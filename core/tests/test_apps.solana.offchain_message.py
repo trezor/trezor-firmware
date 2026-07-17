@@ -1,6 +1,4 @@
 # flake8: noqa: F403,F405
-from ubinascii import unhexlify
-
 from trezor.crypto import base58
 from trezor.wire import DataError
 
@@ -103,7 +101,7 @@ class TestMessageV0(unittest.TestCase):
 
     def test_vectors(self):
         for vector in TEST_VECTORS:
-            offchain = OffchainMessage.from_bytes(unhexlify(vector["hex"]))
+            offchain = OffchainMessage.from_bytes(bytes.fromhex(vector["hex"]))
 
             self.assertMsgEqual(
                 offchain,

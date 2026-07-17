@@ -30,10 +30,10 @@ class TestEosGetPublicKey(unittest.TestCase):
         ]
 
         public_keys = [
-            b"0315c358024ce46767102578947584c4342a6982b922d454f63588effa34597197",
-            b"029622eff7248c4d298fe28f2df19ee0d5f7674f678844e05c31d1a5632412869e",
-            b"02625f33c10399703e95e41bd5054beef3ab893dcc7df2bb9bdcee48359b29069d",
-            b"037c9b7d24d42589941cca3f4debc75b37c0e7b881e6eb00d2e674958debe3bbc3",
+            "0315c358024ce46767102578947584c4342a6982b922d454f63588effa34597197",
+            "029622eff7248c4d298fe28f2df19ee0d5f7674f678844e05c31d1a5632412869e",
+            "02625f33c10399703e95e41bd5054beef3ab893dcc7df2bb9bdcee48359b29069d",
+            "037c9b7d24d42589941cca3f4debc75b37c0e7b881e6eb00d2e674958debe3bbc3",
         ]
 
         wif_keys = [
@@ -48,7 +48,7 @@ class TestEosGetPublicKey(unittest.TestCase):
             node.derive_path(path)
             wif, public_key = _get_public_key(node)
 
-            self.assertEqual(hexlify(public_key), public_keys[index])
+            self.assertEqual(public_key.hex(), public_keys[index])
             self.assertEqual(wif, wif_keys[index])
             self.assertEqual(public_key_to_wif(public_key), wif_keys[index])
 

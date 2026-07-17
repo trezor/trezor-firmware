@@ -37,7 +37,7 @@ def _crc16_checksum(data: AnyBytes) -> bytes:
 
     Initial value changed to 0x0000 to match Stellar configuration.
     """
-    import ustruct
+    import struct
 
     crc = 0x0000
     polynomial = 0x1021
@@ -50,4 +50,4 @@ def _crc16_checksum(data: AnyBytes) -> bytes:
             if c15 ^ bit:
                 crc ^= polynomial
 
-    return ustruct.pack("<H", crc & 0xFFFF)
+    return struct.pack("<H", crc & 0xFFFF)

@@ -115,6 +115,22 @@ void nlr_pop(void) {
     *top = (*top)->prev;
 }
 
+void nlr_push_jump_callback(nlr_jump_callback_node_t *node, nlr_jump_callback_fun_t fun) {
+    nlr_jump_callback_node_t **top = &MP_STATE_THREAD(nlr_jump_callback_top);
+    node->prev = *top;
+    node->fun = fun;
+    *top = node;
+}
+
+void nlr_pop_jump_callback(bool run_callback) {
+    nlr_jump_callback_node_t **top = &MP_STATE_THREAD(nlr_jump_callback_top);
+    nlr_jump_callback_node_t *cur = *top;
+    *top = (*top)->prev;
+    if (run_callback) {
+        cur->fun(cur);
+    }
+}
+
 NORETURN __attribute__((naked)) void nlr_jump(void *val) {
     nlr_buf_t **top_ptr = &MP_STATE_THREAD(nlr_top);
     nlr_buf_t *top = *top_ptr;

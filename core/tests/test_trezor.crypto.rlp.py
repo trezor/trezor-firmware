@@ -128,7 +128,7 @@ class TestCryptoRlp(unittest.TestCase):
 
     def test_rlp_write(self):
         for i, o in self.vectors:
-            o = unhexlify(o)
+            o = bytes.fromhex(o)
             w = bytearray()
             rlp.write(w, i)
             self.assertEqual(w, o)

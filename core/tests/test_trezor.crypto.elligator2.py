@@ -55,7 +55,7 @@ class TestCryptoElligator2(unittest.TestCase):
 
         for input, output in vectors:
             self.assertEqual(
-                hexlify(elligator2.map_to_curve25519(unhexlify(input))).decode("ascii"),
+                elligator2.map_to_curve25519(bytes.fromhex(input)).hex(),
                 output,
             )
 

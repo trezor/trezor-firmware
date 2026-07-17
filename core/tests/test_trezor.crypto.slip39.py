@@ -209,7 +209,7 @@ class TestCryptoSlip39(unittest.TestCase):
                 identifier, extendable, exponent, ems = slip39.recover_ems(mnemonics)
                 self.assertEqual(
                     slip39.decrypt(ems, b"TREZOR", exponent, identifier, extendable),
-                    unhexlify(secret),
+                    bytes.fromhex(secret),
                 )
             else:
                 with self.assertRaises(slip39.MnemonicError):

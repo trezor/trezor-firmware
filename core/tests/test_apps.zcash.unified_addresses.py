@@ -273,15 +273,15 @@ class ZcashTestVector:
 def get_receivers(tv: ZcashTestVector):
     receivers = dict()
     if tv.p2pkh_bytes is not None:
-        receivers[P2PKH] = unhexlify(tv.p2pkh_bytes)
+        receivers[P2PKH] = bytes.fromhex(tv.p2pkh_bytes)
     if tv.p2sh_bytes is not None:
-        receivers[P2SH] = unhexlify(tv.p2sh_bytes)
+        receivers[P2SH] = bytes.fromhex(tv.p2sh_bytes)
     if tv.sapling_raw_addr is not None:
-        receivers[SAPLING] = unhexlify(tv.sapling_raw_addr)
+        receivers[SAPLING] = bytes.fromhex(tv.sapling_raw_addr)
     if tv.orchard_raw_addr is not None:
-        receivers[ORCHARD] = unhexlify(tv.orchard_raw_addr)
+        receivers[ORCHARD] = bytes.fromhex(tv.orchard_raw_addr)
     if tv.unknown_bytes is not None:
-        receivers[tv.unknown_typecode] = unhexlify(tv.unknown_bytes)
+        receivers[tv.unknown_typecode] = bytes.fromhex(tv.unknown_bytes)
 
     return receivers
 
@@ -292,11 +292,11 @@ class TestZcashAddress(unittest.TestCase):
         for tv in map(ZcashTestVector, TESTVECTORS[2:]):
             receivers = get_receivers(tv)
             ua = unified_addresses.encode(receivers, COIN)
-            self.assertEqual(ua, unhexlify(tv.unified_addr).decode())
+            self.assertEqual(ua, bytes.fromhex(tv.unified_addr).decode())
 
     def test_decode_unified(self):
         for tv in map(ZcashTestVector, TESTVECTORS[2:]):
-            address = unhexlify(tv.unified_addr).decode()
+            address = bytes.fromhex(tv.unified_addr).decode()
             receivers = unified_addresses.decode(address, COIN)
             self.assertEqual(receivers, get_receivers(tv))
 

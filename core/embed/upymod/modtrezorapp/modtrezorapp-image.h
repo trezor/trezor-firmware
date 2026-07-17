@@ -36,7 +36,7 @@ typedef struct _mp_obj_AppImage_t {
 ///     """
 ///     Writes data to the application image at the specified offset.
 ///     """
-STATIC mp_obj_t mod_trezorapp_AppImage_write(mp_obj_t self, mp_obj_t offset_obj,
+static mp_obj_t mod_trezorapp_AppImage_write(mp_obj_t self, mp_obj_t offset_obj,
                                              mp_obj_t data_obj) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
   app_cache_handle_t image = o->image;
@@ -54,7 +54,7 @@ STATIC mp_obj_t mod_trezorapp_AppImage_write(mp_obj_t self, mp_obj_t offset_obj,
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorapp_AppImage_write_obj,
+static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorapp_AppImage_write_obj,
                                  mod_trezorapp_AppImage_write);
 
 /// def finalize(self, bool accept) -> None:
@@ -63,7 +63,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorapp_AppImage_write_obj,
 ///     the image is marked as loaded and will be available for execution.
 ///     If `accept` is false, the image is discarded.
 ///     """
-STATIC mp_obj_t mod_trezorapp_AppImage_finalize(mp_obj_t self,
+static mp_obj_t mod_trezorapp_AppImage_finalize(mp_obj_t self,
                                                 mp_obj_t accept_obj) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
@@ -82,19 +82,19 @@ STATIC mp_obj_t mod_trezorapp_AppImage_finalize(mp_obj_t self,
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_AppImage_finalize_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_AppImage_finalize_obj,
                                  mod_trezorapp_AppImage_finalize);
 
-STATIC const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
+static const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorapp_AppImage_write_obj)},
     {MP_ROM_QSTR(MP_QSTR_finalize),
      MP_ROM_PTR(&mod_trezorapp_AppImage_finalize_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorapp_AppImage_locals_dict,
+static MP_DEFINE_CONST_DICT(mod_trezorapp_AppImage_locals_dict,
                             mod_trezorapp_AppImage_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorapp_AppImage_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_AppImage,
-    .locals_dict = (void *)&mod_trezorapp_AppImage_locals_dict,
-};
+// clang-format off
+static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorapp_AppImage_type,
+  MP_QSTR_AppImage, MP_TYPE_FLAG_NONE,
+  locals_dict, &mod_trezorapp_AppImage_locals_dict);
+// clang-format on

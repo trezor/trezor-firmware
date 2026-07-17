@@ -72,49 +72,50 @@
 #define ATB_3_IS_FREE(a) (((a) & ATB_MASK_3) == 0)
 
 #define BLOCK_SHIFT(block) (2 * ((block) & (BLOCKS_PER_ATB - 1)))
-#define ATB_GET_KIND(block)                                         \
-  ((MP_STATE_MEM(gc_alloc_table_start)[(block) / BLOCKS_PER_ATB] >> \
-    BLOCK_SHIFT(block)) &                                           \
+#define ATB_GET_KIND(block)                                              \
+  ((MP_STATE_MEM(area.gc_alloc_table_start)[(block) / BLOCKS_PER_ATB] >> \
+    BLOCK_SHIFT(block)) &                                                \
    3)
 #define ATB_ANY_TO_FREE(block)                                        \
   do {                                                                \
-    MP_STATE_MEM(gc_alloc_table_start)                                \
+    MP_STATE_MEM(area.gc_alloc_table_start)                           \
     [(block) / BLOCKS_PER_ATB] &= (~(AT_MARK << BLOCK_SHIFT(block))); \
   } while (0)
 #define ATB_FREE_TO_HEAD(block)                                    \
   do {                                                             \
-    MP_STATE_MEM(gc_alloc_table_start)                             \
+    MP_STATE_MEM(area.gc_alloc_table_start)                        \
     [(block) / BLOCKS_PER_ATB] |= (AT_HEAD << BLOCK_SHIFT(block)); \
   } while (0)
 #define ATB_FREE_TO_TAIL(block)                                    \
   do {                                                             \
-    MP_STATE_MEM(gc_alloc_table_start)                             \
+    MP_STATE_MEM(area.gc_alloc_table_start)                        \
     [(block) / BLOCKS_PER_ATB] |= (AT_TAIL << BLOCK_SHIFT(block)); \
   } while (0)
 #define ATB_HEAD_TO_MARK(block)                                    \
   do {                                                             \
-    MP_STATE_MEM(gc_alloc_table_start)                             \
+    MP_STATE_MEM(area.gc_alloc_table_start)                        \
     [(block) / BLOCKS_PER_ATB] |= (AT_MARK << BLOCK_SHIFT(block)); \
   } while (0)
 #define ATB_MARK_TO_HEAD(block)                                       \
   do {                                                                \
-    MP_STATE_MEM(gc_alloc_table_start)                                \
+    MP_STATE_MEM(area.gc_alloc_table_start)                           \
     [(block) / BLOCKS_PER_ATB] &= (~(AT_TAIL << BLOCK_SHIFT(block))); \
   } while (0)
 
 #define BLOCK_FROM_PTR(ptr) \
-  (((byte *)(ptr) - MP_STATE_MEM(gc_pool_start)) / BYTES_PER_BLOCK)
+  (((byte *)(ptr) - MP_STATE_MEM(area.gc_pool_start)) / BYTES_PER_BLOCK)
 #define PTR_FROM_BLOCK(block) \
-  (((block) * BYTES_PER_BLOCK + (uintptr_t)MP_STATE_MEM(gc_pool_start)))
+  (((block) * BYTES_PER_BLOCK + (uintptr_t)MP_STATE_MEM(area.gc_pool_start)))
 #define ATB_FROM_BLOCK(bl) ((bl) / BLOCKS_PER_ATB)
 
 // ptr should be of type void*
-#define VERIFY_PTR(ptr)                                                       \
-  (((uintptr_t)(ptr) & (BYTES_PER_BLOCK - 1)) ==                              \
-       0 /* must be aligned on a block */                                     \
-   && ptr >= (void *)MP_STATE_MEM(                                            \
-                 gc_pool_start) /* must be above start of pool */             \
-   && ptr < (void *)MP_STATE_MEM(gc_pool_end) /* must be below end of pool */ \
+#define VERIFY_PTR(ptr)                                                \
+  (((uintptr_t)(ptr) & (BYTES_PER_BLOCK - 1)) ==                       \
+       0 /* must be aligned on a block */                              \
+   && ptr >= (void *)MP_STATE_MEM(                                     \
+                 area.gc_pool_start) /* must be above start of pool */ \
+   && ptr < (void *)MP_STATE_MEM(                                      \
+                area.gc_pool_end) /* must be below end of pool */      \
   )
 
 #define Q_GET_DATA(q) \
@@ -410,11 +411,14 @@ void dump_instance(FILE *out, const mp_obj_instance_t *obj) {
 
 void dump_type(FILE *out, const mp_obj_type_t *type) {
   print_type(out, "type", qstr_str(type->name), type, false);
-  fprintf(out, ",\n\"locals\": \"%p\"", type->locals_dict);
-  fprintf(out, ",\n\"parent\": \"%p\"},\n", type->parent);
+  // XXX 3ac8b5851e5f4dade465d52b91ed2ccc17851263 #7542
+  fprintf(out, ",\n\"locals\": \"%p\"",
+          MP_OBJ_TYPE_GET_SLOT_OR_NULL(type, locals_dict));
+  fprintf(out, ",\n\"parent\": \"%p\"},\n",
+          MP_OBJ_TYPE_GET_SLOT_OR_NULL(type, parent));
 
-  dump_value(out, type->parent);
-  dump_value(out, type->locals_dict);
+  dump_value(out, MP_OBJ_TYPE_GET_SLOT_OR_NULL(type, parent));
+  dump_value(out, MP_OBJ_TYPE_GET_SLOT_OR_NULL(type, locals_dict));
 }
 
 void dump_list(FILE *out, const mp_obj_list_t *list) {
@@ -456,7 +460,13 @@ typedef struct _mp_obj_set_t {
   mp_set_t set;
 } mp_obj_set_t;
 
-bool is_set_or_frozenset(mp_const_obj_t o);
+bool is_set_or_frozenset(mp_const_obj_t o) {
+  return mp_obj_is_type(o, &mp_type_set)
+#if MICROPY_PY_BUILTINS_FROZENSET
+         || mp_obj_is_type(o, &mp_type_frozenset)
+#endif
+      ;
+}
 
 void dump_set(FILE *out, const mp_obj_set_t *set) {
   print_type(out, "set", NULL, set, false);
@@ -482,7 +492,7 @@ void dump_set(FILE *out, const mp_obj_set_t *set) {
 void dump_protomsg(FILE *out, const mp_obj_protomsg_t *value) {
   mp_obj_t name[2] = {MP_OBJ_NULL, MP_OBJ_NULL};
   mp_obj_type_t *type = protobuf_debug_msg_type();
-  type->attr((mp_obj_t)value, MP_QSTR_MESSAGE_NAME, name);
+  MP_OBJ_TYPE_GET_SLOT(type, attr)((mp_obj_t)value, MP_QSTR_MESSAGE_NAME, name);
 
   print_type(out, "protomsg", NULL, value, false);
   fprintf(out, ",\n\"message_name\": ");
@@ -494,7 +504,7 @@ void dump_protomsg(FILE *out, const mp_obj_protomsg_t *value) {
 void dump_protodef(FILE *out, const mp_obj_t *value) {
   mp_obj_t name[2] = {MP_OBJ_NULL, MP_OBJ_NULL};
   mp_obj_type_t *type = protobuf_debug_msg_def_type();
-  type->attr((mp_obj_t)value, MP_QSTR_MESSAGE_NAME, name);
+  MP_OBJ_TYPE_GET_SLOT(type, attr)((mp_obj_t)value, MP_QSTR_MESSAGE_NAME, name);
 
   print_type(out, "protodef", NULL, value, false);
   fprintf(out, ",\n\"message_name\": ");
@@ -670,8 +680,8 @@ static void dump_meminfo_json(FILE *out) {
 #endif
   }
   fprintf(out, "\n[\n[" UINT_FMT ", " UINT_FMT ", " UINT_FMT "],\n",
-          (mp_uint_t)MP_STATE_MEM(gc_pool_start),
-          (mp_uint_t)MP_STATE_MEM(gc_pool_end), BYTES_PER_BLOCK);
+          (mp_uint_t)MP_STATE_MEM(area.gc_pool_start),
+          (mp_uint_t)MP_STATE_MEM(area.gc_pool_end), BYTES_PER_BLOCK);
 
   // void **ptrs = (void **)(void *)&mp_state_ctx;
   // size_t root_start = offsetof(mp_state_ctx_t, thread.dict_locals);
@@ -706,8 +716,8 @@ static void dump_meminfo_json(FILE *out) {
   fprintf(out, "\"dict_main\",\n");
   dump_value_opt(out, &MP_STATE_VM(dict_main), true);
 
-  fprintf(out, "\"mp_sys_path_obj\",\n");
-  dump_value_opt(out, &MP_STATE_VM(mp_sys_path_obj), true);
+  fprintf(out, "\"mp_sys_path\",\n");
+  dump_value_opt(out, &mp_sys_path, true);
 
   fprintf(out, "\"mp_sys_argv_obj\",\n");
   dump_value_opt(out, &MP_STATE_VM(mp_sys_argv_obj), true);
@@ -729,14 +739,14 @@ static void dump_meminfo_json(FILE *out) {
     fflush(out);
   }
   for (size_t block = 0;
-       block < MP_STATE_MEM(gc_alloc_table_byte_len) * BLOCKS_PER_ATB;
+       block < MP_STATE_MEM(area.gc_alloc_table_byte_len) * BLOCKS_PER_ATB;
        block++) {
     if (ATB_GET_KIND(block) == AT_MARK) {
       ATB_MARK_TO_HEAD(block);
     }
   }
 
-  gc_dump_alloc_table();
+  gc_dump_alloc_table(&mp_plat_print);
 }
 
 /// def meminfo(filename: str | None) -> None:
@@ -744,7 +754,7 @@ static void dump_meminfo_json(FILE *out) {
 ///     Dumps map of micropython GC arena to a file.
 ///     The JSON file can be decoded by analyze-memory-dump.py
 ///     """
-STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
+static mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
   size_t fn_len;
   FILE *out = (filename == mp_const_none)
                   ? NULL
@@ -753,7 +763,7 @@ STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
   dump_meminfo_json(out);
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_meminfo_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_meminfo_obj,
                                  mod_trezorutils_meminfo);
 
 #define MEMINFO_DICT_ENTRIES \

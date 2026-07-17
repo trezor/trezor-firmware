@@ -14,7 +14,7 @@ _b32rev = {ord(v): k for k, v in enumerate(_b32alphabet)}
 
 
 def encode(s: AnyBytes) -> str:
-    from ustruct import unpack
+    from struct import unpack
 
     s = bytes(s)
     quanta, leftover = divmod(len(s), 5)
@@ -58,8 +58,6 @@ def encode(s: AnyBytes) -> str:
 
 
 def decode(s: str) -> bytes:
-    from ubinascii import unhexlify
-
     data = s.encode()
     _, leftover = divmod(len(data), 8)
     if leftover:
@@ -85,11 +83,11 @@ def decode(s: str) -> bytes:
         acc += _b32rev[c] << shift
         shift -= 5
         if shift < 0:
-            parts.append(unhexlify((f"{acc:010x}").encode()))
+            parts.append(bytes.fromhex(f"{acc:010x}"))
             acc = 0
             shift = 35
     # Process the last, partial quanta
-    last = unhexlify(bytes(f"{acc:010x}", "ascii"))
+    last = bytes.fromhex(f"{acc:010x}")
     if padchars == 0:
         last = b""  # No characters
     elif padchars == 1:

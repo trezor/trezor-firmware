@@ -71,7 +71,7 @@
 #define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_CORE_FEATURES)
 
 // Python internal features
-#define MICROPY_READER_VFS          (0)
+#define MICROPY_READER_VFS          (1)
 #define MICROPY_ENABLE_GC           (1)
 #define MICROPY_ENABLE_FINALISER    (1)
 #define MICROPY_STACK_CHECK         (1)
@@ -88,19 +88,21 @@
 #define MICROPY_ENABLE_SOURCE_LINE  (1)
 #endif
 #define MICROPY_FLOAT_IMPL          (MICROPY_FLOAT_IMPL_FLOAT)
+#define MICROPY_TIME_SUPPORT_Y2100_AND_BEYOND (1)
 #define MICROPY_STREAMS_NON_BLOCK   (1)
-#define MICROPY_MODULE_WEAK_LINKS   (0)
 #define MICROPY_CAN_OVERRIDE_BUILTINS (0)
-#define MICROPY_VFS_POSIX_FILE      (1)
+#define MICROPY_VFS_POSIX           (1)
 #define MICROPY_USE_INTERNAL_ERRNO  (0)
+#define MICROPY_PYEXEC_ENABLE_EXIT_CODE_HANDLING (1)
 #define MICROPY_ENABLE_SCHEDULER    (0)
 #define MICROPY_SCHEDULER_DEPTH     (0)
-#define MICROPY_VFS                 (0)
+#define MICROPY_VFS                 (1)
 
 // control over Python builtins
 #define MICROPY_PY_FUNCTION_ATTRS   (1)
 #define MICROPY_PY_DESCRIPTORS      (0)
 #define MICROPY_PY_DELATTR_SETATTR  (0)
+#define MICROPY_PY_BUILTINS_BYTES_HEX (1)
 #define MICROPY_PY_BUILTINS_STR_UNICODE (1)
 #define MICROPY_PY_BUILTINS_STR_CENTER (0)
 #define MICROPY_PY_BUILTINS_STR_PARTITION (1)
@@ -139,43 +141,41 @@
 #define MICROPY_PY_SYS_STDFILES     (0)
 #define MICROPY_PY_SYS_STDIO_BUFFER (0)
 #define MICROPY_PY_SYS_PLATFORM     "trezor-emulator"
-#define MICROPY_PY_UERRNO           (0)
+#define MICROPY_PY_ERRNO            (0)
 #define MICROPY_PY_THREAD           (0)
 #define MICROPY_PY_FSTRINGS         (1)
 
 // extended modules
 #define MICROPY_PY_UCTYPES          (!BITCOIN_ONLY)  // used in FIDO
-#define MICROPY_PY_UZLIB            (0)
-#define MICROPY_PY_UJSON            (0)
-#define MICROPY_PY_UOS              (1)
-#define MICROPY_PY_UOS_INCLUDEFILE  "ports/unix/moduos.c"
-#define MICROPY_PY_UOS_ERRNO        (1)
-#define MICROPY_PY_UOS_GETENV_PUTENV_UNSETENV (1)
-#define MICROPY_PY_UOS_SEP          (1)
-#define MICROPY_PY_UOS_SYSTEM       (1)
-#define MICROPY_PY_UOS_URANDOM      (1)
-#define MICROPY_PY_URE              (0)
-#define MICROPY_PY_URE_SUB          (0)
-#define MICROPY_PY_UHEAPQ           (0)
-#define MICROPY_PY_UHASHLIB         (0)
-#define MICROPY_PY_UHASHLIB_MD5     (0)
-#define MICROPY_PY_UHASHLIB_SHA1    (0)
-#define MICROPY_PY_UCRYPTOLIB       (0)
-#define MICROPY_PY_UBINASCII        (1)
-#define MICROPY_PY_UBINASCII_CRC32  (0)
-#define MICROPY_PY_URANDOM          (0)
-#define MICROPY_PY_URANDOM_EXTRA_FUNCS (0)
-#define MICROPY_PY_USELECT          (0)
-#define MICROPY_PY_UTIMEQ           (1)
-#define MICROPY_PY_UTIME            (1)
-#define MICROPY_PY_UTIME_MP_HAL     (1)
+#define MICROPY_PY_DEFLATE          (0)
+#define MICROPY_PY_JSON             (0)
+#define MICROPY_PY_OS               (1)
+#define MICROPY_PY_OS_INCLUDEFILE   "ports/unix/modos.c"
+#define MICROPY_PY_OS_ERRNO         (1)
+#define MICROPY_PY_OS_GETENV_PUTENV_UNSETENV (1)
+#define MICROPY_PY_OS_SEP           (1)
+#define MICROPY_PY_OS_SYSTEM        (1)
+#define MICROPY_PY_OS_URANDOM       (1)
+#define MICROPY_PY_RE               (0)
+#define MICROPY_PY_RE_SUB           (0)
+#define MICROPY_PY_HEAPQ            (0)
+#define MICROPY_PY_HASHLIB          (0)
+#define MICROPY_PY_HASHLIB_MD5      (0)
+#define MICROPY_PY_HASHLIB_SHA1     (0)
+#define MICROPY_PY_CRYPTOLIB        (0)
+#define MICROPY_PY_BINASCII         (0)
+#define MICROPY_PY_BINASCII_CRC32   (0)
+#define MICROPY_PY_RANDOM           (0)
+#define MICROPY_PY_RANDOM_EXTRA_FUNCS (0)
+#define MICROPY_PY_SELECT           (0)
+#define MICROPY_PY_TIME             (1)
 #define MICROPY_PY_OS_DUPTERM       (0)
 #define MICROPY_PY_LWIP_SOCK_RAW    (0)
 #define MICROPY_PY_MACHINE          (0)
-#define MICROPY_PY_UWEBSOCKET       (0)
+#define MICROPY_PY_WEBSOCKET        (0)
 #define MICROPY_PY_WEBREPL          (0)
 #define MICROPY_PY_FRAMEBUF         (0)
-#define MICROPY_PY_USOCKET          (0)
+#define MICROPY_PY_SOCKET           (0)
 #define MICROPY_PY_NETWORK          (0)
 
 // allocate traceback data only on debug builds
@@ -230,7 +230,8 @@ extern const struct _mp_print_t mp_stderr_print;
 
 // by default contains nearest git tag, which may not be present in shallow
 // repo, breaking reproducibility
-#define MICROPY_BANNER_NAME_AND_VERSION ""
+#define MICROPY_BANNER_NAME_AND_VERSION "MicroPython"
+#define MICROPY_BANNER_MACHINE "unix"
 
 // ============= this ends common config section ===================
 
@@ -249,13 +250,6 @@ typedef int mp_int_t; // must be pointer size
 typedef unsigned int mp_uint_t; // must be pointer size
 #endif
 #endif
-
-#define MICROPY_EVENT_POLL_HOOK \
-    do { \
-        extern void mp_handle_pending(bool); \
-        mp_handle_pending(true); \
-        mp_hal_delay_us(500); \
-    } while (0);
 
 // Cannot include <sys/types.h>, as it may lead to symbol name clashes
 #if _FILE_OFFSET_BITS == 64 && !defined(__LP64__)
@@ -283,11 +277,6 @@ void mp_unix_mark_exec(void);
 // Assume that select() call, interrupted with a signal, and erroring
 // with EINTR, updates remaining timeout value.
 #define MICROPY_SELECT_REMAINING_TIME (1)
-
-#define MICROPY_PORT_ROOT_POINTERS \
-    const char *readline_hist[50]; \
-    void *mmap_region_head; \
-    mp_obj_t trezorconfig_ui_wait_callback; \
 
 // We need to provide a declaration/definition of alloca()
 // unless support for it is disabled.

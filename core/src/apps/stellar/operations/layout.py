@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 from trezor import TR
 from trezor.ui.layouts import (
@@ -378,7 +377,7 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
 async def confirm_claim_claimable_balance_op(
     op: StellarClaimClaimableBalanceOp,
 ) -> None:
-    balance_id = hexlify(op.balance_id).decode()
+    balance_id = op.balance_id.hex()
     await confirm_properties(
         "op_claim_claimable_balance",
         TR.stellar__claim_claimable_balance,

@@ -40,7 +40,7 @@ MP_DEFINE_EXCEPTION(SigningInaccessible, OptigaError)
 ///     """
 ///     Return the certificate stored at the given index.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_optiga_get_certificate(mp_obj_t cert_index) {
+static mp_obj_t mod_trezorcrypto_optiga_get_certificate(mp_obj_t cert_index) {
   mp_int_t idx = mp_obj_get_int(cert_index);
   if (idx < 0 || idx >= OPTIGA_CERT_COUNT) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid index."));
@@ -61,9 +61,9 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_get_certificate(mp_obj_t cert_index) {
   }
 
   cert.len = cert_size;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &cert);
+  return mp_obj_new_bytes_from_vstr(&cert);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_optiga_get_certificate_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_optiga_get_certificate_obj,
                                  mod_trezorcrypto_optiga_get_certificate);
 
 /// def sign(
@@ -74,7 +74,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_optiga_get_certificate_obj,
 ///     Uses the private key at key_index to produce a DER-encoded signature of
 ///     the digest.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
+static mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
                                              mp_obj_t digest) {
   mp_int_t idx = mp_obj_get_int(key_index);
   if (idx < 0 || idx >= OPTIGA_ECC_KEY_COUNT) {
@@ -104,23 +104,23 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
   }
 
   sig.len = sig_size;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
+  return mp_obj_new_bytes_from_vstr(&sig);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_optiga_sign_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_optiga_sign_obj,
                                  mod_trezorcrypto_optiga_sign);
 
 /// def get_sec() -> int | None:
 ///     """
 ///     Returns the value of Optiga's security event counter.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_optiga_get_sec() {
+static mp_obj_t mod_trezorcrypto_optiga_get_sec() {
   uint8_t sec = 0;
   if (optiga_read_sec(&sec)) {
     return mp_obj_new_int_from_uint(sec);
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_optiga_get_sec_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_optiga_get_sec_obj,
                                  mod_trezorcrypto_optiga_get_sec);
 
 #if USE_OPTIGA_TESTING
@@ -128,18 +128,18 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_optiga_get_sec_obj,
 ///     """
 ///     Set Optiga's security event counter to maximum.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_optiga_set_sec_max() {
+static mp_obj_t mod_trezorcrypto_optiga_set_sec_max() {
   optiga_set_sec_max();
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_optiga_set_sec_max_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_optiga_set_sec_max_obj,
                                  mod_trezorcrypto_optiga_set_sec_max);
 #endif
 
 /// DEVICE_CERT_INDEX: int
 /// DEVICE_ECC_KEY_INDEX: int
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_optiga_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_optiga_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_optiga)},
     {MP_ROM_QSTR(MP_QSTR_get_certificate),
      MP_ROM_PTR(&mod_trezorcrypto_optiga_get_certificate_obj)},
@@ -157,10 +157,10 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_optiga_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_OptigaError), MP_ROM_PTR(&mp_type_OptigaError)},
     {MP_ROM_QSTR(MP_QSTR_SigningInaccessible),
      MP_ROM_PTR(&mp_type_SigningInaccessible)}};
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_optiga_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_optiga_globals,
                             mod_trezorcrypto_optiga_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorcrypto_optiga_module = {
+static const mp_obj_module_t mod_trezorcrypto_optiga_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_optiga_globals,
 };

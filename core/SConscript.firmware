@@ -314,24 +314,24 @@ SOURCE_MOD += [
 
 # rust mods
 SOURCE_MOD += [
+    'embed/upymod/bindgen-static.c',
     'embed/upymod/rustmods.c',
 ]
 
-# modutime
+# modutime, modtimeq
 SOURCE_MOD += [
+    'embed/upymod/modtimeq.c',
     'embed/upymod/modutime.c',
 ]
 
 SOURCE_MICROPYTHON = [
-    'vendor/micropython/extmod/modubinascii.c',
+    'vendor/micropython/extmod/modbinascii.c',
+    'vendor/micropython/extmod/modtime.c',
     'vendor/micropython/extmod/moductypes.c',
-    'vendor/micropython/extmod/moduheapq.c',
-    'vendor/micropython/extmod/modutimeq.c',
-    'vendor/micropython/extmod/utime_mphal.c',
     'vendor/micropython/shared/libc/abort_.c',
     'vendor/micropython/shared/libc/printf.c',
-    'vendor/micropython/shared/runtime/gchelper_m3.s',
     'vendor/micropython/shared/runtime/gchelper_native.c',
+    'vendor/micropython/shared/runtime/gchelper_thumb.s'
     'vendor/micropython/shared/runtime/interrupt_char.c',
     'vendor/micropython/shared/runtime/pyexec.c',
     'vendor/micropython/shared/runtime/stdout_helpers.c',
@@ -350,6 +350,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/builtinhelp.c',
     'vendor/micropython/py/builtinimport.c',
     'vendor/micropython/py/compile.c',
+    'vendor/micropython/py/cstack.c',
     'vendor/micropython/py/emitbc.c',
     'vendor/micropython/py/emitcommon.c',
     'vendor/micropython/py/emitglue.c',
@@ -378,6 +379,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/objboundmeth.c',
     'vendor/micropython/py/objcell.c',
     'vendor/micropython/py/objclosure.c',
+    'vendor/micropython/py/objcode.c',
     'vendor/micropython/py/objcomplex.c',
     'vendor/micropython/py/objdict.c',
     'vendor/micropython/py/objenumerate.c',
@@ -560,9 +562,10 @@ env.Replace(
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
     MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
+    MAKEROOTPOINTERS='$PYTHON vendor/micropython/py/make_root_pointers.py',
     MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
-    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + BYTECODE_OPTIMIZATION,
+    MPY_CROSS='vendor/micropython/mpy-cross/build/mpy-cross -O' + BYTECODE_OPTIMIZATION,
     PB2PY='$PYTHON ../common/protob/pb2py',
 )
 
@@ -635,6 +638,18 @@ compressed_data = env.GenerateCompressed(
     target='genhdr/compressed.data.h', source=compressed_collected)
 
 env.Ignore(micropy_defines, compressed_data)
+
+#
+# Micropython root pointers
+#
+
+rootpointers_collected = env.CollectRootPointers(
+    target='genhdr/root_pointers.collected', source=micropy_defines)
+
+rootpointers_data = env.GenerateRootPointers(
+    target='genhdr/root_pointers.h', source=rootpointers_collected)
+
+env.Ignore(micropy_defines, rootpointers_data)
 
 #
 # Micropython version

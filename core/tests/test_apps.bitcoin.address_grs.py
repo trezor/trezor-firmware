@@ -74,7 +74,7 @@ class TestAddressGRS(unittest.TestCase):
         coin = coins.by_name("Groestlcoin Testnet")
 
         address = address_p2sh(
-            unhexlify("7a55d61848e77ca266e79a39bfc85c580a6426c9"), coin
+            bytes.fromhex("7a55d61848e77ca266e79a39bfc85c580a6426c9"), coin
         )
         self.assertEqual(address, "2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e")
 

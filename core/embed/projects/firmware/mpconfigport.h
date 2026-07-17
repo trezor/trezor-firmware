@@ -80,8 +80,8 @@
 #define MICROPY_ENABLE_SOURCE_LINE  (1)
 #endif
 #define MICROPY_FLOAT_IMPL          (MICROPY_FLOAT_IMPL_FLOAT)
+#define MICROPY_TIME_SUPPORT_Y2100_AND_BEYOND (1)
 #define MICROPY_STREAMS_NON_BLOCK   (1)
-#define MICROPY_MODULE_WEAK_LINKS   (0)
 #define MICROPY_CAN_OVERRIDE_BUILTINS (0)
 #define MICROPY_USE_INTERNAL_ERRNO  (1)
 #define MICROPY_ENABLE_SCHEDULER    (0)
@@ -92,6 +92,7 @@
 #define MICROPY_PY_FUNCTION_ATTRS   (1)
 #define MICROPY_PY_DESCRIPTORS      (0)
 #define MICROPY_PY_DELATTR_SETATTR  (0)
+#define MICROPY_PY_BUILTINS_BYTES_HEX (1)
 #define MICROPY_PY_BUILTINS_STR_UNICODE (1)
 #define MICROPY_PY_BUILTINS_STR_CENTER (0)
 #define MICROPY_PY_BUILTINS_STR_PARTITION (1)
@@ -130,37 +131,35 @@
 #define MICROPY_PY_SYS_STDFILES     (0)
 #define MICROPY_PY_SYS_STDIO_BUFFER (0)
 #define MICROPY_PY_SYS_PLATFORM     "trezor"
-#define MICROPY_PY_UERRNO           (0)
+#define MICROPY_PY_ERRNO            (0)
 #define MICROPY_PY_THREAD           (0)
 #define MICROPY_PY_FSTRINGS         (1)
 
 // extended modules
 #define MICROPY_PY_UCTYPES          (!BITCOIN_ONLY)  // used in FIDO
-#define MICROPY_PY_UZLIB            (0)
-#define MICROPY_PY_UJSON            (0)
-#define MICROPY_PY_UOS              (0)
-#define MICROPY_PY_URE              (0)
-#define MICROPY_PY_URE_SUB          (0)
-#define MICROPY_PY_UHEAPQ           (0)
-#define MICROPY_PY_UHASHLIB         (0)
-#define MICROPY_PY_UHASHLIB_MD5     (0)
-#define MICROPY_PY_UHASHLIB_SHA1    (0)
-#define MICROPY_PY_UCRYPTOLIB       (0)
-#define MICROPY_PY_UBINASCII        (1)
-#define MICROPY_PY_UBINASCII_CRC32  (0)
-#define MICROPY_PY_URANDOM          (0)
-#define MICROPY_PY_URANDOM_EXTRA_FUNCS (0)
-#define MICROPY_PY_USELECT          (0)
-#define MICROPY_PY_UTIME            (1)
-#define MICROPY_PY_UTIMEQ           (1)
-#define MICROPY_PY_UTIME_MP_HAL     (1)
+#define MICROPY_PY_DEFLATE          (0)
+#define MICROPY_PY_JSON             (0)
+#define MICROPY_PY_OS               (0)
+#define MICROPY_PY_RE               (0)
+#define MICROPY_PY_RE_SUB           (0)
+#define MICROPY_PY_HEAPQ            (0)
+#define MICROPY_PY_HASHLIB          (0)
+#define MICROPY_PY_HASHLIB_MD5      (0)
+#define MICROPY_PY_HASHLIB_SHA1     (0)
+#define MICROPY_PY_CRYPTOLIB        (0)
+#define MICROPY_PY_BINASCII         (0)
+#define MICROPY_PY_BINASCII_CRC32   (0)
+#define MICROPY_PY_RANDOM           (0)
+#define MICROPY_PY_RANDOM_EXTRA_FUNCS (0)
+#define MICROPY_PY_SELECT           (0)
+#define MICROPY_PY_TIME             (1)
 #define MICROPY_PY_OS_DUPTERM       (0)
 #define MICROPY_PY_LWIP_SOCK_RAW    (0)
 #define MICROPY_PY_MACHINE          (0)
-#define MICROPY_PY_UWEBSOCKET       (0)
+#define MICROPY_PY_WEBSOCKET        (0)
 #define MICROPY_PY_WEBREPL          (0)
 #define MICROPY_PY_FRAMEBUF         (0)
-#define MICROPY_PY_USOCKET          (0)
+#define MICROPY_PY_SOCKET           (0)
 #define MICROPY_PY_NETWORK          (0)
 
 // allocate traceback data only on debug builds
@@ -180,7 +179,8 @@
 
 // by default contains nearest git tag, which may not be present in shallow
 // repo, breaking reproducibility
-#define MICROPY_BANNER_NAME_AND_VERSION ""
+#define MICROPY_BANNER_NAME_AND_VERSION "MicroPython"
+#define MICROPY_BANNER_MACHINE "Trezor"
 
 // ============= this ends common config section ===================
 
@@ -197,15 +197,6 @@ typedef int mp_int_t; // must be pointer size
 typedef unsigned int mp_uint_t; // must be pointer size
 typedef long mp_off_t;
 
-#define MICROPY_BEGIN_ATOMIC_SECTION()     (0)
-#define MICROPY_END_ATOMIC_SECTION(state)  (void)(state)
-#define MICROPY_EVENT_POLL_HOOK \
-    do { \
-        extern void mp_handle_pending(bool); \
-        mp_handle_pending(true); \
-        __WFI(); \
-    } while (0);
-
 #define MICROPY_HW_BOARD_NAME "TREZORv2"
 #define MICROPY_HW_MCU_NAME "STM32F427xx"
 #define MICROPY_HW_HAS_SDCARD 1
@@ -217,9 +208,6 @@ typedef long mp_off_t;
 #define malloc(n) m_malloc(n)
 #define free(p) m_free(p)
 #define realloc(p, n) m_realloc(p, n)
-
-#define MICROPY_PORT_ROOT_POINTERS \
-    mp_obj_t trezorconfig_ui_wait_callback; \
 
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>

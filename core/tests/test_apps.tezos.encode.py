@@ -30,7 +30,7 @@ class TestTezosEncoding(unittest.TestCase):
         for i, o in zip(inputs, outputs):
             w = bytearray()
             _encode_zarith(w, i)
-            self.assertEqual(bytes(w), unhexlify(o))
+            self.assertEqual(bytes(w), bytes.fromhex(o))
 
     def test_tezos_encode_data_with_bool_prefix(self):
         w = bytearray()
@@ -39,8 +39,8 @@ class TestTezosEncoding(unittest.TestCase):
 
         data = "afffeb1dc3c0"
         w = bytearray()
-        _encode_data_with_bool_prefix(w, unhexlify(data), 6)
-        self.assertEqual(bytes(w), unhexlify("ff" + data))
+        _encode_data_with_bool_prefix(w, bytes.fromhex(data), 6)
+        self.assertEqual(bytes(w), bytes.fromhex("ff" + data))
 
     def test_tezos_encode_bool(self):
         w = bytearray()
@@ -54,26 +54,26 @@ class TestTezosEncoding(unittest.TestCase):
     def test_tezos_encode_contract_id(self):
         implicit = TezosContractID(
             tag=TezosContractType.Implicit,
-            hash=unhexlify("00101368afffeb1dc3c089facbbe23f5c30b787ce9"),
+            hash=bytes.fromhex("00101368afffeb1dc3c089facbbe23f5c30b787ce9"),
         )
         w = bytearray()
         _encode_contract_id(w, implicit)
         self.assertEqual(
-            bytes(w), unhexlify("0000101368afffeb1dc3c089facbbe23f5c30b787ce9")
+            bytes(w), bytes.fromhex("0000101368afffeb1dc3c089facbbe23f5c30b787ce9")
         )
 
         originated = TezosContractID(
             tag=TezosContractType.Originated,
-            hash=unhexlify("65671dedc69669f066f45d586a2ecdeddacc95af00"),
+            hash=bytes.fromhex("65671dedc69669f066f45d586a2ecdeddacc95af00"),
         )
         w = bytearray()
         _encode_contract_id(w, originated)
         self.assertEqual(
-            bytes(w), unhexlify("0165671dedc69669f066f45d586a2ecdeddacc95af00")
+            bytes(w), bytes.fromhex("0165671dedc69669f066f45d586a2ecdeddacc95af00")
         )
 
     def test_tezos_base58_encode_check(self):
-        pkh = unhexlify("101368afffeb1dc3c089facbbe23f5c30b787ce9")
+        pkh = bytes.fromhex("101368afffeb1dc3c089facbbe23f5c30b787ce9")
 
         self.assertEqual(
             base58_encode_check(pkh, prefix="tz1"),
@@ -104,7 +104,7 @@ class TestTezosEncoding(unittest.TestCase):
         for i, o in zip(inputs, outputs):
             w = bytearray()
             _encode_natural(w, i)
-            self.assertEqual(bytes(w), unhexlify(o))
+            self.assertEqual(bytes(w), bytes.fromhex(o))
 
 
 if __name__ == "__main__":

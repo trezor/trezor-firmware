@@ -3,7 +3,7 @@ use crate::micropython::macros::obj_type;
 use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
-use crate::micropython::typ::Type;
+use crate::micropython::typ::FullType;
 use crate::micropython::{ffi, util};
 
 #[derive(Copy, Clone)]
@@ -87,7 +87,7 @@ impl DeviceMenuMsg {
 }
 
 // Create a DeviceMenuResult class that contains all result types
-static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
+static DEVICE_MENU_RESULT_TYPE: FullType = obj_type! {
     name: Qstr::MP_QSTR_DeviceMenuResult,
     attr_fn: device_menu_result_attr,
 };

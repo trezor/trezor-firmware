@@ -30,14 +30,14 @@
 ///     """
 ///     Compute uniform random number from interval 0 ... n - 1.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_random_uniform(mp_obj_t n) {
+static mp_obj_t mod_trezorcrypto_random_uniform(mp_obj_t n) {
   uint32_t nn = trezor_obj_get_uint(n);
   if (nn == 0) {
     mp_raise_ValueError(MP_ERROR_TEXT("Maximum can't be zero"));
   }
   return mp_obj_new_int_from_uint(random_uniform(nn));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_uniform_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_uniform_obj,
                                  mod_trezorcrypto_random_uniform);
 
 /// import builtins
@@ -46,7 +46,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_uniform_obj,
 ///     Generate random bytes sequence of length len. If `strong` is set then
 ///     maximum sources of entropy are used.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
+static mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
                                               const mp_obj_t *args) {
   uint32_t len = trezor_obj_get_uint(args[0]);
   if (len > 1024) {
@@ -63,16 +63,16 @@ STATIC mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
   } else {
     rng_fill_buffer((uint8_t *)vstr.buf, len);
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_random_bytes_obj, 1,
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_random_bytes_obj, 1,
                                            2, mod_trezorcrypto_random_bytes);
 
 /// def shuffle(data: list) -> None:
 ///     """
 ///     Shuffles items of given list (in-place).
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_random_shuffle(mp_obj_t data) {
+static mp_obj_t mod_trezorcrypto_random_shuffle(mp_obj_t data) {
   size_t count = 0;
   mp_obj_t *items = NULL;
   mp_obj_get_array(data, &count, &items);
@@ -92,7 +92,7 @@ STATIC mp_obj_t mod_trezorcrypto_random_shuffle(mp_obj_t data) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_shuffle_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_shuffle_obj,
                                  mod_trezorcrypto_random_shuffle);
 
 #ifdef TREZOR_EMULATOR
@@ -100,15 +100,15 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_shuffle_obj,
 ///     """
 ///     Re-seed the RNG with given value.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_random_reseed(mp_obj_t data) {
+static mp_obj_t mod_trezorcrypto_random_reseed(mp_obj_t data) {
   random_reseed(trezor_obj_get_uint(data));
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_reseed_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_reseed_obj,
                                  mod_trezorcrypto_random_reseed);
 #endif
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_random_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_random_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_random)},
     {MP_ROM_QSTR(MP_QSTR_uniform),
      MP_ROM_PTR(&mod_trezorcrypto_random_uniform_obj)},
@@ -121,10 +121,10 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_random_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_random_reseed_obj)},
 #endif
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_random_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_random_globals,
                             mod_trezorcrypto_random_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorcrypto_random_module = {
+static const mp_obj_module_t mod_trezorcrypto_random_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_random_globals,
 };

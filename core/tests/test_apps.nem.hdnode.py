@@ -118,7 +118,7 @@ class TestNemHDNode(unittest.TestCase):
         ]
 
         for test in test_cases:
-            private_key = bytearray(reversed(unhexlify(test[0])))
+            private_key = bytearray(reversed(bytes.fromhex(test[0])))
 
             node = bip32.HDNode(
                 depth=0,
@@ -131,7 +131,7 @@ class TestNemHDNode(unittest.TestCase):
 
             self.assertEqual(node.nem_address(NEM_NETWORK_MAINNET), test[2])
             # public key is prepended with 1, removing
-            self.assertEqual(node.public_key()[1:], unhexlify(test[1]))
+            self.assertEqual(node.public_key()[1:], bytes.fromhex(test[1]))
 
     def test_encryption(self):
         # test vectors from https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/4.test-cipher.dat
@@ -300,7 +300,7 @@ class TestNemHDNode(unittest.TestCase):
         ]
 
         for test in test_cases:
-            private_key = bytearray(reversed(unhexlify(test["private"])))
+            private_key = bytearray(reversed(bytes.fromhex(test["private"])))
             node = bip32.HDNode(
                 depth=0,
                 fingerprint=0,
@@ -311,13 +311,13 @@ class TestNemHDNode(unittest.TestCase):
             )
 
             encrypted = node.nem_encrypt(
-                unhexlify(test["public"]),
-                unhexlify(test["iv"]),
-                unhexlify(test["salt"]),
-                unhexlify(test["input"]),
+                bytes.fromhex(test["public"]),
+                bytes.fromhex(test["iv"]),
+                bytes.fromhex(test["salt"]),
+                bytes.fromhex(test["input"]),
             )
 
-            self.assertEqual(encrypted, unhexlify(test["output"]))
+            self.assertEqual(encrypted, bytes.fromhex(test["output"]))
 
 
 if __name__ == "__main__":

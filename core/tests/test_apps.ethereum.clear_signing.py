@@ -51,7 +51,7 @@ def to_bytes(v: int) -> bytes:
 class TestEthereumClearSigning(unittest.TestCase):
     def test_address_parsing_valid(self):
         addr_hex = "d8da6bf26964af9d7eed9e03e53415d37aa96045"
-        addr_bytes = unhexlify(addr_hex)
+        addr_bytes = bytes.fromhex(addr_hex)
 
         valid_payload = b"\x00" * 12 + addr_bytes
         data = memoryview(valid_payload)
@@ -64,7 +64,7 @@ class TestEthereumClearSigning(unittest.TestCase):
 
     def test_address_parsing_invalid_padding(self):
         addr_hex = "d8da6bf26964af9d7eed9e03e53415d37aa96045"
-        addr_bytes = unhexlify(addr_hex)
+        addr_bytes = bytes.fromhex(addr_hex)
 
         invalid_payload = b"\x01" + b"\x00" * 11 + addr_bytes  # dirty padding
         data = memoryview(invalid_payload)
@@ -147,7 +147,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             is_dynamic=False,
         )
 
-        addr_bytes = unhexlify("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        addr_bytes = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
         u160_val = 2**160 - 1
         bool_val = 1
 
@@ -168,7 +168,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             is_dynamic=False,
         )
 
-        addr_bytes = unhexlify("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        addr_bytes = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
         overflow_u160 = 2**160
         bool_val = 1
 
@@ -186,7 +186,7 @@ class TestEthereumClearSigning(unittest.TestCase):
     def test_dynamic_struct_valid(self):
         dynamic_struct = Tuple((parse_address, parse_string), is_dynamic=True)
 
-        addr = unhexlify("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        addr = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
         # left padded with zeroes
         addr_bytes = b"\x00" * (32 - 20) + addr
 
@@ -232,9 +232,9 @@ class TestEthereumClearSigning(unittest.TestCase):
     def test_array_of_addresses_valid(self):
         address_array_parser = Array(Atomic(parse_address))
 
-        addr1 = unhexlify("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        addr1 = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
         addr1_bytes = b"\x00" * (32 - 20) + addr1
-        addr2 = unhexlify("71c7656ec7ab88b098defb751b7401b5f6d8976f")
+        addr2 = bytes.fromhex("71c7656ec7ab88b098defb751b7401b5f6d8976f")
         addr2_bytes = b"\x00" * (32 - 20) + addr2
 
         array_length = len([addr1, addr2])
@@ -258,13 +258,13 @@ class TestEthereumClearSigning(unittest.TestCase):
     def test_array_of_addresses_with_dirty_element(self):
         address_array_parser = Array(Atomic(parse_address))
 
-        addr_valid_bytes = b"\x00" * 12 + unhexlify(
+        addr_valid_bytes = b"\x00" * 12 + bytes.fromhex(
             "d8da6bf26964af9d7eed9e03e53415d37aa96045"
         )
         addr_dirty_bytes = (
             b"\x01"
             + b"\x00" * 11
-            + unhexlify("71c7656ec7ab88b098defb751b7401b5f6d8976f")
+            + bytes.fromhex("71c7656ec7ab88b098defb751b7401b5f6d8976f")
         )
 
         payload = (
@@ -287,8 +287,8 @@ class TestEthereumClearSigning(unittest.TestCase):
             )
         )
 
-        addr1 = unhexlify("d8da6bf26964af9d7eed9e03e53415d37aa96045")
-        addr2 = unhexlify("71c7656ec7ab88b098defb751b7401b5f6d8976f")
+        addr1 = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        addr2 = bytes.fromhex("71c7656ec7ab88b098defb751b7401b5f6d8976f")
         text1 = "Hello first world!"
         text2 = "Hello second world!"
 
@@ -542,8 +542,8 @@ class TestEthereumClearSigning(unittest.TestCase):
             network = make_eth_network()
 
         fmt = AddressNameFormatter()
-        addr1 = unhexlify("d8da6bf26964af9d7eed9e03e53415d37aa96045")
-        addr2 = unhexlify("71c7656ec7ab88b098defb751b7401b5f6d8976f")
+        addr1 = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        addr2 = bytes.fromhex("71c7656ec7ab88b098defb751b7401b5f6d8976f")
 
         formatted, _, _ = await_result(
             _format_field_value(fmt, [addr1, addr2], None, _Defs(), None)
@@ -559,7 +559,7 @@ class TestEthereumClearSigning(unittest.TestCase):
     def test_multi_value_token_amount(self):
         # Multi-value with TokenAmountFormatter: every element shares the one
         # (constant) token, rendered one amount-per-line.
-        token_addr = unhexlify("ae7ab96520de3a18e5e111b5eaab095312d7fe84")
+        token_addr = bytes.fromhex("ae7ab96520de3a18e5e111b5eaab095312d7fe84")
 
         class _Defs:
             network = make_eth_network()
@@ -660,7 +660,7 @@ class TestEthereumClearSigning(unittest.TestCase):
     def test_from_proto_token_amount_constant_token(self):
         # Regression test for `from_proto`
         # Might use a .proto binary blob in future.
-        token_addr = unhexlify("ae7ab96520de3a18e5e111b5eaab095312d7fe84")  # stETH
+        token_addr = bytes.fromhex("ae7ab96520de3a18e5e111b5eaab095312d7fe84")  # stETH
         info = EthereumERC7730FieldInfo(
             path=EthereumERC7730Path(path=[0]),
             label="Amount",
@@ -675,7 +675,7 @@ class TestEthereumClearSigning(unittest.TestCase):
     def test_token_amount_constant_token_format(self):
         # The token is resolved from `defs` by the constant address, without
         # touching the calldata - so `path_walker` is never called (passed None).
-        token_addr = unhexlify("ae7ab96520de3a18e5e111b5eaab095312d7fe84")  # stETH
+        token_addr = bytes.fromhex("ae7ab96520de3a18e5e111b5eaab095312d7fe84")  # stETH
 
         class _Defs:
             network = make_eth_network()

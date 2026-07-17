@@ -47,24 +47,26 @@ class TestCryptoSha3_512(unittest.TestCase):
 
     def test_digest(self):
         for b, d in self.vectors:
-            self.assertEqual(hashlib.sha3_512(b).digest(), unhexlify(d))
+            self.assertEqual(hashlib.sha3_512(b).digest(), bytes.fromhex(d))
 
     def test_digest_keccak(self):
         for b, d in self.vectors_keccak:
-            self.assertEqual(hashlib.sha3_512(b, keccak=True).digest(), unhexlify(d))
+            self.assertEqual(
+                hashlib.sha3_512(b, keccak=True).digest(), bytes.fromhex(d)
+            )
 
     def test_update(self):
         for b, d in self.vectors:
             x = hashlib.sha3_512()
             x.update(b)
-            self.assertEqual(x.digest(), unhexlify(d))
+            self.assertEqual(x.digest(), bytes.fromhex(d))
 
         x = hashlib.sha3_512()
         for _ in range(1000000):
             x.update(b"a")
         self.assertEqual(
             x.digest(),
-            unhexlify(
+            bytes.fromhex(
                 "3c3a876da14034ab60627c077bb98f7e120a2a5370212dffb3385a18d4f38859ed311d0a9d5141ce9cc5c66ee689b266a8aa18ace8282a0e0db596c90b0a7b87"
             ),
         )
@@ -72,13 +74,13 @@ class TestCryptoSha3_512(unittest.TestCase):
         # x = hashlib.sha3_512()
         # for i in range(16777216):
         #     x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
-        # self.assertEqual(x.digest(), unhexlify('235ffd53504ef836a1342b488f483b396eabbfe642cf78ee0d31feec788b23d0d18d5c339550dd5958a500d4b95363da1b5fa18affc1bab2292dc63b7d85097c'))
+        # self.assertEqual(x.digest(), bytes.fromhex('235ffd53504ef836a1342b488f483b396eabbfe642cf78ee0d31feec788b23d0d18d5c339550dd5958a500d4b95363da1b5fa18affc1bab2292dc63b7d85097c'))
 
     def test_update_keccak(self):
         for b, d in self.vectors_keccak:
             x = hashlib.sha3_512(keccak=True)
             x.update(b)
-            self.assertEqual(x.digest(), unhexlify(d))
+            self.assertEqual(x.digest(), bytes.fromhex(d))
 
     def test_digest_multi(self):
         x = hashlib.sha3_512()

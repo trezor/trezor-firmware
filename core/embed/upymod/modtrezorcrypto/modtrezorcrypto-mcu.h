@@ -27,7 +27,7 @@
 ///     """
 ///     Return MCU device certificate.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_mcu_get_certificate(void) {
+static mp_obj_t mod_trezorcrypto_mcu_get_certificate(void) {
   size_t cert_size = 0;
   if (mcu_attestation_cert_size(&cert_size) != sectrue) {
     mp_raise_msg(&mp_type_RuntimeError,
@@ -44,16 +44,16 @@ STATIC mp_obj_t mod_trezorcrypto_mcu_get_certificate(void) {
   }
 
   cert.len = cert_size;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &cert);
+  return mp_obj_new_bytes_from_vstr(&cert);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_mcu_get_certificate_obj,
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_mcu_get_certificate_obj,
                                  mod_trezorcrypto_mcu_get_certificate);
 
 /// def sign(challenge: AnyBytes) -> bytes:
 ///     """
 ///     Sign challenge bytes with MCU device attestation key.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_mcu_sign(mp_obj_t challenge) {
+static mp_obj_t mod_trezorcrypto_mcu_sign(mp_obj_t challenge) {
   mp_buffer_info_t challenge_buf = {0};
   mp_get_buffer_raise(challenge, &challenge_buf, MP_BUFFER_READ);
 
@@ -66,21 +66,21 @@ STATIC mp_obj_t mod_trezorcrypto_mcu_sign(mp_obj_t challenge) {
   }
 
   sig.len = MCU_ATTESTATION_SIG_SIZE;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
+  return mp_obj_new_bytes_from_vstr(&sig);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_mcu_sign_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_mcu_sign_obj,
                                  mod_trezorcrypto_mcu_sign);
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_mcu_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_mcu_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_mcu)},
     {MP_ROM_QSTR(MP_QSTR_get_certificate),
      MP_ROM_PTR(&mod_trezorcrypto_mcu_get_certificate_obj)},
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_mcu_sign_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_mcu_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_mcu_globals,
                             mod_trezorcrypto_mcu_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorcrypto_mcu_module = {
+static const mp_obj_module_t mod_trezorcrypto_mcu_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_mcu_globals,
 };

@@ -1,7 +1,6 @@
-import ustruct
+import struct
 from micropython import const
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 import storage.device as storage_device
 from trezor import utils
@@ -301,13 +300,13 @@ class Fido2Credential(Credential):
         elif self.user_display_name:
             return self.user_display_name
         elif self.user_id:
-            return hexlify(self.user_id).decode()
+            return self.user_id.hex()
         else:
             return None
 
     def _private_key(self) -> bytes:
         path = [HARDENED | 10022, HARDENED | int.from_bytes(self.id[:4], "big")] + [
-            HARDENED | i for i in ustruct.unpack(">4L", self.id[-16:])
+            HARDENED | i for i in struct.unpack(">4L", self.id[-16:])
         ]
         node = seed.derive_node_without_passphrase(path, _CURVE_NAME[self.curve])
         return node.private_key()
@@ -424,7 +423,7 @@ class U2fCredential(Credential):
         self.node = seed.derive_node_without_passphrase(nodepath, "nist256p1")
 
         # first half of keyhandle is keypath
-        keypath = ustruct.pack("<8L", *path)
+        keypath = struct.pack("<8L", *path)
 
         # second half of keyhandle is a hmac of rp_id_hash and keypath
         mac = hmac(hmac.SHA256, self.node.private_key(), self.rp_id_hash)
@@ -439,8 +438,8 @@ class U2fCredential(Credential):
         if app is not None:
             return app.label
 
-        start = hexlify(self.rp_id_hash[:4]).decode()
-        end = hexlify(self.rp_id_hash[-4:]).decode()
+        start = self.rp_id_hash[:4].hex()
+        end = self.rp_id_hash[-4:].hex()
         return f"{start}...{end}"
 
     @staticmethod
@@ -473,7 +472,7 @@ class U2fCredential(Credential):
 
         # unpack the keypath from the first half of keyhandle
         keypath = keyhandle[:32]
-        path = ustruct.unpack(pathformat, keypath)
+        path = struct.unpack(pathformat, keypath)
 
         # check high bit for hardened keys
         for i in path:

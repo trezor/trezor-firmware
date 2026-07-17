@@ -29,6 +29,9 @@ async def _confirm_word(
 
     # remove duplicates
     non_duplicates = list(set(share_words))
+    # sort list to make UI tests independent on micropython hash function
+    if __debug__:
+        non_duplicates.sort()
     # shuffle list
     random.shuffle(non_duplicates)
     # take top _NUM_OF_CHOICES words

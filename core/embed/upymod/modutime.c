@@ -24,12 +24,12 @@
  * THE SOFTWARE.
  */
 
-#include "extmod/utime_mphal.h"
+#include "extmod/modtime.h"
 #include "shared/timeutils/timeutils.h"
 
 // copy of ports/stm32/modutime.c:time_localtime, without support
 // for getting current clock time (i.e., timestamp must always be provided)
-STATIC mp_obj_t time_gmtime2000(mp_obj_t timestamp) {
+static mp_obj_t time_gmtime2000(mp_obj_t timestamp) {
   mp_int_t seconds = mp_obj_get_int(timestamp);
   timeutils_struct_time_t tm;
   timeutils_seconds_since_2000_to_struct_time(seconds, &tm);
@@ -48,21 +48,21 @@ STATIC mp_obj_t time_gmtime2000(mp_obj_t timestamp) {
 
 MP_DEFINE_CONST_FUN_OBJ_1(time_gmtime2000_obj, time_gmtime2000);
 
-STATIC const mp_rom_map_elem_t time_module_globals_table[] = {
+static const mp_rom_map_elem_t time_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_utime)},
 
     {MP_ROM_QSTR(MP_QSTR_gmtime2000), MP_ROM_PTR(&time_gmtime2000_obj)},
-    {MP_ROM_QSTR(MP_QSTR_sleep), MP_ROM_PTR(&mp_utime_sleep_obj)},
-    {MP_ROM_QSTR(MP_QSTR_sleep_ms), MP_ROM_PTR(&mp_utime_sleep_ms_obj)},
-    {MP_ROM_QSTR(MP_QSTR_sleep_us), MP_ROM_PTR(&mp_utime_sleep_us_obj)},
-    {MP_ROM_QSTR(MP_QSTR_ticks_ms), MP_ROM_PTR(&mp_utime_ticks_ms_obj)},
-    {MP_ROM_QSTR(MP_QSTR_ticks_us), MP_ROM_PTR(&mp_utime_ticks_us_obj)},
-    {MP_ROM_QSTR(MP_QSTR_ticks_cpu), MP_ROM_PTR(&mp_utime_ticks_cpu_obj)},
-    {MP_ROM_QSTR(MP_QSTR_ticks_add), MP_ROM_PTR(&mp_utime_ticks_add_obj)},
-    {MP_ROM_QSTR(MP_QSTR_ticks_diff), MP_ROM_PTR(&mp_utime_ticks_diff_obj)},
+    {MP_ROM_QSTR(MP_QSTR_sleep), MP_ROM_PTR(&mp_time_sleep_obj)},
+    {MP_ROM_QSTR(MP_QSTR_sleep_ms), MP_ROM_PTR(&mp_time_sleep_ms_obj)},
+    {MP_ROM_QSTR(MP_QSTR_sleep_us), MP_ROM_PTR(&mp_time_sleep_us_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ticks_ms), MP_ROM_PTR(&mp_time_ticks_ms_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ticks_us), MP_ROM_PTR(&mp_time_ticks_us_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ticks_cpu), MP_ROM_PTR(&mp_time_ticks_cpu_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ticks_add), MP_ROM_PTR(&mp_time_ticks_add_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ticks_diff), MP_ROM_PTR(&mp_time_ticks_diff_obj)},
 };
 
-STATIC MP_DEFINE_CONST_DICT(time_module_globals, time_module_globals_table);
+static MP_DEFINE_CONST_DICT(time_module_globals, time_module_globals_table);
 
 const mp_obj_module_t mp_module_utime = {
     .base = {&mp_type_module},

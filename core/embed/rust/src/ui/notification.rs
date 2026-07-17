@@ -5,7 +5,7 @@ use crate::micropython::{
     obj::Obj,
     qstr::Qstr,
     simple_type::SimpleTypeObj,
-    typ::Type,
+    typ::FullType,
 };
 use crate::strutil::TString;
 
@@ -67,7 +67,7 @@ impl TryFrom<Obj> for NotificationLevel {
 }
 
 #[cfg(feature = "micropython")]
-static NOTIFICATION_LEVEL_TYPE: Type = obj_type! {
+static NOTIFICATION_LEVEL_TYPE: FullType = obj_type! {
     name: Qstr::MP_QSTR_NotificationLevel,
     locals: &obj_dict!(obj_map! {
         Qstr::MP_QSTR_ALERT => Obj::small_int(0),

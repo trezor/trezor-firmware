@@ -29,13 +29,13 @@ class TestNemNamespace(unittest.TestCase):
         t = serialize_provision_namespace(
             m.transaction,
             m.provision_namespace,
-            unhexlify(
+            bytes.fromhex(
                 "84afa1bbc993b7f5536344914dde86141e61f8cbecaf8c9cefc07391f3287cf5"
             ),
         )
         self.assertEqual(
             hashlib.sha3_256(t, keccak=True).digest(),
-            unhexlify(
+            bytes.fromhex(
                 "f7cab28da57204d01a907c697836577a4ae755e6c9bac60dcc318494a22debb3"
             ),
         )
@@ -54,14 +54,14 @@ class TestNemNamespace(unittest.TestCase):
         t = serialize_provision_namespace(
             m.transaction,
             m.provision_namespace,
-            unhexlify(
+            bytes.fromhex(
                 "244fa194e2509ac0d2fbc18779c2618d8c2ebb61c16a3bcbebcf448c661ba8dc"
             ),
         )
 
         self.assertEqual(
             hashlib.sha3_256(t, keccak=True).digest(),
-            unhexlify(
+            bytes.fromhex(
                 "7ddd5fe607e1bfb5606e0ac576024c318c8300d237273117d4db32a60c49524d"
             ),
         )
@@ -80,14 +80,14 @@ class TestNemNamespace(unittest.TestCase):
         t = serialize_provision_namespace(
             m.transaction,
             m.provision_namespace,
-            unhexlify(
+            bytes.fromhex(
                 "9f3c14f304309c8b72b2821339c4428793b1518bea72d58dd01f19d523518614"
             ),
         )
 
         self.assertEqual(
             hashlib.sha3_256(t, keccak=True).digest(),
-            unhexlify(
+            bytes.fromhex(
                 "57071aad93ca125dc231dc02c07ad8610cd243d35068f9b36a7d231383907569"
             ),
         )

@@ -25,23 +25,23 @@
 ///     """
 ///     Enable/Disable the haptic feedback.
 ///     """
-STATIC mp_obj_t mod_trezorio_haptic_set_enabled(mp_obj_t enable) {
+static mp_obj_t mod_trezorio_haptic_set_enabled(mp_obj_t enable) {
   haptic_set_enabled(mp_obj_is_true(enable));
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_haptic_set_enabled_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_haptic_set_enabled_obj,
                                  mod_trezorio_haptic_set_enabled);
 
-STATIC const mp_rom_map_elem_t mod_trezorio_haptic_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorio_haptic_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_haptic)},
     {MP_ROM_QSTR(MP_QSTR_haptic_set_enabled),
      MP_ROM_PTR(&mod_trezorio_haptic_set_enabled_obj)},
 
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorio_haptic_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorio_haptic_globals,
                             mod_trezorio_haptic_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorio_haptic_module = {
+static const mp_obj_module_t mod_trezorio_haptic_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorio_haptic_globals,
 };

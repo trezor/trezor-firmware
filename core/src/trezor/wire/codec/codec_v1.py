@@ -1,4 +1,4 @@
-import ustruct
+import struct
 from micropython import const
 from typing import TYPE_CHECKING
 
@@ -33,7 +33,7 @@ async def read_message(
     iface.read(report, 0)
     if report[0] != _REP_MARKER:
         raise CodecError("Invalid magic")
-    _, magic1, magic2, mtype, msize = ustruct.unpack(_REP_INIT, report)
+    _, magic1, magic2, mtype, msize = struct.unpack(_REP_INIT, report)
     if magic1 != _REP_MAGIC or magic2 != _REP_MAGIC:
         raise CodecError("Invalid magic")
 
@@ -88,7 +88,7 @@ async def write_message(iface: WireInterface, mtype: int, mdata: AnyBytes) -> No
     # prepare the report buffer with header data
     report = bytearray(iface.TX_PACKET_LEN)
     repofs = _REP_INIT_DATA
-    ustruct.pack_into(
+    struct.pack_into(
         _REP_INIT, report, 0, _REP_MARKER, _REP_MAGIC, _REP_MAGIC, mtype, msize
     )
 

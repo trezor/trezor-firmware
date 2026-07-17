@@ -1,5 +1,5 @@
+import struct
 import uctypes
-import ustruct
 import utime
 from micropython import const
 from typing import TYPE_CHECKING
@@ -1422,7 +1422,7 @@ def _msg_authenticate_sign(
 
     # get next counter
     ctr = cred.next_signature_counter()
-    ctrbuf = ustruct.pack(">L", ctr)
+    ctrbuf = struct.pack(">L", ctr)
 
     # sign the input data together with counter
     sig = cred.sign((rp_id_hash, flags, ctrbuf, challenge))
@@ -1438,15 +1438,15 @@ def _msg_authenticate_sign(
 
 
 def msg_error(cid: int, code: int) -> Cmd:
-    return Cmd(cid, _CMD_MSG, ustruct.pack(">H", code))
+    return Cmd(cid, _CMD_MSG, struct.pack(">H", code))
 
 
 def cmd_error(cid: int, code: int) -> Cmd:
-    return Cmd(cid, _CMD_ERROR, ustruct.pack(">B", code))
+    return Cmd(cid, _CMD_ERROR, struct.pack(">B", code))
 
 
 def cbor_error(cid: int, code: int) -> Cmd:
-    return Cmd(cid, _CMD_CBOR, ustruct.pack(">B", code))
+    return Cmd(cid, _CMD_CBOR, struct.pack(">B", code))
 
 
 def credentials_from_descriptor_list(

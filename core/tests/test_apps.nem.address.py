@@ -17,13 +17,13 @@ if not utils.BITCOIN_ONLY:
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNemAddress(unittest.TestCase):
     def test_addresses(self):
-        pubkey = unhexlify(
+        pubkey = bytes.fromhex(
             "c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844"
         )
         address = nem.compute_address(pubkey, NEM_NETWORK_MAINNET)
         self.assertEqual(address, "NDD2CT6LQLIYQ56KIXI3ENTM6EK3D44P5JFXJ4R4")
 
-        pubkey = unhexlify(
+        pubkey = bytes.fromhex(
             "114171230ad6f8522a000cdc73fbc5c733b30bb71f2b146ccbdf34499f79a810"
         )
         address = nem.compute_address(pubkey, NEM_NETWORK_MAINNET)

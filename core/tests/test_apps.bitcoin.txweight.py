@@ -22,7 +22,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         inp1 = TxInput(
             address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
             # amount=390000,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
             ),
             prev_index=0,
@@ -58,7 +58,7 @@ class TestCalculateTxWeight(unittest.TestCase):
             # 49'/1'/0'/1/0" - 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
             address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
             amount=123456789,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337"
             ),
             prev_index=0,
@@ -99,7 +99,7 @@ class TestCalculateTxWeight(unittest.TestCase):
             # 49'/1'/0'/0/0" - tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
             address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
             amount=12300000,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a"
             ),
             prev_index=0,
@@ -138,7 +138,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         inp1 = TxInput(
             address_n=[86 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
             amount=4600,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "7956f1de3e7362b04115b64a31f0b6822c50dd6c08d78398f392a0ac3f0e357b"
             ),
             prev_index=1,
@@ -185,7 +185,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         inp1 = TxInput(
             address_n=[48 | 0x80000000, 0 | 0x80000000, 1 | 0x80000000, 0, 0],
             amount=100000,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"
             ),
             prev_index=1,
@@ -232,7 +232,7 @@ class TestCalculateTxWeight(unittest.TestCase):
 
         inp1 = TxInput(
             address_n=[49 | 0x80000000, 1 | 0x80000000, 1 | 0x80000000, 0, 0],
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "c9348040bbc2024e12dcb4a0b4806b0398646b91acf314da028c3f03dd0179fc"
             ),
             prev_index=1,
@@ -260,7 +260,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         inp1 = TxInput(
             address_n=[49 | 0x80000000, 1 | 0x80000000, 1 | 0x80000000, 0, 0],
             amount=20000,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "8c3ea7a10ab6d289119b722ec8c27b70c17c722334ced31a0370d782e4b6775d"
             ),
             prev_index=0,
@@ -269,7 +269,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         inp2 = TxInput(
             address_n=[84 | 0x80000000, 1 | 0x80000000, 1 | 0x80000000, 0, 0],
             amount=15000,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "7956f1de3e7362b04115b64a31f0b6822c50dd6c08d78398f392a0ac3f0e357b"
             ),
             prev_index=0,
@@ -278,7 +278,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         inp3 = TxInput(
             address_n=[86 | 0x80000000, 1 | 0x80000000, 1 | 0x80000000, 0, 0],
             amount=4450,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "7956f1de3e7362b04115b64a31f0b6822c50dd6c08d78398f392a0ac3f0e357b"
             ),
             prev_index=0,
@@ -287,7 +287,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         inp4 = TxInput(
             address_n=[44 | 0x80000000, 1 | 0x80000000, 1 | 0x80000000, 0, 0],
             amount=10000,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "3ac32e90831d79385eee49d6030a2123cd9d009fe8ffc3d470af9a6a777a119b"
             ),
             prev_index=2,
@@ -341,20 +341,20 @@ class TestCalculateTxWeight(unittest.TestCase):
 
         inp1 = TxInput(
             amount=100000,
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "e5b7e21b5ba720e81efd6bfa9f854ababdcddc75a43bfa60bf0fe069cfd1bb8a"
             ),
             prev_index=0,
             script_type=InputScriptType.EXTERNAL,
-            script_pubkey=unhexlify("00149c02608d469160a92f40fdf8c6ccced029493088"),
-            ownership_proof=unhexlify(
+            script_pubkey=bytes.fromhex("00149c02608d469160a92f40fdf8c6ccced029493088"),
+            ownership_proof=bytes.fromhex(
                 "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002483045022100d4ad0374c922848c71d913fba59c81b9075e0d33e884d953f0c4b4806b8ffd0c022024740e6717a2b6a5aa03148c3a28b02c713b4e30fc8aeae67fa69eb20e8ddcd9012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
             ),
         )
 
         inp2 = TxInput(
             address_n=[84 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "70f9871eb03a38405cfd7a01e0e1448678132d815e2c9f552ad83ae23969509e"
             ),
             prev_index=0,
@@ -365,15 +365,15 @@ class TestCalculateTxWeight(unittest.TestCase):
         inp3 = TxInput(
             # tb1qldlynaqp0hy4zc2aag3pkenzvxy65saesxw3wd
             # address_n=parse_path("m/84h/1h/0h/0/1"),
-            prev_hash=unhexlify(
+            prev_hash=bytes.fromhex(
                 "65b768dacccfb209eebd95a1fb80a04f1dd6a3abc6d7b41d5e9d9f91605b37d9"
             ),
             prev_index=0,
             amount=10000,
             script_type=InputScriptType.EXTERNAL,
-            script_pubkey=unhexlify("0014fb7e49f4017dc951615dea221b66626189aa43b9"),
+            script_pubkey=bytes.fromhex("0014fb7e49f4017dc951615dea221b66626189aa43b9"),
             script_sig=bytes(0),
-            witness=unhexlify(
+            witness=bytes.fromhex(
                 "024730440220432ac60461de52713ad543cbb1484f7eca1a72c615d539b3f42f5668da4501d2022063786a6d6940a5c1ed9c2d2fd02cef90b6c01ddd84829c946561e15be6c0aae1012103dcf3bc936ecb2ec57b8f468050abce8c8756e75fd74273c9977744b1a0be7d03"
             ),
         )

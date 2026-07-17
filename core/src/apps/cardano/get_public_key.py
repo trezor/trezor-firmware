@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 from trezor import TR
 
@@ -55,8 +54,8 @@ def _get_public_key(
 
     node = keychain.derive(derivation_path)
 
-    public_key = hexlify(derive_public_key(keychain, derivation_path)).decode()
-    chain_code = hexlify(node.chain_code()).decode()
+    public_key = derive_public_key(keychain, derivation_path).hex()
+    chain_code = node.chain_code().hex()
     xpub_key = public_key + chain_code
 
     node_type = HDNodeType(

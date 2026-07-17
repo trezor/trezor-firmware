@@ -28,20 +28,20 @@ class TestCryptoSha512(unittest.TestCase):
 
     def test_digest(self):
         for b, d in self.vectors:
-            self.assertEqual(hashlib.sha512(b).digest(), unhexlify(d))
+            self.assertEqual(hashlib.sha512(b).digest(), bytes.fromhex(d))
 
     def test_update(self):
         for b, d in self.vectors:
             x = hashlib.sha512()
             x.update(b)
-            self.assertEqual(x.digest(), unhexlify(d))
+            self.assertEqual(x.digest(), bytes.fromhex(d))
 
         x = hashlib.sha512()
         for _ in range(1000000):
             x.update(b"a")
         self.assertEqual(
             x.digest(),
-            unhexlify(
+            bytes.fromhex(
                 "e718483d0ce769644e2e42c7bc15b4638e1f98b13b2044285632a803afa973ebde0ff244877ea60a4cb0432ce577c31beb009c5c2c49aa2e4eadb217ad8cc09b"
             ),
         )
@@ -49,7 +49,7 @@ class TestCryptoSha512(unittest.TestCase):
         # x = hashlib.sha512()
         # for i in range(16777216):
         #     x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
-        # self.assertEqual(x.digest(), unhexlify('b47c933421ea2db149ad6e10fce6c7f93d0752380180ffd7f4629a712134831d77be6091b819ed352c2967a2e2d4fa5050723c9630691f1a05a7281dbe6c1086'))
+        # self.assertEqual(x.digest(), bytes.fromhex('b47c933421ea2db149ad6e10fce6c7f93d0752380180ffd7f4629a712134831d77be6091b819ed352c2967a2e2d4fa5050723c9630691f1a05a7281dbe6c1086'))
 
     def test_digest_multi(self):
         x = hashlib.sha512()

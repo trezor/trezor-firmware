@@ -23,40 +23,38 @@ class TestCredential(unittest.TestCase):
         storage.device.is_initialized = lambda: True
 
         cred_id = (
-            b"f1d0020013e65c865634ad8abddf7a66df56ae7d8c3afd356f76426801508b2e"
-            b"579bcb3496fe6396a6002e3cd6d80f6359dfa9961e24c544bfc2f26acec1b8d8"
-            b"78ba56727e1f6a7b5176c607552aea63a5abe5d826d69fab3063edfa0201d9a5"
-            b"1013d69eddb2eff37acdd5963f"
+            "f1d0020013e65c865634ad8abddf7a66df56ae7d8c3afd356f76426801508b2e"
+            "579bcb3496fe6396a6002e3cd6d80f6359dfa9961e24c544bfc2f26acec1b8d8"
+            "78ba56727e1f6a7b5176c607552aea63a5abe5d826d69fab3063edfa0201d9a5"
+            "1013d69eddb2eff37acdd5963f"
         )
 
         rp_id = "example.com"
         rp_id_hash = sha256(rp_id).digest()
 
-        user_id = b"3082019330820138a0030201023082019330820138a003020102308201933082"
+        user_id = "3082019330820138a0030201023082019330820138a003020102308201933082"
 
         user_name = "johnpsmith@example.com"
 
         creation_time = 2
 
         public_key = (
-            b"a501020326200121582051f0d4c307bc737c90ac605c6279f7d01e451798aa7b"
-            b"74df550fdb43a7760c7c22582002b5107fef42094d00f52a9b1e90afb90e1b9d"
-            b"ecbf15a6f13d4f882de857e2f4"
+            "a501020326200121582051f0d4c307bc737c90ac605c6279f7d01e451798aa7b"
+            "74df550fdb43a7760c7c22582002b5107fef42094d00f52a9b1e90afb90e1b9d"
+            "ecbf15a6f13d4f882de857e2f4"
         )
 
-        cred_random = (
-            b"36a9b5d71c13ed54594474b54073af1fb03ea91cd056588909dae43ae2f35dbf"
-        )
+        cred_random = "36a9b5d71c13ed54594474b54073af1fb03ea91cd056588909dae43ae2f35dbf"
 
         # Load credential.
-        cred = Fido2Credential.from_cred_id(unhexlify(cred_id), rp_id_hash)
+        cred = Fido2Credential.from_cred_id(bytes.fromhex(cred_id), rp_id_hash)
         self.assertIsNotNone(cred)
 
         # Check credential data.
-        self.assertEqual(hexlify(cred.id), cred_id)
+        self.assertEqual(cred.id.hex(), cred_id)
         self.assertEqual(cred.rp_id, rp_id)
         self.assertEqual(cred.rp_id_hash, rp_id_hash)
-        self.assertEqual(hexlify(cred.user_id), user_id)
+        self.assertEqual(cred.user_id.hex(), user_id)
         self.assertEqual(cred.user_name, user_name)
         self.assertEqual(cred.creation_time, creation_time)
         self.assertTrue(cred.hmac_secret)
@@ -64,8 +62,8 @@ class TestCredential(unittest.TestCase):
         self.assertIsNone(cred.user_display_name)
 
         # Check credential keys.
-        self.assertEqual(hexlify(cred.hmac_secret_key()), cred_random)
-        self.assertEqual(hexlify(cred.public_key()), public_key)
+        self.assertEqual(cred.hmac_secret_key().hex(), cred_random)
+        self.assertEqual(cred.public_key().hex(), public_key)
 
     def test_truncation(self):
         cred = Fido2Credential()

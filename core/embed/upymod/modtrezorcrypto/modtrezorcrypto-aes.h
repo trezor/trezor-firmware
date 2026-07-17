@@ -58,7 +58,7 @@ typedef struct _mp_obj_AES_t {
 ///     """
 ///     Initialize AES context.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_AES_make_new(const mp_obj_type_t *type,
+static mp_obj_t mod_trezorcrypto_AES_make_new(const mp_obj_type_t *type,
                                               size_t n_args, size_t n_kw,
                                               const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 2, 3, false);
@@ -81,8 +81,7 @@ STATIC mp_obj_t mod_trezorcrypto_AES_make_new(const mp_obj_type_t *type,
     }
   }
 
-  mp_obj_AES_t *o = m_new_obj_with_finaliser(mp_obj_AES_t);
-  o->base.type = type;
+  mp_obj_AES_t *o = mp_obj_malloc_with_finaliser(mp_obj_AES_t, type);
   o->mode = mode;
   if (iv.len != 0) {
     memcpy(o->iv, iv.buf, AES_BLOCK_SIZE);
@@ -158,40 +157,40 @@ static mp_obj_t aes_update(mp_obj_t self, mp_obj_t data, bool encrypt) {
                     aes_ctr_cbuf_inc, &(o->encrypt_ctx));
       break;
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+  return mp_obj_new_bytes_from_vstr(&vstr);
 }
 
 /// def encrypt(self, data: AnyBytes) -> bytes:
 ///     """
 ///     Encrypt data and update AES context.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_AES_encrypt(mp_obj_t self, mp_obj_t data) {
+static mp_obj_t mod_trezorcrypto_AES_encrypt(mp_obj_t self, mp_obj_t data) {
   return aes_update(self, data, true);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AES_encrypt_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AES_encrypt_obj,
                                  mod_trezorcrypto_AES_encrypt);
 
 /// def decrypt(self, data: AnyBytes) -> bytes:
 ///     """
 ///     Decrypt data and update AES context.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_AES_decrypt(mp_obj_t self, mp_obj_t data) {
+static mp_obj_t mod_trezorcrypto_AES_decrypt(mp_obj_t self, mp_obj_t data) {
   return aes_update(self, data, false);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AES_decrypt_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AES_decrypt_obj,
                                  mod_trezorcrypto_AES_decrypt);
 
-STATIC mp_obj_t mod_trezorcrypto_AES___del__(mp_obj_t self) {
+static mp_obj_t mod_trezorcrypto_AES___del__(mp_obj_t self) {
   mp_obj_AES_t *o = MP_OBJ_TO_PTR(self);
   memzero(&(o->encrypt_ctx), sizeof(aes_encrypt_ctx));
   memzero(&(o->decrypt_ctx), sizeof(aes_decrypt_ctx));
   memzero(o->iv, AES_BLOCK_SIZE);
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_AES___del___obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_AES___del___obj,
                                  mod_trezorcrypto_AES___del__);
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_AES_locals_dict_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_AES_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_encrypt),
      MP_ROM_PTR(&mod_trezorcrypto_AES_encrypt_obj)},
     {MP_ROM_QSTR(MP_QSTR_decrypt),
@@ -204,12 +203,12 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_AES_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_OFB), MP_ROM_INT(OFB)},
     {MP_ROM_QSTR(MP_QSTR_CTR), MP_ROM_INT(CTR)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_AES_locals_dict,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_AES_locals_dict,
                             mod_trezorcrypto_AES_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_AES_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_AES,
-    .make_new = mod_trezorcrypto_AES_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_AES_locals_dict,
-};
+// clang-format off
+static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorcrypto_AES_type,
+  MP_QSTR_AES, MP_TYPE_FLAG_NONE,
+  make_new, mod_trezorcrypto_AES_make_new,
+  locals_dict, &mod_trezorcrypto_AES_locals_dict);
+// clang-format on

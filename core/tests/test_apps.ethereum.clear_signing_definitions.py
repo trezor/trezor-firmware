@@ -82,7 +82,7 @@ class TestEthereumClearSigningDefinitions(unittest.TestCase):
         # silently match the wrong contract method.
         for hex_selector, signature in _KNOWN_FUNC_SIGS:
             self.assertEqual(
-                unhexlify(hex_selector),
+                bytes.fromhex(hex_selector),
                 base58.keccak_32(signature),
                 msg=f"selector mismatch for {signature.decode()}",
             )

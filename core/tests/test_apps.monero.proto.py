@@ -2,8 +2,6 @@
 from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
-    import ubinascii
-
     from trezor.crypto import chacha20poly1305_decrypt, chacha20poly1305_encrypt
 
     from apps.monero.signing import offloading_keys, step_09_sign_input
@@ -13,33 +11,33 @@ if not utils.BITCOIN_ONLY:
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestMoneroProto(unittest.TestCase):
     def test_sign_keys(self):
-        mst = ubinascii.unhexlify(
-            b"ca3bbe08a178a4508c3992a47ba775799e7626a365ed136e803fe5f2df2ce01c"
+        mst = bytes.fromhex(
+            "ca3bbe08a178a4508c3992a47ba775799e7626a365ed136e803fe5f2df2ce01c"
         )
         self.assertEqual(
             offloading_keys.key_signature(mst, 0, True)[:12],
-            ubinascii.unhexlify(b"bb665d97ac7c77995578e352"),
+            bytes.fromhex("bb665d97ac7c77995578e352"),
         )
         self.assertEqual(
             offloading_keys.key_signature(mst, 0, False),
-            ubinascii.unhexlify(
-                b"87bb70af81bb7325f73e8b962167579454d126ff8ee51472922d7c103fc60f5f"
+            bytes.fromhex(
+                "87bb70af81bb7325f73e8b962167579454d126ff8ee51472922d7c103fc60f5f"
             ),
         )
         self.assertEqual(
             offloading_keys.key_signature(mst, 3, True)[:12],
-            ubinascii.unhexlify(b"b2ef8e4e4eec72ce3096622a"),
+            bytes.fromhex("b2ef8e4e4eec72ce3096622a"),
         )
         self.assertEqual(
             offloading_keys.key_signature(mst, 3, False),
-            ubinascii.unhexlify(
-                b"e4331602a83a68c892a83693a1b961564048d9349111b85b8b4b52a1adcf36da"
+            bytes.fromhex(
+                "e4331602a83a68c892a83693a1b961564048d9349111b85b8b4b52a1adcf36da"
             ),
         )
 
     def test_sig_seal(self):
-        mst = ubinascii.unhexlify(
-            b"ca3bbe08a178a4508c3992a47ba775799e7626a365ed136e803fe5f2df2ce01c"
+        mst = bytes.fromhex(
+            "ca3bbe08a178a4508c3992a47ba775799e7626a365ed136e803fe5f2df2ce01c"
         )
         st = State()
         st.last_step = st.STEP_SIGN
@@ -62,7 +60,7 @@ class TestMoneroProto(unittest.TestCase):
             "03da465e27f7feec31353cb668f0e8965391f983b06c0684b35b00af38533603",
         ]
 
-        mg_buff = [ubinascii.unhexlify(x) for x in mg_buff]
+        mg_buff = [bytes.fromhex(x) for x in mg_buff]
         mg_buff_b = list(mg_buff)
         mg_res = step_09_sign_input._protect_signature(st, mg_buff)
 

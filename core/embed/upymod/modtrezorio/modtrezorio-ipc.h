@@ -27,7 +27,7 @@
 ///     """
 ///     Sends an IPC message to the specified remote task.
 ///     """
-STATIC mp_obj_t mod_trezorio_ipc_send(mp_obj_t remote_obj, mp_obj_t fn_obj,
+static mp_obj_t mod_trezorio_ipc_send(mp_obj_t remote_obj, mp_obj_t fn_obj,
                                       mp_obj_t data_obj) {
   mp_buffer_info_t bufinfo = {0};
   mp_get_buffer_raise(data_obj, &bufinfo, MP_BUFFER_READ);
@@ -41,7 +41,7 @@ STATIC mp_obj_t mod_trezorio_ipc_send(mp_obj_t remote_obj, mp_obj_t fn_obj,
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_ipc_send_obj,
+static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_ipc_send_obj,
                                  mod_trezorio_ipc_send);
 
 /// class IpcMessage:
@@ -57,29 +57,29 @@ typedef struct _mp_obj_IpcMessage_t {
 ///     """
 ///     Returns the function number.
 ///     """
-STATIC mp_obj_t mod_trezorio_IpcMessage_fn(mp_obj_t self) {
+static mp_obj_t mod_trezorio_IpcMessage_fn(mp_obj_t self) {
   mp_obj_IpcMessage_t *o = MP_OBJ_TO_PTR(self);
   return mp_obj_new_int_from_uint(o->message.fn);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_IpcMessage_fn_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_IpcMessage_fn_obj,
                                  mod_trezorio_IpcMessage_fn);
 
 /// def remote(self) -> int:
 ///     """
 ///     Returns the remote task ID.
 ///     """
-STATIC mp_obj_t mod_trezorio_IpcMessage_remote(mp_obj_t self) {
+static mp_obj_t mod_trezorio_IpcMessage_remote(mp_obj_t self) {
   mp_obj_IpcMessage_t *o = MP_OBJ_TO_PTR(self);
   return MP_OBJ_NEW_SMALL_INT(o->message.remote);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_IpcMessage_remote_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_IpcMessage_remote_obj,
                                  mod_trezorio_IpcMessage_remote);
 
 /// def free(self) -> None:
 ///     """
 ///     Frees the IPC message resources.
 ///     """
-STATIC mp_obj_t mod_trezorio_IpcMessage_free(mp_obj_t self) {
+static mp_obj_t mod_trezorio_IpcMessage_free(mp_obj_t self) {
   mp_obj_IpcMessage_t *o = MP_OBJ_TO_PTR(self);
 
   ipc_message_free(&o->message);
@@ -87,33 +87,33 @@ STATIC mp_obj_t mod_trezorio_IpcMessage_free(mp_obj_t self) {
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_IpcMessage_free_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_IpcMessage_free_obj,
                                  mod_trezorio_IpcMessage_free);
 
 /// def data(self) -> bytes:
 ///     """
 ///     Returns the IPC message data as bytes.
 ///     """
-STATIC mp_obj_t mod_trezorio_IpcMessage_data(mp_obj_t self) {
+static mp_obj_t mod_trezorio_IpcMessage_data(mp_obj_t self) {
   mp_obj_IpcMessage_t *o = MP_OBJ_TO_PTR(self);
   return mp_obj_new_bytes(o->message.data, o->message.size);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_IpcMessage_data_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_IpcMessage_data_obj,
                                  mod_trezorio_IpcMessage_data);
 
-STATIC const mp_rom_map_elem_t mod_trezorio_IpcMessage_locals_dict_table[] = {
+static const mp_rom_map_elem_t mod_trezorio_IpcMessage_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_remote),
      MP_ROM_PTR(&mod_trezorio_IpcMessage_remote_obj)},
     {MP_ROM_QSTR(MP_QSTR_fn), MP_ROM_PTR(&mod_trezorio_IpcMessage_fn_obj)},
     {MP_ROM_QSTR(MP_QSTR_data), MP_ROM_PTR(&mod_trezorio_IpcMessage_data_obj)},
     {MP_ROM_QSTR(MP_QSTR_free), MP_ROM_PTR(&mod_trezorio_IpcMessage_free_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorio_IpcMessage_locals_dict,
+static MP_DEFINE_CONST_DICT(mod_trezorio_IpcMessage_locals_dict,
                             mod_trezorio_IpcMessage_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorio_IpcMessage_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_IpcMessage,
-    .locals_dict = (void *)&mod_trezorio_IpcMessage_locals_dict,
-};
+// clang-format off
+static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorio_IpcMessage_type,
+  MP_QSTR_IpcMessage, MP_TYPE_FLAG_NONE,
+  locals_dict, &mod_trezorio_IpcMessage_locals_dict);
+// clang-format on

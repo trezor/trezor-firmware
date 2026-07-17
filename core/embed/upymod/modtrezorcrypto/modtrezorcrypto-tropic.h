@@ -43,7 +43,7 @@ MP_DEFINE_EXCEPTION(TropicError, Exception)
 ///     """
 ///     Test the session by pinging the chip.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_tropic_ping(mp_obj_t message) {
+static mp_obj_t mod_trezorcrypto_tropic_ping(mp_obj_t message) {
   mp_buffer_info_t message_b = {0};
   mp_get_buffer_raise(message, &message_b, MP_BUFFER_READ);
 
@@ -58,9 +58,9 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_ping(mp_obj_t message) {
 
   memcpy(result.buf, msg_in, message_b.len);
 
-  return mp_obj_new_str_from_vstr(&mp_type_str, &result);
+  return mp_obj_new_str_from_vstr(&result);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_ping_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_ping_obj,
                                  mod_trezorcrypto_tropic_ping);
 
 /// def key_generate(
@@ -69,7 +69,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_ping_obj,
 ///     """
 ///     Generate ECC key in the device's ECC key slot.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_tropic_key_generate(mp_obj_t key_index) {
+static mp_obj_t mod_trezorcrypto_tropic_key_generate(mp_obj_t key_index) {
   mp_int_t idx = mp_obj_get_int(key_index);
   if (idx < 0 || idx >= ECC_SLOT_COUNT) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid index."));
@@ -83,7 +83,7 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_key_generate(mp_obj_t key_index) {
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_key_generate_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_key_generate_obj,
                                  mod_trezorcrypto_tropic_key_generate);
 
 /// def sign(
@@ -93,7 +93,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_key_generate_obj,
 ///     """
 ///     Uses the private key at key_index to produce a signature of the digest.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
+static mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
                                              mp_obj_t digest) {
   mp_int_t idx = mp_obj_get_int(key_index);
   if (idx < 0 || idx >= ECC_SLOT_COUNT) {
@@ -115,9 +115,9 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
   }
 
   sig.len = sizeof(ed25519_signature);
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
+  return mp_obj_new_bytes_from_vstr(&sig);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_tropic_sign_obj,
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_tropic_sign_obj,
                                  mod_trezorcrypto_tropic_sign);
 
 static bool get_slot_range(int index, uint16_t *first_slot,
@@ -141,7 +141,7 @@ static bool get_slot_range(int index, uint16_t *first_slot,
 ///     """
 ///     Return the user data stored at the given index.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_tropic_get_user_data(mp_obj_t index) {
+static mp_obj_t mod_trezorcrypto_tropic_get_user_data(mp_obj_t index) {
   mp_int_t idx = mp_obj_get_int(index);
   uint16_t first_slot = 0;
   uint16_t slot_count = 0;
@@ -165,9 +165,9 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_get_user_data(mp_obj_t index) {
   }
 
   data.len = data_size;
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &data);
+  return mp_obj_new_bytes_from_vstr(&data);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_get_user_data_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_get_user_data_obj,
                                  mod_trezorcrypto_tropic_get_user_data);
 
 /// DEVICE_CERT_INDEX: int
@@ -175,7 +175,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_get_user_data_obj,
 /// FIDO_CERT_INDEX: int
 /// FIDO_KEY_SLOT: int
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_tropic)},
     {MP_ROM_QSTR(MP_QSTR_DEVICE_CERT_INDEX),
      MP_ROM_INT(TROPIC_DEVICE_CERT_INDEX)},
@@ -189,10 +189,10 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_get_user_data),
      MP_ROM_PTR(&mod_trezorcrypto_tropic_get_user_data_obj)},
     {MP_ROM_QSTR(MP_QSTR_TropicError), MP_ROM_PTR(&mp_type_TropicError)}};
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_tropic_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_tropic_globals,
                             mod_trezorcrypto_tropic_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorcrypto_tropic_module = {
+static const mp_obj_module_t mod_trezorcrypto_tropic_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_tropic_globals,
 };

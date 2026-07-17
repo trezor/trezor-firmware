@@ -29,7 +29,7 @@
 ///     Finds index of given word.
 ///     Raises ValueError if not found.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_slip39_word_index(mp_obj_t _word) {
+static mp_obj_t mod_trezorcrypto_slip39_word_index(mp_obj_t _word) {
   mp_buffer_info_t word = {0};
 
   mp_get_buffer_raise(_word, &word, MP_BUFFER_READ);
@@ -40,14 +40,14 @@ STATIC mp_obj_t mod_trezorcrypto_slip39_word_index(mp_obj_t _word) {
   }
   return mp_obj_new_int_from_uint(result);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_slip39_word_index_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_slip39_word_index_obj,
                                  mod_trezorcrypto_slip39_word_index);
 
 /// def get_word(index: int) -> str:
 ///     """
 ///     Returns word on position 'index'.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_slip39_get_word(mp_obj_t _index) {
+static mp_obj_t mod_trezorcrypto_slip39_get_word(mp_obj_t _index) {
   uint16_t index = mp_obj_get_int(_index);
 
   const char *word = get_word(index);
@@ -58,20 +58,20 @@ STATIC mp_obj_t mod_trezorcrypto_slip39_get_word(mp_obj_t _index) {
 
   return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)word, strlen(word));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_slip39_get_word_obj,
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_slip39_get_word_obj,
                                  mod_trezorcrypto_slip39_get_word);
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_slip39_globals_table[] = {
+static const mp_rom_map_elem_t mod_trezorcrypto_slip39_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_slip39)},
     {MP_ROM_QSTR(MP_QSTR_word_index),
      MP_ROM_PTR(&mod_trezorcrypto_slip39_word_index_obj)},
     {MP_ROM_QSTR(MP_QSTR_get_word),
      MP_ROM_PTR(&mod_trezorcrypto_slip39_get_word_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_slip39_globals,
+static MP_DEFINE_CONST_DICT(mod_trezorcrypto_slip39_globals,
                             mod_trezorcrypto_slip39_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorcrypto_slip39_module = {
+static const mp_obj_module_t mod_trezorcrypto_slip39_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_slip39_globals,
 };

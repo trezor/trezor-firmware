@@ -1,10 +1,11 @@
 import micropython
 import sys
+import vfs
+from io import open
+from os import getenv
 from typing import TYPE_CHECKING, Any, Callable, TypeAlias
 
 import coveragedata
-from uio import open
-from uos import getenv
 
 if TYPE_CHECKING:
     from types import FrameType
@@ -119,4 +120,7 @@ try:
     import main  # noqa: F401
 finally:
     print("\n------------------ script exited ------------------")
+    # enable filesystem access for frozen emulator
+    if len(vfs.mount()) == 0:
+        vfs.mount(vfs.VfsPosix(), "/")
     __prof__.write_data()
