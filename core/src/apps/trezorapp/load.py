@@ -11,6 +11,8 @@ from trezor.messages import (
     TrezorAppHeaderRequest,
     TrezorAppLoad,
     TrezorAppLoaded,
+    TrezorAppRootPacketAck,
+    TrezorAppRootPacketRequest,
 )
 from trezor.wire import context
 from trezor.wire.errors import DataError
@@ -30,12 +32,42 @@ async def _load_image(msg: TrezorAppLoad) -> app.AppImage:
     from trezor import app
     from trezor.ui.layouts.progress import progress
 
-    binary = await context.call(
+    # ---------------------------------------------------------------
+    # Request app header
+    # ---------------------------------------------------------------
+
+    header_ack = await context.call(
         TrezorAppHeaderRequest(),
         TrezorAppHeaderAck,
     )
 
-    image = app.create_image(binary.header, binary.proof)
+    # ---------------------------------------------------------------
+    # Check whether the root packet is already loaded and up to date.
+    # ---------------------------------------------------------------
+
+    app_ring = app.app_ring_from_header(header_ack.header)
+
+    if app.root_is_loaded(app_ring):
+        root_timestamp = app.root_timestamp(app_ring)
+    else:
+        root_timestamp = 0
+
+    if root_timestamp != header_ack.timestamp:
+        root_packet_ack = await context.call(
+            TrezorAppRootPacketRequest(
+                app_ring=app_ring,
+                host_timestamp_stale=root_timestamp > header_ack.timestamp,
+            ),
+            TrezorAppRootPacketAck,
+        )
+
+        app.root_update(root_packet_ack.root_packet)
+
+    # ---------------------------------------------------------------
+    # Create image and load chunks
+    # ---------------------------------------------------------------
+
+    image = app.create_image(header_ack.header, header_ack.proof)
 
     if not image_matches(image, msg):
         image.delete()

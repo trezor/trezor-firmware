@@ -302,7 +302,9 @@ if not utils.BITCOIN_ONLY:
     TrezorAppLoaded = 9201
     TrezorAppHeaderRequest = 9202
     TrezorAppHeaderAck = 9203
-    TrezorAppDataChunkRequest = 9204
-    TrezorAppDataChunkAck = 9205
-    TrezorAppMessage = 9206
-    TrezorAppResponse = 9207
+    TrezorAppRootPacketRequest = 9204
+    TrezorAppRootPacketAck = 9205
+    TrezorAppDataChunkRequest = 9206
+    TrezorAppDataChunkAck = 9207
+    TrezorAppMessage = 9208
+    TrezorAppResponse = 9209

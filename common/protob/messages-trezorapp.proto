@@ -13,7 +13,7 @@ option (include_in_bitcoin_only) = true;
  * Request: Load an external application onto the device.
  *
  * If the app is present in the app cache, it will be loaded into memory.
- * Otherwise, a TrezorAppDataChunkRequest flow will be initiated to download the app
+ * Otherwise, an app header loading flow will be initiated to download the app
  * into Trezor.
  *
  * @start
@@ -21,9 +21,9 @@ option (include_in_bitcoin_only) = true;
  * @next TrezorAppHeaderRequest
  */
 message TrezorAppLoad {
-    // Application id
+    /// Application id
     required string id = 1;
-    // Minimal required version
+    /// Minimal required version
     repeated uint32 version = 2;
     /// Hash of the app to load (optional)
     required bytes hash = 3 [default = ''];
@@ -42,6 +42,7 @@ message TrezorAppLoaded {
  * Request: Ask for application header and merkle proof
  *
  * @next TrezorAppHeaderAck
+ * @next TrezorAppRootPacketRequest
  */
 message TrezorAppHeaderRequest {}
 
@@ -49,12 +50,41 @@ message TrezorAppHeaderRequest {}
  * Response: Application header and merkle proof
  *
  * @next TrezorAppDataChunkRequest
+ * @next TrezorAppRootPacketRequest
  */
 message TrezorAppHeaderAck {
-    // Application header
+    /// Application header
     required bytes header = 1;
-    // Merkle proof
+    /// Merkle proof
     required bytes proof = 2;
+    /// Root packet timestamp
+    required uint32 timestamp = 3;
+}
+
+/**
+ * Request: Ask for the appropriate root packet
+ *
+ * The device asks for a root packet required for verification
+ * of the uploaded application.
+ *
+ * @next TrezorAppRootPacketAck
+ * @next TrezorAppHeaderAck
+ */
+message TrezorAppRootPacketRequest {
+    /// Application ring of the requested root packet
+    required uint32 app_ring = 1;
+    /// Signals that the Trezor has the root packet with newer timestamp
+    required bool host_timestamp_stale = 2;
+}
+
+/**
+ * Response: Root packet
+ *
+ * @next TrezorAppDataChunkRequest
+ */
+message TrezorAppRootPacketAck {
+    /// Root packet content
+    required bytes root_packet = 1;
 }
 
 /**
@@ -63,18 +93,21 @@ message TrezorAppHeaderAck {
  * @next TrezorAppDataChunkAck
  */
 message TrezorAppDataChunkRequest {
-    required uint32 index = 1;  // Index of requested chunk
+    /// Index of the requested chunk
+    required uint32 index = 1;
 }
 
 /**
  * Request: Data chunk sent to the device
  *
  * @next TrezorAppDataChunkRequest
- * @next Success
+ * @next TrezorAppLoaded
  */
 message TrezorAppDataChunkAck {
-    required bytes data = 1;  // Bytes from the application image
-    required bytes hash = 2;  // Hash used for the chunk verification
+    /// Bytes from the application image
+    required bytes data = 1;
+    /// Hash used for the chunk verification
+    required bytes hash = 2;
 }
 
 /**

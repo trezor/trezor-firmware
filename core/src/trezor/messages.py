@@ -7263,17 +7263,49 @@ if TYPE_CHECKING:
     class TrezorAppHeaderAck(protobuf.MessageType):
         header: "AnyBytes"
         proof: "AnyBytes"
+        timestamp: "int"
 
         def __init__(
             self,
             *,
             header: "AnyBytes",
             proof: "AnyBytes",
+            timestamp: "int",
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppHeaderAck"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppRootPacketRequest(protobuf.MessageType):
+        app_ring: "int"
+        host_timestamp_stale: "bool"
+
+        def __init__(
+            self,
+            *,
+            app_ring: "int",
+            host_timestamp_stale: "bool",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppRootPacketRequest"]:
+            return isinstance(msg, cls)
+
+    class TrezorAppRootPacketAck(protobuf.MessageType):
+        root_packet: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            root_packet: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppRootPacketAck"]:
             return isinstance(msg, cls)
 
     class TrezorAppDataChunkRequest(protobuf.MessageType):

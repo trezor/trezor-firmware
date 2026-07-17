@@ -69,7 +69,7 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
     image = app.image_by_handle(image_handle)
     if not image.is_running():
         if __debug__:
-            log.error(__name__,f"Task not running: {request.instance_id}")
+            log.error(__name__, f"Task not running: {request.instance_id}")
         raise DataError(f"Task not running: {request.instance_id}")
 
     def die(exception: Exception) -> NoReturn:
@@ -80,7 +80,7 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
 
     try:
         if __debug__:
-            log.debug(__name__,f"Sending wire start IPC message: {request.message_id}")
+            log.debug(__name__, f"Sending wire start IPC message: {request.message_id}")
         io.ipc_send(
             task_id,
             fn_id(_SERVICE_WIRE_START, request.message_id),
@@ -88,7 +88,7 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
         )
     except Exception as e:
         if __debug__:
-            log.error(__name__,"Failed to send IPC message")
+            log.error(__name__, "Failed to send IPC message")
         die(DataError(f"Failed to send IPC message: {e}"))
 
     progress_obj: ProgressLayout | None = None
@@ -125,29 +125,34 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
         elif service == _SERVICE_CRYPTO:
             try:
                 if __debug__:
-                    log.debug(__name__,f"Processing crypto message")
+                    log.debug(__name__, "Processing crypto message")
                 obj = trezorcrypto_api.deserialize_crypto_message(data=bytes(msg.data))
 
                 if message_id == _SERIVICE_CRYPTO_GET_XPUB:
                     address_n: list[int] = obj
                     try:
                         if __debug__:
-                            log.debug(__name__,f"Getting public key for path: {address_n}")
+                            log.debug(
+                                __name__, f"Getting public key for path: {address_n}"
+                            )
                         result = await _get_public_key(address_n)
                     except Exception:
                         if __debug__:
-                            log.error(__name__,"Failed to get public key")
+                            log.error(__name__, "Failed to get public key")
                         result = False
 
                 elif message_id == _SERIVICE_CRYPTO_GET_XPUB_BYTES:
                     address_n: list[int] = obj
                     try:
                         if __debug__:
-                            log.debug(__name__,f"Getting public key bytes for path: {address_n}")
+                            log.debug(
+                                __name__,
+                                f"Getting public key bytes for path: {address_n}",
+                            )
                         result = await _get_public_key_bytes(address_n)
                     except Exception:
                         if __debug__:
-                            log.error(__name__,"Failed to get public key bytes")
+                            log.error(__name__, "Failed to get public key bytes")
                         result = False
 
                 elif message_id == _SERVICE_CRYPTO_ECDSA_PUBLIC_KEY65:
@@ -329,7 +334,10 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
 
         else:
             if __debug__:
-                log.error(__name__, f"Unknown IPC function: service={service}, message_id={message_id}")
+                log.error(
+                    __name__,
+                    f"Unknown IPC function: service={service}, message_id={message_id}",
+                )
             die(RuntimeError("Unknown IPC function"))
 
 
