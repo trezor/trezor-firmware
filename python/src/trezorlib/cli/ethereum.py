@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import functools
 import json
 import re
 import sys
@@ -35,7 +36,7 @@ from typing import (
 import click
 
 from .. import _rlp, definitions, ethereum, tools
-from ..messages import EthereumAccessList, EthereumDefinitionAck, EthereumDefinitions
+from ..messages import EthereumAccessList, EthereumDefinitions
 from . import with_session
 
 if TYPE_CHECKING:
@@ -44,7 +45,6 @@ if TYPE_CHECKING:
     from web3.types import Wei
 
     from ..client import Session
-    from ..messages import EthereumDefinitionRequest
 
 PATH_HELP = "BIP-32 path, e.g. m/44h/60h/0h/0/0"
 
@@ -230,40 +230,12 @@ def _network_def_from_address_n(address_n: tools.Address) -> Optional[bytes]:
     return DEFINITIONS_SOURCE.get_eth_network_by_slip44(slip44)
 
 
-def _definition_provider(
-    req: "EthereumDefinitionRequest",
-) -> EthereumDefinitionAck:
-    """Answer a firmware `EthereumDefinitionRequest` from `DEFINITIONS_SOURCE`.
-
-    The firmware issues these mid-flow while signing a transaction:
-
-    - With a `func_sig`, it is asking for an ERC-7730 contract descriptor
-      (clear-signing display format) for `token_address` on `chain_id`.
-    - Without a `func_sig`, it is asking for a network + token definition
-      (e.g. to resolve a token referenced by a descriptor field).
-    """
-    if req.func_sig:
-        encoded_display_format = DEFINITIONS_SOURCE.get_eth_display_format(
-            req.chain_id, req.token_address, req.func_sig
-        )
-        if encoded_display_format is None:
-            return EthereumDefinitionAck(definitions=None)
-        return EthereumDefinitionAck(
-            definitions=EthereumDefinitions(
-                encoded_display_format=encoded_display_format,
-            )
-        )
-
-    encoded_network = DEFINITIONS_SOURCE.get_eth_network(req.chain_id)
-    encoded_token = DEFINITIONS_SOURCE.get_eth_token(req.chain_id, req.token_address)
-    if encoded_network is None and encoded_token is None:
-        return EthereumDefinitionAck(definitions=None)
-    return EthereumDefinitionAck(
-        definitions=EthereumDefinitions(
-            encoded_network=encoded_network,
-            encoded_token=encoded_token,
-        )
-    )
+# Answers firmware `EthereumDefinitionRequest`s from `DEFINITIONS_SOURCE`.
+# `DEFINITIONS_SOURCE` is mutated in place by the group callback, so binding the
+# object here still sees the delegate/overrides configured on the command line.
+_definition_provider = functools.partial(
+    definitions.definition_provider, DEFINITIONS_SOURCE
+)
 
 
 #####################

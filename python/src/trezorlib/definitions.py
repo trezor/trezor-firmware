@@ -25,7 +25,12 @@ from construct_classes import Struct, subcon
 
 from . import cosi, merkle_tree
 from .construct_helpers import EnumAdapter
-from .messages import DefinitionType
+from .messages import (
+    DefinitionType,
+    EthereumDefinitionAck,
+    EthereumDefinitionRequest,
+    EthereumDefinitions,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -188,3 +193,44 @@ class TarSource(Source):
         except Exception:
             LOG.info("Requested definition at %s was not found", inner_name)
             return None
+
+
+def definition_provider(
+    source: Source,
+    req: EthereumDefinitionRequest,
+) -> EthereumDefinitionAck:
+    """Answer a firmware `EthereumDefinitionRequest` from `source`.
+
+    The firmware issues these mid-flow while signing a transaction:
+
+    - With a `func_sig`, it is asking for an ERC-7730 contract descriptor
+      (clear-signing display format) for `token_address` on `chain_id`.
+    - Without a `func_sig`, it is asking for a network + token definition
+      (e.g. to resolve a token referenced by a descriptor field).
+    """
+    if req.func_sig:
+        encoded_display_format = source.get_eth_display_format(
+            req.chain_id, req.token_address, req.func_sig
+        )
+        if encoded_display_format is None:
+            return EthereumDefinitionAck(definitions=None)
+        return EthereumDefinitionAck(
+            definitions=EthereumDefinitions(
+                encoded_display_format=encoded_display_format,
+            )
+        )
+
+    encoded_network = source.get_eth_network(req.chain_id)
+    encoded_token = (
+        source.get_eth_token(req.chain_id, req.token_address)
+        if req.token_address is not None
+        else None
+    )
+    if encoded_network is None and encoded_token is None:
+        return EthereumDefinitionAck(definitions=None)
+    return EthereumDefinitionAck(
+        definitions=EthereumDefinitions(
+            encoded_network=encoded_network,
+            encoded_token=encoded_token,
+        )
+    )
