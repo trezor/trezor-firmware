@@ -16,14 +16,17 @@
 
 from __future__ import annotations
 
+import functools
 import typing as t
 from itertools import product
+from pathlib import Path
 
 import pytest
 
 from trezorlib import ethereum, exceptions, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import message_filters
+from trezorlib.definitions import FilesystemSource, definition_provider
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path, unharden
@@ -108,7 +111,54 @@ def _do_test_signtx(
         )
 
     expected_v = 2 * parameters["chain_id"] + 35
-    assert sig_v in (expected_v, expected_v + 1)
+    assert sig_v in (expected_v, expected_v + 1)        # 'y-coordinate' sign bit encodes chain_id: EIP-155
+    assert sig_r.hex() == result["sig_r"]
+    assert sig_s.hex() == result["sig_s"]
+    assert sig_v == result["sig_v"]
+
+
+# Directory of dev-signed Ethereum definitions (network / token / clear-signing
+# display formats), laid out as eth/chain-id/<n>/... exactly like the deploy
+# tarball you would pass to `trezorctl ethereum --definitions <dir> sign-tx ...`.
+# Curated to only the definitions the cases below actually pull; drop more .dat
+# files in to clear-sign more contracts/functions.
+_DEFINITIONS_DIR = Path(__file__).parent / "definitions"
+_DEFINITIONS_SOURCE = FilesystemSource(_DEFINITIONS_DIR)
+
+
+@parametrize_using_common_fixtures("ethereum/sign_tx_external_definitions.json")
+@pytest.mark.models("core")
+def test_signtx_external_definitions(
+    session: Session, parameters: dict, result: dict
+) -> None:
+    chain_id = parameters["chain_id"]
+    with session.test_ctx as client:
+        client.set_input_flow(
+            InputFlowConfirmAllWarnings(session).get()
+        )
+        sig_v, sig_r, sig_s = ethereum.sign_tx(
+            session,
+            n=parse_path(parameters["path"]),
+            nonce=int(parameters["nonce"], 16),
+            gas_price=int(parameters["gas_price"], 16),
+            gas_limit=int(parameters["gas_limit"], 16),
+            to=parameters["to_address"],
+            chain_id=chain_id,
+            value=int(parameters["value"], 16),
+            tx_type=parameters["tx_type"],
+            data=bytes.fromhex(parameters["data"]),
+            definitions=messages.EthereumDefinitions(
+                encoded_network=_DEFINITIONS_SOURCE.get_eth_network(chain_id)
+            ),
+            supports_definition_request=True,
+            definition_provider=functools.partial(
+                definition_provider, _DEFINITIONS_SOURCE
+            ),
+            chunkify=True,
+        )
+
+    expected_v = 2 * chain_id + 35
+    assert sig_v in (expected_v, expected_v + 1)    # 'y-coordinate' sign bit encodes chain_id: EIP-155
     assert sig_r.hex() == result["sig_r"]
     assert sig_s.hex() == result["sig_s"]
     assert sig_v == result["sig_v"]
