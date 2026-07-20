@@ -26,8 +26,6 @@
 #include <sec/suspend_io.h>
 #include <sys/irq.h>
 
-#include <../../power_manager/stwlc38/stwlc38.h>
-#include <io/pmic.h>
 #include <io/power_manager.h>
 
 #ifdef USE_RGB_LED
@@ -147,21 +145,15 @@ wakeup_flags_t system_suspend(void) {
   return wakeup_flags;
 }
 
-static void background_tasks_suspend(void) {
-  pm_driver_suspend();
-  pmic_suspend();
-  stwlc38_suspend();
-}
+// The power manager owns its sub-drivers (PMIC, wireless charger); it
+// suspends/resumes them internally, so the suspend framework only deals with
+// the pm_driver_* interface and stays unaware of which power hardware exists.
+static void background_tasks_suspend(void) { pm_driver_suspend(); }
 
 static bool background_tasks_suspended(void) {
-  return pmic_is_suspended() && stwlc38_is_suspended() &&
-         pm_driver_is_suspended();
+  return pm_driver_is_suspended();
 }
 
-static void background_tasks_resume(void) {
-  stwlc38_resume();
-  pmic_resume();
-  pm_driver_resume();
-}
+static void background_tasks_resume(void) { pm_driver_resume(); }
 
 #endif  // defined(KERNEL_MODE) && !defined(SECMON)
