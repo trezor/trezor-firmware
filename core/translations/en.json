@@ -87,10 +87,15 @@
       "Delizia": "Auto-lock delay",
       "Eckhart": "Auto-lock"
     },
-    "backup__can_back_up_anytime": "You can back up your Trezor once, at any time.",
+    "backup__can_back_up_anytime": {
+      "Bolt": "You can back up your Trezor once, at any time.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "backup__create_backup_to_prevent_loss": {
-      "Bolt": "Create a backup to avoid losing access to your funds",
-      "Caesar": "Create a backup to avoid losing access to your funds",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Create a wallet backup to avoid losing access to your funds.",
       "Eckhart": "Create a wallet backup to avoid losing access to your funds."
     },
@@ -98,7 +103,7 @@
     "backup__info_single_share_backup": "Your wallet backup contains {0} words in a specific order.",
     "backup__it_should_be_backed_up": {
       "Bolt": "You should back up your new wallet right now.",
-      "Caesar": "You should back up your new wallet right now.",
+      "Caesar": "",
       "Delizia": "You should back up your new wallet right now.",
       "Eckhart": "Back up your new wallet now."
     },
@@ -108,9 +113,24 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "backup__new_wallet_created": "Wallet created.\n",
-    "backup__new_wallet_successfully_created": "Wallet created successfully.",
-    "backup__not_recommend": "We don't recommend to skip wallet backup creation.",
+    "backup__new_wallet_created": {
+      "Bolt": "",
+      "Caesar": "Wallet created.\n",
+      "Delizia": "Wallet created.\n",
+      "Eckhart": "Wallet created.\n"
+    },
+    "backup__new_wallet_successfully_created": {
+      "Bolt": "Wallet created successfully.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "backup__not_recommend": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "We don't recommend to skip wallet backup creation."
+    },
     "backup__recover_anytime": {
       "Bolt": "",
       "Caesar": "You can use your backup to recover your wallet at any time.",
@@ -1102,15 +1122,30 @@
       "Delizia": "Hold to confirm",
       "Eckhart": ""
     },
-    "instructions__hold_to_continue": "Hold to continue",
+    "instructions__hold_to_continue": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hold to continue"
+    },
     "instructions__hold_to_exit_tutorial": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Hold to exit tutorial",
       "Eckhart": "Hold to exit tutorial"
     },
-    "instructions__hold_to_sign": "Hold to sign",
-    "instructions__menu_to_continue": "Use menu to continue",
+    "instructions__hold_to_sign": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Hold to sign",
+      "Eckhart": "Hold to sign"
+    },
+    "instructions__menu_to_continue": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Use menu to continue"
+    },
     "instructions__shares_continue_with_x_template": {
       "Bolt": "",
       "Caesar": "",
@@ -1129,8 +1164,18 @@
       "Delizia": "",
       "Eckhart": "Start with share {0}"
     },
-    "instructions__swipe_down": "Swipe down",
-    "instructions__swipe_horizontally": "Swipe horizontally",
+    "instructions__swipe_down": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Swipe down",
+      "Eckhart": ""
+    },
+    "instructions__swipe_horizontally": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Swipe horizontally",
+      "Eckhart": ""
+    },
     "instructions__tap": {
       "Bolt": "",
       "Caesar": "",
@@ -1149,10 +1194,30 @@
       "Delizia": "Tap to continue",
       "Eckhart": ""
     },
-    "instructions__view_all_data": "View all data in the menu.",
-    "joint__title": "Joint transaction",
-    "joint__to_the_total_amount": "To the total amount",
-    "joint__you_are_contributing": "You are contributing",
+    "instructions__view_all_data": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "View all data in the menu.",
+      "Eckhart": ""
+    },
+    "joint__title": {
+      "Bolt": "",
+      "Caesar": "Joint transaction",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "joint__to_the_total_amount": {
+      "Bolt": "",
+      "Caesar": "To the total amount",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "joint__you_are_contributing": {
+      "Bolt": "",
+      "Caesar": "You are contributing",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "language__change_to_template": "Change language to {0}?",
     "language__changed": {
       "Bolt": "Language changed successfully",
@@ -2125,7 +2190,12 @@
       "Eckhart": ""
     },
     "reset__never_make_digital_copy": "Never put your backup anywhere digital.",
-    "reset__num_of_share_holders_template": "{0} people or locations will each hold one share.",
+    "reset__num_of_share_holders_template": {
+      "Bolt": "{0} people or locations will each hold one share.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__num_of_shares_advanced_info_template": {
       "Bolt": "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form group {1}.",
       "Caesar": "",
@@ -2174,7 +2244,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__recovery_share_description": "A recovery share is a list of words you wrote down when setting up your Trezor.",
+    "reset__recovery_share_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "A recovery share is a list of words you wrote down when setting up your Trezor."
+    },
     "reset__recovery_share_number": "Your wallet backup consists of 1 to 16 shares.",
     "reset__recovery_share_title_template": {
       "Bolt": "Recovery share {0}",
@@ -2183,7 +2258,12 @@
       "Eckhart": ""
     },
     "reset__recovery_wallet_backup_title": "Wallet backup",
-    "reset__repeat_for_all_shares": "Repeat for all shares.",
+    "reset__repeat_for_all_shares": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Repeat for all shares.",
+      "Eckhart": "Repeat for all shares."
+    },
     "reset__required_number_of_groups": {
       "Bolt": "The required number of groups for recovery.",
       "Caesar": "",
@@ -2910,18 +2990,48 @@
     "tron__claim_unfrozen_balance": "Claim unfrozen balance?",
     "tron__claim_voting_rewards": "Claim voting rewards?",
     "tron__owner_address": "Owner address",
-    "tutorial__continue": "Continue tutorial",
+    "tutorial__continue": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Continue tutorial"
+    },
     "tutorial__did_you_know": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Did you know?",
       "Eckhart": ""
     },
-    "tutorial__exit": "Exit tutorial",
-    "tutorial__first_wallet": "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.",
-    "tutorial__last_one": "Last one",
-    "tutorial__lets_begin": "Learn how to use and navigate this device with ease.",
-    "tutorial__menu": "Find context-specific actions and options in the menu.",
+    "tutorial__exit": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Exit tutorial",
+      "Eckhart": "Exit tutorial"
+    },
+    "tutorial__first_wallet": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.",
+      "Eckhart": ""
+    },
+    "tutorial__last_one": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Last one"
+    },
+    "tutorial__lets_begin": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Learn how to use and navigate this device with ease.",
+      "Eckhart": ""
+    },
+    "tutorial__menu": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Find context-specific actions and options in the menu.",
+      "Eckhart": "Find context-specific actions and options in the menu."
+    },
     "tutorial__menu_appendix": {
       "Bolt": "",
       "Caesar": "",
@@ -2940,7 +3050,12 @@
       "Delizia": "",
       "Eckhart": "Use the on-screen buttons to navigate and confirm your actions."
     },
-    "tutorial__one_more_step": "One more step",
+    "tutorial__one_more_step": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "One more step"
+    },
     "tutorial__power": {
       "Bolt": "",
       "Caesar": "",
@@ -2965,14 +3080,24 @@
       "Delizia": "You're all set to start using your device!",
       "Eckhart": "You're all set to start using your device!"
     },
-    "tutorial__restart_tutorial": "Restart tutorial",
+    "tutorial__restart_tutorial": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Restart tutorial",
+      "Eckhart": "Restart tutorial"
+    },
     "tutorial__scroll_down": {
       "Bolt": "",
       "Caesar": "Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.",
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__suite_restart": "Replay this tutorial anytime from the Trezor Suite app.",
+    "tutorial__suite_restart": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Replay this tutorial anytime from the Trezor Suite app."
+    },
     "tutorial__sure_you_want_skip": {
       "Bolt": "",
       "Caesar": "Are you sure you\nwant to skip the tutorial?",
@@ -2991,8 +3116,18 @@
       "Delizia": "",
       "Eckhart": "Tap to start tutorial"
     },
-    "tutorial__title_easy_navigation": "Easy navigation",
-    "tutorial__title_handy_menu": "Handy menu",
+    "tutorial__title_easy_navigation": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Easy navigation",
+      "Eckhart": ""
+    },
+    "tutorial__title_handy_menu": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Handy menu",
+      "Eckhart": "Handy menu"
+    },
     "tutorial__title_hello": {
       "Bolt": "",
       "Caesar": "Hello",
@@ -3291,7 +3426,12 @@
       "Eckhart": "Receive"
     },
     "words__recipient": "Recipient",
-    "words__recovery_share": "Recovery share",
+    "words__recovery_share": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Recovery share"
+    },
     "words__resource": "Resource",
     "words__review": "Review",
     "words__security": "Security",
