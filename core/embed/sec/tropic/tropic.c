@@ -762,9 +762,6 @@ static bool set_backup_distribution_version_to(uint32_t distribution_version) {
 }
 
 static secbool tropic_restart_chip(void) {
-#ifndef TREZOR_EMULATOR
-  tropic01_reset();
-#endif
   tropic_deinit();
   if (tropic_init(NULL) != LT_OK) {
     return secfalse;
