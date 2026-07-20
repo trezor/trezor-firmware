@@ -2,7 +2,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 import trezorthp
-from storage.cache_thp import clear_sessions_without_channel
+from storage.cache_thp import PREEMPTING_PACKET, clear_sessions_without_channel
 from trezor import config, io, loop, utils
 from trezor.loop import race, wait
 
@@ -62,17 +62,32 @@ class ThpContext:
         assert self.active_channel is not None
         return self.active_channel
 
-    def preempt_active_channel_if_stale(self) -> None:
+    def preempt_active_channel_if_stale(
+        self, iface_num: int, cid_hint: int, packet_buffer: AnyBytes
+    ) -> bool:
+        """
+        If the active channel is idle for more than _PREEMPT_TIMEOUT_MS, kill
+        it and save the packet passed as an argument to be processed as if it
+        was received when the next loop session is started.
+
+        Returns True on success, False if the caller should send TRANSPORT_BUSY.
+        """
         if not self.active_channel:
-            return
+            return False
         last_write_ms = self.active_channel.get_last_write()
         if last_write_ms is None or last_write_ms > _PREEMPT_TIMEOUT_MS:
+            self.active_channel.kill(ChannelPreemptedException())
+            saved = PREEMPTING_PACKET.set(iface_num, cid_hint, packet_buffer)
             if __debug__:
                 log.error(
                     __name__,
                     f"Interrupted channel {hex(self.active_channel.channel_id)} after {last_write_ms} ms",
                 )
-            self.active_channel.kill(ChannelPreemptedException())
+                log.debug(
+                    __name__, f"Packet will be processed in next session: {saved}"
+                )
+            return saved
+        return False
 
     async def close(self) -> None:
         for iface_ctx in self._iface_ctxs:
@@ -153,6 +168,12 @@ class InterfaceContext:
         verify_fn = self.verify_credential
         packet_buffer = self._rx_packet_buf
 
+        if (pep := PREEMPTING_PACKET.get(iface_num)) is not None:
+            if __debug__:
+                log.debug(__name__, "got packet from previous session", iface=iface)
+            cid_hint, buf = pep
+            self.read_packet_for_channel(cid_hint, buf)
+
         while True:
             while not self.should_read():
                 if __debug__ and _TRACE:
@@ -177,7 +198,6 @@ class InterfaceContext:
             result = trezorthp.packet_in(iface_num, packet_buffer, verify_fn)
             if isinstance(result, int):
                 self.read_packet_for_channel(result, packet_buffer)
-                self.clear_closed_sessions()
                 continue
 
             if __debug__ and _TRACE and result is not None:
@@ -237,10 +257,13 @@ class InterfaceContext:
                     self.thp_ctx.channel_ready_box.put(None, replace=True)
 
         if self.active_channel is None or self.active_channel.channel_id != channel_id:
-            trezorthp.send_transport_busy(channel_id)
-            self.inactive_channels.add(channel_id)
-            self.request_write()
-            self.thp_ctx.preempt_active_channel_if_stale()
+            preempted = self.thp_ctx.preempt_active_channel_if_stale(
+                self._iface.iface_num(), result, packet_buffer
+            )
+            if not preempted:
+                trezorthp.send_transport_busy(channel_id)
+                self.inactive_channels.add(channel_id)
+                self.request_write()
             return
 
         try:
@@ -250,6 +273,7 @@ class InterfaceContext:
                 log.exception(__name__, exc)
             self.active_channel.kill(exc)
             self.active_channel = None
+        self.clear_closed_sessions()
 
     def write_loop(self) -> Generator[Any, Any, None]:
         """
