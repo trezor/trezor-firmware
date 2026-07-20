@@ -67,13 +67,20 @@ struct AppHeader {
     chunk_size: U16<LittleEndian>,
     /// Reserved field for runtime purposes (zeroed)
     reserved2: [u8; 2],
+    /// Curves used for the app (e.g., secp256k1, ed25519)
+    /// (utf-8 encoded, zero-padded)
+    curves: [u8; metadata::APP_CURVES_MAX_LEN],
+    /// Allowed BIP32 path prefixes
+    /// Each path is a null-terminated string, and the array 
+    /// is zero-padded to a fixed size.
+    paths: [u8; metadata::APP_PATHS_MAX_LEN],
+
     // TODO logo
-    // TODO bip32_paths
 }
 
 impl AppHeader {
     /// Fixed size of the app header in bytes.
-    const APP_HEADER_SIZE: usize = 0x100;
+    const APP_HEADER_SIZE: usize = 0x200;
     /// Magic number used to identify the app binary format in the header.
     const APP_HEADER_MAGIC: u32 = 0x415A5254; // TRZA
     /// Chunk size used for hashing the payload in bytes.
@@ -130,6 +137,8 @@ pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf>
         chunk_hash: hash_payload(&code, AppHeader::CHUNK_SIZE),
         data_size: U32::new(data_size),
         chunk_size: U16::new(AppHeader::CHUNK_SIZE as u16),
+        curves: metadata::curves(package)?,
+        paths: metadata::paths(package)?,
         reserved2: [0; 2],
     };
 

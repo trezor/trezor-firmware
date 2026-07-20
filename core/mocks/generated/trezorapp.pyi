@@ -139,6 +139,16 @@ class AppImage:
         this operation has no effect.
         """
 
+    def allowed_curves() -> Iterator[str]:
+        """
+        Return an iterator over the allowed curves
+        """
+
+    def allowed_paths() -> Iterator[str]:
+        """
+        Return an iterator over the allowed BIP32 path prefixes.
+        """
+
 
 # upymod/modtrezorapp/modtrezorapp.c
 def create_image(header: AnyBytes, proof: AnyBytes) -> AppImage:

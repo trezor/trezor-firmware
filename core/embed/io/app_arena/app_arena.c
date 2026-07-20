@@ -247,7 +247,7 @@ ts_t app_arena_create_image(const void* header, size_t header_size,
 
       // Verify the signature of the header
 
-      secbool signature_valid = sectrue; // !@# TODO remove
+      secbool signature_valid = sectrue;  // !@# TODO remove
 
       /* secbool signature_valid = secfalse;
       status = app_header_verify_signature(entry->header, proof, proof_size,
@@ -335,6 +335,8 @@ ts_t app_image_get_info(app_image_handle_t handle, app_image_info_t* info) {
   memcpy(info->id, entry->header->id, sizeof(info->id));
   memcpy(info->name, entry->header->app_name, sizeof(info->name));
   memcpy(info->vendor, entry->header->vendor_name, sizeof(info->vendor));
+  memcpy(info->curves, entry->header->curves, sizeof(info->curves));
+  memcpy(info->paths, entry->header->paths, sizeof(info->paths));
 
   if (entry->running) {
     info->task_id = systask_id(&entry->applet.task);

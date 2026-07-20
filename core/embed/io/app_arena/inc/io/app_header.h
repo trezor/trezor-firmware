@@ -31,8 +31,8 @@
 #define APP_HEADER_MAX_ID_LEN 32
 #define APP_HEADER_MAX_NAME_LEN 32
 #define APP_HEADER_MAX_VENDOR_LEN 32
-#define APP_CURVE_MAX_LEN 16
-#define APP_ADDRESS_PATTERNS_MAX_LEN 256
+#define APP_HEADER_CURVES_MAX_LEN 16
+#define APP_HEADER_PATHS_MAX_LEN 256
 
 #define APP_HEADER_MAX_SIZE 512
 
@@ -72,10 +72,12 @@ typedef struct {
   uint16_t chunk_size;
   /** Reserved for future use */
   uint16_t reserved2;
-  /** Curve used (e.g., secp256k1, ed25519) */
-  char curve[APP_CURVE_MAX_LEN];  
-  /** Allowed address patterns (array of null-terminated strings, zero-padded) */
-  char address_patterns[APP_ADDRESS_PATTERNS_MAX_LEN];
+  /** Allowed curves (e.g., secp256k1, ed25519)
+   * (array of null-terminated strings, zero-padded) */
+  char curves[APP_HEADER_CURVES_MAX_LEN];
+  /** Allowed BIP32 path prefixes
+   * (array of null-terminated strings, zero-padded) */
+  char paths[APP_HEADER_PATHS_MAX_LEN];
 
   // TODO logo
 

@@ -21,14 +21,11 @@
 
 #include <trezor_types.h>
 
+#include <io/app_header.h>
 #include <rtl/crypto_helpers.h>
 #include <sys/systask.h>
 
 #define APP_IMAGE_HANDLE_INVALID 0
-
-#define APP_IMAGE_MAX_ID_LEN 32
-#define APP_IMAGE_MAX_NAME_LEN 32
-#define APP_IMAGE_MAX_VENDOR_LEN 32
 
 /** Handle for a loaded application image. */
 typedef uint32_t app_image_handle_t;
@@ -39,12 +36,15 @@ typedef struct {
   bool ready;
   /** Set if image is currently running. */
   bool running;
-  /** Unique identification of the application. */
-  char id[APP_IMAGE_MAX_ID_LEN];
-  /** Name of the loaded application. */
-  char name[APP_IMAGE_MAX_NAME_LEN];
-  /** Vendor of the loaded application. */
-  char vendor[APP_IMAGE_MAX_VENDOR_LEN];
+  /** Unique identification of the application.
+   * UTF-8 encoded, zero-padded, but not necessarily null-terminated. */
+  char id[APP_HEADER_MAX_ID_LEN];
+  /** Name of the loaded application.
+   * UTF-8 encoded, zero-padded, but not necessarily null-terminated. */
+  char name[APP_HEADER_MAX_NAME_LEN];
+  /** Vendor of the loaded application.
+   * UTF-8 encoded, zero-padded, but not necessarily null-terminated. */
+  char vendor[APP_HEADER_MAX_VENDOR_LEN];
   /** Version of the application. */
   uint32_t version;
   /** Privilege ring of the application. */
@@ -59,6 +59,15 @@ typedef struct {
   size_t chunk_size;
   /** Calculated hash of the image header */
   sha256_digest_t header_hash;
+  /** List of allowed curves (e.g., secp256k1, ed25519)
+   * Each entry is a null-terminated string, and the list
+   * is zero-padded to the maximum length */
+  char curves[APP_HEADER_CURVES_MAX_LEN];
+  /** List of allowed BIP32 path prefixes.
+   * Each entry is a null-terminated string, and the list
+   * is zero-padded to the maximum length */
+  char paths[APP_HEADER_PATHS_MAX_LEN];
+
 } app_image_info_t;
 
 /** Information about the application arena. */

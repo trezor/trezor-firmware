@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 from hashlib import sha256
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple, cast
 
 import construct as c
 from construct_classes import subcon
@@ -65,6 +65,11 @@ class AppHeader(SanityCheckedStruct):
     chunk_size: int
     # Reserved for future use
     reserved_2: bytes | None = None
+    # Curves used for the app (e.g., secp256k1, ed25519)
+    curves: list[str]
+    # Allowed BIP32 path prefixes
+    paths: list[str]
+    # Reserved for future use
     reserved_3: bytes | None = None
 
     SUBCON = c.Struct(
@@ -86,6 +91,28 @@ class AppHeader(SanityCheckedStruct):
         "chunk_hash" / c.Bytes(32),
         "chunk_size" / c.Int16ul,
         "reserved_2" / Reserved(2),
+        "curves"
+        / c.ExprAdapter(
+            c.Bytes(64),
+            decoder=lambda obj, ctx: [
+                curve.decode("utf-8")
+                for curve in cast(bytes, obj).split(b"\0")
+                if curve
+            ],
+            encoder=lambda obj, ctx: b"\0".join(
+                curve.encode("utf-8") for curve in cast(list[str], obj)
+            ).ljust(64, b"\0"),
+        ),
+        "paths"
+        / c.ExprAdapter(
+            c.Bytes(256),
+            decoder=lambda obj, ctx: [
+                path.decode("utf-8") for path in cast(bytes, obj).split(b"\0") if path
+            ],
+            encoder=lambda obj, ctx: b"\0".join(
+                path.encode("utf-8") for path in cast(list[str], obj)
+            ).ljust(256, b"\0"),
+        ),
         "_end_offset" / c.Tell,
         "reserved_3"
         / Reserved(c.this.header_size - c.this._end_offset + c.this._start_offset),
