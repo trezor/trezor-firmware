@@ -2239,7 +2239,9 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
 
 async def pin_mismatch_popup(is_wipe_code: bool = False) -> None:
     title = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
-    description = TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter_new
+    description = (
+        TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter_new_description
+    )
     br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
 
     with error_popup(
