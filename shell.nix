@@ -159,6 +159,8 @@ stdenvNoCC.mkDerivation ({
   # Enabling rust-analyzer extension in VSCode
   RUST_SRC_PATH = "${rustProfiles.rust-src}/lib/rustlib/src/rust/library";
 
+  # Avoid printing "Using udevCheckHook", there are no rules to check
+  dontUdevCheck = 1;
 } // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
 })
