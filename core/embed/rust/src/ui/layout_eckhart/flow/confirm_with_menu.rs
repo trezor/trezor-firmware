@@ -7,6 +7,7 @@ use super::super::firmware::{
 };
 use super::super::theme::gradient::Gradient;
 use super::super::theme::{self};
+use super::util::single_page;
 use crate::error;
 use crate::maybe_trace::MaybeTrace;
 use crate::strutil::TString;
@@ -58,6 +59,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     hold: bool,
     extra_menu_label: Option<TString<'static>>,
     cancel_menu_label: Option<TString<'static>>,
+    external_menu: bool,
 ) -> Result<SwipeFlow, error::Error> {
     // Value
     let confirm_button = if hold {
@@ -77,7 +79,9 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     let mut value_screen = TextScreen::new(content)
         .with_header(Header::new(title).with_menu_button())
         .with_action_bar(ActionBar::new_single(confirm_button))
-        .with_subtitle(subtitle.unwrap_or(TString::empty()));
+        .with_subtitle(subtitle.unwrap_or(TString::empty()))
+        .with_external_menu(external_menu);
+
     if let Some(hint) = hint {
         value_screen = value_screen.with_hint(Hint::new_instruction(hint, Some(theme::ICON_INFO)));
     }
@@ -86,7 +90,13 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
     });
-
+    if external_menu {
+        // TODO: will eventually replace the internal menu
+        if extra_menu_label.is_some() || cancel_menu_label.is_some() {
+            return Err(error::Error::NotImplementedError);
+        }
+        return single_page(content_value);
+    }
     // Menu
     let mut menu = VerticalMenu::<ShortMenuVec>::empty();
     let mut menu_items = Vec::<usize, 2>::new();
