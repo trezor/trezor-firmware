@@ -91,7 +91,7 @@
     "backup__create_backup_to_prevent_loss": {
       "Bolt": "Create a backup to avoid losing access to your funds",
       "Caesar": "Create a backup to avoid losing access to your funds",
-      "Delizia": "Create a backup to avoid losing access to your funds",
+      "Delizia": "Create a wallet backup to avoid losing access to your funds.",
       "Eckhart": "Create a wallet backup to avoid losing access to your funds."
     },
     "backup__info_multi_share_backup": "Your wallet backup contains multiple lists of words in a specific order (shares).",
@@ -915,12 +915,7 @@
     "fido__device_already_registered": "This device is already registered with this application.",
     "fido__device_already_registered_with_template": "This device is already registered with {0}.",
     "fido__device_not_registered": "This device is not registered with this application.",
-    "fido__does_not_belong": {
-      "Bolt": "The credential you are trying to import does\nnot belong to this authenticator.",
-      "Caesar": "The credential you are trying to import does\nnot belong to this authenticator.",
-      "Delizia": "The credential you are trying to import does\nnot belong to this authenticator.",
-      "Eckhart": "The credential you are trying to import does not belong to this authenticator."
-    },
+    "fido__does_not_belong": "The credential you are trying to import does not belong to this authenticator.",
     "fido__erase_credentials": {
       "Bolt": "erase all credentials?",
       "Caesar": "",
@@ -1086,7 +1081,7 @@
     "instructions__continue_holding": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Continue\nholding",
+      "Delizia": "Keep holding",
       "Eckhart": "Keep holding"
     },
     "instructions__continue_in_app": {
@@ -1773,6 +1768,12 @@
     },
     "pin__reenter": "Re-enter PIN",
     "pin__reenter_new": "Re-enter new PIN",
+    "pin__reenter_new_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Re-enter new PIN.",
+      "Eckhart": ""
+    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Please re-enter PIN to confirm.",
@@ -1862,7 +1863,7 @@
     "recovery__dry_run_bip39_valid_mismatch": "The entered wallet backup is valid but doesn't match the one on this device.",
     "recovery__dry_run_slip39_valid_match": "The entered wallet backup is valid and matches the one on this device.",
     "recovery__dry_run_slip39_valid_mismatch": "The entered wallet backup is valid but doesn't match the one on this device.",
-    "recovery__enter_any_share": "Enter any share",
+    "recovery__enter_any_share": "Enter any share.",
     "recovery__enter_backup": "Enter your backup.",
     "recovery__enter_different_share": {
       "Bolt": "Enter a different share.",
@@ -1929,12 +1930,7 @@
     "recovery__wanna_cancel_dry_run": "Are you sure you want to cancel the backup check?",
     "recovery__wanna_cancel_recovery": "Are you sure you want to cancel the recovery process?",
     "recovery__word_count_template": "({0} words)",
-    "recovery__word_x_of_y_template": {
-      "Bolt": "Word {0} of {1}",
-      "Caesar": "Word {0} of {1}",
-      "Delizia": "Word {0} of {1}",
-      "Eckhart": "Word {0}\nof {1}"
-    },
+    "recovery__word_x_of_y_template": "Word {0} of {1}",
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "{count} more {plural} starting",
       "Caesar": "",
@@ -2211,7 +2207,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Select word {0} from\nshare {1}"
+      "Eckhart": "Select word {0} from share {1}"
     },
     "reset__select_word_template": {
       "Bolt": "",
@@ -2448,7 +2444,7 @@
     },
     "reset__your_backup_is_done": "Your backup is done.",
     "ripple__account_deletion_warning": "Delete Ripple account?",
-    "ripple__account_to_be_deleted": "To be deleted:",
+    "ripple__account_to_be_deleted": "To be deleted",
     "ripple__confirm_tag": "Confirm tag",
     "ripple__destination_tag_missing": "Destination tag is not set. Typically needed when sending to exchanges.",
     "ripple__destination_tag_template": "Destination tag:\n{0}",
@@ -3270,13 +3266,13 @@
     "words__outputs": "outputs",
     "words__pay_attention": "Pay attention",
     "words__please_check_again": {
-      "Bolt": "Please check again",
-      "Caesar": "Please check again",
+      "Bolt": "Please check again.",
+      "Caesar": "Please check again.",
       "Delizia": "",
       "Eckhart": ""
     },
     "words__please_try_again": {
-      "Bolt": "Please try again",
+      "Bolt": "Please try again.",
       "Caesar": "Please try again",
       "Delizia": "Please try again",
       "Eckhart": ""
