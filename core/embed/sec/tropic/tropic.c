@@ -164,7 +164,6 @@ static bool is_retryable(lt_ret_t ret) {
     }                                                                     \
     TROPIC_RETRY_COMMAND_res;                                             \
   })
-
 #endif  // TREZOR_EMULATOR
 
 typedef struct {
