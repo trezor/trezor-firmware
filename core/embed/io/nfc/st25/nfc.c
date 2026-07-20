@@ -54,6 +54,21 @@
 // NFC-F PAD0
 #define LM_PAD0 0x00U
 
+// Per-pin SPI alternate function. Most boards route all three SPI signals on a
+// single alternate function (NFC_SPI_PIN_AF), but some pins expose the SPI
+// signal on a different AF than the others (e.g. on STM32U5 SPI3_MOSI on PD6 is
+// AF5 while SPI3_SCK/MISO are AF6). Boards may override any of these
+// individually; the rest fall back to NFC_SPI_PIN_AF.
+#ifndef NFC_SPI_SCK_AF
+#define NFC_SPI_SCK_AF NFC_SPI_PIN_AF
+#endif
+#ifndef NFC_SPI_MISO_AF
+#define NFC_SPI_MISO_AF NFC_SPI_PIN_AF
+#endif
+#ifndef NFC_SPI_MOSI_AF
+#define NFC_SPI_MOSI_AF NFC_SPI_PIN_AF
+#endif
+
 typedef enum {
   NFC_STATE_ACTIVE,
   NFC_STATE_NOT_ACTIVE,
@@ -138,6 +153,32 @@ nfc_status_t nfc_init() {
 
   memset(drv, 0, sizeof(st25_driver_t));
 
+#ifdef NFC_PWR_EN_N_PIN
+  NFC_PWR_EN_N_PIN_CLK_EN();
+
+  // NFC PWR_EN_N pin
+  HAL_GPIO_WritePin(NFC_PWR_EN_N_PORT, NFC_PWR_EN_N_PIN, GPIO_PIN_SET);
+  GPIO_InitTypeDef GPIO_InitStruct_pwr_en_n = {0};
+  GPIO_InitStruct_pwr_en_n.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct_pwr_en_n.Pull = GPIO_NOPULL;
+  GPIO_InitStruct_pwr_en_n.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct_pwr_en_n.Pin = NFC_PWR_EN_N_PIN;
+  HAL_GPIO_Init(NFC_PWR_EN_N_PORT, &GPIO_InitStruct_pwr_en_n);
+#endif
+
+#ifdef NFC_RESET_PIN
+  NFC_RESET_PIN_CLK_EN();
+
+  // NFC RESET pin
+  HAL_GPIO_WritePin(NFC_RESET_PORT, NFC_RESET_PIN, GPIO_PIN_RESET);
+  GPIO_InitTypeDef GPIO_InitStruct_reset = {0};
+  GPIO_InitStruct_reset.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct_reset.Pull = GPIO_NOPULL;
+  GPIO_InitStruct_reset.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct_reset.Pin = NFC_RESET_PIN;
+  HAL_GPIO_Init(NFC_RESET_PORT, &GPIO_InitStruct_reset);
+#endif
+
   // Enable clock of relevant peripherals
   // SPI + GPIO ports
   NFC_SPI_FORCE_RESET();
@@ -146,31 +187,56 @@ nfc_status_t nfc_init() {
   NFC_SPI_MISO_CLK_EN();
   NFC_SPI_MOSI_CLK_EN();
   NFC_SPI_SCK_CLK_EN();
-  NFC_SPI_NSS_CLK_EN();
 
   // SPI peripheral pin config
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = NFC_SPI_PIN_AF;
 
   GPIO_InitStruct.Pin = NFC_SPI_MISO_PIN;
+  GPIO_InitStruct.Alternate = NFC_SPI_MISO_AF;
   HAL_GPIO_Init(NFC_SPI_MISO_PORT, &GPIO_InitStruct);
 
   GPIO_InitStruct.Pin = NFC_SPI_MOSI_PIN;
+  GPIO_InitStruct.Alternate = NFC_SPI_MOSI_AF;
   HAL_GPIO_Init(NFC_SPI_MOSI_PORT, &GPIO_InitStruct);
 
   GPIO_InitStruct.Pin = NFC_SPI_SCK_PIN;
+  GPIO_InitStruct.Alternate = NFC_SPI_SCK_AF;
   HAL_GPIO_Init(NFC_SPI_SCK_PORT, &GPIO_InitStruct);
 
+#if defined(ST25R500) || defined(ST25R200)
+  NFC_SPI_R210_NSS_CLK_EN();
+  NFC_SPI_R200_NSS_CLK_EN();
+
   // NSS pin controlled by software, set as classical GPIO
+  HAL_GPIO_WritePin(NFC_SPI_R210_NSS_PORT, NFC_SPI_R210_NSS_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(NFC_SPI_R200_NSS_PORT, NFC_SPI_R200_NSS_PIN, GPIO_PIN_SET);
+  GPIO_InitTypeDef GPIO_InitStruct_nss = {0};
+  GPIO_InitStruct_nss.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct_nss.Pull = GPIO_NOPULL;
+  GPIO_InitStruct_nss.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct_nss.Pin = NFC_SPI_R210_NSS_PIN;
+  HAL_GPIO_Init(NFC_SPI_R210_NSS_PORT, &GPIO_InitStruct_nss);
+  GPIO_InitStruct_nss.Pin = NFC_SPI_R200_NSS_PIN;
+  HAL_GPIO_Init(NFC_SPI_R200_NSS_PORT, &GPIO_InitStruct_nss);
+
+  // Power on NFC IC
+  HAL_GPIO_WritePin(NFC_PWR_EN_N_PORT, NFC_PWR_EN_N_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(NFC_RESET_PORT, NFC_RESET_PIN, GPIO_PIN_RESET);
+#else
+  NFC_SPI_NSS_CLK_EN();
+
+  // NSS pin controlled by software, set as classical GPIO
+  HAL_GPIO_WritePin(NFC_SPI_NSS_PORT, NFC_SPI_NSS_PIN, GPIO_PIN_SET);
   GPIO_InitTypeDef GPIO_InitStruct_nss = {0};
   GPIO_InitStruct_nss.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct_nss.Pull = GPIO_NOPULL;
   GPIO_InitStruct_nss.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct_nss.Pin = NFC_SPI_NSS_PIN;
   HAL_GPIO_Init(NFC_SPI_NSS_PORT, &GPIO_InitStruct_nss);
+#endif
 
   // NFC IRQ pin
   GPIO_InitTypeDef GPIO_InitStructure_int = {0};
@@ -266,11 +332,25 @@ void nfc_deinit(void) {
     HAL_SPI_DeInit(&drv->hspi);
   }
 
+#if defined(ST25R500) || defined(ST25R200)
+  // Power off NFC IC
+  HAL_GPIO_WritePin(NFC_RESET_PORT, NFC_RESET_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(NFC_PWR_EN_N_PORT, NFC_PWR_EN_N_PIN, GPIO_PIN_SET);
+#endif
+
   HAL_GPIO_DeInit(NFC_SPI_MISO_PORT, NFC_SPI_MISO_PIN);
   HAL_GPIO_DeInit(NFC_SPI_MOSI_PORT, NFC_SPI_MOSI_PIN);
   HAL_GPIO_DeInit(NFC_SPI_SCK_PORT, NFC_SPI_SCK_PIN);
-  HAL_GPIO_DeInit(NFC_SPI_NSS_PORT, NFC_SPI_NSS_PIN);
   HAL_GPIO_DeInit(NFC_INT_PORT, NFC_INT_PIN);
+
+#if defined(ST25R500) || defined(ST25R200)
+  HAL_GPIO_DeInit(NFC_SPI_R210_NSS_PORT, NFC_SPI_R210_NSS_PIN);
+  HAL_GPIO_DeInit(NFC_SPI_R200_NSS_PORT, NFC_SPI_R200_NSS_PIN);
+  HAL_GPIO_DeInit(NFC_PWR_EN_N_PORT, NFC_PWR_EN_N_PIN);
+  HAL_GPIO_DeInit(NFC_RESET_PORT, NFC_RESET_PIN);
+#else
+  HAL_GPIO_DeInit(NFC_SPI_NSS_PORT, NFC_SPI_NSS_PIN);
+#endif
 
   memset(drv, 0, sizeof(st25_driver_t));
 }

@@ -23,6 +23,9 @@ driver = "io/pmic_power_latch"
 
 [ble]
 
+[nfc]
+driver = "io/nfc_st25r210"
+
 [nrf]
 
 [nrf_auth]

@@ -36,11 +36,28 @@ extern "C" {
 
 // Device type definition - deferred to board spec
 
+#ifdef ST25R500
+// GPIO port used for ST25R SPI SS port
+#define ST25R_SS_PORT NFC_SPI_R210_NSS_PORT
+// GPIO pin used for ST25R SPI SS
+#define ST25R_SS_PIN NFC_SPI_R210_NSS_PIN
+#elif defined(ST25R200)
+// GPIO port used for ST25R SPI SS port
+#define ST25R_SS_PORT NFC_SPI_R200_NSS_PORT
+// GPIO pin used for ST25R SPI SS
+#define ST25R_SS_PIN NFC_SPI_R200_NSS_PIN
+#else
 // GPIO pin used for ST25R SPI SS
 #define ST25R_SS_PIN NFC_SPI_NSS_PIN
-
 // GPIO port used for ST25R SPI SS port
 #define ST25R_SS_PORT NFC_SPI_NSS_PORT
+#endif
+
+#if defined(ST25R500) || defined(ST25R200)
+// GPIO port used for ST25R RESET port
+#define ST25R_RESET_PORT NFC_RESET_PORT
+#define ST25R_RESET_PIN NFC_RESET_PIN
+#endif
 
 // GPIO pin used for ST25R External Interrupt
 #define ST25R_INT_PIN NFC_INT_PIN
