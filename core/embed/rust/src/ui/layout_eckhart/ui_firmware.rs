@@ -281,6 +281,7 @@ impl FirmwareUI for UIEckhart {
             false,
             Some(TR::confirm_total__title_fee.into()),
             None,
+            false,
         )?;
         Ok(flow)
     }
@@ -381,7 +382,7 @@ impl FirmwareUI for UIEckhart {
         items: Obj,
         hold: bool,
         verb: Option<TString<'static>>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new_styled(
             items,
@@ -394,8 +395,17 @@ impl FirmwareUI for UIEckhart {
         .into_paragraphs()
         .with_placement(LinearPlacement::vertical());
 
-        let flow =
-            flow::new_confirm_with_menu(title, None, paragraphs, None, verb, hold, None, None)?;
+        let flow = flow::new_confirm_with_menu(
+            title,
+            None,
+            paragraphs,
+            None,
+            verb,
+            hold,
+            None,
+            None,
+            external_menu,
+        )?;
         Ok(flow)
     }
 
@@ -613,6 +623,7 @@ impl FirmwareUI for UIEckhart {
             false,
             verb_info,
             None,
+            false,
         )?;
         LayoutObj::new_root(flow)
     }
