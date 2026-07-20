@@ -87,7 +87,7 @@ def issue_credential(
 
 def unwrap_credential(encoded_noise_payload: AnyBytes) -> AnyBytes | None:
     expected_type = protobuf.type_for_name("ThpHandshakeCompletionReqNoisePayload")
-    msg = wrap_protobuf_load(encoded_noise_payload, expected_type)
+    msg = wrap_protobuf_load(encoded_noise_payload, expected_type, is_message=False)
     if not ThpHandshakeCompletionReqNoisePayload.is_type_of(msg):
         raise TypeError
     return msg.host_pairing_credential
@@ -100,7 +100,9 @@ def decode_credential(
     Decode a protobuf encoded pairing credential.
     """
     expected_type = protobuf.type_for_name("ThpPairingCredential")
-    credential = wrap_protobuf_load(encoded_pairing_credential_message, expected_type)
+    credential = wrap_protobuf_load(
+        encoded_pairing_credential_message, expected_type, is_message=False
+    )
     if not ThpPairingCredential.is_type_of(credential):
         raise TypeError
     return credential
