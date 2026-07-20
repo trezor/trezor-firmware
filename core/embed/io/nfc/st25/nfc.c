@@ -86,8 +86,6 @@ static st25_driver_t g_st25_driver = {
     .rfal_initialized = false,
 };
 
-static uint8_t isodep_block_number = 0;
-
 static ts_t nfc_transceive_blocking(const nfc_apdu_cmd_t cmd,
                                     nfc_apdu_response_t resp);
 
@@ -286,13 +284,6 @@ cleanup:
   return false;
 }
 
-/*!
- * @brief Call after every successful APDU exchange to keep block number in sync
- */
-static inline void nfc_isodep_toggle_block(void) {
-  isodep_block_number ^= 0x01U;
-}
-
 /*
  * @brief R(NAK) presence check — ISO/IEC 14443-4 §7.6.6 Method 2
  *
@@ -303,14 +294,14 @@ static inline void nfc_isodep_toggle_block(void) {
  * @return 'true' when tag is present and responded, else 'false'.
  */
 static bool nfc_isodep_rnak_presence_check(void) {
-  uint8_t rnak =
-      (isodep_block_number == 0U) ? ISODEP_PCB_RNAK_BN0 : ISODEP_PCB_RNAK_BN1;
+  uint8_t rnak = (rfalIsoDepGetBlockNumber() == 0U) ? ISODEP_PCB_RNAK_BN0
+                                                    : ISODEP_PCB_RNAK_BN1;
 
   /* Expected R(ACK) per ISO Rule 12:
    * R(NAK) bn != PICC bn → PICC sends R(ACK) with its own bn
    * Since we match our current bn, PICC bn will be opposite  */
-  uint8_t rack_exp =
-      (isodep_block_number == 0U) ? ISODEP_PCB_RACK_BN1 : ISODEP_PCB_RACK_BN0;
+  uint8_t rack_exp = (rfalIsoDepGetBlockNumber() == 0U) ? ISODEP_PCB_RACK_BN1
+                                                        : ISODEP_PCB_RACK_BN0;
 
   uint8_t rxBuf[2U];
   uint16_t rxLenBits = 0U;
@@ -366,7 +357,6 @@ ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp) {
   }
 
   TSH_CHECK_OK(nfc_transceive_blocking(cmd, resp));
-  nfc_isodep_toggle_block();
 
 cleanup:
   TSH_RETURN;
