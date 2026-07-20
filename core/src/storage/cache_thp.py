@@ -243,3 +243,48 @@ def clear_all_except_one_session_keys(excluded: tuple[AnyBytes, AnyBytes]) -> No
             s_last_usage = session.last_usage
             session.clear()
             session.set_int(LAST_USAGE, s_last_usage)
+
+
+# Used to store single packet across loop restart when channel preemption happens.
+class PreemptingPacket:
+    MAX_PACKET_LEN = 244  # maximum packet len across all interface types
+
+    def __init__(self) -> None:
+        self.packet_buffer = bytearray(self.MAX_PACKET_LEN)
+        self.reset()
+
+    def reset(self) -> None:
+        self.iface_num = None
+        self.cid_hint = 0
+        self.packet_len = 0
+
+    def set(self, iface_num: int, cid_hint: int, packet_buffer: AnyBytes) -> bool:
+        """Store packet across session restart.
+
+        cid_hint = channel_id | ((buffer_hint//8) << 16),
+        see InterfaceContext.read_packet_for_channel
+
+        Returns False if a packet is already stored (possibly by other interface).
+        """
+        assert len(packet_buffer) <= self.MAX_PACKET_LEN
+        if self.iface_num is not None:
+            return False
+        self.iface_num = iface_num
+        self.cid_hint = cid_hint
+        self.packet_len = len(packet_buffer)
+        self.packet_buffer[: self.packet_len] = packet_buffer
+        return True
+
+    def get(self, iface_num: int) -> tuple[int, memoryview] | None:
+        """
+        Take the packet if there is one, return None otherwise. The returned
+        memoryview must be processed before `set()` overwrites the contents.
+        """
+        if self.iface_num != iface_num:
+            return None
+        res = (self.cid_hint, memoryview(self.packet_buffer)[: self.packet_len])
+        self.reset()
+        return res
+
+
+PREEMPTING_PACKET = PreemptingPacket()

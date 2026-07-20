@@ -6,6 +6,7 @@ import pytest
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.thp.channel import Channel
 from trezorlib.thp.exceptions import ThpError, ThpErrorCode
+from trezorlib.thp.pairing import PairingController
 
 from .connect import prepare_channel_for_pairing
 
@@ -102,3 +103,52 @@ def test_concurrent_channels(test_ctx: TrezorTestContext) -> None:
     for channel in channels[1:]:
         test_ctx.channel = channel
         test_ctx.ping("hi2")
+
+
+def _open_channel_no_retries(test_ctx: TrezorTestContext) -> Channel:
+    new_channel = Channel.allocate(test_ctx.transport)
+    new_channel.open(credentials=[])
+    new_channel.BUSY_RETRIES = 0
+    return new_channel
+
+
+def _replace_channel_and_do_pairing(
+    test_ctx: TrezorTestContext, channel: Channel
+) -> None:
+    test_ctx.channel = channel
+    test_ctx.client._interact_ctx = test_ctx.client._interact()
+    test_ctx.client.pairing = PairingController(test_ctx.client)
+    test_ctx.client.pairing.skip()
+    test_ctx.client.pairing.finish()
+
+
+# It's possible for this test to fail if CI is very slow. If this happens
+# we should first try marking it with @pytest.mark.flaky(retries=5)
+def test_preemption_busy(test_ctx: TrezorTestContext) -> None:
+    channel_1 = _open_channel_no_retries(test_ctx)
+    channel_2 = _open_channel_no_retries(test_ctx)
+
+    # GetFeatures is in AVOID_RESTARTING_FOR and keeps channel active
+    test_ctx.refresh_features()
+
+    # hopefully less than _PREEMPT_TIMEOUT_MS passed and we get TRANSPORT_BUSY
+    with pytest.raises(ThpError, match="TRANSPORT_BUSY"):
+        _replace_channel_and_do_pairing(test_ctx, channel_1)
+    # channel_1 is desynced now
+
+    time.sleep(1.1)  # _PREEMPT_TIMEOUT_MS + epsilon
+
+    # initial test_ctx.channel is preempted, no TRANSPORT_BUSY is sent
+    _replace_channel_and_do_pairing(test_ctx, channel_2)
+
+
+def test_preemption_wait(test_ctx: TrezorTestContext) -> None:
+    channel_1 = _open_channel_no_retries(test_ctx)
+
+    # GetFeatures is in AVOID_RESTARTING_FOR and keeps channel active
+    test_ctx.refresh_features()
+
+    time.sleep(1.1)  # _PREEMPT_TIMEOUT_MS + epsilon
+
+    # no TRANSPORT_BUSY after _PREEMPT_TIMEOUT_MS
+    _replace_channel_and_do_pairing(test_ctx, channel_1)
