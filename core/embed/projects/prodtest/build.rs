@@ -14,10 +14,10 @@ fn main() -> Result<()> {
             lib.add_source("emulator.c");
         } else if cfg!(feature = "pq_secure_boot") {
             // Merkle-tree layout: prodtest is a single secure module and its own
-            // variant. Emit its TRZM module header + the (single-entry) manifest,
-            // and stamp the prodtest variant. No legacy vendor/image/secmon header.
+            // variant. Emit the (single-entry) manifest that commits its code
+            // directly, and stamp the prodtest variant. No per-module header and
+            // no legacy vendor/image/secmon header.
             lib.add_define("PQ_SECURE_BOOT", Some("1"));
-            lib.add_source("module_header.S");
             lib.add_source("manifest_header.S");
             lib.add_define("FW_VARIANT", Some("4")); // FW_VARIANT_PRODTEST
         } else {

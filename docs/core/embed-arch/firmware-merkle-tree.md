@@ -92,9 +92,10 @@ verifies the founder signature over `modelRoot`.
 ### 5.1 Variant manifest ("firmware directory")  **[proto host]**
 
 The variant leaf is a **manifest** placed at the **start of the firmware image**,
-before the module headers. It keeps the TRZM module headers (§5.3): each entry
-references its module by `header_hash`, which commits the module's `code_hash`
-(a single SHA-256 over the whole module code).
+before the modules. Each entry commits its module's code **directly** via
+`code_hash` (a single SHA-256 over the whole module code) — there is no separate
+per-module header, so the commitment is a single hop (variant leaf → manifest →
+`code_hash` → code).
 
 Byte layout (little-endian), variant leaf = `SHA256(0x00 || manifest)`:
 
@@ -113,9 +114,9 @@ Entry:
 | --- | --- | --- | --- |
 | 0 | `module_type` | u32 | role: secmon / kernel / core (`fw_module_type_t`) |
 | 4 | `flags` | u32 | reserved (0) |
-| 8 | `addr` | u32 | module location (offset from firmware region start) |
+| 8 | `addr` | u32 | module **code** offset from firmware region start |
 | 12 | `size` | u32 | module code size |
-| 16 | `header_hash` | 32 | `SHA256(TRZM header)` — commits `code_hash` |
+| 16 | `code_hash` | 32 | `SHA256(whole module code)` |
 
 Fixed part 76 B + 48 B/entry. `firmware_variant` is taken from the
 kernel+coreapp module. The module set/count/roles are **authenticated data** —
@@ -134,33 +135,30 @@ single-variant (`variant leaf == firmwareRoot`, identity fold) — backward
 compatible. This is the *middle* segment of the one tree; `boot_header_merkle_
 proof` is the *top* segment.
 
-### 5.3 Module header (TRZM)  **[impl]**
+### 5.3 Module code commitment  **[impl]**
 
-`firmware_module_header_t` (fixed 52 B): `magic=TRZM, hw_model, module_type,
-version[4], code_size, code_hash[32]`. Reserved 0x400 header region precedes the
-code. `code_hash = SHA256(whole module code)` — a single hash, **not** per-chunk;
-the manifest's `header_hash` commits the whole header incl. `code_hash`, and boot
-/ install verify code integrity via `firmware_module_verify_code` (one
-module-sized hash). The image is written in full before boot, so there is no
-sub-module/per-chunk streaming verification; install rejects at module
-granularity (per §"incremental verify") and the whole-tree check is the backstop.
-If in-flight per-transport-chunk verify is ever required, the right shape is a
-variant-A hash chain in place of the single `code_hash` (same 32 bytes), not the
-old per-chunk array.
+There is **no per-module header**. Each manifest entry commits its module's code
+directly: `code_hash = SHA256(whole module code)` over `size` bytes at `addr`.
+Boot / install verify integrity by rehashing the code and comparing to the
+(authenticated) `code_hash` — one module-sized hash. The image is written in full
+before boot, so there is no sub-module/per-chunk streaming verification; install
+rejects at module granularity (per §"incremental verify") and the whole-tree
+check is the backstop. The entry's `addr`/`size` are emitted by the linker
+(`manifest_header.S` from linker symbols); `code_hash` is filled post-build
+(`headertool_pq`) over the placed code.
 
-### 5.4 Firmware image layout  **[design]**
+### 5.4 Firmware image layout  **[impl]**
 
 ```
 firmware.bin:
-  [ manifest ]                          offset 0 (reserved region at firmware start)
-  [ secmon:  TRZM header (0x400) | code ]
-  [ kernel:  TRZM header (0x400) | code ]
-  [ core:    TRZM header (0x400) | code ]   (kernel/core split is future)
+  [ manifest ]              offset 0 (reserved region FW_MANIFEST_REGION = 0x400)
+  [ secmon:  code ]         (aligned to CODE_ALIGNMENT)
+  [ kernel:  code ]         (aligned to CODE_ALIGNMENT; kernel/core split is future)
 ```
 
-The manifest sits at the firmware start; each entry's `addr` is the authenticated
-offset of its module. (Reserved manifest region size / alignment: TBD — must fit
-the largest manifest and align the first module to the flash/chunk boundary.)
+The manifest sits at the firmware start (reserved `FW_MANIFEST_REGION` = 0x400);
+each entry's `addr` is the authenticated offset of its module **code** (no header
+region), aligned to `CODE_ALIGNMENT`.
 
 ## 6. App layer (kernel) — **[design]**
 
@@ -197,7 +195,7 @@ and needs a phase-2 transfer-to-nRF-chip install step.
 | `firmware_type` | boot header **unauth** | no (device-written) |
 | firmware path (`firmware_proof`) | boot header **unauth** | no (verified by recompute) |
 | variant manifest | **firmware image start** | yes (leaf under `firmwareRoot`) |
-| TRZM headers + chunk hashes | per module, in firmware image | yes (via manifest `header_hash`) |
+| module code | per module, in firmware image | yes (via manifest `code_hash`) |
 
 ## 9. Verification flow
 
@@ -208,27 +206,30 @@ and needs a phase-2 transfer-to-nRF-chip install step.
 2. Bootloader: read the manifest at firmware start, `variant_leaf =
    SHA256(0x00 || manifest)`, fold `firmware_proof` → compare to `firmware_root`
    from its (boardloader-verified) boot header. Then for each manifest entry:
-   `SHA256(TRZM header @ addr) == header_hash`, and verify code chunks vs
-   `header.chunk_hashes`. Jump to the entry module (secmon).
+   `SHA256(code @ addr, size) == code_hash`. Jump to the entry module (secmon).
 3. Kernel (opt): to load an app, fold the app's path → `appRoot` from the
    (bootloader-verified) manifest.
 
 ## 10. Implementation status
 
-- **[impl]** hashing primitives + fold; `boot_header_calc_firmware_root` (subtree
-  build + proof fold); `firmware_verify` / `firmware_verify_headers`;
+- **[impl]** hashing primitives + fold; manifest verify math
+  (`firmware_manifest_authentic` / `firmware_verify_manifest` /
+  `firmware_verify_manifest_entry` — variant leaf `H(0x00 || manifest)` folds to
+  `firmware_root`, each entry's code verified vs `code_hash`);
   cross-validation harness (`tests/fw_merkle`).
+- **[impl]** manifest at firmware start (linker `.manifest` region +
+  `manifest_header.S`); no per-module header (module code committed directly);
+  `fw_check_pq.c` / `wf_firmware_update_pq.c` drive off the manifest.
 - **[impl]** `firmware_proof_nodes` in `boot_header_unauth_t` +
   `fw_check_pq.c` reads and folds it (11b); Python `BootHeaderUnauth` mirrors.
 - **[impl]** build-time variant stamping (universal=2 / btc-only=3).
 - **[proto host]** founder tree over variants + per-variant proofs
   (`firmware_module.build_founder_tree`); manifest build (`build_manifest` /
-  `variant_manifest` / `variant_leaf`) — variant leaf = `H(0x00 || manifest)`.
-- **[design / TODO]** switch the shared verify math from the module *subtree* to
-  the *manifest* leaf; store the manifest at firmware start; model tree →
-  `modelRoot` (multi-model, non-empty `boot_header_merkle_proof`); app tree +
-  `appRoot`; translations; nRF as a shared node; kernel/core split; production
-  signing + custom/delegated (non-founder) path.
+  `fill_manifest` / `variant_leaf`) — variant leaf = `H(0x00 || manifest)`.
+- **[design / TODO]** model tree → `modelRoot` (multi-model, non-empty
+  `boot_header_merkle_proof`); app tree + `appRoot`; translations; nRF as a
+  shared node; kernel/core split; production signing; custom firmware as a
+  first-class tree variant (`FW_VARIANT_CUSTOM`, founder-zeroed app `code_hash`).
 
 ## 11. Open questions
 

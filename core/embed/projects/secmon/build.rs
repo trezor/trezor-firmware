@@ -8,10 +8,10 @@ fn main() -> Result<()> {
 
         lib.add_source("main.c");
 
-        // Merkle-tree layout uses a module header (TRZM); otherwise legacy TSEC.
+        // Merkle-tree layout: the secmon module is just code (no per-module
+        // header -- the firmware manifest commits it); otherwise legacy TSEC.
         if cfg!(feature = "pq_secure_boot") {
             lib.add_define("PQ_SECURE_BOOT", Some("1"));
-            lib.add_source("module_header.S");
         } else {
             lib.add_source("header.S");
         }

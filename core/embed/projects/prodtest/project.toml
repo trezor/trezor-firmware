@@ -45,9 +45,10 @@ uses = [
 ]
 
 # ".manifest" is the firmware manifest region at the image start in the
-# Merkle-tree layout (absent, thus a no-op, on legacy builds); ".vendorheader"
-# is legacy-only. ".header" is the TRZM module header (tree) or the image header
-# (legacy) -- only one is present per build.
+# Merkle-tree layout (absent, thus a no-op, on legacy builds); in the tree layout
+# prodtest is just code committed directly by the manifest. ".vendorheader" and
+# ".header" are the legacy vendor + image headers (absent, thus no-ops, in the
+# tree layout).
 elf_sections = [".manifest", ".vendorheader", ".header", ".flash", ".data"]
 
 secmon_body_sections   = [".secmon_header", ".flash", ".data"]

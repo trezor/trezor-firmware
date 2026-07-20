@@ -32,20 +32,28 @@ from trezorlib._internal import firmware_headers
 
 def _variant_info(firmware: Path) -> dict:
     fw = firmware.read_bytes()
-    mods = firmware_module.find_modules(fw)
-    if not mods:
-        raise SystemExit(f"{firmware}: no TRZM modules found")
-    unfilled = [h for h in mods if not any(h["code_hash"]) and h["code_size"] > 0]
+    entries = firmware_module.manifest_entries(fw)
+    if not entries:
+        raise SystemExit(f"{firmware}: no manifest modules found")
+    # A zeroed kernel+coreapp code_hash is a legitimate custom/wildcard manifest;
+    # any OTHER entry with a zero hash means the manifest was never code-filled.
+    unfilled = [
+        e
+        for e in entries
+        if e["size"] > 0
+        and not any(e["code_hash"])
+        and e["module_type"] != firmware_module.FW_MODULE_APP
+    ]
     if unfilled:
         raise SystemExit(
-            f"{firmware}: module headers not filled (run the firmware build / "
-            "headertool_pq first)"
+            f"{firmware}: manifest code hashes not filled (run the firmware "
+            "build / headertool_pq first)"
         )
     manifest = firmware_module.read_manifest(fw)
     return {
         "path": firmware,
         "fw": fw,
-        "mods": mods,
+        "entries": entries,
         "manifest": manifest,
         "leaf": firmware_module.variant_leaf(manifest),
         "variant": firmware_module.manifest_variant(manifest),

@@ -26,8 +26,8 @@ _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-/* Kernel code length only -- excludes the secmon prefix and the module header,
-   which are not covered by this module's chunk hashes. */
+/* Kernel code length only -- excludes the secmon prefix, which is a separate
+   module not covered by this module's code hash. */
 _codelen = _kernel_flash_end - _kernel_flash_start;
 
 SECTIONS {
@@ -39,16 +39,12 @@ SECTIONS {
     . = _manifest_start + FW_MANIFEST_REGION;
   } >FLASH AT>FLASH
 
-  /* Merkle-tree layout: the secmon binary is prefixed (excluded from the module
-     hash) so the kernel links at its real run address; then the module header;
-     then the kernel code. No legacy vendor header. */
+  /* Merkle-tree layout: the secmon binary is prefixed (a separate module,
+     excluded from this module's code hash) so the kernel links at its real run
+     address; the kernel code follows directly. There is no per-module header --
+     the firmware manifest entry commits the code directly. */
   .secmon : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.secmon));
-  } >FLASH AT>FLASH
-
-  .header : ALIGN(4) {
-    . += 1K;
-    . = ALIGN(CODE_ALIGNMENT);
   } >FLASH AT>FLASH
 
   .flash : ALIGN(CODE_ALIGNMENT) {

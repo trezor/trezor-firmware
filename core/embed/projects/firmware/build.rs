@@ -13,10 +13,10 @@ fn main() -> Result<()> {
 
         lib.add_sources(["main.c", "boot_image_embdata.c"]);
 
-        // Firmware header: the Merkle-tree layout uses a module header (TRZM);
-        // otherwise the legacy vendor header + image header.
+        // Firmware header: the Merkle-tree layout describes each module directly
+        // in the manifest (no per-module header); otherwise the legacy vendor
+        // header + image header.
         if cfg!(feature = "pq_secure_boot") {
-            lib.add_source("module_header.S");
             // The firmware manifest ("firmware directory") at the image start.
             lib.add_source("manifest_header.S");
             // Stamp the authenticated firmware variant into the manifest. The

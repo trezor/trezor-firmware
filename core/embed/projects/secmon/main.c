@@ -159,14 +159,10 @@ static void secmon_panic(const systask_postmortem_t* pminfo) {
 extern uint32_t _secmon_size;
 #define SECMON_SIZE ((uint32_t)&_secmon_size)
 
-#ifdef PQ_SECURE_BOOT
-// Merkle-tree layout: the kernel+coreapp module starts right after the secmon
-// module, but its code is preceded by the module header (TRZM). Skip that
-// reserved region to reach the kernel's vector table.
-#define KERNEL_START (FIRMWARE_START + SECMON_SIZE + FW_MODULE_HEADER_REGION)
-#else
+// Merkle-tree layout: the kernel+coreapp module code starts right after the
+// secmon module (no per-module header). _secmon_size spans the manifest region
+// plus the secmon code, i.e. exactly the offset to the kernel's vector table.
 #define KERNEL_START (FIRMWARE_START + SECMON_SIZE)
-#endif
 
 int main(void) {
   tz_init();

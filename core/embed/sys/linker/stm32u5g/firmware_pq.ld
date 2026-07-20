@@ -28,26 +28,32 @@ _codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data);
 _heap_start = ADDR(.heap);
 _heap_end = ADDR(.heap) + SIZEOF(.heap);
 
+/* Manifest directory entries self-describe each module's code region (offset
+   from the firmware start + size), emitted by manifest_header.S from these
+   symbols. The post-build step (headertool_pq) then fills only each entry's
+   code_hash over [addr, addr+size). There is no per-module header: the secmon
+   is the .secmon blob, the kernel+coreapp code is [.padding .. .data]. */
+_manifest_secmon_addr = ADDR(.secmon) - FIRMWARE_START;
+_manifest_secmon_size = SIZEOF(.secmon);
+_manifest_kernel_addr = ADDR(.padding) - FIRMWARE_START;
+_manifest_kernel_size = _codelen;
+
 SECTIONS {
   /* Merkle-tree layout (pq_secure_boot feature). The secmon binary is prefixed
      (its own module -- excluded from this module's hash and from _codelen) so
-     the kernel+coreapp code links at its real run address. The .header section
-     then holds the kernel+coreapp module header (TRZM, see module_header.S),
-     replacing the legacy vendor header + image header. */
+     the kernel+coreapp code links at its real run address. There is no
+     per-module header: each module's code region is described directly by the
+     manifest directory entry (addr/size/code_hash). */
   /* Firmware manifest ("firmware directory") at the very start of the image,
-     before the modules. Its static fields come from manifest_header.S; the
-     post-build step (headertool_pq) fills the per-entry addr/size/header_hash.
-     The section is padded to FW_MANIFEST_REGION by manifest_header.S. */
+     before the modules. Its static fields + per-entry addr/size come from
+     manifest_header.S; the post-build step (headertool_pq) fills each entry's
+     code_hash. The section is padded to FW_MANIFEST_REGION by manifest_header.S. */
   .manifest : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.manifest));
   } >FLASH AT>FLASH
 
   .secmon : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.secmon));
-  } >FLASH AT>FLASH
-
-  .header : ALIGN(4) {
-    KEEP(*(.header));
   } >FLASH AT>FLASH
 
   .padding : ALIGN(4) {

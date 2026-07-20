@@ -46,7 +46,8 @@ uses = [
 
 # ".manifest" is the firmware manifest region at the image start, and ".secmon"
 # the secmon module prefix, in the Merkle-tree layout (both absent, and thus
-# no-ops, on non-tree builds).
+# no-ops, on non-tree builds). ".vendorheader"/".header" are the legacy vendor +
+# image headers (absent, thus no-ops, in the tree layout).
 elf_sections = [".manifest", ".secmon", ".vendorheader", ".header", ".flash", ".data"]
 
 # STM32F4: firmware spans two non-contiguous flash banks (bank2 starts at 0x08100000)

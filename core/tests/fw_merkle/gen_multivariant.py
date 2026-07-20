@@ -2,17 +2,18 @@
 """Generate a multi-variant, manifest-based firmware_root cross-validation vector.
 
 Builds SYNTHETIC firmware images for several variants -- each image is
-[manifest | secmon module | kernel module], where the variant leaf is
-H(0x00 || manifest) and the manifest references each TRZM module header by
-header_hash (so per-chunk verification is exercised). Computes the founder
-firmware_root + per-variant proofs (firmware_module.build_founder_tree),
-self-checks the fold in Python, and writes a vector the C harness
-(crossvalidate.c) replays through the REAL device math (firmware_verify_manifest).
+[manifest | secmon code | kernel code], where the variant leaf is
+H(0x00 || manifest) and the manifest references each module directly by
+code_hash = SHA-256 over the whole module code (one commitment hop, no per-module
+header). Computes the founder firmware_root + per-variant proofs
+(firmware_module.build_founder_tree), self-checks the fold in Python, and writes
+a vector the C harness (crossvalidate.c) replays through the REAL device math
+(firmware_verify_manifest).
 
 Image layout (offsets authenticated via the manifest's addr fields):
-  0x000  manifest            (padded to MANIFEST_REGION)
-  MR     secmon TRZM header  (padded to FW_MODULE_HEADER_REGION) | code
-  ...    kernel TRZM header  (padded to FW_MODULE_HEADER_REGION) | code
+  0x000  manifest      (padded to MANIFEST_REGION)
+  MR     secmon code   (padded to CODE_ALIGNMENT)
+  ...    kernel code   (padded to CODE_ALIGNMENT)
 
 FWM2 layout (little-endian):
   "FWM2" | founder_root(32) | variant_count(u32)
@@ -33,38 +34,27 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
 from trezor_core_tools import firmware_module as fm  # noqa: E402
 
-HW_MODEL = int.from_bytes(b"T3W1", "little")
-HEADER_REGION = 0x400  # FW_MODULE_HEADER_REGION
 MANIFEST_REGION = 0x400  # reserved region for the manifest at image start
+CODE_ALIGNMENT = 0x400
 CODE_SIZE = 0x100
 
 VARIANTS = {2: "universal", 3: "bitcoin-only", 4: "prodtest"}
 
 
-def _module(module_type: int, code: bytes):
-    """Return (header_bytes, code) for a synthetic TRZM module. code_hash is a
-    single SHA-256 over the whole module code. The variant is authenticated in
-    the manifest, not the module header."""
-    code_hash = hashlib.sha256(code).digest()
-    header = fm._FIXED.pack(
-        fm.MAGIC,
-        HW_MODEL,
-        module_type,
-        bytes([1, 0, 0, 0]),
-        len(code),
-        code_hash,
-    )
-    return header, code
+def _align(x: int) -> int:
+    return (x + CODE_ALIGNMENT - 1) // CODE_ALIGNMENT * CODE_ALIGNMENT
 
 
 def _build_variant_image(vid: int):
-    """Lay out [manifest | secmon | kernel] and return (image, manifest_bytes)."""
-    secmon_hdr, secmon_code = _module(1, b"\xaa" * CODE_SIZE)
-    kernel_hdr, kernel_code = _module(2, bytes([vid & 0xFF]) * CODE_SIZE)
+    """Lay out [manifest | secmon code | kernel code] and return
+    (image, manifest_bytes). Each manifest entry commits its module directly by
+    code_hash = SHA-256 over the module code (no per-module header)."""
+    secmon_code = b"\xaa" * CODE_SIZE
+    kernel_code = bytes([vid & 0xFF]) * CODE_SIZE
 
-    # Module offsets (manifest occupies the first MANIFEST_REGION bytes).
+    # Module code offsets (manifest occupies the first MANIFEST_REGION bytes).
     sec_addr = MANIFEST_REGION
-    ker_addr = sec_addr + HEADER_REGION + CODE_SIZE
+    ker_addr = _align(sec_addr + CODE_SIZE)
 
     entries = [
         # secmon is the secure boot/entry module (FLAG_BOOT).
@@ -73,27 +63,22 @@ def _build_variant_image(vid: int):
             "flags": fm.FW_MANIFEST_ENTRY_FLAG_BOOT,
             "addr": sec_addr,
             "size": CODE_SIZE,
-            "header_hash": fm._sha256(secmon_hdr),
+            "code_hash": hashlib.sha256(secmon_code).digest(),
         },
         {
             "module_type": 2,
             "flags": 0,
             "addr": ker_addr,
             "size": CODE_SIZE,
-            "header_hash": fm._sha256(kernel_hdr),
+            "code_hash": hashlib.sha256(kernel_code).digest(),
         },
     ]
     manifest = fm.build_manifest(vid, entries)
 
-    image = bytearray(ker_addr + HEADER_REGION + CODE_SIZE)
-    # 0xFF-fill the reserved/padding regions like flash.
-    for i in range(len(image)):
-        image[i] = 0xFF
+    image = bytearray(b"\xff" * _align(ker_addr + CODE_SIZE))
     image[0 : len(manifest)] = manifest
-    image[sec_addr : sec_addr + len(secmon_hdr)] = secmon_hdr
-    image[sec_addr + HEADER_REGION : sec_addr + HEADER_REGION + CODE_SIZE] = secmon_code
-    image[ker_addr : ker_addr + len(kernel_hdr)] = kernel_hdr
-    image[ker_addr + HEADER_REGION : ker_addr + HEADER_REGION + CODE_SIZE] = kernel_code
+    image[sec_addr : sec_addr + CODE_SIZE] = secmon_code
+    image[ker_addr : ker_addr + CODE_SIZE] = kernel_code
     return bytes(image), manifest
 
 

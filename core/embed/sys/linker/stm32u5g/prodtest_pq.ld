@@ -30,23 +30,22 @@ _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-/* Tree module code size -- what the TRZM header's code_size / code_hash cover:
-   everything after the 1K module header region. Mirrors firmware_pq.ld. */
+/* Tree module code size -- what the manifest entry's size / code_hash cover:
+   everything after the manifest region. Mirrors firmware_pq.ld. */
 _codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data);
+
+/* The single prodtest module's code region, self-described by the manifest
+   entry (emitted by manifest_header.S). There is no per-module header. */
+_manifest_module_addr = ADDR(.padding) - FIRMWARE_START;
+_manifest_module_size = _codelen;
 
 SECTIONS {
   /* Firmware manifest ("firmware directory") at the image start -- prodtest's
      single-module variant leaf (see manifest_header.S). Padded to
-     FW_MANIFEST_REGION there; the post-build step fills the entry
-     addr/size/header_hash. */
+     FW_MANIFEST_REGION there; the entry's addr/size come from manifest_header.S
+     and the post-build step fills its code_hash. */
   .manifest : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.manifest));
-  } >FLASH AT>FLASH
-
-  /* The prodtest module header (TRZM, see module_header.S), replacing the legacy
-     vendor + image + secmon headers. */
-  .header : ALIGN(4) {
-    KEEP(*(.header));
   } >FLASH AT>FLASH
 
   .padding : ALIGN(4) {

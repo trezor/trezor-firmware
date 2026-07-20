@@ -91,7 +91,7 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
 
   // The manifest ("firmware directory") is at the firmware region start. It is
   // the variant leaf (H(0x00 || manifest)); firmware_verify_manifest folds it
-  // up to firmware_root, then verifies each module (header_hash + code chunks).
+  // up to firmware_root, then verifies each module's code against its code_hash.
   // The module set/roles/layout come from the (authenticated) manifest, so this
   // does not hardcode a module table.
   const firmware_manifest_t* manifest =
@@ -116,7 +116,7 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
   // Variant, version and entry point from the (now-verified) manifest. Both the
   // variant and the firmware version are authenticated manifest fields (part of
   // the variant leaf); the entry point is the secmon module's code. The version
-  // is read from the manifest -- NOT the kernel+coreapp module header -- so it
+  // is read from the manifest's authenticated firmware_version field -- so it
   // is a single authenticated source shared with the phase-1 install confirm
   // (they can only diverge for a spliced custom image, which is UNSAFE anyway).
   info->variant = manifest->firmware_variant;
@@ -135,7 +135,8 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
   for (size_t i = 0; i < manifest->module_count; i++) {
     const firmware_manifest_entry_t* e = &manifest->entries[i];
     if ((e->flags & FW_MANIFEST_ENTRY_FLAG_BOOT) != 0) {
-      info->entry_address = FIRMWARE_START + e->addr + FW_MODULE_HEADER_REGION;
+      // entry->addr points directly at the module code (no per-module header).
+      info->entry_address = FIRMWARE_START + e->addr;
       boot_entries++;
     }
   }

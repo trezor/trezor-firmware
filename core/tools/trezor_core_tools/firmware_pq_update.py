@@ -161,7 +161,7 @@ def main() -> None:
     # otherwise it requests + streams the full code. No host-side --full-bootloader
     # guess -- the device is the judge.
     bl_code = bl[len(boot_header) :]
-    mods = firmware_module.find_modules(fw)
+    mods = firmware_module.manifest_entries(fw)
     # Preamble blob = [manifest || firmware_proof]. The proof (co-path variant leaf
     # -> firmware_root) is written next to the firmware by the signer as
     # `<firmware>.proof`; empty for a single-variant firmware.

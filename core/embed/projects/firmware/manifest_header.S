@@ -7,11 +7,12 @@
 // emitted at the very start of the firmware image (see firmware_pq.ld). It is
 // the variant leaf of the firmware tree: variant_leaf = H(0x00 || manifest).
 //
-// Static fields are set here at build time: the magic, the firmware variant, and
-// the module directory's shape (module_count + each entry's role/flags). The
-// per-entry addr/size/header_hash are filled post-build (headertool_pq), since
-// they depend on the linked layout and the (post-build) chunk hashes; app_root
-// and translations_root are reserved (zero) until those subtrees exist.
+// Static fields are set here at build time: the magic, the firmware variant, the
+// module directory's shape (module_count + each entry's role/flags) and each
+// entry's addr/size (from linker symbols -- the modules are linked in this
+// image, so their code offsets/sizes are known). Only each entry's code_hash is
+// filled post-build (headertool_pq), over the placed module code; app_root and
+// translations_root are reserved (zero) until those subtrees exist.
 //
 // Layout matches firmware_manifest_t (sec/boot_header.h) and the signer/tool
 // (tools/trezor_core_tools/firmware_module.py) byte-for-byte. The region is
@@ -34,16 +35,16 @@ g_firmware_manifest:
     // entry[0]: secmon (the secure boot/entry module)
     .word 1                          // module_type = FW_MODULE_SECMON
     .word 1                          // flags = FW_MANIFEST_ENTRY_FLAG_BOOT
-    .word 0                          // addr        (filled post-build)
-    .word 0                          // size        (filled post-build)
-    .space 32                        // header_hash  (filled post-build)
+    .word _manifest_secmon_addr      // addr (secmon code offset; linker)
+    .word _manifest_secmon_size      // size (secmon code size; linker)
+    .space 32                        // code_hash   (filled post-build)
 
     // entry[1]: kernel+coreapp
     .word 2                          // module_type = FW_MODULE_APP (kernel+coreapp)
     .word 0                          // flags
-    .word 0                          // addr        (filled post-build)
-    .word 0                          // size        (filled post-build)
-    .space 32                        // header_hash  (filled post-build)
+    .word _manifest_kernel_addr      // addr (kernel+coreapp code offset; linker)
+    .word _manifest_kernel_size      // size (kernel+coreapp code size; linker)
+    .space 32                        // code_hash   (filled post-build)
 
     . = g_firmware_manifest + 0x400  // reserve FW_MANIFEST_REGION
     .size g_firmware_manifest, .-g_firmware_manifest

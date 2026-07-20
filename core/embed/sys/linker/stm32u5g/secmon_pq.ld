@@ -39,18 +39,12 @@ SECTIONS {
      itself is emitted by the firmware image, not the secmon; here it only shifts
      the addresses so the secmon runs at its real address). Mirrors kernel_pq.ld.
      Excluded from secmon.bin via the project's elf_sections, so the module image
-     is just [header | code]. */
+     is just the secmon code (no per-module header in the Merkle-tree scheme --
+     the firmware manifest entry commits the code directly). */
   .manifest : ALIGN(CODE_ALIGNMENT) {
     _manifest_start = .;
     . = _manifest_start + FW_MANIFEST_REGION;
   } >FLASH AT>FLASH
-
-  /* Merkle-tree layout (pq_secure_boot feature): the secmon module header
-     (TRZM, see module_header.S) at the module start; no legacy vendor/TSEC
-     header. The tree signer fills its chunk hashes over the secmon code. */
-  .header : ALIGN(4) {
-    KEEP(*(.header));
-  } >FLASH
 
   .padding : ALIGN(4) {
     _secmon_code_start = .;

@@ -10,9 +10,10 @@
 // exactly ONE entry (the prodtest module), flagged as the secure boot/entry
 // module (FW_MANIFEST_ENTRY_FLAG_BOOT).
 //
-// Static fields are set here at build time; the per-entry addr/size/header_hash
-// are filled post-build (headertool_pq). Layout matches firmware_manifest_t
-// (sec/boot_header.h) and the signer/tool (firmware_module.py) byte-for-byte.
+// Static fields (incl. the entry's addr/size, from linker symbols) are set here
+// at build time; only the entry's code_hash is filled post-build (headertool_pq).
+// Layout matches firmware_manifest_t (sec/boot_header.h) and the signer/tool
+// (firmware_module.py) byte-for-byte.
 
     .section .manifest, "a"
 
@@ -31,9 +32,9 @@ g_firmware_manifest:
     // entry[0]: prodtest (the sole secure boot/entry module)
     .word 3                          // module_type = FW_MODULE_PRODTEST
     .word 1                          // flags = FW_MANIFEST_ENTRY_FLAG_BOOT
-    .word 0                          // addr        (filled post-build)
-    .word 0                          // size        (filled post-build)
-    .space 32                        // header_hash  (filled post-build)
+    .word _manifest_module_addr      // addr (prodtest code offset; linker)
+    .word _manifest_module_size      // size (prodtest code size; linker)
+    .space 32                        // code_hash   (filled post-build)
 
     . = g_firmware_manifest + 0x400  // reserve FW_MANIFEST_REGION
     .size g_firmware_manifest, .-g_firmware_manifest

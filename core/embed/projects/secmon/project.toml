@@ -16,6 +16,7 @@ uses = [
     "tropic",
 ]
 
-# ".header" is the TRZM module header in the Merkle-tree layout; ".secmon_header"
-# is the legacy TSEC header. Only one is present per build (the other is a no-op).
+# ".secmon_header" is the legacy TSEC header; ".header" is the legacy image
+# header. Both are absent (no-ops) in the Merkle-tree layout, where the secmon is
+# just code committed directly by the firmware manifest.
 elf_sections = [".secmon_header", ".header", ".flash", ".data", ".gnu.sgstubs"]

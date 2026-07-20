@@ -123,9 +123,9 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
         let bin = postbuild::elf_to_bin(&elf, args.project, &model_config, use_dev_keys)?;
 
         // Sign the binary except for those that don't have headers. Firmware
-        // built with the Merkle-tree layout is skipped too: it carries module
-        // headers (TRZM) whose chunk hashes are filled below, with the
-        // firmware_root folded into the bootloader header by the tree signer.
+        // built with the Merkle-tree layout is skipped too: its per-module
+        // code hashes are filled into the manifest below, with the firmware_root
+        // folded into the bootloader header by the tree signer.
         let is_tree = model_config.has_feature("pq_secure_boot");
         let skip_legacy_sign = matches!(args.project, Project::Boardloader | Project::Kernel)
             || (matches!(
@@ -136,9 +136,9 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
             postbuild::sign_binary(&bin, args.project, &model_config, use_dev_keys)?;
         }
 
-        // Merkle-tree firmware: fill each module's TRZM header (chunk hashes) at
-        // build time. firmware.bin is the combined [secmon | kernel+coreapp]
-        // image, so this fills every module in one pass.
+        // Merkle-tree firmware: fill each module's code_hash into the manifest at
+        // build time. firmware.bin is the combined [manifest | secmon |
+        // kernel+coreapp] image, so this fills every module in one pass.
         if is_tree && matches!(args.project, Project::Firmware | Project::Prodtest) {
             // Custom (unofficial) firmware: --unsafe-fw zeroes the kernel+coreapp
             // entry's manifest hash (a wildcard), so the (dev-signed) manifest still

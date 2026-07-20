@@ -409,13 +409,12 @@ typedef struct {
       custom;  // installed firmware_type is custom: kernel+coreapp may deviate
 } fwt_upload_handler_t;
 
-// Verify every manifest module whose bytes are now fully on flash (header +
-// code within [0, bytes_on_flash)) against its authenticated directory entry:
-// H(TRZM header) == entry->header_hash and the per-chunk code hashes. Advances
-// next_module so each module is verified exactly once, the moment it lands --
-// early rejection instead of waiting for the whole image. entry->addr is the
-// module header offset; entry->size is its code size; code follows the header
-// region, so the module ends at addr + FW_MODULE_HEADER_REGION + size.
+// Verify every manifest module whose code is now fully on flash
+// ([addr, addr+size) within [0, bytes_on_flash)) against its authenticated
+// directory entry: H(code) == entry->code_hash. Advances next_module so each
+// module is verified exactly once, the moment it lands -- early rejection
+// instead of waiting for the whole image. entry->addr is the module code
+// offset and entry->size its code size, so the module ends at addr + size.
 static upload_status_t fwt_verify_ready_modules(fwt_upload_handler_t *h,
                                                 protob_io_t *iface,
                                                 uint32_t bytes_on_flash) {
@@ -433,7 +432,7 @@ static upload_status_t fwt_verify_ready_modules(fwt_upload_handler_t *h,
       h->next_module++;
       continue;
     }
-    uint32_t module_end = e->addr + FW_MODULE_HEADER_REGION + e->size;
+    uint32_t module_end = e->addr + e->size;
     if (module_end > bytes_on_flash) {
       break;  // not fully written yet
     }
@@ -542,7 +541,7 @@ static upload_status_t fwt_on_finish(image_upload_handler_t *base,
     return s;
   }
   // Authoritative whole-tree verify against the installed firmware_root
-  // (manifest fold + per-module header/code integrity), independent of the
+  // (manifest fold + per-module code integrity), independent of the
   // incremental checks -- the backstop.
   firmware_tree_info_t info = {0};
   if (sectrue != firmware_verify_tree(&info)) {

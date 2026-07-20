@@ -56,11 +56,11 @@ pub fn elf_to_bin(
         Project::Prodtest => {
             if model_config.has_feature("pq_secure_boot") {
                 // Merkle-tree layout: prodtest is a single secure module + its
-                // manifest ([.manifest | .header (TRZM) | code]). Plain objcopy of
-                // the tree sections; the TRZM header's chunk hashes + the manifest
-                // entry are filled by fill_firmware_tree_headers (cargo.rs), and the
-                // firmware_root is folded into the bootloader header by the founder
-                // tree signer -- so there is no legacy secmon-split / vendor header.
+                // manifest ([.manifest | code]). Plain objcopy of the tree
+                // sections; the manifest entry's code_hash is filled by
+                // fill_firmware_tree_headers (cargo.rs), and the firmware_root is
+                // folded into the bootloader header by the founder tree signer --
+                // so there is no legacy secmon-split / vendor header.
                 objcopy(source, &project_profile.elf_sections)
             } else if model_config.secmon {
                 // On secmon models prodtest is a secmon-signed body with a plain
@@ -136,17 +136,18 @@ pub fn sign_binary(
     Ok(())
 }
 
-/// Fills the per-module chunk hashes of a Merkle-tree firmware image
-/// (`firmware.bin`, a chain of TRZM modules) in place, at build time. The
-/// firmware_root is folded into the bootloader header later by the tree signer.
+/// Fills the per-module code hashes of a Merkle-tree firmware image
+/// (`firmware.bin` = [manifest | module code...]) into the manifest in place, at
+/// build time. The firmware_root is folded into the bootloader header later by
+/// the tree signer.
 ///
 /// When `custom` is set, builds a CUSTOM/unofficial image: the kernel+coreapp
-/// entry's manifest hash is zeroed (a wildcard), so the (dev-signed) manifest
-/// still folds to firmware_root and the secmon conforms, but any kernel+coreapp
-/// is treated as unofficial.
+/// entry's manifest code_hash is zeroed (a wildcard), so the (dev-signed)
+/// manifest still folds to firmware_root and the secmon conforms, but any
+/// kernel+coreapp is treated as unofficial.
 pub fn fill_firmware_tree_headers(binary: &Path, custom: bool) -> Result<()> {
     println!(
-        "xtask: Filling module headers in `{}`{}",
+        "xtask: Filling manifest code hashes in `{}`{}",
         binary
             .file_name()
             .context("Failed to get binary file name")?
