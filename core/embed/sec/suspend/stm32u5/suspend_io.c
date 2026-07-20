@@ -72,7 +72,7 @@ void resume_secure_drivers() {
   secure_aes_init();
 #endif
 #ifdef USE_TROPIC
-  tropic_init(NULL);
+  ensure_true(tropic_init(NULL) == LT_OK, "Failed to initialize Tropic driver");
 #endif
 }
 
