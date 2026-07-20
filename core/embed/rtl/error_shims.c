@@ -21,13 +21,14 @@
 // called without linking the sys crate. This is needed when compiling the
 // tests for the crates that don't depend on sys, such as the crypto crate.
 
+#include <rtl/sysexit.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "rtl/error_handling.h"
 
-__attribute__((noreturn)) void error_shutdown_ex_n(
-    const char *title, size_t title_len, const char *message,
-    size_t message_len, const char *footer, size_t footer_len) {
+void system_exit_error_ex(const char* title, size_t title_len,
+                          const char* message, size_t message_len,
+                          const char* footer, size_t footer_len) {
   printf("====== ERROR ======\n");
   if (title != NULL && *title != '\0') {
     printf("Title: %*s\n", (int)title_len, title);
@@ -39,16 +40,13 @@ __attribute__((noreturn)) void error_shutdown_ex_n(
   exit(1);
 }
 
-__attribute__((noreturn)) void __fatal_error_n(const char *message,
-                                               size_t message_len,
-                                               const char *file,
-                                               size_t file_len, int line) {
+void system_exit_fatal_ex(const char* message, size_t message_len,
+                          const char* file, size_t file_len, int line) {
   printf("====== FATAL ERROR ======\n");
   printf("Fatal error: %*s", (int)message_len, message);
   if (file != NULL && *file != '\0') {
     printf(" at %*s:%d", (int)file_len, file, line);
   }
   printf("\n");
-
   exit(1);
 }

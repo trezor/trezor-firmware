@@ -21,7 +21,6 @@
 // called without linking the sys crate. This is needed when compiling the
 // tests for the crates that don't depend on sys, such as the crypto crate.
 
-#include "fault_handler.h"
-#include <rtl/error_handling.h>
+#include <trezor_rtl.h>
 
 void tc_fault_handler(const char *message) { error_shutdown(message); }

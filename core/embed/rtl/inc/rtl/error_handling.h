@@ -20,7 +20,8 @@
 #pragma once
 
 #include <errno.h>
-#include <stddef.h>
+
+#include "sysexit.h"
 
 // Suppresses the intellisense error in VSCode
 #ifndef __FILE_NAME__
@@ -149,6 +150,8 @@ const char *ts_string(ts_t status);
 /**
  * Shows an error message and shuts down the device.
  *
+ * Do not use this function in new code, use `system_exit_error()` instead.
+ *
  * @param title Title of the error message (defaults to
  *  "INTERNAL ERROR" if NULL)
  * @param message Main error message (defaults to no message if NULL)
@@ -162,21 +165,7 @@ void __attribute__((noreturn)) error_shutdown_ex(const char *title,
 /**
  * Shows an error message and shuts down the device.
  *
- * Like `error_shutdown_ex`, but with explicit lengths for the strings.
- *
- * @param title Title of the error message.
- * @param title_len Length of the title.
- * @param message Main error message.
- * @param message_len Length of the message.
- * @param footer Footer of the error message.
- * @param footer_len Length of the footer.
- */
-void __attribute__((noreturn)) error_shutdown_ex_n(
-    const char *title, size_t title_len, const char *message,
-    size_t message_len, const char *footer, size_t footer_len);
-
-/**
- * Shows an error message and shuts down the device.
+ * Do not use this function in new code, use `system_exit_error()` instead.
  *
  * @param message Main error message (defaults to no message if NULL)
  */

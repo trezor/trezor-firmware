@@ -5,4 +5,4 @@ mod ffi;
 pub mod error;
 pub mod util;
 
-pub use error::{__fatal_error, error_shutdown};
+pub use error::{system_exit_error, system_exit_fatal};

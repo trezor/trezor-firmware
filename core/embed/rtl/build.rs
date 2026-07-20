@@ -25,7 +25,7 @@ fn main() -> Result<()> {
         add_uzlib(lib);
 
         if cfg!(feature = "error_shims") {
-            lib.add_source("src/error_shims.c");
+            lib.add_source("error_shims.c");
         }
 
         lib.add_rust_bindings(|builder| Ok(add_rust_bindings(builder)))?;
@@ -80,7 +80,8 @@ fn add_uzlib(lib: &mut xbuild::CLibrary) {
 
 fn add_rust_bindings(builder: bindgen::Builder) -> bindgen::Builder {
     builder
-        .header("inc/rtl/error_handling.h")
-        .allowlist_function("error_shutdown_ex_n")
-        .allowlist_function("__fatal_error_n")
+        .header("inc/rtl/sysexit.h")
+        .allowlist_function("system_exit")
+        .allowlist_function("system_exit_error_ex")
+        .allowlist_function("system_exit_fatal_ex")
 }
