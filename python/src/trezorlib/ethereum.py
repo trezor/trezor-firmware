@@ -470,3 +470,23 @@ def sign_typed_data_hash(
         ),
         expect=messages.EthereumTypedDataSignature,
     )
+
+
+@workflow(capability=messages.Capability.Ethereum)
+def sign_auth_eip7702(
+    session: "Session",
+    n: "Address",
+    *,
+    delegate: str,
+    chain_id: int,
+    nonce: int,
+) -> messages.EthereumAuth7702Signature:
+    return session.call(
+        messages.EthereumSignAuth7702(
+            address_n=n,
+            chain_id=chain_id,
+            delegate=delegate,
+            nonce=nonce,
+        ),
+        expect=messages.EthereumAuth7702Signature,
+    )

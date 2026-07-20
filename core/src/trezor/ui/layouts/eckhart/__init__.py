@@ -1520,6 +1520,91 @@ if not utils.BITCOIN_ONLY:
 
         await confirm_linear_flow(_step1, _step2, _step3)
 
+    async def confirm_ethereum_eip7702_auth(
+        delegate_name: str,
+        delegate_addr: str,
+        network_name: str,
+        account: str,
+        account_path: str,
+    ) -> None:
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+        with trezorui_api.show_warning(
+            title=TR.words__warning,
+            button=TR.buttons__confirm,
+            description=TR.ethereum__auth_warn,
+            value=TR.words__know_what_your_doing,
+            allow_cancel=True,
+            danger=True,
+        ) as layout:
+            await raise_if_not_confirmed(layout, "ethereum/auth7702/warn")
+
+        with trezorui_api.confirm_properties(
+            title=TR.ethereum__auth_title,
+            items=[
+                (TR.ethereum__delegating, account, False),
+                (TR.ethereum__to, delegate_name, False),
+                (TR.ethereum__network, network_name, False),
+            ],
+            hold=True,
+            external_menu=True,
+        ) as layout:
+            account_info = [
+                (TR.words__account, account, True),
+                (TR.address_details__derivation_path, account_path, True),
+            ]
+            children = [
+                create_details(TR.address_details__account_info, account_info),
+                create_details(TR.ethereum__smart_info, delegate_addr),
+            ]
+            await confirm_with_menu(
+                layout,
+                Menu.root(children, cancel=TR.buttons__cancel),
+                "ethereum/auth7702/details",
+                ButtonRequestType.SignTx,
+            )
+
+    async def confirm_ethereum_eip7702_revoke(
+        network_name: str,
+        account: str,
+        account_path: str,
+    ) -> None:
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+        account_info = [
+            (TR.words__account, account, True),
+            (TR.address_details__derivation_path, account_path, True),
+        ]
+        menu = Menu.root(
+            [create_details(TR.address_details__account_info, account_info)],
+            cancel=TR.buttons__cancel,
+        )
+
+        with trezorui_api.confirm_action(
+            title=TR.ethereum__revoke_title,
+            description=None,
+            action=TR.ethereum__revoke_warn.format(account),
+            verb=TR.buttons__continue,
+            external_menu=True,
+            cancel=False,
+        ) as layout:
+            await confirm_with_menu(
+                layout, menu, "ethereum/revoke7702/intro", ButtonRequestType.SignTx
+            )
+
+        with trezorui_api.confirm_properties(
+            title=TR.ethereum__revoke_title,
+            items=[
+                (TR.ethereum__approve_revoke_from, account, False),
+                (TR.ethereum__network, network_name, False),
+            ],
+            hold=True,
+            external_menu=True,
+        ) as layout:
+            await confirm_with_menu(
+                layout, menu, "ethereum/revoke7702/details", ButtonRequestType.SignTx
+            )
+
     async def confirm_ethereum_staking_tx(
         title: str,
         intro_question: str,
