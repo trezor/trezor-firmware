@@ -30,10 +30,9 @@
 #include "rfal_nfc.h"
 
 typedef struct {
-  // Last state
-  bool last_state;
-  // Pending events
-  nfc_event_t events;
+  bool last_state;       // connection state already reported to this task
+  uint8_t connected;     // unreported connect edge
+  uint8_t disconnected;  // unreported disconnect edge
 } nfc_fsm_t;
 
 //!< Card connection status flag
@@ -62,12 +61,22 @@ bool nfc_get_event(nfc_event_t* event) {
   assert(event != NULL);
   nfc_fsm_t* fsm = &g_nfc_tls[systask_id(systask_active())];
 
-  *event = NFC_NO_EVENT;
-  if (fsm->events != NFC_NO_EVENT) {
-    *event = fsm->events;
-    fsm->events = NFC_NO_EVENT;
+  if (fsm->connected && fsm->disconnected) {
+    fsm->connected = 0;
+    fsm->disconnected = 0;
+    fsm->last_state = false;
+  } else if (fsm->connected) {
+    fsm->connected = 0;
+    fsm->last_state = true;
+    *event = NFC_EVENT_CONNECTED;
+    return true;
+  } else if (fsm->disconnected) {
+    fsm->disconnected = 0;
+    fsm->last_state = false;
+    *event = NFC_EVENT_DISCONNECTED;
     return true;
   }
+  *event = NFC_NO_EVENT;
   return false;
 }
 
@@ -81,22 +90,6 @@ ts_t nfc_get_device_info(nfc_dev_info_t* dev_info) {
     memset(dev_info, 0, sizeof(nfc_dev_info_t));
     return TS_ENOSTATE;
   }
-}
-
-static bool nfc_fsm_update(nfc_fsm_t* fsm, bool* new_state) {
-  bool new_event = false;
-
-  if (*new_state != fsm->last_state) {
-    if (*new_state) {
-      fsm->events = NFC_EVENT_CONNECTED;
-    } else {
-      fsm->events = NFC_EVENT_DISCONNECTED;
-    }
-    new_event = true;
-    fsm->last_state = *new_state;
-  }
-
-  return new_event;
 }
 
 static void on_task_created(void* context, systask_id_t task_id) {
@@ -134,10 +127,15 @@ static void on_event_poll(void* context, bool read_awaited,
 static bool on_check_read_ready(void* context, systask_id_t task_id,
                                 void* param) {
   nfc_fsm_t* fsm = &g_nfc_tls[task_id];
+  bool new_state = *(bool*)param;
 
-  bool* new_state = (bool*)param;
-
-  return nfc_fsm_update(fsm, new_state);
+  if (new_state && !(fsm->last_state)) {
+    fsm->connected = 1;
+  }
+  if (!new_state && fsm->last_state) {
+    fsm->disconnected = 1;
+  }
+  return fsm->connected || fsm->disconnected;
 }
 
 static const syshandle_vmt_t g_nfc_handle_vmt = {
