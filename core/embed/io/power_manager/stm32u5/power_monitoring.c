@@ -77,7 +77,9 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   memcpy(&drv->pmic_data, report, sizeof(pmic_report_t));
 
   // Get wireless charger data
+#ifdef USE_WIRELESS_CHARGER
   stwlc38_get_report(&drv->wireless_data);
+#endif
 
 #ifdef USE_TELEMETRY
   // Update telemetry with the current battery temperature

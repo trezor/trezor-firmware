@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef USE_POWER_MANAGER
+#ifdef USE_WIRELESS_CHARGER
 
 #include <trezor_rtl.h>
 
@@ -183,4 +183,4 @@ PRODTEST_CLI_CMD(
   .args = ""
 );
 
-#endif // USE_POWER_MANAGER
+#endif // USE_WIRELESS_CHARGER

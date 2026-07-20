@@ -23,6 +23,19 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
     lib.add_source("power_manager/power_manager_poll.c");
 
+    // --- Optional wireless charger ----------------------------------------
+    // Not present in the emulator (the STWLC38 driver needs the STM32 HAL).
+    if cfg!(feature = "wireless_stwlc38") && cfg!(not(feature = "emulator")) {
+        lib.add_define("USE_WIRELESS_CHARGER", Some("1"));
+        if cfg!(feature = "mcu_stm32u5") {
+            lib.add_sources([
+                "power_manager/stwlc38/stwlc38.c",
+                "power_manager/stwlc38/stwlc38_patching.c",
+            ]);
+        }
+    }
+
+    // --- Power manager backend --------------------------------------------
     if cfg!(feature = "emulator") {
         lib.add_source("power_manager/unix/power_manager.c");
     } else if cfg!(feature = "mcu_stm32u5") {
@@ -33,8 +46,6 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             "power_manager/battery/battery.c",
             "power_manager/battery/fuel_gauge.c",
             "power_manager/battery/battery_model.c",
-            "power_manager/stwlc38/stwlc38.c",
-            "power_manager/stwlc38/stwlc38_patching.c",
         ]);
     } else {
         bail_unsupported!();

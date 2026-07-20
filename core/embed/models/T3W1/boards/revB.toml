@@ -25,6 +25,7 @@ panel = "io/touch_panel_lx250a2410a"
 [rgb_led]
 
 [power_manager]
+wireless = "io/wireless_stwlc38"
 
 [nfc]
 

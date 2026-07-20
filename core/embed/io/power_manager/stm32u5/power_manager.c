@@ -63,10 +63,17 @@ pm_status_t pm_init(bool inherit_state) {
   memset(drv, 0, sizeof(pm_driver_t));
 
   // Initialize hardware subsystems
-  if (!pmic_init() || !stwlc38_init()) {
+  if (!pmic_init()) {
     pm_deinit();
     return PM_ERROR;
   }
+
+#ifdef USE_WIRELESS_CHARGER
+  if (!stwlc38_init()) {
+    pm_deinit();
+    return PM_ERROR;
+  }
+#endif
 
   if (!pm_poll_init()) {
     pm_deinit();
@@ -202,7 +209,9 @@ void pm_deinit(void) {
   }
 
   pmic_deinit();
+#ifdef USE_WIRELESS_CHARGER
   stwlc38_deinit();
+#endif
 
   drv->initialized = false;
 }
@@ -630,6 +639,12 @@ bool pm_driver_suspend(void) {
 
   irq_unlock(irq_key);
 
+  // Suspend the sub-drivers owned by the power manager.
+  pmic_suspend();
+#ifdef USE_WIRELESS_CHARGER
+  stwlc38_suspend();
+#endif
+
   return true;
 }
 
@@ -701,6 +716,12 @@ bool pm_usb_is_connected(void) {
 }
 
 bool pm_driver_resume(void) {
+  // Resume the sub-drivers owned by the power manager.
+#ifdef USE_WIRELESS_CHARGER
+  stwlc38_resume();
+#endif
+  pmic_resume();
+
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -747,6 +768,12 @@ bool pm_driver_is_suspended(void) {
   irq_key_t irq_key = irq_lock();
   suspended = drv->suspended;
   irq_unlock(irq_key);
+
+  // The power manager is only fully suspended once its sub-drivers are too.
+  suspended = suspended && pmic_is_suspended();
+#ifdef USE_WIRELESS_CHARGER
+  suspended = suspended && stwlc38_is_suspended();
+#endif
 
   return suspended;
 }
