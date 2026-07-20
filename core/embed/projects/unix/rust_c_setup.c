@@ -59,7 +59,7 @@ void rust_tests_c_setup(void) {
 #endif
 
 #ifdef USE_TROPIC
-  tropic_init(NULL);
+  ensure_true(tropic_init(NULL) == LT_OK, "Failed to initialize Tropic driver");
 #endif
 
   usb_configure(NULL);
