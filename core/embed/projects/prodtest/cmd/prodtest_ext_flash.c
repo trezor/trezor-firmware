@@ -27,6 +27,10 @@
 #include <rtl/strutils.h>
 #include <sys/ext_flash.h>
 
+#ifdef USE_EXT_FLASH_OTFDEC
+#include <sec/ext_flash_otfdec.h>
+#endif
+
 #include "prodtest_error_codes.h"
 
 // Maximum bytes transferred in a single read or program CLI command.
@@ -224,9 +228,9 @@ static void prodtest_ext_flash_read(cli_t* cli) {
 //   [1/7] init          — deinit + fresh init: JEDEC ID, QE bit verified
 //   [2/7] drive-strength — SR3 R/W via explicit indirect mode
 //   [3/7] erase          — 4 KB sector, mmap toggled internally
-//   [4/7] verify erase   — mmap read, all 0xFF
+//   [4/7] verify erase   — mmap read, all 0xFF (OTFDEC inactive)
 //   [5/7] write patterns — 4 pages via explicit indirect mode
-//   [6/7] verify mmap    — XIP read vs. expected patterns
+//   [6/7] verify patterns — mmap read vs. expected patterns (OTFDEC inactive)
 //   [7/7] verify indirect — quad + slow read vs. expected patterns
 //
 // Optional <addr> selects the test sector (snapped to sector boundary).
@@ -282,6 +286,11 @@ static void prodtest_ext_flash_test(cli_t* cli) {
             (int)(EXT_FLASH_SECTOR_SIZE / 1024),
             (int)EXT_FLASH_PAGE_SIZE);
 
+#ifdef USE_EXT_FLASH_OTFDEC
+  // Ensure OTFDEC is inactive so mmap reads return raw flash data.
+  ext_flash_otfdec_deinit();
+#endif
+
   // [1/7] Fresh init — deinit any prior state, then initialise from scratch.
   cli_trace(cli, "[1/7] init...");
   ext_flash_deinit();
@@ -324,16 +333,18 @@ static void prodtest_ext_flash_test(cli_t* cli) {
   }
   cli_trace(cli, "[3/7] erase: OK");
 
-  // [4/7] Verify erased — mmap is active; read from XIP window.
+  // [4/7] Verify erased — mmap read; OTFDEC inactive so raw 0xFF bytes from
+  // erased flash are returned.
   cli_trace(cli, "[4/7] verify erase...");
   {
-    const volatile uint8_t* mptr =
-        (const volatile uint8_t*)(uintptr_t)(EXT_FLASH_MMAP_BASE + test_addr);
+    const volatile uint8_t *mptr =
+        (const volatile uint8_t *)(uintptr_t)(EXT_FLASH_MMAP_BASE + test_addr);
     for (uint32_t i = 0; i < EXT_FLASH_PAGE_SIZE; i++) {
-      if (mptr[i] != 0xFFu) {
+      uint8_t val = mptr[i];
+      if (val != 0xFFu) {
         cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_VERIFY_ERASE_DATA,
                   "[4/7] verify erase: [%u]=0x%02X expected 0xFF",
-                  (unsigned int)i, mptr[i]);
+                  (unsigned int)i, val);
         return;
       }
     }
@@ -364,28 +375,30 @@ static void prodtest_ext_flash_test(cli_t* cli) {
   }
   cli_trace(cli, "[5/7] write patterns: OK");
 
-  // [6/7] Verify via mmap — XIP quad read (cmd 0xEB 1-4-4).
-  cli_trace(cli, "[6/7] verify mmap...");
+  // [6/7] Verify patterns via mmap read; OTFDEC inactive so raw programmed
+  // bytes are compared directly via the XIP window.
+  cli_trace(cli, "[6/7] verify patterns (mmap)...");
   {
     static uint8_t expected[EXT_FLASH_PAGE_SIZE];
-    const volatile uint8_t* mptr =
-        (const volatile uint8_t*)(uintptr_t)(EXT_FLASH_MMAP_BASE + test_addr);
     for (uint32_t p = 0; p < TEST_PAGES; p++) {
+      uint32_t paddr = test_addr + p * EXT_FLASH_PAGE_SIZE;
+      const volatile uint8_t *mptr =
+          (const volatile uint8_t *)(uintptr_t)(EXT_FLASH_MMAP_BASE + paddr);
       fill_page_pattern(expected, p);
       for (uint32_t i = 0; i < EXT_FLASH_PAGE_SIZE; i++) {
-        uint8_t got = mptr[p * EXT_FLASH_PAGE_SIZE + i];
-        if (got != expected[i]) {
+        uint8_t val = mptr[i];
+        if (val != expected[i]) {
           cli_error(cli, PRODTEST_ERR_EXT_FLASH_TEST_PATTERN_MMAP_DATA,
-                    "[6/7] mmap: page %u (%s) [%u] got=0x%02X want=0x%02X",
+                    "[6/7] verify: page %u (%s) [%u] got=0x%02X want=0x%02X",
                     (unsigned int)p, pattern_name(p),
-                    (unsigned int)i, got, expected[i]);
+                    (unsigned int)i, val, expected[i]);
           return;
         }
       }
       cli_trace(cli, "      page %u (%s): OK", (unsigned int)p, pattern_name(p));
     }
   }
-  cli_trace(cli, "[6/7] verify mmap: OK  (XIP cmd 0xEB 1-4-4)");
+  cli_trace(cli, "[6/7] verify patterns: OK  (mmap XIP read)");
 
   // [7/7] Verify via indirect quad read (cmd 0xEB 1-4-4) of all pages,
   //       then via single-wire slow read (cmd 0x03 1-1-1) of page 0.
@@ -429,6 +442,150 @@ static void prodtest_ext_flash_test(cli_t* cli) {
   cli_ok(cli, "NvM test PASS");
 }
 
+// ============================================================================
+// ext-flash-otfdec-load  <addr> <hexdata>
+//
+// Initialises OTFDEC1 (zero nonce, version 0), encrypts <hexdata> for storage
+// at ext-flash offset <addr> using OTFDEC1 cipher mode, programs the resulting
+// ciphertext into external flash, and leaves OTFDEC1 active.
+//
+// Requirements:
+//   - Target area must be pre-erased (use ext-flash-erase first).
+//   - addr must be 16-byte aligned; hex data length must be a multiple of 16.
+//
+// After this command OTFDEC remains active: ext-flash-read returns plaintext
+// via the XIP window.  Use ext-flash-otfdec-exec to execute the loaded code
+// (it reinits OTFDEC then deinits after the call).  Run ext-flash-test to
+// automatically deactivate OTFDEC and verify raw flash state.
+// ============================================================================
+
+#ifdef USE_EXT_FLASH_OTFDEC
+
+static void prodtest_ext_flash_otfdec_load(cli_t* cli) {
+  if (cli_arg_count(cli) != 2) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint32_t addr = 0;
+  if (!cli_arg_uint32(cli, "addr", &addr)) {
+    cli_error_arg(cli, "Expecting addr (decimal or 0x-prefixed hex).");
+    return;
+  }
+
+  if (addr & 3u) {
+    cli_error_arg(cli, "addr must be 4-byte aligned (got 0x%08X).",
+                  (unsigned int)addr);
+    return;
+  }
+
+  static uint8_t plaintext[EXT_FLASH_CMD_WRITE_MAX];
+  static uint8_t ciphertext[EXT_FLASH_CMD_WRITE_MAX];
+  size_t len = 0;
+  if (!cli_arg_hex(cli, "hexdata", plaintext, sizeof(plaintext), &len)) {
+    cli_error_arg(cli, "Failed to decode hex data (max %d bytes).",
+                  (int)EXT_FLASH_CMD_WRITE_MAX);
+    return;
+  }
+
+  if (len & 3u) {
+    cli_error_arg(cli, "Data length must be a multiple of 4 bytes (got %d).",
+                  (int)len);
+    return;
+  }
+
+  if (addr >= EXT_FLASH_SIZE || (uint32_t)len > EXT_FLASH_SIZE - addr) {
+    cli_error_arg(cli, "Range 0x%08X+%d exceeds flash size (%d KB).",
+                  (unsigned int)addr, (int)len, (int)(EXT_FLASH_SIZE / 1024));
+    return;
+  }
+
+  uint32_t nonce[2] = {0, 0};
+  if (sectrue != ext_flash_otfdec_init(nonce, 0)) {
+    cli_error(cli, PRODTEST_ERR_EXT_FLASH_PROGRAM, "OTFDEC init failed.");
+    return;
+  }
+
+  cli_trace(cli, "Encrypting %d bytes for flash offset 0x%08X...",
+            (int)len, (unsigned int)addr);
+
+  // OCTOSPI must be in mmap mode for HAL_OTFDEC_Cipher to access the XIP
+  // window.  ext_flash_write() toggles mmap internally, so encrypt first.
+  if (!ext_flash_otfdec_cipher(addr, plaintext, (uint32_t)len, ciphertext)) {
+    ext_flash_otfdec_deinit();
+    cli_error(cli, PRODTEST_ERR_EXT_FLASH_PROGRAM, "OTFDEC cipher failed.");
+    return;
+  }
+
+  cli_trace(cli, "Programming ciphertext to flash at 0x%08X...",
+            (unsigned int)addr);
+  if (!ext_flash_write(addr, ciphertext, (uint32_t)len)) {
+    ext_flash_otfdec_deinit();
+    cli_error(cli, PRODTEST_ERR_EXT_FLASH_PROGRAM,
+              "Flash write failed at 0x%08X.", (unsigned int)addr);
+    return;
+  }
+
+  // Leave OTFDEC active so subsequent ext-flash-read returns plaintext via XIP.
+  cli_ok(cli, "%d bytes encrypted and programmed at 0x%08X.",
+         (int)len, (unsigned int)addr);
+}
+
+// ============================================================================
+// ext-flash-otfdec-exec  <addr>
+//
+// Calls the Thumb-2 function located at EXT_FLASH_MMAP_BASE + addr.
+// OTFDEC1 decrypts the fetched instructions on-the-fly so the CPU executes
+// the original plaintext code.  The function must have prototype void(*)(void).
+// ============================================================================
+
+static void prodtest_ext_flash_otfdec_exec(cli_t* cli) {
+  if (cli_arg_count(cli) != 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint32_t addr = 0;
+  if (!cli_arg_uint32(cli, "addr", &addr)) {
+    cli_error_arg(cli, "Expecting addr (decimal or 0x-prefixed hex).");
+    return;
+  }
+
+  if (addr >= EXT_FLASH_SIZE) {
+    cli_error_arg(cli, "Address 0x%08X is outside flash (%d KB).",
+                  (unsigned int)addr, (int)(EXT_FLASH_SIZE / 1024));
+    return;
+  }
+
+  // Deinit any existing OTFDEC state (idempotent), then reinit with zero
+  // nonce so the key and region are freshly loaded before XIP execution.
+  ext_flash_otfdec_deinit();
+  uint32_t nonce[2] = {0, 0};
+  if (sectrue != ext_flash_otfdec_init(nonce, 0)) {
+    cli_error(cli, PRODTEST_ERR_EXT_FLASH_PROGRAM, "OTFDEC init failed.");
+    return;
+  }
+
+  cli_trace(cli, "Jumping to OTFDEC-decrypted code at 0x%08X (mmap+0x%08X)...",
+            (unsigned int)(EXT_FLASH_MMAP_BASE + addr), (unsigned int)addr);
+
+  // Instruction barrier: ensure all pending writes are visible before the
+  // branch.  A full I-cache invalidation (HAL_ICACHE_Invalidate) may be
+  // needed if the address was fetched before; sufficient for fresh flash.
+  __DSB();
+  __ISB();
+
+  // Bit 0 set: Thumb-2 branch target (required on ARMv8-M).
+  typedef void (*fn_t)(void);
+  fn_t fn = (fn_t)((uintptr_t)(EXT_FLASH_MMAP_BASE + addr) | 1u);
+  fn();
+
+  ext_flash_otfdec_deinit();
+  cli_ok(cli, "Returned from 0x%08X.", (unsigned int)(EXT_FLASH_MMAP_BASE + addr));
+}
+
+#endif  // USE_EXT_FLASH_OTFDEC
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -458,6 +615,24 @@ PRODTEST_CLI_CMD(
   .info = "Production NvM test: pin connectivity, 100 MHz quad-SPI, stress patterns, SR3 R/W",
   .args = "[addr]"
 );
+
+#ifdef USE_EXT_FLASH_OTFDEC
+
+PRODTEST_CLI_CMD(
+  .name = "ext-flash-otfdec-load",
+  .func = prodtest_ext_flash_otfdec_load,
+  .info = "Init OTFDEC, encrypt data via OTFDEC1 cipher and program to ext flash (area pre-erased); OTFDEC stays active",
+  .args = "<addr> <hexdata>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "ext-flash-otfdec-exec",
+  .func = prodtest_ext_flash_otfdec_exec,
+  .info = "Init OTFDEC, execute Thumb-2 code from EXT_FLASH_MMAP_BASE+addr with on-the-fly decryption, then deinit",
+  .args = "<addr>"
+);
+
+#endif  // USE_EXT_FLASH_OTFDEC
 
 // clang-format on
 

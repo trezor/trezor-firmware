@@ -11,6 +11,7 @@ uses = [
     "display_rgba8888",
     "dma2d",
     "ext_flash",
+    "ext_flash_otfdec",
     "framebuffer",
     "haptic",
     "hash_processor",

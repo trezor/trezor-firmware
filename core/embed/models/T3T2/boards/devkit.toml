@@ -29,3 +29,6 @@ driver = "io/pmic_power_latch"
 
 [ext_flash]
 driver = "sys/ext_flash"
+
+[ext_flash_otfdec]
+driver = "sec/ext_flash_otfdec"
