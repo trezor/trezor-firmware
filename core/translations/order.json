@@ -1252,5 +1252,6 @@
   "1250": "ethereum__revoke_warn",
   "1251": "ethereum__smart_info",
   "1252": "ethereum__to",
-  "1253": "ethereum__calldata_digest"
+  "1253": "ethereum__calldata_digest",
+  "1254": "pin__reenter_new_description"
 }
