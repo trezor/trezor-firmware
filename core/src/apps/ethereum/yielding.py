@@ -29,6 +29,7 @@ _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR = (
 DEPOSIT_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
     func_sig=FUNC_SIG_DEPOSIT,
+    provider_name=None,
     intent="Deposit",
     parameter_definitions=[
         Atomic(parse_uint256),  # assets
@@ -41,6 +42,7 @@ DEPOSIT_DISPLAY_FORMAT = DisplayFormat(
 WITHDRAW_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
     func_sig=FUNC_SIG_WITHDRAW,
+    provider_name=None,
     intent="Withdraw",
     parameter_definitions=[
         Atomic(parse_uint256),  # assets
@@ -54,6 +56,7 @@ WITHDRAW_DISPLAY_FORMAT = DisplayFormat(
 REDEEM_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
     func_sig=FUNC_SIG_REDEEM,
+    provider_name=None,
     intent="Redeem",
     parameter_definitions=[
         Atomic(parse_uint256),  # shares
@@ -70,6 +73,7 @@ REDEEM_DISPLAY_FORMAT = DisplayFormat(
 CLAIM_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
     func_sig=FUNC_SIG_CLAIM,
+    provider_name=None,
     intent="Claim",
     parameter_definitions=[
         Array(Atomic(parse_address)),  # users
