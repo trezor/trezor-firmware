@@ -188,4 +188,16 @@ bool telemetry_get__verified(telemetry_data_t *out);
 
 #endif  // USE_TELEMETRY
 
+// ---------------------------------------------------------------------
+
+#ifdef USE_EXT_FLASH_OTFDEC
+
+#include <sec/ext_flash_otfdec.h>
+
+bool ext_flash_otfdec_cipher__verified(uint32_t flash_addr,
+                                       const uint8_t *plaintext,
+                                       uint32_t byte_len,
+                                       uint8_t *ciphertext_out);
+#endif  // USE_EXT_FLASH_OTFDEC
+
 #endif  // SECMON

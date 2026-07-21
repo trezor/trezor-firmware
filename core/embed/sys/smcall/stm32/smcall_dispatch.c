@@ -52,6 +52,10 @@
 #include <sec/suspend_io.h>
 #endif
 
+#ifdef USE_EXT_FLASH_OTFDEC
+#include <sec/ext_flash_otfdec.h>
+#endif
+
 #include <sec/boot_image.h>
 
 #include "smcall_numbers.h"
@@ -432,6 +436,17 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       args[0] = backup_ram_write__verified(key, type, data, data_size);
     } break;
 #endif  // USE_BACKUP_RAM
+
+#ifdef USE_EXT_FLASH_OTFDEC
+    case SMCALL_EXT_FLASH_OTFDEC_CIPHER: {
+      uint32_t flash_addr = args[0];
+      const uint8_t *plaintext = (const uint8_t *)args[1];
+      uint32_t byte_len = args[2];
+      uint8_t *ciphertext_out = (uint8_t *)args[3];
+      args[0] = ext_flash_otfdec_cipher__verified(flash_addr, plaintext,
+                                                  byte_len, ciphertext_out);
+    } break;
+#endif  // USE_EXT_FLASH_OTFDEC
 
 #ifdef USE_TELEMETRY
     // ------------------------------------------------------------------

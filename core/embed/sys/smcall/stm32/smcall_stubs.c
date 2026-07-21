@@ -431,6 +431,23 @@ secbool secret_validate_nrf_pairing(const uint8_t *message, size_t msg_len,
 
 #endif
 
+#ifdef USE_EXT_FLASH_OTFDEC
+
+// =============================================================================
+// ext_flash_otfdec.h
+// =============================================================================
+
+#include <sec/ext_flash_otfdec.h>
+
+bool ext_flash_otfdec_cipher(uint32_t flash_addr, const uint8_t *plaintext,
+                              uint32_t byte_len, uint8_t *ciphertext_out) {
+  return (bool)smcall_invoke4(flash_addr, (uint32_t)plaintext, byte_len,
+                               (uint32_t)ciphertext_out,
+                               SMCALL_EXT_FLASH_OTFDEC_CIPHER);
+}
+
+#endif  // USE_EXT_FLASH_OTFDEC
+
 #ifdef USE_TELEMETRY
 
 // =============================================================================

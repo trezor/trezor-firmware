@@ -638,4 +638,29 @@ access_violation:
 }
 #endif  // USE_TELEMETRY
 
+// ---------------------------------------------------------------------
+
+#ifdef USE_EXT_FLASH_OTFDEC
+#include <sec/ext_flash_otfdec.h>
+
+bool ext_flash_otfdec_cipher__verified(uint32_t flash_addr,
+                                       const uint8_t *plaintext,
+                                       uint32_t byte_len,
+                                       uint8_t *ciphertext_out) {
+  if (!probe_read_access(plaintext, byte_len)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(ciphertext_out, byte_len)) {
+    goto access_violation;
+  }
+
+  return ext_flash_otfdec_cipher(flash_addr, plaintext, byte_len, ciphertext_out);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+#endif  // USE_EXT_FLASH_OTFDEC
+
 #endif  // SECMON
