@@ -1130,7 +1130,14 @@ async def _handle_approve(
 
     assert isinstance(arg1_raw_value, int)
 
-    recipient_str = lookup_known_address(msg.chain_id, arg0_raw_value)
+    recipient_str = (
+        lookup_known_address(msg.chain_id, arg0_raw_value)
+        if display_format.provider_name is None
+        else display_format.provider_name
+    )
+
+    # Ideally our vault name and definition should also be added in the ERC-7730 registry
+    # Until that is verified, we'll keep our vault information hardcoded.
     if recipient_str is None:
         vault = lookup_vault(defs.network, arg0_raw_value)
         if vault is not UNKNOWN_VAULT:
