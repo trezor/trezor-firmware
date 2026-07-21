@@ -761,14 +761,6 @@ static bool set_backup_distribution_version_to(uint32_t distribution_version) {
   return true;
 }
 
-static secbool tropic_restart_chip(void) {
-  tropic_deinit();
-  if (tropic_init(NULL) != LT_OK) {
-    return secfalse;
-  }
-  return sectrue;
-}
-
 // Applies `expected_config` and writes the new distribution version to slot 6.
 //
 // Crash-safety: the write order is designed so that a power-cut leaves slot 6
@@ -869,7 +861,11 @@ static secbool set_expected_config(
     return secfalse;
   }
 
-  return tropic_restart_chip();
+  if (lt_reboot(&g_tropic_driver.handle, TR01_REBOOT) != LT_OK) {
+    return secfalse;
+  }
+
+  return sectrue;
 }
 
 // clang-format off
