@@ -19,6 +19,20 @@
             }
         },
         {
+            "name": "metamask_nonce_1_chainid_0_all_networks",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "nonce": 1,
+                "chain_id": 0
+            },
+            "result": {
+                "sig_v": 1,
+                "sig_r": "9092db9dd37e92acd62299cfe9610f911401029dbe24a7ccb4dd725790794c2e",
+                "sig_s": "265486929f9094a3fd11bd19eac17d027925632e68d1047ba8737b972da783bc"
+            }
+        },
+        {
             "name": "ambire_nonce_1_chainid_1_mainnet",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
@@ -30,6 +44,35 @@
                 "sig_v": 0,
                 "sig_r": "77400904e30c320d62b65641f612898ca209fd3b2a8885d0b85d912dc8c40de2",
                 "sig_s": "7938228fd841d148463bb080ace6a580309dbf94a165b3c885db984609123ffd"
+            }
+        },
+        {
+            "name": "metamask_nonce_1_chainid_1_mainnet",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "nonce": 1,
+                "chain_id": 1
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "c9d939488d895963635118cdb92d4956370e8ee8ce3a3180dcce66057f365dae",
+                "sig_s": "694b9ddb1caf5c2bee62fedd557a02a744da1e4cc32c0dcd3a0e7532cf5f546e"
+            }
+        },
+        {
+            "name": "metamask_nonce_1_chainid_200901_unknown",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "nonce": 1,
+                "chain_id": 200901,
+                "fake_defs": false
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "e225efdf988dd90234db63c653a9404b8d74e9ba79335e4d690c879f140cc81d",
+                "sig_s": "082031ed702504345e74f238e8a56d66438c911ce6e1089c6bcd87d9056c3304"
             }
         },
         {
@@ -58,6 +101,20 @@
                 "sig_v": 0,
                 "sig_r": "74cec49fb8d385917ee9a81cb02ce7636df04853e3b3e9c31fc432b03e0dbbd6",
                 "sig_s": "60070f26d933a49b15db5b46d1443b92ff87916ea9eca9c9b6f36788ce181106"
+            }
+        },
+        {
+            "name": "ambire_nonce_2_chainid_123456789_defs",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x5A7fC11397E9A8AD41Bf10bF13f22b0A63F96f6D",
+                "nonce": 2,
+                "chain_id": 123456789
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "4bd2cf05222f0fdfd1db9f7b83b3dad612dd1060fd091a32b66c423952b7f8d7",
+                "sig_s": "16fd7587e55b3b1c412f74597fb4ffba4fa4dd7d877fb91407ac12749d26f16b"
             }
         },
         {
@@ -114,6 +171,20 @@
                 "sig_v": 0,
                 "sig_r": "092e59d6486520ea8fdcb1f4639fc8d3c02273f7f84bc83a527fbb9a95b8c70d",
                 "sig_s": "3a384fd28a3044fadf937511c795f50e1adeec94118a51dfab42b478a0bf860c"
+            }
+        },
+        {
+            "name": "revoke_nonce_0_chainid_123456789_defs",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x0000000000000000000000000000000000000000",
+                "nonce": 0,
+                "chain_id": 123456789
+            },
+            "result": {
+                "sig_v": 1,
+                "sig_r": "dbfcec89e34039831441c02101e0ee217da668efb6d37ab4c35c0aa3454865a0",
+                "sig_s": "1ec4a7afcb7b36a84a4ae37d7ac2ae7e5bfd06868e04847be6f3882603dc83f7"
             }
         }
     ]

@@ -676,3 +676,40 @@ def sign_typed_data_hash(
         "signature": f"0x{ret.signature.hex()}",
     }
     return output
+
+
+@cli.command()
+@click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.option(
+    "-c", "--chain-id", type=int, default=1, help="EIP-155 chain id (replay protection)"
+)
+@click.option("-i", "--nonce", type=int, required=True, help="Transaction counter")
+@click.argument("delegate_addr")
+@with_session
+def sign_auth_eip7702(
+    session: "Session",
+    address: str,
+    chain_id: int,
+    nonce: int,
+    delegate_addr: str,
+) -> dict[str, Any]:
+    """
+    Sign EIP-7702 authorization.
+
+    If DELEGATE_ADDR is 0x0000000000000000000000000000000000000000, authorization is revoked.
+    """
+    address_n = tools.parse_path(address)
+    encoded_network = DEFINITIONS_SOURCE.get_eth_network(chain_id)
+    ret = ethereum.sign_auth_eip7702(
+        session,
+        address_n,
+        delegate=delegate_addr,
+        chain_id=chain_id,
+        nonce=nonce,
+        encoded_network=encoded_network,
+    )
+    return {
+        "v": ret.signature_v,
+        "r": f"0x{ret.signature_r.hex()}",
+        "s": f"0x{ret.signature_s.hex()}",
+    }
