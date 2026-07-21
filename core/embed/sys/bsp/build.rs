@@ -90,7 +90,12 @@ fn add_stm32u5_bsp(lib: &mut CLibrary) -> Result<()> {
     if cfg!(feature = "secure_mode") {
         lib.add_sources_in_dir(
             "../../vendor/stm32u5xx_hal_driver/Src/",
-            ["stm32u5xx_hal_rcc.c", "stm32u5xx_hal_rcc_ex.c"],
+            [
+                "stm32u5xx_hal_rcc.c",
+                "stm32u5xx_hal_rcc_ex.c",
+                // OTFDEC HAL used only by secmon: key config lives in secure world
+                "stm32u5xx_hal_otfdec.c",
+            ],
         );
     }
 
