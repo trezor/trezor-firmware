@@ -1735,10 +1735,14 @@ class InputFlowEthereumSignTxData(InputFlowBase):
                 assert layout.title().startswith(TR.ethereum__title_input_data)
 
                 # Only intro layout contains "view all" functionality:
-                assert is_intro == (
-                    TR.instructions__view_all_data in layout.text_content()
-                    or TR.buttons__view_all_data in layout.button_contents()
-                )
+                if self.client.layout_type is LayoutType.Delizia:
+                    assert is_intro == (
+                        TR.instructions__view_all_data in layout.text_content()
+                    )
+                elif self.client.layout_type is LayoutType.Eckhart:
+                    assert is_intro == (
+                        TR.buttons__view_all_data in layout.button_contents()
+                    )
 
                 if self.scroll:
                     self._go_to_next_page(is_intro)
