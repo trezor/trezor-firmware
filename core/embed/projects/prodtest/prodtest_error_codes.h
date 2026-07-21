@@ -58,6 +58,7 @@
 //   common         : 23000 – 23999
 //   prodtest       : 24000 – 24999
 //   syslog         : 25000 – 25999
+//   nfc-backup     : 26000 – 26999
 
 typedef enum {
 
@@ -469,4 +470,10 @@ typedef enum {
   // === syslog (25000–25999) ===
   PRODTEST_ERR_SYSLOG_FILTER_SET = 25010,
 
+  // === nfc-backup (26000–26999) ===
+  PRODTEST_ERR_NFC_BACKUP_INIT = 26010,
+  PRODTEST_ERR_NFC_BACKUP_DISCOVERY = 26011,
+  PRODTEST_ERR_NFC_BACKUP_UNEXPECTED_CARD_TYPE = 26012,
+  PRODTEST_ERR_NFC_BACKUP_HANDSHAKE_FAILED = 26013,
+  
 } prodtest_error_t;

@@ -48,6 +48,7 @@ static uint8_t nfc_compose_uri(const char* uri, uint8_t* buffer,
 }
 
 static void prodtest_nfc_read_card(cli_t* cli) {
+  
   uint32_t timeout = 0;
   bool timeout_set = false;
   nfc_dev_info_t dev_info;

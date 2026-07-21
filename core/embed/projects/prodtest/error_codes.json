@@ -148,6 +148,11 @@
       "module": "syslog",
       "range_start": 25000,
       "range_end": 25999
+    },
+    {
+      "module": "nfc-backup",
+      "range_start": 26000,
+      "range_end": 26999
     }
   ],
   "errors": [
@@ -1935,6 +1940,26 @@
       "code": 25010,
       "name": "PRODTEST_ERR_SYSLOG_FILTER_SET",
       "module": "syslog"
+    },
+    {
+      "code": 26010,
+      "name": "PRODTEST_ERR_NFC_BACKUP_INIT",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26011,
+      "name": "PRODTEST_ERR_NFC_BACKUP_DISCOVERY",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26012,
+      "name": "PRODTEST_ERR_NFC_BACKUP_UNEXPECTED_CARD_TYPE",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26013,
+      "name": "PRODTEST_ERR_NFC_BACKUP_HANDSHAKE_FAILED",
+      "module": "nfc-backup"
     }
   ]
 }
