@@ -537,7 +537,7 @@ class Channel:
             if message.seq_bit is not None:
                 if message.seq_bit != self.sync_bit_receive:
                     LOG.warning(
-                        "Received unexpected message: sync bit=%d, expected=%d",
+                        "Received unexpected message: seq bit=%d, expected=%d",
                         message.seq_bit,
                         self.sync_bit_receive,
                     )
