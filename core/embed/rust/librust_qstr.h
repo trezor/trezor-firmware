@@ -572,6 +572,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__please_check_again;
   MP_QSTR_pin__reenter;
   MP_QSTR_pin__reenter_new;
+  MP_QSTR_pin__reenter_new_description;
   MP_QSTR_pin__reenter_to_confirm;
   MP_QSTR_pin__remove;
   MP_QSTR_pin__setup_completed;
