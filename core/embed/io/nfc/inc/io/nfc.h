@@ -25,9 +25,10 @@
 #define NFC_MAX_UID_BUF_SIZE ((NFC_MAX_UID_LEN + 1) * 2)
 
 /**
- * @brief Must corespond to RFAL_FEATURE_ISO_DEP_APDU_MAX_LEN in rfal_platform.h
+ * @brief Must corespond to RFAL_FEATURE_ISO_DEP_IBLOCK_MAX_LEN in
+ * rfal_platform.h
  */
-#define NFC_MAX_APDU_LEN 512
+#define NFC_MAX_APDU_LEN 256
 
 /** @brief Supported NFC types. **/
 typedef enum {
@@ -65,18 +66,11 @@ typedef struct {
   uint8_t uid_len;
 } nfc_dev_info_t;
 
-/** @brief NFC APDU command buffer structure */
+/** @brief NFC APDU message buffer structure */
 typedef struct {
-  const uint8_t *data;
+  uint8_t data[NFC_MAX_APDU_LEN];
   uint16_t data_len;
-} nfc_apdu_cmd_t;
-
-/** @brief NFC APDU response buffer pointers */
-typedef struct {
-  uint8_t *data;       //!< [out] Pointer to the buffer to store received data.
-  uint16_t *data_len;  //!< [in/out] Pointer to the length of the buffer.
-  // On return,  it will contain the actual length of the received data.
-} nfc_apdu_response_t;
+} nfc_apdu_message_t;
 
 /**
  * @brief Initialize NFC driver including supportive RFAL middleware and
@@ -131,4 +125,4 @@ ts_t nfc_get_device_info(nfc_dev_info_t *dev_info);
  * @param resp [out] Rx data buffer structure
  * @return TS_OK when the function pass, otherwise an error.
  */
-ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp);
+ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp);

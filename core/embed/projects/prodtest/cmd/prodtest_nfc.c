@@ -28,8 +28,8 @@
 
 #include "prodtest_error_codes.h"
 
-static uint8_t nfc_compose_uri(const char* uri, uint8_t* buffer,
-                               uint8_t buffer_size) {
+static uint16_t nfc_compose_uri(const char* uri, uint8_t* buffer,
+                                uint16_t buffer_size) {
   size_t uri_len = strlen(uri);
   const uint8_t uri_header[] = {0x03,    uri_len + 5, 0xD1, 0x01,
                                 uri_len, 0x55,        0x01};
@@ -244,16 +244,12 @@ static void prodtest_nfc_write_card(cli_t* cli) {
       }
 
       cli_trace(cli, "Writing URI to NFC tag %s", dev_info.uid);
-      uint8_t uri_buffer[128] = {0};
-      uint8_t nfc_rx_buffer[NFC_MAX_APDU_LEN] = {0};
-      uint16_t nfc_rx_len = sizeof(nfc_rx_buffer);
-      nfc_apdu_cmd_t tx_buf = {.data = uri_buffer, .data_len = 0};
-      nfc_apdu_response_t rx_buf = {.data = nfc_rx_buffer,
-                                    .data_len = &nfc_rx_len};
+      nfc_apdu_message_t tx_buf = {0};
+      nfc_apdu_message_t rx_buf = {0};
 
       tx_buf.data_len =
-          nfc_compose_uri("trezor.io/", uri_buffer, sizeof(uri_buffer));
-      nfc_status = nfc_transceive(tx_buf, rx_buf);
+          nfc_compose_uri("trezor.io/", tx_buf.data, sizeof(tx_buf.data));
+      nfc_status = nfc_transceive(&tx_buf, &rx_buf);
       if (ts_ok(nfc_status)) {
         cli_trace(cli, "URI write success");
       } else {
