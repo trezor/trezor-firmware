@@ -17,6 +17,7 @@ APPROVE_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
     func_sig=b"\x09\x5e\xa7\xb3",  # approve(address,uint256)
     intent="Approve",
+    provider_name=None,
     parameter_definitions=[
         Atomic(parse_address),  # _spender
         Atomic(parse_uint256),  # _value
@@ -38,6 +39,7 @@ TRANSFER_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
     func_sig=b"\xa9\x05\x9c\xbb",  # transfer(address,uint256)
     intent="Send",
+    provider_name=None,
     parameter_definitions=[
         Atomic(parse_address),  # _to
         Atomic(parse_uint256),  # _value

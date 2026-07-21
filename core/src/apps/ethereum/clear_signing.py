@@ -805,11 +805,13 @@ class DisplayFormat:
         self,
         binding_context: BindingContext | None,
         func_sig: bytes,
+        provider_name: str | None,
         intent: str,
         parameter_definitions: list[ABIValue],
         field_definitions: list[FieldDefinition],
     ) -> None:
         self.binding_context = binding_context
+        self.provider_name = provider_name
         self.func_sig = func_sig
         self.intent = intent
         self.parameter_definitions = parameter_definitions
@@ -956,6 +958,7 @@ class DisplayFormat:
             binding_context=BindingContext([(proto.chain_id, bytes(proto.address))]),
             func_sig=bytes(proto.func_sig),
             intent=proto.intent,
+            provider_name=proto.provider_name,
             parameter_definitions=[
                 ABIValue.from_proto(p) for p in proto.parameter_definitions
             ],
@@ -1275,7 +1278,9 @@ async def _handle_generic_ui(
             properties_to_confirm.append(token_address_property)
 
     recipient_str = (
-        lookup_known_address(msg.chain_id, bytes_from_address(msg.to)) or msg.to
+        (lookup_known_address(msg.chain_id, bytes_from_address(msg.to)) or msg.to)
+        if display_format.provider_name is None
+        else display_format.provider_name
     )
 
     await require_confirm_clear_signing(
