@@ -157,6 +157,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ethereum.get_address"
         if msg_type == MessageType.EthereumGetPublicKey:
             return "apps.ethereum.get_public_key"
+        if msg_type == MessageType.EthereumSignAuth7702:
+            return "apps.ethereum.sign_auth_eip7702"
         if msg_type == MessageType.EthereumSignTx:
             return "apps.ethereum.sign_tx"
         if msg_type == MessageType.EthereumSignTxEIP1559:
