@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-from pathlib import Path
 import collections
 import json
 import re
+from pathlib import Path
 
 import click
-
 from cli import TranslationsDir
-from trezorlib._internal import translations
 
+from trezorlib._internal import translations
 
 HERE = Path(__file__).parent
 
 # staging directory for layout-specific translation JSON files
 CROWDIN_DIR = HERE / "crowdin"
+
 
 @click.group()
 def cli() -> None:
@@ -42,7 +42,9 @@ def split() -> None:
             with open(CROWDIN_DIR / f"{lang}_{layout_type.name}.json", "w") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
-    click.echo(f"Successfully generated layout-specific translation files in '{CROWDIN_DIR}'")
+    click.echo(
+        f"Successfully generated layout-specific translation files in '{CROWDIN_DIR}'"
+    )
 
 
 @cli.command()
@@ -54,7 +56,7 @@ def merge() -> None:
         """Remove or replace non-printable characters in translation strings."""
         # Replace non-breaking spaces with regular spaces, EXCEPT before ? ! and :
         # Use negative lookahead to avoid replacing before French punctuation
-        text = re.sub(r'\u00A0(?![?!:])', ' ', text)
+        text = re.sub(r"\u00A0(?![?!:])", " ", text)
         # Replace double newlines with newline-carriage return
         # This is needed because Crowdin converts \n\r to \n\n on import
         text = text.replace("\n\n", "\n\r")
@@ -65,17 +67,23 @@ def merge() -> None:
         # This is happening because English was added to Crowdin as a target language
         if lang == "en":
             continue
-        merged_translations: dict[str, str | dict[str, str]] = collections.defaultdict(dict)
+        merged_translations: dict[str, str | dict[str, str]] = collections.defaultdict(
+            dict
+        )
 
         for layout_type in translations.ALL_LAYOUTS:
             with open(CROWDIN_DIR / f"{lang}_{layout_type.name}.json", "r") as f:
                 blob_json = json.load(f)
 
             # mapping string name to its translation (for the current layout)
-            layout_specific_translations: dict[str, str] = blob_json.get("translations", {})
+            layout_specific_translations: dict[str, str] = blob_json.get(
+                "translations", {}
+            )
             for key, value in layout_specific_translations.items():
                 cleaned_value = clean_translation(value)
-                merged_translations[key][layout_type.name] = cleaned_value
+                layout_specific = merged_translations[key]
+                assert isinstance(layout_specific, dict)
+                layout_specific[layout_type.name] = cleaned_value
 
         # Ensure all layouts are present per key, fill missing with empty strings
         for key, layout_map in merged_translations.items():
@@ -98,7 +106,9 @@ def merge() -> None:
         tdir.save_lang(lang, blob_json)
         click.echo(f"Updated {lang}")
 
-    click.echo(f"Successfully merged back layout-specific translation files from '{CROWDIN_DIR}'")
+    click.echo(
+        f"Successfully merged back layout-specific translation files from '{CROWDIN_DIR}'"
+    )
 
 
 if __name__ == "__main__":

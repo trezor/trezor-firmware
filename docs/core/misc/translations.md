@@ -8,6 +8,8 @@ When no foreign-language is present, the English version is used - [en.json](../
 
 Translations files contain the translated strings and also all the special font characters as a link to `.json` files in [fonts](../../../core/translations/fonts) directory. Font files are not needed for `english`, which uses just default/built-in `ASCII` characters.
 
+Please note that while both firmware and translation blobs use version format with 4 components `major.minor.patch.build`, only the first 3 must match. The build numbers have no relation to each other.
+
 ## Generating blobs
 
 To generate up-to-date blobs, use `python core/translations/cli.py gen` - they will appear in `core/translations` as `translations-*.bin` files. The files contain information about the specific hardware model, language and device version.

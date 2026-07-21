@@ -11,17 +11,17 @@ Usage:
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import click
 
 
-def load_json(path: Path) -> Dict[str, Any]:
+def load_json(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def save_json(path: Path, data: Dict[str, Any]) -> None:
+def save_json(path: Path, data: dict[str, Any]) -> None:
     with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
@@ -36,7 +36,7 @@ def infer_layout(file_path: Path) -> str:
     return parts[1]
 
 
-def compile_rules(raw_rules: List[Dict[str, Any]]):
+def compile_rules(raw_rules: list[dict[str, Any]]) -> list[dict]:
     compiled = []
     for r in raw_rules:
         kinds = [k for k in ("exact", "prefix", "regex") if k in r]
@@ -86,7 +86,7 @@ def compile_rules(raw_rules: List[Dict[str, Any]]):
     return compiled
 
 
-def match_rule(key: str, rules):
+def match_rule(key: str, rules: list[dict]) -> list:
     matches = []
     for rule in rules:
         t = rule["type"]
@@ -108,7 +108,7 @@ def match_rule(key: str, rules):
     return matches
 
 
-def process_file(file_path: Path, rules, dry_run: bool = False):
+def process_file(file_path: Path, rules: list[dict], dry_run: bool = False) -> dict:
     data = load_json(file_path)
     if "translations" not in data or not isinstance(data["translations"], dict):
         raise ValueError(f"No 'translations' object in {file_path}")
@@ -126,7 +126,7 @@ def process_file(file_path: Path, rules, dry_run: bool = False):
 
     changed = 0
     total = len(translations)
-    blanked_keys: List[str] = []
+    blanked_keys: list[str] = []
     for key, value in list(translations.items()):
         if not isinstance(value, str):
             continue
@@ -159,7 +159,9 @@ def process_file(file_path: Path, rules, dry_run: bool = False):
     }
 
 
-def write_blanked_file(out_dir: Path, original_filename: str, blanked_keys: List[str]):
+def write_blanked_file(
+    out_dir: Path, original_filename: str, blanked_keys: list[str]
+) -> None:
     if not blanked_keys:
         return
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -175,10 +177,10 @@ def run_cleanup(
     locales_dir: Path,
     *,
     lang: str = "en",
-    dry_run: Optional[bool] = None,
-    only: Optional[List[str]] = None,
-    blanked_out_dir: Optional[Path] = None,
-):
+    dry_run: bool | None = None,
+    only: list[str] | None = None,
+    blanked_out_dir: Path | None = None,
+) -> dict:
     """
     Execute cleanup using rules. Returns a dict with a summary and counts.
     Does not print or exit; raises exceptions on fatal errors.
@@ -257,8 +259,8 @@ def click_cleanup(
     lang: str,
     dry_run: bool,
     only: tuple[str, ...],
-    blanked_out_dir: Optional[Path],
-):
+    blanked_out_dir: Path | None,
+) -> None:
     """
     Standalone CLI entrypoint using click. Also usable programmatically via run_cleanup().
     """

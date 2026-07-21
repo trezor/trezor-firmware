@@ -79,7 +79,7 @@ async def do_change_language(
     # Compare only (VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH):
     if len(header.version) != 4 or len(expected_version) != 4:
         raise DataError("Invalid version format")
-    if header.version[:3] != expected_version[:3]:
+    if not translations.version_matches_firmware(header.version, expected_version):
         raise DataError("Translations version mismatch")
 
     current_header = translations.TranslationsHeader.load_from_flash()
@@ -91,7 +91,9 @@ async def do_change_language(
         # if a blob is present, it can only be silently upgraded to expected_version
         silent_install = (
             current_header.language == header.language
-            and current_header.version != expected_version
+            and not translations.version_matches_firmware(
+                current_header.version, expected_version
+            )
         )
 
     # Confirm with user
