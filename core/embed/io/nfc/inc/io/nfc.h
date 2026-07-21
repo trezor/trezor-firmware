@@ -132,3 +132,21 @@ ts_t nfc_get_device_info(nfc_dev_info_t *dev_info);
  * @return TS_OK when the function pass, otherwise an error.
  */
 ts_t nfc_transceive(const nfc_apdu_cmd_t cmd, nfc_apdu_response_t resp);
+
+
+/** 
+ * @brief Transceive psk message over ISO14443-3 customized frame (9-b header,
+ * no parity bits, augmented CRC).
+ * 
+ * tx_psk should be an array of 16 bytes, and rx_psk should be of the same size.
+ * 
+ * @param tx_psk [in] Pointer to the PSK message to transmit.
+ * @param tx_psk_buf_len [in] Length of the PSK message to transmit.
+ * @param rx_psk [out] Pointer to the buffer to store received PSK message.
+ * @param rx_psk_buf_len [in] Capacity of the receive buffer.
+ * @param rx_psk_len [in/out] Pointer to the length of the received PSK message.
+ * @return TS_OK when the function pass, otherwise an error.
+ */
+ts_t nfc_transceive_psk(uint8_t *tx_psk, size_t tx_psk_buf_len,
+                        uint8_t *rx_psk, size_t rx_psk_buf_len,
+                        size_t *rx_psk_len);
