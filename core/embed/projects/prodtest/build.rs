@@ -43,6 +43,7 @@ fn main() -> Result<()> {
                 "prodtest_sdcard.c",
                 "prodtest_tamper.c",
                 "prodtest_sbu.c",
+                "prodtest_secrets.c",
                 "prodtest_secure_channel.c",
                 "prodtest_syslog.c",
                 "prodtest_telemetry.c",
@@ -64,7 +65,6 @@ fn main() -> Result<()> {
                     "prodtest_nrf.c",
                     "prodtest_optiga.c",
                     "prodtest_power_manager.c",
-                    "prodtest_secrets.c",
                     "prodtest_wpc.c",
                 ],
             );
