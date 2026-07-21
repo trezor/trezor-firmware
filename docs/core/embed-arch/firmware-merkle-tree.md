@@ -19,12 +19,13 @@ of the tree it owns and bridging to the root it inherits via a Merkle path:
 | --- | --- | --- | --- | --- |
 | **boardloader** | `H(bootloader)` + model leaf | model path (`boot_header_merkle_proof`) | `modelRoot` | verifies the **signature** |
 | **bootloader** | `H(firmware manifest)` | firmware path (`firmware_proof`) | `firmwareRoot` | trusts it (in the boardloader-verified boot header) |
-| **kernel** (opt) | `H(app)` | app path | `appRoot` | trusts it (in the bootloader-verified manifest) |
+| **kernel** (opt) | `H(app)` | app path | a future app root | would be added to the manifest when apps exist (§6) |
 
-`firmwareRoot` and `appRoot` are ordinary **internal nodes** of the single tree,
-but they are also **materialized as fields** in their parent node (checkpoints),
+`firmwareRoot` is an ordinary **internal node** of the single tree,
+but it is also **materialized as a field** in its parent node (a checkpoint),
 so a lower domain can verify its subtree locally against a root it already trusts
-without re-walking to `modelRoot` or re-checking the signature.
+without re-walking to `modelRoot` or re-checking the signature. A future app root
+(§6) would be materialized the same way, in the variant manifest.
 
 The founder's build system produces `modelRoot`; the founder compares it against
 the value shown on their Trezor, and the Trezor can show what changed since last
@@ -38,10 +39,8 @@ modelRoot                                            [signed]
 │   └── model leaf  { hwModel, version, fixVersion, …,
 │                     firmwareRoot, bootloaderHash }      ← boot header (TRZQ)
 │         └── firmwareRoot                                (materialized field)
-│               ├── variant manifest (universal)  { firmwareType, appRoot,
+│               ├── variant manifest (universal)  { firmwareType,
 │               │        translationsRoot, hashDirectory[secmon,kernel,core] }
-│               │     └── appRoot                          (materialized field)
-│               │           └── app leaves (btc, eth, solana, …)
 │               ├── variant manifest (bitcoin-only)
 │               ├── variant manifest (prodtest)
 │               └── nrf            (shared, variant-agnostic — see §7)
@@ -104,10 +103,9 @@ Byte layout (little-endian), variant leaf = `SHA256(0x00 || manifest)`:
 | 0 | `magic` = `TRZD` | u32 | firmware directory |
 | 4 | `firmware_variant` | u32 | `fw_variant_t` (== `vendor_fw_type_t`); authenticated |
 | 8 | `firmware_version` | 4×u8 | major, minor, patch, build (kernel+coreapp) |
-| 12 | `app_root` | 32 | root of the app tree; **zero** until apps exist |
-| 44 | `translations_root` | 32 | root of translations; **zero** until they exist |
-| 76 | `module_count` | u32 | |
-| 80 | `entry[module_count]` | — | 48 bytes each |
+| 12 | `translations_root` | 32 | root of translations; **zero** until they exist |
+| 44 | `module_count` | u32 | |
+| 48 | `entry[module_count]` | — | 48 bytes each |
 
 Entry:
 
@@ -193,12 +191,15 @@ its real `code_hash` (the signer zeroes it only for the leaf).
 
 ## 6. App layer (kernel) — **[design]**
 
-`appRoot` (a field in the variant manifest) is the root of a Merkle tree of
-installable apps (btc, eth, solana, …). A module such as the kernel verifies an
-app it loads by folding the app's Merkle path up to `appRoot` (which it trusts
-because the manifest is bootloader-verified). `translations_root` is analogous
-for translation blobs. Neither is built yet; the manifest reserves zeroed fields
-for them.
+A future app root would be the root of a Merkle tree of installable apps (btc,
+eth, solana, …). A module such as the kernel would verify an app it loads by
+folding the app's Merkle path up to that root (which it trusts because the
+manifest is bootloader-verified). When apps are built, the app root would be
+added to the variant manifest, materialized like `firmwareRoot` (§1). It is
+**not** a reserved manifest field today — the manifest carries no app root until
+apps exist. `translations_root` is the analogous anchor for translation blobs
+and *is* reserved (zeroed) in the manifest, though translations are not built
+yet either.
 
 ## 7. nRF placement — **[design]**
 
@@ -238,8 +239,8 @@ and needs a phase-2 transfer-to-nRF-chip install step.
    SHA256(0x00 || manifest)`, fold `firmware_proof` → compare to `firmware_root`
    from its (boardloader-verified) boot header. Then for each manifest entry:
    `SHA256(code @ addr, size) == code_hash`. Jump to the entry module (secmon).
-3. Kernel (opt): to load an app, fold the app's path → `appRoot` from the
-   (bootloader-verified) manifest.
+3. Kernel (opt, future): to load an app, fold the app's path → a future app root
+   carried in the (bootloader-verified) manifest.
 
 ## 10. Implementation status
 
@@ -262,7 +263,7 @@ and needs a phase-2 transfer-to-nRF-chip install step.
   (`firmware_module.build_founder_tree`); manifest build (`build_manifest` /
   `fill_manifest` / `variant_leaf` + `authenticity_manifest`).
 - **[design / TODO]** model tree → `modelRoot` (multi-model, non-empty
-  `boot_header_merkle_proof`); app tree + `appRoot`; translations; nRF as a
+  `boot_header_merkle_proof`); app tree + its manifest app root; translations; nRF as a
   shared node; kernel/core split; production signing; whether the custom slot
   ships in the production field `firmwareRoot`.
 

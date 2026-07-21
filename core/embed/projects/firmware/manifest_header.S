@@ -11,8 +11,8 @@
 // module directory's shape (module_count + each entry's role/flags) and each
 // entry's addr/size (from linker symbols -- the modules are linked in this
 // image, so their code offsets/sizes are known). Only each entry's code_hash is
-// filled post-build (headertool_pq), over the placed module code; app_root and
-// translations_root are reserved (zero) until those subtrees exist.
+// filled post-build (headertool_pq), over the placed module code;
+// translations_root is reserved (zero) until that subtree exists.
 //
 // Layout matches firmware_manifest_t (sec/boot_header.h) and the signer/tool
 // (tools/trezor_core_tools/firmware_module.py) byte-for-byte. The region is
@@ -28,7 +28,6 @@ g_firmware_manifest:
     .byte VERSION_MINOR              //   kernel+coreapp module header, version.h)
     .byte VERSION_PATCH              // firmware_version.patch
     .byte VERSION_BUILD              // firmware_version.build
-    .space 32                        // app_root         (reserved; 0)
     .space 32                        // translations_root(reserved; 0)
     .word 2                          // module_count (secmon + kernel+coreapp)
 

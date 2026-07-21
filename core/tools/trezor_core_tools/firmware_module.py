@@ -76,14 +76,14 @@ def _model_str(hw_model: int) -> str:
 # --- Variant manifest ("firmware directory") ---------------------------------
 #
 # The variant leaf is a manifest: a directory of the variant's modules plus
-# variant-level authenticated fields (firmware_variant, app_root,
+# variant-level authenticated fields (firmware_variant,
 # translations_root). Each directory entry references its module directly by
 # code_hash = SHA-256 over the whole module code (there is no per-module TRZM
 # header). The variant leaf is H(0x00 || manifest); the founder tree combines
 # variant leaves.
 #
 # Layout (little-endian), must byte-match the on-device manifest:
-#   magic 'TRZD' | firmware_variant u32 | firmware_version[4] | app_root[32]
+#   magic 'TRZD' | firmware_variant u32 | firmware_version[4]
 #   | translations_root[32] | module_count u32 | entry[module_count]
 #   entry: module_type u32 | flags u32 | addr u32 | size u32 | code_hash[32]
 # firmware_version is major,minor,patch,build (mirrors the kernel+coreapp build);
@@ -91,7 +91,7 @@ def _model_str(hw_model: int) -> str:
 # firmware version in phase 1 (before the module code is streamed).
 
 MANIFEST_MAGIC = b"TRZD"
-_MANIFEST_FIXED = struct.Struct("<4sI4s32s32sI")
+_MANIFEST_FIXED = struct.Struct("<4sI4s32sI")
 _MANIFEST_ENTRY = struct.Struct("<IIII32s")
 _ZERO32 = b"\x00" * 32
 _ZERO4 = b"\x00" * 4
@@ -100,7 +100,6 @@ _ZERO4 = b"\x00" * 4
 def build_manifest(
     firmware_variant: int,
     entries: list[dict],
-    app_root: bytes = _ZERO32,
     translations_root: bytes = _ZERO32,
     firmware_version: bytes = _ZERO4,
 ) -> bytes:
@@ -111,7 +110,6 @@ def build_manifest(
         MANIFEST_MAGIC,
         firmware_variant,
         firmware_version,
-        app_root,
         translations_root,
         len(entries),
     )
@@ -129,7 +127,7 @@ def build_manifest(
 def read_manifest(fw: bytes | bytearray) -> bytes:
     """Read the manifest bytes stored at the start of a firmware image (the
     authenticated bytes the device hashes for the variant leaf)."""
-    magic, _v, _ver, _ar, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
+    magic, _v, _ver, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError("no manifest at the firmware image start")
     return bytes(fw[0 : _MANIFEST_FIXED.size + mc * _MANIFEST_ENTRY.size])
@@ -139,7 +137,7 @@ def manifest_entries(fw: bytes | bytearray) -> list[dict]:
     """Parse the manifest directory into a list of entry dicts (module_type,
     flags, addr, size, code_hash), in manifest order. Replaces the old TRZM
     module-chain scan -- the manifest IS the directory now."""
-    magic, _v, _ver, _ar, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
+    magic, _v, _ver, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError("no manifest at the firmware image start")
     entries = []
@@ -163,7 +161,7 @@ def format_manifest(manifest: bytes) -> str:
     the authenticated variant + subtree roots and the per-module directory (each
     entry's role/flags/addr/size and committed code_hash). A ZEROED
     kernel+coreapp code_hash marks a custom/wildcard (unofficial) manifest."""
-    magic, variant, ver, app_root, tr_root, mc = _MANIFEST_FIXED.unpack_from(
+    magic, variant, ver, tr_root, mc = _MANIFEST_FIXED.unpack_from(
         manifest, 0
     )
     if magic != MANIFEST_MAGIC:
@@ -178,7 +176,6 @@ def format_manifest(manifest: bytes) -> str:
         "firmware manifest (TRZD)",
         f"  firmware_variant : {variant} ({vname})",
         f"  firmware_version : {ver_str}",
-        f"  app_root         : {_root(app_root)}",
         f"  translations_root: {_root(tr_root)}",
         f"  module_count     : {mc}",
     ]
@@ -197,7 +194,7 @@ def format_manifest(manifest: bytes) -> str:
 
 def manifest_variant(manifest: bytes) -> int:
     """The authenticated firmware_variant (fw_variant_t) stored in a manifest."""
-    magic, variant, _ver, _ar, _tr, _mc = _MANIFEST_FIXED.unpack_from(manifest, 0)
+    magic, variant, _ver, _tr, _mc = _MANIFEST_FIXED.unpack_from(manifest, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError("not a manifest (bad magic)")
     return variant
@@ -205,7 +202,7 @@ def manifest_variant(manifest: bytes) -> int:
 
 def manifest_version(manifest: bytes) -> tuple[int, int, int, int]:
     """The authenticated firmware version (major, minor, patch, build)."""
-    magic, _v, ver, _ar, _tr, _mc = _MANIFEST_FIXED.unpack_from(manifest, 0)
+    magic, _v, ver, _tr, _mc = _MANIFEST_FIXED.unpack_from(manifest, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError("not a manifest (bad magic)")
     return tuple(ver)
@@ -231,9 +228,9 @@ def fill_manifest(fw: bytearray) -> bytearray:
     code hash, including the kernel+coreapp of a CUSTOM variant (its real hash is
     the creator's integrity hash). The custom slot's founder-signed leaf zeroes
     the app hash only for the AUTHENTICITY fold (see variant_leaf), never in the
-    on-flash bytes. app_root / translations_root are left as set by the template
-    (0 until those subtrees exist)."""
-    magic, _variant, _ver, _ar, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
+    on-flash bytes. translations_root is left as set by the template
+    (0 until that subtree exists)."""
+    magic, _variant, _ver, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError(
             "no manifest template at the image start (manifest_header.S missing?)"
@@ -258,7 +255,7 @@ def authenticity_manifest(manifest: bytes) -> bytes:
     byte-for-byte."""
     if manifest_variant(manifest) != FW_VARIANT_CUSTOM:
         return manifest
-    _magic, _v, _ver, _ar, _tr, mc = _MANIFEST_FIXED.unpack_from(manifest, 0)
+    _magic, _v, _ver, _tr, mc = _MANIFEST_FIXED.unpack_from(manifest, 0)
     buf = bytearray(manifest)
     # firmware_version (creator's app version) -> zero.
     buf[8:12] = b"\x00" * 4

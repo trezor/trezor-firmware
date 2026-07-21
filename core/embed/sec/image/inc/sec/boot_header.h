@@ -230,7 +230,6 @@ typedef struct __attribute__((packed)) {
       firmware_version[4];      /**< major, minor, patch, build (authenticated);
                                      mirrors the kernel+coreapp module header so
                                      the install confirm can show it in phase 1 */
-  merkle_proof_node_t app_root; /**< root of the app tree (0 if none) */
   merkle_proof_node_t
       translations_root; /**< root of translations (0 if none) */
   uint32_t module_count;

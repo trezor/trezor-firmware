@@ -25,7 +25,6 @@ g_firmware_manifest:
     .byte VERSION_MINOR              // firmware_version.minor
     .byte VERSION_PATCH              // firmware_version.patch
     .byte VERSION_BUILD              // firmware_version.build
-    .space 32                        // app_root         (reserved; 0)
     .space 32                        // translations_root(reserved; 0)
     .word 1                          // module_count (prodtest only)
 

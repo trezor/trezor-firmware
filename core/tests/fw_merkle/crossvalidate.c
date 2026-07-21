@@ -58,7 +58,6 @@ typedef struct __attribute__((packed)) {
   uint32_t magic;
   uint32_t firmware_variant;
   uint8_t firmware_version[4];
-  merkle_proof_node_t app_root;
   merkle_proof_node_t translations_root;
   uint32_t module_count;
   firmware_manifest_entry_t entries[];
