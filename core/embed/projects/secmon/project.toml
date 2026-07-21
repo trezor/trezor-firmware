@@ -1,6 +1,7 @@
 uses = [
     "backup_ram",
     "boot_ucb",
+    "ext_flash_otfdec",
     "consumption_mask",
     "hash_processor",
     "lockable_bootloader",

@@ -222,6 +222,11 @@ void tz_init(void) {
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
 
+  // Note: peripheral clocks are NOT enabled here.  Drivers are responsible for
+  // enabling their own clocks (e.g. __HAL_RCC_OTFDEC1_CLK_ENABLE() in
+  // ext_flash_otfdec_init).  In the SECMON build, security-critical clocks are
+  // enabled in the SECMON tz_init before the NS world starts.
+
   tz_enable_illegal_access_interrupt();
 }
 #endif  // !SECMON

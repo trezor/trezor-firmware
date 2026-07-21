@@ -27,6 +27,10 @@
 #include <sec/secure_aes.h>
 #include <sec/tz_init.h>
 #include <sec/unit_properties.h>
+
+#ifdef USE_EXT_FLASH_OTFDEC
+#include <sec/ext_flash_otfdec.h>
+#endif
 #include <sys/bootutils.h>
 #include <sys/flash.h>
 #include <sys/system.h>
@@ -105,6 +109,21 @@ static void drivers_init(void) {
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
+
+#ifdef USE_EXT_FLASH_OTFDEC
+  // OTFDEC key derivation uses SAES/DHUK; ensure the peripheral is up even
+  // when USE_STORAGE_HWKEY is not set on this build configuration.
+#ifndef USE_STORAGE_HWKEY
+  ensure(secure_aes_init(), "secure_aes_init failed");
+#endif
+  // TODO: pass nonce and version from the firmware image header once the
+  //       on-flash layout is finalised.  Using zero nonce for bring-up.
+  uint32_t otfdec_nonce[2] = {0, 0};
+  ensure(ext_flash_otfdec_init(otfdec_nonce, 0), "ext_flash_otfdec_init failed");
+#ifndef USE_STORAGE_HWKEY
+  secure_aes_deinit();
+#endif
+#endif  // USE_EXT_FLASH_OTFDEC
 
 #ifdef USE_TAMPER
   tamper_init();

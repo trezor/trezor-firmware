@@ -51,6 +51,10 @@
 #include <sys/ext_flash.h>
 #endif
 
+#ifdef USE_EXT_FLASH_OTFDEC
+#include <sec/ext_flash_otfdec.h>
+#endif
+
 #ifdef USE_SD_CARD
 #include <io/sdcard.h>
 #endif
