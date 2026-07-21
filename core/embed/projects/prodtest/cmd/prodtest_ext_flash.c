@@ -21,6 +21,9 @@
 
 #include <string.h>
 
+#include <cmsis_compiler.h>
+
+#include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
@@ -196,6 +199,73 @@ static void prodtest_ext_flash_read(cli_t* cli) {
 
   static uint8_t buf[EXT_FLASH_CMD_READ_MAX];
   memcpy(buf, (const uint8_t*)(uintptr_t)(EXT_FLASH_MMAP_BASE + addr), len);
+
+  size_t offset = 0;
+  while (offset < len) {
+    size_t row = MIN(16, len - offset);
+    char hex[16 * 2 + 1];
+    cstr_encode_hex(hex, sizeof(hex), &buf[offset], row);
+    cli_trace(cli, "%08X: %s", (unsigned int)(addr + offset), hex);
+    offset += row;
+  }
+
+  cli_ok(cli, "");
+}
+
+// ============================================================================
+// ext-flash-read-raw  <addr> <len>
+//
+// Read bytes from external flash via the indirect SPI path, bypassing the
+// memory-mapped (XIP) window entirely.  Because the CPU never reads through
+// the OCTOSPI mmap aperture, OTFDEC decryption does NOT apply and the bytes
+// returned are the raw ciphertext stored on the chip.
+//
+// Contrast with ext-flash-read (XIP/mmap, OTFDEC decrypts on-the-fly):
+//   ext-flash-read     addr len  →  plaintext  (through OTFDEC)
+//   ext-flash-read-raw addr len  →  ciphertext (raw chip bytes)
+// ============================================================================
+
+static void prodtest_ext_flash_read_raw(cli_t* cli) {
+  if (cli_arg_count(cli) != 2) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint32_t addr = 0;
+  if (!cli_arg_uint32(cli, "addr", &addr)) {
+    cli_error_arg(cli, "Expecting addr (decimal or 0x-prefixed hex).");
+    return;
+  }
+
+  uint32_t len = 0;
+  if (!cli_arg_uint32(cli, "len", &len) || len == 0 ||
+      len > EXT_FLASH_CMD_READ_MAX) {
+    cli_error_arg(cli, "Expecting len in range 1-%d.", EXT_FLASH_CMD_READ_MAX);
+    return;
+  }
+
+  if (addr >= EXT_FLASH_SIZE || len > EXT_FLASH_SIZE - addr) {
+    cli_error(cli, PRODTEST_ERR_EXT_FLASH_READ,
+              "Range 0x%08X+%d exceeds flash size (%d KB).",
+              (unsigned int)addr, (int)len, (int)(EXT_FLASH_SIZE / 1024));
+    return;
+  }
+
+  // ext_flash_read() requires mmap to be off (it issues direct SPI commands).
+  // Disable mmap for the duration of the read, then restore it.
+  bool was_mmap = ext_flash_is_mmap_enabled();
+  if (was_mmap) ext_flash_mmap_disable();
+
+  static uint8_t buf[EXT_FLASH_CMD_READ_MAX];
+  bool ok = ext_flash_read(addr, buf, len);
+
+  if (was_mmap) ext_flash_mmap_enable();
+
+  if (!ok) {
+    cli_error(cli, PRODTEST_ERR_EXT_FLASH_READ,
+              "Indirect read failed at 0x%08X.", (unsigned int)addr);
+    return;
+  }
 
   size_t offset = 0;
   while (offset < len) {
@@ -473,8 +543,8 @@ static void prodtest_ext_flash_otfdec_load(cli_t* cli) {
     return;
   }
 
-  if (addr & 3u) {
-    cli_error_arg(cli, "addr must be 4-byte aligned (got 0x%08X).",
+  if (addr & 15u) {
+    cli_error_arg(cli, "addr must be 16-byte aligned (got 0x%08X).",
                   (unsigned int)addr);
     return;
   }
@@ -488,8 +558,8 @@ static void prodtest_ext_flash_otfdec_load(cli_t* cli) {
     return;
   }
 
-  if (len & 3u) {
-    cli_error_arg(cli, "Data length must be a multiple of 4 bytes (got %d).",
+  if (len & 15u) {
+    cli_error_arg(cli, "Data length must be a multiple of 16 bytes (got %d).",
                   (int)len);
     return;
   }
@@ -509,8 +579,6 @@ static void prodtest_ext_flash_otfdec_load(cli_t* cli) {
   cli_trace(cli, "Encrypting %d bytes for flash offset 0x%08X...",
             (int)len, (unsigned int)addr);
 
-  // OCTOSPI must be in mmap mode for HAL_OTFDEC_Cipher to access the XIP
-  // window.  ext_flash_write() toggles mmap internally, so encrypt first.
   if (!ext_flash_otfdec_cipher(addr, plaintext, (uint32_t)len, ciphertext)) {
     ext_flash_otfdec_deinit();
     cli_error(cli, PRODTEST_ERR_EXT_FLASH_PROGRAM, "OTFDEC cipher failed.");
@@ -569,9 +637,9 @@ static void prodtest_ext_flash_otfdec_exec(cli_t* cli) {
   cli_trace(cli, "Jumping to OTFDEC-decrypted code at 0x%08X (mmap+0x%08X)...",
             (unsigned int)(EXT_FLASH_MMAP_BASE + addr), (unsigned int)addr);
 
-  // Instruction barrier: ensure all pending writes are visible before the
-  // branch.  A full I-cache invalidation (HAL_ICACHE_Invalidate) may be
-  // needed if the address was fetched before; sufficient for fresh flash.
+  // Flush I-cache so the CPU fetches the freshly written ciphertext from flash
+  // (decrypted on-the-fly by OTFDEC) rather than any stale cached line.
+  HAL_ICACHE_Invalidate();
   __DSB();
   __ISB();
 
@@ -606,6 +674,13 @@ PRODTEST_CLI_CMD(
   .name = "ext-flash-read",
   .func = prodtest_ext_flash_read,
   .info = "Read bytes from external flash via memory-mapped (XIP) mode",
+  .args = "<addr> <len>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "ext-flash-read-raw",
+  .func = prodtest_ext_flash_read_raw,
+  .info = "Read raw ciphertext from ext flash via indirect SPI (bypasses OTFDEC/XIP)",
   .args = "<addr> <len>"
 );
 
