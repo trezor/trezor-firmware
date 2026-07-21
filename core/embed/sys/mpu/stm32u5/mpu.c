@@ -517,11 +517,11 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 #endif
     case MPU_MODE_UNUSED_FLASH:
 #ifdef USE_EXT_FLASH
-  SET_REGION( 6, EXT_FLASH_MMAP_BASE,      EXT_FLASH_SIZE,     EXT_FLASH,    NO,    NO );
+      SET_REGION( 6, EXT_FLASH_MMAP_BASE,  EXT_FLASH_SIZE,     EXT_FLASH,   YES,    NO );
 #else
-  DIS_REGION( 6);
+      DIS_REGION( 6 );
 #endif
-  break;
+      break;
     case MPU_MODE_BOOTARGS:
       SET_REGION( 6, BOOTARGS_START,           BOOTARGS_SIZE,      SRAM,        YES,    NO );
       break;

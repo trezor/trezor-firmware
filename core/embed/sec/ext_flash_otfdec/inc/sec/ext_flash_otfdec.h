@@ -45,3 +45,18 @@ secbool ext_flash_otfdec_init(const uint32_t nonce[2], uint16_t version);
 // Call before updating the ext-flash content so that reads during erase/write
 // are not passed through the now-incorrect decryption window.
 void ext_flash_otfdec_deinit(void);
+
+// Encrypts `byte_len` bytes of `plaintext` using OTFDEC1 encipher mode,
+// producing ciphertext that — when written to ext-flash at `flash_addr` —
+// will be transparently decrypted by OTFDEC on CPU fetch (XIP).
+//
+// Constraints:
+//   - `flash_addr` must be within the OCTOSPI1 memory-mapped window
+//   - `byte_len` must be a non-zero multiple of 16 (OTFDEC AES block size)
+//   - both buffers must be 4-byte aligned
+//   - OCTOSPI1 must be in memory-mapped (XIP) mode at call time
+//
+// In non-secure builds this call crosses the TrustZone boundary via smcall;
+// the actual encryption executes in secmon where OTFDEC1 is SEC|PRIV.
+bool ext_flash_otfdec_cipher(uint32_t flash_addr, const uint8_t *plaintext,
+                              uint32_t byte_len, uint8_t *ciphertext_out);
