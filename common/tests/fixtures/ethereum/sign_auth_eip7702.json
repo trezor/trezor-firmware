@@ -6,7 +6,6 @@
     "tests": [
         {
             "name": "ambire_nonce_1_chainid_0_all_networks",
-            "skip_models": ["t1", "t2t1"],
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x5A7fC11397E9A8AD41Bf10bF13f22b0A63F96f6D",
@@ -21,7 +20,6 @@
         },
         {
             "name": "ambire_nonce_1_chainid_1_mainnet",
-            "skip_models": ["t1", "t2t1"],
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x5A7fC11397E9A8AD41Bf10bF13f22b0A63F96f6D",
@@ -36,7 +34,6 @@
         },
         {
             "name": "ambire_nonce_3_chainid_8453_base",
-            "skip_models": ["t1", "t2t1"],
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x5A7fC11397E9A8AD41Bf10bF13f22b0A63F96f6D",
@@ -51,7 +48,6 @@
         },
         {
             "name": "ambire_nonce_2_chainid_42161_arbitrum",
-            "skip_models": ["t1", "t2t1"],
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x5A7fC11397E9A8AD41Bf10bF13f22b0A63F96f6D",
@@ -66,7 +62,6 @@
         },
         {
             "name": "revoke_nonce_123456_chainid_0_all_networks",
-            "skip_models": ["t1", "t2t1"],
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x0000000000000000000000000000000000000000",
@@ -81,7 +76,6 @@
         },
         {
             "name": "revoke_nonce_123456_chainid_1_mainnet",
-            "skip_models": ["t1", "t2t1"],
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x0000000000000000000000000000000000000000",
@@ -96,7 +90,6 @@
         },
         {
             "name": "revoke_nonce_123456_chainid_8453_base",
-            "skip_models": ["t1", "t2t1"],
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x0000000000000000000000000000000000000000",
@@ -111,7 +104,6 @@
         },
         {
             "name": "revoke_nonce_123456_chainid_42161_arbitrum",
-            "skip_models": ["t1", "t2t1"],
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x0000000000000000000000000000000000000000",
