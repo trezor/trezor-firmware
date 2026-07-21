@@ -160,7 +160,9 @@ message FirmwareBegin {
     required bytes boot_header = 1;      // new signed boot header (TRZQ)
     required bytes module_headers = 2;   // authenticated firmware manifest (TRZD variant leaf) + per-variant Merkle proof; device folds it to firmware_root
     optional uint32 code_length = 3;     // new bootloader code available to stream; omit/0 => header-only
-    optional bool custom_install = 4;    // install an unofficial kernel+coreapp that may deviate from the manifest (requires unlocked bootloader; runs unprivileged with a warning)
+    // (tag 4 was custom_install; removed -- custom is now the authenticated
+    // FW_VARIANT_CUSTOM manifest variant, derived on-device, no host flag)
+    reserved 4;
 }
 
 /**

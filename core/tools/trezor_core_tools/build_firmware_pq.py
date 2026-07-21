@@ -50,9 +50,15 @@ SIGNER = _HERE.with_name("firmware_pq_sign.py")
 
 # Variant name -> extra `xtask build firmware` flags. universal is the default
 # build; bitcoin-only adds --btc-only (feature_resolver: !btc_only => universal_fw).
+# custom adds --unsafe-fw => FW_VARIANT_CUSTOM: the founder-signed unofficial-app
+# slot. Its leaf zeroes the app version/size/code_hash, so this one build
+# establishes a slot that ANY creator app folds to (installed unprivileged,
+# unlocked-bootloader-only, own storage domain). Shipping it in the bundle is a
+# deliberate product choice -- custom firmware is allowed on production devices.
 VARIANT_FLAGS: dict[str, list[str]] = {
     "universal": [],
     "btc-only": ["--btc-only"],
+    "custom": ["--unsafe-fw"],
 }
 # Prodtest is its OWN project (`xtask build prodtest`), a single secure module --
 # not a firmware variant -- but it folds into the founder firmware_root as another
@@ -67,7 +73,7 @@ VARIANT_FLAGS: dict[str, list[str]] = {
 # btc-only` (no prodtest).
 PRODTEST_VARIANT = "prodtest"
 ALL_VARIANTS = [*VARIANT_FLAGS, PRODTEST_VARIANT]
-DEFAULT_VARIANTS = ["universal", "btc-only", "prodtest"]
+DEFAULT_VARIANTS = ["universal", "btc-only", "custom", "prodtest"]
 
 
 def _run_xtask(*xargs: str) -> None:
@@ -91,7 +97,6 @@ def build(
     output: Path,
     production: bool,
     bootloader_devel: bool,
-    unsafe_fw: bool = False,
 ) -> None:
     output.mkdir(parents=True, exist_ok=True)
 
@@ -116,26 +121,20 @@ def build(
     _run_xtask("build", "bootloader", "--model", model, *flags)
     _collect("bootloader.bin", output / "bootloader.bin")
 
-    # --unsafe-fw zeroes each variant manifest's kernel+coreapp hash -> a CUSTOM
-    # (unofficial) bundle where any kernel+coreapp installs as custom. Applied to
-    # the firmware builds only (the bootloader has no firmware manifest).
-    fw_flags = flags + (["--unsafe-fw"] if unsafe_fw else [])
-
     # One image per variant (artifacts/latest/{firmware,prodtest}.bin is overwritten
     # by each build, so copy it to <variant>.bin right after). Prodtest is its own
-    # project (a single secure module, never custom -> no --unsafe-fw).
+    # project (a single secure module). The custom variant is just another firmware
+    # build with VARIANT_FLAGS["custom"] == --unsafe-fw (=> FW_VARIANT_CUSTOM).
     for v in variants:
         if v == PRODTEST_VARIANT:
             print(f"building prodtest ({model}) ...")
             _run_xtask("build", "prodtest", "--model", model, *flags)
             _collect("prodtest.bin", output / f"{v}.bin")
         else:
-            print(
-                f"building firmware variant '{v}' ({model}) "
-                f"{'[CUSTOM/unsafe]' if unsafe_fw else ''}..."
-            )
+            note = " [CUSTOM/unofficial slot]" if v == "custom" else ""
+            print(f"building firmware variant '{v}' ({model}){note} ...")
             _run_xtask(
-                "build", "firmware", "--model", model, *VARIANT_FLAGS[v], *fw_flags
+                "build", "firmware", "--model", model, *VARIANT_FLAGS[v], *flags
             )
             _collect("firmware.bin", output / f"{v}.bin")
 
@@ -363,13 +362,6 @@ def main() -> None:
         help="use dev keys + dev bootloader/secmon (default: on)",
     )
     ap.add_argument(
-        "--unsafe-fw",
-        action="store_true",
-        help="build a CUSTOM/unofficial bundle: zero each manifest's kernel+coreapp "
-        "hash so any kernel+coreapp installs as custom (unlocked-bootloader-only, "
-        "boot warning, unprivileged). The secmon + manifest still conform/sign.",
-    )
-    ap.add_argument(
         "--skip-build",
         action="store_true",
         help="re-sign + check existing <output>/*.bin (skip the xtask builds)",
@@ -405,7 +397,6 @@ def main() -> None:
                 output,
                 args.production,
                 args.bootloader_devel,
-                args.unsafe_fw,
             )
         sign(output, variants, flash_target)
 

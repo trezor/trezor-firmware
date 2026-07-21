@@ -71,7 +71,8 @@ extern const void nrf_app_size;
 #ifdef FW_VARIANT
 #include <sec/boot_header.h>
 _Static_assert(
-    FW_VARIANT == FW_VARIANT_UNIVERSAL || FW_VARIANT == FW_VARIANT_BITCOIN_ONLY,
+    FW_VARIANT == FW_VARIANT_UNIVERSAL || FW_VARIANT == FW_VARIANT_BITCOIN_ONLY ||
+        FW_VARIANT == FW_VARIANT_CUSTOM,
     "FW_VARIANT must be a known fw_variant_t (see firmware/build.rs)");
 #endif
 

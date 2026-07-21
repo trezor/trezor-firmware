@@ -96,14 +96,6 @@ def main() -> None:
         action="store_true",
         help="skip the pre-upload consistency guard (not recommended)",
     )
-    ap.add_argument(
-        "--custom",
-        action="store_true",
-        help="force an unofficial install even if the firmware matches "
-        "the manifest (custom is otherwise auto-detected). Custom "
-        "requires an unlocked bootloader; runs unprivileged with a "
-        "warning; skips the variant-fold guard.",
-    )
     ap.add_argument("--reconnect-retries", type=int, default=30)
     args = ap.parse_args()
 
@@ -136,14 +128,10 @@ def main() -> None:
         )
 
         root, _bl, problems = check_signed_bootloader(args.bootloader)
-        # A custom (unofficial) firmware intentionally deviates from the founder
-        # manifest, so the variant-fold guard does not apply -- only require a
-        # properly signed bootloader. (custom is resolved just below; recompute the
-        # detection here so the guard is skipped for a detected-custom image too.)
-        fw_bytes = args.firmware.read_bytes()
-        if root is not None and not (
-            args.custom or firmware_module.is_custom_firmware(fw_bytes)
-        ):
+        # Every variant -- including the custom slot -- folds to firmware_root
+        # (variant_leaf zeroes the custom app hash in the authenticity leaf), so
+        # the variant-fold guard always applies.
+        if root is not None:
             problems += check_variant_folds(args.firmware, root)
         if problems:
             print("PRE-UPLOAD CHECK FAILED:", file=sys.stderr)
@@ -170,18 +158,13 @@ def main() -> None:
     proof = proof_path.read_bytes() if proof_path.exists() else b""
     module_headers = manifest + proof
     names = [firmware_module.TYPE_NAMES.get(m["module_type"], "?") for m in mods]
-    # Custom (unofficial) is AUTO-DETECTED from the image: a kernel+coreapp that
-    # deviates from its (official) manifest must be installed as custom. --custom
-    # only forces it (e.g. to install an official image into the custom domain).
-    detected_custom = firmware_module.is_custom_firmware(fw)
-    custom = detected_custom or args.custom
+    # Custom (unofficial) is the authenticated FW_VARIANT_CUSTOM variant; the
+    # device derives + gates it (unlocked bootloader, unprivileged). Detected here
+    # only to annotate the output -- there is no host flag to send.
+    is_custom = firmware_module.is_custom_firmware(fw)
     mode = f"bl code available ({len(bl_code)} B); device decides header-only vs full"
-    if custom:
-        mode += (
-            " [CUSTOM/unofficial: detected]"
-            if detected_custom
-            else " [CUSTOM/unofficial: forced]"
-        )
+    if is_custom:
+        mode += " [CUSTOM/unofficial]"
     print(
         f"boot header: {len(boot_header)} B | manifest: {len(manifest)} B | "
         f"proof: {len(proof)} B ({len(proof) // 32} nodes) | modules: {names} | "
@@ -194,7 +177,7 @@ def main() -> None:
     if session.features.bootloader_mode is not True:
         raise SystemExit("device must be in bootloader mode")
     streamed = firmware.firmware_begin(
-        session, boot_header, module_headers, code=bl_code, custom=custom
+        session, boot_header, module_headers, code=bl_code
     )
     print(
         f"phase 1 done ({'full bootloader streamed' if streamed else 'header-only'} "

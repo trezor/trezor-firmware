@@ -147,8 +147,6 @@ typedef struct _FirmwareBegin {
     pb_callback_t module_headers;
     bool has_code_length;
     uint32_t code_length;
-    bool has_custom_install;
-    bool custom_install;
 } FirmwareBegin;
 
 typedef struct _FirmwareRequest {
@@ -213,7 +211,7 @@ extern "C" {
 #define ButtonRequest_init_default               {false, _ButtonRequestType_MIN}
 #define ButtonAck_init_default                   {0}
 #define FirmwareErase_init_default               {false, 0}
-#define FirmwareBegin_init_default               {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0}
+#define FirmwareBegin_init_default               {{{NULL}, NULL}, {{NULL}, NULL}, false, 0}
 #define FirmwareRequest_init_default             {0, 0}
 #define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}}
 #define UnlockBootloader_init_default            {0}
@@ -227,7 +225,7 @@ extern "C" {
 #define ButtonRequest_init_zero                  {false, _ButtonRequestType_MIN}
 #define ButtonAck_init_zero                      {0}
 #define FirmwareErase_init_zero                  {false, 0}
-#define FirmwareBegin_init_zero                  {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0}
+#define FirmwareBegin_init_zero                  {{{NULL}, NULL}, {{NULL}, NULL}, false, 0}
 #define FirmwareRequest_init_zero                {0, 0}
 #define FirmwareUpload_init_zero                 {{{NULL}, NULL}, false, {0, {0}}}
 #define UnlockBootloader_init_zero               {0}
@@ -269,7 +267,6 @@ extern "C" {
 #define FirmwareBegin_boot_header_tag            1
 #define FirmwareBegin_module_headers_tag         2
 #define FirmwareBegin_code_length_tag            3
-#define FirmwareBegin_custom_install_tag         4
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
 #define FirmwareUpload_payload_tag               1
@@ -356,8 +353,7 @@ X(a, STATIC,   OPTIONAL, UINT32,   length,            1)
 #define FirmwareBegin_FIELDLIST(X, a) \
 X(a, CALLBACK, REQUIRED, BYTES,    boot_header,       1) \
 X(a, CALLBACK, REQUIRED, BYTES,    module_headers,    2) \
-X(a, STATIC,   OPTIONAL, UINT32,   code_length,       3) \
-X(a, STATIC,   OPTIONAL, BOOL,     custom_install,    4)
+X(a, STATIC,   OPTIONAL, UINT32,   code_length,       3)
 #define FirmwareBegin_CALLBACK pb_default_field_callback
 #define FirmwareBegin_DEFAULT NULL
 

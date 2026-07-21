@@ -140,13 +140,11 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
         // build time. firmware.bin is the combined [manifest | secmon |
         // kernel+coreapp] image, so this fills every module in one pass.
         if is_tree && matches!(args.project, Project::Firmware | Project::Prodtest) {
-            // Custom (unofficial) firmware: --unsafe-fw zeroes the kernel+coreapp
-            // entry's manifest hash (a wildcard), so the (dev-signed) manifest still
-            // folds to firmware_root and the secmon conforms, but any kernel+coreapp
-            // installs as custom. (Non-bootloader-devel default-custom + production
-            // paths are TBD.) Prodtest is a single secure module and is never custom.
-            let custom = args.unsafe_fw && args.project == Project::Firmware;
-            postbuild::fill_firmware_tree_headers(&bin, custom)?;
+            // Fill each manifest entry's code_hash over the placed module code.
+            // The variant (incl. CUSTOM, from --unsafe-fw -> FW_VARIANT_CUSTOM in
+            // the manifest) is baked at build time; the founder signer zeroes the
+            // custom app hash only for the authenticity leaf, never on flash.
+            postbuild::fill_firmware_tree_headers(&bin)?;
         }
 
         if args.project == Project::Firmware {

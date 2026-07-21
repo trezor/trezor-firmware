@@ -35,6 +35,8 @@
 // both schemes. Keep these in sync.
 _Static_assert((int)FW_VARIANT_NONE == (int)VENDOR_FW_TYPE_RESERVED,
                "fw variant");
+_Static_assert((int)FW_VARIANT_CUSTOM == (int)VENDOR_FW_TYPE_CUSTOM,
+               "fw variant");
 _Static_assert((int)FW_VARIANT_UNIVERSAL == (int)VENDOR_FW_TYPE_UNIVERSAL,
                "fw variant");
 _Static_assert((int)FW_VARIANT_BITCOIN_ONLY == (int)VENDOR_FW_TYPE_BTC_ONLY,

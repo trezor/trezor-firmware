@@ -20,12 +20,16 @@ fn main() -> Result<()> {
             // The firmware manifest ("firmware directory") at the image start.
             lib.add_source("manifest_header.S");
             // Stamp the authenticated firmware variant into the manifest. The
-            // firmware variant is a binary axis (matches upymod's BITCOIN_ONLY
-            // axis): the `universal_fw` feature => UNIVERSAL, its absence =>
-            // BITCOIN_ONLY. The numeric values ARE fw_variant_t (sec/boot_header.h,
-            // itself pinned to vendor_fw_type_t); a _Static_assert in main.c ties
-            // these literals to the enum so the two cannot silently drift.
-            let variant = if cfg!(feature = "universal_fw") {
+            // `unsafe_fw` feature builds the CUSTOM (unofficial) variant -- a
+            // first-class tree slot whose kernel+coreapp code_hash the founder
+            // signs as zero, so any creator app authenticates to it (runs
+            // unprivileged, unlocked-bootloader-only, own storage domain).
+            // Otherwise the binary btc-only axis applies: `universal_fw` =>
+            // UNIVERSAL, its absence => BITCOIN_ONLY. The numeric values ARE
+            // fw_variant_t (sec/boot_header.h, pinned to vendor_fw_type_t).
+            let variant = if cfg!(feature = "unsafe_fw") {
+                "1" // FW_VARIANT_CUSTOM
+            } else if cfg!(feature = "universal_fw") {
                 "2" // FW_VARIANT_UNIVERSAL
             } else {
                 "3" // FW_VARIANT_BITCOIN_ONLY
@@ -70,22 +74,18 @@ fn main() -> Result<()> {
             // The prefixed secmon MUST be the exact same binary the kernel was
             // built against (see kernel/build.rs embed_secmon_binary) or the
             // kernel secure-faults, so mirror that selection here:
-            //   - dev build: the freshly-built secmon (from source), so a normal
-            //     dev build tracks the current secmon source;
-            //   - dev + --unsafe-fw: the committed prebuilt dev secmon
-            //     (secmon_DEV) -- a STABLE signed secmon the dev bundle's manifest
-            //     commits -- so a custom build's kernel+coreapp can deviate while
-            //     the secmon still conforms (and for compatibility testing);
+            //   - dev build: the freshly-built secmon (from source). A CUSTOM
+            //     (--unsafe-fw) build embeds the SAME dev secmon -- the secmon is
+            //     founder-bound even for the custom variant (only the app is
+            //     unbound), so its manifest secmon code_hash must match the
+            //     founder-signed custom leaf. The secmon SOURCE and the firmware
+            //     VARIANT are independent axes.
             //   - release: the officially built secmon.
             let model_id = xbuild::current_model_id()?;
             let dir = PathBuf::from(format!("../../models/{}/secmon", model_id));
             if cfg!(feature = "bootloader_devel") {
-                if cfg!(feature = "unsafe_fw") {
-                    lib.embed_binary(dir.join("secmon_DEV.bin"), "secmon")?;
-                } else {
-                    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-                    lib.embed_binary(out_dir.join("../../../secmon.bin"), "secmon")?;
-                }
+                let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+                lib.embed_binary(out_dir.join("../../../secmon.bin"), "secmon")?;
             } else {
                 lib.embed_binary(dir.join("secmon.bin"), "secmon")?;
             }

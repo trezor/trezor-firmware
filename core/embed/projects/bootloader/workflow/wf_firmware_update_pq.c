@@ -209,31 +209,32 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
     return WF_ERROR;
   }
 
-  // --- Resolve variant + official/custom -> firmware_type. ---
+  // --- Resolve the (authenticated) variant -> firmware_type. ---
   uint32_t variant = manifest->firmware_variant;
 
-  // Custom (unofficial) install: the host declares it in the preamble. It lets
-  // the streamed kernel+coreapp deviate from the founder manifest (secmon stays
-  // official), but ONLY on an UNLOCKED bootloader; the result runs unprivileged
-  // with a boot warning and is storage-isolated (the custom flag feeds the
-  // storage salt). FIH: is_custom stays secfalse unless positively granted on a
-  // positively-unlocked bootloader.
-  secbool is_custom = secfalse;
-  if (msg.has_custom_install && msg.custom_install) {
+  // Custom firmware is the authenticated FW_VARIANT_CUSTOM slot: its manifest
+  // leaf was founder-signed with the kernel+coreapp code_hash zeroed (see
+  // firmware_manifest_authentic above), so the variant field is authenticated
+  // and the app is founder-unbound (integrity-only). A custom install runs
+  // unprivileged, is storage-isolated (firmware_type == the variant feeds the
+  // storage salt), and is allowed ONLY on an UNLOCKED bootloader. FIH: gate on
+  // the POSITIVE is_official check -- anything not positively official (custom /
+  // none / unknown) requires an unlocked bootloader.
+  secbool is_custom = firmware_type_is_custom((uint8_t)variant);
+  if (firmware_type_is_official((uint8_t)variant) != sectrue) {
 #ifdef LOCKABLE_BOOTLOADER
     if (secret_bootloader_locked() != secfalse) {
       send_msg_failure(iface, FailureType_Failure_ProcessError,
                        "Unlock the bootloader to install unofficial firmware");
       return WF_ERROR;
     }
-    is_custom = sectrue;
 #else
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Unofficial firmware not supported");
     return WF_ERROR;
 #endif
   }
-  uint8_t firmware_type = firmware_type_compose(variant, is_custom);
+  uint8_t firmware_type = firmware_type_compose(variant);
 
   // FIH: default to the SAFE behaviour -- WIPE (keep_seed secfalse) and treat
   // the device as NOT empty (require confirmation). Each flips to the
@@ -280,9 +281,9 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   //     confirm screen; reuse the bootloader one for now. ---
   // Vendor identity shown on the confirm: the variant name for an official
   // install, or the loud UNSAFE marker for a custom one. FIH: official only on
-  // a positive is_custom == secfalse.
+  // the POSITIVE is_official allow-list.
   size_t vendor_len = 0;
-  const secbool install_official = (is_custom == secfalse) ? sectrue : secfalse;
+  const secbool install_official = firmware_type_is_official((uint8_t)variant);
   const char *vendor = tree_vendor_str(variant, install_official, &vendor_len);
   // Firmware version from the (authenticated) manifest, packed for format_ver.
   // This is the FIRMWARE version, not the staged bootloader's TRZQ version.
@@ -405,8 +406,6 @@ typedef struct {
   const firmware_manifest_t *manifest;
   uintptr_t firmware_base;  // firmware region start (manifest addr base)
   size_t next_module;       // next directory entry to verify incrementally
-  secbool
-      custom;  // installed firmware_type is custom: kernel+coreapp may deviate
 } fwt_upload_handler_t;
 
 // Verify every manifest module whose code is now fully on flash
@@ -421,23 +420,15 @@ static upload_status_t fwt_verify_ready_modules(fwt_upload_handler_t *h,
   const firmware_manifest_t *m = h->manifest;
   while (h->next_module < m->module_count) {
     const firmware_manifest_entry_t *e = &m->entries[h->next_module];
-    // A custom (unofficial) install lets ONLY the non-secure app
-    // (FW_MODULE_APP) deviate from the manifest; its size may differ from the
-    // entry too, so we can't use the entry to know when it is fully written.
-    // Defer that module to the whole-image verify in on_finish
-    // (firmware_verify_tree, which honours the custom flag); skip here. Every
-    // other module (secmon, prodtest) is never custom and is always verified
-    // incrementally.
-    if (h->custom == sectrue && e->module_type == FW_MODULE_APP) {
-      h->next_module++;
-      continue;
-    }
+    // Every module -- including a custom variant's kernel+coreapp -- carries a
+    // real code_hash in the (authenticated) manifest, so each is verified
+    // against it the moment its bytes land. For the custom app that hash is the
+    // creator's (corruption check); the secmon's is founder-signed.
     uint32_t module_end = e->addr + e->size;
     if (module_end > bytes_on_flash) {
       break;  // not fully written yet
     }
-    if (sectrue !=
-        firmware_verify_manifest_entry(e, h->firmware_base, secfalse)) {
+    if (sectrue != firmware_verify_manifest_entry(e, h->firmware_base)) {
       send_msg_failure(iface, FailureType_Failure_ProcessError,
                        e->module_type == FW_MODULE_SECMON
                            ? "vtree: secmon verify failed (incremental)"
@@ -506,11 +497,6 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
   h->manifest = (const firmware_manifest_t *)h->manifest_buf;
   h->firmware_base = (uintptr_t)flash_area_get_address(base->target_area, 0, 0);
   h->next_module = 0;
-  // Custom (unofficial) install: phase 1 stamped the custom flag into the (now
-  // installed) boot header. It lets the kernel+coreapp deviate from the
-  // manifest.
-  h->custom = (unauth != NULL) ? firmware_type_is_custom(unauth->firmware_type)
-                               : secfalse;
 
   // Pre-confirmed in phase 1 -> auto-accept.
   ui_screen_install_start(iface->wire->wireless);
@@ -547,23 +533,13 @@ static upload_status_t fwt_on_finish(image_upload_handler_t *base,
   if (sectrue != firmware_verify_tree(&info)) {
     // Granular breakdown (prototype diagnostic): re-run the per-module checks
     // the way firmware_verify_tree does, so the failure names the culprit -- a
-    // module (secmon/kernel) vs the manifest fold/authenticity -- and reports
-    // the custom flag actually installed in the boot header.
-    const boot_header_auth_t *bl = boot_header_auth_get(BOOTLOADER_START);
-    const boot_header_unauth_t *u =
-        (bl != NULL) ? boot_header_unauth_get(bl) : NULL;
-    secbool custom =
-        (u != NULL) ? firmware_type_is_custom(u->firmware_type) : secfalse;
+    // module (secmon/kernel) vs the manifest fold/authenticity.
     const firmware_manifest_t *man =
         (const firmware_manifest_t *)(uintptr_t)FIRMWARE_START;
     for (size_t i = 0; man->magic == FW_MANIFEST_MAGIC && i < man->module_count;
          i++) {
       const firmware_manifest_entry_t *e = &man->entries[i];
-      secbool allow_custom =
-          (custom == sectrue && e->module_type == FW_MODULE_APP) ? sectrue
-                                                                 : secfalse;
-      if (sectrue !=
-          firmware_verify_manifest_entry(e, FIRMWARE_START, allow_custom)) {
+      if (sectrue != firmware_verify_manifest_entry(e, FIRMWARE_START)) {
         send_msg_failure(iface, FailureType_Failure_ProcessError,
                          e->module_type == FW_MODULE_SECMON
                              ? "vtree: secmon module bad"
@@ -574,9 +550,7 @@ static upload_status_t fwt_on_finish(image_upload_handler_t *base,
     // Every module passes individually -> the manifest fold/authenticity (or
     // the installed firmware_root) is the mismatch.
     send_msg_failure(iface, FailureType_Failure_ProcessError,
-                     custom == sectrue
-                         ? "vtree: fold/authenticity failed (custom)"
-                         : "vtree: fold/authenticity failed (official)");
+                     "vtree: fold/authenticity failed");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
   }
   // Update installed; clear the auto-continue command.

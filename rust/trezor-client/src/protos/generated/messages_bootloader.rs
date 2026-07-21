@@ -175,8 +175,6 @@ pub struct FirmwareBegin {
     pub module_headers: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bootloader.FirmwareBegin.code_length)
     pub code_length: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.bootloader.FirmwareBegin.custom_install)
-    pub custom_install: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.bootloader.FirmwareBegin.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -284,27 +282,8 @@ impl FirmwareBegin {
         self.code_length = ::std::option::Option::Some(v);
     }
 
-    // optional bool custom_install = 4;
-
-    pub fn custom_install(&self) -> bool {
-        self.custom_install.unwrap_or(false)
-    }
-
-    pub fn clear_custom_install(&mut self) {
-        self.custom_install = ::std::option::Option::None;
-    }
-
-    pub fn has_custom_install(&self) -> bool {
-        self.custom_install.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_custom_install(&mut self, v: bool) {
-        self.custom_install = ::std::option::Option::Some(v);
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "boot_header",
@@ -320,11 +299,6 @@ impl FirmwareBegin {
             "code_length",
             |m: &FirmwareBegin| { &m.code_length },
             |m: &mut FirmwareBegin| { &mut m.code_length },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "custom_install",
-            |m: &FirmwareBegin| { &m.custom_install },
-            |m: &mut FirmwareBegin| { &mut m.custom_install },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<FirmwareBegin>(
             "FirmwareBegin",
@@ -359,9 +333,6 @@ impl ::protobuf::Message for FirmwareBegin {
                 24 => {
                     self.code_length = ::std::option::Option::Some(is.read_uint32()?);
                 },
-                32 => {
-                    self.custom_install = ::std::option::Option::Some(is.read_bool()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -383,9 +354,6 @@ impl ::protobuf::Message for FirmwareBegin {
         if let Some(v) = self.code_length {
             my_size += ::protobuf::rt::uint32_size(3, v);
         }
-        if let Some(v) = self.custom_install {
-            my_size += 1 + 1;
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -400,9 +368,6 @@ impl ::protobuf::Message for FirmwareBegin {
         }
         if let Some(v) = self.code_length {
             os.write_uint32(3, v)?;
-        }
-        if let Some(v) = self.custom_install {
-            os.write_bool(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -424,7 +389,6 @@ impl ::protobuf::Message for FirmwareBegin {
         self.boot_header = ::std::option::Option::None;
         self.module_headers = ::std::option::Option::None;
         self.code_length = ::std::option::Option::None;
-        self.custom_install = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -433,7 +397,6 @@ impl ::protobuf::Message for FirmwareBegin {
             boot_header: ::std::option::Option::None,
             module_headers: ::std::option::Option::None,
             code_length: ::std::option::Option::None,
-            custom_install: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1016,17 +979,16 @@ impl ::protobuf::reflect::ProtobufValue for ProdTestT1 {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x19messages-bootloader.proto\x12\x1dhw.trezor.messages.bootloader\"'\
-    \n\rFirmwareErase\x12\x16\n\x06length\x18\x01\x20\x01(\rR\x06length\"\
-    \x9f\x01\n\rFirmwareBegin\x12\x1f\n\x0bboot_header\x18\x01\x20\x02(\x0cR\
-    \nbootHeader\x12%\n\x0emodule_headers\x18\x02\x20\x02(\x0cR\rmoduleHeade\
-    rs\x12\x1f\n\x0bcode_length\x18\x03\x20\x01(\rR\ncodeLength\x12%\n\x0ecu\
-    stom_install\x18\x04\x20\x01(\x08R\rcustomInstall\"A\n\x0fFirmwareReques\
-    t\x12\x16\n\x06offset\x18\x01\x20\x02(\rR\x06offset\x12\x16\n\x06length\
-    \x18\x02\x20\x02(\rR\x06length\">\n\x0eFirmwareUpload\x12\x18\n\x07paylo\
-    ad\x18\x01\x20\x02(\x0cR\x07payload\x12\x12\n\x04hash\x18\x02\x20\x01(\
-    \x0cR\x04hash\"&\n\nProdTestT1\x12\x18\n\x07payload\x18\x01\x20\x01(\x0c\
-    R\x07payloadB>\n#com.satoshilabs.trezor.lib.protobufB\x17TrezorMessageBo\
-    otloader\
+    \n\rFirmwareErase\x12\x16\n\x06length\x18\x01\x20\x01(\rR\x06length\"~\n\
+    \rFirmwareBegin\x12\x1f\n\x0bboot_header\x18\x01\x20\x02(\x0cR\nbootHead\
+    er\x12%\n\x0emodule_headers\x18\x02\x20\x02(\x0cR\rmoduleHeaders\x12\x1f\
+    \n\x0bcode_length\x18\x03\x20\x01(\rR\ncodeLengthJ\x04\x08\x04\x10\x05\"\
+    A\n\x0fFirmwareRequest\x12\x16\n\x06offset\x18\x01\x20\x02(\rR\x06offset\
+    \x12\x16\n\x06length\x18\x02\x20\x02(\rR\x06length\">\n\x0eFirmwareUploa\
+    d\x12\x18\n\x07payload\x18\x01\x20\x02(\x0cR\x07payload\x12\x12\n\x04has\
+    h\x18\x02\x20\x01(\x0cR\x04hash\"&\n\nProdTestT1\x12\x18\n\x07payload\
+    \x18\x01\x20\x01(\x0cR\x07payloadB>\n#com.satoshilabs.trezor.lib.protobu\
+    fB\x17TrezorMessageBootloader\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

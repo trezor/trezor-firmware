@@ -112,7 +112,6 @@ def firmware_begin(
     boot_header: bytes,
     module_headers: bytes,
     code: t.Optional[bytes] = None,
-    custom: bool = False,
     progress_update: t.Callable[[int], t.Any] = lambda _: None,
 ) -> bool:
     """Phase 1 of a Merkle-tree firmware update.
@@ -132,10 +131,11 @@ def firmware_begin(
     After the device reboots and the boardloader installs the new boot header,
     reconnect and call `update()` with the firmware modules to run phase 2.
 
-    If `custom` is set, the device is told this is an unofficial install: the
-    kernel+coreapp may deviate from the founder manifest. The device requires an
-    unlocked bootloader and marks the firmware custom (boot warning, unprivileged,
-    storage-isolated). The secmon must still match the manifest.
+    Custom (unofficial) firmware is a first-class authenticated variant
+    (FW_VARIANT_CUSTOM) in the manifest, so the device derives custom-ness from
+    the authenticated variant itself -- it requires an unlocked bootloader and
+    runs the firmware unprivileged with a boot warning, storage-isolated. No host
+    flag is needed.
     """
     if session.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
@@ -145,7 +145,6 @@ def firmware_begin(
             boot_header=boot_header,
             module_headers=module_headers,
             code_length=len(code) if code else None,
-            custom_install=True if custom else None,
         )
     )
 

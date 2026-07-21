@@ -55,12 +55,12 @@ fn main() -> Result<()> {
 
         // Firmware presence/verification + firmware-update flow: the legacy
         // vendor/image-header path (fw_check.c + wf_firmware_update.c) or the
-        // Merkle-tree path (fw_tree_verify.c + wf_firmware_update_tree.c).
+        // Merkle-tree path (fw_check_pq.c + wf_firmware_update_pq.c).
         // Exactly one; both provide `workflow_firmware_update`.
         if cfg!(feature = "pq_secure_boot") {
             lib.add_define("PQ_SECURE_BOOT", Some("1"));
-            lib.add_source("fw_tree_verify.c");
-            lib.add_source("workflow/wf_firmware_update_tree.c");
+            lib.add_source("fw_check_pq.c");
+            lib.add_source("workflow/wf_firmware_update_pq.c");
         } else {
             lib.add_source("fw_check.c");
             lib.add_source("workflow/wf_firmware_update.c");

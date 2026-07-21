@@ -35,15 +35,11 @@ def _variant_info(firmware: Path) -> dict:
     entries = firmware_module.manifest_entries(fw)
     if not entries:
         raise SystemExit(f"{firmware}: no manifest modules found")
-    # A zeroed kernel+coreapp code_hash is a legitimate custom/wildcard manifest;
-    # any OTHER entry with a zero hash means the manifest was never code-filled.
-    unfilled = [
-        e
-        for e in entries
-        if e["size"] > 0
-        and not any(e["code_hash"])
-        and e["module_type"] != firmware_module.FW_MODULE_APP
-    ]
+    # Every entry (incl. a CUSTOM variant's kernel+coreapp) carries a REAL
+    # code_hash on flash after the build fill; a zero hash means the manifest was
+    # never code-filled. (The custom app's founder-zeroing happens only in the
+    # authenticity leaf, computed by variant_leaf -- never on flash.)
+    unfilled = [e for e in entries if e["size"] > 0 and not any(e["code_hash"])]
     if unfilled:
         raise SystemExit(
             f"{firmware}: manifest code hashes not filled (run the firmware "

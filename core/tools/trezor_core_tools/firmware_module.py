@@ -33,8 +33,8 @@ FW_MANIFEST_REGION = 0x400
 
 TYPE_NAMES = {1: "secmon", 2: "app (kernel+coreapp)", 3: "prodtest"}
 # Variant vocabulary shared with vendor_fw_type_t (sec/image.h) and the model
-# vendorheader JSONs. Value 1 (custom/unsafe) is the FW_TYPE_CUSTOM_FLAG axis in
-# the tree scheme, not a variant, but is named here for completeness.
+# vendorheader JSONs. Value 1 (custom) is a FIRST-CLASS variant in the tree
+# scheme -- the founder-signed unofficial-app slot (see variant_leaf).
 VARIANT_NAMES = {
     0: "none",
     1: "custom",
@@ -43,6 +43,13 @@ VARIANT_NAMES = {
     4: "prodtest",
     5: "CA",
 }
+
+# Firmware variants (fw_variant_t, sec/boot_header.h) == vendor_fw_type_t.
+FW_VARIANT_NONE = 0
+FW_VARIANT_CUSTOM = 1
+FW_VARIANT_UNIVERSAL = 2
+FW_VARIANT_BITCOIN_ONLY = 3
+FW_VARIANT_PRODTEST = 4
 
 # Module types (fw_module_type_t, sec/boot_header.h). APP is the non-secure
 # application (kernel+coreapp); PRODTEST is a standalone secure factory-test image.
@@ -204,62 +211,28 @@ def manifest_version(manifest: bytes) -> tuple[int, int, int, int]:
     return tuple(ver)
 
 
-def manifest_kernel_is_wildcard(manifest: bytes) -> bool:
-    """True if the manifest's kernel+coreapp entry is a FILLED wildcard (its
-    code_hash zeroed) while another (secmon) entry IS filled -- i.e. a custom
-    manifest. The secmon-filled condition distinguishes this from a fresh,
-    unfilled template (where ALL code_hashes are zero, incl. the secmon), so it
-    does not misfire on a fresh build. NOTE: addr can no longer discriminate --
-    the linker fills addr/size in the template (only code_hash is post-filled)."""
-    magic, _v, _ver, _ar, _tr, mc = _MANIFEST_FIXED.unpack_from(manifest, 0)
-    if magic != MANIFEST_MAGIC:
-        return False
-    app_zeroed = False
-    other_filled = False
-    for i in range(mc):
-        eoff = _MANIFEST_FIXED.size + i * _MANIFEST_ENTRY.size
-        mtype, _flags, _addr, _size, ch = _MANIFEST_ENTRY.unpack_from(manifest, eoff)
-        if mtype == FW_MODULE_APP:
-            app_zeroed = not any(ch)
-        elif any(ch):
-            other_filled = True
-    return app_zeroed and other_filled
-
-
 def is_custom_firmware(fw: bytes | bytearray) -> bool:
-    """True iff a NON-secmon module (kernel+coreapp) code deviates from its
-    manifest entry's committed code_hash -- i.e. this image must be installed as
-    CUSTOM/unofficial. Replays the device's per-entry bind:
-    code_hash == SHA256(the module code at the entry's addr, size bytes).
-
-    The manifest itself is still the (official) one that folds to the founder
-    firmware_root; only a module's code differs. A secmon deviation is NOT
-    "custom" -- the device rejects it outright (the secure monitor must stay
-    official) -- so it is ignored here (the install will simply fail)."""
-    for e in manifest_entries(fw):
-        if e["module_type"] == FW_MODULE_SECMON:
-            continue
-        code = bytes(fw[e["addr"] : e["addr"] + e["size"]])
-        if _sha256(code) != e["code_hash"]:
-            return True
-    return False
+    """True iff the firmware's authenticated variant is the CUSTOM slot
+    (FW_VARIANT_CUSTOM). Custom is a first-class variant now -- not a per-module
+    wildcard -- so this is a simple variant check."""
+    try:
+        return manifest_variant(read_manifest(fw)) == FW_VARIANT_CUSTOM
+    except ValueError:
+        return False
 
 
-def fill_manifest(fw: bytearray, custom: bool = False) -> bytearray:
+def fill_manifest(fw: bytearray) -> bytearray:
     """Patch the compile-time manifest template (from manifest_header.S) in place.
 
     The template already carries the static fields (magic, firmware_variant,
     module_count, firmware_version) and each entry's module_type + flags + addr +
     size (the latter two from linker symbols). This fills each entry's code_hash
-    (single SHA-256 over the module code at addr..addr+size). app_root /
-    translations_root are left as set by the template (0 until those subtrees
-    exist).
-
-    With `custom`, the kernel+coreapp entry's code_hash is ZEROED (a wildcard):
-    the manifest is still (dev-)signed and folds to firmware_root, but NO
-    kernel+coreapp matches a zero hash, so any firmware installed against it is
-    treated as custom/unofficial. The secmon entry stays a real hash (it must
-    always conform)."""
+    (single SHA-256 over the module code at addr..addr+size) -- ALWAYS the real
+    code hash, including the kernel+coreapp of a CUSTOM variant (its real hash is
+    the creator's integrity hash). The custom slot's founder-signed leaf zeroes
+    the app hash only for the AUTHENTICITY fold (see variant_leaf), never in the
+    on-flash bytes. app_root / translations_root are left as set by the template
+    (0 until those subtrees exist)."""
     magic, _variant, _ver, _ar, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError(
@@ -267,20 +240,44 @@ def fill_manifest(fw: bytearray, custom: bool = False) -> bytearray:
         )
     for i in range(mc):
         eoff = _MANIFEST_FIXED.size + i * _MANIFEST_ENTRY.size
-        mtype, _flags, addr, size, _ch = _MANIFEST_ENTRY.unpack_from(fw, eoff)
+        _mtype, _flags, addr, size, _ch = _MANIFEST_ENTRY.unpack_from(fw, eoff)
         # Entry layout: module_type(4) flags(4) addr(4) size(4) code_hash(32).
-        if custom and mtype == FW_MODULE_APP:
-            fw[eoff + 16 : eoff + 48] = b"\x00" * 32  # wildcard -> always custom
-        else:
-            code = bytes(fw[addr : addr + size])
-            fw[eoff + 16 : eoff + 48] = _sha256(code)
+        code = bytes(fw[addr : addr + size])
+        fw[eoff + 16 : eoff + 48] = _sha256(code)
     return fw
 
 
+def authenticity_manifest(manifest: bytes) -> bytes:
+    """The manifest bytes the variant leaf is computed over: identical to
+    `manifest`, EXCEPT for the CUSTOM variant, where EVERYTHING the creator
+    controls is zeroed so any creator app folds to the one founder-signed slot:
+    the manifest firmware_version (offset 8, 4 bytes) and the kernel+coreapp
+    (FW_MODULE_APP) entry's size + code_hash (the entry's contiguous tail,
+    offset +12..+48). The app's module_type/flags/addr and the whole secmon entry
+    stay real. Mirrors boot_header_variant_leaf() in boot_header_merkle.h
+    byte-for-byte."""
+    if manifest_variant(manifest) != FW_VARIANT_CUSTOM:
+        return manifest
+    _magic, _v, _ver, _ar, _tr, mc = _MANIFEST_FIXED.unpack_from(manifest, 0)
+    buf = bytearray(manifest)
+    # firmware_version (creator's app version) -> zero.
+    buf[8:12] = b"\x00" * 4
+    for i in range(mc):
+        eoff = _MANIFEST_FIXED.size + i * _MANIFEST_ENTRY.size
+        mtype = struct.unpack_from("<I", manifest, eoff)[0]
+        if mtype == FW_MODULE_APP:
+            # app entry size (+12, 4B) + code_hash (+16, 32B) -> zero.
+            buf[eoff + 12 : eoff + 48] = b"\x00" * 36
+            break
+    return bytes(buf)
+
+
 def variant_leaf(manifest: bytes) -> bytes:
-    """The variant's Merkle leaf: H(0x00 || manifest). This is the node the
-    founder tree combines and the device folds up to firmware_root."""
-    return merkle_tree.leaf_hash(manifest)
+    """The variant's Merkle leaf: H(0x00 || authenticity_manifest). This is the
+    node the founder tree combines and the device folds up to firmware_root. For
+    the custom variant the app code_hash is zeroed first (see
+    authenticity_manifest)."""
+    return merkle_tree.leaf_hash(authenticity_manifest(manifest))
 
 
 # --- Founder (multi-variant) firmware_root -----------------------------------

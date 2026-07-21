@@ -141,25 +141,21 @@ pub fn sign_binary(
 /// build time. The firmware_root is folded into the bootloader header later by
 /// the tree signer.
 ///
-/// When `custom` is set, builds a CUSTOM/unofficial image: the kernel+coreapp
-/// entry's manifest code_hash is zeroed (a wildcard), so the (dev-signed)
-/// manifest still folds to firmware_root and the secmon conforms, but any
-/// kernel+coreapp is treated as unofficial.
-pub fn fill_firmware_tree_headers(binary: &Path, custom: bool) -> Result<()> {
+/// The variant (universal / btc-only / CUSTOM) is baked into the manifest at
+/// build time (manifest_header.S from the FW_VARIANT define); this step only
+/// fills the code hashes. For a CUSTOM build the kernel+coreapp code_hash is the
+/// real (creator) hash on flash -- the founder signer zeroes it only for the
+/// authenticity leaf, so any creator app folds to the same signed custom slot.
+pub fn fill_firmware_tree_headers(binary: &Path) -> Result<()> {
     println!(
-        "xtask: Filling manifest code hashes in `{}`{}",
+        "xtask: Filling manifest code hashes in `{}`",
         binary
             .file_name()
             .context("Failed to get binary file name")?
             .to_string_lossy(),
-        if custom { " (CUSTOM/unofficial)" } else { "" }
     );
 
-    let mut cmd = process::Command::new("headertool_pq");
-    if custom {
-        cmd.arg("--custom");
-    }
-    let status = cmd
+    let status = process::Command::new("headertool_pq")
         .arg(binary)
         .status()
         .context("Failed to execute headertool_pq")?;

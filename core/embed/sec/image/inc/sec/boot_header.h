@@ -149,37 +149,39 @@ typedef enum {
 } fw_module_type_t;
 
 /**
- * Firmware variant, authenticated in the module header.
+ * Firmware variant, authenticated in the manifest (firmware_manifest_t.
+ * firmware_variant, part of the variant leaf).
  *
- * This is the founder-committed btc-only/universal/... axis (storage
- * separation). The official-vs-custom axis is NOT stored here -- it is derived
- * from the verification outcome (founder tree = official; delegation/unhashed =
- * custom). Variant-agnostic modules that are shared across variants (e.g. the
- * secmon) use FW_VARIANT_NONE so their header/leaf stays identical everywhere.
+ * The founder-committed storage-separation axis: btc-only / universal /
+ * prodtest / ... AND custom. `FW_VARIANT_CUSTOM` is a FIRST-CLASS variant, not a
+ * flag: the founder signs a custom slot into the tree whose kernel+coreapp
+ * (FW_MODULE_APP) code_hash is ZERO, so any creator's app folds to the same
+ * authenticated leaf (the app is founder-UNauthenticated by design -- only
+ * integrity-checked against the on-flash creator hash; see
+ * firmware_verify_manifest). Variant-agnostic modules shared across variants
+ * (e.g. the secmon) use FW_VARIANT_NONE so their leaf stays identical everywhere.
  *
  * Values MUST match `vendor_fw_type_t` (sec/image.h) -- the same vocabulary the
  * legacy vendor-header `fw_type` and the model vendorheader JSONs use -- so a
- * given variant maps to the same firmware_type byte in both schemes. The custom
- * value (1) is intentionally absent: "custom" is the FW_TYPE_CUSTOM_FLAG bit,
- * not a variant. (Static-asserted against vendor_fw_type_t in boot_header.c.)
+ * given variant maps to the same firmware_type byte in both schemes.
+ * (Static-asserted against vendor_fw_type_t in boot_header.c.)
  */
 typedef enum {
   FW_VARIANT_NONE = 0,          // == VENDOR_FW_TYPE_RESERVED
+  FW_VARIANT_CUSTOM = 1,        // == VENDOR_FW_TYPE_CUSTOM (unofficial app slot)
   FW_VARIANT_UNIVERSAL = 2,     // == VENDOR_FW_TYPE_UNIVERSAL
   FW_VARIANT_BITCOIN_ONLY = 3,  // == VENDOR_FW_TYPE_BTC_ONLY
   FW_VARIANT_PRODTEST = 4,      // == VENDOR_FW_TYPE_PRODTEST
 } fw_variant_t;
 
 /*
- * Layout of the resolved firmware_type byte (the storage-domain identity the
- * bootloader persists to boot_header_unauth_t.firmware_type). It combines BOTH
- * storage-separation axes:
- *   low 7 bits : variant (fw_variant_t) -- authenticated in the module header
- *   high bit   : custom flag            -- derived from the verification tier
- * Per-vendor isolation (tier 2) folds into the storage entropy, not this byte.
+ * The resolved firmware_type byte (the storage-domain identity the bootloader
+ * persists to boot_header_unauth_t.firmware_type) IS the authenticated variant
+ * (fw_variant_t). Custom-ness is the variant value (FW_VARIANT_CUSTOM), not a
+ * separate flag: official and custom therefore occupy distinct storage domains,
+ * and custom<->custom stays a single shared domain. Per-vendor isolation (tier 2)
+ * folds into the storage entropy, not this byte.
  */
-#define FW_TYPE_VARIANT_MASK 0x7F
-#define FW_TYPE_CUSTOM_FLAG 0x80
 
 /** Magic at the start of a firmware manifest ('TRZD', little-endian u32). */
 #define FW_MANIFEST_MAGIC 0x445A5254
@@ -351,11 +353,20 @@ void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
 /**
  * Header-only manifest authenticity: variant leaf == firmware_root (via proof).
  *
- * Computes the variant leaf H(0x00 || manifest) and folds `proof` up to the
- * root, requiring it equals `trusted_root`. Does NOT read any module code (the
- * bodies need not be present), so the update preamble can authenticate the
- * manifest -- and trust its `firmware_variant` / directory -- before streaming.
- * `firmware_verify_manifest` is the full check (this + per-module integrity).
+ * Computes the variant leaf and folds `proof` up to the root, requiring it
+ * equals `trusted_root`. Does NOT read any module code (the bodies need not be
+ * present), so the update preamble can authenticate the manifest -- and trust
+ * its `firmware_variant` / directory -- before streaming. `firmware_verify_
+ * manifest` is the full check (this + per-module integrity).
+ *
+ * The variant leaf is `H(0x00 || manifest)`, EXCEPT for the CUSTOM variant
+ * (`firmware_variant == FW_VARIANT_CUSTOM`) where the kernel+coreapp
+ * (FW_MODULE_APP) entry's `code_hash` is substituted with ZERO before hashing.
+ * The founder signs the custom slot with a zeroed app hash, so any creator's
+ * app authenticates to the same leaf -- the app is founder-UNauthenticated (it
+ * is integrity-checked separately, in firmware_verify_manifest). This zero-for-
+ * fold substitution is centralized here (and in the leaf helper) so no path can
+ * fold with the wrong app-hash treatment.
  *
  * @param manifest Manifest bytes
  * @param manifest_len Manifest length (firmware_manifest_size)
@@ -376,12 +387,19 @@ secbool firmware_manifest_authentic(const firmware_manifest_t* manifest,
  *
  * The module set, roles and layout come from the (authenticated) manifest
  * rather than a hardcoded table.
- *  1. Authenticity: variant leaf = H(0x00 || manifest); fold `proof` up to
- *     the root and require it equals `trusted_root` (the signed firmware_root).
+ *  1. Authenticity: the variant leaf (see firmware_manifest_authentic, incl. the
+ *     CUSTOM app-hash zeroing) folds via `proof` to `trusted_root` (the signed
+ *     firmware_root).
  *  2. Integrity: for each directory entry, the module code at
  *     `firmware_base + addr` (`size` bytes) must hash to the entry's
- *     `code_hash`. Because the entry is authenticated by step 1, this is both
- *     the authenticity and the integrity check for the code, in one hop.
+ *     `code_hash`. For official variants that `code_hash` is founder-signed
+ *     (step 1 authenticates it). For the CUSTOM variant the kernel+coreapp
+ *     `code_hash` is the creator's (NOT founder-signed -- zeroed in step 1), so
+ *     this is a corruption/integrity check only; the secmon stays founder-bound.
+ *
+ * Custom-ness is derived from the (now-authenticated) `manifest->firmware_
+ * variant`; there is no caller flag -- an official image cannot be verified as
+ * custom or vice versa (either mismatches the signed leaf and is rejected).
  *
  * @param manifest Manifest at the start of the firmware image
  * @param manifest_len Manifest length in bytes (firmware_manifest_size)
@@ -390,18 +408,13 @@ secbool firmware_manifest_authentic(const firmware_manifest_t* manifest,
  * @param proof Firmware Merkle proof (variant leaf -> firmware_root)
  * @param proof_count Number of proof nodes
  * @param trusted_root The signed firmware_root to check against
- * @param custom If sectrue, allow a CUSTOM (unofficial) install: the non-secmon
- *               module (kernel+coreapp) code_hash is not enforced, so the app
- *               may be any build; the manifest and secmon still bind to the
- *               founder root. If secfalse, every module must match.
  * @return secbool -- sectrue iff authenticity and integrity all hold
  */
 secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
                                  size_t manifest_len, uintptr_t firmware_base,
                                  const merkle_proof_node_t* proof,
                                  size_t proof_count,
-                                 const merkle_proof_node_t* trusted_root,
-                                 secbool custom);
+                                 const merkle_proof_node_t* trusted_root);
 
 /**
  * Integrity check for ONE manifest directory entry (step 2 of
@@ -410,38 +423,45 @@ secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
  * `entry->code_hash`.
  *
  * The manifest carrying `entry` must already be authenticated
- * (firmware_manifest_authentic) so `code_hash` is trusted. Lets a streaming
- * install verify each module the moment its bytes are on flash, instead of
- * waiting for the whole image.
+ * (firmware_manifest_authentic) so `code_hash` is trusted (for the CUSTOM app,
+ * `code_hash` is the creator's -- this is then a corruption check only). Lets a
+ * streaming install verify each module the moment its bytes are on flash,
+ * instead of waiting for the whole image. The custom app carries its creator's
+ * real code_hash in the manifest, so it is verified here like any other module
+ * (no skip); only the founder-authenticity treats the custom app hash as zero.
  *
  * @param entry One (authenticated) manifest directory entry
  * @param firmware_base Base address the entry `addr` offset is relative to
- * @param allow_custom If sectrue, skip the code_hash check entirely, so the
- *                     module code may be any (unofficial) build. Must never be
- *                     set for the secmon.
  * @return secbool -- sectrue iff the module code matches the entry's code_hash
  */
 secbool firmware_verify_manifest_entry(const firmware_manifest_entry_t* entry,
-                                       uintptr_t firmware_base,
-                                       secbool allow_custom);
+                                       uintptr_t firmware_base);
 
 /**
- * Composes the persisted firmware_type byte from the two storage-separation
- * axes: the authenticated `variant` (fw_variant_t) and the derived trust class
- * (`is_custom` -- sectrue for delegated/unhashed, secfalse for official).
+ * Composes the persisted firmware_type byte from the authenticated `variant`
+ * (fw_variant_t). firmware_type IS the variant: custom-ness is the variant value
+ * (FW_VARIANT_CUSTOM), not a separate flag.
  *
  * The result is only trustworthy because the bootloader is the sole writer of
  * the write-protected boot header region; it must be *derived* from the
- * authenticated variant + verification outcome, never taken from an untrusted
- * input. Storage entropy / wipe-on-change key off this value.
+ * authenticated manifest variant, never taken from an untrusted input. Storage
+ * entropy / wipe-on-change key off this value.
  */
-uint8_t firmware_type_compose(uint32_t variant, secbool is_custom);
+uint8_t firmware_type_compose(uint32_t variant);
 
 /** Extracts the variant (fw_variant_t) from a firmware_type byte. */
 uint32_t firmware_type_variant(uint8_t firmware_type);
 
-/** Returns sectrue if the firmware_type byte marks custom (vs official). */
+/** Returns sectrue if the firmware_type byte marks custom (the custom variant).
+ *  FIH note: for granting official privileges use firmware_type_is_official()
+ *  (a positive check that fails toward restricted), NOT !is_custom. */
 secbool firmware_type_is_custom(uint8_t firmware_type);
+
+/** Returns sectrue ONLY on a positive determination that firmware_type is a
+ *  recognized OFFICIAL (founder-authenticated, non-custom) variant. Anything
+ *  else -- custom, none, or an unknown value -- returns secfalse, so a glitched
+ *  or unexpected byte fails toward restricted (never a silent official grant). */
+secbool firmware_type_is_official(uint8_t firmware_type);
 
 /**
  * Checks the signature in the boot header against the public keys.

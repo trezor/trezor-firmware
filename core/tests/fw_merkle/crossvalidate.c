@@ -39,11 +39,10 @@ typedef struct {
 #define FW_MODULE_APP 2
 #define FW_MODULE_PRODTEST 3
 #define FW_VARIANT_NONE 0
+#define FW_VARIANT_CUSTOM 1
 #define FW_VARIANT_UNIVERSAL 2
 #define FW_VARIANT_BITCOIN_ONLY 3
 #define FW_VARIANT_PRODTEST 4
-#define FW_TYPE_VARIANT_MASK 0x7F
-#define FW_TYPE_CUSTOM_FLAG 0x80
 
 #define FW_MANIFEST_MAGIC 0x445A5254 /* 'TRZD' */
 
@@ -114,6 +113,11 @@ static int run_manifest(const uint8_t *buf) {
     p += image_len;
     memcpy(&manifest_len, p, 4);
     p += 4;
+    uint32_t alt_len;
+    memcpy(&alt_len, p, 4);
+    p += 4;
+    const uint8_t *alt_image = p; /* different-size/version custom app (or none) */
+    p += alt_len;
     memcpy(&proof_count, p, 4);
     p += 4;
     merkle_proof_node_t proof[32];
@@ -140,72 +144,123 @@ static int run_manifest(const uint8_t *buf) {
       }
     }
 
-    /* 1) full verify (official): variant leaf folds + per-entry code integrity.
-     *    Custom mode must ALSO accept an official image (superset acceptance). */
-    secbool r = firmware_verify_manifest(manifest, manifest_len, base, proof,
-                                         proof_count, &trusted, secfalse);
-    secbool rc = firmware_verify_manifest(manifest, manifest_len, base, proof,
-                                          proof_count, &trusted, sectrue);
-    int verify_ok = (r == sectrue) && (rc == sectrue);
+    int is_custom = (variant_id == FW_VARIANT_CUSTOM);
 
-    /* 2) tamper an APP code byte. Official (secfalse) must REJECT (code_hash
-     *    mismatch). Custom (sectrue) must ACCEPT: the app may deviate from the
-     *    founder manifest -- its code_hash is not enforced. */
+    /* 1) full verify: the variant leaf (for CUSTOM the app code_hash is zeroed
+     *    inside the fold) folds to the founder root, and every module's code
+     *    matches its manifest code_hash. Custom-ness is derived from the
+     *    manifest variant -- there is no caller flag. */
+    secbool r = firmware_verify_manifest(manifest, manifest_len, base, proof,
+                                         proof_count, &trusted);
+    int verify_ok = (r == sectrue);
+
+    /* 2) tamper an APP code byte WITHOUT updating its manifest code_hash -> the
+     *    integrity check must fail for EVERY variant, custom INCLUDED (the
+     *    custom app carries the creator's real hash and is corruption-checked;
+     *    this is the Mod 2 change from the old allow_custom skip). */
     int tamper_app_ok = 1;
     if (app_size > 0) {
       image[app_addr + app_size - 1] ^= 0xFF;
       secbool r2 = firmware_verify_manifest(manifest, manifest_len, base, proof,
-                                            proof_count, &trusted, secfalse);
-      secbool r2c = firmware_verify_manifest(manifest, manifest_len, base, proof,
-                                             proof_count, &trusted, sectrue);
-      tamper_app_ok = (r2 == secfalse) && (r2c == sectrue);
+                                            proof_count, &trusted);
+      tamper_app_ok = (r2 == secfalse);
       image[app_addr + app_size - 1] ^= 0xFF;
     }
 
-    /* 3) tamper a SECMON code byte. BOTH modes must REJECT: the secure monitor
-     *    is always founder-bound, even for a custom install. */
+    /* 3) SUBSTITUTE the app: change the app code AND rewrite its manifest
+     *    code_hash to match (a self-consistent DIFFERENT app). The CUSTOM slot
+     *    must still verify -- its app is founder-UNbound (the leaf zeroes it) --
+     *    while an OFFICIAL variant must now FAIL, because its app code_hash is
+     *    founder-signed and changing it breaks the fold. This is the core custom
+     *    property (accepts any integrity-consistent app; official does not). */
+    int substitute_ok = 1;
+    if (app_size > 0) {
+      firmware_manifest_t *m = (firmware_manifest_t *)image;
+      merkle_proof_node_t *app_ch = NULL;
+      for (uint32_t i = 0; i < m->module_count; i++) {
+        if (m->entries[i].module_type == FW_MODULE_APP) {
+          app_ch = &m->entries[i].code_hash;
+          break;
+        }
+      }
+      uint8_t saved_byte = image[app_addr];
+      uint8_t saved_hash[32];
+      if (app_ch) memcpy(saved_hash, app_ch->bytes, 32);
+      image[app_addr] ^= 0xFF; /* different app code */
+      if (app_ch) {            /* keep the manifest self-consistent */
+        SHA256_CTX c;
+        sha256_Init(&c);
+        sha256_Update(&c, image + app_addr, app_size);
+        sha256_Final(&c, app_ch->bytes);
+      }
+      secbool rs = firmware_verify_manifest(manifest, manifest_len, base, proof,
+                                            proof_count, &trusted);
+      substitute_ok = is_custom ? (rs == sectrue) : (rs == secfalse);
+      image[app_addr] = saved_byte;
+      if (app_ch) memcpy(app_ch->bytes, saved_hash, 32);
+    }
+
+    /* 4) tamper a SECMON code byte -> reject for EVERY variant: the secure
+     *    monitor is always founder-bound, even for the custom slot. */
     image[secmon_addr] ^= 0xFF;
-    secbool r3 = firmware_verify_manifest(manifest, manifest_len, base, proof,
-                                          proof_count, &trusted, secfalse);
-    secbool r3c = firmware_verify_manifest(manifest, manifest_len, base, proof,
-                                           proof_count, &trusted, sectrue);
-    int tamper_secmon_ok = (r3 == secfalse) && (r3c == secfalse);
+    secbool r4 = firmware_verify_manifest(manifest, manifest_len, base, proof,
+                                          proof_count, &trusted);
+    int tamper_secmon_ok = (r4 == secfalse);
     image[secmon_addr] ^= 0xFF;
 
-    /* 4) tamper a proof node -> authenticity must fail (both modes). */
+    /* 5) tamper a proof node -> authenticity must fail. */
     int tamper_proof_ok = 1;
     if (proof_count > 0) {
       proof[0].bytes[0] ^= 0xFF;
-      secbool r4 = firmware_verify_manifest(manifest, manifest_len, base, proof,
-                                            proof_count, &trusted, secfalse);
-      tamper_proof_ok = (r4 == secfalse);
+      secbool r5 = firmware_verify_manifest(manifest, manifest_len, base, proof,
+                                            proof_count, &trusted);
+      tamper_proof_ok = (r5 == secfalse);
       proof[0].bytes[0] ^= 0xFF;
     }
 
+    /* 6) app-agnostic slot (custom only): a DIFFERENT-size/version app (the alt
+     *    image) must fold to the SAME founder root + proof. Proves the custom
+     *    leaf zeroes the app version/size/code_hash, so it is not tied to one
+     *    specific creator build. */
+    int alt_ok = 1;
+    if (alt_len > 0) {
+      const firmware_manifest_t *am = (const firmware_manifest_t *)alt_image;
+      size_t am_len = firmware_manifest_size(am);
+      secbool ra = firmware_verify_manifest(am, am_len, (uintptr_t)alt_image,
+                                            proof, proof_count, &trusted);
+      alt_ok = (ra == sectrue);
+    }
+
     printf(
-        "  variant %u (%-12s): verify %s, tamper-app %s, tamper-secmon %s, "
-        "tamper-proof %s\n",
+        "  variant %u (%-12s): verify %s, tamper-app %s, substitute-app %s, "
+        "tamper-secmon %s, tamper-proof %s%s\n",
         variant_id, variant_id < 6 ? names[variant_id] : "?",
-        verify_ok ? "OK" : "FAIL",
-        tamper_app_ok ? "policy OK" : "WRONG (bug!)",
+        verify_ok ? "OK" : "FAIL", tamper_app_ok ? "rejected OK" : "ACCEPTED (bug!)",
+        substitute_ok ? (is_custom ? "accepted OK" : "rejected OK") : "WRONG (bug!)",
         tamper_secmon_ok ? "rejected OK" : "ACCEPTED (bug!)",
-        tamper_proof_ok ? "rejected OK" : "ACCEPTED (bug!)");
-    ok &= verify_ok & tamper_app_ok & tamper_secmon_ok & tamper_proof_ok;
+        tamper_proof_ok ? "rejected OK" : "ACCEPTED (bug!)",
+        alt_len > 0 ? (alt_ok ? ", alt-app accepted OK" : ", alt-app REJECTED (bug!)")
+                    : "");
+    ok &= verify_ok & tamper_app_ok & substitute_ok & tamper_secmon_ok &
+          tamper_proof_ok & alt_ok;
   }
 
-  /* firmware_type = variant + trust class (both storage axes). The variant is
-   * authenticated in the manifest; exercise the compose/extract helpers here. */
+  /* firmware_type IS the authenticated variant byte (custom-ness == the
+   * FW_VARIANT_CUSTOM variant, no flag). Exercise the compose/extract helpers +
+   * the positive is_official allow-list. */
   {
-    uint32_t variant = FW_VARIANT_UNIVERSAL;
-    uint8_t ft_official = firmware_type_compose(variant, secfalse);
-    uint8_t ft_custom = firmware_type_compose(variant, sectrue);
-    int h_ok = firmware_type_variant(ft_official) == variant &&
-               firmware_type_is_custom(ft_official) == secfalse &&
-               firmware_type_variant(ft_custom) == variant &&
+    uint8_t ft_univ = firmware_type_compose(FW_VARIANT_UNIVERSAL);
+    uint8_t ft_custom = firmware_type_compose(FW_VARIANT_CUSTOM);
+    int h_ok = ft_univ == FW_VARIANT_UNIVERSAL && ft_custom == FW_VARIANT_CUSTOM &&
+               firmware_type_variant(ft_univ) == FW_VARIANT_UNIVERSAL &&
                firmware_type_is_custom(ft_custom) == sectrue &&
-               ft_official != ft_custom;
-    printf("  firmware_type          : official=0x%02x custom=0x%02x -> %s\n",
-           ft_official, ft_custom, h_ok ? "OK" : "FAIL");
+               firmware_type_is_custom(ft_univ) == secfalse &&
+               firmware_type_is_official(ft_univ) == sectrue &&
+               firmware_type_is_official(ft_custom) == secfalse &&
+               firmware_type_is_official(
+                   firmware_type_compose(FW_VARIANT_NONE)) == secfalse;
+    printf("  firmware_type          : universal=0x%02x custom=0x%02x -> %s\n",
+           ft_univ, ft_custom, h_ok ? "OK" : "FAIL");
     ok &= h_ok;
   }
 

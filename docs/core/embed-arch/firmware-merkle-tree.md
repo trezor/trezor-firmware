@@ -103,23 +103,23 @@ Byte layout (little-endian), variant leaf = `SHA256(0x00 || manifest)`:
 | --- | --- | --- | --- |
 | 0 | `magic` = `TRZD` | u32 | firmware directory |
 | 4 | `firmware_variant` | u32 | `fw_variant_t` (== `vendor_fw_type_t`); authenticated |
-| 8 | `app_root` | 32 | root of the app tree; **zero** until apps exist |
-| 40 | `translations_root` | 32 | root of translations; **zero** until they exist |
-| 72 | `module_count` | u32 | |
-| 76 | `entry[module_count]` | — | 48 bytes each |
+| 8 | `firmware_version` | 4×u8 | major, minor, patch, build (kernel+coreapp) |
+| 12 | `app_root` | 32 | root of the app tree; **zero** until apps exist |
+| 44 | `translations_root` | 32 | root of translations; **zero** until they exist |
+| 76 | `module_count` | u32 | |
+| 80 | `entry[module_count]` | — | 48 bytes each |
 
 Entry:
 
 | offset | field | type | notes |
 | --- | --- | --- | --- |
 | 0 | `module_type` | u32 | role: secmon / kernel / core (`fw_module_type_t`) |
-| 4 | `flags` | u32 | reserved (0) |
+| 4 | `flags` | u32 | `FW_MANIFEST_ENTRY_FLAG_*` (e.g. `_FLAG_BOOT`) |
 | 8 | `addr` | u32 | module **code** offset from firmware region start |
 | 12 | `size` | u32 | module code size |
 | 16 | `code_hash` | 32 | `SHA256(whole module code)` |
 
-Fixed part 76 B + 48 B/entry. `firmware_variant` is taken from the
-kernel+coreapp module. The module set/count/roles are **authenticated data** —
+Fixed part 80 B + 48 B/entry. The module set/count/roles are **authenticated data** —
 the bootloader iterates the directory rather than hardcoding a role table, so
 adding/splitting modules of known types needs no bootloader code change (only a
 re-sign). New module *types* or new boot-flow relationships still need code.
@@ -159,6 +159,37 @@ firmware.bin:
 The manifest sits at the firmware start (reserved `FW_MANIFEST_REGION` = 0x400);
 each entry's `addr` is the authenticated offset of its module **code** (no header
 region), aligned to `CODE_ALIGNMENT`.
+
+### 5.5 Custom (unofficial) firmware = `FW_VARIANT_CUSTOM`  **[impl]**
+
+Custom firmware is a **first-class tree variant** (`FW_VARIANT_CUSTOM = 1`), not
+a flag. The founder signs one custom slot into `firmwareRoot` whose variant leaf
+is computed with **everything the creator controls zeroed** — the manifest
+`firmware_version` and the kernel+coreapp (`FW_MODULE_APP`) entry's `size` +
+`code_hash`. The app entry's `module_type`/`flags`/`addr` and the **entire secmon
+entry** stay real, so the founder still binds the secmon and the app's role +
+placement. Because size/version/code_hash are all zeroed, ONE founder-signed slot
+accepts **any** creator app (any code, size, version); the creator ships their
+real values on flash (used for integrity + display only).
+
+The manifest then serves **two roles**, and the zero-for-fold substitution is
+centralized in one place (`boot_header_variant_leaf`, mirrored in the Python
+`authenticity_manifest`):
+- **Authenticity** (founder): recompute the variant leaf with the app `code_hash`
+  treated as zero → fold → must equal `firmwareRoot`. Proves the secmon +
+  structure are founder-authorized and this is the sanctioned custom slot. Any
+  creator app authenticates to the same leaf, so the app is **founder-UNbound**.
+- **Integrity** (creator): the app code must hash to the on-flash (creator)
+  `code_hash`. Corruption/attestation only — NOT app authenticity.
+
+Security posture: the secmon stays founder-signed (bound even for custom); custom
+runs **unprivileged** (no secret/provisioning access, boot warning), is
+storage-isolated (`firmware_type` == the variant, so custom is its own domain;
+custom↔custom is shared), and installs **only on an unlocked bootloader**.
+`firmware_type_is_official()` is a positive allow-list (fails toward restricted);
+`is_custom` / privilege gates never grant official on a glitched byte. The
+build-time `--unsafe-fw` selects `FW_VARIANT_CUSTOM`; the app is still filled with
+its real `code_hash` (the signer zeroes it only for the leaf).
 
 ## 6. App layer (kernel) — **[design]**
 
@@ -222,21 +253,26 @@ and needs a phase-2 transfer-to-nRF-chip install step.
   `fw_check_pq.c` / `wf_firmware_update_pq.c` drive off the manifest.
 - **[impl]** `firmware_proof_nodes` in `boot_header_unauth_t` +
   `fw_check_pq.c` reads and folds it (11b); Python `BootHeaderUnauth` mirrors.
-- **[impl]** build-time variant stamping (universal=2 / btc-only=3).
+- **[impl]** build-time variant stamping (universal=2 / btc-only=3 / custom=1).
+- **[impl]** custom firmware as a first-class tree variant (`FW_VARIANT_CUSTOM`,
+  founder-zeroed app `code_hash` in the leaf; app founder-unbound + integrity-
+  checked; `firmware_type` == variant; unprivileged, unlocked-bootloader-only;
+  `--unsafe-fw` builds it). See §5.5.
 - **[proto host]** founder tree over variants + per-variant proofs
   (`firmware_module.build_founder_tree`); manifest build (`build_manifest` /
-  `fill_manifest` / `variant_leaf`) — variant leaf = `H(0x00 || manifest)`.
+  `fill_manifest` / `variant_leaf` + `authenticity_manifest`).
 - **[design / TODO]** model tree → `modelRoot` (multi-model, non-empty
   `boot_header_merkle_proof`); app tree + `appRoot`; translations; nRF as a
-  shared node; kernel/core split; production signing; custom firmware as a
-  first-class tree variant (`FW_VARIANT_CUSTOM`, founder-zeroed app `code_hash`).
+  shared node; kernel/core split; production signing; whether the custom slot
+  ships in the production field `firmwareRoot`.
 
 ## 11. Open questions
 
 - Manifest reserved-region size + module alignment at firmware start.
 - nRF: option 1 vs 2; is it ever genuinely per-variant?
-- `firmware_type` in the manifest = variant marker only (authenticated), with the
-  custom/official bit still *derived* from the verification tier — confirm.
+- ~~`firmware_type` = variant marker + a derived custom/official bit~~
+  **RESOLVED**: `firmware_type` IS the authenticated variant byte; custom-ness is
+  the `FW_VARIANT_CUSTOM` variant, not a flag (see §5.5).
 - Whether `boot_header_merkle_proof` (model tree) is ever populated (batched
   multi-model signing) or stays single-leaf.
 - Kernel vs coreapp as separate modules (boot-flow change).

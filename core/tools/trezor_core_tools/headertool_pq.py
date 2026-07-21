@@ -21,46 +21,24 @@ def _fill_module_image(
     dry_run: bool,
     print_merkle_root: bool,
     echo: Any,
-    custom: bool = False,
 ) -> None:
     """Fill the manifest code hashes of a Merkle-tree firmware image.
 
     This is the build-time step for `firmware.bin`: each manifest directory
     entry's `code_hash` (single SHA-256 over the module code at addr..addr+size)
-    is filled. The firmware_root is derived later (by the tree signer) from the
-    filled image.
-
-    With `custom`, builds a CUSTOM/unofficial image: the kernel+coreapp entry's
-    manifest code_hash is ZEROED (a wildcard). The manifest is still (dev-)signed
-    and folds to firmware_root, and the secmon still conforms, but no kernel+coreapp
-    matches a zero hash, so the device treats the firmware as custom (boot warning,
-    unlocked-bootloader-only, unprivileged) regardless of the kernel+coreapp built.
+    is filled -- ALWAYS the real code hash, including a CUSTOM variant's
+    kernel+coreapp (its real hash is the creator's integrity hash). The
+    firmware_root is derived later (by the tree signer) from the filled image;
+    for the custom variant the signer zeroes the app hash only for the
+    authenticity leaf (variant_leaf), never on flash. The variant (incl. CUSTOM)
+    is baked into the manifest at build time, not chosen here.
     """
     fw = bytearray(firmware_data)
 
-    # Preserve custom across a re-fill: if the STORED manifest already has a
-    # filled wildcard (zeroed) kernel+coreapp entry, keep it zeroed rather than
-    # re-deriving it (which would silently un-customize the image).
-    if not custom:
-        try:
-            custom = firmware_module.manifest_kernel_is_wildcard(
-                firmware_module.read_manifest(firmware_data)
-            )
-        except ValueError:
-            pass
-
     # Patch the manifest template (from manifest_header.S) at the image start:
-    # fill each entry's code_hash from the placed module code (module_type / flags
-    # / addr / size are already set by the .S). The variant leaf (the node the
-    # founder tree combines) is H(0x00 || manifest). `custom` zeroes the
-    # kernel+coreapp entry's hash so any kernel+coreapp is unofficial.
-    firmware_module.fill_manifest(fw, custom=custom)
-
-    if custom:
-        echo(
-            "Custom (unofficial) image: kernel+coreapp manifest hash ZEROED "
-            "-> any kernel+coreapp installs as custom."
-        )
+    # fill each entry's code_hash from the placed module code (module_type /
+    # flags / addr / size are already set by the .S).
+    firmware_module.fill_manifest(fw)
 
     manifest = firmware_module.read_manifest(fw)
     leaf = firmware_module.variant_leaf(manifest)
@@ -72,9 +50,13 @@ def _fill_module_image(
     entries = firmware_module.manifest_entries(fw)
     echo(f"Detected image type: firmware manifest (TRZD), {len(entries)} modules")
     # Show the FILLED manifest (post-fill), so build-time output has the real
-    # addr/size/code_hash values -- not the unfilled template. A custom image's
-    # zeroed kernel+coreapp entry is preserved above, so it still shows faithfully.
+    # addr/size/code_hash values -- not the unfilled template.
     echo(firmware_module.format_manifest(manifest))
+    if firmware_module.is_custom_firmware(fw):
+        echo(
+            "CUSTOM (unofficial) variant: kernel+coreapp is founder-UNbound "
+            "(integrity-only); installs unprivileged, unlocked-bootloader-only."
+        )
     # The variant leaf = H(0x00 || manifest); the founder firmware_root that spans
     # all variants is derived later by the signer.
     echo(f"variant leaf   : {leaf.hex()}")
@@ -110,12 +92,6 @@ def _fill_module_image(
     help="Merkle proof node. Can be repeated.",
 )
 @click.option("-q", "--quiet", is_flag=True, help="Do not print anything.")
-@click.option(
-    "--custom",
-    is_flag=True,
-    help="Build a CUSTOM/unofficial tree image: zero the kernel+coreapp entry's "
-    "manifest hash (wildcard) so any kernel+coreapp installs as unofficial.",
-)
 @click.argument("firmware_file", type=click.File("rb+"))
 def cli(
     firmware_file: BinaryIO,
@@ -125,7 +101,6 @@ def cli(
     merkle_proof: list[str],
     print_merkle_root: bool,
     quiet: bool,
-    custom: bool,
 ) -> None:
     """Manage firmware headers.
 
@@ -157,7 +132,6 @@ def cli(
             dry_run,
             print_merkle_root,
             echo,
-            custom,
         )
         return
 

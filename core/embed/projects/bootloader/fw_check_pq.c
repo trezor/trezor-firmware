@@ -75,10 +75,6 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
   // this stays backward-compatible. Bounded by BOOT_HEADER_FW_PROOF_MAX_NODES.
   const merkle_proof_node_t* fw_proof = NULL;
   size_t fw_proof_count = 0;
-  // Custom (unofficial) firmware: the boot header's firmware_type custom flag
-  // (write-protected from firmware, set at install) tells us to expect the
-  // kernel+coreapp to deviate from the founder manifest. secmon stays bound.
-  secbool custom = secfalse;
   const boot_header_unauth_t* unauth = boot_header_unauth_get(bl);
   if (unauth != NULL) {
     if (unauth->firmware_proof_count > BOOT_HEADER_FW_PROOF_MAX_NODES) {
@@ -86,7 +82,6 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
     }
     fw_proof_count = unauth->firmware_proof_count;
     fw_proof = fw_proof_count > 0 ? unauth->firmware_proof_nodes : NULL;
-    custom = firmware_type_is_custom(unauth->firmware_type);
   }
 
   // The manifest ("firmware directory") is at the firmware region start. It is
@@ -106,20 +101,19 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
 
   if (sectrue !=
       firmware_verify_manifest(manifest, manifest_len, FIRMWARE_START, fw_proof,
-                               fw_proof_count, &trusted_root, custom)) {
+                               fw_proof_count, &trusted_root)) {
     return secfalse;
   }
-  // Official ONLY on a positive custom == secfalse (the manifest verified in
-  // strict mode). A glitched `custom` cannot fabricate an official verdict.
-  info->is_official = (custom == secfalse) ? sectrue : secfalse;
 
-  // Variant, version and entry point from the (now-verified) manifest. Both the
-  // variant and the firmware version are authenticated manifest fields (part of
-  // the variant leaf); the entry point is the secmon module's code. The version
-  // is read from the manifest's authenticated firmware_version field -- so it
-  // is a single authenticated source shared with the phase-1 install confirm
-  // (they can only diverge for a spliced custom image, which is UNSAFE anyway).
+  // Variant, version and entry point from the (now-verified) manifest. The
+  // variant and firmware version are authenticated manifest fields (part of the
+  // variant leaf that folded to firmware_root); for the CUSTOM variant only the
+  // app code_hash was zeroed in that fold, so the variant field itself is
+  // bound. Official ONLY on a POSITIVE is_official on that authenticated variant
+  // -- custom / none / unknown fall through to not-official (FIH: a glitched or
+  // unexpected variant can never fabricate an official verdict).
   info->variant = manifest->firmware_variant;
+  info->is_official = firmware_type_is_official((uint8_t)info->variant);
   info->version = (uint32_t)manifest->firmware_version[0] |
                   ((uint32_t)manifest->firmware_version[1] << 8) |
                   ((uint32_t)manifest->firmware_version[2] << 16) |
@@ -167,13 +161,12 @@ void fw_check(fw_info_t* info) {
 
   // A provisioned device has a vendor identity for the UI / Features even when
   // its firmware is absent or invalid. Derive it from the (write-protected,
-  // trusted) firmware_type byte: its variant names an official image, its
-  // custom flag flips the vendor to the UNSAFE marker.
+  // trusted) firmware_type byte, which IS the authenticated variant: an official
+  // variant names the image; the custom variant (or any non-official value)
+  // maps to the UNSAFE marker via the positive is_official check.
   if (info->header_present == sectrue) {
     uint32_t variant = firmware_type_variant(unauth->firmware_type);
-    secbool is_official =
-        (firmware_type_is_custom(unauth->firmware_type) == secfalse) ? sectrue
-                                                                     : secfalse;
+    secbool is_official = firmware_type_is_official(unauth->firmware_type);
     info->ui.vendor_str =
         tree_vendor_str(variant, is_official, &info->ui.vendor_str_len);
   }
