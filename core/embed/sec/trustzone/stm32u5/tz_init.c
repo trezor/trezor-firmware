@@ -279,6 +279,16 @@ void tz_init(void) {
       GTZC_PERIPH_ICACHE_REG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_DCACHE1_REG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
+  // Enable OTFDEC1 clock (RCC is secure; cannot be done from non-secure kernel)
+  // and mark the peripheral as secure & privileged so the kernel cannot
+  // reconfigure the AES decryption key after secmon programs it via KDF.
+  // TODO: derive the AES key from the HUK (or similar hardware secret) and
+  // configure OTFDEC1 regions here (or in drivers_init()) once the KDF and
+  // ext_flash on-disk layout are finalised.
+  __HAL_RCC_OTFDEC1_CLK_ENABLE();
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_OTFDEC1, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
 #if defined STM32U5A9xx || defined STM32U5G9xx
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_DCACHE2_REG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
