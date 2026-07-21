@@ -1256,7 +1256,7 @@ impl FirmwareUI for UIDelizia {
             Some(title) => {
                 let header = Header::left_aligned(title);
                 let header = if danger {
-                    header.with_danger_icon()
+                    header.with_danger().with_danger_icon()
                 } else {
                     header.with_warning_low_icon()
                 };
