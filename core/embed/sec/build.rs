@@ -6,6 +6,8 @@ mod backup_ram;
 mod board_capabilities;
 #[path = "consumption_mask/build.rs"]
 mod consumption_mask;
+#[path = "ext_flash_otfdec/build.rs"]
+mod ext_flash_otfdec;
 #[path = "fwutils/build.rs"]
 mod fwutils;
 #[path = "hash_processor/build.rs"]
@@ -63,6 +65,7 @@ fn main() -> Result<()> {
                 backup_ram if cfg!(feature = "backup_ram"),
                 board_capabilities,
                 consumption_mask if cfg!(feature = "consumption_mask"),
+                ext_flash_otfdec if cfg!(feature = "ext_flash_otfdec"),
                 fwutils,
                 hash_processor if cfg!(feature = "hash_processor"),
                 hw_revision if cfg!(feature = "hw_revision"),
