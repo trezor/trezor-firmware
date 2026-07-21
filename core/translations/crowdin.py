@@ -61,10 +61,6 @@ def merge() -> None:
         return text
 
     for lang in sorted(tdir.all_languages()):
-        # No reason to process English "translations", they are empty and overwrite en.json
-        # This is happening because English was added to Crowdin as a target language
-        if lang == "en":
-            continue
         merged_translations: dict[str, str | dict[str, str]] = collections.defaultdict(dict)
 
         for layout_type in translations.ALL_LAYOUTS:
