@@ -409,15 +409,12 @@ impl<R: Role, B: Backend> Channel<R, B> {
             && matches!(self.send_state, SendState::Sending { .. })
         {
             // ACK we sent was lost. Will be retransmitted along current outgoing message.
-            log::debug!("[{:04x}] Bad sync bit, ignoring packet.", self.channel_id);
+            log::debug!("[{:04x}] Bad seq bit, ignoring packet.", self.channel_id);
         } else if !matches!(self.receive_state, ReceiveState::Receiving { .. }) {
             // Might happen when we've sent an ACK and it got lost or delayed.
             // We end up sending reply while the other side is retransmitting.
             // NOTE: no checksum verification because we drop the continuations
-            log::debug!(
-                "[{:04x}] Bad sync bit, resending last ACK.",
-                self.channel_id
-            );
+            log::debug!("[{:04x}] Bad seq bit, resending last ACK.", self.channel_id);
             self.send_ack = Some(SyncBits::new().with_ack_bit(sb.seq_bit()));
         }
         Err(Error::malformed_data())

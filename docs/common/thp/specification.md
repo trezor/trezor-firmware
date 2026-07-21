@@ -320,6 +320,8 @@ The primary function of the synchronization layer is to work as the *Alternating
 
 It is possible that some packets are lost by the Data transfer layer (L1). In order to guarantee reliable communication, THP uses the *Alternating Bit Protocol* in combination with a *CRC32* checksum.
 
+Only the following message types take part in the synchronization layer: `handshake_init_request`, `handshake_init_response`, `handshake_completion_request`, `handshake_completion_response`, `encrypted_transport` and `ACK`. Notably `channel_allocation_request`, `channel_allocation_response` and `transport_error` don't carry a sequence number and are not acknowledged.
+
 ### Alternating Bit Protocol
 
 The *Alternating Bit Protocol* (ABP) is a protocol between a sender and a receiver over an unreliable channel. The channel is unreliable in the sense that it can discard or duplicate messages, but it cannot change their order or content. The protocol guarantees the eventual and non-duplicative delivery of messages.
@@ -407,6 +409,12 @@ flowchart LR
     R1 -- in: Message(Seq=1); out: Ack(Seq=1); return Message for processing --> R0
     R1 -- in: Message(Seq=0); out: Ack(Seq=0); discard Message as duplicate --> R1
 ```
+
+#### Encoding
+
+The sequence bit is encoded into the control byte of the applicable messages, mask 0x10 (00010000).
+
+The ACK bit can be similarly accessed using the mask 0x08 (00001000). On messages other than ACK, the ACK number is ignored unless piggybacking is enabled.
 
 ### ACK Message structure
 
