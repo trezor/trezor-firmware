@@ -146,6 +146,12 @@ stdenvNoCC.mkDerivation ({
   DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   NIX_ENFORCE_PURITY = 0;
 
+  # Force uv to use the nix-provided Python instead of its own managed builds.
+  # Without this, uv defaults to python-preference=managed + python-downloads=automatic,
+  # silently downloading/reusing its own interpreter and ignoring python3 on PATH.
+  UV_PYTHON_PREFERENCE = "only-system";
+  UV_PYTHON_DOWNLOADS = "never";
+
   # Fix bdist-wheel problem by setting source date epoch to a more recent date
   SOURCE_DATE_EPOCH = 1600000000;
 
