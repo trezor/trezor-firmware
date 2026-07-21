@@ -18,6 +18,7 @@ pub enum Project {
     #[value(name = "bootloader_ci")]
     BootloaderCi,
     Firmware,
+    Hsm,
     Prodtest,
     Kernel,
     Secmon,
@@ -37,6 +38,7 @@ impl Project {
                     "firmware"
                 }
             }
+            Project::Hsm => "hsm",
             Project::Prodtest => "prodtest",
             Project::Kernel => "kernel",
             Project::Secmon => "secmon",
@@ -51,6 +53,7 @@ impl Project {
             Project::BootloaderCi => "bootloader_ci",
             Project::Boardloader => "boardloader",
             Project::Firmware => "firmware",
+            Project::Hsm => "hsm",
             Project::Prodtest => "prodtest",
             Project::Kernel => "kernel",
             Project::Secmon => "secmon",
@@ -73,7 +76,7 @@ impl Project {
         let symbol = match self {
             Project::Boardloader => "BOARDLOADER_START",
             Project::Bootloader | Project::BootloaderCi => "BOOTLOADER_START",
-            Project::Firmware | Project::Prodtest => "FIRMWARE_START",
+            Project::Firmware | Project::Prodtest | Project::Hsm => "FIRMWARE_START",
             _ => return Err(anyhow!("Flashing {:?} is not supported", self)),
         };
         Ok(symbol)
