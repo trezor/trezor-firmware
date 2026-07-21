@@ -145,3 +145,18 @@ def weth_deployments() -> Iterator[tuple[int, bytes]]:
 % for chain_id, addr in WETH_DEPLOYMENTS:
     yield (${chain_id}, ${fmt_addr(addr)})
 % endfor
+
+<%
+_EIP7702_ADDRESSES = [
+    # https://etherscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
+    ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
+    # https://etherscan.io/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
+    ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
+]
+%>
+def lookup_eip7702_address(address: bytes) -> str | None:
+% for addr, name in _EIP7702_ADDRESSES:
+    if address == ${fmt_addr(addr)}:
+        return "${name}"
+% endfor
+    return None

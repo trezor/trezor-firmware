@@ -1498,6 +1498,88 @@ if not utils.BITCOIN_ONLY:
             br_code=br_code,
         )
 
+    async def confirm_ethereum_eip7702_auth(
+        delegate_name: str,
+        delegate_addr: str,
+        network_item: StrPropertyType,
+        account: str,
+        account_path: str,
+        nonce: int,
+    ) -> None:
+        with trezorui_api.show_warning(
+            title=TR.words__warning,
+            button=TR.buttons__confirm,
+            description=TR.ethereum__auth_warn,
+            allow_cancel=True,
+            danger=True,
+        ) as layout:
+            await raise_if_not_confirmed(layout, "ethereum/auth7702/warn")
+
+        main_ctx = trezorui_api.confirm_properties(
+            title=TR.ethereum__auth_title,
+            items=[
+                (TR.ethereum__delegating, account, False),
+                (TR.ethereum__to, delegate_name, False),
+                network_item,
+            ],
+            hold=True,
+            external_menu=True,
+        )
+        menu_ctx = trezorui_api.show_info_with_cancel(
+            title="",
+            items=[
+                (TR.words__account, account, False),
+                (TR.address_details__derivation_path, account_path, False),
+                (TR.ethereum__smart_info, delegate_addr, False),
+                # TODO: switch to non-Cardano specific string
+                (TR.cardano__nonce, str(nonce), False),
+            ],
+        )
+        with main_ctx as main, menu_ctx as menu:
+            await with_info(
+                main, menu, "ethereum/auth7702/details", ButtonRequestType.SignTx
+            )
+
+    async def confirm_ethereum_eip7702_revoke(
+        network_item: StrPropertyType,
+        account: str,
+        account_path: str,
+        nonce: int,
+    ) -> None:
+        with trezorui_api.confirm_action(
+            title=TR.ethereum__revoke_title,
+            description=None,
+            action=TR.ethereum__revoke_warn.format(account),
+            verb=TR.buttons__continue,
+        ) as layout:
+            await raise_if_not_confirmed(
+                layout, "ethereum/revoke7702/intro", ButtonRequestType.SignTx
+            )
+
+        main_ctx = trezorui_api.confirm_properties(
+            title=TR.ethereum__revoke_title,
+            items=[
+                (TR.ethereum__approve_revoke_from, account, False),
+                network_item,
+            ],
+            verb=TR.buttons__confirm,
+            hold=True,
+            external_menu=True,
+        )
+        menu_ctx = trezorui_api.show_info_with_cancel(
+            title="",
+            items=[
+                (TR.words__account, account, False),
+                (TR.address_details__derivation_path, account_path, False),
+                # TODO: switch to non-Cardano specific string
+                (TR.cardano__nonce, str(nonce), False),
+            ],
+        )
+        with main_ctx as main, menu_ctx as menu:
+            await with_info(
+                main, menu, "ethereum/revoke7702/details", ButtonRequestType.SignTx
+            )
+
     def confirm_solana_unknown_token_warning() -> Awaitable[None]:
         return show_danger(
             "unknown_token_warning", content=TR.solana__unknown_token_address
