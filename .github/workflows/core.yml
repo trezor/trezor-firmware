@@ -207,6 +207,7 @@ jobs:
       SDL_VIDEODRIVER: dummy
       TREZOR_MODEL: ${{ matrix.model }}
       PYTEST_TIMEOUT: 400
+      TESTOPTS: "--durations 10"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
