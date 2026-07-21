@@ -198,4 +198,5 @@ message EthereumDisplayFormatInfo {
     required string intent = 4;
     repeated EthereumABIValueInfo parameter_definitions = 5;
     repeated EthereumERC7730FieldInfo field_definitions = 6;
+    optional string provider_name = 7;
 }

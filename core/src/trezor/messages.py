@@ -3421,6 +3421,7 @@ if TYPE_CHECKING:
         intent: "str"
         parameter_definitions: "list[EthereumABIValueInfo]"
         field_definitions: "list[EthereumERC7730FieldInfo]"
+        provider_name: "str | None"
 
         def __init__(
             self,
@@ -3431,6 +3432,7 @@ if TYPE_CHECKING:
             intent: "str",
             parameter_definitions: "list[EthereumABIValueInfo] | None" = None,
             field_definitions: "list[EthereumERC7730FieldInfo] | None" = None,
+            provider_name: "str | None" = None,
         ) -> None:
             pass
 
