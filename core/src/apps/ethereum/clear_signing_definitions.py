@@ -11,7 +11,7 @@ from .clear_signing import (
     parse_uint256,
 )
 
-# https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/ercs/calldata-erc20-tokens.json#L27
+# https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/ercs/calldata-erc20-tokens.json#L27
 
 APPROVE_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
@@ -75,7 +75,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     yield APPROVE_DISPLAY_FORMAT
     yield TRANSFER_DISPLAY_FORMAT
 
-    # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/1inch/calldata-AggregationRouterV6.json#L9
+    # https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/registry/1inch/calldata-AggregationRouterV6.json#L9
     ONEINCH_ADDRESS = b"\x11\x11\x11\x12\x54\x21\xca\x6d\xc4\x52\xd2\x89\x31\x42\x80\xa0\xf8\x84\x2a\x65"
     ONEINCH_CHAINS = [
         1,
@@ -119,6 +119,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_address),  # executor
                 Tuple(
@@ -165,6 +166,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # token
                 Atomic(parse_uint256),  # amount
@@ -200,6 +202,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_bytes32),  # token
@@ -236,6 +239,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # token
                 Atomic(parse_uint256),  # amount
@@ -272,6 +276,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # token
                 Atomic(parse_uint256),  # amount
@@ -309,6 +314,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_bytes32),  # token
@@ -346,6 +352,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_bytes32),  # token
@@ -384,6 +391,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_uint256),  # minReturn
                 Atomic(parse_bytes32),  # dex
@@ -414,6 +422,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_uint256),  # minReturn
                 Atomic(parse_uint256),  # dex
@@ -445,6 +454,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_uint256),  # minReturn
                 Atomic(parse_uint256),  # dex
@@ -477,6 +487,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_uint256),  # minReturn
@@ -508,6 +519,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_uint256),  # minReturn
@@ -540,6 +552,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_uint256),  # minReturn
@@ -567,11 +580,11 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
         )
     )
 
-    # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json#L6
+    # https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json#L6
     UNISWAP_V3_ROUTER_ADDRESS = b"\x68\xb3\x46\x58\x33\xfb\x72\xa7\x0e\xcd\xf4\x85\xe0\xe4\xc7\xbd\x86\x65\xfc\x45"
     UNISWAP_V3_ROUTER_CHAINS = [1]
 
-    # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json
+    # https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json
 
     UNISWAP_CONTEXT = BindingContext(
         [(chain, UNISWAP_V3_ROUTER_ADDRESS) for chain in UNISWAP_V3_ROUTER_CHAINS],
@@ -583,6 +596,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=UNISWAP_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="Uniswap V3 Router",
             parameter_definitions=[
                 Tuple(
                     (
@@ -624,6 +638,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=UNISWAP_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="Uniswap V3 Router",
             parameter_definitions=[
                 Tuple(
                     (
@@ -673,6 +688,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=UNISWAP_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="Uniswap V3 Router",
             parameter_definitions=[
                 Tuple(
                     (
@@ -714,6 +730,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=UNISWAP_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="Uniswap V3 Router",
             parameter_definitions=[
                 Tuple(
                     (
@@ -771,6 +788,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
         binding_context=WETH_CONTEXT,
         func_sig=b"\xd0\xe3\x0d\xb0",  # deposit()
         intent="Wrap ETH to WETH",
+        provider_name=None,
         parameter_definitions=[],  # no arguments, the amount is the tx value
         field_definitions=[
             FieldDefinition(
@@ -785,6 +803,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
         binding_context=WETH_CONTEXT,
         func_sig=b"\x2e\x1a\x7d\x4d",  # withdraw(uint256)
         intent="Unwrap WETH to ETH",
+        provider_name=None,
         parameter_definitions=[
             Atomic(parse_uint256),  # wad
         ],
@@ -818,6 +837,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=TREZOR_TEST_CONTEXT,
             func_sig=b"\x7e\x57\x7e\x01",  # synthetic selector (dummy contract)
             intent="Trezor Test Scalars. DO NOT USE",
+            provider_name="Trezor Test. DO NOT USE",
             parameter_definitions=[
                 Atomic(parse_address),  # 0 recipient
                 Atomic(parse_uint256),  # 1 nativeAmount
@@ -853,6 +873,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=TREZOR_TEST_CONTEXT,
             func_sig=b"\x7e\x57\x7e\x02",  # synthetic selector (dummy contract)
             intent="Trezor Test Token. DO NOT USE",
+            provider_name="Trezor Test. DO NOT USE",
             parameter_definitions=[
                 Atomic(parse_address),  # 0 token (target of token_path below)
                 Atomic(parse_uint256),  # 1 tokenAmount
@@ -875,6 +896,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=TREZOR_TEST_CONTEXT,
             func_sig=b"\x7e\x57\x7e\x03",  # synthetic selector (dummy contract)
             intent="Trezor Test Arrays. DO NOT USE",
+            provider_name="Trezor Test. DO NOT USE",
             parameter_definitions=[
                 Array(Atomic(parse_uint256)),  # 0 amounts (multi-value array)
                 Array(
@@ -903,6 +925,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=TREZOR_TEST_CONTEXT,
             func_sig=b"\x7e\x57\x7e\x04",  # synthetic selector (dummy contract)
             intent="Trezor Test Paths. DO NOT USE",
+            provider_name="Trezor Test. DO NOT USE",
             parameter_definitions=[
                 Atomic(parse_uint256),  # 0 amount (reused by both slice fields)
                 DynamicLeaf(parse_bytes),  # 1 packedPath (sliced for token addresses)
