@@ -35,14 +35,6 @@ _SOLIDITY_SIGNATURES = (
     b"ethUnoswapTo(uint256,uint256,uint256)",
     b"ethUnoswapTo2(uint256,uint256,uint256,uint256)",
     b"ethUnoswapTo3(uint256,uint256,uint256,uint256,uint256)",
-    # LiFi LIFIDiamond
-    b"swapTokensMultipleV3ERC20ToERC20(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool)[])",
-    b"swapTokensMultipleV3ERC20ToNative(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool)[])",
-    b"swapTokensMultipleV3NativeToERC20(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool)[])",
-    b"swapTokensSingleV3ERC20ToERC20(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool))",
-    b"swapTokensSingleV3ERC20ToNative(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool))",
-    b"swapTokensSingleV3NativeToERC20(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool))",
-    b"swapTokensGeneric(bytes32,string,string,address,uint256,(address,address,address,address,uint256,bytes,bool)[])",
     # Uniswap V3 Router 02
     b"exactInput((bytes,address,uint256,uint256))",
     b"exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",

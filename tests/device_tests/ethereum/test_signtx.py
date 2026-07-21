@@ -111,7 +111,10 @@ def _do_test_signtx(
         )
 
     expected_v = 2 * parameters["chain_id"] + 35
-    assert sig_v in (expected_v, expected_v + 1)        # 'y-coordinate' sign bit encodes chain_id: EIP-155
+    assert sig_v in (
+        expected_v,
+        expected_v + 1,
+    )  # 'y-coordinate' sign bit encodes chain_id: EIP-155
     assert sig_r.hex() == result["sig_r"]
     assert sig_s.hex() == result["sig_s"]
     assert sig_v == result["sig_v"]
@@ -133,9 +136,7 @@ def test_signtx_external_definitions(
 ) -> None:
     chain_id = parameters["chain_id"]
     with session.test_ctx as client:
-        client.set_input_flow(
-            InputFlowConfirmAllWarnings(session).get()
-        )
+        client.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         sig_v, sig_r, sig_s = ethereum.sign_tx(
             session,
             n=parse_path(parameters["path"]),
@@ -158,7 +159,10 @@ def test_signtx_external_definitions(
         )
 
     expected_v = 2 * chain_id + 35
-    assert sig_v in (expected_v, expected_v + 1)    # 'y-coordinate' sign bit encodes chain_id: EIP-155
+    assert sig_v in (
+        expected_v,
+        expected_v + 1,
+    )  # 'y-coordinate' sign bit encodes chain_id: EIP-155
     assert sig_r.hex() == result["sig_r"]
     assert sig_s.hex() == result["sig_s"]
     assert sig_v == result["sig_v"]
