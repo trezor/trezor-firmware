@@ -4924,6 +4924,8 @@ pub struct EthereumSignAuth7702 {
     pub delegate: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumSignAuth7702.nonce)
     pub nonce: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumSignAuth7702.definitions)
+    pub definitions: ::protobuf::MessageField<EthereumDefinitions>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum.EthereumSignAuth7702.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -5015,7 +5017,7 @@ impl EthereumSignAuth7702 {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(5);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -5036,6 +5038,11 @@ impl EthereumSignAuth7702 {
             "nonce",
             |m: &EthereumSignAuth7702| { &m.nonce },
             |m: &mut EthereumSignAuth7702| { &mut m.nonce },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, EthereumDefinitions>(
+            "definitions",
+            |m: &EthereumSignAuth7702| { &m.definitions },
+            |m: &mut EthereumSignAuth7702| { &mut m.definitions },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumSignAuth7702>(
             "EthereumSignAuth7702",
@@ -5058,6 +5065,11 @@ impl ::protobuf::Message for EthereumSignAuth7702 {
         if self.nonce.is_none() {
             return false;
         }
+        for v in &self.definitions {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -5078,6 +5090,9 @@ impl ::protobuf::Message for EthereumSignAuth7702 {
                 },
                 32 => {
                     self.nonce = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                42 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.definitions)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -5103,6 +5118,10 @@ impl ::protobuf::Message for EthereumSignAuth7702 {
         if let Some(v) = self.nonce {
             my_size += ::protobuf::rt::uint64_size(4, v);
         }
+        if let Some(v) = self.definitions.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -5120,6 +5139,9 @@ impl ::protobuf::Message for EthereumSignAuth7702 {
         }
         if let Some(v) = self.nonce {
             os.write_uint64(4, v)?;
+        }
+        if let Some(v) = self.definitions.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(5, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -5142,6 +5164,7 @@ impl ::protobuf::Message for EthereumSignAuth7702 {
         self.chain_id = ::std::option::Option::None;
         self.delegate = ::std::option::Option::None;
         self.nonce = ::std::option::Option::None;
+        self.definitions.clear();
         self.special_fields.clear();
     }
 
@@ -5151,6 +5174,7 @@ impl ::protobuf::Message for EthereumSignAuth7702 {
             chain_id: ::std::option::Option::None,
             delegate: ::std::option::Option::None,
             nonce: ::std::option::Option::None,
+            definitions: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -5503,15 +5527,17 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x02(\tR\x07address\"\x99\x01\n\x13EthereumDefinitions\x12'\n\x0fenc\
     oded_network\x18\x01\x20\x01(\x0cR\x0eencodedNetwork\x12#\n\rencoded_tok\
     en\x18\x02\x20\x01(\x0cR\x0cencodedToken\x124\n\x16encoded_display_forma\
-    t\x18\x03\x20\x01(\x0cR\x14encodedDisplayFormat\"\x86\x01\n\x14EthereumS\
+    t\x18\x03\x20\x01(\x0cR\x14encodedDisplayFormat\"\xda\x01\n\x14EthereumS\
     ignAuth7702\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x19\
     \n\x08chain_id\x18\x02\x20\x02(\x04R\x07chainId\x12\x1a\n\x08delegate\
     \x18\x03\x20\x02(\tR\x08delegate\x12\x14\n\x05nonce\x18\x04\x20\x02(\x04\
-    R\x05nonce:\x04\x88\xb2\x19\x01\"\x84\x01\n\x19EthereumAuth7702Signature\
-    \x12\x1f\n\x0bsignature_v\x18\x01\x20\x02(\rR\nsignatureV\x12\x1f\n\x0bs\
-    ignature_r\x18\x02\x20\x02(\x0cR\nsignatureR\x12\x1f\n\x0bsignature_s\
-    \x18\x03\x20\x02(\x0cR\nsignatureS:\x04\x88\xb2\x19\x01B<\n#com.satoshil\
-    abs.trezor.lib.protobufB\x15TrezorMessageEthereum\
+    R\x05nonce\x12R\n\x0bdefinitions\x18\x05\x20\x01(\x0b20.hw.trezor.messag\
+    es.ethereum.EthereumDefinitionsR\x0bdefinitions:\x04\x88\xb2\x19\x01\"\
+    \x84\x01\n\x19EthereumAuth7702Signature\x12\x1f\n\x0bsignature_v\x18\x01\
+    \x20\x02(\rR\nsignatureV\x12\x1f\n\x0bsignature_r\x18\x02\x20\x02(\x0cR\
+    \nsignatureR\x12\x1f\n\x0bsignature_s\x18\x03\x20\x02(\x0cR\nsignatureS:\
+    \x04\x88\xb2\x19\x01B<\n#com.satoshilabs.trezor.lib.protobufB\x15TrezorM\
+    essageEthereum\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

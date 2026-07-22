@@ -5889,6 +5889,7 @@ class EthereumSignAuth7702(protobuf.MessageType):
         2: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
         3: protobuf.Field("delegate", "string", repeated=False, required=True),
         4: protobuf.Field("nonce", "uint64", repeated=False, required=True),
+        5: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5898,11 +5899,13 @@ class EthereumSignAuth7702(protobuf.MessageType):
         delegate: "str",
         nonce: "int",
         address_n: Optional[Sequence["int"]] = None,
+        definitions: Optional["EthereumDefinitions"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.chain_id = chain_id
         self.delegate = delegate
         self.nonce = nonce
+        self.definitions = definitions
 
 
 class EthereumAuth7702Signature(protobuf.MessageType):

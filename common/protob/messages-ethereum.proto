@@ -232,10 +232,11 @@ message EthereumDefinitions {
 message EthereumSignAuth7702 {
     option (experimental_message) = true;
 
-    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
-    required uint64 chain_id = 2;   // chain id on which the authorization is valid, or 0 for all
-    required string delegate = 3;   // address of the code that will be delegated to the EOA
-    required uint64 nonce = 4;      // account nonce for which the authorization is valid
+    repeated uint32 address_n = 1;                 // BIP-32 path to derive the key from master node
+    required uint64 chain_id = 2;                  // chain id on which the authorization is valid, or 0 for all
+    required string delegate = 3;                  // address of the code that will be delegated to the EOA
+    required uint64 nonce = 4;                     // account nonce for which the authorization is valid
+    optional EthereumDefinitions definitions = 5;  // network definitions (for chain ID)
 }
 
 /**
