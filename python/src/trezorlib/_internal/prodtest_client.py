@@ -128,6 +128,7 @@ class Cmd:
     TROPIC_TEST_RNG = "tropic-test-rng"
     TROPIC_TEST_SIGN = "tropic-test-sign"
     TROPIC_TESTS_CLEANUP = "tropic-tests-cleanup"
+    TROPIC_UPDATE_CONFIGURATION = "tropic-update-configuration"
     TROPIC_UPDATE_FW = "tropic-update-fw"
     UNIT_TEST_LIST = "unit-test-list"
     UNIT_TEST_RUN = "unit-test-run"
