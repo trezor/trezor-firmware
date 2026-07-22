@@ -861,6 +861,9 @@ STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Maximum size of user-uploaded homescreen in bytes."""
 /// EMULATOR: bool
 /// """Whether the firmware is running in the emulator."""
+/// PRODUCTION: bool
+/// """Whether the firmware is a production build (signed with production
+/// keys)."""
 /// BITCOIN_ONLY: bool
 /// """Whether the firmware is Bitcoin-only."""
 /// UI_LAYOUT: str
@@ -1090,6 +1093,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_false},
+#endif
+#if PRODUCTION
+    {MP_ROM_QSTR(MP_QSTR_PRODUCTION), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_PRODUCTION), mp_const_false},
 #endif
 #if BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_true},

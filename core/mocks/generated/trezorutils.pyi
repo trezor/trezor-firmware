@@ -304,6 +304,9 @@ HOMESCREEN_MAXSIZE: int
 """Maximum size of user-uploaded homescreen in bytes."""
 EMULATOR: bool
 """Whether the firmware is running in the emulator."""
+PRODUCTION: bool
+"""Whether the firmware is a production build (signed with production
+keys)."""
 BITCOIN_ONLY: bool
 """Whether the firmware is Bitcoin-only."""
 UI_LAYOUT: str
