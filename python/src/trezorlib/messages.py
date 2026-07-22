@@ -4849,6 +4849,7 @@ class EthereumDisplayFormatInfo(protobuf.MessageType):
         4: protobuf.Field("intent", "string", repeated=False, required=True),
         5: protobuf.Field("parameter_definitions", "EthereumABIValueInfo", repeated=True, required=False, default=None),
         6: protobuf.Field("field_definitions", "EthereumERC7730FieldInfo", repeated=True, required=False, default=None),
+        7: protobuf.Field("provider_name", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4860,6 +4861,7 @@ class EthereumDisplayFormatInfo(protobuf.MessageType):
         intent: "str",
         parameter_definitions: Optional[Sequence["EthereumABIValueInfo"]] = None,
         field_definitions: Optional[Sequence["EthereumERC7730FieldInfo"]] = None,
+        provider_name: Optional["str"] = None,
     ) -> None:
         self.parameter_definitions: Sequence["EthereumABIValueInfo"] = parameter_definitions if parameter_definitions is not None else []
         self.field_definitions: Sequence["EthereumERC7730FieldInfo"] = field_definitions if field_definitions is not None else []
@@ -4867,6 +4869,7 @@ class EthereumDisplayFormatInfo(protobuf.MessageType):
         self.address = address
         self.func_sig = func_sig
         self.intent = intent
+        self.provider_name = provider_name
 
 
 class EosGetPublicKey(protobuf.MessageType):

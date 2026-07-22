@@ -786,11 +786,13 @@ class DisplayFormat:
         self,
         binding_context: BindingContext | None,
         func_sig: bytes,
+        provider_name: str | None,
         intent: str,
         parameter_definitions: list[ABIValue],
         field_definitions: list[FieldDefinition],
     ) -> None:
         self.binding_context = binding_context
+        self.provider_name = provider_name
         self.func_sig = func_sig
         self.intent = intent
         self.parameter_definitions = parameter_definitions
@@ -937,6 +939,7 @@ class DisplayFormat:
             binding_context=BindingContext([(proto.chain_id, bytes(proto.address))]),
             func_sig=bytes(proto.func_sig),
             intent=proto.intent,
+            provider_name=proto.provider_name,
             parameter_definitions=[
                 ABIValue.from_proto(p) for p in proto.parameter_definitions
             ],
@@ -1077,7 +1080,7 @@ async def _handle_approve(
     fee_items: Iterable[StrPropertyType],
 ) -> None:
     from .layout import require_confirm_approve
-    from .sc_constants import KNOWN_ADDRESSES
+    from .sc_constants import known_provider_name
     from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
     # approve() is not payable; surface any native ETH sent along with it.
@@ -1108,7 +1111,14 @@ async def _handle_approve(
 
     assert isinstance(arg1_raw_value, int)
 
-    recipient_str = KNOWN_ADDRESSES.get((msg.chain_id, arg0_raw_value))
+    recipient_str = (
+        known_provider_name(msg.chain_id, arg0_raw_value)
+        if display_format.provider_name is None
+        else display_format.provider_name
+    )
+
+    # Ideally our vault name and definition should also be added in the ERC-7730 registry
+    # Until that is verified, we'll keep our vault information hardcoded.
     if recipient_str is None:
         vault = lookup_vault(defs.network, arg0_raw_value)
         if vault is not UNKNOWN_VAULT:
@@ -1218,7 +1228,7 @@ async def _handle_generic_ui(
     from . import tokens
     from .helpers import bytes_from_address
     from .layout import require_confirm_clear_signing
-    from .sc_constants import KNOWN_ADDRESSES
+    from .sc_constants import known_provider_name
 
     # Surface the native ETH value in the summary when non-zero - unless the
     # display format already renders it as an `AmountFormatter` field (e.g. a
@@ -1255,8 +1265,10 @@ async def _handle_generic_ui(
             )
             properties_to_confirm.append(token_address_property)
 
-    recipient_str = KNOWN_ADDRESSES.get(
-        (msg.chain_id, bytes_from_address(msg.to)), msg.to
+    recipient_str = (
+        (known_provider_name(msg.chain_id, bytes_from_address(msg.to)) or msg.to)
+        if display_format.provider_name is None
+        else display_format.provider_name
     )
 
     await require_confirm_clear_signing(

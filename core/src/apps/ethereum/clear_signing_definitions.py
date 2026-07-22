@@ -11,12 +11,13 @@ from .clear_signing import (
     parse_uint256,
 )
 
-# https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/ercs/calldata-erc20-tokens.json#L27
+# https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/ercs/calldata-erc20-tokens.json#L27
 
 APPROVE_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
     func_sig=b"\x09\x5e\xa7\xb3",  # approve(address,uint256)
     intent="Approve",
+    provider_name=None,
     parameter_definitions=[
         Atomic(parse_address),  # _spender
         Atomic(parse_uint256),  # _value
@@ -38,6 +39,7 @@ TRANSFER_DISPLAY_FORMAT = DisplayFormat(
     binding_context=None,
     func_sig=b"\xa9\x05\x9c\xbb",  # transfer(address,uint256)
     intent="Send",
+    provider_name=None,
     parameter_definitions=[
         Atomic(parse_address),  # _to
         Atomic(parse_uint256),  # _value
@@ -75,7 +77,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
     yield APPROVE_DISPLAY_FORMAT
     yield TRANSFER_DISPLAY_FORMAT
 
-    # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/1inch/calldata-AggregationRouterV6.json#L9
+    # https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/registry/1inch/calldata-AggregationRouterV6.json#L9
     ONEINCH_ADDRESS = unhexlify("111111125421cA6dc452d289314280a0f8842A65")
     ONEINCH_CHAINS = [
         1,
@@ -119,6 +121,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_address),  # executor
                 Tuple(
@@ -165,6 +168,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # token
                 Atomic(parse_uint256),  # amount
@@ -200,6 +204,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_bytes32),  # token
@@ -236,6 +241,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # token
                 Atomic(parse_uint256),  # amount
@@ -272,6 +278,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # token
                 Atomic(parse_uint256),  # amount
@@ -309,6 +316,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_bytes32),  # token
@@ -346,6 +354,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_bytes32),  # token
@@ -384,6 +393,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_uint256),  # minReturn
                 Atomic(parse_bytes32),  # dex
@@ -414,6 +424,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_uint256),  # minReturn
                 Atomic(parse_uint256),  # dex
@@ -445,6 +456,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_uint256),  # minReturn
                 Atomic(parse_uint256),  # dex
@@ -477,6 +489,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_uint256),  # minReturn
@@ -508,6 +521,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_uint256),  # minReturn
@@ -540,6 +554,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=ONEINCH_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="1inch Aggregation Router V6",
             parameter_definitions=[
                 Atomic(parse_bytes32),  # to
                 Atomic(parse_uint256),  # minReturn
@@ -567,9 +582,9 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
         )
     )
 
-    # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/lifi/calldata-LIFIDiamond.json
+    # https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/registry/lifi/calldata-LIFIDiamond.json
     LIFI_ADDRESS = unhexlify("1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE")
-    # Chains where the LiFi diamond is deployed at the canonical LIFI_ADDRESS.
+    # Chains where the LI.FI diamond is deployed at the canonical LIFI_ADDRESS.
     LIFI_CHAINS = [
         1,
         10,
@@ -598,7 +613,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
         1313161554,
         1666600000,
     ]
-    # Chains where the LiFi diamond is deployed at a non-canonical address.
+    # Chains where the LI.FI diamond is deployed at a non-canonical address.
     LIFI_ALT_DEPLOYMENTS = [
         (324, unhexlify("341e94069f53234fe6dabef707ad424830525715")),  # zkSync Era
         (1088, unhexlify("24ca98fb6972f5ee05f0db00595c7f68d9fafd68")),  # Metis
@@ -621,6 +636,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=LIFI_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="LI.FI Diamond",
             parameter_definitions=[
                 Atomic(parse_bytes),  # _transactionId
                 Dynamic(parse_string),  # _integrator
@@ -672,6 +688,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=LIFI_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="LI.FI Diamond",
             parameter_definitions=[
                 Atomic(parse_bytes),  # _transactionId
                 Dynamic(parse_string),  # _integrator
@@ -721,6 +738,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=LIFI_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="LI.FI Diamond",
             parameter_definitions=[
                 Atomic(parse_bytes),  # _transactionId
                 Dynamic(parse_string),  # _integrator
@@ -770,6 +788,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=LIFI_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="LI.FI Diamond",
             parameter_definitions=[
                 Atomic(parse_bytes),  # _transactionId
                 Dynamic(parse_string),  # _integrator
@@ -817,6 +836,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=LIFI_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="LI.FI Diamond",
             parameter_definitions=[
                 Atomic(parse_bytes),  # _transactionId
                 Dynamic(parse_string),  # _integrator
@@ -864,6 +884,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=LIFI_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="LI.FI Diamond",
             parameter_definitions=[
                 Atomic(parse_bytes),  # _transactionId
                 Dynamic(parse_string),  # _integrator
@@ -911,6 +932,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=LIFI_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="LI.FI Diamond",
             parameter_definitions=[
                 Atomic(parse_bytes),  # _transactionId
                 Dynamic(parse_string),  # _integrator
@@ -962,11 +984,11 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
         )
     )
 
-    # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json#L6
+    # https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json#L6
     UNISWAP_V3_ROUTER_ADDRESS = unhexlify("68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
     UNISWAP_V3_ROUTER_CHAINS = [1]
 
-    # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json
+    # https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json
 
     UNISWAP_CONTEXT = BindingContext(
         [(chain, UNISWAP_V3_ROUTER_ADDRESS) for chain in UNISWAP_V3_ROUTER_CHAINS],
@@ -978,6 +1000,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=UNISWAP_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="Uniswap V3 Router",
             parameter_definitions=[
                 Tuple(
                     (
@@ -1019,6 +1042,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=UNISWAP_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="Uniswap V3 Router",
             parameter_definitions=[
                 Tuple(
                     (
@@ -1068,6 +1092,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=UNISWAP_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="Uniswap V3 Router",
             parameter_definitions=[
                 Tuple(
                     (
@@ -1109,6 +1134,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=UNISWAP_CONTEXT,
             func_sig=_FUNC_SIG,
             intent="Swap",
+            provider_name="Uniswap V3 Router",
             parameter_definitions=[
                 Tuple(
                     (
@@ -1173,6 +1199,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=TREZOR_TEST_CONTEXT,
             func_sig=unhexlify("7e577e01"),  # synthetic selector (dummy contract)
             intent="Trezor Test Scalars. DO NOT USE",
+            provider_name="Trezor Test. DO NOT USE",
             parameter_definitions=[
                 Atomic(parse_address),  # 0 recipient
                 Atomic(parse_uint256),  # 1 nativeAmount
@@ -1208,6 +1235,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=TREZOR_TEST_CONTEXT,
             func_sig=unhexlify("7e577e02"),  # synthetic selector (dummy contract)
             intent="Trezor Test Token. DO NOT USE",
+            provider_name="Trezor Test. DO NOT USE",
             parameter_definitions=[
                 Atomic(parse_address),  # 0 token (target of token_path below)
                 Atomic(parse_uint256),  # 1 tokenAmount
@@ -1230,6 +1258,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=TREZOR_TEST_CONTEXT,
             func_sig=unhexlify("7e577e03"),  # synthetic selector (dummy contract)
             intent="Trezor Test Arrays. DO NOT USE",
+            provider_name="Trezor Test. DO NOT USE",
             parameter_definitions=[
                 Array(Atomic(parse_uint256)),  # 0 amounts (multi-value array)
                 Array(
@@ -1258,6 +1287,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             binding_context=TREZOR_TEST_CONTEXT,
             func_sig=unhexlify("7e577e04"),  # synthetic selector (dummy contract)
             intent="Trezor Test Paths. DO NOT USE",
+            provider_name="Trezor Test. DO NOT USE",
             parameter_definitions=[
                 Atomic(parse_uint256),  # 0 amount (reused by both slice fields)
                 Dynamic(parse_bytes),  # 1 packedPath (sliced for token addresses)

@@ -7,11 +7,7 @@ if not utils.BITCOIN_ONLY:
 
     from ethereum_common import *
     from trezor.enums import EthereumERC7730FieldFormatterType as FT
-    from trezor.messages import (
-        EthereumERC7730FieldInfo,
-        EthereumERC7730Path,
-        EthereumTokenInfo,
-    )
+    from trezor.messages import EthereumERC7730FieldInfo, EthereumERC7730Path
 
     from apps.ethereum.clear_signing import (
         AddressNameFormatter,
@@ -591,6 +587,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         display_format = DisplayFormat(
             binding_context=None,
             func_sig=b"\x00\x00\x00\x00",
+            provider_name=None,
             intent="Test",
             parameter_definitions=[Array(Atomic(parse_uint256))],
             field_definitions=[FieldDefinition((0,), "Values", RawFormatter)],
@@ -636,6 +633,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         display_format = DisplayFormat(
             binding_context=None,
             func_sig=b"\x00\x00\x00\x00",
+            provider_name=None,
             intent="Test",
             parameter_definitions=[],
             field_definitions=[
