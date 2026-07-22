@@ -19,13 +19,11 @@ of the tree it owns and bridging to the root it inherits via a Merkle path:
 | --- | --- | --- | --- | --- |
 | **boardloader** | `H(bootloader)` + model leaf | model path (`boot_header_merkle_proof`) | `modelRoot` | verifies the **signature** |
 | **bootloader** | `H(firmware manifest)` | firmware path (`firmware_proof`) | `firmwareRoot` | trusts it (in the boardloader-verified boot header) |
-| **kernel** (opt) | `H(app)` | app path | a future app root | would be added to the manifest when apps exist (§6) |
 
 `firmwareRoot` is an ordinary **internal node** of the single tree,
 but it is also **materialized as a field** in its parent node (a checkpoint),
 so a lower domain can verify its subtree locally against a root it already trusts
-without re-walking to `modelRoot` or re-checking the signature. A future app root
-(§6) would be materialized the same way, in the variant manifest.
+without re-walking to `modelRoot` or re-checking the signature.
 
 The founder's build system produces `modelRoot`; the founder compares it against
 the value shown on their Trezor, and the Trezor can show what changed since last
@@ -36,14 +34,14 @@ time (e.g. a new bootloader vs. just a new Solana app).
 ```
 modelRoot                                            [signed]
 ├── modelIntNode…
-│   └── model leaf  { hwModel, version, fixVersion, …,
-│                     firmwareRoot, bootloaderHash }      ← boot header (TRZQ)
-│         └── firmwareRoot                                (materialized field)
-│               ├── variant manifest (universal)  { firmwareType,
-│               │        translationsRoot, hashDirectory[secmon,kernel,core] }
-│               ├── variant manifest (bitcoin-only)
-│               ├── variant manifest (prodtest)
-│               └── nrf            (shared, variant-agnostic — see §7)
+│   ├── model leaf  { hwModel, version, fixVersion, …,
+│   │                 firmwareRoot, bootloaderHash }      ← boot header (TRZQ)
+│   │         └── firmwareRoot                            (materialized field)
+│   │               ├── variant manifest (universal)  { firmwareType,
+│   │               │        translationsRoot, hashDirectory[secmon,kernel,core] }
+│   │               ├── variant manifest (bitcoin-only)
+│   │               └── variant manifest (prodtest)
+│   └── nrf leaf     (self-verified model-level peer, variant-agnostic — see §6)
 └── … other models
 ```
 
@@ -197,35 +195,77 @@ custom↔custom is shared), and installs **only on an unlocked bootloader**.
 build-time `--unsafe-fw` selects `FW_VARIANT_CUSTOM`; the app is still filled with
 its real `code_hash` (the signer zeroes it only for the leaf).
 
-## 6. App layer (kernel) — **[design]**
+## 6. nRF placement — **[design]**
 
-A future app root would be the root of a Merkle tree of installable apps (btc,
-eth, solana, …). A module such as the kernel would verify an app it loads by
-folding the app's Merkle path up to that root (which it trusts because the
-manifest is bootloader-verified). When apps are built, the app root would be
-added to the variant manifest, materialized like `firmwareRoot` (§1). It is
-**not** a reserved manifest field today — the manifest carries no app root until
-apps exist. `translations_root` is the analogous anchor for translation blobs
-and *is* reserved (zeroed) in the manifest, though translations are not built
-yet either.
+The nRF (BLE co-processor) firmware runs on a **separate chip** and is
+**variant-agnostic and model-specific**. It boots on its own MCU *before* the STM
+can inspect it, and a hash the nRF *reports back* is not a trustworthy check — so
+the STM cannot verify the running nRF firmware top-down. Security of the link
+rests on **THP + pairing/HMAC**; the nRF is treated as an untrusted comms party.
 
-## 7. nRF placement — **[design]**
+The nRF is therefore a **self-verifying, model-level peer** of the STM in the one
+founder tree — NOT a node under `firmwareRoot`, and NOT embedded in a variant
+manifest:
 
-The nRF (BLE co-processor) firmware is **variant-agnostic and model-specific**, so
-it is a **shared node at the `firmwareRoot` level**, NOT an entry duplicated in
-each variant manifest. Two options:
+- **Root of trust on the nRF side.** The nRF has its own two stages — an **nRF
+  bootloader** (founder pubkey, factory-provisioned, exactly like the STM
+  boardloader) plus an updatable **nRF app**. The nRF app carries its own
+  boot-header-equivalent + Merkle proof, and the nRF bootloader verifies its
+  (PQ / SLH-DSA) signature at **install and boot**. SLH-DSA on the nRF MCU is
+  feasible (~16 kB signature — optionally MCU-supplied — + ~11 kB code, ~2 kB
+  RAM, ~75 ms).
+- **One founder root.** The nRF app's leaf proves into the **same founder root**
+  (`modelRoot`) as the STM model leaf: one founder key signs both branches, and
+  the STM boardloader and the nRF bootloader both hold that key. This is mainly
+  founder/organisational unification — the *authoritative* nRF check is on the
+  nRF chip, at boot.
+- **STM verifies only at install.** During a bootloader-mediated nRF install the
+  STM has the nRF bytes and the founder pubkey, so it verifies the nRF app's
+  founder signature then, rejecting a bad binary early (defense-in-depth).
+  Verifying that signature needs only the founder pubkey, not a materialised
+  `modelRoot`. At boot the STM cannot check the nRF — that is the nRF
+  bootloader's job.
 
-1. **(preferred)** a sibling leaf/subtree under `firmwareRoot`, alongside the
-   variant manifests — bootloader-verified, reuses `firmwareRoot`.
-2. a separate `nrfRoot` peer of `firmwareRoot` in the model leaf —
-   boardloader-verified.
+**Install path.** The nRF firmware is **not embedded** in kernel+coreapp; it is
+delivered and updated **through the STM bootloader** — staged to non-volatile
+memory before transfer to the nRF chip, so an interrupted update bricks neither
+side. Doing it in the bootloader (not the firmware) means an nRF update needs no
+firmware install and reuses the same staging mechanism. Motivation: free flash on
+constrained models (U585 / Pico) and app space on T3W1. Pairing keys (derived
+from `secret`) are available to the bootloader.
 
-Choice hinges on which layer installs/verifies the nRF (bootloader ⇒ option 1).
-T3W1 keeps its nRF **embedded** in kernel+coreapp (`.nrf_app`) for now (covered
-transitively); the shared-sibling split is for future flash-constrained models,
-and needs a phase-2 transfer-to-nRF-chip install step.
+**Downgrade — coupled monotonic.** A drift between the STM firmware and the nRF
+firmware could make a **comms-incompatible** pair, so their `monotonic_version`
+is kept **matched**: the nRF app and the STM boot header carry the same monotonic,
+and a coupled release bumps both. Enforcement needs **no new persistent state** —
+it falls out of three existing/planned pieces:
 
-## 8. Storage summary
+1. **Install-time equality check.** The bootloader (which installs the nRF and
+   has verified its signature) requires `nRF.monotonic == boot_header.monotonic`;
+   a mismatched pair can never be installed.
+2. **STM self-rollback (existing).** The boardloader already pins the boot-header
+   monotonic non-decreasing (`write_/check_bootloader_min_version`), so the STM
+   side — and thus the matched nRF — can't roll back.
+3. **nRF self-rollback (planned).** The nRF bootloader keeps *its* monotonic
+   non-decreasing, so the nRF can't be downgraded out-of-band on its own chip.
+
+Together the pair is pinned and matched forever, with the STM boot-header
+monotonic as the single reference — no recorded nRF version needed (that would
+only be required for *decoupled* per-side floors, and couldn't be trusted from a
+runtime nRF report anyway). The coupled install must be **ordered** (commit/verify
+the nRF before bumping the boot header) so a partial two-chip update leaves a
+consistent pair, not a stranded mismatch. This is a **version-axis** coupling for
+compatibility, not a tree coupling (no multi-version-tree signing). Cost: no
+independent nRF version bumps — an nRF-only fix still needs a coupled monotonic
+bump, i.e. a re-signed boot header (cheap via the header-only update path) even if
+the STM code is unchanged.
+
+**Today (T3W1):** the nRF stays **embedded** in kernel+coreapp (`.nrf_app`),
+covered transitively by that module's `code_hash` and version-locked one-to-one
+with the firmware. The self-verifying peer split above is the target for
+flash-constrained models.
+
+## 7. Storage summary
 
 | item | where | authenticated? |
 | --- | --- | --- |
@@ -237,7 +277,7 @@ and needs a phase-2 transfer-to-nRF-chip install step.
 | variant manifest | **firmware image start** | yes (leaf under `firmwareRoot`) |
 | module code | per module, in firmware image | yes (via manifest `code_hash`) |
 
-## 9. Verification flow
+## 8. Verification flow
 
 **Boot (boardloader → bootloader → firmware):**
 1. Boardloader: recompute model leaf from the boot header + `H(bootloader_code)`,
@@ -253,10 +293,8 @@ and needs a phase-2 transfer-to-nRF-chip install step.
    (`firmware_type==0`) or unmatched device stays unbootable until a real install
    stamps the variant. Then for each manifest entry:
    `SHA256(code @ addr, size) == code_hash`. Jump to the entry module (secmon).
-3. Kernel (opt, future): to load an app, fold the app's path → a future app root
-   carried in the (bootloader-verified) manifest.
 
-## 10. Implementation status
+## 9. Implementation status
 
 - **[impl]** hashing primitives + fold; manifest verify math
   (`firmware_manifest_authentic` / `firmware_verify_manifest` /
@@ -281,14 +319,20 @@ and needs a phase-2 transfer-to-nRF-chip install step.
   (`firmware_module.build_founder_tree`); manifest build (`build_manifest` /
   `fill_manifest` / `variant_leaf` + `authenticity_manifest`).
 - **[design / TODO]** model tree → `modelRoot` (multi-model, non-empty
-  `boot_header_merkle_proof`); app tree + its manifest app root; translations; nRF as a
-  shared node; kernel/core split; production signing; whether the custom slot
-  ships in the production field `firmwareRoot`.
+  `boot_header_merkle_proof`); translations; nRF as a self-verified model-level
+  peer (own boot-stage + proof, STM-checked only at install, monotonic coupled —
+  §6); kernel/core split; production signing; whether the custom slot ships in
+  the production field `firmwareRoot`.
 
-## 11. Open questions
+## 10. Open questions
 
 - Manifest reserved-region size + module alignment at firmware start.
-- nRF: option 1 vs 2; is it ever genuinely per-variant?
+- ~~nRF: shared node under `firmwareRoot` vs `nrfRoot` peer; who verifies?~~
+  **RESOLVED** (see §6): self-verified model-level peer under `modelRoot` (nRF
+  bootloader holds the founder key), STM verifies only at install, monotonic
+  coupled to the boot header via an install-time equality check + both-sides
+  self-rollback (no recorded nRF version). Remaining: the exact nRF
+  boot-header-equivalent layout, and the ordered two-chip install commit.
 - ~~`firmware_type` = variant marker + a derived custom/official bit~~
   **RESOLVED**: `firmware_type` IS the authenticated variant byte; custom-ness is
   the `FW_VARIANT_CUSTOM` variant, not a flag (see §5.5).
