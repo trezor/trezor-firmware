@@ -1,13 +1,13 @@
 import builtins
 from micropython import const
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 from storage.cache_common import (
     CHANNEL_ID,
     LAST_USAGE,
     SESSION_ID,
     SESSION_STATE,
-    DataCache,
+    EncryptableDataCache,
 )
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ _ALLOCATED_STATE = const(1)
 _SEEDLESS_STATE = const(2)
 
 
-class SessionThpCache(DataCache):
+class SessionThpCache(EncryptableDataCache):
     def __init__(self) -> None:
         from trezor import utils
 
@@ -70,6 +70,16 @@ class SessionThpCache(DataCache):
 
     def clear(self) -> None:
         super().clear()
+
+    def fields_to_encrypt(self) -> Sequence[int]:
+        from storage.cache_thp_keys import CACHE_ENCRYPTED_KEYS_THP
+
+        return CACHE_ENCRYPTED_KEYS_THP
+
+    def is_preauthorized(self) -> bool:
+        from storage.cache_thp_keys import APP_COMMON_AUTHORIZATION_TYPE
+
+        return self.is_set(APP_COMMON_AUTHORIZATION_TYPE)
 
 
 _SESSIONS: list[SessionThpCache] = []

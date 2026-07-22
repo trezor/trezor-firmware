@@ -77,3 +77,44 @@ homescreen_shown: object | None = None
 # Timestamp of last autolock activity.
 # Here to persist across main loop restart between workflows.
 autolock_last_touch: int | None = None
+
+
+def encrypt_cache() -> None:
+    """
+    Encrypts seeds in all the cached sessions and the sessionless cache.
+    """
+    exceptions = []
+    for session in _PROTOCOL_CACHE._SESSIONS + [_SESSIONLESS_CACHE]:
+        try:
+            session.encrypt()
+        except Exception as e:
+            session.clear()
+            exceptions.append(e)
+
+    if __debug__:
+        # We added 28 bytes per cache to the heap. We need to rebaseline the emulator's
+        # free-heap-decrease self-check (dev-only) so the next main-loop iteration
+        # doesn't flag it as a leak.
+        from trezorutils import clear_gc_info, update_gc_info
+
+        gc.collect()
+        clear_gc_info()
+        update_gc_info()
+
+    if exceptions:
+        raise exceptions[0]
+
+
+def decrypt_cache() -> None:
+    """
+    Decrypts seeds in all the cached sessions and the sessionless cache.
+    """
+    exceptions = []
+    for session in _PROTOCOL_CACHE._SESSIONS + [_SESSIONLESS_CACHE]:
+        try:
+            session.decrypt()
+        except Exception as e:
+            session.clear()
+            exceptions.append(e)
+    if exceptions:
+        raise exceptions[0]
