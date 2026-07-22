@@ -45,7 +45,6 @@ unsafe_fw = []
 mcu_stm32u58 = ["sec/mcu_stm32u58", "mcu_stm32u5"]
 mcu_stm32u5g = ["sec/mcu_stm32u5g", "mcu_stm32u5"]
 mcu_stm32u5a = ["sec/mcu_stm32u5a", "mcu_stm32u5"]
-mcu_stm32u5 = ["sec/trustzone"]
 
 # --------------------------------------------------------------------------
 # Selectable components
@@ -81,3 +80,5 @@ default = [
     "sec/rdi",
     "rtl/aes_gcm",
     ]
+
+mcu_stm32u5 = ["sec/trustzone"]
