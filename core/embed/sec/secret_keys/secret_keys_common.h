@@ -27,6 +27,7 @@
 #include <trezor_rtl.h>
 
 #include <ecdsa.h>
+#include <ed25519-donna/ed25519.h>
 
 // Key derivation indices
 #define KEY_INDEX_MCU_DEVICE_AUTH 0
@@ -51,5 +52,8 @@ secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
 secbool secret_key_derive_nist256p1(uint8_t slot, uint16_t index,
                                     uint16_t rotation_index,
                                     uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+
+secbool secret_key_derive_curve25519(uint8_t slot, uint16_t index,
+                                     curve25519_key dest);
 
 #endif  // SECURE_MODE

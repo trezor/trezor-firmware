@@ -132,4 +132,15 @@ cleanup:
   return ret;
 }
 
+secbool secret_key_derive_curve25519(uint8_t slot, uint16_t index,
+                                     curve25519_key dest) {
+  _Static_assert(sizeof(curve25519_key) == SHA256_DIGEST_LENGTH);
+
+  secbool ret = secret_key_derive_sym(slot, index, 0, 0, dest);
+  dest[0] &= 248;
+  dest[31] &= 127;
+  dest[31] |= 64;
+  return ret;
+}
+
 #endif  // SECURE_MODE
