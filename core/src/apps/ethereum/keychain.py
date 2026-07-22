@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import (
         EthereumGetAddress,
+        EthereumSignAuth7702,
         EthereumSignMessage,
         EthereumSignTx,
         EthereumSignTxEIP1559,
@@ -34,16 +35,24 @@ if TYPE_CHECKING:
     ]
 
     # messages for "with_keychain_and_defs_from_chain_id" decorator
-    MsgInSignTx = TypeVar(
-        "MsgInSignTx",
+    MsgInSignFromChainId = TypeVar(
+        "MsgInSignFromChainId",
+        EthereumSignAuth7702,
         EthereumSignTx,
         EthereumSignTxEIP1559,
     )
 
     HandlerChainId = Callable[
-        [MsgInSignTx, Keychain, definitions.Definitions],
+        [MsgInSignFromChainId, Keychain, definitions.Definitions],
         Awaitable[MsgOut],
     ]
+
+    # messages used for (clear-)signing transactions
+    MsgInSignTx = TypeVar(
+        "MsgInSignTx",
+        EthereumSignTx,
+        EthereumSignTxEIP1559,
+    )
 
 
 # We believe Ethereum should use 44'/60'/a' for everything, because it is
@@ -135,10 +144,10 @@ def with_keychain_from_path(
 
 
 def with_keychain_from_chain_id(
-    func: HandlerChainId[MsgInSignTx, MsgOut],
-) -> Handler[MsgInSignTx, MsgOut]:
-    # this is only for SignTx, and only PATTERN_ADDRESS is allowed
-    async def wrapper(msg: MsgInSignTx) -> MsgOut:
+    func: HandlerChainId[MsgInSignFromChainId, MsgOut],
+) -> Handler[MsgInSignFromChainId, MsgOut]:
+    # this is only for SignTx & SignAuth7702, and only PATTERN_ADDRESS is allowed
+    async def wrapper(msg: MsgInSignFromChainId) -> MsgOut:
         defs = _defs_from_message(msg, chain_id=msg.chain_id)
         schemas = _schemas_from_network(PATTERNS_ADDRESS, defs.network)
         keychain = await get_keychain(CURVE, schemas, [[b"SLIP-0024"]])
