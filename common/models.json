@@ -36,6 +36,18 @@
             "4": "Bitcoin Orange",
             "5": "Freedom Edition"
         }
+    },
+    "T3W1": {
+        "name": "Trezor Safe 7",
+        "colors": {
+            "1": "Charcoal Black",
+            "2": "Obsidian Green",
+            "3": "Bitcoin Orange"
+        },
+        "frontColors": {
+            "1": "1",
+            "2": "2",
+            "3": "1"
+        }
     }
 }
-
