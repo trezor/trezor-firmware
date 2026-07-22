@@ -180,7 +180,8 @@ def _get_test_name_and_group(node_id: str) -> tuple[str, str]:
         return new_name, group_name
 
     differentiator = hashlib.sha256(new_name.encode()).hexdigest()
-    shortened_name = new_name[:91] + "-" + differentiator[:8]
+    # Preserve closing bracket for parameterized tests by truncating to 90 chars + ']'
+    shortened_name = new_name[:90] + "]" + "-" + differentiator[:8]
     return shortened_name, group_name
 
 
