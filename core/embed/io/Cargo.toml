@@ -4,7 +4,6 @@ version = "0.0.0"
 edition = "2024"
 links = "io"
 
-
 [build-dependencies]
 color-eyre.workspace = true
 xbuild.workspace = true
@@ -17,7 +16,7 @@ sys.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# MCU features
+# MCU selection - only enable one of these at a time
 # --------------------------------------------------------------------------
 
 mcu_stm32f427 = ["sec/mcu_stm32f427", "mcu_stm32f4"]
@@ -27,7 +26,7 @@ mcu_stm32u5g = ["sec/mcu_stm32u5g", "mcu_stm32u5"]
 mcu_stm32u5a = ["sec/mcu_stm32u5a", "mcu_stm32u5"]
 
 # --------------------------------------------------------------------------
-# Privilege mode features
+# Privilege mode
 # --------------------------------------------------------------------------
 
 kernel_mode = ["sec/kernel_mode"]
@@ -46,12 +45,12 @@ dma2d = []
 emulator = ["sec/emulator"]
 fancy_fatal_error = []
 haptic = ["sys/i2c_bus"]
+hw_jpeg_decoder = []
 ipc = ["sys/ipc"]
+lockable_bootloader = ["sec/lockable_bootloader"]
 nfc = []
 nrf = []
 nrf_auth = ["sec/nrf_auth"]
-hw_jpeg_decoder = []
-lockable_bootloader = ["sec/lockable_bootloader"]
 pmic = ["sys/i2c_bus"]
 power_manager = ["pmic", "sys/i2c_bus"]
 production = ["sec/production"]
@@ -68,25 +67,9 @@ usb_iface_vcp = ["usb"]
 usb_iface_webauthn = ["usb"]
 usb_iface_wire = ["usb"]
 
-test = [
-    "mcu_stm32u5g",
-    "models/model_t3w1",
-    "emulator",
-    "kernel_mode",
-    "secure_mode",
-    "sec/secret",
-]
-
 # --------------------------------------------------------------------------
-# Automatically derived features (do not enable from outside)
+# Driver implementation options
 # --------------------------------------------------------------------------
-
-mcu_stm32u5 = ["mcu_stm32"]
-mcu_stm32f4 = ["mcu_stm32"]
-mcu_stm32 = []
-usb = []
-
-# Features for selecting driver implementations
 
 backlight_tps61043 = []
 backlight_tps61062 = []
@@ -104,8 +87,6 @@ touch_sitronix = ["sys/i2c_bus"]
 touch_panel_t2t1 = []
 touch_panel_lx154a2422cpt23 = []
 touch_panel_lx250a2410a = []
-
-framebuffer = []
 
 # Drivers below that always need framebuffer pull it in implicitly,
 # so any project selecting them via the board peripheral chain doesn't have
@@ -125,3 +106,26 @@ display_panel_lx154a2482 = []
 display_panel_dem240320b1 = []
 display_panel_vg2864 = []
 
+# --------------------------------------------------------------------------
+# Unit test configuration
+# --------------------------------------------------------------------------
+
+test = [
+    "mcu_stm32u5g",
+    "models/model_t3w1",
+    "emulator",
+    "kernel_mode",
+    "secure_mode",
+    "sec/secret",
+]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+mcu_stm32u5 = ["mcu_stm32"]
+mcu_stm32f4 = ["mcu_stm32"]
+mcu_stm32 = []
+
+framebuffer = []
+usb = []

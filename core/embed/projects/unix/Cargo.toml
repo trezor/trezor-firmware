@@ -9,18 +9,18 @@ color-eyre.workspace = true
 xbuild.workspace = true
 
 [dependencies]
-trezor_lib.workspace = true
 io.workspace = true
+models.workspace = true
+rtl.workspace = true
 sec.workspace = true
 sys.workspace = true
-rtl.workspace = true
-models.workspace = true
+trezor_lib.workspace = true
 upymod.workspace = true
 
 [features]
 
 # --------------------------------------------------------------------------
-# Selectable features
+# Build options
 # --------------------------------------------------------------------------
 
 asan = ["models/asan"]
@@ -31,11 +31,11 @@ debug = ["trezor_lib/debug"]
 debuglink = ["trezor_lib/debuglink", "io/usb_iface_debug"]
 disable_animation = ["upymod/disable_animation"]
 emulator = ["io/emulator", "upymod/emulator"]
+frozen = ["upymod/frozen"]
 log_stack_usage = ["upymod/log_stack_usage"]
 memperf = ["upymod/memperf"]
 micropy_enable_source_lines = ["upymod/enable_source_lines"]
 n4w1 = ["upymod/n4w1"]
-frozen = ["upymod/frozen"]
 optiga_testing = ["sec/optiga_testing"]
 pyopt = ["upymod/pyopt"]
 ui_debug = ["trezor_lib/ui_debug"]
@@ -45,83 +45,18 @@ universal_fw = ["trezor_lib/universal_fw", "upymod/universal_fw", "io/usb_iface_
 unsafe_fw = []
 
 # --------------------------------------------------------------------------
-# Automatically derived features (do not enable from outside)
+# MCU selection - only enable one of these at a time
 # --------------------------------------------------------------------------
-
-default = [
-    "sys/applets",
-    "io/display",
-    "io/fancy_fatal_error",
-    "io/kernel_mode",
-    "io/secure_mode",
-    "io/usb_iface_wire",
-    "sec/rdi",
-    "rtl/secp256k1_zkp",
-    "rtl/aes_gcm",
-
-    "trezor_lib/with_new_crates", # only for transitional period
-    "trezor_lib/with_upymod", # only for transitional period
-
-    "trezor_lib/crypto",
-    "trezor_lib/micropython",
-    "trezor_lib/protobuf",
-    "trezor_lib/ui",
-    "trezor_lib/storage",
-    "trezor_lib/translations",
-    "trezor_lib/usb",
-    ]
 
 mcu_stm32f427 = ["io/mcu_stm32f427", "upymod/mcu_stm32f427", "mcu_stm32f4"]
 mcu_stm32f429 = ["io/mcu_stm32f429", "upymod/mcu_stm32f429", "mcu_stm32f4"]
-mcu_stm32f4 = ["mcu_stm32"]
 mcu_stm32u58 = ["io/mcu_stm32u58", "upymod/mcu_stm32u58", "mcu_stm32u5"]
 mcu_stm32u5g = ["io/mcu_stm32u5g", "upymod/mcu_stm32u5g", "mcu_stm32u5"]
 mcu_stm32u5a = ["io/mcu_stm32u5a", "upymod/mcu_stm32u5a", "mcu_stm32u5"]
-mcu_stm32u5 = ["sec/trustzone",  "mcu_stm32"]
-mcu_stm32 = []
 
-app_loading = ["io/app_loading", "upymod/app_loading", "trezor_lib/app_loading", "io/ipc"]
-backlight = ["io/backlight", "upymod/backlight", "trezor_lib/backlight"]
-backup_ram = ["sec/backup_ram"]
-ble = ["io/ble", "upymod/ble", "trezor_lib/ble", "nrf", "nrf_auth"]
-boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
-button = ["io/button", "upymod/button","trezor_lib/button"]
-consumption_mask = ["sec/consumption_mask"]
-dev_keys = ["trezor_lib/dev_keys"]
-display = ["io/display"]
-dma2d = ["io/dma2d", "trezor_lib/dma2d"]
-framebuffer = ["io/framebuffer", "trezor_lib/framebuffer"]
-haptic = ["io/haptic", "upymod/haptic", "trezor_lib/haptic"]
-hash_processor = ["sec/hash_processor"]
-iwdg = ["sec/iwdg"]
-lockable_bootloader = ["io/lockable_bootloader"]
-mcu_attestation = ["sec/mcu_attestation", "upymod/mcu_attestation"]
-nrf = ["io/nrf", "trezor_lib/nrf"]
-nrf_auth = ["io/nrf_auth"]
-optiga = ["sec/optiga", "upymod/optiga", "trezor_lib/optiga"]
-power_manager = ["io/power_manager", "upymod/power_manager", "trezor_lib/power_manager", "trezor_lib/pmic"]
-rgb_led = ["io/rgb_led", "upymod/rgb_led", "trezor_lib/rgb_led"]
-sd_card = ["io/sd_card", "upymod/sd_card", "trezor_lib/sd_card"]
-secmon_layout = ["models/secmon_layout"]
-secret = ["sec/secret"]
-secure_aes = ["sec/secure_aes"]
-serial_number = ["upymod/serial_number", "trezor_lib/serial_number"]
-suspend = ["io/suspend"]
-tamper = ["sec/tamper"]
-telemetry = ["sec/telemetry", "upymod/telemetry", "trezor_lib/telemetry"]
-thp = ["upymod/thp", "rtl/aes_gcm", "trezor_lib/thp"]
-touch = ["io/touch", "upymod/touch", "trezor_lib/touch"]
-touch_wakeup = ["io/touch_wakeup", "upymod/touch_wakeup", "trezor_lib/touch_wakeup"]
-tropic = ["sec/tropic", "upymod/tropic", "trezor_lib/tropic"]
-
-# Legacy coin support
-decred = ["upymod/decred"]
-eos = ["rtl/eos", "upymod/eos"]
-nem = ["rtl/nem", "upymod/nem"]
-
-display_mono = ["trezor_lib/display_mono"]
-display_rgb565 = ["trezor_lib/display_rgb565"]
-display_rgba8888 = ["trezor_lib/display_rgba8888", "trezor_lib/ui_color_32bit"]
+# --------------------------------------------------------------------------
+# Layout selection - only enable one of these at a time
+# --------------------------------------------------------------------------
 
 layout_bolt = [
     "trezor_lib/layout_bolt",
@@ -156,3 +91,81 @@ layout_eckhart = [
     "trezor_lib/hw_jpeg_decoder",
     "io/hw_jpeg_decoder",
 ]
+
+display_mono = ["trezor_lib/display_mono"]
+display_rgb565 = ["trezor_lib/display_rgb565"]
+display_rgba8888 = ["trezor_lib/display_rgba8888", "trezor_lib/ui_color_32bit"]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
+
+app_loading = ["io/app_loading", "upymod/app_loading", "trezor_lib/app_loading", "io/ipc"]
+backlight = ["io/backlight", "upymod/backlight", "trezor_lib/backlight"]
+backup_ram = ["sec/backup_ram"]
+ble = ["io/ble", "upymod/ble", "trezor_lib/ble", "nrf", "nrf_auth"]
+boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
+button = ["io/button", "upymod/button", "trezor_lib/button"]
+consumption_mask = ["sec/consumption_mask"]
+dev_keys = ["trezor_lib/dev_keys"]
+display = ["io/display"]
+dma2d = ["io/dma2d", "trezor_lib/dma2d"]
+framebuffer = ["io/framebuffer", "trezor_lib/framebuffer"]
+haptic = ["io/haptic", "upymod/haptic", "trezor_lib/haptic"]
+hash_processor = ["sec/hash_processor"]
+iwdg = ["sec/iwdg"]
+lockable_bootloader = ["io/lockable_bootloader"]
+mcu_attestation = ["sec/mcu_attestation", "upymod/mcu_attestation"]
+nrf = ["io/nrf", "trezor_lib/nrf"]
+nrf_auth = ["io/nrf_auth"]
+optiga = ["sec/optiga", "upymod/optiga", "trezor_lib/optiga"]
+power_manager = ["io/power_manager", "upymod/power_manager", "trezor_lib/power_manager", "trezor_lib/pmic"]
+rgb_led = ["io/rgb_led", "upymod/rgb_led", "trezor_lib/rgb_led"]
+sd_card = ["io/sd_card", "upymod/sd_card", "trezor_lib/sd_card"]
+secmon_layout = ["models/secmon_layout"]
+secret = ["sec/secret"]
+secure_aes = ["sec/secure_aes"]
+serial_number = ["upymod/serial_number", "trezor_lib/serial_number"]
+suspend = ["io/suspend"]
+tamper = ["sec/tamper"]
+telemetry = ["sec/telemetry", "upymod/telemetry", "trezor_lib/telemetry"]
+thp = ["upymod/thp", "rtl/aes_gcm", "trezor_lib/thp"]
+touch = ["io/touch", "upymod/touch", "trezor_lib/touch"]
+touch_wakeup = ["io/touch_wakeup", "upymod/touch_wakeup", "trezor_lib/touch_wakeup"]
+tropic = ["sec/tropic", "upymod/tropic", "trezor_lib/tropic"]
+
+# Legacy coin support
+decred = ["upymod/decred"]
+eos = ["rtl/eos", "upymod/eos"]
+nem = ["rtl/nem", "upymod/nem"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = [
+    "sys/applets",
+    "io/display",
+    "io/fancy_fatal_error",
+    "io/kernel_mode",
+    "io/secure_mode",
+    "io/usb_iface_wire",
+    "sec/rdi",
+    "rtl/secp256k1_zkp",
+    "rtl/aes_gcm",
+
+    "trezor_lib/with_new_crates", # only for transitional period
+    "trezor_lib/with_upymod", # only for transitional period
+
+    "trezor_lib/crypto",
+    "trezor_lib/micropython",
+    "trezor_lib/protobuf",
+    "trezor_lib/ui",
+    "trezor_lib/storage",
+    "trezor_lib/translations",
+    "trezor_lib/usb",
+    ]
+
+mcu_stm32f4 = ["mcu_stm32"]
+mcu_stm32u5 = ["sec/trustzone", "mcu_stm32"]
+mcu_stm32 = []

@@ -10,16 +10,16 @@ xbuild.workspace = true
 
 [dependencies]
 io.workspace = true
+models.workspace = true
+rtl.workspace = true
 sec.workspace = true
 sys.workspace = true
-rtl.workspace = true
-models.workspace = true
 trezor_lib.workspace = true
 
 [features]
 
 # --------------------------------------------------------------------------
-# Selectable features
+# Build options
 # --------------------------------------------------------------------------
 
 app_loading = ["io/app_loading", "io/ipc"]
@@ -39,35 +39,23 @@ universal_fw = ["io/usb_iface_webauthn"]
 unsafe_fw = []
 
 # --------------------------------------------------------------------------
-# Automatically derived features (do not enable from outside)
+# MCU selection - only enable one of these at a time
 # --------------------------------------------------------------------------
-
-default = [
-    "sys/applets",
-    "io/display",
-    "io/kernel_mode",
-    "io/usb_iface_wire",
-    "sec/rdi",
-    "sec/storage",
-    "models/kernel",
-    "rtl/aes_gcm",
-    "trezor_lib/with_new_crates", # only for transitional period
-    ]
 
 mcu_stm32f427 = ["io/mcu_stm32f427", "mcu_stm32f4"]
 mcu_stm32f429 = ["io/mcu_stm32f429", "mcu_stm32f4"]
-mcu_stm32f4 = []
 mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
 mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
 mcu_stm32u5a = ["io/mcu_stm32u5a", "mcu_stm32u5"]
-mcu_stm32u5 = ["sec/trustzone"]
 
-secure_mode = ["io/secure_mode"]
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
 
 backlight = ["io/backlight"]
 backup_ram = ["sec/backup_ram"]
-boot_ucb = ["sec/boot_ucb"]
 ble = ["io/ble", "nrf", "nrf_auth"]
+boot_ucb = ["sec/boot_ucb"]
 button = ["io/button"]
 consumption_mask = ["sec/consumption_mask"]
 dbg_console = ["sys/dbg_console"]
@@ -91,6 +79,7 @@ sdram = ["sys/sdram"]
 secmon_layout = ["models/secmon_layout"]
 secret = ["sec/secret"]
 secure_aes = ["sec/secure_aes"]
+secure_mode = ["io/secure_mode"]
 smp = ["io/smp", "trezor_lib/smp", "trezor_lib/nrf"]
 suspend = ["io/suspend"]
 tamper = ["sec/tamper"]
@@ -98,3 +87,22 @@ telemetry = ["sec/telemetry"]
 touch = ["io/touch"]
 touch_wakeup = ["io/touch_wakeup"]
 tropic = ["sec/tropic"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = [
+    "sys/applets",
+    "io/display",
+    "io/kernel_mode",
+    "io/usb_iface_wire",
+    "sec/rdi",
+    "sec/storage",
+    "models/kernel",
+    "rtl/aes_gcm",
+    "trezor_lib/with_new_crates", # only for transitional period
+    ]
+
+mcu_stm32f4 = []
+mcu_stm32u5 = ["sec/trustzone"]
