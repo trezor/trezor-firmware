@@ -114,24 +114,28 @@ typedef struct __attribute__((packed)) {
  * kernel + coreapp + nRF) with headroom to spare. */
 #define BOOT_HEADER_MAX_MODULES 8
 
-/** Maximum firmware Merkle proof nodes stored in the boot header (the co-path
- *  from the installed variant_root up to firmware_root; depth is
+/** Maximum firmware Merkle proof nodes reserved in the manifest region (the
+ *  co-path from this variant's leaf up to firmware_root; depth is
  *  ceil(log2(number of variants)), so 4 covers up to 16 variants).
  *
- *  This is a fixed reservation in the (unauthenticated) boot header: the
- * founder signs one header per model that all its variants share, and the
- * bootloader writes the device's actual proof into this slot at install time,
- * so the slot must hold the deepest variant proof. Raising it only costs 32
- * bytes/node of unauth space; it is NOT authenticated, so changing it never
- * invalidates signatures. Sized for up to 16 firmware variants. */
-#define BOOT_HEADER_FW_PROOF_MAX_NODES 4
+ *  The proof lives in the firmware image's manifest region, right after the
+ *  manifest (firmware_manifest_proof_t), OUTSIDE the variant leaf -- so the
+ *  firmware image carries its own proof and NONE is stored in the boot header.
+ *  It is unauthenticated (verified by folding the variant leaf to the signed
+ *  firmware_root at boot), so raising this never invalidates signatures; it only
+ *  costs 32 bytes/node of the FW_MANIFEST_REGION budget. Sized for up to 16
+ *  firmware variants. */
+#define FW_MANIFEST_PROOF_MAX_NODES 4
 
 /**
  * Reserved region at the very start of the firmware image (before the first
- * module), holding the firmware manifest (see firmware_manifest_t). The first
- * module's code begins this many bytes after the firmware region start. Fixed
- * layout constant -- matches the `.manifest` reserve in the *_pq.ld linker
- * scripts, the post-build manifest writer, and the signer.
+ * module), holding the firmware manifest (see firmware_manifest_t) followed by
+ * the firmware Merkle proof (see firmware_manifest_proof_t). The first module's
+ * code begins this many bytes after the firmware region start. Fixed layout
+ * constant -- matches the `.manifest` reserve in the *_pq.ld linker scripts, the
+ * post-build manifest writer, and the signer. Must fit the largest manifest plus
+ * the proof: sizeof(firmware_manifest_t) + BOOT_HEADER_MAX_MODULES entries +
+ * sizeof(firmware_manifest_proof_t) with FW_MANIFEST_PROOF_MAX_NODES nodes.
  */
 #define FW_MANIFEST_REGION 0x400
 
@@ -218,10 +222,11 @@ typedef struct __attribute__((packed)) {
  * Placed at the start of the firmware image, before the modules. It is
  * the per-variant node of the firmware Merkle tree: the variant leaf is
  * `H(0x00 || manifest)` and folds (via the firmware Merkle proof) up to the
- * signed `firmware_root`. It carries the authenticated variant identity plus
- * the roots of the app and translation subtrees, and a directory of the
- * variant's modules. Layout matches tools/trezor_core_tools/firmware_module.py
- * byte-for-byte.
+ * signed `firmware_root`. It carries the authenticated variant identity plus the
+ * translations subtree root and a directory of the variant's modules. The
+ * firmware Merkle proof (firmware_manifest_proof_t) follows immediately after
+ * (at firmware_manifest_size), OUTSIDE the leaf. Layout matches
+ * tools/trezor_core_tools/firmware_module.py byte-for-byte.
  */
 typedef struct __attribute__((packed)) {
   uint32_t magic;            /**< FW_MANIFEST_MAGIC */
@@ -236,10 +241,76 @@ typedef struct __attribute__((packed)) {
   firmware_manifest_entry_t entries[]; /**< module_count directory entries */
 } firmware_manifest_t;
 
-/** Total size in bytes of a firmware manifest (fixed part + entries). */
+/** Total size in bytes of a firmware manifest (fixed part + entries). This is
+ *  exactly the span the variant leaf H(0x00 || manifest) covers; the firmware
+ *  Merkle proof begins right after it (see firmware_manifest_proof_t). */
 static inline size_t firmware_manifest_size(const firmware_manifest_t* m) {
   return sizeof(firmware_manifest_t) +
          (size_t)m->module_count * sizeof(firmware_manifest_entry_t);
+}
+
+/**
+ * Firmware Merkle proof embedded in the manifest region.
+ *
+ * Placed immediately after the manifest (at offset firmware_manifest_size),
+ * within FW_MANIFEST_REGION and OUTSIDE the variant leaf -- the leaf is
+ * H(0x00 || manifest), covering only firmware_manifest_size bytes, so the proof
+ * is excluded by construction (no circularity: a proof cannot be inside the
+ * bytes it proves). The firmware image thus carries its own co-path
+ * (variant leaf -> firmware_root); NO proof is stored in the boot header.
+ *
+ * Unauthenticated: verified by folding the variant leaf through it to the
+ * (signed) firmware_root at boot, so a wrong proof simply fails verification. A
+ * node_count of 0 means a single-variant tree (variant leaf == firmware_root, an
+ * identity fold) -- the backward-compatible default. Layout matches
+ * tools/trezor_core_tools/firmware_module.py byte-for-byte.
+ */
+typedef struct __attribute__((packed)) {
+  uint32_t node_count; /**< proof nodes (<= FW_MANIFEST_PROOF_MAX_NODES) */
+  merkle_proof_node_t nodes[]; /**< node_count co-path nodes */
+} firmware_manifest_proof_t;
+
+/** Pointer to the embedded proof (immediately after the manifest). Bounds are
+ *  NOT checked here -- use firmware_manifest_read_proof for untrusted input. */
+static inline const firmware_manifest_proof_t* firmware_manifest_proof(
+    const firmware_manifest_t* m) {
+  return (const firmware_manifest_proof_t*)((const uint8_t*)m +
+                                            firmware_manifest_size(m));
+}
+
+/**
+ * Bounds-checked read of the embedded firmware proof.
+ *
+ * `avail` is the number of bytes available from the manifest start -- the flash
+ * region size FW_MANIFEST_REGION at boot / phase-2 install, or the received blob
+ * length in the FirmwareBegin preamble. Verifies the node_count field and all
+ * its nodes fit within `avail` and node_count <= FW_MANIFEST_PROOF_MAX_NODES.
+ *
+ * On success returns sectrue and sets *out_nodes (NULL when node_count == 0) and
+ * *out_count. On any bound/cap violation returns secfalse (fail-closed) and
+ * leaves the outputs cleared.
+ */
+static inline secbool firmware_manifest_read_proof(
+    const firmware_manifest_t* m, size_t avail,
+    const merkle_proof_node_t** out_nodes, size_t* out_count) {
+  *out_nodes = NULL;
+  *out_count = 0;
+  size_t manifest_len = firmware_manifest_size(m);
+  if (avail < manifest_len + sizeof(uint32_t)) {
+    return secfalse;
+  }
+  const firmware_manifest_proof_t* p = firmware_manifest_proof(m);
+  uint32_t count = p->node_count;
+  if (count > FW_MANIFEST_PROOF_MAX_NODES) {
+    return secfalse;
+  }
+  if (avail < manifest_len + sizeof(uint32_t) +
+                  (size_t)count * sizeof(merkle_proof_node_t)) {
+    return secfalse;
+  }
+  *out_count = count;
+  *out_nodes = (count > 0) ? p->nodes : NULL;
+  return sectrue;
 }
 
 /**
@@ -282,36 +353,14 @@ typedef struct __attribute__((packed)) {
   uint8_t padding[3];
   //todo - rozsirit na 32 bit - FIH
 
-  /* Firmware Merkle proof: the co-path from the installed firmware's
-   * variant_root up to the founder-signed firmware_root (boot_header_auth_t.
-   * firmware_root). It authenticates that this device's single installed
-   * variant is a member of the multi-variant firmware tree. Written by the
-   * bootloader at install time (from the update message / factory
-   * provisioning), like firmware_type. Unauthenticated: it is verified by
-   * recomputation at boot (firmware_verify_manifest recomputes the root and
-   * compares to the signed firmware_root), so a wrong proof simply fails
-   * verification.
-   * A count of 0 means a single-variant tree where variant_root ==
-   * firmware_root (no fold), which is the backward-compatible default.
-   *
-   * NOTE: this is the FIRMWARE tree proof; do not confuse it with
-   * boot_header_merkle_proof_t, which is the BOOTLOADER's own co-path in the
-   * founder bootloader tree.
-   *
-   * Appended at the END of the unauth part (per the warning above) so older
-   * boardloaders -- which locate the signatures at the start of the unauth part
-   * via the self-describing auth_size -- are unaffected.
-   *
-   * Present ONLY in PQ_SECURE_BOOT builds: it is meaningful only for the
-   * Merkle-tree firmware scheme. Non-pq boot_ucb models (which have no firmware
-   * tree) keep the shorter unauth part, so their existing signed bootloaders
-   * stay byte-compatible. The parser (trezorlib BootHeaderUnauth) treats it as
-   * optional and locates the code via header_size, so it reads both layouts;
-   * new unauth fields are appended after this one (see boot-header budget). */
-#ifdef PQ_SECURE_BOOT
-  uint32_t firmware_proof_count;
-  merkle_proof_node_t firmware_proof_nodes[BOOT_HEADER_FW_PROOF_MAX_NODES];
-#endif
+  /* NOTE: the FIRMWARE Merkle proof is NOT stored here. In the PQ_SECURE_BOOT
+   * scheme it lives in the firmware image's manifest region
+   * (firmware_manifest_proof_t, right after the manifest), so the firmware
+   * carries its own co-path to firmware_root and this (write-protected) header
+   * only holds the storage-domain identity (firmware_type). New unauth fields
+   * are appended at the END of this struct (per the warning above); the parser
+   * locates the code via header_size, so older boardloaders/bins stay
+   * compatible (see boot-header budget). */
 
 } boot_header_unauth_t;
 

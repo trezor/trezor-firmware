@@ -68,22 +68,6 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
   memcpy(trusted_root.bytes, bl->firmware_root.bytes,
          sizeof(trusted_root.bytes));
 
-  // Firmware Merkle proof: the co-path folding this device's installed variant
-  // leaf up to the signed firmware_root. It lives in our boot header's unauth
-  // part, written at install time. A count of 0 (single-variant tree, or a
-  // legacy header) means variant leaf == firmware_root -- an identity fold, so
-  // this stays backward-compatible. Bounded by BOOT_HEADER_FW_PROOF_MAX_NODES.
-  const merkle_proof_node_t* fw_proof = NULL;
-  size_t fw_proof_count = 0;
-  const boot_header_unauth_t* unauth = boot_header_unauth_get(bl);
-  if (unauth != NULL) {
-    if (unauth->firmware_proof_count > BOOT_HEADER_FW_PROOF_MAX_NODES) {
-      return secfalse;
-    }
-    fw_proof_count = unauth->firmware_proof_count;
-    fw_proof = fw_proof_count > 0 ? unauth->firmware_proof_nodes : NULL;
-  }
-
   // The manifest ("firmware directory") is at the firmware region start. It is
   // the variant leaf (H(0x00 || manifest)); firmware_verify_manifest folds it
   // up to firmware_root, then verifies each module's code against its code_hash.
@@ -99,9 +83,42 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
     return secfalse;
   }
 
+  // Firmware Merkle proof: the co-path folding this device's installed variant
+  // leaf up to the signed firmware_root. It is embedded in the firmware image's
+  // manifest region, right after the manifest (self-contained image -- nothing
+  // in the boot header). A node_count of 0 (single-variant tree) is an identity
+  // fold, so this stays backward-compatible. Bounds-checked against the on-flash
+  // region size FW_MANIFEST_REGION (and FW_MANIFEST_PROOF_MAX_NODES).
+  const merkle_proof_node_t* fw_proof = NULL;
+  size_t fw_proof_count = 0;
+  if (sectrue != firmware_manifest_read_proof(manifest, FW_MANIFEST_REGION,
+                                              &fw_proof, &fw_proof_count)) {
+    return secfalse;
+  }
+
   if (sectrue !=
       firmware_verify_manifest(manifest, manifest_len, FIRMWARE_START, fw_proof,
                                fw_proof_count, &trusted_root)) {
+    return secfalse;
+  }
+
+  // Variant pin: the authenticated running variant MUST equal the variant the
+  // device is provisioned as -- the write-protected boot-header firmware_type,
+  // which IS the storage-domain identity (see boot_header firmware_type). This
+  // couples "which variant runs" to "which storage domain it decrypts": a
+  // genuine but DIFFERENT variant image (e.g. a factory-privileged prodtest
+  // swapped onto a universal device) folds to firmware_root, yet must NOT boot
+  // against another domain's seed. The firmware Merkle proof now rides in the
+  // (firmware-controlled) image, so this write-protected byte is what pins the
+  // device to its one installed variant -- re-establishing the coupling the
+  // boot-header proof used to provide, but stated directly on the storage-domain
+  // authority. FIH: fail-closed -- an unprovisioned (firmware_type == 0) or
+  // mismatched device stays unbootable until a real install stamps the matching
+  // variant (so a bare/direct-flashed image also does not run until installed).
+  const boot_header_unauth_t* unauth = boot_header_unauth_get(bl);
+  if (unauth == NULL || unauth->firmware_type == 0 ||
+      manifest->firmware_variant !=
+          firmware_type_variant(unauth->firmware_type)) {
     return secfalse;
   }
 

@@ -11,10 +11,11 @@ variants. This tool:
      one variant is given -> firmware_root == that leaf),
   3. folds firmware_root into the (one, variant-agnostic) bootloader header and
      re-signs it (dev keys),
-  4. writes each variant's Merkle proof (the co-path variant_leaf -> firmware_root)
-     next to its firmware.bin as `<firmware>.proof` (raw 32-byte nodes; empty for
-     a single variant). The OTA delivers that proof; the device folds its variant
-     leaf through it to firmware_root.
+  4. bakes each variant's Merkle proof (the co-path variant_leaf -> firmware_root)
+     into its firmware.bin, in the manifest region right after the manifest, so
+     the image is self-contained (empty for a single variant). Both the device at
+     boot and the OTA fold the variant leaf through the embedded proof to
+     firmware_root -- no proof is stored in the boot header.
 
 Pass `--firmware` once per variant (e.g. universal + bitcoin-only + prodtest).
 """
@@ -71,6 +72,13 @@ def sign_firmware_images(
         firmware_root, proofs = firmware_module.build_founder_tree(leaves)
     for v in variants:
         v["proof"] = proofs[v["leaf"]]
+        # Bake the proof into the image's manifest region (right after the
+        # manifest, OUTSIDE the leaf) so firmware.bin is self-contained. This does
+        # not change the manifest/leaf -- the proof is excluded from the leaf.
+        fw_ba = bytearray(v["fw"])
+        firmware_module.install_manifest_proof(fw_ba, v["proof"])
+        v["path"].write_bytes(fw_ba)
+        v["fw"] = bytes(fw_ba)
 
     # Fold firmware_root into the bootloader header's firmware_root and re-sign.
     bl = firmware_headers.BootloaderV2Image.parse(bootloader.read_bytes())
@@ -109,15 +117,15 @@ def main() -> None:
     ap.add_argument(
         "--install-proof",
         type=Path,
-        help="write THIS variant's proof into the bootloader's unauth "
-        "region (for direct-flashing that variant, no OTA)",
+        help="stamp THIS variant's firmware_type into the bootloader for "
+        "direct-flashing that variant (no OTA); the proof rides in the image",
     )
     ap.add_argument(
         "--bare",
         action="store_true",
-        help="leave the bootloader unauth BARE (variant=0, no proof) so "
-        "the firmware must be installed via OTA; zeroed explicitly "
-        "so re-signing a proof-installed bootloader is bare too",
+        help="leave the bootloader firmware_type BARE (0) so the firmware "
+        "must be installed via OTA; zeroed explicitly so re-signing a "
+        "stamped bootloader is bare too",
     )
     args = ap.parse_args()
 
@@ -133,53 +141,39 @@ def main() -> None:
     )
     for v in variants:
         leaf, proof = v["leaf"], v["proof"]
-        # Write the per-variant proof next to its firmware.bin.
-        proof_path = v["path"].with_suffix(v["path"].suffix + ".proof")
-        proof_path.write_bytes(b"".join(proof))
         print(
             f"  {v['path'].name:24} leaf {_short(leaf)}  proof {len(proof)} node(s)"
-            f" -> {proof_path.name}"
+            f" baked into image"
         )
-        # Sanity: this variant's leaf + proof must fold to firmware_root.
+        # Sanity: this variant's leaf + proof must fold to firmware_root, and the
+        # proof just baked into the image must read back identically.
         assert firmware_module._fold_proof(leaf, proof) == firmware_root
+        assert firmware_module.read_manifest_proof(v["fw"]) == proof
 
-    # Optionally write one variant's proof into the bootloader unauth so the
-    # bootloader + that variant can be direct-flashed (the boot path folds the
-    # variant leaf through this proof to firmware_root). The proof is unauth, so
-    # this does not affect the signature.
+    # For a direct flash (no OTA) the proof already rides in the firmware image;
+    # we only stamp the variant into the bootloader's firmware_type so the device
+    # reads as PROVISIONED (fw_check keys off firmware_type != 0) and picks the
+    # right storage domain. firmware_type is unauth, so this does not re-sign.
     if args.install_proof:
         match = next((v for v in variants if v["path"] == args.install_proof), None)
         if match is None:
             raise SystemExit(
                 f"--install-proof {args.install_proof}: not among --firmware"
             )
-        proof = match["proof"]
-        MAX = type(bl.unauth).FW_PROOF_MAX_NODES
-        if len(proof) > MAX:
-            raise SystemExit(f"proof {len(proof)} > {MAX} nodes")
-        bl.unauth.firmware_proof_count = len(proof)
-        bl.unauth.firmware_proof_nodes = proof + [b"\x00" * 32] * (MAX - len(proof))
-        # Also stamp the variant into firmware_type so the direct-flashed device
-        # reads as PROVISIONED (fw_check keys off firmware_type != 0). Dev builds
-        # are official, so the custom flag (high bit) is 0 -> firmware_type ==
-        # variant. (Matches firmware_type_compose(variant, official) on-device.)
+        # Dev builds are official, so firmware_type == variant (no custom flag).
         bl.unauth.firmware_type = match["variant"]
         args.bootloader.write_bytes(bl.build())
         print(
-            f"installed {match['path'].name} proof ({len(proof)} node(s)) + "
-            f"firmware_type={match['variant']} into the bootloader unauth"
+            f"stamped firmware_type={match['variant']} ({match['path'].name}) into "
+            "the bootloader for direct-flashing (the proof rides in the image)"
         )
     elif args.bare:
-        # No variant / no proof in the unauth region, so the device cannot boot a
-        # directly-flashed firmware and MUST receive it via OTA (phase 1 writes the
-        # variant + proof into the boot header). Zero explicitly so re-signing an
-        # already-proof-installed bootloader ends up bare too.
-        MAX = type(bl.unauth).FW_PROOF_MAX_NODES
-        bl.unauth.firmware_proof_count = 0
-        bl.unauth.firmware_proof_nodes = [b"\x00" * 32] * MAX
+        # firmware_type 0 -> the device reads as unprovisioned and MUST receive the
+        # firmware via OTA (phase 1 stamps firmware_type; the proof rides in the
+        # image). Zero explicitly so re-signing a stamped bootloader ends up bare.
         bl.unauth.firmware_type = 0
         args.bootloader.write_bytes(bl.build())
-        print("bootloader unauth left BARE (variant=0, no proof) -> install via OTA")
+        print("bootloader firmware_type left BARE (0) -> install via OTA")
 
     print(
         f"bootloader     : signed root {bl.merkle_root().hex()[:12]}, "

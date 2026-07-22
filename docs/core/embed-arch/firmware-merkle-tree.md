@@ -125,13 +125,21 @@ re-sign). New module *types* or new boot-flow relationships still need code.
 ### 5.2 Firmware path = `firmware_proof`  **[impl 11b]**
 
 Co-path from the variant leaf up to `firmwareRoot`. Stored **unauthenticated** in
-the boot header (`boot_header_unauth_t.firmware_proof_count` +
-`firmware_proof_nodes[BOOT_HEADER_FW_PROOF_MAX_NODES=4]`); verified by
-recomputation against the (signed) `firmware_root`, so unauth is safe. Written at
-install time (OTA phase 1 / factory), like `firmware_type`. `count = 0` ⇒
-single-variant (`variant leaf == firmwareRoot`, identity fold) — backward
+the firmware image's **manifest region**, immediately after the manifest
+(`firmware_manifest_proof_t`: `node_count` +
+`nodes[≤ FW_MANIFEST_PROOF_MAX_NODES=4]`), so the image carries its own proof and
+**no proof is stored in the boot header**. It sits OUTSIDE the variant leaf (the
+leaf is `H(0x00 || manifest)`, covering only the manifest), so there is no
+circularity. Verified by recomputation against the (signed) `firmware_root`, so
+unauth is safe. Baked into the image by the signer (`firmware_pq_sign`). `count =
+0` ⇒ single-variant (`variant leaf == firmwareRoot`, identity fold) — backward
 compatible. This is the *middle* segment of the one tree; `boot_header_merkle_
 proof` is the *top* segment.
+
+Because the proof rides in the image, a directly-flashed `firmware.bin` needs no
+proof baked into the bootloader (only `firmware_type` for provisioning), and OTA
+phase 1 no longer writes a proof to the boot header — it only stamps
+`firmware_type`.
 
 ### 5.3 Module code commitment  **[impl]**
 
@@ -225,7 +233,7 @@ and needs a phase-2 transfer-to-nRF-chip install step.
 | `firmware_root` | boot header **auth** | yes (in model leaf) |
 | model path (`boot_header_merkle_proof`) | boot header, after auth | folded into signed root |
 | `firmware_type` | boot header **unauth** | no (device-written) |
-| firmware path (`firmware_proof`) | boot header **unauth** | no (verified by recompute) |
+| firmware path (`firmware_proof`) | **firmware image** manifest region (after the manifest) | no (verified by recompute) |
 | variant manifest | **firmware image start** | yes (leaf under `firmwareRoot`) |
 | module code | per module, in firmware image | yes (via manifest `code_hash`) |
 
@@ -236,8 +244,14 @@ and needs a phase-2 transfer-to-nRF-chip install step.
    fold `boot_header_merkle_proof` → `modelRoot`, verify signature. Jump to
    bootloader.
 2. Bootloader: read the manifest at firmware start, `variant_leaf =
-   SHA256(0x00 || manifest)`, fold `firmware_proof` → compare to `firmware_root`
-   from its (boardloader-verified) boot header. Then for each manifest entry:
+   SHA256(0x00 || manifest)`, read `firmware_proof` from the manifest region
+   (right after the manifest) and fold it → compare to `firmware_root` from its
+   (boardloader-verified) boot header. **Variant pin:** the authenticated
+   `firmware_variant` must equal the boot-header `firmware_type` (the
+   storage-domain identity), so a genuine-but-different variant (which folds fine)
+   cannot boot against another domain's seed, and an unprovisioned
+   (`firmware_type==0`) or unmatched device stays unbootable until a real install
+   stamps the variant. Then for each manifest entry:
    `SHA256(code @ addr, size) == code_hash`. Jump to the entry module (secmon).
 3. Kernel (opt, future): to load an app, fold the app's path → a future app root
    carried in the (bootloader-verified) manifest.
@@ -252,8 +266,12 @@ and needs a phase-2 transfer-to-nRF-chip install step.
 - **[impl]** manifest at firmware start (linker `.manifest` region +
   `manifest_header.S`); no per-module header (module code committed directly);
   `fw_check_pq.c` / `wf_firmware_update_pq.c` drive off the manifest.
-- **[impl]** `firmware_proof_nodes` in `boot_header_unauth_t` +
-  `fw_check_pq.c` reads and folds it (11b); Python `BootHeaderUnauth` mirrors.
+- **[impl]** `firmware_proof` embedded in the firmware image's manifest region
+  (`firmware_manifest_proof_t`, after the manifest, OUTSIDE the leaf);
+  `fw_check_pq.c` / `wf_firmware_update_pq.c` read + fold it (11b) via the
+  bounds-checked `firmware_manifest_read_proof`; the signer bakes it in, the boot
+  header carries no proof. Python `firmware_module` mirrors (`install_manifest_
+  proof` / `read_manifest_proof`).
 - **[impl]** build-time variant stamping (universal=2 / btc-only=3 / custom=1).
 - **[impl]** custom firmware as a first-class tree variant (`FW_VARIANT_CUSTOM`,
   founder-zeroed app `code_hash` in the leaf; app founder-unbound + integrity-

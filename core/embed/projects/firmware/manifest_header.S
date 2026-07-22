@@ -12,9 +12,12 @@
 // entry's addr/size (from linker symbols -- the modules are linked in this
 // image, so their code offsets/sizes are known). Only each entry's code_hash is
 // filled post-build (headertool_pq), over the placed module code;
-// translations_root is reserved (zero) until that subtree exists.
+// translations_root is reserved (zero) until that subtree exists. The firmware
+// Merkle proof after the manifest is zeroed here (node_count=0) and filled by
+// the signer (firmware_pq_sign) once the founder firmware_root is known.
 //
-// Layout matches firmware_manifest_t (sec/boot_header.h) and the signer/tool
+// Layout matches firmware_manifest_t + firmware_manifest_proof_t
+// (sec/boot_header.h) and the signer/tool
 // (tools/trezor_core_tools/firmware_module.py) byte-for-byte. The region is
 // reserved to FW_MANIFEST_REGION (1K).
 
@@ -44,6 +47,15 @@ g_firmware_manifest:
     .word _manifest_kernel_addr      // addr (kernel+coreapp code offset; linker)
     .word _manifest_kernel_size      // size (kernel+coreapp code size; linker)
     .space 32                        // code_hash   (filled post-build)
+
+    // firmware Merkle proof (firmware_manifest_proof_t): the co-path folding
+    // this variant's leaf up to firmware_root, filled post-build by the signer
+    // (firmware_pq_sign). It sits right after the manifest, OUTSIDE the variant
+    // leaf (the leaf covers only up to here), so the image carries its own proof
+    // -- none is stored in the boot header. node_count=0 by default (single
+    // variant, no fold); the signer overwrites it for a multi-variant tree.
+    .word 0                          // firmware_proof.node_count (filled post-build)
+    .space 4*32                      // firmware_proof.nodes[FW_MANIFEST_PROOF_MAX_NODES]
 
     . = g_firmware_manifest + 0x400  // reserve FW_MANIFEST_REGION
     .size g_firmware_manifest, .-g_firmware_manifest

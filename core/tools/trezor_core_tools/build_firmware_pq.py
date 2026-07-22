@@ -16,14 +16,16 @@ flashing the firmware_root=0 bootloader from step 1 instead of the re-signed one
 forgetting --install-proof for a direct flash -> "firmware corrupted" on the device.
 
 This tool builds each requested variant into its own file, builds the bootloader,
-folds the founder firmware_root in and re-signs it, and writes each variant's proof
--- then runs a consistency GUARD over the result so it can never hand you a
-mismatched pair. The output directory is a self-contained, ready-to-OTA bundle.
+folds the founder firmware_root in and re-signs it, and bakes each variant's proof
+into its firmware.bin -- then runs a consistency GUARD over the result so it can
+never hand you a mismatched pair. Each firmware.bin is self-contained (its Merkle
+proof rides in the manifest region), so the output directory is a ready-to-OTA
+bundle.
 
-By default the bootloader is left BARE (variant=0, no proof in the unauth region),
-so the firmware must be installed via OTA (which writes the variant + proof into the
-boot header). Pass --flash-target <variant> to instead bake that variant's proof into
-the bootloader for direct flashing (a combined ready-to-flash image is deferred).
+By default the bootloader is left BARE (firmware_type=0), so the firmware must be
+installed via OTA (which stamps firmware_type; the proof rides in the image). Pass
+--flash-target <variant> to instead stamp that variant's firmware_type into the
+bootloader for direct flashing (a combined ready-to-flash image is deferred).
 
 DEV ONLY for now: signing uses dev keys (firmware_pq_sign -> sign_with_devkeys).
 Production founder-key signing is deferred (#12).
@@ -141,9 +143,9 @@ def build(
 
 def sign(output: Path, variants: list[str], flash_target: str | None) -> None:
     """Fold the founder firmware_root over all variants into the bootloader, re-sign,
-    and write each variant's proof. By default the bootloader is left BARE (variant=0,
-    no proof) so firmware must be installed via OTA; with a flash_target, that
-    variant's proof is installed into the unauth region for direct-flashing."""
+    and bake each variant's proof into its firmware.bin. By default the bootloader is
+    left BARE (firmware_type=0) so firmware must be installed via OTA; with a
+    flash_target, that variant's firmware_type is stamped in for direct-flashing."""
     cmd = [sys.executable, str(SIGNER)]
     for v in variants:
         cmd += ["--firmware", str(output / f"{v}.bin")]
@@ -160,11 +162,6 @@ def sign(output: Path, variants: list[str], flash_target: str | None) -> None:
     print("signing bundle ...")
     print(f"  $ {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
-
-
-def _proof_nodes(path: Path) -> list[bytes]:
-    data = path.read_bytes() if path.exists() else b""
-    return [data[i : i + 32] for i in range(0, len(data), 32)]
 
 
 def check_signed_bootloader(
@@ -191,14 +188,14 @@ def check_signed_bootloader(
 
 
 def check_variant_folds(fw_path: Path, root: bytes) -> list[str]:
-    """A variant's leaf, folded through its sibling `.proof`, must equal the signed
-    firmware_root. This is the tie between a variant image and a bootloader."""
+    """A variant's leaf, folded through the proof baked into its image, must equal
+    the signed firmware_root. This is the tie between a variant image and a
+    bootloader."""
     if not fw_path.exists():
         return [f"firmware missing ({fw_path})"]
-    leaf = firmware_module.variant_leaf(
-        firmware_module.read_manifest(fw_path.read_bytes())
-    )
-    proof = _proof_nodes(fw_path.with_suffix(".bin.proof"))
+    fw = fw_path.read_bytes()
+    leaf = firmware_module.variant_leaf(firmware_module.read_manifest(fw))
+    proof = firmware_module.read_manifest_proof(fw)
     folded = firmware_module._fold_proof(leaf, proof)
     if folded != root:
         return [
@@ -213,55 +210,36 @@ def check(output: Path, variants: list[str], flash_target: str | None) -> list[s
 
     Catches every mismatch class we have hit: an unsigned (root=0) bootloader, a
     bad signature, a variant whose leaf+proof does not fold to the signed
-    firmware_root, and -- depending on mode -- either a non-bare bootloader (when we
-    want OTA-only) or a flash-target whose proof was not installed (direct-flash).
+    firmware_root, and -- depending on mode -- a bootloader whose firmware_type is
+    not bare (OTA-only) or not stamped to the flash-target variant (direct-flash).
     """
     root, bl, problems = check_signed_bootloader(output / "bootloader.bin")
     if root is None or bl is None:
         return problems
 
-    # Every variant leaf must fold through its proof to the signed firmware_root.
+    # Every variant leaf must fold through the proof baked into its image to the
+    # signed firmware_root.
     for v in variants:
         problems += check_variant_folds(output / f"{v}.bin", root)
 
-    # firmware_proof_* are absent (None) on non-pq bootloaders (see core.py); a pq
-    # bootloader always has them, but guard for the type checker + non-pq bins.
-    installed = [bytes(n) for n in (bl.unauth.firmware_proof_nodes or [])][
-        : bl.unauth.firmware_proof_count or 0
-    ]
+    # The proof rides in each firmware image (checked above); the bootloader only
+    # carries firmware_type. Bare -> firmware_type 0 (OTA stamps it); flash-target
+    # -> firmware_type stamped to that variant so a direct-flashed device boots.
     if flash_target is None:
-        # Bare bootloader: unauth must carry no variant and no proof, so firmware
-        # can only be installed via OTA (which writes them from the wire).
-        if bl.unauth.firmware_proof_count != 0 or installed:
-            problems.append(
-                f"bootloader unauth is not bare ({len(installed)} proof node(s)) -- "
-                "expected variant=0 / no proof for the OTA-only bootloader"
-            )
         if bl.unauth.firmware_type != 0:
             problems.append(
-                f"bootloader unauth firmware_type={bl.unauth.firmware_type} != 0 -- "
-                "expected a bare (unprovisioned) bootloader"
+                f"bootloader firmware_type={bl.unauth.firmware_type} != 0 -- "
+                "expected a bare (unprovisioned) bootloader for OTA-only"
             )
     else:
-        # The flash-target's proof AND variant must be installed in the bootloader
-        # unauth (direct-flash only; an OTA rewrites both from the wire): the proof
-        # so the variant leaf folds to firmware_root, and firmware_type so the
-        # device reads as provisioned (fw_check keys off firmware_type != 0).
         tgt = output / f"{flash_target}.bin"
-        tgt_proof = _proof_nodes(tgt.with_suffix(".bin.proof"))
-        if installed != tgt_proof:
-            problems.append(
-                f"installed unauth proof ({len(installed)} nodes) != flash-target "
-                f"'{flash_target}' proof ({len(tgt_proof)} nodes) -- direct-flashing "
-                f"'{flash_target}' would not boot"
-            )
         if tgt.exists():
             tgt_variant = firmware_module.manifest_variant(
                 firmware_module.read_manifest(tgt.read_bytes())
             )
             if bl.unauth.firmware_type != tgt_variant:
                 problems.append(
-                    f"installed firmware_type={bl.unauth.firmware_type} != flash-target "
+                    f"stamped firmware_type={bl.unauth.firmware_type} != flash-target "
                     f"'{flash_target}' variant {tgt_variant} -- direct-flashed device "
                     "would read as unprovisioned (empty)"
                 )
@@ -270,13 +248,13 @@ def check(output: Path, variants: list[str], flash_target: str | None) -> list[s
 
 def zip_bundle(output: Path, variants: list[str]) -> Path:
     """Pack the bundle into a single portable <name>.zip (flat: bootloader.bin, each
-    <variant>.bin + its .proof, bundle.json). firmware_pq_update.py accepts this zip
+    <variant>.bin, bundle.json). Each <variant>.bin is self-contained (its Merkle
+    proof is baked into the manifest region). firmware_pq_update.py accepts this zip
     directly via `--bundle <zip> --variant <name>` (it extracts to a temp dir)."""
     zip_path = output.parent / f"{output.name}.zip"
     files = [output / "bootloader.bin", output / "bundle.json"]
     for v in variants:
         files.append(output / f"{v}.bin")
-        files.append(output / f"{v}.bin.proof")  # may be empty for a single variant
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for f in files:
             if f.exists():
@@ -296,13 +274,13 @@ def _summary(
     print(
         "  bootloader.bin        "
         + (
-            "(BARE: variant=0 / no proof -> OTA only)"
+            "(BARE: firmware_type=0 -> OTA only)"
             if bare
-            else f"(direct-flash proof: {flash_target})"
+            else f"(direct-flash: firmware_type={flash_target})"
         )
     )
     for v in variants:
-        print(f"  {v}.bin  +  {v}.bin.proof")
+        print(f"  {v}.bin  (proof baked in)")
     print("  bundle.json")
     if archive is not None:
         arel = archive.relative_to(CORE) if archive.is_relative_to(CORE) else archive
@@ -342,7 +320,7 @@ def main() -> None:
     )
     ap.add_argument(
         "--flash-target",
-        help="install THIS variant's proof+variant into the bootloader for direct "
+        help="stamp THIS variant's firmware_type into the bootloader for direct "
         "flashing (default: none -> BARE bootloader; install firmware via OTA)",
     )
     # Two independent axes (do NOT conflate):

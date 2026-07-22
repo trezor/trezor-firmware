@@ -281,12 +281,6 @@ class BootHeaderUnauth(SanityCheckedStruct):
     slh_signatures: list[bytes]
     ec_signatures: list[bytes]
     firmware_type: int
-    firmware_proof_count: t.Optional[int]
-    firmware_proof_nodes: t.Optional[list[bytes]]
-
-    # Fixed number of firmware-proof node slots in the boot header
-    # (== BOOT_HEADER_FW_PROOF_MAX_NODES in sec/boot_header.h; keep in sync).
-    FW_PROOF_MAX_NODES = 4
 
     # fmt: off
     SUBCON = c.Struct(
@@ -297,21 +291,13 @@ class BootHeaderUnauth(SanityCheckedStruct):
         "slh_signatures" / c.Bytes(7856)[2],
         "ec_signatures" / c.Bytes(64)[2],
 
-        # Other fields that are not part of the signature
+        # Other fields that are not part of the signature. The FIRMWARE Merkle
+        # proof is NOT here: in pq_secure_boot it lives in the firmware image's
+        # manifest region (firmware_manifest_proof_t), so this write-protected
+        # header only carries the storage-domain identity (firmware_type). Future
+        # unauth fields are appended AFTER this, bounded by the FixedSized unauth
+        # region (see BootableImage), so older bins/parsers stay compatible.
         "firmware_type" / c.Aligned(4, c.Byte),
-
-        # Firmware Merkle proof: co-path folding the installed variant_root up to
-        # the signed firmware_root. PRESENT ONLY in PQ_SECURE_BOOT bootloaders
-        # (boot_header_unauth_t #ifdef); non-pq / older boot_ucb bins end the
-        # unauth part here. Parsed as OPTIONAL within the FixedSized unauth region
-        # (see BootableImage): read iff bytes remain, so one parser handles both
-        # layouts. Future unauth fields are appended AFTER this as further
-        # Optionals -- older bins/parsers just see fewer/extra trailing bytes.
-        "firmware_proof_count" / c.Optional(c.Int32ul),
-        "firmware_proof_nodes" / c.If(
-            lambda ctx: ctx.firmware_proof_count is not None,
-            c.Bytes(32)[FW_PROOF_MAX_NODES],
-        ),
     )
     # fmt: on
 
@@ -331,10 +317,9 @@ class BootableImage(SanityCheckedStruct):
 
     SUBCON = c.Struct(
         "header" / BootHeader.SUBCON,
-        # The unauth part occupies exactly header_len - auth_len bytes (no trailing
-        # padding: auth_len = MAXSIZE - proof - sizeof(unauth)). Bounding it to that
-        # region locates the code at header_len regardless of which optional unauth
-        # fields (firmware_proof, future fields) a given bin carries.
+        # The unauth part occupies exactly header_len - auth_len bytes. Bounding it
+        # to that region locates the code at header_len regardless of which
+        # (future, optional) unauth fields a given bin carries.
         "unauth" / c.FixedSized(
             c.this.header.header_len - c.this.header.auth_len,
             BootHeaderUnauth.SUBCON,

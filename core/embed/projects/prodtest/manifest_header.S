@@ -12,7 +12,9 @@
 //
 // Static fields (incl. the entry's addr/size, from linker symbols) are set here
 // at build time; only the entry's code_hash is filled post-build (headertool_pq).
-// Layout matches firmware_manifest_t (sec/boot_header.h) and the signer/tool
+// The firmware Merkle proof after the manifest is zeroed here (node_count=0) and
+// filled by the signer (firmware_pq_sign). Layout matches firmware_manifest_t +
+// firmware_manifest_proof_t (sec/boot_header.h) and the signer/tool
 // (firmware_module.py) byte-for-byte.
 
     .section .manifest, "a"
@@ -34,6 +36,12 @@ g_firmware_manifest:
     .word _manifest_module_addr      // addr (prodtest code offset; linker)
     .word _manifest_module_size      // size (prodtest code size; linker)
     .space 32                        // code_hash   (filled post-build)
+
+    // firmware Merkle proof (firmware_manifest_proof_t), filled post-build by the
+    // signer. Right after the manifest, OUTSIDE the variant leaf; node_count=0
+    // default (single variant, no fold). See firmware/manifest_header.S.
+    .word 0                          // firmware_proof.node_count (filled post-build)
+    .space 4*32                      // firmware_proof.nodes[FW_MANIFEST_PROOF_MAX_NODES]
 
     . = g_firmware_manifest + 0x400  // reserve FW_MANIFEST_REGION
     .size g_firmware_manifest, .-g_firmware_manifest

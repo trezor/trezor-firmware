@@ -101,7 +101,8 @@ def main() -> None:
 
     # Resolve paths from a bundle (--bundle DIR|ZIP --variant NAME) or take them
     # directly. A .zip is extracted to a temp dir kept alive for the whole run
-    # (_bundle_tmp), so the <variant>.bin + its .proof are on disk when read below.
+    # (_bundle_tmp), so the self-contained <variant>.bin (proof baked in) is on
+    # disk when read below.
     _bundle_tmp: tempfile.TemporaryDirectory | None = None
     if args.bundle is not None:
         if not args.variant:
@@ -150,13 +151,14 @@ def main() -> None:
     # guess -- the device is the judge.
     bl_code = bl[len(boot_header) :]
     mods = firmware_module.manifest_entries(fw)
-    # Preamble blob = [manifest || firmware_proof]. The proof (co-path variant leaf
-    # -> firmware_root) is written next to the firmware by the signer as
-    # `<firmware>.proof`; empty for a single-variant firmware.
+    # Preamble blob = the firmware image's manifest region [manifest || proof
+    # struct] -- the exact bytes at the image start, since the signer bakes the
+    # per-variant Merkle proof (co-path variant leaf -> firmware_root) into the
+    # manifest region. The device authenticates the manifest against firmware_root
+    # using this embedded proof (empty for a single-variant firmware).
     manifest = firmware_module.read_manifest(fw)
-    proof_path = args.firmware.with_suffix(args.firmware.suffix + ".proof")
-    proof = proof_path.read_bytes() if proof_path.exists() else b""
-    module_headers = manifest + proof
+    proof = firmware_module.read_manifest_proof(fw)
+    module_headers = firmware_module.read_manifest_region(fw)
     names = [firmware_module.TYPE_NAMES.get(m["module_type"], "?") for m in mods]
     # Custom (unofficial) is the authenticated FW_VARIANT_CUSTOM variant; the
     # device derives + gates it (unlocked bootloader, unprivileged). Detected here
@@ -167,7 +169,7 @@ def main() -> None:
         mode += " [CUSTOM/unofficial]"
     print(
         f"boot header: {len(boot_header)} B | manifest: {len(manifest)} B | "
-        f"proof: {len(proof)} B ({len(proof) // 32} nodes) | modules: {names} | "
+        f"proof: {len(proof)} node(s) | modules: {names} | "
         f"phase-1: {mode}"
     )
 

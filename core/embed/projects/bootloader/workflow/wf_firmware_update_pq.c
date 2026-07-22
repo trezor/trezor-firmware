@@ -178,13 +178,13 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   }
 
   // --- Authenticate the firmware manifest against the new firmware_root. ---
-  //     The preamble blob is [manifest || firmware_proof]: the manifest
-  //     ("firmware directory") followed by the per-variant Merkle proof
-  //     (co-path variant leaf
-  //     -> firmware_root). Authenticate header-only (no bodies yet): the
-  //     variant leaf, folded through the proof, must equal firmware_root. A
-  //     single-variant firmware has an empty proof (variant leaf ==
-  //     firmware_root).
+  //     The preamble blob is the firmware image's manifest region:
+  //     [manifest || firmware_manifest_proof_t] -- the manifest ("firmware
+  //     directory") followed by the per-variant Merkle proof (co-path variant
+  //     leaf -> firmware_root), the exact bytes baked at the firmware image
+  //     start. Authenticate header-only (no bodies yet): the variant leaf,
+  //     folded through the proof, must equal firmware_root. A single-variant
+  //     firmware has an empty proof (variant leaf == firmware_root).
   merkle_proof_node_t firmware_root;
   memcpy(firmware_root.bytes, hdr->firmware_root.bytes,
          sizeof(firmware_root.bytes));
@@ -197,12 +197,11 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
     return WF_ERROR;
   }
   size_t manifest_len = firmware_manifest_size(manifest);
-  const merkle_proof_node_t *fw_proof =
-      (const merkle_proof_node_t *)(module_headers + manifest_len);
-  size_t fw_proof_count = (mh_len - manifest_len) / sizeof(merkle_proof_node_t);
-  if (fw_proof_count > BOOT_HEADER_FW_PROOF_MAX_NODES ||
-      sectrue != firmware_manifest_authentic(manifest, manifest_len,
-                                             fw_proof_count ? fw_proof : NULL,
+  const merkle_proof_node_t *fw_proof = NULL;
+  size_t fw_proof_count = 0;
+  if (sectrue != firmware_manifest_read_proof(manifest, mh_len, &fw_proof,
+                                              &fw_proof_count) ||
+      sectrue != firmware_manifest_authentic(manifest, manifest_len, fw_proof,
                                              fw_proof_count, &firmware_root)) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Invalid firmware manifest");
@@ -312,11 +311,12 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
 #endif
   }
 
-  // --- Set the resolved firmware_type + the firmware proof into the (unauth)
-  //     header, then stage it. Both are outside auth_size (do not affect the
-  //     signature); the boot path folds the variant leaf through this proof to
-  //     firmware_root, and the UCB hash covers them so they survive install.
-  //     ---
+  // --- Set the resolved firmware_type into the (unauth) header, then stage it.
+  //     firmware_type is outside auth_size (does not affect the signature) and
+  //     the UCB hash covers it so it survives install. The firmware Merkle proof
+  //     is NOT written here -- it rides in the firmware image's manifest region
+  //     (installed in phase 2), so this write-protected header carries only the
+  //     storage-domain identity. ---
   boot_header_unauth_t *unauth =
       (boot_header_unauth_t *)(uintptr_t)boot_header_unauth_get(hdr);
   if (unauth == NULL) {
@@ -325,11 +325,6 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
     return WF_ERROR;
   }
   unauth->firmware_type = firmware_type;
-  unauth->firmware_proof_count = (uint32_t)fw_proof_count;
-  if (fw_proof_count > 0) {
-    memcpy(unauth->firmware_proof_nodes, fw_proof,
-           fw_proof_count * sizeof(merkle_proof_node_t));
-  }
 
   uint32_t header_size = hdr->header_size;
   if (sectrue != ucb_stage_write_header(bh_buf, header_size)) {
@@ -461,10 +456,12 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER;
   }
 
-  // Authenticate the streamed manifest against the firmware_root (+ proof) in
-  // our boardloader-verified boot header BEFORE writing anything -- the
-  // earliest possible rejection of a wrong/corrupt manifest. Its (now-trusted)
-  // entries then drive the per-module verification as the modules stream in.
+  // Authenticate the streamed manifest against the firmware_root in our
+  // boardloader-verified boot header BEFORE writing anything -- the earliest
+  // possible rejection of a wrong/corrupt manifest. The per-variant proof is
+  // embedded in the streamed image's manifest region (right after the manifest);
+  // fold the variant leaf through it to firmware_root. Its (now-trusted) entries
+  // then drive the per-module verification as the modules stream in.
   const boot_header_auth_t *bl = boot_header_auth_get(BOOTLOADER_START);
   if (bl == NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
@@ -475,17 +472,9 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
   memcpy(root.bytes, bl->firmware_root.bytes, sizeof(root.bytes));
   const merkle_proof_node_t *proof = NULL;
   size_t proof_count = 0;
-  const boot_header_unauth_t *unauth = boot_header_unauth_get(bl);
-  if (unauth != NULL) {
-    if (unauth->firmware_proof_count > BOOT_HEADER_FW_PROOF_MAX_NODES) {
-      send_msg_failure(iface, FailureType_Failure_ProcessError,
-                       "Invalid boot header");
-      return UPLOAD_ERR_INVALID_IMAGE_HEADER;
-    }
-    proof_count = unauth->firmware_proof_count;
-    proof = proof_count > 0 ? unauth->firmware_proof_nodes : NULL;
-  }
-  if (sectrue != firmware_manifest_authentic(manifest, manifest_len, proof,
+  if (sectrue != firmware_manifest_read_proof(manifest, len, &proof,
+                                              &proof_count) ||
+      sectrue != firmware_manifest_authentic(manifest, manifest_len, proof,
                                              proof_count, &root)) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Invalid firmware manifest");

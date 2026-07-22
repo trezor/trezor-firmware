@@ -1,10 +1,10 @@
 """Shared helpers for the Merkle-tree firmware layout (`pq_secure_boot`).
 
 A `firmware.bin` built with the `pq_secure_boot` feature begins with a firmware
-manifest ("firmware directory", magic 'TRZD') occupying FW_MANIFEST_REGION,
-followed by the module code blobs it describes:
+manifest ("firmware directory", magic 'TRZD') and the firmware Merkle proof, both
+inside FW_MANIFEST_REGION, followed by the module code blobs it describes:
 
-    [ manifest | secmon code | kernel+coreapp code ]
+    [ manifest | firmware proof | secmon code | kernel+coreapp code ]
 
 The manifest's directory entry for each module carries the module's code offset
 (`addr`), `size`, and `code_hash` (a single SHA-256 over the whole module code).
@@ -14,9 +14,15 @@ authenticated descriptor, so the commitment is a single hop
 H(0x00 || manifest); the founder firmware_root is the Merkle tree over the
 per-variant leaves.
 
+The firmware Merkle proof (co-path variant leaf -> firmware_root) sits right
+after the manifest, OUTSIDE the variant leaf, so the image carries its own proof
+and none is stored in the boot header (firmware_manifest_proof_t, sec/
+boot_header.h).
+
 `fill_manifest()` fills each entry's code_hash from the placed module code (a
 build step, see headertool_pq). `firmware_root_multi()` / `build_founder_tree()`
-compute the founder root + per-variant proofs (the signer).
+compute the founder root + per-variant proofs; `install_manifest_proof()` bakes
+each variant's proof into its image (the signer, see firmware_pq_sign).
 """
 
 from __future__ import annotations
@@ -28,8 +34,12 @@ from trezorlib import merkle_tree
 
 CODE_ALIGNMENT = 0x400
 # Reserved region at the very start of the firmware image, holding the manifest
-# (matches FW_MANIFEST_REGION in sec/boot_header.h and the *_pq.ld scripts).
+# followed by the firmware Merkle proof (matches FW_MANIFEST_REGION in
+# sec/boot_header.h and the *_pq.ld scripts).
 FW_MANIFEST_REGION = 0x400
+# Max firmware Merkle proof nodes reserved after the manifest (== FW_MANIFEST_
+# PROOF_MAX_NODES in sec/boot_header.h; covers up to 16 variants).
+FW_MANIFEST_PROOF_MAX_NODES = 4
 
 TYPE_NAMES = {1: "secmon", 2: "app (kernel+coreapp)", 3: "prodtest"}
 # Variant vocabulary shared with vendor_fw_type_t (sec/image.h) and the model
@@ -93,6 +103,9 @@ def _model_str(hw_model: int) -> str:
 MANIFEST_MAGIC = b"TRZD"
 _MANIFEST_FIXED = struct.Struct("<4sI4s32sI")
 _MANIFEST_ENTRY = struct.Struct("<IIII32s")
+# firmware_manifest_proof_t (sec/boot_header.h): u32 node_count + node_count
+# 32-byte nodes, placed right after the manifest, OUTSIDE the variant leaf.
+_PROOF_COUNT = struct.Struct("<I")
 _ZERO32 = b"\x00" * 32
 _ZERO4 = b"\x00" * 4
 
@@ -131,6 +144,64 @@ def read_manifest(fw: bytes | bytearray) -> bytes:
     if magic != MANIFEST_MAGIC:
         raise ValueError("no manifest at the firmware image start")
     return bytes(fw[0 : _MANIFEST_FIXED.size + mc * _MANIFEST_ENTRY.size])
+
+
+def _manifest_len(fw: bytes | bytearray) -> int:
+    """Byte length of the manifest at the image start (== the span the variant
+    leaf covers); the firmware Merkle proof begins right after it."""
+    magic, _v, _ver, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
+    if magic != MANIFEST_MAGIC:
+        raise ValueError("no manifest at the firmware image start")
+    return _MANIFEST_FIXED.size + mc * _MANIFEST_ENTRY.size
+
+
+def build_manifest_proof(proof_nodes: list[bytes]) -> bytes:
+    """Serialize the firmware Merkle proof (firmware_manifest_proof_t): a u32
+    node_count followed by the co-path nodes. An empty proof (single-variant
+    tree) serializes to just a zero count."""
+    if len(proof_nodes) > FW_MANIFEST_PROOF_MAX_NODES:
+        raise ValueError(
+            f"proof {len(proof_nodes)} > {FW_MANIFEST_PROOF_MAX_NODES} nodes"
+        )
+    return _PROOF_COUNT.pack(len(proof_nodes)) + b"".join(proof_nodes)
+
+
+def read_manifest_proof(fw: bytes | bytearray) -> list[bytes]:
+    """Read the embedded firmware Merkle proof nodes (the firmware_manifest_
+    proof_t right after the manifest) from a firmware image."""
+    off = _manifest_len(fw)
+    (count,) = _PROOF_COUNT.unpack_from(fw, off)
+    if count > FW_MANIFEST_PROOF_MAX_NODES:
+        raise ValueError(f"proof node_count {count} > {FW_MANIFEST_PROOF_MAX_NODES}")
+    off += _PROOF_COUNT.size
+    return [bytes(fw[off + i * 32 : off + i * 32 + 32]) for i in range(count)]
+
+
+def read_manifest_region(fw: bytes | bytearray) -> bytes:
+    """The firmware image's manifest-region prefix [manifest || proof struct] --
+    exactly the bytes the device parses at the image start and the OTA
+    FirmwareBegin preamble carries."""
+    off = _manifest_len(fw)
+    (count,) = _PROOF_COUNT.unpack_from(fw, off)
+    if count > FW_MANIFEST_PROOF_MAX_NODES:
+        raise ValueError(f"proof node_count {count} > {FW_MANIFEST_PROOF_MAX_NODES}")
+    return bytes(fw[0 : off + _PROOF_COUNT.size + count * 32])
+
+
+def install_manifest_proof(fw: bytearray, proof_nodes: list[bytes]) -> bytearray:
+    """Bake the firmware Merkle proof into the image's manifest region, in place
+    (right after the manifest). Called by the signer once the founder
+    firmware_root -- and thus each variant's co-path -- is known. Validates the
+    manifest + proof fit within FW_MANIFEST_REGION."""
+    off = _manifest_len(fw)
+    blob = build_manifest_proof(proof_nodes)
+    if off + len(blob) > FW_MANIFEST_REGION:
+        raise ValueError(
+            f"manifest ({off} B) + proof ({len(blob)} B) exceeds "
+            f"FW_MANIFEST_REGION ({FW_MANIFEST_REGION} B)"
+        )
+    fw[off : off + len(blob)] = blob
+    return fw
 
 
 def manifest_entries(fw: bytes | bytearray) -> list[dict]:
