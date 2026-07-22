@@ -1,0 +1,1 @@
+[T3B1,T3T1] Fixed a crash during PIN verification when upgrading from firmware versions older than 2.9.0.
