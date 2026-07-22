@@ -105,7 +105,7 @@ fn main() -> Result<()> {
                     "-mtune=cortex-m33",
                 ]);
 
-                if cfg!(feature = "secure_mode") {
+                if cfg!(feature = "secure_mode") || !cfg!(feature = "secmon_layout") {
                     lib.add_flag("-mcmse");
                 }
             } else {
