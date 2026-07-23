@@ -82,13 +82,9 @@ class Node:
 class MerkleTree:
     """Merkle tree for a list of byte values.
 
-    The tree is built up as follows:
-
-    1. Order the leaves by their hash.
-    2. Build up the next level up by pairing the leaves in the current level from left
-       to right.
-    3. Any left-over odd node at the current level gets pushed to the next level.
-    4. Repeat until there is only one node left.
+    The leaves are ordered by their hash and the tree is built balanced: all leaves end
+    up within one level of each other, so any two membership proofs differ in length by
+    at most one. See `_build_tree` for details.
 
     Values are not saved in the tree, only their hashes. This allows us to construct a
     tree with very large values without having to keep them in memory.
@@ -128,31 +124,41 @@ class MerkleTree:
 
     def __init__(self, values: t.Iterable[bytes]) -> None:
         leaves = [Leaf(value) for value in values]
-        leaves.sort(key=lambda leaf: leaf.tree_hash)
 
         if not leaves:
             raise ValueError("Merkle tree must have at least one value")
 
+        leaves.sort(key=lambda leaf: leaf.tree_hash)
         self.entries = {leaf.tree_hash: leaf for leaf in leaves}
+        self.root = self._build_tree(leaves)
 
-        # build the tree
-        current_level = leaves
-        while len(current_level) > 1:
-            # build one level of the tree
-            next_level = []
-            while len(current_level) >= 2:
-                left, right, *current_level = current_level
-                next_level.append(Node(left, right))
+    @staticmethod
+    def _build_tree(leaves: t.Sequence[NodeType]) -> NodeType:
+        """Build a balanced tree from an ordered sequence of leaves.
 
-            # add the remaining one or zero nodes to the next level
-            next_level.extend(current_level)
+        The first leaves are pushed one level deeper so that the level above the bottom
+        becomes a power of two; from there the tree is perfect. The deep leaves go first,
+        so the last leaves get the shortest proofs.
+        """
+        if len(leaves) == 1:
+            return leaves[0]
 
-            # switch levels and continue
-            current_level = next_level
+        # `depth` is ceil(log2(n)) and `capacity` the leaf count of a perfect tree of
+        # that depth (the smallest power of two >= n). The first `split` leaves are
+        # pushed one level deeper and paired up, so the level above the bottom becomes a
+        # perfect power of two (`capacity // 2` wide); the remaining `n - split` leaves
+        # stay shallow (shorter proofs).
+        depth = (len(leaves) - 1).bit_length()
+        capacity = 1 << depth
+        split = 2 * len(leaves) - capacity
+        level = [Node(leaves[i], leaves[i + 1]) for i in range(0, split, 2)] + list(
+            leaves[split:]
+        )
 
-        assert len(current_level) == 1, "Tree must have exactly one root node"
-        # save the root
-        self.root = current_level[0]
+        # `level` now has a power-of-two length: collapse it into a perfect tree.
+        while len(level) > 1:
+            level = [Node(level[i], level[i + 1]) for i in range(0, len(level), 2)]
+        return level[0]
 
     def get_root_hash(self) -> bytes:
         return self.root.tree_hash

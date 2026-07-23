@@ -105,3 +105,13 @@ def test_tree(
     for value, proof in proofs.items():
         assert mt.get_proof(value) == proof
         assert evaluate_proof(value, proof) == root_hash
+
+
+@pytest.mark.parametrize("count", range(1, 34))
+def test_tree_is_balanced(count: int) -> None:
+    # All leaves end up within one level of each other, so any two proofs differ in
+    # length by at most one.
+    values = [f"value-{i}".encode() for i in range(count)]
+    mt = MerkleTree(values)
+    lengths = [len(mt.get_proof(v)) for v in values]
+    assert max(lengths) - min(lengths) <= 1
