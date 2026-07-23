@@ -1,60 +1,16 @@
-use ufmt::derive::uDebug;
+use crate::app_runtime2;
 
-use crate::low_level_api;
-use crate::sysevent::SysEvents;
-
-/// Represents a timeout duration in milliseconds.
-///
-/// Use [`Timeout::max`] for the longest supported timeout, or construct
-/// via [`Timeout::ms`], [`Timeout::seconds`], or [`Timeout::minutes`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq)]
-pub struct Timeout(u32);
-
-pub const TIMEOUT_MAX: u32 = u32::MAX / 2 - 1;
+pub use crate::traits::util::Timeout;
 
 impl Timeout {
-    /// Creates a timeout of `ms` milliseconds.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `ms` exceeds [`TIMEOUT_MAX`].
-    pub fn ms(ms: u32) -> Self {
-        assert!(ms <= TIMEOUT_MAX, "Timeout too long");
-        Self(ms)
-    }
-
-    /// Creates a timeout of `seconds` seconds.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the resulting timeout exceeds [`TIMEOUT_MAX`] ms.
-    pub fn seconds(seconds: u32) -> Self {
-        Self::ms(seconds * 1000)
-    }
-
-    /// Creates a timeout of `minutes` minutes.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the resulting timeout exceeds [`TIMEOUT_MAX`] ms.
-    pub fn minutes(minutes: u32) -> Self {
-        Self::seconds(minutes * 60)
-    }
-
-    /// Returns the maximum supported timeout value.
-    pub fn max() -> Self {
-        Self::ms(TIMEOUT_MAX)
-    }
-
     /// Converts this timeout to an absolute deadline by adding it to the current systick.
     pub fn as_deadline(&self) -> u32 {
-        low_level_api::systick_ms().wrapping_add(self.0)
+        app_runtime2::systick_ms().wrapping_add(self.0)
     }
 
     /// Blocks until this timeout elapses.
     pub fn sleep(&self) {
-        let awaited = SysEvents::empty();
-        awaited.poll(*self);
+        app_runtime2::sleep(self.0);
     }
 }
 

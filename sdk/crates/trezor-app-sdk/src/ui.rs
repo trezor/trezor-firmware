@@ -30,17 +30,15 @@ use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 
-use crate::core_services::services_or_die;
-use crate::ipc::IpcMessage;
-use crate::service::CoreIpcService;
 pub use crate::structs::{
     ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
     ConfirmValueIntro, ConfirmWithInfo, Property, RequestNumber, SelectMenu, ShowAddress,
     ShowDanger, ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess,
     ShowWarning, StrExt, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
 };
+use crate::traits::service::{CoreIpcService, MessageDyn as _};
 use crate::util::Timeout;
-use crate::{Error, unwrap};
+use crate::{Error, core_services, unwrap};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum<'a> = Archived<TrezorUiEnum<'a>>;
@@ -55,12 +53,16 @@ pub type UiResult = Result<TrezorUiResult>;
 fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
     let bytes = to_bytes::<Failure>(value).map_err(|_| Error::ServiceError)?;
 
-    let message = IpcMessage::new(0, bytes.as_ref());
-    let result = services_or_die().call(CoreIpcService::Ui, &message, Timeout::max())?;
+    let result = core_services::call(
+        CoreIpcService::Ui,
+        0,
+        bytes.as_ref(),
+        Timeout::max(),
+    )?;
 
     // Safe validation using bytecheck before accessing archived data
     let archived = unwrap!(rkyv::access::<ArchivedTrezorUiResult, Failure>(
-        result.data()
+        result.data().into()
     ));
 
     let deserialized = unwrap!(deserialize::<TrezorUiResult, Failure>(archived));
@@ -85,8 +87,7 @@ fn ipc_ui_call_void(value: &TrezorUiEnum) -> Result<()> {
 fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<()> {
     let bytes = to_bytes::<Failure>(value).map_err(|_| Error::ServiceError)?;
 
-    let message = IpcMessage::new(value.id(), bytes.as_ref());
-    let _ = services_or_die().call(CoreIpcService::Progress, &message, Timeout::max())?;
+    core_services::call(CoreIpcService::Progress, value.id() as _, bytes.as_ref(), Timeout::max())?;
     Ok(())
 }
 

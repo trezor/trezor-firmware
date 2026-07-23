@@ -863,8 +863,7 @@ pub enum TrezorCryptoResult_<'a> {
 
 #[cfg(feature = "app")]
 pub enum TrezorCryptoResult {
-    Xpub([u8; 111]),
-    PublicKey(crate::alloc_types::Vec<u8>), // 32, 33 or 65 bytes depending on the curve
+    XpubBytes([u8; 33]),
     Signature([u8; 65]),
     AddressMac([u8; 32]),
     Boolean(bool),

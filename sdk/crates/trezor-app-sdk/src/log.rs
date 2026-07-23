@@ -40,15 +40,6 @@
 //! cargo build --features log_level_info
 //! ```
 
-/// Log level enumeration, ordered by severity.
-#[doc(hidden)]
-pub enum Level {
-    Error,
-    Warn,
-    Info,
-    Debug,
-}
-
 // Private helper macro — exported only so the level-specific macros can call it
 // from other crates. Do not use this macro directly.
 #[doc(hidden)]
@@ -62,9 +53,7 @@ macro_rules! log {
             feature = "log_level_debug",
         ))]
         {
-            $crate::print::start_print(module_path!(), $level);
-            let _ = ufmt::uwrite!($crate::print::printer(), $($args)*);
-            $crate::print::end_print();
+            $crate::print::log($level, |writer| ufmt::uwrite!(writer, $($args)*));
         }
     }
 }
@@ -84,7 +73,7 @@ macro_rules! error {
         ))]
         {
             $crate::log::log!(
-                $crate::log::Level::Error,
+                $crate::traits::syslog::LogLevel::Error,
                 $($arg)*
             );
         }
@@ -104,7 +93,7 @@ macro_rules! warn_ {
         ))]
         {
             $crate::log::log!(
-                $crate::log::Level::Warn,
+                $crate::traits::syslog::LogLevel::Warn,
                 $($arg)*
             );
         }
