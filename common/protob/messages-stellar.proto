@@ -442,16 +442,19 @@ message StellarSorobanAddressCredentials {
 }
 
 /**
- * https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-transaction.x#L578
+ * https://github.com/stellar/stellar-xdr/blob/v27.0/Stellar-transaction.x#L593
  * @embed
  */
 message StellarSorobanCredentials {
     required StellarSorobanCredentialsType type = 1;
-    optional StellarSorobanAddressCredentials address = 2;
+    optional StellarSorobanAddressCredentials address_v2 = 2;
 
     enum StellarSorobanCredentialsType {
         SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0;
-        SOROBAN_CREDENTIALS_ADDRESS = 1;
+        // 1 is the legacy SOROBAN_CREDENTIALS_ADDRESS, which is due to be
+        // deprecated in Protocol 28 and is intentionally not supported
+        reserved 1;
+        SOROBAN_CREDENTIALS_ADDRESS_V2 = 2;
     };
 }
 

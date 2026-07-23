@@ -469,7 +469,7 @@ class StellarHostFunctionType(IntEnum):
 
 class StellarSorobanCredentialsType(IntEnum):
     SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0
-    SOROBAN_CREDENTIALS_ADDRESS = 1
+    SOROBAN_CREDENTIALS_ADDRESS_V2 = 2
 
 
 class TezosContractType(IntEnum):
@@ -8635,17 +8635,17 @@ class StellarSorobanCredentials(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("type", "StellarSorobanCredentialsType", repeated=False, required=True),
-        2: protobuf.Field("address", "StellarSorobanAddressCredentials", repeated=False, required=False, default=None),
+        2: protobuf.Field("address_v2", "StellarSorobanAddressCredentials", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         type: "StellarSorobanCredentialsType",
-        address: Optional["StellarSorobanAddressCredentials"] = None,
+        address_v2: Optional["StellarSorobanAddressCredentials"] = None,
     ) -> None:
         self.type = type
-        self.address = address
+        self.address_v2 = address_v2
 
 
 class StellarSorobanAuthorizationEntry(protobuf.MessageType):

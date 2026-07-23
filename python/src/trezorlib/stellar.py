@@ -77,10 +77,17 @@ try:
     )
 
     HAVE_STELLAR_SDK = True
+    # Protocol 27 XDR (SOROBAN_CREDENTIALS_ADDRESS_V2 etc.) is only available
+    # in stellar-sdk >= 15; on Python 3.9 the `stellar` extra installs
+    # stellar-sdk 13 (see pyproject.toml), which lacks it.
+    HAVE_STELLAR_SDK_PROTOCOL_27 = hasattr(
+        xdr.SorobanCredentialsType, "SOROBAN_CREDENTIALS_ADDRESS_V2"
+    )
     DEFAULT_NETWORK_PASSPHRASE = Network.PUBLIC_NETWORK_PASSPHRASE
 
 except ImportError:
     HAVE_STELLAR_SDK = False
+    HAVE_STELLAR_SDK_PROTOCOL_27 = False
     DEFAULT_NETWORK_PASSPHRASE = "Public Global Stellar Network ; September 2015"
 
 DEFAULT_BIP32_PATH = "m/44h/148h/0h"
@@ -576,12 +583,18 @@ def _read_credentials(
         return messages.StellarSorobanCredentials(
             type=messages.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT
         )
-    elif credentials.type == xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS:
+    elif (
+        HAVE_STELLAR_SDK_PROTOCOL_27
+        and credentials.type
+        == xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2
+    ):
         return messages.StellarSorobanCredentials(
-            type=messages.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS,
-            address=_read_address_credentials(credentials.address),
+            type=messages.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2,
+            address_v2=_read_address_credentials(credentials.address_v2),
         )
     else:
+        # The legacy, to-be-deprecated SOROBAN_CREDENTIALS_ADDRESS is
+        # intentionally not supported.
         raise ValueError(f"Unsupported SorobanCredentials type: {credentials.type}")
 
 
