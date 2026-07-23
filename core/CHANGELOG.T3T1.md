@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.12.3] (24rd July 2026)
+
+### Fixed
+- Fixed a crash during PIN verification when upgrading from firmware versions older than 2.9.0.  [#7354]
+
 ## [2.12.2] (22nd July 2026)
 
 ### Added
@@ -1422,3 +1427,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#7065]: https://github.com/trezor/trezor-firmware/pull/7065
 [#7101]: https://github.com/trezor/trezor-firmware/pull/7101
 [#7202]: https://github.com/trezor/trezor-firmware/pull/7202
+[#7354]: https://github.com/trezor/trezor-firmware/pull/7354
