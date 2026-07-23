@@ -102,6 +102,11 @@ def c_str_filter(b: Any) -> str:
         return json.dumps(b)
 
 
+def c_bytearray_filter(b: bytes) -> str:
+    assert isinstance(b, bytes)
+    return "{" + ", ".join(f"0x{c:02x}" for c in b) + "}"
+
+
 def black_repr_filter(val: Any) -> str:
     if isinstance(val, str):
         if '"' in val:
@@ -134,6 +139,7 @@ def make_support_filter(
 MAKO_FILTERS = {
     "utf8_str": utf8_str_filter,
     "c_str": c_str_filter,
+    "c_bytearray": c_bytearray_filter,
     "ascii": ascii_filter,
     "black_repr": black_repr_filter,
 }
