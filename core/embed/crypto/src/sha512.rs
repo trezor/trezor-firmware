@@ -3,16 +3,17 @@ use core::ops::DerefMut;
 use rtl::CSlice;
 
 use super::ffi;
+use super::memory::{Memory, init_ctx};
 use super::secret::{HazardGuard, SecretContext, SecretContextLock, ZeroableMemory};
+use crate::hasher::{PinnedHasher, RawHasher};
 
 pub const BLOCK_SIZE: usize = ffi::SHA512_BLOCK_LENGTH as usize;
 pub const DIGEST_SIZE: usize = ffi::SHA512_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-pub type Sha512Ctx = SecretContext<ffi::SHA512_CTX>;
+type Sha512Ctx = ffi::SHA512_CTX;
 
-// SAFETY: SHA512_CTX is valid when zeroed
-unsafe impl ZeroableMemory for ffi::SHA512_CTX {}
+unsafe impl ZeroableMemory for Sha512Ctx {}
 
 impl ffi::SHA512_CTX {
     /// Initialize the SHA512 context.
@@ -48,11 +49,7 @@ impl HazardGuard<'_, ffi::SHA512_CTX> {
     }
 }
 
-/// SHA512 hasher.
-///
-/// A wrapper around a SHA512 context that provides a safe interface for hashing
-/// data.
-pub struct Sha512<D: DerefMut<Target = Sha512Ctx>>(SecretContextLock<D>);
+pub type Sha512<'a> = PinnedHasher<&'a mut Memory<Sha512Ctx>>;
 
 impl<D: DerefMut<Target = Sha512Ctx>> Sha512<D> {
     /// Construct a new SHA512 hasher.
@@ -75,14 +72,16 @@ impl<D: DerefMut<Target = Sha512Ctx>> Sha512<D> {
     }
 }
 
-impl Sha512<&'_ mut Sha512Ctx> {
-    /// Calculate the SHA512 digest of the given data.
-    pub fn digest(data: &[u8]) -> Digest {
-        let mut ctx = Sha512Ctx::default();
-        let mut sha = Sha512::new(&mut ctx);
-        sha.update(data);
-        sha.finalize()
-    }
+pub fn digest_into(data: &[u8], out: &mut Digest) {
+    init_ctx!(Sha512, ctx);
+    ctx.update(data);
+    ctx.finalize(out);
+}
+
+pub fn digest(data: &[u8]) -> Digest {
+    let mut out = [0u8; DIGEST_SIZE];
+    digest_into(data, &mut out);
+    out
 }
 
 #[cfg(test)]
@@ -112,9 +111,10 @@ mod test {
 
     #[test]
     fn test_empty_ctx() {
-        let mut ctx = Sha512Ctx::default();
-        let sha = Sha512::new(&mut ctx);
-        let out = sha.finalize();
+        let mut out = [0u8; DIGEST_SIZE];
+
+        init_ctx!(Sha512, ctx);
+        ctx.finalize(&mut out);
 
         let out_hex = hex::encode(out);
         assert_eq!(out_hex, SHA512_EMPTY);

@@ -1,17 +1,19 @@
 use core::ops::DerefMut;
+use core::pin::Pin;
 
 use rtl::CSlice;
 
 use super::ffi;
+use super::memory::{Memory, init_ctx};
 use super::secret::{HazardGuard, SecretContext, SecretContextLock, ZeroableMemory};
+use crate::hasher::{PinnedHasher, RawHasher};
 
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-pub type HmacSha256Ctx = SecretContext<ffi::HMAC_SHA256_CTX>;
+type HmacSha256Ctx = ffi::HMAC_SHA256_CTX;
 
-// SAFETY: HMAC_SHA256_CTX is valid when zeroed
-unsafe impl ZeroableMemory for ffi::HMAC_SHA256_CTX {}
+unsafe impl ZeroableMemory for HmacSha256Ctx {}
 
 impl HazardGuard<'_, ffi::HMAC_SHA256_CTX> {
     /// Initialize the HMAC context with the given key.
@@ -42,11 +44,7 @@ impl HazardGuard<'_, ffi::HMAC_SHA256_CTX> {
     }
 }
 
-/// HMAC-SHA256 hasher.
-///
-/// A wrapper around an HMAC-SHA256 context that provides a safe interface for
-/// authenticating data.
-pub struct HmacSha256<D: DerefMut<Target = HmacSha256Ctx>>(SecretContextLock<D>);
+pub type HmacSha256<'a> = PinnedHasher<&'a mut Memory<HmacSha256Ctx>>;
 
 impl<D: DerefMut<Target = HmacSha256Ctx>> HmacSha256<D> {
     /// Construct a new HMAC-SHA256 hasher keyed by `key`.

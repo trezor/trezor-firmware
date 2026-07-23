@@ -164,6 +164,7 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
             match data.len() {
                 111 => TrezorCryptoResultRef::Xpub(unwrap!(data.try_into())),
                 _ => {
+                    log::debug!("Unexpected data length for crypto result: {}", data.len());
                     return Err(Error::TypeError);
                 }
             }
@@ -173,22 +174,29 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
                 32 => TrezorCryptoResultRef::AddressMac(unwrap!(data.try_into())),
                 65 => TrezorCryptoResultRef::Signature(unwrap!(data.try_into())),
                 _ => {
+                    log::debug!("Unexpected data length for crypto result: {}", data.len());
                     return Err(Error::TypeError);
                 }
             }
         } else if obj.is_immediate() {
             TrezorCryptoResultRef::Boolean(unwrap!(bool::try_from(obj)))
         } else {
+            log::debug!("Tuple serialization for crypto result");
             // Expect a (type_tag: int, bytes) tuple for ambiguous lengths (e.g. 65 bytes)
             let list: Gc<List> = obj.try_into()?;
+            log::debug!("Tuple length: {}", list.len());
             assert!(
                 list.len() == 2,
                 "Expected a tuple of (type_tag: int, bytes)"
             );
+            log::debug!("Getting tag");
             let tag_obj = list.get(0)?;
             let tag: u8 = unwrap!(tag_obj.try_into());
+            log::debug!("Tag: {}", tag);
+            log::debug!("Getting bytes");
             let bytes_obj = list.get(1)?;
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(bytes_obj) });
+            log::debug!("Data length: {}", data.len());
             match tag {
                 0 => {
                     assert!(
@@ -198,6 +206,7 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
                     TrezorCryptoResultRef::PublicKey(unwrap!(data.try_into()))
                 }
                 _ => {
+                    log::debug!("Unexpected type tag for crypto result: {}", tag);
                     return Err(Error::TypeError);
                 }
             }
