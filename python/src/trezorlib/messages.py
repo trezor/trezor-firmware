@@ -357,10 +357,12 @@ class EthereumABIType(IntEnum):
     ABI_UINT16 = 14
     ABI_UINT8 = 15
     ABI_BOOL = 16
+    ABI_INT160 = 17
     ABI_BYTES32 = 20
     ABI_BYTES16 = 21
     ABI_BYTES8 = 22
     ABI_BYTES4 = 23
+    ABI_BYTES20 = 24
     ABI_BYTES = 30
     ABI_STRING = 31
 

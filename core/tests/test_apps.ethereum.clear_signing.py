@@ -30,7 +30,12 @@ if not utils.BITCOIN_ONLY:
         _format_field_value,
         parse_address,
         parse_bool,
+        parse_bytes4,
+        parse_bytes8,
+        parse_bytes16,
+        parse_bytes20,
         parse_bytes32,
+        parse_int160,
         parse_string,
         parse_uint24,
         parse_uint160,
@@ -399,6 +404,60 @@ class TestEthereumClearSigning(unittest.TestCase):
 
         with self.assertRaises(OutOfBounds):
             atomic_bytes32.parse(memoryview(b"\x00" * 20), 0)
+
+    def test_fixed_bytes_parsing(self):
+        # bytesN is left-aligned in the word: value first, zero padding after
+        for parser, width in (
+            (parse_bytes4, 4),
+            (parse_bytes8, 8),
+            (parse_bytes16, 16),
+            (parse_bytes20, 20),
+        ):
+            atomic = Atomic(parser)
+
+            value = bytes(range(1, width + 1))
+            word = value + b"\x00" * (32 - width)
+            data = memoryview(FIVE_RANDOM_BYTES + word + SEVEN_RANDOM_BYTES)
+            parsed, consumed = atomic.parse(data, len(FIVE_RANDOM_BYTES))
+            self.assertEqual(parsed, value)
+            self.assertEqual(consumed, 32)
+
+            # dirty right padding (a stray bit just past the value)
+            dirty_word = value + b"\x01" + b"\x00" * (32 - width - 1)
+            dirty_data = memoryview(
+                FIVE_RANDOM_BYTES + dirty_word + SEVEN_RANDOM_BYTES
+            )
+            with self.assertRaises(ValueOverflow):
+                atomic.parse(dirty_data, len(FIVE_RANDOM_BYTES))
+
+            with self.assertRaises(OutOfBounds):
+                atomic.parse(memoryview(b"\x00" * 20), 0)
+
+    def test_int160_parsing(self):
+        atomic_int160 = Atomic(parse_int160)
+
+        def signed_word(v: int) -> bytes:
+            return (v & ((1 << 256) - 1)).to_bytes(32, "big")
+
+        for val in (0, 1, -1, 2**159 - 1, -(2**159), -123456789):
+            data = memoryview(
+                SEVEN_RANDOM_BYTES + signed_word(val) + FIVE_RANDOM_BYTES
+            )
+            parsed, consumed = atomic_int160.parse(data, len(SEVEN_RANDOM_BYTES))
+            self.assertEqual(parsed, val)
+            self.assertEqual(consumed, 32)
+
+        # out of int160 range (both directions), including a value with
+        # dirty sign-extension bits
+        for invalid in (2**159, -(2**159) - 1, 2**200):
+            invalid_data = memoryview(
+                SEVEN_RANDOM_BYTES + signed_word(invalid) + FIVE_RANDOM_BYTES
+            )
+            with self.assertRaises(ValueOverflow):
+                atomic_int160.parse(invalid_data, len(SEVEN_RANDOM_BYTES))
+
+        with self.assertRaises(OutOfBounds):
+            atomic_int160.parse(memoryview(b"\x00" * 20), 0)
 
     def test_array_of_arrays_of_bytes32(self):
         # bytes32[][] = [[b0, b1], [b2]]
