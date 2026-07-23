@@ -79,7 +79,7 @@ class BleTransport(Transport):
         # TODO use manufacturer_data
         # Skip BLE enumeration unless at least one requested model is BLE-capable
         # (capability comes from the single-source model registry).
-        if models and not any(getattr(model, "ble_capable", False) for model in models):
+        if models and not any(model.ble_capable for model in models):
             return []
         devices = cls.ble_proxy().scan()
         return [BleTransport(device[0]) for device in devices]

@@ -85,10 +85,10 @@ class LayoutType(Enum):
         # The model's UI layout is sourced from the single-source model registry
         # (trezorlib._modeldata); LayoutType member names match those layout
         # names, so a new model is handled without touching this function.
-        layout = getattr(model, "layout", None)
+        layout = model.layout
         if layout:
             return cls[layout]
-        internal_name = getattr(model, "internal_name", None)
+        internal_name = model.internal_name
         if internal_name:
             return cls.from_internal_name(internal_name)
         raise ValueError(f"Unknown model: {model}")
