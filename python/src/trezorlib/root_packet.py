@@ -16,37 +16,43 @@
 
 import logging
 import typing as t
+from hashlib import sha256
 
 import construct as c
+from construct_classes import subcon
 
+from .construct_helpers import Reserved
 from .firmware.sanity_struct import SanityCheckedStruct
 
 LOG = logging.getLogger(__name__)
 TREZOR_ROOT_PACKET = b"TRRP"
 MLDSA_SIG = c.Bytes(2420)
 
+# Number of signature slots in the unauthenticated part. `sigmask` must select
+# exactly this many keys.
+NUM_SIGNATURES = 2
 
-class RootPacket(SanityCheckedStruct):
-    NAME: t.ClassVar[str] = "root packet"
+
+class RootPacketAuth(SanityCheckedStruct):
+    """Authenticated part of the root packet."""
+
+    NAME: t.ClassVar[str] = "root packet (authenticated part)"
 
     MAX_RINGS: t.ClassVar[int] = 3
 
     ring_mask: int
-    timestamp: int
     sigmask: int
+    timestamp: int
     root_rings: list[bytes]
-    signature_0: bytes
-    signature_1: bytes
 
     SUBCON = c.Struct(
         "_magic" / c.Const(TREZOR_ROOT_PACKET, c.Bytes(4)),
         "_version" / c.Const(b"\x01", c.Bytes(1)),
         "ring_mask" / c.Byte,
-        "timestamp" / c.Int32ul,
         "sigmask" / c.Byte,
+        "_reserved" / Reserved(1),
+        "timestamp" / c.Int32ul,
         "root_rings" / c.Array(lambda ctx: bin(ctx.ring_mask).count("1"), c.Bytes(32)),
-        "signature_0" / MLDSA_SIG,
-        "signature_1" / MLDSA_SIG,
     )
 
     # ---- higher-level, flag-like abstraction ----
@@ -73,6 +79,13 @@ class RootPacket(SanityCheckedStruct):
         """Mapping {ring_index: 32-byte root} for all present rings."""
         return {i: self.ring(i) for i in self.ring_indices}
 
+    def digest(self) -> bytes:
+        """SHA256 over the authenticated part.
+
+        This is the value that gets signed.
+        """
+        return sha256(self.build()).digest()
+
     def sanity_check(self, image: bytes, errors: t.Sequence[str] = ()) -> None:
         _errors: list[str] = list(errors)
 
@@ -89,6 +102,41 @@ class RootPacket(SanityCheckedStruct):
             _errors.append(
                 f"ring_mask {self.ring_mask:#04x} has bits set above "
                 f"MAX_RINGS={self.MAX_RINGS}"
+            )
+
+        super().sanity_check(image, _errors)
+
+
+class RootPacket(SanityCheckedStruct):
+    NAME: t.ClassVar[str] = "root packet"
+
+    MAX_RINGS: t.ClassVar[int] = RootPacketAuth.MAX_RINGS
+
+    # Authenticated part -- the digest is computed over this.
+    auth: RootPacketAuth = subcon(RootPacketAuth)
+    # Unauthenticated part -- signatures of `auth.digest()` only.
+    signature_0: bytes
+    signature_1: bytes
+
+    SUBCON = c.Struct(
+        "auth" / RootPacketAuth.SUBCON,
+        "signature_0" / MLDSA_SIG,
+        "signature_1" / MLDSA_SIG,
+    )
+
+    def digest(self) -> bytes:
+        """SHA256 over the authenticated part; see `RootPacketAuth.digest`."""
+        return self.auth.digest()
+
+    def sanity_check(self, image: bytes, errors: t.Sequence[str] = ()) -> None:
+        _errors: list[str] = list(errors)
+
+        # `sigmask` must select exactly as many keys as there are signatures
+        selected = bin(self.auth.sigmask).count("1")
+        if selected != NUM_SIGNATURES:
+            _errors.append(
+                f"sigmask {self.auth.sigmask:#04x} selects {selected} keys, "
+                f"expected {NUM_SIGNATURES}"
             )
 
         super().sanity_check(image, _errors)

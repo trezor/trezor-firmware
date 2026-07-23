@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 class AppHeader(SanityCheckedStruct):
     # Magic number to identify the app binary format
-    magic: int
+    magic: bytes
     # Header size in bytes
     header_size: int
     # Unique identifier of the app
