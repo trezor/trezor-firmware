@@ -81,7 +81,13 @@ where
                 }
             }
             CancelInfoConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
-            CancelInfoConfirmMsg::Info => Ok(INFO.as_obj()),
+            CancelInfoConfirmMsg::Info => {
+                if let Some(index) = self.info_index() {
+                    index.try_into()
+                } else {
+                    Ok(INFO.as_obj())
+                }
+            }
         }
     }
 }

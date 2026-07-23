@@ -49,7 +49,7 @@ pub use address_details::AddressDetails;
 pub use changing_text::ChangingTextLine;
 #[cfg(feature = "translations")]
 pub use coinjoin_progress::CoinJoinProgress;
-pub use flow::Flow;
+pub use flow::{Flow, NAV_SUBPAGE_STRIDE};
 pub use flow_pages::{FlowPages, Page};
 pub use frame::{Frame, ScrollableFrame};
 #[cfg(feature = "micropython")]

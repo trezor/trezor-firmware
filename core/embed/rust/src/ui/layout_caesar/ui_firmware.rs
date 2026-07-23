@@ -35,7 +35,8 @@ use crate::{
 
 use super::{
     component::{
-        AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, ChoiceControls,
+        AddressDetails, ButtonAction, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage,
+        ChoiceControls, NAV_SUBPAGE_STRIDE,
         CoinJoinProgress, ConfirmHomescreen, ExternalMenuLeft, Flow, FlowPages, Frame, Homescreen,
         Lockscreen, NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame,
         ShareWords, ShowMore, SimpleChoice, WordlistEntry, WordlistType,
@@ -935,6 +936,7 @@ impl FirmwareUI for UICaesar {
         mut current: usize,
         cancel: Option<TString<'static>>,
         title: Option<TString<'static>>,
+        confirm: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // Prepend the cancel item (when present) as the first carousel item.
         let mut all_items: heapless::Vec<TString<'static>, { MAX_MENU_ITEMS + 1 }> =
@@ -951,7 +953,7 @@ impl FirmwareUI for UICaesar {
         let choice = SimpleChoice::new(
             all_items,
             ChoiceControls::Cancellable,
-            TR::buttons__view.into(),
+            confirm.unwrap_or_else(|| TR::buttons__view.into()),
         )
         .with_initial_page_counter(current)
         .with_show_incomplete()
@@ -1281,6 +1283,152 @@ impl FirmwareUI for UICaesar {
         Ok(obj)
     }
 
+    fn show_nav_demo(
+        title: TString<'static>,
+        pages: Obj,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        // Assemble all demo pages into a single `FormattedText`, one hard page
+        // break (`add_next_page`) between them. Each page is an optional bold
+        // heading followed by the body text.
+        let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+        let mut first = true;
+        for page in IterBuf::new().try_iterate(pages)? {
+            let [heading, body]: [Obj; 2] = util::iter_into_array(page)?;
+            let heading: TString = heading.try_into()?;
+            let body: TString = body.try_into()?;
+            if !first {
+                ops.add_next_page();
+            }
+            first = false;
+            if !heading.is_empty() {
+                ops.add_text_with_font(heading, fonts::FONT_BOLD_UPPER)
+                    .add_newline()
+                    .add_newline_half();
+            }
+            ops.add_text_with_font(body, fonts::FONT_NORMAL);
+        }
+        let formatted = FormattedText::new(ops).vertically_centered();
+
+        // Reuse the new action-bar navigation: left = menu (-> PageMsg::Info),
+        // right = next page / confirm, hold-left + right = previous page.
+        let content = ButtonPage::new(formatted, theme::BG)
+            .with_external_menu_nav(ExternalMenuLeft::Menu)
+            .with_confirm_btn(Some(ButtonDetails::text(TR::buttons__confirm.into())));
+        let mut frame = ScrollableFrame::new(content).with_numeric_indicator();
+        if !title.is_empty() {
+            frame = frame.with_title(title);
+        }
+        let obj = LayoutObj::new(frame)?;
+        Ok(obj)
+    }
+
+    fn show_nav_tutorial(
+        pages: Obj,
+        start_page: usize,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        const PAGE_COUNT: usize = 7;
+
+        // Extract exactly seven (title, body) string pairs from Python. The
+        // buttons for each screen are fixed here (debug-only vocabulary), so
+        // only the prose is data-driven and can be tweaked without a rebuild.
+        let raw: [Obj; PAGE_COUNT] = util::iter_into_array(pages)?;
+        let mut screens: [(TString<'static>, TString<'static>); PAGE_COUNT] =
+            [(TString::empty(), TString::empty()); PAGE_COUNT];
+        for (i, page) in raw.iter().enumerate() {
+            let [title, body]: [Obj; 2] = util::iter_into_array(*page)?;
+            screens[i] = (title.try_into()?, body.try_into()?);
+        }
+
+        // Left = open the context menu (INFO); right = advance to the next step.
+        let menu_next = ButtonActions::new(
+            Some(ButtonAction::Info),
+            None,
+            Some(ButtonAction::NextPage),
+        );
+
+        let get_page = move |page_index| {
+            let (title, text) = screens[page_index];
+            match page_index {
+                // Welcome: X exits the tutorial, CONTINUE advances.
+                0 => nav_tutorial_screen(
+                    title,
+                    text,
+                    ButtonLayout::cancel_none_text("CONTINUE".into()),
+                    ButtonActions::cancel_none_next(),
+                ),
+                // Left/right button navigation: left = menu, right = CONTINUE.
+                1 => nav_tutorial_screen(
+                    title,
+                    text,
+                    ButtonLayout::menu_none_text("CONTINUE".into()),
+                    menu_next,
+                ),
+                // Hold-to-confirm demonstration: left = menu, right = HTC.
+                2 => nav_tutorial_screen(
+                    title,
+                    text,
+                    ButtonLayout::menu_none_htc("HOLD TO CONFIRM".into()),
+                    menu_next,
+                ),
+                // Both-buttons (middle) confirm demonstration.
+                3 => nav_tutorial_screen(
+                    title,
+                    text,
+                    ButtonLayout::none_armed_none("VIEW".into()),
+                    ButtonActions::none_next_none(),
+                ),
+                // Scrollable content on the action-bar navigation: left = menu
+                // (short press) / Shift (hold -> right scrolls up), right = the
+                // CONTINUE button, which scrolls down and advances on the last
+                // sub-page.
+                4 => nav_tutorial_screen(
+                    title,
+                    text,
+                    ButtonLayout::menu_none_text("CONTINUE".into()),
+                    menu_next,
+                )
+                .with_nav(),
+                // Menu step: the left menu button opens the context menu
+                // (handled in Python via the returned INFO message).
+                5 => nav_tutorial_screen(
+                    title,
+                    text,
+                    ButtonLayout::menu_none_none(),
+                    ButtonActions::new(Some(ButtonAction::Info), None, None),
+                ),
+                // Done: AGAIN restarts from the beginning, CONTINUE finishes.
+                6 => nav_tutorial_screen(
+                    title,
+                    text,
+                    ButtonLayout::text_none_text("AGAIN".into(), "CONTINUE".into()),
+                    ButtonActions::beginning_none_confirm(),
+                ),
+                _ => unreachable!(),
+            }
+        };
+
+        let pages = FlowPages::new(get_page, PAGE_COUNT);
+
+        // Mimic the choice pages' ignore-second-button behaviour so the middle
+        // (both-buttons) confirm requires a genuine simultaneous press.
+        // `with_return_info_index` makes the menu button report which screen it
+        // was opened from, so the caller can resume there.
+        // `start_page` is a resume token encoding page + sub-page (see
+        // `Flow::info_index`): `page * NAV_SUBPAGE_STRIDE + sub_page`.
+        let start_page_idx = start_page / NAV_SUBPAGE_STRIDE;
+        let start_subpage = (start_page % NAV_SUBPAGE_STRIDE) as u16;
+        let layout = RootComponent::new(
+            Flow::new(pages)
+                .with_scrollbar(false)
+                .with_numeric_nav_indicator()
+                .with_start_page(start_page_idx)
+                .with_start_subpage(start_subpage)
+                .with_return_info_index()
+                .with_ignore_second_button_ms(constant::IGNORE_OTHER_BTN_MS),
+        );
+        Ok(layout)
+    }
+
     fn show_progress(
         description: TString<'static>,
         indeterminate: bool,
@@ -1587,6 +1735,27 @@ fn tutorial_screen(
     ops.add_text_with_font(text, fonts::FONT_NORMAL);
     let formatted = FormattedText::new(ops).vertically_centered();
     Page::new(btn_layout, btn_actions, formatted).with_title(title)
+}
+
+/// Like `tutorial_screen`, but the body text is a runtime `TString` (supplied
+/// from Python) rather than a compile-time translation. Used by the debug
+/// nav-tutorial. An empty title yields a titleless screen.
+fn nav_tutorial_screen(
+    title: TString<'static>,
+    text: TString<'static>,
+    btn_layout: ButtonLayout,
+    btn_actions: ButtonActions,
+) -> Page {
+    // Classic textual "..." for multi-page continuation, no next/prev arrows.
+    let mut ops = OpTextLayout::new(theme::TEXT_NORMAL_CLASSIC_ELLIPSIS);
+    ops.add_text_with_font(text, fonts::FONT_NORMAL);
+    let formatted = FormattedText::new(ops).vertically_centered();
+    let page = Page::new(btn_layout, btn_actions, formatted);
+    if title.is_empty() {
+        page
+    } else {
+        page.with_title(title)
+    }
 }
 
 fn add_paragraphs<'a>(

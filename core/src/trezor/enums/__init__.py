@@ -724,5 +724,7 @@ if TYPE_CHECKING:
         BenchmarkNames = 9101
         BenchmarkRun = 9102
         BenchmarkResult = 9103
+        ShowNavDemo = 9104
+        ShowNavTutorial = 9105
         TelemetryGet = 1100
         Telemetry = 1101

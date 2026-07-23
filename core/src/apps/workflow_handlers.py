@@ -28,6 +28,10 @@ def _find_message_handler_module(msg_type: int) -> str:
     # debug
     if __debug__ and msg_type == MessageType.LoadDevice:
         return "apps.debug.load_device"
+    if __debug__ and msg_type == MessageType.ShowNavDemo:
+        return "apps.debug.nav_demo"
+    if __debug__ and msg_type == MessageType.ShowNavTutorial:
+        return "apps.debug.nav_tutorial"
 
     # benchmark
     if __debug__ and msg_type == MessageType.BenchmarkListNames:

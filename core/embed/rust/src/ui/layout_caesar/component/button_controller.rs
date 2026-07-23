@@ -130,11 +130,15 @@ impl ButtonContainer {
     pub fn new(pos: ButtonPos, btn_details: Option<ButtonDetails>) -> Self {
         const DEFAULT_LONG_PRESS_MS: u32 = 1000;
         let send_long_press = btn_details.as_ref().is_some_and(|btn| btn.send_long_press);
+        let long_press_ms = btn_details
+            .as_ref()
+            .and_then(|btn| btn.long_press_ms)
+            .unwrap_or(DEFAULT_LONG_PRESS_MS);
         Self {
             pos,
             button_type: btn_details.map(|d| ButtonType::from_button_details(pos, d)),
             pressed_since: None,
-            long_press_ms: DEFAULT_LONG_PRESS_MS,
+            long_press_ms,
             long_pressed_timer: Timer::new(),
             send_long_press,
         }
@@ -144,7 +148,12 @@ impl ButtonContainer {
     ///
     /// Passing `None` as `btn_details` will mark the button as inactive.
     pub fn set(&mut self, btn_details: Option<ButtonDetails>, button_area: Rect) {
+        const DEFAULT_LONG_PRESS_MS: u32 = 1000;
         self.send_long_press = btn_details.as_ref().is_some_and(|btn| btn.send_long_press);
+        self.long_press_ms = btn_details
+            .as_ref()
+            .and_then(|btn| btn.long_press_ms)
+            .unwrap_or(DEFAULT_LONG_PRESS_MS);
         self.button_type = btn_details.map(|d| ButtonType::from_button_details(self.pos, d));
         if let Some(button_type) = &mut self.button_type {
             button_type.place(button_area);
@@ -265,6 +274,11 @@ pub struct ButtonController {
     /// right button into a secondary action (used by the action-bar
     /// navigation).
     left_shift: bool,
+    /// Whether the left button has been held long enough to engage "Shift"
+    /// (set when `LongPressed(Left)` fires). The right-button secondary action
+    /// only becomes available once this is true, so a quick tap of the left
+    /// button opens the menu instead of shifting.
+    left_long_pressed: bool,
 }
 
 impl ButtonController {
@@ -280,6 +294,7 @@ impl ButtonController {
             ignore_btn_delay: None,
             handle_middle_button,
             left_shift: false,
+            left_long_pressed: false,
         }
     }
 
@@ -394,6 +409,7 @@ impl ButtonController {
     /// Resetting the state of the controller.
     pub fn reset_state(&mut self, ctx: &mut EventCtx) {
         self.state = ButtonState::Nothing;
+        self.left_long_pressed = false;
         self.reset_button_presses();
         self.set_pressed(ctx, false, false, false);
         if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
@@ -427,6 +443,9 @@ impl Component for ButtonController {
                                 match which {
                                     // ▼ *
                                     PhysicalButton::Left => {
+                                        // Fresh left press starts clean: shift is
+                                        // not engaged until a long press fires.
+                                        self.left_long_pressed = false;
                                         self.got_pressed(ctx, ButtonPos::Left);
                                         self.left_btn.forward_hold(ctx, ButtonEvent::HoldStarted);
                                         Some(ButtonControllerMsg::Pressed(ButtonPos::Left))
@@ -468,17 +487,16 @@ impl Component for ButtonController {
                         },
                         // * ▼ | ▼ *
                         ButtonEvent::ButtonPressed(b) if b != which_down => {
-                            // Buttons may be non-clickable (caused by long-holding the other
-                            // button)
-                            if let Some(ignore_btn_delay) = &self.ignore_btn_delay {
-                                if ignore_btn_delay.ignore_button(b) {
-                                    return None;
-                                }
-                            }
-                            // Shift mode: left is held and right is pressed -> secondary
-                            // action. Only when explicitly enabled and there is no middle
-                            // button configured.
+                            // Shift mode: left is held (and already long-pressed)
+                            // and right is pressed -> engage the secondary action.
+                            // This is checked BEFORE the ignore-second-button
+                            // delay, because after the ~0.5 s hold that delay
+                            // would otherwise suppress the right press. The
+                            // secondary action itself fires on RELEASE of the
+                            // right button (see `ShiftRightDown`), not here; here
+                            // we only show the right button as pressed.
                             if self.left_shift
+                                && self.left_long_pressed
                                 && !self.handle_middle_button
                                 && which_down == PhysicalButton::Left
                                 && b == PhysicalButton::Right
@@ -487,33 +505,40 @@ impl Component for ButtonController {
                                 // button so no LongPressed can fire while in shift mode.
                                 self.left_btn.reset();
                                 self.left_btn.forward_hold(ctx, ButtonEvent::HoldCanceled);
-                                (
-                                    ButtonState::ShiftRightDown,
-                                    Some(ButtonControllerMsg::ShiftedTriggered(ButtonPos::Right)),
-                                )
-                            }
-                            // ↓ ↓
-                            else if self.handle_middle_button {
-                                self.got_pressed(ctx, ButtonPos::Middle);
-                                self.middle_hold_started(ctx);
-                                (
-                                    ButtonState::BothDown,
-                                    Some(ButtonControllerMsg::Pressed(ButtonPos::Middle)),
-                                )
+                                (ButtonState::ShiftRightDown, None)
                             } else {
-                                // When a button gets pressed while another one is being held,
-                                // cancel the hold and do not register the press.
-                                match which_down {
-                                    PhysicalButton::Left => {
-                                        self.left_btn.forward_hold(ctx, ButtonEvent::HoldCanceled);
+                                // Buttons may be non-clickable (caused by long-holding the
+                                // other button)
+                                if let Some(ignore_btn_delay) = &self.ignore_btn_delay {
+                                    if ignore_btn_delay.ignore_button(b) {
+                                        return None;
                                     }
-                                    PhysicalButton::Right => {
-                                        self.right_btn.forward_hold(ctx, ButtonEvent::HoldCanceled);
-                                    }
-                                    _ => {}
                                 }
+                                // ↓ ↓
+                                if self.handle_middle_button {
+                                    self.got_pressed(ctx, ButtonPos::Middle);
+                                    self.middle_hold_started(ctx);
+                                    (
+                                        ButtonState::BothDown,
+                                        Some(ButtonControllerMsg::Pressed(ButtonPos::Middle)),
+                                    )
+                                } else {
+                                    // When a button gets pressed while another one is being
+                                    // held, cancel the hold and do not register the press.
+                                    match which_down {
+                                        PhysicalButton::Left => {
+                                            self.left_btn
+                                                .forward_hold(ctx, ButtonEvent::HoldCanceled);
+                                        }
+                                        PhysicalButton::Right => {
+                                            self.right_btn
+                                                .forward_hold(ctx, ButtonEvent::HoldCanceled);
+                                        }
+                                        _ => {}
+                                    }
 
-                                return None;
+                                    return None;
+                                }
                             }
                         }
                         _ => (self.state, None),
@@ -578,11 +603,14 @@ impl Component for ButtonController {
                     },
                     // Shift mode: left held as "Shift", right currently down.
                     ButtonState::ShiftRightDown => match button_event {
-                        // Right released -> stay in shift, wait for another right press.
-                        ButtonEvent::ButtonReleased(PhysicalButton::Right) => {
-                            (ButtonState::ShiftIdle, None)
-                        }
+                        // Right released -> NOW perform the secondary action and
+                        // wait (in shift) for another right press.
+                        ButtonEvent::ButtonReleased(PhysicalButton::Right) => (
+                            ButtonState::ShiftIdle,
+                            Some(ButtonControllerMsg::ShiftedTriggered(ButtonPos::Right)),
+                        ),
                         // Left released -> leave shift; swallow the pending right release.
+                        // No secondary action (the right button was not released first).
                         ButtonEvent::ButtonReleased(PhysicalButton::Left) => {
                             self.left_btn.reset();
                             (
@@ -594,11 +622,11 @@ impl Component for ButtonController {
                     },
                     // Shift mode: left held as "Shift", right released.
                     ButtonState::ShiftIdle => match button_event {
-                        // Right pressed again -> repeat the secondary action.
-                        ButtonEvent::ButtonPressed(PhysicalButton::Right) => (
-                            ButtonState::ShiftRightDown,
-                            Some(ButtonControllerMsg::ShiftedTriggered(ButtonPos::Right)),
-                        ),
+                        // Right pressed again -> show it pressed; the action fires
+                        // on release (back in `ShiftRightDown`).
+                        ButtonEvent::ButtonPressed(PhysicalButton::Right) => {
+                            (ButtonState::ShiftRightDown, None)
+                        }
                         // Left released -> leave shift mode, restore visuals.
                         ButtonEvent::ButtonReleased(PhysicalButton::Left) => {
                             self.left_btn.reset();
@@ -619,6 +647,9 @@ impl Component for ButtonController {
                     }
                     ButtonState::OneDown(down_button) => match down_button {
                         PhysicalButton::Left => {
+                            // Left held: highlight it (filled) both as the
+                            // pressed-menu feedback and, once long-pressed, as
+                            // the filled "Shift" label.
                             self.set_pressed(ctx, true, false, false);
                         }
                         PhysicalButton::Right => {
@@ -629,11 +660,13 @@ impl Component for ButtonController {
                     ButtonState::BothDown | ButtonState::OneReleased(_) => {
                         self.set_pressed(ctx, false, true, false);
                     }
-                    // Left highlighted as "Shift" is held.
+                    // In "Shift" mode the left shows the filled "Shift" label.
+                    // While the right (secondary "back") button is held down it
+                    // is inverted too, so the press is visible; the move happens
+                    // only once it is released.
                     ButtonState::ShiftIdle => {
                         self.set_pressed(ctx, true, false, false);
                     }
-                    // Both left ("Shift") and right (secondary action) highlighted.
                     ButtonState::ShiftRightDown => {
                         self.set_pressed(ctx, true, false, true);
                     }
@@ -648,6 +681,11 @@ impl Component for ButtonController {
                     ignore_btn_delay.handle_timers(event);
                 }
                 if let Some(pos) = self.handle_long_press_timers(event) {
+                    if matches!(pos, ButtonPos::Left) {
+                        // The left button has been held long enough: the
+                        // "Shift" secondary action is now available.
+                        self.left_long_pressed = true;
+                    }
                     return Some(ButtonControllerMsg::LongPressed(pos));
                 }
                 self.handle_htc_expiration(ctx, event)

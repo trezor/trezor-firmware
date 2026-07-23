@@ -531,8 +531,10 @@ def select_menu(
     current: int,
     cancel: str | None = None,
     title: str | None = None,
+    confirm: str | None = None,
 ) -> LayoutContext[int]:
-    """Select an item from a menu. Returns index in range `0..len(items)`."""
+    """Select an item from a menu. Returns index in range `0..len(items)`.
+    `confirm` overrides the middle "select" button label (caesar)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -738,6 +740,29 @@ def show_lockscreen(
 # rust/src/ui/api/firmware_micropython.rs
 def show_mismatch(*, title: str) -> LayoutContext[UiResult]:
     """Warning of receiving address mismatch."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def show_nav_demo(
+    *,
+    title: str,
+    pages: Iterable[tuple[str, str]],
+) -> LayoutContext[UiResult]:
+    """Demo of the new caesar action-bar navigation: multiple static-text pages
+    (each a `(heading, body)` tuple) with a context menu on the left button and a
+    numeric page indicator. Caesar-only; other layouts raise NotImplementedError."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def show_nav_tutorial(
+    *,
+    pages: Iterable[tuple[str, str]],
+    start_page: int = 0,
+) -> LayoutContext[UiResult]:
+    """Updated device tutorial on the new caesar action-bar navigation. Takes
+    exactly seven `(title, body)` screens; `start_page` resumes at a given screen
+    (used after the context menu). Returns INFO when the menu button is pressed on
+    the menu screen. Caesar-only; other layouts raise NotImplementedError."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

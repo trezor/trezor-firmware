@@ -80,6 +80,7 @@ pub struct Page {
     btn_actions: ButtonActions,
     title: Option<TString<'static>>,
     slim_arrows: bool,
+    nav: bool,
 }
 
 // For `layout.rs`
@@ -95,6 +96,7 @@ impl Page {
             btn_actions,
             title: None,
             slim_arrows: false,
+            nav: false,
         }
     }
 }
@@ -111,6 +113,26 @@ impl Page {
     pub fn with_slim_arrows(mut self) -> Self {
         self.slim_arrows = true;
         self
+    }
+
+    /// Mark this page as using the action-bar navigation (menu + "Shift").
+    /// The button layout and events for such a page are handled by `Flow`
+    /// (it owns the shift state), not by `btn_layout()` here.
+    pub fn with_nav(mut self) -> Self {
+        self.nav = true;
+        self
+    }
+
+    /// Whether this page uses the action-bar navigation.
+    pub fn is_nav(&self) -> bool {
+        self.nav
+    }
+
+    /// The raw, un-paginated button layout as configured in `layout.rs`. Used
+    /// by `Flow` to pick the boundary buttons (first / last sub-page) of an
+    /// action-bar page.
+    pub fn raw_btn_layout(&self) -> ButtonLayout {
+        self.btn_layout.clone()
     }
 
     pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

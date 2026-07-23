@@ -304,6 +304,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_coinjoin__title_progress;
   MP_QSTR_coinjoin__waiting_for_others;
   MP_QSTR_coinjoin_authorized;
+  MP_QSTR_confirm;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_address;
   MP_QSTR_confirm_cancel;
@@ -859,6 +860,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
+  MP_QSTR_show_nav_demo;
+  MP_QSTR_show_nav_tutorial;
   MP_QSTR_show_pairing_device_name;
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;
@@ -883,6 +886,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_sn__title;
   MP_QSTR_start_advertising;
   MP_QSTR_start_comm;
+  MP_QSTR_start_page;
   MP_QSTR_storage_msg__processing;
   MP_QSTR_storage_msg__starting;
   MP_QSTR_storage_msg__verifying_pin;

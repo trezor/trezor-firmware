@@ -280,6 +280,7 @@ pub trait FirmwareUI {
         current: usize,
         cancel: Option<TString<'static>>,
         title: Option<TString<'static>>,
+        confirm: Option<TString<'static>>, // middle "select" button label; defaults per-model
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn select_word(
@@ -408,6 +409,19 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_mismatch(title: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
+
+    /// Demo of the caesar action-bar navigation: multiple static-text pages
+    /// (each a `(heading, body)` tuple) shown in a `ButtonPage` with the
+    /// external-menu navigation and a numeric page indicator.
+    fn show_nav_demo(
+        title: TString<'static>,
+        pages: Obj, // iterable of (heading, body) string tuples
+    ) -> Result<Gc<LayoutObj>, Error>;
+
+    fn show_nav_tutorial(
+        pages: Obj,      // iterable of exactly 7 (title, body) string tuples
+        start_page: usize, // page to start on (used to resume after the menu)
+    ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_progress(
         description: TString<'static>,

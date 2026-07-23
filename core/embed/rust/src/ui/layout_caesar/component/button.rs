@@ -38,6 +38,7 @@ pub struct Button {
     bounds: Rect,
     pos: ButtonPos,
     content: ButtonContent,
+    pressed_content: Option<ButtonContent>,
     font: Font,
     decoration: Option<Decoration>,
     fixed_width: Option<i16>,
@@ -50,6 +51,7 @@ impl Button {
         Self {
             pos,
             content: btn_details.content,
+            pressed_content: btn_details.pressed_content,
             font: btn_details.font,
             decoration: btn_details.decoration,
             fixed_width: btn_details.fixed_width,
@@ -205,8 +207,12 @@ impl Component for Button {
                 .render(target);
         }
 
-        // Painting the content
-        match &self.content {
+        // Painting the content (use the pressed-only alternate when inverted).
+        let content = match (&self.state, &self.pressed_content) {
+            (State::Pressed, Some(pressed)) => pressed,
+            _ => &self.content,
+        };
+        match content {
             ButtonContent::Text(text) => text.map(|t| {
                 shape::Text::new(
                     self.get_text_baseline() - Offset::x(self.font.start_x_bearing(t)),
@@ -274,12 +280,19 @@ pub enum ButtonContent {
 #[derive(Clone)]
 pub struct ButtonDetails {
     pub content: ButtonContent,
+    /// Optional alternate content drawn only while the button is pressed
+    /// (inverted). Lets a button show a slightly different glyph in its
+    /// pressed/highlighted state (e.g. the menu icon).
+    pressed_content: Option<ButtonContent>,
     font: Font,
     pub duration: Option<Duration>,
     decoration: Option<Decoration>,
     fixed_width: Option<i16>,
     offset: Offset,
     pub send_long_press: bool,
+    /// Optional override (ms) for how long the button must be held before
+    /// `LongPressed` fires. `None` uses the controller's default.
+    pub long_press_ms: Option<u32>,
 }
 
 impl ButtonDetails {
@@ -287,12 +300,14 @@ impl ButtonDetails {
     pub fn text(text: TString<'static>) -> Self {
         Self {
             content: ButtonContent::Text(text),
+            pressed_content: None,
             font: fonts::FONT_NORMAL_UPPER,
             duration: None,
             decoration: Some(Decoration::Outline),
             fixed_width: None,
             offset: Offset::zero(),
             send_long_press: false,
+            long_press_ms: None,
         }
     }
 
@@ -300,12 +315,14 @@ impl ButtonDetails {
     pub fn icon(icon: Icon) -> Self {
         Self {
             content: ButtonContent::Icon(icon),
+            pressed_content: None,
             font: fonts::FONT_NORMAL_UPPER,
             duration: None,
             decoration: None,
             fixed_width: None,
             offset: Offset::zero(),
             send_long_press: false,
+            long_press_ms: None,
         }
     }
 
@@ -331,9 +348,28 @@ impl ButtonDetails {
         Self::icon(theme::ICON_CANCEL).with_offset(Offset::new(3, -3))
     }
 
-    /// Hamburger menu icon with no outline (matching `cancel_icon`).
+    /// Hamburger menu icon with no outline (matching `cancel_icon`). Used when
+    /// no secondary ("Shift") action is available on the current screen.
     pub fn menu_icon() -> Self {
         Self::icon(theme::ICON_MENU).with_offset(Offset::new(3, -3))
+    }
+
+    /// Hamburger menu icon wrapped in parentheses `( ≡ )`, indicating that a
+    /// secondary ("Shift") action is available via a long press of the left
+    /// button. Enables `send_long_press` so the controller fires `LongPressed`.
+    pub fn menu_shift_icon() -> Self {
+        // The icon already includes the parentheses with 2px gaps around the
+        // hamburger (14px wide), so it is aligned to the left edge (no x
+        // offset) instead of being inset like the plain menu icon. When
+        // pressed it shows just the hamburger (rows inset from the edges, no
+        // brackets) inside the inverted rounded box.
+        Self::icon(theme::ICON_MENU_SHIFT)
+            .with_offset(Offset::new(0, -3))
+            .with_pressed_icon(theme::ICON_MENU_PRESSED)
+            .with_send_long_press()
+            // Half of the 1000 ms default: the "Shift" secondary action
+            // becomes available after a ~0.5 s hold.
+            .with_long_press_ms(500)
     }
 
     /// Boxed "Shift" text button (used by the action-bar navigation).
@@ -384,6 +420,21 @@ impl ButtonDetails {
             .with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
+    /// Secondary "back" (scroll to previous page) action shown on the right
+    /// while Shift is held. A wide outlined button whose up-arrow sits in an
+    /// inverted (white) center square. Takes half the screen's width.
+    pub fn back_secondary_icon() -> Self {
+        // Idle (Shift shown): an outlined button with a tall white rectangle
+        // behind a dark up-arrow (figma 426:2925). When pressed the whole
+        // button inverts to a solid white box with a dark up-arrow (figma
+        // 421:6338); the plain-arrow pressed icon avoids re-inverting the baked
+        // white rectangle.
+        Self::icon(theme::ICON_BACK)
+            .with_outline()
+            .with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
+            .with_pressed_icon(theme::ICON_ARROW_UP)
+    }
+
     /// Outline around the button.
     pub fn with_outline(mut self) -> Self {
         self.decoration = Some(Decoration::Outline);
@@ -425,6 +476,27 @@ impl ButtonDetails {
     /// Specifying the font of the button.
     pub fn with_font(mut self, font: Font) -> Self {
         self.font = font;
+        self
+    }
+
+    /// Alternate icon shown only while the button is pressed (inverted).
+    pub fn with_pressed_icon(mut self, icon: Icon) -> Self {
+        self.pressed_content = Some(ButtonContent::Icon(icon));
+        self
+    }
+
+    /// Emit a `LongPressed` event after a ~1s hold. Used by the action-bar
+    /// navigation to engage the "Shift" secondary action only after a
+    /// deliberate long press of the left button.
+    pub fn with_send_long_press(mut self) -> Self {
+        self.send_long_press = true;
+        self
+    }
+
+    /// Override how long (ms) the button must be held before `LongPressed`
+    /// fires. Takes effect only together with `with_send_long_press`.
+    pub fn with_long_press_ms(mut self, ms: u32) -> Self {
+        self.long_press_ms = Some(ms);
         self
     }
 }
@@ -757,6 +829,20 @@ impl ButtonLayout {
             Some(ButtonDetails::cancel_icon()),
             None,
             Some(ButtonDetails::up_arrow_icon_wide()),
+        )
+    }
+
+    /// Menu icon on left, nothing else (used to open a context menu).
+    pub fn menu_none_none() -> Self {
+        Self::new(Some(ButtonDetails::menu_icon()), None, None)
+    }
+
+    /// Left back arrow and WIDE down arrow on right (scrollable content).
+    pub fn arrow_none_arrow_wide() -> Self {
+        Self::new(
+            Some(ButtonDetails::left_arrow_icon()),
+            None,
+            Some(ButtonDetails::down_arrow_icon_wide()),
         )
     }
 }

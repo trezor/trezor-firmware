@@ -387,6 +387,10 @@ enum MessageType {
     MessageType_BenchmarkRun = 9102 [(bitcoin_only) = true];
     MessageType_BenchmarkResult = 9103 [(bitcoin_only) = true];
 
+    // Nav demo (debug/demo only)
+    MessageType_ShowNavDemo = 9104 [(bitcoin_only) = true];
+    MessageType_ShowNavTutorial = 9105 [(bitcoin_only) = true];
+
     // Telemetry
     MessageType_TelemetryGet = 1100 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_Telemetry = 1101 [(bitcoin_only) = true, (wire_out) = true];

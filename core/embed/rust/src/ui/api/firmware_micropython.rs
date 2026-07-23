@@ -759,8 +759,12 @@ extern "C" fn new_select_menu(n_args: usize, args: *const Obj, kwargs: *mut Map)
             .get(Qstr::MP_QSTR_title)
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
+        let confirm: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_confirm)
+            .and_then(Obj::try_into_option)
+            .unwrap_or(None);
 
-        let layout = ModelUI::select_menu(items, current, cancel, title)?;
+        let layout = ModelUI::select_menu(items, current, cancel, title, confirm)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1146,6 +1150,28 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
 
         let layout = ModelUI::show_mismatch(title)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_nav_demo(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let pages: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
+
+        let obj = ModelUI::show_nav_demo(title, pages)?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_nav_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let pages: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
+        let start_page: usize = kwargs.get(Qstr::MP_QSTR_start_page)?.try_into()?;
+
+        let layout = ModelUI::show_nav_tutorial(pages, start_page)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1896,8 +1922,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     current: int,
     ///     cancel: str | None = None,
     ///     title: str | None = None,
+    ///     confirm: str | None = None,
     /// ) -> LayoutContext[int]:
-    ///     """Select an item from a menu. Returns index in range `0..len(items)`."""
+    ///     """Select an item from a menu. Returns index in range `0..len(items)`.
+    ///     `confirm` overrides the middle "select" button label (caesar)."""
     Qstr::MP_QSTR_select_menu => obj_fn_kw!(0, new_select_menu).as_obj(),
 
     /// def select_word(
@@ -2085,6 +2113,27 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_mismatch(*, title: str) -> LayoutContext[UiResult]:
     ///     """Warning of receiving address mismatch."""
     Qstr::MP_QSTR_show_mismatch => obj_fn_kw!(0, new_show_mismatch).as_obj(),
+
+    /// def show_nav_demo(
+    ///     *,
+    ///     title: str,
+    ///     pages: Iterable[tuple[str, str]],
+    /// ) -> LayoutContext[UiResult]:
+    ///     """Demo of the new caesar action-bar navigation: multiple static-text pages
+    ///     (each a `(heading, body)` tuple) with a context menu on the left button and a
+    ///     numeric page indicator. Caesar-only; other layouts raise NotImplementedError."""
+    Qstr::MP_QSTR_show_nav_demo => obj_fn_kw!(0, new_show_nav_demo).as_obj(),
+
+    /// def show_nav_tutorial(
+    ///     *,
+    ///     pages: Iterable[tuple[str, str]],
+    ///     start_page: int = 0,
+    /// ) -> LayoutContext[UiResult]:
+    ///     """Updated device tutorial on the new caesar action-bar navigation. Takes
+    ///     exactly seven `(title, body)` screens; `start_page` resumes at a given screen
+    ///     (used after the context menu). Returns INFO when the menu button is pressed on
+    ///     the menu screen. Caesar-only; other layouts raise NotImplementedError."""
+    Qstr::MP_QSTR_show_nav_tutorial => obj_fn_kw!(0, new_show_nav_tutorial).as_obj(),
 
     /// def show_progress(
     ///     *,

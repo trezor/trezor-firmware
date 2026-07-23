@@ -116,6 +116,37 @@ def prodtest_t1(session: "Session") -> None:
 
 @cli.command()
 @with_session(seedless=True)
+def nav_demo(session: "Session") -> None:
+    """Show the Trezor Safe 3 navigation demo flow on the device.
+
+    Debug-firmware only. Renders a multi-page static-text flow using the new
+    caesar action-bar navigation (left button = context menu, right button =
+    next page / confirm, hold-left + right = previous page).
+    """
+    from ..nav_demo import show_nav_demo
+
+    result = show_nav_demo(session)
+    click.echo(result.message)
+
+
+@cli.command()
+@with_session(seedless=True)
+def nav_tutorial(session: "Session") -> None:
+    """Show the updated Trezor Safe 3 device tutorial on the device.
+
+    Debug-firmware only. Runs the "Tutorial update" flow on the new caesar
+    action-bar navigation: welcome, left/right navigation, hold-to-confirm,
+    both-buttons confirm, screen scroll, a context menu (Restart / Complete
+    tutorial), and a final screen (AGAIN / CONTINUE).
+    """
+    from ..nav_tutorial import show_nav_tutorial
+
+    result = show_nav_tutorial(session)
+    click.echo(result.message)
+
+
+@cli.command()
+@with_session(seedless=True)
 def optiga_set_sec_max(session: "Session") -> None:
     """Set Optiga's security event counter to maximum."""
     debug_transport = session.client.transport.find_debug()

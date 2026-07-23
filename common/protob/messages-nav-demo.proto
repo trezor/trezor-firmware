@@ -1,0 +1,28 @@
+syntax = "proto2";
+package hw.trezor.messages.nav_demo;
+
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageNavDemo";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+
+import "options.proto";
+
+// Include in BTC-only firmware
+option (include_in_bitcoin_only) = true;
+
+/**
+ * Request: Show the Safe 3 (caesar) navigation demo flow. Debug/demo only.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message ShowNavDemo {}
+
+/**
+ * Request: Show the updated Safe 3 (caesar) device tutorial on the new
+ * action-bar navigation. Debug/demo only.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message ShowNavTutorial {}

@@ -50,7 +50,12 @@ ifeq ($(PYOPT),1)
 XTASK_BUILD_OPTS += --pyopt true
 else ifeq ($(PYOPT),0)
 XTASK_BUILD_OPTS += --pyopt false
+# Debug builds disable UI animations by default (deterministic device tests).
+# Set DISABLE_ANIMATION=0 to keep animations, e.g. to see the hold-to-confirm
+# loader grow in the nav tutorial/demo.
+ifneq ($(DISABLE_ANIMATION),0)
 XTASK_BUILD_OPTS += --disable-animation
+endif
 XTASK_BUILD_OPTS += --dbg-console vcp
 endif
 ifeq ($(TREZOR_MEMPERF),1)

@@ -124,8 +124,12 @@ where
     fn update_buttons(&mut self, ctx: &mut EventCtx) {
         let pager = self.pager();
         let btn_layout = self.get_button_layout(pager.has_prev(), pager.has_next());
-        self.buttons.mutate(ctx, |_ctx, buttons| {
+        self.buttons.mutate(ctx, |ctx, buttons| {
             buttons.set(btn_layout);
+            // Changing the button layout only clears the internal pad; force a
+            // full repaint so any leftover "pressed"/highlight pixels (e.g. from
+            // holding the left button before entering Shift) are cleared.
+            buttons.request_complete_repaint(ctx);
         });
     }
 
@@ -152,16 +156,21 @@ where
     /// Button layout for the action-bar navigation mode.
     fn get_nav_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout {
         if self.shift_active {
-            // While "Shift" is held: left = Shift, right = wide up arrow (scroll
-            // up) if there is a previous page, otherwise nothing.
-            return if has_prev {
-                ButtonLayout::shift_none_up_arrow_wide()
-            } else {
-                ButtonLayout::shift_none_none()
-            };
+            // While "Shift" is held: left = filled "Shift" label, right = the
+            // secondary "back" (scroll up) button if there is a previous page.
+            let btn_right = has_prev.then(ButtonDetails::back_secondary_icon);
+            return ButtonLayout::new(Some(ButtonDetails::shift_text()), None, btn_right);
         }
 
-        let btn_left = Some(ButtonDetails::menu_icon());
+        // Show the menu icon wrapped in parentheses only when a secondary
+        // ("Shift") action is available, i.e. there is a previous page to
+        // scroll back to. On the first page there is no secondary action, so
+        // the plain menu icon is used and the long press does nothing.
+        let btn_left = Some(if has_prev {
+            ButtonDetails::menu_shift_icon()
+        } else {
+            ButtonDetails::menu_icon()
+        });
         let btn_right = if has_next {
             // Wide down arrow to scroll to the next page.
             Some(ButtonDetails::down_arrow_icon_wide())
@@ -184,11 +193,14 @@ where
     ) -> Option<PageMsg<T::Msg>> {
         if let Some(msg) = self.buttons.event(ctx, event) {
             match msg {
-                // Left press-down enters "Shift" mode: swap to the shift layout.
-                ButtonControllerMsg::Pressed(ButtonPos::Left) => {
+                // Long press of the left button (~1s) engages "Shift" mode:
+                // swap to the shift layout and highlight the right (secondary)
+                // button. A plain press-down does NOT enter shift anymore.
+                ButtonControllerMsg::LongPressed(ButtonPos::Left) => {
                     self.shift_active = true;
                     self.update_buttons(ctx);
                     self.buttons.mutate(ctx, |ctx, buttons| {
+                        // Keep the "Shift" label filled while it is held.
                         buttons.highlight_button(ctx, ButtonPos::Left);
                     });
                 }
@@ -197,24 +209,30 @@ where
                     self.shift_active = false;
                     self.update_buttons(ctx);
                 }
-                // Left short press: open menu / close the screen.
+                // Left button released.
                 ButtonControllerMsg::Triggered(ButtonPos::Left, _) => {
-                    self.shift_active = false;
-                    self.update_buttons(ctx);
-                    return Some(match external_nav {
-                        ExternalMenuLeft::Menu => PageMsg::Info,
-                    });
+                    if self.shift_active {
+                        // Was a long press (shift shown): releasing just returns
+                        // to the default layout and does NOT open the menu.
+                        self.shift_active = false;
+                        self.update_buttons(ctx);
+                    } else {
+                        // Short press: open the menu / close the screen.
+                        return Some(match external_nav {
+                            ExternalMenuLeft::Menu => PageMsg::Info,
+                        });
+                    }
                 }
                 // Secondary action (right pressed while Shift held): scroll up.
                 ButtonControllerMsg::ShiftedTriggered(ButtonPos::Right) => {
                     if self.pager().has_prev() {
                         self.prev_page();
                         self.change_page(ctx);
-                        // Shift is still held; keep the left button highlighted.
-                        self.buttons.mutate(ctx, |ctx, buttons| {
-                            buttons.highlight_button(ctx, ButtonPos::Left);
-                        });
                     }
+                    // Shift is still held; keep the "Shift" label filled.
+                    self.buttons.mutate(ctx, |ctx, buttons| {
+                        buttons.highlight_button(ctx, ButtonPos::Left);
+                    });
                 }
                 // Primary action: next page, or confirm/close on the last page.
                 ButtonControllerMsg::Triggered(ButtonPos::Right, _) => {

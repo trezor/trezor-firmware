@@ -719,6 +719,7 @@ impl FirmwareUI for UIDelizia {
         mut current: usize,
         cancel: Option<TString<'static>>,
         title: Option<TString<'static>>,
+        _confirm: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut menu_items = VerticalMenuItems::new();
         if let Some(text) = cancel {
@@ -1065,6 +1066,20 @@ impl FirmwareUI for UIDelizia {
         ));
 
         Ok(layout)
+    }
+
+    fn show_nav_demo(
+        _title: TString<'static>,
+        _pages: Obj,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        Err(Error::NotImplementedError)
+    }
+
+    fn show_nav_tutorial(
+        _pages: Obj,
+        _start_page: usize,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_progress(

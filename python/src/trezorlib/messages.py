@@ -784,6 +784,8 @@ class MessageType(IntEnum):
     BenchmarkNames = 9101
     BenchmarkRun = 9102
     BenchmarkResult = 9103
+    ShowNavDemo = 9104
+    ShowNavTutorial = 9105
     TelemetryGet = 1100
     Telemetry = 1101
 
@@ -7071,6 +7073,14 @@ class MoneroExportedKeyImage(protobuf.MessageType):
     ) -> None:
         self.iv = iv
         self.blob = blob
+
+
+class ShowNavDemo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9104
+
+
+class ShowNavTutorial(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9105
 
 
 class NEMGetAddress(protobuf.MessageType):

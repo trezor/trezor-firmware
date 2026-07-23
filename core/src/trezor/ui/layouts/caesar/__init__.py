@@ -408,6 +408,111 @@ async def show_address(
         )
 
 
+async def show_nav_demo(
+    title: str,
+    pages: Sequence[tuple[str, str]],
+    menu_items: Sequence[tuple[str, str]] = (),
+    *,
+    br_name: str = "nav_demo",
+    br_code: ButtonRequestType = BR_CODE_OTHER,
+) -> None:
+    """Demo of the new caesar action-bar navigation and context menu.
+
+    `pages` is a list of `(heading, body)` pairs rendered as a single paginated
+    screen: left button = context menu, right button = next page / confirm on
+    the last page, hold-left + right = previous page, with a numeric page
+    indicator. `menu_items` is a list of `(name, text)` shown as detail screens
+    inside the context menu opened with the left button; a "Cancel?" item ends
+    the demo.
+    """
+    from trezor.ui.layouts.menu import Menu, interact_with_menu
+
+    details = [
+        create_details(name, text, external_menu=True) for name, text in menu_items
+    ]
+    menu = Menu.root(details, cancel=TR.words__cancel_question)
+
+    with trezorui_api.show_nav_demo(title=title, pages=pages) as layout:
+        await interact_with_menu(layout, menu, br_name, br_code)
+
+
+async def show_nav_tutorial(
+    pages: Sequence[tuple[str, str]],
+    *,
+    menu_restart: str = "Restart\ntutorial",
+    menu_complete: str = "Complete\ntutorial",
+    menu_back: str = "Back",
+    menu_confirm: str = "YES",
+    menu_info_title: str = "MENU",
+    menu_info_text: str = (
+        "The menu provides context information. We will cover this later."
+    ),
+    menu_screen: int = 5,
+    br_name: str = "nav_tutorial",
+    br_code: ButtonRequestType = BR_CODE_OTHER,
+) -> None:
+    """Updated caesar device tutorial on the new action-bar navigation.
+
+    `pages` is exactly seven `(title, body)` screens. The tutorial is a small
+    state machine: the flow runs in Rust, and whenever the menu button is
+    pressed the layout returns the index of the screen it was opened from. We
+    then open a context menu with "Restart tutorial" / "Complete tutorial" /
+    back. Restart re-enters at the first screen, complete finishes, and back
+    resumes on the same screen. CONFIRMED finishes the tutorial (CONTINUE on the
+    last screen); the X on the first screen raises `ActionCancelled`.
+    """
+    start_page = 0
+    br: str | None = br_name
+    while True:
+        with trezorui_api.show_nav_tutorial(
+            pages=pages, start_page=start_page
+        ) as layout:
+            result = await interact(layout, br, br_code, raise_on_cancel=None)
+        br = None  # the ButtonRequest is only sent for the first screen
+
+        if result is trezorui_api.CONFIRMED:
+            return  # CONTINUE on the last screen
+        if result is trezorui_api.CANCELLED:
+            raise ActionCancelled  # X on the first screen
+
+        # Otherwise the menu button was pressed. `result` is a resume token
+        # encoding both the page and its sub-page as `page * STRIDE + sub_page`
+        # (see Flow::info_index); passing it back as `start_page` resumes on the
+        # exact page AND sub-page. STRIDE must match NAV_SUBPAGE_STRIDE (Rust).
+        subpage_stride = 100
+        menu_token = result if isinstance(result, int) else start_page
+        origin_page = menu_token // subpage_stride
+
+        if origin_page < menu_screen:
+            # Before the tutorial explains the menu (the MENU step), opening it
+            # just shows an informative screen with a single "X" to close.
+            with trezorui_api.confirm_action(
+                title=menu_info_title,
+                action=None,
+                description=menu_info_text,
+                verb_cancel="",
+            ) as info:
+                await interact(info, None, br_code, raise_on_cancel=None)
+            start_page = menu_token  # resume on the exact page/sub-page
+            continue
+
+        # From the MENU step onward the menu offers the real actions.
+        with trezorui_api.select_menu(
+            items=[menu_restart, menu_complete],
+            current=0,
+            cancel=menu_back,
+            confirm=menu_confirm,
+        ) as menu_layout:
+            choice = await interact(menu_layout, None, br_code, raise_on_cancel=None)
+
+        if choice == 0:
+            start_page = 0  # restart from the beginning
+        elif choice == 1:
+            return  # complete the tutorial
+        else:
+            start_page = menu_token  # back - resume on the exact page/sub-page
+
+
 async def show_pubkey(
     pubkey: str,
     title: str | None = None,

@@ -27,6 +27,11 @@ pub const TEXT_NORMAL: TextStyle = TextStyle::new(fonts::FONT_NORMAL, FG, BG, FG
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_NEXT_PAGE, ELLIPSIS_ICON_MARGIN)
     .with_prev_page_icon(ICON_PREV_PAGE, PREV_PAGE_ICON_MARGIN);
+/// Like `TEXT_NORMAL` but uses a textual "..." for both the trailing and the
+/// leading page-break indicator instead of the next-/prev-page arrow icons.
+pub const TEXT_NORMAL_CLASSIC_ELLIPSIS: TextStyle =
+    TextStyle::new(fonts::FONT_NORMAL, FG, BG, FG, FG)
+        .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
 pub const TEXT_NORMAL_UPPER: TextStyle = TextStyle::new(fonts::FONT_NORMAL_UPPER, FG, BG, FG, FG)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_NEXT_PAGE, ELLIPSIS_ICON_MARGIN)
@@ -88,7 +93,10 @@ include_icon!(ICON_LOCK, "layout_caesar/res/lock.toif"); // 10*10
 include_icon!(ICON_LOCK_SMALL, "layout_caesar/res/lock_small.toif"); // 6*7
 include_icon!(ICON_LOGO, "layout_caesar/res/logo_22_33.toif"); // 22*33
 include_icon!(ICON_LOGO_EMPTY, "layout_caesar/res/logo_22_33_empty.toif");
-include_icon!(ICON_MENU, "layout_caesar/res/menu.toif"); // 10*7
+include_icon!(ICON_MENU, "layout_caesar/res/menu.toif"); // 6*7
+include_icon!(ICON_MENU_SHIFT, "layout_caesar/res/menu_shift.toif"); // 14*7
+include_icon!(ICON_BACK, "layout_caesar/res/back.toif"); // 12*11
+include_icon!(ICON_MENU_PRESSED, "layout_caesar/res/menu_pressed.toif"); // 14*7
 include_icon!(ICON_NEXT_PAGE, "layout_caesar/res/next_page.toif"); // 9*8
 include_icon!(ICON_PREV_PAGE, "layout_caesar/res/prev_page.toif"); // 8*10
 include_icon!(ICON_SPACE, "layout_caesar/res/space.toif"); // 12*3

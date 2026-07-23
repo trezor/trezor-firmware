@@ -5400,6 +5400,18 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["MoneroExportedKeyImage"]:
             return isinstance(msg, cls)
 
+    class ShowNavDemo(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ShowNavDemo"]:
+            return isinstance(msg, cls)
+
+    class ShowNavTutorial(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ShowNavTutorial"]:
+            return isinstance(msg, cls)
+
     class NEMGetAddress(protobuf.MessageType):
         address_n: "list[int]"
         network: "int"
