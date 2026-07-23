@@ -518,12 +518,10 @@ async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> No
     #   produces over the transaction envelope. Approving that signature approves
     #   these entries, so we must always show them for confirmation.
     #
-    # - ADDRESS credentials are authorized by a separate signature over the
-    #   ENVELOPE_TYPE_SOROBAN_AUTHORIZATION preimage, which this device does not
+    # - ADDRESS_V2 credentials are authorized by a separate signature over the
+    #   ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS preimage, which this device does not
     #   produce. They are hidden behind an opt-in and only shown for information;
     #   the user does not need to review them to sign safely.
-
-    # NOTE: signing ADDRESS credentials for our own account may be added later.
 
     shown = 0
     non_src_entries = []
@@ -560,13 +558,13 @@ async def _confirm_auth_entry(
 
     creds = auth.credentials
 
-    if creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS:
-        if creds.address is None:
-            raise DataError("Stellar: missing address credentials")
+    if creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2:
+        if creds.address_v2 is None:
+            raise DataError("Stellar: missing address_v2 credentials")
 
         await confirm_address(
             f"{TR.words__authorization} {position}",
-            creds.address.address,
+            creds.address_v2.address,
             description=TR.words__address,
             br_name="op_auth_entry_address",
         )
