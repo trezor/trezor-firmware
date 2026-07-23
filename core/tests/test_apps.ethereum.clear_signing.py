@@ -20,6 +20,7 @@ if not utils.BITCOIN_ONLY:
         DateFormatter,
         DirtyAddress,
         DisplayFormat,
+        DynamicLeaf,
         FieldDefinition,
         InvalidFormatDefinition,
         OutOfBounds,
@@ -30,6 +31,7 @@ if not utils.BITCOIN_ONLY:
         _format_field_value,
         parse_address,
         parse_bool,
+        parse_bytes,
         parse_bytes32,
         parse_string,
         parse_uint24,
@@ -469,6 +471,81 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         with self.assertRaises(OutOfBounds):
             nested_array_parser.parse(memoryview(payload_fail), 0)
+
+    def _pack_dynamic_leaf(self, blob: bytes) -> bytes:
+        # one-word length prefix + data, zero-padded to a word boundary
+        padded_size = ((len(blob) + 31) // 32) * 32
+        return to_bytes(len(blob)) + blob + b"\x00" * (padded_size - len(blob))
+
+    def test_array_of_bytes(self):
+        # bytes[]: each element is a dynamic leaf, so element heads are
+        # offsets (relative to the heads base) to length-prefixed bodies.
+        array_parser = Array(DynamicLeaf(parse_bytes))
+
+        elements = [b"", b"abc", bytes(range(40))]  # empty / sub-word / two-word
+        bodies = [self._pack_dynamic_leaf(e) for e in elements]
+
+        heads_size = len(elements) * 32
+        array_pointer = len(FIVE_RANDOM_BYTES) + 32  # absolute pos of array body
+        payload = (
+            to_bytes(array_pointer)
+            + to_bytes(len(elements))
+            + to_bytes(heads_size)  # rel. offset → element 0 body
+            + to_bytes(heads_size + len(bodies[0]))  # rel. offset → element 1 body
+            + to_bytes(heads_size + len(bodies[0]) + len(bodies[1]))  # → element 2
+            + bodies[0]
+            + bodies[1]
+            + bodies[2]
+        )
+        data = memoryview(FIVE_RANDOM_BYTES + payload + SEVEN_RANDOM_BYTES)
+
+        parsed, consumed = array_parser.parse(data, len(FIVE_RANDOM_BYTES))
+        self.assertEqual(parsed, elements)
+        self.assertEqual(consumed, 32)
+
+    def test_array_of_strings(self):
+        array_parser = Array(DynamicLeaf(parse_string))
+
+        texts = ["Hello world!", "Ahoj světe!"]  # non-ASCII exercises utf-8 decode
+        bodies = [self._pack_dynamic_leaf(t.encode("utf-8")) for t in texts]
+
+        heads_size = len(texts) * 32
+        array_pointer = len(SEVEN_RANDOM_BYTES) + 32
+        payload = (
+            to_bytes(array_pointer)
+            + to_bytes(len(texts))
+            + to_bytes(heads_size)  # rel. offset → element 0 body
+            + to_bytes(heads_size + len(bodies[0]))  # rel. offset → element 1 body
+            + bodies[0]
+            + bodies[1]
+        )
+        data = memoryview(SEVEN_RANDOM_BYTES + payload + FIVE_RANDOM_BYTES)
+
+        parsed, consumed = array_parser.parse(data, len(SEVEN_RANDOM_BYTES))
+        self.assertEqual(parsed, texts)
+        self.assertEqual(consumed, 32)
+
+    def test_array_of_bytes_out_of_bounds(self):
+        array_parser = Array(DynamicLeaf(parse_bytes))
+
+        # element length word claims more data than the calldata holds
+        payload = (
+            to_bytes(32)  # pointer to array body (no prefix, absolute pos = 32)
+            + to_bytes(1)  # element count
+            + to_bytes(32)  # rel. offset → element 0 body
+            + to_bytes(64)  # element length = 64, but no data follows
+        )
+        with self.assertRaises(OutOfBounds):
+            array_parser.parse(memoryview(payload), 0)
+
+        # element head offset points past the end of the calldata
+        payload = (
+            to_bytes(32)  # pointer to array body
+            + to_bytes(1)  # element count
+            + to_bytes(9999)  # rel. offset → far out of bounds
+        )
+        with self.assertRaises(OutOfBounds):
+            array_parser.parse(memoryview(payload), 0)
 
     # --- Field formatters ---
 
