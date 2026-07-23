@@ -3,13 +3,15 @@ use std::process;
 use anyhow::{Context, Result, ensure};
 use owo_colors::OwoColorize;
 
-use crate::args::{BuildArgs, Project, TestArgs};
+use crate::args::{BuildArgs, Project, ResolvedBuildArgs, TestArgs};
 use crate::{artifacts, feature_resolver, helpers, memusage, postbuild, prebuild};
 
 pub fn build(args: BuildArgs) -> Result<()> {
-    build_impl(args.clone(), false)?;
+    let resolved_args = ResolvedBuildArgs::from_build_args(&args);
 
-    if args.storage_insecure_testing_mode {
+    build_impl(resolved_args.clone(), false)?;
+
+    if resolved_args.storage_insecure_testing_mode {
         println!(
             "{}",
             "STORAGE_INSECURE_TESTING_MODE enabled, DO NOT USE"
@@ -22,11 +24,13 @@ pub fn build(args: BuildArgs) -> Result<()> {
 }
 
 pub fn clippy(args: BuildArgs) -> Result<()> {
-    run_cargo_subcommand("clippy", &args)
+    let resolved_args = ResolvedBuildArgs::from_build_args(&args);
+    run_cargo_subcommand("clippy", &resolved_args)
 }
 
 pub fn check(args: BuildArgs) -> Result<()> {
-    run_cargo_subcommand("check", &args)
+    let resolved_args = ResolvedBuildArgs::from_build_args(&args);
+    run_cargo_subcommand("check", &resolved_args)
 }
 
 pub fn test(args: TestArgs) -> Result<()> {
@@ -87,12 +91,12 @@ pub fn fmt() -> Result<()> {
     Ok(())
 }
 
-fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
+fn build_impl(args: ResolvedBuildArgs, is_dependency: bool) -> Result<()> {
     if !args.emulator {
         // Recursively build dependencies (Firmware -> Kernel -> Secmon)
         if let Some(dependency) = args.project.dependency(args.model)? {
             build_impl(
-                BuildArgs {
+                ResolvedBuildArgs {
                     project: dependency,
                     ..args.clone()
                 },
@@ -169,7 +173,7 @@ fn build_impl(args: BuildArgs, is_dependency: bool) -> Result<()> {
     Ok(())
 }
 
-fn run_cargo_subcommand(subcommand: &str, args: &BuildArgs) -> Result<()> {
+fn run_cargo_subcommand(subcommand: &str, args: &ResolvedBuildArgs) -> Result<()> {
     let mut cmd = process::Command::new("cargo");
 
     cmd.arg(subcommand).current_dir(helpers::workspace_dir()?);

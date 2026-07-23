@@ -2,7 +2,7 @@ use std::process;
 
 use anyhow::{Result, bail};
 
-use crate::args::{BuildArgs, ConsoleType, Project};
+use crate::args::{ConsoleType, Project, ResolvedBuildArgs};
 use crate::{config, helpers};
 
 pub struct ResolvedBuildFeatures {
@@ -12,7 +12,7 @@ pub struct ResolvedBuildFeatures {
 }
 
 /// Resolves cargo features and target triple from the provided CLI arguments.
-pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuildFeatures> {
+pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeatures> {
     let mut features: Vec<String> = vec![args.model.feature_name()];
 
     if args.emulator {
@@ -50,16 +50,14 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuildFeatures> {
         }
     }
 
-    let pyopt = args.pyopt.unwrap_or(true);
-
     if args.project == Project::Firmware {
-        if pyopt {
+        if args.pyopt {
             features.push("pyopt".into());
         } else {
             features.push("debug".into());
         }
 
-        if args.source_lines.unwrap_or(args.emulator) {
+        if args.source_lines {
             features.push("micropy_enable_source_lines".into());
         }
 
@@ -102,7 +100,7 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuildFeatures> {
             features.push("universal_fw".into());
         }
 
-        if !pyopt {
+        if !args.pyopt {
             features.push("optiga_testing".into());
         }
 
@@ -126,11 +124,11 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuildFeatures> {
             features.push("ui_performance_overlay".into());
         }
 
-        if !pyopt {
+        if !args.pyopt {
             features.push("ui_debug_overlay".into());
         }
 
-        if args.debug_link.unwrap_or(!pyopt) {
+        if args.debug_link {
             features.push("debuglink".into());
             features.push("ui_debug".into());
         }
@@ -141,7 +139,7 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuildFeatures> {
     }
 
     if matches!(args.project, Project::Kernel) {
-        if args.debug_link.unwrap_or(!pyopt) {
+        if args.debug_link {
             features.push("debuglink".into());
         }
     }
@@ -183,7 +181,7 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuildFeatures> {
 }
 
 /// Configures a cargo command with the appropriate arguments and features.
-pub fn configure_cargo(args: &BuildArgs, cmd: &mut process::Command) -> Result<()> {
+pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> Result<()> {
     let resolved = resolve_features(args)?;
     let mut rebuild_std = false;
 

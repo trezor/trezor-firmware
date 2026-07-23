@@ -4,17 +4,17 @@ use std::{env, fs};
 use anyhow::{Context, Result, anyhow};
 use cargo_metadata::MetadataCommand;
 
-use crate::args::{BuildArgs, Model, Project};
+use crate::args::{Model, Project, ResolvedBuildArgs};
 
 /// Returns the path to the built ELF file for the given build arguments.
-pub fn elf_path(args: &BuildArgs) -> Result<PathBuf> {
+pub fn elf_path(args: &ResolvedBuildArgs) -> Result<PathBuf> {
     let elf_name = args.project.package_name(args.emulator);
     Ok(profile_dir(args)?.join(elf_name))
 }
 
 /// Returns the profile output directory (e.g.
 /// `build/thumbv7em-none-eabihf/release`).
-pub fn profile_dir(args: &BuildArgs) -> Result<PathBuf> {
+pub fn profile_dir(args: &ResolvedBuildArgs) -> Result<PathBuf> {
     let mut path = build_dir()?;
     if !args.emulator {
         let model_config = args.model.config()?;
