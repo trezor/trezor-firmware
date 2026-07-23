@@ -180,6 +180,19 @@ def parse_int160(raw_data: memoryview) -> Value:
     return value
 
 
+def _word_bytes(value: AnyValue) -> AnyValue:
+    """An EVM word can be viewed as an integer or as 32 bytes. A byte-slice
+    step selects the bytes view: e.g. `token.[-20:]` reads the low 20 bytes
+    of a uint256 (the 1inch packed `Address` type). Non-numeric values are
+    returned unchanged - they are sliced directly."""
+    if type(value) is int:  # not isinstance: bool is an int subclass
+        if value < 0:
+            # byte-slicing a signed value has no defined meaning
+            raise InvalidFormatDefinition
+        return value.to_bytes(_EVM_WORD_SIZE, "big")
+    return value
+
+
 def parse_bool(raw_data: memoryview) -> Value:
     if len(raw_data) < _EVM_WORD_SIZE:
         raise OutOfBounds
@@ -493,6 +506,9 @@ class DateFormatter(FieldFormatter):
 
         if value is None:
             return None, None, None
+        if isinstance(value, (bytes, bytearray)):
+            # a sliced word, e.g. `goodUntil.[-4:]`: big-endian seconds
+            value = int.from_bytes(value, "big")
         if isinstance(value, int):
             return format_timestamp(value), None, None
         raise InvalidFormatDefinition
@@ -796,7 +812,13 @@ class FieldDefinition:
                 # A literal constant value, resolved by the parser — not walked
                 # from calldata. Rendered as-is (typically by the raw formatter).
                 return p.const_value
-            return tuple(p.path)
+            steps: list[int | tuple[int] | tuple[int, int]] = list(p.path)
+            if p.slice_end is not None:
+                # `data.[0:20]` or `takerTraits.[:1]` (start defaults to 0)
+                steps.append((p.slice_start or 0, p.slice_end))
+            elif p.slice_start is not None:
+                steps.append((p.slice_start,))  # `token.[-20:]`
+            return tuple(steps)
 
         path = decode_path(info.path)
 
@@ -927,6 +949,9 @@ class DisplayFormat:
                     if p is None:
                         p = None
                         break
+                    if isinstance(step, tuple):
+                        # slices view numeric values as bytes (see _word_bytes)
+                        p = _word_bytes(p)
                     if isinstance(p, (list, tuple, bytes)):
                         # walk inside Arrays or Tuples
                         try:

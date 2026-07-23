@@ -424,9 +424,7 @@ class TestEthereumClearSigning(unittest.TestCase):
 
             # dirty right padding (a stray bit just past the value)
             dirty_word = value + b"\x01" + b"\x00" * (32 - width - 1)
-            dirty_data = memoryview(
-                FIVE_RANDOM_BYTES + dirty_word + SEVEN_RANDOM_BYTES
-            )
+            dirty_data = memoryview(FIVE_RANDOM_BYTES + dirty_word + SEVEN_RANDOM_BYTES)
             with self.assertRaises(ValueOverflow):
                 atomic.parse(dirty_data, len(FIVE_RANDOM_BYTES))
 
@@ -440,9 +438,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             return (v & ((1 << 256) - 1)).to_bytes(32, "big")
 
         for val in (0, 1, -1, 2**159 - 1, -(2**159), -123456789):
-            data = memoryview(
-                SEVEN_RANDOM_BYTES + signed_word(val) + FIVE_RANDOM_BYTES
-            )
+            data = memoryview(SEVEN_RANDOM_BYTES + signed_word(val) + FIVE_RANDOM_BYTES)
             parsed, consumed = atomic_int160.parse(data, len(SEVEN_RANDOM_BYTES))
             self.assertEqual(parsed, val)
             self.assertEqual(consumed, 32)
@@ -576,7 +572,13 @@ class TestEthereumClearSigning(unittest.TestCase):
         formatted, _, _ = await_result(fmt.format(None, None, None, None))
         self.assertIsNone(formatted)
 
-        # non-int value is rejected
+        # a sliced word, e.g. `goodUntil.[-4:]`: big-endian seconds
+        formatted, _, _ = await_result(
+            fmt.format((1616051824).to_bytes(4, "big"), None, None, None)
+        )
+        self.assertEqual(formatted, "2021-03-18 07:17:04")
+
+        # non-timestamp value is rejected
         with self.assertRaises(InvalidFormatDefinition):
             await_result(fmt.format("not-a-timestamp", None, None, None))
 
@@ -774,6 +776,87 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertEqual(formatted, "kmgcEURC")
         self.assertIsNone(token)
         self.assertIsNone(token_address)
+
+    # --- path byte-slices (`token.[-20:]` etc.) ---
+
+    def test_from_proto_path_slice(self):
+        # The optional terminal slice decodes into a trailing step tuple.
+        def decoded(**kwargs):
+            info = EthereumERC7730FieldInfo(
+                path=EthereumERC7730Path(**kwargs),
+                label="Field",
+                formatter=FT.FORMATTER_RAW,
+            )
+            return FieldDefinition.from_proto(info).path
+
+        self.assertEqual(decoded(path=[0]), (0,))
+        # token.[-20:]
+        self.assertEqual(decoded(path=[0], slice_start=-20), (0, (-20,)))
+        # params.path.[0:20]
+        self.assertEqual(
+            decoded(path=[1, 0], slice_start=0, slice_end=20), (1, 0, (0, 20))
+        )
+        # takerTraits.[:1] - start defaults to 0
+        self.assertEqual(decoded(path=[2], slice_end=1), (2, (0, 1)))
+
+    def test_packed_address_slice_end_to_end(self):
+        # The 1inch `Address` pattern: a uint256 whose low 20 bytes are an
+        # address and whose high bits carry flags. The parameter parses as a
+        # plain uint256 (faithful to the ABI); the field's `[-20:]` slice
+        # views the value as its EVM word and clips the flags (_word_bytes).
+        # The second parameter is the `goodUntil.[-4:]` shape: a date packed
+        # into the low bytes of a bytes32.
+        class _Defs:
+            network = make_eth_network()
+
+        addr_hex = "d8da6bf26964af9d7eed9e03e53415d37aa96045"
+        flags = (1 << 255) | (1 << 160)
+        packed_address = flags | int.from_bytes(unhexlify(addr_hex), "big")
+
+        display_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            intent="Test",
+            parameter_definitions=[
+                Atomic(parse_uint256),  # packed address
+                Atomic(parse_bytes32),  # packed date
+            ],
+            field_definitions=[
+                FieldDefinition((0, (-20,)), "Beneficiary", AddressNameFormatter),
+                FieldDefinition((1, (-4,)), "Expires", DateFormatter),
+            ],
+        )
+
+        calldata = to_bytes(packed_address) + to_bytes(1616051824)
+        parameters, fields = await_result(
+            display_format.parse_calldata(memoryview(calldata), None, _Defs())
+        )
+
+        # the parsed parameter keeps the full packed value
+        self.assertEqual(parameters[0], packed_address)
+
+        (label, formatted, _), _, _ = fields[0]
+        self.assertEqual(label, "Beneficiary")
+        self.assertEqual(formatted.lower(), "0x" + addr_hex)
+
+        (label, formatted, _), _, _ = fields[1]
+        self.assertEqual(label, "Expires")
+        self.assertEqual(formatted, "2021-03-18 07:17:04")
+
+    def test_slice_of_negative_int_rejected(self):
+        # Byte-slicing a signed value has no defined meaning.
+        display_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            intent="Test",
+            parameter_definitions=[Atomic(parse_int160)],
+            field_definitions=[FieldDefinition((0, (-20,)), "Field", RawFormatter)],
+        )
+        minus_one = ((1 << 256) - 1).to_bytes(32, "big")
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(
+                display_format.parse_calldata(memoryview(minus_one), None, None)
+            )
 
     # --- tokenAmount with a constant (literal) token address ---
 
