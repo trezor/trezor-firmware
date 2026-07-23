@@ -27,10 +27,6 @@ async def sign_soroban_authorization(
 
     from . import helpers, layout, writers
     from .operations.layout import confirm_authorized_invocation
-    from .operations.serialize import (
-        write_sc_address,
-        write_soroban_authorized_invocation,
-    )
 
     await paths.validate_path(keychain, msg.address_n)
 
@@ -58,8 +54,8 @@ async def sign_soroban_authorization(
     )
     writers.write_int64(w, auth.nonce)
     writers.write_uint32(w, auth.signature_expiration_ledger)
-    write_sc_address(w, auth.address)
-    write_soroban_authorized_invocation(w, auth.invocation)
+    writers.write_sc_address(w, auth.address)
+    writers.write_soroban_authorized_invocation(w, auth.invocation)
 
     await layout.require_confirm_auth_signing_address(signing_address, msg.address_n)
 

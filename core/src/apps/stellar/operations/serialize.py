@@ -6,17 +6,20 @@ from trezor.wire import DataError, ProcessError
 from ..writers import (
     write_bool,
     write_bytes_fixed,
-    write_int32,
     write_int64,
+    write_invoke_contract_args,
     write_pubkey,
+    write_sc_address,
+    write_sc_val,
+    write_soroban_authorized_invocation,
     write_string,
     write_uint32,
     write_uint64,
+    write_vec,
 )
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Callable, TypeVar
 
     from trezor.messages import (
         StellarAccountMergeOp,
@@ -28,9 +31,6 @@ if TYPE_CHECKING:
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
         StellarHostFunction,
-        StellarInt128Parts,
-        StellarInt256Parts,
-        StellarInvokeContractArgs,
         StellarInvokeHostFunctionOp,
         StellarManageBuyOfferOp,
         StellarManageDataOp,
@@ -38,28 +38,12 @@ if TYPE_CHECKING:
         StellarPathPaymentStrictReceiveOp,
         StellarPathPaymentStrictSendOp,
         StellarPaymentOp,
-        StellarSCVal,
-        StellarSCValMapEntry,
         StellarSetOptionsOp,
         StellarSorobanAddressCredentials,
         StellarSorobanAuthorizationEntry,
-        StellarSorobanAuthorizedFunction,
-        StellarSorobanAuthorizedInvocation,
         StellarSorobanCredentials,
-        StellarUInt128Parts,
-        StellarUInt256Parts,
     )
     from trezor.utils import Writer
-
-    T = TypeVar("T")
-
-
-def _write_vec(
-    w: Writer, items: list[T], write_item: Callable[[Writer, T], None]
-) -> None:
-    write_uint32(w, len(items))
-    for item in items:
-        write_item(w, item)
 
 
 def write_account_merge_op(w: Writer, msg: StellarAccountMergeOp) -> None:
@@ -136,7 +120,7 @@ def write_path_payment_strict_receive_op(
 
     _write_asset(w, msg.destination_asset)
     write_uint64(w, msg.destination_amount)
-    _write_vec(w, msg.paths, _write_asset)
+    write_vec(w, msg.paths, _write_asset)
 
 
 def write_path_payment_strict_send_op(
@@ -148,7 +132,7 @@ def write_path_payment_strict_send_op(
 
     _write_asset(w, msg.destination_asset)
     write_uint64(w, msg.destination_min)
-    _write_vec(w, msg.paths, _write_asset)
+    write_vec(w, msg.paths, _write_asset)
 
 
 def write_payment_op(w: Writer, msg: StellarPaymentOp) -> None:
@@ -265,7 +249,7 @@ def _write_claimable_balance_id(w: Writer, claimable_balance_id: AnyBytes) -> No
 
 def write_invoke_host_function_op(w: Writer, msg: StellarInvokeHostFunctionOp) -> None:
     _write_host_function(w, msg.function)
-    _write_vec(w, msg.auth, _write_soroban_authorization_entry)
+    write_vec(w, msg.auth, _write_soroban_authorization_entry)
 
 
 def _write_host_function(w: Writer, msg: StellarHostFunction) -> None:
@@ -278,166 +262,6 @@ def _write_host_function(w: Writer, msg: StellarHostFunction) -> None:
         write_invoke_contract_args(w, msg.invoke_contract)
     else:
         raise ProcessError("Stellar: unsupported host function type")
-
-
-def write_invoke_contract_args(w: Writer, msg: StellarInvokeContractArgs) -> None:
-    write_sc_address(w, msg.contract_address)
-    _write_sc_symbol(w, msg.function_name)
-    _write_vec(w, msg.args, _write_sc_val)
-
-
-def write_sc_address(w: Writer, addr: str) -> None:
-    from .. import helpers
-
-    version, data = helpers.decode_strkey(addr)
-
-    if version == helpers.STRKEY_ED25519_PUBLIC_KEY:
-        # AccountID is a PublicKey: KEY_TYPE_ED25519 (0) + 32 bytes ed25519
-        write_uint32(w, 0)  # SC_ADDRESS_TYPE_ACCOUNT
-        write_uint32(w, 0)  # KEY_TYPE_ED25519
-        write_bytes_fixed(w, data, 32)
-    elif version == helpers.STRKEY_CONTRACT:
-        # ContractID is a Hash (32 bytes)
-        write_uint32(w, 1)  # SC_ADDRESS_TYPE_CONTRACT
-        write_bytes_fixed(w, data, 32)
-    elif version == helpers.STRKEY_MUXED_ACCOUNT:
-        # MuxedEd25519Account: { id: uint64, ed25519: uint256 }
-        # address format: 32 bytes ed25519 + 8 bytes id
-        write_uint32(w, 2)  # SC_ADDRESS_TYPE_MUXED_ACCOUNT
-        write_bytes_fixed(w, data[32:40], 8)  # id (uint64)
-        write_bytes_fixed(w, data[0:32], 32)  # ed25519
-    elif version == helpers.STRKEY_CLAIMABLE_BALANCE:
-        # ClaimableBalanceID: { type: uint32, v0: Hash }
-        # address format: 1 byte type + 32 bytes hash (from strkey decoding);
-        # decode_strkey has already checked that the type byte is v0
-        write_uint32(w, 3)  # SC_ADDRESS_TYPE_CLAIMABLE_BALANCE
-        write_uint32(w, 0)  # CLAIMABLE_BALANCE_ID_TYPE_V0
-        write_bytes_fixed(w, data[1:33], 32)  # v0 hash
-    elif version == helpers.STRKEY_LIQUIDITY_POOL:
-        # PoolID is a Hash (32 bytes)
-        write_uint32(w, 4)  # SC_ADDRESS_TYPE_LIQUIDITY_POOL
-        write_bytes_fixed(w, data, 32)
-    else:
-        raise ProcessError("Stellar: unsupported SC address type")
-
-
-def _write_sc_symbol(w: Writer, symbol: str) -> None:
-    from .. import consts
-
-    written = write_string(w, symbol)
-    if written > consts.SCSYMBOL_MAX_SIZE:
-        raise DataError("Stellar: symbol too long")
-
-
-def _write_sc_val(w: Writer, msg: StellarSCVal) -> None:
-    from trezor.enums import StellarSCValType
-
-    write_uint32(w, msg.type)
-
-    if msg.type == StellarSCValType.SCV_BOOL:
-        if msg.b is None:
-            raise DataError("Stellar: missing bool value")
-        write_bool(w, msg.b)
-    elif msg.type == StellarSCValType.SCV_VOID:
-        pass  # no data
-    elif msg.type == StellarSCValType.SCV_U32:
-        if msg.u32 is None:
-            raise DataError("Stellar: missing u32 value")
-        write_uint32(w, msg.u32)
-    elif msg.type == StellarSCValType.SCV_I32:
-        if msg.i32 is None:
-            raise DataError("Stellar: missing i32 value")
-        write_int32(w, msg.i32)
-    elif msg.type == StellarSCValType.SCV_U64:
-        if msg.u64 is None:
-            raise DataError("Stellar: missing u64 value")
-        write_uint64(w, msg.u64)
-    elif msg.type == StellarSCValType.SCV_I64:
-        if msg.i64 is None:
-            raise DataError("Stellar: missing i64 value")
-        write_int64(w, msg.i64)
-    elif msg.type == StellarSCValType.SCV_TIMEPOINT:
-        if msg.timepoint is None:
-            raise DataError("Stellar: missing timepoint value")
-        write_uint64(w, msg.timepoint)
-    elif msg.type == StellarSCValType.SCV_DURATION:
-        if msg.duration is None:
-            raise DataError("Stellar: missing duration value")
-        write_uint64(w, msg.duration)
-    elif msg.type == StellarSCValType.SCV_U128:
-        if msg.u128 is None:
-            raise DataError("Stellar: missing u128 value")
-        _write_uint128_parts(w, msg.u128)
-    elif msg.type == StellarSCValType.SCV_I128:
-        if msg.i128 is None:
-            raise DataError("Stellar: missing i128 value")
-        _write_int128_parts(w, msg.i128)
-    elif msg.type == StellarSCValType.SCV_U256:
-        if msg.u256 is None:
-            raise DataError("Stellar: missing u256 value")
-        _write_uint256_parts(w, msg.u256)
-    elif msg.type == StellarSCValType.SCV_I256:
-        if msg.i256 is None:
-            raise DataError("Stellar: missing i256 value")
-        _write_int256_parts(w, msg.i256)
-    elif msg.type == StellarSCValType.SCV_BYTES:
-        if msg.bytes is None:
-            raise DataError("Stellar: missing bytes value")
-        write_string(w, msg.bytes)
-    elif msg.type == StellarSCValType.SCV_STRING:
-        if msg.string is None:
-            raise DataError("Stellar: missing string value")
-        write_string(w, msg.string)
-    elif msg.type == StellarSCValType.SCV_SYMBOL:
-        if msg.symbol is None:
-            raise DataError("Stellar: missing symbol value")
-        _write_sc_symbol(w, msg.symbol)
-    elif msg.type == StellarSCValType.SCV_VEC:
-        # In XDR the vector is a pointer (SCVec*), i.e. nullable, but a null vector
-        # is not a valid Soroban value (only Some([...]), possibly empty). Here it
-        # is a `repeated` field that is always a list, never None, so encoding it
-        # as present is correct.
-        write_bool(w, True)  # present
-        _write_vec(w, msg.vec, _write_sc_val)
-    elif msg.type == StellarSCValType.SCV_MAP:
-        # map is a pointer (SCMap*) in XDR; same reasoning as SCV_VEC above.
-        write_bool(w, True)  # present
-        _write_vec(w, msg.map, _write_sc_map_entry)
-    elif msg.type == StellarSCValType.SCV_ADDRESS:
-        if msg.address is None:
-            raise DataError("Stellar: missing address value")
-        write_sc_address(w, msg.address)
-    else:
-        raise ProcessError("Stellar: unsupported SCVal type")
-
-
-def _write_sc_map_entry(w: Writer, entry: StellarSCValMapEntry) -> None:
-    _write_sc_val(w, entry.key)
-    _write_sc_val(w, entry.value)
-
-
-def _write_uint128_parts(w: Writer, msg: StellarUInt128Parts) -> None:
-    write_uint64(w, msg.hi)
-    write_uint64(w, msg.lo)
-
-
-def _write_int128_parts(w: Writer, msg: StellarInt128Parts) -> None:
-    write_int64(w, msg.hi)
-    write_uint64(w, msg.lo)
-
-
-def _write_uint256_parts(w: Writer, msg: StellarUInt256Parts) -> None:
-    write_uint64(w, msg.hi_hi)
-    write_uint64(w, msg.hi_lo)
-    write_uint64(w, msg.lo_hi)
-    write_uint64(w, msg.lo_lo)
-
-
-def _write_int256_parts(w: Writer, msg: StellarInt256Parts) -> None:
-    write_int64(w, msg.hi_hi)
-    write_uint64(w, msg.hi_lo)
-    write_uint64(w, msg.lo_hi)
-    write_uint64(w, msg.lo_lo)
 
 
 def _write_soroban_authorization_entry(
@@ -467,28 +291,4 @@ def _write_soroban_address_credentials(
     write_sc_address(w, msg.address)
     write_int64(w, msg.nonce)
     write_uint32(w, msg.signature_expiration_ledger)
-    _write_sc_val(w, msg.signature)
-
-
-def write_soroban_authorized_invocation(
-    w: Writer, msg: StellarSorobanAuthorizedInvocation
-) -> None:
-    _write_soroban_authorized_function(w, msg.function)
-    _write_vec(w, msg.sub_invocations, write_soroban_authorized_invocation)
-
-
-def _write_soroban_authorized_function(
-    w: Writer, msg: StellarSorobanAuthorizedFunction
-) -> None:
-    from trezor.enums import StellarSorobanAuthorizedFunctionType
-
-    write_uint32(w, msg.type)
-    if (
-        msg.type
-        == StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN
-    ):
-        if msg.contract_fn is None:
-            raise DataError("Stellar: missing contract_fn")
-        write_invoke_contract_args(w, msg.contract_fn)
-    else:
-        raise ProcessError("Stellar: unsupported authorized function type")
+    write_sc_val(w, msg.signature)

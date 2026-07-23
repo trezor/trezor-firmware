@@ -4,8 +4,7 @@ from common import *  # isort:skip
 from trezor.wire import DataError
 
 if not utils.BITCOIN_ONLY:
-    from apps.stellar.operations.serialize import _write_sc_symbol
-    from apps.stellar.writers import write_int32, write_int64
+    from apps.stellar.writers import _write_sc_symbol, write_int32, write_int64
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
