@@ -9384,8 +9384,8 @@ pub struct StellarSorobanCredentials {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanCredentials.type)
     pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_soroban_credentials::StellarSorobanCredentialsType>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanCredentials.address)
-    pub address: ::protobuf::MessageField<StellarSorobanAddressCredentials>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanCredentials.address_v2)
+    pub address_v2: ::protobuf::MessageField<StellarSorobanAddressCredentials>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSorobanCredentials.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -9433,9 +9433,9 @@ impl StellarSorobanCredentials {
             |m: &mut StellarSorobanCredentials| { &mut m.type_ },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarSorobanAddressCredentials>(
-            "address",
-            |m: &StellarSorobanCredentials| { &m.address },
-            |m: &mut StellarSorobanCredentials| { &mut m.address },
+            "address_v2",
+            |m: &StellarSorobanCredentials| { &m.address_v2 },
+            |m: &mut StellarSorobanCredentials| { &mut m.address_v2 },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSorobanCredentials>(
             "StellarSorobanCredentials",
@@ -9452,7 +9452,7 @@ impl ::protobuf::Message for StellarSorobanCredentials {
         if self.type_.is_none() {
             return false;
         }
-        for v in &self.address {
+        for v in &self.address_v2 {
             if !v.is_initialized() {
                 return false;
             }
@@ -9467,7 +9467,7 @@ impl ::protobuf::Message for StellarSorobanCredentials {
                     self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
                 18 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.address)?;
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.address_v2)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -9484,7 +9484,7 @@ impl ::protobuf::Message for StellarSorobanCredentials {
         if let Some(v) = self.type_ {
             my_size += ::protobuf::rt::int32_size(1, v.value());
         }
-        if let Some(v) = self.address.as_ref() {
+        if let Some(v) = self.address_v2.as_ref() {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
@@ -9497,7 +9497,7 @@ impl ::protobuf::Message for StellarSorobanCredentials {
         if let Some(v) = self.type_ {
             os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
         }
-        if let Some(v) = self.address.as_ref() {
+        if let Some(v) = self.address_v2.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
@@ -9518,14 +9518,14 @@ impl ::protobuf::Message for StellarSorobanCredentials {
 
     fn clear(&mut self) {
         self.type_ = ::std::option::Option::None;
-        self.address.clear();
+        self.address_v2.clear();
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static StellarSorobanCredentials {
         static instance: StellarSorobanCredentials = StellarSorobanCredentials {
             type_: ::std::option::Option::None,
-            address: ::protobuf::MessageField::none(),
+            address_v2: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -9556,8 +9556,8 @@ pub mod stellar_soroban_credentials {
     pub enum StellarSorobanCredentialsType {
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT)
         SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0,
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS)
-        SOROBAN_CREDENTIALS_ADDRESS = 1,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2)
+        SOROBAN_CREDENTIALS_ADDRESS_V2 = 2,
     }
 
     impl ::protobuf::Enum for StellarSorobanCredentialsType {
@@ -9570,7 +9570,7 @@ pub mod stellar_soroban_credentials {
         fn from_i32(value: i32) -> ::std::option::Option<StellarSorobanCredentialsType> {
             match value {
                 0 => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT),
-                1 => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS),
+                2 => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_V2),
                 _ => ::std::option::Option::None
             }
         }
@@ -9578,14 +9578,14 @@ pub mod stellar_soroban_credentials {
         fn from_str(str: &str) -> ::std::option::Option<StellarSorobanCredentialsType> {
             match str {
                 "SOROBAN_CREDENTIALS_SOURCE_ACCOUNT" => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT),
-                "SOROBAN_CREDENTIALS_ADDRESS" => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS),
+                "SOROBAN_CREDENTIALS_ADDRESS_V2" => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_V2),
                 _ => ::std::option::Option::None
             }
         }
 
         const VALUES: &'static [StellarSorobanCredentialsType] = &[
             StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT,
-            StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS,
+            StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_V2,
         ];
     }
 
@@ -9596,7 +9596,10 @@ pub mod stellar_soroban_credentials {
         }
 
         fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
-            let index = *self as usize;
+            let index = match self {
+                StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT => 0,
+                StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_V2 => 1,
+            };
             Self::enum_descriptor().value_by_index(index)
         }
     }
@@ -10515,26 +10518,26 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x02(\tR\x07address\x12\x14\n\x05nonce\x18\x02\x20\x02(\x12R\x05nonce\
     \x12>\n\x1bsignature_expiration_ledger\x18\x03\x20\x02(\rR\x19signatureE\
     xpirationLedger\x12F\n\tsignature\x18\x04\x20\x02(\x0b2(.hw.trezor.messa\
-    ges.stellar.StellarSCValR\tsignature\"\xc6\x02\n\x19StellarSorobanCreden\
+    ges.stellar.StellarSCValR\tsignature\"\xd4\x02\n\x19StellarSorobanCreden\
     tials\x12g\n\x04type\x18\x01\x20\x02(\x0e2S.hw.trezor.messages.stellar.S\
-    tellarSorobanCredentials.StellarSorobanCredentialsTypeR\x04type\x12V\n\
-    \x07address\x18\x02\x20\x01(\x0b2<.hw.trezor.messages.stellar.StellarSor\
-    obanAddressCredentialsR\x07address\"h\n\x1dStellarSorobanCredentialsType\
-    \x12&\n\"SOROBAN_CREDENTIALS_SOURCE_ACCOUNT\x10\0\x12\x1f\n\x1bSOROBAN_C\
-    REDENTIALS_ADDRESS\x10\x01\"\xe4\x01\n\x20StellarSorobanAuthorizationEnt\
-    ry\x12W\n\x0bcredentials\x18\x01\x20\x02(\x0b25.hw.trezor.messages.stell\
-    ar.StellarSorobanCredentialsR\x0bcredentials\x12g\n\x0froot_invocation\
-    \x18\x02\x20\x02(\x0b2>.hw.trezor.messages.stellar.StellarSorobanAuthori\
-    zedInvocationR\x0erootInvocation\"\xe3\x01\n\x1bStellarInvokeHostFunctio\
-    nOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12K\n\
-    \x08function\x18\x02\x20\x02(\x0b2/.hw.trezor.messages.stellar.StellarHo\
-    stFunctionR\x08function\x12P\n\x04auth\x18\x03\x20\x03(\x0b2<.hw.trezor.\
-    messages.stellar.StellarSorobanAuthorizationEntryR\x04auth\"\x15\n\x13St\
-    ellarTxExtRequest\"?\n\x0cStellarTxExt\x12\x0c\n\x01v\x18\x01\x20\x02(\
-    \x11R\x01v\x12!\n\x0csoroban_data\x18\x02\x20\x01(\x0cR\x0bsorobanData*=\
-    \n\x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\x12\r\n\tALPHANUM4\x10\
-    \x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satoshilabs.trezor.lib.protob\
-    ufB\x14TrezorMessageStellar\
+    tellarSorobanCredentials.StellarSorobanCredentialsTypeR\x04type\x12[\n\n\
+    address_v2\x18\x02\x20\x01(\x0b2<.hw.trezor.messages.stellar.StellarSoro\
+    banAddressCredentialsR\taddressV2\"q\n\x1dStellarSorobanCredentialsType\
+    \x12&\n\"SOROBAN_CREDENTIALS_SOURCE_ACCOUNT\x10\0\x12\"\n\x1eSOROBAN_CRE\
+    DENTIALS_ADDRESS_V2\x10\x02\"\x04\x08\x01\x10\x01\"\xe4\x01\n\x20Stellar\
+    SorobanAuthorizationEntry\x12W\n\x0bcredentials\x18\x01\x20\x02(\x0b25.h\
+    w.trezor.messages.stellar.StellarSorobanCredentialsR\x0bcredentials\x12g\
+    \n\x0froot_invocation\x18\x02\x20\x02(\x0b2>.hw.trezor.messages.stellar.\
+    StellarSorobanAuthorizedInvocationR\x0erootInvocation\"\xe3\x01\n\x1bSte\
+    llarInvokeHostFunctionOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rs\
+    ourceAccount\x12K\n\x08function\x18\x02\x20\x02(\x0b2/.hw.trezor.message\
+    s.stellar.StellarHostFunctionR\x08function\x12P\n\x04auth\x18\x03\x20\
+    \x03(\x0b2<.hw.trezor.messages.stellar.StellarSorobanAuthorizationEntryR\
+    \x04auth\"\x15\n\x13StellarTxExtRequest\"?\n\x0cStellarTxExt\x12\x0c\n\
+    \x01v\x18\x01\x20\x02(\x11R\x01v\x12!\n\x0csoroban_data\x18\x02\x20\x01(\
+    \x0cR\x0bsorobanData*=\n\x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\x12\
+    \r\n\tALPHANUM4\x10\x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satoshilab\
+    s.trezor.lib.protobufB\x14TrezorMessageStellar\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

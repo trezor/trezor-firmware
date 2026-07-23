@@ -453,10 +453,10 @@ def _write_soroban_credentials(w: Writer, msg: StellarSorobanCredentials) -> Non
     write_uint32(w, msg.type)
     if msg.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT:
         pass  # void
-    elif msg.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS:
-        if msg.address is None:
+    elif msg.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2:
+        if msg.address_v2 is None:
             raise DataError("Stellar: missing address credentials")
-        _write_soroban_address_credentials(w, msg.address)
+        _write_soroban_address_credentials(w, msg.address_v2)
     else:
         raise ProcessError("Stellar: unsupported credentials type")
 
