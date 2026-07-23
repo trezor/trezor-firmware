@@ -11,7 +11,7 @@ import pytest
 
 from trezorlib import btc, ward
 from trezorlib.authdb_tree import AuthDbTree
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -21,6 +21,138 @@ ENTRIES = {
     b"carol": b"data_carol",
     b"dave": b"data_dave",
 }
+
+
+class InMemoryEvoluStore:
+    """Minimal host-side store for the attested WARD root blob."""
+
+    def __init__(self) -> None:
+        self.root: bytes | None = None
+        self.counter = 0
+        self.root_mac: bytes | None = None
+
+    def get_root(self) -> tuple[bytes | None, int, bytes | None]:
+        return self.root, self.counter, self.root_mac
+
+    def put_root(self, root: bytes | None, counter: int, root_mac: bytes | None) -> None:
+        self.root = root
+        self.counter = counter
+        self.root_mac = root_mac
+
+
+class InMemoryWardManager:
+    """Debug-key WM stub used by the firmware device tests."""
+
+    @staticmethod
+    def sign_attestation(wallet_id: bytes, nonce: bytes, counter: int, mac: bytes) -> bytes:
+        return ward.sign_wm_attestation(nonce, counter, mac, wallet_id)
+
+    @staticmethod
+    def sign_final(wallet_id: bytes, counter: int, mac: bytes) -> bytes:
+        return ward.sign_ward_final(counter, mac, wallet_id)
+
+
+class WardHostHarness:
+    """In-memory host harness for WARD end-to-end tests.
+
+    Keeps the authenticated Merkle state in AuthDbTree and the attested
+    (root, counter, root_mac) blob in the Evolu-like store.
+    """
+
+    def __init__(self) -> None:
+        self.tree = AuthDbTree()
+        self.store = InMemoryEvoluStore()
+        self.wm = InMemoryWardManager()
+        self.queue: list[tuple[bytes, bytes]] = []
+
+    def bootstrap_device(self, session: Session) -> tuple[int, bytes | None, bytes | None, bytes | None]:
+        root, counter, root_mac = self.store.get_root()
+        return ward.bootstrap(
+            session,
+            counter,
+            root_mac,
+            root,
+            sign_attestation=self.wm.sign_attestation,
+        )
+
+    def lookup(self, session: Session, address: bytes) -> bytes | None:
+        if self.tree.get_counter(address):
+            value = self.tree.get_value(address)
+            valid, membership, _counter, _wallet_id = ward.lookup(
+                session,
+                address=address,
+                value=value,
+                proof=self.tree.get_proof(address),
+                counter=self.tree.get_counter(address),
+            )
+            assert valid and membership
+            return value
+
+        proof, witness_address, witness_counter, witness_value = (
+            self.tree.get_nonmembership_proof(address)
+        )
+        valid, membership, _counter, _wallet_id = ward.lookup(
+            session,
+            address=address,
+            value=None,
+            proof=proof,
+            witness_address=witness_address,
+            witness_value=witness_value,
+            witness_counter=witness_counter,
+        )
+        assert valid and not membership
+        return None
+
+    def set_value(self, session: Session, address: bytes, value: bytes | None) -> int:
+        self.bootstrap_device(session)
+
+        new_counter = self.store.counter + 1
+        old_counter = self.tree.get_counter(address)
+        if old_counter:
+            old_value = self.tree.get_value(address)
+            proof = self.tree.get_proof(address)
+            witness_address = witness_value = None
+            witness_counter = None
+        else:
+            old_value = b""
+            proof, witness_address, witness_counter, witness_value = (
+                self.tree.get_nonmembership_proof(address)
+            )
+
+        counter, new_root, _wallet_id, root_mac = ward.write(
+            session,
+            address=address,
+            old_value=old_value,
+            new_value=value or b"",
+            new_counter=new_counter,
+            proof=proof,
+            old_counter=old_counter or None,
+            witness_address=witness_address,
+            witness_value=witness_value,
+            witness_counter=witness_counter,
+            sign_final=self.wm.sign_final,
+        )
+
+        if value is None:
+            self.tree.delete(address)
+        else:
+            self.tree.insert(address, value, counter=new_counter)
+
+        expected_root = None if self.tree.is_empty() else self.tree.get_root_hash()
+        assert new_root == expected_root
+        self.store.put_root(new_root, counter, root_mac)
+        return counter
+
+    def enqueue_set(self, address: bytes, value: bytes | None) -> None:
+        self.queue.append((address, value or b""))
+
+    def drain_queue(self, session: Session) -> int:
+        applied = 0
+        while self.queue:
+            address, value = self.queue.pop(0)
+            self.set_value(session, address, value or None)
+            applied += 1
+        return applied
 
 
 def _make_tree() -> AuthDbTree:
@@ -217,9 +349,12 @@ def test_ward_ingest_bad_signature_rejected(session: Session) -> None:
     tree = _make_tree()
     counter, _r, _wid, mac = ward.debug_set_root(session, tree.get_root_hash())
 
-    ward.init_sync(session)
+    nonce, _version, wallet_id = ward.init_sync(session)
+    assert wallet_id is not None
+    valid_sig = ward.sign_wm_attestation(nonce, counter, mac, wallet_id)
+    bad_sig = bytes([valid_sig[0] ^ 0x01]) + valid_sig[1:]
     with pytest.raises(TrezorFailure):
-        ward.ingest_attestation(session, counter, mac, bytes(64))  # invalid wm_sig
+        ward.ingest_attestation(session, counter, mac, bad_sig)
 
 
 @pytest.mark.models("core")
@@ -236,6 +371,36 @@ def test_ward_ingest_rollback_rejected(session: Session) -> None:
     sig = ward.sign_wm_attestation(nonce, 1, mac, wallet_id)
     with pytest.raises(TrezorFailure):
         ward.ingest_attestation(session, 1, mac, sig)
+
+
+@pytest.mark.models("core")
+def test_ward_e2e_in_memory_store_lookup_modify(session: Session) -> None:
+    """End-to-end WARD scenario driven through an in-memory Evolu/WM host harness."""
+    host = WardHostHarness()
+
+    # Fresh wallet: bootstrap empty state, then prove a missing address is absent.
+    counter, root, _wallet_id, root_mac = host.bootstrap_device(session)
+    assert counter == 0
+    assert root is None
+    assert root_mac is None
+    assert host.lookup(session, b"adr1") is None
+
+    # INSERT -> membership lookup.
+    host.set_value(session, b"adr1", b"Petr_adr1_v0")
+    assert host.lookup(session, b"adr1") == b"Petr_adr1_v0"
+
+    # UPDATE -> membership lookup reflects the new label.
+    host.set_value(session, b"adr1", b"Petr_adr1_v1")
+    assert host.lookup(session, b"adr1") == b"Petr_adr1_v1"
+
+    # Queue one offline change and drain it while online.
+    host.enqueue_set(b"adr2", b"Petr_adr2_v0")
+    assert host.drain_queue(session) == 1
+    assert host.lookup(session, b"adr2") == b"Petr_adr2_v0"
+
+    # DELETE -> non-membership lookup.
+    host.set_value(session, b"adr1", None)
+    assert host.lookup(session, b"adr1") is None
 
 
 # ---------------------------------------------------------------------------
