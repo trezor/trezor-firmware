@@ -1,0 +1,1 @@
+Stellar: Support signing Soroban authorization entries (`stellar.sign_soroban_authorization`, `stellar.from_authorization_entry` and `trezorctl stellar sign-soroban-authorization`).

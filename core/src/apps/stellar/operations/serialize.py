@@ -281,12 +281,12 @@ def _write_host_function(w: Writer, msg: StellarHostFunction) -> None:
 
 
 def write_invoke_contract_args(w: Writer, msg: StellarInvokeContractArgs) -> None:
-    _write_sc_address(w, msg.contract_address)
+    write_sc_address(w, msg.contract_address)
     _write_sc_symbol(w, msg.function_name)
     _write_vec(w, msg.args, _write_sc_val)
 
 
-def _write_sc_address(w: Writer, addr: str) -> None:
+def write_sc_address(w: Writer, addr: str) -> None:
     from .. import helpers
 
     version, data = helpers.decode_strkey(addr)
@@ -406,7 +406,7 @@ def _write_sc_val(w: Writer, msg: StellarSCVal) -> None:
     elif msg.type == StellarSCValType.SCV_ADDRESS:
         if msg.address is None:
             raise DataError("Stellar: missing address value")
-        _write_sc_address(w, msg.address)
+        write_sc_address(w, msg.address)
     else:
         raise ProcessError("Stellar: unsupported SCVal type")
 
@@ -444,7 +444,7 @@ def _write_soroban_authorization_entry(
     w: Writer, msg: StellarSorobanAuthorizationEntry
 ) -> None:
     _write_soroban_credentials(w, msg.credentials)
-    _write_soroban_authorized_invocation(w, msg.root_invocation)
+    write_soroban_authorized_invocation(w, msg.root_invocation)
 
 
 def _write_soroban_credentials(w: Writer, msg: StellarSorobanCredentials) -> None:
@@ -464,17 +464,17 @@ def _write_soroban_credentials(w: Writer, msg: StellarSorobanCredentials) -> Non
 def _write_soroban_address_credentials(
     w: Writer, msg: StellarSorobanAddressCredentials
 ) -> None:
-    _write_sc_address(w, msg.address)
+    write_sc_address(w, msg.address)
     write_int64(w, msg.nonce)
     write_uint32(w, msg.signature_expiration_ledger)
     _write_sc_val(w, msg.signature)
 
 
-def _write_soroban_authorized_invocation(
+def write_soroban_authorized_invocation(
     w: Writer, msg: StellarSorobanAuthorizedInvocation
 ) -> None:
     _write_soroban_authorized_function(w, msg.function)
-    _write_vec(w, msg.sub_invocations, _write_soroban_authorized_invocation)
+    _write_vec(w, msg.sub_invocations, write_soroban_authorized_invocation)
 
 
 def _write_soroban_authorized_function(

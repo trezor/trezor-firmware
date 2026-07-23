@@ -316,6 +316,8 @@ trezor_message_impl! {
     StellarInvokeHostFunctionOp => MessageType_StellarInvokeHostFunctionOp,
     StellarTxExtRequest => MessageType_StellarTxExtRequest,
     StellarTxExt => MessageType_StellarTxExt,
+    StellarSignSorobanAuthorization => MessageType_StellarSignSorobanAuthorization,
+    StellarSorobanAuthorizationSignature => MessageType_StellarSorobanAuthorizationSignature,
 }
 
 #[cfg(feature = "tezos")]
