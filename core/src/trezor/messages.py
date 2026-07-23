@@ -3374,6 +3374,8 @@ if TYPE_CHECKING:
         path: "list[int]"
         container_path: "EthereumERC7730ContainerPath | None"
         const_value: "str | None"
+        slice_start: "int | None"
+        slice_end: "int | None"
 
         def __init__(
             self,
@@ -3381,6 +3383,8 @@ if TYPE_CHECKING:
             path: "list[int] | None" = None,
             container_path: "EthereumERC7730ContainerPath | None" = None,
             const_value: "str | None" = None,
+            slice_start: "int | None" = None,
+            slice_end: "int | None" = None,
         ) -> None:
             pass
 

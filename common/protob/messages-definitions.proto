@@ -167,6 +167,8 @@ message EthereumERC7730Path {
     repeated sint32 path = 1;         // eg. (0,) is encoded as [0], (1, 2) is encoded as [1, 2], etc.
     optional EthereumERC7730ContainerPath container_path = 2;
     optional string const_value = 3;  // a literal constant value, not walked from calldata
+    optional sint32 slice_start = 4;
+    optional sint32 slice_end = 5;
 }
 
 /**
