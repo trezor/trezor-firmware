@@ -47,13 +47,6 @@ if TYPE_CHECKING:
         Awaitable[MsgOut],
     ]
 
-    # messages used for (clear-)signing transactions
-    MsgInSignTx = TypeVar(
-        "MsgInSignTx",
-        EthereumSignTx,
-        EthereumSignTxEIP1559,
-    )
-
 
 # We believe Ethereum should use 44'/60'/a' for everything, because it is
 # account-based, rather than UTXO-based. Unfortunately, lot of Ethereum

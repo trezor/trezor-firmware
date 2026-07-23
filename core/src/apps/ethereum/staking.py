@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from trezor.messages import EthereumNetworkInfo
     from trezor.ui.layouts import StrPropertyType
 
-    from .keychain import MsgInSignTx
+    from .clear_signing import MsgInSignTx
 
 
 FUNC_SIG_STAKE = unhexlify("3a29dbae")

@@ -7,9 +7,14 @@ from . import networks
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Awaitable, Callable, Sequence
+    from typing import Awaitable, Callable, Sequence, TypeVar
 
-    from trezor.messages import EthereumFieldType, EthereumTokenInfo
+    from trezor.messages import (
+        EthereumFieldType,
+        EthereumSignTx,
+        EthereumSignTxEIP1559,
+        EthereumTokenInfo,
+    )
     from trezor.ui.layouts import StrPropertyType
     from trezor.utils import HashWriter
 
@@ -19,6 +24,12 @@ if TYPE_CHECKING:
     # `data_left: int` argument is provided.
     DataChunkLoader = Callable[[int], Awaitable[AnyBytes]]
 
+    # protobuf messages used for clear-signing
+    MsgInSignTx = TypeVar(
+        "MsgInSignTx",
+        EthereumSignTx,
+        EthereumSignTxEIP1559,
+    )
 
 RSKIP60_NETWORKS = (30, 31)
 

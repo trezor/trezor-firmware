@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from trezor.messages import EthereumNetworkInfo
 
-    from .keychain import MsgInSignTx
+    from .clear_signing import MsgInSignTx
 
 from trezor.messages import EthereumTokenInfo
 

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType
 
-    from .keychain import MsgInSignTx
+    from .clear_signing import MsgInSignTx
     from .yielding_vaults import EthereumVaultInfo
 
 # https://ethereum.org/developers/docs/standards/tokens/erc-4626

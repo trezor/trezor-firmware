@@ -14,11 +14,13 @@ from .helpers import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Callable, Iterable, Sequence
+    from typing import Callable, Iterable, Sequence, TypeVar
 
     from trezor.messages import (
         EthereumABIValueInfo,
         EthereumERC7730FieldInfo,
+        EthereumSignTx,
+        EthereumSignTxEIP1559,
         EthereumTokenInfo,
     )
     from trezor.ui.layouts import StrPropertyType
@@ -27,7 +29,12 @@ if TYPE_CHECKING:
 
     from apps.common.payment_request import PaymentRequestVerifier
 
-    from .keychain import MsgInSignTx
+    # messages supported for clear-signing
+    MsgInSignTx = TypeVar(
+        "MsgInSignTx",
+        EthereumSignTx,
+        EthereumSignTxEIP1559,
+    )
 
     # Represents values that have been parsed from the calldata
     # into our internal representation.

@@ -20,9 +20,9 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
     from apps.common.payment_request import PaymentRequestVerifier
 
+    from .clear_signing import MsgInSignTx
     from .definitions import Definitions
     from .helpers import DataChunkLoader
-    from .keychain import MsgInSignTx
 
 
 # Maximum chain_id which returns the full signature_v (which must fit into an uint32).
