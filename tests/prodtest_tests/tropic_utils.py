@@ -77,8 +77,27 @@ class TropicModelState:
     def chip_id(self) -> bytes | None:
         return self.raw.get("chip_id")
 
+    @property
+    def riscv_fw_version(self) -> bytes | None:
+        return self.raw.get("riscv_fw_version")
+
+    @property
+    def spect_fw_version(self) -> bytes | None:
+        return self.raw.get("spect_fw_version")
+
+    @property
+    def pairing_keys(self) -> dict[int, dict[str, t.Any]]:
+        # Normalizes the value of invalid and blank pairing keys so that they can be compared
+        return {
+            slot: {
+                **key,
+                "value": key["value"] if key.get("state") == "written" else b"",
+            }
+            for slot, key in (self.raw.get("i_pairing_keys", {})).items()
+        }
+
     def pairing_key(self, slot: int) -> dict[str, t.Any] | None:
-        return (self.raw.get("i_pairing_keys") or {}).get(slot)
+        return self.pairing_keys.get(slot)
 
     def pairing_key_state(self, slot: int) -> str | None:
         key = self.pairing_key(slot)
@@ -88,8 +107,12 @@ class TropicModelState:
         key = self.pairing_key(slot)
         return key.get("value") if key else None
 
+    @property
+    def slots(self) -> dict[int, dict[str, t.Any]]:
+        return self.raw.get("r_user_data", {})
+
     def slot(self, slot: int) -> dict[str, t.Any] | None:
-        return (self.raw.get("r_user_data") or {}).get(slot)
+        return self.slots.get(slot)
 
     def slot_value(self, slot: int) -> bytes | None:
         entry = self.slot(slot)
@@ -107,15 +130,19 @@ class TropicModelState:
             return True
         return all(byte == 0xFF for byte in value)
 
+    @property
+    def ecc_keys(self) -> dict[int, dict[str, t.Any]]:
+        return self.raw.get("r_ecc_keys", {})
+
     def ecc_key(self, slot: int) -> dict[str, t.Any] | None:
-        return (self.raw.get("r_ecc_keys") or {}).get(slot)
+        return self.ecc_keys.get(slot)
 
     def ecc_key_is_present(self, slot: int) -> bool:
-        return self.ecc_key(slot) is not None
+        return slot in self.ecc_keys
 
     @property
     def mcounters(self) -> dict[int, dict[str, t.Any]]:
-        return self.raw.get("r_mcounters") or {}
+        return self.raw.get("r_mcounters", {})
 
     def mcounter(self, slot: int) -> dict[str, t.Any] | None:
         return self.mcounters.get(slot)
