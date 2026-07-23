@@ -23,14 +23,14 @@ if not utils.BITCOIN_ONLY:
         StellarUInt256Parts,
     )
 
-    from apps.stellar.operations.layout import (
+    from apps.stellar.layout import (
         _format_i128,
         _format_i256,
         _format_sc_val,
         _format_u128,
         _format_u256,
-        _is_root_auth_entry,
     )
+    from apps.stellar.operations.layout import _is_root_auth_entry
 
     def _u32(value):
         return StellarSCVal(type=StellarSCValType.SCV_U32, u32=value)

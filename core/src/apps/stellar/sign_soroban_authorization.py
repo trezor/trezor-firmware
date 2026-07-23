@@ -26,7 +26,6 @@ async def sign_soroban_authorization(
     from apps.common import paths, seed
 
     from . import helpers, layout, writers
-    from .operations.layout import confirm_authorized_invocation
 
     # Only the address-bound preimage variant introduced in Protocol 27 is supported
     if (
@@ -64,7 +63,7 @@ async def sign_soroban_authorization(
         # which the device account is a signer.
         await layout.require_confirm_auth_on_behalf_of(auth.address)
 
-    await confirm_authorized_invocation(auth.invocation)
+    await layout.confirm_authorized_invocation(auth.invocation)
     await layout.require_confirm_signature_expiration_ledger(
         auth.signature_expiration_ledger
     )
