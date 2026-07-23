@@ -1,7 +1,7 @@
 use super::super::component::Button;
 use super::super::firmware::{
-    ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
-    VerticalMenuScreenMsg,
+    ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+    VerticalMenuScreen, VerticalMenuScreenMsg,
 };
 use super::super::theme;
 use crate::error;
@@ -36,8 +36,6 @@ impl FlowController for ConfirmValueIntro {
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
             (Self::Intro, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
-            // special case for the "view all data" button
-            (Self::Intro, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Info),
             (Self::Intro, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Info),
             (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Cancelled),
@@ -87,18 +85,15 @@ pub fn new_confirm_value_intro(
     .with_page_limit(1)
     .with_header(Header::new(title).with_menu_button())
     .with_subtitle(subtitle.unwrap_or(TString::empty()))
-    .with_action_bar(
-        ActionBar::new_double(
-            Button::with_text(TR::buttons__view_all_data.into()),
-            confirm_button,
-        )
-        .with_left_short(false),
-    )
+    .with_hint(Hint::new_instruction_green(
+        TR::instructions__view_all_data,
+        Some(theme::ICON_INFO),
+    ))
+    .with_action_bar(ActionBar::new_single(confirm_button))
     .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
-        // special case for the "view all data" button
-        TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
+        TextScreenMsg::Cancelled => None, // cancellation is done via menu
     });
 
     let menu_items = VerticalMenu::<ShortMenuVec>::empty()
