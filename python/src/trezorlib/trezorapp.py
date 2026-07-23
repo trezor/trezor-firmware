@@ -215,7 +215,7 @@ def load(
 
         resp = session.call(
             messages.TrezorAppHeaderAck(
-                header=image.header_bytes(), proof=proof, timestamp=rp.timestamp
+                header=image.header_bytes(), proof=proof, timestamp=rp.auth.timestamp
             )
         )
 
