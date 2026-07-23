@@ -3440,6 +3440,34 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumDisplayFormatInfo"]:
             return isinstance(msg, cls)
 
+    class DisplayAddress(protobuf.MessageType):
+        address: "str"
+        title: "str | None"
+        subtitle: "str | None"
+        case_sensitive: "bool"
+        chunkify: "bool | None"
+        ward_value: "AnyBytes | None"
+        ward_proof: "list[AnyBytes]"
+        ward_counter: "int | None"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            ward_proof: "list[AnyBytes] | None" = None,
+            title: "str | None" = None,
+            subtitle: "str | None" = None,
+            case_sensitive: "bool | None" = None,
+            chunkify: "bool | None" = None,
+            ward_value: "AnyBytes | None" = None,
+            ward_counter: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DisplayAddress"]:
+            return isinstance(msg, cls)
+
     class EosGetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"

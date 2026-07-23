@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 _CAPABILITIES = {
     "bitcoin": ("lookup",),
     "ethereum": ("lookup",),
+    "display_address": ("lookup",),
 }
 
 if TYPE_CHECKING:

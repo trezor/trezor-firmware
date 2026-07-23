@@ -1,0 +1,33 @@
+syntax = "proto2";
+package hw.trezor.messages.display_address;
+
+import "messages-common.proto";
+import "options.proto";
+
+option java_outer_classname = "TrezorMessageDisplayAddress";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+
+/**
+ * Request: Show an arbitrary address on-screen, optionally authenticating a
+ * host-supplied WARD label for that address.
+ *
+ * If ward_value/proof/counter are present, firmware verifies the membership
+ * proof against its authenticated WARD root via the Core capability boundary
+ * and shows the verified label as the account name. Missing/invalid proof means
+ * no label is displayed.
+ *
+ * Returns a standard Success after confirmation.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message DisplayAddress {
+    required string address = 1;          // address to display
+    optional string title = 2;            // custom screen title
+    optional string subtitle = 3;         // custom subtitle
+    optional bool case_sensitive = 4 [default = true];
+    optional bool chunkify = 5;           // display the address in chunks of 4 characters
+    optional bytes  ward_value   = 6;     // the label/value claimed for this address
+    repeated bytes  ward_proof   = 7;     // MPT membership proof (33 bytes each, leaf-to-root)
+    optional uint32 ward_counter = 8;     // leaf counter stamp for the WARD entry
+}

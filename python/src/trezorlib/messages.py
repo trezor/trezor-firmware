@@ -633,6 +633,7 @@ class MessageType(IntEnum):
     NEMSignedTx = 70
     NEMDecryptMessage = 75
     NEMDecryptedMessage = 76
+    DisplayAddress = 123
     TezosGetAddress = 150
     TezosAddress = 151
     TezosSignTx = 152
@@ -4884,6 +4885,41 @@ class EthereumDisplayFormatInfo(protobuf.MessageType):
         self.address = address
         self.func_sig = func_sig
         self.intent = intent
+
+
+class DisplayAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 123
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("title", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("subtitle", "string", repeated=False, required=False, default=None),
+        4: protobuf.Field("case_sensitive", "bool", repeated=False, required=False, default=True),
+        5: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        6: protobuf.Field("ward_value", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("ward_proof", "bytes", repeated=True, required=False, default=None),
+        8: protobuf.Field("ward_counter", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        ward_proof: Optional[Sequence["bytes"]] = None,
+        title: Optional["str"] = None,
+        subtitle: Optional["str"] = None,
+        case_sensitive: Optional["bool"] = True,
+        chunkify: Optional["bool"] = None,
+        ward_value: Optional["bytes"] = None,
+        ward_counter: Optional["int"] = None,
+    ) -> None:
+        self.ward_proof: Sequence["bytes"] = ward_proof if ward_proof is not None else []
+        self.address = address
+        self.title = title
+        self.subtitle = subtitle
+        self.case_sensitive = case_sensitive
+        self.chunkify = chunkify
+        self.ward_value = ward_value
+        self.ward_counter = ward_counter
 
 
 class EosGetPublicKey(protobuf.MessageType):
