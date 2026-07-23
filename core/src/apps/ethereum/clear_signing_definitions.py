@@ -64,13 +64,16 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
         RawFormatter,
         Tuple,
         UnitFormatter,
+        make_fixed_bytes_parser,
+        make_uint_parser,
         parse_bool,
         parse_bytes,
-        parse_bytes32,
         parse_string,
-        parse_uint24,
-        parse_uint160,
     )
+
+    parse_bytes32 = make_fixed_bytes_parser(32)
+    parse_uint24 = make_uint_parser(24)
+    parse_uint160 = make_uint_parser(160)
 
     yield APPROVE_DISPLAY_FORMAT
     yield TRANSFER_DISPLAY_FORMAT

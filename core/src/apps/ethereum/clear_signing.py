@@ -49,6 +49,7 @@ if TYPE_CHECKING:
 
 SC_FUNC_SIG_BYTES = const(4)
 _EVM_WORD_SIZE = const(32)  # in bytes
+_EVM_WORD_BITS = const(8 * _EVM_WORD_SIZE)
 
 
 class ClearSigningFailed(Exception):
@@ -108,13 +109,13 @@ def parse_address(raw_data: memoryview) -> Value:
     return bytes(raw_data[_EVM_WORD_SIZE - _ZERO_PADDING :])
 
 
-def parse_uint256(raw_data: memoryview) -> Value:
+def parse_uint256(raw_data: memoryview) -> int:
     if len(raw_data) < _EVM_WORD_SIZE:
         raise OutOfBounds
     return int.from_bytes(raw_data, "big")
 
 
-def _make_uint_parser(bit_width: int) -> "Parser":
+def make_uint_parser(bit_width: int) -> "Parser":
     byte_width = bit_width // 8
 
     def parser(raw_data: memoryview) -> Value:
@@ -126,26 +127,39 @@ def _make_uint_parser(bit_width: int) -> "Parser":
     return parser
 
 
-parse_uint248 = _make_uint_parser(248)
-parse_uint160 = _make_uint_parser(160)
-parse_uint128 = _make_uint_parser(128)
-parse_uint120 = _make_uint_parser(120)
-parse_uint112 = _make_uint_parser(112)
-parse_uint96 = _make_uint_parser(96)
-parse_uint72 = _make_uint_parser(72)
-parse_uint64 = _make_uint_parser(64)
-parse_uint48 = _make_uint_parser(48)
-parse_uint40 = _make_uint_parser(40)
-parse_uint32 = _make_uint_parser(32)
-parse_uint24 = _make_uint_parser(24)
-parse_uint16 = _make_uint_parser(16)
-parse_uint8 = _make_uint_parser(8)
+def make_fixed_bytes_parser(byte_width: int) -> "Parser":
+    """bytesN values are left-aligned in the word: the padding to check
+    for zeroes is on the right, unlike the numeric types.
+    See "bytes<M>: enc(X) is the sequence of bytes in X padded with
+    trailing zero-bytes to a length of 32 bytes" in
+    https://docs.soliditylang.org/en/latest/abi-spec.html#formal-specification-of-the-encoding
+    """
+
+    def parser(raw_data: memoryview) -> Value:
+        if len(raw_data) < _EVM_WORD_SIZE:
+            raise OutOfBounds
+        if any(raw_data[byte_width:_EVM_WORD_SIZE]):
+            raise ValueOverflow
+        return bytes(raw_data[:byte_width])
+
+    return parser
 
 
-def parse_bytes32(raw_data: memoryview) -> Value:
-    if len(raw_data) < _EVM_WORD_SIZE:
-        raise OutOfBounds
-    return bytes(raw_data[:_EVM_WORD_SIZE])
+def make_int_parser(bit_width: int) -> Parser:
+    if not 0 < bit_width <= _EVM_WORD_BITS:
+        raise InvalidFormatDefinition
+
+    def parser(raw_data: memoryview) -> Value:
+        value = parse_uint256(raw_data)
+        # Two's complement.
+        if value >= 1 << (_EVM_WORD_BITS - 1):
+            value -= 1 << _EVM_WORD_BITS
+        # the range check doubles as the sign-extension padding check
+        if not -(1 << (bit_width - 1)) <= value < 1 << (bit_width - 1):
+            raise ValueOverflow
+        return value
+
+    return parser
 
 
 def parse_bool(raw_data: memoryview) -> Value:
@@ -186,37 +200,47 @@ def _get_parser(t: int, is_dynamic: bool) -> Parser:
     elif t == T.ABI_UINT256:
         return parse_uint256
     elif t == T.ABI_UINT248:
-        return parse_uint248
+        return make_uint_parser(248)
     elif t == T.ABI_UINT160:
-        return parse_uint160
+        return make_uint_parser(160)
     elif t == T.ABI_UINT128:
-        return parse_uint128
+        return make_uint_parser(128)
     elif t == T.ABI_UINT120:
-        return parse_uint120
+        return make_uint_parser(120)
     elif t == T.ABI_UINT112:
-        return parse_uint112
+        return make_uint_parser(112)
     elif t == T.ABI_UINT96:
-        return parse_uint96
+        return make_uint_parser(96)
     elif t == T.ABI_UINT72:
-        return parse_uint72
+        return make_uint_parser(72)
     elif t == T.ABI_UINT64:
-        return parse_uint64
+        return make_uint_parser(64)
     elif t == T.ABI_UINT48:
-        return parse_uint48
+        return make_uint_parser(48)
     elif t == T.ABI_UINT40:
-        return parse_uint40
+        return make_uint_parser(40)
     elif t == T.ABI_UINT32:
-        return parse_uint32
+        return make_uint_parser(32)
     elif t == T.ABI_UINT24:
-        return parse_uint24
+        return make_uint_parser(24)
     elif t == T.ABI_UINT16:
-        return parse_uint16
+        return make_uint_parser(16)
     elif t == T.ABI_UINT8:
-        return parse_uint8
+        return make_uint_parser(8)
     elif t == T.ABI_BOOL:
         return parse_bool
+    elif t == T.ABI_INT160:
+        return make_int_parser(160)
     elif t == T.ABI_BYTES32:
-        return parse_bytes32
+        return make_fixed_bytes_parser(32)
+    elif t == T.ABI_BYTES20:
+        return make_fixed_bytes_parser(20)
+    elif t == T.ABI_BYTES16:
+        return make_fixed_bytes_parser(16)
+    elif t == T.ABI_BYTES8:
+        return make_fixed_bytes_parser(8)
+    elif t == T.ABI_BYTES4:
+        return make_fixed_bytes_parser(4)
     raise InvalidFormatDefinition
 
 
