@@ -10,6 +10,7 @@ pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub type Sha256Ctx = SecretContext<ffi::SHA256_CTX>;
+pub type Sha256Guard<'a> = HazardGuard<'a, ffi::SHA256_CTX>;
 
 // SAFETY: SHA256_CTX is valid when zeroed
 unsafe impl ZeroableMemory for ffi::SHA256_CTX {}
@@ -18,20 +19,48 @@ impl ffi::SHA256_CTX {
     /// Initialize the SHA256 context.
     ///
     /// Called by [`Sha256::new`]. Call again when reusing the context after
-    /// [`HazardGuard::finalize`].
+    /// [`Self::hazard_finalize`] / [`HazardGuard::finalize`].
+    ///
+    /// # Copy hazard
+    ///
+    /// None because a "freshly initialized context" is public information.
     pub fn init(&mut self) {
         // SAFETY: ffi
         unsafe { ffi::sha256_Init(self) };
     }
-}
 
-impl HazardGuard<'_, ffi::SHA256_CTX> {
-    /// Update the SHA256 context with the given data.
-    pub fn update(&mut self, data: &[u8]) {
+    /// # Copy hazard
+    ///
+    /// The caller must not move or copy `self` for as long as it keeps
+    /// using it via [`Self::hazard_update`] / [`Self::hazard_finalize`].
+    /// Prefer [`Sha256`] which enforces this via pinning; this raw API only
+    /// exists for callers that cannot use a pinned context (e.g. because
+    /// they must own the hasher by value, as required by some external
+    /// trait).
+    pub fn hazard_update(&mut self, data: &[u8]) {
         let ptr = CSlice::from(data);
         // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::sha256_Update(self.hazard_mut(), ptr.ptr(), ptr.len()) };
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::sha256_Update(self, ptr.ptr(), ptr.len()) };
+    }
+
+    /// # Copy hazard
+    ///
+    /// See [`Self::hazard_update`].
+    pub fn hazard_finalize(&mut self) -> Digest {
+        let mut digest = [0u8; DIGEST_SIZE];
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::sha256_Final(self, digest.as_mut_ptr()) };
+        digest
+    }
+}
+
+impl Sha256Guard<'_> {
+    /// Update the SHA256 context with the given data.
+    pub fn update(&mut self, data: &[u8]) {
+        // COPY HAZARD: implemented on a guard
+        self.hazard_mut().hazard_update(data);
     }
 
     /// Finalize the SHA256 context and return the digest.
@@ -40,29 +69,11 @@ impl HazardGuard<'_, ffi::SHA256_CTX> {
     /// reusing it, the caller must call [`ffi::SHA256_CTX::init`] to
     /// reinitialize it.
     pub fn finalize(&mut self) -> Digest {
-        let mut digest = [0u8; DIGEST_SIZE];
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::sha256_Final(self.hazard_mut(), digest.as_mut_ptr()) };
-        digest
+        // COPY HAZARD: implemented on a guard
+        self.hazard_mut().hazard_finalize()
     }
 }
 
-/// SHA256 hasher.
-///
-/// A wrapper around a SHA256 context that provides a safe interface for hashing
-/// data.
-///
-/// # Example
-///
-/// ```rust
-/// use crypto::sha256::{Sha256, Sha256Ctx};
-///
-/// let mut ctx = Sha256Ctx::default();
-/// let mut sha = Sha256::new(&mut ctx);
-/// sha.update(b"hello");
-/// sha.finalize();
-/// ```
 pub struct Sha256<D: DerefMut<Target = Sha256Ctx>>(SecretContextLock<D>);
 
 impl<D: DerefMut<Target = Sha256Ctx>> Sha256<D> {
@@ -73,13 +84,12 @@ impl<D: DerefMut<Target = Sha256Ctx>> Sha256<D> {
         Self(SecretContextLock::new(ctx))
     }
 
-    /// Update the SHA256 context with the given data.
     pub fn update(&mut self, data: &[u8]) {
         self.0.guarded().update(data);
     }
 
     /// Finalize the SHA256 context and return the digest.
-    pub fn finalize(mut self) -> Digest {
+    pub fn finalize(&mut self) -> Digest {
         self.0.guarded().finalize()
     }
 }
@@ -87,7 +97,7 @@ impl<D: DerefMut<Target = Sha256Ctx>> Sha256<D> {
 impl Sha256<&'_ mut Sha256Ctx> {
     /// Calculate the SHA256 digest of the given data.
     pub fn digest(data: &[u8]) -> Digest {
-        let mut ctx = SecretContext::default();
+        let mut ctx = Sha256Ctx::default();
         let mut sha = Sha256::new(&mut ctx);
         sha.update(data);
         sha.finalize()
@@ -114,10 +124,8 @@ mod test {
     #[test]
     fn test_empty_ctx() {
         let mut ctx = Sha256Ctx::default();
-        let sha = Sha256::new(&mut ctx);
-        let out = sha.finalize();
-
-        let out_hex = hex::encode(out);
+        let mut sha = Sha256::new(&mut ctx);
+        let out_hex = hex::encode(sha.finalize());
         assert_eq!(out_hex, SHA256_EMPTY.to_string());
     }
 

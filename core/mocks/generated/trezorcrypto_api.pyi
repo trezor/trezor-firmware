@@ -2,7 +2,7 @@ from typing import *
 from buffer_types import *
 
 
-# rust/src/crypto/api/firmware_micropython.rs
+# rust/src/crypto_api.rs
 def send_crypto_result(
     *,
     result: CryptoResult,
@@ -11,7 +11,7 @@ def send_crypto_result(
     """Serialize a crypto result (e.g. CryptoResult) into bytes and send it back via the ipc_cb callback."""
 
 
-# rust/src/crypto/api/firmware_micropython.rs
+# rust/src/crypto_api.rs
 def deserialize_crypto_message(
     *,
     data: bytes,

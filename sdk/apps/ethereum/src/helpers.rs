@@ -11,7 +11,11 @@ use crate::{
     uformat,
 };
 use primitive_types::U256;
-use trezor_app_sdk::{Error, Result, ResultExt, crypto, ui};
+use trezor_app_sdk::{
+    Error, Result, ResultExt,
+    crypto::{self, HashingAlgorithm, HasherExt},
+    ui,
+};
 
 const RSKIP60_NETWORKS: [u64; 2] = [30, 31];
 
@@ -32,8 +36,9 @@ pub fn address_from_bytes(address_bytes: &[u8], network: Option<&NetworkInfo>) -
     // Calculate sha3-256 keccak hash
     let hash_input = uformat!("{}{}", prefix.as_str(), address_hex.as_str());
 
-    let mut hasher = crypto::sha3::Keccak256::new(Some(hash_input.as_bytes()));
-    let digest = hasher.digest();
+    let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
+    hasher.update(hash_input.as_bytes());
+    let digest = hasher.finalize();
 
     let mut result = String::from("0x");
 
