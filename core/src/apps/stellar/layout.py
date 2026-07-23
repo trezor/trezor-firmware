@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING
+from ubinascii import hexlify
 
 import trezor.ui.layouts as layouts
 from trezor import TR, strings, wire
-from trezor.enums import ButtonRequestType
+from trezor.enums import ButtonRequestType, StellarSCValType
+from trezor.wire import DataError, ProcessError
 
 from apps.common.paths import address_n_to_str
 
@@ -12,7 +14,18 @@ if TYPE_CHECKING:
     from typing import Iterable
 
     from trezor.enums import StellarMemoType
-    from trezor.messages import PaymentRequest, StellarAsset
+    from trezor.messages import (
+        PaymentRequest,
+        StellarAsset,
+        StellarInt128Parts,
+        StellarInt256Parts,
+        StellarInvokeContractArgs,
+        StellarSCVal,
+        StellarSCValMapEntry,
+        StellarSorobanAuthorizedInvocation,
+        StellarUInt128Parts,
+        StellarUInt256Parts,
+    )
     from trezor.ui.layouts import StrPropertyType
 
     from apps.common.paths import Bip32Path
@@ -231,6 +244,237 @@ async def require_confirm_signature_expiration_ledger(
         hold=True,
         is_data=False,
     )
+
+
+async def confirm_invoke_contract_args(
+    args: StellarInvokeContractArgs,
+    br_name_prefix: str,
+    title: str | None = None,
+) -> None:
+    # If title is not empty, it is shared across screens;
+    # the per-screen label moves into the description / subtitle.
+    await layouts.confirm_address(
+        title or TR.stellar__invoke_contract,
+        args.contract_address,
+        description=TR.stellar__invoke_contract if title else None,
+        br_name=f"{br_name_prefix}_contract_address",
+    )
+    await layouts.confirm_text(
+        f"{br_name_prefix}_function",
+        title or TR.words__function,
+        args.function_name,
+        description=TR.words__function if title else None,
+    )
+    if not args.args:
+        return
+    props = [
+        (f"{i + 1} / {len(args.args)}", _format_sc_val(arg), True)
+        for i, arg in enumerate(args.args)
+    ]
+    await layouts.confirm_properties(
+        f"{br_name_prefix}_args",
+        title or TR.words__arguments,
+        props,
+        TR.words__arguments if title else None,
+    )
+
+
+async def confirm_authorized_invocation(
+    invocation: StellarSorobanAuthorizedInvocation,
+) -> None:
+    """Confirm a standalone authorized invocation tree (auth entry signing).
+
+    Unlike in a transaction, there is always exactly one entry being signed, so
+    its root label is empty; sub-invocations are numbered relative to it
+    (".1", ".1.2", ...), the same paths they would have inside a transaction.
+    """
+    await confirm_invocation(invocation, "")
+
+
+async def confirm_invocation(
+    invocation: StellarSorobanAuthorizedInvocation, position: str, is_root: bool = False
+) -> None:
+    """Confirm an authorized invocation and its sub-invocations recursively.
+
+    The whole authorization tree is shown by default (it is security-critical and
+    can differ from the host function being invoked). `position` is the root
+    label plus the dot-delimited path in the auth tree (e.g. "#2", "#2.1" in a
+    transaction), or empty for the unlabeled root of a standalone authorization
+    entry (whose children are then ".1", ".1.2", ...), so a given entry's
+    children carry the same paths in both flows.
+    """
+    from trezor.enums import StellarSorobanAuthorizedFunctionType
+
+    func = invocation.function
+    if (
+        func.type
+        != StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN
+    ):
+        raise ProcessError("Stellar: unsupported authorized function type")
+    if func.contract_fn is None:
+        raise DataError("Stellar: missing contract_fn")
+
+    if position:
+        title = f"{TR.words__authorization} {position}"
+    else:
+        title = TR.words__authorization
+
+    if not is_root:
+        await confirm_invoke_contract_args(
+            func.contract_fn,
+            br_name_prefix="op_auth",
+            title=title,
+        )
+
+    for i, sub in enumerate(invocation.sub_invocations):
+        await confirm_invocation(sub, f"{position}.{i + 1}")
+
+
+def _escape_str(s: str) -> str:
+    # Escape `\` first, then `"`, so an embedded quote cannot close the surrounding
+    # string delimiters -- otherwise a string could forge extra vec/map items.
+    return s.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _format_sc_val(val: StellarSCVal) -> str:
+    """Format SCVal as a human-readable string, using JSON for complex types."""
+    from trezor.strings import format_duration, format_timestamp
+
+    t = val.type
+
+    if t == StellarSCValType.SCV_BOOL:
+        if val.b is None:
+            raise DataError("Stellar: missing bool value")
+        return "true" if val.b else "false"
+    elif t == StellarSCValType.SCV_VOID:
+        return "void"
+    elif t == StellarSCValType.SCV_U32:
+        if val.u32 is None:
+            raise DataError("Stellar: missing u32 value")
+        return str(val.u32)
+    elif t == StellarSCValType.SCV_I32:
+        if val.i32 is None:
+            raise DataError("Stellar: missing i32 value")
+        return str(val.i32)
+    elif t == StellarSCValType.SCV_U64:
+        if val.u64 is None:
+            raise DataError("Stellar: missing u64 value")
+        return str(val.u64)
+    elif t == StellarSCValType.SCV_I64:
+        if val.i64 is None:
+            raise DataError("Stellar: missing i64 value")
+        return str(val.i64)
+    elif t == StellarSCValType.SCV_TIMEPOINT:
+        if val.timepoint is None:
+            raise DataError("Stellar: missing timepoint value")
+        try:
+            return format_timestamp(val.timepoint)
+        except Exception:
+            return str(val.timepoint)
+    elif t == StellarSCValType.SCV_DURATION:
+        if val.duration is None:
+            raise DataError("Stellar: missing duration value")
+        return format_duration(val.duration)
+    elif t == StellarSCValType.SCV_U128:
+        if val.u128 is None:
+            raise DataError("Stellar: missing u128 value")
+        return _format_u128(val.u128)
+    elif t == StellarSCValType.SCV_I128:
+        if val.i128 is None:
+            raise DataError("Stellar: missing i128 value")
+        return _format_i128(val.i128)
+    elif t == StellarSCValType.SCV_U256:
+        if val.u256 is None:
+            raise DataError("Stellar: missing u256 value")
+        return _format_u256(val.u256)
+    elif t == StellarSCValType.SCV_I256:
+        if val.i256 is None:
+            raise DataError("Stellar: missing i256 value")
+        return _format_i256(val.i256)
+    elif t == StellarSCValType.SCV_BYTES:
+        if val.bytes is None:
+            raise DataError("Stellar: missing bytes value")
+        return "0x" + hexlify(val.bytes).decode()
+    elif t == StellarSCValType.SCV_STRING:
+        if val.string is None:
+            raise DataError("Stellar: missing string value")
+        # Render decoded text as a quoted, escaped string so its content can never
+        # forge the surrounding quotes (and thus the vec/map separators). Non-UTF-8
+        # bytes can't be shown as text, so render them as hex like SCV_BYTES.
+        try:
+            return f'"{_escape_str(bytes(val.string).decode())}"'
+        except UnicodeError:
+            return "0x" + hexlify(val.string).decode()
+    elif t == StellarSCValType.SCV_SYMBOL:
+        if val.symbol is None:
+            raise DataError("Stellar: missing symbol value")
+        # Quote and escape like SCV_STRING so the symbol's content can never forge the
+        # surrounding vec/map delimiters. A symbol is already a valid UTF-8 str, so no
+        # hex fallback is needed (unlike SCV_STRING, which holds raw bytes).
+        return f'"{_escape_str(val.symbol)}"'
+    elif t == StellarSCValType.SCV_VEC:
+        return _format_vec_as_json(val.vec)
+    elif t == StellarSCValType.SCV_MAP:
+        return _format_map_as_json(val.map)
+    elif t == StellarSCValType.SCV_ADDRESS:
+        if val.address is None:
+            raise DataError("Stellar: missing address value")
+        return val.address
+    else:
+        raise DataError(f"Stellar: unsupported SCVal type {t}")
+
+
+def _format_vec_as_json(vec: list[StellarSCVal]) -> str:
+    """Format a vector as JSON array."""
+    items = [_format_sc_val(item) for item in vec]
+    return "[" + ", ".join(items) + "]"
+
+
+def _format_map_as_json(map_entries: list[StellarSCValMapEntry]) -> str:
+    """Format a map as JSON object."""
+    pairs = []
+    for entry in map_entries:
+        key = _format_sc_val(entry.key)
+        value = _format_sc_val(entry.value)
+        pairs.append(f"{key}: {value}")
+    return "{" + ", ".join(pairs) + "}"
+
+
+_MASK64 = 0xFFFF_FFFF_FFFF_FFFF
+
+
+def _format_u128(parts: StellarUInt128Parts) -> str:
+    value = ((parts.hi & _MASK64) << 64) | (parts.lo & _MASK64)
+    return str(value)
+
+
+def _format_i128(parts: StellarInt128Parts) -> str:
+    value = ((parts.hi & _MASK64) << 64) | (parts.lo & _MASK64)
+    if parts.hi < 0:
+        value -= 1 << 128
+    return str(value)
+
+
+def _format_u256(parts: StellarUInt256Parts) -> str:
+    value = (
+        ((parts.hi_hi & _MASK64) << 192)
+        | ((parts.hi_lo & _MASK64) << 128)
+        | ((parts.lo_hi & _MASK64) << 64)
+        | (parts.lo_lo & _MASK64)
+    )
+    return str(value)
+
+
+def _format_i256(parts: StellarInt256Parts) -> str:
+    value = (
+        ((parts.hi_hi & _MASK64) << 192)
+        | ((parts.hi_lo & _MASK64) << 128)
+        | ((parts.lo_hi & _MASK64) << 64)
+        | (parts.lo_lo & _MASK64)
+    )
+    if parts.hi_hi < 0:
+        value -= 1 << 256
+    return str(value)
 
 
 def format_asset(asset: StellarAsset | None) -> str:
