@@ -1259,5 +1259,8 @@
   "1257": "stellar__invoke_contract",
   "1258": "words__arguments",
   "1259": "words__authorization",
-  "1260": "words__function"
+  "1260": "words__function",
+  "1261": "stellar__live_until_ledger",
+  "1262": "stellar__sign_authorization",
+  "1263": "stellar__on_behalf_of"
 }

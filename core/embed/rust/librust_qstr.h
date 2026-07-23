@@ -1517,6 +1517,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__issuer_template;
   MP_QSTR_stellar__key;
   MP_QSTR_stellar__limit;
+  MP_QSTR_stellar__live_until_ledger;
   MP_QSTR_stellar__low;
   MP_QSTR_stellar__master_weight;
   MP_QSTR_stellar__medium;
@@ -1524,6 +1525,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__new_passive_offer;
   MP_QSTR_stellar__no_memo_set;
   MP_QSTR_stellar__no_restriction;
+  MP_QSTR_stellar__on_behalf_of;
   MP_QSTR_stellar__path_pay;
   MP_QSTR_stellar__path_pay_at_least;
   MP_QSTR_stellar__pay;
@@ -1536,6 +1538,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__set_data;
   MP_QSTR_stellar__set_flags;
   MP_QSTR_stellar__set_sequence_to_template;
+  MP_QSTR_stellar__sign_authorization;
   MP_QSTR_stellar__sign_tx_count_template;
   MP_QSTR_stellar__sign_tx_fee_template;
   MP_QSTR_stellar__sign_with;
