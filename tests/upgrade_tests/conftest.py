@@ -9,9 +9,7 @@ import pytest
 from trezorlib._internal.emulator import TropicModel
 
 from ..emulators import (
-    TROPIC_MODEL_CONFIGFILE,
-    TROPIC_MODEL_CONFIGFILE_OLD,
-    TROPIC_OLD_CONFIG_UNTIL_VERSION,
+    TROPIC_MODEL_CONFIG_DIR,
     delete_profile,
     get_logfile,
     is_tropic_capable_model,
@@ -24,10 +22,16 @@ def _get_tropic_model_configfile(tag: str | None) -> Path:
     if tag is not None and tag.startswith("v"):
         tag_version = tag[1:].partition("-")[0]
         if len(tag_version.split(".")) == 3:
-            version_tuple = tuple(int(i) for i in tag_version.split("."))
-            if version_tuple <= TROPIC_OLD_CONFIG_UNTIL_VERSION:
-                return TROPIC_MODEL_CONFIGFILE_OLD
-    return TROPIC_MODEL_CONFIGFILE
+            tag_version_tuple = tuple(int(i) for i in tag_version.split("."))
+            # Find the oldest versioned config whose version is >= the tag version.
+            candidates = []
+            for configfile in TROPIC_MODEL_CONFIG_DIR.glob("[0-9]*_[0-9]*_[0-9]*.yml"):
+                config_version_tuple = tuple(int(p) for p in configfile.stem.split("_"))
+                if tag_version_tuple <= config_version_tuple:
+                    candidates.append((config_version_tuple, configfile))
+            if candidates:
+                return min(candidates)[1]
+    return TROPIC_MODEL_CONFIG_DIR / "current.yml"
 
 
 # This fixture is very similar to `tropic_model` from the parent directory, but has a "function"

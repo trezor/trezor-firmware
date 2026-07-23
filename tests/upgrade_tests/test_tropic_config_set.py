@@ -26,7 +26,7 @@ import yaml
 
 from tests.emulators import (
     ROOT,
-    TROPIC_MODEL_CONFIGFILE,
+    TROPIC_MODEL_CURRENT_CONFIG,
     EmulatorWrapper,
     delete_profile,
     get_logfile,
@@ -284,7 +284,7 @@ def _set_slot(config: dict, slot: int, value: int | None) -> None:
 
 
 def _build_tropic_model_config(scenario: TropicBootScenario) -> dict:
-    config = yaml.safe_load(TROPIC_MODEL_CONFIGFILE.read_text())
+    config = yaml.safe_load(TROPIC_MODEL_CURRENT_CONFIG.read_text())
     _set_chip_distribution(config, scenario.chip_distribution)
     config["i_config"] = _initial_config(
         "irreversible_configurations", scenario.initial_i_config
