@@ -472,7 +472,7 @@ def _is_root_auth_entry(
         StellarSorobanAuthorizedFunctionType,
     )
 
-    from .serialize import write_invoke_contract_args
+    from ..writers import write_invoke_contract_args
 
     auth_fn = auth_entry.root_invocation.function
 
