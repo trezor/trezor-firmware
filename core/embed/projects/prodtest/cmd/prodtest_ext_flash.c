@@ -531,6 +531,46 @@ static void prodtest_ext_flash_test(cli_t* cli) {
 
 #ifdef USE_EXT_FLASH_OTFDEC
 
+// ---------------------------------------------------------------------------
+// Callback context for the XIP demo function.
+//
+// ext-flash-otfdec-exec fills this in SRAM before branching into external
+// flash.  The XIP function (loaded by ext-flash-otfdec-load) receives a
+// pointer to it in R0 and uses it to call back into internal flash, then
+// writes its result to the 'result' field.
+//
+// Struct layout (must match xip_demo_fn.S):
+//   +0   magic    — 0xD0C0DE00, sanity-checks SRAM is reachable
+//   +4   compute  — fn ptr into internal flash; called as compute(input)
+//   +8   result   — written by XIP code, read after return
+//   +12  input    — argument passed to compute()
+// ---------------------------------------------------------------------------
+
+typedef uint32_t (*xip_compute_fn_t)(uint32_t);
+
+typedef struct {
+  uint32_t          magic;
+  xip_compute_fn_t  compute;
+  volatile uint32_t result;
+  uint32_t          input;
+} xip_ctx_t;
+
+// Iterative Fibonacci in internal flash.  Called by the XIP demo function via
+// a function pointer stored in xip_ctx_t.  noinline keeps a callable symbol.
+static uint32_t __attribute__((noinline)) xip_demo_compute(uint32_t x) {
+  x &= 0x1Fu;
+  if (x <= 1u) return x;
+  uint32_t a = 0, b = 1;
+  for (uint32_t i = 2u; i <= x; i++) {
+    uint32_t c = a + b;
+    a = b;
+    b = c;
+  }
+  return b;
+}
+
+static xip_ctx_t g_xip_ctx;
+
 static void prodtest_ext_flash_otfdec_load(cli_t* cli) {
   if (cli_arg_count(cli) != 2) {
     cli_error_arg_count(cli);
@@ -634,6 +674,14 @@ static void prodtest_ext_flash_otfdec_exec(cli_t* cli) {
     return;
   }
 
+  // Fill in the callback context in SRAM before branching into external flash.
+  // The XIP function receives &g_xip_ctx in R0 and calls g_xip_ctx.compute()
+  // from internal flash, writing the return value to g_xip_ctx.result.
+  g_xip_ctx.magic   = 0xD0C0DE00u;
+  g_xip_ctx.compute = xip_demo_compute;
+  g_xip_ctx.result  = 0;
+  g_xip_ctx.input   = 20;  // fib(20) = 6765
+
   cli_trace(cli, "Jumping to OTFDEC-decrypted code at 0x%08X (mmap+0x%08X)...",
             (unsigned int)(EXT_FLASH_MMAP_BASE + addr), (unsigned int)addr);
 
@@ -644,11 +692,17 @@ static void prodtest_ext_flash_otfdec_exec(cli_t* cli) {
   __ISB();
 
   // Bit 0 set: Thumb-2 branch target (required on ARMv8-M).
-  typedef void (*fn_t)(void);
+  // The XIP function receives &g_xip_ctx in R0 and calls back into the
+  // internal-flash xip_demo_compute() via the function pointer in the struct.
+  typedef void (*fn_t)(xip_ctx_t *);
   fn_t fn = (fn_t)((uintptr_t)(EXT_FLASH_MMAP_BASE + addr) | 1u);
-  fn();
+  fn(&g_xip_ctx);
 
   ext_flash_otfdec_deinit();
+  cli_trace(cli, "XIP returned; fib(%u) = %u (0x%08X)",
+            (unsigned int)g_xip_ctx.input,
+            (unsigned int)g_xip_ctx.result,
+            (unsigned int)g_xip_ctx.result);
   cli_ok(cli, "Returned from 0x%08X.", (unsigned int)(EXT_FLASH_MMAP_BASE + addr));
 }
 
@@ -703,7 +757,7 @@ PRODTEST_CLI_CMD(
 PRODTEST_CLI_CMD(
   .name = "ext-flash-otfdec-exec",
   .func = prodtest_ext_flash_otfdec_exec,
-  .info = "Init OTFDEC, execute Thumb-2 code from EXT_FLASH_MMAP_BASE+addr with on-the-fly decryption, then deinit",
+  .info = "Init OTFDEC, call Thumb-2 code at EXT_FLASH_MMAP_BASE+addr (R0=callback ctx with fn ptr into internal flash), report result, deinit",
   .args = "<addr>"
 );
 

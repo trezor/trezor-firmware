@@ -6,21 +6,23 @@ The script walks through the full end-to-end cycle:
 
   1. Erase the target 4 KB sector.
   2. Write known plaintext via ext-flash-otfdec-load (encrypts with OTFDEC1
-     encipher mode in secmon, then programs the ciphertext to flash).
+     encipher mode, then programs the ciphertext to flash).
   3. Read back via ext-flash-read  (XIP / OTFDEC-decrypted)  → must match plaintext.
   4. Read back via ext-flash-read-raw (indirect SPI, no OTFDEC) → must be ciphertext.
   5. Assert steps 3 and 4 differ, proving the chip stores ciphertext while the
      CPU sees plaintext.
-  6. Load a minimal Thumb-2 function (BX LR — immediate return) at a second
-     offset and execute it via ext-flash-otfdec-exec.  A clean return proves
-     OTFDEC transparently decrypts fetched instructions.
+  6. Load a Thumb-2 function at a second offset and execute it.  The function is
+     called with a callback context (xip_ctx_t*) in R0 that contains a function
+     pointer into internal flash.  The XIP code calls that function and writes the
+     result back into the context struct.  A correct result proves that:
+       - OTFDEC transparently decrypted the fetched instructions, and
+       - the XIP code can reach and call functions in internal flash via BLX.
 
 Usage:
     python3 otfdec_demo.py [--device /dev/ttyACM0] [--addr 0x0000]
 
 Prerequisites:
   - Device running prodtest with USE_EXT_FLASH and USE_EXT_FLASH_OTFDEC enabled.
-  - OTFDEC1 must have been initialised by secmon on boot (ext_flash_otfdec_init).
   - pyserial installed: pip install pyserial
 """
 
@@ -172,21 +174,38 @@ def section(n: int, title: str) -> None:
 #   - length is a multiple of 16 (OTFDEC AES block constraint)
 PLAINTEXT = bytes(range(0x00, 0x40))  # 64 bytes: 0x00 0x01 … 0x3F
 
-# Minimal Thumb-2 function: BX LR + NOPs, padded to 16 bytes (one AES block).
-#   0x4770 = BX LR  → little-endian in memory: 70 47
-#   0xBF00 = NOP    → little-endian in memory: 00 BF
-# The function does nothing except return, proving that OTFDEC correctly
-# decrypted the instruction bytes so the CPU could execute them.
-THUMB_RET = bytes([
-    0x70, 0x47,  # BX LR
-    0x00, 0xBF,  # NOP
-    0x00, 0xBF,  # NOP
-    0x00, 0xBF,  # NOP
-    0x00, 0xBF,  # NOP
-    0x00, 0xBF,  # NOP
-    0x00, 0xBF,  # NOP
-    0x00, 0xBF,  # NOP  (pad to 16 bytes)
+# Thumb-2 function executed from external flash via OTFDEC XIP.
+# Called by ext-flash-otfdec-exec as: void fn(xip_ctx_t *ctx)
+#
+# The host fills xip_ctx_t in SRAM before the call:
+#   +0   magic    0xD0C0DE00        (sanity marker)
+#   +4   compute  <fn ptr>          function in internal flash
+#   +8   result   0 initially       written by THIS function
+#   +12  input    20                argument for compute()
+#
+# This function:
+#   1. Reads ctx->input and ctx->compute
+#   2. Calls compute(input) via BLX — crosses the OSPI→internal-flash gap
+#      using an absolute address (BLX Rn, not BL) because the 2+ GB distance
+#      from 0x90000000 to 0x08000000 exceeds the ±16 MB BL range.
+#   3. Stores the return value in ctx->result
+#
+# See tools/xip_demo_fn.S for the annotated assembly source.
+# 16 bytes = one AES block (OTFDEC minimum granularity).
+THUMB_FN = bytes([
+    0x10, 0xB5,  # push {r4, lr}
+    0x04, 0x46,  # mov  r4, r0          ; save ctx*
+    0xE1, 0x68,  # ldr  r1, [r4, #12]   ; r1 = ctx->input
+    0x62, 0x68,  # ldr  r2, [r4, #4]    ; r2 = ctx->compute (internal-flash fn ptr)
+    0x08, 0x46,  # mov  r0, r1           ; first arg = input
+    0x90, 0x47,  # blx  r2               ; call internal-flash compute(input)
+    0xA0, 0x60,  # str  r0, [r4, #8]    ; ctx->result = return value
+    0x10, 0xBD,  # pop  {r4, pc}         ; return
 ])
+
+# Expected result: xip_demo_compute(20) computes iterative Fibonacci(20).
+XIP_INPUT    = 20
+XIP_EXPECTED = 6765  # fib(20) = 6765 = 0x00001A6D
 
 
 # ---------------------------------------------------------------------------
@@ -203,7 +222,7 @@ def run_demo(conn: Connection, base_addr: int) -> None:
     data_addr = base_addr
     code_addr = base_addr + 0x100   # code 256 B after the data block
 
-    if (code_addr + len(THUMB_RET)) > (sector_addr + 0x1000):
+    if (code_addr + len(THUMB_FN)) > (sector_addr + 0x1000):
         print("error: code block overflows the erased sector; reduce --addr or increase sector size",
               file=sys.stderr)
         sys.exit(1)
@@ -251,13 +270,32 @@ def run_demo(conn: Connection, base_addr: int) -> None:
     check(mismatches > 0, "AES-CTR keystream altered the data (OTFDEC active)")
 
     # ------------------------------------------------------------------
-    section(6, f"Load Thumb-2 BX-LR payload at 0x{code_addr:08X} and execute")
+    section(6, f"Load Thumb-2 callback function at 0x{code_addr:08X} and execute")
     # ------------------------------------------------------------------
-    print(f"    Payload    : {THUMB_RET.hex()}  (BX LR + NOPs)")
-    conn.command("ext-flash-otfdec-load", f"0x{code_addr:08X}", THUMB_RET)
+    print(f"    Payload    : {THUMB_FN.hex()}")
+    print(f"    Function   : reads callback ctx in R0, calls compute({XIP_INPUT})")
+    print(f"                 from internal flash via BLX, writes result to ctx")
+    print(f"    Expected   : fib({XIP_INPUT}) = {XIP_EXPECTED} (0x{XIP_EXPECTED:08X})")
+    conn.command("ext-flash-otfdec-load", f"0x{code_addr:08X}", THUMB_FN)
     print("    Code written.  Calling ext-flash-otfdec-exec ...")
-    conn.command("ext-flash-otfdec-exec", f"0x{code_addr:08X}")
-    ok("Returned from ext flash — OTFDEC instruction decryption is working")
+    _, trace = conn.command("ext-flash-otfdec-exec", f"0x{code_addr:08X}")
+
+    # Parse 'fib(N) = M' from the trace line emitted by the exec command.
+    result_val = None
+    for line in trace:
+        m = re.search(r"fib\(\d+\)\s*=\s*(\d+)", line)
+        if m:
+            result_val = int(m.group(1))
+            break
+
+    check(result_val is not None, "result value found in exec trace output")
+    if result_val is not None:
+        check(
+            result_val == XIP_EXPECTED,
+            f"XIP code called internal-flash function correctly: "
+            f"fib({XIP_INPUT}) = {result_val} "
+            f"({'OK' if result_val == XIP_EXPECTED else f'expected {XIP_EXPECTED}'})",
+        )
 
     # ------------------------------------------------------------------
     print(f"\n{'═' * 60}")
