@@ -45,6 +45,9 @@ _SOLIDITY_SIGNATURES = (
     b"withdraw(uint256,address,address)",
     b"redeem(uint256,address,address)",
     b"claim(address[],address[],uint256[],bytes32[][])",
+    # WETH wrap/unwrap
+    b"deposit()",
+    b"withdraw(uint256)",
 )
 
 
