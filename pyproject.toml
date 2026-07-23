@@ -73,7 +73,6 @@ dev = [
 [tool.uv]
 package = false
 exclude-newer = "30 days"
-exclude-newer-package = { cryptography = "2026-06-09T22:32:33.447Z" }
 
 [tool.uv.sources]
 trezor = { path = "./python", editable = true }
