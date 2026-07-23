@@ -122,6 +122,12 @@ message GetAddress {
         [default = SPENDADDRESS];  // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional bool ignore_xpub_magic = 6;  // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
     optional bool chunkify = 7;           // display the address in chunks of 4 characters
+    // WARD label-at-address (optional): host-supplied membership proof for the derived
+    // address. If present, firmware verifies it against its authenticated WARD root via
+    // the Core capability boundary and shows the verified label. Absent = no label.
+    optional bytes  ward_value   = 8;  // the label/value claimed for this address
+    repeated bytes  ward_proof   = 9;  // MPT membership proof (33 bytes each, leaf-to-root)
+    optional uint32 ward_counter = 10; // leaf counter stamp for the WARD entry
 }
 
 /**

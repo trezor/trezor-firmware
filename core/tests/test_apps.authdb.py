@@ -1,4 +1,4 @@
-from common import unittest
+from common import await_result, unittest
 
 from mock_storage import mock_storage
 from trezor.crypto.hashlib import sha256
@@ -124,7 +124,7 @@ ENTRIES = {b"alice": b"data_alice", b"bob": b"data_bob",
 class TestAuthDbVerifyProof(unittest.TestCase):
 
     def setUp(self):
-        from apps.authdb.lookup import _verify_proof
+        from apps.authdb._mpt import verify_proof as _verify_proof
         self._verify = _verify_proof
 
     def test_valid_proof_alice(self):
@@ -217,7 +217,7 @@ class TestAuthDbVerifyProof(unittest.TestCase):
 class TestAuthDbNonMembership(unittest.TestCase):
 
     def setUp(self):
-        from apps.authdb.lookup import _verify_nonmembership
+        from apps.authdb._mpt import verify_nonmembership as _verify_nonmembership
         self._verify_nm = _verify_nonmembership
 
     def test_nonmember_valid(self):
@@ -629,7 +629,7 @@ class TestAuthDbMpt(unittest.TestCase):
         )
 
     def test_verify_proof_matches_lookup_wrapper(self):
-        from apps.authdb.lookup import _verify_proof
+        from apps.authdb._mpt import verify_proof as _verify_proof
 
         root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
         self.assertEqual(
@@ -640,7 +640,7 @@ class TestAuthDbMpt(unittest.TestCase):
         self.assertFalse(self.mpt.verify_proof(b"alice", 1, b"WRONG", proof, root))
 
     def test_verify_nonmembership_matches_lookup_wrapper(self):
-        from apps.authdb.lookup import _verify_nonmembership
+        from apps.authdb._mpt import verify_nonmembership as _verify_nonmembership
 
         root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
         target = b"zara"
@@ -758,6 +758,233 @@ class TestAuthDbComputeNewRoot(unittest.TestCase):
                 b"bob", 0, b"", 1, b"data_bob", [bytes([0]) + b"S" * 32], None,
                 witness_address=b"alice", witness_counter=1, witness_value=b"data_alice",
             )
+
+
+class TestWardQueueStorage(unittest.TestCase):
+    """Storage-level coverage for the WARD pending-candidate queue and the
+    finalize commit (core/src/storage/authdb.py: queue_* + commit_finalize)."""
+
+    def _id(self, n):
+        # wallet_id is a 20-byte BIP32 Hash160.
+        return _sha256d(b"ward-wallet-%d" % n)[:20]
+
+    @mock_storage
+    def test_put_get_roundtrip(self):
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        root = _sha256d(b"root-T")
+        mac = _sha256d(b"mac-T")
+        authdb.queue_put(wallet_id, 5, root, mac, b"alice")
+
+        rec = authdb.queue_get(wallet_id)
+        self.assertIsNotNone(rec)
+        counter, got_root, got_mac, state, address = rec
+        self.assertEqual(counter, 5)
+        self.assertEqual(got_root, root)
+        self.assertEqual(got_mac, mac)
+        self.assertEqual(state, authdb.QUEUE_PENDING)
+        self.assertEqual(address, b"alice")
+
+    @mock_storage
+    def test_get_is_wallet_scoped(self):
+        import storage.authdb as authdb
+
+        authdb.queue_put(self._id(1), 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
+        # A different wallet sees no candidate (single-record, wallet-tagged).
+        self.assertIsNone(authdb.queue_get(self._id(2)))
+
+    @mock_storage
+    def test_set_committed_and_drop(self):
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        authdb.queue_put(wallet_id, 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
+        authdb.queue_set_committed(wallet_id)
+        _c, _r, _m, state, _a = authdb.queue_get(wallet_id)
+        self.assertEqual(state, authdb.QUEUE_COMMITTED)
+
+        authdb.queue_drop()
+        self.assertIsNone(authdb.queue_get(wallet_id))
+
+    @mock_storage
+    def test_set_committed_rejects_foreign_wallet(self):
+        import storage.authdb as authdb
+
+        authdb.queue_put(self._id(1), 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
+        with self.assertRaises(ValueError):
+            authdb.queue_set_committed(self._id(2))
+
+    @mock_storage
+    def test_empty_candidate_roundtrip(self):
+        """A DELETE-to-empty candidate stores EMPTY_ROOT and reads back as
+        (counter, None, None, state, address)."""
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        authdb.queue_put(wallet_id, 9, None, None, b"bob")
+        counter, root, mac, _state, address = authdb.queue_get(wallet_id)
+        self.assertEqual(counter, 9)
+        self.assertIsNone(root)
+        self.assertIsNone(mac)
+        self.assertEqual(address, b"bob")
+
+    @mock_storage
+    def test_commit_finalize_installs_and_advances_qm(self):
+        """commit_finalize installs (root, counter) AND raises qm_last_counter
+        to counter in one write -- WARDConfirmCommit's atomic advance."""
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        # Bootstrap a qm ceiling at 6 (fresh wallet, no root).
+        authdb.commit_init(wallet_id, 6, None, None)
+        self.assertEqual(authdb.get_qm_counter(wallet_id), 6)
+        self.assertEqual(authdb.get_counter(wallet_id), 0)
+
+        root = _sha256d(b"final-root")
+        authdb.commit_finalize(wallet_id, root, 7)
+        self.assertEqual(authdb.get_counter(wallet_id), 7)
+        self.assertEqual(authdb.get_qm_counter(wallet_id), 7)  # ceiling advanced
+        self.assertEqual(authdb.get_root(wallet_id), root)
+
+    @mock_storage
+    def test_commit_finalize_empty_tree(self):
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        authdb.commit_finalize(wallet_id, None, 1)
+        self.assertEqual(authdb.get_counter(wallet_id), 1)
+        self.assertIsNone(authdb.get_root(wallet_id))
+
+
+class TestWardCoreCapability(unittest.TestCase):
+    """The Core (apps.common.ward) appId capability boundary that gates on-device
+    Trezor App -> WARD calls. The verify path itself is covered by TestAuthDbMpt /
+    the device test; here we cover only the capability check, which runs before any
+    seed/root access."""
+
+    def test_capability_map(self):
+        from apps.common import ward as ward_core
+
+        self.assertIn("lookup", ward_core._CAPABILITIES["bitcoin"])
+        self.assertIn("lookup", ward_core._CAPABILITIES["ethereum"])
+        # An app with no grant is absent from the map entirely.
+        self.assertNotIn("wallet", ward_core._CAPABILITIES)
+
+    def test_unauthorized_app_rejected(self):
+        from apps.common import ward as ward_core
+        from trezor.wire import DataError
+
+        with self.assertRaises(DataError):
+            await_result(ward_core.lookup_label("wallet", b"addr", b"v", [], 0))
+
+    def test_unauthorized_capability_rejected(self):
+        """bitcoin holds 'lookup' but not 'set_entry' -- the gate must reject the
+        capability it wasn't granted (before hitting NotImplementedError)."""
+        from apps.common import ward as ward_core
+        from trezor.wire import DataError
+
+        with self.assertRaises(DataError):
+            await_result(ward_core.set_entry("bitcoin"))
+
+
+class TestWardSyncStorage(unittest.TestCase):
+    """The WARD sync-round context (_SYNC): nonce + attested checkpoint."""
+
+    def _id(self, n):
+        return _sha256d(b"ward-wallet-%d" % n)[:20]
+
+    @mock_storage
+    def test_begin_then_get(self):
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        nonce = _sha256d(b"nonce-1")  # 32 bytes
+        authdb.sync_begin(wallet_id, nonce)
+        got = authdb.sync_get(wallet_id)
+        self.assertIsNotNone(got)
+        n, state, counter, mac = got
+        self.assertEqual(n, nonce)
+        self.assertEqual(state, authdb.SYNC_NONCE)
+        self.assertEqual(counter, 0)
+        self.assertIsNone(mac)
+
+    @mock_storage
+    def test_set_attested(self):
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        authdb.sync_begin(wallet_id, _sha256d(b"nonce"))
+        mac = _sha256d(b"mac-ext")
+        authdb.sync_set_attested(wallet_id, 7, mac)
+        _n, state, counter, got_mac = authdb.sync_get(wallet_id)
+        self.assertEqual(state, authdb.SYNC_ATTESTED)
+        self.assertEqual(counter, 7)
+        self.assertEqual(got_mac, mac)
+
+    @mock_storage
+    def test_attested_empty_tree_mac_is_none(self):
+        import storage.authdb as authdb
+
+        wallet_id = self._id(1)
+        authdb.sync_begin(wallet_id, _sha256d(b"nonce"))
+        authdb.sync_set_attested(wallet_id, 3, None)  # empty tree
+        _n, _state, counter, mac = authdb.sync_get(wallet_id)
+        self.assertEqual(counter, 3)
+        self.assertIsNone(mac)
+
+    @mock_storage
+    def test_wallet_scoped_and_clear(self):
+        import storage.authdb as authdb
+
+        authdb.sync_begin(self._id(1), _sha256d(b"nonce"))
+        self.assertIsNone(authdb.sync_get(self._id(2)))
+        authdb.sync_clear()
+        self.assertIsNone(authdb.sync_get(self._id(1)))
+
+    @mock_storage
+    def test_set_attested_requires_round(self):
+        import storage.authdb as authdb
+
+        with self.assertRaises(ValueError):
+            authdb.sync_set_attested(self._id(1), 1, None)
+
+
+class TestWardAttestation(unittest.TestCase):
+    """verify_wm_attestation against the debug WM key (available under __debug__)."""
+
+    def _id(self, n):
+        return _sha256d(b"ward-wallet-%d" % n)[:20]
+
+    def _preimage(self, nonce, wallet_id, counter, mac):
+        return (
+            b"WARD ATTEST v1" + bytes([1]) + nonce + wallet_id
+            + counter.to_bytes(4, "big") + mac
+        )
+
+    def test_valid_attestation_accepted(self):
+        from trezor.crypto.curve import ed25519
+        from apps.authdb._qm import verify_wm_attestation
+
+        seed = b"AUTHDB QM DEBUG KEY SEED v1 ...."  # 32 bytes, matches _QM_PUBKEY_DEBUG
+        wallet_id = self._id(1)
+        nonce = _sha256d(b"nonce")
+        mac = _sha256d(b"mac")
+        counter = 5
+        sig = ed25519.sign(seed, self._preimage(nonce, wallet_id, counter, mac))
+        self.assertTrue(verify_wm_attestation(wallet_id, nonce, counter, mac, sig))
+
+    def test_tampered_counter_rejected(self):
+        from trezor.crypto.curve import ed25519
+        from apps.authdb._qm import verify_wm_attestation
+
+        seed = b"AUTHDB QM DEBUG KEY SEED v1 ...."
+        wallet_id = self._id(1)
+        nonce = _sha256d(b"nonce")
+        mac = _sha256d(b"mac")
+        sig = ed25519.sign(seed, self._preimage(nonce, wallet_id, 5, mac))
+        # verify against a different counter -> preimage mismatch -> rejected
+        self.assertFalse(verify_wm_attestation(wallet_id, nonce, 6, mac, sig))
 
 
 if __name__ == "__main__":

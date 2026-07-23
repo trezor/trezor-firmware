@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import click
 
-from .. import authdb
+from .. import authdb, ward
 from . import with_session
 
 if TYPE_CHECKING:
@@ -17,78 +17,53 @@ def cli() -> None:
 
 
 @cli.command()
-@click.option("--qm-counter", "qm_counter", type=int, required=True, help="Latest QM counter.")
-@click.option(
-    "--qm-signature",
-    "qm_signature_hex",
-    required=True,
-    help="QM Ed25519 signature (hex) over b'AUTHDB QM v1'||wallet_id||counter(4B BE).",
-)
-@click.option("--root", "root_hex", default=None, help="Root from Evolu (hex); omit for a fresh wallet.")
-@click.option("--counter", "counter", type=int, default=None, help="Counter the root was attested at.")
-@click.option("--root-mac", "root_mac_hex", default=None, help="root_mac (hex) for the supplied root.")
+@click.option("--counter", "counter", type=int, required=True, help="Attested counter_ext.")
+@click.option("--root", "root_hex", default=None, help="Root from Evolu (hex); omit for a fresh/empty wallet.")
+@click.option("--root-mac", "root_mac_hex", default=None, help="mac_ext (hex) for the supplied root.")
 @with_session
 def init(
     session: "Session",
-    qm_counter: int,
-    qm_signature_hex: str,
+    counter: int,
     root_hex: str | None,
-    counter: int | None,
     root_mac_hex: str | None,
 ) -> str:
-    """Bootstrap the device AuthDB state from the QM counter + stored root.
+    """Bootstrap the device via the WARD sync round.
 
-    The device verifies the QM Ed25519 signature, stores qm_counter as the
-    qm_last_counter anti-rollback ceiling, and — if a root is supplied —
-    verifies counter == qm_counter and root_mac before installing it.
+    Runs init_sync -> ingest_attestation -> merge_state; the WM freshness
+    attestation is signed here with the debug WM key (dev/testing use). The
+    device verifies the attestation and that mac_ext binds the supplied root
+    before adopting (root, counter).
     """
     root = bytes.fromhex(root_hex) if root_hex else None
     root_mac = bytes.fromhex(root_mac_hex) if root_mac_hex else None
-    qm_last, wallet_id, out_counter, out_root, out_mac = authdb.init(
-        session,
-        qm_counter=qm_counter,
-        qm_signature=bytes.fromhex(qm_signature_hex),
-        root=root,
-        counter=counter,
-        root_mac=root_mac,
+    out_counter, out_root, wallet_id, out_mac = ward.bootstrap(
+        session, counter, root_mac, root
     )
     id_hex = wallet_id.hex() if wallet_id else "(none)"
     root_out = out_root.hex() if out_root else "(empty)"
     mac_out = out_mac.hex() if out_mac else "(none)"
     return (
-        f"Initialized. QM last counter: {qm_last}. Wallet ID: {id_hex}. "
+        f"Bootstrapped. Wallet ID: {id_hex}. "
         f"Counter: {out_counter}. Root: {root_out}. Root-MAC: {mac_out}"
     )
 
 
 @cli.command(name="set-root")
 @click.argument("root_hex")
-@click.option("--mac", "mac_hex", default=None, help="Root-attestation MAC (hex) from update-leaf.")
-@click.option("--wallet-id", "wallet_id_hex", default=None, help="Wallet ID (hex); required with a real mac.")
-@click.option("--counter", "counter", type=int, default=None, help="Target counter; required with a real mac.")
 @with_session
-def set_root(
-    session: "Session",
-    root_hex: str,
-    mac_hex: str | None,
-    wallet_id_hex: str | None,
-    counter: int | None,
-) -> str:
-    """Install a Merkle root (32 bytes, hex-encoded) on the device.
+def set_root(session: "Session", root_hex: str) -> str:
+    """DEBUG-only: inject a Merkle root (32 bytes, hex) via WARDDebugSetRoot.
 
-    With no --mac this is a debug-only unauthenticated injection. Supply
-    --mac (a device-produced root-attestation token) plus --wallet-id and
-    --counter for the production-safe, MAC-verified path.
+    Seeds a root in one call without the full attest+merge sequence; rejected on
+    production firmware. The production path to install a root is the WARD sync
+    round (`trezorctl authdb init`).
     """
-    root = bytes.fromhex(root_hex)
-    mac = bytes.fromhex(mac_hex) if mac_hex else None
-    wallet_id_arg = bytes.fromhex(wallet_id_hex) if wallet_id_hex else None
-    out_counter, wallet_id, new_root, root_mac = authdb.set_root(
-        session, root, mac=mac, wallet_id=wallet_id_arg, counter=counter
+    out_counter, new_root, wallet_id, root_mac = ward.debug_set_root(
+        session, bytes.fromhex(root_hex)
     )
     id_hex = wallet_id.hex() if wallet_id else "(none)"
     mac_out = root_mac.hex() if root_mac else "(none)"
-    return f"Root stored. Counter: {out_counter}. Wallet ID: {id_hex}. Root-MAC: {mac_out}"
+    return f"Root injected (debug). Counter: {out_counter}. Wallet ID: {id_hex}. Root-MAC: {mac_out}"
 
 
 @cli.command()
@@ -150,7 +125,7 @@ def lookup(
     witness_address = bytes.fromhex(witness_address_hex) if witness_address_hex else None
     witness_value = bytes.fromhex(witness_value_hex) if witness_value_hex else None
 
-    valid, membership, out_counter, wallet_id = authdb.lookup(
+    valid, membership, out_counter, wallet_id = ward.lookup(
         session,
         address=address,
         value=value,
@@ -242,7 +217,9 @@ def update_leaf(
     witness_address = bytes.fromhex(witness_address_hex) if witness_address_hex else None
     witness_value = bytes.fromhex(witness_value_hex) if witness_value_hex else None
 
-    counter, new_root, wallet_id, new_mac = authdb.update_leaf(
+    # WARD write round (set_entry -> commit -> finalize). The final WM attestation
+    # is signed here with the debug WM key for local/dev use.
+    counter, new_root, wallet_id, new_mac = ward.write(
         session,
         address=address,
         old_value=old_value,
@@ -301,7 +278,7 @@ def delete(
     old_value = bytes.fromhex(old_value_hex)
     proof = [bytes.fromhex(h) for h in proof_hexes]
 
-    counter, new_root, wallet_id, _mac = authdb.update_leaf(
+    counter, new_root, wallet_id, _mac = ward.write(
         session,
         address=address,
         old_value=old_value,

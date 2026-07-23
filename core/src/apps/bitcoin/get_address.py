@@ -150,6 +150,22 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             )
         else:
             account = address_n_to_name_or_unknown(coin, address_n, script_type)
+            # WARD label-at-address: when the host supplies a membership proof for
+            # this address, route it through the Core capability boundary, which
+            # verifies it against the device's authenticated WARD root and returns
+            # the trusted label. A forged/stale proof yields None (account unchanged).
+            if msg.ward_value is not None:
+                from apps.common import ward as ward_core
+
+                label = await ward_core.lookup_label(
+                    "bitcoin",
+                    address.encode(),
+                    msg.ward_value,
+                    msg.ward_proof,
+                    msg.ward_counter or 0,
+                )
+                if label is not None:
+                    account = bytes(label).decode()
             await show_address(
                 address_short,
                 subtitle=subtitle,

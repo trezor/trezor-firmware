@@ -112,15 +112,27 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.PaymentNotification:
         return "apps.misc.payment_notification"
 
-    # authdb (four online interfaces: init / setroot / dblookup / dbchange)
-    if msg_type == MessageType.AuthDbInit:
-        return "apps.authdb.init"
-    if msg_type == MessageType.AuthDbSetRoot:
-        return "apps.authdb.set_root"
-    if msg_type == MessageType.AuthDbLookup:
-        return "apps.authdb.lookup"
-    if msg_type == MessageType.AuthDbUpdateLeaf:
-        return "apps.authdb.update_leaf"
+    # WARD write round (decomposed AuthDbUpdateLeaf: set_entry / commit / finalize)
+    if msg_type == MessageType.WARDSetEntry:
+        return "apps.ward.set_entry"
+    if msg_type == MessageType.WARDCommitCandidate:
+        return "apps.ward.commit"
+    if msg_type == MessageType.WARDConfirmCommit:
+        return "apps.ward.finalize"
+
+    # WARD sync round (bootstrap/refresh) + lookup + debug seed
+    if msg_type == MessageType.WARDInitSyncRound:
+        return "apps.ward.init_sync"
+    if msg_type == MessageType.WARDIngestAttestation:
+        return "apps.ward.ingest_attest"
+    if msg_type == MessageType.WARDListPendingEdits:
+        return "apps.ward.list_pending"
+    if msg_type == MessageType.WARDMergeState:
+        return "apps.ward.merge_state"
+    if msg_type == MessageType.WARDLookup:
+        return "apps.ward.lookup"
+    if __debug__ and msg_type == MessageType.WARDDebugSetRoot:
+        return "apps.ward.debug_set_root"
 
     # evolu
     if msg_type == MessageType.EvoluGetNode:

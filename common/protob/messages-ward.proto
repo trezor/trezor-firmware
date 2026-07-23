@@ -1,0 +1,276 @@
+syntax = "proto2";
+package hw.trezor.messages.ward;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageWard";
+
+// WARD is the decomposition of the former fused AuthDbUpdateLeaf into a
+// sequenced write round with a durable device-held pending edit:
+//
+//   WARDSetEntry  -- verify the old-state proof, compute the candidate
+//                    (root_T, counter_T, mac_T) and queue it PENDING. The
+//                    device does NOT advance its counter yet.
+//   WARDCommitCandidate -- emit the queued candidate triple so the host can
+//                    persist it (Evolu) and have the WARD Manager (WM/QM) sign it.
+//   WARDConfirmCommit -- verify the WM's Ed25519 signature over the exact
+//                    candidate, then install the root, advance the counter,
+//                    and drop the queued edit.
+//
+// AuthDbInit / AuthDbSetRoot / AuthDbLookup remain in messages-authdb.proto.
+
+/**
+ * Request: Verify a leaf change against the stored root and queue it as a
+ * PENDING candidate (offline queue; MVP depth: at most one per wallet).
+ *
+ * The device verifies old_value is the current value at address (or the address
+ * is absent when old_value is empty), computes the candidate new root, stamps
+ * the changed leaf with new_counter (== current root counter + 1), and stores
+ * the candidate (root_T, counter_T, mac_T) without advancing the counter.
+ *
+ * Supported operations (same classification as the former AuthDbUpdateLeaf):
+ *   UPDATE  : old_value non-empty, new_value non-empty, membership proof for old leaf
+ *   DELETE  : old_value non-empty, new_value empty,     membership proof for old leaf
+ *   INSERT  : old_value empty,     new_value non-empty, non-membership proof (witness fields)
+ *   INIT    : old_value empty,     new_value non-empty, proof empty, no witness (empty tree)
+ *
+ * The leaf hash is sha256d(0x00||address||counter(4B BE)||value).
+ * @start
+ * @next WARDSetEntryAck
+ * @next Failure
+ */
+message WARDSetEntry {
+    required bytes  address         = 1;  // key to update
+    required bytes  old_value       = 2;  // current value; empty means address is absent
+    required bytes  new_value       = 3;  // new value; empty means delete
+    repeated bytes  proof           = 4;  // proof for old state (33 bytes each, leaf-to-root)
+    optional bytes  witness_address = 5;  // non-membership witness address (INSERT only)
+    optional bytes  witness_value   = 6;  // non-membership witness value   (INSERT only)
+    optional uint32 old_counter     = 9;  // previous global stamp of the leaf; absent/0 on INSERT/INIT
+    required uint32 new_counter     = 10; // candidate global counter stamped onto the leaf (current root counter + 1)
+    optional uint32 witness_counter = 11; // global stamp of witness_value (INSERT only)
+}
+
+/**
+ * Response: Confirmation that the candidate was verified and queued PENDING.
+ * The candidate triple itself is emitted by WARDCommitCandidate, not here.
+ * @end
+ */
+message WARDSetEntryAck {
+    required uint32 counter   = 1;  // candidate counter_T (current root counter + 1)
+    optional bytes  wallet_id = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+}
+
+/**
+ * Request: Emit the queued PENDING candidate as the authorized commit.
+ *
+ * The device returns the (root_T, counter_T, mac_T) triple it computed at
+ * WARDSetEntry and marks the queued edit COMMITTED. This is the self-contained,
+ * verifiable attestation the host persists to Evolu and submits to the WM.
+ * The counter is still NOT advanced on the device.
+ * @start
+ * @next WARDCommitCandidateAck
+ * @next Failure
+ */
+message WARDCommitCandidate {
+}
+
+/**
+ * Response: The authorized candidate triple.
+ * @end
+ */
+message WARDCommitCandidateAck {
+    required uint32 counter   = 1;  // candidate counter_T
+    optional bytes  new_root  = 2;  // candidate root_T; absent if the tree becomes empty (DELETE to empty)
+    optional bytes  mac       = 3;  // mac_T = HMAC(root_mac_key, wallet_id||counter_T||root_T); absent if empty
+    optional bytes  wallet_id = 4;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+}
+
+/**
+ * Request: Confirm the committed candidate after the WM has signed it.
+ *
+ * The device verifies qm_signature is a valid Ed25519 signature under the
+ * provisioned WM/QM public key over
+ *     b"WARD FINAL v1" || wallet_id || counter(4B BE) || mac
+ * and asserts (counter, mac) equal the queued COMMITTED candidate and that
+ * counter is strictly greater than the stored qm_last_counter (anti-rollback).
+ * Only then does it install root_T, advance the counter and qm_last_counter to
+ * counter_T, and drop the queued edit.
+ * @start
+ * @next WARDConfirmCommitAck
+ * @next Failure
+ */
+message WARDConfirmCommit {
+    required uint32 counter      = 1;  // counter_T; must equal the committed candidate
+    optional bytes  mac          = 2;  // mac_T; must equal the committed candidate (absent iff the candidate is empty)
+    required bytes  qm_signature = 3;  // WM Ed25519 sig over b"WARD FINAL v1"||wallet_id||counter(4B BE)||mac
+}
+
+/**
+ * Response: The device's authenticated state after confirmation.
+ * @end
+ */
+message WARDConfirmCommitAck {
+    required uint32 counter   = 1;  // counter after finalize (== counter_T)
+    optional bytes  new_root  = 2;  // installed root; absent if the tree is now empty
+    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if empty
+}
+
+// ===========================================================================
+// Sync round (bootstrap / refresh): establish the device's authenticated state
+// from the WM-attested (counter, mac) and the host-held root.
+//
+//   WARDInitSyncRound     -- device mints a per-round nonce (anti-replay)
+//   WARDIngestAttestation -- device verifies the WM's signed (counter, mac)
+//   WARDListPendingEdits  -- device reports its queued pending-edit addresses
+//   WARDMergeState        -- device adopts the host root after checking it
+//                            against the attested mac
+// ===========================================================================
+
+/**
+ * Request: Begin a sync round. The device mints and stores a fresh nonce.
+ * @start
+ * @next WARDInitSyncRoundAck
+ * @next Failure
+ */
+message WARDInitSyncRound {
+}
+
+/**
+ * Response: the device-minted nonce (echoed back in the WM attestation).
+ * @end
+ */
+message WARDInitSyncRoundAck {
+    required bytes  nonce     = 1;  // per-round anti-replay value the WM attestation must echo
+    required uint32 version   = 2;  // WARD protocol version
+    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+}
+
+/**
+ * Request: Deliver the WM's freshness attestation for this wallet.
+ *
+ * The device verifies wm_signature is a valid Ed25519 signature under the
+ * provisioned WM/QM public key over
+ *     b"WARD ATTEST v1" || version(1B) || nonce || wallet_id || counter(4B BE) || mac
+ * where nonce is the one minted at WARDInitSyncRound. It also asserts
+ * counter >= counter_loc (anti-rollback), then records (counter, mac) as the
+ * attested checkpoint for this round.
+ * @start
+ * @next WARDIngestAttestationAck
+ * @next Failure
+ */
+message WARDIngestAttestation {
+    required uint32 counter      = 1;  // counter_ext the WM claims is current
+    optional bytes  mac          = 2;  // mac_ext = MAC(mac_key, root||counter_ext); absent if the tree is empty
+    required bytes  wm_signature = 3;  // Ed25519 sig over the attestation preimage (see above)
+}
+
+/**
+ * Response: acknowledgement of the accepted attestation.
+ * @end
+ */
+message WARDIngestAttestationAck {
+    required uint32 counter   = 1;  // accepted counter_ext
+    optional bytes  wallet_id = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+}
+
+/**
+ * Request: Ask the device for the addresses currently in its pending-edit queue
+ * (so Suite can fetch/build the corresponding entries). MVP depth: 0 or 1.
+ * @start
+ * @next WARDListPendingEditsAck
+ * @next Failure
+ */
+message WARDListPendingEdits {
+}
+
+/**
+ * Response: the queued pending-edit addresses.
+ * @end
+ */
+message WARDListPendingEditsAck {
+    repeated bytes addresses = 1;  // addresses of the currently queued pending edits
+    optional bytes wallet_id = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+}
+
+/**
+ * Request: Adopt the host-supplied root as the device's authenticated state.
+ *
+ * The device asserts MAC(mac_key, root || counter_ext) == the mac attested at
+ * WARDIngestAttestation (binding the data plane to the state plane), then installs
+ * (root, counter_ext) and advances the anti-rollback ceiling. `root` is absent for
+ * an empty tree (the attested mac is then all-zero). Requires a prior
+ * WARDIngestAttestation in the same round.
+ * @start
+ * @next WARDMergeStateAck
+ * @next Failure
+ */
+message WARDMergeState {
+    optional bytes root = 1;  // the current authenticated root; absent for an empty tree
+}
+
+/**
+ * Response: the device's authenticated state after adopting the root.
+ * @end
+ */
+message WARDMergeStateAck {
+    required uint32 counter   = 1;  // installed counter (== attested counter_ext)
+    optional bytes  new_root  = 2;  // installed root; absent if the tree is empty
+    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if empty
+}
+
+/**
+ * Request: Verify a Merkle Patricia Trie proof for a (address, value) pair
+ * against the device's authenticated root (formerly AuthDbLookup).
+ *
+ * Membership proof (witness_address absent): verify (address, value) is present.
+ * Non-membership proof (witness_address present): verify address is absent via a
+ * witness leaf on address's path. Empty proof + no witness = empty tree.
+ * @start
+ * @next WARDLookupAck
+ * @next Failure
+ */
+message WARDLookup {
+    required bytes  address         = 1;  // key whose SHA-256 determines the tree path
+    optional bytes  value           = 2;  // value stored at address (required for membership)
+    repeated bytes  proof           = 3;  // sibling hashes, leaf-to-root order (33 bytes each)
+    optional bytes  witness_address = 4;  // non-membership: witness leaf address
+    optional bytes  witness_value   = 5;  // non-membership: witness leaf value
+    optional uint32 counter         = 6;  // leaf counter for address (required for membership)
+    optional uint32 witness_counter = 7;  // leaf counter for witness_address (non-membership)
+}
+
+/**
+ * Response: verification result together with the current counter.
+ * @end
+ */
+message WARDLookupAck {
+    required bool   valid      = 1;  // true if the proof is valid against the stored root
+    required uint32 counter    = 2;  // current global counter
+    optional bool   membership = 3;  // true = membership proof, false = non-membership
+    optional bytes  wallet_id  = 4;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+}
+
+/**
+ * Request: DEBUG-ONLY unauthenticated root injection, for tests to seed a root
+ * without the full attest+merge sequence. Rejected on production firmware.
+ * @start
+ * @next WARDDebugSetRootAck
+ * @next Failure
+ */
+message WARDDebugSetRoot {
+    required bytes root = 1;  // 32-byte root to install (increments the counter by 1)
+}
+
+/**
+ * Response: the device state after the debug injection.
+ * @end
+ */
+message WARDDebugSetRootAck {
+    required uint32 counter   = 1;  // counter after install
+    optional bytes  new_root  = 2;  // installed root
+    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root)
+}
