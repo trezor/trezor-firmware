@@ -560,13 +560,13 @@ async def _confirm_auth_entry(
 
     creds = auth.credentials
 
-    if creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS:
-        if creds.address is None:
+    if creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2:
+        if creds.address_v2 is None:
             raise DataError("Stellar: missing address credentials")
 
         await confirm_address(
             f"{TR.words__authorization} {position}",
-            creds.address.address,
+            creds.address_v2.address,
             description=TR.words__address,
             br_name="op_auth_entry_address",
         )

@@ -6710,13 +6710,13 @@ if TYPE_CHECKING:
 
     class StellarSorobanCredentials(protobuf.MessageType):
         type: "StellarSorobanCredentialsType"
-        address: "StellarSorobanAddressCredentials | None"
+        address_v2: "StellarSorobanAddressCredentials | None"
 
         def __init__(
             self,
             *,
             type: "StellarSorobanCredentialsType",
-            address: "StellarSorobanAddressCredentials | None" = None,
+            address_v2: "StellarSorobanAddressCredentials | None" = None,
         ) -> None:
             pass
 

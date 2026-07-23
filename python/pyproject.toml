@@ -40,14 +40,24 @@ hidapi = ["hidapi>=0.7.99.post20"]
 ethereum = ["web3>=5"]
 qt-widgets = ["PyQt5"]
 extra = ["Pillow>=10"]
-stellar = ["stellar-sdk>=13"]
+stellar = [
+    "stellar-sdk>=13; python_version < '3.10'",
+    # Protocol 27 support (SOROBAN_CREDENTIALS_ADDRESS_V2 etc.) requires
+    # stellar-sdk 15, which dropped Python 3.9. The floor is the 15.0.0b0
+    # pre-release only because the 15.0.0 final is younger than the
+    # `exclude-newer = "30 days"` uv policy below and would make resolution
+    # fail; bump to >=15 once the final release ages past that window.
+    "stellar-sdk>=15.0.0b0; python_version >= '3.10'",
+]
 ble = ["bleak>=1.1.0"]
 full = [
     "hidapi>=0.7.99.post20",
     "web3>=5",
     "PyQt5",
     "Pillow>=10",
-    "stellar-sdk>=13",
+    "stellar-sdk>=13; python_version < '3.10'",
+    # 15.0.0b0 floor: see the stellar extra above
+    "stellar-sdk>=15.0.0b0; python_version >= '3.10'",
     "bleak>=1.1.0",
 ]
 
