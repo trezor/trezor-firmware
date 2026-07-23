@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.serialization import (
 HERE = Path(__file__).parent
 ROOT = HERE.parent.parent.resolve()
 CONFIG_DIR = ROOT / "tests" / "tropic_model"
-DEST_PATH = CONFIG_DIR / "config.yml"
+DEST_PATH = CONFIG_DIR / "firmware_config.yml"
 CFG_SPEC_PATH = (
     ROOT / "core" / "embed" / "sec" / "tropic" / "config" / "tropic_configs.json"
 )

@@ -23,7 +23,7 @@ import pytest
 import yaml
 
 from tests.emulators import (
-    TROPIC_MODEL_CONFIGFILE,
+    TROPIC_MODEL_CURRENT_CONFIG,
     EmulatorWrapper,
     delete_profile,
     get_logfile,
@@ -58,9 +58,9 @@ def _bundled_fw_version_slot() -> bytes:
     fills from the images bundled by `core/embed/sec/tropic/build.rs`. A firmware
     bump therefore only has to be followed by `make tropic_config`.
     """
-    config = yaml.safe_load(TROPIC_MODEL_CONFIGFILE.read_text())
+    config = yaml.safe_load(TROPIC_MODEL_CURRENT_CONFIG.read_text())
     value = slot_value(config, TROPIC_FW_VERSION_SLOT)
-    assert value is not None, f"Missing FW version slot in {TROPIC_MODEL_CONFIGFILE}"
+    assert value is not None, f"Missing FW version slot in {TROPIC_MODEL_CURRENT_CONFIG}"
     return value
 
 
@@ -307,7 +307,7 @@ def _initial_i_config(version_or_name: int | str) -> dict[str, int]:
 
 
 def _build_tropic_model_config(scenario: TropicFwUpdateScenario) -> dict:
-    config = yaml.safe_load(TROPIC_MODEL_CONFIGFILE.read_text())
+    config = yaml.safe_load(TROPIC_MODEL_CURRENT_CONFIG.read_text())
     set_chip_distribution(config, scenario.chip_distribution)
     set_chip_revision(config, scenario.silicon_revision)
     config["i_config"] = _initial_i_config(scenario.initial_i_config)

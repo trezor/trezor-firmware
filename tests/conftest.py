@@ -46,7 +46,7 @@ from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 from . import ui_tests
 from .emulators import (
-    TROPIC_MODEL_CONFIGFILE,
+    TROPIC_MODEL_CURRENT_CONFIG,
     EmulatorWrapper,
     delete_profile,
     get_logfile,
@@ -120,7 +120,7 @@ def tropic_model_port(request: pytest.FixtureRequest) -> t.Iterator[int | None]:
         )
         with TropicModel(
             profile_dir=temp_dir,
-            configfile=TROPIC_MODEL_CONFIGFILE,
+            configfile=TROPIC_MODEL_CURRENT_CONFIG,
             port=port,
             logfile=logfile,
         ) as tropic_model:
