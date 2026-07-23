@@ -755,6 +755,76 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
         )
     )
 
+    # Canonical WETH (Wrapped Ether) contracts holding the chain's native currency.
+    # Wrapping is 1:1 and reversible, so the amounts are rendered with the native
+    # currency formatter: deposit() wraps the transaction value into WETH and
+    # withdraw(wad) unwraps the same amount of WETH back to the native currency.
+    # https://github.com/trezor/trezor-firmware/issues/7252
+    WETH_DEPLOYMENTS = [
+        # https://etherscan.io/address/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+        (
+            1,
+            b"\xc0\x2a\xaa\x39\xb2\x23\xfe\x8d\x0a\x0e\x5c\x4f\x27\xea\xd9\x08\x3c\x75\x6c\xc2",
+        ),
+        # https://optimistic.etherscan.io/address/0x4200000000000000000000000000000000000006
+        (
+            10,
+            b"\x42\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06",
+        ),
+        # https://arbiscan.io/address/0x82aF49447D8a07e3bd95BD0d56f35241523fBab1
+        (
+            42161,
+            b"\x82\xaf\x49\x44\x7d\x8a\x07\xe3\xbd\x95\xbd\x0d\x56\xf3\x52\x41\x52\x3f\xba\xb1",
+        ),
+        # https://basescan.org/address/0x4200000000000000000000000000000000000006
+        (
+            8453,
+            b"\x42\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06",
+        ),
+        # https://sepolia.etherscan.io/address/0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9
+        (
+            11155111,
+            b"\x7b\x79\x99\x5e\x5f\x79\x3a\x07\xbc\x00\xc2\x14\x12\xe5\x0e\xca\xe0\x98\xe7\xf9",
+        ),
+        # https://holesky.etherscan.io/address/0x94373a4919B3240D86eA41593D5eBa789FEF3848
+        (
+            17000,
+            b"\x94\x37\x3a\x49\x19\xb3\x24\x0d\x86\xea\x41\x59\x3d\x5e\xba\x78\x9f\xef\x38\x48",
+        ),
+    ]
+
+    WETH_CONTEXT = BindingContext(WETH_DEPLOYMENTS)
+
+    yield DisplayFormat(
+        binding_context=WETH_CONTEXT,
+        func_sig=b"\xd0\xe3\x0d\xb0",  # deposit()
+        intent="Wrap ETH to WETH",
+        parameter_definitions=[],  # no arguments, the amount is the tx value
+        field_definitions=[
+            FieldDefinition(
+                ContainerPath.Value,  # @.value
+                "Amount",
+                AmountFormatter,
+            ),
+        ],
+    )
+
+    yield DisplayFormat(
+        binding_context=WETH_CONTEXT,
+        func_sig=b"\x2e\x1a\x7d\x4d",  # withdraw(uint256)
+        intent="Unwrap WETH to ETH",
+        parameter_definitions=[
+            Atomic(parse_uint256),  # wad
+        ],
+        field_definitions=[
+            FieldDefinition(
+                (0,),  # wad
+                "Amount",
+                AmountFormatter,
+            ),
+        ],
+    )
+
     if __debug__:
 
         # One contract to test it all would have been easier. But Caesar has a paragraph limit.
