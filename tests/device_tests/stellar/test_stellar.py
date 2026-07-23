@@ -188,6 +188,56 @@ def test_sign_tx(session: Session, parameters, result):
         assert False, "Invalid expected result"
 
 
+@pytest.mark.models("core")
+@parametrize_using_common_fixtures("stellar/sign_soroban_authorization.json")
+def test_sign_soroban_authorization(session: Session, parameters, result):
+    authorization = protobuf.dict_to_proto(
+        messages.StellarSorobanAuthorizationWithAddress, parameters["authorization"]
+    )
+
+    # check fixture consistency
+    if stellar.HAVE_STELLAR_SDK_PROTOCOL_27:
+        from stellar_sdk import Keypair
+        from stellar_sdk import auth as stellar_auth
+        from stellar_sdk import xdr as stellar_xdr
+
+        entry = stellar_xdr.SorobanAuthorizationEntry.from_xdr(parameters["xdr"])
+        assert stellar.from_authorization_entry(entry) == authorization
+
+        if "signature" in result:
+            assert entry.credentials.address_v2 is not None
+            payload = stellar_auth.authorization_payload_hash(
+                stellar_auth.build_authorization_preimage(
+                    entry,
+                    valid_until_ledger_sequence=entry.credentials.address_v2.signature_expiration_ledger.uint32,
+                    network_passphrase=parameters["network_passphrase"],
+                )
+            )
+            pubkey = bytes.fromhex(result["public_key"])
+            keypair = Keypair.from_raw_ed25519_public_key(pubkey)
+            keypair.verify(payload, b64decode(result["signature"]))
+
+    if "signature" in result:
+        response = stellar.sign_soroban_authorization(
+            session,
+            parse_path(parameters["address_n"]),
+            parameters["network_passphrase"],
+            authorization,
+        )
+        assert response.public_key.hex() == result["public_key"]
+        assert b64encode(response.signature).decode() == result["signature"]
+    elif "error_message" in result:
+        with pytest.raises(TrezorFailure, match=result["error_message"]):
+            stellar.sign_soroban_authorization(
+                session,
+                parse_path(parameters["address_n"]),
+                parameters["network_passphrase"],
+                authorization,
+            )
+    else:
+        assert False, "Invalid expected result"
+
+
 @parametrize_using_common_fixtures("stellar/get_address.json")
 def test_get_address(session: Session, parameters, result):
     address_n = parse_path(parameters["path"])
