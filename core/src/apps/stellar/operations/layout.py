@@ -565,7 +565,7 @@ async def _confirm_auth_entry(
             raise DataError("Stellar: missing address credentials")
 
         await confirm_address(
-            f"{TR.words__authorization} {position}",
+            f"{TR.words__authorization} #{position}",
             creds.address_v2.address,
             description=TR.words__address,
             br_name="op_auth_entry_address",
@@ -573,7 +573,7 @@ async def _confirm_auth_entry(
 
     # Show the whole authorized invocation tree starting from its root (not just the
     # nested sub-invocations), so the user sees exactly what this signature authorizes.
-    await _confirm_invocation(auth.root_invocation, str(position), is_root=is_root)
+    await _confirm_invocation(auth.root_invocation, f"#{position}", is_root=is_root)
 
 
 async def _confirm_invocation(
@@ -582,8 +582,9 @@ async def _confirm_invocation(
     """Confirm an authorized invocation and its sub-invocations recursively.
 
     The whole authorization tree is shown by default (it is security-critical and
-    can differ from the host function being invoked). `position` is the path in
-    the auth tree (e.g. "1", "1-2", "1-2-1").
+    can differ from the host function being invoked). `position` is the root
+    label plus the dot-delimited path in the auth tree (e.g. "#2", "#2.1",
+    "#2.1.1"), so every label is composed as root label + path from the root.
     """
     from trezor.enums import StellarSorobanAuthorizedFunctionType
 
@@ -606,7 +607,7 @@ async def _confirm_invocation(
         )
 
     for i, sub in enumerate(invocation.sub_invocations):
-        await _confirm_invocation(sub, f"{position}-{i + 1}")
+        await _confirm_invocation(sub, f"{position}.{i + 1}")
 
 
 def _escape_str(s: str) -> str:
