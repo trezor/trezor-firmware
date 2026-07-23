@@ -47,7 +47,7 @@ from . import (
     assert_hexdata,
 )
 from .tropic_utils import (
-    DEFAULT_TROPIC_MODEL_CONFIGFILE,
+    DEFAULT_PRODTEST_TROPIC_MODEL_CONFIGFILE,
     TropicModelState,
     TropicProdtest,
 )
@@ -230,10 +230,10 @@ def test_tropic_lock(tropic_prodtest: TropicProdtest) -> None:
     fresh (unlocked) model as a baseline to show the reversible config actually
     changed.
     """
-    baseline = TropicModelState.from_file(DEFAULT_TROPIC_MODEL_CONFIGFILE)
+    baseline = TropicModelState.from_file(DEFAULT_PRODTEST_TROPIC_MODEL_CONFIGFILE)
 
     with tropic_prodtest(
-        tropic_model_configfile=DEFAULT_TROPIC_MODEL_CONFIGFILE
+        tropic_model_configfile=DEFAULT_PRODTEST_TROPIC_MODEL_CONFIGFILE
     ) as session:
         session.client.command_ok(ProdtestCommand(Cmd.TROPIC_LOCK))
     locked = session.state()
