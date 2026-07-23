@@ -1,18 +1,20 @@
+use core::mem::MaybeUninit;
 use core::ops::DerefMut;
-
-use rtl::CSlice;
+use core::pin::Pin;
 
 use super::ffi;
+use super::memory::{Memory, init_ctx};
 use super::secret::{HazardGuard, SecretContext, SecretContextLock, ZeroableMemory};
+use crate::hasher::{PinnedHasher, RawHasher};
 
 pub const BLOCK_SIZE: usize = ffi::SHA256_BLOCK_LENGTH as usize;
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-pub type Sha256Ctx = SecretContext<ffi::SHA256_CTX>;
+pub type Sha256Ctx = ffi::SHA256_CTX;
 
 // SAFETY: SHA256_CTX is valid when zeroed
-unsafe impl ZeroableMemory for ffi::SHA256_CTX {}
+unsafe impl ZeroableMemory for Sha256Ctx {}
 
 impl ffi::SHA256_CTX {
     /// Initialize the SHA256 context.
@@ -48,22 +50,7 @@ impl HazardGuard<'_, ffi::SHA256_CTX> {
     }
 }
 
-/// SHA256 hasher.
-///
-/// A wrapper around a SHA256 context that provides a safe interface for hashing
-/// data.
-///
-/// # Example
-///
-/// ```rust
-/// use crypto::sha256::{Sha256, Sha256Ctx};
-///
-/// let mut ctx = Sha256Ctx::default();
-/// let mut sha = Sha256::new(&mut ctx);
-/// sha.update(b"hello");
-/// sha.finalize();
-/// ```
-pub struct Sha256<D: DerefMut<Target = Sha256Ctx>>(SecretContextLock<D>);
+pub type Sha256<'a> = PinnedHasher<&'a mut Memory<Sha256Ctx>>;
 
 impl<D: DerefMut<Target = Sha256Ctx>> Sha256<D> {
     /// Construct a new SHA256 hasher.
@@ -72,8 +59,17 @@ impl<D: DerefMut<Target = Sha256Ctx>> Sha256<D> {
         ctx.hazard_mut().init();
         Self(SecretContextLock::new(ctx))
     }
+}
 
-    /// Update the SHA256 context with the given data.
+impl Default for NoPinSha256 {
+    fn default() -> Self {
+        let mut ctx = unsafe { MaybeUninit::<ffi::SHA256_CTX>::zeroed().assume_init() };
+        unsafe { ffi::sha256_Init(&mut ctx) };
+        Self { ctx }
+    }
+}
+
+impl NoPinSha256 {
     pub fn update(&mut self, data: &[u8]) {
         self.0.guarded().update(data);
     }
@@ -113,9 +109,10 @@ mod test {
 
     #[test]
     fn test_empty_ctx() {
-        let mut ctx = Sha256Ctx::default();
-        let sha = Sha256::new(&mut ctx);
-        let out = sha.finalize();
+        let mut out = Digest::default();
+
+        init_ctx!(Sha256, ctx);
+        ctx.finalize(&mut out);
 
         let out_hex = hex::encode(out);
         assert_eq!(out_hex, SHA256_EMPTY.to_string());

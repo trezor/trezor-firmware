@@ -158,7 +158,6 @@ pub enum Cmd {
     /// Print current version of specified project
     PrintVersion(PrintVersionArgs),
     Modular(ModularArgs),
-    ApiBindings(ApiArgs),
 }
 
 #[derive(Args, Debug)]
@@ -252,10 +251,4 @@ pub struct CombineArgs {
 #[command(hide = true)] // Should probably go under some kind of misc subcommand.
 pub struct PrintVersionArgs {
     pub project: Project,
-}
-
-#[derive(Args, Debug)]
-pub struct ApiArgs {
-    #[arg(long, default_value = "false")]
-    pub check_only: bool,
 }

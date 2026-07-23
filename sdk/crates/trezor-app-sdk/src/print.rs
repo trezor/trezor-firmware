@@ -1,6 +1,23 @@
-use crate::log::Level;
-use crate::low_level_api;
+use core::cell::RefCell;
+
+use stabby::str::Str;
+
+use crate::app_runtime2;
+use crate::traits::syslog::{
+    LogCallback, LogCallbackRef, LogLevel, LogRecordDyn, LogRecordRef, StaticSyslogV1, SyslogV1,
+    SyslogV1Dyn as _,
+};
+use crate::traits::util::FastResult;
+
+#[cfg(not(target_os = "none"))]
 mod unix_ffi {
+    use stabby::str::Str;
+
+    use crate::traits::syslog::{
+        LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1,
+    };
+    use crate::traits::util::FastResult;
+
     const STDOUT_FILENO: cty::c_int = 1;
 
     unsafe extern "C" {
@@ -13,89 +30,91 @@ mod unix_ffi {
             write(STDOUT_FILENO, to_log.as_ptr(), to_log.len() as cty::size_t);
         }
     }
-}
 
-#[derive(Clone, Copy, Default)]
-enum Printer {
-    #[cfg(not(target_os = "none"))]
-    #[cfg_attr(not(target_os = "none"), default)]
-    Unix,
-    #[cfg_attr(target_os = "none", default)]
-    None,
-    Api,
-}
+    pub struct UnixLogger;
 
-impl Printer {
-    const fn initial() -> Self {
-        #[cfg(not(target_os = "none"))]
-        return Printer::Unix;
-        #[cfg(target_os = "none")]
-        return Printer::None;
-    }
-
-    fn start_print(&self, module: &str, log_level: Level) {
-        match self {
-            #[cfg(not(target_os = "none"))]
-            Printer::Unix => unix_ffi::print(module),
-            Printer::None => (),
-            Printer::Api => {
-                let level = match log_level {
-                    Level::Error => low_level_api::ffi::LOG_LEVEL_ERROR,
-                    Level::Warn => low_level_api::ffi::LOG_LEVEL_WRN,
-                    Level::Info => low_level_api::ffi::LOG_LEVEL_INFO,
-                    Level::Debug => low_level_api::ffi::LOG_LEVEL_DEBUG,
-                };
-                low_level_api::syslog_start_record(module.as_bytes(), level);
-            }
+    impl SyslogV1 for UnixLogger {
+        extern "C" fn log_simple<'a>(&self, _level: LogLevel, message: Str<'a>) {
+            print(message.as_str());
+        }
+        extern "C" fn log<'a>(&self, _level: LogLevel, callback: LogCallbackRef<'a>) {
+            callback.call(self.into());
         }
     }
 
-    fn print(&self, to_log: &str) {
-        match self {
-            #[cfg(not(target_os = "none"))]
-            Printer::Unix => unix_ffi::print(to_log),
-            Printer::None => (),
-            Printer::Api => low_level_api::syslog_write_chunk(to_log.as_bytes(), false),
-        }
-    }
-
-    fn end_print(&self) {
-        match self {
-            #[cfg(not(target_os = "none"))]
-            Printer::Unix => unix_ffi::print("\n"),
-            Printer::None => (),
-            Printer::Api => low_level_api::syslog_write_chunk(b"", true),
+    impl LogRecord for UnixLogger {
+        extern "C" fn write<'a>(&self, string: Str<'a>) -> FastResult<(), ()> {
+            print(string.as_str());
+            Ok(()).into()
         }
     }
 }
 
-impl ufmt::uWrite for Printer {
-    type Error = core::convert::Infallible;
+pub struct NoOutput;
+
+impl SyslogV1 for NoOutput {
+    extern "C" fn log_simple<'a>(&self, _level: LogLevel, _message: Str<'a>) {}
+    extern "C" fn log<'a>(&self, _level: LogLevel, _callback: LogCallbackRef<'a>) {}
+}
+
+pub struct LocalWriter<'a>(LogRecordRef<'a>);
+
+impl LocalWriter<'_> {
+    fn write(&self, s: &str) -> Result<(), ()> {
+        self.0.write(s.into()).into_result()
+    }
+}
+
+impl<'a> ufmt::uWrite for LocalWriter<'a> {
+    type Error = ();
 
     fn write_str(&mut self, s: &str) -> Result<(), Self::Error> {
-        self.print(s);
-        Ok(())
+        Self::write(self, s)
     }
 }
 
-static PRINTER: spin::RwLock<Printer> = spin::RwLock::new(Printer::initial());
-
-pub(super) fn enable_api_printer() {
-    *PRINTER.try_write().unwrap() = Printer::Api;
+fn syslog() -> StaticSyslogV1 {
+    if let Some(syslog) = app_runtime2::try_get_syslog() {
+        return syslog;
+    }
+    if cfg!(not(target_os = "none")) {
+        (&unix_ffi::UnixLogger).into()
+    } else {
+        (&NoOutput).into()
+    }
 }
 
-pub fn printer() -> impl ufmt::uWrite {
-    *PRINTER.try_read().unwrap()
+pub fn log_simple(level: LogLevel, message: &str) {
+    syslog().log_simple(level, message.into());
 }
 
-pub fn start_print(module: &str, log_level: Level) {
-    PRINTER.try_read().unwrap().start_print(module, log_level);
+struct FnOnceWrapper<F> {
+    callback: RefCell<Option<F>>,
 }
 
-pub fn print(to_log: &str) {
-    PRINTER.try_read().unwrap().print(to_log);
+impl<F> FnOnceWrapper<F> {
+    fn new(callback: F) -> Self {
+        Self {
+            callback: RefCell::new(Some(callback)),
+        }
+    }
 }
 
-pub fn end_print() {
-    PRINTER.try_read().unwrap().end_print();
+impl<F> LogCallback for FnOnceWrapper<F>
+where
+    F: for<'a> FnOnce(LocalWriter<'a>) -> Result<(), ()>,
+{
+    extern "C" fn call<'a>(&self, record: LogRecordRef<'a>) -> FastResult<(), ()> {
+        self.callback
+            .borrow_mut()
+            .take()
+            .map(|callback| callback(LocalWriter(record)))
+            .unwrap_or(Err(()))
+            .into()
+    }
+}
+
+pub fn log(level: LogLevel, callback: impl FnOnce(LocalWriter) -> Result<(), ()>) {
+    let callback = FnOnceWrapper::new(callback);
+    syslog().log(level, (&callback).into());
 }

@@ -6,32 +6,50 @@ pub use rkyv::Archived;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 
-use crate::alloc_types::Vec;
-use crate::core_services::services_or_die;
-use crate::ipc::IpcMessage;
-pub use crate::low_level_api::ffi::{HMAC_SHA256_CTX, SHA256_CTX, SHA512_CTX};
-use crate::low_level_api::{ed25519_cosi_combine_publickeys, ed25519_sign_open, get_crypto_or_die};
-use crate::service::CoreIpcService;
-use crate::structs::TrezorCryptoResultRef;
-pub use crate::structs::{TrezorCryptoEnum, TrezorCryptoResult};
+use crate::app_runtime2::get_crypto_or_die;
+use crate::error::{Result, ResultExt as _};
+use crate::structs::TrezorCryptoEnum;
+pub use crate::structs::{ArchivedTrezorCryptoResult, TrezorCryptoResult};
+use crate::traits::service::{CoreIpcService, IpcError, MessageDyn as _};
 use crate::util::Timeout;
-use crate::{Error, Result, unwrap};
+use crate::{Error, core_services, unwrap};
+pub type ArchivedTrezorCryptoEnum<'a> = Archived<TrezorCryptoEnum<'a>>;
+type ArchivedTrezorCryptoResult_<'a> = Archived<TrezorCryptoResult_<'a>>;
+
+#[cfg(not(feature = "test"))]
+pub use crate::low_level_api::{Keccak256, Sha3_256, Sha256, Sha512};
+#[cfg(feature = "test")]
+pub use crate::mock::{Keccak256, Sha3_256, Sha256, Sha512};
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
-type CryptoResult = Result<TrezorCryptoResult>;
+pub enum CryptoError {
+    IpcCallFailed,
+}
+
+impl<'a> From<IpcError<'a>> for CryptoError {
+    fn from(_error: IpcError<'a>) -> Self {
+        CryptoError::IpcCallFailed
+    }
+}
+
+type CryptoResult = Result<TrezorCryptoResult, CryptoError>;
 
 fn ipc_crypto_call<'a>(value: &TrezorCryptoEnum<'a>) -> CryptoResult {
     let bytes = unwrap!(to_bytes::<Failure>(value));
 
-    let message = IpcMessage::new(value.id() as _, bytes.as_ref());
-    let result = services_or_die().call(CoreIpcService::Crypto, &message, Timeout::max())?;
+    let result = core_services::call(
+        CoreIpcService::Crypto,
+        value.id() as _,
+        bytes.as_ref(),
+        Timeout::max(),
+    )?;
 
     // Safe validation using bytecheck before accessing archived data
-    let archived = unwrap!(rkyv::access::<Archived<TrezorCryptoResultRef>, Failure>(
-        result.data()
+    let archived = unwrap!(rkyv::access::<Archived<TrezorCryptoResult>, Failure>(
+        result.data().into()
     ));
 
     let result = match archived {
@@ -123,24 +141,25 @@ pub trait Hasher {
 
 /// Derives the extended public key (xpub) for `address_n`, tagged with the
 /// given `xpub_magic` version bytes.
-pub fn get_xpub(address_n: &[u32], xpub_magic: u32) -> Result<crate::alloc_types::String> {
+pub fn get_xpub(address_n: &[u32]) -> Result<String, CryptoError> {
     let value = TrezorCryptoEnum::GetXpub {
         address_n: address_n.into(),
         xpub_magic,
     };
 
     let res = ipc_crypto_call(&value);
-    if let Ok(TrezorCryptoResult::Xpub(xpub)) = res {
-        Ok(unwrap!(core::str::from_utf8(xpub.as_slice())).into())
+    if let Ok(TrezorCryptoResult::XpubBytes(xpub)) = res {
+        let xpub_str = get_crypto_or_die().base58check_encode((&xpub[..]).into());
+        Ok(xpub_str.as_str().into())
+        // TODO: do we need to copy the string? or is it enough to propagate stabby's type
     } else {
         // TODO: proper error type
-        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
+        Err(CryptoError::IpcCallFailed.into())
     }
 }
 
-/// Derives the raw public key for `address_n`, in compressed or uncompressed form.
-pub fn get_public_key(address_n: &[u32], compressed: bool) -> Result<crate::alloc_types::Vec<u8>> {
-    let value = TrezorCryptoEnum::GetPublicKey {
+pub fn get_xpub_bytes(address_n: &[u32]) -> Result<[u8; 33], CryptoError> {
+    let value = TrezorCryptoEnum::GetXpubBytes {
         address_n: address_n.into(),
         compressed,
     };
@@ -150,7 +169,7 @@ pub fn get_public_key(address_n: &[u32], compressed: bool) -> Result<crate::allo
         Ok(xpub)
     } else {
         // TODO: proper error type
-        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
+        Err(CryptoError::IpcCallFailed.into())
     }
 }
 
@@ -166,7 +185,7 @@ pub fn sign_typed_hash(
     encoded_token: Option<&[u8]>,
     chain_id: Option<u64>,
     show_progress: bool,
-) -> Result<[u8; 65]> {
+) -> Result<[u8; 65], CryptoError> {
     let value = TrezorCryptoEnum::SignTypedHash {
         address_n: address_n.into(),
         hash: *hash,
@@ -182,7 +201,7 @@ pub fn sign_typed_hash(
         Ok(signature)
     } else {
         // TODO: proper error type
-        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
+        Err(CryptoError::IpcCallFailed.into())
     }
 }
 
@@ -206,7 +225,11 @@ pub fn sign_digest(address_n: &[u32], digest: &[u8; 32], compressed: bool) -> Re
 
 /// Verifies a MAC previously produced by [`get_address_mac`] for `address_n`
 /// and `address`, confirming the pairing hasn't been tampered with.
-pub fn check_address_mac(address_n: &[u32], mac: &[u8; 32], address: &str) -> Result<bool> {
+pub fn check_address_mac(
+    address_n: &[u32],
+    mac: &[u8; 32],
+    address: &str,
+) -> Result<bool, CryptoError> {
     let value = TrezorCryptoEnum::CheckAddressMac {
         address_n: address_n.into(),
         mac: *mac,
@@ -219,13 +242,13 @@ pub fn check_address_mac(address_n: &[u32], mac: &[u8; 32], address: &str) -> Re
         Ok(valid)
     } else {
         // TODO: proper error type
-        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
+        Err(CryptoError::IpcCallFailed.into())
     }
 }
 
 /// Computes a MAC binding `address_n` to `address`, so a cached `address` can
 /// later be re-authenticated via [`check_address_mac`] without a full re-derivation.
-pub fn get_address_mac(address_n: &[u32], address: &str) -> Result<[u8; 32]> {
+pub fn get_address_mac(address_n: &[u32], address: &str) -> Result<[u8; 32], CryptoError> {
     let value = TrezorCryptoEnum::GetAddressMac {
         address_n: address_n.into(),
         address: address.into(),
@@ -237,12 +260,12 @@ pub fn get_address_mac(address_n: &[u32], address: &str) -> Result<[u8; 32]> {
         Ok(mac)
     } else {
         // TODO: proper error type
-        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
+        Err(CryptoError::IpcCallFailed.into())
     }
 }
 
 /// Checks `nonce` against Core's cached-nonce store, returning whether it's still valid.
-pub fn verify_nonce_cache(nonce: &[u8]) -> Result<bool> {
+pub fn verify_nonce_cache(nonce: &[u8]) -> Result<bool, CryptoError> {
     let value = TrezorCryptoEnum::VerifyNonceCache {
         nonce: nonce.into(),
     };
@@ -253,40 +276,87 @@ pub fn verify_nonce_cache(nonce: &[u8]) -> Result<bool> {
         Ok(valid)
     } else {
         // TODO: proper error type
-        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
+        Err(CryptoError::IpcCallFailed.into())
     }
 }
 
-/// ECDSA over the secp256k1 curve.
-pub mod secp256k1 {
-    use super::*;
+pub fn verify_derivation_path(
+    address_n: &[u32],
+    encoded_network: Option<&[u8]>,
+    encoded_token: Option<&[u8]>,
+    chain_id: Option<u64>,
+) -> Result<(), CryptoError> {
+    let value = TrezorCryptoEnum::VerifyDerivationPath {
+        address_n: address_n.into(),
+        encoded_network: encoded_network.map(|network| network.into()),
+        encoded_token: encoded_token.map(|token| token.into()),
+        chain_id,
+    };
 
     /// Verifies an ECDSA `signature` over `digest` against `public_key`.
     pub fn verify(public_key: &[u8], signature: &[u8], digest: &[u8; 32]) -> bool {
         ecdsa_verify_digest(get_crypto_or_die().secp256k1, public_key, signature, digest)
     }
 
-    /// Recovers the public key that produced `signature` over `digest`, if any.
-    pub fn verify_recover(
-        signature: &[u8; 65],
-        digest: &[u8; 32],
-    ) -> Option<crate::alloc_types::Vec<u8>> {
-        ecdsa_recover(get_crypto_or_die().secp256k1, signature, digest)
+    if matches!(res, Ok(TrezorCryptoResult::Boolean(true))) {
+        Ok(())
+    } else {
+        // TODO: proper error type
+        Err(CryptoError::IpcCallFailed.into())
     }
 }
 
-/// ECDSA over the NIST P-256 (secp256r1) curve.
-pub mod nist256p1 {
-    use super::*;
+/// def verify_recover(signature: AnyBytes, digest: AnyBytes) -> bytes:
+///     """
+///     Uses signature of the digest to verify the digest and recover the public
+///     key. Returns public key on success, None if the signature is invalid.
+///     """
+pub fn secp256k1_verify_recover(signature: &[u8; 65], digest: &[u8; 32]) -> Option<Vec<u8>> {
+    let mut recid = signature[0] - 27;
 
     /// Verifies an ECDSA `signature` over `digest` against `public_key`.
     pub fn verify(public_key: &[u8], signature: &[u8], digest: &[u8; 32]) -> bool {
         ecdsa_verify_digest(get_crypto_or_die().nist256p1, public_key, signature, digest)
     }
 
-    /// Recovers the public key that produced `signature` over `digest`, if any.
-    pub fn verify_recover(signature: &[u8; 65], digest: &[u8; 32]) -> Option<Vec<u8>> {
-        ecdsa_recover(get_crypto_or_die().nist256p1, signature, digest)
+    let compressed = recid >= 4;
+    recid &= 3;
+    let mut pub_key = [0u8; 65];
+    let secp256k1 = unsafe { &*get_crypto_or_die().secp256k1 };
+
+    if unsafe {
+        unwrap!(get_crypto_or_die().ecdsa_recover_pub_from_sig)(
+            secp256k1,
+            &mut pub_key as *mut u8,
+            &signature[1],
+            digest.as_ptr(),
+            recid.into(),
+        )
+    } != 0
+    {
+        return None; // Recovery failed
+    }
+
+    if compressed {
+        pub_key[0] = 0x02 | (pub_key[64] & 1);
+    };
+
+    let len = if compressed { 33 } else { 65 };
+    let mut result = Vec::with_capacity(65);
+    result.extend_from_slice(&pub_key[..len]);
+    Some(result)
+}
+
+pub fn ecdsa_get_public_key65(address_n: &[u32]) -> Result<[u8; 65]> {
+    let value = TrezorCryptoEnum::EcdsaPublicKey65 {
+        address_n: address_n.into(),
+    };
+
+    let res = ipc_crypto_call(&value);
+    if let Ok(TrezorCryptoResult::EcdsaPublicKey65(pubkey)) = res {
+        Ok(pubkey)
+    } else {
+        Err(Error::ApiError(crate::low_level_api::ApiError::Failed))?
     }
 }
 

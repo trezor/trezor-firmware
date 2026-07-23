@@ -25,31 +25,33 @@
     feature(lang_items)
 )]
 #![warn(missing_docs)]
+#![feature(allocator_api)]
+#![feature(const_trait_impl)]
+#![feature(panic_internals)]
 
+extern crate alloc;
+
+pub mod error;
 // Always available: shared API structs used by both core app and extapps
 mod structs;
+
+#[cfg(feature = "app")]
+pub mod app_runtime2;
+
+pub mod traits;
 
 // Full app runtime — only compiled when `app` feature is enabled
 #[cfg(feature = "app")]
 mod alloc_types;
-#[cfg(feature = "app")]
-mod core_services;
-#[cfg(feature = "app")]
-mod critical_section;
-#[cfg(feature = "app")]
-mod ipc;
-#[cfg(feature = "app")]
-mod low_level_api;
-#[cfg(feature = "app")]
-mod sysevent;
+// #[cfg(feature = "app")]
+// mod core_services;
+// #[cfg(feature = "app")]
+// mod critical_section;
+// #[cfg(feature = "app")]
+// mod low_level_api;
 
-#[cfg(not(feature = "app"))]
-pub mod crypto {
-
-    pub use crate::structs::{Slice, TrezorCryptoEnum, TrezorCryptoResultRef};
-}
-
-// Full crypto runtime — only when `app` feature is enabled
+// #[cfg(feature = "app")]
+// pub mod alloc_types;
 #[cfg(feature = "app")]
 pub mod crypto;
 
@@ -70,8 +72,7 @@ pub mod log;
 #[doc(hidden)]
 #[cfg(feature = "app")]
 pub mod print;
-#[cfg(feature = "app")]
-pub mod service;
+
 #[cfg(feature = "app")]
 pub mod util;
 
@@ -93,12 +94,4 @@ mod app_runtime;
 #[cfg(feature = "app")]
 pub use app_runtime::{Align, Error, Result, ResultExt};
 #[cfg(feature = "app")]
-pub use low_level_api::ApiError;
-#[cfg(feature = "app")]
-pub use wire::{
-    WireDecode, WireEncode, WireRequest, wire_error_raw, wire_receive_wire_start, wire_request,
-    wire_request_raw, wire_respond_raw,
-};
-
-#[cfg(feature = "app")]
-crate::static_service!(CORE_SERVICE, CoreApp, service::CoreIpcService, 16384);
+pub use ui::{ArchivedTrezorUiEnum, ArchivedTrezorUiResult};

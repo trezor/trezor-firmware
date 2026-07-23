@@ -4,6 +4,7 @@
 #![no_main]
 
 use core::hint::black_box;
+use core::pin::Pin;
 
 #[cfg(feature = "aes_gcm")]
 pub mod aesgcm;
@@ -13,7 +14,9 @@ pub mod curve25519;
 pub mod ecdsa;
 pub mod ed25519;
 mod ffi;
+pub mod hasher;
 pub mod hmac;
+pub mod memory;
 pub mod merkle;
 pub mod secret;
 pub mod sha256;

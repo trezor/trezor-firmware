@@ -1,11 +1,7 @@
 #[cfg(feature = "debug")]
 use crate::alloc_types::Box;
 #[cfg(not(feature = "test"))]
-use crate::low_level_api;
-use crate::low_level_api::ApiError;
-use crate::service;
-#[cfg(not(feature = "test"))]
-use crate::{CORE_SERVICE, core_services, error, util};
+use crate::{core_services, error, util};
 
 /// A wrapper which aligns its inner value to 8 bytes.
 #[doc(hidden)]
@@ -16,7 +12,6 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 #[cfg_attr(any(feature = "debug", feature = "test"), derive(Debug))]
 pub enum Error {
-    ApiError(ApiError),
     ServiceError,
     DataError(&'static str),
     Cancelled,
@@ -138,18 +133,6 @@ impl ufmt::uDisplay for Error {
     }
 }
 
-impl From<ApiError> for Error {
-    fn from(error: ApiError) -> Self {
-        Error::ApiError(error)
-    }
-}
-
-impl From<service::Error<'_>> for Error {
-    fn from(_error: service::Error) -> Self {
-        Error::ServiceError
-    }
-}
-
 /// Extension trait for attaching call-site context to an [`Error`] as it
 /// propagates up through `?`.
 pub trait ResultExt<T> {
@@ -220,13 +203,6 @@ impl<T> ResultExt<T> for Result<T> {
         self
     }
 }
-
-#[cfg(not(feature = "test"))]
-use embedded_alloc::LlffHeap as Heap;
-
-#[cfg(not(feature = "test"))]
-#[global_allocator]
-static HEAP: Heap = Heap::empty();
 
 #[cfg(not(feature = "test"))]
 unsafe extern "Rust" {
