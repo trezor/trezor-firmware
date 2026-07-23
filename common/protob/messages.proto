@@ -245,6 +245,8 @@ enum MessageType {
     reserved 237;  // omitted: StellarRestoreFootprint
     MessageType_StellarTxExtRequest = 238 [(wire_out) = true];
     MessageType_StellarTxExt = 239 [(wire_in) = true];
+    MessageType_StellarSignSorobanAuthorization = 240 [(wire_in) = true];
+    MessageType_StellarSorobanAuthorizationSignature = 241 [(wire_out) = true];
 
     // Cardano
     // dropped Sign/VerifyMessage ids 300-302
