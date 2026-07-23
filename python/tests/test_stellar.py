@@ -21,13 +21,16 @@ import pytest
 try:
     from stellar_sdk import (
         Account,
+        Address,
         Asset,
         AuthorizationFlag,
         MuxedAccount,
         Network,
         TransactionBuilder,
         TrustLineEntryFlag,
+        scval,
     )
+    from stellar_sdk import xdr as stellar_xdr
     from stellar_sdk.strkey import StrKey
 except ImportError:
     pytest.skip("stellar_sdk not installed", allow_module_level=True)
@@ -970,3 +973,179 @@ def test_claim_claimable_balance():
     assert isinstance(operations[0], messages.StellarClaimClaimableBalanceOp)
     assert operations[0].source_account == operation_source
     assert operations[0].balance_id == bytes.fromhex(balance_id)
+
+
+SOROBAN_SOURCE = "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+SOROBAN_CONTRACT = "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI"
+SOROBAN_DESTINATION = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+
+skip_if_no_protocol_27 = pytest.mark.skipif(
+    not stellar.HAVE_STELLAR_SDK_PROTOCOL_27,
+    reason="requires Stellar SDK with Protocol 27 support",
+)
+
+
+def make_soroban_invocation(
+    function_name="transfer", amount=500_111_000, sub_invocations=()
+):
+    return stellar_xdr.SorobanAuthorizedInvocation(
+        function=stellar_xdr.SorobanAuthorizedFunction(
+            type=stellar_xdr.SorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN,
+            contract_fn=stellar_xdr.InvokeContractArgs(
+                contract_address=Address(SOROBAN_CONTRACT).to_xdr_sc_address(),
+                function_name=stellar_xdr.SCSymbol(function_name.encode()),
+                args=[
+                    scval.to_address(SOROBAN_SOURCE),
+                    scval.to_address(SOROBAN_DESTINATION),
+                    scval.to_int128(amount),
+                ],
+            ),
+        ),
+        sub_invocations=list(sub_invocations),
+    )
+
+
+def expected_invocation(function_name, amount, sub_invocations=()):
+    return messages.StellarSorobanAuthorizedInvocation(
+        function=messages.StellarSorobanAuthorizedFunction(
+            type=messages.StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN,
+            contract_fn=messages.StellarInvokeContractArgs(
+                contract_address=SOROBAN_CONTRACT,
+                function_name=function_name,
+                args=[
+                    messages.StellarSCVal(
+                        type=messages.StellarSCValType.SCV_ADDRESS,
+                        address=SOROBAN_SOURCE,
+                    ),
+                    messages.StellarSCVal(
+                        type=messages.StellarSCValType.SCV_ADDRESS,
+                        address=SOROBAN_DESTINATION,
+                    ),
+                    messages.StellarSCVal(
+                        type=messages.StellarSCValType.SCV_I128,
+                        i128=messages.StellarInt128Parts(hi=0, lo=amount),
+                    ),
+                ],
+            ),
+        ),
+        sub_invocations=list(sub_invocations),
+    )
+
+
+def make_authorization_entry(
+    address, nonce, signature_expiration_ledger, signature=None, sub_invocations=()
+):
+    return stellar_xdr.SorobanAuthorizationEntry(
+        credentials=stellar_xdr.SorobanCredentials(
+            type=stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2,
+            address_v2=stellar_xdr.SorobanAddressCredentials(
+                address=Address(address).to_xdr_sc_address(),
+                nonce=stellar_xdr.Int64(nonce),
+                signature_expiration_ledger=stellar_xdr.Uint32(
+                    signature_expiration_ledger
+                ),
+                # None means "not signed yet" and becomes an SCV_VOID signature
+                signature=signature if signature is not None else scval.to_void(),
+            ),
+        ),
+        root_invocation=make_soroban_invocation(sub_invocations=sub_invocations),
+    )
+
+
+@skip_if_no_protocol_27
+def test_from_authorization_entry():
+    entry = make_authorization_entry(SOROBAN_SOURCE, 123456789, 600000)
+
+    authorization = stellar.from_authorization_entry(entry)
+
+    assert authorization == messages.StellarSorobanAuthorizationWithAddress(
+        nonce=123456789,
+        signature_expiration_ledger=600000,
+        address=SOROBAN_SOURCE,
+        invocation=expected_invocation("transfer", 500_111_000),
+    )
+
+
+@skip_if_no_protocol_27
+def test_from_authorization_entry_contract_address():
+    entry = make_authorization_entry(SOROBAN_CONTRACT, 123456789, 700000)
+
+    authorization = stellar.from_authorization_entry(entry)
+
+    assert authorization.address == SOROBAN_CONTRACT
+    assert authorization.nonce == 123456789
+    assert authorization.signature_expiration_ledger == 700000
+
+
+@skip_if_no_protocol_27
+def test_from_authorization_entry_sub_invocations():
+    entry = make_authorization_entry(
+        SOROBAN_SOURCE,
+        123456789,
+        600000,
+        sub_invocations=[
+            make_soroban_invocation("child_one", 1),
+            make_soroban_invocation(
+                "child_two", 2, [make_soroban_invocation("grandchild", 3)]
+            ),
+        ],
+    )
+
+    authorization = stellar.from_authorization_entry(entry)
+
+    assert authorization.invocation == expected_invocation(
+        "transfer",
+        500_111_000,
+        [
+            expected_invocation("child_one", 1),
+            expected_invocation("child_two", 2, [expected_invocation("grandchild", 3)]),
+        ],
+    )
+
+
+@skip_if_no_protocol_27
+def test_from_authorization_entry_ignores_signature():
+    # The signature is not part of the signed payload, so entries that already
+    # carry one (e.g. collected from other signers) translate the same way.
+    unsigned = make_authorization_entry(SOROBAN_SOURCE, 123456789, 600000)
+    signed = make_authorization_entry(
+        SOROBAN_SOURCE, 123456789, 600000, signature=scval.to_bytes(b"whatever")
+    )
+
+    assert stellar.from_authorization_entry(signed) == stellar.from_authorization_entry(
+        unsigned
+    )
+
+
+@skip_if_no_protocol_27
+def test_from_authorization_entry_unsupported_credentials():
+    entry = stellar_xdr.SorobanAuthorizationEntry(
+        credentials=stellar_xdr.SorobanCredentials(
+            type=stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT
+        ),
+        root_invocation=make_soroban_invocation(),
+    )
+
+    with pytest.raises(ValueError, match="Unsupported SorobanCredentials type"):
+        stellar.from_authorization_entry(entry)
+
+
+@skip_if_no_protocol_27
+def test_from_authorization_entry_legacy_address_credentials():
+    # The legacy SOROBAN_CREDENTIALS_ADDRESS is deliberately unsupported;
+    # it is due to be deprecated in Protocol 28.
+    entry = stellar_xdr.SorobanAuthorizationEntry(
+        credentials=stellar_xdr.SorobanCredentials(
+            type=stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS,
+            address=stellar_xdr.SorobanAddressCredentials(
+                address=Address(SOROBAN_SOURCE).to_xdr_sc_address(),
+                nonce=stellar_xdr.Int64(123456789),
+                signature_expiration_ledger=stellar_xdr.Uint32(600000),
+                signature=scval.to_void(),
+            ),
+        ),
+        root_invocation=make_soroban_invocation(),
+    )
+
+    with pytest.raises(ValueError, match="Unsupported SorobanCredentials type"):
+        stellar.from_authorization_entry(entry)
