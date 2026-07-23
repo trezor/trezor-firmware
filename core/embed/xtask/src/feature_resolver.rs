@@ -2,11 +2,11 @@ use std::process;
 
 use anyhow::{Result, bail};
 
-use crate::args::{BuildArgs, ConsoleType, Project, ResolvedBuild};
+use crate::args::{BuildArgs, ConsoleType, Project, ResolvedBuildFeatures};
 use crate::{config, helpers};
 
 /// Resolves cargo features and target triple from the provided CLI arguments.
-pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
+pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuildFeatures> {
     let mut features: Vec<String> = vec![args.model.feature_name()];
 
     if args.emulator {
@@ -169,7 +169,7 @@ pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuild> {
         Some(model_config.target_triple()?)
     };
 
-    Ok(ResolvedBuild {
+    Ok(ResolvedBuildFeatures {
         features,
         target_triple,
         board_header: board_features.board_header,

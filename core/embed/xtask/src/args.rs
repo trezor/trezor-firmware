@@ -5,7 +5,7 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 
 pub use crate::model::Model;
 
-pub struct ResolvedBuild {
+pub struct ResolvedBuildFeatures {
     pub features: Vec<String>,
     pub target_triple: Option<&'static str>,
     pub board_header: String,
@@ -287,7 +287,7 @@ impl BuildArgs {
         }
     }
 
-    pub fn resolve_features(&self) -> Result<ResolvedBuild> {
+    pub fn resolve_features(&self) -> Result<ResolvedBuildFeatures> {
         crate::feature_resolver::resolve_features(self)
     }
 
