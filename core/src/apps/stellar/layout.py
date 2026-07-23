@@ -168,6 +168,71 @@ async def require_confirm_final(
     )
 
 
+async def require_confirm_auth_signing_address(
+    address: str, address_n: Bip32Path
+) -> None:
+    """Confirm the device account whose key signs the Soroban authorization.
+
+    Always the first screen of the flow, like the signing address screen of
+    Ethereum's message signing flows.
+    """
+    from apps.common import paths
+
+    from . import PATTERN, SLIP44_ID
+
+    account_name = paths.get_account_name("Stellar", address_n, PATTERN, SLIP44_ID)
+    account_path = paths.address_n_to_str(address_n)
+
+    if account_name is None:
+        raise wire.DataError("Stellar: Invalid account name")
+
+    info_items: list[StrPropertyType] = [
+        (TR.words__account, account_name, None),
+        (TR.address_details__derivation_path, account_path, None),
+    ]
+
+    await layouts.confirm_address(
+        title=TR.sign_message__confirm_address,
+        address=address,
+        br_name="confirm_auth_signing_address",
+        br_code=ButtonRequestType.ConfirmOutput,
+        verb=TR.buttons__continue,
+        info_items=info_items,
+        info_title=TR.address_details__account_info,
+    )
+
+
+async def require_confirm_auth_on_behalf_of(address: str) -> None:
+    """Confirm the address whose Soroban authorization credentials are signed.
+
+    Only shown when it differs from the signing address, i.e. when the device
+    account signs on behalf of another party. e.g. a contract account of
+    which the device account is a signer.
+    """
+    await layouts.confirm_address(
+        title=TR.words__authorization,
+        address=address,
+        description=TR.stellar__on_behalf_of,
+        br_name="confirm_auth_on_behalf_of",
+        br_code=ButtonRequestType.ConfirmOutput,
+        verb=TR.buttons__continue,
+    )
+
+
+async def require_confirm_signature_expiration_ledger(
+    signature_expiration_ledger: int,
+) -> None:
+    await layouts.confirm_value(
+        title=TR.stellar__sign_authorization,
+        value=str(signature_expiration_ledger),
+        description=TR.stellar__valid_until_ledger,
+        br_name="confirm_soroban_auth",
+        br_code=ButtonRequestType.SignTx,
+        hold=True,
+        is_data=False,
+    )
+
+
 def format_asset(asset: StellarAsset | None) -> str:
     from trezor.enums import StellarAssetType
     from trezor.wire import DataError

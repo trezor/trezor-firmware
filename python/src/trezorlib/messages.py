@@ -472,6 +472,10 @@ class StellarSorobanCredentialsType(IntEnum):
     SOROBAN_CREDENTIALS_ADDRESS_V2 = 2
 
 
+class StellarSorobanAuthorizationEnvelopeType(IntEnum):
+    ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS = 10
+
+
 class TezosContractType(IntEnum):
     Implicit = 0
     Originated = 1
@@ -699,6 +703,8 @@ class MessageType(IntEnum):
     StellarInvokeHostFunctionOp = 235
     StellarTxExtRequest = 238
     StellarTxExt = 239
+    StellarSignSorobanAuthorization = 240
+    StellarSorobanAuthorizationSignature = 241
     CardanoGetPublicKey = 305
     CardanoPublicKey = 306
     CardanoGetAddress = 307
@@ -8685,6 +8691,46 @@ class StellarInvokeHostFunctionOp(protobuf.MessageType):
         self.source_account = source_account
 
 
+class StellarSignSorobanAuthorization(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 240
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("network_passphrase", "string", repeated=False, required=True),
+        3: protobuf.Field("envelope_type", "StellarSorobanAuthorizationEnvelopeType", repeated=False, required=True),
+        4: protobuf.Field("soroban_authorization_with_address", "StellarSorobanAuthorizationWithAddress", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        network_passphrase: "str",
+        envelope_type: "StellarSorobanAuthorizationEnvelopeType",
+        address_n: Optional[Sequence["int"]] = None,
+        soroban_authorization_with_address: Optional["StellarSorobanAuthorizationWithAddress"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.network_passphrase = network_passphrase
+        self.envelope_type = envelope_type
+        self.soroban_authorization_with_address = soroban_authorization_with_address
+
+
+class StellarSorobanAuthorizationSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 241
+    FIELDS = {
+        1: protobuf.Field("public_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        public_key: "bytes",
+        signature: "bytes",
+    ) -> None:
+        self.public_key = public_key
+        self.signature = signature
+
+
 class StellarTxExtRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 238
 
@@ -8801,6 +8847,29 @@ class StellarSCValMapEntry(protobuf.MessageType):
     ) -> None:
         self.key = key
         self.value = value
+
+
+class StellarSorobanAuthorizationWithAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("nonce", "sint64", repeated=False, required=True),
+        2: protobuf.Field("signature_expiration_ledger", "uint32", repeated=False, required=True),
+        3: protobuf.Field("address", "string", repeated=False, required=True),
+        4: protobuf.Field("invocation", "StellarSorobanAuthorizedInvocation", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce: "int",
+        signature_expiration_ledger: "int",
+        address: "str",
+        invocation: "StellarSorobanAuthorizedInvocation",
+    ) -> None:
+        self.nonce = nonce
+        self.signature_expiration_ledger = signature_expiration_ledger
+        self.address = address
+        self.invocation = invocation
 
 
 class TelemetryGet(protobuf.MessageType):
