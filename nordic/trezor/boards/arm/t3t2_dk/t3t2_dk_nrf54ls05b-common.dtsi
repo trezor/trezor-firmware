@@ -1,0 +1,23 @@
+/*
+ * Copyright (c) 2025 Trezor Company s.r.o.
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+#include "t3t2_dk_nrf54ls05b-pinctrl.dtsi"
+
+/ {
+	aliases {
+		watchdog0 = &wdt30;
+	};
+};
+
+/* UART link to the STM32 main SoC, shared with the console (as on t3w1).
+ * 1 Mbaud with hardware RTS/CTS flow control to match the STM side. */
+&uart20 {
+	current-speed = <1000000>;
+	hw-flow-control;
+	pinctrl-0 = <&uart20_default>;
+	pinctrl-1 = <&uart20_sleep>;
+	pinctrl-names = "default", "sleep";
+};

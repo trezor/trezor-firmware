@@ -74,7 +74,8 @@ usage() {
     echo "$0 [-b board_name] [-a app_dir] [-p] [-d] [-r] [-s] [-f]"
     cat <<END
     Parameters:
-    -b board_name: build with board name as param
+    -b board: full board target (e.g. t3t2_dk/nrf54ls05b/cpuapp) or a model
+              alias (t3t2, t3w1) that expands to that model's default board
     -a app_dir: specify application directory (default: trezor-ble)
     -p: production build
     -d: use debug overlay when building
@@ -117,14 +118,15 @@ parse_partition_info() {
 }
 
 # Verify the active nRF Connect SDK / toolchain match the target board before
-# building. Each board is pinned to one SDK: t3w1 -> NCS 2.9 (west-ncs2.9.yml).
-# Building with the wrong SDK or toolchain active produces confusing,
-# hard-to-diagnose failures.
+# building. Each board is pinned to one SDK: t3w1 -> NCS 2.9 (west-ncs2.9.yml),
+# t3t2_dk/nRF54L -> NCS 3.3 (west.yml, default). Building with the wrong SDK or
+# toolchain active produces confusing, hard-to-diagnose failures.
 verify_environment() {
     local board="$1"
     local required_major expected_manifest
     case "$board" in
         t3w1*)   required_major=2; expected_manifest="west-ncs2.9.yml" ;;
+        t3t2_dk*) required_major=3; expected_manifest="west.yml" ;;
         *)
             echo "verify: board '$board' has no known SDK pairing; skipping SDK/toolchain check."
             return 0
@@ -195,6 +197,19 @@ Install it with:
     echo "verify: OK - board '$board' <-> NCS v${sdk_version}, toolchain ${NCS_TOOLCHAIN_VERSION:-<pre-set>} (manifest ${expected_manifest})."
 }
 
+# Resolve a friendly board alias to its canonical Zephyr board target. Lets you
+# pass just a model name (e.g. "t3t2") and get that model's default board, while
+# a full board target (anything containing '/', e.g. "t3t2_dk/nrf54ls05b/cpuapp")
+# or any unrecognised value passes through unchanged - so a specific board can
+# always be selected explicitly.
+resolve_board() {
+    case "$1" in
+        t3t2)  echo "t3t2_dk/nrf54ls05b/cpuapp" ;;
+        t3w1)  echo "t3w1_revA_nrf52832" ;;
+        *)     echo "$1" ;;
+    esac
+}
+
 while getopts ${OPTSTRING} opt; do
   case ${opt} in
     b)
@@ -210,10 +225,10 @@ while getopts ${OPTSTRING} opt; do
       PRISTINE="--pristine=always"
       ;;
     d)
-      DEBUG="-- -DOVERLAY_CONFIG=debug.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_debug.conf\""
+      DEBUG="-DOVERLAY_CONFIG=debug.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_debug.conf\""
       ;;
     p)
-      PRODUCTION="-- -DOVERLAY_CONFIG=prod.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_prod.conf\""
+      PRODUCTION="-DOVERLAY_CONFIG=prod.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_prod.conf\""
       ;;
     s)
       SIGN=1
@@ -229,9 +244,29 @@ while getopts ${OPTSTRING} opt; do
 done
 
 if [ -n "$BOARD" ]; then
+    resolved_board=$(resolve_board "$BOARD")
+    if [ "$resolved_board" != "$BOARD" ]; then
+        echo "board: alias '$BOARD' -> '$resolved_board'"
+        BOARD="$resolved_board"
+    fi
     verify_environment "$BOARD"
+
+    # Board-scoped sysbuild overlays. The ed25519 image-hash override symbol
+    # (SB_CONFIG_BOOT_IMG_HASH_ALG_SHA512) only exists on nRF54L / NCS 3.3, so
+    # it must not live in the shared sysbuild.conf - assigning it on nRF52832 /
+    # NCS 2.9 aborts the build with an "undefined symbol" Kconfig warning.
+    SB_OVERLAY=
+    case "$BOARD" in
+        t3t2_dk*) SB_OVERLAY="-DSB_EXTRA_CONF_FILE=$PWD/$APP_DIR/sysbuild_nrf54l.conf" ;;
+    esac
+
+    # Assemble all post-'--' cmake args; emit the '--' separator only if any exist.
+    EXTRA_CMAKE_ARGS="$DEBUG $PRODUCTION $SB_OVERLAY"
+    CMAKE_SEP=
+    [ -n "${EXTRA_CMAKE_ARGS// /}" ] && CMAKE_SEP="--"
+
     run_under_ncs_subshell \
-        "west build ./$APP_DIR -b $BOARD --sysbuild $PRISTINE $DEBUG $PRODUCTION"
+        "west build ./$APP_DIR -b $BOARD --sysbuild $PRISTINE $CMAKE_SEP $EXTRA_CMAKE_ARGS"
 fi
 
 get_version_from_file() {

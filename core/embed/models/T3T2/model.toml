@@ -18,6 +18,7 @@ features = [
     "secret",
     "secure_aes",
     "serial_number",
+    "smp",
     "framebuffer",
     "tamper",
     "thp",
