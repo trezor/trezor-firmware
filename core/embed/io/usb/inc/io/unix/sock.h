@@ -11,6 +11,10 @@
 
 /// Emulator datagram socket, for USB and BLE. Currently uses UDP but can be
 /// possibly switched to unix datagram sockets.
+///
+/// Thread-safety: `sock_sendto()`, `sock_can_send()` and `sock_can_recv()`
+/// may be called concurrently with each other. Any other use requires
+/// exclusive access to the socket.
 typedef struct {
   /// Port number.
   uint16_t port;
