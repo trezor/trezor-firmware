@@ -7,6 +7,7 @@ from trezor.enums import ButtonRequestType, RecoveryType
 from trezor.wire import ActionCancelled
 
 from ..common import interact, interact_simple, raise_if_not_confirmed, with_info
+from ..properties import with_colon
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
@@ -834,7 +835,7 @@ def confirm_amount(
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
-    description = description or f"{TR.words__amount}:"  # def_arg
+    description = description or with_colon(TR.words__amount)  # def_arg
     return confirm_value(
         title,
         amount,
@@ -906,7 +907,6 @@ async def confirm_properties(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
 ) -> None:
-    from ..properties import with_colon
 
     items = with_colon(
         (
@@ -1109,9 +1109,11 @@ if not utils.BITCOIN_ONLY:
             total_amount = f"{total_amount}\n{native_amount}"
 
         if is_send:
-            description = f"{TR.words__recipient}:"
+            description = with_colon(TR.words__recipient)
         else:
-            description = f"{TR.ethereum__interaction_contract}:" if recipient else None
+            description = (
+                with_colon(TR.ethereum__interaction_contract) if recipient else None
+            )
 
         address_ctx = trezorui_api.confirm_value(
             title=TR.words__address,
@@ -1138,9 +1140,9 @@ if not utils.BITCOIN_ONLY:
 
         total_ctx = trezorui_api.confirm_summary(
             amount=total_amount,
-            amount_label=f"{TR.words__amount}:",
+            amount_label=with_colon(TR.words__amount),
             fee=maximum_fee,
-            fee_label=f"{TR.send__maximum_fee}:",
+            fee_label=with_colon(TR.send__maximum_fee),
             title=TR.words__title_summary,
             extra_items=extra_items,  # used so that info button is shown
             extra_title=TR.confirm_total__title_fee,
@@ -1277,7 +1279,7 @@ if not utils.BITCOIN_ONLY:
 
         await _confirm_summary(
             native_amount,
-            f"{TR.words__amount}:" if native_amount else None,
+            with_colon(TR.words__amount) if native_amount else None,
             maximum_fee,
             TR.send__maximum_fee,
             TR.words__title_summary,
@@ -1570,7 +1572,7 @@ if not utils.BITCOIN_ONLY:
         confirm_ctx = trezorui_api.confirm_value(
             title=title,
             description=description,
-            extra=f"{TR.words__provider}:" if vote_account else None,
+            extra=with_colon(TR.words__provider) if vote_account else None,
             value=vote_account,
             verb=TR.buttons__continue,
             info=True,

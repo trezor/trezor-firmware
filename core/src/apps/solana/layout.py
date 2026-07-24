@@ -13,6 +13,7 @@ from trezor.ui.layouts import (
     show_danger,
     show_warning,
 )
+from trezor.ui.layouts.properties import maybe_with_colon
 
 from apps.common.paths import address_n_to_str
 
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.messages import PaymentRequest, SolanaOffchainMessageV1, SolanaTokenInfo
-    from trezor.ui.layouts import PropertyType, StrPropertyType
+    from trezor.ui.layouts import StrPropertyType
 
     from .definitions import Definitions
     from .transaction import Fee
@@ -139,7 +140,7 @@ async def confirm_instruction(
             ):
                 continue
 
-            account_data: list[PropertyType] = []
+            account_data: list[StrPropertyType] = []
             if not is_address_reference(account_value):
                 account_description = f"{base58.encode(account_value[0])}"
                 token = definitions.get_token(account_value[0])
@@ -167,7 +168,7 @@ async def confirm_instruction(
             raise ValueError  # Invalid ui property
 
     if instruction.multisig_signers:
-        signers: list[PropertyType] = []
+        signers: list[StrPropertyType] = []
         for i, multisig_signer in enumerate(instruction.multisig_signers, 1):
             if not is_address_reference(multisig_signer):
                 multisig_signer_public_key = multisig_signer[0]
@@ -234,7 +235,7 @@ async def confirm_unsupported_instruction_details(
             title,
             (
                 (
-                    f"{TR.solana__instruction_data}",
+                    maybe_with_colon(TR.solana__instruction_data),
                     bytes(instruction.instruction_data),
                     True,
                 ),
@@ -242,7 +243,7 @@ async def confirm_unsupported_instruction_details(
         )
 
         for i, account in enumerate(instruction.accounts, 1):
-            accounts: list[PropertyType] = []
+            accounts: list[StrPropertyType] = []
             if not is_address_reference(account):
                 account_public_key = account[0]
                 address_type = get_address_type(account[1])
@@ -267,7 +268,7 @@ async def confirm_unsupported_instruction_details(
             await confirm_properties(
                 "accounts",
                 title,
-                accounts,
+                maybe_with_colon(accounts),
             )
 
 

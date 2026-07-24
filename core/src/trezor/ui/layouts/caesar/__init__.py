@@ -6,6 +6,7 @@ from trezor.enums import ButtonRequestType, RecoveryType
 from trezor.wire import ActionCancelled
 
 from ..common import interact, interact_simple, raise_if_not_confirmed
+from ..properties import with_colon
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
@@ -898,7 +899,9 @@ def confirm_amount(
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
-    description = description or f"{TR.words__amount}:"  # def_arg
+    from ..properties import with_colon
+
+    description = description or with_colon(TR.words__amount)  # def_arg
     return confirm_blob(
         br_name,
         title,
@@ -1320,7 +1323,7 @@ if not utils.BITCOIN_ONLY:
             amount_title = verb
             amount_value = ""
         else:
-            amount_title = f"{TR.words__amount}:"
+            amount_title = with_colon(TR.words__amount)
             amount_value = total_amount
 
         with trezorui_api.confirm_summary(
@@ -2074,7 +2077,7 @@ async def confirm_modify_output(
         title=TR.modify_amount__title,
         value=address,
         verb=TR.buttons__continue,
-        description=f"{TR.words__address}:",
+        description=with_colon(TR.words__address),
     )
 
     modify_ctx = trezorui_api.confirm_modify_output(
