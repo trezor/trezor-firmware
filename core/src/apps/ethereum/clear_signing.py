@@ -142,10 +142,42 @@ parse_uint16 = _make_uint_parser(16)
 parse_uint8 = _make_uint_parser(8)
 
 
-def parse_bytes32(raw_data: memoryview) -> Value:
+def _make_fixed_bytes_parser(byte_width: int) -> "Parser":
+    """bytesN values are left-aligned in the word: the padding to check
+    for zeroes is on the right, unlike the numeric types.
+    See "bytes<M>: enc(X) is the sequence of bytes in X padded with
+    trailing zero-bytes to a length of 32 bytes" in
+    https://docs.soliditylang.org/en/latest/abi-spec.html#formal-specification-of-the-encoding
+    """
+
+    def parser(raw_data: memoryview) -> Value:
+        if len(raw_data) < _EVM_WORD_SIZE:
+            raise OutOfBounds
+        if any(raw_data[byte_width:_EVM_WORD_SIZE]):
+            raise ValueOverflow
+        return bytes(raw_data[:byte_width])
+
+    return parser
+
+
+parse_bytes32 = _make_fixed_bytes_parser(32)
+parse_bytes20 = _make_fixed_bytes_parser(20)
+parse_bytes16 = _make_fixed_bytes_parser(16)
+parse_bytes8 = _make_fixed_bytes_parser(8)
+parse_bytes4 = _make_fixed_bytes_parser(4)
+
+
+def parse_int160(raw_data: memoryview) -> Value:
     if len(raw_data) < _EVM_WORD_SIZE:
         raise OutOfBounds
-    return bytes(raw_data[:_EVM_WORD_SIZE])
+    value = int.from_bytes(raw_data[:_EVM_WORD_SIZE], "big")
+    # Two's complement.
+    if value >= 1 << 255:
+        value -= 1 << 256
+    # the range check doubles as the sign-extension padding check
+    if not -(1 << 159) <= value < 1 << 159:
+        raise ValueOverflow
+    return value
 
 
 def parse_bool(raw_data: memoryview) -> Value:
@@ -215,8 +247,18 @@ def _get_parser(t: int, is_dynamic: bool) -> Parser:
         return parse_uint8
     elif t == T.ABI_BOOL:
         return parse_bool
+    elif t == T.ABI_INT160:
+        return parse_int160
     elif t == T.ABI_BYTES32:
         return parse_bytes32
+    elif t == T.ABI_BYTES20:
+        return parse_bytes20
+    elif t == T.ABI_BYTES16:
+        return parse_bytes16
+    elif t == T.ABI_BYTES8:
+        return parse_bytes8
+    elif t == T.ABI_BYTES4:
+        return parse_bytes4
     raise InvalidFormatDefinition
 
 
