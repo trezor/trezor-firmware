@@ -25,9 +25,10 @@ from construct_classes import subcon
 from . import messages
 from .construct_helpers import Reserved, TupleAdapter
 from .firmware.sanity_struct import SanityCheckedStruct
+from .root_packet import RootPacket
 
 if TYPE_CHECKING:
-    from .transport.session import Session
+    from .client import Session
 
 
 class AppHeader(SanityCheckedStruct):
@@ -168,6 +169,7 @@ def load(
     session: Session,
     binary: bytes,
     proof: bytes,
+    root_packet: bytes,
     min_version: Optional[Tuple[int, int, int, int]],
     force_reload: bool = False,
 ) -> int:
@@ -205,12 +207,19 @@ def load(
 
     # If the device requests the binary, we proceed to upload it.
     if isinstance(resp, messages.TrezorAppHeaderRequest):
+        rp = RootPacket.parse(root_packet)
         # Send the header and proof to the device
+
         resp = session.call(
             messages.TrezorAppHeaderAck(
-                header=image.header_bytes(), proof=proof, timestamp=0
-            )  # TODO: timestamp
+                header=image.header_bytes(), proof=proof, timestamp=rp.timestamp
+            )
         )
+
+        if isinstance(resp, messages.TrezorAppRootPacketRequest):
+            resp = session.call(
+                messages.TrezorAppRootPacketAck(root_packet=root_packet)
+            )
 
         chunks = image.chunks()
 
