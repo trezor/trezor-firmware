@@ -11,4 +11,5 @@ pub mod model;
 pub mod options;
 pub mod postbuild;
 pub mod prebuild;
+pub mod profiles;
 pub mod upload;

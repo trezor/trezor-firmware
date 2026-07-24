@@ -1,0 +1,24 @@
+# Build profiles shared by xtask and tf-tools.
+#
+# Each [[<profile-name>]] table is a profile fragment. Fragments whose optional
+# `when` filter matches are applied in file order; later matching fragments
+# override earlier values. Explicit CLI options override all profile values.
+# Local entries in user-profiles.toml are applied after this file and may add or
+# override profiles. The local file is ignored by Git.
+#
+# `model` and `project` accept arrays. Selector fields are combined with AND;
+# values within a selector array are combined with OR.
+
+[[test]]
+debug = true
+pyopt = false
+
+[[test]]
+when = { emulator = true }
+source-lines = true
+
+# Example of a model- and project-specific fragment:
+#
+# [[test]]
+# when = { model = ["t3t1", "t3t2", "t3w1"], project = ["firmware", "kernel"] }
+# debug-link = true

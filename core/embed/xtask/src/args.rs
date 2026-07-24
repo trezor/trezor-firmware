@@ -5,7 +5,8 @@ use serde::Deserialize;
 pub use crate::model::Model;
 use crate::options::BuildOptions;
 
-#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Project {
     Bootloader,
     Boardloader,
@@ -104,6 +105,7 @@ impl Project {
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
 pub enum ConsoleType {
     Vcp,
     Swo,
@@ -156,6 +158,10 @@ pub struct BuildArgs {
     /// Use emulator build
     #[arg(long, short = 'e')]
     pub emulator: bool,
+
+    /// Build profile defined in xtask/tf-tools/profiles.toml
+    #[arg(long, short = 'p')]
+    pub profile: Option<String>,
 
     #[command(flatten)]
     pub options: BuildOptions,

@@ -1,10 +1,13 @@
+use anyhow::Result;
 use clap::Args;
 use serde::Deserialize;
 
 use crate::args::{BuildArgs, ConsoleType, Model, Project};
+use crate::profiles;
 
 #[derive(Args, Deserialize, Debug, Clone, Default)]
 #[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct BuildOptions {
     /// Enable debug build
     #[arg(long, short = 'd', num_args = 0..=1, default_missing_value = "true")]
@@ -209,12 +212,14 @@ pub struct ResolvedBuildArgs {
 }
 
 impl ResolvedBuildArgs {
-    pub fn from_build_args(args: &BuildArgs) -> Self {
+    pub fn from_build_args(args: &BuildArgs) -> Result<Self> {
+        let profile_options = profiles::resolve(args)?;
         let o = BuildOptions::defaults_for(args.project, args.model, args.emulator)
+            .overlay(profile_options)
             .overlay(args.options.clone())
             .postfix();
 
-        Self {
+        Ok(Self {
             project: args.project,
             model: args.model,
             emulator: args.emulator,
@@ -245,7 +250,7 @@ impl ResolvedBuildArgs {
             emit_memory_analysis: o.emit_memory_analysis.unwrap_or_default(),
             timings: o.timings.unwrap_or_default(),
             verbose: o.verbose.unwrap_or_default(),
-        }
+        })
     }
 
     /// Determines the Cargo profile to use

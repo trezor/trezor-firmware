@@ -7,3 +7,5 @@ Contents:
 - `manifest.yaml`: Extension manifest and configuration metadata.
 - `debug/`: Launch and debug templates.
 - `svd/`: SVD files describing MCU registers.
+- `profiles.toml`: Shared xtask build profiles.
+- `user-profiles.toml`: Optional local xtask build profile overrides; ignored by Git.
