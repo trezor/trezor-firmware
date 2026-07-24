@@ -82,33 +82,22 @@ class LayoutType(Enum):
 
     @classmethod
     def from_model(cls, model: models.TrezorModel) -> "LayoutType":
-        if model in (models.T2T1,):
-            return cls.Bolt
-        if model in (models.T2B1, models.T3B1):
-            return cls.Caesar
-        if model in (models.T3T1, models.T3T2):
-            return cls.Delizia
-        if model in (models.T3W1,):
-            return cls.Eckhart
-        if model in (models.T1B1,):
-            return cls.T1
-        internal_name = getattr(model, "internal_name", None)
+        # The model's UI layout is sourced from the single-source model registry
+        # (trezorlib._modeldata); LayoutType member names match those layout
+        # names, so a new model is handled without touching this function.
+        layout = model.layout
+        if layout:
+            return cls[layout]
+        internal_name = model.internal_name
         if internal_name:
             return cls.from_internal_name(internal_name)
         raise ValueError(f"Unknown model: {model}")
 
     @classmethod
     def from_internal_name(cls, internal_name: str) -> "LayoutType":
-        if internal_name in (models.T2T1.internal_name,):
-            return cls.Bolt
-        if internal_name in (models.T2B1.internal_name, models.T3B1.internal_name):
-            return cls.Caesar
-        if internal_name in (models.T3T1.internal_name, models.T3T2.internal_name):
-            return cls.Delizia
-        if internal_name in (models.T3W1.internal_name,):
-            return cls.Eckhart
-        if internal_name in (models.T1B1.internal_name,):
-            return cls.T1
+        model = models.by_internal_name(internal_name)
+        if model is not None and model.layout:
+            return cls[model.layout]
         raise ValueError(f"Unknown internal name: {internal_name}")
 
     def __str__(self) -> str:

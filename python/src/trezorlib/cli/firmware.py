@@ -42,24 +42,13 @@ if TYPE_CHECKING:
     from ..client import Session, TrezorClient
     from . import TrezorConnection
 
+# Built from the single-source model registry: every model is selectable by its
+# internal name, plus any aliases it declares. Adding a model (or alias) in
+# trezorlib._modeldata makes it available here automatically.
 MODEL_CHOICE = ChoiceType(
     {
-        "T1B1": models.T1B1,
-        "T2T1": models.T2T1,
-        "T2B1": models.T2B1,
-        "T3T1": models.T3T1,
-        "T3T2": models.T3T2,
-        "T3B1": models.T3B1,
-        "T3W1": models.T3W1,
-        # aliases
-        "1": models.T1B1,
-        "one": models.T1B1,
-        "t": models.T2T1,
-        "r": models.T2B1,
-        "safe3": models.T2B1,
-        "s3": models.T2B1,
-        "safe5": models.T3T1,
-        "s5": models.T3T1,
+        **{model.internal_name: model for model in models.ALL_MODELS},
+        **{alias: model for model in models.ALL_MODELS for alias in model.aliases},
     },
     case_sensitive=False,
 )
