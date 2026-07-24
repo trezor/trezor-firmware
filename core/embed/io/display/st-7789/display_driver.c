@@ -130,6 +130,22 @@ void display_deinit(display_content_mode_t mode) {
   drv->initialized = false;
 }
 
+#ifdef USE_SUSPEND
+// This driver has no display-based (touch) wakeup path, so the power manager's
+// suspend/resume framework does not drive the display off/on here (that is
+// gated on touch-wakeup). These are minimal hooks so the framework links; the
+// display state is preserved across the CPU's low-power stop.
+void display_suspend(display_wakeup_params_t* wakeup_params) {
+  if (wakeup_params != NULL) {
+    memset(wakeup_params, 0, sizeof(*wakeup_params));
+  }
+}
+
+void display_resume(const display_wakeup_params_t* wakeup_params) {
+  (void)wakeup_params;
+}
+#endif  // USE_SUSPEND
+
 bool display_set_backlight(uint8_t level) {
   display_driver_t* drv = &g_display_driver;
 
