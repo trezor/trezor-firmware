@@ -324,6 +324,14 @@ void touch_power_set(bool on) {
   }
 }
 
+#ifdef USE_SUSPEND
+// This driver has no touch-based wakeup, so suspend/resume simply power the
+// controller down and back up (the display and touch share power/reset lines).
+void touch_suspend(void) { touch_deinit(); }
+
+void touch_resume(void) { touch_init(); }
+#endif  // USE_SUSPEND
+
 secbool touch_ready(void) {
   touch_driver_t* driver = &g_touch_driver;
 
