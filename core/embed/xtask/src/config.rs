@@ -135,7 +135,7 @@ impl BoardConfig {
 }
 
 #[derive(Deserialize)]
-pub struct ProjectProfile {
+pub struct ProjectConfig {
     pub uses: Vec<String>,
     pub elf_sections: Vec<String>,
     /// Body sections used when the model has secmon and the binary needs a
@@ -152,7 +152,7 @@ pub struct ProjectProfile {
     pub split_part2_sections: Option<Vec<String>>,
 }
 
-impl ProjectProfile {
+impl ProjectConfig {
     pub fn load(project: Project) -> Result<Self> {
         let pkg = project.package_name(false);
         let path = workspace_dir()?
@@ -184,7 +184,7 @@ pub fn resolve_board_features(
     emulator: bool,
 ) -> Result<BoardFeatures> {
     let board_config = BoardConfig::load(&model_config.model_id, board_id)?;
-    let project_profile = ProjectProfile::load(project)?;
+    let project_config = ProjectConfig::load(project)?;
     let pkg = project.package_name(false);
     let model_override = model_config
         .project_overrides
@@ -192,7 +192,7 @@ pub fn resolve_board_features(
         .cloned()
         .unwrap_or_default();
 
-    let uses: HashSet<&str> = project_profile.uses.iter().map(|s| s.as_str()).collect();
+    let uses: HashSet<&str> = project_config.uses.iter().map(|s| s.as_str()).collect();
     let exclude: HashSet<&str> = model_override.exclude.iter().map(|s| s.as_str()).collect();
 
     let mut features = Vec::new();
