@@ -48,6 +48,7 @@ async def confirm_fido_reset() -> bool:
         description=TR.words__really_wanna,
         reverse=True,
         prompt_screen=True,
+        external_menu=True,
     ) as layout:
         return await interact_simple(layout) is trezorui_api.CONFIRMED
 

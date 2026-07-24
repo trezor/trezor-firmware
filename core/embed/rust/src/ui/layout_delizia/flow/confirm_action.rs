@@ -275,12 +275,10 @@ pub fn new_confirm_action(
     action: Option<TString<'static>>,
     description: Option<TString<'static>>,
     subtitle: Option<TString<'static>>,
-    verb_cancel: Option<TString<'static>>,
     reverse: bool,
     hold: bool,
     prompt_screen: bool,
     prompt_title: TString<'static>,
-    external_menu: bool,
 ) -> Result<SwipeFlow, error::Error> {
     let paragraphs = {
         let action = action.unwrap_or("".into());
@@ -298,19 +296,9 @@ pub fn new_confirm_action(
         paragraphs.into_paragraphs()
     };
 
-    if external_menu && (prompt_screen || hold) {
-        return Err(Error::ValueError(
-            c"external_menu currently not supported in tandem with prompt_screen/hold",
-        ));
-    }
-
     new_confirm_action_simple(
         paragraphs,
-        if external_menu {
-            ConfirmActionExtra::ExternalMenu
-        } else {
-            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_cancel(verb_cancel))
-        },
+        ConfirmActionExtra::ExternalMenu,
         ConfirmActionStrings::new(title, subtitle, None, prompt_screen.then_some(prompt_title)),
         ConfirmActionOptions::new().with_hold(hold),
     )

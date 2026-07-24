@@ -52,25 +52,23 @@ impl FirmwareUI for UIDelizia {
         subtitle: Option<TString<'static>>,
         _verb: Option<TString<'static>>,
         _cancel: bool,
-        verb_cancel: Option<TString<'static>>,
+        _verb_cancel: Option<TString<'static>>,
         hold: bool,
         _hold_danger: bool,
         reverse: bool,
         prompt_screen: bool,
         prompt_title: Option<TString<'static>>,
-        external_menu: bool, // TODO: will eventually replace the internal menu
+        _external_menu: bool, // Delizia always uses external menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::confirm_action::new_confirm_action(
             title,
             action,
             description,
             subtitle,
-            if external_menu { None } else { verb_cancel },
             reverse,
             hold,
             prompt_screen,
             prompt_title.unwrap_or(TString::empty()),
-            external_menu,
         )?;
         Ok(flow)
     }
@@ -201,7 +199,7 @@ impl FirmwareUI for UIDelizia {
 
             new_confirm_action_simple(
                 paragraphs,
-                ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
+                ConfirmActionExtra::ExternalMenu,
                 ConfirmActionStrings::new(
                     TR::homescreen__settings_title.into(),
                     Some(TR::homescreen__settings_subtitle.into()),
@@ -237,7 +235,7 @@ impl FirmwareUI for UIDelizia {
 
         let flow = flow::new_confirm_action_simple(
             paragraphs,
-            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
+            ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(
                 TR::coinjoin__title.into(),
                 None,
@@ -268,7 +266,7 @@ impl FirmwareUI for UIDelizia {
 
         let flow = flow::new_confirm_action_simple(
             FormattedText::new(ops).vertically_centered(),
-            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
+            ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(title, None, None, Some(title)),
             ConfirmActionOptions::new(),
         )?;
@@ -450,17 +448,13 @@ impl FirmwareUI for UIDelizia {
         items: Obj,
         hold: bool,
         _verb: Option<TString<'static>>,
-        external_menu: bool,
+        _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(items)?;
 
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            if external_menu {
-                ConfirmActionExtra::ExternalMenu
-            } else {
-                ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new())
-            },
+            ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(title, subtitle, None, hold.then_some(title)),
             ConfirmActionOptions::new().with_hold(hold),
         )?;
@@ -472,7 +466,7 @@ impl FirmwareUI for UIDelizia {
         subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
-        verb_info: Option<TString<'static>>,
+        _verb_info: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
@@ -500,7 +494,7 @@ impl FirmwareUI for UIDelizia {
         }
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_info(verb_info)),
+            ConfirmActionExtra::ExternalMenu,
             strings,
             ConfirmActionOptions::new(),
         )?;
