@@ -112,14 +112,14 @@ async def require_confirm_tx(
     chunkify: bool,
     native_amount: str | None = None,
 ) -> None:
-    from trezor.ui.layouts import confirm_ethereum_tx, ethereum_address_title
+    from trezor.ui.layouts import confirm_ethereum_tx
 
     from . import tokens
 
     account, account_path = get_account_and_path(address_n)
 
     if token is tokens.UNKNOWN_TOKEN:
-        title = ethereum_address_title()
+        title = TR.words__address
         await require_confirm_unknown_token(title)
         await require_confirm_address(
             address_bytes,
