@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import click
 
-from .. import authdb, ward
+from .. import ward
 from . import with_session
 
 if TYPE_CHECKING:
@@ -29,16 +29,20 @@ def init(
 ) -> str:
     """Bootstrap the device via the WARD sync round.
 
-    Runs init_sync -> ingest_attestation -> merge_state; the WM freshness
-    attestation is signed here with the debug WM key (dev/testing use). The
-    device verifies the attestation and that mac_ext binds the supplied root
-    before adopting (root, counter).
+    Runs sync -> ingest_attestation -> reconcile; the WM freshness attestation
+    is signed here with the debug WM key (dev/testing use). The device verifies
+    the attestation and that mac_ext binds the supplied root before adopting
+    (root, counter).
     """
     root = bytes.fromhex(root_hex) if root_hex else None
     root_mac = bytes.fromhex(root_mac_hex) if root_mac_hex else None
-    out_counter, out_root, wallet_id, out_mac = ward.bootstrap(
-        session, counter, root_mac, root
-    )
+    nonce = ward.sync(session)
+    _pending, wallet_id = ward.list_pending(session)
+    assert wallet_id is not None
+    mac_for_sig = root_mac if root_mac is not None else authdb.ZERO_MAC
+    sig = ward.sign_wm_attestation(nonce, counter, mac_for_sig, wallet_id)
+    ward.ingest_attestation(session, counter, root_mac, sig)
+    out_counter, out_root, out_mac = ward.reconcile(session, root)
     id_hex = wallet_id.hex() if wallet_id else "(none)"
     root_out = out_root.hex() if out_root else "(empty)"
     mac_out = out_mac.hex() if out_mac else "(none)"
@@ -217,9 +221,9 @@ def update_leaf(
     witness_address = bytes.fromhex(witness_address_hex) if witness_address_hex else None
     witness_value = bytes.fromhex(witness_value_hex) if witness_value_hex else None
 
-    # WARD write round (set_entry -> commit -> finalize). The final WM attestation
+    # WARD write round (add_pending -> commit -> finalize). The final WM attestation
     # is signed here with the debug WM key for local/dev use.
-    counter, new_root, wallet_id, new_mac = ward.write(
+    ward.add_pending(
         session,
         address=address,
         old_value=old_value,
@@ -230,6 +234,13 @@ def update_leaf(
         witness_address=witness_address,
         witness_value=witness_value,
         witness_counter=witness_counter,
+    )
+    candidate_counter, _root_t, mac_t, wallet_id = ward.commit(session)
+    mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
+    assert wallet_id is not None
+    sig = ward.sign_ward_update(candidate_counter, mac_for_sig, wallet_id)
+    counter, new_root, wallet_id, new_mac = ward.confirm_commit(
+        session, candidate_counter, mac_t, sig
     )
     root_hex = new_root.hex() if new_root else "(empty)"
     id_hex = wallet_id.hex() if wallet_id else "(none)"
@@ -278,7 +289,7 @@ def delete(
     old_value = bytes.fromhex(old_value_hex)
     proof = [bytes.fromhex(h) for h in proof_hexes]
 
-    counter, new_root, wallet_id, _mac = ward.write(
+    ward.add_pending(
         session,
         address=address,
         old_value=old_value,
@@ -286,6 +297,13 @@ def delete(
         new_counter=new_counter,
         old_counter=old_counter,
         proof=proof,
+    )
+    candidate_counter, mac_root, mac_t, wallet_id = ward.commit(session)
+    mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
+    assert wallet_id is not None
+    sig = ward.sign_ward_update(candidate_counter, mac_for_sig, wallet_id)
+    counter, new_root, wallet_id, _mac = ward.confirm_commit(
+        session, candidate_counter, mac_t, sig
     )
     root_hex = new_root.hex() if new_root else "(empty)"
     id_hex = wallet_id.hex() if wallet_id else "(none)"

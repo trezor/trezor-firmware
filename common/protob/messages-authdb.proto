@@ -6,11 +6,10 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageAuthDb";
 
 // All AuthDb* messages have been migrated to the WARD flow (messages-ward.proto):
-//   AuthDbUpdateLeaf -> WARDSetEntry / WARDCommitCandidate / WARDConfirmCommit
-//   AuthDbInit       -> WARDInitSyncRound / WARDIngestAttestation / WARDMergeState
-//   AuthDbSetRoot    -> absorbed into WARDMergeState (+ debug WARDDebugSetRoot)
+//   AuthDbUpdateLeaf -> WARDAddPending / WARDCommitCandidate / WARDConfirmCommit
+//   AuthDbInit       -> WARDSync / WARDIngestAttestation / WARDReconcile
+//   AuthDbSetRoot    -> absorbed into WARDReconcile (+ debug WARDDebugSetRoot)
 //   AuthDbLookup     -> WARDLookup
 // Their MessageType ids (2300-2307) are reserved; see messages.proto. This file
 // is intentionally left with no messages (the shared authenticity/MPT primitives
 // live in core/src/apps/authdb as code, not on the wire).
-

@@ -7520,7 +7520,7 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TronRawParameter"]:
             return isinstance(msg, cls)
 
-    class WARDSetEntry(protobuf.MessageType):
+    class WARDAddPending(protobuf.MessageType):
         address: "AnyBytes"
         old_value: "AnyBytes"
         new_value: "AnyBytes"
@@ -7547,10 +7547,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSetEntry"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDAddPending"]:
             return isinstance(msg, cls)
 
-    class WARDSetEntryAck(protobuf.MessageType):
+    class WARDAddPendingAck(protobuf.MessageType):
         counter: "int"
         wallet_id: "AnyBytes | None"
 
@@ -7563,7 +7563,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSetEntryAck"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDAddPendingAck"]:
             return isinstance(msg, cls)
 
     class WARDCommitCandidate(protobuf.MessageType):
@@ -7630,13 +7630,13 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmCommitAck"]:
             return isinstance(msg, cls)
 
-    class WARDInitSyncRound(protobuf.MessageType):
+    class WARDSync(protobuf.MessageType):
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDInitSyncRound"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSync"]:
             return isinstance(msg, cls)
 
-    class WARDInitSyncRoundAck(protobuf.MessageType):
+    class WARDSyncAck(protobuf.MessageType):
         nonce: "AnyBytes"
         version: "int"
         wallet_id: "AnyBytes | None"
@@ -7651,7 +7651,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDInitSyncRoundAck"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSyncAck"]:
             return isinstance(msg, cls)
 
     class WARDIngestAttestation(protobuf.MessageType):
@@ -7710,7 +7710,7 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDListPendingEditsAck"]:
             return isinstance(msg, cls)
 
-    class WARDMergeState(protobuf.MessageType):
+    class WARDReconcile(protobuf.MessageType):
         root: "AnyBytes | None"
 
         def __init__(
@@ -7721,10 +7721,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDMergeState"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDReconcile"]:
             return isinstance(msg, cls)
 
-    class WARDMergeStateAck(protobuf.MessageType):
+    class WARDReconcileAck(protobuf.MessageType):
         counter: "int"
         new_root: "AnyBytes | None"
         wallet_id: "AnyBytes | None"
@@ -7741,7 +7741,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDMergeStateAck"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDReconcileAck"]:
             return isinstance(msg, cls)
 
     class WARDLookup(protobuf.MessageType):

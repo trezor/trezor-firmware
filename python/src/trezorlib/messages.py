@@ -779,20 +779,20 @@ class MessageType(IntEnum):
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
     TronWithdrawBalance = 2213
-    WARDSetEntry = 2330
-    WARDSetEntryAck = 2331
+    WARDAddPending = 2330
+    WARDAddPendingAck = 2331
     WARDCommitCandidate = 2332
     WARDCommitCandidateAck = 2333
     WARDConfirmCommit = 2334
     WARDConfirmCommitAck = 2335
-    WARDInitSyncRound = 2336
-    WARDInitSyncRoundAck = 2337
+    WARDSync = 2336
+    WARDSyncAck = 2337
     WARDIngestAttestation = 2338
     WARDIngestAttestationAck = 2339
     WARDListPendingEdits = 2340
     WARDListPendingEditsAck = 2341
-    WARDMergeState = 2342
-    WARDMergeStateAck = 2343
+    WARDReconcile = 2342
+    WARDReconcileAck = 2343
     WARDLookup = 2344
     WARDLookupAck = 2345
     WARDDebugSetRoot = 2346
@@ -9465,7 +9465,7 @@ class TronRawParameter(protobuf.MessageType):
         self.value = value
 
 
-class WARDSetEntry(protobuf.MessageType):
+class WARDAddPending(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2330
     FIELDS = {
         1: protobuf.Field("address", "bytes", repeated=False, required=True),
@@ -9503,7 +9503,7 @@ class WARDSetEntry(protobuf.MessageType):
         self.witness_counter = witness_counter
 
 
-class WARDSetEntryAck(protobuf.MessageType):
+class WARDAddPendingAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2331
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
@@ -9590,11 +9590,11 @@ class WARDConfirmCommitAck(protobuf.MessageType):
         self.root_mac = root_mac
 
 
-class WARDInitSyncRound(protobuf.MessageType):
+class WARDSync(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2336
 
 
-class WARDInitSyncRoundAck(protobuf.MessageType):
+class WARDSyncAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2337
     FIELDS = {
         1: protobuf.Field("nonce", "bytes", repeated=False, required=True),
@@ -9672,7 +9672,7 @@ class WARDListPendingEditsAck(protobuf.MessageType):
         self.wallet_id = wallet_id
 
 
-class WARDMergeState(protobuf.MessageType):
+class WARDReconcile(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2342
     FIELDS = {
         1: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
@@ -9686,7 +9686,7 @@ class WARDMergeState(protobuf.MessageType):
         self.root = root
 
 
-class WARDMergeStateAck(protobuf.MessageType):
+class WARDReconcileAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2343
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),

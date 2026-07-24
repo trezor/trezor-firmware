@@ -1,16 +1,16 @@
-"""Device tests for the WARD write round (set_entry -> commit -> finalize),
+"""Device tests for the WARD write round (add_pending -> commit -> finalize),
 the decomposition of the former fused AuthDbUpdateLeaf.
 
 Each write is driven either through the individual wrappers (to observe the
-intermediate state) or through the ward.write() convenience. The WARD Manager's
-final attestation is signed locally with the debug WM key (ward.DEBUG_QM_SEED),
-accepted only on debug firmware.
+intermediate state or through an equivalent host-side helper sequence. The WARD
+Manager's final attestation is signed locally with the debug WM key
+(ward.DEBUG_QM_SEED), accepted only on debug firmware.
 """
 
 import pytest
 
 from trezorlib import btc, ward
-from trezorlib.authdb_tree import AuthDbTree
+from trezorlib.authdb_tree import WARDTree
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
@@ -49,31 +49,32 @@ class InMemoryWardManager:
 
     @staticmethod
     def sign_final(wallet_id: bytes, counter: int, mac: bytes) -> bytes:
-        return ward.sign_ward_final(counter, mac, wallet_id)
+        return ward.sign_ward_update(counter, mac, wallet_id)
 
 
 class WardHostHarness:
     """In-memory host harness for WARD end-to-end tests.
 
-    Keeps the authenticated Merkle state in AuthDbTree and the attested
+    Keeps the authenticated Merkle state in WARDTree and the attested
     (root, counter, root_mac) blob in the Evolu-like store.
     """
 
     def __init__(self) -> None:
-        self.tree = AuthDbTree()
+        self.tree = WARDTree()
         self.store = InMemoryEvoluStore()
         self.wm = InMemoryWardManager()
         self.queue: list[tuple[bytes, bytes]] = []
 
     def bootstrap_device(self, session: Session) -> tuple[int, bytes | None, bytes | None, bytes | None]:
         root, counter, root_mac = self.store.get_root()
-        return ward.bootstrap(
-            session,
-            counter,
-            root_mac,
-            root,
-            sign_attestation=self.wm.sign_attestation,
-        )
+        nonce = ward.sync(session)
+        _pending, wallet_id = ward.list_pending(session)
+        assert wallet_id is not None
+        mac_for_sig = root_mac if root_mac is not None else ward.ZERO_MAC
+        sig = self.wm.sign_attestation(wallet_id, nonce, counter, mac_for_sig)
+        ward.ingest_attestation(session, counter, root_mac, sig)
+        out_counter, out_root, out_root_mac = ward.reconcile(session, root)
+        return out_counter, out_root, wallet_id, out_root_mac
 
     def lookup(self, session: Session, address: bytes) -> bytes | None:
         if self.tree.get_counter(address):
@@ -119,7 +120,7 @@ class WardHostHarness:
                 self.tree.get_nonmembership_proof(address)
             )
 
-        counter, new_root, _wallet_id, root_mac = ward.write(
+        ward.add_pending(
             session,
             address=address,
             old_value=old_value,
@@ -130,7 +131,13 @@ class WardHostHarness:
             witness_address=witness_address,
             witness_value=witness_value,
             witness_counter=witness_counter,
-            sign_final=self.wm.sign_final,
+        )
+        c_counter, _root_t, mac_t, wallet_id = ward.commit(session)
+        mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
+        assert wallet_id is not None
+        sig = self.wm.sign_final(wallet_id, c_counter, mac_for_sig)
+        counter, new_root, _wallet_id, root_mac = ward.confirm_commit(
+            session, c_counter, mac_t, sig
         )
 
         if value is None:
@@ -155,18 +162,44 @@ class WardHostHarness:
         return applied
 
 
-def _make_tree() -> AuthDbTree:
-    tree = AuthDbTree()
+def _make_tree() -> WARDTree:
+    tree = WARDTree()
     for addr, val in ENTRIES.items():
         tree.insert(addr, val, counter=1)
     return tree
 
 
-def _seed_device(session: Session, tree: AuthDbTree) -> int:
+def _seed_device(session: Session, tree: WARDTree) -> int:
     """Install the host tree's root on the device (debug injection) and return the
     device counter it now sits at."""
     counter, _root, _wid, _mac = ward.debug_set_root(session, tree.get_root_hash())
     return counter
+
+
+def _sync_device(
+    session: Session,
+    counter: int,
+    root: bytes | None,
+    root_mac: bytes | None,
+) -> tuple[int, bytes | None, bytes | None, bytes | None]:
+    nonce = ward.sync(session)
+    _pending, wallet_id = ward.list_pending(session)
+    assert wallet_id is not None
+    mac_for_sig = root_mac if root_mac is not None else ward.ZERO_MAC
+    sig = ward.sign_wm_attestation(nonce, counter, mac_for_sig, wallet_id)
+    ward.ingest_attestation(session, counter, root_mac, sig)
+    out_counter, out_root, out_root_mac = ward.reconcile(session, root)
+    return out_counter, out_root, wallet_id, out_root_mac
+
+
+def _finalize_pending(
+    session: Session,
+) -> tuple[int, bytes | None, bytes | None, bytes | None]:
+    c_counter, _root_t, mac_t, wallet_id = ward.commit(session)
+    mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
+    assert wallet_id is not None
+    sig = ward.sign_ward_update(c_counter, mac_for_sig, wallet_id)
+    return ward.confirm_commit(session, c_counter, mac_t, sig)
 
 
 @pytest.mark.models("core")
@@ -175,7 +208,7 @@ def test_ward_update(session: Session) -> None:
     counter0 = _seed_device(session, tree)
 
     new_counter = counter0 + 1
-    counter, new_root, wallet_id, root_mac = ward.write(
+    ward.add_pending(
         session,
         address=b"alice",
         old_value=ENTRIES[b"alice"],
@@ -184,6 +217,7 @@ def test_ward_update(session: Session) -> None:
         proof=tree.get_proof(b"alice"),
         old_counter=tree.get_counter(b"alice"),
     )
+    counter, new_root, wallet_id, root_mac = _finalize_pending(session)
 
     tree.insert(b"alice", b"data_alice_v2", counter=new_counter)
     assert counter == new_counter
@@ -199,7 +233,7 @@ def test_ward_insert(session: Session) -> None:
 
     new_counter = counter0 + 1
     proof, w_addr, w_counter, w_value = tree.get_nonmembership_proof(b"erin")
-    counter, new_root, _wid, _mac = ward.write(
+    ward.add_pending(
         session,
         address=b"erin",
         old_value=b"",
@@ -210,6 +244,7 @@ def test_ward_insert(session: Session) -> None:
         witness_counter=w_counter,
         witness_value=w_value,
     )
+    counter, new_root, _wid, _mac = _finalize_pending(session)
 
     tree.insert(b"erin", b"data_erin", counter=new_counter)
     assert counter == new_counter
@@ -222,7 +257,7 @@ def test_ward_delete(session: Session) -> None:
     counter0 = _seed_device(session, tree)
 
     new_counter = counter0 + 1
-    counter, new_root, _wid, _mac = ward.write(
+    ward.add_pending(
         session,
         address=b"alice",
         old_value=ENTRIES[b"alice"],
@@ -231,6 +266,7 @@ def test_ward_delete(session: Session) -> None:
         proof=tree.get_proof(b"alice"),
         old_counter=tree.get_counter(b"alice"),
     )
+    counter, new_root, _wid, _mac = _finalize_pending(session)
 
     tree.delete(b"alice")
     assert counter == new_counter
@@ -239,12 +275,12 @@ def test_ward_delete(session: Session) -> None:
 
 @pytest.mark.models("core")
 def test_ward_counter_advances_only_at_finalize(session: Session) -> None:
-    """set_entry + commit must NOT advance the device counter; only finalize does."""
+    """add_pending + commit must NOT advance the device counter; only finalize does."""
     tree = _make_tree()
     counter0 = _seed_device(session, tree)
     new_counter = counter0 + 1
 
-    ward.set_entry(
+    ward.add_pending(
         session,
         address=b"alice",
         old_value=ENTRIES[b"alice"],
@@ -266,8 +302,8 @@ def test_ward_counter_advances_only_at_finalize(session: Session) -> None:
     assert valid and membership
     assert dev_counter == counter0  # not advanced yet
 
-    sig = ward.sign_ward_final(c_counter, mac_t, wallet_id)
-    counter, _new_root, _wid, _root_mac = ward.finalize(session, c_counter, mac_t, sig)
+    sig = ward.sign_ward_update(c_counter, mac_t, wallet_id)
+    counter, _new_root, _wid, _root_mac = ward.confirm_commit(session, c_counter, mac_t, sig)
     assert counter == new_counter  # advanced now
 
 
@@ -277,7 +313,7 @@ def test_ward_finalize_bad_signature_rejected(session: Session) -> None:
     counter0 = _seed_device(session, tree)
     new_counter = counter0 + 1
 
-    ward.set_entry(
+    ward.add_pending(
         session,
         address=b"alice",
         old_value=ENTRIES[b"alice"],
@@ -290,17 +326,17 @@ def test_ward_finalize_bad_signature_rejected(session: Session) -> None:
 
     bad_sig = bytes(64)  # not a valid WM signature
     with pytest.raises(TrezorFailure):
-        ward.finalize(session, c_counter, mac_t, bad_sig)
+        ward.confirm_commit(session, c_counter, mac_t, bad_sig)
 
 
 @pytest.mark.models("core")
 def test_ward_second_set_entry_rejected_while_pending(session: Session) -> None:
-    """Offline queue depth 1: a second SetEntry while one is pending is rejected."""
+    """Offline queue depth 1: a second add_pending while one is pending is rejected."""
     tree = _make_tree()
     counter0 = _seed_device(session, tree)
     new_counter = counter0 + 1
 
-    ward.set_entry(
+    ward.add_pending(
         session,
         address=b"alice",
         old_value=ENTRIES[b"alice"],
@@ -310,7 +346,7 @@ def test_ward_second_set_entry_rejected_while_pending(session: Session) -> None:
         old_counter=tree.get_counter(b"alice"),
     )
     with pytest.raises(TrezorFailure):
-        ward.set_entry(
+        ward.add_pending(
             session,
             address=b"bob",
             old_value=ENTRIES[b"bob"],
@@ -337,9 +373,7 @@ def test_ward_bootstrap_adopts_attested_root(session: Session) -> None:
     counter, _r, _wid, mac = ward.debug_set_root(session, root)
 
     # Now drive a real sync round at the next counter, re-adopting the same root.
-    out_counter, new_root, _wid, _rm = ward.bootstrap(
-        session, counter, mac, root
-    )
+    out_counter, new_root, _wid, _rm = _sync_device(session, counter, root, mac)
     assert out_counter == counter
     assert new_root == root
 
@@ -349,7 +383,8 @@ def test_ward_ingest_bad_signature_rejected(session: Session) -> None:
     tree = _make_tree()
     counter, _r, _wid, mac = ward.debug_set_root(session, tree.get_root_hash())
 
-    nonce, _version, wallet_id = ward.init_sync(session)
+    nonce = ward.sync(session)
+    _pending, wallet_id = ward.list_pending(session)
     assert wallet_id is not None
     valid_sig = ward.sign_wm_attestation(nonce, counter, mac, wallet_id)
     bad_sig = bytes([valid_sig[0] ^ 0x01]) + valid_sig[1:]
@@ -367,7 +402,7 @@ def test_ward_ingest_rollback_rejected(session: Session) -> None:
     assert counter >= 2
 
     # Attest a stale counter 1 < counter_loc with a correctly-signed attestation.
-    nonce, _v, _wid = ward.init_sync(session)
+    nonce = ward.sync(session)
     sig = ward.sign_wm_attestation(nonce, 1, mac, wallet_id)
     with pytest.raises(TrezorFailure):
         ward.ingest_attestation(session, 1, mac, sig)
@@ -418,7 +453,7 @@ def test_ward_get_address_label(session: Session) -> None:
 
     # 1. Learn the address, then build a WARD tree keyed by the address string.
     address = btc.get_address(session, "Bitcoin", path)
-    tree = AuthDbTree()
+    tree = WARDTree()
     tree.insert(address.encode(), b"alice.btc", counter=1)
 
     # 2. Install that authenticated root on the device (debug seed).

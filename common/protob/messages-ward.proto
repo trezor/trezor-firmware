@@ -8,7 +8,7 @@ option java_outer_classname = "TrezorMessageWard";
 // WARD is the decomposition of the former fused AuthDbUpdateLeaf into a
 // sequenced write round with a durable device-held pending edit:
 //
-//   WARDSetEntry  -- verify the old-state proof, compute the candidate
+//   WARDAddPending   -- verify the old-state proof, compute the candidate
 //                    (root_T, counter_T, mac_T) and queue it PENDING. The
 //                    device does NOT advance its counter yet.
 //   WARDCommitCandidate -- emit the queued candidate triple so the host can
@@ -36,10 +36,10 @@ option java_outer_classname = "TrezorMessageWard";
  *
  * The leaf hash is sha256d(0x00||address||counter(4B BE)||value).
  * @start
- * @next WARDSetEntryAck
+ * @next WARDAddPendingAck
  * @next Failure
  */
-message WARDSetEntry {
+message WARDAddPending {
     required bytes  address         = 1;  // key to update
     required bytes  old_value       = 2;  // current value; empty means address is absent
     required bytes  new_value       = 3;  // new value; empty means delete
@@ -56,7 +56,7 @@ message WARDSetEntry {
  * The candidate triple itself is emitted by WARDCommitCandidate, not here.
  * @end
  */
-message WARDSetEntryAck {
+message WARDAddPendingAck {
     required uint32 counter   = 1;  // candidate counter_T (current root counter + 1)
     optional bytes  wallet_id = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
 }
@@ -65,7 +65,7 @@ message WARDSetEntryAck {
  * Request: Emit the queued PENDING candidate as the authorized commit.
  *
  * The device returns the (root_T, counter_T, mac_T) triple it computed at
- * WARDSetEntry and marks the queued edit COMMITTED. This is the self-contained,
+ * WARDAddPending and marks the queued edit COMMITTED. This is the self-contained,
  * verifiable attestation the host persists to Evolu and submits to the WM.
  * The counter is still NOT advanced on the device.
  * @start
@@ -121,27 +121,27 @@ message WARDConfirmCommitAck {
 // Sync round (bootstrap / refresh): establish the device's authenticated state
 // from the WM-attested (counter, mac) and the host-held root.
 //
-//   WARDInitSyncRound     -- device mints a per-round nonce (anti-replay)
+//   WARDSync              -- device mints a per-round nonce (anti-replay)
 //   WARDIngestAttestation -- device verifies the WM's signed (counter, mac)
 //   WARDListPendingEdits  -- device reports its queued pending-edit addresses
-//   WARDMergeState        -- device adopts the host root after checking it
+//   WARDReconcile         -- device adopts the host root after checking it
 //                            against the attested mac
 // ===========================================================================
 
 /**
  * Request: Begin a sync round. The device mints and stores a fresh nonce.
  * @start
- * @next WARDInitSyncRoundAck
+ * @next WARDSyncAck
  * @next Failure
  */
-message WARDInitSyncRound {
+message WARDSync {
 }
 
 /**
  * Response: the device-minted nonce (echoed back in the WM attestation).
  * @end
  */
-message WARDInitSyncRoundAck {
+message WARDSyncAck {
     required bytes  nonce     = 1;  // per-round anti-replay value the WM attestation must echo
     required uint32 version   = 2;  // WARD protocol version
     optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
@@ -153,7 +153,7 @@ message WARDInitSyncRoundAck {
  * The device verifies wm_signature is a valid Ed25519 signature under the
  * provisioned WM/QM public key over
  *     b"WARD ATTEST v1" || version(1B) || nonce || wallet_id || counter(4B BE) || mac
- * where nonce is the one minted at WARDInitSyncRound. It also asserts
+ * where nonce is the one minted at WARDSync. It also asserts
  * counter >= counter_loc (anti-rollback), then records (counter, mac) as the
  * attested checkpoint for this round.
  * @start
@@ -203,10 +203,10 @@ message WARDListPendingEditsAck {
  * an empty tree (the attested mac is then all-zero). Requires a prior
  * WARDIngestAttestation in the same round.
  * @start
- * @next WARDMergeStateAck
+ * @next WARDReconcileAck
  * @next Failure
  */
-message WARDMergeState {
+message WARDReconcile {
     optional bytes root = 1;  // the current authenticated root; absent for an empty tree
 }
 
@@ -214,7 +214,7 @@ message WARDMergeState {
  * Response: the device's authenticated state after adopting the root.
  * @end
  */
-message WARDMergeStateAck {
+message WARDReconcileAck {
     required uint32 counter   = 1;  // installed counter (== attested counter_ext)
     optional bytes  new_root  = 2;  // installed root; absent if the tree is empty
     optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree

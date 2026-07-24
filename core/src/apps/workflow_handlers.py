@@ -114,23 +114,23 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.PaymentNotification:
         return "apps.misc.payment_notification"
 
-    # WARD write round (decomposed AuthDbUpdateLeaf: set_entry / commit / finalize)
-    if msg_type == MessageType.WARDSetEntry:
-        return "apps.ward.set_entry"
+    # WARD write round (decomposed AuthDbUpdateLeaf: add_pending / commit / finalize)
+    if msg_type == MessageType.WARDAddPending:
+        return "apps.ward.add_pending"
     if msg_type == MessageType.WARDCommitCandidate:
         return "apps.ward.commit"
     if msg_type == MessageType.WARDConfirmCommit:
-        return "apps.ward.finalize"
+        return "apps.ward.confirm_commit"
 
     # WARD sync round (bootstrap/refresh) + lookup + debug seed
-    if msg_type == MessageType.WARDInitSyncRound:
-        return "apps.ward.init_sync"
+    if msg_type == MessageType.WARDSync:
+        return "apps.ward.sync"
     if msg_type == MessageType.WARDIngestAttestation:
-        return "apps.ward.ingest_attest"
+        return "apps.ward.ingest_attestation"
     if msg_type == MessageType.WARDListPendingEdits:
         return "apps.ward.list_pending"
-    if msg_type == MessageType.WARDMergeState:
-        return "apps.ward.merge_state"
+    if msg_type == MessageType.WARDReconcile:
+        return "apps.ward.reconcile"
     if msg_type == MessageType.WARDLookup:
         return "apps.ward.lookup"
     if __debug__ and msg_type == MessageType.WARDDebugSetRoot:

@@ -21,7 +21,7 @@ Proof format (leaf→root order):
 Mirrors buildMpt / generateMerkleProof / evaluateProof in merkletree.ts.
 
 Empty tree:
-  An empty AuthDbTree has no root hash.  get_root_hash() returns EMPTY_ROOT
+  An empty WARDTree has no root hash.  get_root_hash() returns EMPTY_ROOT
   (all-zero bytes) to signal the empty state; callers should test
   ``tree.is_empty()`` rather than comparing against EMPTY_ROOT directly.
 """
@@ -105,27 +105,27 @@ def _hash_mpt(node: _MptNode) -> bytes:
 
 
 # ---------------------------------------------------------------------------
-# AuthDbTree — public interface (bytes in/out, used by device tests)
+# WARDTree — public interface (bytes in/out, used by device tests)
 # ---------------------------------------------------------------------------
 
-class AuthDbTree:
+class WARDTree:
     """MPT-based Merkle tree for AuthDB, with a per-address leaf counter.
 
     Usage::
 
-        tree = AuthDbTree()
+        tree = WARDTree()
         c1 = tree.insert(b"alice", b"data_alice")       # c1 == 1
         c2 = tree.insert(b"bob",   b"data_bob")         # c2 == 1
         root = tree.get_root_hash()
         proof = tree.get_proof(b"alice")
-        assert AuthDbTree.verify_proof(b"alice", c1, b"data_alice", proof, root)
+        assert WARDTree.verify_proof(b"alice", c1, b"data_alice", proof, root)
 
         # UPDATE bumps the counter by exactly 1:
         c1b = tree.insert(b"alice", b"data_alice_v2")   # c1b == 2
 
         # Non-membership:
         proof, w_addr, w_counter, w_val = tree.get_nonmembership_proof(b"unknown")
-        assert AuthDbTree.verify_nonmembership(b"unknown", proof, w_addr, w_counter, w_val, root)
+        assert WARDTree.verify_nonmembership(b"unknown", proof, w_addr, w_counter, w_val, root)
 
         # Delete (set value to empty):
         tree.delete(b"alice")
@@ -326,4 +326,4 @@ class AuthDbTree:
             if _addr_bit(addr_hash, bit) != _addr_bit(witness_hash, bit):
                 return False
 
-        return AuthDbTree.verify_proof(witness_address, witness_counter, witness_value, proof, root)
+        return WARDTree.verify_proof(witness_address, witness_counter, witness_value, proof, root)

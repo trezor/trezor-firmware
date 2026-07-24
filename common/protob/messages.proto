@@ -390,21 +390,21 @@ enum MessageType {
     // device-id override, offline-queue/apply/delete/get, fast-forward). Do not reuse.
 
     // WARD write round (decomposed AuthDbUpdateLeaf: set_entry -> commit_candidate -> confirm_commit)
-    MessageType_WARDSetEntry = 2330 [(wire_in) = true];
-    MessageType_WARDSetEntryAck = 2331 [(wire_out) = true];
+    MessageType_WARDAddPending = 2330 [(wire_in) = true];
+    MessageType_WARDAddPendingAck = 2331 [(wire_out) = true];
     MessageType_WARDCommitCandidate = 2332 [(wire_in) = true];
     MessageType_WARDCommitCandidateAck = 2333 [(wire_out) = true];
     MessageType_WARDConfirmCommit = 2334 [(wire_in) = true];
     MessageType_WARDConfirmCommitAck = 2335 [(wire_out) = true];
     // WARD sync round (bootstrap/refresh) + lookup + debug seed
-    MessageType_WARDInitSyncRound = 2336 [(wire_in) = true];
-    MessageType_WARDInitSyncRoundAck = 2337 [(wire_out) = true];
+    MessageType_WARDSync = 2336 [(wire_in) = true];
+    MessageType_WARDSyncAck = 2337 [(wire_out) = true];
     MessageType_WARDIngestAttestation = 2338 [(wire_in) = true];
     MessageType_WARDIngestAttestationAck = 2339 [(wire_out) = true];
     MessageType_WARDListPendingEdits = 2340 [(wire_in) = true];
     MessageType_WARDListPendingEditsAck = 2341 [(wire_out) = true];
-    MessageType_WARDMergeState = 2342 [(wire_in) = true];
-    MessageType_WARDMergeStateAck = 2343 [(wire_out) = true];
+    MessageType_WARDReconcile = 2342 [(wire_in) = true];
+    MessageType_WARDReconcileAck = 2343 [(wire_out) = true];
     MessageType_WARDLookup = 2344 [(wire_in) = true];
     MessageType_WARDLookupAck = 2345 [(wire_out) = true];
     MessageType_WARDDebugSetRoot = 2346 [(wire_in) = true];

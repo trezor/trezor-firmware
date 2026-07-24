@@ -124,7 +124,7 @@ ENTRIES = {b"alice": b"data_alice", b"bob": b"data_bob",
 class TestAuthDbVerifyProof(unittest.TestCase):
 
     def setUp(self):
-        from apps.authdb._mpt import verify_proof as _verify_proof
+        from apps.ward.service import verify_proof as _verify_proof
         self._verify = _verify_proof
 
     def test_valid_proof_alice(self):
@@ -217,7 +217,7 @@ class TestAuthDbVerifyProof(unittest.TestCase):
 class TestAuthDbNonMembership(unittest.TestCase):
 
     def setUp(self):
-        from apps.authdb._mpt import verify_nonmembership as _verify_nonmembership
+        from apps.ward.service import verify_nonmembership as _verify_nonmembership
         self._verify_nm = _verify_nonmembership
 
     def test_nonmember_valid(self):
@@ -258,7 +258,7 @@ class TestAuthDbNonMembership(unittest.TestCase):
 
 
 class TestAuthDbStorageIsolation(unittest.TestCase):
-    """Storage-level functional + adversarial coverage for core/src/storage/authdb.py.
+    """Storage-level functional + adversarial coverage for core/src/storage/ward_store.py.
 
     Uses AuthDbSetDeviceId-style wallet_id switching (here done directly at
     the storage layer) to emulate multiple devices/wallets sharing one
@@ -274,49 +274,49 @@ class TestAuthDbStorageIsolation(unittest.TestCase):
 
     @mock_storage
     def test_roots_isolated_per_wallet(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         id_a, id_b = self._id(1), self._id(2)
         root_a, root_b = self._root(1), self._root(2)
 
-        authdb.set_root(id_a, root_a)
-        authdb.set_root(id_b, root_b)
+        ward_store.set_root(id_a, root_a)
+        ward_store.set_root(id_b, root_b)
 
-        self.assertEqual(authdb.get_root(id_a), root_a)
-        self.assertEqual(authdb.get_root(id_b), root_b)
+        self.assertEqual(ward_store.get_root(id_a), root_a)
+        self.assertEqual(ward_store.get_root(id_b), root_b)
         # Counters advance independently per wallet.
-        self.assertEqual(authdb.get_counter(id_a), 0)
-        authdb.increment_counter(id_a)
-        self.assertEqual(authdb.get_counter(id_a), 1)
-        self.assertEqual(authdb.get_counter(id_b), 0)
+        self.assertEqual(ward_store.get_counter(id_a), 0)
+        ward_store.increment_counter(id_a)
+        self.assertEqual(ward_store.get_counter(id_a), 1)
+        self.assertEqual(ward_store.get_counter(id_b), 0)
 
     @mock_storage
     def test_wallet_table_capacity_enforced(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
-        for n in range(authdb.MAX_WALLETS):
-            authdb.set_root(self._id(n), self._root(n))
+        for n in range(ward_store.MAX_WALLETS):
+            ward_store.set_root(self._id(n), self._root(n))
 
         with self.assertRaises(ValueError):
-            authdb.set_root(self._id(authdb.MAX_WALLETS), self._root(999))
+            ward_store.set_root(self._id(ward_store.MAX_WALLETS), self._root(999))
 
         # Existing wallets remain intact after the rejected insert.
-        self.assertEqual(authdb.get_root(self._id(0)), self._root(0))
+        self.assertEqual(ward_store.get_root(self._id(0)), self._root(0))
 
     @mock_storage
     def test_cache_capacity_enforced(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
-        for n in range(authdb.MAX_CACHE_ENTRIES):
-            authdb.set_cache_entry(b"addr-%d" % n, "label-%d" % n, None)
+        for n in range(ward_store.MAX_CACHE_ENTRIES):
+            ward_store.set_cache_entry(b"addr-%d" % n, "label-%d" % n, None)
 
         with self.assertRaises(ValueError):
-            authdb.set_cache_entry(b"addr-overflow", "label-overflow", None)
+            ward_store.set_cache_entry(b"addr-overflow", "label-overflow", None)
 
-        authdb.wipe_cache()
+        ward_store.wipe_cache()
         # After wiping, capacity is available again.
-        authdb.set_cache_entry(b"addr-overflow", "label-overflow", None)
-        label, _mac = authdb.get_cache_entry(b"addr-overflow")
+        ward_store.set_cache_entry(b"addr-overflow", "label-overflow", None)
+        label, _mac = ward_store.get_cache_entry(b"addr-overflow")
         self.assertEqual(label, "label-overflow")
 
     @mock_storage
@@ -324,21 +324,21 @@ class TestAuthDbStorageIsolation(unittest.TestCase):
         """BUG regression test — cache is NOT scoped by wallet_id.
 
         Unlike `_ROOTS` (keyed table, see test_roots_isolated_per_wallet),
-        `_CACHE` in core/src/storage/authdb.py is a single flat blob with no
+        `_CACHE` in core/src/storage/ward_store.py is a single flat blob with no
         wallet_id column at all. Switching wallet (as AuthDbSetDeviceId
         does) does not isolate offline-cache entries between wallets
         sharing one physical device. This asserts *today's* behavior; if the
         cache storage is fixed to be wallet-scoped, this test must be
-        flipped to assertIsNone (see docs/authdb.md and the sync-protocol
+        flipped to assertIsNone (see docs/ward_store.md and the sync-protocol
         review notes on cache isolation).
         """
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         # No device_id/wallet_id parameter exists on these calls at all —
         # that's the bug: cache entries have no wallet scoping.
-        authdb.set_cache_entry(b"shared-addr", "label-for-wallet-A", None)
+        ward_store.set_cache_entry(b"shared-addr", "label-for-wallet-A", None)
 
-        label, _mac = authdb.get_cache_entry(b"shared-addr")
+        label, _mac = ward_store.get_cache_entry(b"shared-addr")
         # A "different wallet" (post AuthDbSetDeviceId switch) still sees
         # wallet A's cache entry — leakage across wallets.
         self.assertEqual(label, "label-for-wallet-A")
@@ -346,7 +346,7 @@ class TestAuthDbStorageIsolation(unittest.TestCase):
 
 class TestAuthDbOfflineQueueStorage(unittest.TestCase):
     """Storage-level functional + adversarial coverage for the offline sync
-    additions to core/src/storage/authdb.py (queue + per-wallet sequencing).
+    additions to core/src/storage/ward_store.py (queue + per-wallet sequencing).
     """
 
     def _id(self, n):
@@ -355,37 +355,37 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
     @mock_storage
     def test_sequence_derived_monotonic_per_wallet(self):
         """peek_next_sequence() is a pure derived read (no separate persisted
-        counter, see storage/authdb.py's comment on why that was removed):
+        counter, see storage/ward_store.py's comment on why that was removed):
         it only advances once an operation carrying that sequence is
         actually, durably appended."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         id_a, id_b = self._id(1), self._id(2)
-        self.assertEqual(authdb.peek_next_sequence(id_a), 1)
+        self.assertEqual(ward_store.peek_next_sequence(id_a), 1)
 
         for n in range(3):
-            seq = authdb.peek_next_sequence(id_a)
+            seq = ward_store.peek_next_sequence(id_a)
             self.assertEqual(seq, n + 1)
-            authdb.append_offline_operation(
+            ward_store.append_offline_operation(
                 id_a, seq, b"addr-%d" % n, 0, b"", 1, b"val-%d" % n, b"\x00" * 32
             )
 
         # Independent per wallet.
-        self.assertEqual(authdb.peek_next_sequence(id_b), 1)
-        self.assertEqual(authdb.peek_next_sequence(id_a), 4)
+        self.assertEqual(ward_store.peek_next_sequence(id_b), 1)
+        self.assertEqual(ward_store.peek_next_sequence(id_a), 4)
 
     @mock_storage
     def test_queue_append_and_fifo_order(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
         for n in range(3):
-            seq = authdb.peek_next_sequence(wallet_id)
-            authdb.append_offline_operation(
+            seq = ward_store.peek_next_sequence(wallet_id)
+            ward_store.append_offline_operation(
                 wallet_id, seq, b"addr-%d" % n, 0, b"", 1, b"val-%d" % n, b"\x00" * 32
             )
 
-        queue = authdb.get_offline_queue(wallet_id)
+        queue = ward_store.get_offline_queue(wallet_id)
         self.assertEqual([e[0] for e in queue], [1, 2, 3])
         self.assertEqual([e[1] for e in queue], [b"addr-0", b"addr-1", b"addr-2"])
         self.assertEqual([e[4] for e in queue], [1, 1, 1])  # new_counter
@@ -394,37 +394,37 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
     def test_queue_isolated_per_wallet(self):
         """Unlike the offline *cache* (see test_cache_not_isolated_per_wallet),
         the offline *queue* is wallet_id-scoped from the start."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         id_a, id_b = self._id(1), self._id(2)
-        seq_a = authdb.peek_next_sequence(id_a)
-        authdb.append_offline_operation(id_a, seq_a, b"addr", 0, b"", 1, b"val-a", b"\x00" * 32)
+        seq_a = ward_store.peek_next_sequence(id_a)
+        ward_store.append_offline_operation(id_a, seq_a, b"addr", 0, b"", 1, b"val-a", b"\x00" * 32)
 
-        self.assertEqual(len(authdb.get_offline_queue(id_a)), 1)
-        self.assertEqual(authdb.get_offline_queue(id_b), [])
+        self.assertEqual(len(ward_store.get_offline_queue(id_a)), 1)
+        self.assertEqual(ward_store.get_offline_queue(id_b), [])
 
     @mock_storage
     def test_queue_capacity_enforced_per_wallet(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        for n in range(authdb.MAX_OFFLINE_QUEUE_ENTRIES):
-            seq = authdb.peek_next_sequence(wallet_id)
-            authdb.append_offline_operation(
+        for n in range(ward_store.MAX_OFFLINE_QUEUE_ENTRIES):
+            seq = ward_store.peek_next_sequence(wallet_id)
+            ward_store.append_offline_operation(
                 wallet_id, seq, b"addr-%d" % n, 0, b"", 1, b"val-%d" % n, b"\x00" * 32
             )
 
-        overflow_seq = authdb.peek_next_sequence(wallet_id)
+        overflow_seq = ward_store.peek_next_sequence(wallet_id)
         with self.assertRaises(ValueError):
-            authdb.append_offline_operation(
+            ward_store.append_offline_operation(
                 wallet_id, overflow_seq, b"addr-overflow", 0, b"", 1, b"val", b"\x00" * 32
             )
 
         # A different wallet is unaffected by wallet A's full queue.
         other = self._id(2)
-        other_seq = authdb.peek_next_sequence(other)
-        authdb.append_offline_operation(other, other_seq, b"addr", 0, b"", 1, b"val", b"\x00" * 32)
-        self.assertEqual(len(authdb.get_offline_queue(other)), 1)
+        other_seq = ward_store.peek_next_sequence(other)
+        ward_store.append_offline_operation(other, other_seq, b"addr", 0, b"", 1, b"val", b"\x00" * 32)
+        self.assertEqual(len(ward_store.get_offline_queue(other)), 1)
 
     @mock_storage
     def test_gc_only_deletes_upto_watermark(self):
@@ -434,27 +434,27 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         ever receives the device's OWN persisted watermark from the RPC
         handler, but the storage function itself must still honor whatever
         boundary it's given precisely, with no off-by-one drift."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
         for n in range(5):
-            seq = authdb.peek_next_sequence(wallet_id)
-            authdb.append_offline_operation(
+            seq = ward_store.peek_next_sequence(wallet_id)
+            ward_store.append_offline_operation(
                 wallet_id, seq, b"addr-%d" % n, 0, b"", 1, b"val-%d" % n, b"\x00" * 32
             )
 
-        deleted = authdb.delete_offline_operations_upto(wallet_id, 3)
+        deleted = ward_store.delete_offline_operations_upto(wallet_id, 3)
         self.assertEqual(deleted, 3)
-        remaining = authdb.get_offline_queue(wallet_id)
+        remaining = ward_store.get_offline_queue(wallet_id)
         self.assertEqual([e[0] for e in remaining], [4, 5])
 
         # A second wallet's queue must be untouched.
         other = self._id(2)
-        other_seq = authdb.peek_next_sequence(other)
-        authdb.append_offline_operation(other, other_seq, b"addr", 0, b"", 1, b"val", b"\x00" * 32)
-        deleted_none = authdb.delete_offline_operations_upto(wallet_id, 0)
+        other_seq = ward_store.peek_next_sequence(other)
+        ward_store.append_offline_operation(other, other_seq, b"addr", 0, b"", 1, b"val", b"\x00" * 32)
+        deleted_none = ward_store.delete_offline_operations_upto(wallet_id, 0)
         self.assertEqual(deleted_none, 0)
-        self.assertEqual(len(authdb.get_offline_queue(other)), 1)
+        self.assertEqual(len(ward_store.get_offline_queue(other)), 1)
 
     @mock_storage
     def test_sequence_not_burned_by_crash_between_append_calls(self):
@@ -463,37 +463,37 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         separate reservation step whose completion could desync from what
         was actually appended -- simulate a "crash" by simply calling peek
         again without appending, and confirm it's still consistent."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        seq = authdb.peek_next_sequence(wallet_id)
+        seq = ward_store.peek_next_sequence(wallet_id)
         self.assertEqual(seq, 1)
         # "Crash" before append: peeking again must still return 1, not 2 --
         # there is nothing to have reserved-and-lost.
-        self.assertEqual(authdb.peek_next_sequence(wallet_id), 1)
+        self.assertEqual(ward_store.peek_next_sequence(wallet_id), 1)
 
-        authdb.append_offline_operation(wallet_id, seq, b"addr", 0, b"", 1, b"val", b"\x00" * 32)
-        self.assertEqual(authdb.peek_next_sequence(wallet_id), 2)
+        ward_store.append_offline_operation(wallet_id, seq, b"addr", 0, b"", 1, b"val", b"\x00" * 32)
+        self.assertEqual(ward_store.peek_next_sequence(wallet_id), 2)
 
     @mock_storage
     def test_last_applied_sequence_defaults_and_persists(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 0)
+        self.assertEqual(ward_store.get_last_applied_sequence(wallet_id), 0)
 
-        authdb.set_last_applied_sequence(wallet_id, 7)
-        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 7)
+        ward_store.set_last_applied_sequence(wallet_id, 7)
+        self.assertEqual(ward_store.get_last_applied_sequence(wallet_id), 7)
 
         # last_applied_sequence lives in the same _ROOTS record as root/
         # counter (see commit_applied_operation()), but clear_root() only
         # ever sets the root field to the EMPTY_ROOT sentinel -- it no
         # longer deletes the record -- so clearing a root must not reset
         # sync bookkeeping.
-        authdb.set_root(wallet_id, _sha256d(b"some-root"))
-        authdb.clear_root(wallet_id)
-        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 7)
-        self.assertIsNone(authdb.get_root(wallet_id))
+        ward_store.set_root(wallet_id, _sha256d(b"some-root"))
+        ward_store.clear_root(wallet_id)
+        self.assertEqual(ward_store.get_last_applied_sequence(wallet_id), 7)
+        self.assertIsNone(ward_store.get_root(wallet_id))
 
     @mock_storage
     def test_clear_root_preserves_counter_and_record(self):
@@ -502,28 +502,28 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         the very next write -- see update_leaf.py/apply_offline_operations.py
         history). Counter must survive a clear, and re-adding a root for the
         same wallet_id must not consume a fresh MAX_WALLETS slot."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        authdb.set_root(wallet_id, _sha256d(b"root-1"))
-        authdb.increment_counter(wallet_id)
-        authdb.increment_counter(wallet_id)
-        self.assertEqual(authdb.get_counter(wallet_id), 2)
+        ward_store.set_root(wallet_id, _sha256d(b"root-1"))
+        ward_store.increment_counter(wallet_id)
+        ward_store.increment_counter(wallet_id)
+        self.assertEqual(ward_store.get_counter(wallet_id), 2)
 
-        authdb.clear_root(wallet_id)
-        self.assertIsNone(authdb.get_root(wallet_id))
-        self.assertEqual(authdb.get_counter(wallet_id), 2)  # survives the clear
+        ward_store.clear_root(wallet_id)
+        self.assertIsNone(ward_store.get_root(wallet_id))
+        self.assertEqual(ward_store.get_counter(wallet_id), 2)  # survives the clear
 
         # Counter continues from where it left off, not reset to 0.
-        authdb.set_root(wallet_id, _sha256d(b"root-2"))
-        self.assertEqual(authdb.increment_counter(wallet_id), 3)
+        ward_store.set_root(wallet_id, _sha256d(b"root-2"))
+        self.assertEqual(ward_store.increment_counter(wallet_id), 3)
 
     @mock_storage
     def test_set_root_rejects_empty_root_sentinel(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         with self.assertRaises(ValueError):
-            authdb.set_root(self._id(1), authdb.EMPTY_ROOT)
+            ward_store.set_root(self._id(1), ward_store.EMPTY_ROOT)
 
     @mock_storage
     def test_commit_applied_operation_is_a_single_write(self):
@@ -531,92 +531,92 @@ class TestAuthDbOfflineQueueStorage(unittest.TestCase):
         all update together via ONE call, and a delete-to-empty (new_root is
         None) must not lose the record the way the old clear_root()-deletes-
         everything behavior did."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
 
         # First-ever INIT via commit_applied_operation itself (creates the record).
-        counter = authdb.commit_applied_operation(wallet_id, _sha256d(b"root-1"), 1)
+        counter = ward_store.commit_applied_operation(wallet_id, _sha256d(b"root-1"), 1)
         self.assertEqual(counter, 1)
-        self.assertEqual(authdb.get_root(wallet_id), _sha256d(b"root-1"))
-        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 1)
+        self.assertEqual(ward_store.get_root(wallet_id), _sha256d(b"root-1"))
+        self.assertEqual(ward_store.get_last_applied_sequence(wallet_id), 1)
 
         # UPDATE
-        counter = authdb.commit_applied_operation(wallet_id, _sha256d(b"root-2"), 2)
+        counter = ward_store.commit_applied_operation(wallet_id, _sha256d(b"root-2"), 2)
         self.assertEqual(counter, 2)
-        self.assertEqual(authdb.get_root(wallet_id), _sha256d(b"root-2"))
-        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 2)
+        self.assertEqual(ward_store.get_root(wallet_id), _sha256d(b"root-2"))
+        self.assertEqual(ward_store.get_last_applied_sequence(wallet_id), 2)
 
         # DELETE-to-empty: root clears, counter/sequence still advance, and
         # the record survives (unlike the old 3-separate-writes behavior).
-        counter = authdb.commit_applied_operation(wallet_id, None, 3)
+        counter = ward_store.commit_applied_operation(wallet_id, None, 3)
         self.assertEqual(counter, 3)
-        self.assertIsNone(authdb.get_root(wallet_id))
-        self.assertEqual(authdb.get_last_applied_sequence(wallet_id), 3)
-        self.assertEqual(authdb.get_counter(wallet_id), 3)  # not reset by the delete
+        self.assertIsNone(ward_store.get_root(wallet_id))
+        self.assertEqual(ward_store.get_last_applied_sequence(wallet_id), 3)
+        self.assertEqual(ward_store.get_counter(wallet_id), 3)  # not reset by the delete
 
     @mock_storage
     def test_commit_root_and_counter_single_write(self):
         """update_leaf.py/set_root.py's atomicity primitive: root+counter
         move together, incrementing by exactly 1 each call."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        counter = authdb.commit_root_and_counter(wallet_id, _sha256d(b"root-1"))
+        counter = ward_store.commit_root_and_counter(wallet_id, _sha256d(b"root-1"))
         self.assertEqual(counter, 1)
-        counter = authdb.commit_root_and_counter(wallet_id, _sha256d(b"root-2"))
+        counter = ward_store.commit_root_and_counter(wallet_id, _sha256d(b"root-2"))
         self.assertEqual(counter, 2)
-        self.assertEqual(authdb.get_root(wallet_id), _sha256d(b"root-2"))
+        self.assertEqual(ward_store.get_root(wallet_id), _sha256d(b"root-2"))
 
     @mock_storage
     def test_commit_root_and_counter_value_jumps_directly(self):
         """fast_forward_root.py/set_root.py's verified-mac atomicity
         primitive: jumps straight to an attested counter, not +1."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        authdb.commit_root_and_counter_value(wallet_id, _sha256d(b"root-1"), 42)
-        self.assertEqual(authdb.get_counter(wallet_id), 42)
-        self.assertEqual(authdb.get_root(wallet_id), _sha256d(b"root-1"))
+        ward_store.commit_root_and_counter_value(wallet_id, _sha256d(b"root-1"), 42)
+        self.assertEqual(ward_store.get_counter(wallet_id), 42)
+        self.assertEqual(ward_store.get_root(wallet_id), _sha256d(b"root-1"))
 
     @mock_storage
     def test_set_counter_direct_write(self):
         """set_counter() (used by fast_forward_root.py) jumps straight to an
         arbitrary value, unlike increment_counter()'s +1-only semantics."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        authdb.set_root(wallet_id, _sha256d(b"root"))
-        self.assertEqual(authdb.get_counter(wallet_id), 0)
+        ward_store.set_root(wallet_id, _sha256d(b"root"))
+        self.assertEqual(ward_store.get_counter(wallet_id), 0)
 
-        authdb.set_counter(wallet_id, 42)
-        self.assertEqual(authdb.get_counter(wallet_id), 42)
+        ward_store.set_counter(wallet_id, 42)
+        self.assertEqual(ward_store.get_counter(wallet_id), 42)
 
         # A subsequent increment continues from the jumped-to value.
-        authdb.increment_counter(wallet_id)
-        self.assertEqual(authdb.get_counter(wallet_id), 43)
+        ward_store.increment_counter(wallet_id)
+        self.assertEqual(ward_store.get_counter(wallet_id), 43)
 
         # A second wallet's counter is untouched.
         other = self._id(2)
-        authdb.set_root(other, _sha256d(b"other-root"))
-        self.assertEqual(authdb.get_counter(other), 0)
+        ward_store.set_root(other, _sha256d(b"other-root"))
+        self.assertEqual(ward_store.get_counter(other), 0)
 
     @mock_storage
     def test_set_counter_requires_existing_record(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         with self.assertRaises(ValueError):
-            authdb.set_counter(self._id(1), 5)
+            ward_store.set_counter(self._id(1), 5)
 
 
 class TestAuthDbMpt(unittest.TestCase):
-    """Cross-check apps.authdb._mpt's extracted primitives against the same
+    """Cross-check apps.ward.service's extracted primitives against the same
     MPT fixtures used by TestAuthDbVerifyProof/TestAuthDbNonMembership above,
     to guarantee the extraction from update_leaf.py/lookup.py is
     behavior-preserving."""
 
     def setUp(self):
-        from apps.authdb import _mpt
+        from apps.ward import service as _mpt
         self.mpt = _mpt
 
     def test_leaf_and_internal_hash_match_local_helpers(self):
@@ -629,7 +629,7 @@ class TestAuthDbMpt(unittest.TestCase):
         )
 
     def test_verify_proof_matches_lookup_wrapper(self):
-        from apps.authdb._mpt import verify_proof as _verify_proof
+        from apps.ward.service import verify_proof as _verify_proof
 
         root, proof = build_mpt_root_and_proof(ENTRIES, b"alice")
         self.assertEqual(
@@ -640,7 +640,7 @@ class TestAuthDbMpt(unittest.TestCase):
         self.assertFalse(self.mpt.verify_proof(b"alice", 1, b"WRONG", proof, root))
 
     def test_verify_nonmembership_matches_lookup_wrapper(self):
-        from apps.authdb._mpt import verify_nonmembership as _verify_nonmembership
+        from apps.ward.service import verify_nonmembership as _verify_nonmembership
 
         root, _ = build_mpt_root_and_proof(ENTRIES, b"alice")
         target = b"zara"
@@ -654,7 +654,7 @@ class TestAuthDbMpt(unittest.TestCase):
 
 
 class TestAuthDbComputeNewRoot(unittest.TestCase):
-    """Functional coverage for apps.authdb._mpt.compute_new_root(), the
+    """Functional coverage for apps.ward.service.compute_new_root(), the
     single shared INIT/INSERT/UPDATE/DELETE state machine used by both
     update_leaf.py and apply_offline_operations.py.
 
@@ -664,7 +664,7 @@ class TestAuthDbComputeNewRoot(unittest.TestCase):
     """
 
     def setUp(self):
-        from apps.authdb import _mpt
+        from apps.ward import service as _mpt
         self.mpt = _mpt
 
     def test_init_on_empty_tree(self):
@@ -762,7 +762,7 @@ class TestAuthDbComputeNewRoot(unittest.TestCase):
 
 class TestWardQueueStorage(unittest.TestCase):
     """Storage-level coverage for the WARD pending-candidate queue and the
-    finalize commit (core/src/storage/authdb.py: queue_* + commit_finalize)."""
+    finalize commit (core/src/storage/ward_store.py: queue_* + commit_finalize)."""
 
     def _id(self, n):
         # wallet_id is a 20-byte BIP32 Hash160.
@@ -770,60 +770,60 @@ class TestWardQueueStorage(unittest.TestCase):
 
     @mock_storage
     def test_put_get_roundtrip(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
         root = _sha256d(b"root-T")
         mac = _sha256d(b"mac-T")
-        authdb.queue_put(wallet_id, 5, root, mac, b"alice")
+        ward_store.queue_put(wallet_id, 5, root, mac, b"alice")
 
-        rec = authdb.queue_get(wallet_id)
+        rec = ward_store.queue_get(wallet_id)
         self.assertIsNotNone(rec)
         counter, got_root, got_mac, state, address = rec
         self.assertEqual(counter, 5)
         self.assertEqual(got_root, root)
         self.assertEqual(got_mac, mac)
-        self.assertEqual(state, authdb.QUEUE_PENDING)
+        self.assertEqual(state, ward_store.QUEUE_PENDING)
         self.assertEqual(address, b"alice")
 
     @mock_storage
     def test_get_is_wallet_scoped(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
-        authdb.queue_put(self._id(1), 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
+        ward_store.queue_put(self._id(1), 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
         # A different wallet sees no candidate (single-record, wallet-tagged).
-        self.assertIsNone(authdb.queue_get(self._id(2)))
+        self.assertIsNone(ward_store.queue_get(self._id(2)))
 
     @mock_storage
     def test_set_committed_and_drop(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        authdb.queue_put(wallet_id, 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
-        authdb.queue_set_committed(wallet_id)
-        _c, _r, _m, state, _a = authdb.queue_get(wallet_id)
-        self.assertEqual(state, authdb.QUEUE_COMMITTED)
+        ward_store.queue_put(wallet_id, 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
+        ward_store.queue_set_committed(wallet_id)
+        _c, _r, _m, state, _a = ward_store.queue_get(wallet_id)
+        self.assertEqual(state, ward_store.QUEUE_COMMITTED)
 
-        authdb.queue_drop()
-        self.assertIsNone(authdb.queue_get(wallet_id))
+        ward_store.queue_drop()
+        self.assertIsNone(ward_store.queue_get(wallet_id))
 
     @mock_storage
     def test_set_committed_rejects_foreign_wallet(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
-        authdb.queue_put(self._id(1), 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
+        ward_store.queue_put(self._id(1), 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
         with self.assertRaises(ValueError):
-            authdb.queue_set_committed(self._id(2))
+            ward_store.queue_set_committed(self._id(2))
 
     @mock_storage
     def test_empty_candidate_roundtrip(self):
         """A DELETE-to-empty candidate stores EMPTY_ROOT and reads back as
         (counter, None, None, state, address)."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        authdb.queue_put(wallet_id, 9, None, None, b"bob")
-        counter, root, mac, _state, address = authdb.queue_get(wallet_id)
+        ward_store.queue_put(wallet_id, 9, None, None, b"bob")
+        counter, root, mac, _state, address = ward_store.queue_get(wallet_id)
         self.assertEqual(counter, 9)
         self.assertIsNone(root)
         self.assertIsNone(mac)
@@ -833,28 +833,28 @@ class TestWardQueueStorage(unittest.TestCase):
     def test_commit_finalize_installs_and_advances_qm(self):
         """commit_finalize installs (root, counter) AND raises qm_last_counter
         to counter in one write -- WARDConfirmCommit's atomic advance."""
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
         # Bootstrap a qm ceiling at 6 (fresh wallet, no root).
-        authdb.commit_init(wallet_id, 6, None, None)
-        self.assertEqual(authdb.get_qm_counter(wallet_id), 6)
-        self.assertEqual(authdb.get_counter(wallet_id), 0)
+        ward_store.commit_init(wallet_id, 6, None, None)
+        self.assertEqual(ward_store.get_qm_counter(wallet_id), 6)
+        self.assertEqual(ward_store.get_counter(wallet_id), 0)
 
         root = _sha256d(b"final-root")
-        authdb.commit_finalize(wallet_id, root, 7)
-        self.assertEqual(authdb.get_counter(wallet_id), 7)
-        self.assertEqual(authdb.get_qm_counter(wallet_id), 7)  # ceiling advanced
-        self.assertEqual(authdb.get_root(wallet_id), root)
+        ward_store.commit_finalize(wallet_id, root, 7)
+        self.assertEqual(ward_store.get_counter(wallet_id), 7)
+        self.assertEqual(ward_store.get_qm_counter(wallet_id), 7)  # ceiling advanced
+        self.assertEqual(ward_store.get_root(wallet_id), root)
 
     @mock_storage
     def test_commit_finalize_empty_tree(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        authdb.commit_finalize(wallet_id, None, 1)
-        self.assertEqual(authdb.get_counter(wallet_id), 1)
-        self.assertIsNone(authdb.get_root(wallet_id))
+        ward_store.commit_finalize(wallet_id, None, 1)
+        self.assertEqual(ward_store.get_counter(wallet_id), 1)
+        self.assertIsNone(ward_store.get_root(wallet_id))
 
 
 class TestWardCoreCapability(unittest.TestCase):
@@ -896,58 +896,58 @@ class TestWardSyncStorage(unittest.TestCase):
 
     @mock_storage
     def test_begin_then_get(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
         nonce = _sha256d(b"nonce-1")  # 32 bytes
-        authdb.sync_begin(wallet_id, nonce)
-        got = authdb.sync_get(wallet_id)
+        ward_store.sync_begin(wallet_id, nonce)
+        got = ward_store.sync_get(wallet_id)
         self.assertIsNotNone(got)
         n, state, counter, mac = got
         self.assertEqual(n, nonce)
-        self.assertEqual(state, authdb.SYNC_NONCE)
+        self.assertEqual(state, ward_store.SYNC_NONCE)
         self.assertEqual(counter, 0)
         self.assertIsNone(mac)
 
     @mock_storage
     def test_set_attested(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        authdb.sync_begin(wallet_id, _sha256d(b"nonce"))
+        ward_store.sync_begin(wallet_id, _sha256d(b"nonce"))
         mac = _sha256d(b"mac-ext")
-        authdb.sync_set_attested(wallet_id, 7, mac)
-        _n, state, counter, got_mac = authdb.sync_get(wallet_id)
-        self.assertEqual(state, authdb.SYNC_ATTESTED)
+        ward_store.sync_set_attested(wallet_id, 7, mac)
+        _n, state, counter, got_mac = ward_store.sync_get(wallet_id)
+        self.assertEqual(state, ward_store.SYNC_ATTESTED)
         self.assertEqual(counter, 7)
         self.assertEqual(got_mac, mac)
 
     @mock_storage
     def test_attested_empty_tree_mac_is_none(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        authdb.sync_begin(wallet_id, _sha256d(b"nonce"))
-        authdb.sync_set_attested(wallet_id, 3, None)  # empty tree
-        _n, _state, counter, mac = authdb.sync_get(wallet_id)
+        ward_store.sync_begin(wallet_id, _sha256d(b"nonce"))
+        ward_store.sync_set_attested(wallet_id, 3, None)  # empty tree
+        _n, _state, counter, mac = ward_store.sync_get(wallet_id)
         self.assertEqual(counter, 3)
         self.assertIsNone(mac)
 
     @mock_storage
     def test_wallet_scoped_and_clear(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
-        authdb.sync_begin(self._id(1), _sha256d(b"nonce"))
-        self.assertIsNone(authdb.sync_get(self._id(2)))
-        authdb.sync_clear()
-        self.assertIsNone(authdb.sync_get(self._id(1)))
+        ward_store.sync_begin(self._id(1), _sha256d(b"nonce"))
+        self.assertIsNone(ward_store.sync_get(self._id(2)))
+        ward_store.sync_clear()
+        self.assertIsNone(ward_store.sync_get(self._id(1)))
 
     @mock_storage
     def test_set_attested_requires_round(self):
-        import storage.authdb as authdb
+        import storage.ward_store as ward_store
 
         with self.assertRaises(ValueError):
-            authdb.sync_set_attested(self._id(1), 1, None)
+            ward_store.sync_set_attested(self._id(1), 1, None)
 
 
 class TestWardAttestation(unittest.TestCase):
@@ -964,9 +964,9 @@ class TestWardAttestation(unittest.TestCase):
 
     def test_valid_attestation_accepted(self):
         from trezor.crypto.curve import ed25519
-        from apps.authdb._qm import verify_wm_attestation
+        from apps.ward.service import verify_wm_attestation
 
-        seed = b"AUTHDB QM DEBUG KEY SEED v1 ...."  # 32 bytes, matches _QM_PUBKEY_DEBUG
+        seed = b"AUTHDB QM DEBUG KEY SEED v1 ...."  # 32 bytes, matches _WM_PUBKEY_DEBUG
         wallet_id = self._id(1)
         nonce = _sha256d(b"nonce")
         mac = _sha256d(b"mac")
@@ -976,7 +976,7 @@ class TestWardAttestation(unittest.TestCase):
 
     def test_tampered_counter_rejected(self):
         from trezor.crypto.curve import ed25519
-        from apps.authdb._qm import verify_wm_attestation
+        from apps.ward.service import verify_wm_attestation
 
         seed = b"AUTHDB QM DEBUG KEY SEED v1 ...."
         wallet_id = self._id(1)

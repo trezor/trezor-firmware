@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Optional
 
 from . import _ed25519, messages
 
@@ -15,17 +15,17 @@ _WARD_ATTEST_DOMAIN = b"WARD ATTEST v1"
 _WARD_ATTEST_VERSION = 1
 
 # Well-known DEBUG WM/QM Ed25519 seed, accepted only by debug firmware. Its public
-# key is provisioned as _QM_PUBKEY_DEBUG in core/src/apps/authdb/_qm.py. Used by
+# key is provisioned as _WM_PUBKEY_DEBUG in core/src/apps/ward/service.py. Used by
 # tests / the CLI to stand in for the WARD Manager's final signature.
 DEBUG_QM_SEED = b"AUTHDB QM DEBUG KEY SEED v1 ...."
 
 
 # ---------------------------------------------------------------------------
-# Wire wrappers — the WARD write round (set_entry -> commit -> finalize)
+# Wire wrappers — the WARD update round (add_pending -> commit -> finalize)
 # ---------------------------------------------------------------------------
 
 
-def set_entry(
+def add_pending(
     session: "Session",
     address: bytes,
     old_value: bytes,
@@ -45,7 +45,7 @@ def set_entry(
     its counter. Returns (candidate_counter, wallet_id).
     """
     resp = session.call(
-        messages.WARDSetEntry(
+        messages.WARDAddPending(
             address=address,
             old_value=old_value,
             new_value=new_value,
@@ -56,7 +56,7 @@ def set_entry(
             witness_value=witness_value,
             witness_counter=witness_counter,
         ),
-        expect=messages.WARDSetEntryAck,
+        expect=messages.WARDAddPendingAck,
     )
     return resp.counter, resp.wallet_id
 
@@ -72,7 +72,7 @@ def commit(
     return resp.counter, resp.new_root, resp.mac, resp.wallet_id
 
 
-def finalize(
+def confirm_commit(
     session: "Session",
     counter: int,
     mac: Optional[bytes],
@@ -95,7 +95,7 @@ def finalize(
 # ---------------------------------------------------------------------------
 
 
-def sign_ward_final(
+def sign_ward_update(
     counter: int, mac: bytes, wallet_id: bytes, qm_seed: bytes = DEBUG_QM_SEED
 ) -> bytes:
     """Produce the WM final attestation the device verifies in WARDConfirmCommit:
@@ -138,29 +138,39 @@ def sign_wm_attestation(
 
 
 # ---------------------------------------------------------------------------
-# Wire wrappers — the WARD sync round (bootstrap/refresh) + lookup + debug seed
+# Wire wrappers — the WARD sync round + lookup + debug seed
 # ---------------------------------------------------------------------------
 
 
-def init_sync(session: "Session") -> tuple[bytes, int, Optional[bytes]]:
-    """Begin a sync round. Returns (nonce, version, wallet_id)."""
+def sync(session: "Session") -> bytes:
+    """Start a fresh sync round on the device.
+
+    Returns the fresh nonce for WM attestation. Suite/host already knows the
+    wallet identity and carries it to the WM out-of-band.
+    """
     resp = session.call(
-        messages.WARDInitSyncRound(), expect=messages.WARDInitSyncRoundAck
+        messages.WARDSync(), expect=messages.WARDSyncAck
     )
-    return resp.nonce, resp.version, resp.wallet_id
+    return resp.nonce
 
 
 def ingest_attestation(
-    session: "Session", counter: int, mac: Optional[bytes], wm_signature: bytes
-) -> tuple[int, Optional[bytes]]:
-    """Deliver the WM freshness attestation. Returns (counter, wallet_id)."""
+    session: "Session",
+    counter_ext: int,
+    root_mac_ext: Optional[bytes],
+    wm_signature: bytes,
+) -> int:
+    """Verify and record the WM freshness attestation for the open sync round.
+
+    Returns the accepted external counter.
+    """
     resp = session.call(
         messages.WARDIngestAttestation(
-            counter=counter, mac=mac, wm_signature=wm_signature
+            counter=counter_ext, mac=root_mac_ext, wm_signature=wm_signature
         ),
         expect=messages.WARDIngestAttestationAck,
     )
-    return resp.counter, resp.wallet_id
+    return resp.counter
 
 
 def list_pending(session: "Session") -> tuple[list[bytes], Optional[bytes]]:
@@ -171,14 +181,17 @@ def list_pending(session: "Session") -> tuple[list[bytes], Optional[bytes]]:
     return list(resp.addresses), resp.wallet_id
 
 
-def merge_state(
+def reconcile(
     session: "Session", root: Optional[bytes]
-) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
-    """Adopt the attested root. Returns (counter, new_root, wallet_id, root_mac)."""
+) -> tuple[int, Optional[bytes], Optional[bytes]]:
+    """Finalize an already-attested sync round by installing the supplied root.
+
+    Returns (counter, adopted_root, installed_root_mac).
+    """
     resp = session.call(
-        messages.WARDMergeState(root=root), expect=messages.WARDMergeStateAck
+        messages.WARDReconcile(root=root), expect=messages.WARDReconcileAck
     )
-    return resp.counter, resp.new_root, resp.wallet_id, resp.root_mac
+    return resp.counter, resp.new_root, resp.root_mac
 
 
 def lookup(
@@ -218,75 +231,3 @@ def debug_set_root(
         messages.WARDDebugSetRoot(root=root), expect=messages.WARDDebugSetRootAck
     )
     return resp.counter, resp.new_root, resp.wallet_id, resp.root_mac
-
-
-def bootstrap(
-    session: "Session",
-    counter: int,
-    mac: Optional[bytes],
-    root: Optional[bytes],
-    sign_attestation: Optional[Callable[[bytes, bytes, int, bytes], bytes]] = None,
-) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
-    """Run a full sync round: init_sync -> (WM sign) -> ingest_attestation ->
-    merge_state, adopting the WM-attested (counter, mac) and host `root`.
-
-    `sign_attestation(wallet_id, nonce, counter, mac) -> signature` is the WM's
-    freshness attestation; defaults to the debug signer. Returns merge_state's
-    (counter, new_root, wallet_id, root_mac).
-    """
-    nonce, _version, wallet_id = init_sync(session)
-    assert wallet_id is not None
-    mac_for_sig = mac if mac is not None else ZERO_MAC
-    if sign_attestation is not None:
-        sig = sign_attestation(wallet_id, nonce, counter, mac_for_sig)
-    else:
-        sig = sign_wm_attestation(nonce, counter, mac_for_sig, wallet_id)
-    ingest_attestation(session, counter, mac, sig)
-    return merge_state(session, root)
-
-
-# ---------------------------------------------------------------------------
-# Convenience: the whole write round in one call (drop-in for the former
-# authdb.update_leaf). Returns the same (counter, new_root, wallet_id, mac) shape.
-# ---------------------------------------------------------------------------
-
-
-def write(
-    session: "Session",
-    address: bytes,
-    old_value: bytes,
-    new_value: bytes,
-    new_counter: int,
-    proof: list[bytes],
-    old_counter: Optional[int] = None,
-    witness_address: Optional[bytes] = None,
-    witness_value: Optional[bytes] = None,
-    witness_counter: Optional[int] = None,
-    sign_final: Optional[Callable[[bytes, int, bytes], bytes]] = None,
-) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
-    """Run set_entry -> commit -> (WM sign) -> finalize.
-
-    `sign_final(wallet_id, counter, mac) -> signature` is the WM's final
-    attestation; defaults to the debug signer. Returns
-    (counter, new_root, wallet_id, root_mac).
-    """
-    set_entry(
-        session,
-        address,
-        old_value,
-        new_value,
-        new_counter,
-        proof,
-        old_counter=old_counter,
-        witness_address=witness_address,
-        witness_value=witness_value,
-        witness_counter=witness_counter,
-    )
-    c_counter, root_t, mac_t, wallet_id = commit(session)
-    mac_for_sig = mac_t if mac_t is not None else ZERO_MAC
-    assert wallet_id is not None
-    if sign_final is not None:
-        sig = sign_final(wallet_id, c_counter, mac_for_sig)
-    else:
-        sig = sign_ward_final(c_counter, mac_for_sig, wallet_id)
-    return finalize(session, c_counter, mac_t, sig)
