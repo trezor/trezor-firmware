@@ -154,13 +154,13 @@ impl BootloaderUI for UICaesar {
         let title_str = if is_newinstall {
             "INSTALL FIRMWARE"
         } else if is_newvendor {
-            "CHANGE FW VENDOR"
+            "CHANGE FIRMWARE VENDOR"
         } else if version_cmp > 0 {
-            "UPDATE FIRMWARE"
+            "UPGRADE FIRMWARE"
         } else if version_cmp == 0 {
-            "REINSTALL FW"
+            "REINSTALL FIRMWARE"
         } else {
-            "DOWNGRADE FW"
+            "DOWNGRADE FIRMWARE"
         };
 
         let message =
@@ -184,7 +184,7 @@ impl BootloaderUI for UICaesar {
             "INSTALL".into(),
             false,
         )
-        .with_info_screen("FW FINGERPRINT".into(), fingerprint);
+        .with_info_screen("FIRMWARE FINGERPRINT".into(), fingerprint);
 
         let (_, res) = run(&mut frame, true, false);
         res

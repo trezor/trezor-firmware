@@ -183,15 +183,15 @@ impl BootloaderUI for UIEckhart {
         unwrap!(version_str.push_str(vendor));
 
         let title_str = if is_newinstall {
-            "Install firmware"
+            "Install Firmware"
         } else if is_newvendor {
-            "Change fw vendor"
+            "Change Firmware Vendor"
         } else if version_cmp > 0 {
-            "Update firmware"
+            "Upgrade Firmware"
         } else if version_cmp == 0 {
-            "Reinstall firmware"
+            "Reinstall Firmware"
         } else {
-            "Downgrade firmware"
+            "Downgrade Firmware"
         };
         let msg = Label::left_aligned(version_str.as_str().into(), TEXT_NORMAL);
         let alert = (!should_keep_seed).then_some(Label::left_aligned(
@@ -222,7 +222,7 @@ impl BootloaderUI for UIEckhart {
             .with_action_bar(BldActionBar::new_double(left, right))
             .with_screen_border(SCREEN_BORDER_BLUE)
             .with_more_info(
-                BldHeader::new("FW Fingerprint".into()).with_close_button(),
+                BldHeader::new("Firmware Fingerprint".into()).with_close_button(),
                 Label::left_aligned(fingerprint.into(), TEXT_FW_FINGERPRINT),
             );
 
