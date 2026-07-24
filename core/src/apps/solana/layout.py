@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.messages import PaymentRequest, SolanaOffchainMessageV1, SolanaTokenInfo
-    from trezor.ui.layouts import PropertyType, StrPropertyType
+    from trezor.ui.layouts import StrPropertyType
 
     from .definitions import Definitions
     from .transaction import Fee
@@ -140,7 +140,7 @@ async def confirm_instruction(
             ):
                 continue
 
-            account_data: list[PropertyType] = []
+            account_data: list[StrPropertyType] = []
             if not is_address_reference(account_value):
                 account_description = f"{base58.encode(account_value[0])}"
                 token = definitions.get_token(account_value[0])
@@ -168,7 +168,7 @@ async def confirm_instruction(
             raise ValueError  # Invalid ui property
 
     if instruction.multisig_signers:
-        signers: list[PropertyType] = []
+        signers: list[StrPropertyType] = []
         for i, multisig_signer in enumerate(instruction.multisig_signers, 1):
             if not is_address_reference(multisig_signer):
                 multisig_signer_public_key = multisig_signer[0]
@@ -243,7 +243,7 @@ async def confirm_unsupported_instruction_details(
         )
 
         for i, account in enumerate(instruction.accounts, 1):
-            accounts: list[PropertyType] = []
+            accounts: list[StrPropertyType] = []
             if not is_address_reference(account):
                 account_public_key = account[0]
                 address_type = get_address_type(account[1])
