@@ -120,7 +120,7 @@ async def confirm_instruction(
                 f"{instruction_index}/{instructions_count}",
                 (
                     (
-                        maybe_with_colon(ui_property.display_name),
+                        ui_property.display_name,
                         property_template.format(value, *args),
                         True,
                     ),
