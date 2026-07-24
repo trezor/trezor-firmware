@@ -74,12 +74,14 @@ pub trait FirmwareUI {
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
     fn confirm_value_intro(
         title: TString<'static>,
         value: Obj, // TODO: replace Obj
         subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        verb_view_all: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace

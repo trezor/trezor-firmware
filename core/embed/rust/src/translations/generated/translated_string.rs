@@ -1663,6 +1663,10 @@ pub enum TranslatedString {
     words__authorization = 1259,  // "Authorization"
     words__comm_continue = 1260,  // "Communication with your connected device failed. It's safe to continue."
     words__function = 1261,  // "Function"
+    #[cfg(feature = "universal_fw")]
+    ethereum__skip_to_hash = 1262,  // "Skip and view hash"
+    #[cfg(feature = "universal_fw")]
+    ethereum__view_data_and_hash = 1263,  // "View data and hash"
 }
 
 impl TranslatedString {
@@ -2932,6 +2936,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4199,6 +4205,8 @@ impl TranslatedString {
                 18995,
                 19066,
                 19074,
+                19092,
+                19110,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5465,6 +5473,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6732,6 +6742,8 @@ impl TranslatedString {
                 18995,
                 19066,
                 19074,
+                19092,
+                19110,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7998,6 +8010,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9265,6 +9279,8 @@ impl TranslatedString {
                 18995,
                 19066,
                 19074,
+                19092,
+                19110,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10531,6 +10547,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11798,6 +11816,8 @@ impl TranslatedString {
                 18995,
                 19066,
                 19074,
+                19092,
+                19110,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13065,6 +13085,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14332,6 +14354,8 @@ impl TranslatedString {
                 16786,
                 16857,
                 16865,
+                16883,
+                16901,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15598,6 +15622,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16865,6 +16891,8 @@ impl TranslatedString {
                 16786,
                 16857,
                 16865,
+                16883,
+                16901,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18131,6 +18159,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19398,6 +19428,8 @@ impl TranslatedString {
                 16786,
                 16857,
                 16865,
+                16883,
+                16901,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20664,6 +20696,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21931,6 +21965,8 @@ impl TranslatedString {
                 16786,
                 16857,
                 16865,
+                16883,
+                16901,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23198,6 +23234,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24465,6 +24503,8 @@ impl TranslatedString {
                 18884,
                 18955,
                 18963,
+                18981,
+                18999,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25731,6 +25771,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26998,6 +27040,8 @@ impl TranslatedString {
                 18884,
                 18955,
                 18963,
+                18981,
+                18999,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28264,6 +28308,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29531,6 +29577,8 @@ impl TranslatedString {
                 18884,
                 18955,
                 18963,
+                18981,
+                18999,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30797,6 +30845,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32064,6 +32114,8 @@ impl TranslatedString {
                 18884,
                 18955,
                 18963,
+                18981,
+                18999,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33331,6 +33383,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34598,6 +34652,8 @@ impl TranslatedString {
                 20271,
                 20342,
                 20350,
+                20368,
+                20386,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35864,6 +35920,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37131,6 +37189,8 @@ impl TranslatedString {
                 20271,
                 20342,
                 20350,
+                20368,
+                20386,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38397,6 +38457,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39664,6 +39726,8 @@ impl TranslatedString {
                 20271,
                 20342,
                 20350,
+                20368,
+                20386,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40930,6 +40994,8 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "Skip and view hash",
+                "View data and hash",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42197,6 +42263,8 @@ impl TranslatedString {
                 20271,
                 20342,
                 20350,
+                20368,
+                20386,
             ];
 
         }
@@ -42787,6 +42855,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__sign_eip712, Self::ethereum__sign_eip712),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__skip_to_hash, Self::ethereum__skip_to_hash),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__smart_info, Self::ethereum__smart_info),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__staking_claim, Self::ethereum__staking_claim),
@@ -42848,6 +42918,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__vault_redeem_to, Self::ethereum__vault_redeem_to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_withdraw_intro, Self::ethereum__vault_withdraw_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__view_data_and_hash, Self::ethereum__view_data_and_hash),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__withdraw, Self::ethereum__withdraw),
         #[cfg(feature = "universal_fw")]
