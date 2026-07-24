@@ -12,7 +12,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import mldsa
 
 from trezorlib.merkle_tree import MerkleTree, evaluate_proof
-from trezorlib.root_packet import RootPacket
+from trezorlib.root_packet import RootPacket, RootPacketAuth
 from trezorlib.trezorapp import AppHeader, AppImage
 
 # Genesis of the root-packet timestamp: 2026-06-14 12:00 UTC.
@@ -162,10 +162,12 @@ def _create_rootpacket(
     ring_mask: int, root_rings: list[bytes], out_file: Path | None
 ) -> None:
     rp = RootPacket(
-        ring_mask=ring_mask,
-        timestamp=0,
-        sigmask=3,
-        root_rings=root_rings,
+        auth=RootPacketAuth(
+            ring_mask=ring_mask,
+            sigmask=3,
+            timestamp=0,
+            root_rings=root_rings,
+        ),
         signature_0=b"\x00" * 2420,
         signature_1=b"\x00" * 2420,
     )
@@ -302,11 +304,12 @@ def _generate_app_image(
 
 
 def _print_root_packet(rp: RootPacket) -> None:
+    auth = rp.auth
     print("RootPacket:")
-    print(f"  ring_mask:   {rp.ring_mask:#04x}")
-    print(f"  timestamp:   {rp.timestamp} ({rp.timestamp:#010x})")
-    print(f"  sigmask:     {rp.sigmask:#04x}")
-    for index, root in rp.rings.items():
+    print(f"  ring_mask:   {auth.ring_mask:#04x}")
+    print(f"  timestamp:   {auth.timestamp} ({auth.timestamp:#010x})")
+    print(f"  sigmask:     {auth.sigmask:#04x}")
+    for index, root in auth.rings.items():
         print(f"  ring[{index}]:     {root.hex()}")
     print(f"  signature_0: {rp.signature_0[:8].hex()}… ({len(rp.signature_0)} bytes)")
     print(f"  signature_1: {rp.signature_1[:8].hex()}… ({len(rp.signature_1)} bytes)")
@@ -352,7 +355,7 @@ def timestamp(rootpacket: Path) -> None:
     )
 
     # The on-device field is a uint32, so store the two's-complement of the signed value.
-    rp.timestamp = time_signed & 0xFFFFFFFF
+    rp.auth.timestamp = time_signed & 0xFFFFFFFF
 
     out_file = _suffixed_path(rootpacket, "timestamped")
     out_file.write_bytes(rp.build())
@@ -370,9 +373,10 @@ def sign(rootpacket: Path) -> None:
     _print_root_packet(rp)
 
     keys = [mldsa.MLDSA44PrivateKey.from_seed_bytes(seed) for seed in DEV_SIGNING_SEEDS]
+
+    rp.auth.sigmask = 0b11
     digest = rp.digest()
 
-    rp.sigmask = 0b11
     rp.signature_0 = keys[0].sign(digest)
     rp.signature_1 = keys[1].sign(digest)
 
@@ -402,7 +406,7 @@ def verify(rootpacket: Path) -> None:
     checked = 0
     failed = 0
     for slot, (pubkey, signature) in enumerate(zip(public_keys, signatures)):
-        if not rp.sigmask & (1 << slot):
+        if not rp.auth.sigmask & (1 << slot):
             print(f"  signature_{slot}: skipped (sigmask bit {slot} clear)")
             continue
         checked += 1
@@ -414,7 +418,9 @@ def verify(rootpacket: Path) -> None:
             failed += 1
 
     if checked == 0:
-        raise click.ClickException(f"sigmask {rp.sigmask:#04x} selects no signatures")
+        raise click.ClickException(
+            f"sigmask {rp.auth.sigmask:#04x} selects no signatures"
+        )
     if failed:
         raise click.ClickException(
             f"{failed} of {checked} signature(s) failed to verify"
@@ -459,11 +465,11 @@ def verify_app(app: Path, proof: Path, rootpacket: Path) -> None:
     print(f"  app_ring: {app_ring}")
     print(f"  proof:    {[p[:4].hex() for p in proof_entries]}")
 
-    if not rp.has_ring(app_ring):
+    if not rp.auth.has_ring(app_ring):
         raise click.ClickException(
-            f"RootPacket (mask {rp.ring_mask:#04x}) has no root for ring {app_ring}"
+            f"RootPacket (mask {rp.auth.ring_mask:#04x}) has no root for ring {app_ring}"
         )
-    expected_root = rp.ring(app_ring)
+    expected_root = rp.auth.ring(app_ring)
     computed_root = evaluate_proof(digest, proof_entries)
 
     print(f"\n  expected root (ring {app_ring}): {expected_root.hex()}")
