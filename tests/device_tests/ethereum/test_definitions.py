@@ -591,3 +591,63 @@ def test_clear_signing_with_mismatched_definition(session: Session) -> None:
     )
     _sign_tx_with_display_format(session, bad_display_format, on_page=on_page)
     assert_all_seen()
+
+
+# WETH wrap (deposit) / unwrap (withdraw) - built-in display formats.
+# https://github.com/trezor/trezor-firmware/issues/7252
+
+# Canonical WETH on Ethereum mainnet
+WETH_MAINNET = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+
+WETH_DEPOSIT_CALLDATA = bytes.fromhex("d0e30db0")  # deposit()
+WETH_WITHDRAW_CALLDATA = bytes.fromhex(
+    "2e1a7d4d"  # withdraw(uint256)
+    + "000000000000000000000000000000000000000000000000002386f26fc10000"  # wad: 0.01
+)
+WETH_AMOUNT = 0x2386F26FC10000  # 0.01 ETH
+
+
+def _get_weth_sign_tx_params(data: bytes, value: int = 0) -> dict:
+    return dict(
+        n=parse_path("m/44h/60h/0h/0/1"),
+        nonce=0x0,
+        gas_price=0x14,
+        gas_limit=0x14,
+        to=WETH_MAINNET,
+        value=value,
+        data=data,
+        chain_id=1,
+    )
+
+
+@pytest.mark.models("core")
+def test_clear_signing_weth_deposit(session: Session) -> None:
+    on_page, assert_all_seen = make_label_checker(
+        expected={"WETH", "Wrap ETH to WETH", "0.01 ETH"},
+        absent={"UNKN"},
+    )
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(
+                InputFlowConfirmAllWarnings(session, on_page=on_page).get()
+            )
+        ethereum.sign_tx(
+            session,
+            **_get_weth_sign_tx_params(WETH_DEPOSIT_CALLDATA, value=WETH_AMOUNT),
+        )
+    assert_all_seen()
+
+
+@pytest.mark.models("core")
+def test_clear_signing_weth_withdraw(session: Session) -> None:
+    on_page, assert_all_seen = make_label_checker(
+        expected={"WETH", "Unwrap WETH to ETH", "0.01 ETH"},
+        absent={"UNKN"},
+    )
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(
+                InputFlowConfirmAllWarnings(session, on_page=on_page).get()
+            )
+        ethereum.sign_tx(session, **_get_weth_sign_tx_params(WETH_WITHDRAW_CALLDATA))
+    assert_all_seen()

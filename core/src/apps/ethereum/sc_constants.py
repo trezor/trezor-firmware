@@ -59,6 +59,19 @@ KNOWN_ADDRESSES = {
     (1116, unhexlify("0000000000000000000000000000000000001011")): "Core Stake",
     # https://scan.coredao.org/address/0x0000000000000000000000000000000000001010
     (1116, unhexlify("0000000000000000000000000000000000001010")): "Core Stake",
+    # WETH (Wrapped Ether) - canonical contracts, see clear_signing_definitions.py
+    # https://etherscan.io/address/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+    (1, unhexlify("C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")): "WETH",
+    # https://optimistic.etherscan.io/address/0x4200000000000000000000000000000000000006
+    (10, unhexlify("4200000000000000000000000000000000000006")): "WETH",
+    # https://arbiscan.io/address/0x82aF49447D8a07e3bd95BD0d56f35241523fBab1
+    (42161, unhexlify("82aF49447D8a07e3bd95BD0d56f35241523fBab1")): "WETH",
+    # https://basescan.org/address/0x4200000000000000000000000000000000000006
+    (8453, unhexlify("4200000000000000000000000000000000000006")): "WETH",
+    # https://sepolia.etherscan.io/address/0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9
+    (11155111, unhexlify("7b79995e5f793A07Bc00c21412e50Ecae098E7f9")): "WETH",
+    # https://holesky.etherscan.io/address/0x94373a4919B3240D86eA41593D5eBa789FEF3848
+    (17000, unhexlify("94373a4919B3240D86eA41593D5eBa789FEF3848")): "WETH",
     # yield.xyz
     # https://etherscan.io/address/0xb929b89153fc2eed442e81e5a1add4e2fa39028f
     (1, unhexlify("b929b89153fc2eed442e81e5a1add4e2fa39028f")): "yield.xyz",
