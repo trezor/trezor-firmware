@@ -39,13 +39,14 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: |
-            core/build/unix/trezor-emu-core*
+            core/build-xtask/artifacts/latest/firmware-emu*
           retention-days: 7
 
   # Context tests for Core. Generates screenshots of UI flows of curated list of tests
@@ -53,6 +54,8 @@ jobs:
   core_context_tests_single_language:
     needs: core_emu
     if: ${{ !inputs.all-languages }}
+    permissions:
+      id-token: write  # for fetching OIDC token for AWS in reusable workflow jobs
     uses: ./.github/workflows/crowdin-ui-check-reuse.yml
     with:
       languages: '["en", "${{ inputs.language }}"]'
@@ -60,6 +63,8 @@ jobs:
   core_context_tests_all_languages:
     needs: core_emu
     if: ${{ inputs.all-languages }}
+    permissions:
+      id-token: write  # for fetching OIDC token for AWS in reusable workflow jobs
     uses: ./.github/workflows/crowdin-ui-check-reuse.yml
     with:
       languages: '["en", "cs", "fr", "de", "es", "pt"]'
