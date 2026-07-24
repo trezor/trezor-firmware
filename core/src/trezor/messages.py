@@ -4301,6 +4301,7 @@ if TYPE_CHECKING:
         chain_id: "int"
         delegate: "str"
         nonce: "int"
+        definitions: "EthereumDefinitions | None"
 
         def __init__(
             self,
@@ -4309,6 +4310,7 @@ if TYPE_CHECKING:
             delegate: "str",
             nonce: "int",
             address_n: "list[int] | None" = None,
+            definitions: "EthereumDefinitions | None" = None,
         ) -> None:
             pass
 
