@@ -50,6 +50,7 @@ function help_and_die() {
   echo "Options:"
   echo "  --skip-bitcoinonly - do not build bitcoin-only firmwares"
   echo "  --skip-normal - do not build regular firmwares"
+  echo "  --skip-translations - do not add the translations Merkle root to the fingerprints file"
   echo "  --repository path/to/repo - checkout the repository from the given path/url"
   echo "  --no-init - do not recreate docker environments"
   echo "  --init-only - set up the docker environment and exit without building"
@@ -68,6 +69,7 @@ function help_and_die() {
 OPT_BUILD_NORMAL=1
 OPT_BUILD_BITCOINONLY=1
 OPT_BUILD_NRF=0
+OPT_ADD_TRANSLATIONS=1
 INIT=1
 INIT_ONLY=0
 MODELS=(T1B1 T2B1 T2T1 T3T1 T3W1)
@@ -86,6 +88,10 @@ while true; do
       ;;
     --skip-normal)
       OPT_BUILD_NORMAL=0
+      shift
+      ;;
+    --skip-translations)
+      OPT_ADD_TRANSLATIONS=0
       shift
       ;;
     --repository)
@@ -304,6 +310,8 @@ DIR=$(pwd)
 
 # build core
 
+CORE_FIRMWARE_BUILT=0
+
 for TREZOR_MODEL in ${MODELS[@]}; do
   if [ "$TREZOR_MODEL" = "T1B1" ]; then
     continue
@@ -329,6 +337,10 @@ for TREZOR_MODEL in ${MODELS[@]}; do
 
     if [ -z "$MAKE_TARGETS" ]; then
       continue
+    fi
+
+    if [[ "$MAKE_TARGETS" == *build_firmware* ]]; then
+      CORE_FIRMWARE_BUILT=1
     fi
 
     SCRIPT_NAME=".build_core_${TREZOR_MODEL}_${BITCOIN_ONLY}.sh"
@@ -561,9 +573,8 @@ echo
 FINGERPRINTS_FILE="build/${COMMIT_HASH}.fingerprints"
 MASTER_FILE="build/${COMMIT_HASH}.master"
 if [ -f "$FINGERPRINTS_FILE" ]; then
-  echo "Fingerprints ($FINGERPRINTS_FILE):"
-  echo
-  cat "$FINGERPRINTS_FILE"
+  # Append the translations root if a firmware that consumes them was built and
+  # compute the master fingerprint.
   $DOCKER run \
       --network=host \
       --rm \
@@ -572,10 +583,20 @@ if [ -f "$FINGERPRINTS_FILE" ]; then
       "$SNAPSHOT_NAME" \
       /nix/var/nix/profiles/default/bin/nix-shell --run \
         "cd /reproducible-build/trezor-firmware \
+         && if [ $OPT_ADD_TRANSLATIONS -eq 1 ] && [ $CORE_FIRMWARE_BUILT -eq 1 ] \
+               && ! grep -q '^translations:' /local/$FINGERPRINTS_FILE; then \
+              translations_root=\$(uv run core/translations/cli.py merkle-root) \
+              && { echo '# core/translations'; \
+                   echo \"translations: \$translations_root\"; \
+                   echo; } >> /local/$FINGERPRINTS_FILE; \
+            fi \
          && uv run python/tools/master-fingerprint.py /local/$FINGERPRINTS_FILE \
               > /local/$MASTER_FILE \
          && chown $USER:$GROUP /local/$MASTER_FILE" \
     || { rm -f "$MASTER_FILE"; exit 1; }
+  echo "Fingerprints ($FINGERPRINTS_FILE):"
+  echo
+  cat "$FINGERPRINTS_FILE"
   cat "$MASTER_FILE"
 else
   echo "(no core/legacy firmware images built)"
