@@ -448,10 +448,9 @@ def _sign_tx_with_display_format(
     if sign_tx_params is None:
         sign_tx_params = get_clear_signing_sign_tx_params()
     with session.test_ctx as client:
-        if not session.debug.legacy_debug:
-            client.set_input_flow(
-                InputFlowConfirmAllWarnings(session, on_page=on_page).get()
-            )
+        client.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=on_page).get()
+        )
         ethereum.sign_tx(
             session,
             **sign_tx_params,
@@ -627,10 +626,7 @@ def test_clear_signing_weth_deposit(session: Session) -> None:
         absent={"UNKN"},
     )
     with session.test_ctx as client:
-        if not session.debug.legacy_debug:
-            client.set_input_flow(
-                InputFlowConfirmAllWarnings(session, on_page=on_page).get()
-            )
+        client.set_input_flow(client.ui.default_input_flow(on_page=on_page))
         ethereum.sign_tx(
             session,
             **_get_weth_sign_tx_params(WETH_DEPOSIT_CALLDATA, value=WETH_AMOUNT),
@@ -645,9 +641,6 @@ def test_clear_signing_weth_withdraw(session: Session) -> None:
         absent={"UNKN"},
     )
     with session.test_ctx as client:
-        if not session.debug.legacy_debug:
-            client.set_input_flow(
-                InputFlowConfirmAllWarnings(session, on_page=on_page).get()
-            )
+        client.set_input_flow(client.ui.default_input_flow(on_page=on_page))
         ethereum.sign_tx(session, **_get_weth_sign_tx_params(WETH_WITHDRAW_CALLDATA))
     assert_all_seen()
