@@ -317,3 +317,5 @@ if not utils.BITCOIN_ONLY:
     WARDLookupAck = 2345
     WARDDebugSetRoot = 2346
     WARDDebugSetRootAck = 2347
+    WARDProofRequest = 2348
+    WARDProofAck = 2349

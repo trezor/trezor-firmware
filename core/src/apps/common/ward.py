@@ -55,6 +55,94 @@ async def lookup_label(
     return await service.lookup_label_impl(address, value, proof, counter)
 
 
+async def _classify_label(
+    address: bytes,
+    value: bytes | None,
+    proof: list[bytes],
+    counter: int | None,
+    witness_address: bytes | None = None,
+    witness_value: bytes | None = None,
+    witness_counter: int | None = None,
+) -> tuple[str, bytes | None]:
+    """Verify a (membership / non-membership) proof against the device's
+    authenticated root and classify it. Returns (status, label), where status is
+    "unknown" / "membership" / "non-membership" and label is the verified value
+    bytes (only for a valid membership proof, else None). Shared by the PUSH and
+    PULL label paths."""
+    valid, _counter, membership, _wallet_id = await lookup(
+        address,
+        value,
+        proof,
+        witness_address=witness_address,
+        witness_value=witness_value,
+        counter=counter,
+        witness_counter=witness_counter,
+    )
+    if not valid:
+        return "unknown", None
+    if membership:
+        # `lookup` already verified (address, value, counter) against the root,
+        # so the supplied value is now trusted.
+        return "membership", value
+    return "non-membership", None
+
+
+async def verify_label(
+    app_id: str,
+    address: bytes,
+    value: bytes | None,
+    proof: list[bytes],
+    counter: int | None,
+    witness_address: bytes | None = None,
+    witness_value: bytes | None = None,
+    witness_counter: int | None = None,
+) -> tuple[str, bytes | None]:
+    """GATED PUSH-path label resolution: classify a proof the host attached
+    up-front (e.g. DisplayAddress.ward_*). Returns (status, label). Raises
+    DataError if `app_id` lacks the `lookup` capability."""
+    _authorize(app_id, "lookup")
+    return await _classify_label(
+        address,
+        value,
+        proof,
+        counter,
+        witness_address=witness_address,
+        witness_value=witness_value,
+        witness_counter=witness_counter,
+    )
+
+
+async def resolve_label(app_id: str, address: bytes) -> tuple[str, bytes | None]:
+    """GATED PULL-path label resolution for on-device apps.
+
+    Rather than trusting a proof the host pushed up-front, the device PULLS it:
+    it sends a WARDProofRequest naming `address`, the host answers with the WARD
+    entry + proof it holds (WARDProofAck), and this verifies that proof against
+    the device's authenticated root. Returns (status, label) — see verify_label.
+
+    Reusable by any on-device app that displays an address (DisplayAddress,
+    Bitcoin/Ethereum getAddress, sign-tx outputs). Raises DataError if `app_id`
+    lacks the `lookup` capability.
+    """
+    _authorize(app_id, "lookup")
+    from trezor.messages import WARDProofAck, WARDProofRequest
+    from trezor.wire import context
+
+    ack = await context.call(WARDProofRequest(address=address), WARDProofAck)
+
+    # A membership answer carries a value (and no witness); a non-membership
+    # answer carries witness fields (or nothing at all, for an empty tree).
+    return await _classify_label(
+        address,
+        ack.value,
+        ack.proof,
+        ack.counter,
+        witness_address=ack.witness_address,
+        witness_value=ack.witness_value,
+        witness_counter=ack.witness_counter,
+    )
+
+
 # ---------------------------------------------------------------------------
 # UNGATED host-facing ops. The WARD App (host wire handlers) drives these; the
 # host is the WARD owner, not a gated on-device principal. Thin pass-throughs to

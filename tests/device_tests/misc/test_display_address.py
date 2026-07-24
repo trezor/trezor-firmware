@@ -262,13 +262,48 @@ def test_display_address_unknown_with_wrong_proof(session: Session) -> None:
     assert response.message == "Address shown"
 
 
-@pytest.mark.skip(
-    reason=(
-        "DisplayAddress cannot express non-membership on a non-empty tree yet: "
-        "the message has no witness_address/witness_value/witness_counter fields."
-    )
-)
-def test_display_address_non_membership_label3(session: Session) -> None:
+# ---------------------------------------------------------------------------
+# PULL model: the host omits the proof from DisplayAddress and instead answers a
+# WARDProofRequest the device emits on demand. The device pulls the entry from
+# the host's WARDTree via the registered ward_proof_callback.
+# ---------------------------------------------------------------------------
+
+
+def test_display_address_more_labels_pull(session: Session) -> None:
+    address = "bc1qdemoaddress000000000000000000000000000"
+    other_address = "bc1qotheraddress000000000000000000000000000"
+    value = b'TEST:1:{"label":"label1"}'
+    other_value = b'TEST:1:{"label":"label2"}'
+    tree = WARDTree()
+    tree.insert(address.encode(), value, counter=1)
+    tree.insert(other_address.encode(), other_value, counter=1)
+    ward.debug_set_root(session, tree.get_root_hash())
+
+    with session.test_ctx as client:
+        client.app.ward_proof_callback = ward.tree_proof_callback(tree)
+        with BackgroundDeviceHandler(client) as dev:
+            dev.run_with_provided_session(
+                session,
+                lambda s: s.call(
+                    messages.DisplayAddress(address=address),
+                    expect=messages.Success,
+                ),
+            )
+            layout = dev.debuglink().read_layout()
+            assert layout.title().splitlines()[0].lower() == "membership"
+            assert "label1" in layout.title().lower() or layout.subtitle() == "label1"
+            content = layout.screen_content()
+            assert address in content.replace("\n", "").replace(" ", "")
+            dev.debuglink().press_yes()
+            response = dev.result()
+
+    assert response.message == "Address shown"
+
+
+def test_display_address_non_membership_pull(session: Session) -> None:
+    """Non-membership on a non-empty tree — impossible in the PUSH model (the
+    message has no witness fields) but expressible via PULL, since WARDProofAck
+    carries witness_address/witness_value/witness_counter."""
     address = "bc1qdemoaddress000000000000000000000000000"
     other_address = "bc1qotheraddress000000000000000000000000000"
     missing_address = "bc1qlabel3000000000000000000000000000000000"
@@ -277,19 +312,24 @@ def test_display_address_non_membership_label3(session: Session) -> None:
     tree = WARDTree()
     tree.insert(address.encode(), value, counter=1)
     tree.insert(other_address.encode(), other_value, counter=1)
-    proof, witness_address, witness_counter, witness_value = tree.get_nonmembership_proof(
-        missing_address.encode()
-    )
     ward.debug_set_root(session, tree.get_root_hash())
 
-    # A real non-membership DisplayAddress call would need to send:
-    # - proof
-    # - witness_address
-    # - witness_counter
-    # - witness_value
-    # The current message only carries ward_value / ward_proof / ward_counter.
-    assert proof is not None
-    assert witness_address is not None
-    assert witness_counter is not None
-    assert witness_value is not None
+    with session.test_ctx as client:
+        client.app.ward_proof_callback = ward.tree_proof_callback(tree)
+        with BackgroundDeviceHandler(client) as dev:
+            dev.run_with_provided_session(
+                session,
+                lambda s: s.call(
+                    messages.DisplayAddress(address=missing_address),
+                    expect=messages.Success,
+                ),
+            )
+            layout = dev.debuglink().read_layout()
+            assert layout.title().splitlines()[0].lower() == "non-membership"
+            content = layout.screen_content()
+            assert missing_address in content.replace("\n", "").replace(" ", "")
+            dev.debuglink().press_yes()
+            response = dev.result()
+
+    assert response.message == "Address shown"
 

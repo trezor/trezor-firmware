@@ -409,6 +409,9 @@ enum MessageType {
     MessageType_WARDLookupAck = 2345 [(wire_out) = true];
     MessageType_WARDDebugSetRoot = 2346 [(wire_in) = true];
     MessageType_WARDDebugSetRootAck = 2347 [(wire_out) = true];
+    // WARD proof-on-demand (device pulls a proof from the host mid-workflow)
+    MessageType_WARDProofRequest = 2348 [(wire_out) = true];
+    MessageType_WARDProofAck = 2349 [(wire_in) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

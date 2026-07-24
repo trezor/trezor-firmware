@@ -274,3 +274,34 @@ message WARDDebugSetRootAck {
     optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
     optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root)
 }
+
+/**
+ * Request: DEVICE -> HOST. Emitted mid-workflow by an on-device app (Bitcoin /
+ * Ethereum getAddress, DisplayAddress, ...) that is about to display an address
+ * and wants to authenticate a WARD label for it. Instead of the host pushing a
+ * proof up-front, the device pulls it on demand: it names the address, and the
+ * host answers with the WARD entry + proof it holds. The device then verifies
+ * the proof against its own authenticated root before trusting the label.
+ * @next WARDProofAck
+ */
+message WARDProofRequest {
+    required bytes address = 1;  // address the device is about to display
+}
+
+/**
+ * Response: HOST -> DEVICE. The WARD entry the host holds for the requested
+ * address, plus the proof binding it to the device's authenticated root.
+ *
+ *   membership     : set value + counter (+ proof); leave the witness_* fields empty.
+ *   non-membership : leave value empty; set proof + witness_address / witness_value /
+ *                    witness_counter (empty tree: leave everything empty).
+ * @end
+ */
+message WARDProofAck {
+    optional bytes  value           = 1;  // value stored at address (membership)
+    repeated bytes  proof           = 2;  // sibling hashes, leaf-to-root order (33 bytes each)
+    optional uint32 counter         = 3;  // leaf counter for address (membership)
+    optional bytes  witness_address = 4;  // non-membership: witness leaf address
+    optional bytes  witness_value   = 5;  // non-membership: witness leaf value
+    optional uint32 witness_counter = 6;  // non-membership: witness leaf counter
+}

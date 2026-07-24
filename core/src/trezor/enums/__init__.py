@@ -737,6 +737,8 @@ if TYPE_CHECKING:
         WARDLookupAck = 2345
         WARDDebugSetRoot = 2346
         WARDDebugSetRootAck = 2347
+        WARDProofRequest = 2348
+        WARDProofAck = 2349
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

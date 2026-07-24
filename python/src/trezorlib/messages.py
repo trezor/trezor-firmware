@@ -797,6 +797,8 @@ class MessageType(IntEnum):
     WARDLookupAck = 2345
     WARDDebugSetRoot = 2346
     WARDDebugSetRootAck = 2347
+    WARDProofRequest = 2348
+    WARDProofAck = 2349
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -9799,6 +9801,49 @@ class WARDDebugSetRootAck(protobuf.MessageType):
         self.new_root = new_root
         self.wallet_id = wallet_id
         self.root_mac = root_mac
+
+
+class WARDProofRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2348
+    FIELDS = {
+        1: protobuf.Field("address", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "bytes",
+    ) -> None:
+        self.address = address
+
+
+class WARDProofAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2349
+    FIELDS = {
+        1: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
+        3: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("witness_address", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("witness_value", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("witness_counter", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        proof: Optional[Sequence["bytes"]] = None,
+        value: Optional["bytes"] = None,
+        counter: Optional["int"] = None,
+        witness_address: Optional["bytes"] = None,
+        witness_value: Optional["bytes"] = None,
+        witness_counter: Optional["int"] = None,
+    ) -> None:
+        self.proof: Sequence["bytes"] = proof if proof is not None else []
+        self.value = value
+        self.counter = counter
+        self.witness_address = witness_address
+        self.witness_value = witness_value
+        self.witness_counter = witness_counter
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

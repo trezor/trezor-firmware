@@ -8,16 +8,22 @@ option java_outer_classname = "TrezorMessageDisplayAddress";
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
 /**
- * Request: Show an arbitrary address on-screen, optionally authenticating a
- * host-supplied WARD label for that address.
+ * Request: Show an arbitrary address on-screen, authenticating a WARD label for
+ * that address. Two interchangeable ways to supply the proof:
  *
- * If ward_value/proof/counter are present, firmware verifies the membership
- * proof against its authenticated WARD root via the Core capability boundary
- * and shows the verified label as the account name. Missing/invalid proof means
- * no label is displayed.
+ *   PUSH: the host attaches ward_value/ward_proof/ward_counter to this message.
+ *         The firmware verifies them directly against its authenticated root.
+ *   PULL: the host omits them. The firmware emits a WARDProofRequest naming the
+ *         address, the host answers with a WARDProofAck, and the firmware
+ *         verifies that proof instead.
+ *
+ * Either way verification goes through the Core capability boundary against the
+ * device's authenticated WARD root; a valid membership proof shows the verified
+ * label as the account name, otherwise no label is displayed.
  *
  * Returns a standard Success after confirmation.
  * @start
+ * @next WARDProofRequest
  * @next Success
  * @next Failure
  */
@@ -27,7 +33,7 @@ message DisplayAddress {
     optional string subtitle = 3;         // custom subtitle
     optional bool case_sensitive = 4 [default = true];
     optional bool chunkify = 5;           // display the address in chunks of 4 characters
-    optional bytes  ward_value   = 6;     // the label/value claimed for this address
-    repeated bytes  ward_proof   = 7;     // MPT membership proof (33 bytes each, leaf-to-root)
-    optional uint32 ward_counter = 8;     // leaf counter stamp for the WARD entry
+    optional bytes  ward_value   = 6;     // PUSH: the label/value claimed for this address
+    repeated bytes  ward_proof   = 7;     // PUSH: MPT membership proof (33 bytes each, leaf-to-root)
+    optional uint32 ward_counter = 8;     // PUSH: leaf counter stamp for the WARD entry
 }

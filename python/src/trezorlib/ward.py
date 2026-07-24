@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 from . import _ed25519, messages
 
 if TYPE_CHECKING:
+    from .authdb_tree import WARDTree
     from .transport.session import Session
 
 ZERO_MAC = b"\x00" * 32
@@ -237,3 +238,46 @@ def debug_set_root(
         messages.WARDDebugSetRoot(root=root), expect=messages.WARDDebugSetRootAck
     )
     return resp.counter, resp.new_root, resp.wallet_id, resp.root_mac
+
+
+# ---------------------------------------------------------------------------
+# Proof-on-demand: the device pulls a WARD proof mid-workflow via WARDProofRequest.
+# ---------------------------------------------------------------------------
+
+
+def build_proof_ack(tree: "WARDTree", address: bytes) -> messages.WARDProofAck:
+    """Answer a WARDProofRequest from `tree`: a membership proof if the address is
+    present, otherwise a non-membership (witness) proof, or an empty ack for an
+    empty tree."""
+    if tree.is_empty():
+        return messages.WARDProofAck()
+    if tree.get_counter(address):
+        return messages.WARDProofAck(
+            value=tree.get_value(address),
+            proof=tree.get_proof(address),
+            counter=tree.get_counter(address),
+        )
+    proof, witness_address, witness_counter, witness_value = (
+        tree.get_nonmembership_proof(address)
+    )
+    return messages.WARDProofAck(
+        proof=proof,
+        witness_address=witness_address,
+        witness_value=witness_value,
+        witness_counter=witness_counter,
+    )
+
+
+def tree_proof_callback(
+    tree: "WARDTree",
+) -> Callable[[messages.WARDProofRequest], messages.WARDProofAck]:
+    """Build an AppManifest.ward_proof_callback that serves proofs from `tree`.
+
+    Register it on the client so the device can pull WARD proofs on demand:
+        client.app.ward_proof_callback = ward.tree_proof_callback(tree)
+    """
+
+    def _callback(msg: messages.WARDProofRequest) -> messages.WARDProofAck:
+        return build_proof_ack(tree, msg.address)
+
+    return _callback

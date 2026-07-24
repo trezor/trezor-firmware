@@ -7824,6 +7824,44 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDDebugSetRootAck"]:
             return isinstance(msg, cls)
 
+    class WARDProofRequest(protobuf.MessageType):
+        address: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            address: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDProofRequest"]:
+            return isinstance(msg, cls)
+
+    class WARDProofAck(protobuf.MessageType):
+        value: "AnyBytes | None"
+        proof: "list[AnyBytes]"
+        counter: "int | None"
+        witness_address: "AnyBytes | None"
+        witness_value: "AnyBytes | None"
+        witness_counter: "int | None"
+
+        def __init__(
+            self,
+            *,
+            proof: "list[AnyBytes] | None" = None,
+            value: "AnyBytes | None" = None,
+            counter: "int | None" = None,
+            witness_address: "AnyBytes | None" = None,
+            witness_value: "AnyBytes | None" = None,
+            witness_counter: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDProofAck"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
         batch_size: "int | None"
 
