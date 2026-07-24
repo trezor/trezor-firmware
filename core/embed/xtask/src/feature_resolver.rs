@@ -2,8 +2,14 @@ use std::process;
 
 use anyhow::{Result, bail};
 
-use crate::args::{BuildArgs, ConsoleType, Project, ResolvedBuildFeatures};
+use crate::args::{BuildArgs, ConsoleType, Project};
 use crate::{config, helpers};
+
+pub struct ResolvedBuildFeatures {
+    pub features: Vec<String>,
+    pub target_triple: Option<&'static str>,
+    pub board_header: String,
+}
 
 /// Resolves cargo features and target triple from the provided CLI arguments.
 pub fn resolve_features(args: &BuildArgs) -> Result<ResolvedBuildFeatures> {
