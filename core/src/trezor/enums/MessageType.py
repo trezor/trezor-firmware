@@ -194,6 +194,8 @@ if not utils.BITCOIN_ONLY:
     StellarInvokeHostFunctionOp = 235
     StellarTxExtRequest = 238
     StellarTxExt = 239
+    StellarSignSorobanAuthorization = 240
+    StellarSorobanAuthorizationSignature = 241
     CardanoGetPublicKey = 305
     CardanoPublicKey = 306
     CardanoGetAddress = 307

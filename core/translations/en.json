@@ -2845,6 +2845,7 @@
     "stellar__new_passive_offer": "New Passive Offer",
     "stellar__no_memo_set": "No memo set!",
     "stellar__no_restriction": "[no restriction]",
+    "stellar__on_behalf_of": "On behalf of",
     "stellar__path_pay": "Path Pay",
     "stellar__path_pay_at_least": "Path Pay at least",
     "stellar__pay": "Pay",
@@ -2857,6 +2858,7 @@
     "stellar__set_data": "Set data",
     "stellar__set_flags": "Set flags",
     "stellar__set_sequence_to_template": "Set sequence to {0}?",
+    "stellar__sign_authorization": "Sign authorization",
     "stellar__sign_tx_count_template": "Sign this transaction made up of {0}",
     "stellar__sign_tx_fee_template": "and pay {0}\nfor fee?",
     "stellar__sign_with": "Sign with",
@@ -2869,6 +2871,7 @@
     "stellar__update": "Update",
     "stellar__valid_from": "Valid from (UTC)",
     "stellar__valid_to": "Valid to (UTC)",
+    "stellar__valid_until_ledger": "Valid until ledger",
     "stellar__value_sha256": "Value (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Do you want to clear value key {0}?",
     "storage_msg__processing": {

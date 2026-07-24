@@ -412,7 +412,10 @@ if TYPE_CHECKING:
 
     class StellarSorobanCredentialsType(IntEnum):
         SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0
-        SOROBAN_CREDENTIALS_ADDRESS = 1
+        SOROBAN_CREDENTIALS_ADDRESS_V2 = 2
+
+    class StellarSorobanAuthorizationEnvelopeType(IntEnum):
+        ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS = 10
 
     class TezosContractType(IntEnum):
         Implicit = 0
@@ -635,6 +638,8 @@ if TYPE_CHECKING:
         StellarInvokeHostFunctionOp = 235
         StellarTxExtRequest = 238
         StellarTxExt = 239
+        StellarSignSorobanAuthorization = 240
+        StellarSorobanAuthorizationSignature = 241
         CardanoGetPublicKey = 305
         CardanoPublicKey = 306
         CardanoGetAddress = 307

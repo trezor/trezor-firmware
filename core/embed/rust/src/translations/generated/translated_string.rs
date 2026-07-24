@@ -1663,6 +1663,12 @@ pub enum TranslatedString {
     words__authorization = 1259,  // "Authorization"
     words__comm_continue = 1260,  // "Communication with your connected device failed. It's safe to continue."
     words__function = 1261,  // "Function"
+    #[cfg(feature = "universal_fw")]
+    stellar__on_behalf_of = 1262,  // "On behalf of"
+    #[cfg(feature = "universal_fw")]
+    stellar__sign_authorization = 1263,  // "Sign authorization"
+    #[cfg(feature = "universal_fw")]
+    stellar__valid_until_ledger = 1264,  // "Valid until ledger"
 }
 
 impl TranslatedString {
@@ -2932,6 +2938,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4199,6 +4208,9 @@ impl TranslatedString {
                 18995,
                 19066,
                 19074,
+                19086,
+                19104,
+                19122,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5465,6 +5477,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6732,6 +6747,9 @@ impl TranslatedString {
                 18995,
                 19066,
                 19074,
+                19086,
+                19104,
+                19122,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7998,6 +8016,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9265,6 +9286,9 @@ impl TranslatedString {
                 18995,
                 19066,
                 19074,
+                19086,
+                19104,
+                19122,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10531,6 +10555,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11798,6 +11825,9 @@ impl TranslatedString {
                 18995,
                 19066,
                 19074,
+                19086,
+                19104,
+                19122,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13065,6 +13095,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14332,6 +14365,9 @@ impl TranslatedString {
                 16786,
                 16857,
                 16865,
+                16877,
+                16895,
+                16913,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15598,6 +15634,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16865,6 +16904,9 @@ impl TranslatedString {
                 16786,
                 16857,
                 16865,
+                16877,
+                16895,
+                16913,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18131,6 +18173,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19398,6 +19443,9 @@ impl TranslatedString {
                 16786,
                 16857,
                 16865,
+                16877,
+                16895,
+                16913,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20664,6 +20712,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21931,6 +21982,9 @@ impl TranslatedString {
                 16786,
                 16857,
                 16865,
+                16877,
+                16895,
+                16913,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23198,6 +23252,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24465,6 +24522,9 @@ impl TranslatedString {
                 18884,
                 18955,
                 18963,
+                18975,
+                18993,
+                19011,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25731,6 +25791,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26998,6 +27061,9 @@ impl TranslatedString {
                 18884,
                 18955,
                 18963,
+                18975,
+                18993,
+                19011,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28264,6 +28330,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29531,6 +29600,9 @@ impl TranslatedString {
                 18884,
                 18955,
                 18963,
+                18975,
+                18993,
+                19011,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30797,6 +30869,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32064,6 +32139,9 @@ impl TranslatedString {
                 18884,
                 18955,
                 18963,
+                18975,
+                18993,
+                19011,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33331,6 +33409,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34598,6 +34679,9 @@ impl TranslatedString {
                 20245,
                 20316,
                 20324,
+                20336,
+                20354,
+                20372,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35864,6 +35948,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37131,6 +37218,9 @@ impl TranslatedString {
                 20245,
                 20316,
                 20324,
+                20336,
+                20354,
+                20372,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38397,6 +38487,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39664,6 +39757,9 @@ impl TranslatedString {
                 20245,
                 20316,
                 20324,
+                20336,
+                20354,
+                20372,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40930,6 +41026,9 @@ impl TranslatedString {
                 "Authorization",
                 "Communication with your connected device failed. It's safe to continue.",
                 "Function",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42197,6 +42296,9 @@ impl TranslatedString {
                 20245,
                 20316,
                 20324,
+                20336,
+                20354,
+                20372,
             ];
 
         }
@@ -43580,6 +43682,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__no_restriction, Self::stellar__no_restriction),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__on_behalf_of, Self::stellar__on_behalf_of),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__path_pay, Self::stellar__path_pay),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__path_pay_at_least, Self::stellar__path_pay_at_least),
@@ -43604,6 +43708,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__set_sequence_to_template, Self::stellar__set_sequence_to_template),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__sign_authorization, Self::stellar__sign_authorization),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__sign_tx_count_template, Self::stellar__sign_tx_count_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__sign_tx_fee_template, Self::stellar__sign_tx_fee_template),
@@ -43627,6 +43733,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_stellar__valid_from, Self::stellar__valid_from),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__valid_to, Self::stellar__valid_to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__valid_until_ledger, Self::stellar__valid_until_ledger),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__value_sha256, Self::stellar__value_sha256),
         #[cfg(feature = "universal_fw")]
