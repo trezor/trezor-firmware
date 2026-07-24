@@ -42,7 +42,6 @@ async def confirm_action(
     title: str,
     action: str | None = None,
     description: str | None = None,
-    description_param: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
@@ -54,9 +53,6 @@ async def confirm_action(
     prompt_screen: bool = False,
     prompt_title: str | None = None,
 ) -> None:
-    if description is not None and description_param is not None:
-        description = description.format(description_param)
-
     with trezorui_api.confirm_action(
         title=title,
         action=action,
@@ -2212,7 +2208,6 @@ def confirm_metadata(
     br_name: str,
     title: str,
     content: str,
-    param: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     hold: bool = False,
     verb: str | None = None,
@@ -2223,7 +2218,6 @@ def confirm_metadata(
         title=title,
         action="",
         description=content,
-        description_param=param,
         verb=verb,
         hold=hold,
         br_code=br_code,

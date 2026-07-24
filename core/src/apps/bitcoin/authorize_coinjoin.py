@@ -85,8 +85,7 @@ async def authorize_coinjoin(
         await confirm_metadata(
             "fee_over_threshold",
             TR.bitcoin__title_high_mining_fee,
-            TR.bitcoin__high_mining_fee_template,
-            max_fee_per_vbyte,
+            TR.bitcoin__high_mining_fee_template.format(max_fee_per_vbyte),
             ButtonRequestType.FeeOverThreshold,
         )
 

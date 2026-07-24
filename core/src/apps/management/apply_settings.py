@@ -215,8 +215,7 @@ async def _require_confirm_change_display_rotation(rotation: DisplayRotation) ->
         "set_rotation",
         TR.rotation__title_change,
         subtitle=TR.words__settings,
-        description=TR.rotation__change_template,
-        description_param=label,
+        description=TR.rotation__change_template.format(label),
         br_code=BRT_PROTECT_CALL,
         prompt_screen=True,
     )
@@ -228,8 +227,7 @@ async def _require_confirm_change_autolock_delay(delay_ms: int) -> None:
     await confirm_action(
         "set_autolock_delay",
         TR.auto_lock__title,
-        description=TR.auto_lock__change_template,
-        description_param=format_duration_ms(delay_ms),
+        description=TR.auto_lock__change_template.format(format_duration_ms(delay_ms)),
         br_code=BRT_PROTECT_CALL,
         prompt_screen=True,
     )
