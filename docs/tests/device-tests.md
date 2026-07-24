@@ -130,7 +130,7 @@ You can specify a skip reason as `reason="TODO implement for Delizia too"`.
 
 [pytest-random-order]: https://pypi.org/project/pytest-random-order/
 
-## Extended testing and debugging
+## 4. Extended testing and debugging
 
 ### Building for debugging (Emulator only)
 
@@ -171,3 +171,15 @@ DebugLink interface supports polling the device for its current [GC-related info
 On every test setup/teardown, we check for whether the free memory has decreased (indicating that the GC didn't free all allocated heap memory).
 
 By default, the test will fail if a leak is detected. In order to issue a warning instead, use `--ignore-gc-leak` CLI flag.
+
+## 5. Running tests on hardware over BLE
+
+T3W1 currently cannot do DebugLink over BLE so it must still be connected with USB during testing.
+
+* Build the firmware with secure elements disabled and `--storage-insecure-testing-mode true` to make testing faster.
+* In device menu: `Pair & Connect` -> `Forget all`.
+* Open your OS Bluetooth settings, forget the Trezor if there, do not connect to it, keep the window open.
+* In device menu: `Pair & Connect` -> `Pair new device`.
+* Run `trezorctl -vv ble connect` - OS settings should show the pairing code, confirm it there and on device.
+* Optionally check the connection: `trezorctl --ble --path "ble:" -vv get-features`.
+* Run pytest over BLE: `pytest --ble -v tests/device_tests`, add arguments as required.
