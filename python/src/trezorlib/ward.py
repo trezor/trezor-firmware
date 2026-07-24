@@ -174,7 +174,13 @@ def ingest_attestation(
 
 
 def list_pending(session: "Session") -> tuple[list[bytes], Optional[bytes]]:
-    """Return (pending_edit_addresses, wallet_id)."""
+    """Return (pending_edit_addresses, wallet_id).
+
+    Note:
+    - wallet_id is returned only for current compatibility
+    - callers should not rely on list_pending() as the source of wallet_id
+    - the intended design is for wallet_id to come from a different host/device source
+    """
     resp = session.call(
         messages.WARDListPendingEdits(), expect=messages.WARDListPendingEditsAck
     )

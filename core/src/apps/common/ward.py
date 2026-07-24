@@ -156,6 +156,12 @@ async def reconcile(
 
 
 async def list_pending() -> tuple[list[bytes], bytes]:
+    """Return queued pending-edit addresses.
+
+    Note:
+    - wallet_id is still returned for compatibility with current callers
+    - list_pending() should not be the long-term source of wallet_id
+    """
     from apps.ward import service
 
     return await service.list_pending_impl()

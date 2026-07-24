@@ -191,7 +191,7 @@ message WARDListPendingEdits {
  */
 message WARDListPendingEditsAck {
     repeated bytes addresses = 1;  // addresses of the currently queued pending edits
-    optional bytes wallet_id = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    optional bytes wallet_id = 2;  // compatibility-only; callers should not depend on list_pending as the wallet_id source
 }
 
 /**
