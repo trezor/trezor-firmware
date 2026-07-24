@@ -907,16 +907,15 @@ async def confirm_properties(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
 ) -> None:
-    from ..properties import with_colon
 
-    items = with_colon(
+    items = [
         (
             prop[0],
             (utils.hexlify_if_bytes(prop[1]) if prop[1] else None),
             prop[2],
         )
         for prop in props
-    )
+    ]
 
     if subtitle:
         title += ": " + subtitle
