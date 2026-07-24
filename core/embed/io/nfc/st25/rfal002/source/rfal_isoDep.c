@@ -2833,4 +2833,9 @@ ReturnCode rfalIsoDepGetApduTransceiveStatus( void )
     return ret;
  }
 
+uint8_t rfalIsoDepGetBlockNumber( void )
+{
+    return gIsoDep.blockNumber;
+}
+
 #endif /* RFAL_FEATURE_ISO_DEP */
