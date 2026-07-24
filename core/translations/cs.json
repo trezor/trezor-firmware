@@ -193,10 +193,10 @@
     "bitcoin__title_proof_of_ownership": "Důkaz vlastnictví",
     "bitcoin__title_purchase_ticket": "Koupit lístek",
     "bitcoin__title_update_transaction": {
-      "Bolt": "Aktualizovat transakci",
-      "Caesar": "Aktualiz. transakci",
-      "Delizia": "Aktualizovat transakci",
-      "Eckhart": "Aktualizovat transakci"
+      "Bolt": "Zrychlit transakci",
+      "Caesar": "Zrychlit transakci",
+      "Delizia": "Zrychlit transakci",
+      "Eckhart": "Zrychlit transakci"
     },
     "bitcoin__unknown_path": "Neznámá cesta",
     "bitcoin__unknown_transaction": "Neznámá transakce",

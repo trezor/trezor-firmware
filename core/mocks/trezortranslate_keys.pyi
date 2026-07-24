@@ -74,7 +74,7 @@ class TR:
     bitcoin__title_payjoin: str = "Payjoin"
     bitcoin__title_proof_of_ownership: str = "Proof of ownership"
     bitcoin__title_purchase_ticket: str = "Purchase ticket"
-    bitcoin__title_update_transaction: str = "Update transaction"
+    bitcoin__title_update_transaction: str = "Speed up transaction"
     bitcoin__unknown_path: str = "Unknown path"
     bitcoin__unknown_transaction: str = "Unknown transaction"
     bitcoin__unusually_high_fee: str = "Unusually high fee."

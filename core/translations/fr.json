@@ -258,10 +258,10 @@
     "bitcoin__title_proof_of_ownership": "Preuve de propriété",
     "bitcoin__title_purchase_ticket": "Acheter un ticket",
     "bitcoin__title_update_transaction": {
-      "Bolt": "Màj la trans.",
-      "Caesar": "Mettre à jour la transaction",
-      "Delizia": "Mettre à jour la transaction",
-      "Eckhart": "Mettre à jour la transaction"
+      "Bolt": "Accélérer la trans.",
+      "Caesar": "Accélérer la transaction",
+      "Delizia": "Accélérer la transaction",
+      "Eckhart": "Accélérer la transaction"
     },
     "bitcoin__unknown_path": "Chemin inconnu",
     "bitcoin__unknown_transaction": "Transaction inconnue",
