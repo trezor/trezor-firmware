@@ -41,6 +41,12 @@ def cli() -> None:
 @click.argument(
     "app_path", type=click.Path(exists=True, dir_okay=False, path_type=Path)
 )
+@click.argument(
+    "proof_path", type=click.Path(exists=True, dir_okay=False, path_type=Path)
+)
+@click.argument(
+    "root_packet_path", type=click.Path(exists=True, dir_okay=False, path_type=Path)
+)
 @click.option(
     "--min-version",
     type=str,
@@ -54,7 +60,12 @@ def cli() -> None:
 )
 @with_session()
 def load(
-    session: "Session", min_version: str | None, app_path: Path, force_reload: bool
+    session: "Session",
+    min_version: str | None,
+    app_path: Path,
+    proof_path: Path,
+    root_packet_path: Path,
+    force_reload: bool,
 ) -> None:
     """Load an external application onto the device.
 
@@ -74,7 +85,16 @@ def load(
             )
 
         app_binary = app_path.read_bytes()
-        instance_id = trezorapp.load(session, app_binary, b"", version, force_reload)
+        proof = proof_path.read_bytes()
+        root_packet = root_packet_path.read_bytes()
+        instance_id = trezorapp.load(
+            session,
+            binary=app_binary,
+            proof=proof,
+            root_packet=root_packet,
+            min_version=version,
+            force_reload=force_reload,
+        )
         click.echo(f"Application ready with instance ID: {instance_id}")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
