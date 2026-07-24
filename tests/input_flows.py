@@ -1721,6 +1721,9 @@ class InputFlowEthereumSignTxData(InputFlowBase):
 
         # First blob confirmation layout has different semantic on those models:
         is_intro = self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart)
+        if is_intro:
+            # make sure the translated string is not empty (i.e. blanked)
+            assert TR.instructions__view_all_data
 
         while True:
             br = yield
@@ -1735,12 +1738,16 @@ class InputFlowEthereumSignTxData(InputFlowBase):
 
                 # Only intro layout contains "view all" functionality:
                 if self.client.layout_type is LayoutType.Delizia:
+                    # shown as the first paragraph
                     assert is_intro == (
                         TR.instructions__view_all_data in layout.text_content()
                     )
                 elif self.client.layout_type is LayoutType.Eckhart:
-                    assert is_intro == (
-                        TR.buttons__view_all_data in layout.button_contents()
+                    # shown as a separate label
+                    assert is_intro == bool(
+                        layout.find_unique_object_with_key_and_value(
+                            key="text", value=TR.instructions__view_all_data
+                        )
                     )
 
                 if self.scroll:
