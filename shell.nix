@@ -1,6 +1,7 @@
 { fullDeps ? false
 , hardwareTest ? false
 , devTools ? false
+, pythonTest ? false
  }:
 
 let
@@ -146,12 +147,6 @@ stdenvNoCC.mkDerivation ({
   DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   NIX_ENFORCE_PURITY = 0;
 
-  # Force uv to use the nix-provided Python instead of its own managed builds.
-  # Without this, uv defaults to python-preference=managed + python-downloads=automatic,
-  # silently downloading/reusing its own interpreter and ignoring python3 on PATH.
-  UV_PYTHON_PREFERENCE = "only-system";
-  UV_PYTHON_DOWNLOADS = "never";
-
   # Fix bdist-wheel problem by setting source date epoch to a more recent date
   SOURCE_DATE_EPOCH = 1600000000;
 
@@ -167,6 +162,16 @@ stdenvNoCC.mkDerivation ({
 
   # Avoid printing "Using udevCheckHook", there are no rules to check
   dontUdevCheck = 1;
-} // (lib.optionalAttrs fullDeps) {
+} // (if pythonTest then {
+  # Allow uv to use any python version for python tests
+  UV_PYTHON_PREFERENCE = "managed";
+  UV_PYTHON_DOWNLOADS = "automatic";
+} else {
+  # Force uv to use the nix-provided Python instead of its own managed builds.
+  # Without this, uv defaults to python-preference=managed + python-downloads=automatic,
+  # silently downloading/reusing its own interpreter and ignoring python3 on PATH.
+  UV_PYTHON_PREFERENCE = "only-system";
+  UV_PYTHON_DOWNLOADS = "never";
+}) // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
 })
