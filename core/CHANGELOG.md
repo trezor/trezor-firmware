@@ -89,7 +89,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Adding TRON support for TRX and other TRC-20 tokens, smart contracts, and Stake 2.0.  [#5358]
-- ETH: Add support for EIP-7702.  [#6394]
 
 ### Changed
 - Updated libtropic to version 3.0.0.  [#6247]
