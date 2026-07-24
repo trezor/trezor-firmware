@@ -8,3 +8,4 @@ Slip39_Advanced = 2
 Slip39_Single_Extendable = 3
 Slip39_Basic_Extendable = 4
 Slip39_Advanced_Extendable = 5
+RawSeed = 6

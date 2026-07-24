@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 from trezor import utils
 
+from trezor.enums import BackupType
+
 from . import backup_types
 
 if TYPE_CHECKING:
-    from trezor.enums import BackupType
     from trezor.ui import ProgressLayout
 
 
@@ -27,8 +28,6 @@ def is_bip39() -> bool:
     If False then SLIP-39 (either Basic or Advanced).
     Other invalid values are checked directly in storage.
     """
-    from trezor.enums import BackupType
-
     return get_type() == BackupType.Bip39
 
 
@@ -37,6 +36,12 @@ def get_seed(
     progress_bar: bool = True,
     mnemonic_secret: bytes | None = None,
 ) -> bytes:
+    """Return the BIP-32 seed for the configured secret.
+
+    If the device is in RawSeed mode, the stored seed is returned as-is and the
+    passphrase is ignored. Otherwise the mnemonic is stretched with the supplied
+    passphrase using BIP-39 or SLIP-39 PBKDF2.
+    """
     mnemonic_secret = mnemonic_secret or get_secret()
     if mnemonic_secret is None:
         raise ValueError  # Mnemonic not set
@@ -50,6 +55,13 @@ def get_seed(
         from trezor.crypto import bip39
 
         seed = bip39.seed(mnemonic_secret.decode(), passphrase, render_func)
+
+    elif get_type() == BackupType.RawSeed:
+        # The stored secret is already a derived BIP-32 seed (permanent
+        # passphrase mode). Passphrase is ignored from this point on.
+        if len(mnemonic_secret) != 64:
+            raise RuntimeError
+        seed = bytes(mnemonic_secret)
 
     else:  # SLIP-39
         from trezor.crypto import slip39

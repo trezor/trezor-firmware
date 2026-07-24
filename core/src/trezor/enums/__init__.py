@@ -178,6 +178,7 @@ if TYPE_CHECKING:
         Slip39_Single_Extendable = 3
         Slip39_Basic_Extendable = 4
         Slip39_Advanced_Extendable = 5
+        RawSeed = 6
 
     class BackupMethod(IntEnum):
         Display = 0

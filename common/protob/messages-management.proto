@@ -20,6 +20,7 @@ enum BackupType {
     Slip39_Single_Extendable = 3;  // extendable single-share Shamir backup
     Slip39_Basic_Extendable = 4;   // extendable multi-share Shamir backup
     Slip39_Advanced_Extendable = 5;  // extendable multi-share Shamir backup with groups
+    RawSeed = 6;                   // raw BIP-32 seed (permanent passphrase mode)
 }
 
 /**
@@ -221,6 +222,18 @@ message SetBusy {
  * @next Success
  */
 message EndSession {}
+
+/**
+ * Request: overwrite the stored seed with the currently derived passphrase-protected root.
+ * This action is irreversible. The original seed and all parent/sibling keys are lost.
+ * The device will continue to operate normally, but seed verification will no longer be
+ * possible because the stored secret is a raw BIP-32 seed, not a mnemonic.
+ * @start
+ * @next ButtonRequest
+ * @next Success
+ * @next Failure
+ */
+message SetPermanentPassphrase {}
 
 /**
  * Request: change some property of the device, e.g. label or homescreen

@@ -1,8 +1,12 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
+from mock_storage import mock_storage
+from mock import patch
+
 from storage import device
 from trezor import config
+from trezor.enums import BackupType
 
 
 class TestConfig(unittest.TestCase):
@@ -58,6 +62,97 @@ class TestConfig(unittest.TestCase):
             secret3 = device.get_device_secret()
             self.assertEqual(len(secret3), 16)
             self.assertNotEqual(secret1, secret3)
+
+
+class TestPermanentPassphrase(unittest.TestCase):
+    """Tests for the permanent-passphrase storage helpers."""
+
+    def setUp(self):
+        config.init()
+        config.wipe()
+
+    @mock_storage
+    def test_set_permanent_passphrase_rejects_empty_passphrase(self):
+        """set_permanent_passphrase refuses to run when no passphrase is active."""
+        from apps.common import mnemonic
+        from apps.management.set_permanent_passphrase import (
+            set_permanent_passphrase,
+        )
+        from storage.cache_common import APP_COMMON_SEED
+        from trezor.messages import SetPermanentPassphrase
+        from trezor.wire import DataError
+
+        # Set up a normal BIP-39 wallet.
+        device.store_mnemonic_secret(
+            b"word " * 12, allow_derivation_fail=True
+        )
+        device.set_backup_type(BackupType.Bip39)
+
+        # The active session seed equals the no-passphrase seed.
+        seed_without_passphrase = mnemonic.get_seed(
+            passphrase="", progress_bar=False
+        )
+
+        def fake_cache_get(key, default=None):
+            if key == APP_COMMON_SEED:
+                return seed_without_passphrase
+            return default
+
+        with patch(context, "cache_get", fake_cache_get):
+            with self.assertRaises(DataError):
+                await_result(set_permanent_passphrase(SetPermanentPassphrase()))
+
+    def test_store_raw_seed_secret(self):
+        """RawSeed mode overwrites the secret and clears metadata."""
+        from storage import common
+
+        raw_seed = b"\xab" * 64
+        # Set up a normal BIP-39 wallet with SLIP-39 metadata present.
+        device.store_mnemonic_secret(
+            b"word " * 12, allow_derivation_fail=True
+        )
+        device.set_backup_type(BackupType.Bip39)
+        common.set(device._NAMESPACE, device._SLIP39_IDENTIFIER, b"\x01\x02")
+        common.set_uint8(device._NAMESPACE, device._SLIP39_ITERATION_EXPONENT, 2)
+        if not utils.BITCOIN_ONLY:
+            common.set(device._NAMESPACE, device._BINARY_MNEMONIC, b"\x00binary")
+
+        device.store_raw_seed_secret(raw_seed)
+
+        self.assertEqual(device.get_mnemonic_secret(), raw_seed)
+        self.assertEqual(device.get_backup_type(), BackupType.RawSeed)
+        self.assertTrue(device.no_backup())
+        self.assertIsNone(
+            common.get(device._NAMESPACE, device._SLIP39_IDENTIFIER)
+        )
+        self.assertIsNone(
+            common.get(device._NAMESPACE, device._SLIP39_ITERATION_EXPONENT)
+        )
+        if not utils.BITCOIN_ONLY:
+            self.assertIsNone(
+                common.get(device._NAMESPACE, device._BINARY_MNEMONIC)
+            )
+
+    def test_store_raw_seed_secret_wrong_length(self):
+        """Only a 64-byte seed is accepted for RawSeed storage."""
+        with self.assertRaises(ValueError):
+            device.store_raw_seed_secret(b"\xab" * 32)
+
+    def test_get_seed_raw_seed_ignores_passphrase(self):
+        """In RawSeed mode get_seed returns the stored seed unchanged."""
+        from apps.common import mnemonic
+
+        raw_seed = b"\xcd" * 64
+        device.store_raw_seed_secret(raw_seed)
+
+        self.assertEqual(
+            mnemonic.get_seed(passphrase="", progress_bar=False),
+            raw_seed,
+        )
+        self.assertEqual(
+            mnemonic.get_seed(passphrase="different", progress_bar=False),
+            raw_seed,
+        )
 
 
 if __name__ == "__main__":

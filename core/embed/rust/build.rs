@@ -441,6 +441,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_var("EXTERNAL_SALT_SIZE")
         .allowlist_function("storage_setup")
         .allowlist_function("storage_wipe")
+        .allowlist_function("storage_compact")
         .allowlist_function("storage_is_unlocked")
         .allowlist_function("storage_lock")
         .allowlist_function("storage_unlock")

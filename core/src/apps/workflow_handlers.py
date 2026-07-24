@@ -63,6 +63,8 @@ def _find_message_handler_module(msg_type: int) -> str:
 
     if msg_type == MessageType.ShowDeviceTutorial:
         return "apps.management.show_tutorial"
+    if msg_type == MessageType.SetPermanentPassphrase:
+        return "apps.management.set_permanent_passphrase"
 
     if utils.USE_TELEMETRY and msg_type == MessageType.TelemetryGet:
         return "apps.telemetry.get_telemetry"
