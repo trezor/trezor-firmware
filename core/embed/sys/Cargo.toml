@@ -15,7 +15,7 @@ models.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# MCU features
+# MCU selection - only enable one of these at a time
 # --------------------------------------------------------------------------
 
 mcu_stm32f427 = ["models/mcu_stm32f427", "mcu_stm32f4"]
@@ -25,7 +25,7 @@ mcu_stm32u5g = ["models/mcu_stm32u5g", "mcu_stm32u5"]
 mcu_stm32u5a = ["models/mcu_stm32u5a", "mcu_stm32u5"]
 
 # --------------------------------------------------------------------------
-# Privilege mode features
+# Privilege mode
 # --------------------------------------------------------------------------
 
 kernel_mode = ["models/kernel_mode"]
@@ -35,25 +35,29 @@ secure_mode = ["models/secure_mode"]
 # Selectable components
 # --------------------------------------------------------------------------
 
-applets = []
 app_loading = ["applets"]
+applets = []
 block_on_vcp = []
 boot_ucb = []
+dbg_console = []
+dbg_console_swo = ["dbg_console"]
+dbg_console_system_view = ["dbg_console", "system_view"]
+dbg_console_vcp = ["dbg_console"]
 emulator = ["rtl/emulator"]
 i2c_bus = []
 ipc = []
 lockable_bootloader = []
+production = ["rtl/production"]
 pvd = []
 rtc = []
-trustzone = []
-dbg_console = []
-dbg_console_swo = ["dbg_console"]
-dbg_console_vcp = ["dbg_console"]
-dbg_console_system_view = ["dbg_console", "system_view"]
 sdram = []
 sdram_stm32f429i_disc1 = []
 system_view = []
-production = ["rtl/production"]
+trustzone = []
+
+# --------------------------------------------------------------------------
+# Unit test configuration
+# --------------------------------------------------------------------------
 
 test = [
     "mcu_stm32u5g",
@@ -70,4 +74,3 @@ test = [
 mcu_stm32f4 = ["mcu_stm32"]
 mcu_stm32u5 = ["mcu_stm32"]
 mcu_stm32 = []
-

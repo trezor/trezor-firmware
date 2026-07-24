@@ -9,32 +9,91 @@ color-eyre.workspace = true
 xbuild.workspace = true
 
 [dependencies]
-trezor_lib.workspace = true
 io.workspace = true
+models.workspace = true
+rtl.workspace = true
 sec.workspace = true
 sys.workspace = true
-rtl.workspace = true
-models.workspace = true
+trezor_lib.workspace = true
 
 [features]
 
 # --------------------------------------------------------------------------
-# Selectable features
+# Build options
 # --------------------------------------------------------------------------
 
 bootloader_devel = ["sec/bootloader_devel"]
-emulator = ["io/emulator"]
 clippy = ["trezor_lib/clippy"]
 dbg_console_swo = ["dbg_console", "sys/dbg_console_swo"]
-dbg_console_vcp = ["dbg_console",  "sys/dbg_console_vcp",  "io/usb_iface_vcp"]
 dbg_console_system_view = ["dbg_console", "sys/dbg_console_system_view"]
+dbg_console_vcp = ["dbg_console", "sys/dbg_console_vcp", "io/usb_iface_vcp"]
 debug = ["trezor_lib/debug"]
 debuglink = ["trezor_lib/debuglink", "io/usb_iface_debug"]
 disable_animation = []
+emulator = ["io/emulator"]
 production = ["io/production"]
 ui_debug = ["trezor_lib/ui_debug"]
 ui_debug_overlay = ["trezor_lib/ui_debug_overlay"]
 ui_performance_overlay = ["trezor_lib/ui_performance_overlay"]
+
+# --------------------------------------------------------------------------
+# MCU selection - only enable one of these at a time
+# --------------------------------------------------------------------------
+
+mcu_stm32f427 = ["io/mcu_stm32f427", "mcu_stm32f4"]
+mcu_stm32f429 = ["io/mcu_stm32f429", "mcu_stm32f4"]
+mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_stm32u5a = ["io/mcu_stm32u5a", "mcu_stm32u5"]
+
+# --------------------------------------------------------------------------
+# Layout selection - only enable one of these at a time
+# --------------------------------------------------------------------------
+
+layout_bolt = ["trezor_lib/layout_bolt"]
+layout_caesar = ["trezor_lib/layout_caesar"]
+layout_delizia = ["trezor_lib/layout_delizia"]
+layout_eckhart = ["trezor_lib/layout_eckhart"]
+
+display_mono = ["trezor_lib/display_mono"]
+display_rgb565 = ["trezor_lib/display_rgb565"]
+display_rgba8888 = ["trezor_lib/display_rgba8888", "trezor_lib/ui_color_32bit"]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
+
+backlight = ["io/backlight", "trezor_lib/backlight"]
+backup_ram = ["sec/backup_ram"]
+ble = ["io/ble", "trezor_lib/ble", "nrf", "nrf_auth"]
+boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
+button = ["io/button", "trezor_lib/button"]
+consumption_mask = ["sec/consumption_mask"]
+dbg_console = ["sys/dbg_console"]
+display = ["io/display"]
+dma2d = ["io/dma2d", "trezor_lib/dma2d"]
+framebuffer = ["io/framebuffer", "trezor_lib/framebuffer"]
+haptic = ["io/haptic", "trezor_lib/haptic"]
+hash_processor = ["sec/hash_processor"]
+iwdg = ["sec/iwdg"]
+lockable_bootloader = ["io/lockable_bootloader"]
+mcu_attestation = ["sec/mcu_attestation"]
+nrf = ["io/nrf", "trezor_lib/nrf"]
+nrf_auth = ["io/nrf_auth"]
+power_manager = ["io/power_manager", "trezor_lib/power_manager", "trezor_lib/pmic"]
+pvd = ["sys/pvd"]
+rgb_led = ["io/rgb_led", "trezor_lib/rgb_led"]
+rtc = ["sys/rtc"]
+sdram = ["sys/sdram"]
+secmon_verification = ["sec/secmon_verification"]
+secret = ["sec/secret"]
+secure_aes = ["sec/secure_aes"]
+suspend = ["io/suspend"]
+tamper = ["sec/tamper"]
+telemetry = ["sec/telemetry", "trezor_lib/telemetry"]
+touch = ["io/touch", "trezor_lib/touch"]
+touch_wakeup = ["io/touch_wakeup", "trezor_lib/touch_wakeup"]
+ui_empty_lock = ["trezor_lib/ui_empty_lock"]
 
 # --------------------------------------------------------------------------
 # Automatically derived features (do not enable from outside)
@@ -57,51 +116,5 @@ default = [
     "trezor_lib/usb",
     ]
 
-mcu_stm32f427 = ["io/mcu_stm32f427", "mcu_stm32f4"]
-mcu_stm32f429 = ["io/mcu_stm32f429", "mcu_stm32f4"]
 mcu_stm32f4 = []
-mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
-mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
-mcu_stm32u5a = ["io/mcu_stm32u5a", "mcu_stm32u5"]
 mcu_stm32u5 = ["sec/trustzone"]
-
-backlight = ["io/backlight", "trezor_lib/backlight"]
-backup_ram = ["sec/backup_ram"]
-ble = ["io/ble", "trezor_lib/ble", "nrf", "nrf_auth"]
-nrf = ["io/nrf", "trezor_lib/nrf"]
-nrf_auth = ["io/nrf_auth"]
-boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
-button = ["io/button", "trezor_lib/button"]
-consumption_mask = ["sec/consumption_mask"]
-dbg_console = ["sys/dbg_console"]
-display = ["io/display"]
-dma2d = ["io/dma2d", "trezor_lib/dma2d"]
-framebuffer = ["io/framebuffer", "trezor_lib/framebuffer"]
-haptic = ["io/haptic", "trezor_lib/haptic"]
-hash_processor = ["sec/hash_processor"]
-iwdg = ["sec/iwdg"]
-lockable_bootloader = ["io/lockable_bootloader"]
-mcu_attestation = ["sec/mcu_attestation"]
-power_manager = ["io/power_manager", "trezor_lib/power_manager", "trezor_lib/pmic"]
-pvd = ["sys/pvd"]
-rgb_led = ["io/rgb_led", "trezor_lib/rgb_led"]
-rtc = ["sys/rtc"]
-sdram = ["sys/sdram"]
-secmon_verification = ["sec/secmon_verification"]
-secret = ["sec/secret"]
-secure_aes = ["sec/secure_aes"]
-suspend = ["io/suspend"]
-tamper = ["sec/tamper"]
-telemetry = ["sec/telemetry", "trezor_lib/telemetry"]
-touch = ["io/touch", "trezor_lib/touch"]
-touch_wakeup = ["io/touch_wakeup", "trezor_lib/touch_wakeup"]
-ui_empty_lock = ["trezor_lib/ui_empty_lock"]
-
-display_mono = ["trezor_lib/display_mono"]
-display_rgb565 = ["trezor_lib/display_rgb565"]
-display_rgba8888 = ["trezor_lib/display_rgba8888", "trezor_lib/ui_color_32bit"]
-
-layout_bolt = ["trezor_lib/layout_bolt"]
-layout_caesar = ["trezor_lib/layout_caesar"]
-layout_delizia = ["trezor_lib/layout_delizia"]
-layout_eckhart = ["trezor_lib/layout_eckhart"]

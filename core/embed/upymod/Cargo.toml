@@ -17,7 +17,7 @@ io.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# MCU features
+# MCU selection - only enable one of these at a time
 # --------------------------------------------------------------------------
 
 mcu_stm32f427 = ["io/mcu_stm32f427", "mcu_stm32f4"]
@@ -37,8 +37,8 @@ ble = ["io/ble"]
 button = ["io/button"]
 decred = []
 disable_animation = []
-enable_source_lines = []
 emulator = ["io/emulator"]
+enable_source_lines = []
 eos = []
 frozen = []
 haptic = ["io/haptic"]
@@ -55,8 +55,8 @@ optiga = ["sec/optiga"]
 power_manager = ["io/power_manager"]
 pyopt = []
 rgb_led = ["io/rgb_led"]
-serial_number = []
 sd_card = ["io/sd_card"]
+serial_number = []
 telemetry = ["sec/telemetry"]
 thp = []
 touch = ["io/touch"]

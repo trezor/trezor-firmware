@@ -16,45 +16,38 @@ xbuild.workspace = true
 
 [dependencies]
 io.workspace = true
+models.workspace = true
+rtl.workspace = true
 sec.workspace = true
 sys.workspace = true
-rtl.workspace = true
-models.workspace = true
 
 [features]
 
 # --------------------------------------------------------------------------
-# Selectable features
+# Build options
 # --------------------------------------------------------------------------
 
 bootloader_devel = ["sec/bootloader_devel"]
 clippy = []
-emulator = ["io/emulator"]
 dbg_console_swo = ["dbg_console"]
-dbg_console_vcp = ["dbg_console", "io/usb_iface_vcp"]
 dbg_console_system_view = ["dbg_console", "sys/system_view"]
+dbg_console_vcp = ["dbg_console", "io/usb_iface_vcp"]
+emulator = ["io/emulator"]
 production = ["io/production"]
 
 # --------------------------------------------------------------------------
-# Automatically derived features (do not enable from outside)
+# MCU selection - only enable one of these at a time
 # --------------------------------------------------------------------------
-
-default = [
-    "io/display",
-    "io/kernel_mode",
-    "io/secure_mode",
-    "io/usb_iface_wire",
-    "models/bootloader",
-    "rtl/ed25519_no_precomp",
-]
 
 mcu_stm32f427 = ["io/mcu_stm32f427", "mcu_stm32f4"]
 mcu_stm32f429 = ["io/mcu_stm32f429", "mcu_stm32f4"]
-mcu_stm32f4 = ["io/mcu_stm32f4"]
 mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
 mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
 mcu_stm32u5a = ["io/mcu_stm32u5a", "mcu_stm32u5"]
-mcu_stm32u5 = ["sec/trustzone"]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
 
 backlight = ["io/backlight"]
 backup_ram = ["sec/backup_ram"]
@@ -73,10 +66,26 @@ power_manager = ["io/power_manager"]
 pvd = ["sys/pvd"]
 rgb_led = ["io/rgb_led"]
 sdram = ["sys/sdram"]
-secret = ["sec/secret"]
 secmon_verification = ["sec/secmon_verification"]
+secret = ["sec/secret"]
 secure_aes = ["sec/secure_aes"]
 suspend = ["io/suspend"]
 tamper = ["sec/tamper"]
 telemetry = ["sec/telemetry"]
 touch = ["io/touch"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = [
+    "io/display",
+    "io/kernel_mode",
+    "io/secure_mode",
+    "io/usb_iface_wire",
+    "models/bootloader",
+    "rtl/ed25519_no_precomp",
+]
+
+mcu_stm32f4 = ["io/mcu_stm32f4"]
+mcu_stm32u5 = ["sec/trustzone"]

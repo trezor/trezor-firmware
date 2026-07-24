@@ -11,11 +11,10 @@ xbuild.workspace = true
 [dependencies]
 models.workspace = true
 
-
 [features]
 
 # --------------------------------------------------------------------------
-# Selectable features
+# Selectable components
 # --------------------------------------------------------------------------
 
 aes_gcm = []
@@ -32,10 +31,11 @@ sphincsplus = []
 sprintf = []
 universal_fw = []
 
+# --------------------------------------------------------------------------
+# Unit test configuration
+# --------------------------------------------------------------------------
+
 test = [
     "models/model_t3w1",
     "emulator",
 ]
-
-
-
