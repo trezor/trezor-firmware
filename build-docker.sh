@@ -561,9 +561,17 @@ echo
 FINGERPRINTS_FILE="build/${COMMIT_HASH}.fingerprints"
 MASTER_FILE="build/${COMMIT_HASH}.master"
 if [ -f "$FINGERPRINTS_FILE" ]; then
-  echo "Fingerprints ($FINGERPRINTS_FILE):"
-  echo
-  cat "$FINGERPRINTS_FILE"
+  # Add translations only if a core firmware was built.
+  INCLUDE_TRANSLATIONS=0
+  if [[ " ${CORE_TARGETS[*]} " == *" firmware "* ]]; then
+    for MODEL in "${MODELS[@]}"; do
+      if [ "$MODEL" != "T1B1" ]; then
+        INCLUDE_TRANSLATIONS=1
+      fi
+    done
+  fi
+
+  # Append the translations root and compute the master fingerprint.
   $DOCKER run \
       --network=host \
       --rm \
@@ -572,10 +580,20 @@ if [ -f "$FINGERPRINTS_FILE" ]; then
       "$SNAPSHOT_NAME" \
       /nix/var/nix/profiles/default/bin/nix-shell --run \
         "cd /reproducible-build/trezor-firmware \
+         && if [ $INCLUDE_TRANSLATIONS -eq 1 ] \
+               && ! grep -q '^translations:' /local/$FINGERPRINTS_FILE; then \
+              translations_root=\$(uv run core/translations/cli.py merkle-root) \
+              && { echo '# core/translations'; \
+                   echo \"translations: \$translations_root\"; \
+                   echo; } >> /local/$FINGERPRINTS_FILE; \
+            fi \
          && uv run python/tools/master-fingerprint.py /local/$FINGERPRINTS_FILE \
               > /local/$MASTER_FILE \
          && chown $USER:$GROUP /local/$MASTER_FILE" \
     || { rm -f "$MASTER_FILE"; exit 1; }
+  echo "Fingerprints ($FINGERPRINTS_FILE):"
+  echo
+  cat "$FINGERPRINTS_FILE"
   cat "$MASTER_FILE"
 else
   echo "(no core/legacy firmware images built)"
