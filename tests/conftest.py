@@ -62,6 +62,7 @@ if t.TYPE_CHECKING:
 
     from trezorlib._internal.emulator import Emulator
     from trezorlib.client import Session
+    from trezorlib.transport import Transport
 
 
 HERE = Path(__file__).resolve().parent
@@ -200,8 +201,11 @@ def _raw_test_ctx(request: pytest.FixtureRequest) -> TrezorTestContext:
         emu_fixture = request.getfixturevalue("emulator")
         test_ctx = emu_fixture.client
     else:
-        if os.environ.get("TREZOR_BLE") != "1":
+        ble = request.session.config.getoption("ble")
+        if not (os.environ.get("TREZOR_BLE") == "1" or ble):
             BleTransport.ENABLED = False
+        # No BLE DebugLink yet, use WebUSB
+        BleTransport._DEBUG_TRANSPORT = "webusb:"
 
         interact = os.environ.get("INTERACT") == "1"
         if not interact:
@@ -212,11 +216,15 @@ def _raw_test_ctx(request: pytest.FixtureRequest) -> TrezorTestContext:
         try:
             if path:
                 test_ctx = _test_ctx_from_path(path, interact)
+            elif ble:
+                test_ctx = _find_test_ctx(interact, transport=BleTransport)
             else:
                 test_ctx = _find_test_ctx(interact)
         except Exception:
             request.session.shouldstop = "Failed to communicate with Trezor"
             raise
+
+        assert not ble or isinstance(test_ctx.transport, BleTransport)
 
     return test_ctx
 
@@ -226,8 +234,10 @@ def _test_ctx_from_path(path: str | None, interact: bool) -> TrezorTestContext:
     return TrezorTestContext(transport, auto_interact=not interact, force_wipe=True)
 
 
-def _find_test_ctx(interact: bool) -> TrezorTestContext:
-    devices = enumerate_devices()
+def _find_test_ctx(
+    interact: bool, transport: type[Transport] | None = None
+) -> TrezorTestContext:
+    devices = transport.enumerate() if transport else enumerate_devices()
     for device in devices:
         try:
             return TrezorTestContext(
@@ -615,6 +625,12 @@ def pytest_addoption(parser: "Parser") -> None:
         action="store_true",
         default=False,
         help="Issue a warning when GC leak detected (otherwise, fail the test)",
+    )
+    parser.addoption(
+        "--ble",
+        action="store_true",
+        default=False,
+        help="Force tests over BLE transport (with DebugLink over USB)",
     )
 
 

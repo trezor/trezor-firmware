@@ -27,8 +27,7 @@ from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 
 from ..log import DUMP_PACKETS
-from . import Timeout, Transport, TransportException
-from .udp import UdpTransport
+from . import Timeout, Transport, TransportException, _get_transport_prefer_full
 
 if t.TYPE_CHECKING:
     from ..models import TrezorModel
@@ -64,6 +63,7 @@ class BleTransport(Transport):
     PATH_PREFIX = "ble"
     CHUNK_SIZE = 244
 
+    _DEBUG_TRANSPORT: str | None = None
     _ble = None
     _cached_last = 0.0
     _cached_devices: list[tuple[str, str]] = []
@@ -75,8 +75,16 @@ class BleTransport(Transport):
     def get_path(self) -> str:
         return "{}:{}".format(self.PATH_PREFIX, self.device)
 
-    def find_debug(self) -> UdpTransport:
-        return UdpTransport("127.0.0.1:27315")
+    def find_debug(self) -> Transport:
+        if self._DEBUG_TRANSPORT is not None:
+            LOG.info(f"Overriding BLE debuglink: {self._DEBUG_TRANSPORT}")
+            debug = _get_transport_prefer_full(self._DEBUG_TRANSPORT).find_debug()
+            LOG.warning(
+                f"Using replacement DebugLink for BLE device: {debug.get_path()}"
+            )
+            return debug
+
+        raise NotImplementedError
 
     @classmethod
     def enumerate(
@@ -96,22 +104,12 @@ class BleTransport(Transport):
         return [BleTransport(device[0]) for device in cls._cached_devices]
 
     @classmethod
-    def _try_path(cls, path: str) -> BleTransport:
-        devices = cls.enumerate(None)
-        devices = [d for d in devices if d.device == path]
-        if len(devices) == 0:
-            raise TransportException(f"No BLE device: {path}")
-        return devices[0]
-
-    @classmethod
-    def find_by_path(cls, path: str, prefix_search: bool = False) -> BleTransport:
-        if not prefix_search:
-            raise TransportException
-
-        if prefix_search:
-            return super().find_by_path(path, prefix_search)
-        else:
-            raise TransportException(f"No BLE device: {path}")
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> "BleTransport":
+        # short circuit non-prefix search
+        # full-len path should probably avoid scanning and use BleakScanner.find_device_by_address
+        if not prefix_search and len(path) != _FULL_LEN:
+            raise TransportException(f"BLE device not found: {path}")
+        return super().find_by_path(path, prefix_search)
 
     def _open(self) -> None:
         self.ble_proxy().connect(self.device)
