@@ -32,10 +32,14 @@ def test_ping_with_text(client: ProdtestClient) -> None:
 
 
 def test_ping_with_long_text(client: ProdtestClient) -> None:
-    """ping echoes text up to the CLI line buffer, truncating anything beyond."""
-    long_text = 512 * "longtext"
+    """ping should echo back long text without dropping bytes.
+
+    The text length is chosen so that the response exceeds the 4096-byte
+    buffer the host reads datagrams into (see ``VcpUdpTransport.readline``).
+    The full echo thus verifies that the emulator splits responses into
+    small datagrams. A single oversized datagram would get silently
+    truncated by the host and the trailing bytes would be lost.
+    """
+    long_text = 512 * "longtext" + "A"
     resp = client.command_ok(ProdtestCommand(Cmd.PING, long_text))
-    assert resp.args == long_text
-    too_long_text = long_text + "A"
-    resp = client.command_ok(ProdtestCommand(Cmd.PING, too_long_text))
     assert resp.args == long_text
