@@ -908,14 +908,14 @@ async def confirm_properties(
     verb: str | None = None,
 ) -> None:
 
-    items = [
+    items = with_colon(
         (
             prop[0],
             (utils.hexlify_if_bytes(prop[1]) if prop[1] else None),
             prop[2],
         )
         for prop in props
-    ]
+    )
 
     if subtitle:
         title += ": " + subtitle
