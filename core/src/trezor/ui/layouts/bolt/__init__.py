@@ -6,12 +6,7 @@ from trezor import TR, ui, utils
 from trezor.enums import ButtonRequestType, RecoveryType
 from trezor.wire import ActionCancelled
 
-from ..common import (
-    interact,
-    interact_simple,
-    raise_if_not_confirmed,
-    with_info,
-)
+from ..common import interact, interact_simple, raise_if_not_confirmed, with_info
 from ..properties import with_colon
 
 if TYPE_CHECKING:
