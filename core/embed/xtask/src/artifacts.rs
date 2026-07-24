@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
-use crate::args::ResolvedBuildArgs;
 use crate::helpers;
+use crate::options::ResolvedBuildArgs;
 
 /// Returns whether a filesystem entry exists without following symlinks, so
 /// broken symlinks are still treated as present and can be replaced.

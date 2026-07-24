@@ -3,7 +3,8 @@ use std::process;
 use anyhow::{Context, Result, ensure};
 use owo_colors::OwoColorize;
 
-use crate::args::{BuildArgs, Project, ResolvedBuildArgs, TestArgs};
+use crate::args::{BuildArgs, Project, TestArgs};
+use crate::options::ResolvedBuildArgs;
 use crate::{artifacts, feature_resolver, helpers, memusage, postbuild, prebuild};
 
 pub fn build(args: BuildArgs) -> Result<()> {
