@@ -27,7 +27,6 @@ from multiprocessing.connection import Connection
 from ..log import DUMP_PACKETS
 from ..models import T3W1
 from . import Timeout, Transport, TransportException
-from .udp import UdpTransport
 
 if t.TYPE_CHECKING:
     from ..models import TrezorModel
@@ -49,7 +48,7 @@ TREZOR_SERVICE_UUID = "8c000001-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_RX = "8c000002-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_TX = "8c000003-a59b-4d58-a9ad-073df69fa1b1"
 
-SCAN_INTERVAL_SECONDS = 3
+SCAN_INTERVAL_SECONDS = 10
 SHUTDOWN_TIMEOUT_SECONDS = 10
 
 SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
@@ -70,9 +69,6 @@ class BleTransport(Transport):
     def get_path(self) -> str:
         return "{}:{}".format(self.PATH_PREFIX, self.device)
 
-    def find_debug(self) -> UdpTransport:
-        return UdpTransport("127.0.0.1:27315")
-
     @classmethod
     def enumerate(
         cls, models: t.Iterable[TrezorModel] | None = None
@@ -90,16 +86,6 @@ class BleTransport(Transport):
         if len(devices) == 0:
             raise TransportException(f"No BLE device: {path}")
         return devices[0]
-
-    @classmethod
-    def find_by_path(cls, path: str, prefix_search: bool = False) -> BleTransport:
-        if not prefix_search:
-            raise TransportException
-
-        if prefix_search:
-            return super().find_by_path(path, prefix_search)
-        else:
-            raise TransportException(f"No BLE device: {path}")
 
     def _open(self) -> None:
         self.ble_proxy().connect(self.device)
