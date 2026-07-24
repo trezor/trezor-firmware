@@ -799,6 +799,8 @@ class MessageType(IntEnum):
     WARDDebugSetRootAck = 2347
     WARDProofRequest = 2348
     WARDProofAck = 2349
+    WARDDiscardPending = 2350
+    WARDDiscardPendingAck = 2351
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -9844,6 +9846,27 @@ class WARDProofAck(protobuf.MessageType):
         self.witness_address = witness_address
         self.witness_value = witness_value
         self.witness_counter = witness_counter
+
+
+class WARDDiscardPending(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2350
+
+
+class WARDDiscardPendingAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2351
+    FIELDS = {
+        1: protobuf.Field("discarded_address", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        discarded_address: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+    ) -> None:
+        self.discarded_address = discarded_address
+        self.wallet_id = wallet_id
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

@@ -121,6 +121,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.ward.commit"
     if msg_type == MessageType.WARDConfirmCommit:
         return "apps.ward.confirm_commit"
+    if msg_type == MessageType.WARDDiscardPending:
+        return "apps.ward.discard_pending"
 
     # WARD sync round (bootstrap/refresh) + lookup + debug seed
     if msg_type == MessageType.WARDSync:

@@ -856,6 +856,54 @@ class TestWardQueueStorage(unittest.TestCase):
         self.assertEqual(ward_store.get_counter(wallet_id), 1)
         self.assertIsNone(ward_store.get_root(wallet_id))
 
+    @mock_storage
+    def test_service_queue_discard_drops_candidate(self):
+        """service.queue_discard() abandons the queued candidate (the internal
+        primitive behind WARDDiscardPending)."""
+        import storage.ward_store as ward_store
+        from apps.ward import service
+
+        wallet_id = self._id(1)
+        ward_store.queue_put(wallet_id, 3, _sha256d(b"r"), _sha256d(b"m"), b"alice")
+        self.assertIsNotNone(ward_store.queue_get(wallet_id))
+
+        service.queue_discard()
+        self.assertIsNone(ward_store.queue_get(wallet_id))
+
+    @mock_storage
+    def test_discard_works_regardless_of_state(self):
+        """A discard must clear a COMMITTED candidate too (the stuck-finalize case
+        that motivates WARDDiscardPending), not just a PENDING one."""
+        import storage.ward_store as ward_store
+        from apps.ward import service
+
+        wallet_id = self._id(1)
+        ward_store.queue_put(wallet_id, 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
+        ward_store.queue_set_committed(wallet_id)
+        _c, _r, _m, state, _a = ward_store.queue_get(wallet_id)
+        self.assertEqual(state, ward_store.QUEUE_COMMITTED)
+
+        service.queue_discard()
+        self.assertIsNone(ward_store.queue_get(wallet_id))
+
+    @mock_storage
+    def test_discard_does_not_touch_counter_or_root(self):
+        """Discard is not a finalize: it leaves the installed (root, counter)
+        untouched."""
+        import storage.ward_store as ward_store
+        from apps.ward import service
+
+        wallet_id = self._id(1)
+        root = _sha256d(b"installed-root")
+        ward_store.commit_finalize(wallet_id, root, 4)
+        ward_store.queue_put(wallet_id, 5, _sha256d(b"rT"), _sha256d(b"mT"), b"alice")
+
+        service.queue_discard()
+
+        self.assertIsNone(ward_store.queue_get(wallet_id))
+        self.assertEqual(ward_store.get_counter(wallet_id), 4)
+        self.assertEqual(ward_store.get_root(wallet_id), root)
+
 
 class TestWardCoreCapability(unittest.TestCase):
     """The Core (apps.common.ward) appId capability boundary that gates on-device

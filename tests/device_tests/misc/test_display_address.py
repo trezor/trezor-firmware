@@ -5,6 +5,7 @@ from trezorlib.authdb_tree import WARDTree
 from trezorlib.debuglink import DebugSession as Session
 
 from ...device_handler import BackgroundDeviceHandler
+from ...ward_mgr_emu import sign_ward_update, sign_wm_attestation
 
 pytestmark = [pytest.mark.models("core")]
 
@@ -19,7 +20,7 @@ def _sync_device(
     _pending, wallet_id = ward.list_pending(session)
     assert wallet_id is not None
     mac_for_sig = root_mac if root_mac is not None else ward.ZERO_MAC
-    sig = ward.sign_wm_attestation(nonce, counter, mac_for_sig, wallet_id)
+    sig = sign_wm_attestation(nonce, counter, mac_for_sig, wallet_id)
     ward.ingest_attestation(session, counter, root_mac, sig)
     return ward.reconcile(session, root)
 
@@ -64,7 +65,7 @@ def _add_value_via_device(
     c_counter, _root_t, mac_t, wallet_id = ward.commit(session)
     assert wallet_id is not None
     mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
-    sig = ward.sign_ward_update(c_counter, mac_for_sig, wallet_id)
+    sig = sign_ward_update(c_counter, mac_for_sig, wallet_id)
     counter, new_root, _wallet_id, root_mac = ward.confirm_commit(
         session, c_counter, mac_t, sig
     )
@@ -188,6 +189,48 @@ def test_display_address_more_labels_via_device(session: Session) -> None:
             response = dev.result()
 
     assert response.message == "Address shown"
+
+
+def test_add_value_via_device_increments_leaf_counter(session: Session) -> None:
+    """Updating an existing WARD entry via the device must bump that leaf's
+    counter. The device stamps the changed leaf with new_counter (== global
+    counter + 1) and recomputes the root, so a repeated update to the SAME
+    address advances its leaf counter 1 -> 2."""
+    address = "bc1qdemoaddress000000000000000000000000000"
+    value = b'TEST:1:{"label":"label1"}'
+    updated_value = b'TEST:1:{"label":"label1-updated"}'
+    tree = WARDTree()
+    counter = 0
+    root_mac = None
+
+    # First write is an INSERT: the leaf is stamped with counter 1.
+    counter, root_mac = _add_value_via_device(
+        session, tree, address, value, counter, root_mac
+    )
+    assert tree.get_counter(address.encode()) == 1
+
+    # Second write to the same address is an UPDATE: the leaf counter increments.
+    counter, root_mac = _add_value_via_device(
+        session, tree, address, updated_value, counter, root_mac
+    )
+    assert counter == 2
+    assert tree.get_counter(address.encode()) == 2
+
+    # The device's authenticated root binds the leaf at the INCREMENTED counter:
+    # a membership lookup with counter=2 verifies, while the stale counter=1 does
+    # not. (_add_value_via_device already asserts new_root == tree root, so the
+    # device recomputed the root using the bumped leaf counter.)
+    proof = tree.get_proof(address.encode())
+    valid, membership, current, _wallet_id = ward.lookup(
+        session, address.encode(), updated_value, proof, counter=2
+    )
+    assert valid and membership
+    assert current == 2
+
+    stale_valid, _membership, _current, _wallet_id = ward.lookup(
+        session, address.encode(), updated_value, proof, counter=1
+    )
+    assert not stale_valid
 
 
 def test_display_address_single_label(session: Session) -> None:

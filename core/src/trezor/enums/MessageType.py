@@ -319,3 +319,5 @@ if not utils.BITCOIN_ONLY:
     WARDDebugSetRootAck = 2347
     WARDProofRequest = 2348
     WARDProofAck = 2349
+    WARDDiscardPending = 2350
+    WARDDiscardPendingAck = 2351

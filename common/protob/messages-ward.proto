@@ -305,3 +305,28 @@ message WARDProofAck {
     optional bytes  witness_value   = 5;  // non-membership: witness leaf value
     optional uint32 witness_counter = 6;  // non-membership: witness leaf counter
 }
+
+/**
+ * Request: abandon the current wallet's queued pending edit without finalizing it.
+ *
+ * The MVP offline queue holds at most one uncommitted candidate per wallet, and
+ * WARDAddPending refuses while one exists. If a candidate can never be finalized
+ * (e.g. the WM will not sign it), this lets the host explicitly discard it and
+ * unblock further edits. Scoped to the caller's wallet; a candidate belonging to
+ * a different (hidden) wallet is left untouched. Idempotent: discarding when
+ * nothing is queued for this wallet succeeds with no discarded_address.
+ * @start
+ * @next WARDDiscardPendingAck
+ * @next Failure
+ */
+message WARDDiscardPending {
+}
+
+/**
+ * Response: the outcome of the discard.
+ * @end
+ */
+message WARDDiscardPendingAck {
+    optional bytes discarded_address = 1;  // address whose edit was discarded; absent if none was queued
+    optional bytes wallet_id         = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier
+}

@@ -7862,6 +7862,28 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDProofAck"]:
             return isinstance(msg, cls)
 
+    class WARDDiscardPending(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDiscardPending"]:
+            return isinstance(msg, cls)
+
+    class WARDDiscardPendingAck(protobuf.MessageType):
+        discarded_address: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            discarded_address: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDiscardPendingAck"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
         batch_size: "int | None"
 

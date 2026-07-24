@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Optional
 
-from . import _ed25519, messages
+from . import messages
 
 if TYPE_CHECKING:
     from .authdb_tree import WARDTree
@@ -10,15 +10,11 @@ if TYPE_CHECKING:
 
 ZERO_MAC = b"\x00" * 32
 
-# WARD attestation domains (must match apps.authdb._qm).
-_WARD_FINAL_DOMAIN = b"WARD FINAL v1"
-_WARD_ATTEST_DOMAIN = b"WARD ATTEST v1"
-_WARD_ATTEST_VERSION = 1
-
-# Well-known DEBUG WM/QM Ed25519 seed, accepted only by debug firmware. Its public
-# key is provisioned as _WM_PUBKEY_DEBUG in core/src/apps/ward/service.py. Used by
-# tests / the CLI to stand in for the WARD Manager's final signature.
-DEBUG_QM_SEED = b"AUTHDB QM DEBUG KEY SEED v1 ...."
+# NOTE: the WM (WARD Manager) signing helpers and the debug WM key are NOT here.
+# They are the WARD Manager's role (an external freshness authority), not a
+# device-client operation, and they forge signatures with a debug-only key. They
+# live in the test harness at tests/ward_mgr_emu.py so this production client
+# library ships no debug-only signing.
 
 
 # ---------------------------------------------------------------------------
@@ -91,51 +87,16 @@ def confirm_commit(
     return resp.counter, resp.new_root, resp.wallet_id, resp.root_mac
 
 
-# ---------------------------------------------------------------------------
-# WM final-attestation signing (dev/test helper)
-# ---------------------------------------------------------------------------
-
-
-def sign_ward_update(
-    counter: int, mac: bytes, wallet_id: bytes, qm_seed: bytes = DEBUG_QM_SEED
-) -> bytes:
-    """Produce the WM final attestation the device verifies in WARDConfirmCommit:
-
-        Ed25519-Sign(qm_seed, b"WARD FINAL v1" || wallet_id || counter(4B BE) || mac)
-
-    In production the WARD Manager holds the key and signs; this dev helper signs
-    with the debug seed so tests / the CLI can drive the full flow.
-    """
-    message = _WARD_FINAL_DOMAIN + wallet_id + counter.to_bytes(4, "big") + mac
-    pk = _ed25519.publickey_unsafe(qm_seed)
-    return _ed25519.signature_unsafe(message, qm_seed, pk)
-
-
-def sign_wm_attestation(
-    nonce: bytes,
-    counter: int,
-    mac: bytes,
-    wallet_id: bytes,
-    qm_seed: bytes = DEBUG_QM_SEED,
-) -> bytes:
-    """Produce the WM freshness attestation the device verifies in
-    WARDIngestAttestation:
-
-        Ed25519-Sign(qm_seed,
-            b"WARD ATTEST v1" || version(1B) || nonce || wallet_id || counter(4B BE) || mac)
-
-    Dev helper: signs with the debug WM seed so tests/CLI can drive the sync round.
-    """
-    message = (
-        _WARD_ATTEST_DOMAIN
-        + bytes([_WARD_ATTEST_VERSION])
-        + nonce
-        + wallet_id
-        + counter.to_bytes(4, "big")
-        + mac
+def discard_pending(
+    session: "Session",
+) -> tuple[Optional[bytes], Optional[bytes]]:
+    """Abandon the current wallet's queued pending edit without finalizing it,
+    unblocking the depth-1 offline queue. Returns (discarded_address, wallet_id);
+    discarded_address is None if nothing was queued for this wallet."""
+    resp = session.call(
+        messages.WARDDiscardPending(), expect=messages.WARDDiscardPendingAck
     )
-    pk = _ed25519.publickey_unsafe(qm_seed)
-    return _ed25519.signature_unsafe(message, qm_seed, pk)
+    return resp.discarded_address, resp.wallet_id
 
 
 # ---------------------------------------------------------------------------

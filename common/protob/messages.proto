@@ -412,6 +412,9 @@ enum MessageType {
     // WARD proof-on-demand (device pulls a proof from the host mid-workflow)
     MessageType_WARDProofRequest = 2348 [(wire_out) = true];
     MessageType_WARDProofAck = 2349 [(wire_in) = true];
+    // WARD discard a queued pending edit (unblock the depth-1 offline queue)
+    MessageType_WARDDiscardPending = 2350 [(wire_in) = true];
+    MessageType_WARDDiscardPendingAck = 2351 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

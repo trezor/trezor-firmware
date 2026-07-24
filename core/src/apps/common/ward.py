@@ -221,6 +221,15 @@ async def confirm_commit(
     return await service.confirm_commit_impl(counter, mac, qm_signature)
 
 
+async def discard_pending() -> tuple[bytes | None, bytes]:
+    """Abandon the current wallet's queued pending edit. Returns
+    (discarded_address, wallet_id); discarded_address is None if nothing was
+    queued for this wallet."""
+    from apps.ward import service
+
+    return await service.discard_pending_impl()
+
+
 async def sync() -> tuple[bytes, int, bytes]:
     from apps.ward import service
 
