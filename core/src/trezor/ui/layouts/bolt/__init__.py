@@ -34,7 +34,6 @@ async def confirm_action(
     title: str,
     action: str | None = None,
     description: str | None = None,
-    description_param: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
@@ -46,9 +45,6 @@ async def confirm_action(
     prompt_screen: bool = False,  # unused on bolt
     prompt_title: str | None = None,
 ) -> None:
-    if description is not None and description_param is not None:
-        description = description.format(description_param)
-
     with trezorui_api.confirm_action(
         title=title,
         action=action,
@@ -2043,12 +2039,13 @@ def confirm_metadata(
     verb: str | None = None,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__continue  # def_arg
+    if param is not None:
+        content = content.format(param)
     return confirm_action(
         br_name,
         title=title,
         action="",
         description=content,
-        description_param=param,
         verb=verb,
         hold=hold,
         br_code=br_code,

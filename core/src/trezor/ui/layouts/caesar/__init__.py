@@ -61,7 +61,6 @@ async def confirm_action(
     title: str,
     action: str | None = None,
     description: str | None = None,
-    description_param: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = "",
@@ -74,8 +73,6 @@ async def confirm_action(
     prompt_title: str | None = None,
 ) -> None:
     verb = verb or TR.buttons__confirm  # def_arg
-    if description is not None and description_param is not None:
-        description = description.format(description_param)
 
     with trezorui_api.confirm_action(
         title=title,
