@@ -1141,6 +1141,8 @@ pub struct CKBSphincsPlusSignTx {
     pub sign_group_input_indices: ::std::vec::Vec<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.chunkify)
     pub chunkify: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.header_deps)
+    pub header_deps: ::std::vec::Vec<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSphincsPlusSignTx.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1327,7 +1329,7 @@ impl CKBSphincsPlusSignTx {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut fields = ::std::vec::Vec::with_capacity(10);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "account_index",
@@ -1373,6 +1375,11 @@ impl CKBSphincsPlusSignTx {
             "chunkify",
             |m: &CKBSphincsPlusSignTx| { &m.chunkify },
             |m: &mut CKBSphincsPlusSignTx| { &mut m.chunkify },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "header_deps",
+            |m: &CKBSphincsPlusSignTx| { &m.header_deps },
+            |m: &mut CKBSphincsPlusSignTx| { &mut m.header_deps },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSphincsPlusSignTx>(
             "CKBSphincsPlusSignTx",
@@ -1431,6 +1438,9 @@ impl ::protobuf::Message for CKBSphincsPlusSignTx {
                 72 => {
                     self.chunkify = ::std::option::Option::Some(is.read_bool()?);
                 },
+                82 => {
+                    self.header_deps.push(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1470,6 +1480,9 @@ impl ::protobuf::Message for CKBSphincsPlusSignTx {
         if let Some(v) = self.chunkify {
             my_size += 1 + 1;
         }
+        for value in &self.header_deps {
+            my_size += ::protobuf::rt::bytes_size(10, &value);
+        };
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1503,6 +1516,9 @@ impl ::protobuf::Message for CKBSphincsPlusSignTx {
         if let Some(v) = self.chunkify {
             os.write_bool(9, v)?;
         }
+        for v in &self.header_deps {
+            os.write_bytes(10, &v)?;
+        };
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -1529,6 +1545,7 @@ impl ::protobuf::Message for CKBSphincsPlusSignTx {
         self.witnesses_count = ::std::option::Option::None;
         self.sign_group_input_indices.clear();
         self.chunkify = ::std::option::Option::None;
+        self.header_deps.clear();
         self.special_fields.clear();
     }
 
@@ -1543,6 +1560,7 @@ impl ::protobuf::Message for CKBSphincsPlusSignTx {
             witnesses_count: ::std::option::Option::None,
             sign_group_input_indices: ::std::vec::Vec::new(),
             chunkify: ::std::option::Option::None,
+            header_deps: ::std::vec::Vec::new(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -7745,7 +7763,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ss\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x1b\n\tlock_a\
     rgs\x18\x02\x20\x02(\x0cR\x08lockArgs\x12\x1d\n\npublic_key\x18\x03\x20\
     \x02(\x0cR\tpublicKey\x12\x18\n\x07variant\x18\x04\x20\x02(\rR\x07varian\
-    t\"\xe7\x02\n\x14CKBSphincsPlusSignTx\x12&\n\raccount_index\x18\x01\x20\
+    t\"\x88\x03\n\x14CKBSphincsPlusSignTx\x12&\n\raccount_index\x18\x01\x20\
     \x01(\r:\x010R\x0caccountIndex\x12\x1c\n\x07variant\x18\x02\x20\x01(\r:\
     \x0249R\x07variant\x12\x18\n\x07network\x18\x03\x20\x02(\tR\x07network\
     \x12!\n\x0cinputs_count\x18\x04\x20\x02(\rR\x0binputsCount\x12#\n\routpu\
@@ -7753,95 +7771,96 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x06\x20\x01(\r:\x010R\rcellDepsCount\x12'\n\x0fwitnesses_count\x18\
     \x07\x20\x01(\rR\x0ewitnessesCount\x127\n\x18sign_group_input_indices\
     \x18\x08\x20\x03(\rR\x15signGroupInputIndices\x12\x1a\n\x08chunkify\x18\
-    \t\x20\x01(\x08R\x08chunkify\"\xb1\x01\n\x19CKBSphincsPlusSignMessage\
-    \x12&\n\raccount_index\x18\x01\x20\x01(\r:\x010R\x0caccountIndex\x12\x1c\
-    \n\x07variant\x18\x02\x20\x01(\r:\x0249R\x07variant\x12\x18\n\x07message\
-    \x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\x07network\x18\x04\x20\x02(\
-    \tR\x07network\x12\x1a\n\x08chunkify\x18\x05\x20\x01(\x08R\x08chunkify\"\
-    s\n\x1eCKBSphincsPlusMessageSignature\x12\x18\n\x07address\x18\x01\x20\
-    \x02(\tR\x07address\x12\x1d\n\npublic_key\x18\x02\x20\x02(\x0cR\tpublicK\
-    ey\x12\x18\n\x07variant\x18\x03\x20\x02(\rR\x07variant\"\xf2\x01\n\x1bCK\
-    BSphincsPlusVerifyMessage\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07ad\
-    dress\x12\x1d\n\npublic_key\x18\x02\x20\x02(\x0cR\tpublicKey\x12\x18\n\
-    \x07message\x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\x07variant\x18\
-    \x04\x20\x02(\rR\x07variant\x12\x18\n\x07network\x18\x05\x20\x02(\tR\x07\
-    network\x120\n\x14signature_total_size\x18\x06\x20\x02(\rR\x12signatureT\
-    otalSize\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\"}\n\
-    \x0eCKBSignMessage\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
-    \x12\x18\n\x07message\x18\x02\x20\x02(\x0cR\x07message\x12\x18\n\x07netw\
-    ork\x18\x03\x20\x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x04\x20\x01\
-    (\x08R\x08chunkify\"M\n\x13CKBMessageSignature\x12\x18\n\x07address\x18\
-    \x01\x20\x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\t\
-    signature\"\x9a\x01\n\x10CKBVerifyMessage\x12\x18\n\x07address\x18\x01\
-    \x20\x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsign\
-    ature\x12\x18\n\x07message\x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\
-    \x07network\x18\x04\x20\x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x05\
-    \x20\x01(\x08R\x08chunkify\"\x86\x02\n\x0cCKBCellInput\x125\n\x17previou\
-    s_output_tx_hash\x18\x01\x20\x02(\x0cR\x14previousOutputTxHash\x122\n\
-    \x15previous_output_index\x18\x02\x20\x02(\rR\x13previousOutputIndex\x12\
-    \x17\n\x05since\x18\x03\x20\x01(\x04:\x010R\x05since\x127\n\x18dao_depos\
-    it_header_index\x18\x04\x20\x01(\rR\x15daoDepositHeaderIndex\x129\n\x19d\
-    ao_withdraw_header_index\x18\x05\x20\x01(\rR\x16daoWithdrawHeaderIndex\"\
-    \x91\x02\n\rCKBCellOutput\x12\x1a\n\x08capacity\x18\x01\x20\x02(\x04R\
-    \x08capacity\x12$\n\x0elock_code_hash\x18\x02\x20\x02(\x0cR\x0clockCodeH\
-    ash\x12$\n\x0elock_hash_type\x18\x03\x20\x02(\rR\x0clockHashType\x12\x1b\
-    \n\tlock_args\x18\x04\x20\x02(\x0cR\x08lockArgs\x12$\n\x0etype_code_hash\
-    \x18\x05\x20\x01(\x0cR\x0ctypeCodeHash\x12$\n\x0etype_hash_type\x18\x06\
-    \x20\x01(\rR\x0ctypeHashType\x12\x1b\n\ttype_args\x18\x07\x20\x01(\x0cR\
-    \x08typeArgs\x12\x12\n\x04data\x18\x08\x20\x01(\x0cR\x04data\"V\n\nCKBCe\
-    llDep\x12\x17\n\x07tx_hash\x18\x01\x20\x02(\x0cR\x06txHash\x12\x14\n\x05\
-    index\x18\x02\x20\x02(\rR\x05index\x12\x19\n\x08dep_type\x18\x03\x20\x02\
-    (\rR\x07depType\"\xd4\x02\n\tCKBSignTx\x12\x1b\n\taddress_n\x18\x01\x20\
-    \x03(\rR\x08addressN\x12\x18\n\x07network\x18\x02\x20\x02(\tR\x07network\
-    \x12!\n\x0cinputs_count\x18\x03\x20\x02(\rR\x0binputsCount\x12#\n\routpu\
-    ts_count\x18\x04\x20\x02(\rR\x0coutputsCount\x12)\n\x0fcell_deps_count\
-    \x18\x05\x20\x01(\r:\x010R\rcellDepsCount\x12\x1a\n\x08chunkify\x18\x06\
-    \x20\x01(\x08R\x08chunkify\x12'\n\x0fwitnesses_count\x18\x07\x20\x01(\rR\
-    \x0ewitnessesCount\x127\n\x18sign_group_input_indices\x18\x08\x20\x03(\r\
-    R\x15signGroupInputIndices\x12\x1f\n\x0bheader_deps\x18\t\x20\x03(\x0cR\
-    \nheaderDeps\"\xf2\x01\n\x0cCKBTxRequest\x12K\n\x0crequest_type\x18\x01\
-    \x20\x01(\x0e2(.hw.trezor.messages.ckb.CKBTxRequestTypeR\x0brequestType\
-    \x12E\n\x07details\x18\x02\x20\x01(\x0b2+.hw.trezor.messages.ckb.CKBTxRe\
-    questDetailsR\x07details\x12N\n\nserialized\x18\x03\x20\x01(\x0b2..hw.tr\
-    ezor.messages.ckb.CKBTxRequestSerializedR\nserialized\"\xb0\x01\n\x13CKB\
-    TxRequestDetails\x12#\n\rrequest_index\x18\x01\x20\x01(\rR\x0crequestInd\
-    ex\x12\x17\n\x07tx_hash\x18\x02\x20\x01(\x0cR\x06txHash\x12)\n\x10signat\
-    ure_offset\x18\x03\x20\x01(\rR\x0fsignatureOffset\x120\n\x14signature_to\
-    tal_size\x18\x04\x20\x01(\rR\x12signatureTotalSize\"O\n\x16CKBTxRequestS\
-    erialized\x12\x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\x12\x17\
-    \n\x07tx_hash\x18\x02\x20\x01(\x0cR\x06txHash\"K\n\rCKBTxAckInput\x12:\n\
-    \x05input\x18\x01\x20\x02(\x0b2$.hw.trezor.messages.ckb.CKBCellInputR\
-    \x05input\"O\n\x0eCKBTxAckOutput\x12=\n\x06output\x18\x01\x20\x02(\x0b2%\
-    .hw.trezor.messages.ckb.CKBCellOutputR\x06output\"P\n\x0fCKBTxAckCellDep\
-    \x12=\n\x08cell_dep\x18\x01\x20\x02(\x0b2\".hw.trezor.messages.ckb.CKBCe\
-    llDepR\x07cellDep\"\xc0\x01\n\x10CKBTxAckPrevMeta\x12\x18\n\x07version\
-    \x18\x01\x20\x02(\rR\x07version\x12!\n\x0cinputs_count\x18\x02\x20\x02(\
-    \rR\x0binputsCount\x12#\n\routputs_count\x18\x03\x20\x02(\rR\x0coutputsC\
-    ount\x12)\n\x0fcell_deps_count\x18\x04\x20\x01(\r:\x010R\rcellDepsCount\
-    \x12\x1f\n\x0bheader_deps\x18\x05\x20\x03(\x0cR\nheaderDeps\"\xd9\x02\n\
-    \x0eCKBBlockHeader\x12\x18\n\x07version\x18\x01\x20\x02(\rR\x07version\
-    \x12%\n\x0ecompact_target\x18\x02\x20\x02(\rR\rcompactTarget\x12\x1c\n\t\
-    timestamp\x18\x03\x20\x02(\x04R\ttimestamp\x12\x16\n\x06number\x18\x04\
-    \x20\x02(\x04R\x06number\x12\x14\n\x05epoch\x18\x05\x20\x02(\x04R\x05epo\
-    ch\x12\x1f\n\x0bparent_hash\x18\x06\x20\x02(\x0cR\nparentHash\x12+\n\x11\
-    transactions_root\x18\x07\x20\x02(\x0cR\x10transactionsRoot\x12%\n\x0epr\
-    oposals_hash\x18\x08\x20\x02(\x0cR\rproposalsHash\x12\x1d\n\nextra_hash\
-    \x18\t\x20\x02(\x0cR\textraHash\x12\x10\n\x03dao\x18\n\x20\x02(\x0cR\x03\
-    dao\x12\x14\n\x05nonce\x18\x0b\x20\x02(\x0cR\x05nonce\"P\n\x0eCKBTxAckHe\
-    ader\x12>\n\x06header\x18\x01\x20\x02(\x0b2&.hw.trezor.messages.ckb.CKBB\
-    lockHeaderR\x06header\"q\n\x0eCKBWitnessArgs\x12\x1f\n\tlock_size\x18\
-    \x01\x20\x01(\r:\x0265R\x08lockSize\x12\x1d\n\ninput_type\x18\x02\x20\
-    \x01(\x0cR\tinputType\x12\x1f\n\x0boutput_type\x18\x03\x20\x01(\x0cR\nou\
-    tputType\"n\n\x0fCKBTxAckWitness\x12I\n\x0cwitness_args\x18\x01\x20\x01(\
-    \x0b2&.hw.trezor.messages.ckb.CKBWitnessArgsR\x0bwitnessArgs\x12\x10\n\
-    \x03raw\x18\x02\x20\x01(\x0cR\x03raw\"0\n\x10CKBTxAckSigChunk\x12\x1c\n\
-    \tsignature\x18\x01\x20\x01(\x0cR\tsignature*\xbf\x01\n\x10CKBTxRequestT\
-    ype\x12\x0b\n\x07TXINPUT\x10\0\x12\x0c\n\x08TXOUTPUT\x10\x01\x12\r\n\tTX\
-    CELLDEP\x10\x02\x12\x0e\n\nTXFINISHED\x10\x03\x12\r\n\tTXWITNESS\x10\x04\
-    \x12\x0e\n\nTXPREVMETA\x10\x05\x12\x0f\n\x0bTXPREVINPUT\x10\x06\x12\x10\
-    \n\x0cTXPREVOUTPUT\x10\x07\x12\x11\n\rTXPREVCELLDEP\x10\x08\x12\x0c\n\
-    \x08TXHEADER\x10\t\x12\x0e\n\nTXSIGCHUNK\x10\nB7\n#com.satoshilabs.trezo\
-    r.lib.protobufB\x10TrezorMessageCKB\
+    \t\x20\x01(\x08R\x08chunkify\x12\x1f\n\x0bheader_deps\x18\n\x20\x03(\x0c\
+    R\nheaderDeps\"\xb1\x01\n\x19CKBSphincsPlusSignMessage\x12&\n\raccount_i\
+    ndex\x18\x01\x20\x01(\r:\x010R\x0caccountIndex\x12\x1c\n\x07variant\x18\
+    \x02\x20\x01(\r:\x0249R\x07variant\x12\x18\n\x07message\x18\x03\x20\x02(\
+    \x0cR\x07message\x12\x18\n\x07network\x18\x04\x20\x02(\tR\x07network\x12\
+    \x1a\n\x08chunkify\x18\x05\x20\x01(\x08R\x08chunkify\"s\n\x1eCKBSphincsP\
+    lusMessageSignature\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\
+    \x12\x1d\n\npublic_key\x18\x02\x20\x02(\x0cR\tpublicKey\x12\x18\n\x07var\
+    iant\x18\x03\x20\x02(\rR\x07variant\"\xf2\x01\n\x1bCKBSphincsPlusVerifyM\
+    essage\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x1d\n\npu\
+    blic_key\x18\x02\x20\x02(\x0cR\tpublicKey\x12\x18\n\x07message\x18\x03\
+    \x20\x02(\x0cR\x07message\x12\x18\n\x07variant\x18\x04\x20\x02(\rR\x07va\
+    riant\x12\x18\n\x07network\x18\x05\x20\x02(\tR\x07network\x120\n\x14sign\
+    ature_total_size\x18\x06\x20\x02(\rR\x12signatureTotalSize\x12\x1a\n\x08\
+    chunkify\x18\x07\x20\x01(\x08R\x08chunkify\"}\n\x0eCKBSignMessage\x12\
+    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x18\n\x07message\
+    \x18\x02\x20\x02(\x0cR\x07message\x12\x18\n\x07network\x18\x03\x20\x02(\
+    \tR\x07network\x12\x1a\n\x08chunkify\x18\x04\x20\x01(\x08R\x08chunkify\"\
+    M\n\x13CKBMessageSignature\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07a\
+    ddress\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\x9a\x01\n\
+    \x10CKBVerifyMessage\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\
+    \x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\x12\x18\n\x07mess\
+    age\x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\x07network\x18\x04\x20\
+    \x02(\tR\x07network\x12\x1a\n\x08chunkify\x18\x05\x20\x01(\x08R\x08chunk\
+    ify\"\x86\x02\n\x0cCKBCellInput\x125\n\x17previous_output_tx_hash\x18\
+    \x01\x20\x02(\x0cR\x14previousOutputTxHash\x122\n\x15previous_output_ind\
+    ex\x18\x02\x20\x02(\rR\x13previousOutputIndex\x12\x17\n\x05since\x18\x03\
+    \x20\x01(\x04:\x010R\x05since\x127\n\x18dao_deposit_header_index\x18\x04\
+    \x20\x01(\rR\x15daoDepositHeaderIndex\x129\n\x19dao_withdraw_header_inde\
+    x\x18\x05\x20\x01(\rR\x16daoWithdrawHeaderIndex\"\x91\x02\n\rCKBCellOutp\
+    ut\x12\x1a\n\x08capacity\x18\x01\x20\x02(\x04R\x08capacity\x12$\n\x0eloc\
+    k_code_hash\x18\x02\x20\x02(\x0cR\x0clockCodeHash\x12$\n\x0elock_hash_ty\
+    pe\x18\x03\x20\x02(\rR\x0clockHashType\x12\x1b\n\tlock_args\x18\x04\x20\
+    \x02(\x0cR\x08lockArgs\x12$\n\x0etype_code_hash\x18\x05\x20\x01(\x0cR\
+    \x0ctypeCodeHash\x12$\n\x0etype_hash_type\x18\x06\x20\x01(\rR\x0ctypeHas\
+    hType\x12\x1b\n\ttype_args\x18\x07\x20\x01(\x0cR\x08typeArgs\x12\x12\n\
+    \x04data\x18\x08\x20\x01(\x0cR\x04data\"V\n\nCKBCellDep\x12\x17\n\x07tx_\
+    hash\x18\x01\x20\x02(\x0cR\x06txHash\x12\x14\n\x05index\x18\x02\x20\x02(\
+    \rR\x05index\x12\x19\n\x08dep_type\x18\x03\x20\x02(\rR\x07depType\"\xd4\
+    \x02\n\tCKBSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
+    \x12\x18\n\x07network\x18\x02\x20\x02(\tR\x07network\x12!\n\x0cinputs_co\
+    unt\x18\x03\x20\x02(\rR\x0binputsCount\x12#\n\routputs_count\x18\x04\x20\
+    \x02(\rR\x0coutputsCount\x12)\n\x0fcell_deps_count\x18\x05\x20\x01(\r:\
+    \x010R\rcellDepsCount\x12\x1a\n\x08chunkify\x18\x06\x20\x01(\x08R\x08chu\
+    nkify\x12'\n\x0fwitnesses_count\x18\x07\x20\x01(\rR\x0ewitnessesCount\
+    \x127\n\x18sign_group_input_indices\x18\x08\x20\x03(\rR\x15signGroupInpu\
+    tIndices\x12\x1f\n\x0bheader_deps\x18\t\x20\x03(\x0cR\nheaderDeps\"\xf2\
+    \x01\n\x0cCKBTxRequest\x12K\n\x0crequest_type\x18\x01\x20\x01(\x0e2(.hw.\
+    trezor.messages.ckb.CKBTxRequestTypeR\x0brequestType\x12E\n\x07details\
+    \x18\x02\x20\x01(\x0b2+.hw.trezor.messages.ckb.CKBTxRequestDetailsR\x07d\
+    etails\x12N\n\nserialized\x18\x03\x20\x01(\x0b2..hw.trezor.messages.ckb.\
+    CKBTxRequestSerializedR\nserialized\"\xb0\x01\n\x13CKBTxRequestDetails\
+    \x12#\n\rrequest_index\x18\x01\x20\x01(\rR\x0crequestIndex\x12\x17\n\x07\
+    tx_hash\x18\x02\x20\x01(\x0cR\x06txHash\x12)\n\x10signature_offset\x18\
+    \x03\x20\x01(\rR\x0fsignatureOffset\x120\n\x14signature_total_size\x18\
+    \x04\x20\x01(\rR\x12signatureTotalSize\"O\n\x16CKBTxRequestSerialized\
+    \x12\x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\x12\x17\n\x07tx_h\
+    ash\x18\x02\x20\x01(\x0cR\x06txHash\"K\n\rCKBTxAckInput\x12:\n\x05input\
+    \x18\x01\x20\x02(\x0b2$.hw.trezor.messages.ckb.CKBCellInputR\x05input\"O\
+    \n\x0eCKBTxAckOutput\x12=\n\x06output\x18\x01\x20\x02(\x0b2%.hw.trezor.m\
+    essages.ckb.CKBCellOutputR\x06output\"P\n\x0fCKBTxAckCellDep\x12=\n\x08c\
+    ell_dep\x18\x01\x20\x02(\x0b2\".hw.trezor.messages.ckb.CKBCellDepR\x07ce\
+    llDep\"\xc0\x01\n\x10CKBTxAckPrevMeta\x12\x18\n\x07version\x18\x01\x20\
+    \x02(\rR\x07version\x12!\n\x0cinputs_count\x18\x02\x20\x02(\rR\x0binputs\
+    Count\x12#\n\routputs_count\x18\x03\x20\x02(\rR\x0coutputsCount\x12)\n\
+    \x0fcell_deps_count\x18\x04\x20\x01(\r:\x010R\rcellDepsCount\x12\x1f\n\
+    \x0bheader_deps\x18\x05\x20\x03(\x0cR\nheaderDeps\"\xd9\x02\n\x0eCKBBloc\
+    kHeader\x12\x18\n\x07version\x18\x01\x20\x02(\rR\x07version\x12%\n\x0eco\
+    mpact_target\x18\x02\x20\x02(\rR\rcompactTarget\x12\x1c\n\ttimestamp\x18\
+    \x03\x20\x02(\x04R\ttimestamp\x12\x16\n\x06number\x18\x04\x20\x02(\x04R\
+    \x06number\x12\x14\n\x05epoch\x18\x05\x20\x02(\x04R\x05epoch\x12\x1f\n\
+    \x0bparent_hash\x18\x06\x20\x02(\x0cR\nparentHash\x12+\n\x11transactions\
+    _root\x18\x07\x20\x02(\x0cR\x10transactionsRoot\x12%\n\x0eproposals_hash\
+    \x18\x08\x20\x02(\x0cR\rproposalsHash\x12\x1d\n\nextra_hash\x18\t\x20\
+    \x02(\x0cR\textraHash\x12\x10\n\x03dao\x18\n\x20\x02(\x0cR\x03dao\x12\
+    \x14\n\x05nonce\x18\x0b\x20\x02(\x0cR\x05nonce\"P\n\x0eCKBTxAckHeader\
+    \x12>\n\x06header\x18\x01\x20\x02(\x0b2&.hw.trezor.messages.ckb.CKBBlock\
+    HeaderR\x06header\"q\n\x0eCKBWitnessArgs\x12\x1f\n\tlock_size\x18\x01\
+    \x20\x01(\r:\x0265R\x08lockSize\x12\x1d\n\ninput_type\x18\x02\x20\x01(\
+    \x0cR\tinputType\x12\x1f\n\x0boutput_type\x18\x03\x20\x01(\x0cR\noutputT\
+    ype\"n\n\x0fCKBTxAckWitness\x12I\n\x0cwitness_args\x18\x01\x20\x01(\x0b2\
+    &.hw.trezor.messages.ckb.CKBWitnessArgsR\x0bwitnessArgs\x12\x10\n\x03raw\
+    \x18\x02\x20\x01(\x0cR\x03raw\"0\n\x10CKBTxAckSigChunk\x12\x1c\n\tsignat\
+    ure\x18\x01\x20\x01(\x0cR\tsignature*\xbf\x01\n\x10CKBTxRequestType\x12\
+    \x0b\n\x07TXINPUT\x10\0\x12\x0c\n\x08TXOUTPUT\x10\x01\x12\r\n\tTXCELLDEP\
+    \x10\x02\x12\x0e\n\nTXFINISHED\x10\x03\x12\r\n\tTXWITNESS\x10\x04\x12\
+    \x0e\n\nTXPREVMETA\x10\x05\x12\x0f\n\x0bTXPREVINPUT\x10\x06\x12\x10\n\
+    \x0cTXPREVOUTPUT\x10\x07\x12\x11\n\rTXPREVCELLDEP\x10\x08\x12\x0c\n\x08T\
+    XHEADER\x10\t\x12\x0e\n\nTXSIGCHUNK\x10\nB7\n#com.satoshilabs.trezor.lib\
+    .protobufB\x10TrezorMessageCKB\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

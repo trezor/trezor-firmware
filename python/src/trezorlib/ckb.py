@@ -180,19 +180,9 @@ def sign_tx(
     Returns:
         CKBTxRequest with signature and tx_hash when TXFINISHED
     """
-    from .messages import CKBTxRequestType
-
     if cell_deps is None:
         cell_deps = []
     prev_tx_map = {_normalize_tx_hash(k): v for k, v in (prev_txs or {}).items()}
-
-    def _get_prev_tx(tx_hash: bytes | None) -> CkbPrevTx:
-        if tx_hash is None:
-            raise ValueError("Device requested previous tx without a tx_hash")
-        key = _normalize_tx_hash(tx_hash)
-        if key not in prev_tx_map:
-            raise ValueError(f"Missing previous tx for {key.hex()}")
-        return prev_tx_map[key]
 
     if witnesses is None:
         witnesses = [create_witness_args()]
@@ -215,7 +205,66 @@ def sign_tx(
         expect=messages.CKBTxRequest,
     )
 
+    res, _ = _serve_tx_requests(
+        session, res, inputs, outputs, cell_deps, witnesses, prev_tx_map, headers
+    )
+    return res
+
+
+def _serve_tx_requests(
+    session: "Session",
+    res: "messages.CKBTxRequest",
+    inputs: list["messages.CKBCellInput"],
+    outputs: list["messages.CKBCellOutput"],
+    cell_deps: list["messages.CKBCellDep"],
+    witnesses: list["messages.CKBTxAckWitness"],
+    prev_tx_map: dict[bytes, CkbPrevTx],
+    headers: list["messages.CKBBlockHeader"] | None,
+) -> tuple["messages.CKBTxRequest", bytes]:
+    """Serve the device's CKBTxRequest stream until TXFINISHED.
+
+    Returns ``(final_request, signature)`` where ``signature`` concatenates any
+    TXSIGCHUNK chunks the device streamed (the SPHINCS+ witness lock; empty for
+    the ECDSA flow, which returns its signature in the final request instead).
+    """
+    from .messages import CKBTxRequestType
+
+    def _get_prev_tx(tx_hash: bytes | None) -> CkbPrevTx:
+        if tx_hash is None:
+            raise ValueError("Device requested previous tx without a tx_hash")
+        key = _normalize_tx_hash(tx_hash)
+        if key not in prev_tx_map:
+            raise ValueError(f"Missing previous tx for {key.hex()}")
+        return prev_tx_map[key]
+
+    signature = bytearray()
+    sig_total: int | None = None
     while res.request_type != CKBTxRequestType.TXFINISHED:
+        if res.request_type == CKBTxRequestType.TXSIGCHUNK:
+            if res.serialized is None or res.serialized.signature is None:
+                raise ValueError("TXSIGCHUNK request without signature data")
+            details = res.details
+            if (
+                details is None
+                or details.signature_offset is None
+                or details.signature_total_size is None
+            ):
+                raise ValueError("TXSIGCHUNK request without chunk metadata")
+            if details.signature_offset != len(signature):
+                raise ValueError(
+                    f"TXSIGCHUNK out of order: offset {details.signature_offset}, "
+                    f"received {len(signature)}"
+                )
+            if sig_total is None:
+                sig_total = details.signature_total_size
+            elif details.signature_total_size != sig_total:
+                raise ValueError("TXSIGCHUNK total size changed mid-stream")
+            signature.extend(res.serialized.signature)
+            res = session.call(
+                messages.CKBTxAckSigChunk(), expect=messages.CKBTxRequest
+            )
+            continue
+
         if res.details is None:
             raise ValueError("Device response missing request details")
         details = res.details
@@ -283,7 +332,110 @@ def sign_tx(
         else:
             raise ValueError(f"Unknown request type: {res.request_type}")
 
-    return res
+    if sig_total is not None and len(signature) != sig_total:
+        raise ValueError(
+            f"Incomplete signature stream: {len(signature)} of {sig_total} bytes"
+        )
+    return res, bytes(signature)
+
+
+class SphincsSignedTx(NamedTuple):
+    """Result of a SPHINCS+ signing flow.
+
+    ``witness_lock`` is the complete witness lock field
+    ([0x80,0x00,0x01,0x01,flag] || public_key || signature) assembled from the
+    TXSIGCHUNK stream; place it in the signing witness before broadcasting.
+    """
+
+    tx_hash: bytes
+    witness_lock: bytes
+
+
+@workflow(capability=messages.Capability.CKB)
+def get_sphincs_address(
+    session: "Session",
+    network: str,
+    account_index: int = 0,
+    variant: int = 49,
+    show_display: bool = False,
+    chunkify: bool = False,
+) -> messages.CKBSphincsPlusAddress:
+    """Get the CKB SPHINCS+ post-quantum address (with lock_args and public key).
+
+    Requires the device to be initialized with an extended BIP-39 mnemonic
+    (36/54/72 words) matching the variant's security level.
+    """
+    return session.call(
+        messages.CKBSphincsPlusGetAddress(
+            account_index=account_index,
+            variant=variant,
+            network=network,
+            show_display=show_display,
+            chunkify=chunkify,
+        ),
+        expect=messages.CKBSphincsPlusAddress,
+    )
+
+
+@workflow(capability=messages.Capability.CKB)
+def sign_sphincs_tx(
+    session: "Session",
+    inputs: list["messages.CKBCellInput"],
+    outputs: list["messages.CKBCellOutput"],
+    cell_deps: list["messages.CKBCellDep"] | None = None,
+    witnesses: list["messages.CKBTxAckWitness"] | None = None,
+    sign_group_input_indices: list[int] | None = None,
+    network: str = "Mainnet",
+    account_index: int = 0,
+    variant: int = 49,
+    chunkify: bool = False,
+    prev_txs: dict[bytes | str, CkbPrevTx] | None = None,
+    header_deps: list[bytes] | None = None,
+    headers: list["messages.CKBBlockHeader"] | None = None,
+) -> SphincsSignedTx:
+    """Sign a CKB transaction with a SPHINCS+ post-quantum key.
+
+    Same streaming protocol and arguments as :func:`sign_tx` (including
+    ``header_deps``/``headers`` for Nervos DAO withdrawals), but keyed by
+    ``account_index``/``variant`` instead of a BIP-32 path. The ~50 KB witness
+    lock is streamed back in TXSIGCHUNK chunks and returned assembled.
+    """
+    if cell_deps is None:
+        cell_deps = []
+    prev_tx_map = {_normalize_tx_hash(k): v for k, v in (prev_txs or {}).items()}
+
+    if witnesses is None:
+        witnesses = [create_witness_args()]
+        witnesses += [create_witness_raw() for _ in range(max(0, len(inputs) - 1))]
+    if sign_group_input_indices is None:
+        sign_group_input_indices = list(range(len(inputs)))
+
+    res = session.call(
+        messages.CKBSphincsPlusSignTx(
+            account_index=account_index,
+            variant=variant,
+            network=network,
+            inputs_count=len(inputs),
+            outputs_count=len(outputs),
+            cell_deps_count=len(cell_deps),
+            witnesses_count=len(witnesses),
+            sign_group_input_indices=sign_group_input_indices,
+            chunkify=chunkify,
+            header_deps=header_deps or [],
+        ),
+        expect=messages.CKBTxRequest,
+    )
+
+    res, witness_lock = _serve_tx_requests(
+        session, res, inputs, outputs, cell_deps, witnesses, prev_tx_map, headers
+    )
+    if res.serialized is None or res.serialized.tx_hash is None:
+        raise ValueError("Device did not return the transaction hash")
+    if not witness_lock:
+        raise ValueError("Device did not stream the SPHINCS+ signature")
+    return SphincsSignedTx(
+        tx_hash=bytes(res.serialized.tx_hash), witness_lock=witness_lock
+    )
 
 
 def create_cell_input(

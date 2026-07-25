@@ -3224,6 +3224,7 @@ class CKBSphincsPlusSignTx(protobuf.MessageType):
         7: protobuf.Field("witnesses_count", "uint32", repeated=False, required=False, default=None),
         8: protobuf.Field("sign_group_input_indices", "uint32", repeated=True, required=False, default=None),
         9: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        10: protobuf.Field("header_deps", "bytes", repeated=True, required=False, default=None),
     }
 
     def __init__(
@@ -3233,6 +3234,7 @@ class CKBSphincsPlusSignTx(protobuf.MessageType):
         inputs_count: "int",
         outputs_count: "int",
         sign_group_input_indices: Optional[Sequence["int"]] = None,
+        header_deps: Optional[Sequence["bytes"]] = None,
         account_index: Optional["int"] = 0,
         variant: Optional["int"] = 49,
         cell_deps_count: Optional["int"] = 0,
@@ -3240,6 +3242,7 @@ class CKBSphincsPlusSignTx(protobuf.MessageType):
         chunkify: Optional["bool"] = None,
     ) -> None:
         self.sign_group_input_indices: Sequence["int"] = sign_group_input_indices if sign_group_input_indices is not None else []
+        self.header_deps: Sequence["bytes"] = header_deps if header_deps is not None else []
         self.network = network
         self.inputs_count = inputs_count
         self.outputs_count = outputs_count

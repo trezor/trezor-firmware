@@ -1957,6 +1957,7 @@ if TYPE_CHECKING:
         witnesses_count: "int | None"
         sign_group_input_indices: "list[int]"
         chunkify: "bool | None"
+        header_deps: "list[AnyBytes]"
 
         def __init__(
             self,
@@ -1965,6 +1966,7 @@ if TYPE_CHECKING:
             inputs_count: "int",
             outputs_count: "int",
             sign_group_input_indices: "list[int] | None" = None,
+            header_deps: "list[AnyBytes] | None" = None,
             account_index: "int | None" = None,
             variant: "int | None" = None,
             cell_deps_count: "int | None" = None,

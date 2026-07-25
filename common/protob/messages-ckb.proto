@@ -87,6 +87,7 @@ message CKBSphincsPlusSignTx {
     optional uint32 witnesses_count = 7;                // length of the on-chain witness vector (required)
     repeated uint32 sign_group_input_indices = 8;       // input indices of the lock-script group to sign (sorted)
     optional bool chunkify = 9;                         // display addresses in chunks
+    repeated bytes header_deps = 10;                    // 32-byte block-header hashes committed in the tx hash (e.g. Nervos DAO); empty for plain transfers
 }
 
 /**

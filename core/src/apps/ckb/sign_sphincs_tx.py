@@ -12,6 +12,11 @@ sighash_all. The on-chain verifier is FIPS 205 SLH-DSA while the vendored
 library is Round-3 SPHINCS+, so the message is wrapped with the FIPS 205 domain
 separator before signing. SPHINCS+ signatures reach ~50 KB and are streamed back
 in chunks via TXSIGCHUNK.
+
+Nervos DAO is supported exactly like the ECDSA path: header_deps are committed
+in the raw tx hash, and a phase-2 withdrawing-cell input is credited its
+verified maximum withdraw value (deposit + compensation, RFC 0023) after the
+deposit/withdraw block headers are checked against header_deps.
 """
 
 from typing import TYPE_CHECKING
@@ -20,14 +25,6 @@ from trezor.crypto.hashlib import blake2b
 from trezor.wire import DataError
 
 from . import helpers
-
-# Read-only Molecule serialization shared with the ECDSA path.
-from .sign_tx import (
-    _compute_raw_tx_hash,
-    _serialize_bytes,
-    _serialize_cell_output,
-    _serialize_uint32_le,
-)
 from .get_sphincs_address import (
     _CODE_HASH_MAINNET,
     _CODE_HASH_TESTNET,
@@ -38,6 +35,17 @@ from .get_sphincs_address import (
     _compute_lock_args,
     _require_sphincs_mnemonic,
     _wipe,
+)
+
+# Read-only Molecule serialization and Nervos DAO verification shared with the
+# ECDSA path.
+from .sign_tx import (
+    _compute_raw_tx_hash,
+    _dao_withdraw_value,
+    _is_dao_withdrawing_cell,
+    _serialize_bytes,
+    _serialize_cell_output,
+    _serialize_uint32_le,
 )
 
 if TYPE_CHECKING:
@@ -54,6 +62,7 @@ if TYPE_CHECKING:
 _MAX_INPUTS = 256
 _MAX_OUTPUTS = 256
 _MAX_CELL_DEPS = 64
+_MAX_WITNESSES = 512
 
 # Signature chunk size, kept well under the THP per-message buffer (~8 KB).
 _SIG_CHUNK_SIZE = 4096
@@ -122,7 +131,9 @@ async def _stream_and_verify_prev_tx(tx_hash: bytes) -> list["CKBCellOutput"]:
         if ack_out.output is None:
             raise DataError("Missing previous transaction output")
         prev_outputs.append(ack_out.output)
-        prev_outputs_data.append(bytes(ack_out.output.data) if ack_out.output.data else b"")
+        prev_outputs_data.append(
+            bytes(ack_out.output.data) if ack_out.output.data else b""
+        )
 
     prev_cell_deps: list["CKBCellDep"] = []
     for i in range(meta.cell_deps_count or 0):
@@ -216,7 +227,13 @@ async def sign_sphincs_tx(msg: "CKBSphincsPlusSignTx") -> "CKBTxRequest":
     from trezor.ui.layouts import show_continue_in_app
     from trezor.wire.context import call
 
-    from .layout import require_confirm_output, require_confirm_testnet, require_confirm_total
+    from .layout import (
+        require_confirm_fee_over_threshold,
+        require_confirm_output,
+        require_confirm_testnet,
+        require_confirm_total,
+        require_confirm_type_script,
+    )
 
     variant = msg.variant if msg.variant is not None else 49
     if variant not in _VALID_VARIANTS:
@@ -240,209 +257,230 @@ async def sign_sphincs_tx(msg: "CKBSphincsPlusSignTx") -> "CKBTxRequest":
         raise DataError("Invalid cell_deps_count")
     if msg.witnesses_count is None:
         raise DataError("Missing witnesses_count")
+    if msg.witnesses_count > _MAX_WITNESSES:
+        raise DataError("Invalid witnesses_count")
     if not msg.sign_group_input_indices:
         raise DataError("Missing sign_group_input_indices")
 
     # Derive the signer's public key and SPHINCS+ lock script up front so we can
-    # detect change outputs and locate the signing group among the inputs.
+    # detect change outputs and locate the signing group among the inputs. The
+    # seed stays in memory until the final signing step; the try/finally wipes
+    # it on every exit path.
     seed = _require_sphincs_mnemonic(variant)
     try:
         public_key = sphincsplus.derive_public_key(seed, account_index, variant)
-    except Exception:
-        _wipe(seed)
-        raise
-    sender_lock_args = _compute_lock_args(public_key, variant)
-    if network == "Mainnet":
-        sender_code_hash = _CODE_HASH_MAINNET
-        sender_hash_type = _HASH_TYPE_MAINNET
-    else:
-        sender_code_hash = _CODE_HASH_TESTNET
-        sender_hash_type = _HASH_TYPE_TESTNET
-
-    # Stream inputs (outpoints only; capacities/locks come from the prev tx).
-    inputs: list["CKBCellInput"] = []
-    for i in range(msg.inputs_count):
-        ack = await call(
-            CKBTxRequest(
-                request_type=CKBTxRequestType.TXINPUT,
-                details=CKBTxRequestDetails(request_index=i),
-            ),
-            CKBTxAckInput,
-        )
-        if ack.input is None:
-            _wipe(seed)
-            raise DataError("Missing input data")
-        if len(ack.input.previous_output_tx_hash) != 32:
-            _wipe(seed)
-            raise DataError("previous_output_tx_hash must be 32 bytes")
-        inputs.append(ack.input)
-
-    # Stream outputs and confirm the external recipients.
-    outputs: list["CKBCellOutput"] = []
-    outputs_data: list[bytes] = []
-    is_change_flags: list[bool] = []
-    has_external_output = False
-    for i in range(msg.outputs_count):
-        ack = await call(
-            CKBTxRequest(
-                request_type=CKBTxRequestType.TXOUTPUT,
-                details=CKBTxRequestDetails(request_index=i),
-            ),
-            CKBTxAckOutput,
-        )
-        if ack.output is None:
-            _wipe(seed)
-            raise DataError("Missing output data")
-        out = ack.output
-        outputs.append(out)
-        outputs_data.append(bytes(out.data) if out.data else b"")
-        is_change = (
-            out.lock_args == sender_lock_args
-            and out.lock_code_hash == sender_code_hash
-            and out.lock_hash_type == sender_hash_type
-            and out.type_code_hash is None
-            and not out.data
-        )
-        is_change_flags.append(is_change)
-        if not is_change:
-            has_external_output = True
-
-    send_amount = 0
-    total_out = 0
-    for i, out in enumerate(outputs):
-        total_out += out.capacity
-        if is_change_flags[i] and has_external_output:
-            continue
-        send_amount += out.capacity
-        await require_confirm_output(
-            helpers.encode_address_full(
-                out.lock_code_hash, out.lock_hash_type, out.lock_args, network
-            ),
-            out.capacity,
-            chunkify=bool(msg.chunkify),
-        )
-
-    # Stream cell deps.
-    cell_deps: list["CKBCellDep"] = []
-    for i in range(cell_deps_count):
-        ack = await call(
-            CKBTxRequest(
-                request_type=CKBTxRequestType.TXCELLDEP,
-                details=CKBTxRequestDetails(request_index=i),
-            ),
-            CKBTxAckCellDep,
-        )
-        if ack.cell_dep is None:
-            _wipe(seed)
-            raise DataError("Missing cell_dep data")
-        cell_deps.append(ack.cell_dep)
-
-    tx_hash = _compute_raw_tx_hash(
-        inputs=inputs,
-        outputs=outputs,
-        outputs_data=outputs_data,
-        cell_deps=cell_deps,
-    )
-
-    # Verify each input trustlessly by streaming its previous tx, then collect
-    # the spent cell (capacity + full molecule CellOutput + data) and locate the
-    # signing script group (inputs whose lock is the signer's SPHINCS+ lock).
-    prev_cache: dict[bytes, list["CKBCellOutput"]] = {}
-    input_cells: list[tuple[bytes, bytes]] = []
-    group_indices: list[int] = []
-    total_in = 0
-    for i, inp in enumerate(inputs):
-        prev_hash = bytes(inp.previous_output_tx_hash)
-        prev_outputs = prev_cache.get(prev_hash)
-        if prev_outputs is None:
-            prev_outputs = await _stream_and_verify_prev_tx(prev_hash)
-            prev_cache[prev_hash] = prev_outputs
-        index = inp.previous_output_index
-        if index >= len(prev_outputs):
-            _wipe(seed)
-            raise DataError("Input previous_output_index out of range")
-        spent = prev_outputs[index]
-        total_in += spent.capacity
-        input_cells.append(
-            (_serialize_cell_output(spent), bytes(spent.data) if spent.data else b"")
-        )
-        if (
-            spent.lock_code_hash == sender_code_hash
-            and spent.lock_hash_type == sender_hash_type
-            and spent.lock_args == sender_lock_args
-        ):
-            group_indices.append(i)
-
-    if not group_indices:
-        _wipe(seed)
-        raise DataError("No input belongs to the signer's SPHINCS+ lock")
-    if group_indices != sorted(msg.sign_group_input_indices):
-        _wipe(seed)
-        raise DataError("sign_group_input_indices do not match the signer's inputs")
-
-    # Stream witnesses: the first group witness carries WitnessArgs (only its
-    # input_type/output_type enter the message); all others are raw bytes.
-    signing_index = group_indices[0]
-    first_input_type = b""
-    first_output_type = b""
-    witnesses_raw: dict[int, bytes] = {}
-    for i in range(msg.witnesses_count):
-        ack = await call(
-            CKBTxRequest(
-                request_type=CKBTxRequestType.TXWITNESS,
-                details=CKBTxRequestDetails(request_index=i),
-            ),
-            CKBTxAckWitness,
-        )
-        if i == signing_index:
-            args = ack.witness_args
-            if args is None:
-                _wipe(seed)
-                raise DataError("Missing WitnessArgs for signing witness")
-            # as_slice() of a molecule BytesOpt is the length-prefixed Bytes for
-            # Some and empty for None.
-            first_input_type = (
-                _serialize_bytes(args.input_type) if args.input_type is not None else b""
-            )
-            first_output_type = (
-                _serialize_bytes(args.output_type) if args.output_type is not None else b""
-            )
+        sender_lock_args = _compute_lock_args(public_key, variant)
+        if network == "Mainnet":
+            sender_code_hash = _CODE_HASH_MAINNET
+            sender_hash_type = _HASH_TYPE_MAINNET
         else:
-            if ack.witness_args is not None:
-                _wipe(seed)
-                raise DataError("Unexpected WitnessArgs for non-signing witness")
-            witnesses_raw[i] = bytes(ack.raw) if ack.raw is not None else b""
+            sender_code_hash = _CODE_HASH_TESTNET
+            sender_hash_type = _HASH_TYPE_TESTNET
 
-    sighash = _compute_ckb_tx_message_all(
-        tx_hash=tx_hash,
-        input_cells=input_cells,
-        group_indices=group_indices,
-        first_input_type=first_input_type,
-        first_output_type=first_output_type,
-        witnesses_raw=witnesses_raw,
-        inputs_count=msg.inputs_count,
-        witnesses_count=msg.witnesses_count,
-    )
+        # Stream inputs (outpoints only; capacities/locks come from the prev tx).
+        inputs: list["CKBCellInput"] = []
+        for i in range(msg.inputs_count):
+            ack = await call(
+                CKBTxRequest(
+                    request_type=CKBTxRequestType.TXINPUT,
+                    details=CKBTxRequestDetails(request_index=i),
+                ),
+                CKBTxAckInput,
+            )
+            if ack.input is None:
+                raise DataError("Missing input data")
+            if len(ack.input.previous_output_tx_hash) != 32:
+                raise DataError("previous_output_tx_hash must be 32 bytes")
+            inputs.append(ack.input)
 
-    # Fee comes from the trustlessly verified input capacities, never the host.
-    if total_in < total_out:
-        _wipe(seed)
-        raise DataError("Inputs do not cover outputs")
-    fee = total_in - total_out
-    await require_confirm_total(send_amount + fee, fee)
+        # Stream outputs and confirm the external recipients.
+        outputs: list["CKBCellOutput"] = []
+        outputs_data: list[bytes] = []
+        is_change_flags: list[bool] = []
+        has_external_output = False
+        for i in range(msg.outputs_count):
+            ack = await call(
+                CKBTxRequest(
+                    request_type=CKBTxRequestType.TXOUTPUT,
+                    details=CKBTxRequestDetails(request_index=i),
+                ),
+                CKBTxAckOutput,
+            )
+            if ack.output is None:
+                raise DataError("Missing output data")
+            out = ack.output
+            outputs.append(out)
+            outputs_data.append(bytes(out.data) if out.data else b"")
+            is_change = (
+                out.lock_args == sender_lock_args
+                and out.lock_code_hash == sender_code_hash
+                and out.lock_hash_type == sender_hash_type
+                and out.type_code_hash is None
+                and not out.data
+            )
+            is_change_flags.append(is_change)
+            if not is_change:
+                has_external_output = True
 
-    # FIPS 205 pure signing prepends M' = 0x00 || len(ctx) || ctx || M; with an
-    # empty context this is two zero bytes. The vendored Round-3 SPHINCS+ otherwise
-    # matches FIPS 205, so this prefix turns it into a FIPS 205 SLH-DSA signature.
-    fips205_message = b"\x00\x00" + sighash
-    try:
+        send_amount = 0
+        total_out = 0
+        for i, out in enumerate(outputs):
+            total_out += out.capacity
+            if is_change_flags[i] and has_external_output:
+                continue
+            send_amount += out.capacity
+            if out.type_code_hash is not None:
+                await require_confirm_type_script()
+            await require_confirm_output(
+                helpers.encode_address_full(
+                    out.lock_code_hash, out.lock_hash_type, out.lock_args, network
+                ),
+                out.capacity,
+                chunkify=bool(msg.chunkify),
+            )
+
+        # Stream cell deps.
+        cell_deps: list["CKBCellDep"] = []
+        for i in range(cell_deps_count):
+            ack = await call(
+                CKBTxRequest(
+                    request_type=CKBTxRequestType.TXCELLDEP,
+                    details=CKBTxRequestDetails(request_index=i),
+                ),
+                CKBTxAckCellDep,
+            )
+            if ack.cell_dep is None:
+                raise DataError("Missing cell_dep data")
+            cell_deps.append(ack.cell_dep)
+
+        # header_deps are committed in the tx hash; the device must hash them or
+        # its signature would not match the transaction the host broadcasts.
+        header_deps = [bytes(h) for h in msg.header_deps] if msg.header_deps else []
+        tx_hash = _compute_raw_tx_hash(
+            inputs=inputs,
+            outputs=outputs,
+            outputs_data=outputs_data,
+            cell_deps=cell_deps,
+            header_deps=header_deps,
+        )
+
+        # Verify each input trustlessly by streaming its previous tx, then
+        # collect the spent cell (capacity + full molecule CellOutput + data)
+        # and locate the signing script group (inputs whose lock is the
+        # signer's SPHINCS+ lock).
+        prev_cache: dict[bytes, list["CKBCellOutput"]] = {}
+        # (header index) -> (block number, accumulated rate), filled on demand
+        # while verifying Nervos DAO withdrawing-cell inputs.
+        header_cache: dict[int, tuple[int, int]] = {}
+        input_cells: list[tuple[bytes, bytes]] = []
+        group_indices: list[int] = []
+        total_in = 0
+        for i, inp in enumerate(inputs):
+            prev_hash = bytes(inp.previous_output_tx_hash)
+            prev_outputs = prev_cache.get(prev_hash)
+            if prev_outputs is None:
+                prev_outputs = await _stream_and_verify_prev_tx(prev_hash)
+                prev_cache[prev_hash] = prev_outputs
+            index = inp.previous_output_index
+            if index >= len(prev_outputs):
+                raise DataError("Input previous_output_index out of range")
+            spent = prev_outputs[index]
+            if _is_dao_withdrawing_cell(spent):
+                # A DAO withdrawal unlocks deposit + compensation, so total_out
+                # may validly exceed the plain input capacity. Credit the
+                # verified maximum withdraw capacity instead of the raw
+                # capacity.
+                total_in += await _dao_withdraw_value(
+                    inp, spent, header_deps, header_cache
+                )
+            else:
+                total_in += spent.capacity
+            input_cells.append(
+                (
+                    _serialize_cell_output(spent),
+                    bytes(spent.data) if spent.data else b"",
+                )
+            )
+            if (
+                spent.lock_code_hash == sender_code_hash
+                and spent.lock_hash_type == sender_hash_type
+                and spent.lock_args == sender_lock_args
+            ):
+                group_indices.append(i)
+
+        if not group_indices:
+            raise DataError("No input belongs to the signer's SPHINCS+ lock")
+        if group_indices != sorted(msg.sign_group_input_indices):
+            raise DataError("sign_group_input_indices do not match the signer's inputs")
+
+        # Stream witnesses: the first group witness carries WitnessArgs (only its
+        # input_type/output_type enter the message); all others are raw bytes.
+        signing_index = group_indices[0]
+        if signing_index >= msg.witnesses_count:
+            raise DataError("Signing witness index out of range")
+        first_input_type = b""
+        first_output_type = b""
+        witnesses_raw: dict[int, bytes] = {}
+        for i in range(msg.witnesses_count):
+            ack = await call(
+                CKBTxRequest(
+                    request_type=CKBTxRequestType.TXWITNESS,
+                    details=CKBTxRequestDetails(request_index=i),
+                ),
+                CKBTxAckWitness,
+            )
+            if i == signing_index:
+                args = ack.witness_args
+                if args is None:
+                    raise DataError("Missing WitnessArgs for signing witness")
+                # A molecule BytesOpt serializes to length-prefixed bytes when
+                # present and to nothing when absent.
+                first_input_type = (
+                    _serialize_bytes(args.input_type)
+                    if args.input_type is not None
+                    else b""
+                )
+                first_output_type = (
+                    _serialize_bytes(args.output_type)
+                    if args.output_type is not None
+                    else b""
+                )
+            else:
+                if ack.witness_args is not None:
+                    raise DataError("Unexpected WitnessArgs for non-signing witness")
+                witnesses_raw[i] = bytes(ack.raw) if ack.raw is not None else b""
+
+        sighash = _compute_ckb_tx_message_all(
+            tx_hash=tx_hash,
+            input_cells=input_cells,
+            group_indices=group_indices,
+            first_input_type=first_input_type,
+            first_output_type=first_output_type,
+            witnesses_raw=witnesses_raw,
+            inputs_count=msg.inputs_count,
+            witnesses_count=msg.witnesses_count,
+        )
+
+        # Fee comes from the trustlessly verified input capacities, never the host.
+        if total_in < total_out:
+            raise DataError("Inputs do not cover outputs")
+        fee = total_in - total_out
+        await require_confirm_fee_over_threshold(fee, total_out)
+        await require_confirm_total(send_amount + fee, fee)
+
+        # FIPS 205 pure signing prepends M' = 0x00 || len(ctx) || ctx || M; with
+        # an empty context this is two zero bytes. The vendored Round-3 SPHINCS+
+        # otherwise matches FIPS 205, so this prefix turns it into a FIPS 205
+        # SLH-DSA signature.
+        fips205_message = b"\x00\x00" + sighash
         signed_pk, raw_signature = sphincsplus.derive_and_sign(
             seed, account_index, variant, fips205_message
         )
-        if signed_pk != public_key:
-            raise DataError("SPHINCS+ public key mismatch (possible fault injection)")
     finally:
         _wipe(seed)
+
+    if signed_pk != public_key:
+        raise DataError("SPHINCS+ public key mismatch (possible fault injection)")
 
     full_signature = _construct_witness_lock(variant, public_key, raw_signature)
 
