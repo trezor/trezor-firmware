@@ -37,7 +37,6 @@ async def require_confirm_output(
     await confirm_output(
         address,
         _format_ckb_amount(amount),
-        title=TR.send__confirm_sending,
         chunkify=chunkify,
     )
 
