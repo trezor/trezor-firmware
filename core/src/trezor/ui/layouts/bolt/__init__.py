@@ -1283,7 +1283,7 @@ if not utils.BITCOIN_ONLY:
 
         await _confirm_summary(
             native_amount,
-            with_colon(TR.words__amount) if native_amount else None,
+            TR.words__amount if native_amount else None,
             maximum_fee,
             TR.send__maximum_fee,
             TR.words__title_summary,
