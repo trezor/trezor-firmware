@@ -15,7 +15,9 @@ if TYPE_CHECKING:
     from buffer_types import StrOrBytes
     from typing import Callable, TypeVar
 
+    from trezor.enums import StellarAssetType
     from trezor.messages import (
+        StellarAsset,
         StellarInt128Parts,
         StellarInt256Parts,
         StellarInvokeContractArgs,
@@ -57,6 +59,45 @@ def write_pubkey(w: Writer, address: str) -> None:
     # first 4 bytes of an address are the type, there's only one type (0)
     write_uint32(w, 0)
     writers.write_bytes_fixed(w, public_key_from_address(address), 32)
+
+
+def write_asset_code(
+    w: Writer, asset_type: StellarAssetType, asset_code: str | None
+) -> None:
+    from trezor.enums import StellarAssetType
+
+    if asset_type == StellarAssetType.NATIVE:
+        return  # nothing is needed
+
+    if asset_code is None:
+        raise DataError("Stellar: invalid asset")
+
+    code = asset_code.encode()
+    if asset_type == StellarAssetType.ALPHANUM4:
+        if len(code) > 4:
+            raise DataError("Stellar: asset code too long for ALPHANUM4")
+        # pad with zeros to 4 chars
+        write_bytes_fixed(w, code + bytes([0] * (4 - len(code))), 4)
+    elif asset_type == StellarAssetType.ALPHANUM12:
+        if len(code) > 12:
+            raise DataError("Stellar: asset code too long for ALPHANUM12")
+        # pad with zeros to 12 chars
+        write_bytes_fixed(w, code + bytes([0] * (12 - len(code))), 12)
+    else:
+        raise ProcessError("Stellar: invalid asset type")
+
+
+def write_asset(w: Writer, asset: StellarAsset) -> None:
+    from trezor.enums import StellarAssetType
+
+    if asset.type == StellarAssetType.NATIVE:
+        write_uint32(w, 0)
+        return
+    if asset.code is None or asset.issuer is None:
+        raise DataError("Stellar: invalid asset")
+    write_uint32(w, asset.type)
+    write_asset_code(w, asset.type, asset.code)
+    write_pubkey(w, asset.issuer)
 
 
 _INT32_MIN = const(-0x8000_0000)
