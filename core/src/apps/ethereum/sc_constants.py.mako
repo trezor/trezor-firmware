@@ -68,19 +68,6 @@ KNOWN_ADDRESSES = [
     (1116, "0000000000000000000000000000000000001011", "Core Stake"),
     # https://scan.coredao.org/address/0x0000000000000000000000000000000000001010
     (1116, "0000000000000000000000000000000000001010", "Core Stake"),
-    # WETH (Wrapped Ether) - canonical contracts, see clear_signing_definitions.py
-    # https://etherscan.io/address/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
-    (1, "C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", "WETH"),
-    # https://optimistic.etherscan.io/address/0x4200000000000000000000000000000000000006
-    (10, "4200000000000000000000000000000000000006", "WETH"),
-    # https://arbiscan.io/address/0x82aF49447D8a07e3bd95BD0d56f35241523fBab1
-    (42161, "82aF49447D8a07e3bd95BD0d56f35241523fBab1", "WETH"),
-    # https://basescan.org/address/0x4200000000000000000000000000000000000006
-    (8453, "4200000000000000000000000000000000000006", "WETH"),
-    # https://sepolia.etherscan.io/address/0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9
-    (11155111, "7b79995e5f793A07Bc00c21412e50Ecae098E7f9", "WETH"),
-    # https://holesky.etherscan.io/address/0x94373a4919B3240D86eA41593D5eBa789FEF3848
-    (17000, "94373a4919B3240D86eA41593D5eBa789FEF3848", "WETH"),
     # yield.xyz
     # https://etherscan.io/address/0xb929b89153fc2eed442e81e5a1add4e2fa39028f
     (1, "b929b89153fc2eed442e81e5a1add4e2fa39028f", "yield.xyz"),
@@ -112,14 +99,27 @@ KNOWN_ADDRESSES = [
     (1, "15c2b3adca66e26b6f230b4023f52a285b7f9995", "yield.xyz"),
 ]
 
+# Canonical WETH (Wrapped Ether) contracts holding the chain's native currency.
+WETH_DEPLOYMENTS = [
+    # https://etherscan.io/address/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+    (1, "C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"),
+    # https://optimistic.etherscan.io/address/0x4200000000000000000000000000000000000006
+    (10, "4200000000000000000000000000000000000006"),
+    # https://arbiscan.io/address/0x82aF49447D8a07e3bd95BD0d56f35241523fBab1
+    (42161, "82aF49447D8a07e3bd95BD0d56f35241523fBab1"),
+    # https://basescan.org/address/0x4200000000000000000000000000000000000006
+    (8453, "4200000000000000000000000000000000000006"),
+    # https://sepolia.etherscan.io/address/0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9
+    (11155111, "7b79995e5f793A07Bc00c21412e50Ecae098E7f9"),
+    # https://holesky.etherscan.io/address/0x94373a4919B3240D86eA41593D5eBa789FEF3848
+    (17000, "94373a4919B3240D86eA41593D5eBa789FEF3848"),
+]
+
 %>
 
 def lookup_known_address(chain_id: int, address: bytes) -> str | None:
     """Return a human-readable name of a well-known smart contract,
     or `None` if the address is not known.
-
-    No dict is used so that nothing stays allocated in RAM; all the data
-    lives in flash. (See also `apps.workflow_handlers`.)
     """
     for known_chain_id, known_address, name in _known_address_iterator():
         if chain_id == known_chain_id and address == known_address:
@@ -133,6 +133,15 @@ def _known_address_iterator() -> Iterator[tuple[int, bytes, str]]:
 % for chain_id, addr, name in KNOWN_ADDRESSES:
     yield (${chain_id}, ${fmt_addr(addr)}, "${name}")
 % endfor
+    for chain_id, addr in weth_deployments():
+        yield (chain_id, addr, "WETH")
 
     if __debug__:
         yield (1, ${fmt_addr("dddddddddddddddddddddddddddddddddddddddd")}, "Trezor Test. DO NOT USE")
+
+
+def weth_deployments() -> Iterator[tuple[int, bytes]]:
+    """Canonical WETH (Wrapped Ether) contract deployments: (chain_id, address). """
+% for chain_id, addr in WETH_DEPLOYMENTS:
+    yield (${chain_id}, ${fmt_addr(addr)})
+% endfor
