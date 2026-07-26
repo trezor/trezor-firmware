@@ -273,15 +273,16 @@ Ethereum commands.
     - path to local directory
     - path to local tar archive
 
-    For debugging purposes, it is possible to force use a specific network and token definition by
-    using the `--network` and `--token` options. These options accept either a path to a file with a
-    binary blob, or a hex-encoded string.
+    For debugging purposes, it is possible to force use a specific network, token or contract
+    descriptor definition by using the `--network`, `--token` and `--display-format` options. These
+    options accept either a path to a file with a binary blob, or a hex-encoded string.
 
   Options:
     -d, --definitions TEXT  Source for Ethereum definition blobs.
     -a, --auto-definitions  Automatically download required definitions from trezor.io
     --network TEXT          Network definition blob.
     --token TEXT            Token definition blob.
+    --display-format TEXT   ERC-7730 clear-signing contract descriptor blob.
     --help                  Show this message and exit.
 
   Commands:
