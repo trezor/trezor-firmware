@@ -331,6 +331,7 @@ if TYPE_CHECKING:
         FORMATTER_UNIT = 3
         FORMATTER_RAW = 4
         FORMATTER_DATE = 5
+        FORMATTER_CALLDATA = 6
 
     class EthereumERC7730ContainerPath(IntEnum):
         FROM = 1

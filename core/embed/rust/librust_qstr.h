@@ -1329,6 +1329,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__staking_stake_intro;
   MP_QSTR_ethereum__staking_unstake;
   MP_QSTR_ethereum__staking_unstake_intro;
+  MP_QSTR_ethereum__subcall;
+  MP_QSTR_ethereum__subcall_to;
   MP_QSTR_ethereum__subtitle_input_data_bytes;
   MP_QSTR_ethereum__title_confirm_domain;
   MP_QSTR_ethereum__title_confirm_message;

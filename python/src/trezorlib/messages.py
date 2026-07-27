@@ -374,6 +374,7 @@ class EthereumERC7730FieldFormatterType(IntEnum):
     FORMATTER_UNIT = 3
     FORMATTER_RAW = 4
     FORMATTER_DATE = 5
+    FORMATTER_CALLDATA = 6
 
 
 class EthereumERC7730ContainerPath(IntEnum):
@@ -4865,6 +4866,8 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         7: protobuf.Field("base", "string", repeated=False, required=False, default=None),
         8: protobuf.Field("prefix", "bool", repeated=False, required=False, default=None),
         9: protobuf.Field("const_token_address", "bytes", repeated=False, required=False, default=None),
+        10: protobuf.Field("callee_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
+        11: protobuf.Field("selector", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4879,6 +4882,8 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         base: Optional["str"] = None,
         prefix: Optional["bool"] = None,
         const_token_address: Optional["bytes"] = None,
+        callee_path: Optional["EthereumERC7730Path"] = None,
+        selector: Optional["bytes"] = None,
     ) -> None:
         self.path = path
         self.label = label
@@ -4889,6 +4894,8 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         self.base = base
         self.prefix = prefix
         self.const_token_address = const_token_address
+        self.callee_path = callee_path
+        self.selector = selector
 
 
 class EthereumDisplayFormatInfo(protobuf.MessageType):

@@ -1673,6 +1673,10 @@ pub enum TranslatedString {
     stellar__sign_authorization = 1265,  // "Sign authorization"
     #[cfg(feature = "universal_fw")]
     stellar__valid_until_ledger = 1266,  // "Valid until ledger"
+    #[cfg(feature = "universal_fw")]
+    ethereum__subcall = 1267,  // "Subcall"
+    #[cfg(feature = "universal_fw")]
+    ethereum__subcall_to = 1268,  // "Subcall to"
 }
 
 impl TranslatedString {
@@ -2947,6 +2951,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4219,6 +4225,8 @@ impl TranslatedString {
                 19122,
                 19140,
                 19158,
+                19165,
+                19175,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5490,6 +5498,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6762,6 +6772,8 @@ impl TranslatedString {
                 19122,
                 19140,
                 19158,
+                19165,
+                19175,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8033,6 +8045,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9305,6 +9319,8 @@ impl TranslatedString {
                 19122,
                 19140,
                 19158,
+                19165,
+                19175,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10576,6 +10592,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11848,6 +11866,8 @@ impl TranslatedString {
                 19122,
                 19140,
                 19158,
+                19165,
+                19175,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13120,6 +13140,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14392,6 +14414,8 @@ impl TranslatedString {
                 16913,
                 16931,
                 16949,
+                16956,
+                16966,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15663,6 +15687,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16935,6 +16961,8 @@ impl TranslatedString {
                 16913,
                 16931,
                 16949,
+                16956,
+                16966,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18206,6 +18234,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19478,6 +19508,8 @@ impl TranslatedString {
                 16913,
                 16931,
                 16949,
+                16956,
+                16966,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20749,6 +20781,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22021,6 +22055,8 @@ impl TranslatedString {
                 16913,
                 16931,
                 16949,
+                16956,
+                16966,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23293,6 +23329,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24565,6 +24603,8 @@ impl TranslatedString {
                 19011,
                 19029,
                 19047,
+                19054,
+                19064,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25836,6 +25876,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27108,6 +27150,8 @@ impl TranslatedString {
                 19011,
                 19029,
                 19047,
+                19054,
+                19064,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28379,6 +28423,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29651,6 +29697,8 @@ impl TranslatedString {
                 19011,
                 19029,
                 19047,
+                19054,
+                19064,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30922,6 +30970,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32194,6 +32244,8 @@ impl TranslatedString {
                 19011,
                 19029,
                 19047,
+                19054,
+                19064,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33466,6 +33518,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34738,6 +34792,8 @@ impl TranslatedString {
                 20398,
                 20416,
                 20434,
+                20441,
+                20451,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36009,6 +36065,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37281,6 +37339,8 @@ impl TranslatedString {
                 20398,
                 20416,
                 20434,
+                20441,
+                20451,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38552,6 +38612,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39824,6 +39886,8 @@ impl TranslatedString {
                 20398,
                 20416,
                 20434,
+                20441,
+                20451,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41095,6 +41159,8 @@ impl TranslatedString {
                 "On behalf of",
                 "Sign authorization",
                 "Valid until ledger",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42367,6 +42433,8 @@ impl TranslatedString {
                 20398,
                 20416,
                 20434,
+                20441,
+                20451,
             ];
 
         }
@@ -42976,6 +43044,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__staking_unstake, Self::ethereum__staking_unstake),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__staking_unstake_intro, Self::ethereum__staking_unstake_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__subcall, Self::ethereum__subcall),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__subcall_to, Self::ethereum__subcall_to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__subtitle_input_data_bytes, Self::ethereum__subtitle_input_data_bytes),
         #[cfg(feature = "universal_fw")]

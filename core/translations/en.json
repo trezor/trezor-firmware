@@ -880,6 +880,8 @@
     "ethereum__staking_stake_intro": "Stake ETH on Everstake?",
     "ethereum__staking_unstake": "Unstake",
     "ethereum__staking_unstake_intro": "Unstake ETH from Everstake?",
+    "ethereum__subcall": "Subcall",
+    "ethereum__subcall_to": "Subcall to",
     "ethereum__subtitle_input_data_bytes": {
       "Bolt": "",
       "Caesar": "",

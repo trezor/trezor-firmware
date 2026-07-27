@@ -1265,5 +1265,7 @@
   "1263": "ethereum__view_data_and_hash",
   "1264": "stellar__on_behalf_of",
   "1265": "stellar__sign_authorization",
-  "1266": "stellar__valid_until_ledger"
+  "1266": "stellar__valid_until_ledger",
+  "1267": "ethereum__subcall",
+  "1268": "ethereum__subcall_to"
 }
