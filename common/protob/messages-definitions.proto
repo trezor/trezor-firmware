@@ -140,6 +140,7 @@ enum EthereumERC7730FieldFormatterType {
     FORMATTER_RAW = 4;
     FORMATTER_DATE = 5;
     FORMATTER_CALLDATA = 6;
+    FORMATTER_ENUM = 7;
 }
 
 /**
@@ -194,8 +195,22 @@ message EthereumERC7730FieldInfo {
     // Typically a metadata value, resolved by the parser.
     optional bytes const_token_address = 9;
 
+    // CalldataFormatter params
     optional EthereumERC7730Path callee_path = 10;  // address of the called contract
     optional bytes selector = 11;                   // 4-byte selector, when the embedded calldata is args-only
+
+    // EnumFormatter params
+    repeated EthereumERC7730EnumEntry enum_values = 12;
+}
+
+/**
+ * One entry of an ERC-7730 enum formatter: maps a value
+ * found in calldata to the string displayed to the user.
+ * @embed
+ */
+message EthereumERC7730EnumEntry {
+    required uint32 key = 1;
+    required string value = 2;
 }
 
 /**
