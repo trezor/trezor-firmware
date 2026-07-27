@@ -3404,6 +3404,7 @@ if TYPE_CHECKING:
         const_token_address: "AnyBytes | None"
         callee_path: "EthereumERC7730Path | None"
         selector: "AnyBytes | None"
+        enum_values: "list[EthereumERC7730EnumEntry]"
 
         def __init__(
             self,
@@ -3411,6 +3412,7 @@ if TYPE_CHECKING:
             path: "EthereumERC7730Path",
             label: "str",
             formatter: "EthereumERC7730FieldFormatterType",
+            enum_values: "list[EthereumERC7730EnumEntry] | None" = None,
             token_path: "EthereumERC7730Path | None" = None,
             threshold: "AnyBytes | None" = None,
             decimals: "int | None" = None,
@@ -3424,6 +3426,22 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumERC7730FieldInfo"]:
+            return isinstance(msg, cls)
+
+    class EthereumERC7730EnumEntry(protobuf.MessageType):
+        key: "int"
+        value: "str"
+
+        def __init__(
+            self,
+            *,
+            key: "int",
+            value: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumERC7730EnumEntry"]:
             return isinstance(msg, cls)
 
     class EthereumDisplayFormatInfo(protobuf.MessageType):

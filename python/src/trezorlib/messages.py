@@ -375,6 +375,7 @@ class EthereumERC7730FieldFormatterType(IntEnum):
     FORMATTER_RAW = 4
     FORMATTER_DATE = 5
     FORMATTER_CALLDATA = 6
+    FORMATTER_ENUM = 7
 
 
 class EthereumERC7730ContainerPath(IntEnum):
@@ -4862,6 +4863,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         9: protobuf.Field("const_token_address", "bytes", repeated=False, required=False, default=None),
         10: protobuf.Field("callee_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
         11: protobuf.Field("selector", "bytes", repeated=False, required=False, default=None),
+        12: protobuf.Field("enum_values", "EthereumERC7730EnumEntry", repeated=True, required=False, default=None),
     }
 
     def __init__(
@@ -4870,6 +4872,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         path: "EthereumERC7730Path",
         label: "str",
         formatter: "EthereumERC7730FieldFormatterType",
+        enum_values: Optional[Sequence["EthereumERC7730EnumEntry"]] = None,
         token_path: Optional["EthereumERC7730Path"] = None,
         threshold: Optional["bytes"] = None,
         decimals: Optional["int"] = None,
@@ -4879,6 +4882,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         callee_path: Optional["EthereumERC7730Path"] = None,
         selector: Optional["bytes"] = None,
     ) -> None:
+        self.enum_values: Sequence["EthereumERC7730EnumEntry"] = enum_values if enum_values is not None else []
         self.path = path
         self.label = label
         self.formatter = formatter
@@ -4890,6 +4894,23 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         self.const_token_address = const_token_address
         self.callee_path = callee_path
         self.selector = selector
+
+
+class EthereumERC7730EnumEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("key", "uint32", repeated=False, required=True),
+        2: protobuf.Field("value", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: "int",
+        value: "str",
+    ) -> None:
+        self.key = key
+        self.value = value
 
 
 class EthereumDisplayFormatInfo(protobuf.MessageType):
