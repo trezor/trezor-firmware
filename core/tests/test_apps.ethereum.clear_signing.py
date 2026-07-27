@@ -9,7 +9,11 @@ if not utils.BITCOIN_ONLY:
 
     from ethereum_common import *
     from trezor.enums import EthereumERC7730FieldFormatterType as FT
-    from trezor.messages import EthereumERC7730FieldInfo, EthereumERC7730Path
+    from trezor.messages import (
+        EthereumERC7730EnumEntry,
+        EthereumERC7730FieldInfo,
+        EthereumERC7730Path,
+    )
 
     from apps.ethereum import clear_signing_definitions
     from apps.ethereum.clear_signing import (
@@ -22,6 +26,7 @@ if not utils.BITCOIN_ONLY:
         DirtyAddress,
         DisplayFormat,
         DynamicLeaf,
+        EnumFormatter,
         FieldDefinition,
         InvalidFormatDefinition,
         OutOfBounds,
@@ -630,6 +635,100 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertIsInstance(date_fmt, DateFormatter)
         formatted, _, _ = await_result(date_fmt.format(1616051824, None, None, None))
         self.assertEqual(formatted, "2021-03-18 07:17:04")
+
+    # --- enum formatter ---
+
+    def test_enum_formatter(self):
+        # ERC-7730 `enum` format: an ABI-registered enum for interestRateMode
+        # in Aave's supply/borrow calls.
+        fmt = EnumFormatter({1: "stable", 2: "variable"})
+
+        formatted, token, addr = await_result(fmt.format(1, None, None, None))
+        self.assertEqual(formatted, "stable")
+        self.assertIsNone(token)
+        self.assertIsNone(addr)
+
+        formatted, _, _ = await_result(fmt.format(2, None, None, None))
+        self.assertEqual(formatted, "variable")
+
+        # None -> None
+        formatted, _, _ = await_result(fmt.format(None, None, None, None))
+        self.assertIsNone(formatted)
+
+        # a key missing from the mapping fails clear signing
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(fmt.format(3, None, None, None))
+
+        # non-integer values are rejected
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(fmt.format("stable", None, None, None))
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(fmt.format(b"\x01", None, None, None))
+
+        # an enum pointed at an array renders one entry per line
+        formatted, _, _ = await_result(
+            _format_field_value(fmt, [2, 1], None, None, None)
+        )
+        self.assertEqual(formatted, "variable\nstable")
+
+    def test_from_proto_enum_dispatch(self):
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Interest rate mode",
+            formatter=FT.FORMATTER_ENUM,
+            enum_values=[
+                EthereumERC7730EnumEntry(key=1, value="stable"),
+                EthereumERC7730EnumEntry(key=2, value="variable"),
+            ],
+        )
+        fmt = FieldDefinition.from_proto(info).get_formatter()
+        self.assertIsInstance(fmt, EnumFormatter)
+        formatted, _, _ = await_result(fmt.format(2, None, None, None))
+        self.assertEqual(formatted, "variable")
+
+        # an enum field without its mapping is rejected at decode time
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Interest rate mode",
+            formatter=FT.FORMATTER_ENUM,
+        )
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(info)
+
+    def test_enum_end_to_end(self):
+        # Full path: calldata -> parse a `uint8` parameter -> the field renders
+        # the mapped display string.
+        def make_display_format():
+            return DisplayFormat(
+                binding_context=None,
+                func_sig=b"\x00\x00\x00\x00",
+                provider_name=None,
+                intent="Test",
+                parameter_definitions=[Atomic(make_uint_parser(8))],
+                field_definitions=[
+                    FieldDefinition(
+                        (0,), "Rate mode", EnumFormatter({1: "stable", 2: "variable"})
+                    )
+                ],
+            )
+
+        parameters, fields = await_result(
+            make_display_format().parse_calldata(memoryview(to_bytes(2)), None, None)
+        )
+        self.assertEqual(parameters, [2])
+        (label, formatted, _), token, token_address = fields[0]
+        self.assertEqual(label, "Rate mode")
+        self.assertEqual(formatted, "variable")
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+
+        # a calldata value outside the mapping fails the parse (blind signing)
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(
+                make_display_format().parse_calldata(
+                    memoryview(to_bytes(3)), None, None
+                )
+            )
 
     # --- Multi-value fields (a formatter pointed at an array) ---
 

@@ -96,9 +96,6 @@ class InvalidFormatDefinition(ClearSigningFailed):
     pass
 
 
-# Value Parsers
-
-
 def _check_padding_zero(
     raw_data: memoryview, used_bytes: int, exc: type[ValueOverflow] = ValueOverflow
 ) -> None:
@@ -517,6 +514,28 @@ class CalldataFormatter(RawFormatter):
     def __init__(self, callee_path: Path, selector: bytes | None = None) -> None:
         self.callee_path = callee_path
         self.selector = selector
+class EnumFormatter(FieldFormatter):
+    """ERC-7730 `enum` format: the value read from calldata is a key into a
+    descriptor-supplied mapping and is displayed as the mapped string."""
+
+    def __init__(self, entries: dict[int, str]) -> None:
+        self.entries = entries
+
+    async def format(
+        self,
+        value: AnyValue,
+        _msg: MsgInSignTx,
+        _definitions: Definitions,
+        _path_walker: PathWalker,
+    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+        if value is None:
+            return None, None, None
+        if not isinstance(value, int):
+            raise InvalidFormatDefinition
+        formatted = self.entries.get(value)
+        if formatted is None:
+            raise InvalidFormatDefinition
+        return formatted, None, None
 
 
 async def _format_field_value(
@@ -863,6 +882,15 @@ class FieldDefinition:
             if selector is not None and len(selector) != SC_FUNC_SIG_BYTES:
                 raise InvalidFormatDefinition
             formatter = CalldataFormatter(decode_path(info.callee_path), selector)
+        elif fmt_type == FT.FORMATTER_ENUM:
+            if not info.enum_values:
+                raise InvalidFormatDefinition
+            enum_entries: dict[int, str] = {}
+            for e in info.enum_values:
+                if e.key in enum_entries:
+                    raise InvalidFormatDefinition
+                enum_entries[e.key] = e.value
+            formatter = EnumFormatter(enum_entries)
         else:
             raise InvalidFormatDefinition
 
