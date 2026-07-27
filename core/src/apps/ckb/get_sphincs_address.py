@@ -6,12 +6,17 @@ if TYPE_CHECKING:
     from trezor.messages import CKBSphincsPlusAddress, CKBSphincsPlusGetAddress
 
 
-# Fixed header bytes for the CKB all-in-one quantum-resistant lock script,
-# laid out as [reserved, required_first_n, threshold, pubkey_num, sign_flag].
+# Multisig configuration header [S, R, M, N] of the CKB all-in-one
+# quantum-resistant lock script, in its documented single-sig form `80 01 01 01`.
+# Hashed into lock_args; the witness must carry the same bytes (the on-chain
+# script rehashes them), and hosts must use them to derive matching addresses.
 _MULTISIG_RESERVED_FIELD_VALUE = 0x80
-_REQUIRED_FIRST_N = 0x00
+_REQUIRED_FIRST_N = 0x01
 _THRESHOLD = 0x01
 _PUBKEY_NUM = 0x01
+_MULTISIG_HEADER = bytes(
+    [_MULTISIG_RESERVED_FIELD_VALUE, _REQUIRED_FIRST_N, _THRESHOLD, _PUBKEY_NUM]
+)
 
 # Deployed code hashes of the CKB SPHINCS+ on-chain lock script.
 _CODE_HASH_MAINNET = (
@@ -86,25 +91,15 @@ def _split_extended_mnemonic_to_seed(mnemonic_bytes: bytes) -> bytearray:
 def _compute_lock_args(public_key: bytes, variant: int) -> bytes:
     """Compute the 32-byte CKB lock_args from a SPHINCS+ public key.
 
-    Matches key-vault-wasm get_lock_scrip_arg:
+    Per the lock script's multisig configuration hashing:
         blake2b_256(personal="ckb-sphincs+-sct",
-                    data=[0x80, 0x00, 0x01, 0x01, variant << 1] || public_key)
+                    data=[0x80, 0x01, 0x01, 0x01, variant << 1] || public_key)
     """
     from trezor.crypto.hashlib import blake2b
 
     sign_flag = (variant << 1) & 0xFF
     h = blake2b(outlen=32, personal=b"ckb-sphincs+-sct")
-    h.update(
-        bytes(
-            [
-                _MULTISIG_RESERVED_FIELD_VALUE,
-                _REQUIRED_FIRST_N,
-                _THRESHOLD,
-                _PUBKEY_NUM,
-                sign_flag,
-            ]
-        )
-    )
+    h.update(_MULTISIG_HEADER + bytes([sign_flag]))
     h.update(public_key)
     return h.digest()
 

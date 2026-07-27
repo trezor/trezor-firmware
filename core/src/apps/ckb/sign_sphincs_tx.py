@@ -31,6 +31,7 @@ from .get_sphincs_address import (
     _HASH_TYPE_MAINNET,
     _HASH_TYPE_TESTNET,
     _MAX_ACCOUNT_INDEX,
+    _MULTISIG_HEADER,
     _VALID_VARIANTS,
     _compute_lock_args,
     _require_sphincs_mnemonic,
@@ -69,13 +70,13 @@ _SIG_CHUNK_SIZE = 4096
 
 
 def _construct_witness_lock(variant: int, public_key: bytes, signature: bytes) -> bytes:
-    """Build the witness lock: [0x80,0x00,0x01,0x01,flag] || public_key || signature.
+    """Build the witness lock: multisig header || param flag || public_key || signature.
 
     flag = (variant << 1) | 1 sets the has-signature bit (the script-args flag
-    in get_sphincs_address clears it). Matches key-vault-wasm message_prefix().
+    in get_sphincs_address clears it).
     """
     flag = ((variant << 1) | 1) & 0xFF
-    return bytes([0x80, 0x00, 0x01, 0x01, flag]) + public_key + signature
+    return _MULTISIG_HEADER + bytes([flag]) + public_key + signature
 
 
 async def _stream_and_verify_prev_tx(tx_hash: bytes) -> list["CKBCellOutput"]:
