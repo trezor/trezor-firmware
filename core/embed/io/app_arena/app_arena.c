@@ -210,7 +210,7 @@ ts_t app_arena_create_image(const void* header, size_t header_size,
                             const sha256_digest_t* proof, size_t proof_size,
                             app_image_handle_t* handle) {
   TSH_DECLARE;
-  // ts_t status;
+  ts_t status;
 
   app_arena_t* arena = &g_app_arena;
 
@@ -246,15 +246,11 @@ ts_t app_arena_create_image(const void* header, size_t header_size,
       entry->header_hash = header_hash;
 
       // Verify the signature of the header
-
-      secbool signature_valid = sectrue;  // !@# TODO remove
-
-      /* secbool signature_valid = secfalse;
+      secbool signature_valid = secfalse;
       status = app_header_verify_signature(entry->header, proof, proof_size,
                                            &signature_valid);
       TSH_CHECK_OK(status);
       TSH_CHECK(signature_valid == sectrue, TS_EBADMSG);
-      */
 
       secbool volatile signature_valid_fih = signature_valid;  // FIH
       TSH_CHECK(signature_valid_fih == sectrue, TS_EBADMSG);   // FIH

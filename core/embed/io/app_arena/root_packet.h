@@ -39,11 +39,8 @@ typedef struct {
   /** Bitmask of included Merkle roots. Each bit maps to a ring in
    * app_ring_t. Up to three bits may be set. */
   uint8_t ring_mask;
-  /** Bitmask of signature verification keys. Each bit maps to a public key
-   * in ROOT_PACKET_KEYS. Exactly two bits must be set. */
-  uint8_t sigmask;
   /** Reserved for future use */
-  uint8_t reserved[1];
+  uint8_t reserved[2];
   /** Root packet timestamp */
   uint32_t timestamp;
   /** Merkle roots for the rings in ring_mask. The roots are stored
@@ -58,6 +55,11 @@ typedef struct {
  * in memory, and contains the signatures of the authenticated part hash.
  */
 typedef struct {
+  /** Bitmask of signature verification keys. Each bit maps to a public key
+   * in ROOT_PACKET_KEYS. Exactly two bits must be set. */
+  uint8_t sigmask;
+  /** Reserved for future use */
+  uint8_t reserved[3];
   /* Signatures of authenticated root packet part */
   mldsa44_signature_t signature[2];
 } root_packet_unauth_t;
