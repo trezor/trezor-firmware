@@ -25,6 +25,7 @@
 #define __BIP32_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "ecdsa.h"
@@ -68,7 +69,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t child_num,
                      const uint8_t *chain_code, const uint8_t *private_key,
                      const char *curve, HDNode *out);
 
-int hdnode_from_seed(const uint8_t *seed, int seed_len, const char *curve,
+int hdnode_from_seed(const uint8_t *seed, size_t seed_len, const char *curve,
                      HDNode *out);
 
 #define hdnode_private_ckd_prime(X, I) \
@@ -113,13 +114,13 @@ int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig,
                        int (*is_canonical)(uint8_t by, uint8_t sig[64]));
 
 int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key,
-                          uint8_t *session_key, int *result_size);
+                          uint8_t *session_key, size_t *result_size);
 
-int hdnode_serialize_public(const HDNode *node, uint32_t fingerprint,
-                            uint32_t version, char *str, int strsize);
+size_t hdnode_serialize_public(const HDNode *node, uint32_t fingerprint,
+                               uint32_t version, char *str, size_t strsize);
 
-int hdnode_serialize_private(const HDNode *node, uint32_t fingerprint,
-                             uint32_t version, char *str, int strsize);
+size_t hdnode_serialize_private(const HDNode *node, uint32_t fingerprint,
+                                uint32_t version, char *str, size_t strsize);
 
 int hdnode_deserialize_public(const char *str, uint32_t version,
                               const char *curve, HDNode *node,
@@ -131,7 +132,7 @@ int hdnode_deserialize_private(const char *str, uint32_t version,
 
 int hdnode_get_address_raw(HDNode *node, uint32_t version, uint8_t *addr_raw);
 int hdnode_get_address(HDNode *node, uint32_t version, char *addr,
-                       int addrsize);
+                       size_t addrsize);
 
 const curve_info *get_curve_by_name(const char *curve_name);
 

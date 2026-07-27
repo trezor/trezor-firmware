@@ -24,6 +24,7 @@
 #define __CARDANO_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include "bip32.h"
 #include "options.h"
@@ -38,12 +39,12 @@ extern const curve_info ed25519_cardano_info;
 int hdnode_private_ckd_cardano(HDNode *inout, uint32_t i);
 
 int secret_from_entropy_cardano_icarus(
-    const uint8_t *pass, int pass_len, const uint8_t *entropy, int entropy_len,
-    uint8_t secret_out[CARDANO_SECRET_LENGTH],
+    const uint8_t *pass, size_t pass_len, const uint8_t *entropy,
+    size_t entropy_len, uint8_t secret_out[CARDANO_SECRET_LENGTH],
     void (*progress_callback)(uint32_t current, uint32_t total));
-int secret_from_seed_cardano_ledger(const uint8_t *seed, int seed_len,
+int secret_from_seed_cardano_ledger(const uint8_t *seed, size_t seed_len,
                                     uint8_t secret_out[CARDANO_SECRET_LENGTH]);
-int secret_from_seed_cardano_slip23(const uint8_t *seed, int seed_len,
+int secret_from_seed_cardano_slip23(const uint8_t *seed, size_t seed_len,
                                     uint8_t secret_out[CARDANO_SECRET_LENGTH]);
 
 int hdnode_from_secret_cardano(const uint8_t secret[CARDANO_SECRET_LENGTH],

@@ -877,7 +877,7 @@ void ecdsa_get_address_raw(const uint8_t *pub_key, uint32_t version,
 
 void ecdsa_get_address(const uint8_t *pub_key, uint32_t version,
                        HasherType hasher_pubkey, HasherType hasher_base58,
-                       char *addr, int addrsize) {
+                       char *addr, size_t addrsize) {
   uint8_t raw[MAX_ADDR_RAW_SIZE] = {0};
   size_t prefix_len = address_prefix_bytes_len(version);
   ecdsa_get_address_raw(pub_key, version, hasher_pubkey, raw);
@@ -901,7 +901,7 @@ void ecdsa_get_address_segwit_p2sh_raw(const uint8_t *pub_key, uint32_t version,
 void ecdsa_get_address_segwit_p2sh(const uint8_t *pub_key, uint32_t version,
                                    HasherType hasher_pubkey,
                                    HasherType hasher_base58, char *addr,
-                                   int addrsize) {
+                                   size_t addrsize) {
   uint8_t raw[MAX_ADDR_RAW_SIZE] = {0};
   size_t prefix_len = address_prefix_bytes_len(version);
   ecdsa_get_address_segwit_p2sh_raw(pub_key, version, hasher_pubkey, raw);
@@ -910,7 +910,7 @@ void ecdsa_get_address_segwit_p2sh(const uint8_t *pub_key, uint32_t version,
 }
 
 void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version,
-                   HasherType hasher_base58, char *wif, int wifsize) {
+                   HasherType hasher_base58, char *wif, size_t wifsize) {
   uint8_t wif_raw[MAX_WIF_RAW_SIZE] = {0};
   size_t prefix_len = address_prefix_bytes_len(version);
   address_write_prefix_bytes(version, wif_raw);
@@ -925,7 +925,7 @@ void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version,
 int ecdsa_address_decode(const char *addr, uint32_t version,
                          HasherType hasher_base58, uint8_t *out) {
   if (!addr) return 0;
-  int prefix_len = address_prefix_bytes_len(version);
+  size_t prefix_len = address_prefix_bytes_len(version);
   return base58_decode_check(addr, hasher_base58, out, 20 + prefix_len) ==
              20 + prefix_len &&
          address_check_prefix(out, version);

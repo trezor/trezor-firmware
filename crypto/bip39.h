@@ -43,12 +43,14 @@ void bip39_cache_clear(void);
 
 extern const char *const BIP39_WORDLIST_ENGLISH[BIP39_WORD_COUNT];
 
-const char *mnemonic_from_data(const uint8_t *data, int len);
+const char *mnemonic_from_data(const uint8_t *data, size_t len);
 void mnemonic_clear(void);
 
 int mnemonic_check(const char *mnemonic);
 
-int mnemonic_to_bits(const char *mnemonic, uint8_t *bits);
+// Returns the number of bits written to `bits`, or 0 if the mnemonic is
+// invalid.
+size_t mnemonic_to_bits(const char *mnemonic, uint8_t *bits);
 
 // passphrase must be at most 256 characters otherwise it would be truncated
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
@@ -62,8 +64,8 @@ typedef struct {
 } found_word;
 
 found_word mnemonic_find_word(const char *word);
-const char *mnemonic_complete_word(const char *prefix, int len);
+const char *mnemonic_complete_word(const char *prefix, size_t len);
 const char *mnemonic_get_word(int index);
-uint32_t mnemonic_word_completion_mask(const char *prefix, int len);
+uint32_t mnemonic_word_completion_mask(const char *prefix, size_t len);
 
 #endif

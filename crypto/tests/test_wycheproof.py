@@ -894,21 +894,21 @@ lib.aes_ccm_decrypt.argtypes = [
 lib.aes_ccm_decrypt.restype = ctypes.c_int
 lib.pbkdf2_hmac_sha256.argtypes = [
     ctypes.c_char_p,
-    ctypes.c_int,
+    ctypes.c_size_t,
     ctypes.c_char_p,
-    ctypes.c_int,
+    ctypes.c_size_t,
     ctypes.c_uint32,
     ctypes.c_char_p,
-    ctypes.c_int,
+    ctypes.c_size_t,
 ]
 lib.pbkdf2_hmac_sha512.argtypes = [
     ctypes.c_char_p,
-    ctypes.c_int,
+    ctypes.c_size_t,
     ctypes.c_char_p,
-    ctypes.c_int,
+    ctypes.c_size_t,
     ctypes.c_uint32,
     ctypes.c_char_p,
-    ctypes.c_int,
+    ctypes.c_size_t,
 ]
 
 curve25519_dh_vectors = generate_curve25519_dh("x25519_test.json")

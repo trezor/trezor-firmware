@@ -113,11 +113,11 @@ START_TEST(test_bip32_cardano_hdnode_vector_1) {
 
   uint8_t mnemonic_bits[66];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
-  int mnemonic_bits_len = mnemonic_to_bits(
+  size_t mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
-  ck_assert_int_eq(mnemonic_bits_len, 132);
+  ck_assert_uint_eq(mnemonic_bits_len, 132);
   secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
@@ -159,11 +159,11 @@ START_TEST(test_bip32_cardano_hdnode_vector_2) {
 
   uint8_t mnemonic_bits[66];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
-  int mnemonic_bits_len = mnemonic_to_bits(
+  size_t mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
-  ck_assert_int_eq(mnemonic_bits_len, 132);
+  ck_assert_uint_eq(mnemonic_bits_len, 132);
   secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
@@ -200,11 +200,11 @@ START_TEST(test_bip32_cardano_hdnode_vector_3) {
 
   uint8_t mnemonic_bits[66];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
-  int mnemonic_bits_len = mnemonic_to_bits(
+  size_t mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
-  ck_assert_int_eq(mnemonic_bits_len, 132);
+  ck_assert_uint_eq(mnemonic_bits_len, 132);
   secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
@@ -241,11 +241,11 @@ START_TEST(test_bip32_cardano_hdnode_vector_4) {
 
   uint8_t mnemonic_bits[66];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
-  int mnemonic_bits_len = mnemonic_to_bits(
+  size_t mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
-  ck_assert_int_eq(mnemonic_bits_len, 132);
+  ck_assert_uint_eq(mnemonic_bits_len, 132);
   secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
@@ -283,11 +283,11 @@ START_TEST(test_bip32_cardano_hdnode_vector_5) {
 
   uint8_t mnemonic_bits[66];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
-  int mnemonic_bits_len = mnemonic_to_bits(
+  size_t mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
-  ck_assert_int_eq(mnemonic_bits_len, 132);
+  ck_assert_uint_eq(mnemonic_bits_len, 132);
   secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
@@ -326,11 +326,11 @@ START_TEST(test_bip32_cardano_hdnode_vector_6) {
 
   uint8_t mnemonic_bits[66];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
-  int mnemonic_bits_len = mnemonic_to_bits(
+  size_t mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
-  ck_assert_int_eq(mnemonic_bits_len, 132);
+  ck_assert_uint_eq(mnemonic_bits_len, 132);
   secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
@@ -370,11 +370,11 @@ START_TEST(test_bip32_cardano_hdnode_vector_7) {
 
   uint8_t mnemonic_bits[66];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
-  int mnemonic_bits_len = mnemonic_to_bits(
+  size_t mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
-  ck_assert_int_eq(mnemonic_bits_len, 132);
+  ck_assert_uint_eq(mnemonic_bits_len, 132);
   secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
@@ -415,11 +415,11 @@ START_TEST(test_bip32_cardano_hdnode_vector_8) {
 
   uint8_t mnemonic_bits[66];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
-  int mnemonic_bits_len = mnemonic_to_bits(
+  size_t mnemonic_bits_len = mnemonic_to_bits(
       "found differ bulb shadow wrist blue bind vessel deposit tip pelican "
       "action surprise weapon check fiction muscle this",
       mnemonic_bits);
-  ck_assert_int_eq(mnemonic_bits_len, 198);
+  ck_assert_uint_eq(mnemonic_bits_len, 198);
   secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
@@ -460,12 +460,12 @@ START_TEST(test_bip32_cardano_hdnode_vector_9) {
 
   uint8_t mnemonic_bits[66];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
-  int mnemonic_bits_len = mnemonic_to_bits(
+  size_t mnemonic_bits_len = mnemonic_to_bits(
       "balance exotic ranch knife glory slow tape favorite yard gym awake "
       "ill exist useless parent aim pig stay effort into square gasp credit "
       "butter",
       mnemonic_bits);
-  ck_assert_int_eq(mnemonic_bits_len, 264);
+  ck_assert_uint_eq(mnemonic_bits_len, 264);
   secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);

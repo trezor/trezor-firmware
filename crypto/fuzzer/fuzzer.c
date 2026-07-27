@@ -342,7 +342,7 @@ int fuzz_base58_encode_check(void) {
   size_t raw_inlen = fuzzer_length;
   memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
 
-  int ret = 0;
+  size_t ret = 0;
   // run multiple hasher variants for the same input
   base58_encode_check(in_buffer, raw_inlen, HASHER_SHA2D, out_buffer, outlen);
   base58_encode_check(in_buffer, raw_inlen, HASHER_BLAKED, out_buffer, outlen);

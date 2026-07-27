@@ -230,9 +230,9 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_public(mp_obj_t self,
 
   vstr_t xpub = {0};
   vstr_init_len(&xpub, XPUB_MAXLEN);
-  int written = hdnode_serialize_public(&o->hdnode, o->fingerprint, ver,
-                                        xpub.buf, xpub.alloc);
-  if (written <= 0) {
+  size_t written = hdnode_serialize_public(&o->hdnode, o->fingerprint, ver,
+                                           xpub.buf, xpub.alloc);
+  if (written == 0) {
     vstr_clear(&xpub);
     mp_raise_ValueError(MP_ERROR_TEXT("Failed to serialize"));
   }

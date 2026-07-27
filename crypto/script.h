@@ -23,9 +23,10 @@
 #ifndef __SCRIPT_H__
 #define __SCRIPT_H__
 
+#include <stddef.h>
 #include <stdint.h>
 
-int script_output_to_address(const uint8_t *script, int scriptlen, char *addr,
-                             int addrsize);
+size_t script_output_to_address(const uint8_t *script, size_t scriptlen,
+                                char *addr, size_t addrsize);
 
 #endif

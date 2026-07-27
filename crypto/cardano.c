@@ -84,7 +84,7 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index) {
 
   // checks for hardened/non-hardened derivation, keysize 32 means we are
   // dealing with public key and thus non-h, keysize 64 is for private key
-  int keysize = 32;
+  size_t keysize = 32;
   if (index & 0x80000000) {
     keysize = 64;
   }
@@ -180,7 +180,7 @@ int hdnode_from_secret_cardano(const uint8_t secret[CARDANO_SECRET_LENGTH],
 
 // Derives the root Cardano secret from a master secret, aka seed, as defined in
 // SLIP-0023.
-int secret_from_seed_cardano_slip23(const uint8_t *seed, int seed_len,
+int secret_from_seed_cardano_slip23(const uint8_t *seed, size_t seed_len,
                                     uint8_t secret_out[CARDANO_SECRET_LENGTH]) {
   LOCAL_CONFIDENTIAL uint8_t I[SHA512_DIGEST_LENGTH];
   LOCAL_CONFIDENTIAL HMAC_SHA512_CTX ctx;
@@ -203,7 +203,7 @@ int secret_from_seed_cardano_slip23(const uint8_t *seed, int seed_len,
 // Derives the root Cardano secret from a BIP-32 master secret via the Ledger
 // derivation:
 // https://github.com/cardano-foundation/CIPs/blob/09d7d8ee1bd64f7e6b20b5a6cae088039dce00cb/CIP-0003/Ledger.md
-int secret_from_seed_cardano_ledger(const uint8_t *seed, int seed_len,
+int secret_from_seed_cardano_ledger(const uint8_t *seed, size_t seed_len,
                                     uint8_t secret_out[CARDANO_SECRET_LENGTH]) {
   LOCAL_CONFIDENTIAL uint8_t chain_code[SHA256_DIGEST_LENGTH];
   LOCAL_CONFIDENTIAL uint8_t root_key[SHA512_DIGEST_LENGTH];
@@ -211,7 +211,7 @@ int secret_from_seed_cardano_ledger(const uint8_t *seed, int seed_len,
   LOCAL_CONFIDENTIAL HMAC_SHA512_CTX sctx;
 
   const uint8_t *intermediate_result = seed;
-  int intermediate_result_len = seed_len;
+  size_t intermediate_result_len = seed_len;
   do {
     // STEP 1: derive a master secret like in BIP-32/SLIP-10
     hmac_sha512_Init(&sctx, (const uint8_t *)ED25519_SEED_NAME,
@@ -262,8 +262,8 @@ _Static_assert(
 // scheme:
 // https://github.com/cardano-foundation/CIPs/blob/09d7d8ee1bd64f7e6b20b5a6cae088039dce00cb/CIP-0003/Icarus.md
 int secret_from_entropy_cardano_icarus(
-    const uint8_t *pass, int pass_len, const uint8_t *entropy, int entropy_len,
-    uint8_t secret_out[CARDANO_SECRET_LENGTH],
+    const uint8_t *pass, size_t pass_len, const uint8_t *entropy,
+    size_t entropy_len, uint8_t secret_out[CARDANO_SECRET_LENGTH],
     void (*progress_callback)(uint32_t, uint32_t)) {
   LOCAL_CONFIDENTIAL PBKDF2_HMAC_SHA512_CTX pctx;
   LOCAL_CONFIDENTIAL uint8_t digest[SHA512_DIGEST_LENGTH];
