@@ -46,10 +46,18 @@ if TYPE_CHECKING:
     # Assumes that the memoryview contains just that value.
     Parser = Callable[[memoryview], Value]
 
+    # One displayed row: ((label, formatted value, is_mono), token, token_address)
+    DisplayedField = tuple[
+        tuple[str, str | AboveThreshold | None, bool | None],
+        EthereumTokenInfo | None,
+        AnyBytes | None,
+    ]
+
 
 SC_FUNC_SIG_BYTES = const(4)
 _EVM_WORD_SIZE = const(32)  # in bytes
 _EVM_WORD_BITS = const(8 * _EVM_WORD_SIZE)
+_ADDRESS_BYTES = const(20)
 
 
 class ClearSigningFailed(Exception):
@@ -102,11 +110,10 @@ def _check_padding_zero(
 
 
 def parse_address(raw_data: memoryview) -> Value:
-    _ZERO_PADDING = const(20)
     if len(raw_data) < _EVM_WORD_SIZE:
         raise OutOfBounds
-    _check_padding_zero(raw_data, _ZERO_PADDING, DirtyAddress)
-    return bytes(raw_data[_EVM_WORD_SIZE - _ZERO_PADDING :])
+    _check_padding_zero(raw_data, _ADDRESS_BYTES, DirtyAddress)
+    return bytes(raw_data[_EVM_WORD_SIZE - _ADDRESS_BYTES :])
 
 
 def parse_uint256(raw_data: memoryview) -> int:
@@ -496,6 +503,22 @@ class DateFormatter(FieldFormatter):
         raise InvalidFormatDefinition
 
 
+class CalldataFormatter(RawFormatter):
+    """ERC-7730 `calldata` format: the field's value is the embedded calldata
+    of a nested call, rendered with the display format of the called contract
+    (resolved from `callee_path`). Unlike every other formatter it expands
+    into multiple display rows, so `DisplayFormat.parse_calldata` handles it
+    directly (see `_expand_calldata_field`) instead of going through the
+    single-value `format` interface. Subclassing `RawFormatter` is defense
+    in depth: should a code path ever fail to special-case this formatter,
+    the inherited `format` renders the blob as raw hex instead of failing
+    clear signing."""
+
+    def __init__(self, callee_path: Path, selector: bytes | None = None) -> None:
+        self.callee_path = callee_path
+        self.selector = selector
+
+
 async def _format_field_value(
     formatter: FieldFormatter,
     value: AnyValue,
@@ -833,6 +856,13 @@ class FieldDefinition:
             formatter = RawFormatter
         elif fmt_type == FT.FORMATTER_DATE:
             formatter = DateFormatter
+        elif fmt_type == FT.FORMATTER_CALLDATA:
+            if info.callee_path is None:
+                raise InvalidFormatDefinition
+            selector = bytes(info.selector) if info.selector is not None else None
+            if selector is not None and len(selector) != SC_FUNC_SIG_BYTES:
+                raise InvalidFormatDefinition
+            formatter = CalldataFormatter(decode_path(info.callee_path), selector)
         else:
             raise InvalidFormatDefinition
 
@@ -851,17 +881,17 @@ class DisplayFormat:
         self,
         binding_context: BindingContext | None,
         func_sig: bytes,
-        provider_name: str | None,
         intent: str,
         parameter_definitions: list[ABIValue],
         field_definitions: list[FieldDefinition],
+        provider_name: str | None = None,
     ) -> None:
         self.binding_context = binding_context
-        self.provider_name = provider_name
         self.func_sig = func_sig
         self.intent = intent
         self.parameter_definitions = parameter_definitions
         self.field_definitions = field_definitions
+        self.provider_name = provider_name
 
         self.parameters = []
 
@@ -873,21 +903,26 @@ class DisplayFormat:
 
         return self.binding_context.matches(chain_id, address)
 
+    def matches_call(self, func_sig: bytes, chain_id: int, address: bytes) -> bool:
+        """Assert the received descriptor is what was requested"""
+        return self.func_sig == func_sig and self.matches_context(chain_id, address)
+
     async def parse_calldata(
         self,
         calldata: memoryview,
         msg: MsgInSignTx,
         defs: Definitions,
-    ) -> tuple[
-        list[AnyValue],
-        list[
-            tuple[
-                tuple[str, str | AboveThreshold | None, bool | None],
-                EthereumTokenInfo | None,
-                AnyBytes | None,
-            ]
-        ],
-    ]:
+        nested: bool = False,
+        override_callee: bytes | None = None,
+    ) -> tuple[list[AnyValue], list[DisplayedField]]:
+        """Parse `calldata` (without the selector) and format the display fields.
+
+        `nested` marks the parse of an embedded subcall's calldata (see
+        `_expand_calldata_field`): container paths other than `@.to` are
+        unresolvable there, and any further calldata fields render as raw
+        hex instead of triggering tertiary lookups. `override_callee` substitutes
+        the `@.to` container path (the subcall's callee, not the outer
+        transaction's recipient)."""
         parameters: list[AnyValue] = []
 
         offset = 0
@@ -913,13 +948,28 @@ class DisplayFormat:
                 return path
             if isinstance(path, int):  # ContainerPath
                 # standard container paths like @.from, @.value...
+                if path == ContainerPath.To:
+                    # `@.to` means "the contract this call goes to". For the
+                    # outer transaction that is `msg.to`. When parsing a
+                    # subcall, the wrapper (`msg.to`) merely forwards the
+                    # call: `override_callee` holds the actual callee, so e.g. a
+                    # nested transfer's `token_path=@.to` resolves to the
+                    # token contract, not to the wrapper.
+                    if override_callee is not None:
+                        return override_callee
+                    return bytes_from_address(msg.to)
+                if nested:
+                    # In a subcall, `@.from` is ambiguous - the wrapper
+                    # contract if it CALLs the callee, the original signer if
+                    # it DELEGATECALLs - and `@.value` is decided by wrapper
+                    # logic; neither can be resolved from `msg` without
+                    # risking a confidently wrong display.
+                    raise InvalidFormatDefinition
                 if path == ContainerPath.From:
                     account, _ = get_account_and_path(msg.address_n)
                     return account
                 elif path == ContainerPath.Value:
                     return int.from_bytes(msg.value, "big")
-                elif path == ContainerPath.To:
-                    return bytes_from_address(msg.to)
                 else:
                     raise NotImplementedError  # TODO
             else:
@@ -959,17 +1009,26 @@ class DisplayFormat:
                     raise InvalidFormatDefinition
                 return p
 
-        fields: list[
-            tuple[
-                tuple[str, str | AboveThreshold | None, bool | None],
-                EthereumTokenInfo | None,
-                AnyBytes | None,
-            ]
-        ] = []
+        fields: list[DisplayedField] = []
         for field_definition in self.field_definitions:
             try:
-                value = get_value_for_path(field_definition.path)
                 formatter = field_definition.get_formatter()
+                if isinstance(formatter, CalldataFormatter):
+                    # Expands into multiple rows (the subcall's provider and
+                    # intent, then its own fields), so it bypasses the
+                    # single-value formatting below.
+                    fields.extend(
+                        await _expand_calldata_field(
+                            field_definition,
+                            formatter,
+                            get_value_for_path,
+                            msg,
+                            defs,
+                            nested,
+                        )
+                    )
+                    continue
+                value = get_value_for_path(field_definition.path)
                 formatted, token, token_address = await _format_field_value(
                     formatter, value, msg, defs, get_value_for_path
                 )
@@ -1046,6 +1105,127 @@ async def request_definitions(
     return definitions, display_format
 
 
+async def _find_display_format(
+    func_sig: bytes, address_bytes: bytes, msg: MsgInSignTx, nested: bool = False
+) -> DisplayFormat | None:
+    """Find a display format for calling `func_sig` on the `address_bytes`
+    contract, trying built-ins, then the definitions provided in the initial
+    request, then a definition request over the wire."""
+
+    from .clear_signing_definitions import all_display_formats
+
+    for f in all_display_formats():
+        if f.matches_call(func_sig, msg.chain_id, address_bytes):
+            return f
+
+    if not nested and msg.definitions and msg.definitions.encoded_display_format:
+        f = DisplayFormat.from_encoded(msg.definitions.encoded_display_format)
+        if f.matches_call(func_sig, msg.chain_id, address_bytes):
+            return f
+
+    if msg.supports_definition_request:
+        _, f = await request_definitions(msg.chain_id, address_bytes, func_sig)
+        if f is not None and f.matches_call(func_sig, msg.chain_id, address_bytes):
+            return f
+
+    return None
+
+
+async def _expand_calldata_field(
+    field_definition: FieldDefinition,
+    formatter: CalldataFormatter,
+    path_walker: PathWalker,
+    msg: MsgInSignTx,
+    defs: Definitions,
+    nested: bool,
+) -> list[DisplayedField]:
+    """Expand one `calldata` field - an embedded subcall - into display rows.
+
+    The field's path resolves to one `bytes` blob of embedded calldata, and
+    `callee_path` to the address of the contract it is sent to. On success
+    the rows are the subcall's provider and intent, followed by the fields
+    of the callee's display format, labels prefixed. Whenever the subcall
+    cannot be clear-signed - no display format available, malformed inner
+    calldata, unresolvable inner fields - it degrades to two rows, the
+    callee and the raw hex blob, instead of failing the outer transaction."""
+    from .sc_constants import lookup_known_address
+
+    blob = path_walker(field_definition.path)
+    if not isinstance(blob, bytes):
+        # Calldata should be a bytes field
+        raise InvalidFormatDefinition
+
+    callee = path_walker(formatter.callee_path)
+    if not isinstance(callee, bytes) or len(callee) != _ADDRESS_BYTES:
+        raise InvalidFormatDefinition
+
+    def callee_str() -> str:
+        return lookup_known_address(msg.chain_id, callee) or address_from_bytes(
+            callee, defs.network
+        )
+
+    def raw_rows() -> list[DisplayedField]:
+        """No subparsing. Show the callee and the raw hex blob."""
+        from ubinascii import hexlify
+
+        return [
+            ((TR.ethereum__subcall_to, callee_str(), None), None, None),
+            ((field_definition.label, hexlify(blob).decode(), None), None, None),
+        ]
+
+    if nested:
+        # already inside a subcall: no tertiary lookups
+        return raw_rows()
+
+    if formatter.selector is not None:
+        # per ERC-7730, an explicit selector means the blob is args-only
+        func_sig = formatter.selector
+        body = memoryview(blob)
+    elif len(blob) >= SC_FUNC_SIG_BYTES:
+        func_sig = bytes(blob[:SC_FUNC_SIG_BYTES])
+        body = memoryview(blob)[SC_FUNC_SIG_BYTES:]
+    else:
+        return raw_rows()
+
+    try:
+        inner_format = await _find_display_format(func_sig, callee, msg, nested=True)
+        if inner_format is None:
+            return raw_rows()
+        _, inner_fields = await inner_format.parse_calldata(
+            body, msg, defs, nested=True, override_callee=callee
+        )
+    except (ClearSigningFailed, DataError) as e:
+        if __debug__:
+            from trezor import log
+
+            log.debug(
+                __name__,
+                'clear signing: subcall "%s" degraded to raw hex (%s)',
+                field_definition.label,
+                type(e).__name__,
+            )
+        return raw_rows()
+
+    subcall = TR.ethereum__subcall
+    rows: list[DisplayedField] = [
+        (
+            (
+                f"({subcall}) {TR.words__provider}",
+                inner_format.provider_name or callee_str(),
+                None,
+            ),
+            None,
+            None,
+        ),
+        ((f"({subcall}) {TR.words__intent}", inner_format.intent, None), None, None),
+    ]
+    for (inner_label, formatted, is_mono), token, token_address in inner_fields:
+        rows.append(
+            ((f"({subcall}) {inner_label}", formatted, is_mono), token, token_address)
+        )
+    return rows
+
+
 async def try_confirm(
     data: AnyBytes,
     address_bytes: bytes,
@@ -1058,7 +1238,6 @@ async def try_confirm(
     from .clear_signing_definitions import (
         APPROVE_DISPLAY_FORMAT,
         TRANSFER_DISPLAY_FORMAT,
-        all_display_formats,
     )
 
     if not address_bytes:
@@ -1069,30 +1248,7 @@ async def try_confirm(
 
     func_sig = bytes(data[0:SC_FUNC_SIG_BYTES])
 
-    display_format = None
-    for f in all_display_formats():
-        # Start by trying built-in definitions...
-        if f.func_sig == func_sig and f.matches_context(msg.chain_id, address_bytes):
-            display_format = f
-            break
-    else:
-        if msg.definitions and msg.definitions.encoded_display_format:
-            # ... look at definitions provided in the initial request...
-            f = DisplayFormat.from_encoded(msg.definitions.encoded_display_format)
-            if f.func_sig == func_sig and f.matches_context(
-                msg.chain_id, address_bytes
-            ):
-                display_format = f
-        if display_format is None:
-            # ... finally request the display format via another call!
-            if msg.supports_definition_request:
-                _, f = await request_definitions(msg.chain_id, address_bytes, func_sig)
-                if f:
-                    if f.func_sig == func_sig and f.matches_context(
-                        msg.chain_id, address_bytes
-                    ):
-                        display_format = f
-
+    display_format = await _find_display_format(func_sig, address_bytes, msg)
     if display_format is None:
         return False
 
