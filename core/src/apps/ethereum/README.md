@@ -86,6 +86,60 @@ Had the struct contained a dynamic field (like LiFi's `swapData` structs with
 `bytes callData`), words w7/w8 would instead be offsets relative to 0xe0, with
 the two struct bodies following after the heads.
 
+## Nested invocations (`calldata` fields)
+
+A display field with `FORMATTER_CALLDATA` points at a dynamic `bytes` value
+holding an **embedded function call** (a router/multicall/`execute()`-style
+wrapper forwarding a call to another contract). The formatter carries two
+params: `callee_path`, a path to the address of the called contract, and an
+optional `selector` - per ERC-7730, an explicit selector means the blob is
+args-only; otherwise the blob's first 4 bytes are the selector.
+
+`_expand_calldata_field` resolves a display format for `(chain_id, callee,
+inner selector)` via `_find_display_format` - built-ins, then a wire
+definition request; the host-provided blob slot is skipped for nested lookups
+since it holds the one format embedded for the *outer* call - and, on
+success, runs the inner format's `parse_calldata` over the blob's body. The
+subcall is **flattened** into the outer confirm screen as plain rows: a
+`(Subcall) Provider` row (the inner format's `provider_name`, falling back to
+the callee's `KNOWN_ADDRESSES` name, falling back to the callee
+address), a `(Subcall) Intent` row, then the inner format's own fields with
+`(Subcall) `-prefixed labels. There is no separate confirmation for the
+subcall. The field's path must resolve to exactly one `bytes` blob -
+multicall-style `bytes[]` arrays are not (yet) supported.
+
+Rules that keep the nested parse honest:
+
+* **Depth is capped at 1.** The inner parse runs with `nested=True`: a
+  `calldata` field found *inside* a subcall degrades as below, with no
+  tertiary lookup.
+* **`@.to` is overridden to the callee.** Container paths in the inner format
+  refer to the subcall, not the outer transaction - critically, the built-in
+  ERC-20 `transfer`/`approve` formats resolve their token via
+  `token_path=@.to`, which must be the callee (the token contract), never the
+  outer `to` (the wrapper).
+* **`@.from` and `@.value` are rejected when nested.** The subcall's
+  `msg.sender` is ambiguous: it is the wrapper contract if the wrapper
+  `CALL`s the callee, but the original signer if it `DELEGATECALL`s
+  (self-multicall / `execute()`-style wrappers) - and the device cannot tell
+  which from the transaction. Since `@.from` typically labels a beneficiary,
+  guessing wrong would confidently display the wrong recipient. The
+  forwarded `@.value` is decided by wrapper logic and genuinely unknowable.
+  Either field raises and the subcall degrades as below.
+* **The response to a definition request is pinned to the request**: every
+  candidate must pass `DisplayFormat.matches_call` (selector + binding
+  context against the callee), so a validly-signed blob for a different
+  function or contract cannot be substituted in.
+
+Fallback ladder: if no inner display format is available (the "easy case" -
+e.g. contract not supported), or the inner parse fails
+(`ClearSigningFailed`/`DataError`), the subcall degrades to two rows - the
+callee under `Subcall to`, and the raw hex blob under the field's own label -
+and the outer transaction still clear-signs. Only a malformed `calldata`
+field *definition* itself (a path that isn't `bytes`, a callee that isn't an
+address) fails the whole display format, falling back to blind signing like
+any other malformed definition.
+
 ## Failure behavior
 
 All parsing errors derive from `ClearSigningFailed`. `sign_tx` catches it and

@@ -5,17 +5,23 @@ import unittest
 
 if not utils.BITCOIN_ONLY:
 
+    from ubinascii import hexlify
+
     from ethereum_common import *
     from trezor.enums import EthereumERC7730FieldFormatterType as FT
     from trezor.messages import EthereumERC7730FieldInfo, EthereumERC7730Path
 
+    from apps.ethereum import clear_signing_definitions
     from apps.ethereum.clear_signing import (
         AddressNameFormatter,
         Array,
         Atomic,
+        CalldataFormatter,
+        ContainerPath,
         DateFormatter,
         DirtyAddress,
         DisplayFormat,
+        DynamicLeaf,
         FieldDefinition,
         InvalidFormatDefinition,
         OutOfBounds,
@@ -23,12 +29,14 @@ if not utils.BITCOIN_ONLY:
         TokenAmountFormatter,
         Tuple,
         ValueOverflow,
+        _expand_calldata_field,
         _format_field_value,
         make_fixed_bytes_parser,
         make_int_parser,
         make_uint_parser,
         parse_address,
         parse_bool,
+        parse_bytes,
         parse_string,
         parse_uint256,
     )
@@ -921,6 +929,365 @@ class TestEthereumClearSigning(unittest.TestCase):
         fmt = TokenAmountFormatter()
         with self.assertRaises(InvalidFormatDefinition):
             await_result(fmt.format(1, None, None, None))
+
+    # --- `calldata` fields (nested invocations) ---
+
+    TRANSFER_SIG = b"\xa9\x05\x9c\xbb"
+    RECIPIENT = unhexlify("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+    # stETH: mapped to "Lido" in KNOWN_ADDRESSES, exercising the provider /
+    # callee name resolution. Will be updated once those definitions are removed.
+    CALLEE = unhexlify("ae7ab96520de3a18e5e111b5eaab095312d7fe84")
+
+    @staticmethod
+    def _msg(**kwargs):
+        class _Msg:
+            chain_id = 1
+            definitions = None
+            supports_definition_request = False
+            value = b"\x00"
+            to = "0x0000000000000000000000000000000000000000"
+            address_n = []
+
+        msg = _Msg()
+        for k, v in kwargs.items():
+            setattr(msg, k, v)
+        return msg
+
+    @staticmethod
+    def _defs():
+        class _Defs:
+            network = make_eth_network()
+
+            def __init__(self):
+                self.token_requests = []
+
+            def get_token(self, address):
+                self.token_requests.append(bytes(address))
+                return make_eth_token(symbol="TST", decimals=6, address=address)
+
+        return _Defs()
+
+    def _transfer_blob(self):
+        # ERC-20 transfer(RECIPIENT, 2 TST), selector included
+        return self.TRANSFER_SIG + b"\x00" * 12 + self.RECIPIENT + to_bytes(2_000_000)
+
+    def _outer_format(self, formatter):
+        # wrapper(address callee, bytes data) with `data` displayed by `formatter`
+        return DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            intent="Test",
+            parameter_definitions=[
+                Atomic(parse_address),  # callee
+                DynamicLeaf(parse_bytes),  # data
+            ],
+            field_definitions=[FieldDefinition((1,), "Wrapped call", formatter)],
+        )
+
+    def _outer_calldata(self, blob, callee=None):
+        return (
+            b"\x00" * 12
+            + (callee or self.CALLEE)  # left-pad the address to a 32-byte word
+            + to_bytes(64)  # pointer to `data`
+            + to_bytes(len(blob))
+            + blob
+        )
+
+    def _expand(self, blob, formatter=None, callee=None, **parse_kwargs):
+        """Run the full nested-call pipeline and return the display rows.
+
+        Wraps `blob` (the embedded subcall's calldata) into a
+        `wrapper(callee, data)` outer transaction, parses it with the outer
+        display format whose one field is a calldata `formatter` (default:
+        plain `CalldataFormatter` reading the callee from parameter 0), and
+        returns only that expansion's rows - i.e. exactly what the subcall
+        contributes to the confirm screen."""
+        display_format = self._outer_format(
+            formatter or CalldataFormatter(callee_path=(0,))
+        )
+        _, fields = await_result(
+            display_format.parse_calldata(
+                memoryview(self._outer_calldata(blob, callee)),
+                self._msg(),
+                self._defs(),
+                **parse_kwargs,
+            )
+        )
+        return fields
+
+    def _assert_raw_fallback(self, fields, blob, callee_str="Lido"):
+        # the fallback is two rows: the callee, then the raw hex blob
+        self.assertEqual(len(fields), 2)
+        self.assertEqual(fields[0][0][:2], ("Subcall to", callee_str))
+        self.assertEqual(fields[1][0][:2], ("Wrapped call", hexlify(blob).decode()))
+        for _, token, token_address in fields:
+            self.assertIsNone(token)
+            self.assertIsNone(token_address)
+
+    def test_from_proto_calldata_formatter(self):
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[1]),
+            label="Wrapped call",
+            formatter=FT.FORMATTER_CALLDATA,
+            callee_path=EthereumERC7730Path(path=[0]),
+            selector=self.TRANSFER_SIG,
+        )
+        fmt = FieldDefinition.from_proto(info).get_formatter()
+        self.assertIsInstance(fmt, CalldataFormatter)
+        self.assertEqual(fmt.callee_path, (0,))
+        self.assertEqual(fmt.selector, self.TRANSFER_SIG)
+
+        # callee_path is mandatory
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[1]),
+            label="Wrapped call",
+            formatter=FT.FORMATTER_CALLDATA,
+        )
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(info)
+
+        # a selector must be exactly 4 bytes
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[1]),
+            label="Wrapped call",
+            formatter=FT.FORMATTER_CALLDATA,
+            callee_path=EthereumERC7730Path(path=[0]),
+            selector=b"\xa9\x05",
+        )
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(info)
+
+    def test_calldata_nested_transfer(self):
+        # End to end: the embedded blob is an ERC-20 transfer, resolved against
+        # the built-in TRANSFER format - offline, no definition requests. The
+        # inner token must resolve via the *callee* (`@.to` override), not the
+        # outer transaction's `to`.
+        blob = self._transfer_blob()
+        display_format = self._outer_format(CalldataFormatter(callee_path=(0,)))
+        defs = self._defs()
+
+        _, fields = await_result(
+            display_format.parse_calldata(
+                memoryview(self._outer_calldata(blob)), self._msg(), defs
+            )
+        )
+
+        self.assertEqual(len(fields), 4)
+        # built-in TRANSFER has no provider_name -> KNOWN_ADDRESSES fallback
+        self.assertEqual(fields[0][0][:2], ("(Subcall) Provider", "Lido"))
+        self.assertEqual(fields[1][0][:2], ("(Subcall) Intent", "Send"))
+        (label, formatted, _), _, _ = fields[2]
+        self.assertEqual(label, "(Subcall) To")
+        self.assertEqual(formatted.lower(), "0x" + hexlify(self.RECIPIENT).decode())
+        (label, formatted, _), token, token_address = fields[3]
+        self.assertEqual(label, "(Subcall) Amount")
+        self.assertEqual(formatted, "2 TST")
+        self.assertEqual(token.symbol, "TST")
+        self.assertEqual(token_address, self.CALLEE)
+        # the token was looked up by the callee address (`@.to` override)
+        self.assertEqual(defs.token_requests, [self.CALLEE])
+
+    def test_calldata_selector_param(self):
+        # An explicit selector means the blob is args-only (per ERC-7730).
+        blob = self._transfer_blob()[4:]  # strip the selector
+        fields = self._expand(
+            blob, CalldataFormatter(callee_path=(0,), selector=self.TRANSFER_SIG)
+        )
+
+        self.assertEqual(len(fields), 4)
+        self.assertEqual(fields[1][0][:2], ("(Subcall) Intent", "Send"))
+
+    def test_calldata_scalars_descriptor(self):
+        # A richer inner call: the debug-only "Trezor Test Scalars" built-in
+        # (7e577e01, bound to chain 1 / 0xdd..dd) exercises the address, native
+        # amount, raw, unit and date formatters through the nested path.
+        test_callee = b"\xdd" * 20
+        note = b"hi"
+        payload = b"\x01\x02"
+        blob = (
+            b"\x7e\x57\x7e\x01"
+            + b"\x00" * 12
+            + self.RECIPIENT  # recipient
+            + to_bytes(10**18)  # nativeAmount: 1 FAKE
+            + to_bytes(123456789)  # rawInt
+            + to_bytes(12345)  # unitValue: 123.45 UNIT
+            + to_bytes(1616051824)  # timestamp
+            + b"\xab" * 32  # hashBytes32
+            + to_bytes(1)  # flagBool
+            + to_bytes(42)  # sizedUint
+            + to_bytes(320)  # pointer to note
+            + to_bytes(384)  # pointer to payload
+            + to_bytes(len(note))
+            + note
+            + b"\x00" * (32 - len(note))
+            + to_bytes(len(payload))
+            + payload
+        )
+
+        fields = self._expand(blob, callee=test_callee)
+
+        expected = [
+            ("(Subcall) Provider", "Trezor Test. DO NOT USE"),
+            ("(Subcall) Intent", "Trezor Test Scalars. DO NOT USE"),
+            ("(Subcall) Recipient", None),  # checksummed, checked below
+            ("(Subcall) Native Amount", "1 FAKE"),
+            ("(Subcall) Raw Integer", "123456789"),
+            ("(Subcall) Unit Value", "123.45 UNIT"),
+            ("(Subcall) Date", "2021-03-18 07:17:04"),
+            ("(Subcall) Raw Bytes32", "ab" * 32),
+            ("(Subcall) Raw Bool", "True"),
+            ("(Subcall) Raw Uint160", "42"),
+            ("(Subcall) Raw String", "hi"),
+            ("(Subcall) Raw Bytes", "0102"),
+        ]
+        self.assertEqual(len(fields), len(expected))
+        for (label, value), ((got_label, got_value, _), _, _) in zip(expected, fields):
+            self.assertEqual(got_label, label)
+            if value is not None:
+                self.assertEqual(got_value, value)
+        recipient_value = fields[2][0][1]
+        self.assertEqual(
+            recipient_value.lower(), "0x" + hexlify(self.RECIPIENT).decode()
+        )
+
+    def test_calldata_no_inner_format_raw_fallback(self):
+        # No built-in matches and definition requests are unsupported -> the
+        # "easy case": the callee row plus the raw hex of the whole blob.
+        blob = b"\xde\xad\xbe\xef" + to_bytes(5)
+        fields = self._expand(blob)
+        self._assert_raw_fallback(fields, blob)
+
+    def test_calldata_short_blob_raw_fallback(self):
+        # A blob too short to carry a selector cannot be looked up.
+        blob = b"\xa9\x05"
+        fields = self._expand(blob)
+        self._assert_raw_fallback(fields, blob)
+
+    def test_calldata_depth_capped_at_one(self):
+        # Two levels end to end: the outer call embeds a call to a "middle"
+        # format that itself contains a calldata field. The innermost blob is
+        # a transfer that a lookup *would* resolve (TRANSFER is available),
+        # but the depth cap renders it as callee + raw hex instead.
+        from apps.ethereum.clear_signing_definitions import TRANSFER_DISPLAY_FORMAT
+
+        innermost_callee = b"\x99" * 20  # not in KNOWN_ADDRESSES
+        innermost_blob = self._transfer_blob()
+        middle_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x12\x34\x56\x78",
+            intent="Middle",
+            parameter_definitions=[
+                Atomic(parse_address),  # callee
+                DynamicLeaf(parse_bytes),  # data
+            ],
+            field_definitions=[
+                FieldDefinition((1,), "Inner call", CalldataFormatter(callee_path=(0,)))
+            ],
+        )
+        middle_blob = b"\x12\x34\x56\x78" + self._outer_calldata(
+            innermost_blob, callee=innermost_callee
+        )
+
+        original = clear_signing_definitions.all_display_formats
+        clear_signing_definitions.all_display_formats = lambda: iter(
+            [middle_format, TRANSFER_DISPLAY_FORMAT]
+        )
+        try:
+            fields = self._expand(middle_blob)
+        finally:
+            clear_signing_definitions.all_display_formats = original
+
+        self.assertEqual(len(fields), 4)
+        self.assertEqual(fields[0][0][:2], ("(Subcall) Provider", "Lido"))
+        self.assertEqual(fields[1][0][:2], ("(Subcall) Intent", "Middle"))
+        # the middle format's calldata field degraded to callee + raw hex
+        (label, formatted, _), _, _ = fields[2]
+        self.assertEqual(label, "(Subcall) Subcall to")
+        self.assertEqual(formatted.lower(), "0x" + hexlify(innermost_callee).decode())
+        self.assertEqual(
+            fields[3][0][:2],
+            ("(Subcall) Inner call", hexlify(innermost_blob).decode()),
+        )
+        # the transfer was never resolved: no third-level formatting happened
+        self.assertFalse(any("Send" == f[0][1] for f in fields))
+
+    def test_calldata_invalid_values_rejected(self):
+        msg, defs = self._msg(), self._defs()
+        blob = self._transfer_blob()
+
+        cases = [
+            # field path does not resolve to one bytes blob
+            {(0,): 5, (1,): self.CALLEE},
+            {(0,): [blob, blob], (1,): self.CALLEE},  # arrays not supported
+            # callee is not a 20-byte address
+            {(0,): blob, (1,): 5},
+            {(0,): blob, (1,): b"\x00\x01"},
+        ]
+        for values in cases:
+            fmt = CalldataFormatter(callee_path=(1,))
+            fd = FieldDefinition((0,), "Wrapped call", fmt)
+            with self.assertRaises(InvalidFormatDefinition):
+                await_result(
+                    _expand_calldata_field(
+                        fd, fmt, lambda path: values[path], msg, defs, False
+                    )
+                )
+
+    def test_calldata_container_paths_in_nested_parse(self):
+        # `@.to` resolves to the override; `@.from` and `@.value` are
+        # unresolvable in a subcall.
+        def format_for(path):
+            return DisplayFormat(
+                binding_context=None,
+                func_sig=b"\x00\x00\x00\x00",
+                intent="Test",
+                parameter_definitions=[],
+                field_definitions=[FieldDefinition(path, "Field", RawFormatter)],
+            )
+
+        override = self.CALLEE
+        _, fields = await_result(
+            format_for(ContainerPath.To).parse_calldata(
+                memoryview(b""),
+                self._msg(),
+                self._defs(),
+                nested=True,
+                override_callee=override,
+            )
+        )
+        self.assertEqual(fields[0][0][1], hexlify(override).decode())
+
+        for path in (ContainerPath.From, ContainerPath.Value):
+            with self.assertRaises(InvalidFormatDefinition):
+                await_result(
+                    format_for(path).parse_calldata(
+                        memoryview(b""), self._msg(), self._defs(), nested=True
+                    )
+                )
+
+    def test_calldata_inner_failure_degrades_to_raw(self):
+        # An inner display format exists but cannot be rendered (it references
+        # `@.value`, unresolvable in a subcall) -> the subcall degrades to the
+        # callee + raw hex rows instead of failing the outer transaction.
+        blob = b"\x12\x34\x56\x78" + to_bytes(1)
+        inner_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x12\x34\x56\x78",
+            intent="Inner",
+            parameter_definitions=[Atomic(parse_uint256)],
+            field_definitions=[
+                FieldDefinition(ContainerPath.Value, "Amount", RawFormatter)
+            ],
+        )
+
+        original = clear_signing_definitions.all_display_formats
+        clear_signing_definitions.all_display_formats = lambda: iter([inner_format])
+        try:
+            fields = self._expand(blob)
+        finally:
+            clear_signing_definitions.all_display_formats = original
+
+        self._assert_raw_fallback(fields, blob)
 
 
 if __name__ == "__main__":
