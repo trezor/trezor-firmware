@@ -12,8 +12,10 @@ async def discard_pending(msg: WARDDiscardPending) -> WARDDiscardPendingAck:
 
     from apps.common import ward as core
 
-    discarded_address, wallet_id = await core.discard_pending()
+    discarded_address, wallet_id = await core.discard_pending(msg.pending_id)
 
     return WARDDiscardPendingAck(
-        discarded_address=discarded_address, wallet_id=wallet_id
+        discarded_address=discarded_address,
+        wallet_id=wallet_id,
+        pending_id=msg.pending_id,
     )

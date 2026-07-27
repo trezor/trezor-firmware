@@ -114,13 +114,13 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.PaymentNotification:
         return "apps.misc.payment_notification"
 
-    # WARD write round (decomposed AuthDbUpdateLeaf: add_pending / commit / finalize)
-    if msg_type == MessageType.WARDAddPending:
-        return "apps.ward.add_pending"
-    if msg_type == MessageType.WARDCommitCandidate:
-        return "apps.ward.commit"
-    if msg_type == MessageType.WARDConfirmCommit:
-        return "apps.ward.confirm_commit"
+    # WARD update round (pull model: queue intent / perform (pull proof) / confirm)
+    if msg_type == MessageType.WARDQueueUpdate:
+        return "apps.ward.queue_update"
+    if msg_type == MessageType.WARDPerformUpdate:
+        return "apps.ward.perform_update"
+    if msg_type == MessageType.WARDConfirmedByWM:
+        return "apps.ward.confirmed_by_wm"
     if msg_type == MessageType.WARDDiscardPending:
         return "apps.ward.discard_pending"
 

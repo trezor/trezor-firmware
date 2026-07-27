@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 # state. Preimages:
 #   - freshness/ingest (WARDIngestAttestation):
 #       b"WARD ATTEST v1" || version(1B) || nonce || wallet_id || counter(4B BE) || mac
-#   - final/commit (WARDConfirmCommit):
+#   - final/install (WARDConfirmedByWM):
 #       b"WARD FINAL v1" || wallet_id || counter(4B BE) || mac
 # ---------------------------------------------------------------------------
 
@@ -373,55 +373,98 @@ def verify_mac(
 
 def queue_put(
     wallet_id: bytes,
+    pending_id: int,
     counter: int,
-    root: bytes | None,
-    mac: bytes | None,
     address: bytes,
+    old_value: bytes,
+    new_value: bytes,
 ) -> None:
-    """Store the verified candidate as the PENDING edit for wallet_id."""
+    """Store an approved edit intent as PENDING under pending_id (pull model)."""
     import storage.ward_store as ward_store
 
-    ward_store.queue_put(wallet_id, counter, root, mac, address)
+    ward_store.queue_put(wallet_id, pending_id, counter, address, old_value, new_value)
 
 
-def queue_drop() -> None:
-    """Clear the pending edit after a successful WARDConfirmCommit."""
+def queue_drop(wallet_id: bytes, pending_id: int) -> None:
+    """Clear a pending edit after a successful WARDConfirmedByWM."""
     import storage.ward_store as ward_store
 
-    ward_store.queue_drop()
+    ward_store.queue_drop(wallet_id, pending_id)
 
 
-def queue_discard() -> None:
-    """Discard the pending edit without finalizing (spec-parity alias of queue_drop)."""
+def queue_discard(wallet_id: bytes, pending_id: int) -> None:
+    """Discard a pending edit without finalizing (spec-parity alias of queue_drop)."""
     import storage.ward_store as ward_store
 
-    ward_store.queue_drop()
+    ward_store.queue_drop(wallet_id, pending_id)
 
 
-async def discard_pending_impl() -> tuple[bytes | None, bytes]:
-    """Abandon the current wallet's queued pending edit without finalizing it.
+async def _resolve_pending_id(wallet_id: bytes, pending_id: int | None) -> int:
+    """Resolve which queued candidate an operation targets.
 
-    Wallet-scoped: only drops the candidate if it belongs to this wallet (the
-    single queue slot is checked via queue_get before deleting, so a candidate for
-    a different hidden wallet is left intact). Idempotent: returns
-    (None, wallet_id) when nothing is queued for this wallet. Returns
-    (discarded_address, wallet_id) otherwise.
+    - pending_id given: use it verbatim (the caller checks the record exists).
+    - pending_id omitted: single-slot backward compatibility — if exactly one
+      candidate is queued for this wallet, target it; raise if none is queued or
+      the choice is ambiguous (more than one candidate in flight).
+    """
+    if pending_id is not None:
+        return pending_id
+
+    import storage.ward_store as ward_store
+    from trezor.wire import DataError
+
+    entries = ward_store.queue_list(wallet_id)
+    if len(entries) == 1:
+        return entries[0][0]
+    if not entries:
+        raise DataError("no pending candidate")
+    raise DataError("pending_id required: multiple candidates queued")
+
+
+async def discard_pending_impl(
+    pending_id: int | None = None,
+) -> tuple[bytes | None, bytes]:
+    """Abandon queued pending edit(s) without finalizing.
+
+    Wallet-scoped: only candidates belonging to this wallet are touched, so a
+    candidate for a different hidden wallet is always left intact.
+    - pending_id given: drop just that candidate; returns (its_address, wallet_id),
+      or (None, wallet_id) if no such candidate exists for this wallet.
+    - pending_id omitted: drop EVERY candidate queued for this wallet; returns
+      (None, wallet_id).
+    Idempotent in both modes.
     """
     import storage.ward_store as ward_store
 
     wallet_id = await _get_wallet_id()
 
-    rec = ward_store.queue_get(wallet_id)
+    if pending_id is None:
+        dropped = ward_store.queue_drop_all(wallet_id)
+        if __debug__:
+            from trezor import log
+
+            log.debug(
+                __name__,
+                "discard_pending_impl: dropped %d candidate(s) for wallet_id=%s",
+                dropped,
+                wallet_id,
+            )
+        return None, wallet_id
+
+    rec = ward_store.queue_get(wallet_id, pending_id)
     if rec is None:
         return None, wallet_id
-    _counter, _root, _mac, _state, address = rec
-    ward_store.queue_drop()
+    _counter, _state, address, _ov, _nv, _root, _mac = rec
+    ward_store.queue_drop(wallet_id, pending_id)
 
     if __debug__:
         from trezor import log
 
         log.debug(
-            __name__, "discard_pending_impl: dropped candidate for wallet_id=%s", wallet_id
+            __name__,
+            "discard_pending_impl: dropped pending_id=%d for wallet_id=%s",
+            pending_id,
+            wallet_id,
         )
 
     return address, wallet_id
@@ -451,90 +494,93 @@ async def lookup_label_impl(
 # ---------------------------------------------------------------------------
 
 
-async def add_pending_impl(
+def _display_bytes(value: bytes) -> str:
+    """Best-effort rendering of an arbitrary WARD byte string for a trusted screen:
+    UTF-8 when it decodes cleanly, otherwise hex."""
+    try:
+        return value.decode()
+    except UnicodeError:
+        from ubinascii import hexlify
+
+        return hexlify(value).decode()
+
+
+async def _confirm_update(address: bytes, old_value: bytes, new_value: bytes) -> None:
+    """Trusted on-device confirmation of a WARD edit intent (old -> new). Raises
+    ActionCancelled if the user rejects; returns normally on approval."""
+    from trezor.enums import ButtonRequestType
+    from trezor.ui.layouts import confirm_properties
+
+    if len(new_value) == 0:
+        title = "Delete WARD entry"
+    elif len(old_value) == 0:
+        title = "Create WARD entry"
+    else:
+        title = "Update WARD entry"
+
+    # PropertyType is a 3-tuple (name, value, is_data); is_data=True renders the
+    # value as monospace data.
+    props = [("Key", _display_bytes(address), True)]
+    if len(old_value) != 0:
+        props.append(("Old value", _display_bytes(old_value), True))
+    if len(new_value) != 0:
+        props.append(("New value", _display_bytes(new_value), True))
+
+    await confirm_properties(
+        "ward_update",
+        title,
+        props,
+        hold=True,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
+
+
+async def queue_update_impl(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
-    new_counter: int,
-    proof: list[bytes],
-    old_counter: int | None = None,
-    witness_address: bytes | None = None,
-    witness_counter: int | None = None,
-    witness_value: bytes | None = None,
-) -> tuple[int, bytes]:
-    """Verify a leaf change against the stored root and queue it PENDING.
-
-    Computes the candidate root + MAC, stamps the changed leaf with new_counter
-    (== current root counter + 1), stores the candidate WITHOUT advancing the
-    counter (the counter only moves at WARDConfirmCommit). Returns
-    (candidate_counter, wallet_id). Raises DataError on any invariant violation.
+) -> tuple[int, int, bytes]:
+    """Queue an edit INTENT (pull model). Shows the old -> new change on a trusted
+    screen and, ONLY on user approval, derives counter_T (= current authenticated
+    counter + 1), allocates a pending_id, and stores the intent PENDING -- no proof
+    is taken and the root is NOT computed here (that happens at WARDPerformUpdate,
+    from a proof the device pulls itself). Returns (counter_T, pending_id,
+    wallet_id). Raises ActionCancelled if the user rejects, DataError on invariant
+    violation.
     """
-    import storage.ward_session as ward_session
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
     wallet_id = await _get_wallet_id()
 
-    # Depth-1 offline queue: only one uncommitted candidate per wallet in flight.
-    if ward_store.queue_get(wallet_id) is not None:
-        raise DataError("a pending candidate already exists for this wallet")
+    # Multi-slot queue: several intents may be in flight per wallet, bounded by the
+    # storage cap. Committing stays serialized by counter (see confirmed_by_wm_impl).
+    if ward_store.queue_count(wallet_id) >= ward_store.MAX_PENDING:
+        raise DataError("pending queue is full for this wallet")
 
-    # Candidate counter must be exactly current root counter + 1 (anti-rollback).
-    current_counter = ward_store.get_counter(wallet_id)
-    if new_counter != current_counter + 1:
-        raise DataError("new_counter must equal current global counter + 1")
+    # The device is the counter authority: counter_T = current counter + 1.
+    counter_t = ward_store.get_counter(wallet_id) + 1
 
-    oc = old_counter if old_counter else 0
-    present, stored_root = ward_session.root_get(wallet_id)
-    if not present:
-        # Fresh-wallet INIT is allowed before an explicit bootstrap round:
-        # treat "no root in session" as an authenticated empty tree only when
-        # the durable counter floor is still zero. Non-empty wallets must sync
-        # first so edits are anchored to an authenticated root.
-        if current_counter == 0:
-            stored_root = None
-        else:
-            raise DataError("no authenticated root in session")
+    # Trusted confirmation gates the intent (WP-F5). Raises on user rejection.
+    await _confirm_update(address, old_value, new_value)
 
-    try:
-        root_t = compute_new_root(
-            address,
-            oc,
-            old_value,
-            new_counter,
-            new_value,
-            proof,
-            stored_root,
-            witness_address=witness_address,
-            witness_counter=witness_counter,
-            witness_value=witness_value,
-        )
-    except ValueError as e:
-        raise DataError(str(e))
-
-    # Candidate MAC binds wallet_id and the candidate counter to root_T.
-    if root_t is not None:
-        mac_key = await _derive_mac_key(b"root_mac")
-        mac_t = _compute_mac(mac_key, wallet_id, new_counter.to_bytes(4, "big"), root_t)
-    else:
-        mac_t = None
-
-    # TODO: show address + old_value -> new_value confirmation dialog when UI ready.
-
-    ward_store.queue_put(wallet_id, new_counter, root_t, mac_t, address)
+    pending_id = ward_store.queue_alloc_id()
+    ward_store.queue_put(
+        wallet_id, pending_id, counter_t, address, old_value, new_value
+    )
 
     if __debug__:
         from trezor import log
 
         log.debug(
             __name__,
-            "add_pending_impl: queued candidate wallet_id=%s counter_T=%d root_T=%s",
+            "queue_update_impl: queued intent wallet_id=%s pending_id=%d counter_T=%d",
             wallet_id,
-            new_counter,
-            "EMPTY" if root_t is None else "set",
+            pending_id,
+            counter_t,
         )
 
-    return new_counter, wallet_id
+    return counter_t, pending_id, wallet_id
 
 
 async def lookup_impl(
@@ -587,65 +633,149 @@ async def lookup_impl(
     return valid, ward_store.get_counter(wallet_id), membership, wallet_id
 
 
-async def commit_impl() -> tuple[int, bytes | None, bytes | None, bytes]:
-    """Emit the queued PENDING candidate and mark it COMMITTED. The counter is
-    NOT advanced (that happens at confirm). Returns (counter, root, mac, wallet_id).
-    """
+async def intent_address_impl(pending_id: int | None) -> tuple[int, bytes]:
+    """Resolve pending_id to (resolved_pending_id, address) for the active wallet.
+    The Core gateway calls this to build the WARDProofRequest (naming the address
+    and the pending_id) before pulling the proof for WARDPerformUpdate."""
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
     wallet_id = await _get_wallet_id()
-
-    rec = ward_store.queue_get(wallet_id)
+    pid = await _resolve_pending_id(wallet_id, pending_id)
+    rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
-        raise DataError("no pending candidate to commit")
-    counter, root, mac, _state, _address = rec
+        raise DataError("no queued intent to perform")
+    _counter, _state, address, _ov, _nv, _root, _mac = rec
+    return pid, address
 
-    ward_store.queue_set_committed(wallet_id)
+
+async def perform_update_impl(
+    pending_id: int | None,
+    value: bytes | None,
+    proof: list[bytes],
+    counter: int | None,
+    witness_address: bytes | None = None,
+    witness_value: bytes | None = None,
+    witness_counter: int | None = None,
+) -> tuple[int, bytes | None, bytes | None, bytes]:
+    """Authorize a queued intent using a proof the device PULLED on demand.
+
+    The proof package (value/counter for membership, witness_* for non-membership,
+    empty for an empty tree) is the authoritative current state -- the intent's
+    stored old_value was only a display hint. Verifies it against the stored root,
+    computes (root_T, mac_T) for the intent's stored counter_T, and marks the
+    intent COMMITTED. The counter is NOT advanced (that happens at confirm).
+    pending_id selects the intent; if omitted, falls back to the single queued one.
+    Returns (counter_T, root_T, mac_T, wallet_id).
+    """
+    import storage.ward_session as ward_session
+    import storage.ward_store as ward_store
+    from trezor.wire import DataError
+
+    wallet_id = await _get_wallet_id()
+    pid = await _resolve_pending_id(wallet_id, pending_id)
+
+    rec = ward_store.queue_get(wallet_id, pid)
+    if rec is None:
+        raise DataError("no queued intent to perform")
+    counter_t, _state, _address, _old_value, new_value, _root, _mac = rec
+
+    present, stored_root = ward_session.root_get(wallet_id)
+    if not present:
+        # Fresh-wallet INIT: treat "no root in session" as an authenticated empty
+        # tree only when the durable counter floor is still zero.
+        if ward_store.get_counter(wallet_id) == 0:
+            stored_root = None
+        else:
+            raise DataError("no authenticated root in session")
+
+    # Membership -> value + counter (UPDATE/DELETE); non-membership -> witness_*
+    # (INSERT); empty tree -> no proof (INIT). compute_new_root keys INSERT/INIT off
+    # an empty old_value, so map an absent pulled value to b"".
+    old_value = value if value is not None else b""
+    old_counter = counter if counter is not None else 0
+
+    try:
+        root_t = compute_new_root(
+            _address,
+            old_counter,
+            old_value,
+            counter_t,
+            new_value,
+            proof,
+            stored_root,
+            witness_address=witness_address,
+            witness_counter=witness_counter,
+            witness_value=witness_value,
+        )
+    except ValueError as e:
+        raise DataError(str(e))
+
+    # Candidate MAC binds wallet_id and counter_T to root_T.
+    if root_t is not None:
+        mac_key = await _derive_mac_key(b"root_mac")
+        mac_t = _compute_mac(mac_key, wallet_id, counter_t.to_bytes(4, "big"), root_t)
+    else:
+        mac_t = None
+
+    ward_store.queue_set_computed(wallet_id, pid, root_t, mac_t)
 
     if __debug__:
         from trezor import log
 
         log.debug(
             __name__,
-            "commit_impl: emit candidate wallet_id=%s counter_T=%d root_T=%s",
+            "perform_update_impl: computed candidate wallet_id=%s pending_id=%d counter_T=%d root_T=%s",
             wallet_id,
-            counter,
-            "EMPTY" if root is None else "set",
+            pid,
+            counter_t,
+            "EMPTY" if root_t is None else "set",
         )
 
-    return counter, root, mac, wallet_id
+    return counter_t, root_t, mac_t, wallet_id
 
 
-async def confirm_commit_impl(
-    counter_msg: int, mac_msg: bytes | None, qm_signature: bytes
+async def confirmed_by_wm_impl(
+    counter_msg: int,
+    mac_msg: bytes | None,
+    wm_signature: bytes,
+    pending_id: int | None = None,
 ) -> tuple[int, bytes | None, bytes, bytes | None]:
-    """Verify the WM final attestation over the committed candidate, then install
-    (root_T, counter_T), advance the counter + QM ceiling, and drop the queue.
-    The only step that advances the device counter. Returns
-    (counter, new_root, wallet_id, root_mac).
+    """Verify the WM final attestation over the COMMITTED candidate, then install
+    (root_T, counter_T), advance the counter + QM ceiling, and drop that candidate
+    from the queue. The only step that advances the device counter. pending_id
+    selects the candidate; if omitted, falls back to the single queued candidate.
+    Returns (counter, new_root, wallet_id, root_mac).
+
+    Note: with several intents queued, each was stamped counter_T = base + 1 at
+    queue time. Confirming one advances counter_loc, so any sibling still stamped
+    at the same counter becomes stale and is rejected here by the anti-rollback
+    check below — it must be discarded/re-queued. Commit stays serialized by
+    counter even though queueing is not. The device is the counter authority; the
+    WM only co-signs the exact (counter_T, mac_T) the device derived.
     """
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
     wallet_id = await _get_wallet_id()
+    pid = await _resolve_pending_id(wallet_id, pending_id)
 
-    rec = ward_store.queue_get(wallet_id)
+    rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no candidate to finalize")
-    counter, root, mac, state, _address = rec
+    counter, state, _address, _old_value, _new_value, root, mac = rec
 
     if state != ward_store.QUEUE_COMMITTED:
-        raise DataError("candidate has not been committed")
+        raise DataError("candidate has not been performed")
 
     # The candidate MAC (all-zero when the tree becomes empty) is what the WM signs.
     candidate_mac = mac if mac is not None else _ZERO_MAC
     msg_mac = mac_msg if mac_msg is not None else _ZERO_MAC
 
     if counter_msg != counter or msg_mac != candidate_mac:
-        raise DataError("finalize does not match the committed candidate")
+        raise DataError("confirmation does not match the committed candidate")
 
-    if not verify_ward_final(wallet_id, counter, candidate_mac, qm_signature):
+    if not verify_ward_final(wallet_id, counter, candidate_mac, wm_signature):
         raise DataError("WM final attestation verification failed")
 
     # Anti-rollback: the finalized counter must exceed the durable local floor.
@@ -657,14 +787,14 @@ async def confirm_commit_impl(
 
     ward_session.root_set(wallet_id, root)
     ward_store.commit_counter(wallet_id, counter)
-    ward_store.queue_drop()
+    ward_store.queue_drop(wallet_id, pid)
 
     if __debug__:
         from trezor import log
 
         log.debug(
             __name__,
-            "confirm_commit_impl: installed wallet_id=%s counter=%d root=%s",
+            "confirmed_by_wm_impl: installed wallet_id=%s counter=%d root=%s",
             wallet_id,
             counter,
             "EMPTY" if root is None else "set",
@@ -781,19 +911,20 @@ async def reconcile_impl(
     return counter_ext, root, wallet_id, mac_ext
 
 
-async def list_pending_impl() -> tuple[list[bytes], bytes]:
-    """Return (pending_edit_addresses, wallet_id). MVP queue depth 1 → 0 or 1 addr."""
+async def list_pending_impl() -> tuple[list[int], list[bytes], bytes]:
+    """Return (pending_ids, addresses, wallet_id) for every queued candidate of
+    the active wallet, in allocation order (the two lists are parallel)."""
     import storage.ward_store as ward_store
 
     wallet_id = await _get_wallet_id()
 
-    addresses = []
-    rec = ward_store.queue_get(wallet_id)
-    if rec is not None:
-        _counter, _root, _mac, _state, address = rec
+    pending_ids = []  # type: list[int]
+    addresses = []  # type: list[bytes]
+    for pid, address in ward_store.queue_list(wallet_id):
+        pending_ids.append(pid)
         addresses.append(address)
 
-    return addresses, wallet_id
+    return pending_ids, addresses, wallet_id
 
 
 async def debug_set_root_impl(

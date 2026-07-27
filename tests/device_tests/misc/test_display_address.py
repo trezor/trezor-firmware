@@ -33,42 +33,40 @@ def _add_value_via_device(
     counter: int,
     root_mac: bytes | None,
 ) -> tuple[int, bytes | None]:
+    """Drive one edit through the PULL update round:
+    queue_update (trusted confirm) -> perform_update (device pulls the proof from
+    the host WARDTree via ward_proof_callback) -> confirmed_by_wm.
+    """
     root = None if tree.is_empty() else tree.get_root_hash()
     counter, _root, root_mac = _sync_device(session, counter, root, root_mac)
 
     address_bytes = address.encode()
     old_counter = tree.get_counter(address_bytes)
-    if old_counter:
-        old_value = tree.get_value(address_bytes)
-        proof = tree.get_proof(address_bytes)
-        witness_address = witness_value = None
-        witness_counter = None
-    else:
-        old_value = b""
-        proof, witness_address, witness_counter, witness_value = (
-            tree.get_nonmembership_proof(address_bytes)
-        )
-
+    old_value = tree.get_value(address_bytes) if old_counter else b""
     new_counter = counter + 1
-    ward.add_pending(
-        session,
-        address=address_bytes,
-        old_value=old_value,
-        new_value=value,
-        new_counter=new_counter,
-        proof=proof,
-        old_counter=old_counter or None,
-        witness_address=witness_address,
-        witness_value=witness_value,
-        witness_counter=witness_counter,
-    )
-    c_counter, _root_t, mac_t, wallet_id = ward.commit(session)
-    assert wallet_id is not None
-    mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
-    sig = sign_ward_update(c_counter, mac_for_sig, wallet_id)
-    counter, new_root, _wallet_id, root_mac = ward.confirm_commit(
-        session, c_counter, mac_t, sig
-    )
+
+    with session.test_ctx as client:
+        # perform_update pulls the proof for the *current* tree (before this insert).
+        client.app.ward_proof_callback = ward.tree_proof_callback(tree)
+
+        # queue_update shows a trusted old->new confirm screen; approve it.
+        with BackgroundDeviceHandler(client) as dev:
+            dev.run_with_provided_session(
+                session,
+                lambda s: ward.queue_update(s, address_bytes, old_value, value),
+            )
+            dev.debuglink().press_yes()
+            _counter_t, pending_id, _wallet_id = dev.result()
+
+        # perform_update: the device emits WARDProofRequest, answered by the
+        # registered callback; no user interaction.
+        c_counter, _root_t, mac_t, wallet_id = ward.perform_update(session, pending_id)
+        assert wallet_id is not None
+        mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
+        sig = sign_ward_update(c_counter, mac_for_sig, wallet_id)
+        counter, new_root, _wallet_id, root_mac = ward.confirmed_by_wm(
+            session, c_counter, mac_t, sig, pending_id
+        )
 
     tree.insert(address_bytes, value, counter=new_counter)
     assert new_root == tree.get_root_hash()

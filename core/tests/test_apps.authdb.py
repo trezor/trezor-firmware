@@ -770,61 +770,141 @@ class TestWardQueueStorage(unittest.TestCase):
 
     @mock_storage
     def test_put_get_roundtrip(self):
+        """An intent is stored PENDING with counter/address/old/new and NO root/mac
+        (pull model: root/mac are computed later at perform)."""
         import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        root = _sha256d(b"root-T")
-        mac = _sha256d(b"mac-T")
-        ward_store.queue_put(wallet_id, 5, root, mac, b"alice")
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(wallet_id, pid, 5, b"alice", b"old_a", b"new_a")
 
-        rec = ward_store.queue_get(wallet_id)
+        rec = ward_store.queue_get(wallet_id, pid)
         self.assertIsNotNone(rec)
-        counter, got_root, got_mac, state, address = rec
+        counter, state, address, ov, nv, root, mac = rec
         self.assertEqual(counter, 5)
-        self.assertEqual(got_root, root)
-        self.assertEqual(got_mac, mac)
         self.assertEqual(state, ward_store.QUEUE_PENDING)
         self.assertEqual(address, b"alice")
+        self.assertEqual(ov, b"old_a")
+        self.assertEqual(nv, b"new_a")
+        self.assertIsNone(root)  # not computed until perform
+        self.assertIsNone(mac)
 
     @mock_storage
     def test_get_is_wallet_scoped(self):
         import storage.ward_store as ward_store
 
-        ward_store.queue_put(self._id(1), 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
-        # A different wallet sees no candidate (single-record, wallet-tagged).
-        self.assertIsNone(ward_store.queue_get(self._id(2)))
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(self._id(1), pid, 1, b"x", b"o", b"n")
+        # A different wallet does not see this pending_id's intent.
+        self.assertIsNone(ward_store.queue_get(self._id(2), pid))
 
     @mock_storage
-    def test_set_committed_and_drop(self):
+    def test_alloc_id_is_monotonic_and_unique(self):
+        import storage.ward_store as ward_store
+
+        ids = [ward_store.queue_alloc_id() for _ in range(4)]
+        self.assertEqual(ids, sorted(ids))
+        self.assertEqual(len(set(ids)), len(ids))
+
+    @mock_storage
+    def test_multi_slot_coexist(self):
+        """Several intents coexist under distinct pending_ids for one wallet,
+        each retrievable and independently droppable."""
         import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        ward_store.queue_put(wallet_id, 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
-        ward_store.queue_set_committed(wallet_id)
-        _c, _r, _m, state, _a = ward_store.queue_get(wallet_id)
-        self.assertEqual(state, ward_store.QUEUE_COMMITTED)
+        p1 = ward_store.queue_alloc_id()
+        p2 = ward_store.queue_alloc_id()
+        ward_store.queue_put(wallet_id, p1, 5, b"alice", b"o1", b"n1")
+        ward_store.queue_put(wallet_id, p2, 5, b"bob", b"o2", b"n2")
 
-        ward_store.queue_drop()
-        self.assertIsNone(ward_store.queue_get(wallet_id))
+        self.assertEqual(ward_store.queue_count(wallet_id), 2)
+        self.assertEqual(
+            ward_store.queue_list(wallet_id), [(p1, b"alice"), (p2, b"bob")]
+        )
+
+        # Dropping one leaves the other intact.
+        self.assertTrue(ward_store.queue_drop(wallet_id, p1))
+        self.assertIsNone(ward_store.queue_get(wallet_id, p1))
+        self.assertIsNotNone(ward_store.queue_get(wallet_id, p2))
+        self.assertEqual(ward_store.queue_count(wallet_id), 1)
 
     @mock_storage
-    def test_set_committed_rejects_foreign_wallet(self):
+    def test_put_replaces_same_pending_id(self):
         import storage.ward_store as ward_store
 
-        ward_store.queue_put(self._id(1), 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
+        wallet_id = self._id(1)
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(wallet_id, pid, 5, b"alice", b"o1", b"n1")
+        ward_store.queue_put(wallet_id, pid, 6, b"alice2", b"o2", b"n2")
+        self.assertEqual(ward_store.queue_count(wallet_id), 1)
+        counter, _s, address, ov, nv, _r, _m = ward_store.queue_get(wallet_id, pid)
+        self.assertEqual(counter, 6)
+        self.assertEqual(address, b"alice2")
+        self.assertEqual((ov, nv), (b"o2", b"n2"))
+
+    @mock_storage
+    def test_put_enforces_per_wallet_cap(self):
+        import storage.ward_store as ward_store
+
+        wallet_id = self._id(1)
+        for _ in range(ward_store.MAX_PENDING):
+            pid = ward_store.queue_alloc_id()
+            ward_store.queue_put(wallet_id, pid, 1, b"x", b"o", b"n")
         with self.assertRaises(ValueError):
-            ward_store.queue_set_committed(self._id(2))
+            pid = ward_store.queue_alloc_id()
+            ward_store.queue_put(wallet_id, pid, 1, b"y", b"o", b"n")
 
     @mock_storage
-    def test_empty_candidate_roundtrip(self):
-        """A DELETE-to-empty candidate stores EMPTY_ROOT and reads back as
-        (counter, None, None, state, address)."""
+    def test_set_computed_and_drop(self):
+        """perform fills (root, mac) and flips PENDING -> COMMITTED; intent fields
+        are preserved."""
         import storage.ward_store as ward_store
 
         wallet_id = self._id(1)
-        ward_store.queue_put(wallet_id, 9, None, None, b"bob")
-        counter, root, mac, _state, address = ward_store.queue_get(wallet_id)
+        root = _sha256d(b"root-T")
+        mac = _sha256d(b"mac-T")
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(wallet_id, pid, 1, b"x", b"o", b"n")
+        ward_store.queue_set_computed(wallet_id, pid, root, mac)
+
+        counter, state, address, ov, nv, got_root, got_mac = ward_store.queue_get(
+            wallet_id, pid
+        )
+        self.assertEqual(state, ward_store.QUEUE_COMMITTED)
+        self.assertEqual(got_root, root)
+        self.assertEqual(got_mac, mac)
+        self.assertEqual((address, ov, nv), (b"x", b"o", b"n"))
+
+        self.assertTrue(ward_store.queue_drop(wallet_id, pid))
+        self.assertIsNone(ward_store.queue_get(wallet_id, pid))
+
+    @mock_storage
+    def test_set_computed_rejects_foreign_wallet(self):
+        import storage.ward_store as ward_store
+
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(self._id(1), pid, 1, b"x", b"o", b"n")
+        with self.assertRaises(ValueError):
+            ward_store.queue_set_computed(
+                self._id(2), pid, _sha256d(b"r"), _sha256d(b"m")
+            )
+
+    @mock_storage
+    def test_perform_to_empty_tree(self):
+        """A DELETE-to-empty candidate stores EMPTY_ROOT and reads back root/mac
+        None after perform."""
+        import storage.ward_store as ward_store
+
+        wallet_id = self._id(1)
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(wallet_id, pid, 9, b"bob", b"old_b", b"")
+        ward_store.queue_set_computed(wallet_id, pid, None, None)
+        counter, state, address, ov, nv, root, mac = ward_store.queue_get(
+            wallet_id, pid
+        )
         self.assertEqual(counter, 9)
+        self.assertEqual(state, ward_store.QUEUE_COMMITTED)
         self.assertIsNone(root)
         self.assertIsNone(mac)
         self.assertEqual(address, b"bob")
@@ -864,11 +944,12 @@ class TestWardQueueStorage(unittest.TestCase):
         from apps.ward import service
 
         wallet_id = self._id(1)
-        ward_store.queue_put(wallet_id, 3, _sha256d(b"r"), _sha256d(b"m"), b"alice")
-        self.assertIsNotNone(ward_store.queue_get(wallet_id))
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(wallet_id, pid, 3, b"alice", b"o", b"n")
+        self.assertIsNotNone(ward_store.queue_get(wallet_id, pid))
 
-        service.queue_discard()
-        self.assertIsNone(ward_store.queue_get(wallet_id))
+        service.queue_discard(wallet_id, pid)
+        self.assertIsNone(ward_store.queue_get(wallet_id, pid))
 
     @mock_storage
     def test_discard_works_regardless_of_state(self):
@@ -878,13 +959,14 @@ class TestWardQueueStorage(unittest.TestCase):
         from apps.ward import service
 
         wallet_id = self._id(1)
-        ward_store.queue_put(wallet_id, 1, _sha256d(b"r"), _sha256d(b"m"), b"x")
-        ward_store.queue_set_committed(wallet_id)
-        _c, _r, _m, state, _a = ward_store.queue_get(wallet_id)
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(wallet_id, pid, 1, b"x", b"o", b"n")
+        ward_store.queue_set_computed(wallet_id, pid, _sha256d(b"r"), _sha256d(b"m"))
+        _c, state, _a, _ov, _nv, _r, _m = ward_store.queue_get(wallet_id, pid)
         self.assertEqual(state, ward_store.QUEUE_COMMITTED)
 
-        service.queue_discard()
-        self.assertIsNone(ward_store.queue_get(wallet_id))
+        service.queue_discard(wallet_id, pid)
+        self.assertIsNone(ward_store.queue_get(wallet_id, pid))
 
     @mock_storage
     def test_discard_does_not_touch_counter_or_root(self):
@@ -896,11 +978,12 @@ class TestWardQueueStorage(unittest.TestCase):
         wallet_id = self._id(1)
         root = _sha256d(b"installed-root")
         ward_store.commit_finalize(wallet_id, root, 4)
-        ward_store.queue_put(wallet_id, 5, _sha256d(b"rT"), _sha256d(b"mT"), b"alice")
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(wallet_id, pid, 5, b"alice", b"o", b"n")
 
-        service.queue_discard()
+        service.queue_discard(wallet_id, pid)
 
-        self.assertIsNone(ward_store.queue_get(wallet_id))
+        self.assertIsNone(ward_store.queue_get(wallet_id, pid))
         self.assertEqual(ward_store.get_counter(wallet_id), 4)
         self.assertEqual(ward_store.get_root(wallet_id), root)
 

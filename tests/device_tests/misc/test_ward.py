@@ -1,10 +1,11 @@
-"""Device tests for the WARD write round (add_pending -> commit -> finalize),
-the decomposition of the former fused AuthDbUpdateLeaf.
+"""Device tests for the WARD pull update round
+(queue_update -> perform_update -> confirmed_by_wm).
 
-Each write is driven either through the individual wrappers (to observe the
-intermediate state or through an equivalent host-side helper sequence. The WARD
-Manager's final attestation is signed locally with the debug WM key
-(ward_mgr_emu.DEBUG_QM_SEED), accepted only on debug firmware.
+queue_update stores an intent behind a trusted confirm screen (approved here via
+the debuglink); perform_update makes the device PULL the proof from the host
+WARDTree (served by ward_proof_callback) and compute the candidate; confirmed_by_wm
+installs it. The WARD Manager's final attestation is signed locally with the debug
+WM key (ward_mgr_emu.DEBUG_QM_SEED), accepted only on debug firmware.
 """
 
 import pytest
@@ -15,6 +16,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
+from ...device_handler import BackgroundDeviceHandler
 from ...ward_mgr_emu import sign_ward_update, sign_wm_attestation
 
 ENTRIES = {
@@ -109,43 +111,25 @@ class WardHostHarness:
     def set_value(self, session: Session, address: bytes, value: bytes | None) -> int:
         self.bootstrap_device(session)
 
-        new_counter = self.store.counter + 1
-        old_counter = self.tree.get_counter(address)
-        if old_counter:
-            old_value = self.tree.get_value(address)
-            proof = self.tree.get_proof(address)
-            witness_address = witness_value = None
-            witness_counter = None
-        else:
-            old_value = b""
-            proof, witness_address, witness_counter, witness_value = (
-                self.tree.get_nonmembership_proof(address)
-            )
-
-        ward.add_pending(
-            session,
-            address=address,
-            old_value=old_value,
-            new_value=value or b"",
-            new_counter=new_counter,
-            proof=proof,
-            old_counter=old_counter or None,
-            witness_address=witness_address,
-            witness_value=witness_value,
-            witness_counter=witness_counter,
+        # Queue the intent (trusted confirm), then let the device pull the proof
+        # for the current tree at perform time and WM-sign the candidate.
+        old_value = (
+            self.tree.get_value(address) if self.tree.get_counter(address) else b""
         )
-        c_counter, _root_t, mac_t, wallet_id = ward.commit(session)
+        _counter_t, pending_id = _queue_update(session, address, old_value, value or b"")
+
+        c_counter, _root_t, mac_t, wallet_id = _perform(session, self.tree, pending_id)
         mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
         assert wallet_id is not None
         sig = self.wm.sign_final(wallet_id, c_counter, mac_for_sig)
-        counter, new_root, _wallet_id, root_mac = ward.confirm_commit(
-            session, c_counter, mac_t, sig
+        counter, new_root, _wallet_id, root_mac = ward.confirmed_by_wm(
+            session, c_counter, mac_t, sig, pending_id
         )
 
         if value is None:
             self.tree.delete(address)
         else:
-            self.tree.insert(address, value, counter=new_counter)
+            self.tree.insert(address, value, counter=c_counter)
 
         expected_root = None if self.tree.is_empty() else self.tree.get_root_hash()
         assert new_root == expected_root
@@ -194,18 +178,69 @@ def _sync_device(
     return out_counter, out_root, wallet_id, out_root_mac
 
 
-def _finalize_pending(
+def _queue_update(
     session: Session,
+    address: bytes,
+    old_value: bytes,
+    new_value: bytes,
+) -> tuple[int, int]:
+    """Queue an edit INTENT through the trusted confirm screen (approve it via the
+    debuglink). Returns (counter_T, pending_id)."""
+    with session.test_ctx as client:
+        with BackgroundDeviceHandler(client) as dev:
+            dev.run_with_provided_session(
+                session,
+                lambda s: ward.queue_update(s, address, old_value, new_value),
+            )
+            dev.debuglink().press_yes()
+            counter_t, pending_id, _wallet_id = dev.result()
+    assert pending_id is not None
+    return counter_t, pending_id
+
+
+def _perform(
+    session: Session,
+    tree: WARDTree,
+    pending_id: int,
 ) -> tuple[int, bytes | None, bytes | None, bytes | None]:
-    c_counter, _root_t, mac_t, wallet_id = ward.commit(session)
+    """WARDPerformUpdate: the device pulls the proof for `tree` (current, pre-edit
+    state) via ward_proof_callback and computes the candidate. No user interaction.
+    Returns (counter_T, root_T, mac_T, wallet_id)."""
+    session.client.app.ward_proof_callback = ward.tree_proof_callback(tree)
+    return ward.perform_update(session, pending_id)
+
+
+def _perform_and_finalize(
+    session: Session,
+    tree: WARDTree,
+    pending_id: int,
+) -> tuple[int, bytes | None, bytes | None, bytes | None]:
+    """perform_update -> WM-sign -> confirmed_by_wm. Returns the confirm result."""
+    c_counter, _root_t, mac_t, wallet_id = _perform(session, tree, pending_id)
     mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
     assert wallet_id is not None
     sig = sign_ward_update(c_counter, mac_for_sig, wallet_id)
-    return ward.confirm_commit(session, c_counter, mac_t, sig)
+    return ward.confirmed_by_wm(session, c_counter, mac_t, sig, pending_id)
+
+
+def _edit(
+    session: Session,
+    tree: WARDTree,
+    address: bytes,
+    old_value: bytes,
+    new_value: bytes,
+) -> tuple[int, bytes | None, bytes | None, bytes | None, int]:
+    """Full pull update round for one edit. Returns
+    (counter, new_root, wallet_id, root_mac, pending_id)."""
+    _counter_t, pending_id = _queue_update(session, address, old_value, new_value)
+    counter, new_root, wallet_id, root_mac = _perform_and_finalize(
+        session, tree, pending_id
+    )
+    return counter, new_root, wallet_id, root_mac, pending_id
 
 
 def _pending_addresses(session: Session) -> list[bytes]:
-    """The addresses currently queued as a pending edit (0 or 1; MVP depth 1)."""
+    """The addresses currently queued as pending edits (multi-slot)."""
     addresses, wallet_id = ward.list_pending(session)
     assert wallet_id is not None
     return addresses
@@ -217,16 +252,9 @@ def test_ward_update(session: Session) -> None:
     counter0 = _seed_device(session, tree)
 
     new_counter = counter0 + 1
-    ward.add_pending(
-        session,
-        address=b"alice",
-        old_value=ENTRIES[b"alice"],
-        new_value=b"data_alice_v2",
-        new_counter=new_counter,
-        proof=tree.get_proof(b"alice"),
-        old_counter=tree.get_counter(b"alice"),
+    counter, new_root, wallet_id, root_mac, _pid = _edit(
+        session, tree, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
-    counter, new_root, wallet_id, root_mac = _finalize_pending(session)
 
     tree.insert(b"alice", b"data_alice_v2", counter=new_counter)
     assert counter == new_counter
@@ -241,19 +269,9 @@ def test_ward_insert(session: Session) -> None:
     counter0 = _seed_device(session, tree)
 
     new_counter = counter0 + 1
-    proof, w_addr, w_counter, w_value = tree.get_nonmembership_proof(b"erin")
-    ward.add_pending(
-        session,
-        address=b"erin",
-        old_value=b"",
-        new_value=b"data_erin",
-        new_counter=new_counter,
-        proof=proof,
-        witness_address=w_addr,
-        witness_counter=w_counter,
-        witness_value=w_value,
+    counter, new_root, _wid, _mac, _pid = _edit(
+        session, tree, b"erin", b"", b"data_erin"
     )
-    counter, new_root, _wid, _mac = _finalize_pending(session)
 
     tree.insert(b"erin", b"data_erin", counter=new_counter)
     assert counter == new_counter
@@ -266,16 +284,9 @@ def test_ward_delete(session: Session) -> None:
     counter0 = _seed_device(session, tree)
 
     new_counter = counter0 + 1
-    ward.add_pending(
-        session,
-        address=b"alice",
-        old_value=ENTRIES[b"alice"],
-        new_value=b"",
-        new_counter=new_counter,
-        proof=tree.get_proof(b"alice"),
-        old_counter=tree.get_counter(b"alice"),
+    counter, new_root, _wid, _mac, _pid = _edit(
+        session, tree, b"alice", ENTRIES[b"alice"], b""
     )
-    counter, new_root, _wid, _mac = _finalize_pending(session)
 
     tree.delete(b"alice")
     assert counter == new_counter
@@ -284,23 +295,18 @@ def test_ward_delete(session: Session) -> None:
 
 @pytest.mark.models("core")
 def test_ward_counter_advances_only_at_finalize(session: Session) -> None:
-    """add_pending + commit must NOT advance the device counter; only finalize does."""
+    """queue_update + perform_update must NOT advance the device counter; only the
+    WM confirmation does."""
     tree = _make_tree()
     counter0 = _seed_device(session, tree)
     new_counter = counter0 + 1
 
-    ward.add_pending(
-        session,
-        address=b"alice",
-        old_value=ENTRIES[b"alice"],
-        new_value=b"data_alice_v2",
-        new_counter=new_counter,
-        proof=tree.get_proof(b"alice"),
-        old_counter=tree.get_counter(b"alice"),
+    _counter_t, pending_id = _queue_update(
+        session, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
-    c_counter, root_t, mac_t, wallet_id = ward.commit(session)
+    c_counter, _root_t, mac_t, wallet_id = _perform(session, tree, pending_id)
 
-    # After commit, the authenticated root/counter are still the pre-edit ones.
+    # After perform, the authenticated root/counter are still the pre-edit ones.
     valid, membership, dev_counter, _wid = ward.lookup(
         session,
         address=b"alice",
@@ -312,58 +318,41 @@ def test_ward_counter_advances_only_at_finalize(session: Session) -> None:
     assert dev_counter == counter0  # not advanced yet
 
     sig = sign_ward_update(c_counter, mac_t, wallet_id)
-    counter, _new_root, _wid, _root_mac = ward.confirm_commit(session, c_counter, mac_t, sig)
+    counter, _new_root, _wid, _root_mac = ward.confirmed_by_wm(
+        session, c_counter, mac_t, sig, pending_id
+    )
     assert counter == new_counter  # advanced now
 
 
 @pytest.mark.models("core")
 def test_ward_finalize_bad_signature_rejected(session: Session) -> None:
     tree = _make_tree()
-    counter0 = _seed_device(session, tree)
-    new_counter = counter0 + 1
+    _seed_device(session, tree)
 
-    ward.add_pending(
-        session,
-        address=b"alice",
-        old_value=ENTRIES[b"alice"],
-        new_value=b"data_alice_v2",
-        new_counter=new_counter,
-        proof=tree.get_proof(b"alice"),
-        old_counter=tree.get_counter(b"alice"),
+    _counter_t, pending_id = _queue_update(
+        session, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
-    c_counter, _root_t, mac_t, _wallet_id = ward.commit(session)
+    c_counter, _root_t, mac_t, _wallet_id = _perform(session, tree, pending_id)
 
     bad_sig = bytes(64)  # not a valid WM signature
     with pytest.raises(TrezorFailure):
-        ward.confirm_commit(session, c_counter, mac_t, bad_sig)
+        ward.confirmed_by_wm(session, c_counter, mac_t, bad_sig, pending_id)
 
 
 @pytest.mark.models("core")
-def test_ward_second_set_entry_rejected_while_pending(session: Session) -> None:
-    """Offline queue depth 1: a second add_pending while one is pending is rejected."""
+def test_ward_second_set_entry_queues_distinct_pending_id(session: Session) -> None:
+    """Multi-slot queue: a second queue_update while one is pending is accepted and
+    gets its own pending_id (the old depth-1 rejection no longer applies)."""
     tree = _make_tree()
-    counter0 = _seed_device(session, tree)
-    new_counter = counter0 + 1
+    _seed_device(session, tree)
 
-    ward.add_pending(
-        session,
-        address=b"alice",
-        old_value=ENTRIES[b"alice"],
-        new_value=b"data_alice_v2",
-        new_counter=new_counter,
-        proof=tree.get_proof(b"alice"),
-        old_counter=tree.get_counter(b"alice"),
-    )
-    with pytest.raises(TrezorFailure):
-        ward.add_pending(
-            session,
-            address=b"bob",
-            old_value=ENTRIES[b"bob"],
-            new_value=b"data_bob_v2",
-            new_counter=new_counter,
-            proof=tree.get_proof(b"bob"),
-            old_counter=tree.get_counter(b"bob"),
-        )
+    _c1, pid1 = _queue_update(session, b"alice", ENTRIES[b"alice"], b"data_alice_v2")
+    _c2, pid2 = _queue_update(session, b"bob", ENTRIES[b"bob"], b"data_bob_v2")
+    assert pid1 != pid2
+
+    # Both are queued simultaneously.
+    addresses, _wallet_id = ward.list_pending(session)
+    assert set(addresses) == {b"alice", b"bob"}
 
 
 # ---------------------------------------------------------------------------
@@ -493,69 +482,39 @@ def test_ward_get_address_label(session: Session) -> None:
 @pytest.mark.models("core")
 def test_ward_pending_queue_cleared_after_insert(session: Session) -> None:
     tree = _make_tree()
-    counter0 = _seed_device(session, tree)
-    new_counter = counter0 + 1
-    proof, w_addr, w_counter, w_value = tree.get_nonmembership_proof(b"erin")
+    _seed_device(session, tree)
 
     assert _pending_addresses(session) == []
-    ward.add_pending(
-        session,
-        address=b"erin",
-        old_value=b"",
-        new_value=b"data_erin",
-        new_counter=new_counter,
-        proof=proof,
-        witness_address=w_addr,
-        witness_counter=w_counter,
-        witness_value=w_value,
-    )
+    _c, pid = _queue_update(session, b"erin", b"", b"data_erin")
     assert _pending_addresses(session) == [b"erin"]
 
-    _finalize_pending(session)
+    _perform_and_finalize(session, tree, pid)
     assert _pending_addresses(session) == []
 
 
 @pytest.mark.models("core")
 def test_ward_pending_queue_cleared_after_update(session: Session) -> None:
     tree = _make_tree()
-    counter0 = _seed_device(session, tree)
-    new_counter = counter0 + 1
+    _seed_device(session, tree)
 
     assert _pending_addresses(session) == []
-    ward.add_pending(
-        session,
-        address=b"alice",
-        old_value=ENTRIES[b"alice"],
-        new_value=b"data_alice_v2",
-        new_counter=new_counter,
-        proof=tree.get_proof(b"alice"),
-        old_counter=tree.get_counter(b"alice"),
-    )
+    _c, pid = _queue_update(session, b"alice", ENTRIES[b"alice"], b"data_alice_v2")
     assert _pending_addresses(session) == [b"alice"]
 
-    _finalize_pending(session)
+    _perform_and_finalize(session, tree, pid)
     assert _pending_addresses(session) == []
 
 
 @pytest.mark.models("core")
 def test_ward_pending_queue_cleared_after_delete(session: Session) -> None:
     tree = _make_tree()
-    counter0 = _seed_device(session, tree)
-    new_counter = counter0 + 1
+    _seed_device(session, tree)
 
     assert _pending_addresses(session) == []
-    ward.add_pending(
-        session,
-        address=b"alice",
-        old_value=ENTRIES[b"alice"],
-        new_value=b"",
-        new_counter=new_counter,
-        proof=tree.get_proof(b"alice"),
-        old_counter=tree.get_counter(b"alice"),
-    )
+    _c, pid = _queue_update(session, b"alice", ENTRIES[b"alice"], b"")
     assert _pending_addresses(session) == [b"alice"]
 
-    _finalize_pending(session)
+    _perform_and_finalize(session, tree, pid)
     assert _pending_addresses(session) == []
 
 
@@ -566,22 +525,15 @@ def test_ward_pending_queue_cleared_after_update_to_current_value(
     """Updating a leaf to the value it already holds is still a real edit (the
     leaf counter advances, so the root changes); the queue must clear afterwards."""
     tree = _make_tree()
-    counter0 = _seed_device(session, tree)
-    new_counter = counter0 + 1
+    _seed_device(session, tree)
 
     assert _pending_addresses(session) == []
-    ward.add_pending(
-        session,
-        address=b"alice",
-        old_value=ENTRIES[b"alice"],
-        new_value=ENTRIES[b"alice"],  # unchanged value
-        new_counter=new_counter,
-        proof=tree.get_proof(b"alice"),
-        old_counter=tree.get_counter(b"alice"),
+    _c, pid = _queue_update(
+        session, b"alice", ENTRIES[b"alice"], ENTRIES[b"alice"]  # unchanged value
     )
     assert _pending_addresses(session) == [b"alice"]
 
-    _finalize_pending(session)
+    _perform_and_finalize(session, tree, pid)
     assert _pending_addresses(session) == []
 
 
@@ -598,21 +550,15 @@ def test_ward_rejected_finalize_keeps_pending_queue(session: Session) -> None:
     counter0 = _seed_device(session, tree)
     new_counter = counter0 + 1
 
-    ward.add_pending(
-        session,
-        address=b"alice",
-        old_value=ENTRIES[b"alice"],
-        new_value=b"data_alice_v2",
-        new_counter=new_counter,
-        proof=tree.get_proof(b"alice"),
-        old_counter=tree.get_counter(b"alice"),
+    _counter_t, pending_id = _queue_update(
+        session, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
-    c_counter, _root_t, mac_t, wallet_id = ward.commit(session)
+    c_counter, _root_t, mac_t, wallet_id = _perform(session, tree, pending_id)
     assert wallet_id is not None
     assert _pending_addresses(session) == [b"alice"]
 
     # A well-formed signature from an untrusted key: passes the counter/mac match
-    # check, then fails the WM attestation check -- confirm_commit raises BEFORE
+    # check, then fails the WM attestation check -- confirmed_by_wm raises BEFORE
     # queue_drop, so the candidate must remain.
     mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
     bad_sig = sign_ward_update(
@@ -621,15 +567,15 @@ def test_ward_rejected_finalize_keeps_pending_queue(session: Session) -> None:
     with pytest.raises(
         TrezorFailure, match="WM final attestation verification failed"
     ):
-        ward.confirm_commit(session, c_counter, mac_t, bad_sig)
+        ward.confirmed_by_wm(session, c_counter, mac_t, bad_sig, pending_id)
 
-    # The committed candidate survived the rejected finalize.
+    # The committed candidate survived the rejected confirmation.
     assert _pending_addresses(session) == [b"alice"]
 
     # ... and is still finalizable with a valid signature.
     good_sig = sign_ward_update(c_counter, mac_for_sig, wallet_id)
-    counter, new_root, _wid, _mac = ward.confirm_commit(
-        session, c_counter, mac_t, good_sig
+    counter, new_root, _wid, _mac = ward.confirmed_by_wm(
+        session, c_counter, mac_t, good_sig, pending_id
     )
     tree.insert(b"alice", b"data_alice_v2", counter=new_counter)
     assert counter == new_counter
@@ -639,38 +585,20 @@ def test_ward_rejected_finalize_keeps_pending_queue(session: Session) -> None:
 
 @pytest.mark.models("core")
 def test_ward_discard_pending_clears_queue_and_unblocks(session: Session) -> None:
-    """Explicit discard abandons a queued candidate the host cannot finalize,
-    clearing the depth-1 queue so a fresh edit can be added. It also reports the
-    discarded address and does NOT advance the device counter."""
+    """Explicit discard abandons a specific queued candidate (by pending_id) the
+    host cannot finalize. It reports the discarded address and does NOT advance
+    the device counter."""
     tree = _make_tree()
     counter0 = _seed_device(session, tree)
     new_counter = counter0 + 1
 
-    ward.add_pending(
-        session,
-        address=b"alice",
-        old_value=ENTRIES[b"alice"],
-        new_value=b"data_alice_v2",
-        new_counter=new_counter,
-        proof=tree.get_proof(b"alice"),
-        old_counter=tree.get_counter(b"alice"),
+    _counter_t, pid_alice = _queue_update(
+        session, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
     assert _pending_addresses(session) == [b"alice"]
 
-    # While a candidate is queued, a second add_pending is refused (depth-1).
-    with pytest.raises(TrezorFailure, match="pending candidate already exists"):
-        ward.add_pending(
-            session,
-            address=b"bob",
-            old_value=ENTRIES[b"bob"],
-            new_value=b"data_bob_v2",
-            new_counter=new_counter,
-            proof=tree.get_proof(b"bob"),
-            old_counter=tree.get_counter(b"bob"),
-        )
-
-    # Discard the stuck candidate.
-    discarded_address, wallet_id = ward.discard_pending(session)
+    # Discard the stuck candidate by its pending_id.
+    discarded_address, wallet_id = ward.discard_pending(session, pid_alice)
     assert discarded_address == b"alice"
     assert wallet_id is not None
     assert _pending_addresses(session) == []
@@ -687,18 +615,10 @@ def test_ward_discard_pending_clears_queue_and_unblocks(session: Session) -> Non
     assert valid and membership
     assert dev_counter == counter0
 
-    # The queue is unblocked: a different edit can now be added and finalized.
-    ward.add_pending(
-        session,
-        address=b"bob",
-        old_value=ENTRIES[b"bob"],
-        new_value=b"data_bob_v2",
-        new_counter=new_counter,
-        proof=tree.get_proof(b"bob"),
-        old_counter=tree.get_counter(b"bob"),
-    )
+    # The queue is unblocked: a different edit can now be queued and finalized.
+    _c2, pid_bob = _queue_update(session, b"bob", ENTRIES[b"bob"], b"data_bob_v2")
     assert _pending_addresses(session) == [b"bob"]
-    counter, new_root, _wid, _mac = _finalize_pending(session)
+    counter, new_root, _wid, _mac = _perform_and_finalize(session, tree, pid_bob)
     tree.insert(b"bob", b"data_bob_v2", counter=new_counter)
     assert counter == new_counter
     assert new_root == tree.get_root_hash()

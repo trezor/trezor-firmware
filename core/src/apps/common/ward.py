@@ -177,57 +177,72 @@ async def lookup(
     )
 
 
-async def add_pending(
+async def queue_update(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
-    new_counter: int,
-    proof: list[bytes],
-    old_counter: int | None = None,
-    witness_address: bytes | None = None,
-    witness_counter: int | None = None,
-    witness_value: bytes | None = None,
-) -> tuple[int, bytes]:
-    """Verify + queue the candidate edit via the WARD trust anchor. Returns
-    (candidate_counter, wallet_id). The host update round's WARDAddPending step
-    calls this; the counter only advances later at WARDConfirmCommit.
+) -> tuple[int, int, bytes]:
+    """Queue an edit INTENT via the WARD trust anchor (pull model). Shows the
+    old -> new change on a trusted screen and returns (counter_T, pending_id,
+    wallet_id) only on user approval. No proof is sent here; the device pulls it
+    later at WARDPerformUpdate.
     """
     from apps.ward import service
 
-    return await service.add_pending_impl(
-        address,
-        old_value,
-        new_value,
-        new_counter,
-        proof,
-        old_counter=old_counter,
-        witness_address=witness_address,
-        witness_counter=witness_counter,
-        witness_value=witness_value,
+    return await service.queue_update_impl(address, old_value, new_value)
+
+
+async def perform_update(
+    pending_id: int | None = None,
+) -> tuple[int, bytes | None, bytes | None, bytes]:
+    """Authorize a queued intent. Resolves it, PULLS the proof it needs from the
+    host on demand (WARDProofRequest naming address + pending_id -> WARDProofAck),
+    then hands it to the trust anchor to verify + compute the candidate. The wire
+    I/O (context.call) lives here in the Core gateway, not in the trust anchor.
+    Returns (counter_T, root_T, mac_T, wallet_id).
+    """
+    from apps.ward import service
+    from trezor.messages import WARDProofAck, WARDProofRequest
+    from trezor.wire import context
+
+    pid, address = await service.intent_address_impl(pending_id)
+
+    ack = await context.call(
+        WARDProofRequest(address=address, pending_id=pid), WARDProofAck
+    )
+
+    return await service.perform_update_impl(
+        pid,
+        ack.value,
+        ack.proof,
+        ack.counter,
+        witness_address=ack.witness_address,
+        witness_value=ack.witness_value,
+        witness_counter=ack.witness_counter,
     )
 
 
-async def commit() -> tuple[int, bytes | None, bytes | None, bytes]:
-    from apps.ward import service
-
-    return await service.commit_impl()
-
-
-async def confirm_commit(
-    counter: int, mac: bytes | None, qm_signature: bytes
+async def confirmed_by_wm(
+    counter: int,
+    mac: bytes | None,
+    wm_signature: bytes,
+    pending_id: int | None = None,
 ) -> tuple[int, bytes | None, bytes, bytes | None]:
     from apps.ward import service
 
-    return await service.confirm_commit_impl(counter, mac, qm_signature)
+    return await service.confirmed_by_wm_impl(counter, mac, wm_signature, pending_id)
 
 
-async def discard_pending() -> tuple[bytes | None, bytes]:
-    """Abandon the current wallet's queued pending edit. Returns
-    (discarded_address, wallet_id); discarded_address is None if nothing was
-    queued for this wallet."""
+async def discard_pending(
+    pending_id: int | None = None,
+) -> tuple[bytes | None, bytes]:
+    """Abandon queued pending edit(s) for the active wallet. With pending_id, drops
+    just that candidate and returns its address; without, drops all of the
+    wallet's candidates. Returns (discarded_address, wallet_id); discarded_address
+    is None when nothing matched (or in drop-all mode)."""
     from apps.ward import service
 
-    return await service.discard_pending_impl()
+    return await service.discard_pending_impl(pending_id)
 
 
 async def sync() -> tuple[bytes, int, bytes]:
@@ -252,8 +267,8 @@ async def reconcile(
     return await service.reconcile_impl(root)
 
 
-async def list_pending() -> tuple[list[bytes], bytes]:
-    """Return queued pending-edit addresses.
+async def list_pending() -> tuple[list[int], list[bytes], bytes]:
+    """Return queued (pending_ids, addresses, wallet_id) for the active wallet.
 
     Note:
     - wallet_id is still returned for compatibility with current callers

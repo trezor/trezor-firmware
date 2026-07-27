@@ -7520,59 +7520,57 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TronRawParameter"]:
             return isinstance(msg, cls)
 
-    class WARDAddPending(protobuf.MessageType):
+    class WARDQueueUpdate(protobuf.MessageType):
         address: "AnyBytes"
-        old_value: "AnyBytes"
+        old_value: "AnyBytes | None"
         new_value: "AnyBytes"
-        proof: "list[AnyBytes]"
-        witness_address: "AnyBytes | None"
-        witness_value: "AnyBytes | None"
-        old_counter: "int | None"
-        new_counter: "int"
-        witness_counter: "int | None"
 
         def __init__(
             self,
             *,
             address: "AnyBytes",
-            old_value: "AnyBytes",
             new_value: "AnyBytes",
-            new_counter: "int",
-            proof: "list[AnyBytes] | None" = None,
-            witness_address: "AnyBytes | None" = None,
-            witness_value: "AnyBytes | None" = None,
-            old_counter: "int | None" = None,
-            witness_counter: "int | None" = None,
+            old_value: "AnyBytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDAddPending"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDQueueUpdate"]:
             return isinstance(msg, cls)
 
-    class WARDAddPendingAck(protobuf.MessageType):
+    class WARDQueueUpdateAck(protobuf.MessageType):
         counter: "int"
+        pending_id: "int | None"
         wallet_id: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             counter: "int",
+            pending_id: "int | None" = None,
             wallet_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDAddPendingAck"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDQueueUpdateAck"]:
             return isinstance(msg, cls)
 
-    class WARDCommitCandidate(protobuf.MessageType):
+    class WARDPerformUpdate(protobuf.MessageType):
+        pending_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            pending_id: "int | None" = None,
+        ) -> None:
+            pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDCommitCandidate"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformUpdate"]:
             return isinstance(msg, cls)
 
-    class WARDCommitCandidateAck(protobuf.MessageType):
+    class WARDPerformUpdateAck(protobuf.MessageType):
         counter: "int"
         new_root: "AnyBytes | None"
         mac: "AnyBytes | None"
@@ -7589,28 +7587,30 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDCommitCandidateAck"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformUpdateAck"]:
             return isinstance(msg, cls)
 
-    class WARDConfirmCommit(protobuf.MessageType):
+    class WARDConfirmedByWM(protobuf.MessageType):
         counter: "int"
         mac: "AnyBytes | None"
-        qm_signature: "AnyBytes"
+        wm_signature: "AnyBytes"
+        pending_id: "int | None"
 
         def __init__(
             self,
             *,
             counter: "int",
-            qm_signature: "AnyBytes",
+            wm_signature: "AnyBytes",
             mac: "AnyBytes | None" = None,
+            pending_id: "int | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmCommit"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmedByWM"]:
             return isinstance(msg, cls)
 
-    class WARDConfirmCommitAck(protobuf.MessageType):
+    class WARDConfirmedByWMAck(protobuf.MessageType):
         counter: "int"
         new_root: "AnyBytes | None"
         wallet_id: "AnyBytes | None"
@@ -7627,7 +7627,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmCommitAck"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmedByWMAck"]:
             return isinstance(msg, cls)
 
     class WARDSync(protobuf.MessageType):
@@ -7697,11 +7697,13 @@ if TYPE_CHECKING:
     class WARDListPendingEditsAck(protobuf.MessageType):
         addresses: "list[AnyBytes]"
         wallet_id: "AnyBytes | None"
+        pending_ids: "list[int]"
 
         def __init__(
             self,
             *,
             addresses: "list[AnyBytes] | None" = None,
+            pending_ids: "list[int] | None" = None,
             wallet_id: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -7826,11 +7828,13 @@ if TYPE_CHECKING:
 
     class WARDProofRequest(protobuf.MessageType):
         address: "AnyBytes"
+        pending_id: "int | None"
 
         def __init__(
             self,
             *,
             address: "AnyBytes",
+            pending_id: "int | None" = None,
         ) -> None:
             pass
 
@@ -7863,6 +7867,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WARDDiscardPending(protobuf.MessageType):
+        pending_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            pending_id: "int | None" = None,
+        ) -> None:
+            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDDiscardPending"]:
@@ -7871,12 +7883,14 @@ if TYPE_CHECKING:
     class WARDDiscardPendingAck(protobuf.MessageType):
         discarded_address: "AnyBytes | None"
         wallet_id: "AnyBytes | None"
+        pending_id: "int | None"
 
         def __init__(
             self,
             *,
             discarded_address: "AnyBytes | None" = None,
             wallet_id: "AnyBytes | None" = None,
+            pending_id: "int | None" = None,
         ) -> None:
             pass
 

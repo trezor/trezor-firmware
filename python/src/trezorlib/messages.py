@@ -779,12 +779,12 @@ class MessageType(IntEnum):
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
     TronWithdrawBalance = 2213
-    WARDAddPending = 2330
-    WARDAddPendingAck = 2331
-    WARDCommitCandidate = 2332
-    WARDCommitCandidateAck = 2333
-    WARDConfirmCommit = 2334
-    WARDConfirmCommitAck = 2335
+    WARDQueueUpdate = 2330
+    WARDQueueUpdateAck = 2331
+    WARDPerformUpdate = 2332
+    WARDPerformUpdateAck = 2333
+    WARDConfirmedByWM = 2334
+    WARDConfirmedByWMAck = 2335
     WARDSync = 2336
     WARDSyncAck = 2337
     WARDIngestAttestation = 2338
@@ -9469,66 +9469,61 @@ class TronRawParameter(protobuf.MessageType):
         self.value = value
 
 
-class WARDAddPending(protobuf.MessageType):
+class WARDQueueUpdate(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2330
     FIELDS = {
         1: protobuf.Field("address", "bytes", repeated=False, required=True),
-        2: protobuf.Field("old_value", "bytes", repeated=False, required=True),
+        2: protobuf.Field("old_value", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("new_value", "bytes", repeated=False, required=True),
-        4: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
-        5: protobuf.Field("witness_address", "bytes", repeated=False, required=False, default=None),
-        6: protobuf.Field("witness_value", "bytes", repeated=False, required=False, default=None),
-        9: protobuf.Field("old_counter", "uint32", repeated=False, required=False, default=None),
-        10: protobuf.Field("new_counter", "uint32", repeated=False, required=True),
-        11: protobuf.Field("witness_counter", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address: "bytes",
-        old_value: "bytes",
         new_value: "bytes",
-        new_counter: "int",
-        proof: Optional[Sequence["bytes"]] = None,
-        witness_address: Optional["bytes"] = None,
-        witness_value: Optional["bytes"] = None,
-        old_counter: Optional["int"] = None,
-        witness_counter: Optional["int"] = None,
+        old_value: Optional["bytes"] = None,
     ) -> None:
-        self.proof: Sequence["bytes"] = proof if proof is not None else []
         self.address = address
-        self.old_value = old_value
         self.new_value = new_value
-        self.new_counter = new_counter
-        self.witness_address = witness_address
-        self.witness_value = witness_value
-        self.old_counter = old_counter
-        self.witness_counter = witness_counter
+        self.old_value = old_value
 
 
-class WARDAddPendingAck(protobuf.MessageType):
+class WARDQueueUpdateAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2331
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         counter: "int",
+        pending_id: Optional["int"] = None,
         wallet_id: Optional["bytes"] = None,
     ) -> None:
         self.counter = counter
+        self.pending_id = pending_id
         self.wallet_id = wallet_id
 
 
-class WARDCommitCandidate(protobuf.MessageType):
+class WARDPerformUpdate(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2332
+    FIELDS = {
+        1: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pending_id: Optional["int"] = None,
+    ) -> None:
+        self.pending_id = pending_id
 
 
-class WARDCommitCandidateAck(protobuf.MessageType):
+class WARDPerformUpdateAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2333
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
@@ -9551,27 +9546,30 @@ class WARDCommitCandidateAck(protobuf.MessageType):
         self.wallet_id = wallet_id
 
 
-class WARDConfirmCommit(protobuf.MessageType):
+class WARDConfirmedByWM(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2334
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
         2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("qm_signature", "bytes", repeated=False, required=True),
+        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+        4: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         counter: "int",
-        qm_signature: "bytes",
+        wm_signature: "bytes",
         mac: Optional["bytes"] = None,
+        pending_id: Optional["int"] = None,
     ) -> None:
         self.counter = counter
-        self.qm_signature = qm_signature
+        self.wm_signature = wm_signature
         self.mac = mac
+        self.pending_id = pending_id
 
 
-class WARDConfirmCommitAck(protobuf.MessageType):
+class WARDConfirmedByWMAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2335
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
@@ -9664,15 +9662,18 @@ class WARDListPendingEditsAck(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("addresses", "bytes", repeated=True, required=False, default=None),
         2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("pending_ids", "uint32", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         addresses: Optional[Sequence["bytes"]] = None,
+        pending_ids: Optional[Sequence["int"]] = None,
         wallet_id: Optional["bytes"] = None,
     ) -> None:
         self.addresses: Sequence["bytes"] = addresses if addresses is not None else []
+        self.pending_ids: Sequence["int"] = pending_ids if pending_ids is not None else []
         self.wallet_id = wallet_id
 
 
@@ -9809,14 +9810,17 @@ class WARDProofRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2348
     FIELDS = {
         1: protobuf.Field("address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address: "bytes",
+        pending_id: Optional["int"] = None,
     ) -> None:
         self.address = address
+        self.pending_id = pending_id
 
 
 class WARDProofAck(protobuf.MessageType):
@@ -9850,6 +9854,16 @@ class WARDProofAck(protobuf.MessageType):
 
 class WARDDiscardPending(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2350
+    FIELDS = {
+        1: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pending_id: Optional["int"] = None,
+    ) -> None:
+        self.pending_id = pending_id
 
 
 class WARDDiscardPendingAck(protobuf.MessageType):
@@ -9857,6 +9871,7 @@ class WARDDiscardPendingAck(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("discarded_address", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9864,9 +9879,11 @@ class WARDDiscardPendingAck(protobuf.MessageType):
         *,
         discarded_address: Optional["bytes"] = None,
         wallet_id: Optional["bytes"] = None,
+        pending_id: Optional["int"] = None,
     ) -> None:
         self.discarded_address = discarded_address
         self.wallet_id = wallet_id
+        self.pending_id = pending_id
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

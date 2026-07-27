@@ -22,79 +22,85 @@ ZERO_MAC = b"\x00" * 32
 # ---------------------------------------------------------------------------
 
 
-def add_pending(
+def queue_update(
     session: "Session",
     address: bytes,
     old_value: bytes,
     new_value: bytes,
-    new_counter: int,
-    proof: list[bytes],
-    old_counter: Optional[int] = None,
-    witness_address: Optional[bytes] = None,
-    witness_value: Optional[bytes] = None,
-    witness_counter: Optional[int] = None,
-) -> tuple[int, Optional[bytes]]:
-    """Verify a leaf change and queue it as the PENDING candidate.
+) -> tuple[int, Optional[int], Optional[bytes]]:
+    """Queue an edit INTENT (pull model). Carries NO proof.
 
-    old_value=b"" means the address is currently absent (INSERT / INIT);
-    new_value=b"" means delete (DELETE). new_counter must equal the current root
-    counter + 1. The device computes the candidate root/MAC but does NOT advance
-    its counter. Returns (candidate_counter, wallet_id).
+    old_value=b"" means the address is currently absent (INSERT); new_value=b""
+    means delete (DELETE); old_value is a display hint only. The device shows the
+    old -> new change on a trusted screen and, only on user approval, derives
+    counter_T and returns a pending_id. The candidate root is computed later, at
+    perform_update, from a proof the device pulls itself. Returns
+    (counter_T, pending_id, wallet_id).
     """
     resp = session.call(
-        messages.WARDAddPending(
+        messages.WARDQueueUpdate(
             address=address,
             old_value=old_value,
             new_value=new_value,
-            new_counter=new_counter,
-            old_counter=old_counter,
-            proof=proof,
-            witness_address=witness_address,
-            witness_value=witness_value,
-            witness_counter=witness_counter,
         ),
-        expect=messages.WARDAddPendingAck,
+        expect=messages.WARDQueueUpdateAck,
     )
-    return resp.counter, resp.wallet_id
+    return resp.counter, resp.pending_id, resp.wallet_id
 
 
-def commit(
+def perform_update(
     session: "Session",
+    pending_id: Optional[int] = None,
 ) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
-    """Emit the queued candidate. Returns (counter_T, root_T, mac_T, wallet_id);
-    root_T/mac_T are None if the candidate empties the tree."""
+    """Authorize a queued intent. The device PULLS the proof it needs mid-call:
+    it emits a WARDProofRequest, which the client answers via the registered
+    ``ward_proof_callback`` (e.g. ``tree_proof_callback(tree)``) -- so a callback
+    MUST be registered before calling this. pending_id selects the intent; if
+    omitted, the device targets the single queued one. Returns
+    (counter_T, root_T, mac_T, wallet_id); root_T/mac_T are None if the candidate
+    empties the tree.
+    """
     resp = session.call(
-        messages.WARDCommitCandidate(), expect=messages.WARDCommitCandidateAck
+        messages.WARDPerformUpdate(pending_id=pending_id),
+        expect=messages.WARDPerformUpdateAck,
     )
     return resp.counter, resp.new_root, resp.mac, resp.wallet_id
 
 
-def confirm_commit(
+def confirmed_by_wm(
     session: "Session",
     counter: int,
     mac: Optional[bytes],
-    qm_signature: bytes,
+    wm_signature: bytes,
+    pending_id: Optional[int] = None,
 ) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
-    """Finalize the committed candidate with the WM's Ed25519 signature.
+    """Install a committed candidate with the WM's Ed25519 signature over the exact
+    device-derived (counter_T, mac_T). pending_id selects it; if omitted, the
+    device targets the single queued candidate.
 
-    Advances the device counter and drops the queue. Returns
+    Advances the device counter and drops that candidate. Returns
     (counter, new_root, wallet_id, root_mac).
     """
     resp = session.call(
-        messages.WARDConfirmCommit(counter=counter, mac=mac, qm_signature=qm_signature),
-        expect=messages.WARDConfirmCommitAck,
+        messages.WARDConfirmedByWM(
+            counter=counter, mac=mac, wm_signature=wm_signature, pending_id=pending_id
+        ),
+        expect=messages.WARDConfirmedByWMAck,
     )
     return resp.counter, resp.new_root, resp.wallet_id, resp.root_mac
 
 
 def discard_pending(
     session: "Session",
+    pending_id: Optional[int] = None,
 ) -> tuple[Optional[bytes], Optional[bytes]]:
-    """Abandon the current wallet's queued pending edit without finalizing it,
-    unblocking the depth-1 offline queue. Returns (discarded_address, wallet_id);
-    discarded_address is None if nothing was queued for this wallet."""
+    """Abandon queued pending edit(s) without finalizing. With pending_id, drops
+    just that candidate; without it, drops EVERY candidate queued for the wallet.
+    Returns (discarded_address, wallet_id); discarded_address is None when nothing
+    matched (or in drop-all mode)."""
     resp = session.call(
-        messages.WARDDiscardPending(), expect=messages.WARDDiscardPendingAck
+        messages.WARDDiscardPending(pending_id=pending_id),
+        expect=messages.WARDDiscardPendingAck,
     )
     return resp.discarded_address, resp.wallet_id
 
