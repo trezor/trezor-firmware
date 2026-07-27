@@ -383,6 +383,8 @@ class TR:
     ethereum__staking_stake_intro: str = "Stake ETH on Everstake?"
     ethereum__staking_unstake: str = "Unstake"
     ethereum__staking_unstake_intro: str = "Unstake ETH from Everstake?"
+    ethereum__subcall: str = "Subcall"
+    ethereum__subcall_to: str = "Subcall to"
     ethereum__subtitle_input_data_bytes: str = "{0} / {1} bytes"
     ethereum__title_confirm_domain: str = "Confirm domain"
     ethereum__title_confirm_message: str = "Confirm message"

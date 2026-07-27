@@ -1667,6 +1667,10 @@ pub enum TranslatedString {
     ethereum__skip_to_hash = 1262,  // "Skip and view hash"
     #[cfg(feature = "universal_fw")]
     ethereum__view_data_and_hash = 1263,  // "View data and hash"
+    #[cfg(feature = "universal_fw")]
+    ethereum__subcall = 1264,  // "Subcall"
+    #[cfg(feature = "universal_fw")]
+    ethereum__subcall_to = 1265,  // "Subcall to"
 }
 
 impl TranslatedString {
@@ -2938,6 +2942,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4207,6 +4213,8 @@ impl TranslatedString {
                 19074,
                 19092,
                 19110,
+                19117,
+                19127,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5475,6 +5483,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6744,6 +6754,8 @@ impl TranslatedString {
                 19074,
                 19092,
                 19110,
+                19117,
+                19127,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8012,6 +8024,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9281,6 +9295,8 @@ impl TranslatedString {
                 19074,
                 19092,
                 19110,
+                19117,
+                19127,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10549,6 +10565,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11818,6 +11836,8 @@ impl TranslatedString {
                 19074,
                 19092,
                 19110,
+                19117,
+                19127,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13087,6 +13107,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14356,6 +14378,8 @@ impl TranslatedString {
                 16865,
                 16883,
                 16901,
+                16908,
+                16918,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15624,6 +15648,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16893,6 +16919,8 @@ impl TranslatedString {
                 16865,
                 16883,
                 16901,
+                16908,
+                16918,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18161,6 +18189,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19430,6 +19460,8 @@ impl TranslatedString {
                 16865,
                 16883,
                 16901,
+                16908,
+                16918,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20698,6 +20730,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21967,6 +22001,8 @@ impl TranslatedString {
                 16865,
                 16883,
                 16901,
+                16908,
+                16918,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23236,6 +23272,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24505,6 +24543,8 @@ impl TranslatedString {
                 18963,
                 18981,
                 18999,
+                19006,
+                19016,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25773,6 +25813,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27042,6 +27084,8 @@ impl TranslatedString {
                 18963,
                 18981,
                 18999,
+                19006,
+                19016,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28310,6 +28354,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29579,6 +29625,8 @@ impl TranslatedString {
                 18963,
                 18981,
                 18999,
+                19006,
+                19016,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30847,6 +30895,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32116,6 +32166,8 @@ impl TranslatedString {
                 18963,
                 18981,
                 18999,
+                19006,
+                19016,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33385,6 +33437,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34654,6 +34708,8 @@ impl TranslatedString {
                 20350,
                 20368,
                 20386,
+                20393,
+                20403,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35922,6 +35978,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37191,6 +37249,8 @@ impl TranslatedString {
                 20350,
                 20368,
                 20386,
+                20393,
+                20403,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38459,6 +38519,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39728,6 +39790,8 @@ impl TranslatedString {
                 20350,
                 20368,
                 20386,
+                20393,
+                20403,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40996,6 +41060,8 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "Subcall",
+                "Subcall to",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42265,6 +42331,8 @@ impl TranslatedString {
                 20350,
                 20368,
                 20386,
+                20393,
+                20403,
             ];
 
         }
@@ -42874,6 +42942,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__staking_unstake, Self::ethereum__staking_unstake),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__staking_unstake_intro, Self::ethereum__staking_unstake_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__subcall, Self::ethereum__subcall),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__subcall_to, Self::ethereum__subcall_to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__subtitle_input_data_bytes, Self::ethereum__subtitle_input_data_bytes),
         #[cfg(feature = "universal_fw")]

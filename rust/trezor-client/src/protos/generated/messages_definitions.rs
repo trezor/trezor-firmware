@@ -1667,6 +1667,10 @@ pub struct EthereumERC7730FieldInfo {
     pub prefix: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.const_token_address)
     pub const_token_address: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.callee_path)
+    pub callee_path: ::protobuf::MessageField<EthereumERC7730Path>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.selector)
+    pub selector: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1887,8 +1891,44 @@ impl EthereumERC7730FieldInfo {
         self.const_token_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes selector = 11;
+
+    pub fn selector(&self) -> &[u8] {
+        match self.selector.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_selector(&mut self) {
+        self.selector = ::std::option::Option::None;
+    }
+
+    pub fn has_selector(&self) -> bool {
+        self.selector.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_selector(&mut self, v: ::std::vec::Vec<u8>) {
+        self.selector = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_selector(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.selector.is_none() {
+            self.selector = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.selector.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_selector(&mut self) -> ::std::vec::Vec<u8> {
+        self.selector.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut fields = ::std::vec::Vec::with_capacity(11);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, EthereumERC7730Path>(
             "path",
@@ -1935,6 +1975,16 @@ impl EthereumERC7730FieldInfo {
             |m: &EthereumERC7730FieldInfo| { &m.const_token_address },
             |m: &mut EthereumERC7730FieldInfo| { &mut m.const_token_address },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, EthereumERC7730Path>(
+            "callee_path",
+            |m: &EthereumERC7730FieldInfo| { &m.callee_path },
+            |m: &mut EthereumERC7730FieldInfo| { &mut m.callee_path },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "selector",
+            |m: &EthereumERC7730FieldInfo| { &m.selector },
+            |m: &mut EthereumERC7730FieldInfo| { &mut m.selector },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumERC7730FieldInfo>(
             "EthereumERC7730FieldInfo",
             fields,
@@ -1962,6 +2012,11 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
             }
         };
         for v in &self.token_path {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.callee_path {
             if !v.is_initialized() {
                 return false;
             }
@@ -1998,6 +2053,12 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
                 },
                 74 => {
                     self.const_token_address = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                82 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.callee_path)?;
+                },
+                90 => {
+                    self.selector = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -2040,6 +2101,13 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
         if let Some(v) = self.const_token_address.as_ref() {
             my_size += ::protobuf::rt::bytes_size(9, &v);
         }
+        if let Some(v) = self.callee_path.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.selector.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(11, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2073,6 +2141,12 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
         if let Some(v) = self.const_token_address.as_ref() {
             os.write_bytes(9, v)?;
         }
+        if let Some(v) = self.callee_path.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(10, v, os)?;
+        }
+        if let Some(v) = self.selector.as_ref() {
+            os.write_bytes(11, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2099,6 +2173,8 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
         self.base = ::std::option::Option::None;
         self.prefix = ::std::option::Option::None;
         self.const_token_address = ::std::option::Option::None;
+        self.callee_path.clear();
+        self.selector = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2113,6 +2189,8 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
             base: ::std::option::Option::None,
             prefix: ::std::option::Option::None,
             const_token_address: ::std::option::Option::None,
+            callee_path: ::protobuf::MessageField::none(),
+            selector: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2843,6 +2921,8 @@ pub enum EthereumERC7730FieldFormatterType {
     FORMATTER_RAW = 4,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumERC7730FieldFormatterType.FORMATTER_DATE)
     FORMATTER_DATE = 5,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumERC7730FieldFormatterType.FORMATTER_CALLDATA)
+    FORMATTER_CALLDATA = 6,
 }
 
 impl ::protobuf::Enum for EthereumERC7730FieldFormatterType {
@@ -2860,6 +2940,7 @@ impl ::protobuf::Enum for EthereumERC7730FieldFormatterType {
             3 => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_UNIT),
             4 => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_RAW),
             5 => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_DATE),
+            6 => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_CALLDATA),
             _ => ::std::option::Option::None
         }
     }
@@ -2872,6 +2953,7 @@ impl ::protobuf::Enum for EthereumERC7730FieldFormatterType {
             "FORMATTER_UNIT" => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_UNIT),
             "FORMATTER_RAW" => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_RAW),
             "FORMATTER_DATE" => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_DATE),
+            "FORMATTER_CALLDATA" => ::std::option::Option::Some(EthereumERC7730FieldFormatterType::FORMATTER_CALLDATA),
             _ => ::std::option::Option::None
         }
     }
@@ -2883,6 +2965,7 @@ impl ::protobuf::Enum for EthereumERC7730FieldFormatterType {
         EthereumERC7730FieldFormatterType::FORMATTER_UNIT,
         EthereumERC7730FieldFormatterType::FORMATTER_RAW,
         EthereumERC7730FieldFormatterType::FORMATTER_DATE,
+        EthereumERC7730FieldFormatterType::FORMATTER_CALLDATA,
     ];
 }
 
@@ -3007,7 +3090,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     h\x18\x02\x20\x01(\x0e2<.hw.trezor.messages.definitions.EthereumERC7730C\
     ontainerPathR\rcontainerPath\x12\x1f\n\x0bconst_value\x18\x03\x20\x01(\t\
     R\nconstValue\x12\x1f\n\x0bslice_start\x18\x04\x20\x01(\x11R\nsliceStart\
-    \x12\x1b\n\tslice_end\x18\x05\x20\x01(\x11R\x08sliceEnd\"\xc4\x03\n\x18E\
+    \x12\x1b\n\tslice_end\x18\x05\x20\x01(\x11R\x08sliceEnd\"\xb6\x04\n\x18E\
     thereumERC7730FieldInfo\x12G\n\x04path\x18\x01\x20\x02(\x0b23.hw.trezor.\
     messages.definitions.EthereumERC7730PathR\x04path\x12\x14\n\x05label\x18\
     \x02\x20\x02(\tR\x05label\x12_\n\tformatter\x18\x03\x20\x02(\x0e2A.hw.tr\
@@ -3017,35 +3100,38 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0cR\tthreshold\x12\x1a\n\x08decimals\x18\x06\x20\x01(\rR\x08decimals\
     \x12\x12\n\x04base\x18\x07\x20\x01(\tR\x04base\x12\x16\n\x06prefix\x18\
     \x08\x20\x01(\x08R\x06prefix\x12.\n\x13const_token_address\x18\t\x20\x01\
-    (\x0cR\x11constTokenAddress\"\xfa\x02\n\x19EthereumDisplayFormatInfo\x12\
-    \x19\n\x08chain_id\x18\x01\x20\x02(\x04R\x07chainId\x12\x18\n\x07address\
-    \x18\x02\x20\x02(\x0cR\x07address\x12\x19\n\x08func_sig\x18\x03\x20\x02(\
-    \x0cR\x07funcSig\x12\x16\n\x06intent\x18\x04\x20\x02(\tR\x06intent\x12i\
-    \n\x15parameter_definitions\x18\x05\x20\x03(\x0b24.hw.trezor.messages.de\
-    finitions.EthereumABIValueInfoR\x14parameterDefinitions\x12e\n\x11field_\
-    definitions\x18\x06\x20\x03(\x0b28.hw.trezor.messages.definitions.Ethere\
-    umERC7730FieldInfoR\x10fieldDefinitions\x12#\n\rprovider_name\x18\x07\
-    \x20\x01(\tR\x0cproviderName*i\n\x0eDefinitionType\x12\x14\n\x10ETHEREUM\
-    _NETWORK\x10\0\x12\x12\n\x0eETHEREUM_TOKEN\x10\x01\x12\x10\n\x0cSOLANA_T\
-    OKEN\x10\x02\x12\x1b\n\x17ETHEREUM_DISPLAY_FORMAT\x10\x03*\xa7\x03\n\x0f\
-    EthereumABIType\x12\x0f\n\x0bABI_ADDRESS\x10\0\x12\x0f\n\x0bABI_UINT256\
-    \x10\x01\x12\x0f\n\x0bABI_UINT248\x10\x02\x12\x0f\n\x0bABI_UINT160\x10\
-    \x03\x12\x0f\n\x0bABI_UINT128\x10\x04\x12\x0f\n\x0bABI_UINT120\x10\x05\
-    \x12\x0f\n\x0bABI_UINT112\x10\x06\x12\x0e\n\nABI_UINT96\x10\x07\x12\x0e\
-    \n\nABI_UINT72\x10\x08\x12\x0e\n\nABI_UINT64\x10\t\x12\x0e\n\nABI_UINT48\
-    \x10\n\x12\x0e\n\nABI_UINT40\x10\x0b\x12\x0e\n\nABI_UINT32\x10\x0c\x12\
-    \x0e\n\nABI_UINT24\x10\r\x12\x0e\n\nABI_UINT16\x10\x0e\x12\r\n\tABI_UINT\
-    8\x10\x0f\x12\x0c\n\x08ABI_BOOL\x10\x10\x12\x0e\n\nABI_INT160\x10\x11\
-    \x12\x0f\n\x0bABI_BYTES32\x10\x14\x12\x0f\n\x0bABI_BYTES16\x10\x15\x12\
-    \x0e\n\nABI_BYTES8\x10\x16\x12\x0e\n\nABI_BYTES4\x10\x17\x12\x0f\n\x0bAB\
-    I_BYTES20\x10\x18\x12\r\n\tABI_BYTES\x10\x1e\x12\x0e\n\nABI_STRING\x10\
-    \x1f*\xac\x01\n!EthereumERC7730FieldFormatterType\x12\x1a\n\x16FORMATTER\
-    _ADDRESS_NAME\x10\0\x12\x14\n\x10FORMATTER_AMOUNT\x10\x01\x12\x1a\n\x16F\
-    ORMATTER_TOKEN_AMOUNT\x10\x02\x12\x12\n\x0eFORMATTER_UNIT\x10\x03\x12\
-    \x11\n\rFORMATTER_RAW\x10\x04\x12\x12\n\x0eFORMATTER_DATE\x10\x05*;\n\
-    \x1cEthereumERC7730ContainerPath\x12\x08\n\x04FROM\x10\x01\x12\t\n\x05VA\
-    LUE\x10\x02\x12\x06\n\x02TO\x10\x03B?\n#com.satoshilabs.trezor.lib.proto\
-    bufB\x18TrezorMessageDefinitions\
+    (\x0cR\x11constTokenAddress\x12T\n\x0bcallee_path\x18\n\x20\x01(\x0b23.h\
+    w.trezor.messages.definitions.EthereumERC7730PathR\ncalleePath\x12\x1a\n\
+    \x08selector\x18\x0b\x20\x01(\x0cR\x08selector\"\xfa\x02\n\x19EthereumDi\
+    splayFormatInfo\x12\x19\n\x08chain_id\x18\x01\x20\x02(\x04R\x07chainId\
+    \x12\x18\n\x07address\x18\x02\x20\x02(\x0cR\x07address\x12\x19\n\x08func\
+    _sig\x18\x03\x20\x02(\x0cR\x07funcSig\x12\x16\n\x06intent\x18\x04\x20\
+    \x02(\tR\x06intent\x12i\n\x15parameter_definitions\x18\x05\x20\x03(\x0b2\
+    4.hw.trezor.messages.definitions.EthereumABIValueInfoR\x14parameterDefin\
+    itions\x12e\n\x11field_definitions\x18\x06\x20\x03(\x0b28.hw.trezor.mess\
+    ages.definitions.EthereumERC7730FieldInfoR\x10fieldDefinitions\x12#\n\rp\
+    rovider_name\x18\x07\x20\x01(\tR\x0cproviderName*i\n\x0eDefinitionType\
+    \x12\x14\n\x10ETHEREUM_NETWORK\x10\0\x12\x12\n\x0eETHEREUM_TOKEN\x10\x01\
+    \x12\x10\n\x0cSOLANA_TOKEN\x10\x02\x12\x1b\n\x17ETHEREUM_DISPLAY_FORMAT\
+    \x10\x03*\xa7\x03\n\x0fEthereumABIType\x12\x0f\n\x0bABI_ADDRESS\x10\0\
+    \x12\x0f\n\x0bABI_UINT256\x10\x01\x12\x0f\n\x0bABI_UINT248\x10\x02\x12\
+    \x0f\n\x0bABI_UINT160\x10\x03\x12\x0f\n\x0bABI_UINT128\x10\x04\x12\x0f\n\
+    \x0bABI_UINT120\x10\x05\x12\x0f\n\x0bABI_UINT112\x10\x06\x12\x0e\n\nABI_\
+    UINT96\x10\x07\x12\x0e\n\nABI_UINT72\x10\x08\x12\x0e\n\nABI_UINT64\x10\t\
+    \x12\x0e\n\nABI_UINT48\x10\n\x12\x0e\n\nABI_UINT40\x10\x0b\x12\x0e\n\nAB\
+    I_UINT32\x10\x0c\x12\x0e\n\nABI_UINT24\x10\r\x12\x0e\n\nABI_UINT16\x10\
+    \x0e\x12\r\n\tABI_UINT8\x10\x0f\x12\x0c\n\x08ABI_BOOL\x10\x10\x12\x0e\n\
+    \nABI_INT160\x10\x11\x12\x0f\n\x0bABI_BYTES32\x10\x14\x12\x0f\n\x0bABI_B\
+    YTES16\x10\x15\x12\x0e\n\nABI_BYTES8\x10\x16\x12\x0e\n\nABI_BYTES4\x10\
+    \x17\x12\x0f\n\x0bABI_BYTES20\x10\x18\x12\r\n\tABI_BYTES\x10\x1e\x12\x0e\
+    \n\nABI_STRING\x10\x1f*\xc4\x01\n!EthereumERC7730FieldFormatterType\x12\
+    \x1a\n\x16FORMATTER_ADDRESS_NAME\x10\0\x12\x14\n\x10FORMATTER_AMOUNT\x10\
+    \x01\x12\x1a\n\x16FORMATTER_TOKEN_AMOUNT\x10\x02\x12\x12\n\x0eFORMATTER_\
+    UNIT\x10\x03\x12\x11\n\rFORMATTER_RAW\x10\x04\x12\x12\n\x0eFORMATTER_DAT\
+    E\x10\x05\x12\x16\n\x12FORMATTER_CALLDATA\x10\x06*;\n\x1cEthereumERC7730\
+    ContainerPath\x12\x08\n\x04FROM\x10\x01\x12\t\n\x05VALUE\x10\x02\x12\x06\
+    \n\x02TO\x10\x03B?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessa\
+    geDefinitions\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
