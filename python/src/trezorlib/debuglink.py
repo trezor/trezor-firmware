@@ -1860,7 +1860,26 @@ def load_device(
 
 
 def load_trezorapp(session: client.Session, binary: Path) -> int:
-    instance_id = trezorapp.load(session, binary.read_bytes(), b"", None)
+    if not binary.is_file():
+        raise FileNotFoundError(f"App binary not found: {binary}")
+    app_binary = binary.read_bytes()
+
+    # The proof sits next to the app binary, sharing its name but with a .proof suffix.
+    proof_path = binary.with_suffix(".proof")
+    if not proof_path.is_file():
+        raise FileNotFoundError(f"App proof not found: {proof_path}")
+    proof = proof_path.read_bytes()
+
+    # Pick the root packet based on the app ring stored in the app header:
+    # ring 0 -> rootpacket_0, rings 1 and 2 -> rootpacket_12.
+    app_ring = trezorapp.AppImage.parse(app_binary).header.app_ring
+    root_packet_name = "rootpacket_0.tmr" if app_ring == 0 else "rootpacket_12.tmr"
+    root_packet_path = binary.parent / root_packet_name
+    if not root_packet_path.is_file():
+        raise FileNotFoundError(f"Root packet not found: {root_packet_path}")
+    root_packet = root_packet_path.read_bytes()
+
+    instance_id = trezorapp.load(session, app_binary, proof, root_packet, None)
     return instance_id
 
 
