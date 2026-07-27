@@ -3403,6 +3403,8 @@ if TYPE_CHECKING:
         base: "str | None"
         prefix: "bool | None"
         const_token_address: "AnyBytes | None"
+        callee_path: "EthereumERC7730Path | None"
+        selector: "AnyBytes | None"
 
         def __init__(
             self,
@@ -3416,6 +3418,8 @@ if TYPE_CHECKING:
             base: "str | None" = None,
             prefix: "bool | None" = None,
             const_token_address: "AnyBytes | None" = None,
+            callee_path: "EthereumERC7730Path | None" = None,
+            selector: "AnyBytes | None" = None,
         ) -> None:
             pass
 
