@@ -63,8 +63,12 @@ ts_t app_header_calc_merkle_root(const app_header_t* header,
   // Calculate header hash
   SHA256_CTX ctx;
   sha256_Init(&ctx);
-  sha256_Update(&ctx, prefix0, sizeof(prefix0));
   sha256_Update(&ctx, (const uint8_t*)header, header->header_size);
+  sha256_Final(&ctx, root->bytes);
+
+  sha256_Init(&ctx);
+  sha256_Update(&ctx, prefix0, sizeof(prefix0));  
+  sha256_Update(&ctx, root->bytes, sizeof(root->bytes));
   sha256_Final(&ctx, root->bytes);
 
   // Add the Merkle proof nodes to the hash
