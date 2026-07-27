@@ -42,7 +42,7 @@ def with_colon(
         return None
 
     NBSP = "\u00a0"
-    separator = f"{NBSP}:" if translations.get_language() == "fr" else ":"
+    separator = f"{NBSP}:" if translations.get_language() == "fr-FR" else ":"
     if isinstance(properties, str):
         if properties:
             return f"{properties}{separator}"
