@@ -24,8 +24,8 @@
 #include <string.h>
 #include "base58.h"
 
-int script_output_to_address(const uint8_t *script, int scriptlen, char *addr,
-                             int addrsize) {
+size_t script_output_to_address(const uint8_t *script, size_t scriptlen,
+                                char *addr, size_t addrsize) {
   uint8_t raw[35] = {0};
 
   // P2PKH

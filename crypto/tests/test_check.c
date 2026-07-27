@@ -1194,17 +1194,17 @@ START_TEST(test_base58) {
   const char **str = base58_vector + 1;
   uint8_t rawn[34];
   char strn[53];
-  int r;
+  size_t r;
   while (*raw && *str) {
-    int len = strlen(*raw) / 2;
+    size_t len = strlen(*raw) / 2;
 
     memcpy(rawn, fromhex(*raw), len);
     r = base58_encode_check(rawn, len, HASHER_SHA2D, strn, sizeof(strn));
-    ck_assert_int_eq((size_t)r, strlen(*str) + 1);
+    ck_assert_uint_eq(r, strlen(*str) + 1);
     ck_assert_str_eq(strn, *str);
 
     r = base58_decode_check(strn, HASHER_SHA2D, rawn, len);
-    ck_assert_int_eq(r, len);
+    ck_assert_uint_eq(r, len);
     ck_assert_mem_eq(rawn, fromhex(*raw), len);
 
     raw += 2;
@@ -6952,10 +6952,10 @@ START_TEST(test_mnemonic_to_bits) {
   a = vectors;
   b = vectors + 1;
   while (*a && *b) {
-    int mnemonic_bits_len = mnemonic_to_bits(*b, mnemonic_bits);
-    ck_assert_int_eq(mnemonic_bits_len % 33, 0);
+    size_t mnemonic_bits_len = mnemonic_to_bits(*b, mnemonic_bits);
+    ck_assert_uint_eq(mnemonic_bits_len % 33, 0);
     mnemonic_bits_len = mnemonic_bits_len * 4 / 33;
-    ck_assert_uint_eq((size_t)mnemonic_bits_len, strlen(*a) / 2);
+    ck_assert_uint_eq(mnemonic_bits_len, strlen(*a) / 2);
     ck_assert_mem_eq(mnemonic_bits, fromhex(*a), mnemonic_bits_len);
     a += 2;
     b += 2;
@@ -8568,9 +8568,10 @@ static void test_bip32_ecdh_init_node(HDNode *node, const char *seed_str,
   }
 }
 
-static void test_bip32_ecdh(const char *curve_name, int expected_key_size,
+static void test_bip32_ecdh(const char *curve_name, size_t expected_key_size,
                             const uint8_t *expected_key) {
-  int res, key_size;
+  int res;
+  size_t key_size;
   HDNode alice, bob;
   uint8_t session_key1[expected_key_size], session_key2[expected_key_size];
 
@@ -8580,13 +8581,13 @@ static void test_bip32_ecdh(const char *curve_name, int expected_key_size,
   // Generate shared key from Alice's secret key and Bob's public key
   res = hdnode_get_shared_key(&alice, bob.public_key, session_key1, &key_size);
   ck_assert_int_eq(res, 0);
-  ck_assert_int_eq(key_size, expected_key_size);
+  ck_assert_uint_eq(key_size, expected_key_size);
   ck_assert_mem_eq(session_key1, expected_key, key_size);
 
   // Generate shared key from Bob's secret key and Alice's public key
   res = hdnode_get_shared_key(&bob, alice.public_key, session_key2, &key_size);
   ck_assert_int_eq(res, 0);
-  ck_assert_int_eq(key_size, expected_key_size);
+  ck_assert_uint_eq(key_size, expected_key_size);
   ck_assert_mem_eq(session_key2, expected_key, key_size);
 }
 
@@ -8610,22 +8611,23 @@ START_TEST(test_bip32_ecdh_errors) {
   HDNode node;
   const uint8_t peer_public_key[65] = {0};  // invalid public key
   uint8_t session_key[65];
-  int res, key_size = 0;
+  int res;
+  size_t key_size = 0;
 
   test_bip32_ecdh_init_node(&node, "Seed", ED25519_NAME);
   res = hdnode_get_shared_key(&node, peer_public_key, session_key, &key_size);
   ck_assert_int_eq(res, 1);
-  ck_assert_int_eq(key_size, 0);
+  ck_assert_uint_eq(key_size, 0);
 
   test_bip32_ecdh_init_node(&node, "Seed", CURVE25519_NAME);
   res = hdnode_get_shared_key(&node, peer_public_key, session_key, &key_size);
   ck_assert_int_eq(res, 1);
-  ck_assert_int_eq(key_size, 0);
+  ck_assert_uint_eq(key_size, 0);
 
   test_bip32_ecdh_init_node(&node, "Seed", NIST256P1_NAME);
   res = hdnode_get_shared_key(&node, peer_public_key, session_key, &key_size);
   ck_assert_int_eq(res, 1);
-  ck_assert_int_eq(key_size, 0);
+  ck_assert_uint_eq(key_size, 0);
 }
 END_TEST
 
@@ -8647,9 +8649,9 @@ START_TEST(test_output_script) {
   adr = vectors + 1;
   char address[60];
   while (*scr && *adr) {
-    int r =
+    size_t r =
         script_output_to_address(fromhex(*scr), strlen(*scr) / 2, address, 60);
-    ck_assert_uint_eq((size_t)r, strlen(*adr) + 1);
+    ck_assert_uint_eq(r, strlen(*adr) + 1);
     ck_assert_str_eq(address, *adr);
     scr += 2;
     adr += 2;

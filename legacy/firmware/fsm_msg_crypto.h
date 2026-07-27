@@ -213,7 +213,7 @@ void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
   HDNode *node = fsm_getDerivedNode(curve, address_n, 5, NULL);
   if (!node) return;
 
-  int result_size = 0;
+  size_t result_size = 0;
   if (hdnode_get_shared_key(node, msg->peer_public_key.bytes,
                             resp->session_key.bytes, &result_size) == 0) {
     resp->session_key.size = result_size;

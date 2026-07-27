@@ -1869,7 +1869,8 @@ size_t bn_format(const bignum256 *amount, const char *prefix, const char *suffix
     BN_FORMAT_ADD_OUTPUT_CHAR(prefix[i])
 
   // Move formatted amount to the start of output
-  int length = output - position + output_length;
+  assert(output <= position && position < output + output_length);
+  size_t length = (size_t)(output + output_length - position);
   memmove(output, position, length);
   return length - 1;
 }

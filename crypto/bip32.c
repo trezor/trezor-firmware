@@ -142,7 +142,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t child_num,
   return 1;
 }
 
-int hdnode_from_seed(const uint8_t *seed, int seed_len, const char *curve,
+int hdnode_from_seed(const uint8_t *seed, size_t seed_len, const char *curve,
                      HDNode *out) {
   LOCAL_CONFIDENTIAL uint8_t I[32 + 32];
   memzero(out, sizeof(HDNode));
@@ -339,7 +339,7 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i) {
 #if USE_BIP32_CACHE
 static bool private_ckd_cache_root_set = false;
 static CONFIDENTIAL HDNode private_ckd_cache_root;
-static int private_ckd_cache_index = 0;
+static size_t private_ckd_cache_index = 0;
 
 static CONFIDENTIAL struct {
   bool set;
@@ -436,7 +436,7 @@ int hdnode_get_address_raw(HDNode *node, uint32_t version, uint8_t *addr_raw) {
 }
 
 int hdnode_get_address(HDNode *node, uint32_t version, char *addr,
-                       int addrsize) {
+                       size_t addrsize) {
   if (hdnode_fill_public_key(node) != 0) {
     return 1;
   }
@@ -663,7 +663,7 @@ int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig,
 }
 
 int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key,
-                          uint8_t *session_key, int *result_size) {
+                          uint8_t *session_key, size_t *result_size) {
   // Use elliptic curve Diffie-Helman to compute shared session key
   if (node->curve->params) {
     if (ecdh_multiply(node->curve->params, node->private_key, peer_public_key,
@@ -689,9 +689,9 @@ int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key,
   }
 }
 
-static int hdnode_serialize(const HDNode *node, uint32_t fingerprint,
-                            uint32_t version, bool use_private, char *str,
-                            int strsize) {
+static size_t hdnode_serialize(const HDNode *node, uint32_t fingerprint,
+                               uint32_t version, bool use_private, char *str,
+                               size_t strsize) {
   uint8_t node_data[78] = {0};
   write_be(node_data, version);
   node_data[4] = node->depth;
@@ -704,19 +704,19 @@ static int hdnode_serialize(const HDNode *node, uint32_t fingerprint,
   } else {
     memcpy(node_data + 45, node->public_key, 33);
   }
-  int ret = base58_encode_check(node_data, sizeof(node_data),
-                                node->curve->hasher_base58, str, strsize);
+  size_t ret = base58_encode_check(node_data, sizeof(node_data),
+                                   node->curve->hasher_base58, str, strsize);
   memzero(node_data, sizeof(node_data));
   return ret;
 }
 
-int hdnode_serialize_public(const HDNode *node, uint32_t fingerprint,
-                            uint32_t version, char *str, int strsize) {
+size_t hdnode_serialize_public(const HDNode *node, uint32_t fingerprint,
+                               uint32_t version, char *str, size_t strsize) {
   return hdnode_serialize(node, fingerprint, version, false, str, strsize);
 }
 
-int hdnode_serialize_private(const HDNode *node, uint32_t fingerprint,
-                             uint32_t version, char *str, int strsize) {
+size_t hdnode_serialize_private(const HDNode *node, uint32_t fingerprint,
+                                uint32_t version, char *str, size_t strsize) {
   return hdnode_serialize(node, fingerprint, version, true, str, strsize);
 }
 
