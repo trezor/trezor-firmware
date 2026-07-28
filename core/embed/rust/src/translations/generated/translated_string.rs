@@ -1667,6 +1667,12 @@ pub enum TranslatedString {
     ethereum__skip_to_hash = 1262,  // "Skip and view hash"
     #[cfg(feature = "universal_fw")]
     ethereum__view_data_and_hash = 1263,  // "View data and hash"
+    #[cfg(feature = "universal_fw")]
+    stellar__on_behalf_of = 1264,  // "On behalf of"
+    #[cfg(feature = "universal_fw")]
+    stellar__sign_authorization = 1265,  // "Sign authorization"
+    #[cfg(feature = "universal_fw")]
+    stellar__valid_until_ledger = 1266,  // "Valid until ledger"
 }
 
 impl TranslatedString {
@@ -2938,6 +2944,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4207,6 +4216,9 @@ impl TranslatedString {
                 19074,
                 19092,
                 19110,
+                19122,
+                19140,
+                19158,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5475,6 +5487,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6744,6 +6759,9 @@ impl TranslatedString {
                 19074,
                 19092,
                 19110,
+                19122,
+                19140,
+                19158,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8012,6 +8030,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9281,6 +9302,9 @@ impl TranslatedString {
                 19074,
                 19092,
                 19110,
+                19122,
+                19140,
+                19158,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10549,6 +10573,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11818,6 +11845,9 @@ impl TranslatedString {
                 19074,
                 19092,
                 19110,
+                19122,
+                19140,
+                19158,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13087,6 +13117,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14356,6 +14389,9 @@ impl TranslatedString {
                 16865,
                 16883,
                 16901,
+                16913,
+                16931,
+                16949,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15624,6 +15660,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16893,6 +16932,9 @@ impl TranslatedString {
                 16865,
                 16883,
                 16901,
+                16913,
+                16931,
+                16949,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18161,6 +18203,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19430,6 +19475,9 @@ impl TranslatedString {
                 16865,
                 16883,
                 16901,
+                16913,
+                16931,
+                16949,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20698,6 +20746,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21967,6 +22018,9 @@ impl TranslatedString {
                 16865,
                 16883,
                 16901,
+                16913,
+                16931,
+                16949,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23236,6 +23290,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24505,6 +24562,9 @@ impl TranslatedString {
                 18963,
                 18981,
                 18999,
+                19011,
+                19029,
+                19047,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25773,6 +25833,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27042,6 +27105,9 @@ impl TranslatedString {
                 18963,
                 18981,
                 18999,
+                19011,
+                19029,
+                19047,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28310,6 +28376,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29579,6 +29648,9 @@ impl TranslatedString {
                 18963,
                 18981,
                 18999,
+                19011,
+                19029,
+                19047,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30847,6 +30919,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32116,6 +32191,9 @@ impl TranslatedString {
                 18963,
                 18981,
                 18999,
+                19011,
+                19029,
+                19047,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33385,6 +33463,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34654,6 +34735,9 @@ impl TranslatedString {
                 20350,
                 20368,
                 20386,
+                20398,
+                20416,
+                20434,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35922,6 +36006,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37191,6 +37278,9 @@ impl TranslatedString {
                 20350,
                 20368,
                 20386,
+                20398,
+                20416,
+                20434,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38459,6 +38549,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39728,6 +39821,9 @@ impl TranslatedString {
                 20350,
                 20368,
                 20386,
+                20398,
+                20416,
+                20434,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40996,6 +41092,9 @@ impl TranslatedString {
                 "Function",
                 "Skip and view hash",
                 "View data and hash",
+                "On behalf of",
+                "Sign authorization",
+                "Valid until ledger",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42265,6 +42364,9 @@ impl TranslatedString {
                 20350,
                 20368,
                 20386,
+                20398,
+                20416,
+                20434,
             ];
 
         }
@@ -43652,6 +43754,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__no_restriction, Self::stellar__no_restriction),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__on_behalf_of, Self::stellar__on_behalf_of),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__path_pay, Self::stellar__path_pay),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__path_pay_at_least, Self::stellar__path_pay_at_least),
@@ -43676,6 +43780,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__set_sequence_to_template, Self::stellar__set_sequence_to_template),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__sign_authorization, Self::stellar__sign_authorization),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__sign_tx_count_template, Self::stellar__sign_tx_count_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__sign_tx_fee_template, Self::stellar__sign_tx_fee_template),
@@ -43699,6 +43805,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_stellar__valid_from, Self::stellar__valid_from),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__valid_to, Self::stellar__valid_to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__valid_until_ledger, Self::stellar__valid_until_ledger),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__value_sha256, Self::stellar__value_sha256),
         #[cfg(feature = "universal_fw")]
