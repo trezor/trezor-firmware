@@ -880,9 +880,7 @@ impl FirmwareUI for UIBolt {
             Some(title),
             TString::empty(),
             description,
-            (!button.is_empty()).then_some(button),
-            allow_cancel,
-            time_ms,
+            ModalButtons::new(button, allow_cancel, time_ms),
             icon,
             theme::button_default(),
         )
@@ -995,13 +993,13 @@ impl FirmwareUI for UIBolt {
         if external_menu {
             return Err(Error::NotImplementedError);
         }
-        let button_text = match (button, time_ms) {
+        let buttons = match (button, time_ms) {
             // either button or timeout must be set
             (None, 0) => return Err(Error::NotImplementedError),
-            (None, _) => None,
+            (None, _) => ModalButtons::NoButtonsTimeout(time_ms),
             // disabled buttons are not supported on Bolt
             (Some((_, false)), _) => return Err(Error::NotImplementedError),
-            (Some((text, true)), _) => Some(text),
+            (Some((text, true)), _) => ModalButtons::ConfirmText(text),
         };
 
         let icon = BlendedImage::new(
@@ -1015,9 +1013,7 @@ impl FirmwareUI for UIBolt {
             Some(title),
             TString::empty(),
             description,
-            button_text,
-            false,
-            time_ms,
+            buttons,
             icon,
             theme::button_info(),
         )
@@ -1253,9 +1249,7 @@ impl FirmwareUI for UIBolt {
             Some(title),
             TString::empty(),
             description,
-            (!button.is_empty()).then_some(button),
-            allow_cancel,
-            time_ms,
+            ModalButtons::new(button, allow_cancel, time_ms),
             icon,
             theme::button_confirm(),
         )
@@ -1280,13 +1274,12 @@ impl FirmwareUI for UIBolt {
             // Disallow showing "dangerous" warning with no header.
             return Err(Error::ValueError(c"Non-empty title is required"));
         }
+
         new_show_modal(
             title,
             value,
             description,
-            (!button.is_empty()).then_some(button),
-            allow_cancel,
-            0,
+            ModalButtons::new(button, allow_cancel, 0).force_icons(),
             icon,
             theme::button_reset(),
         )
@@ -1301,74 +1294,102 @@ impl FirmwareUI for UIBolt {
     }
 }
 
+enum ModalButtons {
+    /// Will be closed from the outside or layout will be discarded after first
+    /// paint.
+    NoButtons,
+    /// No buttons, will close after timeout.
+    NoButtonsTimeout(u32),
+    /// Single button with text.
+    ConfirmText(TString<'static>),
+    /// Two buttons with an icon.
+    CancelAndConfirm,
+    /// Cancel button has icon, confirm has text.
+    CancelAndText(TString<'static>),
+}
+
+impl ModalButtons {
+    fn new(button: TString<'static>, allow_cancel: bool, time_ms: u32) -> Self {
+        if button.is_empty() && time_ms == 0 {
+            Self::NoButtons
+        } else if button.is_empty() && time_ms > 0 {
+            Self::NoButtonsTimeout(time_ms)
+        } else if allow_cancel {
+            Self::CancelAndText(button)
+        } else {
+            Self::ConfirmText(button)
+        }
+    }
+
+    fn force_icons(self) -> Self {
+        match self {
+            Self::CancelAndText(_) => Self::CancelAndConfirm,
+            x => x,
+        }
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn new_show_modal(
     title: Option<TString<'static>>,
     value: TString<'static>,
     description: TString<'static>,
-    button: Option<TString<'static>>,
-    allow_cancel: bool,
-    time_ms: u32,
+    buttons: ModalButtons,
     icon: BlendedImage,
     button_style: ButtonStyleSheet,
 ) -> Result<Gc<LayoutObj>, Error> {
-    let obj = match button {
-        None => {
-            if time_ms == 0 {
-                // No buttons and no timer, used when we only want to draw the dialog once and
-                // then throw away the layout object.
-                LayoutObj::new(
-                    IconDialog::new(icon, title, Empty)
-                        .with_value(value)
-                        .with_description(description),
-                )?
-            } else {
-                // Timeout, no buttons.
-                LayoutObj::new(
-                    IconDialog::new(
-                        icon,
-                        title,
-                        Timeout::new(time_ms).map(|_| Some(CancelConfirmMsg::Confirmed)),
-                    )
-                    .with_value(value)
-                    .with_description(description),
-                )?
-            }
-        }
-        Some(button) => {
-            if allow_cancel {
-                // Two buttons.
-                LayoutObj::new(
-                    IconDialog::new(
-                        icon,
-                        title,
-                        Button::cancel_confirm(
-                            Button::with_icon(theme::ICON_CANCEL),
-                            Button::with_text(button).styled(button_style),
-                            false,
-                        ),
-                    )
-                    .with_value(value)
-                    .with_description(description),
-                )?
-            } else {
-                // Single button.
-                LayoutObj::new(
-                    IconDialog::new(
-                        icon,
-                        title,
-                        theme::button_bar(Button::with_text(button).styled(button_style).map(
-                            |msg| {
-                                (matches!(msg, ButtonMsg::Clicked))
-                                    .then(|| CancelConfirmMsg::Confirmed)
-                            },
-                        )),
-                    )
-                    .with_value(value)
-                    .with_description(description),
-                )?
-            }
-        }
+    let obj = match buttons {
+        ModalButtons::NoButtons => LayoutObj::new(
+            IconDialog::new(icon, title, Empty)
+                .with_value(value)
+                .with_description(description),
+        )?,
+        ModalButtons::NoButtonsTimeout(time_ms) => LayoutObj::new(
+            IconDialog::new(
+                icon,
+                title,
+                Timeout::new(time_ms).map(|_| Some(CancelConfirmMsg::Confirmed)),
+            )
+            .with_value(value)
+            .with_description(description),
+        )?,
+        ModalButtons::CancelAndConfirm => LayoutObj::new(
+            IconDialog::new(
+                icon,
+                title,
+                Button::cancel_confirm(
+                    Button::with_icon(theme::ICON_CANCEL),
+                    Button::with_icon(theme::ICON_CONFIRM).styled(button_style),
+                    false,
+                ),
+            )
+            .with_value(value)
+            .with_description(description),
+        )?,
+        ModalButtons::CancelAndText(text) => LayoutObj::new(
+            IconDialog::new(
+                icon,
+                title,
+                Button::cancel_confirm(
+                    Button::with_icon(theme::ICON_CANCEL),
+                    Button::with_text(text).styled(button_style),
+                    false,
+                ),
+            )
+            .with_value(value)
+            .with_description(description),
+        )?,
+        ModalButtons::ConfirmText(text) => LayoutObj::new(
+            IconDialog::new(
+                icon,
+                title,
+                theme::button_bar(Button::with_text(text).styled(button_style).map(|msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+                })),
+            )
+            .with_value(value)
+            .with_description(description),
+        )?,
     };
     Ok(obj)
 }
