@@ -29,7 +29,8 @@ impl CLibrary {
     /// Generates rust bininding (a .rs file) from the configured builder and
     /// writes it to the OUT_DIR.
     pub(crate) fn generate_rust_bindings(&mut self, use_cc_includes: bool) -> Result<()> {
-        if let Some(builder) = self.builder.take() {
+        let out_file = path_from_env("OUT_DIR")?.join(links_name()? + ".rs");
+        let content = if let Some(builder) = self.builder.take() {
             let mut attrs = self.get_merged_attrs();
 
             if use_cc_includes {
@@ -50,6 +51,7 @@ impl CLibrary {
 
             let tmp_out_file = out_file.with_extension("rs.tmp");
 
+            let mut content = Vec::<u8>::new();
             builder
                 .clang_args(attrs.to_compiler_args())
                 // Customize the standard types.
@@ -64,35 +66,58 @@ impl CLibrary {
                 .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
                 .generate()
                 .context("Unable to generate bindings")?
-                .write_to_file(&tmp_out_file)
+                .write(Box::new(&mut content))
                 .context(format!(
                     "Unable to write bindings to {}",
                     tmp_out_file.display()
                 ))?;
 
-            // Bindgen writes the output file even if the content is unchanged,
-            // which causes unnecessary recompilations. To avoid this, we
-            // compare the generated file with the existing one and only replace
-            // it if there are changes.
-            replace_if_different(&tmp_out_file, &out_file)?;
-        }
+            content
+        } else {
+            // just empty file
+            Vec::<u8>::new()
+        };
+
+        // Bindgen writes the output file even if the content is unchanged,
+        // which causes unnecessary recompilations. To avoid this, we
+        // compare the generated file with the existing one and only replace
+        // it if there are changes.
+        maybe_replace(content, &out_file)?;
         Ok(())
     }
 }
 
-fn replace_if_different(src: &std::path::Path, dst: &std::path::Path) -> Result<()> {
-    if dst.exists() {
-        let src_content = std::fs::read(src).context("Failed to read temporary bindings file")?;
+fn maybe_replace(src_content: Vec<u8>, dst: &std::path::Path) -> Result<()> {
+    let should_write = if !dst.exists() {
+        true
+    } else {
         let dst_content = std::fs::read(dst).context("Failed to read existing bindings file")?;
+        src_content != dst_content
+    };
 
-        if src_content == dst_content {
-            // Files are identical, no need to replace
-            // Clean up the temporary file
-            std::fs::remove_file(src).context("Failed to remove temporary bindings file")?;
-            return Ok(());
-        }
+    if !should_write {
+        // Files are identical, no need to replace
+        return Ok(());
     }
 
-    std::fs::rename(src, dst).context("Failed to replace bindings file")?;
-    Ok(())
+    // short path: new content is empty
+    if src_content.is_empty() {
+        std::fs::write(dst, src_content).context("Failed to write empty bindings file")?;
+        return Ok(());
+    }
+
+    // normal path: write new content into a temp file first
+    let out_temp_file = dst.with_extension("rs.tmp");
+    match std::fs::write(&out_temp_file, src_content) {
+        Ok(_) => {
+            std::fs::rename(&out_temp_file, dst).context("Failed to replace bindings file")?;
+            Ok(())
+        }
+        Err(e) => {
+            // try to clean up the temp file, ignore errorrs
+            std::fs::remove_file(out_temp_file).ok();
+            // bail out via the original error
+            Err::<(), std::io::Error>(e.into()).context("Failed to write temp bindings file")
+        }
+    }
 }
