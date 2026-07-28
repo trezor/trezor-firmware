@@ -23,4 +23,6 @@
 
 #include <trezor_rtl.h>
 
-void tc_fault_handler(const char *message) { system_exit_error(NULL, message, NULL); }
+void tc_fault_handler(const char *message) {
+  system_exit_error(NULL, message, NULL);
+}
