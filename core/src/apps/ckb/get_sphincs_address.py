@@ -10,13 +10,7 @@ if TYPE_CHECKING:
 # quantum-resistant lock script, in its documented single-sig form `80 01 01 01`.
 # Hashed into lock_args; the witness must carry the same bytes (the on-chain
 # script rehashes them), and hosts must use them to derive matching addresses.
-_MULTISIG_RESERVED_FIELD_VALUE = 0x80
-_REQUIRED_FIRST_N = 0x01
-_THRESHOLD = 0x01
-_PUBKEY_NUM = 0x01
-_MULTISIG_HEADER = bytes(
-    [_MULTISIG_RESERVED_FIELD_VALUE, _REQUIRED_FIRST_N, _THRESHOLD, _PUBKEY_NUM]
-)
+_MULTISIG_HEADER = bytes([0x80, 0x01, 0x01, 0x01])
 
 # Deployed code hashes of the CKB SPHINCS+ on-chain lock script.
 _CODE_HASH_MAINNET = (
@@ -53,6 +47,13 @@ _VARIANT_SPX_N: dict[int, int] = {
 }
 
 
+# Mirrors the table in crypto/sphincsplus_dispatch.c.
+_VARIANT_SIG_BYTES: dict[int, int] = {
+    48: 17088, 49: 7856, 50: 35664, 51: 16224, 52: 49856, 53: 29792,
+    54: 17088, 55: 7856, 56: 35664, 57: 16224, 58: 49856, 59: 29792,
+}
+
+
 def _variant_spx_n(variant: int) -> int:
     """Return the SPHINCS+ security parameter N for a given variant ID."""
     from trezor.wire import DataError
@@ -71,9 +72,11 @@ def _split_extended_mnemonic_to_seed(mnemonic_bytes: bytes) -> bytearray:
     message. Returns a mutable bytearray so the caller can wipe it after use.
     """
     from trezor.crypto import bip39
+    from trezor.utils import consteq
     from trezor.wire import DataError
 
-    words = mnemonic_bytes.decode().split(" ")
+    # Decoding to str would scatter unwipeable copies of the mnemonic.
+    words = mnemonic_bytes.split(b" ")
     word_count = len(words)
     if word_count not in (36, 54, 72):
         raise DataError("SPHINCS+ requires an extended mnemonic (36, 54 or 72 words)")
@@ -82,9 +85,25 @@ def _split_extended_mnemonic_to_seed(mnemonic_bytes: bytes) -> bytearray:
     entropy_per_sub = (sub_len // 3) * 4
     seed = bytearray()
     for i in range(3):
-        sub_phrase = " ".join(words[i * sub_len : (i + 1) * sub_len])
-        sub_bits = bip39.mnemonic_to_bits(sub_phrase)
-        seed.extend(bytes(sub_bits)[:entropy_per_sub])
+        sub_phrase = b" ".join(words[i * sub_len : (i + 1) * sub_len])
+        seed.extend(bip39.mnemonic_to_bits(sub_phrase)[:entropy_per_sub])
+
+    # Nothing else catches a mnemonic that repeats a sub-phrase.
+    part_1 = seed[0:entropy_per_sub]
+    part_2 = seed[entropy_per_sub : 2 * entropy_per_sub]
+    part_3 = seed[2 * entropy_per_sub :]
+    # consteq and |, not == and or: must not branch on secret contents.
+    degenerate = (
+        consteq(part_1, part_2) | consteq(part_1, part_3) | consteq(part_2, part_3)
+    )
+    _wipe(part_1)
+    _wipe(part_2)
+    _wipe(part_3)
+    if degenerate:
+        _wipe(seed)
+        raise DataError(
+            "Unsafe SPHINCS+ mnemonic: the three sub-phrases must all differ"
+        )
     return seed
 
 

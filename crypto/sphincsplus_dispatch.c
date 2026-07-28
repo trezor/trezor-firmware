@@ -10,7 +10,9 @@
 #define DECLARE_VARIANT(prefix) \
     extern int prefix##_seed_keypair(uint8_t *, uint8_t *, const uint8_t *); \
     extern int prefix##_sign(uint8_t *, size_t *, const uint8_t *, size_t, const uint8_t *); \
-    extern int prefix##_verify(const uint8_t *, size_t, const uint8_t *, size_t, const uint8_t *);
+    extern int prefix##_verify(const uint8_t *, size_t, const uint8_t *, size_t, const uint8_t *); \
+    extern unsigned long long prefix##_sig_bytes(void); \
+    extern unsigned long long prefix##_pk_bytes(void);
 
 DECLARE_VARIANT(spx_sha2_128f)
 DECLARE_VARIANT(spx_sha2_128s)
@@ -27,6 +29,7 @@ DECLARE_VARIANT(spx_shake_256s)
 
 #define VARIANT_ENTRY(prefix, n_val, pk_val, sig_val) \
     { prefix##_seed_keypair, prefix##_sign, prefix##_verify, \
+      prefix##_sig_bytes, prefix##_pk_bytes, \
       pk_val, sig_val, n_val }
 
 /* Variant table indexed by (variant_id - 48).
@@ -53,5 +56,18 @@ const spx_variant_t *spx_get_variant(int variant_id) {
     if (idx < 0 || idx >= 12) {
         return (void *)0;
     }
-    return &variant_table[idx];
+    const spx_variant_t *v = &variant_table[idx];
+
+    /* The table is hand-maintained; the buffers it sizes are written by code
+     * compiled from params.h. Refuse the variant if the two disagree. */
+    if (v->sig_bytes != (size_t)v->sig_bytes_fn()) {
+        return (void *)0;
+    }
+    if (v->pk_bytes != (size_t)v->pk_bytes_fn()) {
+        return (void *)0;
+    }
+    if (v->spx_n > SPX_MAX_N) {
+        return (void *)0;
+    }
+    return v;
 }

@@ -37,19 +37,16 @@ SHANNONS_PER_BYTE = 100000000
 DAO_TYPE_CODE_HASH = b"\x82\xd7\x6d\x1b\x75\xfe\x2f\xd9\xa2\x7d\xfb\xaa\x65\xa0\x39\x22\x1a\x38\x0d\x76\xc9\x26\xf3\x78\xd3\xf8\x1c\xf3\xe7\xe1\x3f\x2e"
 DAO_TYPE_HASH_TYPE = 1  # "type"
 
-# Genesis txs of each network (system script code cells and their dep groups).
-# CKB signatures carry no chain id; a cell_dep on one of these outpoints is what
-# pins the chain a signed transaction can be valid on.
-_GENESIS_TX_HASHES = {
-    "Mainnet": (
-        b"\xe2\xfb\x19\x98\x10\xd4\x9a\x4d\x8b\xee\xc5\x67\x18\xba\x25\x93\xb6\x65\xdb\x9d\x52\x29\x9a\x0f\x9e\x6e\x75\x41\x6d\x73\xff\x5c",
-        b"\x71\xa7\xba\x8f\xc9\x63\x49\xfe\xa0\xed\x3a\x5c\x47\x99\x2e\x3b\x40\x84\xb0\x31\xa4\x22\x64\xa0\x18\xe0\x07\x2e\x81\x72\xe4\x6c",
-    ),
-    "Testnet": (
-        b"\x8f\x8c\x79\xeb\x66\x71\x70\x96\x33\xfe\x6a\x46\xde\x93\xc0\xfe\xdc\x9c\x1b\x8a\x65\x27\xa1\x8d\x39\x83\x87\x95\x42\x63\x5c\x9f",
-        b"\xf8\xde\x3b\xb4\x7d\x05\x5c\xdf\x46\x0d\x93\xa2\xa6\xe1\xb0\x5f\x74\x32\xf9\x77\x7c\x8c\x47\x4a\xbf\x4e\xec\x1d\x4a\xee\x5d\x37",
-    ),
-}
+# Bounds on host-declared counts, shared with the SPHINCS+ path; they guard the
+# streaming loops against DoS. Previous transactions are arbitrary on-chain data
+# (a batch payout can carry hundreds of outputs), so those are bounded looser.
+_MAX_INPUTS = 256
+_MAX_OUTPUTS = 256
+_MAX_CELL_DEPS = 64
+_MAX_WITNESSES = 512
+_MAX_PREV_INPUTS = 1024
+_MAX_PREV_OUTPUTS = 1024
+_MAX_PREV_CELL_DEPS = 256
 
 
 def _blake2b_hash(data: bytes) -> bytes:
@@ -145,7 +142,9 @@ def _serialize_cell_output(cell_output: "CKBCellOutput") -> bytes:
         cell_output.lock_args,
     )
 
-    if cell_output.type_code_hash:
+    # `is not None`: a malformed b"" must reach _serialize_script and be
+    # rejected there, not be silently treated as "no type script".
+    if cell_output.type_code_hash is not None:
         type_script = _serialize_script(
             cell_output.type_code_hash,
             cell_output.type_hash_type or 0,
@@ -472,18 +471,17 @@ def _occupied_capacity(cell: "CKBCellOutput") -> int:
     lock script + type script + data) times 10^8. Only the free capacity above
     this earns DAO compensation."""
     lock_args = bytes(cell.lock_args)
-    type_args = bytes(cell.type_args) if cell.type_args else b""
     data = bytes(cell.data) if cell.data else b""
     occupied_bytes = (
         8  # capacity field
         + 32
         + 1
         + len(lock_args)  # lock script (code_hash + hash_type + args)
-        + 32
-        + 1
-        + len(type_args)  # type script
         + len(data)
     )
+    if cell.type_code_hash is not None:
+        type_args = bytes(cell.type_args) if cell.type_args else b""
+        occupied_bytes += 32 + 1 + len(type_args)
     return occupied_bytes * SHANNONS_PER_BYTE
 
 
@@ -551,13 +549,10 @@ async def _dao_withdraw_value(
     withdraw_number, ar_withdraw = await _verify_header(
         inp.dao_withdraw_header_index, header_deps, header_cache
     )
+    # Only rejects the nonsensical case; a host can still pick a later header
+    # to understate the compensation (and the displayed fee).
     if withdraw_number <= deposit_number:
         raise DataError("DAO withdraw header must be after the deposit header")
-
-    for index in range(len(header_deps)):
-        number, rate = await _verify_header(index, header_deps, header_cache)
-        if number > deposit_number and rate > ar_withdraw:
-            ar_withdraw = rate
 
     cell_data = spent.data
     if cell_data is None or len(cell_data) < 8:
@@ -609,6 +604,13 @@ async def _verify_prev_tx_outputs(tx_hash: bytes) -> list["CKBCellOutput"]:
         ),
         CKBTxAckPrevMeta,
     )
+
+    if meta.inputs_count > _MAX_PREV_INPUTS:
+        raise DataError("Previous transaction inputs_count out of range")
+    if meta.outputs_count > _MAX_PREV_OUTPUTS:
+        raise DataError("Previous transaction outputs_count out of range")
+    if (meta.cell_deps_count or 0) > _MAX_PREV_CELL_DEPS:
+        raise DataError("Previous transaction cell_deps_count out of range")
 
     prev_inputs: list["CKBCellInput"] = []
     for i in range(meta.inputs_count):
@@ -715,6 +717,14 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         raise DataError("Transaction must have at least one input")
     if msg.outputs_count == 0:
         raise DataError("Transaction must have at least one output")
+    if msg.inputs_count > _MAX_INPUTS:
+        raise DataError("Invalid inputs_count")
+    if msg.outputs_count > _MAX_OUTPUTS:
+        raise DataError("Invalid outputs_count")
+    if (msg.cell_deps_count or 0) > _MAX_CELL_DEPS:
+        raise DataError("Invalid cell_deps_count")
+    if (msg.witnesses_count or 0) > _MAX_WITNESSES:
+        raise DataError("Invalid witnesses_count")
 
     # Collect inputs
     inputs: list["CKBCellInput"] = []

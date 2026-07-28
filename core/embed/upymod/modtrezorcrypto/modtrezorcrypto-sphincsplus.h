@@ -70,10 +70,13 @@ STATIC const spx_variant_t *_sphincsplus_validate(
  * caller is responsible for memzero(derived_seed) afterwards.
  *
  * The info string is part of the key-derivation consensus — keep it
- * byte-for-byte identical across firmware versions and host implementations. */
+ * byte-for-byte identical across firmware versions and host implementations.
+ * All three parts share it, so equal parts derive equal values; the caller
+ * must reject a seed whose parts repeat (see _split_extended_mnemonic_to_seed)
+ * or SK_SEED would go on chain inside the published PUB_SEED. */
 STATIC void _sphincsplus_derive(const spx_variant_t *v,
                                 const mp_buffer_info_t *seed, int account_index,
-                                uint8_t derived_seed[96]) {
+                                uint8_t derived_seed[3 * SPX_MAX_N]) {
   int n = (int)v->spx_n;
 
   char info[64];
@@ -83,16 +86,10 @@ STATIC void _sphincsplus_derive(const spx_variant_t *v,
     mp_raise_ValueError(MP_ERROR_TEXT("Account index too large"));
   }
 
-  const uint8_t *sk_seed_raw = (const uint8_t *)seed->buf;
-  const uint8_t *sk_prf_raw = sk_seed_raw + n;
-  const uint8_t *pk_seed_raw = sk_prf_raw + n;
-
-  hkdf_sha256(NULL, 0, sk_seed_raw, n,
-              (const uint8_t *)info, info_len, derived_seed, n);
-  hkdf_sha256(NULL, 0, sk_prf_raw, n,
-              (const uint8_t *)info, info_len, derived_seed + n, n);
-  hkdf_sha256(NULL, 0, pk_seed_raw, n,
-              (const uint8_t *)info, info_len, derived_seed + 2 * n, n);
+  for (int i = 0; i < 3; i++) {
+    hkdf_sha256(NULL, 0, (const uint8_t *)seed->buf + i * n, n,
+                (const uint8_t *)info, info_len, derived_seed + i * n, n);
+  }
 }
 
 /// def derive_public_key(
@@ -117,14 +114,10 @@ STATIC mp_obj_t mod_trezorcrypto_sphincsplus_derive_public_key(
   vstr_t pk = {0};
   vstr_init_len(&pk, v->pk_bytes);
 
-  uint8_t derived_seed[96];
+  uint8_t derived_seed[3 * SPX_MAX_N];
   _sphincsplus_derive(v, &seed, account_index, derived_seed);
 
-  /* sk_local stays on stack and is wiped before return — never reaches the
-   * Python heap. */
-  _Static_assert(4 * 32 <= 128,
-                 "sk_local buffer too small for largest SPHINCS+ variant");
-  uint8_t sk_local[128];
+  uint8_t sk_local[4 * SPX_MAX_N];
   int ret = v->seed_keypair((unsigned char *)pk.buf, sk_local, derived_seed);
 
   memzero(derived_seed, sizeof(derived_seed));
@@ -173,12 +166,10 @@ STATIC mp_obj_t mod_trezorcrypto_sphincsplus_derive_and_sign(
   vstr_t sig = {0};
   vstr_init_len(&sig, v->sig_bytes);
 
-  uint8_t derived_seed[96];
+  uint8_t derived_seed[3 * SPX_MAX_N];
   _sphincsplus_derive(v, &seed, account_index, derived_seed);
 
-  _Static_assert(4 * 32 <= 128,
-                 "sk_local buffer too small for largest SPHINCS+ variant");
-  uint8_t sk_local[128];
+  uint8_t sk_local[4 * SPX_MAX_N];
 
   int ret_kg = v->seed_keypair((unsigned char *)pk.buf, sk_local, derived_seed);
   memzero(derived_seed, sizeof(derived_seed));

@@ -64,24 +64,21 @@ async def sign_sphincs_message(
     if account_index < 0 or account_index > _MAX_ACCOUNT_INDEX:
         raise DataError("Invalid SPHINCS+ account index")
 
+    # The confirmation below raises ActionCancelled, which must reach _wipe.
     seed = _require_sphincs_mnemonic(variant)
     try:
         public_key = sphincsplus.derive_public_key(seed, account_index, variant)
-    except Exception:
-        _wipe(seed)
-        raise
-    address = _address_from_pubkey(public_key, variant, msg.network)
+        address = _address_from_pubkey(public_key, variant, msg.network)
 
-    await confirm_signverify(
-        decode_message(msg.message),
-        address,
-        verify=False,
-        account="CKB SPHINCS+",
-        path="QP/{}/v{}".format(account_index, variant),
-        chunkify=bool(msg.chunkify),
-    )
+        await confirm_signverify(
+            decode_message(msg.message),
+            address,
+            verify=False,
+            account="CKB SPHINCS+",
+            path="QP/{}/v{}".format(account_index, variant),
+            chunkify=bool(msg.chunkify),
+        )
 
-    try:
         signed_pk, signature = sphincsplus.derive_and_sign(
             seed, account_index, variant, _fips205_message(msg.message)
         )

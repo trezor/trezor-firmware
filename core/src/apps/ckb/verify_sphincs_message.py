@@ -10,15 +10,18 @@ from typing import TYPE_CHECKING
 
 from trezor.wire import DataError
 
-from .get_sphincs_address import _VALID_VARIANTS, _address_from_pubkey
+from .get_sphincs_address import (
+    _VALID_VARIANTS,
+    _VARIANT_SIG_BYTES,
+    _address_from_pubkey,
+    _variant_spx_n,
+)
 from .sign_sphincs_message import _fips205_message
 
 if TYPE_CHECKING:
     from trezor.messages import CKBSphincsPlusVerifyMessage, Success
 
-# Largest SPHINCS+ signature is ~49856 bytes (256f); cap the incoming stream a
-# little above that to bound memory and reject malformed totals.
-_MAX_SIGNATURE_SIZE = 51000
+_MAX_SIGNATURE_CHUNKS = 256
 
 
 async def verify_sphincs_message(msg: "CKBSphincsPlusVerifyMessage") -> "Success":
@@ -43,19 +46,27 @@ async def verify_sphincs_message(msg: "CKBSphincsPlusVerifyMessage") -> "Success
     if msg.network not in ("Mainnet", "Testnet"):
         raise DataError("Invalid CKB network")
 
+    # The C binding would raise ValueError, surfacing as a firmware error.
+    if len(msg.public_key) != 2 * _variant_spx_n(variant):  # PUB_SEED || root
+        raise DataError("Invalid SPHINCS+ public key length")
+
     # Bind the public key to the claimed address: a valid signature is only
     # meaningful for the address derived from that key.
     if _address_from_pubkey(msg.public_key, variant, msg.network) != msg.address:
         raise ProcessError("Public key does not match address")
 
     total = msg.signature_total_size
-    if total == 0 or total > _MAX_SIGNATURE_SIZE:
+    if total != _VARIANT_SIG_BYTES[variant]:
         raise DataError("Invalid signature size")
 
     # Stream the signature in from the host (device requests each chunk by
     # offset, host returns it in CKBTxAckSigChunk.signature).
     signature = bytearray()
+    chunks = 0
     while len(signature) < total:
+        chunks += 1
+        if chunks > _MAX_SIGNATURE_CHUNKS:
+            raise DataError("Too many signature chunks")
         ack = await call(
             CKBTxRequest(
                 request_type=CKBTxRequestType.TXSIGCHUNK,

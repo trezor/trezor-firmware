@@ -41,6 +41,13 @@ from .get_sphincs_address import (
 # Read-only Molecule serialization and Nervos DAO verification shared with the
 # ECDSA path.
 from .sign_tx import (
+    _MAX_CELL_DEPS,
+    _MAX_INPUTS,
+    _MAX_OUTPUTS,
+    _MAX_PREV_CELL_DEPS,
+    _MAX_PREV_INPUTS,
+    _MAX_PREV_OUTPUTS,
+    _MAX_WITNESSES,
     _compute_raw_tx_hash,
     _dao_withdraw_value,
     _is_dao_withdrawing_cell,
@@ -57,13 +64,6 @@ if TYPE_CHECKING:
         CKBSphincsPlusSignTx,
         CKBTxRequest,
     )
-
-# Upper bounds guard against DoS via unbounded streaming loops; real CKB
-# transactions never approach them.
-_MAX_INPUTS = 256
-_MAX_OUTPUTS = 256
-_MAX_CELL_DEPS = 64
-_MAX_WITNESSES = 512
 
 # Signature chunk size, kept well under the THP per-message buffer (~8 KB).
 _SIG_CHUNK_SIZE = 4096
@@ -105,6 +105,13 @@ async def _stream_and_verify_prev_tx(tx_hash: bytes) -> list["CKBCellOutput"]:
         ),
         CKBTxAckPrevMeta,
     )
+
+    if meta.inputs_count > _MAX_PREV_INPUTS:
+        raise DataError("Previous transaction inputs_count out of range")
+    if meta.outputs_count > _MAX_PREV_OUTPUTS:
+        raise DataError("Previous transaction outputs_count out of range")
+    if (meta.cell_deps_count or 0) > _MAX_PREV_CELL_DEPS:
+        raise DataError("Previous transaction cell_deps_count out of range")
 
     prev_inputs: list["CKBCellInput"] = []
     for i in range(meta.inputs_count):
