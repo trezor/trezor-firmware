@@ -185,7 +185,7 @@ impl BootloaderUI for UIEckhart {
         let title_str = if is_newinstall {
             "Install firmware"
         } else if is_newvendor {
-            "Change fw vendor"
+            "Change FW vendor"
         } else if version_cmp > 0 {
             "Update firmware"
         } else if version_cmp == 0 {
