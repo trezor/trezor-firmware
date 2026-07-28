@@ -13,7 +13,7 @@ exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for 
 exclude-newer-span = "P30D"
 
 [options.exclude-newer-package]
-stellar-sdk = "3000-01-01T23:00:00Z"
+stellar-sdk = "2026-07-05T00:00:00Z"
 
 [[package]]
 name = "astroid"
