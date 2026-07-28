@@ -514,6 +514,8 @@ class CalldataFormatter(RawFormatter):
     def __init__(self, callee_path: Path, selector: bytes | None = None) -> None:
         self.callee_path = callee_path
         self.selector = selector
+
+
 class EnumFormatter(FieldFormatter):
     """ERC-7730 `enum` format: the value read from calldata is a key into a
     descriptor-supplied mapping and is displayed as the mapped string."""
