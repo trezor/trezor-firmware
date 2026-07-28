@@ -553,6 +553,7 @@
     "cardano__x_of_y_signatures_template": "Vyžaduje {0} podpis ze {1}.",
     "coinjoin__access_account": "Získat přístup k účtu coinjoin?",
     "coinjoin__do_not_disconnect": "Neodpojujte svůj Trezor!",
+    "coinjoin__max_coordinator_fee_pct": "",
     "coinjoin__max_mining_fee": "Max. poplatek za těžbu",
     "coinjoin__max_rounds": "Maximum kol",
     "coinjoin__title": "Schválit coinjoin",
@@ -853,6 +854,7 @@
     "ethereum__delegating": "Delegovat",
     "ethereum__deposit_amount": "Výše vkladu",
     "ethereum__deposit_to": "Vklad do",
+    "ethereum__eip_712_empty_domain": "",
     "ethereum__gas_limit": "Limit gasu",
     "ethereum__gas_price": "Cena gasu",
     "ethereum__interaction_contract": {
@@ -957,12 +959,7 @@
     "fido__device_already_registered": "Toto zařízení je už v této aplikaci zaregistrované.",
     "fido__device_already_registered_with_template": "Toto zařízení je už na {0} zaregistrované.",
     "fido__device_not_registered": "Toto zařízení ještě není v aplikaci zaregistrováno.",
-    "fido__does_not_belong": {
-      "Bolt": "Údaje, které se pokoušíte importovat, nepatří tomuto autentikátoru.",
-      "Caesar": "Údaje, které se pokoušíte importovat, nepatří tomuto autentikátoru.",
-      "Delizia": "Údaje, které se pokoušíte importovat, nepatří tomuto autentikátoru.",
-      "Eckhart": "Údaje, které se pokoušíte importovat,\nnepatří tomuto autentikátoru."
-    },
+    "fido__does_not_belong": "Údaje, které se pokoušíte importovat, nepatří tomuto autentikátoru.",
     "fido__erase_credentials": {
       "Bolt": "smazat všechny údaje?",
       "Caesar": "",
@@ -1224,8 +1221,8 @@
     "instructions__view_all_data": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Zobrazit všechna data v menu.",
-      "Eckhart": ""
+      "Delizia": "Všechna data zobrazíte pomocí nabídky.",
+      "Eckhart": "Všechna data zobrazíte pomocí nabídky."
     },
     "joint__title": {
       "Bolt": "",
@@ -1991,7 +1988,12 @@
     "recovery__wanna_cancel_dry_run": "Opravdu chcete zrušit kontrolu zálohy?",
     "recovery__wanna_cancel_recovery": "Opravdu chcete proces obnovení zrušit?",
     "recovery__word_count_template": "({0} slov)",
-    "recovery__word_x_of_y_template": "Slovo {0} z {1}",
+    "recovery__word_x_of_y_template": {
+      "Bolt": "Slovo {0} z {1}",
+      "Caesar": "Slovo {0} z {1}",
+      "Delizia": "Slovo {0} z {1}",
+      "Eckhart": "Slovo {0}\nz {1}"
+    },
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "Ještě {count} {plural} začínající",
       "Caesar": "",
@@ -2754,7 +2756,6 @@
       "Eckhart": "Sériové číslo"
     },
     "solana__account_index": "Index účtu",
-    "solana__app_domain": "",
     "solana__associated_token_account": "Přidružený tokenový účet",
     "solana__base_fee": "Základní poplatek",
     "solana__claim": "Vybrat",
@@ -2813,11 +2814,14 @@
     "stellar__delete_trust": "Odstranit důvěru",
     "stellar__destination": "Cíl",
     "stellar__exchanges_require_memo": "Memo není nastaveno.\nObvykle vyžadováno při odesílání na burzy.",
+    "stellar__ext_auth": "",
+    "stellar__ext_auth_message": "",
     "stellar__final_confirm": "Konečné potvrzení",
     "stellar__hash": "Hash",
     "stellar__high": "Vysoká",
     "stellar__home_domain": "Domácí doména",
     "stellar__inflation": "Inflace",
+    "stellar__invoke_contract": "",
     "stellar__issuer_template": "Vydavatel {0}",
     "stellar__key": "Klíč",
     "stellar__limit": "Limit",
@@ -3130,7 +3134,7 @@
     "tutorial__title_lets_begin": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Začněme",
+      "Delizia": "Jdeme na to",
       "Eckhart": ""
     },
     "tutorial__title_screen_scroll": {
@@ -3301,10 +3305,12 @@
     "words__address": "Adresa",
     "words__amount": "Částka",
     "words__are_you_sure": "Jste si jistí?",
+    "words__arguments": "",
     "words__array_of": "Pole",
     "words__asset": "Aktivum",
     "words__assets": "Aktiva",
     "words__authenticate": "Ověřit",
+    "words__authorization": "",
     "words__blockhash": "Blockhash",
     "words__bluetooth": "Bluetooth",
     "words__buying": "Koupit",
@@ -3358,6 +3364,7 @@
       "Delizia": "ze",
       "Eckhart": ""
     },
+    "words__function": "",
     "words__important": "Důležité",
     "words__instructions": "Pokyny",
     "words__intent": "Akce",
@@ -3409,8 +3416,8 @@
     },
     "words__please_try_again": {
       "Bolt": "Prosím, zkuste to znovu.",
-      "Caesar": "Prosím, zkuste to znovu.",
-      "Delizia": "Prosím, zkuste to znovu.",
+      "Caesar": "Zkuste to znovu",
+      "Delizia": "Zkuste to znovu",
       "Eckhart": ""
     },
     "words__power": "Napájení",

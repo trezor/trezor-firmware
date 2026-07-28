@@ -96,7 +96,12 @@
     },
     "address__title_refund_address": "Adresse de remboursement",
     "address__title_yours": "La vôtre",
-    "address__warning_not_yours": "",
+    "address__warning_not_yours": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ce n'est PAS votre adresse"
+    },
     "address__xpub": {
       "Bolt": "XPUB",
       "Caesar": "XPUB",
@@ -153,8 +158,8 @@
     "backup__create_backup_to_prevent_loss": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds",
-      "Eckhart": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds"
+      "Delizia": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds.",
+      "Eckhart": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds."
     },
     "backup__info_multi_share_backup": {
       "Bolt": "La sauvegarde contient plusieurs listes dans un ordre spécifique (fragments).",
@@ -673,6 +678,7 @@
     "cardano__x_of_y_signatures_template": "Nécessite {0} signatures sur {1}.",
     "coinjoin__access_account": "Accéder à votre compte Coinjoin ?",
     "coinjoin__do_not_disconnect": "Ne déconnectez pas votre Trezor !",
+    "coinjoin__max_coordinator_fee_pct": "",
     "coinjoin__max_mining_fee": {
       "Bolt": "Frais max de minage",
       "Caesar": "Frais de minage max",
@@ -942,7 +948,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "ethereum__all_evms": "",
+    "ethereum__all_evms": "Tous les EVM",
     "ethereum__approve": "Approuver",
     "ethereum__approve_amount_allowance": {
       "Bolt": "Montant autorisé",
@@ -984,35 +990,51 @@
       "Delizia": "Autoriser un montant illimité de {0}.",
       "Eckhart": "Autoriser un montant illimité de {0}."
     },
-    "ethereum__auth_done": "",
-    "ethereum__auth_title": "",
-    "ethereum__auth_warn": "",
-    "ethereum__calldata_digest": "",
+    "ethereum__auth_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Autorisation EIP-7702 signée.",
+      "Eckhart": "Autorisation EIP-7702 signée."
+    },
+    "ethereum__auth_title": "Autorisation EIP-7702",
+    "ethereum__auth_warn": "Autoriser l'interaction avec un contrat tiers via EIP-7702 ?",
+    "ethereum__calldata_digest": "Digest ERC-8213",
     "ethereum__calldata_suffix": "Suffixe de calldata",
     "ethereum__confirm_contract": "Confirmer le contrat",
     "ethereum__contract_address": "Adresse de contrat du fournisseur",
     "ethereum__data_size_template": "Taille : {0} octets",
-    "ethereum__delegate_done": "",
-    "ethereum__delegate_title": "",
-    "ethereum__delegate_warn": "",
-    "ethereum__delegating": "",
+    "ethereum__delegate_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Délégation EIP-7702 signée.",
+      "Eckhart": "Délégation EIP-7702 signée."
+    },
+    "ethereum__delegate_title": "Délégation EIP-7702",
+    "ethereum__delegate_warn": "Déléguer votre compte à un contrat tiers ?",
+    "ethereum__delegating": "Déléguer",
     "ethereum__deposit_amount": "Montant du dépôt",
     "ethereum__deposit_to": "Déposer vers",
+    "ethereum__eip_712_empty_domain": "",
     "ethereum__gas_limit": "Limite de gas",
     "ethereum__gas_price": "Prix du gas",
     "ethereum__interaction_contract": "Contrat d'interaction",
     "ethereum__max_gas_price": "Frais max par gas",
     "ethereum__name_and_version": "Nom et version",
-    "ethereum__network": "",
+    "ethereum__network": "Réseau",
     "ethereum__new_contract": "Le nouveau contrat sera déployé",
     "ethereum__no_message_field": "Aucun champ de message",
     "ethereum__priority_fee": "Frais de priorité max",
     "ethereum__redeem": "Récupérer",
     "ethereum__redeem_amount": "Montant récupéré",
     "ethereum__redeem_from": "Récupérer depuis",
-    "ethereum__revoke_done": "",
-    "ethereum__revoke_title": "",
-    "ethereum__revoke_warn": "",
+    "ethereum__revoke_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Révocation EIP-7702 signée.",
+      "Eckhart": "Révocation EIP-7702 signée."
+    },
+    "ethereum__revoke_title": "Révocation EIP-7702",
+    "ethereum__revoke_warn": "Révoquer {0} de la délégation du compte intelligent ?",
     "ethereum__reward_tokens": "Jetons de récompense",
     "ethereum__rewards_claim": {
       "Bolt": "Réclam. de récompense",
@@ -1025,7 +1047,7 @@
     "ethereum__show_full_message": "Afficher le message complet",
     "ethereum__show_full_struct": "Afficher le struct complet",
     "ethereum__sign_eip712": "Signer ces données structurées EIP-712 ?",
-    "ethereum__smart_info": "",
+    "ethereum__smart_info": "Infos sur le contrat du compte intelligent",
     "ethereum__staking_claim": "Réclamer",
     "ethereum__staking_claim_address": "Adresse de réclamation",
     "ethereum__staking_claim_intro": "Récupérer les ETH d'Everstake ?",
@@ -1069,7 +1091,7 @@
       "Delizia": "Adresse de token",
       "Eckhart": "Adresse de contrat du jeton"
     },
-    "ethereum__to": "",
+    "ethereum__to": "À",
     "ethereum__token_contract": {
       "Bolt": "Adresse de contrat du jeton",
       "Caesar": "Contrat du jeton",
@@ -1293,8 +1315,8 @@
     "instructions__continue_holding": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Maintenez\nenfoncé",
-      "Eckhart": "Continuez de maintenir"
+      "Delizia": "Maintenez enfoncé",
+      "Eckhart": "Maintenez enfoncé"
     },
     "instructions__continue_in_app": {
       "Bolt": "",
@@ -1390,7 +1412,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Voir toutes les données dans le menu.",
-      "Eckhart": ""
+      "Eckhart": "Voir toutes les données dans le menu."
     },
     "joint__title": {
       "Bolt": "",
@@ -1979,7 +2001,12 @@
       "Delizia": "Ressaisir le nouveau PIN",
       "Eckhart": "Ressaisir le nouveau PIN"
     },
-    "pin__reenter_new_description": "",
+    "pin__reenter_new_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Ressaisir le nouveau PIN.",
+      "Eckhart": ""
+    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Veuillez ressaisir le code PIN pour confirmer.",
@@ -2020,11 +2047,11 @@
     "pin__wipe_code_exists_title": "Code d'effacement défini",
     "pin__wrong_pin": "PIN incorrect",
     "plurals__contains_x_keys": "touche|touches",
-    "plurals__days": "",
-    "plurals__hours": "",
-    "plurals__milliseconds": "",
-    "plurals__minutes": "",
-    "plurals__seconds": "",
+    "plurals__days": "jour|jours",
+    "plurals__hours": "heure|heures",
+    "plurals__milliseconds": "milliseconde|millisecondes",
+    "plurals__minutes": "minute|minutes",
+    "plurals__seconds": "seconde|secondes",
     "plurals__sign_x_actions": "action|actions",
     "plurals__transaction_of_x_operations": "opération|opérations",
     "plurals__x_groups_needed": "groupe|groupes",
@@ -2974,7 +3001,6 @@
       "Eckhart": "Numéro de série"
     },
     "solana__account_index": "Index du compte",
-    "solana__app_domain": "",
     "solana__associated_token_account": "Compte jeton associé",
     "solana__base_fee": "Frais de base",
     "solana__claim": "Réclamer",
@@ -3043,11 +3069,14 @@
     "stellar__delete_trust": "Supprimer le Trust",
     "stellar__destination": "Destination",
     "stellar__exchanges_require_memo": "Mémo non défini.\nGénéralement requis pour un envoi vers une plateforme d'échange.",
+    "stellar__ext_auth": "",
+    "stellar__ext_auth_message": "",
     "stellar__final_confirm": "Confirmation finale",
     "stellar__hash": "Hash",
     "stellar__high": "Élevé",
     "stellar__home_domain": "Domaine d'origine",
     "stellar__inflation": "Inflation",
+    "stellar__invoke_contract": "",
     "stellar__issuer_template": "{0} émetteur",
     "stellar__key": "Clé",
     "stellar__limit": "Limite",
@@ -3209,9 +3238,9 @@
       "Delizia": "",
       "Eckhart": "Scannez le code QR pour appairer"
     },
-    "tron__claim_unfrozen_balance": "",
-    "tron__claim_voting_rewards": "",
-    "tron__owner_address": "",
+    "tron__claim_unfrozen_balance": "Réclamer les fonds disponibles ?",
+    "tron__claim_voting_rewards": "Réclamer les récompenses de vote ?",
+    "tron__owner_address": "Adresse du propriétaire",
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3526,10 +3555,12 @@
     "words__address": "Adresse",
     "words__amount": "Montant",
     "words__are_you_sure": "Êtes-vous sûr ?",
+    "words__arguments": "",
     "words__array_of": "Tableau de",
     "words__asset": "Actif",
     "words__assets": "Actifs",
     "words__authenticate": "Authentifier",
+    "words__authorization": "",
     "words__blockhash": "Hash du bloc",
     "words__bluetooth": "Bluetooth",
     "words__buying": "Achat",
@@ -3593,6 +3624,7 @@
       "Delizia": "du",
       "Eckhart": ""
     },
+    "words__function": "",
     "words__important": "Important",
     "words__instructions": "Instructions",
     "words__intent": "Intention",

@@ -86,7 +86,12 @@
     "address__title_receive_address": "Dirección destino",
     "address__title_refund_address": "Dirección de reembolso",
     "address__title_yours": "Tuyas",
-    "address__warning_not_yours": "",
+    "address__warning_not_yours": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Esta NO es tu dirección"
+    },
     "address__xpub": {
       "Bolt": "XPUB",
       "Caesar": "XPUB",
@@ -128,7 +133,7 @@
     "backup__create_backup_to_prevent_loss": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Crea una c. seg. para evitar perder el acceso a tus fondos",
+      "Delizia": "Crea una c. seg. para evitar perder el acceso a tus fondos.",
       "Eckhart": "Crea una c. seg. para evitar perder el acceso a tus fondos."
     },
     "backup__info_multi_share_backup": "La c. seg. de la billetera contiene varias listas de palabras en un orden concreto (partes).",
@@ -558,6 +563,7 @@
     "cardano__x_of_y_signatures_template": "Requiere {0} de {1} firmas.",
     "coinjoin__access_account": "¿Acceder a tu cuenta de CoinJoin?",
     "coinjoin__do_not_disconnect": "¡No desconectes tu Trezor!",
+    "coinjoin__max_coordinator_fee_pct": "",
     "coinjoin__max_mining_fee": "Tasa máxima de minería",
     "coinjoin__max_rounds": {
       "Bolt": "Máx. de rondas",
@@ -827,7 +833,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "ethereum__all_evms": "",
+    "ethereum__all_evms": "Todas EVMs",
     "ethereum__approve": "Aprobar",
     "ethereum__approve_amount_allowance": "Importe autorizado",
     "ethereum__approve_chain_id": "ID de cadena",
@@ -844,20 +850,31 @@
       "Delizia": "Aprobando una cantidad ilimitada de {0}.",
       "Eckhart": "Aprobando una cantidad ilimitada de {0}."
     },
-    "ethereum__auth_done": "",
-    "ethereum__auth_title": "",
-    "ethereum__auth_warn": "",
-    "ethereum__calldata_digest": "",
+    "ethereum__auth_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Autorización EIP-7702 firmada.",
+      "Eckhart": "Autorización EIP-7702 firmada."
+    },
+    "ethereum__auth_title": "Autorización EIP-7702",
+    "ethereum__auth_warn": "¿Autorizar tu cuenta a un contrato de terceros usando EIP-7702?",
+    "ethereum__calldata_digest": "Resumen ERC-8213",
     "ethereum__calldata_suffix": "Sufijo calldata",
     "ethereum__confirm_contract": "Confirmar contrato",
     "ethereum__contract_address": "Dir. del contrato del proveedor",
     "ethereum__data_size_template": "Tamaño: {0} bytes",
-    "ethereum__delegate_done": "",
-    "ethereum__delegate_title": "",
-    "ethereum__delegate_warn": "",
-    "ethereum__delegating": "",
+    "ethereum__delegate_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Delegación EIP-7702 firmada.",
+      "Eckhart": "Delegación EIP-7702 firmada."
+    },
+    "ethereum__delegate_title": "Delegación EIP-7702",
+    "ethereum__delegate_warn": "¿Delegar tu cuenta a un contrato de terceros?",
+    "ethereum__delegating": "Delegando",
     "ethereum__deposit_amount": "Importe del depósito",
     "ethereum__deposit_to": "Depositar a",
+    "ethereum__eip_712_empty_domain": "",
     "ethereum__gas_limit": "Límite de gas",
     "ethereum__gas_price": "Precio de gas",
     "ethereum__interaction_contract": {
@@ -868,16 +885,21 @@
     },
     "ethereum__max_gas_price": "Comisión máx. de gas",
     "ethereum__name_and_version": "Nombre y versión",
-    "ethereum__network": "",
+    "ethereum__network": "Red",
     "ethereum__new_contract": "Se desplegará un nuevo contrato",
     "ethereum__no_message_field": "Sin campo de mensaje.",
     "ethereum__priority_fee": "Comisión máx. de prioridad",
     "ethereum__redeem": "Redimir",
     "ethereum__redeem_amount": "Redimir importe",
     "ethereum__redeem_from": "Redimir de",
-    "ethereum__revoke_done": "",
-    "ethereum__revoke_title": "",
-    "ethereum__revoke_warn": "",
+    "ethereum__revoke_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Revocación EIP-7702 firmada.",
+      "Eckhart": "Revocación EIP-7702 firmada."
+    },
+    "ethereum__revoke_title": "Revocación EIP-7702",
+    "ethereum__revoke_warn": "¿Revocar {0} de la delegación de contratos inteligentes?",
     "ethereum__reward_tokens": "Tokens de recompensa",
     "ethereum__rewards_claim": "Reclamar recompensas",
     "ethereum__show_full_array": "Ver matriz entera",
@@ -890,7 +912,7 @@
       "Eckhart": "Ver estruct. entera"
     },
     "ethereum__sign_eip712": "¿Quieres firmar los datos EIP-712?",
-    "ethereum__smart_info": "",
+    "ethereum__smart_info": "Info. del contrato de la cuenta inteligente",
     "ethereum__staking_claim": "Reclamar",
     "ethereum__staking_claim_address": "Dir. de reclamo",
     "ethereum__staking_claim_intro": "¿Reclamar ETH de Everstake?",
@@ -929,7 +951,7 @@
       "Delizia": "Contrato del token",
       "Eckhart": "Dirección del contrato del token"
     },
-    "ethereum__to": "",
+    "ethereum__to": "A",
     "ethereum__token_contract": {
       "Bolt": "Dirección del contrato del token",
       "Caesar": "Contrato de token",
@@ -1128,7 +1150,7 @@
     "instructions__continue_holding": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Mantener\nposición",
+      "Delizia": "Sigue presionando",
       "Eckhart": "Mantener posición"
     },
     "instructions__continue_in_app": {
@@ -1225,7 +1247,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Ver todos los datos en el menú.",
-      "Eckhart": ""
+      "Eckhart": "Ver todos los datos en el menú."
     },
     "joint__title": {
       "Bolt": "",
@@ -1804,7 +1826,12 @@
     },
     "pin__reenter": "Reintroducir PIN",
     "pin__reenter_new": "Reintroducir PIN",
-    "pin__reenter_new_description": "",
+    "pin__reenter_new_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Reintroducir el nuevo PIN.",
+      "Eckhart": ""
+    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Reingresa el PIN para confirmar.",
@@ -1840,11 +1867,11 @@
     "pin__wipe_code_exists_title": "Cód. borrar configurado",
     "pin__wrong_pin": "PIN incorrecto",
     "plurals__contains_x_keys": "clave|claves",
-    "plurals__days": "",
-    "plurals__hours": "",
-    "plurals__milliseconds": "",
-    "plurals__minutes": "",
-    "plurals__seconds": "",
+    "plurals__days": "día|días",
+    "plurals__hours": "hora|horas",
+    "plurals__milliseconds": "milisegundo|milisegundos",
+    "plurals__minutes": "minuto|minutos",
+    "plurals__seconds": "segundo|segundos",
     "plurals__sign_x_actions": "acción|acciones",
     "plurals__transaction_of_x_operations": "operación|operaciones",
     "plurals__x_groups_needed": "grupo|grupos",
@@ -2724,7 +2751,6 @@
       "Eckhart": "Número de serie"
     },
     "solana__account_index": "Índice de la cuenta",
-    "solana__app_domain": "",
     "solana__associated_token_account": "Cuenta de token asociada",
     "solana__base_fee": "Comisión base",
     "solana__claim": "Reclamar",
@@ -2783,11 +2809,14 @@
     "stellar__delete_trust": "Eliminar Trust",
     "stellar__destination": "Destino",
     "stellar__exchanges_require_memo": "Memo no definido. Normalmente es necesario cuando envías a exchanges.",
+    "stellar__ext_auth": "",
+    "stellar__ext_auth_message": "",
     "stellar__final_confirm": "Confirmación final",
     "stellar__hash": "Hash",
     "stellar__high": "Alto",
     "stellar__home_domain": "Dominio de origen",
     "stellar__inflation": "Inflación",
+    "stellar__invoke_contract": "",
     "stellar__issuer_template": "Emisor de {0}",
     "stellar__key": "Clave",
     "stellar__limit": "Límite",
@@ -2949,9 +2978,9 @@
       "Delizia": "",
       "Eckhart": "Escanea el QR para emparejar"
     },
-    "tron__claim_unfrozen_balance": "",
-    "tron__claim_voting_rewards": "",
-    "tron__owner_address": "",
+    "tron__claim_unfrozen_balance": "¿Reclamar balance descongelado?",
+    "tron__claim_voting_rewards": "¿Reclamar recompensas de voto?",
+    "tron__owner_address": "Dirección del propietario",
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3286,10 +3315,12 @@
     "words__address": "Dirección",
     "words__amount": "Importe",
     "words__are_you_sure": "¿Seguro?",
+    "words__arguments": "",
     "words__array_of": "Arreglo de",
     "words__asset": "Activo",
     "words__assets": "Activos",
     "words__authenticate": "Autenticar",
+    "words__authorization": "",
     "words__blockhash": "Hash del bloque",
     "words__bluetooth": "Bluetooth",
     "words__buying": "Comprando",
@@ -3343,6 +3374,7 @@
       "Delizia": "del",
       "Eckhart": ""
     },
+    "words__function": "",
     "words__important": "Importante",
     "words__instructions": "Instrucciones",
     "words__intent": "Intención",
