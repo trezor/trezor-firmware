@@ -77,3 +77,33 @@ homescreen_shown: object | None = None
 # Timestamp of last autolock activity.
 # Here to persist across main loop restart between workflows.
 autolock_last_touch: int | None = None
+
+
+def encrypt_cache() -> None:
+    """
+    Encrypts seeds in all the cached sessions and the sessionless cache.
+    """
+    exceptions = []
+    for session in _PROTOCOL_CACHE._SESSIONS + [_SESSIONLESS_CACHE]:
+        try:
+            session.encrypt()
+        except Exception as e:
+            session.clear()
+            exceptions.append(e)
+    if exceptions:
+        raise exceptions[0]
+
+
+def decrypt_cache() -> None:
+    """
+    Decrypts seeds in all the cached sessions and the sessionless cache.
+    """
+    exceptions = []
+    for session in _PROTOCOL_CACHE._SESSIONS + [_SESSIONLESS_CACHE]:
+        try:
+            session.decrypt()
+        except Exception as e:
+            session.clear()
+            exceptions.append(e)
+    if exceptions:
+        raise exceptions[0]
