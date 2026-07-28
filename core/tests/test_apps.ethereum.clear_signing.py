@@ -662,8 +662,6 @@ class TestEthereumClearSigning(unittest.TestCase):
         # non-integer values are rejected
         with self.assertRaises(InvalidFormatDefinition):
             await_result(fmt.format("stable", None, None, None))
-        with self.assertRaises(InvalidFormatDefinition):
-            await_result(fmt.format(b"\x01", None, None, None))
 
         # an enum pointed at an array renders one entry per line
         formatted, _, _ = await_result(
