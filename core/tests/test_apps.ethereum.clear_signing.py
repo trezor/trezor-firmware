@@ -1402,9 +1402,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         for blob in blobs:
             offsets.append(32 * len(blobs) + len(tails))
             tails += to_bytes(len(blob)) + blob + b"\x00" * (-len(blob) % 32)
-        return (
-            to_bytes(len(blobs)) + b"".join(to_bytes(o) for o in offsets) + tails
-        )
+        return to_bytes(len(blobs)) + b"".join(to_bytes(o) for o in offsets) + tails
 
     def _expand_array(self, blobs, callees=None):
         """Like `_expand`, but the wrapper is `wrapper(callee(s), bytes[] data)`:
@@ -1452,9 +1450,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             self.assertEqual(group[1][0][:2], (prefix + "Intent", "Send"))
             (label, formatted, _), _, _ = group[2]
             self.assertEqual(label, prefix + "To")
-            self.assertEqual(
-                formatted.lower(), "0x" + hexlify(self.RECIPIENT).decode()
-            )
+            self.assertEqual(formatted.lower(), "0x" + hexlify(self.RECIPIENT).decode())
             (label, formatted, _), token, token_address = group[3]
             self.assertEqual(label, prefix + "Amount")
             self.assertEqual(formatted, "2 TST")
