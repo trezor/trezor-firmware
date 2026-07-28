@@ -764,7 +764,7 @@ jobs:
           do
             (echo '##' ${build_type}; \
              echo '```'; \
-             find artifacts/core-firmware-*-${build_type}/ -name '*-*-*.bin' -printf "%-40f %10s\n" | sort; \
+             find artifacts/core-firmware-*-${build_type}/ -name '*-*-*.bin' -printf "%10s %f\n" | sort -k 2; \
              echo '```') >> $GITHUB_STEP_SUMMARY
           done
 
