@@ -1485,30 +1485,23 @@ async def _handle_generic_ui(
     from .layout import require_confirm_clear_signing
     from .sc_constants import lookup_known_address
 
-    # Surface the native ETH value in the summary when non-zero - unless the
-    # display format already renders it as an `AmountFormatter` field (e.g. a
-    # swap's "Amount to Send"). That field shows the same canonical string the
-    # summary would, so repeating it there is pure duplication. A `@.value`
-    # field formatted any other way still gets its own summary line.
+    # Surface the native ETH value in the summary when non-zero - unless one of
+    # the display format's own fields already renders it (e.g. a swap's "Amount
+    # to Send"), in which case repeating it in the summary is pure duplication.
+
     value = int.from_bytes(msg.value, "big")
-    value_shown_as_amount_field = any(
-        fd.path == ContainerPath.Value
-        and isinstance(fd.get_formatter(), AmountFormatter)
-        for fd in display_format.field_definitions
-    )
-    amount = (
-        format_ethereum_amount(value, None, defs.network)
-        if value and not value_shown_as_amount_field
-        else None
-    )
+    amount = format_ethereum_amount(value, None, defs.network) if value else None
 
     _, fields = await display_format.parse_calldata(calldata, msg, defs)
 
     properties_to_confirm = []
+    value_shown_as_field = False
 
     for (label, formatted, is_mono), actual_token, actual_token_address in fields:
         if isinstance(formatted, AboveThreshold):
             formatted = formatted.message
+        if amount is not None and formatted == amount:
+            value_shown_as_field = True
         properties_to_confirm.append((label, formatted, is_mono))
         if actual_token is tokens.UNKNOWN_TOKEN:
             assert actual_token_address is not None
@@ -1527,5 +1520,9 @@ async def _handle_generic_ui(
     )
 
     await require_confirm_clear_signing(
-        recipient_str, display_format.intent, properties_to_confirm, maximum_fee, amount
+        recipient_str,
+        display_format.intent,
+        properties_to_confirm,
+        maximum_fee,
+        None if value_shown_as_field else amount,
     )
