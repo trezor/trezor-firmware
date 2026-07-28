@@ -37,40 +37,6 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
 
 
-# TODO: remove once ts-tvl ships the plain-int-key dump from
-# https://github.com/tropicsquare/ts-tvl/pull/14 — then `from_file` can go back
-# to a plain `yaml.safe_load` (and this loader + `_construct_apply` can go).
-class _TropicYamlLoader(yaml.SafeLoader):
-    """SafeLoader that tolerates the model's Python-tagged enum keys.
-
-    Some commands (e.g. `tropic-lock`) make the model serialize slot indices
-    as `!!python/object/apply:tvl.api.l3_api.SlotEnum [N]` instead of a plain
-    integer. The stock `SafeLoader` refuses those tags. We map any such
-    `apply` node back to its single argument (the integer), so pairing-key
-    slots keyed by `SlotEnum(N)` read back identically to the `N` used
-    elsewhere. Subclassing keeps this off the global `SafeLoader`.
-    """
-
-
-def _construct_apply(
-    loader: yaml.SafeLoader, _tag_suffix: str, node: yaml.Node
-) -> t.Any:
-    # The SlotEnum form is `apply:...SlotEnum [N]` — a one-element arg sequence.
-    if isinstance(node, yaml.SequenceNode):
-        args = loader.construct_sequence(node, deep=True)
-    elif isinstance(node, yaml.MappingNode):
-        # General apply mapping form (`{args: [...], ...}`).
-        args = loader.construct_mapping(node, deep=True).get("args", [])
-    else:
-        args = []
-    return args[0] if len(args) == 1 else tuple(args)
-
-
-_TropicYamlLoader.add_multi_constructor(
-    "tag:yaml.org,2002:python/object/apply:", _construct_apply
-)
-
-
 class TropicModelState:
     """Read-only view over a Tropic model config-output YAML file.
 
@@ -92,7 +58,7 @@ class TropicModelState:
             f"Tropic model output file was not generated: {path}. "
             "Did the Tropic model receive SIGINT on shutdown?"
         )
-        return cls(yaml.load(path.read_text(), Loader=_TropicYamlLoader) or {})
+        return cls(yaml.safe_load(path.read_text()) or {})
 
     @property
     def i_config(self) -> dict[str, int]:
