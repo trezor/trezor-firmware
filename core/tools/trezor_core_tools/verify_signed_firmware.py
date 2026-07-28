@@ -43,6 +43,8 @@ from trezorlib._internal import firmware_headers as fh
 from trezorlib.firmware import FirmwareHeader, SecmonHeader
 from trezorlib.firmware.core import FirmwareImage
 
+Image = fh.SignableImageProto | fh.BootloaderV2Image
+
 
 # ---- pretty output -------------------------------------------------------
 def ok(msg: str) -> None:
@@ -58,11 +60,19 @@ def info(msg: str) -> None:
 
 
 # ---- trezorlib glue ------------------------------------------------------
-def parse_any(data: bytes) -> fh.SignableImageProto | fh.BootloaderV2Image:
+def parse_any(data: bytes) -> Image:
     """Parse any supported image. parse_image() doesn't dispatch TRZQ, so do it here."""
     if data[:4] == b"TRZQ":
-        return fh.BootloaderV2Image.parse(data)
-    return fh.parse_image(data)
+        return fh.BootloaderV2Image.parse(data, strict=True)
+    return fh.parse_image(data, strict=True)
+
+
+def _inner_secmon(img: fh.VendorFirmware) -> fh.SecmonImage | None:
+    """Parse the code section as an embedded secmon image, if it is one."""
+    try:
+        return fh.SecmonImage.parse(img.firmware.code)
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def _zero_cosi_header(h: FirmwareHeader | SecmonHeader) -> None:
@@ -84,6 +94,13 @@ def normalized(data: bytes) -> bytes:
     img = parse_any(data)
     if isinstance(img, fh.VendorFirmware):  # TRZV
         _zero_cosi_header(img.firmware.header)
+
+        inner = _inner_secmon(img)
+        if inner is not None:  # Secmon-wrapped image (e.g. T3W1 prodtest)
+            _zero_cosi_header(inner.header)
+            img.firmware.code = inner.build()
+            img.firmware.header.hashes = img.firmware.code_hashes()
+
     elif isinstance(img, fh.BootloaderV2Image):  # TRZQ
         img.header.sigmask = 0
         img.unauth.slh_signatures = [
@@ -107,6 +124,25 @@ def _runs(offsets: list[int]) -> int:
             runs += 1
         prev = o
     return runs
+
+
+# ---- helper - verify signature of an image -------------------------------
+def _check_signatures(img: Image, name_prefix: str = "") -> bool:
+    img_name = f"{name_prefix}{getattr(img, 'NAME', 'image')}"
+    try:
+        if not img.signature_present():
+            bad(f"no signature present in the signed file ({img_name})")
+        else:
+            img.verify()  # production keys; raises on bad signature or bad hashes
+            ok(
+                f"signature of ({img_name}) is GENUINE -- verified against production keys"
+            )
+            return True
+    except Exception as e:  # noqa: BLE001
+        bad(
+            f"signature verification of ({img_name}) FAILED against production keys: {type(e).__name__}: {e}"
+        )
+    return False
 
 
 # ---- core verification of one (unsigned, signed) pair --------------------
@@ -176,21 +212,13 @@ def verify_pair(unsigned: Path, signed: Path) -> bool:
         confined = " [all within signature fields]" if nu == ns else ""
         info(f"{len(diffs)} bytes differ across {_runs(diffs)} run(s){confined}")
 
-    # ---- CHECK 3: signature authenticity -----------------------------------
-    try:
-        if not img.signature_present():
-            bad("no signature present in the signed file")
-            okall = False
-        else:
-            img.verify()  # production keys; raises on bad signature or bad hashes
-            ok(
-                f"signature is GENUINE -- verified against production keys ({getattr(img, 'NAME', 'image')})"
-            )
-    except Exception as e:  # noqa: BLE001
-        bad(
-            f"signature verification FAILED against production keys: {type(e).__name__}: {e}"
-        )
-        okall = False
+    # ---- CHECK 3 signature authenticity -----------------------------------
+    okall &= _check_signatures(img)
+
+    if isinstance(img, fh.VendorFirmware):
+        inner = _inner_secmon(img)
+        if inner is not None:
+            okall &= _check_signatures(inner, name_prefix="inner ")
 
     return okall
 
