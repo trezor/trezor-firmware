@@ -18,6 +18,9 @@ pub const MAX_MENU_ITEMS: usize = 5;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
 
+/// Maximum IPC message size in bytes for serialized data
+pub const MAX_IPC_SIZE: usize = 1024;
+
 pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(

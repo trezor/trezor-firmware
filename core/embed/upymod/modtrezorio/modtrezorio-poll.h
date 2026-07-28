@@ -24,6 +24,10 @@
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 
+#ifdef USE_APP_LOADING
+#include <io/app_arena.h>
+#endif
+
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
@@ -135,11 +139,9 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     if (signalled.read_ready & (1 << SYSHANDLE_IPC2)) {
       ipc_message_t message = {.remote = 2};
       if (ipc_try_receive(&message)) {
-        mp_obj_IpcMessage_t *o =
-            mp_obj_malloc(mp_obj_IpcMessage_t, &mod_trezorio_IpcMessage_type);
-        o->message = message;
         ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_IPC2);
-        ret->items[1] = MP_OBJ_FROM_PTR(o);
+        ret->items[1] = mod_trezorio_ipc_message_to_obj(&message);
+        ipc_message_free(&message);
         return mp_const_true;
       }
     }
@@ -242,6 +244,15 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         ret->items[1] = mp_obj_new_int_from_uint(pm_event.all);
         return mp_const_true;
       }
+    }
+#endif
+
+#ifdef USE_APP_LOADING
+    if (signalled.read_ready & (1 << SYSHANDLE_APP_ARENA)) {
+      app_arena_clear_event();
+      ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_APP_ARENA);
+      ret->items[1] = mp_const_none;
+      return mp_const_true;
     }
 #endif
 

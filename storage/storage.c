@@ -1453,6 +1453,10 @@ secbool storage_has(const uint16_t key) {
  */
 secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
                     uint16_t *len) {
+  if (len == NULL) {
+    return secfalse;
+  }
+
   const uint8_t app = key >> 8;
   // APP == 0 is reserved for PIN related values
   if (sectrue != initialized || app == APP_STORAGE) {
@@ -1542,6 +1546,10 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
 }
 
 secbool storage_set(const uint16_t key, const void *val, const uint16_t len) {
+  if (val == NULL) {
+    return secfalse;
+  }
+
   const uint8_t app = key >> 8;
 
   // APP == 0 is reserved for PIN related values
@@ -1610,6 +1618,10 @@ secbool storage_set_counter(const uint16_t key, const uint32_t count) {
 }
 
 secbool storage_next_counter(const uint16_t key, uint32_t *count) {
+  if (count == NULL) {
+    return secfalse;
+  }
+
   const uint8_t app = key >> 8;
 
   if ((app & FLAG_PUBLIC) == 0) {
@@ -1747,6 +1759,10 @@ end:
 }
 
 void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
+  if (pin == NULL) {
+    return;
+  }
+
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 #if NORCOW_MIN_VERSION <= 2
   // If we are unlocking the storage during upgrade from version 2 or lower,

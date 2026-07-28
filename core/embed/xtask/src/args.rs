@@ -2,6 +2,7 @@ use std::process;
 
 use anyhow::{Result, anyhow};
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use modular_xtask::args::Cmd as ModularCmd;
 
 pub use crate::model::Model;
 
@@ -11,12 +12,13 @@ pub struct ResolvedBuild {
     pub board_header: String,
 }
 
-#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Project {
     Bootloader,
     Boardloader,
     #[value(name = "bootloader_ci")]
     BootloaderCi,
+    #[default]
     Firmware,
     Prodtest,
     Kernel,
@@ -148,9 +150,17 @@ pub enum Cmd {
     Upload(UploadArgs),
     /// Combine multiple firmware projects into a single binary for flashing
     Combine(CombineArgs),
+    Modular(ModularArgs),
+    ApiBindings(ApiArgs),
 }
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug)]
+pub struct ModularArgs {
+    #[command(subcommand)]
+    pub command: ModularCmd,
+}
+
+#[derive(Args, Debug, Clone, Default)]
 #[command(override_usage = "xtask build <PROJECT> --model <MODEL> [OPTIONS]")]
 pub struct BuildArgs {
     pub project: Project,
@@ -354,4 +364,10 @@ pub struct CombineArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+}
+
+#[derive(Args, Debug)]
+pub struct ApiArgs {
+    #[arg(long, default_value = "false")]
+    pub check_only: bool,
 }

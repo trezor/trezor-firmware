@@ -53,6 +53,10 @@ pub struct CLibrary {
 
     // Builder for generating Rust bindings to this library.
     builder: Option<bindgen::Builder>,
+
+    // Optional path to write the generated Rust bindings.
+    // If `None`, defaults to `OUT_DIR/links_name.rs`.
+    builder_output: Option<PathBuf>,
 }
 
 impl CLibrary {
@@ -71,6 +75,7 @@ impl CLibrary {
             libs: Vec::new(),
             external_libs: Vec::new(),
             builder: None,
+            builder_output: None,
         }
     }
 
