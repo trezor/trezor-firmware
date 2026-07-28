@@ -31,11 +31,23 @@
 #include "nfc_poll.h"
 #include "rfal_isoDep.h"
 #include "rfal_nfc.h"
+#include "rfal_rf.h"
 #include "rfal_utils.h"
 #include "sys/mpu.h"
 
 // Interval to poll NFC device if still present (ms)
 #define NFC_POLLING_INTERVAL_MS 300u
+
+#define NFC_PSK_FRAME_HEADER 0xB580  // Only 9 MSB bits are used
+#define NFC_PSK_FRAME_HEADER_BITS 9U
+
+#define NFC_PSK_SHARE_LEN 16U
+#define NFC_PSK_SHARE_REPEAT_COUNT 3U
+#define NFC_PSK_FRAME_PAYLOAD_LEN \
+  (NFC_PSK_SHARE_LEN * NFC_PSK_SHARE_REPEAT_COUNT)
+
+#define NFC_CRC_A_PRELOAD 0x6363U
+#define NFC_CRC_A_POLY 0x8408U
 
 /* PCB byte definitions for R-blocks */
 #define ISODEP_PCB_RNAK_BN0 (0xB2U)  //!< R(NAK) block number 0
@@ -90,6 +102,107 @@ static ts_t nfc_transceive_blocking(const nfc_apdu_message_t *cmd,
                                     nfc_apdu_message_t *resp);
 
 static ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
+
+static void nfc_append_bits_to_frame(uint8_t *frame, uint16_t *bit_index,
+                                     const uint8_t *data, uint16_t data_bits) {
+  for (uint16_t i = 0; i < data_bits; i++) {
+    if ((data[i / 8U] & (uint8_t)(1U << (7U - (i % 8U)))) != 0U) {
+      frame[*bit_index / 8U] |= (uint8_t)(1U << (7U - (*bit_index % 8U)));
+    }
+    (*bit_index)++;
+  }
+}
+
+static uint16_t nfc_crc_a_from_bytestream(const uint8_t *payload,
+                                          size_t payload_len) {
+  uint16_t crc = NFC_CRC_A_PRELOAD;
+
+  for (size_t i = 0; i < payload_len; i++) {
+    uint8_t byte = payload[i];
+
+    // ISO14443A CRC uses LSB-first processing with poly 0x8408.
+    for (uint8_t bit = 0; bit < 8U; bit++) {
+      uint16_t mix = (uint16_t)((crc ^ (uint16_t)byte) & 0x0001U);
+      crc >>= 1U;
+      if (mix != 0U) {
+        crc ^= NFC_CRC_A_POLY;
+      }
+      byte >>= 1U;
+    }
+  }
+
+  return crc;
+}
+
+static uint16_t nfc_build_psk_frame(const uint8_t *tx_psk, uint8_t *tx_frame) {
+  uint16_t bit_index = 0;
+
+  uint8_t header[2] = {(uint8_t)(NFC_PSK_FRAME_HEADER >> 8U),
+                       (uint8_t)(NFC_PSK_FRAME_HEADER & 0xFFU)};
+
+  uint8_t payload[NFC_PSK_FRAME_PAYLOAD_LEN] = {0};
+
+  memset(tx_frame, 0, NFC_PSK_FRAME_PAYLOAD_LEN + 4);
+
+  for (size_t repeat = 0; repeat < NFC_PSK_SHARE_REPEAT_COUNT; repeat++) {
+    memcpy(&payload[repeat * NFC_PSK_SHARE_LEN], tx_psk, NFC_PSK_SHARE_LEN);
+  }
+
+  nfc_append_bits_to_frame(tx_frame, &bit_index, header,
+                           NFC_PSK_FRAME_HEADER_BITS);
+  nfc_append_bits_to_frame(tx_frame, &bit_index, payload,
+                           NFC_PSK_FRAME_PAYLOAD_LEN * 8U);
+
+  uint16_t crc_a =
+      nfc_crc_a_from_bytestream(payload, NFC_PSK_FRAME_PAYLOAD_LEN);
+  crc_a = ~crc_a;  // Invert CRC-A for NFC-A
+
+  nfc_append_bits_to_frame(tx_frame, &bit_index, (uint8_t *)&crc_a, 8U);
+  nfc_append_bits_to_frame(tx_frame, &bit_index, ((uint8_t *)&crc_a) + 1, 8U);
+
+  // Align bit index to next byte boundary
+  if (bit_index % 8U != 0U) {
+    bit_index += (8U - (bit_index % 8U));
+  }
+
+  return bit_index;
+}
+
+static ts_t nfc_parse_psk_frame(uint8_t *frame, uint16_t frame_len,
+                                uint8_t *psk, uint16_t psk_max_len,
+                                uint16_t *psk_len) {
+  TSH_DECLARE;
+
+  TSH_CHECK_ARG(frame != NULL);
+  TSH_CHECK_ARG(frame_len == (2 + NFC_PSK_FRAME_PAYLOAD_LEN + 2));
+  TSH_CHECK_ARG(psk != NULL);
+  TSH_CHECK_ARG(psk_max_len >= NFC_PSK_SHARE_LEN);
+
+  // Check frame header
+  TSH_CHECK(frame[0] == 0xB6 && frame[1] == 0x80, TS_EINVAL);
+
+  // Check that the PSK is repeated correctly in the frame
+  TSH_CHECK(
+      memcmp(frame + 2, frame + 2 + NFC_PSK_SHARE_LEN, NFC_PSK_SHARE_LEN) == 0,
+      TS_EINVAL);
+  TSH_CHECK(memcmp(frame + 2, frame + 2 + 2 * NFC_PSK_SHARE_LEN,
+                   NFC_PSK_SHARE_LEN) == 0,
+            TS_EINVAL);
+
+  uint16_t expected_crc;
+  memcpy(&expected_crc, frame + 2 + NFC_PSK_FRAME_PAYLOAD_LEN,
+         sizeof(expected_crc));
+  uint16_t crc =
+      ~nfc_crc_a_from_bytestream(frame + 2, NFC_PSK_FRAME_PAYLOAD_LEN);
+
+  TSH_CHECK(crc == expected_crc, TS_EINVAL);
+
+  memcpy(psk, frame + 2, NFC_PSK_SHARE_LEN);
+  *psk_len = NFC_PSK_SHARE_LEN;
+
+cleanup:
+  TSH_RETURN;
+}
 
 ts_t nfc_init(void) {
   TSH_DECLARE;
@@ -357,6 +470,49 @@ ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp) {
   }
 
   TSH_CHECK_OK(nfc_transceive_blocking(cmd, resp));
+
+cleanup:
+  TSH_RETURN;
+}
+
+ts_t nfc_transceive_psk(uint8_t *pcd_psk, size_t pcd_psk_max_len,
+                        uint8_t *picc_psk, size_t picc_psk_max_len,
+                        uint16_t *picc_psk_len) {
+  TSH_DECLARE;
+  ts_t status;
+
+  st25_driver_t *drv = &g_st25_driver;
+  TSH_CHECK(drv->initialized, TS_ENOINIT);
+
+  TSH_CHECK_ARG(pcd_psk != NULL);
+  TSH_CHECK_ARG(pcd_psk_max_len == NFC_PSK_SHARE_LEN);
+  TSH_CHECK_ARG(picc_psk_max_len >= NFC_PSK_SHARE_LEN);
+  TSH_CHECK_ARG(picc_psk != NULL);
+  TSH_CHECK_ARG(picc_psk_len != NULL);
+
+  uint32_t flags = (uint32_t)RFAL_TXRX_FLAGS_CRC_TX_MANUAL |
+                   (uint32_t)RFAL_TXRX_FLAGS_CRC_RX_KEEP |
+                   (uint32_t)RFAL_TXRX_FLAGS_CRC_RX_MANUAL |
+                   (uint32_t)RFAL_TXRX_FLAGS_PAR_TX_NONE |
+                   (uint32_t)RFAL_TXRX_FLAGS_PAR_RX_REMV;
+
+  uint8_t cust_cmd[NFC_PSK_FRAME_PAYLOAD_LEN + 4] = {0};
+  uint16_t cust_cmd_bits = nfc_build_psk_frame(pcd_psk, cust_cmd);
+
+  uint8_t cust_resp[NFC_PSK_FRAME_PAYLOAD_LEN + 4] = {0};
+  uint16_t cust_resp_bits = 0;
+
+  ReturnCode rc = rfalISO14443ATransceiveCustomFrame(
+      cust_cmd, cust_cmd_bits, cust_resp,
+      rfalConvBytesToBits(sizeof(cust_resp)), &cust_resp_bits, flags,
+      rfalConvMsTo1fc(100));
+
+  TSH_CHECK(rc == RFAL_ERR_NONE, TS_EIO);
+
+  status = nfc_parse_psk_frame(cust_resp,
+                               (uint16_t)rfalConvBitsToBytes(cust_resp_bits),
+                               picc_psk, picc_psk_max_len, picc_psk_len);
+  TSH_CHECK_OK(status);
 
 cleanup:
   TSH_RETURN;
