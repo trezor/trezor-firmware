@@ -9699,6 +9699,7 @@ class WARDListPendingEditsAck(protobuf.MessageType):
         1: protobuf.Field("addresses", "bytes", repeated=True, required=False, default=None),
         2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("pending_ids", "uint32", repeated=True, required=False, default=None),
+        4: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9707,10 +9708,12 @@ class WARDListPendingEditsAck(protobuf.MessageType):
         addresses: Optional[Sequence["bytes"]] = None,
         pending_ids: Optional[Sequence["int"]] = None,
         wallet_id: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
     ) -> None:
         self.addresses: Sequence["bytes"] = addresses if addresses is not None else []
         self.pending_ids: Sequence["int"] = pending_ids if pending_ids is not None else []
         self.wallet_id = wallet_id
+        self.ward_id = ward_id
 
 
 class WARDReconcile(protobuf.MessageType):
@@ -9789,6 +9792,7 @@ class WARDLookupAck(protobuf.MessageType):
         2: protobuf.Field("counter", "uint32", repeated=False, required=True),
         3: protobuf.Field("membership", "bool", repeated=False, required=False, default=None),
         4: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9798,11 +9802,13 @@ class WARDLookupAck(protobuf.MessageType):
         counter: "int",
         membership: Optional["bool"] = None,
         wallet_id: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
     ) -> None:
         self.valid = valid
         self.counter = counter
         self.membership = membership
         self.wallet_id = wallet_id
+        self.ward_id = ward_id
 
 
 class WARDDebugSetRoot(protobuf.MessageType):

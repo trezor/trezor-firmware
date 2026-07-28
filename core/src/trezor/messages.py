@@ -7726,6 +7726,7 @@ if TYPE_CHECKING:
         addresses: "list[AnyBytes]"
         wallet_id: "AnyBytes | None"
         pending_ids: "list[int]"
+        ward_id: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7733,6 +7734,7 @@ if TYPE_CHECKING:
             addresses: "list[AnyBytes] | None" = None,
             pending_ids: "list[int] | None" = None,
             wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7805,6 +7807,7 @@ if TYPE_CHECKING:
         counter: "int"
         membership: "bool | None"
         wallet_id: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7813,6 +7816,7 @@ if TYPE_CHECKING:
             counter: "int",
             membership: "bool | None" = None,
             wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 

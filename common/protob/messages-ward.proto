@@ -204,6 +204,7 @@ message WARDListPendingEditsAck {
     repeated bytes  addresses   = 1;  // addresses of the currently queued pending edits
     optional bytes  wallet_id   = 2;  // compatibility-only; callers should not depend on list_pending as the wallet_id source
     repeated uint32 pending_ids = 3;  // parallel to addresses: the pending_id of each queued candidate
+    optional bytes  ward_id     = 4;  // SLIP21-derived WM-facing anchor; hosts use it to resolve wardId up front
 }
 
 /**
@@ -263,6 +264,7 @@ message WARDLookupAck {
     required uint32 counter    = 2;  // current global counter
     optional bool   membership = 3;  // true = membership proof, false = non-membership
     optional bytes  wallet_id  = 4;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    optional bytes  ward_id    = 5;  // SLIP21-derived WM-facing anchor; scopes host-side WARD storage
 }
 
 /**

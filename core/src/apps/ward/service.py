@@ -619,9 +619,9 @@ async def lookup_impl(
     witness_value: bytes | None = None,
     counter: int | None = None,
     witness_counter: int | None = None,
-) -> tuple[bool, int, bool, bytes]:
+) -> tuple[bool, int, bool, bytes, bytes]:
     """Verify a membership / non-membership proof against the device's
-    authenticated root. Returns (valid, counter, membership, wallet_id).
+    authenticated root. Returns (valid, counter, membership, wallet_id, ward_id).
     """
     import storage.ward_session as ward_session
     import storage.ward_store as ward_store
@@ -630,6 +630,7 @@ async def lookup_impl(
     membership_query = witness_address is None and value is not None
 
     wallet_id = await _get_wallet_id()
+    ward_id = await _get_ward_id()
     present, stored_root = ward_session.root_get(wallet_id)
     if not present:
         raise DataError("no authenticated root in session")
@@ -641,6 +642,7 @@ async def lookup_impl(
             ward_store.get_counter(wallet_id),
             membership_query,
             wallet_id,
+            ward_id,
         )
 
     if not membership_query:
@@ -658,7 +660,7 @@ async def lookup_impl(
         valid = verify_proof(address, counter, value, proof, stored_root)
         membership = True
 
-    return valid, ward_store.get_counter(wallet_id), membership, wallet_id
+    return valid, ward_store.get_counter(wallet_id), membership, wallet_id, ward_id
 
 
 async def intent_address_impl(pending_id: int | None) -> tuple[int, bytes]:
@@ -993,12 +995,14 @@ async def reconcile_impl(
     return counter_ext, root, wallet_id, mac_ext
 
 
-async def list_pending_impl() -> tuple[list[int], list[bytes], bytes]:
-    """Return (pending_ids, addresses, wallet_id) for every queued candidate of
-    the active wallet, in allocation order (the two lists are parallel)."""
+async def list_pending_impl() -> tuple[list[int], list[bytes], bytes, bytes]:
+    """Return (pending_ids, addresses, wallet_id, ward_id) for every queued
+    candidate of the active wallet, in allocation order (the two lists are
+    parallel). ward_id lets a host resolve the WM-facing anchor up front."""
     import storage.ward_store as ward_store
 
     wallet_id = await _get_wallet_id()
+    ward_id = await _get_ward_id()
 
     pending_ids = []  # type: list[int]
     addresses = []  # type: list[bytes]
@@ -1006,7 +1010,7 @@ async def list_pending_impl() -> tuple[list[int], list[bytes], bytes]:
         pending_ids.append(pid)
         addresses.append(address)
 
-    return pending_ids, addresses, wallet_id
+    return pending_ids, addresses, wallet_id, ward_id
 
 
 async def debug_set_root_impl(

@@ -14,7 +14,7 @@ async def lookup(msg: WARDLookup) -> WARDLookupAck:
 
     from apps.common import ward as core
 
-    valid, counter, membership, wallet_id = await core.lookup(
+    valid, counter, membership, wallet_id, ward_id = await core.lookup(
         msg.address,
         msg.value,
         msg.proof,
@@ -29,4 +29,5 @@ async def lookup(msg: WARDLookup) -> WARDLookupAck:
         counter=counter,
         membership=membership,
         wallet_id=wallet_id,
+        ward_id=ward_id,
     )

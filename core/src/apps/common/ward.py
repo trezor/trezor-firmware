@@ -69,7 +69,7 @@ async def _classify_label(
     "unknown" / "membership" / "non-membership" and label is the verified value
     bytes (only for a valid membership proof, else None). Shared by the PUSH and
     PULL label paths."""
-    valid, _counter, membership, _wallet_id = await lookup(
+    valid, _counter, membership, _wallet_id, _ward_id = await lookup(
         address,
         value,
         proof,
@@ -159,10 +159,10 @@ async def lookup(
     witness_value: bytes | None = None,
     counter: int | None = None,
     witness_counter: int | None = None,
-) -> tuple[bool, int, bool, bytes]:
+) -> tuple[bool, int, bool, bytes, bytes]:
     """Verify a membership / non-membership proof against the device's WARD root.
-    Returns (valid, counter, membership, wallet_id). General proof-verification
-    path used by the host WARDLookup handler.
+    Returns (valid, counter, membership, wallet_id, ward_id). General
+    proof-verification path used by the host WARDLookup handler.
     """
     from apps.ward import service
 
@@ -266,12 +266,14 @@ async def reconcile(
     return await service.reconcile_impl(root)
 
 
-async def list_pending() -> tuple[list[int], list[bytes], bytes]:
-    """Return queued (pending_ids, addresses, wallet_id) for the active wallet.
+async def list_pending() -> tuple[list[int], list[bytes], bytes, bytes]:
+    """Return queued (pending_ids, addresses, wallet_id, ward_id) for the active
+    wallet.
 
     Note:
     - wallet_id is still returned for compatibility with current callers
     - list_pending() should not be the long-term source of wallet_id
+    - ward_id is the SLIP21-derived WM anchor a host uses to key WARD storage
     """
     from apps.ward import service
 
