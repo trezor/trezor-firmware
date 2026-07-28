@@ -86,7 +86,12 @@
     },
     "address__title_refund_address": "Endereço de reembolso",
     "address__title_yours": "Seu",
-    "address__warning_not_yours": "",
+    "address__warning_not_yours": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Este NÃO é seu endereço"
+    },
     "address__xpub": {
       "Bolt": "XPUB",
       "Caesar": "XPUB",
@@ -133,7 +138,7 @@
     "backup__create_backup_to_prevent_loss": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Crie um backup para evitar perder acesso aos seus fundos",
+      "Delizia": "Crie um backup de carteira para evitar perder acesso aos seus fundos.",
       "Eckhart": "Crie um backup de carteira para evitar perder acesso aos seus fundos."
     },
     "backup__info_multi_share_backup": {
@@ -578,6 +583,7 @@
     "cardano__x_of_y_signatures_template": "Requer {0} de {1} assinaturas.",
     "coinjoin__access_account": "Acessar sua conta coinjoin?",
     "coinjoin__do_not_disconnect": "Não desconecte o seu Trezor!",
+    "coinjoin__max_coordinator_fee_pct": "",
     "coinjoin__max_mining_fee": "Taxa máx. de mineração",
     "coinjoin__max_rounds": "Máx. de rodadas",
     "coinjoin__title": "Autorizar coinjoin",
@@ -837,7 +843,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "ethereum__all_evms": "",
+    "ethereum__all_evms": "Todas EVMs",
     "ethereum__approve": "Aprovar",
     "ethereum__approve_amount_allowance": "Quantia permitida",
     "ethereum__approve_chain_id": "ID da chain",
@@ -854,35 +860,51 @@
       "Delizia": "Aprovando quantia ilimitada de {0}.",
       "Eckhart": "Aprovando quantia ilimitada de {0}."
     },
-    "ethereum__auth_done": "",
-    "ethereum__auth_title": "",
-    "ethereum__auth_warn": "",
-    "ethereum__calldata_digest": "",
+    "ethereum__auth_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Autorização EIP-7702 assinada.",
+      "Eckhart": "Autorização EIP-7702 assinada."
+    },
+    "ethereum__auth_title": "Autorização EIP-7702",
+    "ethereum__auth_warn": "Autorizar sua conta a um contrato de terceiros via EIP-7702?",
+    "ethereum__calldata_digest": "Resumo ERC-8213",
     "ethereum__calldata_suffix": "Sufixo calldata",
     "ethereum__confirm_contract": "Confirmar contrato",
     "ethereum__contract_address": "Endereço de contr. do provedor",
     "ethereum__data_size_template": "Tamanho: {0} bytes",
-    "ethereum__delegate_done": "",
-    "ethereum__delegate_title": "",
-    "ethereum__delegate_warn": "",
-    "ethereum__delegating": "",
+    "ethereum__delegate_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Delegação EIP-7702 assinada.",
+      "Eckhart": "Delegação EIP-7702 assinada."
+    },
+    "ethereum__delegate_title": "Delegação EIP-7702",
+    "ethereum__delegate_warn": "Delegar sua conta a um contrato de terceiros?",
+    "ethereum__delegating": "Delegar",
     "ethereum__deposit_amount": "Quantia para depósito",
     "ethereum__deposit_to": "Depósito para",
+    "ethereum__eip_712_empty_domain": "",
     "ethereum__gas_limit": "Limite de gás",
     "ethereum__gas_price": "Preço do gás",
     "ethereum__interaction_contract": "Contrato de interação",
     "ethereum__max_gas_price": "Taxa máxima por gás",
     "ethereum__name_and_version": "Nome e versão",
-    "ethereum__network": "",
+    "ethereum__network": "Rede",
     "ethereum__new_contract": "Novo contrato será implantado",
     "ethereum__no_message_field": "Sem campo de mensagem",
     "ethereum__priority_fee": "Taxa de prioridade máx.",
     "ethereum__redeem": "Resgatar",
     "ethereum__redeem_amount": "Quantia para resgate",
     "ethereum__redeem_from": "Resgatar de",
-    "ethereum__revoke_done": "",
-    "ethereum__revoke_title": "",
-    "ethereum__revoke_warn": "",
+    "ethereum__revoke_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Revogação EIP-7702 assinada.",
+      "Eckhart": "Revogação EIP-7702 assinada."
+    },
+    "ethereum__revoke_title": "Revogação EIP-7702",
+    "ethereum__revoke_warn": "Revogar {0} da delegação de conta inteligente?",
     "ethereum__reward_tokens": "Tokens de recompensa",
     "ethereum__rewards_claim": "Resgate de recompensa",
     "ethereum__show_full_array": {
@@ -910,7 +932,7 @@
       "Eckhart": "Exibir estrutura completa"
     },
     "ethereum__sign_eip712": "Confirmar assinatura de dados tipados EIP-712?",
-    "ethereum__smart_info": "",
+    "ethereum__smart_info": "Info. contrato de conta inteligente",
     "ethereum__staking_claim": "Resgatar",
     "ethereum__staking_claim_address": "Endereço de resgate",
     "ethereum__staking_claim_intro": "Resgatar ETH do Everstake?",
@@ -949,7 +971,7 @@
       "Delizia": "Contrato de token",
       "Eckhart": "Endereço do contrato de token"
     },
-    "ethereum__to": "",
+    "ethereum__to": "A",
     "ethereum__token_contract": {
       "Bolt": "Endereço do contrato de token",
       "Caesar": "Contrato de token",
@@ -1148,7 +1170,7 @@
     "instructions__continue_holding": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Continue\nsegurando",
+      "Delizia": "Continue segurando",
       "Eckhart": "Continue segurando"
     },
     "instructions__continue_in_app": {
@@ -1245,7 +1267,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Veja todos os dados no menu.",
-      "Eckhart": ""
+      "Eckhart": "Veja todos os dados no menu."
     },
     "joint__title": {
       "Bolt": "",
@@ -1859,7 +1881,12 @@
       "Delizia": "Redigite o novo PIN",
       "Eckhart": "Reinsira o novo PIN"
     },
-    "pin__reenter_new_description": "",
+    "pin__reenter_new_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Redigite o novo PIN.",
+      "Eckhart": ""
+    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Redigite o PIN para confirmar.",
@@ -1905,11 +1932,11 @@
     },
     "pin__wrong_pin": "PIN incorreto",
     "plurals__contains_x_keys": "chave|chaves",
-    "plurals__days": "",
-    "plurals__hours": "",
-    "plurals__milliseconds": "",
-    "plurals__minutes": "",
-    "plurals__seconds": "",
+    "plurals__days": "dia|dias",
+    "plurals__hours": "hora|horas",
+    "plurals__milliseconds": "milissegundo|milissegundos",
+    "plurals__minutes": "minuto|minutos",
+    "plurals__seconds": "segundo|segundos",
     "plurals__sign_x_actions": "ação|ações",
     "plurals__transaction_of_x_operations": "operação|operações",
     "plurals__x_groups_needed": "grupo|grupos",
@@ -2046,7 +2073,12 @@
       "Eckhart": "Deseja mesmo cancelar a verificação do backup?"
     },
     "recovery__word_count_template": "({0} palavras)",
-    "recovery__word_x_of_y_template": "Palavra {0} de {1}",
+    "recovery__word_x_of_y_template": {
+      "Bolt": "Palavra {0} de {1}",
+      "Caesar": "Palavra {0} de {1}",
+      "Delizia": "Palavra {0} de {1}",
+      "Eckhart": "Palavra\n{0} de {1}"
+    },
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "Mais {count} {plural} começando com",
       "Caesar": "",
@@ -2839,7 +2871,6 @@
       "Eckhart": "Número de série"
     },
     "solana__account_index": "Índice da conta",
-    "solana__app_domain": "",
     "solana__associated_token_account": "Conta de token associada",
     "solana__base_fee": "Taxa base",
     "solana__claim": "Resgatar",
@@ -2903,11 +2934,14 @@
     "stellar__delete_trust": "Excluir Trust",
     "stellar__destination": "Destino",
     "stellar__exchanges_require_memo": "Memo não definido.\nNormalmente exigido ao enviar para exchanges.",
+    "stellar__ext_auth": "",
+    "stellar__ext_auth_message": "",
     "stellar__final_confirm": "Confirmação final",
     "stellar__hash": "Hash",
     "stellar__high": "Alto",
     "stellar__home_domain": "Domínio de Origem",
     "stellar__inflation": "Inflação",
+    "stellar__invoke_contract": "",
     "stellar__issuer_template": "Emissor {0}",
     "stellar__key": "Chave",
     "stellar__limit": "Limite",
@@ -3064,9 +3098,9 @@
       "Delizia": "",
       "Eckhart": "Escaneie o QR code para parear"
     },
-    "tron__claim_unfrozen_balance": "",
-    "tron__claim_voting_rewards": "",
-    "tron__owner_address": "",
+    "tron__claim_unfrozen_balance": "Resgatar saldo descongelado?",
+    "tron__claim_voting_rewards": "Resgatar recompensas de votação?",
+    "tron__owner_address": "Endereço do proprietário",
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3391,10 +3425,12 @@
     "words__address": "Endereço",
     "words__amount": "Quantia",
     "words__are_you_sure": "Tem certeza?",
+    "words__arguments": "",
     "words__array_of": "Arranjo de",
     "words__asset": "Ativo",
     "words__assets": "Ativos",
     "words__authenticate": "Autenticar",
+    "words__authorization": "",
     "words__blockhash": "Hash do bloco",
     "words__bluetooth": "Bluetooth",
     "words__buying": "Comprando",
@@ -3453,6 +3489,7 @@
       "Delizia": "do",
       "Eckhart": ""
     },
+    "words__function": "",
     "words__important": "Importante",
     "words__instructions": "Instruções",
     "words__intent": "Intenção",
