@@ -6,7 +6,7 @@ use crate::translations::TR;
 use crate::ui::component::base::ComponentExt;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
 use crate::ui::component::{Child, Component, Event, EventCtx, Pad};
-use crate::ui::geometry::{Alignment, Grid, Insets, Offset, Rect};
+use crate::ui::geometry::{Alignment, Grid, GridCellSpan, Insets, Offset, Rect};
 use crate::ui::shape::{self, Renderer};
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -40,7 +40,7 @@ where
             input: NumberInput::new(min, max, init_value).into_child(),
             paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text)).into_child(),
             paragraphs_pad: Pad::with_background(theme::BG),
-            info_button: Button::with_text(TR::buttons__info.into()).into_child(),
+            info_button: Button::with_icon(theme::ICON_CORNER_INFO).into_child(),
             confirm_button: Button::with_text(TR::buttons__continue.into())
                 .styled(theme::button_confirm())
                 .into_child(),
@@ -81,12 +81,15 @@ where
             theme::CONTENT_BORDER,
         ));
 
-        let grid = Grid::new(button_area, 1, 2).with_spacing(theme::KEYBOARD_SPACING);
+        let grid = Grid::new(button_area, 1, 3).with_spacing(theme::KEYBOARD_SPACING);
         self.input.place(input_area);
         self.paragraphs.place(content_area);
         self.paragraphs_pad.place(content_area);
         self.info_button.place(grid.row_col(0, 0));
-        self.confirm_button.place(grid.row_col(0, 1));
+        self.confirm_button.place(grid.cells(GridCellSpan {
+            from: (0, 1),
+            to: (0, 2),
+        }));
         bounds
     }
 
