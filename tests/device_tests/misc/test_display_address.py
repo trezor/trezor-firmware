@@ -89,11 +89,11 @@ def test_display_wrong_address_more_labels(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddress(
+                    messages.DisplayAddressWithProof(
                         address=address,
-                        ward_value=value,
-                        ward_proof=proof,
-                        ward_counter=1,
+                        value=value,
+                        proof=proof,
+                        counter=1,
                     ),
                     expect=messages.Success,
                 ),
@@ -124,11 +124,11 @@ def test_display_address_more_labels(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddress(
+                    messages.DisplayAddressWithProof(
                         address=address,
-                        ward_value=value,
-                        ward_proof=proof,
-                        ward_counter=1,
+                        value=value,
+                        proof=proof,
+                        counter=1,
                     ),
                     expect=messages.Success,
                 ),
@@ -169,11 +169,11 @@ def test_display_address_more_labels_via_device(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddress(
+                    messages.DisplayAddressWithProof(
                         address=address,
-                        ward_value=value,
-                        ward_proof=proof,
-                        ward_counter=1,
+                        value=value,
+                        proof=proof,
+                        counter=1,
                     ),
                     expect=messages.Success,
                 ),
@@ -246,11 +246,11 @@ def test_display_address_single_label(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddress(
+                    messages.DisplayAddressWithProof(
                         address=address,
-                        ward_value=value,
-                        ward_proof=proof,
-                        ward_counter=1,
+                        value=value,
+                        proof=proof,
+                        counter=1,
                     ),
                     expect=messages.Success,
                 ),
@@ -284,11 +284,11 @@ def test_display_address_unknown_with_wrong_proof(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddress(
+                    messages.DisplayAddressWithProof(
                         address=address,
-                        ward_value=value,
-                        ward_proof=wrong_proof,
-                        ward_counter=1,
+                        value=value,
+                        proof=wrong_proof,
+                        counter=1,
                     ),
                     expect=messages.Success,
                 ),

@@ -103,6 +103,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.misc.get_entropy"
     if msg_type == MessageType.DisplayAddress:
         return "apps.display_address.show"
+    if msg_type == MessageType.DisplayAddressWithProof:
+        return "apps.display_address.show_with_proof"
     if msg_type == MessageType.SignIdentity:
         return "apps.misc.sign_identity"
     if msg_type == MessageType.GetECDHSessionKey:

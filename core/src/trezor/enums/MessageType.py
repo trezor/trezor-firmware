@@ -165,6 +165,7 @@ if not utils.BITCOIN_ONLY:
     NEMDecryptMessage = 75
     NEMDecryptedMessage = 76
     DisplayAddress = 123
+    DisplayAddressWithProof = 124
     TezosGetAddress = 150
     TezosAddress = 151
     TezosSignTx = 152

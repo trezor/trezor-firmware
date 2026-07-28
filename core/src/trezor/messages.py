@@ -3446,26 +3446,54 @@ if TYPE_CHECKING:
         subtitle: "str | None"
         case_sensitive: "bool"
         chunkify: "bool | None"
-        ward_value: "AnyBytes | None"
-        ward_proof: "list[AnyBytes]"
-        ward_counter: "int | None"
 
         def __init__(
             self,
             *,
             address: "str",
-            ward_proof: "list[AnyBytes] | None" = None,
             title: "str | None" = None,
             subtitle: "str | None" = None,
             case_sensitive: "bool | None" = None,
             chunkify: "bool | None" = None,
-            ward_value: "AnyBytes | None" = None,
-            ward_counter: "int | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["DisplayAddress"]:
+            return isinstance(msg, cls)
+
+    class DisplayAddressWithProof(protobuf.MessageType):
+        address: "str"
+        title: "str | None"
+        subtitle: "str | None"
+        case_sensitive: "bool"
+        chunkify: "bool | None"
+        value: "AnyBytes | None"
+        proof: "list[AnyBytes]"
+        counter: "int | None"
+        witness_address: "AnyBytes | None"
+        witness_value: "AnyBytes | None"
+        witness_counter: "int | None"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            proof: "list[AnyBytes] | None" = None,
+            title: "str | None" = None,
+            subtitle: "str | None" = None,
+            case_sensitive: "bool | None" = None,
+            chunkify: "bool | None" = None,
+            value: "AnyBytes | None" = None,
+            counter: "int | None" = None,
+            witness_address: "AnyBytes | None" = None,
+            witness_value: "AnyBytes | None" = None,
+            witness_counter: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DisplayAddressWithProof"]:
             return isinstance(msg, cls)
 
     class EosGetPublicKey(protobuf.MessageType):

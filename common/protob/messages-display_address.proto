@@ -8,18 +8,13 @@ option java_outer_classname = "TrezorMessageDisplayAddress";
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
 /**
- * Request: Show an arbitrary address on-screen, authenticating a WARD label for
- * that address. Two interchangeable ways to supply the proof:
+ * Request: Show an arbitrary address on-screen with a PULL-authenticated WARD
+ * label. The firmware emits a WARDProofRequest naming the address; the host answers
+ * with a WARDProofAck; the firmware verifies that proof against its authenticated
+ * WARD root (through the Core capability boundary) and shows the verified label as
+ * the account name (or none, for non-membership/unknown).
  *
- *   PUSH: the host attaches ward_value/ward_proof/ward_counter to this message.
- *         The firmware verifies them directly against its authenticated root.
- *   PULL: the host omits them. The firmware emits a WARDProofRequest naming the
- *         address, the host answers with a WARDProofAck, and the firmware
- *         verifies that proof instead.
- *
- * Either way verification goes through the Core capability boundary against the
- * device's authenticated WARD root; a valid membership proof shows the verified
- * label as the account name, otherwise no label is displayed.
+ * The PUSH variant (host supplies the proof up-front) is DisplayAddressWithProof.
  *
  * Returns a standard Success after confirmation.
  * @start
@@ -33,7 +28,29 @@ message DisplayAddress {
     optional string subtitle = 3;         // custom subtitle
     optional bool case_sensitive = 4 [default = true];
     optional bool chunkify = 5;           // display the address in chunks of 4 characters
-    optional bytes  ward_value   = 6;     // PUSH: the label/value claimed for this address
-    repeated bytes  ward_proof   = 7;     // PUSH: MPT membership proof (33 bytes each, leaf-to-root)
-    optional uint32 ward_counter = 8;     // PUSH: leaf counter stamp for the WARD entry
+}
+
+/**
+ * Request: Show an arbitrary address on-screen with a PUSH-authenticated WARD label
+ * — the host attaches the proof up-front instead of answering a pull. The firmware
+ * verifies the supplied (membership: value/counter; non-membership: witness_*)
+ * proof against its authenticated WARD root and shows the verified label.
+ *
+ * The PULL variant (device requests the proof on demand) is DisplayAddress.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message DisplayAddressWithProof {
+    required string address = 1;          // address to display
+    optional string title = 2;            // custom screen title
+    optional string subtitle = 3;         // custom subtitle
+    optional bool case_sensitive = 4 [default = true];
+    optional bool chunkify = 5;           // display the address in chunks of 4 characters
+    optional bytes  value           = 6;  // membership: the value stored at address
+    repeated bytes  proof           = 7;  // sibling hashes, leaf-to-root (33 bytes each)
+    optional uint32 counter         = 8;  // membership: leaf counter for address
+    optional bytes  witness_address = 9;  // non-membership: witness leaf address
+    optional bytes  witness_value   = 10; // non-membership: witness leaf value
+    optional uint32 witness_counter = 11; // non-membership: witness leaf counter
 }

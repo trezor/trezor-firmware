@@ -634,6 +634,7 @@ class MessageType(IntEnum):
     NEMDecryptMessage = 75
     NEMDecryptedMessage = 76
     DisplayAddress = 123
+    DisplayAddressWithProof = 124
     TezosGetAddress = 150
     TezosAddress = 151
     TezosSignTx = 152
@@ -4899,31 +4900,66 @@ class DisplayAddress(protobuf.MessageType):
         3: protobuf.Field("subtitle", "string", repeated=False, required=False, default=None),
         4: protobuf.Field("case_sensitive", "bool", repeated=False, required=False, default=True),
         5: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
-        6: protobuf.Field("ward_value", "bytes", repeated=False, required=False, default=None),
-        7: protobuf.Field("ward_proof", "bytes", repeated=True, required=False, default=None),
-        8: protobuf.Field("ward_counter", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address: "str",
-        ward_proof: Optional[Sequence["bytes"]] = None,
         title: Optional["str"] = None,
         subtitle: Optional["str"] = None,
         case_sensitive: Optional["bool"] = True,
         chunkify: Optional["bool"] = None,
-        ward_value: Optional["bytes"] = None,
-        ward_counter: Optional["int"] = None,
     ) -> None:
-        self.ward_proof: Sequence["bytes"] = ward_proof if ward_proof is not None else []
         self.address = address
         self.title = title
         self.subtitle = subtitle
         self.case_sensitive = case_sensitive
         self.chunkify = chunkify
-        self.ward_value = ward_value
-        self.ward_counter = ward_counter
+
+
+class DisplayAddressWithProof(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 124
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("title", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("subtitle", "string", repeated=False, required=False, default=None),
+        4: protobuf.Field("case_sensitive", "bool", repeated=False, required=False, default=True),
+        5: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        6: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
+        8: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        9: protobuf.Field("witness_address", "bytes", repeated=False, required=False, default=None),
+        10: protobuf.Field("witness_value", "bytes", repeated=False, required=False, default=None),
+        11: protobuf.Field("witness_counter", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        proof: Optional[Sequence["bytes"]] = None,
+        title: Optional["str"] = None,
+        subtitle: Optional["str"] = None,
+        case_sensitive: Optional["bool"] = True,
+        chunkify: Optional["bool"] = None,
+        value: Optional["bytes"] = None,
+        counter: Optional["int"] = None,
+        witness_address: Optional["bytes"] = None,
+        witness_value: Optional["bytes"] = None,
+        witness_counter: Optional["int"] = None,
+    ) -> None:
+        self.proof: Sequence["bytes"] = proof if proof is not None else []
+        self.address = address
+        self.title = title
+        self.subtitle = subtitle
+        self.case_sensitive = case_sensitive
+        self.chunkify = chunkify
+        self.value = value
+        self.counter = counter
+        self.witness_address = witness_address
+        self.witness_value = witness_value
+        self.witness_counter = witness_counter
 
 
 class EosGetPublicKey(protobuf.MessageType):

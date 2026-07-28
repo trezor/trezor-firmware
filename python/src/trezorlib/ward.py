@@ -37,10 +37,13 @@ def queue_update(
     perform_update, from a proof the device pulls itself. Returns
     (counter_T, pending_id, wallet_id).
     """
+    # old_value is a display hint only and is not carried on the wire (the diagram's
+    # WARDQueueUpdate is address + new_value); the device pulls the current state at
+    # perform time.
+    del old_value
     resp = session.call(
         messages.WARDQueueUpdate(
             address=address,
-            old_value=old_value,
             new_value=new_value,
         ),
         expect=messages.WARDQueueUpdateAck,
