@@ -505,24 +505,20 @@ def _display_bytes(value: bytes) -> str:
         return hexlify(value).decode()
 
 
-async def _confirm_update(address: bytes, old_value: bytes, new_value: bytes) -> None:
-    """Trusted on-device confirmation of a WARD edit intent (old -> new). Raises
+async def _confirm_update(address: bytes, new_value: bytes) -> None:
+    """Trusted on-device confirmation of a WARD edit intent. Raises
     ActionCancelled if the user rejects; returns normally on approval."""
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_properties
 
     if len(new_value) == 0:
         title = "Delete WARD entry"
-    elif len(old_value) == 0:
-        title = "Create WARD entry"
     else:
-        title = "Update WARD entry"
+        title = "Queue WARD entry"
 
     # PropertyType is a 3-tuple (name, value, is_data); is_data=True renders the
     # value as monospace data.
     props = [("Key", _display_bytes(address), True)]
-    if len(old_value) != 0:
-        props.append(("Old value", _display_bytes(old_value), True))
     if len(new_value) != 0:
         props.append(("New value", _display_bytes(new_value), True))
 
@@ -537,10 +533,9 @@ async def _confirm_update(address: bytes, old_value: bytes, new_value: bytes) ->
 
 async def queue_update_impl(
     address: bytes,
-    old_value: bytes,
     new_value: bytes,
 ) -> tuple[int, int, bytes]:
-    """Queue an edit INTENT (pull model). Shows the old -> new change on a trusted
+    """Queue an edit INTENT (pull model). Shows the queued change on a trusted
     screen and, ONLY on user approval, derives counter_T (= current authenticated
     counter + 1), allocates a pending_id, and stores the intent PENDING -- no proof
     is taken and the root is NOT computed here (that happens at WARDPerformUpdate,
@@ -561,12 +556,24 @@ async def queue_update_impl(
     # The device is the counter authority: counter_T = current counter + 1.
     counter_t = ward_store.get_counter(wallet_id) + 1
 
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__,
+            "queue_update_impl: confirm intent wallet_id=%s address=%s new_value_len=%d counter_T=%d",
+            wallet_id,
+            address,
+            len(new_value),
+            counter_t,
+        )
+
     # Trusted confirmation gates the intent (WP-F5). Raises on user rejection.
-    await _confirm_update(address, old_value, new_value)
+    await _confirm_update(address, new_value)
 
     pending_id = ward_store.queue_alloc_id()
     ward_store.queue_put(
-        wallet_id, pending_id, counter_t, address, old_value, new_value
+        wallet_id, pending_id, counter_t, address, b"", new_value
     )
 
     if __debug__:
@@ -646,6 +653,18 @@ async def intent_address_impl(pending_id: int | None) -> tuple[int, bytes]:
     if rec is None:
         raise DataError("no queued intent to perform")
     _counter, _state, address, _ov, _nv, _root, _mac = rec
+
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__,
+            "intent_address_impl: wallet_id=%s pending_id=%d address=%s",
+            wallet_id,
+            pid,
+            address,
+        )
+
     return pid, address
 
 
@@ -661,8 +680,8 @@ async def perform_update_impl(
     """Authorize a queued intent using a proof the device PULLED on demand.
 
     The proof package (value/counter for membership, witness_* for non-membership,
-    empty for an empty tree) is the authoritative current state -- the intent's
-    stored old_value was only a display hint. Verifies it against the stored root,
+    empty for an empty tree) is the authoritative current state. Verifies it
+    against the stored root,
     computes (root_T, mac_T) for the intent's stored counter_T, and marks the
     intent COMMITTED. The counter is NOT advanced (that happens at confirm).
     pending_id selects the intent; if omitted, falls back to the single queued one.
@@ -694,6 +713,20 @@ async def perform_update_impl(
     # an empty old_value, so map an absent pulled value to b"".
     old_value = value if value is not None else b""
     old_counter = counter if counter is not None else 0
+
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__,
+            "perform_update_impl: verify pending_id=%d wallet_id=%s counter_T=%d proof_len=%d old_counter=%d witness=%s",
+            pid,
+            wallet_id,
+            counter_t,
+            len(proof),
+            old_counter,
+            "yes" if witness_address is not None else "no",
+        )
 
     try:
         root_t = compute_new_root(
@@ -774,6 +807,18 @@ async def confirmed_by_wm_impl(
 
     if counter_msg != counter or msg_mac != candidate_mac:
         raise DataError("confirmation does not match the committed candidate")
+
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__,
+            "confirmed_by_wm_impl: verify pending_id=%d wallet_id=%s counter_msg=%d mac_present=%s",
+            pid,
+            wallet_id,
+            counter_msg,
+            "yes" if mac_msg is not None else "no",
+        )
 
     if not verify_ward_final(wallet_id, counter, candidate_mac, wm_signature):
         raise DataError("WM final attestation verification failed")

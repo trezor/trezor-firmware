@@ -29,25 +29,24 @@ option java_outer_classname = "TrezorMessageWard";
 /**
  * Request: Queue a leaf change as an unverified INTENT (pull model).
  *
- * This carries NO proof. The device shows old_value -> new_value on a trusted
+ * This carries NO proof. The device shows the new_value on a trusted
  * screen and, only on user approval, derives counter_T (= attested counter + 1),
  * stores the intent under a fresh pending_id, and returns it. The candidate root
  * is computed later, at WARDPerformUpdate, from a proof the device pulls itself.
  *
  * Supported operations (classified at perform time from the pulled proof):
- *   UPDATE  : old_value non-empty, new_value non-empty
- *   DELETE  : old_value non-empty, new_value empty
- *   INSERT  : old_value empty,     new_value non-empty
- * old_value is a display hint only; the authoritative current state is the proof
- * the device pulls at WARDPerformUpdate.
+ *   UPDATE  : new_value non-empty
+ *   DELETE  : new_value empty
+ *   INSERT  : new_value non-empty
+ * The authoritative current state is the proof the device pulls at
+ * WARDPerformUpdate.
  * @start
  * @next WARDQueueUpdateAck
  * @next Failure
  */
 message WARDQueueUpdate {
     required bytes address   = 1;  // key to update
-    optional bytes old_value = 2;  // display hint: current value (empty/absent means address is absent)
-    required bytes new_value = 3;  // new value; empty means delete
+    required bytes new_value = 2;  // new value; empty means delete
 }
 
 /**

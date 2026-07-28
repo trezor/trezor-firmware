@@ -9473,8 +9473,7 @@ class WARDQueueUpdate(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2330
     FIELDS = {
         1: protobuf.Field("address", "bytes", repeated=False, required=True),
-        2: protobuf.Field("old_value", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("new_value", "bytes", repeated=False, required=True),
+        2: protobuf.Field("new_value", "bytes", repeated=False, required=True),
     }
 
     def __init__(
@@ -9482,11 +9481,9 @@ class WARDQueueUpdate(protobuf.MessageType):
         *,
         address: "bytes",
         new_value: "bytes",
-        old_value: Optional["bytes"] = None,
     ) -> None:
         self.address = address
         self.new_value = new_value
-        self.old_value = old_value
 
 
 class WARDQueueUpdateAck(protobuf.MessageType):

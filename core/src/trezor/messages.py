@@ -7522,7 +7522,6 @@ if TYPE_CHECKING:
 
     class WARDQueueUpdate(protobuf.MessageType):
         address: "AnyBytes"
-        old_value: "AnyBytes | None"
         new_value: "AnyBytes"
 
         def __init__(
@@ -7530,7 +7529,6 @@ if TYPE_CHECKING:
             *,
             address: "AnyBytes",
             new_value: "AnyBytes",
-            old_value: "AnyBytes | None" = None,
         ) -> None:
             pass
 

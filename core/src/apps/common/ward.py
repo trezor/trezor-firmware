@@ -179,17 +179,16 @@ async def lookup(
 
 async def queue_update(
     address: bytes,
-    old_value: bytes,
     new_value: bytes,
 ) -> tuple[int, int, bytes]:
     """Queue an edit INTENT via the WARD trust anchor (pull model). Shows the
-    old -> new change on a trusted screen and returns (counter_T, pending_id,
+    new value on a trusted screen and returns (counter_T, pending_id,
     wallet_id) only on user approval. No proof is sent here; the device pulls it
     later at WARDPerformUpdate.
     """
     from apps.ward import service
 
-    return await service.queue_update_impl(address, old_value, new_value)
+    return await service.queue_update_impl(address, new_value)
 
 
 async def perform_update(
