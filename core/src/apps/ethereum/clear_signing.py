@@ -530,7 +530,10 @@ class EnumFormatter(FieldFormatter):
     ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
         if value is None:
             return None, None, None
-        if not isinstance(value, int):
+        if isinstance(value, (bytes, bytearray)):
+            # byte sliced to be read as an int
+            value = int.from_bytes(value, "big")
+        if type(value) is not int:
             raise InvalidFormatDefinition
         formatted = self.entries.get(value)
         if formatted is None:
