@@ -1654,6 +1654,23 @@ nfc-write-card [<timeout_ms>]
 OK
 ```
 
+### nfc-backup-handshake 
+Activates NFC and wait for nfc backup card to be taped. On tap, reader will initiate the secure handshake (SELECT Trezor AID file, Exchange ISO14443-3 custom frame and perform xxpsk3 noise protocol)
+
+Example:
+```
+nfc-backup-handshake
+# Tap NFC backup card.
+# NFC card detected.
+# ++++++ NFC backup handshake start ++++++
+# Exchanged PSK: 9EE49A8672C0FED146AE8879F0883D89053F4481433A75AD1829FFE14929C558
+# Card certificate: 0102030405
+# Card welcome message: Hello
+# ++++++ NFC backup completed ++++++++++++
+OK
+```
+
+
 ### unit-test-run
 Prodtest have capability to verify the overall firmware functionality by running built-in unit tests which should excercise the basic
 features of the firmware drivers. This command will run all registered unit tests and return 'OK' if all tests passed.
