@@ -54,7 +54,7 @@ def with_colon(
 
 def maybe_with_colon(
     properties: Iterable[StrPropertyType] | str | None = None,
-):
+) -> Iterable[StrPropertyType] | str | None:
     """Add a colon to the end of the first element of each property tuple if the UI layout should have colons"""
     if utils.UI_LAYOUT in ("BOLT", "CAESAR"):
         return with_colon(properties)
