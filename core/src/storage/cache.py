@@ -90,17 +90,6 @@ def encrypt_cache() -> None:
         except Exception as e:
             session.clear()
             exceptions.append(e)
-
-    if __debug__:
-        # We added 28 bytes per cache to the heap. We need to rebaseline the emulator's
-        # free-heap-decrease self-check (dev-only) so the next main-loop iteration
-        # doesn't flag it as a leak.
-        from trezorutils import clear_gc_info, update_gc_info
-
-        gc.collect()
-        clear_gc_info()
-        update_gc_info()
-
     if exceptions:
         raise exceptions[0]
 

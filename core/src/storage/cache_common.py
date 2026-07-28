@@ -130,6 +130,11 @@ def _get_slip21_key(path: Sequence[bytes], seed: bytes) -> bytes:
     return data[32:64]
 
 
+# ChaCha20-Poly1305 nonce and authentication tag sizes.
+_NONCE_LENGTH = const(12)
+_TAG_LENGTH = const(16)
+
+
 class EncryptableDataCache(DataCache):
     """
     A DataCache that supports encryption and decryption of its fields.
@@ -137,8 +142,8 @@ class EncryptableDataCache(DataCache):
 
     def __init__(self) -> None:
         super().__init__()
-        self.authentication_tag: bytes | None = None
-        self.nonce: bytes | None = None
+        self.nonce = bytearray(_NONCE_LENGTH)
+        self.authentication_tag = bytearray(_TAG_LENGTH)
         self.is_encrypted: bool = False
 
     @staticmethod
@@ -155,8 +160,9 @@ class EncryptableDataCache(DataCache):
 
     def clear(self) -> None:
         super().clear()
-        self.authentication_tag = None
-        self.nonce = None
+        # Zero in place to keep the preallocated buffers
+        self.nonce[:] = bytes(_NONCE_LENGTH)
+        self.authentication_tag[:] = bytes(_TAG_LENGTH)
         self.is_encrypted = False
 
     def encrypt(self) -> None:
@@ -168,20 +174,20 @@ class EncryptableDataCache(DataCache):
         if self.is_encrypted or self.is_empty() or self.is_preauthorized():
             return
 
-        if self.nonce is not None:
-            raise RuntimeError  # nonce must be unset before encrypt
-        if self.authentication_tag is not None:
-            raise RuntimeError  # tag must be unset before encrypt
+        # An unused nonce/tag is erased (all-zero); a non-zero value here means
+        # `is_encrypted` has desynced from the buffers.
+        if any(self.nonce) or any(self.authentication_tag):
+            raise RuntimeError  # nonce and tag must be erased before encrypt
 
         encryption_key = self._get_cache_encryption_key()
-        self.nonce = random.bytes(12)
+        self.nonce[:] = random.bytes(_NONCE_LENGTH)
         cipher = chacha20poly1305_encrypt(encryption_key, self.nonce)
 
         for field in self.fields_to_encrypt():
             value = self.get(field)
             if value is not None:
                 self.set(field, cipher.encrypt(value))
-        self.authentication_tag = cipher.finish()
+        self.authentication_tag[:] = cipher.finish()
         self.is_encrypted = True
 
     def decrypt(self) -> None:
@@ -192,10 +198,12 @@ class EncryptableDataCache(DataCache):
 
         if not self.is_encrypted:
             return
-        if self.nonce is None:
-            raise RuntimeError  # nonce must be set before decrypt
-        if self.authentication_tag is None:
-            raise RuntimeError  # tag must be set before decrypt
+
+        # Symmetric to `encrypt`: a live (non-zero) nonce and tag must be present
+        # whenever `is_encrypted` is set.
+        if not any(self.nonce) or not any(self.authentication_tag):
+            raise RuntimeError  # nonce and tag must be set before decrypt
+
         encryption_key = self._get_cache_encryption_key()
         cipher = chacha20poly1305_decrypt(encryption_key, self.nonce)
 
@@ -207,9 +215,10 @@ class EncryptableDataCache(DataCache):
         cipher.finish(self.authentication_tag)
         for field, value in decrypted_fields.items():
             self.set(field, value)
+        # Erase the now-spent nonce and tag; zero in place to keep the buffers.
+        self.nonce[:] = bytes(_NONCE_LENGTH)
+        self.authentication_tag[:] = bytes(_TAG_LENGTH)
         self.is_encrypted = False
-        self.nonce = None
-        self.authentication_tag = None
 
     def is_preauthorized(self) -> bool:
         """
