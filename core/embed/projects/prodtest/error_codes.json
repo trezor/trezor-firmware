@@ -148,6 +148,11 @@
       "module": "syslog",
       "range_start": 25000,
       "range_end": 25999
+    },
+    {
+      "module": "nfc-backup",
+      "range_start": 26000,
+      "range_end": 26999
     }
   ],
   "errors": [
@@ -1945,6 +1950,86 @@
       "code": 25010,
       "name": "PRODTEST_ERR_SYSLOG_FILTER_SET",
       "module": "syslog"
+    },
+    {
+      "code": 26010,
+      "name": "PRODTEST_ERR_NFC_BACKUP_INIT",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26011,
+      "name": "PRODTEST_ERR_NFC_BACKUP_DISCOVERY",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26012,
+      "name": "PRODTEST_ERR_NFC_BACKUP_UNEXPECTED_CARD_TYPE",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26013,
+      "name": "PRODTEST_ERR_NFC_BACKUP_PSK_EXCHANGE_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26014,
+      "name": "PRODTEST_ERR_NFC_BACKUP_NOISE_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26015,
+      "name": "PRODTEST_ERR_NFC_BACKUP_HANDSHAKE_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26016,
+      "name": "PRODTEST_ERR_NFC_BACKUP_AUTHENTICATE_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26017,
+      "name": "PRODTEST_ERR_NFC_BACKUP_SET_PIN_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26018,
+      "name": "PRODTEST_ERR_NFC_BACKUP_WIPE_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26019,
+      "name": "PRODTEST_ERR_NFC_BACKUP_READ_PIN_COUNTER_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26020,
+      "name": "PRODTEST_ERR_NFC_BACKUP_READ_SUCCESS_LOG_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26021,
+      "name": "PRODTEST_ERR_NFC_BACKUP_READ_FAILURE_LOGS_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26023,
+      "name": "PRODTEST_ERR_NFC_BACKUP_WRITE_SEED_METADATA_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26024,
+      "name": "PRODTEST_ERR_NFC_BACKUP_READ_SEED_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26025,
+      "name": "PRODTEST_ERR_NFC_BACKUP_WRITE_SEED_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26026,
+      "name": "PRODTEST_ERR_NFC_BACKUP_ACTIVATE_FLASHLOADER_FAILED",
+      "module": "nfc-backup"
     }
   ]
 }
