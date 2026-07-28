@@ -817,6 +817,9 @@ jobs:
         run: |
           rm -rf emulators/{bootloader,firmware}-emu emulators/mpy-files emulators/*.json
           pushd emulators
+          # trezor-user-env expected format for aarch64: trezor-emu-arm-core-T2T1-universal
+          for F in firmware-emu-arm-*; do NEWF=`echo $F | sed s/firmware-emu-arm/trezor-emu-arm-core/`; mv $F $NEWF; done
+          # trezor-user-env expected format for x86_64: trezor-emu-core-T2T1-universal
           for F in firmware-emu-*; do NEWF=`echo $F | sed s/firmware-emu/trezor-emu-core/`; mv $F $NEWF; done
           popd
           tree
