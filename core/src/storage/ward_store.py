@@ -115,12 +115,13 @@ def bump_counter(wallet_id: bytes) -> int:
 # where each body is:
 #   [pending_id:4][wallet_id:20][counter_T:4][state:1][root_T:32][mac_T:32]
 #   [addr_len:2][address][ov_len:2][old_value][nv_len:2][new_value]
-# At WARDQueueUpdate the intent is stored PENDING with the counter_T the device
-# derived and PLACEHOLDER root/mac (not yet computed). At WARDPerformUpdate the
-# device pulls a proof, computes (root_T, mac_T), and marks it COMMITTED via
-# queue_set_computed(); only then are root/mac meaningful (root_T == EMPTY_ROOT
-# then marks a candidate that empties the tree, mac_T all-zero). A per-wallet cap
-# of MAX_PENDING bounds the on-device storage.
+# At WARDQueueUpdate the intent is stored PENDING with counter_T UNSET (0, strict
+# model: the candidate counter is not a queue-time input) and PLACEHOLDER root/mac
+# (not yet computed). At WARDPerformUpdate the device derives counter_T, pulls a
+# proof, computes (root_T, mac_T), and marks it COMMITTED via queue_set_computed();
+# only then are counter_T/root/mac meaningful (root_T == EMPTY_ROOT then marks a
+# candidate that empties the tree, mac_T all-zero). A per-wallet cap of MAX_PENDING
+# bounds the on-device storage.
 # ---------------------------------------------------------------------------
 
 QUEUE_PENDING = const(0x00)
@@ -287,11 +288,14 @@ def queue_put(
 def queue_set_computed(
     wallet_id: bytes,
     pending_id: int,
+    counter: int,
     root: bytes | None,
     mac: bytes | None,
 ) -> None:
-    """Fill the computed (root_T, mac_T) for a queued intent and mark it COMMITTED
-    (WARDPerformUpdate). root/mac None means the candidate empties the tree."""
+    """Fill the device-derived counter_T and the computed (root_T, mac_T) for a
+    queued intent and mark it COMMITTED (WARDPerformUpdate). Under the strict model
+    counter_T is unset (0) at queue time and first written here. root/mac None means
+    the candidate empties the tree."""
     stored_root = root if root is not None else EMPTY_ROOT
     stored_mac = mac if mac is not None else _ZERO_MAC
     if len(stored_root) != ROOT_LENGTH or len(stored_mac) != 32:
@@ -301,7 +305,7 @@ def queue_set_computed(
     for i in range(len(records)):
         body = records[i]
         if _rec_pid(body) == pending_id and _rec_wid(body) == wallet_id:
-            counter, _state, address, old_value, new_value, _r, _m = _parse_body(body)
+            _c, _state, address, old_value, new_value, _r, _m = _parse_body(body)
             records[i] = _build_body(
                 pending_id,
                 wallet_id,

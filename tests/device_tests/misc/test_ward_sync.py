@@ -80,8 +80,9 @@ def test_ward_initial_sync_rejects_incorrect_wm_signature(session: Session) -> N
 
     # The mac is correct; only the signature is bad, so the failure is unambiguous.
     mac = wm.root_mac(wallet_id, 2, root)
-    nonce = ward.sync(session)
-    bad_sig = impostor.sign_attestation(wallet_id, nonce, 2, mac)
+    nonce, ward_id = ward.sync(session)
+    assert ward_id is not None
+    bad_sig = impostor.sign_attestation(ward_id, nonce, 2, mac)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
@@ -169,8 +170,9 @@ def test_ward_sync_rejects_wrong_root_mac(session: Session) -> None:
 
     # Sign the tampered mac so it clears the attestation signature check; it must
     # then fail the root<->mac binding in reconcile.
-    nonce = ward.sync(session)
-    sig = wm.sign_attestation(wallet_id, nonce, 2, bad_mac)
+    nonce, ward_id = ward.sync(session)
+    assert ward_id is not None
+    sig = wm.sign_attestation(ward_id, nonce, 2, bad_mac)
     ward.ingest_attestation(session, 2, bad_mac, sig)
 
     with pytest.raises(
@@ -198,8 +200,9 @@ def test_ward_sync_rejects_counter_mac_mismatch(session: Session) -> None:
 
     # Sign (signed_counter, mismatched_mac) consistently, so ingest's signature and
     # counter checks both pass; the mismatch must surface at reconcile.
-    nonce = ward.sync(session)
-    sig = wm.sign_attestation(wallet_id, nonce, signed_counter, mismatched_mac)
+    nonce, ward_id = ward.sync(session)
+    assert ward_id is not None
+    sig = wm.sign_attestation(ward_id, nonce, signed_counter, mismatched_mac)
     ward.ingest_attestation(session, signed_counter, mismatched_mac, sig)
 
     with pytest.raises(
@@ -221,8 +224,9 @@ def test_ward_sync_rejects_counter_rollback(session: Session) -> None:
     assert wallet_id is not None
     stale_counter = 1
     mac = wm.root_mac(wallet_id, stale_counter, root)
-    nonce = ward.sync(session)
-    sig = wm.sign_attestation(wallet_id, nonce, stale_counter, mac)
+    nonce, ward_id = ward.sync(session)
+    assert ward_id is not None
+    sig = wm.sign_attestation(ward_id, nonce, stale_counter, mac)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="older than counter_loc"
@@ -244,8 +248,9 @@ def test_ward_sync_rejects_rollback_after_progress(session: Session) -> None:
     _pending, wallet_id = ward.list_pending(session)
     assert wallet_id is not None
     mac = wm.root_mac(wallet_id, 1, tree1.get_root_hash())
-    nonce = ward.sync(session)
-    sig = wm.sign_attestation(wallet_id, nonce, 1, mac)
+    nonce, ward_id = ward.sync(session)
+    assert ward_id is not None
+    sig = wm.sign_attestation(ward_id, nonce, 1, mac)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="older than counter_loc"
@@ -263,8 +268,9 @@ def test_ward_sync_rejects_replayed_attestation(session: Session) -> None:
     assert wallet_id is not None
     mac = wm.root_mac(wallet_id, 2, root)
 
-    nonce1 = ward.sync(session)
-    sig = wm.sign_attestation(wallet_id, nonce1, 2, mac)  # valid for round 1
+    nonce1, ward_id = ward.sync(session)
+    assert ward_id is not None
+    sig = wm.sign_attestation(ward_id, nonce1, 2, mac)  # valid for round 1
 
     ward.sync(session)  # a new round supersedes nonce1
 

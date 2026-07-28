@@ -8,31 +8,33 @@ option java_outer_classname = "TrezorMessageWard";
 // WARD is a pull-oriented update round with a durable device-held pending edit:
 //
 //   WARDQueueUpdate   -- INTENT ONLY. The device shows the old->new change on a
-//                    trusted screen; only if the user approves does it derive the
-//                    candidate counter_T (= attested counter + 1), queue the intent
-//                    under a fresh pending_id, and return that id. NO proof is sent
-//                    here and the root is NOT computed yet.
-//   WARDPerformUpdate -- Authorize the queued intent. The device PULLS the proof it
-//                    needs on demand (WARDProofRequest naming pending_id), computes
-//                    (root_T, mac_T) against the stored counter_T, marks the edit
-//                    COMMITTED, and returns the candidate. The counter is NOT yet
-//                    advanced.
+//                    trusted screen; only if the user approves does it queue the
+//                    intent under a fresh pending_id and return that id. NO proof is
+//                    sent here, the root is NOT computed, and NO candidate counter
+//                    is derived (strict model: counter_T is not a queue-time input).
+//   WARDPerformUpdate -- Authorize the queued intent. The device DERIVES counter_T
+//                    (= current attested counter + 1) here, PULLS the proof it needs
+//                    on demand (WARDProofRequest naming pending_id), computes
+//                    (root_T, mac_T) for counter_T, marks the edit COMMITTED, and
+//                    returns the candidate. The durable counter is NOT yet advanced.
 //   WARDConfirmedByWM -- verify the WM's Ed25519 signature over the exact
 //                    device-derived (counter_T, mac_T), then install the root,
 //                    advance the counter, and drop the queued edit.
 //
 // Multi-slot: several intents may be queued per wallet, each addressed by its own
 // pending_id (bounded by the device storage cap). Commit stays serialized by
-// counter (siblings stamped at the same counter_T go stale once one confirms).
+// counter (siblings stamped at the same counter_T at perform time go stale once
+// one confirms).
 // AuthDbInit / AuthDbSetRoot / AuthDbLookup remain in messages-authdb.proto.
 
 /**
  * Request: Queue a leaf change as an unverified INTENT (pull model).
  *
  * This carries NO proof. The device shows the new_value on a trusted
- * screen and, only on user approval, derives counter_T (= attested counter + 1),
- * stores the intent under a fresh pending_id, and returns it. The candidate root
- * is computed later, at WARDPerformUpdate, from a proof the device pulls itself.
+ * screen and, only on user approval, stores the intent under a fresh pending_id
+ * and returns it. No candidate counter is derived here (strict model: counter_T is
+ * not a queue-time input). The candidate counter and root are derived later, at
+ * WARDPerformUpdate, from a proof the device pulls itself.
  *
  * Supported operations (classified at perform time from the pulled proof):
  *   UPDATE  : new_value non-empty
@@ -56,7 +58,9 @@ message WARDQueueUpdate {
  * @end
  */
 message WARDQueueUpdateAck {
-    required uint32 counter    = 1;  // candidate counter_T derived on-device (attested counter + 1)
+    // No counter here (strict model): the candidate counter_T is first derived at
+    // WARDPerformUpdate, not at queue time. Field 1 is reserved to preserve numbering.
+    reserved 1;
     optional uint32 pending_id = 2;  // handle for this queued intent; addresses it in perform/confirm/discard
     optional bytes  wallet_id  = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
 }
@@ -83,10 +87,11 @@ message WARDPerformUpdate {
  * @end
  */
 message WARDPerformUpdateAck {
-    required uint32 counter   = 1;  // candidate counter_T
+    required uint32 counter   = 1;  // candidate counter_T, derived on-device here (= current attested counter + 1)
     optional bytes  new_root  = 2;  // candidate root_T; absent if the tree becomes empty (DELETE to empty)
     optional bytes  mac       = 3;  // mac_T = HMAC(root_mac_key, wallet_id||counter_T||root_T); absent if empty
     optional bytes  wallet_id = 4;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    optional bytes  ward_id   = 5;  // SLIP21-derived WM-facing anchor; the host forwards it to the WM for /commit
 }
 
 /**
@@ -94,7 +99,7 @@ message WARDPerformUpdateAck {
  *
  * The device verifies wm_signature is a valid Ed25519 signature under the
  * provisioned WM public key over
- *     b"WARD FINAL v1" || wallet_id || counter(4B BE) || mac
+ *     b"WARD FINAL v1" || ward_id || counter(4B BE) || mac
  * and asserts (counter, mac) equal the device-derived (counter_T, mac_T) of the
  * committed candidate and that counter is strictly greater than the stored
  * qm_last_counter (anti-rollback) -- the device is the counter authority; the WM
@@ -107,7 +112,7 @@ message WARDPerformUpdateAck {
 message WARDConfirmedByWM {
     required uint32 counter      = 1;  // counter_T; must equal the device-derived committed candidate
     optional bytes  mac          = 2;  // mac_T; must equal the committed candidate (absent iff the candidate is empty)
-    required bytes  wm_signature = 3;  // WM Ed25519 sig over b"WARD FINAL v1"||wallet_id||counter(4B BE)||mac
+    required bytes  wm_signature = 3;  // WM Ed25519 sig over b"WARD FINAL v1"||ward_id||counter(4B BE)||mac
     optional uint32 pending_id   = 4;  // which committed candidate to install; omit to target the single queued one
 }
 
@@ -150,6 +155,7 @@ message WARDSyncAck {
     required bytes  nonce     = 1;  // per-round anti-replay value the WM attestation must echo
     required uint32 version   = 2;  // WARD protocol version
     optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    optional bytes  ward_id   = 4;  // SLIP21-derived WM-facing anchor; the host forwards it to the WM for /attest
 }
 
 /**
@@ -157,7 +163,7 @@ message WARDSyncAck {
  *
  * The device verifies wm_signature is a valid Ed25519 signature under the
  * provisioned WM/QM public key over
- *     b"WARD ATTEST v1" || version(1B) || nonce || wallet_id || counter(4B BE) || mac
+ *     b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac
  * where nonce is the one minted at WARDSync. It also asserts
  * counter >= counter_loc (anti-rollback), then records (counter, mac) as the
  * attested checkpoint for this round.

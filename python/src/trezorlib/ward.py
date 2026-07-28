@@ -27,15 +27,15 @@ def queue_update(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
-) -> tuple[int, Optional[int], Optional[bytes]]:
+) -> tuple[Optional[int], Optional[bytes]]:
     """Queue an edit INTENT (pull model). Carries NO proof.
 
     old_value=b"" means the address is currently absent (INSERT); new_value=b""
     means delete (DELETE); old_value is a display hint only. The device shows the
-    old -> new change on a trusted screen and, only on user approval, derives
-    counter_T and returns a pending_id. The candidate root is computed later, at
-    perform_update, from a proof the device pulls itself. Returns
-    (counter_T, pending_id, wallet_id).
+    old -> new change on a trusted screen and, only on user approval, returns a
+    pending_id. Under the strict model NO candidate counter is derived here; the
+    counter and candidate root are computed later, at perform_update, from a proof
+    the device pulls itself. Returns (pending_id, wallet_id).
     """
     # old_value is a display hint only and is not carried on the wire (the diagram's
     # WARDQueueUpdate is address + new_value); the device pulls the current state at
@@ -48,26 +48,27 @@ def queue_update(
         ),
         expect=messages.WARDQueueUpdateAck,
     )
-    return resp.counter, resp.pending_id, resp.wallet_id
+    return resp.pending_id, resp.wallet_id
 
 
 def perform_update(
     session: "Session",
     pending_id: Optional[int] = None,
-) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
+) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes], Optional[bytes]]:
     """Authorize a queued intent. The device PULLS the proof it needs mid-call:
     it emits a WARDProofRequest, which the client answers via the registered
     ``ward_proof_callback`` (e.g. ``tree_proof_callback(tree)``) -- so a callback
-    MUST be registered before calling this. pending_id selects the intent; if
-    omitted, the device targets the single queued one. Returns
-    (counter_T, root_T, mac_T, wallet_id); root_T/mac_T are None if the candidate
-    empties the tree.
+    MUST be registered before calling this. This is where the device first derives
+    counter_T (strict model). pending_id selects the intent; if omitted, the device
+    targets the single queued one. Returns
+    (counter_T, root_T, mac_T, wallet_id, ward_id); root_T/mac_T are None if the
+    candidate empties the tree.
     """
     resp = session.call(
         messages.WARDPerformUpdate(pending_id=pending_id),
         expect=messages.WARDPerformUpdateAck,
     )
-    return resp.counter, resp.new_root, resp.mac, resp.wallet_id
+    return resp.counter, resp.new_root, resp.mac, resp.wallet_id, resp.ward_id
 
 
 def confirmed_by_wm(
@@ -113,16 +114,17 @@ def discard_pending(
 # ---------------------------------------------------------------------------
 
 
-def sync(session: "Session") -> bytes:
+def sync(session: "Session") -> tuple[bytes, Optional[bytes]]:
     """Start a fresh sync round on the device.
 
-    Returns the fresh nonce for WM attestation. Suite/host already knows the
-    wallet identity and carries it to the WM out-of-band.
+    Returns (nonce, ward_id): the fresh nonce for WM attestation and the
+    SLIP21-derived WM-facing ward_id the host forwards to the WM (the WM signs its
+    attestation preimage over ward_id, not the local wallet_id).
     """
     resp = session.call(
         messages.WARDSync(), expect=messages.WARDSyncAck
     )
-    return resp.nonce
+    return resp.nonce, resp.ward_id
 
 
 def ingest_attestation(

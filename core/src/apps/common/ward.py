@@ -180,11 +180,11 @@ async def lookup(
 async def queue_update(
     address: bytes,
     new_value: bytes,
-) -> tuple[int, int, bytes]:
+) -> tuple[int, bytes]:
     """Queue an edit INTENT via the WARD trust anchor (pull model). Shows the
-    new value on a trusted screen and returns (counter_T, pending_id,
-    wallet_id) only on user approval. No proof is sent here; the device pulls it
-    later at WARDPerformUpdate.
+    new value on a trusted screen and returns (pending_id, wallet_id) only on user
+    approval. No proof and no candidate counter here (strict model: counter_T is
+    derived later, inside the WM-synchronized WARDPerformUpdate flow).
     """
     from apps.ward import service
 
@@ -193,12 +193,12 @@ async def queue_update(
 
 async def perform_update(
     pending_id: int | None = None,
-) -> tuple[int, bytes | None, bytes | None, bytes]:
+) -> tuple[int, bytes | None, bytes | None, bytes, bytes]:
     """Authorize a queued intent. Resolves it, PULLS the proof it needs from the
     host on demand (WARDProofRequest naming address + pending_id -> WARDProofAck),
-    then hands it to the trust anchor to verify + compute the candidate. The wire
-    I/O (context.call) lives here in the Core gateway, not in the trust anchor.
-    Returns (counter_T, root_T, mac_T, wallet_id).
+    then hands it to the trust anchor to derive counter_T + compute the candidate.
+    The wire I/O (context.call) lives here in the Core gateway, not in the trust
+    anchor. Returns (counter_T, root_T, mac_T, wallet_id, ward_id).
     """
     from apps.ward import service
     from trezor.messages import WARDProofAck, WARDProofRequest
@@ -244,7 +244,7 @@ async def discard_pending(
     return await service.discard_pending_impl(pending_id)
 
 
-async def sync() -> tuple[bytes, int, bytes]:
+async def sync() -> tuple[bytes, int, bytes, bytes]:
     from apps.ward import service
 
     return await service.sync_impl()

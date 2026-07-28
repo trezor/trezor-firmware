@@ -9525,7 +9525,6 @@ class WARDQueueUpdate(protobuf.MessageType):
 class WARDQueueUpdateAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2331
     FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
         2: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
         3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
     }
@@ -9533,11 +9532,9 @@ class WARDQueueUpdateAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        counter: "int",
         pending_id: Optional["int"] = None,
         wallet_id: Optional["bytes"] = None,
     ) -> None:
-        self.counter = counter
         self.pending_id = pending_id
         self.wallet_id = wallet_id
 
@@ -9563,6 +9560,7 @@ class WARDPerformUpdateAck(protobuf.MessageType):
         2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9572,11 +9570,13 @@ class WARDPerformUpdateAck(protobuf.MessageType):
         new_root: Optional["bytes"] = None,
         mac: Optional["bytes"] = None,
         wallet_id: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
     ) -> None:
         self.counter = counter
         self.new_root = new_root
         self.mac = mac
         self.wallet_id = wallet_id
+        self.ward_id = ward_id
 
 
 class WARDConfirmedByWM(protobuf.MessageType):
@@ -9635,6 +9635,7 @@ class WARDSyncAck(protobuf.MessageType):
         1: protobuf.Field("nonce", "bytes", repeated=False, required=True),
         2: protobuf.Field("version", "uint32", repeated=False, required=True),
         3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9643,10 +9644,12 @@ class WARDSyncAck(protobuf.MessageType):
         nonce: "bytes",
         version: "int",
         wallet_id: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
     ) -> None:
         self.nonce = nonce
         self.version = version
         self.wallet_id = wallet_id
+        self.ward_id = ward_id
 
 
 class WARDIngestAttestation(protobuf.MessageType):

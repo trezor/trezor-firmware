@@ -12,6 +12,8 @@ async def sync(msg: WARDSync) -> WARDSyncAck:
 
     from apps.common import ward as core
 
-    nonce, version, wallet_id = await core.sync()
+    nonce, version, wallet_id, ward_id = await core.sync()
 
-    return WARDSyncAck(nonce=nonce, version=version, wallet_id=wallet_id)
+    return WARDSyncAck(
+        nonce=nonce, version=version, wallet_id=wallet_id, ward_id=ward_id
+    )

@@ -248,17 +248,20 @@ def _verify(message: bytes, signature: bytes) -> bool:
 
 
 def verify_wm_attestation(
-    wallet_id: bytes, nonce: bytes, counter: int, mac: bytes, signature: bytes
+    ward_id: bytes, nonce: bytes, counter: int, mac: bytes, signature: bytes
 ) -> bool:
     """Verify the WM's freshness attestation for a sync round:
 
-        b"WARD ATTEST v1" || version(1B) || nonce || wallet_id || counter(4B BE) || mac
+        b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac
+
+    `ward_id` is the SLIP21-derived WM-facing anchor (see `_get_ward_id`), NOT the
+    20-byte local `wallet_id`; the WM only ever signs over `ward_id`.
     """
     message = (
         _WARD_ATTEST_DOMAIN
         + bytes([_WARD_ATTEST_VERSION])
         + nonce
-        + wallet_id
+        + ward_id
         + counter.to_bytes(4, "big")
         + mac
     )
@@ -266,13 +269,15 @@ def verify_wm_attestation(
 
 
 def verify_ward_final(
-    wallet_id: bytes, counter: int, mac: bytes, signature: bytes
+    ward_id: bytes, counter: int, mac: bytes, signature: bytes
 ) -> bool:
     """Verify the WM's final attestation over the committed WARD candidate:
 
-        b"WARD FINAL v1" || wallet_id || counter(4B BE) || mac
+        b"WARD FINAL v1" || ward_id || counter(4B BE) || mac
+
+    `ward_id` is the SLIP21-derived WM-facing anchor (see `_get_ward_id`).
     """
-    message = _WARD_FINAL_DOMAIN + wallet_id + counter.to_bytes(4, "big") + mac
+    message = _WARD_FINAL_DOMAIN + ward_id + counter.to_bytes(4, "big") + mac
     return _verify(message, signature)
 
 
@@ -294,6 +299,27 @@ async def _get_wallet_id() -> bytes:
     s = await seed_module.get_seed()
     node = bip32.from_seed(s, "secp256k1")
     return sha256_ripemd160(node.public_key()).digest()
+
+
+async def _get_ward_id() -> bytes:
+    """ward_id = SLIP21(seed, [b"TREZOR", b"WARDID", b"wallet_id", wallet_id]).key()
+    -- 32 bytes.
+
+    The WM-facing anti-rollback / anti-fork anchor (spec §5). Distinct from the
+    20-byte local `wallet_id`: it is what the WM signs over in every ATTEST/FINAL
+    preimage, is derived from the seed (so it is wallet-stable and independent of
+    the mutable Evolu `ownerId`), and is verifiable by the device. The device
+    derives it and forwards it to the host; the host MUST NOT invent or substitute
+    it.
+    """
+    from apps.common import seed as seed_module
+    from apps.common.seed import Slip21Node
+
+    wallet_id = await _get_wallet_id()
+    s = await seed_module.get_seed()
+    node = Slip21Node(s)
+    node.derive_path([b"TREZOR", b"WARDID", b"wallet_id", wallet_id])
+    return node.key()
 
 
 async def _derive_mac_key(domain: bytes) -> bytes:
@@ -534,14 +560,15 @@ async def _confirm_update(address: bytes, new_value: bytes) -> None:
 async def queue_update_impl(
     address: bytes,
     new_value: bytes,
-) -> tuple[int, int, bytes]:
+) -> tuple[int, bytes]:
     """Queue an edit INTENT (pull model). Shows the queued change on a trusted
-    screen and, ONLY on user approval, derives counter_T (= current authenticated
-    counter + 1), allocates a pending_id, and stores the intent PENDING -- no proof
-    is taken and the root is NOT computed here (that happens at WARDPerformUpdate,
-    from a proof the device pulls itself). Returns (counter_T, pending_id,
-    wallet_id). Raises ActionCancelled if the user rejects, DataError on invariant
-    violation.
+    screen and, ONLY on user approval, allocates a pending_id and stores the intent
+    PENDING. Under the strict counter model the candidate counter is NOT derived
+    here: queueing captures user intent only. counter_T is first derived inside the
+    WM-synchronized commit flow (WARDPerformUpdate), against the attested round
+    state. No proof is taken and the root is NOT computed here either. Returns
+    (pending_id, wallet_id). Raises ActionCancelled if the user rejects, DataError
+    on invariant violation.
     """
     import storage.ward_store as ward_store
     from trezor.wire import DataError
@@ -553,41 +580,35 @@ async def queue_update_impl(
     if ward_store.queue_count(wallet_id) >= ward_store.MAX_PENDING:
         raise DataError("pending queue is full for this wallet")
 
-    # The device is the counter authority: counter_T = current counter + 1.
-    counter_t = ward_store.get_counter(wallet_id) + 1
-
     if __debug__:
         from trezor import log
 
         log.debug(
             __name__,
-            "queue_update_impl: confirm intent wallet_id=%s address=%s new_value_len=%d counter_T=%d",
+            "queue_update_impl: confirm intent wallet_id=%s address=%s new_value_len=%d",
             wallet_id,
             address,
             len(new_value),
-            counter_t,
         )
 
     # Trusted confirmation gates the intent (WP-F5). Raises on user rejection.
     await _confirm_update(address, new_value)
 
     pending_id = ward_store.queue_alloc_id()
-    ward_store.queue_put(
-        wallet_id, pending_id, counter_t, address, b"", new_value
-    )
+    # counter_T left unset (0) at queue time; derived at WARDPerformUpdate.
+    ward_store.queue_put(wallet_id, pending_id, 0, address, b"", new_value)
 
     if __debug__:
         from trezor import log
 
         log.debug(
             __name__,
-            "queue_update_impl: queued intent wallet_id=%s pending_id=%d counter_T=%d",
+            "queue_update_impl: queued intent wallet_id=%s pending_id=%d",
             wallet_id,
             pending_id,
-            counter_t,
         )
 
-    return counter_t, pending_id, wallet_id
+    return pending_id, wallet_id
 
 
 async def lookup_impl(
@@ -676,16 +697,19 @@ async def perform_update_impl(
     witness_address: bytes | None = None,
     witness_value: bytes | None = None,
     witness_counter: int | None = None,
-) -> tuple[int, bytes | None, bytes | None, bytes]:
+) -> tuple[int, bytes | None, bytes | None, bytes, bytes]:
     """Authorize a queued intent using a proof the device PULLED on demand.
 
     The proof package (value/counter for membership, witness_* for non-membership,
-    empty for an empty tree) is the authoritative current state. Verifies it
-    against the stored root,
-    computes (root_T, mac_T) for the intent's stored counter_T, and marks the
-    intent COMMITTED. The counter is NOT advanced (that happens at confirm).
-    pending_id selects the intent; if omitted, falls back to the single queued one.
-    Returns (counter_T, root_T, mac_T, wallet_id).
+    empty for an empty tree) is the authoritative current state. This is where the
+    candidate counter is FIRST derived under the strict model: the device is the
+    counter authority and sets counter_T = current authenticated counter + 1 here,
+    inside the WM-synchronized flow -- never at queue time and never from host/app
+    input. Verifies the proof against the stored root, computes (root_T, mac_T) for
+    counter_T, persists counter_T, and marks the intent COMMITTED. The durable
+    counter floor is NOT advanced (that happens at confirm). pending_id selects the
+    intent; if omitted, falls back to the single queued one. Returns
+    (counter_T, root_T, mac_T, wallet_id, ward_id).
     """
     import storage.ward_session as ward_session
     import storage.ward_store as ward_store
@@ -697,7 +721,11 @@ async def perform_update_impl(
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no queued intent to perform")
-    counter_t, _state, _address, _old_value, new_value, _root, _mac = rec
+    _counter, _state, _address, _old_value, new_value, _root, _mac = rec
+
+    # Strict model: derive the candidate counter now, from the device's current
+    # authenticated floor -- not from the (unset) queue-time value.
+    counter_t = ward_store.get_counter(wallet_id) + 1
 
     present, stored_root = ward_session.root_get(wallet_id)
     if not present:
@@ -751,7 +779,8 @@ async def perform_update_impl(
     else:
         mac_t = None
 
-    ward_store.queue_set_computed(wallet_id, pid, root_t, mac_t)
+    # Persist the just-derived counter_T alongside the computed (root_T, mac_T).
+    ward_store.queue_set_computed(wallet_id, pid, counter_t, root_t, mac_t)
 
     if __debug__:
         from trezor import log
@@ -765,7 +794,8 @@ async def perform_update_impl(
             "EMPTY" if root_t is None else "set",
         )
 
-    return counter_t, root_t, mac_t, wallet_id
+    ward_id = await _get_ward_id()
+    return counter_t, root_t, mac_t, wallet_id, ward_id
 
 
 async def confirmed_by_wm_impl(
@@ -780,12 +810,14 @@ async def confirmed_by_wm_impl(
     selects the candidate; if omitted, falls back to the single queued candidate.
     Returns (counter, new_root, wallet_id, root_mac).
 
-    Note: with several intents queued, each was stamped counter_T = base + 1 at
-    queue time. Confirming one advances counter_loc, so any sibling still stamped
-    at the same counter becomes stale and is rejected here by the anti-rollback
-    check below — it must be discarded/re-queued. Commit stays serialized by
-    counter even though queueing is not. The device is the counter authority; the
-    WM only co-signs the exact (counter_T, mac_T) the device derived.
+    Note: under the strict model counter_T is derived at WARDPerformUpdate, not at
+    queue time. With several intents performed, each was stamped counter_T = base +
+    1 from the floor current at its perform. Confirming one advances counter_loc, so
+    any sibling still stamped at the same counter becomes stale and is rejected here
+    by the anti-rollback check below — it must be re-performed (or discarded).
+    Commit stays serialized by counter even though queueing is not. The device is
+    the counter authority; the WM only co-signs the exact (counter_T, mac_T) the
+    device derived.
     """
     import storage.ward_store as ward_store
     from trezor.wire import DataError
@@ -820,7 +852,8 @@ async def confirmed_by_wm_impl(
             "yes" if mac_msg is not None else "no",
         )
 
-    if not verify_ward_final(wallet_id, counter, candidate_mac, wm_signature):
+    ward_id = await _get_ward_id()
+    if not verify_ward_final(ward_id, counter, candidate_mac, wm_signature):
         raise DataError("WM final attestation verification failed")
 
     # Anti-rollback: the finalized counter must exceed the durable local floor.
@@ -848,13 +881,16 @@ async def confirmed_by_wm_impl(
     return counter, root, wallet_id, mac
 
 
-async def sync_impl() -> tuple[bytes, int, bytes]:
+async def sync_impl() -> tuple[bytes, int, bytes, bytes]:
     """Begin a sync round: mint a fresh per-round nonce (anti-replay) and store it.
-    Returns (nonce, version, wallet_id)."""
+    Also derives and returns the WM-facing ward_id so the host can address the WM
+    for this round without inventing it. Returns (nonce, version, wallet_id,
+    ward_id)."""
     import storage.ward_session as ward_session
     from trezor.crypto import random
 
     wallet_id = await _get_wallet_id()
+    ward_id = await _get_ward_id()
     nonce = random.bytes(ward_session.NONCE_LENGTH)
     ward_session.sync_begin(wallet_id, nonce)
 
@@ -863,7 +899,7 @@ async def sync_impl() -> tuple[bytes, int, bytes]:
 
         log.debug(__name__, "sync_impl: minted nonce for wallet_id=%s", wallet_id)
 
-    return nonce, _WARD_VERSION, wallet_id
+    return nonce, _WARD_VERSION, wallet_id, ward_id
 
 
 async def ingest_attestation_impl(
@@ -883,8 +919,9 @@ async def ingest_attestation_impl(
         raise DataError("no sync round in progress")
     nonce, _state, _counter, _mac = ctx
 
+    ward_id = await _get_ward_id()
     mac = mac_msg if mac_msg is not None else _ZERO_MAC
-    if not verify_wm_attestation(wallet_id, nonce, counter, mac, wm_signature):
+    if not verify_wm_attestation(ward_id, nonce, counter, mac, wm_signature):
         raise DataError("WM attestation verification failed")
 
     # Anti-rollback: the attested counter cannot precede the device's floor.

@@ -61,20 +61,22 @@ def sign_wm_attestation(
     nonce: bytes,
     counter: int,
     mac: bytes,
-    wallet_id: bytes,
+    ward_id: bytes,
     qm_seed: bytes = DEBUG_QM_SEED,
 ) -> bytes:
     """Produce the WM freshness attestation the device verifies in
     WARDIngestAttestation:
 
         Ed25519-Sign(qm_seed,
-            b"WARD ATTEST v1" || version(1B) || nonce || wallet_id || counter(4B BE) || mac)
+            b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac)
+
+    The WM signs over the SLIP21-derived ward_id (32B), NOT the local wallet_id.
     """
     message = (
         _WARD_ATTEST_DOMAIN
         + bytes([_WARD_ATTEST_VERSION])
         + nonce
-        + wallet_id
+        + ward_id
         + counter.to_bytes(4, "big")
         + mac
     )
@@ -82,13 +84,15 @@ def sign_wm_attestation(
 
 
 def sign_ward_update(
-    counter: int, mac: bytes, wallet_id: bytes, qm_seed: bytes = DEBUG_QM_SEED
+    counter: int, mac: bytes, ward_id: bytes, qm_seed: bytes = DEBUG_QM_SEED
 ) -> bytes:
     """Produce the WM final attestation the device verifies in WARDConfirmCommit:
 
-        Ed25519-Sign(qm_seed, b"WARD FINAL v1" || wallet_id || counter(4B BE) || mac)
+        Ed25519-Sign(qm_seed, b"WARD FINAL v1" || ward_id || counter(4B BE) || mac)
+
+    The WM signs over the SLIP21-derived ward_id (32B), NOT the local wallet_id.
     """
-    message = _WARD_FINAL_DOMAIN + wallet_id + counter.to_bytes(4, "big") + mac
+    message = _WARD_FINAL_DOMAIN + ward_id + counter.to_bytes(4, "big") + mac
     return _ed25519_sign(message, qm_seed)
 
 
@@ -141,16 +145,16 @@ class WMEmulator:
         )
 
     def sign_attestation(
-        self, wallet_id: bytes, nonce: bytes, counter: int, mac: bytes
+        self, ward_id: bytes, nonce: bytes, counter: int, mac: bytes
     ) -> bytes:
         """Ed25519 WM freshness attestation over
-        b"WARD ATTEST v1"||version||nonce||wallet_id||counter||mac."""
-        return sign_wm_attestation(nonce, counter, mac, wallet_id, self.qm_seed)
+        b"WARD ATTEST v1"||version||nonce||ward_id||counter||mac."""
+        return sign_wm_attestation(nonce, counter, mac, ward_id, self.qm_seed)
 
-    def sign_final(self, wallet_id: bytes, counter: int, mac: bytes) -> bytes:
+    def sign_final(self, ward_id: bytes, counter: int, mac: bytes) -> bytes:
         """Ed25519 WM final attestation over
-        b"WARD FINAL v1"||wallet_id||counter||mac (verified at WARDConfirmCommit)."""
-        return sign_ward_update(counter, mac, wallet_id, self.qm_seed)
+        b"WARD FINAL v1"||ward_id||counter||mac (verified at WARDConfirmCommit)."""
+        return sign_ward_update(counter, mac, ward_id, self.qm_seed)
 
 
 def wm_initial_sync(
@@ -168,11 +172,14 @@ def wm_initial_sync(
     assert wallet_id is not None
 
     root = None if tree.is_empty() else tree.get_root_hash()
+    # root_mac stays keyed by the local wallet_id (device-internal MAC); the WM's
+    # Ed25519 attestation binds the SLIP21-derived ward_id it gets from the device.
     mac = None if root is None else wm.root_mac(wallet_id, counter, root)
 
-    nonce = ward.sync(session)
+    nonce, ward_id = ward.sync(session)
+    assert ward_id is not None
     sig = wm.sign_attestation(
-        wallet_id, nonce, counter, mac if mac is not None else ZERO_MAC
+        ward_id, nonce, counter, mac if mac is not None else ZERO_MAC
     )
     ward.ingest_attestation(session, counter, mac, sig)
     return ward.reconcile(session, root)

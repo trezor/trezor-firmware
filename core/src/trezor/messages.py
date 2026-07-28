@@ -7565,14 +7565,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WARDQueueUpdateAck(protobuf.MessageType):
-        counter: "int"
         pending_id: "int | None"
         wallet_id: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            counter: "int",
             pending_id: "int | None" = None,
             wallet_id: "AnyBytes | None" = None,
         ) -> None:
@@ -7601,6 +7599,7 @@ if TYPE_CHECKING:
         new_root: "AnyBytes | None"
         mac: "AnyBytes | None"
         wallet_id: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7609,6 +7608,7 @@ if TYPE_CHECKING:
             new_root: "AnyBytes | None" = None,
             mac: "AnyBytes | None" = None,
             wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7666,6 +7666,7 @@ if TYPE_CHECKING:
         nonce: "AnyBytes"
         version: "int"
         wallet_id: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7673,6 +7674,7 @@ if TYPE_CHECKING:
             nonce: "AnyBytes",
             version: "int",
             wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 

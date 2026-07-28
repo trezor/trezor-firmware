@@ -16,11 +16,10 @@ def _sync_device(
     root: bytes | None,
     root_mac: bytes | None,
 ) -> tuple[int, bytes | None, bytes | None]:
-    nonce = ward.sync(session)
-    _pending, wallet_id = ward.list_pending(session)
-    assert wallet_id is not None
+    nonce, ward_id = ward.sync(session)
+    assert ward_id is not None
     mac_for_sig = root_mac if root_mac is not None else ward.ZERO_MAC
-    sig = sign_wm_attestation(nonce, counter, mac_for_sig, wallet_id)
+    sig = sign_wm_attestation(nonce, counter, mac_for_sig, ward_id)
     ward.ingest_attestation(session, counter, root_mac, sig)
     return ward.reconcile(session, root)
 
@@ -56,14 +55,16 @@ def _add_value_via_device(
                 lambda s: ward.queue_update(s, address_bytes, old_value, value),
             )
             dev.debuglink().press_yes()
-            _counter_t, pending_id, _wallet_id = dev.result()
+            pending_id, _wallet_id = dev.result()
 
-        # perform_update: the device emits WARDProofRequest, answered by the
-        # registered callback; no user interaction.
-        c_counter, _root_t, mac_t, wallet_id = ward.perform_update(session, pending_id)
-        assert wallet_id is not None
+        # perform_update: the device derives counter_T and emits WARDProofRequest,
+        # answered by the registered callback; no user interaction.
+        c_counter, _root_t, mac_t, _wallet_id, ward_id = ward.perform_update(
+            session, pending_id
+        )
+        assert ward_id is not None
         mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
-        sig = sign_ward_update(c_counter, mac_for_sig, wallet_id)
+        sig = sign_ward_update(c_counter, mac_for_sig, ward_id)
         counter, new_root, _wallet_id, root_mac = ward.confirmed_by_wm(
             session, c_counter, mac_t, sig, pending_id
         )

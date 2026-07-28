@@ -90,8 +90,9 @@ def test_ward_passphrase_mac_is_wallet_scoped(client: Client) -> None:
 
     # Give B a FRESHLY-signed, otherwise-valid attestation carrying A's MAC, so it
     # clears B's signature + counter checks and fails only at the MAC binding.
-    nonce_b = ward.sync(session_b)
-    sig = sign_wm_attestation(nonce_b, 1, mac_a, wallet_id_b)
+    nonce_b, ward_id_b = ward.sync(session_b)
+    assert ward_id_b is not None
+    sig = sign_wm_attestation(nonce_b, 1, mac_a, ward_id_b)
     ward.ingest_attestation(session_b, 1, mac_a, sig)
 
     with pytest.raises(TrezorFailure, match="root does not match the attested mac"):
@@ -100,8 +101,8 @@ def test_ward_passphrase_mac_is_wallet_scoped(client: Client) -> None:
 
 def test_ward_passphrase_attestation_is_wallet_bound(client: Client) -> None:
     """A whole WM attestation minted for wallet A cannot be replayed to wallet B:
-    the signature covers wallet_id, so B's verification (with its own wallet_id)
-    fails."""
+    the signature covers ward_id (itself wallet-scoped, SLIP21-derived), so B's
+    verification (with its own ward_id) fails."""
     session_a = client.get_session(passphrase=_PP_A)
     session_b = client.get_session(passphrase=_PP_B)
     wm_a = WMEmulator(passphrase=_PP_A)
@@ -113,9 +114,10 @@ def test_ward_passphrase_attestation_is_wallet_bound(client: Client) -> None:
     root = tree.get_root_hash()
     mac_a = wm_a.root_mac(wallet_id_a, 1, root)
 
-    # Attestation valid for wallet A (signed over nonce_a, wallet_id_a).
-    nonce_a = ward.sync(session_a)
-    sig_a = wm_a.sign_attestation(wallet_id_a, nonce_a, 1, mac_a)
+    # Attestation valid for wallet A (signed over nonce_a, ward_id_a).
+    nonce_a, ward_id_a = ward.sync(session_a)
+    assert ward_id_a is not None
+    sig_a = wm_a.sign_attestation(ward_id_a, nonce_a, 1, mac_a)
 
     # Replay it into a sync round on wallet B.
     ward.sync(session_b)
