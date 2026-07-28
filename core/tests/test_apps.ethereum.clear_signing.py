@@ -1313,12 +1313,16 @@ class TestEthereumClearSigning(unittest.TestCase):
         blob = self._transfer_blob()
 
         cases = [
-            # field path does not resolve to one bytes blob
+            # field path does not resolve to bytes blob(s)
             {(0,): 5, (1,): self.CALLEE},
-            {(0,): [blob, blob], (1,): self.CALLEE},  # arrays not supported
+            {(0,): [blob, 5], (1,): self.CALLEE},  # non-bytes array element
             # callee is not a 20-byte address
             {(0,): blob, (1,): 5},
             {(0,): blob, (1,): b"\x00\x01"},
+            # a callee array must match the subcall array's length
+            {(0,): [blob, blob], (1,): [self.CALLEE]},
+            # a single blob takes a single callee, not an array
+            {(0,): blob, (1,): [self.CALLEE]},
         ]
         for values in cases:
             fmt = CalldataFormatter(callee_path=(1,))
@@ -1385,6 +1389,116 @@ class TestEthereumClearSigning(unittest.TestCase):
             clear_signing_definitions.all_display_formats = original
 
         self._assert_raw_fallback(fields, blob)
+
+    # --- arrays of subcalls (`bytes[] data`, e.g. a multicall) ---
+
+    @staticmethod
+    def _encode_bytes_array(blobs):
+        # ABI body of a `bytes[]`: element count, one offset word per element
+        # (relative to the start of the offsets block), then the
+        # length-prefixed, right-padded elements.
+        offsets = []
+        tails = b""
+        for blob in blobs:
+            offsets.append(32 * len(blobs) + len(tails))
+            tails += to_bytes(len(blob)) + blob + b"\x00" * (-len(blob) % 32)
+        return (
+            to_bytes(len(blobs)) + b"".join(to_bytes(o) for o in offsets) + tails
+        )
+
+    def _expand_array(self, blobs, callees=None):
+        """Like `_expand`, but the wrapper is `wrapper(callee(s), bytes[] data)`:
+        `data` carries one embedded subcall per element. `callees` switches the
+        first parameter from a single shared address to a parallel `address[]`."""
+        if callees is None:
+            callee_param = Atomic(parse_address)
+            calldata = b"\x00" * 12 + self.CALLEE + to_bytes(64)
+        else:
+            callee_param = Array(Atomic(parse_address))
+            callees_body = to_bytes(len(callees)) + b"".join(
+                b"\x00" * 12 + c for c in callees
+            )
+            calldata = to_bytes(64) + to_bytes(64 + len(callees_body)) + callees_body
+        calldata += self._encode_bytes_array(blobs)
+
+        display_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            intent="Test",
+            parameter_definitions=[callee_param, Array(DynamicLeaf(parse_bytes))],
+            field_definitions=[
+                FieldDefinition(
+                    (1,), "Wrapped call", CalldataFormatter(callee_path=(0,))
+                )
+            ],
+        )
+        defs = self._defs()
+        _, fields = await_result(
+            display_format.parse_calldata(memoryview(calldata), self._msg(), defs)
+        )
+        return fields, defs
+
+    def test_calldata_array_of_subcalls(self):
+        # Two embedded transfers sharing one callee: each expands as its own
+        # subcall, rows indexed "(Subcall #1)" / "(Subcall #2)", and the token
+        # resolves per subcall via the shared callee.
+        blob = self._transfer_blob()
+        fields, defs = self._expand_array([blob, blob])
+
+        self.assertEqual(len(fields), 8)
+        for n, group in ((1, fields[:4]), (2, fields[4:])):
+            prefix = f"(Subcall #{n}) "
+            self.assertEqual(group[0][0][:2], (prefix + "Provider", "Lido"))
+            self.assertEqual(group[1][0][:2], (prefix + "Intent", "Send"))
+            (label, formatted, _), _, _ = group[2]
+            self.assertEqual(label, prefix + "To")
+            self.assertEqual(
+                formatted.lower(), "0x" + hexlify(self.RECIPIENT).decode()
+            )
+            (label, formatted, _), token, token_address = group[3]
+            self.assertEqual(label, prefix + "Amount")
+            self.assertEqual(formatted, "2 TST")
+            self.assertEqual(token.symbol, "TST")
+            self.assertEqual(token_address, self.CALLEE)
+        self.assertEqual(defs.token_requests, [self.CALLEE, self.CALLEE])
+
+    def test_calldata_array_parallel_callees(self):
+        # `callee_path` resolves to an `address[]` parallel to the subcall
+        # array: each subcall is displayed against its own callee.
+        other_callee = b"\x99" * 20  # not in KNOWN_ADDRESSES
+        blob = self._transfer_blob()
+        fields, defs = self._expand_array(
+            [blob, blob], callees=[self.CALLEE, other_callee]
+        )
+
+        self.assertEqual(len(fields), 8)
+        self.assertEqual(fields[0][0][:2], ("(Subcall #1) Provider", "Lido"))
+        (label, provider, _), _, _ = fields[4]
+        self.assertEqual(label, "(Subcall #2) Provider")
+        self.assertEqual(provider.lower(), "0x" + hexlify(other_callee).decode())
+        # each subcall's token resolves via its own callee
+        self.assertEqual(defs.token_requests, [self.CALLEE, other_callee])
+
+    def test_calldata_array_raw_fallback(self):
+        # Elements that cannot be clear-signed degrade independently, with the
+        # index carried into the fallback rows' labels.
+        good_blob = self._transfer_blob()
+        bad_blob = b"\xde\xad\xbe\xef" + to_bytes(5)
+        fields, _ = self._expand_array([bad_blob, good_blob])
+
+        self.assertEqual(len(fields), 6)
+        self.assertEqual(fields[0][0][:2], ("(Subcall #1) To", "Lido"))
+        self.assertEqual(
+            fields[1][0][:2],
+            ("(Subcall #1) Wrapped call", hexlify(bad_blob).decode()),
+        )
+        self.assertEqual(fields[2][0][:2], ("(Subcall #2) Provider", "Lido"))
+
+    def test_calldata_array_empty(self):
+        # An empty subcall array legitimately contributes no rows.
+        fields, defs = self._expand_array([])
+        self.assertEqual(fields, [])
+        self.assertEqual(defs.token_requests, [])
 
 
 if __name__ == "__main__":
