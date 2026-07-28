@@ -11,3 +11,5 @@ RFAL middleware updated to version 4.0.2 from  https://www.st.com/en/embedded-so
 STM32 HAL drivers. To resolve this,  variale in RFAL library was refactored to DSI_ID.
 
 2. Add blockNumber getter "uint8_t rfalIsoDepGetBlockNumber(void)" for R(NAK) packet generation purpose.
+
+3. Add rfalISO14443ATransceiveCustomFrame() function to support ISO14443-3 customized messages with NFC backup card.
