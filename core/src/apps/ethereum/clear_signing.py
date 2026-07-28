@@ -1172,25 +1172,77 @@ async def _expand_calldata_field(
     defs: Definitions,
     nested: bool,
 ) -> list[DisplayedField]:
-    """Expand one `calldata` field - an embedded subcall - into display rows.
+    """Expand one `calldata` field into display rows.
 
-    The field's path resolves to one `bytes` blob of embedded calldata, and
-    `callee_path` to the address of the contract it is sent to. On success
-    the rows are the subcall's provider and intent, followed by the fields
-    of the callee's display format, labels prefixed. Whenever the subcall
-    cannot be clear-signed - no display format available, malformed inner
-    calldata, unresolvable inner fields - it degrades to two rows, the
-    callee and the raw hex blob, instead of failing the outer transaction."""
+    The field's path resolves either to one `bytes` blob of embedded calldata
+    (a single subcall), or to an array of such blobs (e.g. a multicall's
+    `bytes[] data`). In the array case each element is expanded as its own
+    subcall and its rows are labeled "(Subcall #1)", "(Subcall #2)", ...;
+    `callee_path` then resolves either to a single address shared by all
+    subcalls or to a parallel array of addresses of the same length."""
+    blobs = path_walker(field_definition.path)
+    callees = path_walker(formatter.callee_path)
+
+    if not isinstance(blobs, list):
+        return await _expand_one_subcall(
+            field_definition, formatter, blobs, callees, msg, defs, nested
+        )
+
+    if isinstance(callees, list):
+        if len(callees) != len(blobs):
+            raise InvalidFormatDefinition
+    else:
+        # Same callee for all subcalls
+        callees = [callees] * len(blobs)
+
+    rows: list[DisplayedField] = []
+    for i, (blob, callee) in enumerate(zip(blobs, callees)):
+        rows.extend(
+            await _expand_one_subcall(
+                field_definition,
+                formatter,
+                blob,
+                callee,
+                msg,
+                defs,
+                nested,
+                index=i + 1,
+            )
+        )
+    return rows
+
+
+async def _expand_one_subcall(
+    field_definition: FieldDefinition,
+    formatter: CalldataFormatter,
+    blob: AnyValue,
+    callee: AnyValue,
+    msg: MsgInSignTx,
+    defs: Definitions,
+    nested: bool,
+    index: int | None = None,
+) -> list[DisplayedField]:
+    """Expand one embedded subcall into display rows.
+
+    On success the rows are the subcall's provider and intent, followed by
+    the fields of the callee's display format, labels prefixed. Whenever the
+    subcall cannot be clear-signed - no display format available, malformed
+    inner calldata, unresolvable inner fields - it degrades to two rows, the
+    callee and the raw hex blob, instead of failing the outer transaction.
+    `index` is the subcall's 1-based position when it comes from an array of
+    subcalls, reflected in the label prefix: "(Subcall #<index>)"."""
     from .sc_constants import lookup_known_address
 
-    blob = path_walker(field_definition.path)
     if not isinstance(blob, bytes):
         # Calldata should be a bytes field
         raise InvalidFormatDefinition
 
-    callee = path_walker(formatter.callee_path)
     if not isinstance(callee, bytes) or len(callee) != _ADDRESS_BYTES:
         raise InvalidFormatDefinition
+
+    subcall = TR.ethereum__subcall
+    if index is not None:
+        subcall = f"{subcall} #{index}"
 
     def callee_str() -> str:
         return lookup_known_address(msg.chain_id, callee) or address_from_bytes(
@@ -1201,9 +1253,14 @@ async def _expand_calldata_field(
         """No subparsing. Show the callee and the raw hex blob."""
         from ubinascii import hexlify
 
+        to_label = TR.ethereum__subcall_to
+        blob_label = field_definition.label
+        if index is not None:
+            to_label = f"({subcall}) {TR.ethereum__to}"
+            blob_label = f"({subcall}) {blob_label}"
         return [
-            ((TR.ethereum__subcall_to, callee_str(), None), None, None),
-            ((field_definition.label, hexlify(blob).decode(), None), None, None),
+            ((to_label, callee_str(), None), None, None),
+            ((blob_label, hexlify(blob).decode(), None), None, None),
         ]
 
     if nested:
@@ -1239,7 +1296,6 @@ async def _expand_calldata_field(
             )
         return raw_rows()
 
-    subcall = TR.ethereum__subcall
     rows: list[DisplayedField] = [
         (
             (
