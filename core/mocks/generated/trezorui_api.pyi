@@ -118,6 +118,18 @@ def disable_animation(disable: bool) -> None:
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def set_lockscreen_anim(kind: int, speed_pct: int, pulse_pct: int, background: bool) -> None:
+    """Select experimental lockscreen animation, debug builds only.
+    0 = stock lockscreen, 1/2 = 16px block stripes, 3/4 = smooth gradient,
+    5/6 = smooth plus dithering, 7 = particles, 8 = sand clock,
+    9 = halftone, 10/11/12 = moire (horizontal/vertical/diagonal),
+    13 = hatched squares, 14 = strings.
+    speed_pct scales the animation clock, pulse_pct the oscillation
+    strength; 100 means unchanged. background draws the homescreen
+    wallpaper behind the animation."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def backlight_get() -> int:
     """Get currently set backlight level. Returns None if backlight is not supported."""
 

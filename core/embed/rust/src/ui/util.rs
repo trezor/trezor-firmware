@@ -40,6 +40,122 @@ pub fn animation_disabled() -> bool {
 #[cfg(not(feature = "ui_debug"))]
 pub fn set_animation_disabled(_disabled: bool) {}
 
+/// Which experimental lockscreen animation to render, if any.
+///
+/// Prototype scaffolding for evaluating animation cost on a display with no
+/// framebuffer. Selected at runtime over debuglink so that variants can be
+/// compared without reflashing; see `DebugLinkSetLockscreenAnim`.
+#[cfg(feature = "ui_debug")]
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum LockscreenAnimKind {
+    /// Normal lockscreen.
+    Off,
+    /// Screen-filling 16x16 block grid, gradient sweeping along x.
+    VerticalStripes,
+    /// Screen-filling 16x16 block grid, gradient sweeping along y.
+    HorizontalStripes,
+    /// Continuous per-pixel gradient sweeping along x.
+    VerticalSmooth,
+    /// Continuous per-pixel gradient sweeping along y.
+    HorizontalSmooth,
+    /// As `VerticalSmooth`, with ordered dithering against RGB565 banding.
+    VerticalDither,
+    /// As `HorizontalSmooth`, with ordered dithering against RGB565 banding.
+    HorizontalDither,
+    /// Particles drifting on a noise field.
+    Particles,
+    /// Hourglass pouring sand.
+    SandClock,
+    /// Lattice of dots sized by a drifting interference field.
+    Halftone,
+    /// Two counter-scrolling line gratings, lines across the screen.
+    MoireHorizontal,
+    /// Two counter-scrolling line gratings, lines down the screen.
+    MoireVertical,
+    /// Two counter-scrolling line gratings, lines at 45 degrees.
+    MoireDiagonal,
+    /// Two diagonally hatched squares drifting around the screen.
+    HatchSquares,
+    /// Horizontal lines vibrating like plucked strings.
+    Strings,
+}
+
+#[cfg(feature = "ui_debug")]
+impl LockscreenAnimKind {
+    pub fn from_u16(v: u16) -> Self {
+        match v {
+            1 => Self::VerticalStripes,
+            2 => Self::HorizontalStripes,
+            3 => Self::VerticalSmooth,
+            4 => Self::HorizontalSmooth,
+            5 => Self::VerticalDither,
+            6 => Self::HorizontalDither,
+            7 => Self::Particles,
+            8 => Self::SandClock,
+            9 => Self::Halftone,
+            10 => Self::MoireHorizontal,
+            11 => Self::MoireVertical,
+            12 => Self::MoireDiagonal,
+            13 => Self::HatchSquares,
+            14 => Self::Strings,
+            _ => Self::Off,
+        }
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+static mut LOCKSCREEN_ANIM_KIND: LockscreenAnimKind = LockscreenAnimKind::Off;
+/// Animation clock multiplier; 1.0 is the nominal rate.
+#[cfg(feature = "ui_debug")]
+static mut LOCKSCREEN_ANIM_SPEED: f32 = 1.0;
+/// Oscillation strength multiplier for the animations that have one.
+#[cfg(feature = "ui_debug")]
+static mut LOCKSCREEN_ANIM_PULSE: f32 = 1.0;
+/// Draw the homescreen wallpaper behind the animation.
+#[cfg(feature = "ui_debug")]
+static mut LOCKSCREEN_ANIM_BG: bool = false;
+
+#[cfg(feature = "ui_debug")]
+pub fn lockscreen_anim_kind() -> LockscreenAnimKind {
+    // SAFETY: single-threaded access
+    unsafe { LOCKSCREEN_ANIM_KIND }
+}
+
+#[cfg(feature = "ui_debug")]
+pub fn lockscreen_anim_speed() -> f32 {
+    // SAFETY: single-threaded access
+    unsafe { LOCKSCREEN_ANIM_SPEED }
+}
+
+#[cfg(feature = "ui_debug")]
+pub fn lockscreen_anim_pulse() -> f32 {
+    // SAFETY: single-threaded access
+    unsafe { LOCKSCREEN_ANIM_PULSE }
+}
+
+#[cfg(feature = "ui_debug")]
+pub fn lockscreen_anim_background() -> bool {
+    // SAFETY: single-threaded access
+    unsafe { LOCKSCREEN_ANIM_BG }
+}
+
+/// `speed_pct` and `pulse_pct` are percentages, so 100 means unchanged.
+#[cfg(feature = "ui_debug")]
+pub fn set_lockscreen_anim(
+    kind: LockscreenAnimKind,
+    speed_pct: u16,
+    pulse_pct: u16,
+    background: bool,
+) {
+    // SAFETY: single-threaded access
+    unsafe {
+        LOCKSCREEN_ANIM_KIND = kind;
+        LOCKSCREEN_ANIM_SPEED = speed_pct as f32 / 100.0;
+        LOCKSCREEN_ANIM_PULSE = pulse_pct as f32 / 100.0;
+        LOCKSCREEN_ANIM_BG = background;
+    }
+}
+
 /// Convert char to a ShortString.
 pub fn char_to_string(ch: char) -> ShortString {
     let mut s = ShortString::new();

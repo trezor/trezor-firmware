@@ -35,9 +35,9 @@ impl UnlockOverlay {
         renderer.render_shape(self);
     }
 
-    fn prepare_overlay(&self, canvas: &mut dyn Canvas) {
-        let center = canvas.bounds().center();
-
+    /// `center` is given in the target canvas's own coordinates, so the caller
+    /// can rasterise into a strip rather than the whole overlay.
+    fn prepare_overlay(&self, canvas: &mut dyn Canvas, center: Point) {
         let transp = Color::black();
         let opaque = Color::white();
 
@@ -92,16 +92,33 @@ impl<'a> Shape<'a> for UnlockOverlay {
     fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
         let bounds = self.bounds();
 
+        // Rasterise only the strip of the overlay that lands in the slice we
+        // were handed. Without a framebuffer this shape is drawn once per slice
+        // it spans — about 11 of 15 — and building the full 173x173 pattern
+        // every time meant ~11x the work, with the blend discarding all but one
+        // strip. Same pixels, an order of magnitude less rasterising.
+        let clip = canvas.viewport().relative_clip(bounds).clip;
+        let visible = clip.translate(-canvas.viewport().origin);
+        if visible.is_empty() {
+            return;
+        }
+
         let overlay_buff = &mut unwrap!(cache.image_buff(), "No image buffer");
 
         let mut overlay_canvas = unwrap!(
-            Mono8Canvas::new(bounds.size(), None, None, &mut overlay_buff[..]),
+            Mono8Canvas::new(visible.size(), None, None, &mut overlay_buff[..]),
             "Too small buffer"
         );
 
-        self.prepare_overlay(&mut overlay_canvas);
+        // The centre, expressed in the strip's coordinates, so the rings stay
+        // continuous from one slice to the next.
+        let center = Point::new(
+            bounds.center().x - visible.x0,
+            bounds.center().y - visible.y0,
+        );
+        self.prepare_overlay(&mut overlay_canvas, center);
 
-        canvas.blend_bitmap(bounds, overlay_canvas.view().with_fg(Color::black()));
+        canvas.blend_bitmap(visible, overlay_canvas.view().with_fg(Color::black()));
     }
 }
 

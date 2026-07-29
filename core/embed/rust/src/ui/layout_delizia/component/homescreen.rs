@@ -771,6 +771,26 @@ impl LockscreenAnim {
         self.start + anim.eval(t)
     }
 
+    /// Gradient sweep phase for the prototype stripe animations, in turns.
+    ///
+    /// Derived from the same clock as `eval()`, so it inherits resume handling
+    /// and needs no extra state. `PixelStripes` takes the fractional part, so
+    /// this is left unwrapped. At 30 deg/s a 90 deg divisor gives one sweep
+    /// every 3 seconds.
+    #[cfg(feature = "ui_debug")]
+    pub fn phase(&self) -> f32 {
+        const DEGREES_PER_SWEEP: f32 = 90.0;
+        self.eval() / DEGREES_PER_SWEEP
+    }
+
+    /// Elapsed animation time in seconds. Same clock as `eval()`, so it
+    /// resumes across attaches without extra state.
+    #[cfg(feature = "ui_debug")]
+    pub fn elapsed_secs(&self) -> f32 {
+        const DEGREES_PER_SEC: f32 = 30.0;
+        self.eval() / DEGREES_PER_SEC
+    }
+
     pub fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event, resume: LockscreenAnimState) {
         match event {
             Event::Attach(AttachType::Initial) => {
@@ -814,7 +834,172 @@ pub struct Lockscreen {
     label_anim: HideLabelAnimation,
 }
 
+/// Endpoints of the prototype gradient, reusing the default-homescreen palette.
+#[cfg(feature = "ui_debug")]
+const ANIM_PROTO_FROM: Color = Color::from_u32(0x0BB671);
+#[cfg(feature = "ui_debug")]
+const ANIM_PROTO_TO: Color = Color::from_u32(0x14271F);
+#[cfg(feature = "ui_debug")]
+const ANIM_GLASS: Color = Color::from_u32(0x14271F);
+#[cfg(feature = "ui_debug")]
+const ANIM_FRAME: Color = Color::from_u32(0x247553);
+#[cfg(feature = "ui_debug")]
+const ANIM_SAND: Color = Color::from_u32(0xEEA600);
+
+/// The hourglass is drawn smaller than the screen; the surrounding area stays
+/// at the black background the renderer already clears each slice to.
+#[cfg(feature = "ui_debug")]
+const ANIM_SAND_AREA: Rect = Rect::snap(AREA.center(), Offset::new(112, 176), Alignment2D::CENTER);
+
 impl Lockscreen {
+    /// Renders the selected prototype animation *instead of* the normal
+    /// lockscreen, returning `true` if it took over the frame.
+    ///
+    /// Replacing the screen rather than layering on top is deliberate: it keeps
+    /// the measured per-frame cost attributable to the animation alone, with no
+    /// wallpaper JPEG decode and no `UnlockOverlay` in the way. The
+    /// tap-to-unlock hint is kept so the device can still be unlocked.
+    #[cfg(feature = "ui_debug")]
+    fn render_anim_prototype<'s>(&'s self, target: &mut impl Renderer<'s>) -> bool {
+        use crate::ui::util::{
+            lockscreen_anim_background, lockscreen_anim_kind, lockscreen_anim_pulse,
+            lockscreen_anim_speed, LockscreenAnimKind,
+        };
+
+        let kind = lockscreen_anim_kind();
+        if kind == LockscreenAnimKind::Off {
+            return false;
+        }
+
+        // Drawn first so the animation composites over it. Costs a full
+        // software JPEG decode per frame, which is the realistic pairing to
+        // measure — but only animations that leave gaps let it show through.
+        let background = lockscreen_anim_background();
+        if background {
+            if let Some(image) = self.image {
+                if let ImageInfo::Jpeg(_) = ImageInfo::parse(image) {
+                    shape::JpegImage::new_image(AREA.center(), image)
+                        .with_align(Alignment2D::CENTER)
+                        .render(target);
+                }
+            } else {
+                render_default_hs(target);
+            }
+        }
+
+        // Scaling elapsed time rather than integrating means changing the speed
+        // mid-run shifts the animation's phase in one step. Acceptable for a
+        // prototype knob, and it keeps every animation stateless.
+        let speed = lockscreen_anim_speed();
+        let pulse = lockscreen_anim_pulse();
+        let phase = self.anim.phase() * speed;
+        let secs = self.anim.elapsed_secs() * speed;
+
+        // The stripe family is one shape with different parameters:
+        // (direction, stripe width in px, ordered dithering).
+        let stripe_cfg = match kind {
+            LockscreenAnimKind::VerticalStripes => {
+                Some((cshape::StripeDir::Vertical, cshape::BLOCK, false))
+            }
+            LockscreenAnimKind::HorizontalStripes => {
+                Some((cshape::StripeDir::Horizontal, cshape::BLOCK, false))
+            }
+            LockscreenAnimKind::VerticalSmooth => {
+                Some((cshape::StripeDir::Vertical, cshape::SMOOTH, false))
+            }
+            LockscreenAnimKind::HorizontalSmooth => {
+                Some((cshape::StripeDir::Horizontal, cshape::SMOOTH, false))
+            }
+            LockscreenAnimKind::VerticalDither => {
+                Some((cshape::StripeDir::Vertical, cshape::SMOOTH, true))
+            }
+            LockscreenAnimKind::HorizontalDither => {
+                Some((cshape::StripeDir::Horizontal, cshape::SMOOTH, true))
+            }
+            _ => None,
+        };
+
+        if let Some((dir, step, dither)) = stripe_cfg {
+            cshape::StripeGradient::new(
+                AREA,
+                dir,
+                step,
+                dither,
+                phase,
+                ANIM_PROTO_FROM,
+                ANIM_PROTO_TO,
+            )
+            .render(target);
+        } else {
+            match kind {
+                LockscreenAnimKind::Particles => {
+                    cshape::Particles::new(AREA, secs, ANIM_PROTO_FROM, ANIM_PROTO_TO)
+                        .render(target)
+                }
+                LockscreenAnimKind::SandClock => {
+                    cshape::SandClock::new(ANIM_SAND_AREA, secs, ANIM_GLASS, ANIM_FRAME, ANIM_SAND)
+                        .render(target)
+                }
+                LockscreenAnimKind::Halftone => {
+                    cshape::Halftone::new(AREA, secs, ANIM_PROTO_FROM, ANIM_PROTO_TO).render(target)
+                }
+                LockscreenAnimKind::MoireHorizontal => cshape::Moire::new(
+                    AREA,
+                    cshape::MoireDir::Horizontal,
+                    secs,
+                    ANIM_PROTO_FROM,
+                    Color::black(),
+                )
+                .render(target),
+                LockscreenAnimKind::MoireVertical => cshape::Moire::new(
+                    AREA,
+                    cshape::MoireDir::Vertical,
+                    secs,
+                    ANIM_PROTO_FROM,
+                    Color::black(),
+                )
+                .render(target),
+                LockscreenAnimKind::MoireDiagonal => cshape::Moire::new(
+                    AREA,
+                    cshape::MoireDir::Diagonal,
+                    secs,
+                    ANIM_PROTO_FROM,
+                    Color::black(),
+                )
+                .render(target),
+                LockscreenAnimKind::HatchSquares => cshape::HatchSquares::new(
+                    AREA,
+                    secs,
+                    ANIM_PROTO_FROM,
+                    ANIM_SAND,
+                    ANIM_FRAME,
+                    Color::black(),
+                    background,
+                )
+                .render(target),
+                LockscreenAnimKind::Strings => {
+                    cshape::Strings::new(AREA, secs, pulse, ANIM_PROTO_FROM, ANIM_PROTO_TO)
+                        .render(target)
+                }
+                // `Off` returned early and the stripe family took the branch above.
+                _ => return false,
+            }
+        }
+
+        render_instruction(TR::lockscreen__tap_to_unlock.into(), target);
+
+        // SAFETY: Single threaded access
+        unsafe {
+            LOCKSCREEN_STATE.attach = self
+                .attach_animation
+                .get_state(self.attach_animation.eval());
+            LOCKSCREEN_STATE.overlay = self.anim.get_state();
+            LOCKSCREEN_STATE.label = self.label_anim.get_state();
+        }
+
+        true
+    }
+
     pub fn new(
         label: TString<'static>,
         bootscreen: bool,
@@ -898,21 +1083,47 @@ impl Component for Lockscreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        #[cfg(feature = "ui_debug")]
+        if self.render_anim_prototype(target) {
+            return;
+        }
+
         const OVERLAY_BORDER: i16 = (AREA.height() / 2) - DEFAULT_HS_RADIUS;
 
         let center = AREA.center();
 
-        if let Some(image) = self.image {
-            if let ImageInfo::Jpeg(_) = ImageInfo::parse(image) {
-                shape::JpegImage::new_image(center, image)
-                    .with_align(Alignment2D::CENTER)
-                    .render(target);
-            }
-        } else {
-            render_default_hs(target);
-        }
+        // The four bars below paint opaque black over everything outside this
+        // box, so any wallpaper drawn there is decoded, blitted, and then
+        // immediately covered. Clipping to the box is pixel-identical — the
+        // slice background is already black — and it skips the wallpaper
+        // entirely on the slices the box does not reach.
+        let unmasked = Rect {
+            x0: OVERLAY_BORDER,
+            y0: OVERLAY_BORDER,
+            x1: AREA.width() - (OVERLAY_BORDER - 2),
+            y1: AREA.height() - (OVERLAY_BORDER - 2),
+        };
 
+        target.in_clip(unmasked, &|target| {
+            if let Some(image) = self.image {
+                if let ImageInfo::Jpeg(_) = ImageInfo::parse(image) {
+                    shape::JpegImage::new_image(center, image)
+                        .with_align(Alignment2D::CENTER)
+                        .render(target);
+                }
+            } else {
+                render_default_hs(target);
+            }
+        });
+
+        // The stock lockscreen is itself an animation, so it takes part in the
+        // `--speed` comparison. The multiplier defaults to 1.0, leaving release
+        // behaviour untouched.
+        #[cfg(feature = "ui_debug")]
+        let overlay_rotation = self.anim.eval() * crate::ui::util::lockscreen_anim_speed();
+        #[cfg(not(feature = "ui_debug"))]
         let overlay_rotation = self.anim.eval();
+
         cshape::UnlockOverlay::new(center, overlay_rotation).render(target);
 
         shape::Bar::new(AREA.split_top(OVERLAY_BORDER).0)

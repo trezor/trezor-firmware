@@ -256,6 +256,24 @@ message DebugLinkSetBatteryState {
 }
 
 /**
+ * Request: Select an experimental lockscreen animation.
+ * Prototype scaffolding for evaluating animation cost on displays rendered
+ * without a framebuffer. Debug builds only.
+ * @start
+ * @next Success
+ */
+message DebugLinkSetLockscreenAnim {
+    // 0 = stock lockscreen (rotating UnlockOverlay), 1/2 = 16px block stripes, 3/4 = smooth gradient,
+    // 5/6 = smooth plus dithering, 7 = particles, 8 = sand clock,
+    // 9 = halftone, 10/11/12 = moire (horizontal/vertical/diagonal),
+    // 13 = hatched squares, 14 = strings
+    optional uint32 kind = 1;
+    optional uint32 speed_pct = 2;  // animation clock, percent; 100 = unchanged
+    optional uint32 pulse_pct = 3;  // oscillation strength, percent; 100 = unchanged
+    optional bool background = 4;   // draw the homescreen wallpaper behind the animation
+}
+
+/**
  * Request: Start or stop tracking layout changes
  * @start
  * @next Success

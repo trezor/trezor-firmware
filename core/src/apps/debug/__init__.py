@@ -33,6 +33,7 @@ if __debug__:
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
             DebugLinkSetBatteryState,
+            DebugLinkSetLockscreenAnim,
             DebugLinkSetLogFilter,
             DebugLinkState,
             DebugLinkStop,
@@ -464,6 +465,32 @@ if __debug__:
         else:
             raise wire.UnexpectedMessage("Debug console not supported")
 
+    async def dispatch_DebugLinkSetLockscreenAnim(
+        msg: DebugLinkSetLockscreenAnim,
+    ) -> Success:
+        """Select an experimental lockscreen animation (prototype)."""
+        kind = msg.kind or 0
+        speed = msg.speed_pct if msg.speed_pct is not None else 100
+        pulse = msg.pulse_pct if msg.pulse_pct is not None else 100
+        background = bool(msg.background)
+        trezorui_api.set_lockscreen_anim(kind, speed, pulse, background)
+        log.debug(
+            __name__,
+            "lockscreen anim kind=%d speed=%d%% pulse=%d%% bg=%s",
+            kind,
+            speed,
+            pulse,
+            background,
+        )
+
+        # The lockscreen animates continuously, so the next frame would pick
+        # this up on its own — but force a repaint so the switch is immediate
+        # even if animations are disabled or the screen is otherwise idle.
+        if isinstance(ui.CURRENT_LAYOUT, ui.Layout):
+            ui.CURRENT_LAYOUT.repaint()
+
+        return Success()
+
     async def dispatch_DebugLinkStop(msg: DebugLinkStop) -> NoReturn:
         """Restart the event loop"""
         raise RestartEventLoop
@@ -604,6 +631,7 @@ if __debug__:
         MessageType.DebugLinkResetDebugEvents: _no_op,
         MessageType.DebugLinkGetGcInfo: dispatch_DebugLinkGetGcInfo,
         MessageType.DebugLinkSetLogFilter: dispatch_DebugLinkSetLogFilter,
+        MessageType.DebugLinkSetLockscreenAnim: dispatch_DebugLinkSetLockscreenAnim,
         MessageType.DebugLinkStop: dispatch_DebugLinkStop,
         MessageType.WipeDevice: dispatch_WipeDevice,
     }

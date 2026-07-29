@@ -6,7 +6,7 @@ use crate::{
         gc::Gc,
         iter::IterBuf,
         list::List,
-        macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
+        macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_fn_var, obj_module},
         map::Map,
         module::Module,
         obj::Obj,
@@ -23,7 +23,7 @@ use crate::{
             device_menu_result::DEVICE_MENU_RESULT,
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{BACK, CANCELLED, CONFIRMED, INFO},
-            util::{upy_disable_animation, RecoveryType},
+            util::{upy_disable_animation, upy_set_lockscreen_anim, RecoveryType},
         },
         notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ},
         ui_firmware::{
@@ -1488,6 +1488,17 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def disable_animation(disable: bool) -> None:
     ///     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
+
+    /// def set_lockscreen_anim(kind: int, speed_pct: int, pulse_pct: int, background: bool) -> None:
+    ///     """Select experimental lockscreen animation, debug builds only.
+    ///     0 = stock lockscreen, 1/2 = 16px block stripes, 3/4 = smooth gradient,
+    ///     5/6 = smooth plus dithering, 7 = particles, 8 = sand clock,
+    ///     9 = halftone, 10/11/12 = moire (horizontal/vertical/diagonal),
+    ///     13 = hatched squares, 14 = strings.
+    ///     speed_pct scales the animation clock, pulse_pct the oscillation
+    ///     strength; 100 means unchanged. background draws the homescreen
+    ///     wallpaper behind the animation."""
+    Qstr::MP_QSTR_set_lockscreen_anim => obj_fn_var!(4, 4, upy_set_lockscreen_anim).as_obj(),
 
     /// def backlight_get() -> int:
     ///     """Get currently set backlight level. Returns None if backlight is not supported."""

@@ -609,6 +609,7 @@ class MessageType(IntEnum):
     DebugLinkN4W1Read = 9016
     DebugLinkN4W1Response = 9017
     DebugLinkSetBatteryState = 9018
+    DebugLinkSetLockscreenAnim = 9019
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4551,6 +4552,29 @@ class DebugLinkSetBatteryState(protobuf.MessageType):
         self.charging_limited = charging_limited
         self.temp_control_active = temp_control_active
         self.battery_connected = battery_connected
+
+
+class DebugLinkSetLockscreenAnim(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9019
+    FIELDS = {
+        1: protobuf.Field("kind", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("speed_pct", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("pulse_pct", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("background", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        kind: Optional["int"] = None,
+        speed_pct: Optional["int"] = None,
+        pulse_pct: Optional["int"] = None,
+        background: Optional["bool"] = None,
+    ) -> None:
+        self.kind = kind
+        self.speed_pct = speed_pct
+        self.pulse_pct = pulse_pct
+        self.background = background
 
 
 class DebugLinkWatchLayout(protobuf.MessageType):

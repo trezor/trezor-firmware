@@ -3164,6 +3164,26 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSetBatteryState"]:
             return isinstance(msg, cls)
 
+    class DebugLinkSetLockscreenAnim(protobuf.MessageType):
+        kind: "int | None"
+        speed_pct: "int | None"
+        pulse_pct: "int | None"
+        background: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            kind: "int | None" = None,
+            speed_pct: "int | None" = None,
+            pulse_pct: "int | None" = None,
+            background: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSetLockscreenAnim"]:
+            return isinstance(msg, cls)
+
     class DebugLinkOptigaSetSecMax(protobuf.MessageType):
 
         @classmethod

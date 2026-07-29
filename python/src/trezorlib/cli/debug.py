@@ -225,3 +225,118 @@ def set_battery_state(
         click.echo(f"Battery state updated: {', '.join(parts)}")
     else:
         click.echo("No battery state parameters specified. Nothing changed.")
+
+
+LOCKSCREEN_ANIM_KINDS = {
+    # The stock lockscreen: not a static screen but its own animation, the
+    # UnlockOverlay rotating at 30 deg/s over the wallpaper. `off` is kept as a
+    # synonym since it is what restores normal behaviour.
+    "default": 0,
+    "off": 0,
+    "vertical": 1,
+    "horizontal": 2,
+    "smooth-vertical": 3,
+    "smooth-horizontal": 4,
+    "dither-vertical": 5,
+    "dither-horizontal": 6,
+    "particles": 7,
+    "sandclock": 8,
+    "halftone": 9,
+    "moire-horizontal": 10,
+    "moire-vertical": 11,
+    "moire-diagonal": 12,
+    "hatch-squares": 13,
+    "strings": 14,
+}
+
+
+@cli.command()
+@click.argument("kind", type=click.Choice(list(LOCKSCREEN_ANIM_KINDS)))
+@click.option(
+    "--speed",
+    type=click.IntRange(1, 2000),
+    default=100,
+    show_default=True,
+    help="Animation speed, percent of nominal",
+)
+@click.option(
+    "--pulse",
+    type=click.IntRange(0, 2000),
+    default=100,
+    show_default=True,
+    help="Oscillation strength, percent of nominal (strings)",
+)
+@click.option(
+    "--background/--no-background",
+    default=False,
+    show_default=True,
+    help="Draw the homescreen wallpaper behind the animation",
+)
+@with_session(seedless=True)
+def set_lockscreen_anim(
+    session: "Session", kind: str, speed: int, pulse: int, background: bool
+) -> None:
+    """Select an experimental lockscreen animation (debug builds only).
+
+    Prototype for evaluating animation cost on a display rendered without a
+    framebuffer. The device must be locked for the effect to be visible.
+
+    \b
+      default            stock lockscreen: rotating UnlockOverlay over the
+                         wallpaper (`off` is a synonym)
+      vertical           16px block stripes, sweeping along x
+      horizontal         16px block stripes, sweeping along y
+      smooth-vertical    continuous per-pixel gradient along x
+      smooth-horizontal  continuous per-pixel gradient along y
+      dither-vertical    smooth-vertical plus ordered dithering
+      dither-horizontal  smooth-horizontal plus ordered dithering
+      particles          particles drifting on a noise field
+      sandclock          hourglass pouring sand
+      halftone           dot lattice sized by a drifting interference field
+      moire-horizontal   counter-scrolling gratings, lines across
+      moire-vertical     counter-scrolling gratings, lines down
+      moire-diagonal     counter-scrolling gratings, lines at 45 degrees
+      hatch-squares      two diagonally hatched squares drifting about
+      strings            horizontal lines vibrating like plucked strings
+
+    The dither variants trade a faint stipple for the RGB565 banding that a
+    smooth ramp shows on a 16-bit panel.
+
+    --speed scales every animation's clock, including `default` — so the stock
+    overlay can be compared against the prototypes on equal terms. --pulse
+    scales oscillation strength and currently only affects `strings`.
+
+    --background draws the homescreen wallpaper (or the default homescreen if
+    none is set) behind the animation, which costs a full software JPEG decode
+    per frame. Only animations that leave gaps let it show through:
+    hatch-squares, strings, particles and halftone. The stripe, moire and
+    sandclock variants paint every pixel and will cover it. `default` always
+    draws the wallpaper, so the flag is redundant there.
+
+    Examples:
+
+      trezorctl debug set-lockscreen-anim default --speed 300
+
+      trezorctl debug set-lockscreen-anim smooth-horizontal
+
+      trezorctl debug set-lockscreen-anim strings --pulse 250 --speed 60
+
+      trezorctl debug set-lockscreen-anim hatch-squares --background
+
+      trezorctl debug set-lockscreen-anim off
+    """
+    debug_transport = session.client.transport.find_debug()
+    debug_transport.open()
+    debug = DebugLink(transport=debug_transport)
+    debug.set_lockscreen_anim(
+        LOCKSCREEN_ANIM_KINDS[kind],
+        speed_pct=speed,
+        pulse_pct=pulse,
+        background=background,
+    )
+    debug_transport.close()
+
+    click.echo(
+        f"Lockscreen animation set to {kind} "
+        f"(speed {speed}%, pulse {pulse}%, background {'on' if background else 'off'})."
+    )

@@ -5,8 +5,9 @@ use crate::{
         buffer::{hexlify_bytes, StrBuffer},
         gc::Gc,
         list::List,
+        map::Map,
         obj::Obj,
-        util::{iter_into_array, try_or_raise},
+        util::{iter_into_array, try_or_raise, try_with_args_and_kwargs},
     },
     storage::{get_avatar_len, load_avatar},
     strutil::TString,
@@ -255,6 +256,28 @@ pub extern "C" fn upy_disable_animation(disable: Obj) -> Obj {
         Ok(Obj::const_none())
     };
     unsafe { try_or_raise(block) }
+}
+
+/// Selects an experimental lockscreen animation. `speed_pct` and `pulse_pct`
+/// are percentages, 100 meaning unchanged. No-op outside debug builds,
+/// mirroring `upy_disable_animation`.
+pub extern "C" fn upy_set_lockscreen_anim(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 4 {
+            return Err(Error::TypeError);
+        }
+        #[cfg(feature = "ui_debug")]
+        {
+            use crate::ui::util::{set_lockscreen_anim, LockscreenAnimKind};
+            let kind: u16 = args[0].try_into()?;
+            let speed: u16 = args[1].try_into()?;
+            let pulse: u16 = args[2].try_into()?;
+            let background: bool = args[3].try_into()?;
+            set_lockscreen_anim(LockscreenAnimKind::from_u16(kind), speed, pulse, background);
+        }
+        Ok(Obj::const_none())
+    };
+    unsafe { try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
 pub fn get_user_custom_image() -> Result<BinaryData<'static>, Error> {

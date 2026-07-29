@@ -919,6 +919,34 @@ class DebugLink:
             expect=messages.Success,
         )
 
+    def set_lockscreen_anim(
+        self,
+        kind: int,
+        speed_pct: int = 100,
+        pulse_pct: int = 100,
+        background: bool = False,
+    ) -> None:
+        """Select an experimental lockscreen animation. Debug builds only.
+
+        0 = stock lockscreen, 1/2 = 16px block stripes, 3/4 = smooth gradient,
+        5/6 = smooth plus dithering, 7 = particles, 8 = sand clock,
+        9 = halftone, 10/11/12 = moire (horizontal/vertical/diagonal),
+        13 = hatched squares, 14 = strings.
+
+        `speed_pct` scales the animation clock and `pulse_pct` the oscillation
+        strength; 100 leaves each unchanged. `background` draws the homescreen
+        wallpaper behind the animation.
+        """
+        self._call(
+            messages.DebugLinkSetLockscreenAnim(
+                kind=kind,
+                speed_pct=speed_pct,
+                pulse_pct=pulse_pct,
+                background=background,
+            ),
+            expect=messages.Success,
+        )
+
     def snapshot_legacy(self) -> None:
         """Snapshot the current state of the device."""
         if self.model is not models.T1B1:
