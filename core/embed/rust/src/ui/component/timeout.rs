@@ -1,4 +1,5 @@
-use crate::time::Duration;
+use sys::time::Duration;
+
 use crate::ui::component::{Component, Event, EventCtx, Timer};
 use crate::ui::geometry::Rect;
 use crate::ui::shape::Renderer;

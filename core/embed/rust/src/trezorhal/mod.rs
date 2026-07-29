@@ -32,8 +32,6 @@ pub mod wordlist;
 
 pub mod secbool;
 
-pub mod time;
-
 #[cfg(feature = "ui")]
 pub mod sysevent;
 

@@ -1,7 +1,9 @@
+use sys::time::Duration;
+
 use super::super::component::{Button, ButtonMsg, ButtonStyleSheet};
 use super::super::theme::{self, TITLE_HEIGHT};
 use crate::strutil::TString;
-use crate::time::{Duration, Stopwatch};
+use crate::time::Stopwatch;
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{Component, Event, EventCtx, FlowMsg, Label};
 use crate::ui::display::{Color, Icon};

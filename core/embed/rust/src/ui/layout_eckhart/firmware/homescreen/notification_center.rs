@@ -1,10 +1,11 @@
+use sys::time::Duration;
+
 use super::super::super::component::{Button, ButtonContent};
 use super::super::theme::firmware::button_homebar_style;
 use super::super::theme::{self, ScreenBackground};
 use super::super::Hint;
 use super::helpers::{render_pill_shaped_background, SHADOW_HEIGHT};
 use crate::strutil::TString;
-use crate::time::Duration;
 use crate::translations::TR;
 use crate::ui::component::{Component, Event, EventCtx, Never, Timer};
 use crate::ui::display::Color;

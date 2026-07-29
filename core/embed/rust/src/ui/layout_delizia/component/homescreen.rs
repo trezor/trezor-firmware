@@ -1,3 +1,5 @@
+use sys::time::{Duration, Instant};
+
 use super::super::cshape::{self, UnlockOverlay};
 use super::super::fonts;
 use super::theme::{self, GREY_LIGHT, HOMESCREEN_ICON, ICON_KEY};
@@ -5,7 +7,7 @@ use super::{constant, Loader, LoaderMsg};
 use crate::error::Error;
 use crate::io::BinaryData;
 use crate::strutil::TString;
-use crate::time::{Duration, Instant, Stopwatch};
+use crate::time::Stopwatch;
 use crate::translations::TR;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{play, HapticEffect};

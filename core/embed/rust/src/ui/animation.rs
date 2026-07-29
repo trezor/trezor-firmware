@@ -1,4 +1,5 @@
-use crate::time::{Duration, Instant};
+use sys::time::{Duration, Instant};
+
 use crate::ui::lerp::{InvLerp, Lerp};
 
 /// Running, time-based linear progression of a value.

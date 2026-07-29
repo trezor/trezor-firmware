@@ -1,7 +1,7 @@
 use heapless::Vec;
-
 #[cfg(feature = "power_manager")]
-use crate::time::Duration;
+use sys::time::{Duration, Instant};
+
 #[cfg(feature = "ble")]
 use crate::trezorhal::bootloader::bootloader_process_ble;
 use crate::trezorhal::bootloader::{bootloader_process_usb, BootloaderWFResult};
@@ -22,7 +22,6 @@ use crate::ui::layout::simplified::{render, ReturnToC};
 use crate::ui::{CommonUI, ModelUI};
 #[cfg(feature = "power_manager")]
 use crate::{
-    time::Instant,
     trezorhal::power_manager::{hibernate, is_usb_connected, suspend},
     ui::display::fade_backlight_duration,
     ui::event::PhysicalButton,

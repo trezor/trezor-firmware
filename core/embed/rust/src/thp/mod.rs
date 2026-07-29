@@ -12,6 +12,7 @@ use heapless::deque::{Deque, DequeView};
 use heapless::linear_map::{Entry, LinearMap, LinearMapView};
 use heapless::Vec;
 use spin::{Lazy, Mutex};
+use sys::time::Instant;
 use time::{least_recently_used, ChannelTiming};
 use trezor_thp::channel::device::{Channel, ChannelIdAllocator, ChannelOpen, Mux};
 use trezor_thp::channel::{
@@ -24,7 +25,6 @@ use trezor_thp::{ChannelIO, Error as ThpError};
 
 use crate::error::Error;
 use crate::micropython::obj::Obj;
-use crate::time::Instant;
 
 type TrezorMux = Mux<TrezorCrypto>;
 type TrezorChannelOpen = ChannelOpen<TrezorCredentialVerifier, TrezorCrypto>;

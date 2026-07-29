@@ -1,9 +1,10 @@
+use sys::time::{Duration, Instant};
+
 use super::super::theme::IMAGE_HOMESCREEN;
 use super::super::{constant, fonts};
 use super::{theme, Loader, LoaderMsg};
 use crate::io::BinaryData;
 use crate::strutil::TString;
-use crate::time::{Duration, Instant};
 use crate::translations::TR;
 use crate::trezorhal::usb::usb_configured;
 use crate::ui::component::text::TextStyle;
