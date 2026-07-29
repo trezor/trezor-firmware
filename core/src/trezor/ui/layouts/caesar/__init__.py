@@ -1510,23 +1510,29 @@ if not utils.BITCOIN_ONLY:
 
         with trezorui_api.confirm_properties(
             title=TR.ethereum__auth_title,
-            items=[
-                (TR.ethereum__delegating, account, False),
-                (TR.ethereum__to, delegate_name, False),
-                network_item,
-            ],
+            items=with_colon(
+                (
+                    (TR.ethereum__delegating, account, False),
+                    (TR.ethereum__to, delegate_name, False),
+                    network_item,
+                )
+            ),
             hold=True,
             external_menu=True,
         ) as layout:
-            account_info = [
-                (TR.words__account, account, False),
-                (TR.address_details__derivation_path, account_path, False),
-            ]
-            more_info = [
-                (TR.ethereum__smart_info, delegate_addr, False),
-                # TODO: switch to non-Cardano specific string
-                (TR.cardano__nonce, str(nonce), False),
-            ]
+            account_info = with_colon(
+                (
+                    (TR.words__account, account, False),
+                    (TR.address_details__derivation_path, account_path, False),
+                )
+            )
+            more_info = with_colon(
+                (
+                    (TR.ethereum__smart_info, delegate_addr, False),
+                    # TODO: switch to non-Cardano specific string
+                    (TR.cardano__nonce, str(nonce), False),
+                )
+            )
             children = [
                 create_details(TR.address_details__account_info, account_info),
                 create_details(TR.buttons__more_info, more_info),
@@ -1546,10 +1552,12 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
-        account_info = [
-            (TR.words__account, account, False),
-            (TR.address_details__derivation_path, account_path, False),
-        ]
+        account_info = with_colon(
+            (
+                (TR.words__account, account, False),
+                (TR.address_details__derivation_path, account_path, False),
+            )
+        )
         menu = Menu.root(
             children=[
                 create_details(TR.address_details__account_info, account_info),
@@ -1573,10 +1581,12 @@ if not utils.BITCOIN_ONLY:
 
         with trezorui_api.confirm_properties(
             title=TR.ethereum__revoke_title,
-            items=[
-                (TR.ethereum__approve_revoke_from, account, False),
-                network_item,
-            ],
+            items=with_colon(
+                (
+                    (TR.ethereum__approve_revoke_from, account, False),
+                    network_item,
+                )
+            ),
             verb=TR.buttons__confirm,
             hold=True,
             external_menu=True,
