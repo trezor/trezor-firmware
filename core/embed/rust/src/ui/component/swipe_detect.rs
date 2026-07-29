@@ -1,4 +1,5 @@
-use crate::time::{Duration, Instant};
+use sys::time::{Duration, Instant};
+
 use crate::ui::animation::Animation;
 use crate::ui::component::{Event, EventCtx};
 use crate::ui::constant::screen;

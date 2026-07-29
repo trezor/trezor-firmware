@@ -1,5 +1,6 @@
+use sys::time::Duration;
+
 use super::super::ButtonStyle;
-use crate::time::Duration;
 use crate::ui::component::text::common::TextEdit;
 use crate::ui::component::{Event, EventCtx, Timer};
 use crate::ui::display::{Color, Font};

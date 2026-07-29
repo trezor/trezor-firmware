@@ -5,6 +5,8 @@ pub mod toif;
 
 pub use color::Color;
 pub use font::{Font, Glyph, GlyphMetrics};
+#[cfg(feature = "backlight")]
+use sys::time::{sleep, Duration};
 
 use super::geometry::{Offset, Point, Rect};
 use crate::strutil::TString;
@@ -13,8 +15,6 @@ use crate::trezorhal::display;
 pub use crate::ui::display::toif::Icon;
 #[cfg(feature = "backlight")]
 use crate::ui::lerp::Lerp;
-#[cfg(feature = "backlight")]
-use crate::{time::Duration, trezorhal::time};
 #[cfg(feature = "backlight")]
 use crate::{time::Stopwatch, ui::util::animation_disabled};
 
@@ -56,7 +56,7 @@ pub fn fade_backlight_duration(target: u8, duration_ms: u32) {
         }
         let val = u8::lerp(current, target, elapsed / duration);
         set_backlight(val);
-        time::sleep(Duration::from_millis(1));
+        sleep(Duration::from_millis(1));
     }
     //account for imprecise rounding
     set_backlight(target);

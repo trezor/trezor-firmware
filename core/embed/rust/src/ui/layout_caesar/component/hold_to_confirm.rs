@@ -1,6 +1,7 @@
+use sys::time::{Duration, Instant};
+
 use super::loader::{Loader, DEFAULT_DURATION_MS};
 use super::{theme, ButtonContent, ButtonDetails, LoaderMsg, LoaderStyleSheet};
-use crate::time::{Duration, Instant};
 use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::event::ButtonEvent;
 use crate::ui::geometry::Rect;

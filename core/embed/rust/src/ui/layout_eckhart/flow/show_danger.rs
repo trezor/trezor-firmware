@@ -1,3 +1,5 @@
+use sys::time::Duration;
+
 use super::super::component::Button;
 use super::super::firmware::{
     ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
@@ -6,7 +8,6 @@ use super::super::firmware::{
 use super::super::theme;
 use crate::error;
 use crate::strutil::TString;
-use crate::time::Duration;
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
 use crate::ui::component::ComponentExt;

@@ -1,9 +1,9 @@
 use heapless::Vec;
+use sys::time::Duration;
 
 use super::Paginate;
 use crate::error::Error;
 use crate::strutil::{ShortString, TString};
-use crate::time::Duration;
 use crate::ui::button_request::{ButtonRequest, ButtonRequestCode};
 use crate::ui::component::{MsgMap, PageMap};
 #[cfg(feature = "ble")]

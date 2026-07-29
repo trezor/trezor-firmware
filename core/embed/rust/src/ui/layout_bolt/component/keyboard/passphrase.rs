@@ -1,12 +1,13 @@
 use core::cell::Cell;
 
+use sys::time::Duration;
+
 use super::super::super::constant::SCREEN;
 use super::super::button::{Button, ButtonContent, ButtonMsg};
 use super::super::keyboard::common::{render_pending_marker, MultiTapKeyboard};
 use super::super::swipe::{Swipe, SwipeDirection};
 use super::super::{theme, ScrollBar};
 use crate::strutil::{ShortString, TString};
-use crate::time::Duration;
 use crate::ui::component::base::ComponentExt;
 use crate::ui::component::text::common::TextBox;
 use crate::ui::component::text::layout::{LayoutFit, LineBreaking};

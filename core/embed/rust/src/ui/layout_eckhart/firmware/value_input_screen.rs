@@ -1,9 +1,10 @@
+use sys::time::Duration;
+
 use super::super::super::constant::SCREEN;
 use super::super::component::{Button, ButtonMsg};
 use super::super::{fonts, theme};
 use super::{ActionBar, ActionBarMsg, Header, HeaderMsg};
 use crate::strutil::{self, plural_form, ShortString, TString};
-use crate::time::Duration;
 use crate::translations::TR;
 use crate::ui::component::swipe_detect::SwipeConfig;
 use crate::ui::component::{Component, Event, EventCtx, Label, Maybe, Timer};

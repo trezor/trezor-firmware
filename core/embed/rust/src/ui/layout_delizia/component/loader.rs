@@ -1,6 +1,7 @@
+use sys::time::{Duration, Instant};
+
 use super::super::cshape::{render_loader, LoaderRange};
 use super::{constant, theme};
-use crate::time::{Duration, Instant};
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::ui::animation::Animation;

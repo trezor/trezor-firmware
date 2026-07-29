@@ -1,5 +1,7 @@
 use core::cmp::Ordering;
 
+use sys::time::Duration;
+
 use super::component::Button;
 use super::firmware::{
     ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header, HeaderMsg,
@@ -22,7 +24,6 @@ use crate::micropython::obj::Obj;
 use crate::micropython::util;
 use crate::storage;
 use crate::strutil::TString;
-use crate::time::Duration;
 use crate::translations::TR;
 use crate::ui::component::text::op::OpTextLayout;
 use crate::ui::component::text::paragraphs::{
