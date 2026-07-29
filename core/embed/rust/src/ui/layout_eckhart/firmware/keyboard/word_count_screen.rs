@@ -33,8 +33,10 @@ pub struct SelectWordCountScreen {
 }
 
 impl SelectWordCountScreen {
-    const DESCRIPTION_HEIGHT: i16 = 50;
-    const KEYPAD_HEIGHT: i16 = 374;
+    /// Two lines: the description wraps and must not be truncated.
+    const DESCRIPTION_HEIGHT: i16 = 71;
+    const KEYPAD_HEIGHT: i16 = 353;
+    const MULTI_SHARE_KEYPAD_HEIGHT: i16 = 334;
 
     pub fn new_multi_share(description: TString<'static>) -> Self {
         Self::new(description, ValueKeypad::new_multi_share())
@@ -67,9 +69,15 @@ impl Component for SelectWordCountScreen {
         debug_assert_eq!(bounds.height(), SCREEN.height());
         debug_assert_eq!(bounds.width(), SCREEN.width());
 
+        let keypad_height = if self.keypad.multi_share {
+            Self::MULTI_SHARE_KEYPAD_HEIGHT
+        } else {
+            Self::KEYPAD_HEIGHT
+        };
+
         let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
         let (description_area, rest) = rest.split_top(Self::DESCRIPTION_HEIGHT);
-        let (keypad_area, _) = rest.split_top(Self::KEYPAD_HEIGHT);
+        let (keypad_area, _) = rest.split_top(keypad_height);
 
         let description_area = description_area.inset(Insets::sides(24));
 
@@ -106,14 +114,17 @@ pub struct ValueKeypad {
     numbers: Vec<u32, MAX_KEYS>,
     area: Rect,
     pressed: Option<usize>,
+    multi_share: bool,
 }
 
 impl ValueKeypad {
     const COLS: usize = 3;
     const ROWS: usize = 3;
     const BUTTON_SIZE: Offset = Offset::new(100, 110);
+    const MULTI_SHARE_BUTTON_SIZE: Offset = Offset::new(138, 130);
     /// Cancel sits in the last grid cell (bottom-right) for the 8-key layout.
     const CANCEL_BUTTON_INDEX: usize = 8;
+    const MULTI_SHARE_CANCEL_INDEX: usize = 2;
 
     pub fn new_single_share() -> Self {
         const NUMBERS: [u32; 8] = [12, 18, 20, 24, 33, 36, 54, 72];
@@ -147,10 +158,36 @@ impl ValueKeypad {
             cancel: Button::with_icon(theme::ICON_CROSS)
                 .styled(theme::button_cancel())
                 .with_radius(12),
+            multi_share: keys.len() < 3,
             keys,
             numbers,
             area: Rect::zero(),
             pressed: None,
+        }
+    }
+
+    fn multi_share_button_border(&self, idx: usize) -> Rect {
+        let size = Self::MULTI_SHARE_BUTTON_SIZE;
+        match idx {
+            0 => Rect::from_top_left_and_size(self.area.top_left(), size),
+            1 => {
+                Rect::from_center_and_size(self.area.left_center().ofs(Offset::x(size.x / 2)), size)
+            }
+            _ => Rect::from_bottom_left_and_size(self.area.bottom_left(), size),
+        }
+    }
+
+    fn multi_share_touch_expand(&self, idx: usize) -> Insets {
+        let vertical_spacing = (self.area.height()
+            - Self::MULTI_SHARE_BUTTON_SIZE.y * Self::ROWS as i16)
+            / (Self::ROWS as i16 - 1);
+
+        if idx.is_multiple_of(Self::ROWS) {
+            Insets::bottom(vertical_spacing / 2)
+        } else if idx % Self::ROWS == Self::ROWS - 1 {
+            Insets::top(vertical_spacing / 2)
+        } else {
+            Insets::new(vertical_spacing / 2, 0, vertical_spacing / 2, 0)
         }
     }
 
@@ -173,10 +210,7 @@ impl ValueKeypad {
         let cx = self.area.x0 + col * col_step + col_step / 2;
         let cy = self.area.y0 + row * row_step + row_step / 2;
 
-        Rect::from_center_and_size(
-            crate::ui::geometry::Point::new(cx, cy),
-            Self::BUTTON_SIZE,
-        )
+        Rect::from_center_and_size(crate::ui::geometry::Point::new(cx, cy), Self::BUTTON_SIZE)
     }
 
     fn get_touch_expand(&self, idx: usize) -> Insets {
@@ -196,43 +230,27 @@ impl Component for ValueKeypad {
     type Msg = SelectWordCountMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        // Multi-share recovery (only 2 word counts) uses a centered single
-        // column to match the original UX. Single-share recovery has 8 word
-        // counts and uses a 3x3 grid (8 keys + cancel in last cell).
-        let multi = self.keys.len() < 3;
-
-        self.area = if multi {
-            // One narrow column centered
+        self.area = if self.multi_share {
             Rect::from_center_and_size(
                 bounds.center(),
-                Offset::new(Self::BUTTON_SIZE.x, bounds.height()),
+                Offset::new(Self::MULTI_SHARE_BUTTON_SIZE.x, bounds.height()),
             )
         } else {
-            // Full grid area with horizontal padding
             bounds.inset(Insets::sides(20))
         };
 
-        if multi {
-            // 3 vertical cells: key0, key1, cancel
-            let col_step = self.area.height() / 3;
+        if self.multi_share {
             for i in 0..self.keys.len() {
-                let cy = self.area.y0 + i as i16 * col_step + col_step / 2;
-                let rect = Rect::from_center_and_size(
-                    crate::ui::geometry::Point::new(self.area.center().x, cy),
-                    Self::BUTTON_SIZE,
-                );
-                self.keys[i].place(rect);
-                self.keys[i]
-                    .set_expanded_touch_area(Insets::new(8, 0, 8, 0));
+                let border = self.multi_share_button_border(i);
+                let touch_expand = self.multi_share_touch_expand(i);
+                self.keys[i].place(border);
+                self.keys[i].set_expanded_touch_area(touch_expand);
             }
-            let cancel_cy = self.area.y0 + 2 * col_step + col_step / 2;
-            let cancel_rect = Rect::from_center_and_size(
-                crate::ui::geometry::Point::new(self.area.center().x, cancel_cy),
-                Self::BUTTON_SIZE,
-            );
-            self.cancel.place(cancel_rect);
             self.cancel
-                .set_expanded_touch_area(Insets::new(8, 0, 8, 0));
+                .place(self.multi_share_button_border(Self::MULTI_SHARE_CANCEL_INDEX));
+            self.cancel.set_expanded_touch_area(
+                self.multi_share_touch_expand(Self::MULTI_SHARE_CANCEL_INDEX),
+            );
         } else {
             for i in 0..self.keys.len() {
                 let border = self.get_button_border(i);
