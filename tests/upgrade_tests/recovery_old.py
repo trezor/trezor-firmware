@@ -23,9 +23,12 @@ def select_number_of_words(
 ) -> None:
     if "SelectWordCount" not in debug.read_layout().all_components():
         debug.click(debug.screen_buttons.ok())
-    if tag_version is None or tag_version > (2, 8, 8):
-        # layout changed after adding the cancel button
+    if tag_version is None:
+        # No tag means the build under test, which carries the current layout.
         coords = debug.screen_buttons.word_count_all_word(num_of_words)
+    elif tag_version > (2, 8, 8):
+        # layout changed after adding the cancel button
+        coords = debug.screen_buttons.word_count_all_word_released(num_of_words)
     else:
         word_option_offset = 6
         word_options = (12, 18, 20, 24, 33)

@@ -2007,8 +2007,45 @@ class ScreenButtons:
         else:
             raise ValueError("Wrong layout type")
 
-    def word_count_all_word(self, word_count: int) -> Coords:
+    def _word_count_cell_eckhart(self, cell: int) -> Coords:
+        """Center of a cell in the Eckhart 3x3 word-count keypad.
+
+        Mirrors `ValueKeypad::place` in `word_count_screen.rs`. Cells 0..7 hold
+        the word counts, cell 8 holds cancel.
+        """
+        HEADER_HEIGHT = 96
+        DESCRIPTION_HEIGHT = 71
+        KEYPAD_HEIGHT = 353
+        SIDE_INSET = 20
+
+        assert cell < 9
+        col, row = cell % 3, cell // 3
+        col_step = (self._width() - 2 * SIDE_INSET) // 3
+        row_step = KEYPAD_HEIGHT // 3
+        return (
+            SIDE_INSET + col * col_step + col_step // 2,
+            HEADER_HEIGHT + DESCRIPTION_HEIGHT + row * row_step + row_step // 2,
+        )
+
+    def word_count_all_word_released(self, word_count: int) -> Coords:
+        """Coordinates on firmware that predates the Eckhart 3x3 keypad.
+
+        Upgrade tests drive released firmware, whose keypad still has five keys
+        in two columns. Other layouts are unaffected by that rework.
+        """
         assert word_count in (12, 18, 20, 24, 33)
+        if self.layout_type is not LayoutType.Eckhart:
+            return self.word_count_all_word(word_count)
+        return {
+            12: self._grid35(0, 2),
+            18: self._grid35(2, 2),
+            20: self._grid35(0, 3),
+            24: self._grid35(2, 3),
+            33: self._grid35(2, 4),
+        }[word_count]
+
+    def word_count_all_word(self, word_count: int) -> Coords:
+        assert word_count in (12, 18, 20, 24, 33, 36, 54, 72)
         if self.layout_type is LayoutType.Bolt:
             coords_map = {
                 12: self.grid34(0, 2),
@@ -2026,12 +2063,10 @@ class ScreenButtons:
                 33: self.grid34(2, 3),
             }
         elif self.layout_type is LayoutType.Eckhart:
+            # Order must match ValueKeypad::new_single_share.
             coords_map = {
-                12: self._grid35(0, 2),
-                18: self._grid35(2, 2),
-                20: self._grid35(0, 3),
-                24: self._grid35(2, 3),
-                33: self._grid35(2, 4),
+                count: self._word_count_cell_eckhart(cell)
+                for cell, count in enumerate((12, 18, 20, 24, 33, 36, 54, 72))
             }
         else:
             raise ValueError("Wrong layout type")
@@ -2044,7 +2079,7 @@ class ScreenButtons:
         elif self.layout_type is LayoutType.Delizia:
             return self.grid34(0, 3)
         elif self.layout_type is LayoutType.Eckhart:
-            return self._grid35(0, 4)
+            return self._word_count_cell_eckhart(8)
         else:
             raise ValueError("Wrong layout type")
 
