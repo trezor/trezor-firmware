@@ -277,13 +277,7 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "uv run make -C core -f Makefile.scons build_unix"
-      # Ensure that "cargo build" works when NOT executed through our makefiles,
-      # indicating that it does not rely on particular envvars or other flags.
-      # This makes sure that rust-analyzer will work on our codebase.
-      - run: nix-shell --run "cd core/embed/rust && cargo build"
-        if: matrix.asan == 'noasan'
-      - run: nix-shell --run "uv run make -C core -f Makefile.scons test_rust"
+      - run: nix-shell --run "uv run make -C core test_rust"
       - run: nix-shell --run "uv run make -C core clippy"
 
   core_rust_client_test:

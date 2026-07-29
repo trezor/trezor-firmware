@@ -124,8 +124,8 @@ test: ## run unit tests
 	cd tests ; ./run_tests.sh $(TESTOPTS)
 
 test_rust: ## run rs unit tests
-	false # NOT IMPLEMENTED
-	# xtask test crypto
+	xtask test crypto
+	# TODO:
 	# xtask test all
 
 test_emu_sanity: ## make sure the emulator doesn't crash on startup
