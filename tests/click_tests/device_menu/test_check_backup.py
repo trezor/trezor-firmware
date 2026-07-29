@@ -110,7 +110,8 @@ def test_backup_check_cancel(device_handler: "BackgroundDeviceHandler"):
     assert TR.recovery__check_dry_run in debug.read_layout().text_content()
 
     # Cancel the flow
-    debug.click(debug.screen_buttons.cancel())
+    debug.click(debug.screen_buttons.menu())
+    debug.button_actions.navigate_to_menu_item(0)
     assert_device_screen(debug, Menu.SECURITY)
 
     close_device_menu(debug)
