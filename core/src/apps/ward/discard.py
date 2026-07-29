@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from trezor.messages import WARDDiscardPending, WARDDiscardPendingAck
 
 
-async def discard_pending(msg: WARDDiscardPending) -> WARDDiscardPendingAck:
+async def discard(msg: WARDDiscardPending) -> WARDDiscardPendingAck:
     """WARDDiscardPending wire handler (TA): abandon the current wallet's queued
     pending edit (via Core -> WARD trust anchor), unblocking the depth-1 queue.
     """
@@ -12,7 +12,7 @@ async def discard_pending(msg: WARDDiscardPending) -> WARDDiscardPendingAck:
 
     from apps.common import ward as core
 
-    discarded_address, wallet_id = await core.discard_pending(msg.pending_id)
+    discarded_address, wallet_id = await core.discard(msg.pending_id)
 
     return WARDDiscardPendingAck(
         discarded_address=discarded_address,

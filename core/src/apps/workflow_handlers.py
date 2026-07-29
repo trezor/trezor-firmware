@@ -118,21 +118,21 @@ def _find_message_handler_module(msg_type: int) -> str:
 
     # WARD update round (pull model: queue intent / perform (pull proof) / confirm)
     if msg_type == MessageType.WARDQueueUpdate:
-        return "apps.ward.queue_update"
+        return "apps.ward.queue"
     if msg_type == MessageType.WARDPerformUpdate:
-        return "apps.ward.perform_update"
+        return "apps.ward.perform"
     if msg_type == MessageType.WARDConfirmedByWM:
-        return "apps.ward.confirmed_by_wm"
+        return "apps.ward.finalize"
     if msg_type == MessageType.WARDDiscardPending:
-        return "apps.ward.discard_pending"
+        return "apps.ward.discard"
 
     # WARD sync round (bootstrap/refresh) + lookup + debug seed
     if msg_type == MessageType.WARDSync:
         return "apps.ward.sync"
     if msg_type == MessageType.WARDIngestAttestation:
-        return "apps.ward.ingest_attestation"
+        return "apps.ward.ingest"
     if msg_type == MessageType.WARDListPendingEdits:
-        return "apps.ward.list_pending"
+        return "apps.ward.pending"
     if msg_type == MessageType.WARDReconcile:
         return "apps.ward.reconcile"
     if msg_type == MessageType.WARDLookup:

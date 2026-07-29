@@ -7,7 +7,7 @@ Two kinds of caller route through here:
     `app_id`, checked against a static allowlist. This scopes which on-device app
     may authenticate a WARD label.
   - The host-facing WARD wire handlers (apps.ward.*) call the UNGATED ops below
-    (lookup / add_pending / commit / confirm_commit / sync / list_pending /
+    (lookup / add_pending / commit / confirm_commit / sync / pending /
     debug_set_root). The host is the WARD owner/driver, not an on-device app
     principal, so it is not capability-gated; these are thin pass-throughs kept
     here only so the trust anchor has a single gateway.
@@ -52,7 +52,7 @@ async def lookup_label(
     _authorize(app_id, "lookup")
     from apps.ward import service
 
-    return await service.lookup_label_impl(address, value, proof, counter)
+    return await service.lookup_label(address, value, proof, counter)
 
 
 async def _classify_label(
@@ -166,7 +166,7 @@ async def lookup(
     """
     from apps.ward import service
 
-    return await service.lookup_impl(
+    return await service.lookup(
         address,
         value,
         proof,
@@ -177,7 +177,7 @@ async def lookup(
     )
 
 
-async def queue_update(
+async def queue(
     address: bytes,
     new_value: bytes,
 ) -> tuple[int, bytes]:
@@ -188,10 +188,10 @@ async def queue_update(
     """
     from apps.ward import service
 
-    return await service.queue_update_impl(address, new_value)
+    return await service.queue(address, new_value)
 
 
-async def perform_update(
+async def perform(
     pending_id: int | None = None,
 ) -> tuple[int, bytes | None, bytes | None, bytes, bytes]:
     """Authorize a queued intent. Resolves it, PULLS the proof it needs from the
@@ -204,13 +204,13 @@ async def perform_update(
     from trezor.messages import WARDProofAck, WARDProofRequest
     from trezor.wire import context
 
-    pid, address = await service.intent_address_impl(pending_id)
+    pid, address = await service.intent(pending_id)
 
     ack = await context.call(
         WARDProofRequest(address=address, pending_id=pid), WARDProofAck
     )
 
-    return await service.perform_update_impl(
+    return await service.perform(
         pid,
         ack.value,
         ack.proof,
@@ -221,7 +221,7 @@ async def perform_update(
     )
 
 
-async def confirmed_by_wm(
+async def finalize(
     counter: int,
     mac: bytes | None,
     wm_signature: bytes,
@@ -229,10 +229,10 @@ async def confirmed_by_wm(
 ) -> tuple[int, bytes | None, bytes, bytes | None]:
     from apps.ward import service
 
-    return await service.confirmed_by_wm_impl(counter, mac, wm_signature, pending_id)
+    return await service.finalize(counter, mac, wm_signature, pending_id)
 
 
-async def discard_pending(
+async def discard(
     pending_id: int | None = None,
 ) -> tuple[bytes | None, bytes]:
     """Abandon queued pending edit(s) for the active wallet. With pending_id, drops
@@ -241,21 +241,21 @@ async def discard_pending(
     is None when nothing matched (or in drop-all mode)."""
     from apps.ward import service
 
-    return await service.discard_pending_impl(pending_id)
+    return await service.discard(pending_id)
 
 
 async def sync() -> tuple[bytes, int, bytes, bytes]:
     from apps.ward import service
 
-    return await service.sync_impl()
+    return await service.sync()
 
 
-async def ingest_attestation(
+async def ingest(
     counter: int, mac: bytes | None, wm_signature: bytes
 ) -> tuple[int, bytes]:
     from apps.ward import service
 
-    return await service.ingest_attestation_impl(counter, mac, wm_signature)
+    return await service.ingest(counter, mac, wm_signature)
 
 
 async def reconcile(
@@ -263,21 +263,21 @@ async def reconcile(
 ) -> tuple[int, bytes | None, bytes, bytes | None]:
     from apps.ward import service
 
-    return await service.reconcile_impl(root)
+    return await service.reconcile(root)
 
 
-async def list_pending() -> tuple[list[int], list[bytes], bytes, bytes]:
+async def pending() -> tuple[list[int], list[bytes], bytes, bytes]:
     """Return queued (pending_ids, addresses, wallet_id, ward_id) for the active
     wallet.
 
     Note:
     - wallet_id is still returned for compatibility with current callers
-    - list_pending() should not be the long-term source of wallet_id
+    - pending() should not be the long-term source of wallet_id
     - ward_id is the SLIP21-derived WM anchor a host uses to key WARD storage
     """
     from apps.ward import service
 
-    return await service.list_pending_impl()
+    return await service.pending()
 
 
 async def debug_set_root(
@@ -285,4 +285,4 @@ async def debug_set_root(
 ) -> tuple[int, bytes | None, bytes, bytes | None]:
     from apps.ward import service
 
-    return await service.debug_set_root_impl(root)
+    return await service.debug_set_root(root)

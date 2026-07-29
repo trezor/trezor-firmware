@@ -447,7 +447,7 @@ async def _resolve_pending_id(wallet_id: bytes, pending_id: int | None) -> int:
     raise DataError("pending_id required: multiple candidates queued")
 
 
-async def discard_pending_impl(
+async def discard(
     pending_id: int | None = None,
 ) -> tuple[bytes | None, bytes]:
     """Abandon queued pending edit(s) without finalizing.
@@ -471,7 +471,7 @@ async def discard_pending_impl(
 
             log.debug(
                 __name__,
-                "discard_pending_impl: dropped %d candidate(s) for wallet_id=%s",
+                "discard: dropped %d candidate(s) for wallet_id=%s",
                 dropped,
                 wallet_id,
             )
@@ -488,7 +488,7 @@ async def discard_pending_impl(
 
         log.debug(
             __name__,
-            "discard_pending_impl: dropped pending_id=%d for wallet_id=%s",
+            "discard: dropped pending_id=%d for wallet_id=%s",
             pending_id,
             wallet_id,
         )
@@ -496,7 +496,7 @@ async def discard_pending_impl(
     return address, wallet_id
 
 
-async def lookup_label_impl(
+async def lookup_label(
     address: bytes, value: bytes, proof: list[bytes], counter: int
 ) -> bytes | None:
     """On-device label lookup: authenticate (address, value) against the active
@@ -557,7 +557,7 @@ async def _confirm_update(address: bytes, new_value: bytes) -> None:
     )
 
 
-async def queue_update_impl(
+async def queue(
     address: bytes,
     new_value: bytes,
 ) -> tuple[int, bytes]:
@@ -576,7 +576,7 @@ async def queue_update_impl(
     wallet_id = await _get_wallet_id()
 
     # Multi-slot queue: several intents may be in flight per wallet, bounded by the
-    # storage cap. Committing stays serialized by counter (see confirmed_by_wm_impl).
+    # storage cap. Committing stays serialized by counter (see finalize).
     if ward_store.queue_count(wallet_id) >= ward_store.MAX_PENDING:
         raise DataError("pending queue is full for this wallet")
 
@@ -585,7 +585,7 @@ async def queue_update_impl(
 
         log.debug(
             __name__,
-            "queue_update_impl: confirm intent wallet_id=%s address=%s new_value_len=%d",
+            "queue: confirm intent wallet_id=%s address=%s new_value_len=%d",
             wallet_id,
             address,
             len(new_value),
@@ -603,7 +603,7 @@ async def queue_update_impl(
 
         log.debug(
             __name__,
-            "queue_update_impl: queued intent wallet_id=%s pending_id=%d",
+            "queue: queued intent wallet_id=%s pending_id=%d",
             wallet_id,
             pending_id,
         )
@@ -611,7 +611,7 @@ async def queue_update_impl(
     return pending_id, wallet_id
 
 
-async def lookup_impl(
+async def lookup(
     address: bytes,
     value: bytes | None,
     proof: list[bytes],
@@ -663,7 +663,7 @@ async def lookup_impl(
     return valid, ward_store.get_counter(wallet_id), membership, wallet_id, ward_id
 
 
-async def intent_address_impl(pending_id: int | None) -> tuple[int, bytes]:
+async def intent(pending_id: int | None) -> tuple[int, bytes]:
     """Resolve pending_id to (resolved_pending_id, address) for the active wallet.
     The Core gateway calls this to build the WARDProofRequest (naming the address
     and the pending_id) before pulling the proof for WARDPerformUpdate."""
@@ -682,7 +682,7 @@ async def intent_address_impl(pending_id: int | None) -> tuple[int, bytes]:
 
         log.debug(
             __name__,
-            "intent_address_impl: wallet_id=%s pending_id=%d address=%s",
+            "intent: wallet_id=%s pending_id=%d address=%s",
             wallet_id,
             pid,
             address,
@@ -691,7 +691,7 @@ async def intent_address_impl(pending_id: int | None) -> tuple[int, bytes]:
     return pid, address
 
 
-async def perform_update_impl(
+async def perform(
     pending_id: int | None,
     value: bytes | None,
     proof: list[bytes],
@@ -733,6 +733,10 @@ async def perform_update_impl(
     if not present:
         # Fresh-wallet INIT: treat "no root in session" as an authenticated empty
         # tree only when the durable counter floor is still zero.
+        # TODO(handoff, gap 1): this cold-starts a first write without requiring a
+        # prior attested/reconciled round in-session, so firmware alone can't detect a
+        # wrongful cold-start (it leans on the WM co-sign + server CAS). Harden by
+        # requiring an attested round before the first perform. See gaps.md #1.
         if ward_store.get_counter(wallet_id) == 0:
             stored_root = None
         else:
@@ -749,7 +753,7 @@ async def perform_update_impl(
 
         log.debug(
             __name__,
-            "perform_update_impl: verify pending_id=%d wallet_id=%s counter_T=%d proof_len=%d old_counter=%d witness=%s",
+            "perform: verify pending_id=%d wallet_id=%s counter_T=%d proof_len=%d old_counter=%d witness=%s",
             pid,
             wallet_id,
             counter_t,
@@ -789,7 +793,7 @@ async def perform_update_impl(
 
         log.debug(
             __name__,
-            "perform_update_impl: computed candidate wallet_id=%s pending_id=%d counter_T=%d root_T=%s",
+            "perform: computed candidate wallet_id=%s pending_id=%d counter_T=%d root_T=%s",
             wallet_id,
             pid,
             counter_t,
@@ -800,7 +804,7 @@ async def perform_update_impl(
     return counter_t, root_t, mac_t, wallet_id, ward_id
 
 
-async def confirmed_by_wm_impl(
+async def finalize(
     counter_msg: int,
     mac_msg: bytes | None,
     wm_signature: bytes,
@@ -847,7 +851,7 @@ async def confirmed_by_wm_impl(
 
         log.debug(
             __name__,
-            "confirmed_by_wm_impl: verify pending_id=%d wallet_id=%s counter_msg=%d mac_present=%s",
+            "finalize: verify pending_id=%d wallet_id=%s counter_msg=%d mac_present=%s",
             pid,
             wallet_id,
             counter_msg,
@@ -874,7 +878,7 @@ async def confirmed_by_wm_impl(
 
         log.debug(
             __name__,
-            "confirmed_by_wm_impl: installed wallet_id=%s counter=%d root=%s",
+            "finalize: installed wallet_id=%s counter=%d root=%s",
             wallet_id,
             counter,
             "EMPTY" if root is None else "set",
@@ -883,7 +887,7 @@ async def confirmed_by_wm_impl(
     return counter, root, wallet_id, mac
 
 
-async def sync_impl() -> tuple[bytes, int, bytes, bytes]:
+async def sync() -> tuple[bytes, int, bytes, bytes]:
     """Begin a sync round: mint a fresh per-round nonce (anti-replay) and store it.
     Also derives and returns the WM-facing ward_id so the host can address the WM
     for this round without inventing it. Returns (nonce, version, wallet_id,
@@ -899,12 +903,12 @@ async def sync_impl() -> tuple[bytes, int, bytes, bytes]:
     if __debug__:
         from trezor import log
 
-        log.debug(__name__, "sync_impl: minted nonce for wallet_id=%s", wallet_id)
+        log.debug(__name__, "sync: minted nonce for wallet_id=%s", wallet_id)
 
     return nonce, _WARD_VERSION, wallet_id, ward_id
 
 
-async def ingest_attestation_impl(
+async def ingest(
     counter: int, mac_msg: bytes | None, wm_signature: bytes
 ) -> tuple[int, bytes]:
     """Verify + record the WM freshness attestation for the open sync round.
@@ -937,7 +941,7 @@ async def ingest_attestation_impl(
 
         log.debug(
             __name__,
-            "ingest_attestation_impl: accepted counter=%d for wallet_id=%s",
+            "ingest: accepted counter=%d for wallet_id=%s",
             counter,
             wallet_id,
         )
@@ -945,7 +949,7 @@ async def ingest_attestation_impl(
     return counter, wallet_id
 
 
-async def reconcile_impl(
+async def reconcile(
     root: bytes | None,
 ) -> tuple[int, bytes | None, bytes, bytes | None]:
     """Adopt the host-supplied root after binding it to the attested mac_ext,
@@ -986,7 +990,7 @@ async def reconcile_impl(
 
         log.debug(
             __name__,
-            "reconcile_impl: adopted counter=%d root=%s wallet_id=%s",
+            "reconcile: adopted counter=%d root=%s wallet_id=%s",
             counter_ext,
             "EMPTY" if root is None else "set",
             wallet_id,
@@ -995,7 +999,7 @@ async def reconcile_impl(
     return counter_ext, root, wallet_id, mac_ext
 
 
-async def list_pending_impl() -> tuple[list[int], list[bytes], bytes, bytes]:
+async def pending() -> tuple[list[int], list[bytes], bytes, bytes]:
     """Return (pending_ids, addresses, wallet_id, ward_id) for every queued
     candidate of the active wallet, in allocation order (the two lists are
     parallel). ward_id lets a host resolve the WM-facing anchor up front."""
@@ -1013,7 +1017,7 @@ async def list_pending_impl() -> tuple[list[int], list[bytes], bytes, bytes]:
     return pending_ids, addresses, wallet_id, ward_id
 
 
-async def debug_set_root_impl(
+async def debug_set_root(
     root: bytes,
 ) -> tuple[int, bytes | None, bytes, bytes | None]:
     """DEBUG-ONLY unauthenticated root injection (seed a root in one call). Installs
