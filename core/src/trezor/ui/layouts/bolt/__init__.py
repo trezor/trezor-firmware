@@ -1523,23 +1523,27 @@ if not utils.BITCOIN_ONLY:
 
         main_ctx = trezorui_api.confirm_properties(
             title=TR.ethereum__auth_title,
-            items=[
-                (TR.ethereum__delegating, account, False),
-                (TR.ethereum__to, delegate_name, False),
-                network_item,
-            ],
+            items=with_colon(
+                (
+                    (TR.ethereum__delegating, account, False),
+                    (TR.ethereum__to, delegate_name, False),
+                    network_item,
+                )
+            ),
             hold=True,
             external_menu=True,
         )
         menu_ctx = trezorui_api.show_info_with_cancel(
             title="",
-            items=[
-                (TR.words__account, account, False),
-                (TR.address_details__derivation_path, account_path, False),
-                (TR.ethereum__smart_info, delegate_addr, False),
-                # TODO: switch to non-Cardano specific string
-                (TR.cardano__nonce, str(nonce), False),
-            ],
+            items=with_colon(
+                (
+                    (TR.words__account, account, False),
+                    (TR.address_details__derivation_path, account_path, False),
+                    (TR.ethereum__smart_info, delegate_addr, False),
+                    # TODO: switch to non-Cardano specific string
+                    (TR.cardano__nonce, str(nonce), False),
+                )
+            ),
         )
         with main_ctx as main, menu_ctx as menu:
             await with_info(
@@ -1564,22 +1568,26 @@ if not utils.BITCOIN_ONLY:
 
         main_ctx = trezorui_api.confirm_properties(
             title=TR.ethereum__revoke_title,
-            items=[
-                (TR.ethereum__approve_revoke_from, account, False),
-                network_item,
-            ],
+            items=with_colon(
+                (
+                    (TR.ethereum__approve_revoke_from, account, False),
+                    network_item,
+                )
+            ),
             verb=TR.buttons__confirm,
             hold=True,
             external_menu=True,
         )
         menu_ctx = trezorui_api.show_info_with_cancel(
             title="",
-            items=[
-                (TR.words__account, account, False),
-                (TR.address_details__derivation_path, account_path, False),
-                # TODO: switch to non-Cardano specific string
-                (TR.cardano__nonce, str(nonce), False),
-            ],
+            items=with_colon(
+                (
+                    (TR.words__account, account, False),
+                    (TR.address_details__derivation_path, account_path, False),
+                    # TODO: switch to non-Cardano specific string
+                    (TR.cardano__nonce, str(nonce), False),
+                )
+            ),
         )
         with main_ctx as main, menu_ctx as menu:
             await with_info(
