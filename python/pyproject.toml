@@ -78,7 +78,7 @@ exclude-newer = "30 days"
 # Exempt stellar-sdk from the 30-day rule so the freshly released 15.0.0
 # final (needed for Protocol 27 support) can be resolved.
 # TODO: remove after 2026-08-04
-exclude-newer-package = { stellar-sdk = "2026-07-051T00:00:00Z" }
+exclude-newer-package = { stellar-sdk = "2026-07-05T00:00:00Z" }
 
 [tool.flit.module]
 name = "trezorlib"
