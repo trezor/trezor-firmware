@@ -1,8 +1,9 @@
 use pareen;
+use sys::time::{Duration, ShortDuration};
 
 use super::theme::{self, TITLE_HEIGHT};
 use super::{Button, ButtonContent, ButtonMsg};
-use crate::time::{Duration, ShortDuration, Stopwatch};
+use crate::time::Stopwatch;
 use crate::translations::TR;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{self, HapticEffect};

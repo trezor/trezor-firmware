@@ -1,12 +1,13 @@
 #[cfg(feature = "haptic")]
 use pareen;
+use sys::time::Duration;
 
 use super::super::cshape::ScreenBorder;
 use super::super::firmware::Header;
 use super::super::theme;
 use super::constant::SCREEN;
 use crate::strutil::TString;
-use crate::time::{Duration, Stopwatch};
+use crate::time::Stopwatch;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic;
 use crate::ui::component::{Component, Event, EventCtx};

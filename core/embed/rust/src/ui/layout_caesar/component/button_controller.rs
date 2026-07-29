@@ -1,7 +1,8 @@
+use sys::time::{Duration, Instant};
+
 use super::{
     theme, Button, ButtonDetails, ButtonLayout, ButtonPos, HoldToConfirm, HoldToConfirmMsg,
 };
-use crate::time::{Duration, Instant};
 use crate::ui::component::base::Event;
 use crate::ui::component::{Component, EventCtx, Pad, Timer};
 use crate::ui::event::{ButtonEvent, PhysicalButton};

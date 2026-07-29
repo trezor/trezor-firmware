@@ -2,9 +2,10 @@
 
 use core::mem::{self, MaybeUninit};
 
-pub use ffi::{sysevents_t, syshandle_t};
+use sys::time::{Duration, Instant};
 
 use super::ffi;
+pub use super::ffi::{sysevents_t, syshandle_t};
 #[cfg(feature = "ble")]
 use crate::trezorhal::ble::ble_parse_event;
 #[cfg(feature = "button")]
@@ -13,7 +14,6 @@ use crate::trezorhal::button::button_parse_event;
 use crate::trezorhal::ffi::button_get_event;
 #[cfg(feature = "power_manager")]
 use crate::trezorhal::power_manager::pm_parse_event;
-use crate::trezorhal::time::ticks_ms;
 #[cfg(feature = "touch")]
 use crate::trezorhal::touch::touch_get_event;
 use crate::ui::component::Event;
@@ -163,12 +163,14 @@ pub fn sysevents_poll(ifaces: &[Syshandle]) -> Option<Event> {
     let awaited = Sysevents::reading_from(ifaces);
     let mut signalled = Sysevents::zeroed();
 
+    let deadline = Instant::now().checked_add(Duration::from_millis(100)).unwrap();
+
     // SAFETY: safe.
     unsafe {
         ffi::sysevents_poll(
             &awaited as _,
             &mut signalled as _,
-            ticks_ms().wrapping_add(100),
+            deadline.to_millis(),
         )
     };
 

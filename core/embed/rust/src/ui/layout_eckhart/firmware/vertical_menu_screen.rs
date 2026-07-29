@@ -1,8 +1,9 @@
+use sys::time::Instant;
+
 use super::super::component::HapticMode;
 use super::constant::SCREEN;
 use super::{theme, Header, HeaderMsg, MenuItems, ShortMenuVec, VerticalMenu, VerticalMenuMsg};
 use crate::strutil::TString;
-use crate::time::Instant;
 use crate::ui::component::swipe_detect::{SwipeConfig, SwipeSettings};
 use crate::ui::component::text::layout::LayoutFit;
 use crate::ui::component::text::TextStyle;

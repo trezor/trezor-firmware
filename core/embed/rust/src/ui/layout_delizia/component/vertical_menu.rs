@@ -1,9 +1,10 @@
 use heapless::Vec;
+use sys::time::Duration;
 
 use super::super::component::button::{Button, ButtonContent, ButtonMsg, IconText};
 use super::theme;
 use crate::strutil::TString;
-use crate::time::{Duration, Stopwatch};
+use crate::time::Stopwatch;
 use crate::ui::component::base::{AttachType, Component};
 use crate::ui::component::paginated::SinglePage;
 use crate::ui::component::{Event, EventCtx, Paginate};

@@ -1,4 +1,5 @@
 use heapless::String;
+use sys::time::Duration;
 
 use super::super::super::component::ButtonContent;
 use super::super::super::constant::SCREEN;
@@ -9,7 +10,6 @@ use super::common::{
 };
 use super::keypad::{ButtonState, Keypad, KeypadMsg, KeypadState};
 use crate::strutil::{ShortString, TString};
-use crate::time::Duration;
 use crate::ui::component::text::layout::LayoutFit;
 use crate::ui::component::text::{LineBreaking, TextStyle};
 use crate::ui::component::{Component, Event, EventCtx, Label, TextLayout, Timer};

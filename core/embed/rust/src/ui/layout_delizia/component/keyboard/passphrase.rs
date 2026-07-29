@@ -1,6 +1,7 @@
 use core::cell::Cell;
 
 use num_traits::ToPrimitive;
+use sys::time::Duration;
 
 use super::super::super::component::button::{Button, ButtonContent, ButtonMsg};
 use super::super::super::component::keyboard::common::{render_pending_marker, MultiTapKeyboard};
@@ -8,7 +9,6 @@ use super::super::super::component::theme;
 use super::super::super::constant::SCREEN;
 use super::super::super::cshape;
 use crate::strutil::{ShortString, TString};
-use crate::time::Duration;
 use crate::ui::component::base::ComponentExt;
 use crate::ui::component::swipe_detect::SwipeConfig;
 use crate::ui::component::text::common::TextBox;

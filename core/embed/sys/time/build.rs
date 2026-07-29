@@ -2,6 +2,7 @@ use xbuild::{CLibrary, Result, bail_unsupported};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("time/inc");
+    lib.add_rust_bindings(add_rust_bindings)?;
 
     if cfg!(feature = "emulator") {
         lib.add_sources(["time/unix/systick.c", "time/unix/systimer.c"]);
@@ -24,4 +25,14 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
+    let builder = builder
+        .header("time/inc/sys/systick.h")
+        .allowlist_function("systick_ms")
+        .allowlist_function("systick_us")
+        .allowlist_function("systick_delay_ms")
+        .allowlist_function("systick_delay_us");
+    Ok(builder)
 }

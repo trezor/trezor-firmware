@@ -1,7 +1,8 @@
+use sys::time::ShortDuration;
+
 use super::super::component::{ButtonStyle, ButtonStyleSheet};
 use super::super::fonts;
 use super::*;
-use crate::time::ShortDuration;
 use crate::ui::component::text::layout::{Chunks, LineBreaking, PageBreaking};
 use crate::ui::component::text::TextStyle;
 use crate::ui::notification::NotificationLevel;

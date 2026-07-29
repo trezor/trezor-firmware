@@ -1,3 +1,5 @@
+use sys::time::Duration;
+
 use super::super::super::fonts;
 use super::super::title::Title;
 use super::super::{
@@ -5,7 +7,6 @@ use super::super::{
     ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
 };
 use crate::strutil::{ShortString, TString};
-use crate::time::Duration;
 use crate::translations::TR;
 use crate::trezorhal::random;
 use crate::ui::component::text::common::TextBox;

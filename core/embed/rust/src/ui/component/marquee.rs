@@ -1,5 +1,6 @@
+use sys::time::{Duration, Instant};
+
 use crate::strutil::TString;
-use crate::time::{Duration, Instant};
 use crate::ui::animation::Animation;
 use crate::ui::component::{Component, Event, EventCtx, Never, Timer};
 use crate::ui::display::{Color, Font};
