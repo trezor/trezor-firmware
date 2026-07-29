@@ -35,7 +35,7 @@ class MoneroTransactionProgress:
         elif step == state.STEP_INP:
             info = f"{TR.monero__processing_inputs}\n{sub_step + 1}/{state.input_count}"
         elif step == state.STEP_VINI:
-            info = f"{TR.monero__hashing_inputs}n{sub_step + 1}/{state.input_count}"
+            info = f"{TR.monero__hashing_inputs}\n{sub_step + 1}/{state.input_count}"
         elif step == state.STEP_ALL_IN:
             info = TR.monero__processing
         elif step == state.STEP_OUT:
