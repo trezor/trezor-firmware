@@ -16,7 +16,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import os
+import argparse
+import sys
+from io import StringIO
+from pathlib import Path
 from typing import List
 
 import click
@@ -24,25 +27,30 @@ import click
 from trezorlib.cli import trezorctl
 
 DELIMITER_STR = "### ALL CONTENT BELOW IS GENERATED"
+OPTIONS_RST = Path(__file__).resolve().parent.parent / "docs" / "OPTIONS.rst"
 
-options_rst = open(os.path.dirname(__file__) + "/../docs/OPTIONS.rst", "r+")
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--check", action="store_true", help="only verify that OPTIONS.rst is up to date"
+)
+args = parser.parse_args()
+
+current = OPTIONS_RST.read_text()
+output = StringIO()
 
 lead_in: List[str] = []
 
-for line in options_rst:
+for line in current.splitlines(keepends=True):
     lead_in.append(line)
     if DELIMITER_STR in line:
         break
 
-options_rst.seek(0)
-options_rst.truncate(0)
-
 for line in lead_in:
-    options_rst.write(line)
+    output.write(line)
 
 
 def _print(s: str = "") -> None:
-    options_rst.write(s + "\n")
+    output.write(s + "\n")
 
 
 def rst_code_block(help_str: str) -> None:
@@ -68,3 +76,12 @@ for subcommand in sorted(trezorctl.cli.commands):
     rst_code_block(f"trezorctl {subcommand} --help")
     ctx = click.Context(cmd, info_name=f"trezorctl {subcommand}", terminal_width=99)
     rst_code_block(cmd.get_help(ctx))
+
+generated = output.getvalue()
+
+if args.check:
+    if current != generated:
+        sys.exit(f"{OPTIONS_RST.name} is out of date, run `make python_doc` to fix")
+elif current != generated:
+    OPTIONS_RST.write_text(generated)
+    print(f"regenerated {OPTIONS_RST.name}")
