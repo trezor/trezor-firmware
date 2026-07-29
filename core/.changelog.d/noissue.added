@@ -1,1 +1,3 @@
-[T3W1] Added Nervos CKB support: address generation, transaction signing, and message sign/verify.
+[T3W1] Added Nervos CKB support: address generation, transaction signing (including Nervos DAO), and message sign/verify.
+[T3W1] Added SPHINCS+ (FIPS 205 SLH-DSA) post-quantum signing for the Nervos CKB quantum-resistant lock script, covering all 12 parameter sets.
+[T3W1] Added extended BIP-39 backups (36/54/72 words) required by SPHINCS+ key derivation. These are three concatenated BIP-39 phrases, not standard BIP-39, and cannot be restored by other wallets.

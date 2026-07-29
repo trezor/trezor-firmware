@@ -1,11 +1,19 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
 from trezor.enums import BackupType
 
 if TYPE_CHECKING:
     from trezor.crypto.slip39 import Share
 
-_BIP39_WORD_COUNTS = (12, 18, 24, 36, 54, 72)
+# 36/54/72 words are three concatenated BIP-39 phrases, not standard BIP-39: no
+# other wallet can restore them, so they are offered only where SPHINCS+ can
+# consume them. Must stay in sync with the apps/ckb gate in SConscript.firmware.
+EXTENDED_BIP39_ENABLED = utils.INTERNAL_MODEL == "T3W1" and not utils.BITCOIN_ONLY
+
+_BIP39_WORD_COUNTS = (
+    (12, 18, 24, 36, 54, 72) if EXTENDED_BIP39_ENABLED else (12, 18, 24)
+)
 _SLIP39_WORD_COUNTS = (20, 33)
 
 
