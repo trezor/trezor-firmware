@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.2] (29th July 2026)
+[0.20.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.20.1...python/v0.20.2
+
+### Added
+- Support for [Solana off-chain message signing v0](https://docs.anza.xyz/proposals/off-chain-message-signing).  [#6759]
+- Add ML-DSA-44 device authenticity check.  [#6826]
+- Add testing module to trezorlib.  [#6994]
+- Tron: Claim voting rewards (WithdrawBalanceContract).  [#7101]
+- Stellar: Support signing Soroban authorization entries (`stellar.sign_soroban_authorization`, `stellar.from_authorization_entry` and `trezorctl stellar sign-soroban-authorization`).  [#7365]
+
+### Changed
+- `TrezorClient.ensure_unlocked()` will not allocate a session and will not cause seed derivation. `Session.ensure_unlocked()` now just forwards to `TrezorClient`.  [#7168]
+- Generated Merkle trees are now balanced.  [#7359]
+
+### Fixed
+- Solana: allow chunkified addresses.  [#6545]
+- Tron: allow chunkified addresses.  [#6730]
+- Skip stale protocol v1 responses on probing.  [#6859]
+- Fix non-functional `trezorctl get-session` with THP.  [#7168]
+- Fix broken HID transport.  [#7428]
+
+### Incompatible changes
+- Solana: add support for off-chain message signing (OCMS) v1 and remove v0.  [#7053]
+- Stellar: Enable signing Soroban smart contract transactions; `sign_tx` / `from_envelope` now accepts / returns a transaction extension.  [#7259]
+
 ## [0.20.1] (11th May 2026)
 [0.20.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.20.0...python/v0.20.1
 
@@ -992,9 +1017,22 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 [#6349]: https://github.com/trezor/trezor-firmware/pull/6349
 [#6449]: https://github.com/trezor/trezor-firmware/pull/6449
 [#6525]: https://github.com/trezor/trezor-firmware/pull/6525
+[#6545]: https://github.com/trezor/trezor-firmware/pull/6545
 [#6555]: https://github.com/trezor/trezor-firmware/pull/6555
 [#6564]: https://github.com/trezor/trezor-firmware/pull/6564
 [#6575]: https://github.com/trezor/trezor-firmware/pull/6575
 [#6580]: https://github.com/trezor/trezor-firmware/pull/6580
 [#6588]: https://github.com/trezor/trezor-firmware/pull/6588
 [#6633]: https://github.com/trezor/trezor-firmware/pull/6633
+[#6730]: https://github.com/trezor/trezor-firmware/pull/6730
+[#6759]: https://github.com/trezor/trezor-firmware/pull/6759
+[#6826]: https://github.com/trezor/trezor-firmware/pull/6826
+[#6859]: https://github.com/trezor/trezor-firmware/pull/6859
+[#6994]: https://github.com/trezor/trezor-firmware/pull/6994
+[#7053]: https://github.com/trezor/trezor-firmware/pull/7053
+[#7101]: https://github.com/trezor/trezor-firmware/pull/7101
+[#7168]: https://github.com/trezor/trezor-firmware/pull/7168
+[#7259]: https://github.com/trezor/trezor-firmware/pull/7259
+[#7359]: https://github.com/trezor/trezor-firmware/pull/7359
+[#7365]: https://github.com/trezor/trezor-firmware/pull/7365
+[#7428]: https://github.com/trezor/trezor-firmware/pull/7428
