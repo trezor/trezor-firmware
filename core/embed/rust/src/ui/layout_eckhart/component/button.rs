@@ -1,7 +1,8 @@
+use sys::time::{Duration, Instant, ShortDuration};
+
 use super::super::component::ConnectionIndicator;
 use super::super::theme::{self, Gradient};
 use crate::strutil::TString;
-use crate::time::{Duration, Instant, ShortDuration};
 #[cfg(feature = "translations")]
 use crate::translations::TR;
 #[cfg(feature = "haptic")]

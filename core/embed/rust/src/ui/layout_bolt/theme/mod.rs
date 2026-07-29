@@ -1,9 +1,10 @@
 pub mod backlight;
 pub mod bootloader;
 
+use sys::time::ShortDuration;
+
 use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet, ResultStyle};
 use super::fonts;
-use crate::time::ShortDuration;
 use crate::ui::component::text::layout::Chunks;
 use crate::ui::component::text::paragraphs::PARAGRAPH_BOTTOM_SPACE;
 use crate::ui::component::text::{LineBreaking, PageBreaking, TextStyle};

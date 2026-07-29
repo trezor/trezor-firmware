@@ -62,7 +62,7 @@ telemetry = []
 n4w1 = []
 translations = ["crypto"]
 secmon_layout = []
-dbg_console = ["dep:sys"]
+dbg_console = ["sys/dbg_console"]
 thp = ["crypto/thp", "dep:trezor-thp", "dep:zeroize"]
 test = [
     "backlight",
@@ -114,6 +114,7 @@ qrcodegen.workspace = true
 rtl.workspace = true
 spin.workspace = true
 static-alloc.workspace = true
+sys.workspace = true
 trezor-tjpgdec.workspace = true
 ufmt.workspace = true
 unsize.workspace = true
@@ -121,7 +122,6 @@ without-alloc.workspace = true
 
 crypto = { workspace = true, optional = true }
 io = { workspace = true, optional = true }
-sys = { workspace = true, optional = true }
 trezor-thp = { workspace = true, optional = true }
 upymod = { workspace = true, optional = true }
 zeroize = { workspace = true, optional = true }

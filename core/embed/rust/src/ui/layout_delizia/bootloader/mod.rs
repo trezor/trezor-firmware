@@ -2,6 +2,7 @@ use connect::Connect;
 use heapless::String;
 use intro::Intro;
 use menu::Menu;
+use sys::time;
 use ufmt::uwrite;
 
 use super::bootloader::welcome::Welcome;
@@ -17,8 +18,6 @@ use super::theme::bootloader::{
 use super::theme::{backlight, GREEN_LIGHT, GREY};
 use super::{fonts, UIDelizia};
 use crate::bootloader::run;
-use crate::time::Duration;
-use crate::trezorhal::time;
 use crate::ui::component::Label;
 use crate::ui::display::toif::Toif;
 use crate::ui::display::{self, Color, Icon, LOADER_MAX};
@@ -112,7 +111,7 @@ impl UIDelizia {
 impl BootloaderUI for UIDelizia {
     fn screen_welcome() -> (u32, u32) {
         // let the previous screen on for some time
-        time::sleep(Duration::from_millis(1500));
+        time::sleep(time::Duration::from_millis(1500));
         let mut frame = Welcome::new();
         run(&mut frame, true, true)
     }

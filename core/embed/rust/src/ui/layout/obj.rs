@@ -6,6 +6,7 @@ use core::ops::{Deref, DerefMut};
 use num_traits::FromPrimitive;
 #[cfg(feature = "touch")]
 use num_traits::ToPrimitive;
+use sys::time::Duration;
 
 use super::base::{Layout, LayoutState};
 use crate::error::Error;
@@ -21,7 +22,6 @@ use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
 use crate::micropython::typ::Type;
 use crate::micropython::util;
-use crate::time::Duration;
 use crate::ui::button_request::ButtonRequest;
 use crate::ui::component::base::{AttachType, TimerToken};
 use crate::ui::component::{Component, Event, EventCtx, Never};

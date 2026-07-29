@@ -1,6 +1,8 @@
+use sys::time::Duration;
+
 use super::theme;
 use crate::strutil::TString;
-use crate::time::{Duration, Stopwatch};
+use crate::time::Stopwatch;
 use crate::ui::component::paginated::SinglePage;
 use crate::ui::component::{Component, Event, EventCtx, Label, Timeout};
 use crate::ui::constant::screen;

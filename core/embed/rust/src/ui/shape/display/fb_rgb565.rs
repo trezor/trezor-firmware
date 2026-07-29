@@ -1,13 +1,15 @@
+use sys::time;
+
 use super::bumps;
 use crate::trezorhal::display;
 use crate::ui::display::Color;
 use crate::ui::geometry::Offset;
 use crate::ui::shape::render::ScopedRenderer;
 use crate::ui::shape::{BasicCanvas, DirectRenderer, DrawingCache, Rgb565Canvas, Viewport};
+#[cfg(feature = "ui_performance_overlay")]
+use crate::ui::PerformanceOverlay;
 #[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
 use crate::ui::{CommonUI, ModelUI};
-#[cfg(feature = "ui_performance_overlay")]
-use crate::{trezorhal::time, ui::PerformanceOverlay};
 
 pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Rgb565Canvas<'alloc>>;
 

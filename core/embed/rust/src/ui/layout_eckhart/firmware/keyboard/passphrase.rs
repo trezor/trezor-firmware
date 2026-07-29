@@ -1,3 +1,5 @@
+use sys::time::Duration;
+
 use super::super::constant::SCREEN;
 use super::super::keyboard::common::{
     render_pending_marker, MultiTapKeyboard, FADING_ICON_COLORS, FADING_ICON_COUNT,
@@ -6,7 +8,6 @@ use super::super::keyboard::common::{
 use super::super::keyboard::keypad::{ButtonState, KeypadState};
 use super::super::{theme, StringInput, StringInputMsg};
 use crate::strutil::TString;
-use crate::time::Duration;
 use crate::ui::component::text::common::TextBox;
 use crate::ui::component::text::layout::{LayoutFit, LineBreaking};
 use crate::ui::component::text::TextStyle;
