@@ -13,6 +13,9 @@ dist: doc clean
 doc:
 	$(PYTHON) helper-scripts/make-options-rst.py
 
+doc_check:
+	$(PYTHON) helper-scripts/make-options-rst.py --check
+
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
 clean-build: ## remove build artifacts
@@ -54,7 +57,7 @@ style_quick_check:
 	black --check $(BLACK_FLAGS) $(STYLE_TARGETS)
 	isort --check-only $(STYLE_TARGETS)
 
-.PHONY: all build install clean style style_check git-clean clean-build clean-pyc clean-test
+.PHONY: all build install clean doc doc_check style style_check git-clean clean-build clean-pyc clean-test
 
 test:
 	pytest tests
