@@ -193,9 +193,11 @@ def failure(exc: BaseException) -> Failure:
     elif isinstance(exc, InvalidSessionError):
         return Failure(code=FailureType.InvalidSession, message="Invalid session")
     else:
-        # NOTE: when receiving generic `FirmwareError` on non-debug build,
-        # change the `if __debug__` to `if True` to get the full error message.
-        if __debug__:
+        if isinstance(exc, MemoryError):
+            message = "Out of memory"
+        elif __debug__:
+            # NOTE: when receiving generic `FirmwareError` on non-debug build,
+            # change the `if __debug__` to `if True` to get the full error message.
             message = str(exc)
         else:
             message = "Firmware error"
