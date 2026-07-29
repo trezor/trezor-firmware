@@ -1,3 +1,15 @@
+"""WARD head — the device's VOLATILE authenticated head.
+
+Holds the current reconciled authenticated head (`root` + the attested
+`counter`/`mac`) plus the in-flight sync round (nonce + round state), backed by the
+sessionless cache. VOLATILE by design: cleared on lock/reboot, and never trusted
+after reboot without a fresh sync + WM re-attestation. Named for its content (the
+device's WARD head, the join of `WM_HEAD` and `DB_HEAD`) — NOT for durability.
+
+The durable anti-rollback floor (`counter_loc`) and the pending-intent queue live in
+`ward_store`, not here; this module only carries the transient view.
+"""
+
 from micropython import const
 
 from storage import cache

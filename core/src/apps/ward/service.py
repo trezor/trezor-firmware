@@ -504,10 +504,10 @@ async def lookup_label(
     not verify (or the tree is empty). Membership-only (the trust-anchor primitive
     behind Core.lookup_label).
     """
-    import storage.ward_session as ward_session
+    import storage.ward_head as ward_head
 
     wallet_id = await _get_wallet_id()
-    present, stored_root = ward_session.root_get(wallet_id)
+    present, stored_root = ward_head.root_get(wallet_id)
     if not present or stored_root is None:
         return None
     if verify_proof(address, counter, value, proof, stored_root):
@@ -623,7 +623,7 @@ async def lookup(
     """Verify a membership / non-membership proof against the device's
     authenticated root. Returns (valid, counter, membership, wallet_id, ward_id).
     """
-    import storage.ward_session as ward_session
+    import storage.ward_head as ward_head
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
@@ -631,7 +631,7 @@ async def lookup(
 
     wallet_id = await _get_wallet_id()
     ward_id = await _get_ward_id()
-    present, stored_root = ward_session.root_get(wallet_id)
+    present, stored_root = ward_head.root_get(wallet_id)
     if not present:
         raise DataError("no authenticated root in session")
 
@@ -713,7 +713,7 @@ async def perform(
     intent; if omitted, falls back to the single queued one. Returns
     (counter_T, root_T, mac_T, wallet_id, ward_id).
     """
-    import storage.ward_session as ward_session
+    import storage.ward_head as ward_head
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
@@ -729,7 +729,7 @@ async def perform(
     # authenticated floor -- not from the (unset) queue-time value.
     counter_t = ward_store.get_counter(wallet_id) + 1
 
-    present, stored_root = ward_session.root_get(wallet_id)
+    present, stored_root = ward_head.root_get(wallet_id)
     if not present:
         # Fresh-wallet INIT: treat "no root in session" as an authenticated empty
         # tree only when the durable counter floor is still zero.
@@ -867,9 +867,9 @@ async def finalize(
         raise DataError("counter_T is not ahead of counter_loc")
 
     # Install the volatile authenticated root and persist only counter_loc.
-    import storage.ward_session as ward_session
+    import storage.ward_head as ward_head
 
-    ward_session.root_set(wallet_id, root)
+    ward_head.root_set(wallet_id, root)
     ward_store.commit_counter(wallet_id, counter)
     ward_store.queue_drop(wallet_id, pid)
 
@@ -892,13 +892,13 @@ async def sync() -> tuple[bytes, int, bytes, bytes]:
     Also derives and returns the WM-facing ward_id so the host can address the WM
     for this round without inventing it. Returns (nonce, version, wallet_id,
     ward_id)."""
-    import storage.ward_session as ward_session
+    import storage.ward_head as ward_head
     from trezor.crypto import random
 
     wallet_id = await _get_wallet_id()
     ward_id = await _get_ward_id()
-    nonce = random.bytes(ward_session.NONCE_LENGTH)
-    ward_session.sync_begin(wallet_id, nonce)
+    nonce = random.bytes(ward_head.NONCE_LENGTH)
+    ward_head.sync_begin(wallet_id, nonce)
 
     if __debug__:
         from trezor import log
@@ -913,14 +913,14 @@ async def ingest(
 ) -> tuple[int, bytes]:
     """Verify + record the WM freshness attestation for the open sync round.
     Returns (counter, wallet_id)."""
-    import storage.ward_session as ward_session
+    import storage.ward_head as ward_head
     import storage.ward_store as ward_store
-    import storage.ward_session as ward_session
+    import storage.ward_head as ward_head
     from trezor.wire import DataError
 
     wallet_id = await _get_wallet_id()
 
-    ctx = ward_session.sync_get(wallet_id)
+    ctx = ward_head.sync_get(wallet_id)
     if ctx is None:
         raise DataError("no sync round in progress")
     nonce, _state, _counter, _mac = ctx
@@ -934,7 +934,7 @@ async def ingest(
     if counter < ward_store.get_counter(wallet_id):
         raise DataError("attested counter is older than counter_loc")
 
-    ward_session.sync_set_attested(wallet_id, counter, mac_msg)
+    ward_head.sync_set_attested(wallet_id, counter, mac_msg)
 
     if __debug__:
         from trezor import log
@@ -957,13 +957,13 @@ async def reconcile(
     Adopt-only (pending edits go through the write path). Returns
     (counter, new_root, wallet_id, root_mac)."""
     import storage.ward_store as ward_store
-    import storage.ward_session as ward_session
+    import storage.ward_head as ward_head
     from trezor.wire import DataError
 
     wallet_id = await _get_wallet_id()
 
-    ctx = ward_session.sync_get(wallet_id)
-    if ctx is None or ctx[1] != ward_session.SYNC_ATTESTED:
+    ctx = ward_head.sync_get(wallet_id)
+    if ctx is None or ctx[1] != ward_head.SYNC_ATTESTED:
         raise DataError("no attested sync round to merge")
     _nonce, _state, counter_ext, mac_ext = ctx
 
@@ -981,9 +981,9 @@ async def reconcile(
         if computed != mac_ext:
             raise DataError("root does not match the attested mac")
 
-    ward_session.root_set(wallet_id, root)
+    ward_head.root_set(wallet_id, root)
     ward_store.commit_counter(wallet_id, counter_ext)
-    ward_session.sync_clear()
+    ward_head.sync_clear()
 
     if __debug__:
         from trezor import log
@@ -1023,7 +1023,7 @@ async def debug_set_root(
     """DEBUG-ONLY unauthenticated root injection (seed a root in one call). Installs
     the root, increments the counter by 1. Rejected on production firmware. Returns
     (counter, new_root, wallet_id, root_mac)."""
-    import storage.ward_session as ward_session
+    import storage.ward_head as ward_head
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
@@ -1035,7 +1035,7 @@ async def debug_set_root(
 
     wallet_id = await _get_wallet_id()
     counter = ward_store.bump_counter(wallet_id)
-    ward_session.root_set(wallet_id, root)
+    ward_head.root_set(wallet_id, root)
 
     mac_key = await _derive_mac_key(b"root_mac")
     new_root = root
