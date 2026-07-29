@@ -15,13 +15,14 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import re
-from typing import TYPE_CHECKING, Any, AnyStr, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
 
 from . import exceptions, messages
 from .tools import prepare_message_bytes, workflow
 
 if TYPE_CHECKING:
     from .client import Session
+    from .definitions import Source
     from .tools import Address
 
 
@@ -179,15 +180,46 @@ def get_public_node(
     )
 
 
+def _answer_definition_request(
+    source: "Source",
+    req: messages.EthereumDefinitionRequest,
+) -> messages.EthereumDefinitionAck:
+    """Answer a firmware `EthereumDefinitionRequest` from `source`."""
+    if req.func_sig:
+        encoded_display_format = source.get_eth_display_format(
+            req.chain_id, req.token_address, req.func_sig
+        )
+        if encoded_display_format is None:
+            return messages.EthereumDefinitionAck(definitions=None)
+        return messages.EthereumDefinitionAck(
+            definitions=messages.EthereumDefinitions(
+                encoded_display_format=encoded_display_format,
+            )
+        )
+
+    encoded_network = source.get_eth_network(req.chain_id)
+    encoded_token = (
+        source.get_eth_token(req.chain_id, req.token_address)
+        if req.token_address is not None
+        else None
+    )
+    if encoded_network is None and encoded_token is None:
+        return messages.EthereumDefinitionAck(definitions=None)
+    return messages.EthereumDefinitionAck(
+        definitions=messages.EthereumDefinitions(
+            encoded_network=encoded_network,
+            encoded_token=encoded_token,
+        )
+    )
+
+
 def _ethereum_sign_loop(
     session: "Session",
     msg_type: type,
     response: Any,
     data: bytes,
     chain_id: int,
-    definition_provider: Optional[
-        Callable[[messages.EthereumDefinitionRequest], messages.EthereumDefinitionAck]
-    ],
+    definition_source: Optional["Source"],
 ) -> Tuple[int, bytes, bytes]:
     """Shared request/response loop for sign_tx and sign_tx_eip1559."""
     while True:
@@ -212,9 +244,10 @@ def _ethereum_sign_loop(
                 response = session.call(messages.EthereumTxAck(data_chunk=chunk))
         elif isinstance(response, messages.EthereumDefinitionRequest):
             # We are being asked for a function definition.
-            if definition_provider is not None:
+            if definition_source is not None:
                 try:
-                    ack = definition_provider(response)
+                    # Response is a request for definitions.
+                    ack = _answer_definition_request(definition_source, response)
                 except Exception:
                     session.cancel()
                     raise
@@ -243,9 +276,7 @@ def sign_tx(
     chunkify: bool = False,
     payment_req: Optional[messages.PaymentRequest] = None,
     supports_definition_request: Optional[bool] = None,
-    definition_provider: Optional[
-        Callable[[messages.EthereumDefinitionRequest], messages.EthereumDefinitionAck]
-    ] = None,
+    definition_source: Optional["Source"] = None,
 ) -> Tuple[int, bytes, bytes]:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
@@ -275,7 +306,7 @@ def sign_tx(
     response = session.call(msg)
 
     return _ethereum_sign_loop(
-        session, messages.EthereumSignTx, response, data, chain_id, definition_provider
+        session, messages.EthereumSignTx, response, data, chain_id, definition_source
     )
 
 
@@ -297,9 +328,7 @@ def sign_tx_eip1559(
     chunkify: bool = False,
     payment_req: Optional[messages.PaymentRequest] = None,
     supports_definition_request: Optional[bool] = None,
-    definition_provider: Optional[
-        Callable[[messages.EthereumDefinitionRequest], messages.EthereumDefinitionAck]
-    ] = None,
+    definition_source: Optional["Source"] = None,
 ) -> Tuple[int, bytes, bytes]:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -329,7 +358,7 @@ def sign_tx_eip1559(
         response,
         data,
         chain_id,
-        definition_provider,
+        definition_source,
     )
 
 

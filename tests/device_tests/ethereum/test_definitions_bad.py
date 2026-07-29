@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from hashlib import sha256
+from unittest.mock import Mock
 
 import pytest
 
 from trezorlib import ethereum, messages, models
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.definitions import Source
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import DefinitionType
 from trezorlib.tools import parse_path
@@ -61,28 +63,26 @@ def _fails_display_format(session: Session, display_format: bytes, match: str) -
 def _fails_display_format_via_request(
     session: Session, display_format: bytes, match: str
 ) -> None:
-    calls: list[messages.EthereumDefinitionRequest] = []
-
-    def provider(
-        req: messages.EthereumDefinitionRequest,
-    ) -> messages.EthereumDefinitionAck:
-        calls.append(req)
-        return messages.EthereumDefinitionAck(
-            definitions=messages.EthereumDefinitions(
-                encoded_display_format=display_format,
-            )
-        )
+    # A spying `Source` serving the invalid display format under test. The explicit
+    # `return_value`s matter: an unconfigured `Mock` returns a `Mock`, which would be
+    # put in `EthereumDefinitions` and only fail later, while encoding the reply.
+    source = Mock(
+        spec_set=Source,
+        get_eth_network=Mock(return_value=None),
+        get_eth_token=Mock(return_value=None),
+        get_eth_display_format=Mock(return_value=display_format),
+    )
 
     with pytest.raises(TrezorFailure, match=match):
         ethereum.sign_tx(
             session,
             **get_clear_signing_sign_tx_params(supports_definition_request=True),
-            definition_provider=provider,
+            definition_source=source,
         )
 
     # Firmware requests the display format once then fails validation. No token requests follow.
-    assert len(calls) == 1
-    assert calls[0].func_sig is not None
+    source.get_eth_display_format.assert_called_once()
+    source.get_eth_token.assert_not_called()
 
 
 def _make_token_payload(
