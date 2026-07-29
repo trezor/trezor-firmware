@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import functools
 import json
 import re
 import sys
@@ -228,14 +227,6 @@ def _network_def_from_address_n(address_n: tools.Address) -> Optional[bytes]:
     # unharden the slip44 part if needed
     slip44 = tools.unharden(address_n[1])
     return DEFINITIONS_SOURCE.get_eth_network_by_slip44(slip44)
-
-
-# Answers firmware `EthereumDefinitionRequest`s from `DEFINITIONS_SOURCE`.
-# `DEFINITIONS_SOURCE` is mutated in place by the group callback, so binding the
-# object here still sees the delegate/overrides configured on the command line.
-_definition_provider = functools.partial(
-    definitions.definition_provider, DEFINITIONS_SOURCE
-)
 
 
 #####################
@@ -505,7 +496,7 @@ def sign_tx(
             definitions=defs,
             chunkify=chunkify,
             supports_definition_request=True,
-            definition_provider=_definition_provider,
+            definition_source=DEFINITIONS_SOURCE,
         )
     else:
         if gas_price is None:
@@ -525,7 +516,7 @@ def sign_tx(
             definitions=defs,
             chunkify=chunkify,
             supports_definition_request=True,
-            definition_provider=_definition_provider,
+            definition_source=DEFINITIONS_SOURCE,
         )
 
     to = ethereum.decode_hex(to_address)

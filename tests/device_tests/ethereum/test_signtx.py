@@ -16,7 +16,6 @@
 
 from __future__ import annotations
 
-import functools
 import typing as t
 from itertools import product
 from pathlib import Path
@@ -26,7 +25,7 @@ import pytest
 from trezorlib import ethereum, exceptions, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import message_filters
-from trezorlib.definitions import FilesystemSource, definition_provider
+from trezorlib.definitions import FilesystemSource
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path, unharden
@@ -152,9 +151,7 @@ def test_signtx_external_definitions(
                 encoded_network=_DEFINITIONS_SOURCE.get_eth_network(chain_id)
             ),
             supports_definition_request=True,
-            definition_provider=functools.partial(
-                definition_provider, _DEFINITIONS_SOURCE
-            ),
+            definition_source=_DEFINITIONS_SOURCE,
             chunkify=True,
         )
 

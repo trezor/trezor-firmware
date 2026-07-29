@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from binascii import hexlify
 from typing import Callable
+from unittest.mock import Mock
 
 import pytest
 
 from trezorlib import ethereum, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.definitions import Source
 from trezorlib.tools import parse_path
 
 from ... import definitions
@@ -27,48 +29,60 @@ from .test_definitions import (
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum, pytest.mark.models("core")]
 
 
-def _make_display_format_definition_provider(
-    display_format_requests: list,
-    token_requests: list,
+def _addr_hex(address: bytes) -> str:
+    return hexlify(address).decode("ascii").lower()
+
+
+def _encode_network(chain_id: int) -> bytes:
+    return definitions.encode_eth_network(chain_id=chain_id)
+
+
+def _mock_source(**methods: Mock) -> Mock:
+    """A spying `Source` that serves no definitions unless told otherwise.
+
+    A firmware `EthereumDefinitionRequest` reaches a `Source` as a method call --
+    a clear-signing display format as `get_eth_display_format`, a token definition
+    as `get_eth_token` (whose network is fetched alongside it) -- so what the
+    firmware asked for is asserted via `assert_called_*` / `call_args_list`.
+
+    Every method needs an explicit `return_value`: an unconfigured `Mock` returns
+    a `Mock`, which would be put in `EthereumDefinitions` and only fail later,
+    while encoding the reply.
+    """
+    source = Mock(
+        spec_set=Source,
+        get_eth_network=Mock(return_value=None),
+        get_eth_token=Mock(return_value=None),
+        get_eth_display_format=Mock(return_value=None),
+    )
+    source.configure_mock(**methods)
+    return source
+
+
+def _display_format_source(
     display_format_info: messages.EthereumDisplayFormatInfo,
     token_definitions: dict[str, dict] | None = None,
-) -> Callable[[messages.EthereumDefinitionRequest], messages.EthereumDefinitionAck]:
+) -> Mock:
+    """A spying `Source` serving one display format, plus tokens keyed by address."""
     if token_definitions is None:
         token_definitions = {
             WETH_TOKEN_DEFINITION["address"][2:].lower(): WETH_TOKEN_DEFINITION
         }
 
-    def provider(
-        req: messages.EthereumDefinitionRequest,
-    ) -> messages.EthereumDefinitionAck:
-        if not req.func_sig:
-            # No func_sig means the firmware is requesting a token/network definition
-            # only (e.g. from `TokenAmountFormatter` during field formatting).
-            token_requests.append(req)
-            addr = hexlify(req.token_address).decode("ascii").lower()
-            token_def = token_definitions.get(addr)
-            assert token_def is not None, f"Unexpected token request for {addr}"
-            assert req.chain_id == token_def["chain_id"]
+    def get_eth_token(chain_id: int, address: bytes) -> bytes:
+        addr = _addr_hex(address)
+        token_def = token_definitions.get(addr)
+        assert token_def is not None, f"Unexpected token request for {addr}"
+        assert chain_id == token_def["chain_id"]
+        return definitions.encode_eth_token(**token_def)
 
-            return messages.EthereumDefinitionAck(
-                definitions=messages.EthereumDefinitions(
-                    encoded_network=definitions.encode_eth_network(
-                        chain_id=token_def["chain_id"]
-                    ),
-                    encoded_token=definitions.encode_eth_token(**token_def),
-                ),
-            )
-        else:  # Display format was requested.
-            display_format_requests.append(req)
-            return messages.EthereumDefinitionAck(
-                definitions=messages.EthereumDefinitions(
-                    encoded_display_format=definitions.encode_eth_display_format(
-                        display_format_info
-                    )
-                ),
-            )
-
-    return provider
+    return _mock_source(
+        get_eth_network=Mock(side_effect=_encode_network),
+        get_eth_token=Mock(side_effect=get_eth_token),
+        get_eth_display_format=Mock(
+            return_value=definitions.encode_eth_display_format(display_format_info)
+        ),
+    )
 
 
 def test_definition_request_sent(session: Session) -> None:
@@ -77,12 +91,6 @@ def test_definition_request_sent(session: Session) -> None:
     # Verify it is called with the right fields and that signing completes
     # without clear signing when we reply with no definition.
 
-    def provider(
-        req: messages.EthereumDefinitionRequest,
-    ) -> messages.EthereumDefinitionAck:
-        definition_requests.append(req)
-        return messages.EthereumDefinitionAck(definitions=None)
-
     for sign_tx, param_getter in [
         (ethereum.sign_tx, get_clear_signing_sign_tx_params),
         (ethereum.sign_tx_eip1559, get_clear_signing_sign_tx_eip1559_params),
@@ -93,7 +101,7 @@ def test_definition_request_sent(session: Session) -> None:
             | {"WETH", "USDT", "UNKN"},
         )
 
-        definition_requests: list[messages.EthereumDefinitionRequest] = []
+        source = _mock_source()
         with session.test_ctx as client:
             if not session.debug.legacy_debug:
                 client.set_input_flow(
@@ -102,14 +110,13 @@ def test_definition_request_sent(session: Session) -> None:
             sign_tx(
                 session,
                 **param_getter(supports_definition_request=True),
-                definition_provider=provider,
+                definition_source=source,
             )
 
-        assert len(definition_requests) == 1
-        req = definition_requests[0]
-        assert req.chain_id == 1
-        assert req.token_address == bytes.fromhex(UNISWAP_V3_ROUTER2[2:].lower())
-        assert req.func_sig == FUNC_SIG_FAKE
+        source.get_eth_display_format.assert_called_once_with(
+            1, bytes.fromhex(UNISWAP_V3_ROUTER2[2:]), FUNC_SIG_FAKE
+        )
+        source.get_eth_token.assert_not_called()
 
         assert_all_seen()
 
@@ -117,12 +124,6 @@ def test_definition_request_sent(session: Session) -> None:
 def test_definition_request_not_sent(session: Session) -> None:
     # When clear signing data is present the firmware does not request a display format
     # mid-flow via EthereumDefinitionRequest if the host did not signal that it supports that.
-
-    def provider(
-        req: messages.EthereumDefinitionRequest,
-    ) -> messages.EthereumDefinitionAck:
-        definition_requests.append(req)
-        return messages.EthereumDefinitionAck(definitions=None)
 
     for sign_tx, param_getter in [
         (ethereum.sign_tx, get_clear_signing_sign_tx_params),
@@ -134,7 +135,7 @@ def test_definition_request_not_sent(session: Session) -> None:
             | {"WETH", "USDT", "UNKN"},
         )
 
-        definition_requests: list[messages.EthereumDefinitionRequest] = []
+        source = _mock_source()
         with session.test_ctx as client:
             if not session.debug.legacy_debug:
                 client.set_input_flow(
@@ -143,10 +144,11 @@ def test_definition_request_not_sent(session: Session) -> None:
             sign_tx(
                 session,
                 **param_getter(supports_definition_request=False),
-                definition_provider=provider,
+                definition_source=source,
             )
 
-        assert len(definition_requests) == 0
+        source.get_eth_display_format.assert_not_called()
+        source.get_eth_token.assert_not_called()
 
         assert_all_seen()
 
@@ -165,8 +167,7 @@ def test_definition_request_with_display_format(session: Session) -> None:
             absent={"UNKN"},
         )
 
-        display_format_requests: list[messages.EthereumDefinitionRequest] = []
-        token_requests: list[messages.EthereumDefinitionRequest] = []
+        source = _display_format_source(UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT)
         with session.test_ctx as client:
             if not session.debug.legacy_debug:
                 client.set_input_flow(
@@ -175,15 +176,12 @@ def test_definition_request_with_display_format(session: Session) -> None:
             sign_tx(
                 session,
                 **param_getter(supports_definition_request=True),
-                definition_provider=_make_display_format_definition_provider(
-                    display_format_requests,
-                    token_requests,
-                    UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
-                ),
+                definition_source=source,
             )
         assert_all_seen()
-        assert len(display_format_requests) == 1
-        assert len(token_requests) == 1  # WETH requested, built in USDT not requested
+        source.get_eth_display_format.assert_called_once()
+        # WETH requested, built in USDT not requested
+        assert source.get_eth_token.call_count == 1
 
 
 def test_definition_request_with_invalid_display_format(session: Session) -> None:
@@ -224,8 +222,7 @@ def test_definition_request_with_invalid_display_format(session: Session) -> Non
             | {"UNKN", "WETH", "USDT"},
         )
 
-        display_format_requests: list[messages.EthereumDefinitionRequest] = []
-        token_requests: list[messages.EthereumDefinitionRequest] = []
+        source = _display_format_source(bad_display_format)
         with session.test_ctx as client:
             if not session.debug.legacy_debug:
                 client.set_input_flow(
@@ -234,13 +231,11 @@ def test_definition_request_with_invalid_display_format(session: Session) -> Non
             sign_tx(
                 session,
                 **param_getter(supports_definition_request=True),
-                definition_provider=_make_display_format_definition_provider(
-                    display_format_requests, token_requests, bad_display_format
-                ),
+                definition_source=source,
             )
 
-        assert len(display_format_requests) == 1
-        assert len(token_requests) == 0
+        source.get_eth_display_format.assert_called_once()
+        source.get_eth_token.assert_not_called()
         assert_all_seen()
 
 
@@ -260,8 +255,9 @@ def test_definition_request_two_tokens(session: Session) -> None:
             | {"FAKE WETH", "FAKE WETH2"},
             absent={"UNKN"},
         )
-        display_format_requests: list[messages.EthereumDefinitionRequest] = []
-        token_requests: list[messages.EthereumDefinitionRequest] = []
+        source = _display_format_source(
+            UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT, token_definitions=token_defs
+        )
         with session.test_ctx as client:
             if not session.debug.legacy_debug:
                 client.set_input_flow(
@@ -273,16 +269,11 @@ def test_definition_request_two_tokens(session: Session) -> None:
                     data=UNISWAP_WETH_WETH2_CALLDATA,
                     supports_definition_request=True,
                 ),
-                definition_provider=_make_display_format_definition_provider(
-                    display_format_requests,
-                    token_requests,
-                    UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT,
-                    token_definitions=token_defs,
-                ),
+                definition_source=source,
             )
         assert_all_seen()
-        assert len(display_format_requests) == 1
-        assert len(token_requests) == 2
+        source.get_eth_display_format.assert_called_once()
+        assert source.get_eth_token.call_count == 2
 
 
 # --- Test descriptor (debug-only built-ins) token-definition handling ---
@@ -347,9 +338,7 @@ TEST_DESCRIPTOR_CALLDATAS = (TEST_TOKEN_CALLDATA, TEST_PATHS_CALLDATA)
 
 def _test_descriptor_sign_tx(
     session: Session,
-    provider: Callable[
-        [messages.EthereumDefinitionRequest], messages.EthereumDefinitionAck
-    ],
+    source: Source,
     calldata: bytes,
     on_page: Callable | None = None,
 ) -> None:
@@ -376,66 +365,62 @@ def _test_descriptor_sign_tx(
                 )
             ),
             supports_definition_request=True,
-            definition_provider=provider,
+            definition_source=source,
         )
+
+
+def _any_token_source() -> Mock:
+    """A spying `Source` resolving every requested token to a fake definition."""
+
+    def get_eth_token(chain_id: int, address: bytes) -> bytes:
+        return definitions.encode_eth_token(
+            address="0x" + _addr_hex(address),
+            chain_id=chain_id,
+            symbol="FAKE TOK",
+            decimals=18,
+            name="FAKE Token",
+        )
+
+    return _mock_source(
+        get_eth_network=Mock(side_effect=_encode_network),
+        get_eth_token=Mock(side_effect=get_eth_token),
+    )
 
 
 def test_descriptor_token_request_non_responsive(session: Session) -> None:
     # Reply with no definition: the non-built-in tokens stay unknown and render
     # "UNKN", signing still completes, and the device asked for each of those
     # token addresses on the right chain (but not the native-currency sentinel).
-    token_requests: list[messages.EthereumDefinitionRequest] = []
-
-    def provider(
-        req: messages.EthereumDefinitionRequest,
-    ) -> messages.EthereumDefinitionAck:
-        if not req.func_sig:
-            token_requests.append(req)
-        return messages.EthereumDefinitionAck(definitions=None)
+    source = _mock_source()
 
     on_page, assert_all_seen = make_label_checker(
         expected={"UNKN"}, absent={"FAKE TOK"}
     )
     for calldata in TEST_DESCRIPTOR_CALLDATAS:
-        _test_descriptor_sign_tx(session, provider, calldata, on_page=on_page)
+        _test_descriptor_sign_tx(session, source, calldata, on_page=on_page)
     assert_all_seen()
 
-    requested = {
-        hexlify(r.token_address).decode("ascii").lower() for r in token_requests
-    }
+    # descriptor is built-in, so only token requests are expected
+    source.get_eth_display_format.assert_not_called()
+    token_calls = [call.args for call in source.get_eth_token.call_args_list]
+    requested = {_addr_hex(address) for _, address in token_calls}
     assert TEST_DESCRIPTOR_TOKENS <= requested
     assert TEST_DESCRIPTOR_NATIVE not in requested
-    for r in token_requests:
-        assert r.chain_id == TEST_DESCRIPTOR_CHAIN_ID
+    for chain_id, _ in token_calls:
+        assert chain_id == TEST_DESCRIPTOR_CHAIN_ID
 
 
 def test_descriptor_token_request_responsive(session: Session) -> None:
     # Resolve every requested token from a provided (fake) definition; the symbol
     # is then rendered for each token field and "UNKN" never appears.
-    def provider(
-        req: messages.EthereumDefinitionRequest,
-    ) -> messages.EthereumDefinitionAck:
-        # descriptor is built-in, so only token (no-func_sig) requests are expected
-        assert not req.func_sig
-        addr = hexlify(req.token_address).decode("ascii").lower()
-        return messages.EthereumDefinitionAck(
-            definitions=messages.EthereumDefinitions(
-                encoded_network=definitions.encode_eth_network(
-                    chain_id=TEST_DESCRIPTOR_CHAIN_ID
-                ),
-                encoded_token=definitions.encode_eth_token(
-                    address="0x" + addr,
-                    chain_id=TEST_DESCRIPTOR_CHAIN_ID,
-                    symbol="FAKE TOK",
-                    decimals=18,
-                    name="FAKE Token",
-                ),
-            )
-        )
+    source = _any_token_source()
 
     on_page, assert_all_seen = make_label_checker(
         expected={"FAKE TOK"}, absent={"UNKN"}
     )
     for calldata in TEST_DESCRIPTOR_CALLDATAS:
-        _test_descriptor_sign_tx(session, provider, calldata, on_page=on_page)
+        _test_descriptor_sign_tx(session, source, calldata, on_page=on_page)
     assert_all_seen()
+
+    # descriptor is built-in, so only token requests are expected
+    source.get_eth_display_format.assert_not_called()
