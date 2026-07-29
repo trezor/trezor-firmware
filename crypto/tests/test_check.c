@@ -70,6 +70,7 @@
 #include "nem.h"
 #include "nist256p1.h"
 #include "noise_kk1.h"
+#include "noise_nxpsk2.h"
 #include "noise_xxpsk3.h"
 #include "pbkdf2.h"
 #include "rand.h"
@@ -11702,6 +11703,342 @@ START_TEST(test_noise_kk1) {
 }
 END_TEST
 
+START_TEST(test_noise_nxpsk2) {
+  // Inject the seed to the random number generator to make the test
+  // deterministic
+  random_reseed(2748932008);
+
+  uint8_t psk[32] = "this_is_a_32byte_preshared_key!!";
+
+  uint8_t responder_private_key[32] = {0};
+  random_buffer(responder_private_key, sizeof(responder_private_key));
+
+  uint8_t responder_public_key[32] = {0};
+  curve25519_scalarmult_basepoint(responder_public_key, responder_private_key);
+
+  noise_nxpsk2_initiator_t initiator = {0};
+  noise_nxpsk2_responder_t responder = {0};
+
+  bool ret = false;
+
+  // Initialize initiator and responder
+  ret = noise_nxpsk2_initiator_init(&initiator, psk);
+  ck_assert_int_eq(ret, true);
+
+  ret = noise_nxpsk2_responder_init(&responder, psk);
+  ck_assert_int_eq(ret, true);
+
+  // --- Handshake ---
+
+  // Initiator creates request1
+  uint8_t request1[256] = {0};
+  size_t request1_size = 0;
+  ret = noise_nxpsk2_initiator_create_request1(
+      &initiator, NULL, 0, request1, sizeof(request1), &request1_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_int_eq(request1_size,
+                   32 + 0 + 16);  // NOISE_NXPSK2_DHLEN + payload + tag
+
+  // Responder handles request1
+  ret = noise_nxpsk2_responder_handle_request1(&responder, request1,
+                                               request1_size, NULL, 0, NULL);
+  ck_assert_int_eq(ret, true);
+
+  // Responder creates response1
+  uint8_t response1[256] = {0};
+  size_t response1_size = 0;
+  ret = noise_nxpsk2_responder_create_response1(
+      &responder, responder_private_key, responder_public_key, NULL, 0,
+      response1, sizeof(response1), &response1_size);
+  ck_assert_int_eq(ret, true);
+  // response1 = ephemeral_pub[32] + enc_static_pub[48] + enc_payload[0+16]
+  ck_assert_int_eq(response1_size, 32 + 48 + 16);
+
+  // Initiator handles response1 — handshake complete
+  uint8_t remote_static_public[32] = {0};
+  ret = noise_nxpsk2_initiator_handle_response1(
+      &initiator, response1, response1_size, remote_static_public, NULL, 0,
+      NULL);
+  ck_assert_int_eq(ret, true);
+
+  ck_assert_mem_eq(remote_static_public, responder_public_key,
+                   NOISE_NXPSK2_DHLEN);
+
+  // --- Transport phase: both directions ---
+
+  // Responder -> Initiator
+  uint8_t msg_r2i[] = "hello from responder";
+  uint8_t ct_r2i[sizeof(msg_r2i) + 16] = {0};
+  size_t ct_r2i_size = 0;
+  ret = noise_nxpsk2_send_message(&responder.transport_state, msg_r2i,
+                                  sizeof(msg_r2i), ct_r2i, sizeof(ct_r2i),
+                                  &ct_r2i_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_int_eq(ct_r2i_size, sizeof(msg_r2i) + 16);
+  ck_assert_int_eq(memcmp(ct_r2i, msg_r2i, sizeof(msg_r2i)) != 0, true);
+
+  uint8_t pt_r2i[256] = {0};
+  size_t pt_r2i_size = 0;
+  ret = noise_nxpsk2_receive_message(&initiator.transport_state, ct_r2i,
+                                     ct_r2i_size, pt_r2i, sizeof(pt_r2i),
+                                     &pt_r2i_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_int_eq(pt_r2i_size, sizeof(msg_r2i));
+  ck_assert_mem_eq(pt_r2i, msg_r2i, sizeof(msg_r2i));
+
+  // Initiator -> Responder
+  uint8_t msg_i2r[] = "hello from initiator";
+  uint8_t ct_i2r[sizeof(msg_i2r) + 16] = {0};
+  size_t ct_i2r_size = 0;
+  ret = noise_nxpsk2_send_message(&initiator.transport_state, msg_i2r,
+                                  sizeof(msg_i2r), ct_i2r, sizeof(ct_i2r),
+                                  &ct_i2r_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_int_eq(ct_i2r_size, sizeof(msg_i2r) + 16);
+
+  uint8_t pt_i2r[256] = {0};
+  size_t pt_i2r_size = 0;
+  ret = noise_nxpsk2_receive_message(&responder.transport_state, ct_i2r,
+                                     ct_i2r_size, pt_i2r, sizeof(pt_i2r),
+                                     &pt_i2r_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(pt_i2r, msg_i2r, sizeof(msg_i2r));
+
+  // Multiple messages in one direction advance the nonce correctly
+  uint8_t msg_a[] = "first";
+  uint8_t msg_b[] = "second";
+  uint8_t ct_a[sizeof(msg_a) + 16] = {0}, ct_b[sizeof(msg_b) + 16] = {0};
+  size_t ct_a_size = 0, ct_b_size = 0;
+  ret =
+      noise_nxpsk2_send_message(&responder.transport_state, msg_a,
+                                sizeof(msg_a), ct_a, sizeof(ct_a), &ct_a_size);
+  ck_assert_int_eq(ret, true);
+  ret =
+      noise_nxpsk2_send_message(&responder.transport_state, msg_b,
+                                sizeof(msg_b), ct_b, sizeof(ct_b), &ct_b_size);
+  ck_assert_int_eq(ret, true);
+
+  uint8_t pt_a[64] = {0}, pt_b[64] = {0};
+  size_t pt_a_size = 0, pt_b_size = 0;
+  ret = noise_nxpsk2_receive_message(&initiator.transport_state, ct_a,
+                                     ct_a_size, pt_a, sizeof(pt_a), &pt_a_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(pt_a, msg_a, sizeof(msg_a));
+  ret = noise_nxpsk2_receive_message(&initiator.transport_state, ct_b,
+                                     ct_b_size, pt_b, sizeof(pt_b), &pt_b_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(pt_b, msg_b, sizeof(msg_b));
+
+  // A tampered ciphertext must fail to decrypt
+  uint8_t tampered[sizeof(msg_r2i) + 16] = {0};
+  size_t tampered_size = 0;
+  ret = noise_nxpsk2_send_message(&responder.transport_state, msg_r2i,
+                                  sizeof(msg_r2i), tampered, sizeof(tampered),
+                                  &tampered_size);
+  ck_assert_int_eq(ret, true);
+  tampered[0] ^= 0xFF;  // flip a bit
+  uint8_t pt_bad[256] = {0};
+  size_t pt_bad_size = 0;
+  ret = noise_nxpsk2_receive_message(&initiator.transport_state, tampered,
+                                     tampered_size, pt_bad, sizeof(pt_bad),
+                                     &pt_bad_size);
+  ck_assert_int_eq(ret, false);
+
+  // --- Double-init should fail ---
+  ret = noise_nxpsk2_initiator_init(&initiator, psk);
+  ck_assert_int_eq(ret, false);
+
+  ret = noise_nxpsk2_responder_init(&responder, psk);
+  ck_assert_int_eq(ret, false);
+
+  // Both sides must have the same handshake hash
+  ck_assert_mem_eq(initiator.transport_state.handshake_hash,
+                   responder.transport_state.handshake_hash,
+                   NOISE_NXPSK2_HASHLEN);
+
+  // Cleanup
+  noise_nxpsk2_initiator_deinit(&initiator);
+  noise_nxpsk2_responder_deinit(&responder);
+
+  // Verify structures are zeroed after deinit
+  noise_nxpsk2_initiator_t zeroed_intr = {0};
+  noise_nxpsk2_responder_t zeroed_rspn = {0};
+  ck_assert_int_eq(memcmp(&initiator, &zeroed_intr, sizeof(initiator)), 0);
+  ck_assert_int_eq(memcmp(&responder, &zeroed_rspn, sizeof(responder)), 0);
+}
+END_TEST
+
+START_TEST(test_noise_nxpsk2_vectors) {
+  static const struct {
+    uint32_t seed;
+    const char *psk;
+    const char *req1_payload;
+    const char *rsp1_payload;
+    const char *transport_msg;
+    const char *expected_request1;
+    const char *expected_response1;
+    const char *expected_transport_msg;
+    const char *expected_handshake_hash;
+  } vectors[] = {
+      {
+          2748932008,
+          "746869735f69735f615f3332627974655f7072657368617265645f6b65792121",
+          "",
+          "",
+          "68656c6c6f2066726f6d20726573706f6e646572",
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "0000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "00000000000000000000000000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "00000",
+          "0000000000000000000000000000000000000000000000000000000000000000",
+      },
+      {
+          1234567890,
+          "616e6f746865725f3332627974655f7072657368617265645f6b65795f787821",
+          "6869",
+          "",
+          "7365636f6e64206d657373616765",
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "000000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "00000000000000000000000000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000000000",
+      },
+      {
+          42,
+          "7965745f616e6f746865725f3332627974655f7072657368617265645f6b6579",
+          "",
+          "7265737031",
+          "7468697264",
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "0000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "000000000000000000000000000000000000000000000000000000000000000",
+          "000000000000000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000000000",
+      },
+      {
+          2748932008,
+          "746869735f69735f615f3332627974655f7072657368617265645f6b65792121",
+          "746869732069732073616e6470697420747572746c65",
+          "706172616c797a65642065656c",
+          "726576656e6765206f6620746865206669667468",
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "00000",
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "0000000",
+          "0000000000000000000000000000000000000000000000000000000000000000000"
+          "00000",
+          "0000000000000000000000000000000000000000000000000000000000000000",
+      },
+  };
+
+  for (size_t v = 0; v < sizeof(vectors) / sizeof(*vectors); v++) {
+    random_reseed(vectors[v].seed);
+
+    uint8_t psk[32];
+    memcpy(psk, fromhex(vectors[v].psk), 32);
+
+    uint8_t responder_private_key[32] = {0};
+    random_buffer(responder_private_key, sizeof(responder_private_key));
+
+    uint8_t responder_public_key[32] = {0};
+    curve25519_scalarmult_basepoint(responder_public_key,
+                                    responder_private_key);
+
+    size_t req1_plen = strlen(vectors[v].req1_payload) / 2;
+    size_t rsp1_plen = strlen(vectors[v].rsp1_payload) / 2;
+    size_t tmsg_len = strlen(vectors[v].transport_msg) / 2;
+
+    uint8_t req1_payload[256] = {0}, rsp1_payload[256] = {0}, tmsg[256] = {0};
+    if (req1_plen)
+      memcpy(req1_payload, fromhex(vectors[v].req1_payload), req1_plen);
+    if (rsp1_plen)
+      memcpy(rsp1_payload, fromhex(vectors[v].rsp1_payload), rsp1_plen);
+    if (tmsg_len) memcpy(tmsg, fromhex(vectors[v].transport_msg), tmsg_len);
+
+    noise_nxpsk2_initiator_t initiator = {0};
+    noise_nxpsk2_responder_t responder = {0};
+    bool ret;
+
+    ret = noise_nxpsk2_initiator_init(&initiator, psk);
+    ck_assert_int_eq(ret, true);
+    ret = noise_nxpsk2_responder_init(&responder, psk);
+    ck_assert_int_eq(ret, true);
+
+    uint8_t req1[512] = {0};
+    size_t req1_size = 0;
+    ret = noise_nxpsk2_initiator_create_request1(
+        &initiator, req1_payload, req1_plen, req1, sizeof(req1), &req1_size);
+    ck_assert_int_eq(ret, true);
+    ck_assert_mem_eq(req1, fromhex(vectors[v].expected_request1), req1_size);
+
+    uint8_t req1_dec[512] = {0};
+    size_t req1_dec_size = 0;
+    ret = noise_nxpsk2_responder_handle_request1(&responder, req1, req1_size,
+                                                 req1_dec, sizeof(req1_dec),
+                                                 &req1_dec_size);
+    ck_assert_int_eq(ret, true);
+    ck_assert_int_eq(req1_dec_size, req1_plen);
+    if (req1_plen) ck_assert_mem_eq(req1_dec, req1_payload, req1_plen);
+
+    uint8_t rsp1[512] = {0};
+    size_t rsp1_size = 0;
+    ret = noise_nxpsk2_responder_create_response1(
+        &responder, responder_private_key, responder_public_key, rsp1_payload,
+        rsp1_plen, rsp1, sizeof(rsp1), &rsp1_size);
+    ck_assert_int_eq(ret, true);
+    ck_assert_mem_eq(rsp1, fromhex(vectors[v].expected_response1), rsp1_size);
+
+    uint8_t rsp1_dec[512] = {0};
+    size_t rsp1_dec_size = 0;
+    uint8_t remote_static_public[32] = {0};
+    ret = noise_nxpsk2_initiator_handle_response1(
+        &initiator, rsp1, rsp1_size, remote_static_public, rsp1_dec,
+        sizeof(rsp1_dec), &rsp1_dec_size);
+    ck_assert_int_eq(ret, true);
+    ck_assert_int_eq(rsp1_dec_size, rsp1_plen);
+    if (rsp1_plen) ck_assert_mem_eq(rsp1_dec, rsp1_payload, rsp1_plen);
+    ck_assert_mem_eq(remote_static_public, responder_public_key,
+                     NOISE_NXPSK2_DHLEN);
+
+    uint8_t tmsg_ct[512] = {0};
+    size_t tmsg_ct_size = 0;
+    ret = noise_nxpsk2_send_message(&responder.transport_state, tmsg, tmsg_len,
+                                    tmsg_ct, sizeof(tmsg_ct), &tmsg_ct_size);
+    ck_assert_int_eq(ret, true);
+    ck_assert_mem_eq(tmsg_ct, fromhex(vectors[v].expected_transport_msg),
+                     tmsg_ct_size);
+
+    uint8_t tmsg_dec[512] = {0};
+    size_t tmsg_dec_size = 0;
+    ret = noise_nxpsk2_receive_message(&initiator.transport_state, tmsg_ct,
+                                       tmsg_ct_size, tmsg_dec, sizeof(tmsg_dec),
+                                       &tmsg_dec_size);
+    ck_assert_int_eq(ret, true);
+    ck_assert_int_eq(tmsg_dec_size, tmsg_len);
+    if (tmsg_len) ck_assert_mem_eq(tmsg_dec, tmsg, tmsg_len);
+
+    // Check handshake hash
+    ck_assert_mem_eq(initiator.transport_state.handshake_hash,
+                     responder.transport_state.handshake_hash,
+                     NOISE_NXPSK2_HASHLEN);
+    ck_assert_mem_eq(initiator.transport_state.handshake_hash,
+                     fromhex(vectors[v].expected_handshake_hash),
+                     NOISE_NXPSK2_HASHLEN);
+  }
+}
+END_TEST
+
 START_TEST(test_noise_xxpsk3) {
   // Inject the seed to the random number generator to make the test
   // deterministic
@@ -12455,6 +12792,8 @@ Suite *test_suite(void) {
 
   tc = tcase_create("noise");
   tcase_add_test(tc, test_noise_kk1);
+  tcase_add_test(tc, test_noise_nxpsk2);
+  tcase_add_test(tc, test_noise_nxpsk2_vectors);
   tcase_add_test(tc, test_noise_xxpsk3);
   tcase_add_test(tc, test_noise_xxpsk3_vectors);
   suite_add_tcase(s, tc);
