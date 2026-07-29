@@ -29,6 +29,11 @@ if TYPE_CHECKING:
 
 DEFAULT_BIP32_PATH = "m/44'/309'/0'/0/0"
 
+# Must stay large: the device bounds how many chunks it will accept.
+_SIG_CHUNK_SIZE = 4096
+# Mirrors _MAX_SIGNATURE_CHUNKS in the device's verify_sphincs_message.
+_MAX_SIG_CHUNKS = 256
+
 
 class CkbPrevTx(NamedTuple):
     """A previous transaction streamed to the device for trustless fee checks.
@@ -211,6 +216,30 @@ def sign_tx(
     return res
 
 
+def _sig_chunk(res: "messages.CKBTxRequest", expected_offset: int) -> tuple[bytes, int]:
+    """Validate a TXSIGCHUNK request and return its payload and total size."""
+    if res.serialized is None or res.serialized.signature is None:
+        raise ValueError("TXSIGCHUNK request without signature data")
+    if (
+        res.details is None
+        or res.details.signature_offset is None
+        or res.details.signature_total_size is None
+    ):
+        raise ValueError("TXSIGCHUNK request without chunk metadata")
+    if res.details.signature_offset != expected_offset:
+        raise ValueError(
+            f"TXSIGCHUNK out of order: offset {res.details.signature_offset}, "
+            f"expected {expected_offset}"
+        )
+    payload = bytes(res.serialized.signature)
+    if not payload:
+        # Without this the offset never advances and the caller spins forever.
+        raise ValueError("TXSIGCHUNK with an empty payload")
+    if expected_offset + len(payload) > res.details.signature_total_size:
+        raise ValueError("TXSIGCHUNK stream exceeds its declared total size")
+    return payload, res.details.signature_total_size
+
+
 def _serve_tx_requests(
     session: "Session",
     res: "messages.CKBTxRequest",
@@ -241,25 +270,12 @@ def _serve_tx_requests(
     sig_total: int | None = None
     while res.request_type != CKBTxRequestType.TXFINISHED:
         if res.request_type == CKBTxRequestType.TXSIGCHUNK:
-            if res.serialized is None or res.serialized.signature is None:
-                raise ValueError("TXSIGCHUNK request without signature data")
-            details = res.details
-            if (
-                details is None
-                or details.signature_offset is None
-                or details.signature_total_size is None
-            ):
-                raise ValueError("TXSIGCHUNK request without chunk metadata")
-            if details.signature_offset != len(signature):
-                raise ValueError(
-                    f"TXSIGCHUNK out of order: offset {details.signature_offset}, "
-                    f"received {len(signature)}"
-                )
+            chunk, total = _sig_chunk(res, len(signature))
             if sig_total is None:
-                sig_total = details.signature_total_size
-            elif details.signature_total_size != sig_total:
+                sig_total = total
+            elif total != sig_total:
                 raise ValueError("TXSIGCHUNK total size changed mid-stream")
-            signature.extend(res.serialized.signature)
+            signature.extend(chunk)
             res = session.call(
                 messages.CKBTxAckSigChunk(), expect=messages.CKBTxRequest
             )
@@ -375,6 +391,126 @@ def get_sphincs_address(
         ),
         expect=messages.CKBSphincsPlusAddress,
     )
+
+
+class SphincsMessageSignature(NamedTuple):
+    """Result of a SPHINCS+ message-signing flow.
+
+    The signature itself arrives through the TXSIGCHUNK stream rather than in
+    the terminal message, so it is reassembled here.
+    """
+
+    address: str
+    public_key: bytes
+    variant: int
+    signature: bytes
+
+
+@workflow(capability=messages.Capability.CKB)
+def sign_sphincs_message(
+    session: "Session",
+    message: AnyStr,
+    network: str = "Mainnet",
+    account_index: int = 0,
+    variant: int = 49,
+    chunkify: bool = False,
+) -> SphincsMessageSignature:
+    """Sign a message with a CKB SPHINCS+ post-quantum key.
+
+    SLH-DSA signatures reach ~50 kB and exceed the wire buffer, so the device
+    streams them back in CKBTxRequest{TXSIGCHUNK} chunks terminated by a
+    CKBSphincsPlusMessageSignature.
+    """
+    res = session.call(
+        messages.CKBSphincsPlusSignMessage(
+            account_index=account_index,
+            variant=variant,
+            message=prepare_message_bytes(message),
+            network=network,
+            chunkify=chunkify,
+        )
+    )
+
+    signature = bytearray()
+    sig_total: int | None = None
+    while isinstance(res, messages.CKBTxRequest):
+        chunk, total = _sig_chunk(res, len(signature))
+        if sig_total is None:
+            sig_total = total
+        elif total != sig_total:
+            raise ValueError("TXSIGCHUNK total size changed mid-stream")
+        signature.extend(chunk)
+        res = session.call(messages.CKBTxAckSigChunk())
+
+    if not isinstance(res, messages.CKBSphincsPlusMessageSignature):
+        raise exceptions.TrezorException(f"Unexpected message {res}")
+    if sig_total is None:
+        raise ValueError("Device did not stream the SPHINCS+ signature")
+    if len(signature) != sig_total:
+        raise ValueError(
+            f"Incomplete signature stream: {len(signature)} of {sig_total} bytes"
+        )
+
+    return SphincsMessageSignature(
+        address=res.address,
+        public_key=bytes(res.public_key),
+        variant=res.variant,
+        signature=bytes(signature),
+    )
+
+
+@workflow(capability=messages.Capability.CKB)
+def verify_sphincs_message(
+    session: "Session",
+    address: str,
+    public_key: bytes,
+    message: AnyStr,
+    signature: bytes,
+    network: str = "Mainnet",
+    variant: int = 49,
+    chunkify: bool = False,
+) -> bool:
+    """Verify a SPHINCS+ message signature on the device.
+
+    The device drives the transfer: it requests each chunk of the signature by
+    offset and this function answers from ``signature``.
+    """
+    try:
+        res = session.call(
+            messages.CKBSphincsPlusVerifyMessage(
+                address=address,
+                public_key=public_key,
+                message=prepare_message_bytes(message),
+                variant=variant,
+                network=network,
+                signature_total_size=len(signature),
+                chunkify=chunkify,
+            )
+        )
+
+        # A well-behaved device never needs this many; it only stops a runaway
+        # device from holding us in the serve loop forever.
+        chunks = 0
+        while isinstance(res, messages.CKBTxRequest):
+            chunks += 1
+            if chunks > _MAX_SIG_CHUNKS:
+                raise ValueError("Too many signature chunk requests")
+            if res.details is None or res.details.signature_offset is None:
+                raise ValueError("TXSIGCHUNK request without chunk metadata")
+            offset = res.details.signature_offset
+            if offset >= len(signature):
+                raise ValueError("Device requested a chunk past the signature")
+            res = session.call(
+                messages.CKBTxAckSigChunk(
+                    signature=signature[offset : offset + _SIG_CHUNK_SIZE]
+                )
+            )
+
+        if not isinstance(res, messages.Success):
+            raise exceptions.TrezorException(f"Unexpected message {res}")
+        return True
+    except exceptions.TrezorFailure:
+        return False
 
 
 @workflow(capability=messages.Capability.CKB)

@@ -1,1 +1,2 @@
-Added Nervos CKB support to trezorlib client and `trezorctl ckb` CLI commands.
+Added Nervos CKB support to trezorlib and `trezorctl ckb`: address generation, transaction signing, and message sign/verify.
+Added SPHINCS+ post-quantum CKB support to trezorlib: address derivation, transaction signing, and message sign/verify. Of these, `trezorctl ckb` exposes message sign/verify.

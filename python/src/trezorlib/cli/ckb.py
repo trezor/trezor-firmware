@@ -223,3 +223,79 @@ def sign_tx(
         f"Signature: 0x{result.serialized.signature.hex()}\n"
         f"TX Hash: 0x{result.serialized.tx_hash.hex()}"
     )
+
+
+@cli.command()
+@click.option(
+    "-a", "--account-index", type=int, default=0, help="SPHINCS+ account index"
+)
+@click.option("-v", "--variant", type=int, default=49, help="SPHINCS+ variant (48-59)")
+@click.option(
+    "--coin",
+    type=click.Choice(["Mainnet", "Testnet"]),
+    default="Mainnet",
+    help="Network (default: Mainnet)",
+)
+@click.option("-C", "--chunkify", is_flag=True)
+@click.argument("message")
+@with_session
+def sign_sphincs_message(
+    session: "Session",
+    account_index: int,
+    variant: int,
+    coin: str,
+    chunkify: bool,
+    message: str,
+) -> str:
+    """Sign a message with a CKB SPHINCS+ post-quantum key."""
+    res = ckb.sign_sphincs_message(
+        session,
+        message,
+        network=coin,
+        account_index=account_index,
+        variant=variant,
+        chunkify=chunkify,
+    )
+    return (
+        f"Address: {res.address}\n"
+        f"Public key: 0x{res.public_key.hex()}\n"
+        f"Variant: {res.variant}\n"
+        f"Signature: 0x{res.signature.hex()}"
+    )
+
+
+@cli.command()
+@click.option("-v", "--variant", type=int, default=49, help="SPHINCS+ variant (48-59)")
+@click.option(
+    "--coin",
+    type=click.Choice(["Mainnet", "Testnet"]),
+    default="Mainnet",
+    help="Network (default: Mainnet)",
+)
+@click.option("-C", "--chunkify", is_flag=True)
+@click.argument("address")
+@click.argument("public_key")
+@click.argument("signature")
+@click.argument("message")
+@with_session
+def verify_sphincs_message(
+    session: "Session",
+    variant: int,
+    coin: str,
+    chunkify: bool,
+    address: str,
+    public_key: str,
+    signature: str,
+    message: str,
+) -> bool:
+    """Verify a CKB SPHINCS+ message signature on the device."""
+    return ckb.verify_sphincs_message(
+        session,
+        address,
+        bytes.fromhex(public_key.removeprefix("0x")),
+        message,
+        bytes.fromhex(signature.removeprefix("0x")),
+        network=coin,
+        variant=variant,
+        chunkify=chunkify,
+    )
