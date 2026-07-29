@@ -61,18 +61,19 @@ async def confirm_action(
         description=description,
         subtitle=subtitle,
         verb=verb,
-        verb_cancel=verb_cancel,
+        cancel=False,
         hold=hold,
         hold_danger=hold_danger,
         reverse=reverse,
         prompt_screen=prompt_screen,
         prompt_title=prompt_title or title,
+        external_menu=True,
     ) as layout:
-        return await raise_if_not_confirmed(
-            layout,
-            br_name,
-            br_code,
-            exc,
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+        menu = Menu.root(cancel=verb_cancel or TR.buttons__cancel)
+        return await confirm_with_menu(
+            layout, menu, br_name, br_code, raise_on_cancel=exc
         )
 
 
