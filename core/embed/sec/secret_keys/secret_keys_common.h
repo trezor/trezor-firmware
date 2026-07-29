@@ -26,6 +26,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <ecdsa.h>
+
 // Key derivation indices
 #define KEY_INDEX_MCU_DEVICE_AUTH 0
 #define KEY_INDEX_OPTIGA_PAIRING 1
