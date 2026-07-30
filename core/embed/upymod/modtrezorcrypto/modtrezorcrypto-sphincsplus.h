@@ -42,9 +42,11 @@
  * `account_index`. Touches no secret material, so callers can allocate output
  * buffers (which may raise on OOM) before deriving any key bytes. Raises a
  * MicroPython exception on invalid input. */
-STATIC const spx_variant_t *_sphincsplus_validate(
-    mp_obj_t seed_obj, mp_obj_t index_obj, mp_obj_t variant_obj,
-    mp_buffer_info_t *seed, int *account_index) {
+STATIC const spx_variant_t *_sphincsplus_validate(mp_obj_t seed_obj,
+                                                  mp_obj_t index_obj,
+                                                  mp_obj_t variant_obj,
+                                                  mp_buffer_info_t *seed,
+                                                  int *account_index) {
   mp_get_buffer_raise(seed_obj, seed, MP_BUFFER_READ);
   *account_index = mp_obj_get_int(index_obj);
   int variant = mp_obj_get_int(variant_obj);
@@ -105,9 +107,8 @@ STATIC mp_obj_t mod_trezorcrypto_sphincsplus_derive_public_key(
     mp_obj_t seed_obj, mp_obj_t index_obj, mp_obj_t variant_obj) {
   mp_buffer_info_t seed = {0};
   int account_index = 0;
-  const spx_variant_t *v = _sphincsplus_validate(seed_obj, index_obj,
-                                                 variant_obj, &seed,
-                                                 &account_index);
+  const spx_variant_t *v = _sphincsplus_validate(
+      seed_obj, index_obj, variant_obj, &seed, &account_index);
 
   /* Allocate the output before deriving any secret, so an OOM here cannot
    * strand key material on the stack. */
@@ -135,7 +136,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(
     mod_trezorcrypto_sphincsplus_derive_public_key);
 
 /// def derive_and_sign(
-///     master_seed: AnyBytes, account_index: int, variant: int, message: AnyBytes
+///     master_seed: AnyBytes,
+///     account_index: int,
+///     variant: int,
+///     message: AnyBytes,
 /// ) -> tuple[bytes, bytes]:
 ///     """
 ///     Derive a SPHINCS+ keypair, sign `message`, and return
@@ -156,8 +160,8 @@ STATIC mp_obj_t mod_trezorcrypto_sphincsplus_derive_and_sign(
 
   mp_buffer_info_t seed = {0};
   int account_index = 0;
-  const spx_variant_t *v = _sphincsplus_validate(args[0], args[1], args[2],
-                                                 &seed, &account_index);
+  const spx_variant_t *v =
+      _sphincsplus_validate(args[0], args[1], args[2], &seed, &account_index);
 
   /* Allocate outputs before deriving any secret, so an OOM here cannot strand
    * key material on the stack. */
@@ -198,9 +202,9 @@ STATIC mp_obj_t mod_trezorcrypto_sphincsplus_derive_and_sign(
    * via a faulty signature. Doing it in C keeps the verify on the same
    * trusted bytes that signing produced — Python cannot tamper with the
    * signature between sign and verify. */
-  int ret_verify = v->verify((const uint8_t *)sig.buf, sig.len,
-                             (const uint8_t *)msg.buf, msg.len,
-                             (const uint8_t *)pk.buf);
+  int ret_verify =
+      v->verify((const uint8_t *)sig.buf, sig.len, (const uint8_t *)msg.buf,
+                msg.len, (const uint8_t *)pk.buf);
   if (ret_verify != 0) {
     vstr_clear(&pk);
     vstr_clear(&sig);
@@ -218,14 +222,17 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_sphincsplus_derive_and_sign);
 
 /// def verify(
-///     public_key: AnyBytes, signature: AnyBytes, message: AnyBytes, variant: int
+///     public_key: AnyBytes,
+///     signature: AnyBytes,
+///     message: AnyBytes,
+///     variant: int,
 /// ) -> bool:
 ///     """
 ///     Verify a SPHINCS+ signature of `message` under `public_key`. `message`
 ///     must already carry whatever domain wrapping the signer applied.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_sphincsplus_verify(size_t n_args,
-                                                     const mp_obj_t *args) {
+                                                    const mp_obj_t *args) {
   (void)n_args;
   mp_buffer_info_t pk = {0}, sig = {0}, msg = {0};
   mp_get_buffer_raise(args[0], &pk, MP_BUFFER_READ);
@@ -241,23 +248,23 @@ STATIC mp_obj_t mod_trezorcrypto_sphincsplus_verify(size_t n_args,
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid public key length"));
   }
 
-  int ret = v->verify((const uint8_t *)sig.buf, sig.len, (const uint8_t *)msg.buf,
-                      msg.len, (const uint8_t *)pk.buf);
+  int ret =
+      v->verify((const uint8_t *)sig.buf, sig.len, (const uint8_t *)msg.buf,
+                msg.len, (const uint8_t *)pk.buf);
   return mp_obj_new_bool(ret == 0);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_sphincsplus_verify_obj, 4, 4,
     mod_trezorcrypto_sphincsplus_verify);
 
-STATIC const mp_rom_map_elem_t
-    mod_trezorcrypto_sphincsplus_globals_table[] = {
-        {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_sphincsplus)},
-        {MP_ROM_QSTR(MP_QSTR_derive_public_key),
-         MP_ROM_PTR(&mod_trezorcrypto_sphincsplus_derive_public_key_obj)},
-        {MP_ROM_QSTR(MP_QSTR_derive_and_sign),
-         MP_ROM_PTR(&mod_trezorcrypto_sphincsplus_derive_and_sign_obj)},
-        {MP_ROM_QSTR(MP_QSTR_verify),
-         MP_ROM_PTR(&mod_trezorcrypto_sphincsplus_verify_obj)},
+STATIC const mp_rom_map_elem_t mod_trezorcrypto_sphincsplus_globals_table[] = {
+    {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_sphincsplus)},
+    {MP_ROM_QSTR(MP_QSTR_derive_public_key),
+     MP_ROM_PTR(&mod_trezorcrypto_sphincsplus_derive_public_key_obj)},
+    {MP_ROM_QSTR(MP_QSTR_derive_and_sign),
+     MP_ROM_PTR(&mod_trezorcrypto_sphincsplus_derive_and_sign_obj)},
+    {MP_ROM_QSTR(MP_QSTR_verify),
+     MP_ROM_PTR(&mod_trezorcrypto_sphincsplus_verify_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_sphincsplus_globals,
                             mod_trezorcrypto_sphincsplus_globals_table);

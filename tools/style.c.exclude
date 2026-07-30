@@ -8,6 +8,7 @@
 ^\./crypto/segwit_addr
 ^\./crypto/sha2
 ^\./crypto/sha3
+^\./crypto/sphincsplus_variants/spx_
 ^\./legacy/vendor
 ^\./core/embed/sys/dbg/stm32/systemview
 ^\./core/embed/io/nfc/st25/rfal*

@@ -16,7 +16,10 @@ def derive_public_key(
 
 # upymod/modtrezorcrypto/modtrezorcrypto-sphincsplus.h
 def derive_and_sign(
-    master_seed: AnyBytes, account_index: int, variant: int, message: AnyBytes
+    master_seed: AnyBytes,
+    account_index: int,
+    variant: int,
+    message: AnyBytes,
 ) -> tuple[bytes, bytes]:
     """
     Derive a SPHINCS+ keypair, sign `message`, and return
@@ -30,7 +33,10 @@ def derive_and_sign(
 
 # upymod/modtrezorcrypto/modtrezorcrypto-sphincsplus.h
 def verify(
-    public_key: AnyBytes, signature: AnyBytes, message: AnyBytes, variant: int
+    public_key: AnyBytes,
+    signature: AnyBytes,
+    message: AnyBytes,
+    variant: int,
 ) -> bool:
     """
     Verify a SPHINCS+ signature of `message` under `public_key`. `message`

@@ -49,11 +49,11 @@ message CKBAddress {
  * @next Failure
  */
 message CKBSphincsPlusGetAddress {
-    optional uint32 account_index = 1 [default=0];  // account index fed into the HKDF info string
-    optional uint32 variant = 2 [default=49];       // SPHINCS+ variant ID (48..=59). Default 49 = SLH-DSA-SHA2-128s
-    required string network = 3;                    // "Mainnet" or "Testnet"
-    optional bool show_display = 4;                 // optionally show on display before sending
-    optional bool chunkify = 5;                     // display the address in chunks of 4 characters
+    optional uint32 account_index = 1 [default = 0];  // account index fed into the HKDF info string
+    optional uint32 variant = 2 [default = 49];       // SPHINCS+ variant ID (48..=59). Default 49 = SLH-DSA-SHA2-128s
+    required string network = 3;                      // "Mainnet" or "Testnet"
+    optional bool show_display = 4;                   // optionally show on display before sending
+    optional bool chunkify = 5;                       // display the address in chunks of 4 characters
 }
 
 /**
@@ -61,10 +61,10 @@ message CKBSphincsPlusGetAddress {
  * @end
  */
 message CKBSphincsPlusAddress {
-    required string address = 1;     // Bech32m encoded CKB address
-    required bytes lock_args = 2;    // 32-byte Blake2b lock script args
-    required bytes public_key = 3;   // SPHINCS+ public key bytes
-    required uint32 variant = 4;     // SPHINCS+ variant ID used
+    required string address = 1;    // Bech32m encoded CKB address
+    required bytes lock_args = 2;   // 32-byte Blake2b lock script args
+    required bytes public_key = 3;  // SPHINCS+ public key bytes
+    required uint32 variant = 4;    // SPHINCS+ variant ID used
 }
 
 /**
@@ -78,16 +78,17 @@ message CKBSphincsPlusAddress {
  * @next Failure
  */
 message CKBSphincsPlusSignTx {
-    optional uint32 account_index = 1 [default=0];      // account index fed into the HKDF info string
-    optional uint32 variant = 2 [default=49];           // SPHINCS+ variant ID (48..=59)
+    optional uint32 account_index = 1 [default = 0];    // account index fed into the HKDF info string
+    optional uint32 variant = 2 [default = 49];         // SPHINCS+ variant ID (48..=59)
     required string network = 3;                        // "Mainnet" or "Testnet"
     required uint32 inputs_count = 4;                   // number of cell inputs
     required uint32 outputs_count = 5;                  // number of cell outputs
-    optional uint32 cell_deps_count = 6 [default=0];    // number of cell dependencies
+    optional uint32 cell_deps_count = 6 [default = 0];  // number of cell dependencies
     optional uint32 witnesses_count = 7;                // length of the on-chain witness vector (required)
     repeated uint32 sign_group_input_indices = 8;       // input indices of the lock-script group to sign (sorted)
     optional bool chunkify = 9;                         // display addresses in chunks
-    repeated bytes header_deps = 10;                    // 32-byte block-header hashes committed in the tx hash (e.g. Nervos DAO); empty for plain transfers
+    repeated bytes header_deps =
+        10;  // 32-byte block-header hashes committed in the tx hash (e.g. Nervos DAO); empty for plain transfers
 }
 
 /**
@@ -101,11 +102,11 @@ message CKBSphincsPlusSignTx {
  * @next Failure
  */
 message CKBSphincsPlusSignMessage {
-    optional uint32 account_index = 1 [default=0];  // account index fed into the HKDF info string
-    optional uint32 variant = 2 [default=49];       // SPHINCS+ variant ID (48..=59)
-    required bytes message = 3;                     // message to be signed
-    required string network = 4;                    // "Mainnet" or "Testnet"
-    optional bool chunkify = 5;                     // display the address in chunks of 4 characters
+    optional uint32 account_index = 1 [default = 0];  // account index fed into the HKDF info string
+    optional uint32 variant = 2 [default = 49];       // SPHINCS+ variant ID (48..=59)
+    required bytes message = 3;                       // message to be signed
+    required string network = 4;                      // "Mainnet" or "Testnet"
+    optional bool chunkify = 5;                       // display the address in chunks of 4 characters
 }
 
 /**
@@ -287,10 +288,10 @@ enum CKBTxRequestType {
  * @embed
  */
 message CKBTxRequestDetails {
-    optional uint32 request_index = 1;          // item index within the current or previous tx
-    optional bytes tx_hash = 2;                 // when set, the item belongs to this previous transaction
-    optional uint32 signature_offset = 3;       // TXSIGCHUNK: byte offset of the chunk in the full signature
-    optional uint32 signature_total_size = 4;   // TXSIGCHUNK: total signature length (set on every chunk)
+    optional uint32 request_index = 1;         // item index within the current or previous tx
+    optional bytes tx_hash = 2;                // when set, the item belongs to this previous transaction
+    optional uint32 signature_offset = 3;      // TXSIGCHUNK: byte offset of the chunk in the full signature
+    optional uint32 signature_total_size = 4;  // TXSIGCHUNK: total signature length (set on every chunk)
 }
 
 /**

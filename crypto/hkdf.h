@@ -20,8 +20,7 @@
  * @param prk      Output pseudorandom key (32 bytes)
  */
 void hkdf_sha256_extract(const uint8_t *salt, size_t salt_len,
-                         const uint8_t *ikm, size_t ikm_len,
-                         uint8_t prk[32]);
+                         const uint8_t *ikm, size_t ikm_len, uint8_t prk[32]);
 
 /**
  * HKDF-Expand: OKM = T(1) || T(2) || ... || T(N) truncated to okm_len
@@ -34,9 +33,8 @@ void hkdf_sha256_extract(const uint8_t *salt, size_t salt_len,
  * @param okm_len  Length of OKM (max 255 * 32 = 8160 bytes)
  * @return         0 on success, -1 if okm_len too large
  */
-int hkdf_sha256_expand(const uint8_t prk[32],
-                       const uint8_t *info, size_t info_len,
-                       uint8_t *okm, size_t okm_len);
+int hkdf_sha256_expand(const uint8_t prk[32], const uint8_t *info,
+                       size_t info_len, uint8_t *okm, size_t okm_len);
 
 /**
  * HKDF one-shot: Extract-then-Expand
@@ -51,9 +49,8 @@ int hkdf_sha256_expand(const uint8_t prk[32],
  * @param okm_len  Length of OKM
  * @return         0 on success, -1 if okm_len too large
  */
-int hkdf_sha256(const uint8_t *salt, size_t salt_len,
-                const uint8_t *ikm, size_t ikm_len,
-                const uint8_t *info, size_t info_len,
+int hkdf_sha256(const uint8_t *salt, size_t salt_len, const uint8_t *ikm,
+                size_t ikm_len, const uint8_t *info, size_t info_len,
                 uint8_t *okm, size_t okm_len);
 
 #endif

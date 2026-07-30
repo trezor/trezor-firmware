@@ -13,5 +13,5 @@
 #include "randombytes.h"
 
 void randombytes(unsigned char *x, unsigned long long xlen) {
-    random_buffer((uint8_t *)x, (size_t)xlen);
+  random_buffer((uint8_t *)x, (size_t)xlen);
 }

@@ -11,8 +11,7 @@
 #include "memzero.h"
 
 void hkdf_sha256_extract(const uint8_t *salt, size_t salt_len,
-                         const uint8_t *ikm, size_t ikm_len,
-                         uint8_t prk[32]) {
+                         const uint8_t *ikm, size_t ikm_len, uint8_t prk[32]) {
   // RFC 5869 Section 2.2: if salt not provided, use HashLen zero octets
   const uint8_t default_salt[32] = {0};
   if (salt == NULL || salt_len == 0) {
@@ -23,9 +22,8 @@ void hkdf_sha256_extract(const uint8_t *salt, size_t salt_len,
   hmac_sha256(salt, (uint32_t)salt_len, ikm, (uint32_t)ikm_len, prk);
 }
 
-int hkdf_sha256_expand(const uint8_t prk[32],
-                       const uint8_t *info, size_t info_len,
-                       uint8_t *okm, size_t okm_len) {
+int hkdf_sha256_expand(const uint8_t prk[32], const uint8_t *info,
+                       size_t info_len, uint8_t *okm, size_t okm_len) {
   // RFC 5869 Section 2.3: L <= 255*HashLen
   if (okm_len > 255 * 32) {
     return -1;
@@ -67,9 +65,8 @@ int hkdf_sha256_expand(const uint8_t prk[32],
   return 0;
 }
 
-int hkdf_sha256(const uint8_t *salt, size_t salt_len,
-                const uint8_t *ikm, size_t ikm_len,
-                const uint8_t *info, size_t info_len,
+int hkdf_sha256(const uint8_t *salt, size_t salt_len, const uint8_t *ikm,
+                size_t ikm_len, const uint8_t *info, size_t info_len,
                 uint8_t *okm, size_t okm_len) {
   uint8_t prk[32];
 
