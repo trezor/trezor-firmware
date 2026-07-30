@@ -1316,7 +1316,7 @@ async def _expand_one_subcall(
 
 
 async def try_confirm(
-    data: AnyBytes,
+    calldata: memoryview,
     address_bytes: bytes,
     msg: MsgInSignTx,
     defs: Definitions,
@@ -1332,10 +1332,10 @@ async def try_confirm(
     if not address_bytes:
         return False
 
-    if len(data) < SC_FUNC_SIG_BYTES:
+    if len(calldata) < SC_FUNC_SIG_BYTES:
         return False
 
-    func_sig = bytes(data[0:SC_FUNC_SIG_BYTES])
+    func_sig = bytes(calldata[0:SC_FUNC_SIG_BYTES])
 
     display_format = await _find_display_format(func_sig, address_bytes, msg)
     if display_format is None:
@@ -1347,7 +1347,7 @@ async def try_confirm(
     ):
         raise DataError("Payment Requests only supported for ERC-20 transfers.")
 
-    calldata = memoryview(data)[SC_FUNC_SIG_BYTES:]
+    calldata = calldata[SC_FUNC_SIG_BYTES:]
 
     # custom treatment of certain functions (APPROVE, TRANSFER)
     if display_format.func_sig == APPROVE_DISPLAY_FORMAT.func_sig:

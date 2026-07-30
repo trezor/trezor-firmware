@@ -29,6 +29,7 @@ ADDRESSES_ACCOUNTING = (
 
 
 def get_approver(
+    calldata: memoryview | None,
     msg: MsgInSignTx,
     network: EthereumNetworkInfo,
     address_bytes: bytes,
@@ -41,16 +42,13 @@ def get_approver(
     `None` is returned for non-staking related transactions.
     """
 
-    from .clear_signing import SC_FUNC_SIG_BYTES
-
-    # local_cache_attribute
-    data_length = msg.data_length
-
-    if data_length > len(msg.data_initial_chunk):
+    if calldata is None:
         return None
 
+    from .clear_signing import SC_FUNC_SIG_BYTES
+
     # No more data should be loaded from host:
-    data_reader = BufferReader(msg.data_initial_chunk)
+    data_reader = BufferReader(calldata)
     if data_reader.remaining_count() < SC_FUNC_SIG_BYTES:
         return None
 

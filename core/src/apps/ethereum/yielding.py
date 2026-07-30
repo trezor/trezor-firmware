@@ -85,8 +85,8 @@ CLAIM_DISPLAY_FORMAT = DisplayFormat(
 
 
 async def get_approver(
+    calldata: memoryview | None,
     msg: MsgInSignTx,
-    initial_data: AnyBytes,
     network: EthereumNetworkInfo,
     address_bytes: AnyBytes,
     maximum_fee: str,
@@ -94,19 +94,19 @@ async def get_approver(
     sender_bytes: AnyBytes,
 ) -> Coroutine[Any, Any, None] | None:
 
-    from .clear_signing import SC_FUNC_SIG_BYTES
-
-    if msg.data_length > len(initial_data):
+    if calldata is None:
         return None
 
+    from .clear_signing import SC_FUNC_SIG_BYTES
+
     # No more data should be loaded from host:
-    if len(initial_data) < SC_FUNC_SIG_BYTES:
+    if len(calldata) < SC_FUNC_SIG_BYTES:
         return None
 
     vault = lookup_vault(network, address_bytes)
 
-    func_sig = bytes(initial_data[:SC_FUNC_SIG_BYTES])
-    calldata = memoryview(initial_data)[SC_FUNC_SIG_BYTES:]
+    func_sig = bytes(calldata[:SC_FUNC_SIG_BYTES])
+    calldata = calldata[SC_FUNC_SIG_BYTES:]
 
     handler = None
     if func_sig == FUNC_SIG_DEPOSIT:
