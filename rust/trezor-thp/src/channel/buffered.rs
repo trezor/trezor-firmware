@@ -1,7 +1,9 @@
 use crate::{
     ChannelIO,
     channel::{APP_HEADER_LEN, PacketInResult, SEND_BUFFER_OVERHEAD},
+    control_byte::ControlByte,
     error::Result,
+    header::parse_channel_length,
 };
 
 use std::ops::{Deref, DerefMut};
@@ -38,28 +40,16 @@ impl<C: ChannelIO> Buffered<C> {
     }
 
     pub fn packet_in(&mut self, packet_buffer: &[u8]) -> PacketInResult {
-        let res = self
-            .channel
-            .packet_in(packet_buffer, self.receive_buffer.as_mut_slice());
-        if let PacketInResult::Accepted {
-            ack_received,
-            message_ready,
-            pong,
-            buffer_size: Some(s),
-            ..
-        } = res
+        if let Ok((_, Some(len))) = ControlByte::parse(packet_buffer)
+            .and_then(|(cb, _)| parse_channel_length(cb, packet_buffer))
         {
-            let new_size: u16 = s.into();
-            log::debug!("Resizing receive buffer to {}.", new_size);
-            self.receive_buffer.resize(new_size.into(), 0u8);
-            return PacketInResult::Accepted {
-                ack_received,
-                message_ready,
-                pong,
-                buffer_size: None,
-            };
+            if usize::from(len) > self.receive_buffer.len() {
+                log::debug!("Resizing receive buffer to {}.", len);
+                self.receive_buffer.resize(len.into(), 0u8);
+            }
         }
-        res
+        self.channel
+            .packet_in(packet_buffer, self.receive_buffer.as_mut_slice())
     }
 
     pub fn packet_out(&mut self) -> Result<Vec<u8>> {

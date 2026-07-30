@@ -584,8 +584,10 @@ fn open_channel(
         .channel_alloc(cids.get(), TestCredentialVerifier)?
         .with_key(DEVICE_KEY)
         .into_buffered();
-    take_turns(&mut d, &mut hm)?;
+    d.set_packet_len(packet_len);
+    take_turns(&mut hm, &mut d)?;
     let mut h = hm.channel_alloc(NullCredentialStore)?.into_buffered();
+    h.set_packet_len(packet_len);
     if enable_piggybacking {
         h.set_device_protocol_version(2, 1);
     }
