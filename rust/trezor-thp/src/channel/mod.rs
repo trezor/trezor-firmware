@@ -889,13 +889,20 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             log::warn!("[{:04x}] Nothing to retransmit.", self.channel_id);
             return Ok(());
         };
+        *retry = retry.saturating_add(1);
+        if !fragmenter.is_done() {
+            log::warn!(
+                "[{:04x}] Not retransmitting before all fragments are sent.",
+                self.channel_id
+            );
+            return Ok(());
+        }
         log::debug!(
             "[{:04x}] Retransmitting message, retry {}.",
             self.channel_id,
             retry
         );
         fragmenter.reset();
-        *retry = retry.saturating_add(1);
         Ok(())
     }
 
