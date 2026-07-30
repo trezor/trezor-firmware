@@ -908,6 +908,35 @@ def by_name(name: str) -> CoinInfo:
                     False,  # overwintered
                     None,  # confidential_assets
                 )
+            if name == "Pepecoin":
+                return CoinInfo(
+                    name,  # coin_name
+                    "PEPE",  # coin_shortcut
+                    8,  # decimals
+                    56,  # address_type
+                    22,  # address_type_p2sh
+                    1200000000000,  # maxfee_kb
+                    "Pepecoin Signed Message:\n",  # signed_message_header
+                    0x02facafd,  # xpub_magic
+                    None,  # xpub_magic_segwit_p2sh
+                    None,  # xpub_magic_segwit_native
+                    None,  # xpub_magic_multisig_segwit_p2sh
+                    None,  # xpub_magic_multisig_segwit_native
+                    None,  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    3434,  # slip44
+                    False,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
             if name == "Primecoin":
                 return CoinInfo(
                     name,  # coin_name
@@ -2506,6 +2535,35 @@ def by_name(name: str) -> CoinInfo:
                     False,  # overwintered
                     None,  # confidential_assets
                 )
+            if name == "Pepecoin":
+                return CoinInfo(
+                    name,  # coin_name
+                    "PEPE",  # coin_shortcut
+                    8,  # decimals
+                    56,  # address_type
+                    22,  # address_type_p2sh
+                    1200000000000,  # maxfee_kb
+                    "Pepecoin Signed Message:\n",  # signed_message_header
+                    0x02facafd,  # xpub_magic
+                    None,  # xpub_magic_segwit_p2sh
+                    None,  # xpub_magic_segwit_native
+                    None,  # xpub_magic_multisig_segwit_p2sh
+                    None,  # xpub_magic_multisig_segwit_native
+                    None,  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    3434,  # slip44
+                    False,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
             if name == "Primecoin":
                 return CoinInfo(
                     name,  # coin_name
@@ -3901,6 +3959,35 @@ def by_name(name: str) -> CoinInfo:
                     False,  # overwintered
                     None,  # confidential_assets
                 )
+            if name == "Pepecoin":
+                return CoinInfo(
+                    name,  # coin_name
+                    "PEPE",  # coin_shortcut
+                    8,  # decimals
+                    56,  # address_type
+                    22,  # address_type_p2sh
+                    1200000000000,  # maxfee_kb
+                    "Pepecoin Signed Message:\n",  # signed_message_header
+                    0x02facafd,  # xpub_magic
+                    None,  # xpub_magic_segwit_p2sh
+                    None,  # xpub_magic_segwit_native
+                    None,  # xpub_magic_multisig_segwit_p2sh
+                    None,  # xpub_magic_multisig_segwit_native
+                    None,  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    3434,  # slip44
+                    False,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
             if name == "Primecoin":
                 return CoinInfo(
                     name,  # coin_name
@@ -5264,6 +5351,35 @@ def by_name(name: str) -> CoinInfo:
                     'secp256k1',  # curve_name
                     False,  # extra_data
                     True,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
+            if name == "Pepecoin":
+                return CoinInfo(
+                    name,  # coin_name
+                    "PEPE",  # coin_shortcut
+                    8,  # decimals
+                    56,  # address_type
+                    22,  # address_type_p2sh
+                    1200000000000,  # maxfee_kb
+                    "Pepecoin Signed Message:\n",  # signed_message_header
+                    0x02facafd,  # xpub_magic
+                    None,  # xpub_magic_segwit_p2sh
+                    None,  # xpub_magic_segwit_native
+                    None,  # xpub_magic_multisig_segwit_p2sh
+                    None,  # xpub_magic_multisig_segwit_native
+                    None,  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    3434,  # slip44
+                    False,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
                     False,  # overwintered
                     None,  # confidential_assets
                 )
@@ -6633,6 +6749,35 @@ def by_name(name: str) -> CoinInfo:
                     False,  # overwintered
                     None,  # confidential_assets
                 )
+            if name == "Pepecoin":
+                return CoinInfo(
+                    name,  # coin_name
+                    "PEPE",  # coin_shortcut
+                    8,  # decimals
+                    56,  # address_type
+                    22,  # address_type_p2sh
+                    1200000000000,  # maxfee_kb
+                    "Pepecoin Signed Message:\n",  # signed_message_header
+                    0x02facafd,  # xpub_magic
+                    None,  # xpub_magic_segwit_p2sh
+                    None,  # xpub_magic_segwit_native
+                    None,  # xpub_magic_multisig_segwit_p2sh
+                    None,  # xpub_magic_multisig_segwit_native
+                    None,  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    3434,  # slip44
+                    False,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
             if name == "Primecoin":
                 return CoinInfo(
                     name,  # coin_name
@@ -7999,6 +8144,35 @@ def by_name(name: str) -> CoinInfo:
                     False,  # overwintered
                     None,  # confidential_assets
                 )
+            if name == "Pepecoin":
+                return CoinInfo(
+                    name,  # coin_name
+                    "PEPE",  # coin_shortcut
+                    8,  # decimals
+                    56,  # address_type
+                    22,  # address_type_p2sh
+                    1200000000000,  # maxfee_kb
+                    "Pepecoin Signed Message:\n",  # signed_message_header
+                    0x02facafd,  # xpub_magic
+                    None,  # xpub_magic_segwit_p2sh
+                    None,  # xpub_magic_segwit_native
+                    None,  # xpub_magic_multisig_segwit_p2sh
+                    None,  # xpub_magic_multisig_segwit_native
+                    None,  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    3434,  # slip44
+                    False,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
             if name == "Primecoin":
                 return CoinInfo(
                     name,  # coin_name
@@ -9362,6 +9536,35 @@ def by_name(name: str) -> CoinInfo:
                     'secp256k1',  # curve_name
                     False,  # extra_data
                     True,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
+            if name == "Pepecoin":
+                return CoinInfo(
+                    name,  # coin_name
+                    "PEPE",  # coin_shortcut
+                    8,  # decimals
+                    56,  # address_type
+                    22,  # address_type_p2sh
+                    1200000000000,  # maxfee_kb
+                    "Pepecoin Signed Message:\n",  # signed_message_header
+                    0x02facafd,  # xpub_magic
+                    None,  # xpub_magic_segwit_p2sh
+                    None,  # xpub_magic_segwit_native
+                    None,  # xpub_magic_multisig_segwit_p2sh
+                    None,  # xpub_magic_multisig_segwit_native
+                    None,  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    3434,  # slip44
+                    False,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
                     False,  # overwintered
                     None,  # confidential_assets
                 )
