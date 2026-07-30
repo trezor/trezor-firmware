@@ -1283,3 +1283,77 @@ fn test_channel_id_wraparound() -> Result<()> {
 
     Ok(())
 }
+
+fn fragment_count(payload_len: usize, packet_len: usize) -> usize {
+    let payload_len = payload_len + APP_HEADER_LEN + TAG_LEN + CHECKSUM_LEN;
+    let init_capacity = packet_len - 5;
+    let cont_capacity = packet_len - 3;
+
+    1 + payload_len
+        .saturating_sub(init_capacity)
+        .div_ceil(cont_capacity)
+}
+
+#[test_case(false; "v20")]
+#[test_case(true; "v21")]
+fn test_retransmit_too_soon(ack_piggybacking: bool) -> Result<()> {
+    setup();
+
+    const PACKET_LEN: usize = 20;
+    const PAYLOAD: &[u8] = &[123; PACKET_LEN * 10]; // at least 10 packets
+
+    fn retransmit<R: Role>(c: &mut Buffered<Channel<R, RustCrypto>>) {
+        assert!(c.packet_out_ready());
+        let attempt = c.sending_retry().unwrap();
+        // should log warning, increase attempt, and continue sending
+        c.message_retransmit().unwrap();
+        assert_eq!(c.sending_retry(), Some(attempt + 1));
+    }
+
+    fn send_one<R1: Role, R2: Role>(
+        from: &mut Buffered<Channel<R1, RustCrypto>>,
+        to: &mut Buffered<Channel<R2, RustCrypto>>,
+    ) -> usize {
+        to.packet_in(&from.packet_out().unwrap())
+            .check_failed()
+            .unwrap();
+        1
+    }
+
+    let (mut h, mut d) = open_channel(PACKET_LEN, ack_piggybacking)?;
+    // host->device
+    h.message_in(0, 404, PAYLOAD).unwrap();
+    let mut nsent = send_one(&mut h, &mut d);
+    nsent += send_one(&mut h, &mut d);
+    nsent += send_one(&mut h, &mut d);
+    retransmit(&mut h);
+    nsent += send_one(&mut h, &mut d);
+    nsent += send_one(&mut h, &mut d);
+    retransmit(&mut h);
+    while h.packet_out_ready() {
+        nsent += send_one(&mut h, &mut d);
+    }
+    // check that message was delivered with no extra packets
+    let (_, _, received) = d.message_out().unwrap();
+    assert_eq!(&received, PAYLOAD);
+    assert_eq!(nsent, fragment_count(PAYLOAD.len(), PACKET_LEN));
+    // device->host
+    d.message_in(0, 500, PAYLOAD).unwrap();
+    retransmit(&mut d);
+    let mut nsent = send_one(&mut d, &mut h);
+    nsent += send_one(&mut d, &mut h);
+    nsent += send_one(&mut d, &mut h);
+    nsent += send_one(&mut d, &mut h);
+    nsent += send_one(&mut d, &mut h);
+    retransmit(&mut d);
+    while d.packet_out_ready() {
+        nsent += send_one(&mut d, &mut h);
+    }
+    // check that message was delivered with no extra packets
+    let (_, _, received) = h.message_out().unwrap();
+    assert_eq!(&received, PAYLOAD);
+    let acks = usize::from(!ack_piggybacking);
+    assert_eq!(nsent, fragment_count(PAYLOAD.len(), PACKET_LEN) + acks);
+
+    Ok(())
+}
