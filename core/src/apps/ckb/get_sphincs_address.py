@@ -222,22 +222,15 @@ async def get_sphincs_address(
 
     address = encode_address_full(code_hash, hash_type, lock_args, msg.network)
 
-    if msg.show_display or msg.show_display is None:
+    # Silent when show_display is unset, matching get_address and every other
+    # address handler: the public key and the address it encodes are not secret,
+    # so a host may read them to build a transaction without prompting.
+    if msg.show_display:
         await show_address(
             address,
             subtitle=TR.address__coin_address_template.format("CKB SPHINCS+"),
             path=f"QP/{account_index}/v{variant}",
             chunkify=bool(msg.chunkify),
-        )
-    else:
-        # Even in silent mode, require a lightweight confirmation so compromised
-        # host software cannot harvest public keys without user awareness.
-        from trezor.ui.layouts import confirm_action
-
-        await confirm_action(
-            "confirm_sphincs_address",
-            "Export SPHINCS+ public key?",
-            description=f"Account QP/{account_index}/v{variant}",
         )
 
     return CKBSphincsPlusAddress(

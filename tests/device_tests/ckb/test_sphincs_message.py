@@ -79,10 +79,7 @@ def test_sphincs_verify_rejects_wrong_signature_size(test_ctx: TrezorTestContext
     # The signature length is fully determined by the variant, so a declared
     # total that does not match it must be refused before anything is buffered.
     session = _load_sphincs_session(test_ctx)
-    with session.test_ctx as client:
-        if not session.debug.legacy_debug:
-            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
-        addr = ckb.get_sphincs_address(session, network="Mainnet", variant=VARIANT)
+    addr = ckb.get_sphincs_address(session, network="Mainnet", variant=VARIANT)
 
     with pytest.raises(TrezorFailure, match="Invalid signature size"):
         session.call(
@@ -130,10 +127,7 @@ def test_sphincs_n16_variants_share_key_material(test_ctx: TrezorTestContext):
     public_keys = {}
     lock_args = {}
     for variant in (48, 49, 54, 55):
-        with session.test_ctx as client:
-            if not session.debug.legacy_debug:
-                client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
-            resp = ckb.get_sphincs_address(session, network="Mainnet", variant=variant)
+        resp = ckb.get_sphincs_address(session, network="Mainnet", variant=variant)
         assert resp.variant == variant
         assert len(resp.public_key) == 32  # 2*n for n=16
         assert len(resp.lock_args) == 32
