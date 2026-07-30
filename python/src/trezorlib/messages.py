@@ -4900,6 +4900,7 @@ class DisplayAddress(protobuf.MessageType):
         3: protobuf.Field("subtitle", "string", repeated=False, required=False, default=None),
         4: protobuf.Field("case_sensitive", "bool", repeated=False, required=False, default=True),
         5: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        6: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4910,12 +4911,14 @@ class DisplayAddress(protobuf.MessageType):
         subtitle: Optional["str"] = None,
         case_sensitive: Optional["bool"] = True,
         chunkify: Optional["bool"] = None,
+        app_id: Optional["str"] = None,
     ) -> None:
         self.address = address
         self.title = title
         self.subtitle = subtitle
         self.case_sensitive = case_sensitive
         self.chunkify = chunkify
+        self.app_id = app_id
 
 
 class DisplayAddressWithProof(protobuf.MessageType):
@@ -4929,9 +4932,9 @@ class DisplayAddressWithProof(protobuf.MessageType):
         6: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
         7: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
         8: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
-        9: protobuf.Field("witness_address", "bytes", repeated=False, required=False, default=None),
-        10: protobuf.Field("witness_value", "bytes", repeated=False, required=False, default=None),
-        11: protobuf.Field("witness_counter", "uint32", repeated=False, required=False, default=None),
+        9: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
+        10: protobuf.Field("witness_value_hash", "bytes", repeated=False, required=False, default=None),
+        12: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4945,9 +4948,9 @@ class DisplayAddressWithProof(protobuf.MessageType):
         chunkify: Optional["bool"] = None,
         value: Optional["bytes"] = None,
         counter: Optional["int"] = None,
-        witness_address: Optional["bytes"] = None,
-        witness_value: Optional["bytes"] = None,
-        witness_counter: Optional["int"] = None,
+        witness_entry_key: Optional["bytes"] = None,
+        witness_value_hash: Optional["bytes"] = None,
+        app_id: Optional["str"] = None,
     ) -> None:
         self.proof: Sequence["bytes"] = proof if proof is not None else []
         self.address = address
@@ -4957,9 +4960,9 @@ class DisplayAddressWithProof(protobuf.MessageType):
         self.chunkify = chunkify
         self.value = value
         self.counter = counter
-        self.witness_address = witness_address
-        self.witness_value = witness_value
-        self.witness_counter = witness_counter
+        self.witness_entry_key = witness_entry_key
+        self.witness_value_hash = witness_value_hash
+        self.app_id = app_id
 
 
 class EosGetPublicKey(protobuf.MessageType):
@@ -9510,6 +9513,7 @@ class WARDQueueUpdate(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address", "bytes", repeated=False, required=True),
         2: protobuf.Field("new_value", "bytes", repeated=False, required=True),
+        3: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9517,9 +9521,11 @@ class WARDQueueUpdate(protobuf.MessageType):
         *,
         address: "bytes",
         new_value: "bytes",
+        app_id: Optional["str"] = None,
     ) -> None:
         self.address = address
         self.new_value = new_value
+        self.app_id = app_id
 
 
 class WARDQueueUpdateAck(protobuf.MessageType):
@@ -9759,10 +9765,10 @@ class WARDLookup(protobuf.MessageType):
         1: protobuf.Field("address", "bytes", repeated=False, required=True),
         2: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
-        4: protobuf.Field("witness_address", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("witness_value", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("witness_value_hash", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
-        7: protobuf.Field("witness_counter", "uint32", repeated=False, required=False, default=None),
+        8: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9771,18 +9777,18 @@ class WARDLookup(protobuf.MessageType):
         address: "bytes",
         proof: Optional[Sequence["bytes"]] = None,
         value: Optional["bytes"] = None,
-        witness_address: Optional["bytes"] = None,
-        witness_value: Optional["bytes"] = None,
+        witness_entry_key: Optional["bytes"] = None,
+        witness_value_hash: Optional["bytes"] = None,
         counter: Optional["int"] = None,
-        witness_counter: Optional["int"] = None,
+        app_id: Optional["str"] = None,
     ) -> None:
         self.proof: Sequence["bytes"] = proof if proof is not None else []
         self.address = address
         self.value = value
-        self.witness_address = witness_address
-        self.witness_value = witness_value
+        self.witness_entry_key = witness_entry_key
+        self.witness_value_hash = witness_value_hash
         self.counter = counter
-        self.witness_counter = witness_counter
+        self.app_id = app_id
 
 
 class WARDLookupAck(protobuf.MessageType):
@@ -9853,6 +9859,7 @@ class WARDProofRequest(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address", "bytes", repeated=False, required=True),
         2: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9860,9 +9867,11 @@ class WARDProofRequest(protobuf.MessageType):
         *,
         address: "bytes",
         pending_id: Optional["int"] = None,
+        app_id: Optional["str"] = None,
     ) -> None:
         self.address = address
         self.pending_id = pending_id
+        self.app_id = app_id
 
 
 class WARDProofAck(protobuf.MessageType):
@@ -9871,9 +9880,9 @@ class WARDProofAck(protobuf.MessageType):
         1: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
         3: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
-        4: protobuf.Field("witness_address", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("witness_value", "bytes", repeated=False, required=False, default=None),
-        6: protobuf.Field("witness_counter", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("witness_value_hash", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -9882,16 +9891,16 @@ class WARDProofAck(protobuf.MessageType):
         proof: Optional[Sequence["bytes"]] = None,
         value: Optional["bytes"] = None,
         counter: Optional["int"] = None,
-        witness_address: Optional["bytes"] = None,
-        witness_value: Optional["bytes"] = None,
-        witness_counter: Optional["int"] = None,
+        witness_entry_key: Optional["bytes"] = None,
+        witness_value_hash: Optional["bytes"] = None,
+        app_id: Optional["str"] = None,
     ) -> None:
         self.proof: Sequence["bytes"] = proof if proof is not None else []
         self.value = value
         self.counter = counter
-        self.witness_address = witness_address
-        self.witness_value = witness_value
-        self.witness_counter = witness_counter
+        self.witness_entry_key = witness_entry_key
+        self.witness_value_hash = witness_value_hash
+        self.app_id = app_id
 
 
 class WARDDiscardPending(protobuf.MessageType):

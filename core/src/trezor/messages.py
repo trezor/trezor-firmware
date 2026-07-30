@@ -3446,6 +3446,7 @@ if TYPE_CHECKING:
         subtitle: "str | None"
         case_sensitive: "bool"
         chunkify: "bool | None"
+        app_id: "str | None"
 
         def __init__(
             self,
@@ -3455,6 +3456,7 @@ if TYPE_CHECKING:
             subtitle: "str | None" = None,
             case_sensitive: "bool | None" = None,
             chunkify: "bool | None" = None,
+            app_id: "str | None" = None,
         ) -> None:
             pass
 
@@ -3471,9 +3473,9 @@ if TYPE_CHECKING:
         value: "AnyBytes | None"
         proof: "list[AnyBytes]"
         counter: "int | None"
-        witness_address: "AnyBytes | None"
-        witness_value: "AnyBytes | None"
-        witness_counter: "int | None"
+        witness_entry_key: "AnyBytes | None"
+        witness_value_hash: "AnyBytes | None"
+        app_id: "str | None"
 
         def __init__(
             self,
@@ -3486,9 +3488,9 @@ if TYPE_CHECKING:
             chunkify: "bool | None" = None,
             value: "AnyBytes | None" = None,
             counter: "int | None" = None,
-            witness_address: "AnyBytes | None" = None,
-            witness_value: "AnyBytes | None" = None,
-            witness_counter: "int | None" = None,
+            witness_entry_key: "AnyBytes | None" = None,
+            witness_value_hash: "AnyBytes | None" = None,
+            app_id: "str | None" = None,
         ) -> None:
             pass
 
@@ -7551,12 +7553,14 @@ if TYPE_CHECKING:
     class WARDQueueUpdate(protobuf.MessageType):
         address: "AnyBytes"
         new_value: "AnyBytes"
+        app_id: "str | None"
 
         def __init__(
             self,
             *,
             address: "AnyBytes",
             new_value: "AnyBytes",
+            app_id: "str | None" = None,
         ) -> None:
             pass
 
@@ -7780,10 +7784,10 @@ if TYPE_CHECKING:
         address: "AnyBytes"
         value: "AnyBytes | None"
         proof: "list[AnyBytes]"
-        witness_address: "AnyBytes | None"
-        witness_value: "AnyBytes | None"
+        witness_entry_key: "AnyBytes | None"
+        witness_value_hash: "AnyBytes | None"
         counter: "int | None"
-        witness_counter: "int | None"
+        app_id: "str | None"
 
         def __init__(
             self,
@@ -7791,10 +7795,10 @@ if TYPE_CHECKING:
             address: "AnyBytes",
             proof: "list[AnyBytes] | None" = None,
             value: "AnyBytes | None" = None,
-            witness_address: "AnyBytes | None" = None,
-            witness_value: "AnyBytes | None" = None,
+            witness_entry_key: "AnyBytes | None" = None,
+            witness_value_hash: "AnyBytes | None" = None,
             counter: "int | None" = None,
-            witness_counter: "int | None" = None,
+            app_id: "str | None" = None,
         ) -> None:
             pass
 
@@ -7861,12 +7865,14 @@ if TYPE_CHECKING:
     class WARDProofRequest(protobuf.MessageType):
         address: "AnyBytes"
         pending_id: "int | None"
+        app_id: "str | None"
 
         def __init__(
             self,
             *,
             address: "AnyBytes",
             pending_id: "int | None" = None,
+            app_id: "str | None" = None,
         ) -> None:
             pass
 
@@ -7878,9 +7884,9 @@ if TYPE_CHECKING:
         value: "AnyBytes | None"
         proof: "list[AnyBytes]"
         counter: "int | None"
-        witness_address: "AnyBytes | None"
-        witness_value: "AnyBytes | None"
-        witness_counter: "int | None"
+        witness_entry_key: "AnyBytes | None"
+        witness_value_hash: "AnyBytes | None"
+        app_id: "str | None"
 
         def __init__(
             self,
@@ -7888,9 +7894,9 @@ if TYPE_CHECKING:
             proof: "list[AnyBytes] | None" = None,
             value: "AnyBytes | None" = None,
             counter: "int | None" = None,
-            witness_address: "AnyBytes | None" = None,
-            witness_value: "AnyBytes | None" = None,
-            witness_counter: "int | None" = None,
+            witness_entry_key: "AnyBytes | None" = None,
+            witness_value_hash: "AnyBytes | None" = None,
+            app_id: "str | None" = None,
         ) -> None:
             pass
 

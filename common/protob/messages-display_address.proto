@@ -28,13 +28,15 @@ message DisplayAddress {
     optional string subtitle = 3;         // custom subtitle
     optional bool case_sensitive = 4 [default = true];
     optional bool chunkify = 5;           // display the address in chunks of 4 characters
+    optional string app_id = 6;           // WARD domain to resolve the label in (entry_key input); default "display_address"
 }
 
 /**
  * Request: Show an arbitrary address on-screen with a PUSH-authenticated WARD label
  * — the host attaches the proof up-front instead of answering a pull. The firmware
- * verifies the supplied (membership: value/counter; non-membership: witness_*)
- * proof against its authenticated WARD root and shows the verified label.
+ * verifies the supplied (membership: value/counter; non-membership: witness hashes)
+ * proof against its authenticated WARD root and shows the verified label. The
+ * device forms entry_key from the trusted "display_address" domain constant.
  *
  * The PULL variant (device requests the proof on demand) is DisplayAddress.
  * @start
@@ -47,10 +49,11 @@ message DisplayAddressWithProof {
     optional string subtitle = 3;         // custom subtitle
     optional bool case_sensitive = 4 [default = true];
     optional bool chunkify = 5;           // display the address in chunks of 4 characters
-    optional bytes  value           = 6;  // membership: the value stored at address
-    repeated bytes  proof           = 7;  // sibling hashes, leaf-to-root (33 bytes each)
-    optional uint32 counter         = 8;  // membership: leaf counter for address
-    optional bytes  witness_address = 9;  // non-membership: witness leaf address
-    optional bytes  witness_value   = 10; // non-membership: witness leaf value
-    optional uint32 witness_counter = 11; // non-membership: witness leaf counter
+    optional bytes  value              = 6;  // membership: the value stored at address
+    repeated bytes  proof              = 7;  // sibling hashes, leaf-to-root (33 bytes each)
+    optional uint32 counter            = 8;  // membership: leaf counter for address
+    optional bytes  witness_entry_key  = 9;  // non-membership: witness leaf entry_key (32B hash; reveals no plaintext)
+    optional bytes  witness_value_hash = 10; // non-membership: witness leaf value_hash = sha256(counter||value)
+    reserved 11;                             // was witness_counter; now committed inside witness_value_hash
+    optional string app_id             = 12; // WARD domain to resolve the label in (entry_key input); default "display_address"
 }

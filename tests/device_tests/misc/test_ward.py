@@ -19,6 +19,8 @@ from trezorlib.tools import parse_path
 from ...device_handler import BackgroundDeviceHandler
 from ...ward_mgr_emu import sign_ward_update, sign_wm_attestation
 
+_APP = "bitcoin"  # capability principal == queried domain for these tests
+
 ENTRIES = {
     b"alice": b"data_alice",
     b"bob": b"data_bob",
@@ -82,29 +84,28 @@ class WardHostHarness:
         return out_counter, out_root, wallet_id, out_root_mac
 
     def lookup(self, session: Session, address: bytes) -> bytes | None:
-        if self.tree.get_counter(address):
-            value = self.tree.get_value(address)
+        if self.tree.get_counter(_APP, address):
+            value = self.tree.get_value(_APP, address)
             valid, membership, _counter, _wallet_id = ward.lookup(
-                session,
+                session, _APP,
                 address=address,
                 value=value,
-                proof=self.tree.get_proof(address),
-                counter=self.tree.get_counter(address),
+                proof=self.tree.get_proof(_APP, address),
+                counter=self.tree.get_counter(_APP, address),
             )
             assert valid and membership
             return value
 
-        proof, witness_address, witness_counter, witness_value = (
-            self.tree.get_nonmembership_proof(address)
+        proof, witness_entry_key, witness_value_hash = (
+            self.tree.get_nonmembership_proof(_APP, address)
         )
         valid, membership, _counter, _wallet_id = ward.lookup(
-            session,
+            session, _APP,
             address=address,
             value=None,
             proof=proof,
-            witness_address=witness_address,
-            witness_value=witness_value,
-            witness_counter=witness_counter,
+            witness_entry_key=witness_entry_key,
+            witness_value_hash=witness_value_hash,
         )
         assert valid and not membership
         return None
@@ -115,7 +116,7 @@ class WardHostHarness:
         # Queue the intent (trusted confirm), then let the device pull the proof
         # for the current tree at perform time and WM-sign the candidate.
         old_value = (
-            self.tree.get_value(address) if self.tree.get_counter(address) else b""
+            self.tree.get_value(_APP, address) if self.tree.get_counter(_APP, address) else b""
         )
         pending_id = _queue_update(session, address, old_value, value or b"")
 
@@ -130,9 +131,9 @@ class WardHostHarness:
         )
 
         if value is None:
-            self.tree.delete(address)
+            self.tree.delete(_APP, address)
         else:
-            self.tree.insert(address, value, counter=c_counter)
+            self.tree.insert(_APP, address, value, counter=c_counter)
 
         expected_root = None if self.tree.is_empty() else self.tree.get_root_hash()
         assert new_root == expected_root
@@ -154,7 +155,7 @@ class WardHostHarness:
 def _make_tree() -> WARDTree:
     tree = WARDTree()
     for addr, val in ENTRIES.items():
-        tree.insert(addr, val, counter=1)
+        tree.insert(_APP, addr, val, counter=1)
     return tree
 
 
@@ -195,7 +196,7 @@ def _queue_update(
         with BackgroundDeviceHandler(client) as dev:
             dev.run_with_provided_session(
                 session,
-                lambda s: ward.queue_update(s, address, old_value, new_value),
+                lambda s: ward.queue_update(s, _APP, address, old_value, new_value),
             )
             dev.debuglink().press_yes()
             pending_id, _wallet_id = dev.result()
@@ -262,7 +263,7 @@ def test_ward_update(session: Session) -> None:
         session, tree, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
 
-    tree.insert(b"alice", b"data_alice_v2", counter=new_counter)
+    tree.insert(_APP, b"alice", b"data_alice_v2", counter=new_counter)
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
     assert root_mac is not None
@@ -279,7 +280,7 @@ def test_ward_insert(session: Session) -> None:
         session, tree, b"erin", b"", b"data_erin"
     )
 
-    tree.insert(b"erin", b"data_erin", counter=new_counter)
+    tree.insert(_APP, b"erin", b"data_erin", counter=new_counter)
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
 
@@ -294,7 +295,7 @@ def test_ward_delete(session: Session) -> None:
         session, tree, b"alice", ENTRIES[b"alice"], b""
     )
 
-    tree.delete(b"alice")
+    tree.delete(_APP, b"alice")
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
 
@@ -314,11 +315,11 @@ def test_ward_counter_advances_only_at_finalize(session: Session) -> None:
 
     # After perform, the authenticated root/counter are still the pre-edit ones.
     valid, membership, dev_counter, _wid = ward.lookup(
-        session,
+        session, _APP,
         address=b"alice",
         value=ENTRIES[b"alice"],
-        counter=tree.get_counter(b"alice"),
-        proof=tree.get_proof(b"alice"),
+        counter=tree.get_counter(_APP, b"alice"),
+        proof=tree.get_proof(_APP, b"alice"),
     )
     assert valid and membership
     assert dev_counter == counter0  # not advanced yet
@@ -458,7 +459,7 @@ def test_ward_get_address_label(session: Session) -> None:
     # 1. Learn the address, then build a WARD tree keyed by the address string.
     address = btc.get_address(session, "Bitcoin", path)
     tree = WARDTree()
-    tree.insert(address.encode(), b"alice.btc", counter=1)
+    tree.insert(_APP, address.encode(), b"alice.btc", counter=1)
 
     # 2. Install that authenticated root on the device (debug seed).
     ward.debug_set_root(session, tree.get_root_hash())
@@ -471,7 +472,7 @@ def test_ward_get_address_label(session: Session) -> None:
         path,
         show_display=True,
         ward_value=b"alice.btc",
-        ward_proof=tree.get_proof(address.encode()),
+        ward_proof=tree.get_proof(_APP, address.encode()),
         ward_counter=1,
     )
     assert result.address == address
@@ -583,7 +584,7 @@ def test_ward_rejected_finalize_keeps_pending_queue(session: Session) -> None:
     counter, new_root, _wid, _mac = ward.confirmed_by_wm(
         session, c_counter, mac_t, good_sig, pending_id
     )
-    tree.insert(b"alice", b"data_alice_v2", counter=new_counter)
+    tree.insert(_APP, b"alice", b"data_alice_v2", counter=new_counter)
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
     assert _pending_addresses(session) == []
@@ -612,11 +613,11 @@ def test_ward_discard_pending_clears_queue_and_unblocks(session: Session) -> Non
     # The counter did not move (discard is not a finalize): the authenticated
     # state is still the pre-edit tree.
     valid, membership, dev_counter, _wid = ward.lookup(
-        session,
+        session, _APP,
         address=b"alice",
         value=ENTRIES[b"alice"],
-        proof=tree.get_proof(b"alice"),
-        counter=tree.get_counter(b"alice"),
+        proof=tree.get_proof(_APP, b"alice"),
+        counter=tree.get_counter(_APP, b"alice"),
     )
     assert valid and membership
     assert dev_counter == counter0
@@ -625,7 +626,7 @@ def test_ward_discard_pending_clears_queue_and_unblocks(session: Session) -> Non
     pid_bob = _queue_update(session, b"bob", ENTRIES[b"bob"], b"data_bob_v2")
     assert _pending_addresses(session) == [b"bob"]
     counter, new_root, _wid, _mac = _perform_and_finalize(session, tree, pid_bob)
-    tree.insert(b"bob", b"data_bob_v2", counter=new_counter)
+    tree.insert(_APP, b"bob", b"data_bob_v2", counter=new_counter)
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
 

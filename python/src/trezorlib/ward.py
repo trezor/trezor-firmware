@@ -24,6 +24,7 @@ ZERO_MAC = b"\x00" * 32
 
 def queue_update(
     session: "Session",
+    app_id: str,
     address: bytes,
     old_value: bytes,
     new_value: bytes,
@@ -43,6 +44,7 @@ def queue_update(
     del old_value
     resp = session.call(
         messages.WARDQueueUpdate(
+            app_id=app_id,
             address=address,
             new_value=new_value,
         ),
@@ -175,25 +177,26 @@ def reconcile(
 
 def lookup(
     session: "Session",
+    app_id: str,
     address: bytes,
     value: Optional[bytes],
     proof: list[bytes],
     counter: Optional[int] = None,
-    witness_address: Optional[bytes] = None,
-    witness_value: Optional[bytes] = None,
-    witness_counter: Optional[int] = None,
+    witness_entry_key: Optional[bytes] = None,
+    witness_value_hash: Optional[bytes] = None,
 ) -> tuple[bool, bool, int, Optional[bytes]]:
     """Verify a proof against the device's authenticated root (formerly
-    authdb.lookup). Returns (valid, membership, counter, wallet_id)."""
+    authdb.lookup). Returns (valid, membership, counter, wallet_id). The device forms
+    entry_key(app_id, address); a non-membership witness is two hashes only."""
     resp = session.call(
         messages.WARDLookup(
+            app_id=app_id,
             address=address,
             value=value,
             proof=proof,
-            witness_address=witness_address,
-            witness_value=witness_value,
+            witness_entry_key=witness_entry_key,
+            witness_value_hash=witness_value_hash,
             counter=counter,
-            witness_counter=witness_counter,
         ),
         expect=messages.WARDLookupAck,
     )
@@ -217,26 +220,30 @@ def debug_set_root(
 # ---------------------------------------------------------------------------
 
 
-def build_proof_ack(tree: "WARDTree", address: bytes) -> messages.WARDProofAck:
-    """Answer a WARDProofRequest from `tree`: a membership proof if the address is
-    present, otherwise a non-membership (witness) proof, or an empty ack for an
-    empty tree."""
+def build_proof_ack(
+    tree: "WARDTree", app_id: str, address: bytes
+) -> messages.WARDProofAck:
+    """Answer a WARDProofRequest from `tree` within the domain named by app_id: a
+    membership proof if the entry is present, otherwise a non-membership (witness)
+    proof, or an empty ack for an empty tree. The witness is two hashes only
+    (witness_entry_key, witness_value_hash) — no plaintext leaks across apps."""
     if tree.is_empty():
-        return messages.WARDProofAck()
-    if tree.get_counter(address):
+        return messages.WARDProofAck(app_id=app_id)
+    if tree.get_counter(app_id, address):
         return messages.WARDProofAck(
-            value=tree.get_value(address),
-            proof=tree.get_proof(address),
-            counter=tree.get_counter(address),
+            value=tree.get_value(app_id, address),
+            proof=tree.get_proof(app_id, address),
+            counter=tree.get_counter(app_id, address),
+            app_id=app_id,
         )
-    proof, witness_address, witness_counter, witness_value = (
-        tree.get_nonmembership_proof(address)
+    proof, witness_entry_key, witness_value_hash = tree.get_nonmembership_proof(
+        app_id, address
     )
     return messages.WARDProofAck(
         proof=proof,
-        witness_address=witness_address,
-        witness_value=witness_value,
-        witness_counter=witness_counter,
+        witness_entry_key=witness_entry_key,
+        witness_value_hash=witness_value_hash,
+        app_id=app_id,
     )
 
 
@@ -250,6 +257,7 @@ def tree_proof_callback(
     """
 
     def _callback(msg: messages.WARDProofRequest) -> messages.WARDProofAck:
-        return build_proof_ack(tree, msg.address)
+        # The device names the domain in the request; serve the proof for it.
+        return build_proof_ack(tree, msg.app_id or "", msg.address)
 
     return _callback

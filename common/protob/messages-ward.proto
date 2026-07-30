@@ -49,6 +49,7 @@ option java_outer_classname = "TrezorMessageWard";
 message WARDQueueUpdate {
     required bytes address   = 1;  // key to update
     required bytes new_value = 2;  // new value; empty means delete
+    optional string app_id   = 3;  // domain the write targets; leaf key = app_id||0x00||address
 }
 
 /**
@@ -246,13 +247,14 @@ message WARDReconcileAck {
  * @next Failure
  */
 message WARDLookup {
-    required bytes  address         = 1;  // key whose SHA-256 determines the tree path
-    optional bytes  value           = 2;  // value stored at address (required for membership)
-    repeated bytes  proof           = 3;  // sibling hashes, leaf-to-root order (33 bytes each)
-    optional bytes  witness_address = 4;  // non-membership: witness leaf address
-    optional bytes  witness_value   = 5;  // non-membership: witness leaf value
-    optional uint32 counter         = 6;  // leaf counter for address (required for membership)
-    optional uint32 witness_counter = 7;  // leaf counter for witness_address (non-membership)
+    required bytes  address            = 1;  // raw identifier; the device forms entry_key = sha256(app_id||0x00||type||0x00||address)
+    optional bytes  value              = 2;  // value stored at address (required for membership)
+    repeated bytes  proof              = 3;  // sibling hashes, leaf-to-root order (33 bytes each)
+    optional bytes  witness_entry_key  = 4;  // non-membership: witness leaf entry_key (32B hash; reveals no plaintext)
+    optional bytes  witness_value_hash = 5;  // non-membership: witness leaf value_hash = sha256(counter||value)
+    optional uint32 counter            = 6;  // leaf counter for address (required for membership)
+    reserved 7;                              // was witness_counter; now committed inside witness_value_hash
+    optional string app_id             = 8;  // domain scoping the path (entry_key input)
 }
 
 /**
@@ -303,6 +305,7 @@ message WARDDebugSetRootAck {
 message WARDProofRequest {
     required bytes  address    = 1;  // address the proof is requested for
     optional uint32 pending_id = 2;  // set during WARDPerformUpdate: the queued intent this proof is for
+    optional string app_id     = 3;  // domain the proof is requested for; host serves the proof for this domain
 }
 
 /**
@@ -315,12 +318,13 @@ message WARDProofRequest {
  * @end
  */
 message WARDProofAck {
-    optional bytes  value           = 1;  // value stored at address (membership)
-    repeated bytes  proof           = 2;  // sibling hashes, leaf-to-root order (33 bytes each)
-    optional uint32 counter         = 3;  // leaf counter for address (membership)
-    optional bytes  witness_address = 4;  // non-membership: witness leaf address
-    optional bytes  witness_value   = 5;  // non-membership: witness leaf value
-    optional uint32 witness_counter = 6;  // non-membership: witness leaf counter
+    optional bytes  value              = 1;  // value stored at address (membership)
+    repeated bytes  proof              = 2;  // sibling hashes, leaf-to-root order (33 bytes each)
+    optional uint32 counter            = 3;  // leaf counter for address (membership)
+    optional bytes  witness_entry_key  = 4;  // non-membership: witness leaf entry_key (32B hash; reveals no plaintext)
+    optional bytes  witness_value_hash = 5;  // non-membership: witness leaf value_hash = sha256(counter||value)
+    reserved 6;                              // was witness_counter; now committed inside witness_value_hash
+    optional string app_id             = 7;  // domain the answered proof is scoped to (echoes the request)
 }
 
 /**

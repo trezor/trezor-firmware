@@ -114,7 +114,10 @@ def bump_counter(wallet_id: bytes) -> int:
 #   [body_len:2][ body ]  repeated
 # where each body is:
 #   [pending_id:4][wallet_id:20][counter_T:4][state:1][root_T:32][mac_T:32]
-#   [addr_len:2][address][ov_len:2][old_value][nv_len:2][new_value]
+#   [addr_len:2][address][ov_len:2][old_value][nv_len:2][new_value][aid_len:2][app_id]
+# app_id (the write's target domain) is length-framed at the tail so the whole
+# round stays bound to dk(app_id, address); records written before app_id existed
+# decode to an empty app_id (the tail read past the buffer yields b"").
 # At WARDQueueUpdate the intent is stored PENDING with counter_T UNSET (0, strict
 # model: the candidate counter is not a queue-time input) and PLACEHOLDER root/mac
 # (not yet computed). At WARDPerformUpdate the device derives counter_T, pulls a
@@ -198,10 +201,11 @@ def _rec_address(body: bytes) -> bytes:
 
 def _parse_body(
     body: bytes,
-) -> tuple[int, int, bytes, bytes, bytes, bytes | None, bytes | None]:
-    """Return (counter, state, address, old_value, new_value, root, mac).
+) -> tuple[int, int, bytes, bytes, bytes, bytes | None, bytes | None, bytes]:
+    """Return (counter, state, address, old_value, new_value, root, mac, app_id).
     root/mac are None until the intent is COMMITTED, and also None (empty tree)
-    when a COMMITTED candidate stored EMPTY_ROOT."""
+    when a COMMITTED candidate stored EMPTY_ROOT. app_id is the write's target
+    domain (empty bytes for records written before app_id existed)."""
     counter = int.from_bytes(body[_OFF_CTR : _OFF_CTR + 4], "big")
     state = body[_OFF_STATE]
     root = bytes(body[_OFF_ROOT : _OFF_ROOT + ROOT_LENGTH])
@@ -209,9 +213,10 @@ def _parse_body(
     address, off = _read_lv(body, _OFF_TAIL)
     old_value, off = _read_lv(body, off)
     new_value, off = _read_lv(body, off)
+    app_id, off = _read_lv(body, off)
     if state != QUEUE_COMMITTED or root == EMPTY_ROOT:
-        return counter, state, address, old_value, new_value, None, None
-    return counter, state, address, old_value, new_value, root, mac
+        return counter, state, address, old_value, new_value, None, None, app_id
+    return counter, state, address, old_value, new_value, root, mac, app_id
 
 
 def _build_body(
@@ -224,6 +229,7 @@ def _build_body(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
+    app_id: bytes,
 ) -> bytes:
     return (
         pending_id.to_bytes(4, "big")
@@ -238,6 +244,8 @@ def _build_body(
         + old_value
         + len(new_value).to_bytes(2, "big")
         + new_value
+        + len(app_id).to_bytes(2, "big")
+        + app_id
     )
 
 
@@ -248,11 +256,13 @@ def queue_put(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
+    app_id: bytes,
 ) -> None:
     """Store an approved edit INTENT as PENDING under pending_id (pull model:
     no proof, no root/mac yet -- those are filled by queue_set_computed at
-    WARDPerformUpdate). Replaces any record with the same pending_id; otherwise
-    appends. Raises ValueError if the wallet already holds MAX_PENDING intents.
+    WARDPerformUpdate). app_id binds the round to dk(app_id, address). Replaces any
+    record with the same pending_id; otherwise appends. Raises ValueError if the
+    wallet already holds MAX_PENDING intents.
     """
     records = _load_records()
 
@@ -274,6 +284,7 @@ def queue_put(
         address,
         old_value,
         new_value,
+        app_id,
     )
 
     for i in range(len(records)):
@@ -305,7 +316,9 @@ def queue_set_computed(
     for i in range(len(records)):
         body = records[i]
         if _rec_pid(body) == pending_id and _rec_wid(body) == wallet_id:
-            _c, _state, address, old_value, new_value, _r, _m = _parse_body(body)
+            _c, _state, address, old_value, new_value, _r, _m, app_id = _parse_body(
+                body
+            )
             records[i] = _build_body(
                 pending_id,
                 wallet_id,
@@ -316,6 +329,7 @@ def queue_set_computed(
                 address,
                 old_value,
                 new_value,
+                app_id,
             )
             _save_records(records)
             return
@@ -325,10 +339,10 @@ def queue_set_computed(
 def queue_get(
     wallet_id: bytes,
     pending_id: int,
-) -> tuple[int, int, bytes, bytes, bytes, bytes | None, bytes | None] | None:
-    """Return (counter, state, address, old_value, new_value, root, mac) for
+) -> tuple[int, int, bytes, bytes, bytes, bytes | None, bytes | None, bytes] | None:
+    """Return (counter, state, address, old_value, new_value, root, mac, app_id) for
     (wallet_id, pending_id), or None. root/mac are None until COMMITTED (and for a
-    COMMITTED candidate that empties the tree)."""
+    COMMITTED candidate that empties the tree). app_id is the write's target domain."""
     for body in _load_records():
         if _rec_pid(body) == pending_id and _rec_wid(body) == wallet_id:
             return _parse_body(body)

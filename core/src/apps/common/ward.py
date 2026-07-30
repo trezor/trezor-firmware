@@ -52,31 +52,31 @@ async def lookup_label(
     _authorize(app_id, "lookup")
     from apps.ward import service
 
-    return await service.lookup_label(address, value, proof, counter)
+    return await service.lookup_label(app_id, address, value, proof, counter)
 
 
 async def _classify_label(
+    app_id: str,
     address: bytes,
     value: bytes | None,
     proof: list[bytes],
     counter: int | None,
-    witness_address: bytes | None = None,
-    witness_value: bytes | None = None,
-    witness_counter: int | None = None,
+    witness_entry_key: bytes | None = None,
+    witness_value_hash: bytes | None = None,
 ) -> tuple[str, bytes | None]:
     """Verify a (membership / non-membership) proof against the device's
-    authenticated root and classify it. Returns (status, label), where status is
-    "unknown" / "membership" / "non-membership" and label is the verified value
-    bytes (only for a valid membership proof, else None). Shared by the PUSH and
-    PULL label paths."""
+    authenticated root and classify it, within the domain named by app_id. Returns
+    (status, label), where status is "unknown" / "membership" / "non-membership" and
+    label is the verified value bytes (only for a valid membership proof, else
+    None). Shared by the PUSH and PULL label paths."""
     valid, _counter, membership, _wallet_id, _ward_id = await lookup(
+        app_id,
         address,
         value,
         proof,
-        witness_address=witness_address,
-        witness_value=witness_value,
+        witness_entry_key=witness_entry_key,
+        witness_value_hash=witness_value_hash,
         counter=counter,
-        witness_counter=witness_counter,
     )
     if not valid:
         return "unknown", None
@@ -93,53 +93,64 @@ async def verify_label(
     value: bytes | None,
     proof: list[bytes],
     counter: int | None,
-    witness_address: bytes | None = None,
-    witness_value: bytes | None = None,
-    witness_counter: int | None = None,
+    witness_entry_key: bytes | None = None,
+    witness_value_hash: bytes | None = None,
+    domain: str | None = None,
 ) -> tuple[str, bytes | None]:
     """GATED PUSH-path label resolution: classify a proof the host attached
-    up-front (e.g. DisplayAddress.ward_*). Returns (status, label). Raises
-    DataError if `app_id` lacks the `lookup` capability."""
+    up-front (e.g. DisplayAddressWithProof). Returns (status, label). Raises
+    DataError if `app_id` lacks the `lookup` capability.
+
+    `app_id` is the CAPABILITY PRINCIPAL (the on-device app, capability-gated).
+    `domain` is the WARD domain the label lives in and forms entry_key; it defaults
+    to `app_id` (an app resolving its own domain). A display app (principal
+    "display_address") passes the queried domain so it can show any app's label."""
     _authorize(app_id, "lookup")
     return await _classify_label(
+        domain if domain is not None else app_id,
         address,
         value,
         proof,
         counter,
-        witness_address=witness_address,
-        witness_value=witness_value,
-        witness_counter=witness_counter,
+        witness_entry_key=witness_entry_key,
+        witness_value_hash=witness_value_hash,
     )
 
 
-async def resolve_label(app_id: str, address: bytes) -> tuple[str, bytes | None]:
+async def resolve_label(
+    app_id: str, address: bytes, domain: str | None = None
+) -> tuple[str, bytes | None]:
     """GATED PULL-path label resolution for on-device apps.
 
     Rather than trusting a proof the host pushed up-front, the device PULLS it:
-    it sends a WARDProofRequest naming `address`, the host answers with the WARD
-    entry + proof it holds (WARDProofAck), and this verifies that proof against
-    the device's authenticated root. Returns (status, label) — see verify_label.
+    it sends a WARDProofRequest naming `address` (and the queried `domain`), the host
+    answers with the WARD entry + proof it holds (WARDProofAck), and this verifies
+    that proof against the device's authenticated root. Returns (status, label).
 
-    Reusable by any on-device app that displays an address (DisplayAddress,
-    Bitcoin/Ethereum getAddress, sign-tx outputs). Raises DataError if `app_id`
-    lacks the `lookup` capability.
+    `app_id` is the capability principal (gated); `domain` is the WARD domain the
+    label lives in and forms entry_key, defaulting to `app_id`. Reusable by any
+    on-device app that displays an address. Raises DataError if `app_id` lacks the
+    `lookup` capability.
     """
     _authorize(app_id, "lookup")
     from trezor.messages import WARDProofAck, WARDProofRequest
     from trezor.wire import context
 
-    ack = await context.call(WARDProofRequest(address=address), WARDProofAck)
+    domain = domain if domain is not None else app_id
+    ack = await context.call(
+        WARDProofRequest(address=address, app_id=domain), WARDProofAck
+    )
 
     # A membership answer carries a value (and no witness); a non-membership
     # answer carries witness fields (or nothing at all, for an empty tree).
     return await _classify_label(
+        domain,
         address,
         ack.value,
         ack.proof,
         ack.counter,
-        witness_address=ack.witness_address,
-        witness_value=ack.witness_value,
-        witness_counter=ack.witness_counter,
+        witness_entry_key=ack.witness_entry_key,
+        witness_value_hash=ack.witness_value_hash,
     )
 
 
@@ -152,43 +163,48 @@ async def resolve_label(app_id: str, address: bytes) -> tuple[str, bytes | None]
 
 
 async def lookup(
+    app_id,
     address: bytes,
     value: bytes | None,
     proof: list[bytes],
-    witness_address: bytes | None = None,
-    witness_value: bytes | None = None,
+    witness_entry_key: bytes | None = None,
+    witness_value_hash: bytes | None = None,
     counter: int | None = None,
-    witness_counter: int | None = None,
 ) -> tuple[bool, int, bool, bytes, bytes]:
-    """Verify a membership / non-membership proof against the device's WARD root.
-    Returns (valid, counter, membership, wallet_id, ward_id). General
-    proof-verification path used by the host WARDLookup handler.
+    """Verify a membership / non-membership proof against the device's WARD root,
+    in the domain named by app_id. Returns (valid, counter, membership, wallet_id,
+    ward_id). General proof-verification path used by the host WARDLookup handler.
+    The host names the domain; the device forms entry_key(app_id, address). A
+    non-membership witness is passed opaquely as (witness_entry_key,
+    witness_value_hash).
     """
     from apps.ward import service
 
     return await service.lookup(
+        app_id,
         address,
         value,
         proof,
-        witness_address=witness_address,
-        witness_value=witness_value,
+        witness_entry_key=witness_entry_key,
+        witness_value_hash=witness_value_hash,
         counter=counter,
-        witness_counter=witness_counter,
     )
 
 
 async def queue(
+    app_id,
     address: bytes,
     new_value: bytes,
 ) -> tuple[int, bytes]:
-    """Queue an edit INTENT via the WARD trust anchor (pull model). Shows the
-    new value on a trusted screen and returns (pending_id, wallet_id) only on user
-    approval. No proof and no candidate counter here (strict model: counter_T is
-    derived later, inside the WM-synchronized WARDPerformUpdate flow).
+    """Queue an edit INTENT via the WARD trust anchor (pull model) for the domain
+    named by app_id. The trust anchor checks its ACL, shows the domain + new value
+    on a trusted screen, and returns (pending_id, wallet_id) only on user approval.
+    No proof and no candidate counter here (strict model: counter_T is derived
+    later, inside the WM-synchronized WARDPerformUpdate flow).
     """
     from apps.ward import service
 
-    return await service.queue(address, new_value)
+    return await service.queue(app_id, address, new_value)
 
 
 async def perform(
@@ -204,10 +220,15 @@ async def perform(
     from trezor.messages import WARDProofAck, WARDProofRequest
     from trezor.wire import context
 
-    pid, address = await service.intent(pending_id)
+    pid, address, app_id = await service.intent(pending_id)
 
     ack = await context.call(
-        WARDProofRequest(address=address, pending_id=pid), WARDProofAck
+        WARDProofRequest(
+            address=address,
+            pending_id=pid,
+            app_id=app_id.decode() if app_id else None,
+        ),
+        WARDProofAck,
     )
 
     return await service.perform(
@@ -215,9 +236,8 @@ async def perform(
         ack.value,
         ack.proof,
         ack.counter,
-        witness_address=ack.witness_address,
-        witness_value=ack.witness_value,
-        witness_counter=ack.witness_counter,
+        witness_entry_key=ack.witness_entry_key,
+        witness_value_hash=ack.witness_value_hash,
     )
 
 

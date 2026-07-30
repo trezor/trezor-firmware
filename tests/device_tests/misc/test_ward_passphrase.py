@@ -18,6 +18,8 @@ from trezorlib.exceptions import TrezorFailure
 
 from ...ward_mgr_emu import WMEmulator, sign_wm_attestation, wm_initial_sync
 
+_APP = "bitcoin"  # capability principal == queried domain for these tests
+
 pytestmark = [
     pytest.mark.models("core"),
     pytest.mark.setup_client(passphrase=True),
@@ -33,7 +35,7 @@ _VAL_B = b'TEST:1:{"label":"B"}'
 
 def _single_leaf_tree(address: str, value: bytes) -> WARDTree:
     tree = WARDTree()
-    tree.insert(address.encode(), value, counter=1)
+    tree.insert(_APP, address.encode(), value, counter=1)
     return tree
 
 
@@ -57,17 +59,17 @@ def test_ward_passphrase_wallets_are_isolated(client: Client) -> None:
 
     # Each wallet authenticates its own entry ...
     valid_a, membership_a, _c, _w = ward.lookup(
-        session_a, _ADDR_A.encode(), _VAL_A, tree_a.get_proof(_ADDR_A.encode()), counter=1
+        session_a, _APP, _ADDR_A.encode(), _VAL_A, tree_a.get_proof(_APP, _ADDR_A.encode()), counter=1
     )
     assert valid_a and membership_a
     valid_b, membership_b, _c, _w = ward.lookup(
-        session_b, _ADDR_B.encode(), _VAL_B, tree_b.get_proof(_ADDR_B.encode()), counter=1
+        session_b, _APP, _ADDR_B.encode(), _VAL_B, tree_b.get_proof(_APP, _ADDR_B.encode()), counter=1
     )
     assert valid_b and membership_b
 
     # ... and does NOT recognize the other wallet's entry (different root).
     other_valid, _m, _c, _w = ward.lookup(
-        session_a, _ADDR_B.encode(), _VAL_B, tree_b.get_proof(_ADDR_B.encode()), counter=1
+        session_a, _APP, _ADDR_B.encode(), _VAL_B, tree_b.get_proof(_APP, _ADDR_B.encode()), counter=1
     )
     assert not other_valid
 

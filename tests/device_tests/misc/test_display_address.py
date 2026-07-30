@@ -7,6 +7,8 @@ from trezorlib.debuglink import DebugSession as Session
 from ...device_handler import BackgroundDeviceHandler
 from ...ward_mgr_emu import sign_ward_update, sign_wm_attestation
 
+_APP = "bitcoin"  # capability principal == queried domain for these tests
+
 pytestmark = [pytest.mark.models("core")]
 
 
@@ -40,8 +42,8 @@ def _add_value_via_device(
     counter, _root, root_mac = _sync_device(session, counter, root, root_mac)
 
     address_bytes = address.encode()
-    old_counter = tree.get_counter(address_bytes)
-    old_value = tree.get_value(address_bytes) if old_counter else b""
+    old_counter = tree.get_counter(_APP, address_bytes)
+    old_value = tree.get_value(_APP, address_bytes) if old_counter else b""
     new_counter = counter + 1
 
     with session.test_ctx as client:
@@ -52,7 +54,7 @@ def _add_value_via_device(
         with BackgroundDeviceHandler(client) as dev:
             dev.run_with_provided_session(
                 session,
-                lambda s: ward.queue_update(s, address_bytes, old_value, value),
+                lambda s: ward.queue_update(s, _APP, address_bytes, old_value, value),
             )
             dev.debuglink().press_yes()
             pending_id, _wallet_id = dev.result()
@@ -69,7 +71,7 @@ def _add_value_via_device(
             session, c_counter, mac_t, sig, pending_id
         )
 
-    tree.insert(address_bytes, value, counter=new_counter)
+    tree.insert(_APP, address_bytes, value, counter=new_counter)
     assert new_root == tree.get_root_hash()
     return counter, root_mac
 
@@ -80,9 +82,9 @@ def test_display_wrong_address_more_labels(session: Session) -> None:
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
     tree = WARDTree()
-    tree.insert(address.encode(), value, counter=1)
-    tree.insert(other_address.encode(), other_value, counter=1)
-    proof = tree.get_proof(other_address.encode())
+    tree.insert(_APP, address.encode(), value, counter=1)
+    tree.insert(_APP, other_address.encode(), other_value, counter=1)
+    proof = tree.get_proof(_APP, other_address.encode())
     ward.debug_set_root(session, tree.get_root_hash())
 
     with session.test_ctx as client:
@@ -91,6 +93,7 @@ def test_display_wrong_address_more_labels(session: Session) -> None:
                 session,
                 lambda s: s.call(
                     messages.DisplayAddressWithProof(
+                        app_id=_APP,
                         address=address,
                         value=value,
                         proof=proof,
@@ -115,9 +118,9 @@ def test_display_address_more_labels(session: Session) -> None:
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
     tree = WARDTree()
-    tree.insert(address.encode(), value, counter=1)
-    tree.insert(other_address.encode(), other_value, counter=1)
-    proof = tree.get_proof(address.encode())
+    tree.insert(_APP, address.encode(), value, counter=1)
+    tree.insert(_APP, other_address.encode(), other_value, counter=1)
+    proof = tree.get_proof(_APP, address.encode())
     ward.debug_set_root(session, tree.get_root_hash())
 
     with session.test_ctx as client:
@@ -126,6 +129,7 @@ def test_display_address_more_labels(session: Session) -> None:
                 session,
                 lambda s: s.call(
                     messages.DisplayAddressWithProof(
+                        app_id=_APP,
                         address=address,
                         value=value,
                         proof=proof,
@@ -163,7 +167,7 @@ def test_display_address_more_labels_via_device(session: Session) -> None:
     assert counter == 2
     assert root_mac is not None
 
-    proof = tree.get_proof(address.encode())
+    proof = tree.get_proof(_APP, address.encode())
 
     with session.test_ctx as client:
         with BackgroundDeviceHandler(client) as dev:
@@ -171,6 +175,7 @@ def test_display_address_more_labels_via_device(session: Session) -> None:
                 session,
                 lambda s: s.call(
                     messages.DisplayAddressWithProof(
+                        app_id=_APP,
                         address=address,
                         value=value,
                         proof=proof,
@@ -206,28 +211,28 @@ def test_add_value_via_device_increments_leaf_counter(session: Session) -> None:
     counter, root_mac = _add_value_via_device(
         session, tree, address, value, counter, root_mac
     )
-    assert tree.get_counter(address.encode()) == 1
+    assert tree.get_counter(_APP, address.encode()) == 1
 
     # Second write to the same address is an UPDATE: the leaf counter increments.
     counter, root_mac = _add_value_via_device(
         session, tree, address, updated_value, counter, root_mac
     )
     assert counter == 2
-    assert tree.get_counter(address.encode()) == 2
+    assert tree.get_counter(_APP, address.encode()) == 2
 
     # The device's authenticated root binds the leaf at the INCREMENTED counter:
     # a membership lookup with counter=2 verifies, while the stale counter=1 does
     # not. (_add_value_via_device already asserts new_root == tree root, so the
     # device recomputed the root using the bumped leaf counter.)
-    proof = tree.get_proof(address.encode())
+    proof = tree.get_proof(_APP, address.encode())
     valid, membership, current, _wallet_id = ward.lookup(
-        session, address.encode(), updated_value, proof, counter=2
+        session, _APP, address.encode(), updated_value, proof, counter=2
     )
     assert valid and membership
     assert current == 2
 
     stale_valid, _membership, _current, _wallet_id = ward.lookup(
-        session, address.encode(), updated_value, proof, counter=1
+        session, _APP, address.encode(), updated_value, proof, counter=1
     )
     assert not stale_valid
 
@@ -238,8 +243,8 @@ def test_display_address_single_label(session: Session) -> None:
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
     tree = WARDTree()
-    tree.insert(address.encode(), value, counter=1)
-    proof = tree.get_proof(address.encode())
+    tree.insert(_APP, address.encode(), value, counter=1)
+    proof = tree.get_proof(_APP, address.encode())
     ward.debug_set_root(session, tree.get_root_hash())
 
     with session.test_ctx as client:
@@ -248,6 +253,7 @@ def test_display_address_single_label(session: Session) -> None:
                 session,
                 lambda s: s.call(
                     messages.DisplayAddressWithProof(
+                        app_id=_APP,
                         address=address,
                         value=value,
                         proof=proof,
@@ -275,9 +281,9 @@ def test_display_address_unknown_with_wrong_proof(session: Session) -> None:
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
     tree = WARDTree()
-    tree.insert(address.encode(), value, counter=1)
-    tree.insert(other_address.encode(), other_value, counter=1)
-    wrong_proof = tree.get_proof(other_address.encode())
+    tree.insert(_APP, address.encode(), value, counter=1)
+    tree.insert(_APP, other_address.encode(), other_value, counter=1)
+    wrong_proof = tree.get_proof(_APP, other_address.encode())
     ward.debug_set_root(session, tree.get_root_hash())
 
     with session.test_ctx as client:
@@ -286,6 +292,7 @@ def test_display_address_unknown_with_wrong_proof(session: Session) -> None:
                 session,
                 lambda s: s.call(
                     messages.DisplayAddressWithProof(
+                        app_id=_APP,
                         address=address,
                         value=value,
                         proof=wrong_proof,
@@ -317,8 +324,8 @@ def test_display_address_more_labels_pull(session: Session) -> None:
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
     tree = WARDTree()
-    tree.insert(address.encode(), value, counter=1)
-    tree.insert(other_address.encode(), other_value, counter=1)
+    tree.insert(_APP, address.encode(), value, counter=1)
+    tree.insert(_APP, other_address.encode(), other_value, counter=1)
     ward.debug_set_root(session, tree.get_root_hash())
 
     with session.test_ctx as client:
@@ -327,7 +334,7 @@ def test_display_address_more_labels_pull(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddress(address=address),
+                    messages.DisplayAddress(address=address, app_id=_APP),
                     expect=messages.Success,
                 ),
             )
@@ -345,15 +352,15 @@ def test_display_address_more_labels_pull(session: Session) -> None:
 def test_display_address_non_membership_pull(session: Session) -> None:
     """Non-membership on a non-empty tree — impossible in the PUSH model (the
     message has no witness fields) but expressible via PULL, since WARDProofAck
-    carries witness_address/witness_value/witness_counter."""
+    carries witness_entry_key/witness_value_hash."""
     address = "bc1qdemoaddress000000000000000000000000000"
     other_address = "bc1qotheraddress000000000000000000000000000"
     missing_address = "bc1qlabel3000000000000000000000000000000000"
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
     tree = WARDTree()
-    tree.insert(address.encode(), value, counter=1)
-    tree.insert(other_address.encode(), other_value, counter=1)
+    tree.insert(_APP, address.encode(), value, counter=1)
+    tree.insert(_APP, other_address.encode(), other_value, counter=1)
     ward.debug_set_root(session, tree.get_root_hash())
 
     with session.test_ctx as client:
@@ -362,7 +369,7 @@ def test_display_address_non_membership_pull(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddress(address=missing_address),
+                    messages.DisplayAddress(address=missing_address, app_id=_APP),
                     expect=messages.Success,
                 ),
             )

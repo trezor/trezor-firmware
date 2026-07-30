@@ -60,10 +60,14 @@ _ZERO_MAC = b"\x00" * 32
 # ---------------------------------------------------------------------------
 # MPT hash / proof primitives (formerly apps.authdb._mpt).
 #
-# Leaf hash = sha256d(0x00||address||counter(4B BE)||value); counter is the
-# GLOBAL root counter stamped onto the leaf on change. compute_new_root() is the
-# single INIT/INSERT/UPDATE/DELETE state machine; it does not enforce the
-# per-generation +1 rule -- update_entry() does that.
+#   entry_key  = sha256(app_id || 0x00 || type || 0x00 || identifier)   (== trie path)
+#   value_hash = sha256(counter(4B BE) || value)
+#   leaf_hash  = sha256(0x00 || entry_key || value_hash)
+#
+# The counter is the GLOBAL root counter stamped onto the leaf on change; it lives
+# inside value_hash (never in entry_key, so an entry keeps one stable path across
+# versions). compute_new_root() is the single INIT/INSERT/UPDATE/DELETE state
+# machine; it does not enforce the per-generation +1 rule -- update_entry() does.
 # ---------------------------------------------------------------------------
 
 
@@ -73,25 +77,65 @@ def sha256d(data: bytes) -> bytes:
     return sha256(data).digest()
 
 
-def addr_bit(addr_hash: bytes, bit: int) -> int:
-    return (addr_hash[bit // 8] >> (7 - (bit % 8))) & 1
+# MVP entry type: the only kind of identifier keyed today is an address. It is
+# baked into entry_key so the key layout reserves a type slot, but it is a constant
+# (no wire/storage field). Later kinds add real types by varying this argument.
+_ENTRY_TYPE_ADDRESS = "address"
 
 
-def leaf_hash(address: bytes, counter: int, value: bytes) -> bytes:
-    return sha256d(b"\x00" + address + counter.to_bytes(4, "big") + value)
+def entry_key(app_id, identifier: bytes, entry_type: str = _ENTRY_TYPE_ADDRESS) -> bytes:
+    """Domain-separated 32-byte trie key: sha256(app_id || 0x00 || type || 0x00 ||
+    identifier). This IS the trie path (there is no second path-hashing step).
+
+    Because it is a HASH, a non-membership witness (which carries the neighbour's
+    entry_key) reveals only a hash of another app's identifier -- never the plaintext.
+    The counter is NOT part of entry_key (it lives in value_hash), so an entry keeps
+    one stable path across version bumps. Must stay byte-for-byte identical to the
+    host (`entryKey`) and Python reference (`_entry_key`) implementations."""
+    if app_id is None:
+        app_id = b""
+    elif isinstance(app_id, str):
+        app_id = app_id.encode()
+    return sha256d(app_id + b"\x00" + entry_type.encode() + b"\x00" + identifier)
+
+
+def value_hash(counter: int, value: bytes) -> bytes:
+    """Hiding commitment to a leaf's value: sha256(counter(4B BE) || value). The
+    counter is committed here (on the value side), never in entry_key. A witness
+    reveals only this hash, so another app never sees the plaintext value. (No salt:
+    low-entropy values remain brute-forceable from value_hash -- accepted for MVP.)"""
+    return sha256d(counter.to_bytes(4, "big") + value)
+
+
+def leaf_hash_of(entry_key_: bytes, vhash: bytes) -> bytes:
+    """Two-level leaf: sha256(0x00 || entry_key || value_hash). Takes the value
+    commitment directly, so a verifier can rebuild a witness leaf from two hashes
+    without ever seeing the value/counter behind it."""
+    return sha256d(b"\x00" + entry_key_ + vhash)
+
+
+def leaf_hash(entry_key_: bytes, counter: int, value: bytes) -> bytes:
+    """Convenience leaf hash when the caller holds the plaintext value+counter (its
+    own entry): leaf_hash_of(entry_key, value_hash(counter, value))."""
+    return leaf_hash_of(entry_key_, value_hash(counter, value))
+
+
+def addr_bit(entry_key_: bytes, bit: int) -> int:
+    return (entry_key_[bit // 8] >> (7 - (bit % 8))) & 1
 
 
 def internal_hash(left: bytes, right: bytes) -> bytes:
     return sha256d(b"\x01" + left + right)
 
 
-def reconstruct(start_hash: bytes, proof: list, addr_hash: bytes) -> bytes:
-    """Walk proof from leaf toward root, rebuilding hashes."""
+def reconstruct(start_hash: bytes, proof: list, entry_key_: bytes) -> bytes:
+    """Walk proof from leaf toward root, rebuilding hashes. entry_key_ is the 32-byte
+    trie path of the leaf the walk starts from."""
     node = start_hash
     for elem in proof:
         bit = elem[0]
         sibling = bytes(elem[1:])
-        if addr_bit(addr_hash, bit) == 0:
+        if addr_bit(entry_key_, bit) == 0:
             node = internal_hash(node, sibling)
         else:
             node = internal_hash(sibling, node)
@@ -99,135 +143,132 @@ def reconstruct(start_hash: bytes, proof: list, addr_hash: bytes) -> bytes:
 
 
 def verify_proof(
-    address: bytes,
+    entry_key_: bytes,
     counter: int,
     value: bytes,
     proof: list,
     expected_root: bytes,
 ) -> bool:
-    """Verify an MPT membership proof for (address, counter, value) against expected_root."""
-    addr_hash = sha256d(address)
-    node = leaf_hash(address, counter, value)
-    node = reconstruct(node, proof, addr_hash)
+    """Verify an MPT membership proof for (entry_key, counter, value) against
+    expected_root. The caller holds its own value+counter, so it forms the leaf
+    directly."""
+    node = leaf_hash(entry_key_, counter, value)
+    node = reconstruct(node, proof, entry_key_)
     return node == expected_root
 
 
 def verify_nonmembership(
-    address: bytes,
-    witness_address: bytes,
-    witness_counter: int,
-    witness_value: bytes,
+    entry_key_: bytes,
+    witness_entry_key: bytes,
+    witness_value_hash: bytes,
     proof: list,
     expected_root: bytes,
 ) -> bool:
-    """Verify that address is NOT in the tree.
+    """Verify that entry_key is NOT in the tree.
 
-    The caller supplies a witness leaf (witness_address, witness_counter,
-    witness_value) that occupies address's path in the tree. We verify:
-      1. The witness is in the tree (membership proof against stored root).
-      2. witness_address != address.
-      3. witness_address and address share the same bit-value at every bit
-         position that appears in the proof (they diverge only after the
-         deepest branch, i.e. the witness is truly the closest leaf to
-         address).
-    """
-    if witness_address == address:
+    The caller supplies a witness leaf as two hashes -- (witness_entry_key,
+    witness_value_hash) -- that occupies entry_key's path, revealing nothing about
+    the witness's plaintext identifier or value. We verify:
+      1. The witness leaf, rebuilt from the two hashes, is in the tree.
+      2. witness_entry_key != entry_key.
+      3. witness_entry_key and entry_key share the same bit at every proof position
+         (the witness is the closest leaf to entry_key's path).
+    Soundness: rebuilding the leaf from witness_entry_key binds the presented key to
+    the in-tree leaf, so a lying key cannot pass."""
+    if witness_entry_key == entry_key_:
         return False
-
-    addr_hash = sha256d(address)
-    witness_hash = sha256d(witness_address)
 
     for elem in proof:
         bit = elem[0]
-        if addr_bit(addr_hash, bit) != addr_bit(witness_hash, bit):
+        if addr_bit(entry_key_, bit) != addr_bit(witness_entry_key, bit):
             return False
 
-    return verify_proof(witness_address, witness_counter, witness_value, proof, expected_root)
+    witness_leaf = leaf_hash_of(witness_entry_key, witness_value_hash)
+    return reconstruct(witness_leaf, proof, witness_entry_key) == expected_root
 
 
 def compute_new_root(
-    address: bytes,
+    entry_key_: bytes,
     old_counter: int,
     old_value: bytes,
     new_counter: int,
     new_value: bytes,
     proof: list,
     stored_root,
-    witness_address=None,
-    witness_counter=None,
-    witness_value=None,
+    witness_entry_key=None,
+    witness_value_hash=None,
 ):
     """Verify (old_counter, old_value, proof) against stored_root, then compute
     the new root. Returns the new root (None if the tree becomes/stays empty),
     or raises ValueError if the old-state proof does not verify. Single
     implementation of the INIT/INSERT/UPDATE/DELETE state machine; update_entry()
     enforces new_counter == current root counter + 1.
+
+    The write target is the caller's own entry, so old_counter/old_value are the
+    plaintext it already holds. An INSERT witness is a neighbour that may belong to
+    another app, so it is supplied privacy-preservingly as (witness_entry_key,
+    witness_value_hash) -- two hashes only.
     """
     inserting = len(old_value) == 0
     deleting = len(new_value) == 0
     if inserting and deleting:
         raise ValueError("old_value and new_value cannot both be empty")
 
-    addr_hash = sha256d(address)
-
     if inserting:
-        if len(proof) == 0 and witness_address is None:
+        if len(proof) == 0 and witness_entry_key is None:
             # INIT: tree was empty
             if stored_root is not None:
                 raise ValueError("Tree is not empty; supply non-membership proof")
-            return leaf_hash(address, new_counter, new_value)
+            return leaf_hash(entry_key_, new_counter, new_value)
 
-        if witness_address is None or witness_counter is None or witness_value is None:
-            raise ValueError("witness_address/witness_counter/witness_value required for INSERT")
-        if witness_address == address:
-            raise ValueError("witness_address must differ from address")
+        if witness_entry_key is None or witness_value_hash is None:
+            raise ValueError("witness_entry_key/witness_value_hash required for INSERT")
+        if witness_entry_key == entry_key_:
+            raise ValueError("witness_entry_key must differ from entry_key")
 
-        witness_hash = sha256d(witness_address)
         for elem in proof:
             bit = elem[0]
-            if addr_bit(addr_hash, bit) != addr_bit(witness_hash, bit):
+            if addr_bit(entry_key_, bit) != addr_bit(witness_entry_key, bit):
                 raise ValueError("Witness does not occupy target's path")
 
-        witness_in_tree = reconstruct(
-            leaf_hash(witness_address, witness_counter, witness_value), proof, witness_hash
-        )
+        witness_leaf = leaf_hash_of(witness_entry_key, witness_value_hash)
+        witness_in_tree = reconstruct(witness_leaf, proof, witness_entry_key)
         if witness_in_tree != stored_root:
             raise ValueError("Non-membership proof invalid: witness not in tree")
 
         split_bit = None
         for b in range(256):
-            if addr_bit(addr_hash, b) != addr_bit(witness_hash, b):
+            if addr_bit(entry_key_, b) != addr_bit(witness_entry_key, b):
                 split_bit = b
                 break
         if split_bit is None:
-            raise ValueError("address and witness_address hash to same value")
+            raise ValueError("entry_key and witness_entry_key are equal")
 
-        new_leaf_t = leaf_hash(address, new_counter, new_value)
-        new_leaf_w = leaf_hash(witness_address, witness_counter, witness_value)
-        if addr_bit(addr_hash, split_bit) == 0:
-            new_branch = internal_hash(new_leaf_t, new_leaf_w)
+        new_leaf_t = leaf_hash(entry_key_, new_counter, new_value)
+        if addr_bit(entry_key_, split_bit) == 0:
+            new_branch = internal_hash(new_leaf_t, witness_leaf)
         else:
-            new_branch = internal_hash(new_leaf_w, new_leaf_t)
-        return reconstruct(new_branch, proof, witness_hash)
+            new_branch = internal_hash(witness_leaf, new_leaf_t)
+        return reconstruct(new_branch, proof, witness_entry_key)
 
     if deleting:
         if stored_root is None:
             raise ValueError("No Merkle root stored on device")
-        current_leaf = leaf_hash(address, old_counter, old_value)
-        if reconstruct(current_leaf, proof, addr_hash) != stored_root:
+        current_leaf = leaf_hash(entry_key_, old_counter, old_value)
+        if reconstruct(current_leaf, proof, entry_key_) != stored_root:
             raise ValueError("Old value proof invalid")
         if len(proof) == 0:
             return None
         sibling_hash = bytes(proof[0][1:])
-        return reconstruct(sibling_hash, proof[1:], addr_hash)
+        return reconstruct(sibling_hash, proof[1:], entry_key_)
 
     # UPDATE (new_counter is the global stamp; validated by update_entry)
     if stored_root is None:
         raise ValueError("No Merkle root stored on device")
-    current_leaf = leaf_hash(address, old_counter, old_value)
-    if reconstruct(current_leaf, proof, addr_hash) != stored_root:
+    current_leaf = leaf_hash(entry_key_, old_counter, old_value)
+    if reconstruct(current_leaf, proof, entry_key_) != stored_root:
         raise ValueError("Old value proof invalid")
-    return reconstruct(leaf_hash(address, new_counter, new_value), proof, addr_hash)
+    return reconstruct(leaf_hash(entry_key_, new_counter, new_value), proof, entry_key_)
 
 
 # ---------------------------------------------------------------------------
@@ -360,32 +401,30 @@ def _compute_mac(key: bytes, *parts: bytes) -> bytes:
 
 
 def compute_root(
-    address: bytes,
+    entry_key_: bytes,
     old_counter: int,
     old_value: bytes,
     new_counter: int,
     new_value: bytes,
     proof: list[bytes],
     stored_root: bytes | None,
-    witness_address: bytes | None = None,
-    witness_counter: int | None = None,
-    witness_value: bytes | None = None,
+    witness_entry_key: bytes | None = None,
+    witness_value_hash: bytes | None = None,
 ) -> bytes | None:
     """Verify the old-state proof against stored_root and return the candidate
     new root (None if the tree becomes/stays empty). Raises ValueError on a
     proof that does not verify.
     """
     return compute_new_root(
-        address,
+        entry_key_,
         old_counter,
         old_value,
         new_counter,
         new_value,
         proof,
         stored_root,
-        witness_address=witness_address,
-        witness_counter=witness_counter,
-        witness_value=witness_value,
+        witness_entry_key=witness_entry_key,
+        witness_value_hash=witness_value_hash,
     )
 
 
@@ -404,11 +443,14 @@ def queue_put(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
+    app_id: bytes = b"",
 ) -> None:
     """Store an approved edit intent as PENDING under pending_id (pull model)."""
     import storage.ward_store as ward_store
 
-    ward_store.queue_put(wallet_id, pending_id, counter, address, old_value, new_value)
+    ward_store.queue_put(
+        wallet_id, pending_id, counter, address, old_value, new_value, app_id
+    )
 
 
 def queue_drop(wallet_id: bytes, pending_id: int) -> None:
@@ -480,7 +522,7 @@ async def discard(
     rec = ward_store.queue_get(wallet_id, pending_id)
     if rec is None:
         return None, wallet_id
-    _counter, _state, address, _ov, _nv, _root, _mac = rec
+    _counter, _state, address, _ov, _nv, _root, _mac, _app_id = rec
     ward_store.queue_drop(wallet_id, pending_id)
 
     if __debug__:
@@ -497,12 +539,13 @@ async def discard(
 
 
 async def lookup_label(
-    address: bytes, value: bytes, proof: list[bytes], counter: int
+    app_id, address: bytes, value: bytes, proof: list[bytes], counter: int
 ) -> bytes | None:
-    """On-device label lookup: authenticate (address, value) against the active
-    wallet's stored WARD root and return the verified value, or None if it does
-    not verify (or the tree is empty). Membership-only (the trust-anchor primitive
-    behind Core.lookup_label).
+    """On-device label lookup: authenticate (app_id, address, value) against the
+    active wallet's stored WARD root and return the verified value, or None if it
+    does not verify (or the tree is empty). Membership-only (the trust-anchor
+    primitive behind Core.lookup_label). The label is bound to its domain: the
+    proof is verified over entry_key(app_id, address).
     """
     import storage.ward_head as ward_head
 
@@ -510,7 +553,8 @@ async def lookup_label(
     present, stored_root = ward_head.root_get(wallet_id)
     if not present or stored_root is None:
         return None
-    if verify_proof(address, counter, value, proof, stored_root):
+    ek = entry_key(app_id, address)
+    if verify_proof(ek, counter, value, proof, stored_root):
         return value
     return None
 
@@ -531,8 +575,21 @@ def _display_bytes(value: bytes) -> str:
         return hexlify(value).decode()
 
 
-async def _confirm_update(address: bytes, new_value: bytes) -> None:
-    """Trusted on-device confirmation of a WARD edit intent. Raises
+def _acl_allows(app_id, capability: str) -> bool:
+    """WARD-service access-control seam for writes.
+
+    The write path is governed here, inside the trust anchor -- not by the Core
+    gateway's read/lookup capability allowlist. The application names the target
+    domain (app_id) and this decides whether that write is permitted. MVP: a
+    permissive stub (the user is the on-device authorizer via _confirm_update, and
+    the round is structurally bound to entry_key so a write can never reach another
+    domain's leaf). Real per-app rules land here later."""
+    return True
+
+
+async def _confirm_update(app_id, address: bytes, new_value: bytes) -> None:
+    """Trusted on-device confirmation of a WARD edit intent. Shows the target
+    domain (app_id) so the user approves "change the <domain> entry for X". Raises
     ActionCancelled if the user rejects; returns normally on approval."""
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_properties
@@ -543,8 +600,9 @@ async def _confirm_update(address: bytes, new_value: bytes) -> None:
         title = "Queue WARD entry"
 
     # PropertyType is a 3-tuple (name, value, is_data); is_data=True renders the
-    # value as monospace data.
-    props = [("Key", _display_bytes(address), True)]
+    # value as monospace data. The domain is shown first: it is the on-device
+    # authorization that binds this write to entry_key(app_id, address).
+    props = [("Domain", _display_bytes(app_id), False), ("Key", _display_bytes(address), True)]
     if len(new_value) != 0:
         props.append(("New value", _display_bytes(new_value), True))
 
@@ -558,20 +616,27 @@ async def _confirm_update(address: bytes, new_value: bytes) -> None:
 
 
 async def queue(
+    app_id,
     address: bytes,
     new_value: bytes,
 ) -> tuple[int, bytes]:
-    """Queue an edit INTENT (pull model). Shows the queued change on a trusted
-    screen and, ONLY on user approval, allocates a pending_id and stores the intent
-    PENDING. Under the strict counter model the candidate counter is NOT derived
-    here: queueing captures user intent only. counter_T is first derived inside the
-    WM-synchronized commit flow (WARDPerformUpdate), against the attested round
-    state. No proof is taken and the root is NOT computed here either. Returns
+    """Queue an edit INTENT (pull model) for the domain named by app_id. Checks the
+    write against the WARD-service ACL, shows the queued change (with its domain) on
+    a trusted screen and, ONLY on user approval, allocates a pending_id and stores
+    the intent PENDING together with app_id -- binding the whole round to
+    entry_key(app_id, address). Under the strict counter model the candidate counter is NOT
+    derived here: queueing captures user intent only. counter_T is first derived
+    inside the WM-synchronized commit flow (WARDPerformUpdate), against the attested
+    round state. No proof is taken and the root is NOT computed here either. Returns
     (pending_id, wallet_id). Raises ActionCancelled if the user rejects, DataError
-    on invariant violation.
+    on invariant violation or when the ACL denies the write.
     """
     import storage.ward_store as ward_store
     from trezor.wire import DataError
+
+    if not _acl_allows(app_id, "update"):
+        raise DataError("app not authorized for WARD update")
+    app_id_b = app_id.encode() if isinstance(app_id, str) else (app_id or b"")
 
     wallet_id = await _get_wallet_id()
 
@@ -592,11 +657,11 @@ async def queue(
         )
 
     # Trusted confirmation gates the intent (WP-F5). Raises on user rejection.
-    await _confirm_update(address, new_value)
+    await _confirm_update(app_id_b, address, new_value)
 
     pending_id = ward_store.queue_alloc_id()
     # counter_T left unset (0) at queue time; derived at WARDPerformUpdate.
-    ward_store.queue_put(wallet_id, pending_id, 0, address, b"", new_value)
+    ward_store.queue_put(wallet_id, pending_id, 0, address, b"", new_value, app_id_b)
 
     if __debug__:
         from trezor import log
@@ -612,22 +677,29 @@ async def queue(
 
 
 async def lookup(
+    app_id,
     address: bytes,
     value: bytes | None,
     proof: list[bytes],
-    witness_address: bytes | None = None,
-    witness_value: bytes | None = None,
+    witness_entry_key: bytes | None = None,
+    witness_value_hash: bytes | None = None,
     counter: int | None = None,
-    witness_counter: int | None = None,
 ) -> tuple[bool, int, bool, bytes, bytes]:
     """Verify a membership / non-membership proof against the device's
-    authenticated root. Returns (valid, counter, membership, wallet_id, ward_id).
+    authenticated root, within the domain named by app_id. Returns
+    (valid, counter, membership, wallet_id, ward_id).
+
+    The target key is formed on-device: entry_key(app_id, address). A non-membership
+    witness is a tree-internal neighbour that may live in ANY domain, so it is
+    supplied privacy-preservingly as two hashes -- (witness_entry_key,
+    witness_value_hash) -- and used opaquely (never re-keyed and never revealing the
+    neighbour's plaintext identifier or value).
     """
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
-    membership_query = witness_address is None and value is not None
+    membership_query = witness_entry_key is None and value is not None
 
     wallet_id = await _get_wallet_id()
     ward_id = await _get_ward_id()
@@ -645,28 +717,45 @@ async def lookup(
             ward_id,
         )
 
+    ek = entry_key(app_id, address)
     if not membership_query:
-        if witness_value is None or witness_counter is None:
+        if witness_value_hash is None:
             raise DataError(
-                "witness_value and witness_counter required for non-membership proof"
+                "witness_value_hash required for non-membership proof"
             )
         valid = verify_nonmembership(
-            address, witness_address, witness_counter, witness_value, proof, stored_root
+            ek, witness_entry_key, witness_value_hash, proof, stored_root
         )
         membership = False
     else:
         if counter is None:
             raise DataError("counter required for membership proof")
-        valid = verify_proof(address, counter, value, proof, stored_root)
+        valid = verify_proof(ek, counter, value, proof, stored_root)
         membership = True
+
+    if __debug__:
+        from trezor import log
+
+        # Explicit outcome so a proof FAILURE is visible in the log rather than silently
+        # collapsing to "unknown" upstream. A membership proof that does not verify is
+        # the case that previously produced no message at all.
+        log.debug(
+            __name__,
+            "lookup: query=%s valid=%s (%s proof %s)",
+            "membership" if membership_query else "non-membership",
+            valid,
+            "membership" if membership else "non-membership",
+            "OK" if valid else "FAILED verification",
+        )
 
     return valid, ward_store.get_counter(wallet_id), membership, wallet_id, ward_id
 
 
-async def intent(pending_id: int | None) -> tuple[int, bytes]:
-    """Resolve pending_id to (resolved_pending_id, address) for the active wallet.
-    The Core gateway calls this to build the WARDProofRequest (naming the address
-    and the pending_id) before pulling the proof for WARDPerformUpdate."""
+async def intent(pending_id: int | None) -> tuple[int, bytes, bytes]:
+    """Resolve pending_id to (resolved_pending_id, address, app_id) for the active
+    wallet. The Core gateway calls this to build the WARDProofRequest (naming the
+    address, its domain, and the pending_id) before pulling the proof for
+    WARDPerformUpdate, so the host serves the proof for the right domain."""
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
@@ -675,7 +764,7 @@ async def intent(pending_id: int | None) -> tuple[int, bytes]:
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no queued intent to perform")
-    _counter, _state, address, _ov, _nv, _root, _mac = rec
+    _counter, _state, address, _ov, _nv, _root, _mac, app_id = rec
 
     if __debug__:
         from trezor import log
@@ -688,7 +777,7 @@ async def intent(pending_id: int | None) -> tuple[int, bytes]:
             address,
         )
 
-    return pid, address
+    return pid, address, app_id
 
 
 async def perform(
@@ -696,9 +785,8 @@ async def perform(
     value: bytes | None,
     proof: list[bytes],
     counter: int | None,
-    witness_address: bytes | None = None,
-    witness_value: bytes | None = None,
-    witness_counter: int | None = None,
+    witness_entry_key: bytes | None = None,
+    witness_value_hash: bytes | None = None,
 ) -> tuple[int, bytes | None, bytes | None, bytes, bytes]:
     """Authorize a queued intent using a proof the device PULLED on demand.
 
@@ -723,7 +811,12 @@ async def perform(
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no queued intent to perform")
-    _counter, _state, _address, _old_value, new_value, _root, _mac = rec
+    _counter, _state, _address, _old_value, new_value, _root, _mac, app_id = rec
+
+    # Bind the candidate to its domain: the leaf key is entry_key(app_id, address),
+    # so this write can only ever produce a leaf under the domain the user approved
+    # at queue time -- it structurally cannot reach another domain's entry.
+    ek = entry_key(app_id, _address)
 
     # Strict model: derive the candidate counter now, from the device's current
     # authenticated floor -- not from the (unset) queue-time value.
@@ -759,21 +852,20 @@ async def perform(
             counter_t,
             len(proof),
             old_counter,
-            "yes" if witness_address is not None else "no",
+            "yes" if witness_entry_key is not None else "no",
         )
 
     try:
         root_t = compute_new_root(
-            _address,
+            ek,
             old_counter,
             old_value,
             counter_t,
             new_value,
             proof,
             stored_root,
-            witness_address=witness_address,
-            witness_counter=witness_counter,
-            witness_value=witness_value,
+            witness_entry_key=witness_entry_key,
+            witness_value_hash=witness_value_hash,
         )
     except ValueError as e:
         raise DataError(str(e))
@@ -834,7 +926,7 @@ async def finalize(
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no candidate to finalize")
-    counter, state, _address, _old_value, _new_value, root, mac = rec
+    counter, state, _address, _old_value, _new_value, root, mac, _app_id = rec
 
     if state != ward_store.QUEUE_COMMITTED:
         raise DataError("candidate has not been performed")

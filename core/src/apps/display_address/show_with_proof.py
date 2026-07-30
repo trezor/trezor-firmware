@@ -6,27 +6,46 @@ if TYPE_CHECKING:
 
 async def show_with_proof(msg: "DisplayAddressWithProof") -> "Success":
     """PUSH: the host attaches the WARD proof up-front. The firmware verifies the
-    supplied (membership: value/counter; non-membership: witness_*) proof against
-    its authenticated WARD root and shows the verified label. The PULL variant is
-    apps.display_address.show.
+    supplied (membership: value/counter; non-membership: witness hashes) proof
+    against its authenticated WARD root and shows the verified label. The PULL
+    variant is apps.display_address.show.
     """
     from trezor.messages import Success
-    from trezor.ui.layouts import show_address
+    from trezor.ui.layouts import show_address, show_warning
+    from trezor.wire import DataError
 
     from apps.common import ward as ward_core
 
-    status, label = await ward_core.verify_label(
-        "display_address",
-        msg.address.encode(),
-        msg.value,
-        msg.proof,
-        msg.counter,
-        witness_address=msg.witness_address,
-        witness_value=msg.witness_value,
-        witness_counter=msg.witness_counter,
-    )
-
-    label_text = bytes(label).decode() if label is not None else None
+    label_text: str | None = None
+    try:
+        status, label = await ward_core.verify_label(
+            "display_address",
+            msg.address.encode(),
+            msg.value,
+            msg.proof,
+            msg.counter,
+            witness_entry_key=msg.witness_entry_key,
+            witness_value_hash=msg.witness_value_hash,
+            domain=msg.app_id,
+        )
+    except DataError as e:
+        # The pushed proof was malformed/incomplete (e.g. a non-membership claim with
+        # no witness_value_hash). Show the issue ON-DEVICE rather than failing silently.
+        await show_warning(
+            "display_address/ward_error",
+            "WARD label unavailable",
+            str(e) or "The supplied label proof was incomplete.",
+        )
+        status = "unverified"
+    else:
+        if status == "membership":
+            label_text = bytes(label).decode() if label is not None else None
+        elif status == "unknown":
+            await show_warning(
+                "display_address/ward_error",
+                "WARD label could not be verified",
+                "The proof did not match the device's authenticated root.",
+            )
 
     await show_address(
         msg.address,
