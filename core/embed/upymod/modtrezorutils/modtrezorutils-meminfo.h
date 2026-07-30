@@ -719,8 +719,10 @@ static void dump_meminfo_json(FILE *out) {
   fprintf(out, "\"mp_sys_path\",\n");
   dump_value_opt(out, &mp_sys_path, true);
 
+#if MICROPY_PY_SYS_ARGV
   fprintf(out, "\"mp_sys_argv_obj\",\n");
   dump_value_opt(out, &MP_STATE_VM(mp_sys_argv_obj), true);
+#endif
 
   fprintf(out, "\"ui_wait_callback\",\n");
   dump_value(out, MP_STATE_VM(trezorconfig_ui_wait_callback));

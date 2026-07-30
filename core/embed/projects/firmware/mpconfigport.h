@@ -131,6 +131,7 @@
 #define MICROPY_PY_SYS_STDFILES     (0)
 #define MICROPY_PY_SYS_STDIO_BUFFER (0)
 #define MICROPY_PY_SYS_PLATFORM     "trezor"
+#define MICROPY_PY_SYS_ARGV         (0)
 #define MICROPY_PY_ERRNO            (0)
 #define MICROPY_PY_THREAD           (0)
 #define MICROPY_PY_FSTRINGS         (1)
