@@ -100,10 +100,22 @@ message EthereumSignTxEIP1559 {
     optional bool chunkify = 13;                          // display the address in chunks of 4 characters
     optional common.PaymentRequest payment_req = 14;      // SLIP-24 payment request
     optional bool supports_definition_request = 15;       // whether the client supports EthereumDefinitionRequest
+    repeated EthereumAuth7702Entry auth_list = 16
+        [(experimental_field) = true];                    // EIP-7702 authorization list (only on Core)
 
     message EthereumAccessList {
         required string address = 1;
         repeated bytes storage_keys = 2;
+    }
+
+    message EthereumAuth7702Entry {
+        option (experimental_message) = true;
+
+        required uint64 chain_id = 1;                      // chain id on which the authorization is valid, or 0 for all
+        required string delegate = 2;                      // address of the code that will be delegated to the EOA
+        required uint64 nonce = 3;                         // account nonce for which the authorization is valid
+
+        optional EthereumAuth7702Signature signature = 4;  // if not provided, request a signature from this account
     }
 }
 
@@ -122,6 +134,9 @@ message EthereumTxRequest {
     optional uint32 signature_v = 2;  // Computed signature (recovery parameter, limited to 27 or 28)
     optional bytes signature_r = 3;   // Computed signature R component (256 bit)
     optional bytes signature_s = 4;   // Computed signature S component (256 bit)
+
+    // Done. Return EIP-7702 authorization list for this transaction.
+    repeated EthereumAuth7702Signature auth_list = 5;
 }
 
 /**

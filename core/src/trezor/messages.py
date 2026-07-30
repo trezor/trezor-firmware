@@ -4123,6 +4123,7 @@ if TYPE_CHECKING:
         chunkify: "bool | None"
         payment_req: "PaymentRequest | None"
         supports_definition_request: "bool | None"
+        auth_list: "list[EthereumAuth7702Entry]"
 
         def __init__(
             self,
@@ -4136,6 +4137,7 @@ if TYPE_CHECKING:
             chain_id: "int",
             address_n: "list[int] | None" = None,
             access_list: "list[EthereumAccessList] | None" = None,
+            auth_list: "list[EthereumAuth7702Entry] | None" = None,
             to: "str | None" = None,
             data_initial_chunk: "AnyBytes | None" = None,
             definitions: "EthereumDefinitions | None" = None,
@@ -4154,10 +4156,12 @@ if TYPE_CHECKING:
         signature_v: "int | None"
         signature_r: "AnyBytes | None"
         signature_s: "AnyBytes | None"
+        auth_list: "list[EthereumAuth7702Signature]"
 
         def __init__(
             self,
             *,
+            auth_list: "list[EthereumAuth7702Signature] | None" = None,
             data_length: "int | None" = None,
             signature_v: "int | None" = None,
             signature_r: "AnyBytes | None" = None,
@@ -4379,6 +4383,26 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumAccessList"]:
+            return isinstance(msg, cls)
+
+    class EthereumAuth7702Entry(protobuf.MessageType):
+        chain_id: "int"
+        delegate: "str"
+        nonce: "int"
+        signature: "EthereumAuth7702Signature | None"
+
+        def __init__(
+            self,
+            *,
+            chain_id: "int",
+            delegate: "str",
+            nonce: "int",
+            signature: "EthereumAuth7702Signature | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumAuth7702Entry"]:
             return isinstance(msg, cls)
 
     class EthereumSignTypedData(protobuf.MessageType):
