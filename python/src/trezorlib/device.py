@@ -260,16 +260,12 @@ def _seed_from_entropy(
         # entropy slice + domain separator. Must match the firmware's
         # reset_device._compute_secret_from_entropy so host and device agree.
         if len(internal_entropy) != strength_bytes:
-            raise ValueError(
-                "internal_entropy length must match strength for extended"
-            )
+            raise ValueError("internal_entropy length must match strength for extended")
         sub_strength = strength_bytes // 3
         parts = []
         for i in range(3):
             sub_int = internal_entropy[i * sub_strength : (i + 1) * sub_strength]
-            ehash = hashlib.sha256(
-                sub_int + external_entropy + bytes([i])
-            ).digest()
+            ehash = hashlib.sha256(sub_int + external_entropy + bytes([i])).digest()
             parts.append(ehash[:sub_strength])
         secret = b"".join(parts)
 

@@ -92,7 +92,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_bip39_seed_obj, 2,
                                            3, mod_trezorcrypto_bip39_seed);
 
 #if !BITCOIN_ONLY
-/// def mnemonic_to_bits(mnemonic: str) -> bytes:
+/// def mnemonic_to_bits(mnemonic: StrOrBytes) -> bytes:
 ///     """
 ///     Convert the mnemonic to its binary representation (including checksum).
 ///     """

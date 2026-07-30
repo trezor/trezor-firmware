@@ -93,7 +93,7 @@ STATIC void _sphincsplus_derive(const spx_variant_t *v,
 }
 
 /// def derive_public_key(
-///     master_seed: bytes, account_index: int, variant: int
+///     master_seed: AnyBytes, account_index: int, variant: int
 /// ) -> bytes:
 ///     """
 ///     Derive SPHINCS+ public key from master seed and account index.
@@ -135,7 +135,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(
     mod_trezorcrypto_sphincsplus_derive_public_key);
 
 /// def derive_and_sign(
-///     master_seed: bytes, account_index: int, variant: int, message: bytes
+///     master_seed: AnyBytes, account_index: int, variant: int, message: AnyBytes
 /// ) -> tuple[bytes, bytes]:
 ///     """
 ///     Derive a SPHINCS+ keypair, sign `message`, and return
@@ -218,7 +218,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_sphincsplus_derive_and_sign);
 
 /// def verify(
-///     public_key: bytes, signature: bytes, message: bytes, variant: int
+///     public_key: AnyBytes, signature: AnyBytes, message: AnyBytes, variant: int
 /// ) -> bool:
 ///     """
 ///     Verify a SPHINCS+ signature of `message` under `public_key`. `message`

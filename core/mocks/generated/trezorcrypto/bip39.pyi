@@ -28,7 +28,7 @@ def seed(
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip39.h
-def mnemonic_to_bits(mnemonic: str) -> bytes:
+def mnemonic_to_bits(mnemonic: StrOrBytes) -> bytes:
     """
     Convert the mnemonic to its binary representation (including checksum).
     """

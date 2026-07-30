@@ -3,6 +3,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import CKBSphincsPlusAddress, CKBSphincsPlusGetAddress
 
 
@@ -39,7 +41,8 @@ _VALID_VARIANTS = (48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59)
 _MAX_ACCOUNT_INDEX = 1_000_000
 
 # Canonical variant-to-N (security parameter) mapping, shared with
-# sign_sphincs_tx to avoid divergent tables.
+# sign_sphincs_tx to avoid divergent tables. Rows group the variants by N.
+# fmt: off
 _VARIANT_SPX_N: dict[int, int] = {
     48: 16, 49: 16, 54: 16, 55: 16,
     50: 24, 51: 24, 56: 24, 57: 24,
@@ -47,11 +50,13 @@ _VARIANT_SPX_N: dict[int, int] = {
 }
 
 
-# Mirrors the table in crypto/sphincsplus_dispatch.c.
+# Mirrors the table in crypto/sphincsplus_dispatch.c. Rows are the SHA2 and the
+# SHAKE half of the table, in variant order.
 _VARIANT_SIG_BYTES: dict[int, int] = {
     48: 17088, 49: 7856, 50: 35664, 51: 16224, 52: 49856, 53: 29792,
     54: 17088, 55: 7856, 56: 35664, 57: 16224, 58: 49856, 59: 29792,
 }
+# fmt: on
 
 
 def _variant_spx_n(variant: int) -> int:
@@ -107,7 +112,7 @@ def _split_extended_mnemonic_to_seed(mnemonic_bytes: bytes) -> bytearray:
     return seed
 
 
-def _compute_lock_args(public_key: bytes, variant: int) -> bytes:
+def _compute_lock_args(public_key: "AnyBytes", variant: int) -> bytes:
     """Compute the 32-byte CKB lock_args from a SPHINCS+ public key.
 
     Per the lock script's multisig configuration hashing:
@@ -166,7 +171,7 @@ def _wipe(buf: bytearray) -> None:
         buf[i] = 0
 
 
-def _address_from_pubkey(public_key: bytes, variant: int, network: str) -> str:
+def _address_from_pubkey(public_key: "AnyBytes", variant: int, network: str) -> str:
     """Derive the CKB SPHINCS+ full (Bech32m) address from a public key."""
     from .helpers import encode_address_full
 
@@ -221,7 +226,7 @@ async def get_sphincs_address(
         await show_address(
             address,
             subtitle=TR.address__coin_address_template.format("CKB SPHINCS+"),
-            path="QP/{}/v{}".format(account_index, variant),
+            path=f"QP/{account_index}/v{variant}",
             chunkify=bool(msg.chunkify),
         )
     else:
@@ -232,7 +237,7 @@ async def get_sphincs_address(
         await confirm_action(
             "confirm_sphincs_address",
             "Export SPHINCS+ public key?",
-            description="Account QP/{}/v{}".format(account_index, variant),
+            description=f"Account QP/{account_index}/v{variant}",
         )
 
     return CKBSphincsPlusAddress(

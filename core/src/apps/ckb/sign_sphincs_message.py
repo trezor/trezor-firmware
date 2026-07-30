@@ -20,13 +20,18 @@ from .get_sphincs_address import (
 )
 
 if TYPE_CHECKING:
-    from trezor.messages import CKBSphincsPlusMessageSignature, CKBSphincsPlusSignMessage
+    from buffer_types import AnyBytes
+
+    from trezor.messages import (
+        CKBSphincsPlusMessageSignature,
+        CKBSphincsPlusSignMessage,
+    )
 
 # Chunk size for streaming the signature, well under the THP buffer (~8 KB).
 _SIG_CHUNK_SIZE = 4096
 
 
-def _fips205_message(message: bytes) -> bytes:
+def _fips205_message(message: "AnyBytes") -> bytes:
     """Domain-wrap a text message for SPHINCS+ signing.
 
     digest = blake2b("ckb-default-hash", "Nervos Message:" || message), then the
@@ -75,7 +80,7 @@ async def sign_sphincs_message(
             address,
             verify=False,
             account="CKB SPHINCS+",
-            path="QP/{}/v{}".format(account_index, variant),
+            path=f"QP/{account_index}/v{variant}",
             chunkify=bool(msg.chunkify),
         )
 
