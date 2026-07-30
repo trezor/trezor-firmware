@@ -64,6 +64,7 @@
 #include "elligator2.h"
 #include "groestl.h"
 #include "hash_to_curve.h"
+#include "hkdf.h"
 #include "hmac_drbg.h"
 #include "memzero.h"
 #include "monero/monero.h"
@@ -6304,6 +6305,76 @@ START_TEST(test_pbkdf2_hmac_sha256) {
 }
 END_TEST
 
+// test vectors from RFC 5869 appendix A (SHA-256 cases). fromhex() returns one
+// shared static buffer, so operands must be copied out before the next call.
+START_TEST(test_hkdf_sha256) {
+  uint8_t salt[80], ikm[80], info[80], prk[32], okm[82];
+
+  // A.1
+  memcpy(salt, fromhex("000102030405060708090a0b0c"), 13);
+  memcpy(ikm, fromhex("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"), 22);
+  memcpy(info, fromhex("f0f1f2f3f4f5f6f7f8f9"), 10);
+
+  hkdf_sha256_extract(salt, 13, ikm, 22, prk);
+  ck_assert_mem_eq(prk,
+                   fromhex("077709362c2e32df0ddc3f0dc47bba6390b6c73bb50f9c3122"
+                           "ec844ad7c2b3e5"),
+                   32);
+
+  ck_assert_int_eq(hkdf_sha256(salt, 13, ikm, 22, info, 10, okm, 42), 0);
+  ck_assert_mem_eq(okm,
+                   fromhex("3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5d"
+                           "b02d56ecc4c5bf34007208d5b887185865"),
+                   42);
+
+  // A.2
+  memcpy(ikm,
+         fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d"
+                 "1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b"
+                 "3c3d3e3f404142434445464748494a4b4c4d4e4f"),
+         80);
+  memcpy(salt,
+         fromhex("606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d"
+                 "7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b"
+                 "9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf"),
+         80);
+  memcpy(info,
+         fromhex("b0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccd"
+                 "cecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaeb"
+                 "ecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"),
+         80);
+  ck_assert_int_eq(hkdf_sha256(salt, 80, ikm, 80, info, 80, okm, 82), 0);
+  ck_assert_mem_eq(
+      okm,
+      fromhex("b11e398dc80327a1c8e7f78c596a49344f012eda2d4efad8a050cc4c19afa97c"
+              "59045a99cac7827271cb41c65e590e09da3275600c2f09b8367793a9aca3db71"
+              "cc30c58179ec3e87c14c01d5c1f3434f1d87"),
+      82);
+
+  // A.3
+  memcpy(ikm, fromhex("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"), 22);
+  ck_assert_int_eq(hkdf_sha256(NULL, 0, ikm, 22, NULL, 0, okm, 42), 0);
+  ck_assert_mem_eq(okm,
+                   fromhex("8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3"
+                           "454e5f3c738d2d9d201395faa4b61a96c8"),
+                   42);
+
+  // NULL salt must behave identically to an explicitly empty one.
+  uint8_t okm_empty_salt[42];
+  ck_assert_int_eq(hkdf_sha256((const uint8_t *)"", 0, ikm, 22,
+                               (const uint8_t *)"", 0, okm_empty_salt, 42),
+                   0);
+  ck_assert_mem_eq(okm_empty_salt, okm, 42);
+
+  // Sized to the requested length: the call must be refused for exceeding
+  // 255*HashLen, and must be refused without this test relying on the length
+  // check happening before the first write.
+  uint8_t too_long[255 * 32 + 1];
+  ck_assert_int_eq(
+      hkdf_sha256(NULL, 0, ikm, 22, NULL, 0, too_long, sizeof(too_long)), -1);
+}
+END_TEST
+
 // test vectors from
 // http://stackoverflow.com/questions/15593184/pbkdf2-hmac-sha-512-test-vectors
 START_TEST(test_pbkdf2_hmac_sha512) {
@@ -11837,6 +11908,7 @@ Suite *test_suite(void) {
 
   tc = tcase_create("pbkdf2");
   tcase_add_test(tc, test_pbkdf2_hmac_sha256);
+  tcase_add_test(tc, test_hkdf_sha256);
   tcase_add_test(tc, test_pbkdf2_hmac_sha512);
   suite_add_tcase(s, tc);
 

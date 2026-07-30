@@ -13,7 +13,7 @@ from trezorlib.debuglink import TrezorTestContext
 from trezorlib.exceptions import TrezorFailure
 
 from ...input_flows import InputFlowConfirmAllWarnings
-from . import prevtx
+from . import prevtx, spx_ref
 
 pytestmark = [
     pytest.mark.altcoin,
@@ -22,9 +22,11 @@ pytestmark = [
     pytest.mark.setup_client(uninitialized=True),
 ]
 
-# 36 words carry 3x16 bytes of entropy, matching the default variant 49
-# (SLH-DSA-SHA2-128s). Each 12-word chunk of "all"*12 is a valid BIP-39 vector.
-MNEMONIC_SPHINCS = " ".join(["all"] * 36)
+# 3x16 bytes of entropy for the default variant 49. Chunks must be distinct.
+_CHUNK_1 = ["all"] * 12
+_CHUNK_2 = ["abandon"] * 11 + ["about"]
+_CHUNK_3 = ["zoo"] * 11 + ["abstract"]
+MNEMONIC_SPHINCS = " ".join(_CHUNK_1 + _CHUNK_2 + _CHUNK_3)
 VARIANT = 49
 
 SHANNON = 100_000_000
@@ -36,16 +38,31 @@ SPHINCS_CODE_HASH_MAINNET = (
 SPHINCS_HASH_TYPE_MAINNET = 1
 
 
-def _load_sphincs_session(test_ctx: TrezorTestContext):
+def _load_sphincs_session(test_ctx: TrezorTestContext, mnemonic: str | None = None):
     debuglink.load_device(
         test_ctx.get_seedless_session(),
-        mnemonic=MNEMONIC_SPHINCS,
+        mnemonic=mnemonic or MNEMONIC_SPHINCS,
         pin="",
         passphrase_protection=False,
         label="test",
         skip_checksum=True,
     )
     return test_ctx.get_session()
+
+
+@pytest.mark.parametrize(
+    "chunks",
+    [
+        pytest.param((_CHUNK_1, _CHUNK_2, _CHUNK_1), id="1==3"),
+        pytest.param((_CHUNK_1, _CHUNK_1, _CHUNK_1), id="all-equal"),
+        pytest.param((_CHUNK_1, _CHUNK_2, _CHUNK_2), id="2==3"),
+        pytest.param((_CHUNK_1, _CHUNK_1, _CHUNK_2), id="1==2"),
+    ],
+)
+def test_sphincs_rejects_degenerate_mnemonic(test_ctx: TrezorTestContext, chunks):
+    session = _load_sphincs_session(test_ctx, " ".join(sum(chunks, [])))
+    with pytest.raises(TrezorFailure, match="sub-phrases must all differ"):
+        ckb.get_sphincs_address(session, network="Mainnet", variant=VARIANT)
 
 
 def _sphincs_lock(session):
@@ -126,7 +143,8 @@ def _sign(session, **kwargs):
 def _assert_witness_lock(witness_lock: bytes, public_key: bytes):
     """Check the assembled witness lock structure (multisig header || pk || sig)."""
     flag = ((VARIANT << 1) | 1) & 0xFF
-    assert witness_lock[:5] == bytes([0x80, 0x00, 0x01, 0x01, flag])
+    # require_first_n is 1, set by "fix(ckb): correct SPHINCS+ address generation".
+    assert witness_lock[:5] == bytes([0x80, 0x01, 0x01, 0x01, flag])
     assert witness_lock[5 : 5 + len(public_key)] == public_key
     # An SLH-DSA-128s signature is 7856 bytes.
     assert len(witness_lock) == 5 + len(public_key) + 7856
@@ -145,6 +163,46 @@ def _make_header(number, ar, timestamp=1_573_852_800_000):
         extra_hash="00" * 32,
         dao=prevtx.make_dao(1, ar, 2, 3),
         nonce="00" * 16,
+    )
+
+
+def test_sign_sphincs_tx_signature_covers_the_right_message(
+    test_ctx: TrezorTestContext,
+):
+    # The other tests would pass on a device that signed a constant.
+    session = _load_sphincs_session(test_ctx)
+    lock_args, public_key = _sphincs_lock(session)
+    inputs, outputs, prev_txs = _plain_transfer(lock_args)
+
+    signed = _sign(session, inputs=inputs, outputs=outputs, prev_txs=prev_txs)
+    signature = signed.witness_lock[5 + len(public_key) :]
+
+    spent = prev_txs[bytes(inputs[0].previous_output_tx_hash)].outputs[0]
+    message = prevtx.ckb_tx_message_all(
+        tx_hash=signed.tx_hash,
+        input_cells=[(spent, b"")],
+        group_indices=[0],
+        first_input_type=b"",
+        first_output_type=b"",
+        witnesses_raw={},
+        inputs_count=1,
+        witnesses_count=1,
+    )
+
+    try:
+        ok = spx_ref.verify_sha2_128s(
+            prevtx.fips205_pure(message), signature, public_key
+        )
+    except spx_ref.BuildUnavailable as exc:
+        pytest.skip(f"reference verifier unavailable: {exc}")
+
+    assert ok, "device signature does not cover the expected ckb_tx_message_all"
+
+    # Guard against the assertion above passing vacuously.
+    tampered = bytearray(message)
+    tampered[0] ^= 0x01
+    assert not spx_ref.verify_sha2_128s(
+        prevtx.fips205_pure(bytes(tampered)), signature, public_key
     )
 
 

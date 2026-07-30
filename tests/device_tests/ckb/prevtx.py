@@ -192,9 +192,18 @@ def sighash_all(tx_hash, witnesses, group_indices, inputs_count) -> bytes:
     return h.digest()
 
 
-def occupied_capacity(lock_args_len, type_args_len, data_len) -> int:
-    """Occupied capacity in shannons; mirrors the device's _occupied_capacity."""
-    occupied_bytes = 8 + 32 + 1 + lock_args_len + 32 + 1 + type_args_len + data_len
+def occupied_capacity(
+    lock_args_len, type_args_len, data_len, has_type_script=True
+) -> int:
+    """Occupied capacity in shannons; mirrors the device's _occupied_capacity.
+
+    `has_type_script` is explicit because `type_args_len=0` alone is ambiguous:
+    a DAO cell has a type script with empty args and still occupies its 33
+    fixed bytes.
+    """
+    occupied_bytes = 8 + 32 + 1 + lock_args_len + data_len
+    if has_type_script:
+        occupied_bytes += 32 + 1 + type_args_len
     return occupied_bytes * 100_000_000
 
 
@@ -227,3 +236,56 @@ def synth_prev_tx(capacities: list[int], salt: int = 0):
     tx_hash = raw_tx_hash([], outputs, outputs_data, [])
     prev = ckb.create_prev_tx(outputs=outputs)
     return prev, tx_hash
+
+
+def ckb_tx_message_all(
+    tx_hash,
+    input_cells,
+    group_indices,
+    first_input_type,
+    first_output_type,
+    witnesses_raw,
+    inputs_count,
+    witnesses_count,
+):
+    """Independent re-implementation of the SPHINCS+ signing message.
+
+    The device builds the same bytes in
+    apps.ckb.sign_sphincs_tx._compute_ckb_tx_message_all. This copy shares no
+    code with it, so a coding error on either side shows up as a signature that
+    does not verify rather than as two implementations agreeing on the wrong
+    message.
+
+    ``input_cells`` is a list of (cell output, cell data) in input order; the
+    ``*_type`` slices are molecule BytesOpt encodings (empty when absent).
+    """
+    h = blake2b(digest_size=32, person=b"ckb-sphincs+-msg")
+    h.update(tx_hash)
+
+    for cell, data in input_cells:
+        h.update(_cell_output(cell))
+        h.update(_u32(len(data)))
+        h.update(data)
+
+    h.update(_u32(len(first_input_type)))
+    h.update(first_input_type)
+    h.update(_u32(len(first_output_type)))
+    h.update(first_output_type)
+
+    for idx in group_indices[1:]:
+        if idx < witnesses_count:
+            raw = witnesses_raw.get(idx, b"")
+            h.update(_u32(len(raw)))
+            h.update(raw)
+
+    for idx in range(inputs_count, witnesses_count):
+        raw = witnesses_raw.get(idx, b"")
+        h.update(_u32(len(raw)))
+        h.update(raw)
+
+    return h.digest()
+
+
+def fips205_pure(message: bytes) -> bytes:
+    """FIPS 205 pure signing prefix: 0x00 || len(ctx) || ctx || M, empty ctx."""
+    return b"\x00\x00" + message

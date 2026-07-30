@@ -359,7 +359,7 @@ class SphincsSignedTx(NamedTuple):
     """Result of a SPHINCS+ signing flow.
 
     ``witness_lock`` is the complete witness lock field
-    ([0x80,0x00,0x01,0x01,flag] || public_key || signature) assembled from the
+    ([0x80,0x01,0x01,0x01,flag] || public_key || signature) assembled from the
     TXSIGCHUNK stream; place it in the signing witness before broadcasting.
     """
 
