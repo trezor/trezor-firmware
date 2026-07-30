@@ -2,7 +2,12 @@
 
 from trezor import TR
 from trezor.strings import format_amount, format_amount_unit
-from trezor.ui.layouts import confirm_output, confirm_total, show_warning
+from trezor.ui.layouts import (
+    confirm_metadata,
+    confirm_output,
+    confirm_total,
+    show_warning,
+)
 
 DECIMALS = 8
 
@@ -24,10 +29,30 @@ async def require_confirm_testnet() -> None:
     )
 
 
-async def require_confirm_type_script() -> None:
+async def require_confirm_unknown_type_script() -> None:
+    # Only for a type script the device cannot identify. A recognized one gets a
+    # screen that names it, so this warning keeps meaning something.
     await show_warning(
         "ckb_type_script",
-        "This output has a type script. Funds may be restricted.",
+        "This output has an unrecognized type script. Funds may be restricted.",
+    )
+
+
+async def require_confirm_dao_deposit(amount: int) -> None:
+    await confirm_metadata(
+        "ckb_dao_deposit",
+        "Nervos DAO",
+        "Deposit {} into the Nervos DAO. The funds stay locked until you withdraw them.",
+        _format_ckb_amount(amount),
+    )
+
+
+async def require_confirm_dao_withdraw(amount: int) -> None:
+    await confirm_metadata(
+        "ckb_dao_withdraw",
+        "Nervos DAO",
+        "Start withdrawing {} from the Nervos DAO. A second transaction collects it after the lock period.",
+        _format_ckb_amount(amount),
     )
 
 

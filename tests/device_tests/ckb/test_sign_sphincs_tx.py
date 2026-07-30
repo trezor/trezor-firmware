@@ -67,10 +67,8 @@ def test_sphincs_rejects_degenerate_mnemonic(test_ctx: TrezorTestContext, chunks
 
 def _sphincs_lock(session):
     """The signer's lock (lock_args, public_key) as the device derives it."""
-    with session.test_ctx as client:
-        if not session.debug.legacy_debug:
-            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
-        resp = ckb.get_sphincs_address(session, network="Mainnet", variant=VARIANT)
+    # No input flow: without show_display the device answers silently.
+    resp = ckb.get_sphincs_address(session, network="Mainnet", variant=VARIANT)
     assert len(resp.lock_args) == 32
     return bytes(resp.lock_args), bytes(resp.public_key)
 
@@ -244,8 +242,8 @@ def test_sign_sphincs_tx_commits_header_deps(test_ctx: TrezorTestContext):
 
 def test_sign_sphincs_tx_dao_deposit(test_ctx: TrezorTestContext):
     # A Nervos DAO deposit: an output carrying the DAO type script and 8 zero
-    # bytes of data. It must be signable and surfaced with the type-script
-    # warning, not mistaken for hidden change (which requires no type script).
+    # bytes of data. It must be signable and surfaced as a DAO deposit, not
+    # mistaken for hidden change (which requires no type script).
     session = _load_sphincs_session(test_ctx)
     lock_args, public_key = _sphincs_lock(session)
 
@@ -276,6 +274,89 @@ def test_sign_sphincs_tx_dao_deposit(test_ctx: TrezorTestContext):
     assert signed.tx_hash == prevtx.raw_tx_hash(
         inputs, outputs, [deposit_data, b""], []
     )
+    _assert_witness_lock(signed.witness_lock, public_key)
+
+
+def test_sign_sphincs_tx_dao_start_withdraw(test_ctx: TrezorTestContext):
+    # Nervos DAO phase 1: the deposit cell is spent and a withdrawing cell is
+    # created, carrying the DAO type script plus the deposit block number. A
+    # deposit cell earns no compensation yet, so no header_deps are involved;
+    # what this covers is the output being recognized as the start of a
+    # withdrawal instead of as an unidentified type script.
+    session = _load_sphincs_session(test_ctx)
+    lock_args, public_key = _sphincs_lock(session)
+
+    deposit_data = bytes(8)
+    spent = _sphincs_cell(
+        lock_args,
+        600 * SHANNON,
+        type_code_hash=DAO_CODE_HASH,
+        type_hash_type=1,
+        type_args=b"",
+        data=deposit_data,
+    )
+    prev_hash = prevtx.raw_tx_hash([], [spent], [deposit_data], [])
+    inputs = [ckb.create_cell_input(tx_hash=prev_hash, index=0)]
+
+    withdraw_data = (100).to_bytes(8, "little")
+    outputs = [
+        _sphincs_cell(
+            lock_args,
+            500 * SHANNON,
+            type_code_hash=DAO_CODE_HASH,
+            type_hash_type=1,
+            type_args=b"",
+            data=withdraw_data,
+        ),
+        _sphincs_cell(lock_args, 100 * SHANNON - 1000),  # change
+    ]
+
+    signed = _sign(
+        session,
+        inputs=inputs,
+        outputs=outputs,
+        prev_txs={prev_hash: ckb.create_prev_tx(outputs=[spent])},
+    )
+
+    assert signed.tx_hash == prevtx.raw_tx_hash(
+        inputs, outputs, [withdraw_data, b""], []
+    )
+    _assert_witness_lock(signed.witness_lock, public_key)
+
+
+def test_sign_sphincs_tx_unknown_type_script(test_ctx: TrezorTestContext):
+    # A type script the device cannot identify has to fall through to the
+    # warning. The DAO code hash with non-empty type_args is used deliberately:
+    # a DAO cell is the whole script, so this near-miss must not be labelled as
+    # one just because the code hash matches.
+    session = _load_sphincs_session(test_ctx)
+    lock_args, public_key = _sphincs_lock(session)
+
+    spent = _sphincs_cell(lock_args, 600 * SHANNON)
+    prev_hash = prevtx.raw_tx_hash([], [spent], [b""], [])
+    inputs = [ckb.create_cell_input(tx_hash=prev_hash, index=0)]
+
+    cell_data = bytes(8)
+    outputs = [
+        _sphincs_cell(
+            lock_args,
+            500 * SHANNON,
+            type_code_hash=DAO_CODE_HASH,
+            type_hash_type=1,
+            type_args=b"\x01",
+            data=cell_data,
+        ),
+        _sphincs_cell(lock_args, 100 * SHANNON - 1000),  # change
+    ]
+
+    signed = _sign(
+        session,
+        inputs=inputs,
+        outputs=outputs,
+        prev_txs={prev_hash: ckb.create_prev_tx(outputs=[spent])},
+    )
+
+    assert signed.tx_hash == prevtx.raw_tx_hash(inputs, outputs, [cell_data, b""], [])
     _assert_witness_lock(signed.witness_lock, public_key)
 
 

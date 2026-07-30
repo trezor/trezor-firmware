@@ -49,6 +49,7 @@ from .sign_tx import (
     _MAX_PREV_OUTPUTS,
     _MAX_WITNESSES,
     _compute_raw_tx_hash,
+    _confirm_output_type_script,
     _dao_withdraw_value,
     _is_dao_withdrawing_cell,
     _serialize_bytes,
@@ -240,7 +241,6 @@ async def sign_sphincs_tx(msg: "CKBSphincsPlusSignTx") -> "CKBTxRequest":
         require_confirm_output,
         require_confirm_testnet,
         require_confirm_total,
-        require_confirm_type_script,
     )
 
     variant = msg.variant if msg.variant is not None else 49
@@ -337,8 +337,7 @@ async def sign_sphincs_tx(msg: "CKBSphincsPlusSignTx") -> "CKBTxRequest":
             if is_change_flags[i] and has_external_output:
                 continue
             send_amount += out.capacity
-            if out.type_code_hash is not None:
-                await require_confirm_type_script()
+            await _confirm_output_type_script(out)
             await require_confirm_output(
                 helpers.encode_address_full(
                     out.lock_code_hash, out.lock_hash_type, out.lock_args, network

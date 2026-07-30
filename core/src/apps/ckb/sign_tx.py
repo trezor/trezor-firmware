@@ -466,6 +466,46 @@ def _is_dao_withdrawing_cell(cell: "CKBCellOutput") -> bool:
     return len(data) == 8 and data != bytes(8)
 
 
+def _is_dao_type_script(cell: "CKBCellOutput") -> bool:
+    """Exactly the Nervos DAO type script: its code hash, the "type" hash type,
+    and no args. A cell carrying the DAO code hash with anything in type_args is
+    not a DAO cell, so it must not be labelled as one."""
+    return (
+        cell.type_code_hash is not None
+        and bytes(cell.type_code_hash) == DAO_TYPE_CODE_HASH
+        and (cell.type_hash_type or 0) == DAO_TYPE_HASH_TYPE
+        and not cell.type_args
+    )
+
+
+async def _confirm_output_type_script(cell: "CKBCellOutput") -> None:
+    """Confirm what an output's type script means, before its address and amount.
+
+    Names the two DAO cell shapes the device can verify in full and warns only
+    about a type script it cannot identify. Warning on every type script would
+    fire on the normal DAO path, training the user to click the warning away.
+    """
+    from .layout import (
+        require_confirm_dao_deposit,
+        require_confirm_dao_withdraw,
+        require_confirm_unknown_type_script,
+    )
+
+    if cell.type_code_hash is None:
+        return
+
+    data = bytes(cell.data) if cell.data else b""
+    if _is_dao_type_script(cell) and len(data) == 8:
+        # A fresh deposit stores 8 zero bytes; a withdrawing cell stores the
+        # deposit block number. Same split as _is_dao_withdrawing_cell.
+        if data == bytes(8):
+            await require_confirm_dao_deposit(cell.capacity)
+        else:
+            await require_confirm_dao_withdraw(cell.capacity)
+    else:
+        await require_confirm_unknown_type_script()
+
+
 def _occupied_capacity(cell: "CKBCellOutput") -> int:
     """Occupied capacity in shannons: the cell's own byte size (capacity field +
     lock script + type script + data) times 10^8. Only the free capacity above
@@ -702,7 +742,6 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         require_confirm_output,
         require_confirm_testnet,
         require_confirm_total,
-        require_confirm_type_script,
     )
 
     await paths.validate_path(keychain, msg.address_n)
@@ -790,8 +829,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
             output.lock_args,
             msg.network,
         )
-        if output.type_code_hash is not None:
-            await require_confirm_type_script()
+        await _confirm_output_type_script(output)
 
         await require_confirm_output(
             address,
