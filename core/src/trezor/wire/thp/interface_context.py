@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import trezorthp
 from storage.cache_thp import PREEMPTING_PACKET, clear_sessions_without_channel
 from trezor import config, io, loop, utils
-from trezor.loop import race, wait
+from trezor.loop import Timeout, race, wait
 
 from ..protocol_common import ChannelPreemptedException
 from . import get_encoded_device_properties
@@ -33,7 +33,6 @@ _PREEMPT_TIMEOUT_MS = const(1_000)
 # Stop retransmission if writes are blocked - e.g. due to USB flow control.
 # It allows restarting the event loop to handle other THP channels.
 _WRITE_TIMEOUT_MS = const(5_000)
-_WRITE_TIMEOUT = loop.sleep(_WRITE_TIMEOUT_MS)
 
 _KEY_REQUIRED_VALS = (trezorthp.KEY_REQUIRED, trezorthp.KEY_REQUIRED_UNLOCK)
 
@@ -106,7 +105,9 @@ class InterfaceContext:
     def __init__(self, iface: WireInterface, thp_ctx: ThpContext) -> None:
         self._iface = iface
         self._read = wait(iface.iface_num() | io.POLL_READ)
-        self._write = wait(iface.iface_num() | io.POLL_WRITE)
+        self._write = wait(
+            iface.iface_num() | io.POLL_WRITE, timeout_ms=_WRITE_TIMEOUT_MS
+        )
         # Currently only one active channel is allowed in a session. Without session restart
         # this might become a dict[int, Channel].
         self.active_channel: Channel | None = None
@@ -290,8 +291,15 @@ class InterfaceContext:
             yield self._write_box
             if __debug__ and _TRACE:
                 log.debug(__name__, "write requested", iface=iface)
-            result = yield race(self.write_all_packets(), _WRITE_TIMEOUT)
-            if isinstance(result, int):
+            try:
+                yield from self.write_all_packets()
+            except Timeout:
+                if __debug__:
+                    log.error(
+                        __name__,
+                        f"write blocked for {_WRITE_TIMEOUT_MS} ms",
+                        iface=iface,
+                    )
                 if self.active_channel:
                     self.active_channel.kill(trezorthp.ThpError("Write is blocked"))
             self.clear_closed_sessions()
