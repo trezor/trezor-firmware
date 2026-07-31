@@ -45,3 +45,6 @@
 	path = vendor/mldsa-native
 	url = https://github.com/pq-code-package/mldsa-native.git
 	ignore = untracked
+[submodule "sdk/crates/stabby"]
+	path = sdk/crates/stabby
+	url = https://github.com/matejcik/stabby
