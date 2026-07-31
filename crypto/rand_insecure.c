@@ -21,6 +21,16 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// Guard against this file ever being compiled into a production build. Every
+// build that includes it must explicitly declare itself non-production, so
+// that a build system which loses the PRODUCTION define fails loudly here
+// instead of silently shipping the insecure PRNG.
+#ifndef PRODUCTION
+#error "PRODUCTION must be defined as 0 or 1 when compiling rand_insecure.c"
+#elif PRODUCTION
+#error "Insecure PRNG must not be compiled into a production build"
+#endif
+
 #include "rand.h"
 
 #ifdef USE_INSECURE_PRNG

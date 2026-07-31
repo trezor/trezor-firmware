@@ -551,6 +551,7 @@ env.Replace(
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'TREZOR_EMULATOR',
+        ('PRODUCTION', '0'),
         'TREZOR_MODEL_'+TREZOR_MODEL,
         ('MP_CONFIGFILE', '"embed/projects/unix/mpconfigport.h"'),
         ui.get_ui_layout(TREZOR_MODEL),

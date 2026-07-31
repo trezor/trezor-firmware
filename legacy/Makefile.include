@@ -155,6 +155,13 @@ CFLAGS += -DBITCOIN_ONLY=0
 CFLAGS += -DU2F_ENABLED=1
 endif
 
+ifeq ($(EMULATOR), 1)
+ifeq ($(PRODUCTION), 1)
+$(error EMULATOR=1 cannot be combined with PRODUCTION=1)
+endif
+PRODUCTION := 0
+endif
+
 ifeq ($(PRODUCTION), 0)
 CFLAGS   += -DPRODUCTION=0
 CPUFLAGS += -DPRODUCTION=0
