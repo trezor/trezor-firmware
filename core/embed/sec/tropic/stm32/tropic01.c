@@ -129,10 +129,11 @@ lt_ret_t lt_port_init(lt_l2_state_t *s2) {
   // The bug is that tropic signals that it is in maintenance mode during
   // startup. This causes the chip to reboot in `lt_init()`, delaying the start
   // by 250 ms. It only manifests when `LT_L1_READ_RETRY_DELAY_MS` is too low.
-  // A 50 ms delay was the shortest one found to skip the window in which
-  // tropic signals maintenance mode on the device it was tested on. 60 ms is
-  // used here in case it varies across devices.
-  systick_delay_ms(60);
+  // A 124 ms delay was the shortest one found to skip the window in which
+  // tropic signals maintenance mode on a device with enabled memory
+  // built-in self test (`MBIST_DIS = 0`) and RNG test (`RNGTEST_DIS = 0`).
+  // 135 ms is used here in case it varies across devices.
+  systick_delay_ms(135);
 
   drv->initialized = true;
 
