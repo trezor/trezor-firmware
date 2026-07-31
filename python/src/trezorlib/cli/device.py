@@ -162,7 +162,12 @@ def load(
 
 
 @cli.command()
-@click.option("-w", "--words", type=click.Choice(["12", "18", "24"]), default="24")
+@click.option(
+    "-w",
+    "--words",
+    type=click.Choice(["12", "15", "18", "21", "24"]),
+    default="24",
+)
 @click.option("-e", "--expand", is_flag=True)
 @click.option("-p", "--pin-protection", is_flag=True)
 @click.option("-r", "--passphrase-protection", is_flag=True)
@@ -231,7 +236,11 @@ def recover(
 
 
 @cli.command()
-@click.option("-t", "--strength", type=click.Choice(["128", "192", "256"]))
+@click.option(
+    "-t",
+    "--strength",
+    type=click.Choice(["128", "160", "192", "224", "256"]),
+)
 @click.option("-r", "--passphrase-protection", is_flag=True)
 @click.option("-p", "--pin-protection", is_flag=True)
 @click.option("-l", "--label")

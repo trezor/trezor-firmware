@@ -194,8 +194,8 @@ def recover(
     if session.features.model == "1" and backup_method is not None:
         raise RuntimeError("Backup method cannot be set for Trezor One")
 
-    if word_count not in (12, 18, 24):
-        raise ValueError("Invalid word count. Use 12/18/24")
+    if word_count not in (12, 15, 18, 21, 24):
+        raise ValueError("Invalid word count. Use 12/15/18/21/24")
 
     if session.features.initialized and type == messages.RecoveryType.NormalRecovery:
         raise RuntimeError(
