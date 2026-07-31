@@ -353,10 +353,11 @@ impl<R: Role, B: Backend> Channel<R, B> {
             // Verify checksum.
             let _ = Reassembler::<R>::single(packet_buffer)?;
             let sb = SyncBits::try_from(packet_buffer)?;
-            self.sync.send_mark_delivered(sb);
-            if self.sync.can_send() {
+            if self.sync.send_mark_delivered(sb) {
                 self.send_state = SendState::Idle;
                 return Ok(());
+            } else {
+                log::warn!("[{:04x}] Unexpected ACK bit.", self.channel_id);
             }
         }
         log::warn!("[{:04x}] Unexpected ACK.", self.channel_id);
@@ -447,8 +448,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
                 && self.sync.is_ack_piggybacking_allowed()
                 && !self.sync.can_send()
             {
-                self.sync.send_mark_delivered(reassembler.sync_bits());
-                if self.sync.can_send() {
+                if self.sync.send_mark_delivered(reassembler.sync_bits()) {
                     ack_received = true;
                     self.send_state = SendState::Idle;
                 } else {
