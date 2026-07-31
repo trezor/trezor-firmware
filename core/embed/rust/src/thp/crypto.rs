@@ -1,4 +1,5 @@
-use crypto::memory::init_ctx;
+use crypto::hasher::RawHasher as _;
+use crypto::memory::{init_ctx, Memory};
 use crypto::{aesgcm, curve25519, sha256};
 use trezor_thp::channel::{Backend, Cipher, Hash, U8Array, DH};
 use zeroize::{Zeroize, Zeroizing};
@@ -97,8 +98,8 @@ impl Cipher for TrezorCryptoAesGcm {
         let (in_out, tag_out) = out.split_at_mut(plaintext.len());
         in_out.copy_from_slice(plaintext);
 
-        init_ctx!(aesgcm::AesGcmEncrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
+        init_ctx!(ctx);
+        let mut ctx = unwrap!(aesgcm::AesGcmEncrypt::new(ctx, key.as_slice(), &full_nonce));
         unwrap!(ctx.encrypt_in_place(in_out));
         unwrap!(ctx.auth(ad));
         let tag = unwrap!(ctx.finish());
@@ -120,8 +121,8 @@ impl Cipher for TrezorCryptoAesGcm {
         let (in_out, tag_out) =
             in_out[..plaintext_len + aesgcm::TAG_SIZE].split_at_mut(plaintext_len);
 
-        init_ctx!(aesgcm::AesGcmEncrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
+        init_ctx!(ctx);
+        let mut ctx = unwrap!(aesgcm::AesGcmEncrypt::new(ctx, key.as_slice(), &full_nonce));
         unwrap!(ctx.encrypt_in_place(in_out));
         unwrap!(ctx.auth(ad));
         let tag = unwrap!(ctx.finish());
@@ -143,8 +144,8 @@ impl Cipher for TrezorCryptoAesGcm {
         let (ciphertext, tag) = unwrap!(ciphertext.split_last_chunk::<{ aesgcm::TAG_SIZE }>());
         out.copy_from_slice(ciphertext);
 
-        init_ctx!(aesgcm::AesGcmDecrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
+        init_ctx!(ctx);
+        let mut ctx = unwrap!(aesgcm::AesGcmDecrypt::new(ctx, key.as_slice(), &full_nonce));
         unwrap!(ctx.decrypt_in_place(out));
         unwrap!(ctx.auth(ad));
         ctx.finish(tag).map_err(|_| out.zeroize())?;
@@ -166,8 +167,8 @@ impl Cipher for TrezorCryptoAesGcm {
         let in_out = &mut in_out[..ciphertext_len];
         let (in_out, tag) = unwrap!(in_out.split_last_chunk_mut::<{ aesgcm::TAG_SIZE }>());
 
-        init_ctx!(aesgcm::AesGcmDecrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
+        init_ctx!(ctx);
+        let mut ctx = unwrap!(aesgcm::AesGcmDecrypt::new(ctx, key.as_slice(), &full_nonce));
         unwrap!(ctx.decrypt_in_place(in_out));
         unwrap!(ctx.auth(ad));
         ctx.finish(tag).map_err(|_| in_out.zeroize())?;
@@ -177,7 +178,7 @@ impl Cipher for TrezorCryptoAesGcm {
 }
 
 #[derive(Default)]
-pub struct TrezorCryptoSha256(sha256::NoPinSha256);
+pub struct TrezorCryptoSha256(Memory<sha256::Sha256Ctx>);
 
 impl Hash for TrezorCryptoSha256 {
     fn name() -> &'static str {
@@ -188,12 +189,19 @@ impl Hash for TrezorCryptoSha256 {
     type Output = Sensitive<sha256::Digest>;
 
     fn input(&mut self, data: &[u8]) {
-        self.0.update(data);
+        // SAFETY:
+        // Usage is sound: the unsafe marker on update_raw does not break soundness.
+        // Otherwise not actually safe! This struct breaks the assumption that
+        // the hasher's inner state cannot be copied around. In this usage
+        unsafe { self.0.update_raw(data) };
     }
 
     fn result(&mut self) -> Self::Output {
-        let mut digest = sha256::Digest::default();
-        self.0.clone().finalize_into(&mut digest);
+        // SAFETY:
+        // Usage is sound: the unsafe marker on finalize_raw does not break soundness.
+        // Otherwise not actually safe! This struct breaks the assumption that
+        // the hasher's inner state cannot be copied around. In this usage
+        let digest = unsafe { self.0.finalize_raw() };
         Self::Output::from_slice(&digest)
     }
 }

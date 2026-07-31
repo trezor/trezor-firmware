@@ -1,51 +1,57 @@
+use core::ops::DerefMut;
 use core::pin::Pin;
 
-use zeroize::{Zeroize, ZeroizeOnDrop};
-
 use super::ffi;
-use super::memory::{Memory, init_ctx};
+use super::memory::Memory;
+use crate::hasher::{PinnedHasher, RawHasher};
+use crate::init_ctx;
+use crate::memory::ZeroableMemory;
 
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-#[derive(Zeroize, ZeroizeOnDrop)]
-pub struct HmacSha256<'a> {
-    ctx: Pin<&'a mut Memory<ffi::HMAC_SHA256_CTX>>,
-}
+pub type HmacSha256Ctx = ffi::HMAC_SHA256_CTX;
 
-impl<'a> HmacSha256<'a> {
-    pub fn new(mut ctx: Pin<&'a mut Memory<ffi::HMAC_SHA256_CTX>>, key: &[u8]) -> Self {
-        // initialize the context
-        // SAFETY: ffi
-        unsafe { ffi::hmac_sha256_Init(ctx.inner(), key.as_ptr(), key.len() as u32) };
-        Self { ctx }
-    }
+unsafe impl ZeroableMemory for HmacSha256Ctx {}
 
-    pub fn update(&mut self, data: &[u8]) {
-        // SAFETY: ffi
-        unsafe { ffi::hmac_sha256_Update(self.ctx.inner(), data.as_ptr(), data.len() as u32) };
-    }
-
-    pub fn memory() -> Memory<ffi::HMAC_SHA256_CTX> {
-        Memory::default()
-    }
-
-    pub fn finalize_into(mut self, out: &mut Digest) {
-        // SAFETY: ffi
-        unsafe { ffi::hmac_sha256_Final(self.ctx.inner(), out.as_mut_ptr()) };
+impl HmacSha256Ctx {
+    pub unsafe fn init_raw(&mut self, key: &[u8]) {
+        unsafe { ffi::hmac_sha256_Init(self, key.as_ptr(), key.len() as u32) };
     }
 }
 
-pub fn digest_into(key: &[u8], data: &[u8], out: &mut Digest) {
-    init_ctx!(HmacSha256, ctx, key);
-    ctx.update(data);
-    ctx.finalize_into(out);
+impl RawHasher for Memory<HmacSha256Ctx> {
+    type Digest = Digest;
+
+    unsafe fn update_raw(&mut self, data: &[u8]) {
+        unsafe { ffi::hmac_sha256_Update(self.as_mut(), data.as_ptr(), data.len() as u32) };
+    }
+
+    unsafe fn finalize_raw(&mut self) -> Self::Digest {
+        let mut digest = [0u8; DIGEST_SIZE];
+        unsafe { ffi::hmac_sha256_Final(self.as_mut(), digest.as_mut_ptr()) };
+        digest
+    }
+}
+
+pub fn hmac_sha256_new<D: DerefMut<Target = Memory<HmacSha256Ctx>>>(
+    mut ctx: Pin<D>,
+    key: &[u8],
+) -> PinnedHasher<D> {
+    let mut mut_ctx = ctx.as_mut();
+    unsafe {
+        // SAFETY: init_raw does not invalidate the pin
+        mut_ctx.inner().init_raw(key);
+        // SAFETY: context is initialized
+        PinnedHasher::new_no_init(ctx)
+    }
 }
 
 pub fn digest(key: &[u8], data: &[u8]) -> Digest {
-    let mut out = [0u8; DIGEST_SIZE];
-    digest_into(key, data, &mut out);
-    out
+    init_ctx!(ctx);
+    let mut hmac = hmac_sha256_new(ctx, key);
+    hmac.update(data);
+    hmac.finalize()
 }
 
 #[cfg(test)]
@@ -101,10 +107,9 @@ mod test {
 
     #[test]
     fn test_empty_ctx() {
-        let mut out = [0u8; DIGEST_SIZE];
-
-        init_ctx!(HmacSha256, ctx, b"");
-        ctx.finalize_into(&mut out);
+        init_ctx!(ctx);
+        let mut ctx = hmac_sha256_new(ctx, b"");
+        let out = ctx.finalize();
         let out_hex = hex::encode(out);
 
         assert_eq!(out_hex, HMAC_SHA256_EMPTY);
@@ -123,12 +128,12 @@ mod test {
         // case 3
         let key =
             b"\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa";
-        init_ctx!(HmacSha256, ctx, key);
+        init_ctx!(ctx);
+        let mut ctx = hmac_sha256_new(ctx, key);
         for _ in 0..50 {
             ctx.update(b"\xdd");
         }
-        let mut out = [0u8; DIGEST_SIZE];
-        ctx.finalize_into(&mut out);
+        let out = ctx.finalize();
         assert_eq!(
             hex::encode(out),
             "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe"
@@ -136,11 +141,12 @@ mod test {
 
         // case 4
         let key = b"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19";
-        init_ctx!(HmacSha256, ctx, key);
+        init_ctx!(ctx);
+        let mut ctx = hmac_sha256_new(ctx, key);
         for _ in 0..50 {
             ctx.update(b"\xcd");
         }
-        ctx.finalize_into(&mut out);
+        let out = ctx.finalize();
         assert_eq!(
             hex::encode(out),
             "82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b"

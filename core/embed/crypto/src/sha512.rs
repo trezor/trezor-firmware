@@ -1,53 +1,61 @@
+use core::ops::DerefMut;
 use core::pin::Pin;
 
-use zeroize::{Zeroize, ZeroizeOnDrop};
-
 use super::ffi;
-use super::memory::{Memory, init_ctx};
+use super::memory::Memory;
+use crate::hasher::{PinnedHasher, RawHasher};
+use crate::init_ctx;
+use crate::memory::ZeroableMemory;
 
 pub const BLOCK_SIZE: usize = ffi::SHA512_BLOCK_LENGTH as usize;
 pub const DIGEST_SIZE: usize = ffi::SHA512_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-#[derive(Zeroize, ZeroizeOnDrop)]
-pub struct Sha512<'a> {
-    ctx: Pin<&'a mut Memory<ffi::SHA512_CTX>>,
-}
+pub type Sha512Ctx = ffi::SHA512_CTX;
 
-impl<'a> Sha512<'a> {
-    pub fn new(ctx: Pin<&'a mut Memory<ffi::SHA512_CTX>>) -> Self {
-        // initialize the context
-        let mut res = Self { ctx };
-        // SAFETY: safe with whatever finds itself as memory contents
-        unsafe { ffi::sha512_Init(res.ctx.inner()) };
-        res
-    }
+unsafe impl ZeroableMemory for Sha512Ctx {}
 
-    pub fn update(&mut self, data: &[u8]) {
-        // SAFETY: ffi
-        unsafe { ffi::sha512_Update(self.ctx.inner(), data.as_ptr(), data.len()) };
-    }
-
-    pub fn memory() -> Memory<ffi::SHA512_CTX> {
-        Memory::default()
-    }
-
-    pub fn finalize_into(mut self, out: &mut Digest) {
-        // SAFETY: ffi
-        unsafe { ffi::sha512_Final(self.ctx.inner(), out.as_mut_ptr()) };
+impl Sha512Ctx {
+    // SAFETY:
+    // init_raw is safe because it doesn't encode any sensitive data
+    // into the context
+    pub fn init_raw(&mut self) {
+        unsafe { ffi::sha512_Init(self) };
     }
 }
 
-pub fn digest_into(data: &[u8], out: &mut Digest) {
-    init_ctx!(Sha512, ctx);
-    ctx.update(data);
-    ctx.finalize_into(out);
+impl RawHasher for Memory<Sha512Ctx> {
+    type Digest = Digest;
+
+    unsafe fn update_raw(&mut self, data: &[u8]) {
+        unsafe { ffi::sha512_Update(self.as_mut(), data.as_ptr(), data.len()) };
+    }
+
+    unsafe fn finalize_raw(&mut self) -> Self::Digest {
+        let mut digest = [0u8; DIGEST_SIZE];
+        unsafe { ffi::sha512_Final(self.as_mut(), digest.as_mut_ptr()) };
+        digest
+    }
+}
+
+pub fn sha512_new<D>(mut ctx: Pin<D>) -> PinnedHasher<D>
+where
+    D: DerefMut<Target = Memory<Sha512Ctx>>,
+{
+    let mut mut_ctx = ctx.as_mut();
+    unsafe {
+        // SAFETY: init_raw does not invalidate the pin
+        mut_ctx.inner().init_raw();
+        // SAFETY: context is initialized
+        PinnedHasher::new_no_init(ctx)
+    }
 }
 
 pub fn digest(data: &[u8]) -> Digest {
-    let mut out = [0u8; DIGEST_SIZE];
-    digest_into(data, &mut out);
-    out
+    init_ctx!(ctx);
+    let mut sha = sha512_new(ctx);
+    sha.update(data);
+    sha.finalize()
 }
 
 #[cfg(test)]
@@ -77,10 +85,9 @@ mod test {
 
     #[test]
     fn test_empty_ctx() {
-        let mut out = [0u8; DIGEST_SIZE];
-
-        init_ctx!(Sha512, ctx);
-        ctx.finalize_into(&mut out);
+        init_ctx!(ctx);
+        let mut sha = sha512_new(ctx);
+        let out = sha.finalize();
 
         let out_hex = hex::encode(out);
         assert_eq!(out_hex, SHA512_EMPTY);
