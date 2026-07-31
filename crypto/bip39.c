@@ -172,23 +172,15 @@ cleanup:
 int mnemonic_check(const char *mnemonic) {
   uint8_t bits[32 + 1] = {0};
   size_t mnemonic_bits_len = mnemonic_to_bits(mnemonic, bits);
-  if (mnemonic_bits_len != (12 * BIP39_BITS_PER_WORD) &&
-      mnemonic_bits_len != (18 * BIP39_BITS_PER_WORD) &&
-      mnemonic_bits_len != (24 * BIP39_BITS_PER_WORD)) {
+  if (mnemonic_bits_len == 0) {
     return 0;
   }
   size_t words = mnemonic_bits_len / BIP39_BITS_PER_WORD;
 
   uint8_t checksum = bits[words * 4 / 3];
   sha256_Raw(bits, words * 4 / 3, bits);
-  if (words == 12) {
-    return (bits[0] & 0xF0) == (checksum & 0xF0);  // compare first 4 bits
-  } else if (words == 18) {
-    return (bits[0] & 0xFC) == (checksum & 0xFC);  // compare first 6 bits
-  } else if (words == 24) {
-    return bits[0] == checksum;  // compare 8 bits
-  }
-  return 0;
+  uint8_t checksum_mask = 0xFF << (8 - words / 3);
+  return (bits[0] & checksum_mask) == (checksum & checksum_mask);
 }
 
 // passphrase must be at most 256 characters otherwise it would be truncated

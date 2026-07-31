@@ -907,13 +907,8 @@ int fuzz_mnemonic_from_data(void) {
   if (mnemo_result != NULL) {
     int res = mnemonic_check(mnemo_result);
     if (res == 0) {
-      // TODO the mnemonic_check() function is currently incorrectly rejecting
-      // valid 15 and 21 word seeds
-      // remove this workaround limitation later
-      if (fuzzer_length != 20 && fuzzer_length != 28) {
-        // the generated mnemonic has an invalid format
-        crash();
-      }
+      // the generated mnemonic has an invalid format
+      crash();
     }
   }
   // scrub the internal buffer to rule out persistent side effects
