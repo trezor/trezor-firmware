@@ -1,39 +1,42 @@
+use core::ops::DerefMut;
 use core::pin::Pin;
 
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::ffi;
 use super::memory::{Memory, init_ctx};
+use crate::hasher::{PinnedHasher, RawHasher};
+use crate::memory::ZeroableMemory;
 
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-#[derive(Zeroize, ZeroizeOnDrop)]
-pub struct HmacSha256<'a> {
-    ctx: Pin<&'a mut Memory<ffi::HMAC_SHA256_CTX>>,
+type HmacSha256Ctx = ffi::HMAC_SHA256_CTX;
+
+unsafe impl ZeroableMemory for HmacSha256Ctx {}
+
+impl RawHasher for HmacSha256Ctx {
+    type Digest = Digest;
+
+    unsafe fn update(ctx: *mut Self, data: &[u8]) {
+        unsafe { ffi::hmac_sha256_Update(ctx, data.as_ptr(), data.len() as u32) };
+    }
+
+    unsafe fn finalize(ctx: *mut Self, output: &mut Self::Digest) {
+        unsafe { ffi::hmac_sha256_Final(ctx, output.as_mut_ptr()) };
+    }
 }
 
-impl<'a> HmacSha256<'a> {
-    pub fn new(mut ctx: Pin<&'a mut Memory<ffi::HMAC_SHA256_CTX>>, key: &[u8]) -> Self {
-        // initialize the context
-        // SAFETY: ffi
-        unsafe { ffi::hmac_sha256_Init(ctx.inner(), key.as_ptr(), key.len() as u32) };
-        Self { ctx }
-    }
+pub type HmacSha256<'a> = PinnedHasher<&'a mut Memory<HmacSha256Ctx>>;
 
-    pub fn update(&mut self, data: &[u8]) {
-        // SAFETY: ffi
-        unsafe { ffi::hmac_sha256_Update(self.ctx.inner(), data.as_ptr(), data.len() as u32) };
-    }
-
-    pub fn memory() -> Memory<ffi::HMAC_SHA256_CTX> {
-        Memory::default()
-    }
-
-    pub fn finalize_into(mut self, out: &mut Digest) {
-        // SAFETY: ffi
-        unsafe { ffi::hmac_sha256_Final(self.ctx.inner(), out.as_mut_ptr()) };
-    }
+pub fn hmac_sha256_new<D: DerefMut<Target = Memory<HmacSha256Ctx>>>(
+    ctx: Pin<D>,
+    key: &[u8],
+) -> PinnedHasher<D> {
+    let mut new = PinnedHasher::new_uninit(ctx);
+    // SAFETY: ffi
+    unsafe { ffi::hmac_sha256_Init(new.inner(), key.as_ptr(), key.len() as u32) };
+    new
 }
 
 pub fn digest_into(key: &[u8], data: &[u8], out: &mut Digest) {

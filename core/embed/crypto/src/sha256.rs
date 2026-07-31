@@ -1,47 +1,45 @@
 use core::mem::MaybeUninit;
+use core::ops::DerefMut;
 use core::pin::Pin;
-
-use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::ffi;
 use super::memory::{Memory, init_ctx};
+use crate::hasher::{PinnedHasher, RawHasher};
+use crate::memory::ZeroableMemory;
 
 pub const BLOCK_SIZE: usize = ffi::SHA256_BLOCK_LENGTH as usize;
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-#[derive(Zeroize, ZeroizeOnDrop)]
-pub struct Sha256<'a> {
-    ctx: Pin<&'a mut Memory<ffi::SHA256_CTX>>,
+pub type Sha256Ctx = ffi::SHA256_CTX;
+
+// SAFETY: SHA256_CTX is valid when zeroed
+unsafe impl ZeroableMemory for Sha256Ctx {}
+
+impl RawHasher for Sha256Ctx {
+    type Digest = Digest;
+
+    unsafe fn update(ctx: *mut Self, data: &[u8]) {
+        unsafe { ffi::sha256_Update(ctx, data.as_ptr(), data.len()) };
+    }
+
+    unsafe fn finalize(ctx: *mut Self, output: &mut Self::Digest) {
+        unsafe { ffi::sha256_Final(ctx, output.as_mut_ptr()) };
+    }
 }
 
-impl<'a> Sha256<'a> {
-    pub fn new(mut ctx: Pin<&'a mut Memory<ffi::SHA256_CTX>>) -> Self {
-        // initialize the context
-        // SAFETY: safe with whatever finds itself as memory contents
-        unsafe { ffi::sha256_Init(ctx.inner()) };
-        Self { ctx }
-    }
+pub type Sha256<'a> = PinnedHasher<&'a mut Memory<Sha256Ctx>>;
 
-    pub fn update(&mut self, data: &[u8]) {
-        // SAFETY: safe
-        unsafe { ffi::sha256_Update(self.ctx.inner(), data.as_ptr(), data.len()) };
-    }
-
-    pub fn memory() -> Memory<ffi::SHA256_CTX> {
-        Memory::default()
-    }
-
-    pub fn finalize_into(mut self, out: &mut Digest) {
-        // SAFETY: safe
-        unsafe { ffi::sha256_Final(self.ctx.inner(), out.as_mut_ptr()) };
-    }
+pub fn new_sha256<D: DerefMut<Target = Memory<Sha256Ctx>>>(ctx: Pin<D>) -> PinnedHasher<D> {
+    let mut new = PinnedHasher::new_uninit(ctx);
+    unsafe { ffi::sha256_Init(new.inner()) };
+    new
 }
 
 pub fn digest_into(data: &[u8], out: &mut Digest) {
     init_ctx!(Sha256, ctx);
     ctx.update(data);
-    ctx.finalize_into(out);
+    ctx.finalize(out);
 }
 
 pub fn digest(data: &[u8]) -> Digest {
@@ -107,7 +105,7 @@ mod test {
         let mut out = Digest::default();
 
         init_ctx!(Sha256, ctx);
-        ctx.finalize_into(&mut out);
+        ctx.finalize(&mut out);
 
         let out_hex = hex::encode(out);
         assert_eq!(out_hex, SHA256_EMPTY.to_string());

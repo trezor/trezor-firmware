@@ -4,6 +4,7 @@ use zeroize::Zeroize;
 
 use super::memory::Memory;
 use super::{Error, consteq, ffi};
+use crate::memory::ZeroableMemory;
 
 // Tag size is a parameter but we fix it to 16 here for simplicity.
 pub const TAG_SIZE: usize = 16;
@@ -21,6 +22,8 @@ enum State {
     Finished,
     Failed,
 }
+
+unsafe impl ZeroableMemory for ffi::gcm_ctx {}
 
 struct AesGcmInner<'a> {
     ctx: Pin<&'a mut Memory<ffi::gcm_ctx>>,

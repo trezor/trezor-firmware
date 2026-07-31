@@ -4,6 +4,10 @@ use core::pin::Pin;
 
 use zeroize::{Zeroize, zeroize_flat_type};
 
+
+/// Marker trait for C types that can be safely zeroed.
+pub unsafe trait ZeroableMemory {}
+
 /// Wrapper for a memory used as a context by C functions. Its purpose is to be
 /// !Unpin, thus prevent moves when accessed through a Pin. We want to avoid
 /// moves as they can leave cryptographic data in memory.
@@ -14,7 +18,7 @@ pub struct Memory<T> {
     _phantom: PhantomPinned,
 }
 
-impl<T> Default for Memory<T> {
+impl<T: ZeroableMemory> Default for Memory<T> {
     fn default() -> Self {
         // SAFETY: a zeroed block of memory is valid for C functions
         let inner = unsafe { MaybeUninit::<T>::zeroed().assume_init() };
@@ -25,7 +29,7 @@ impl<T> Default for Memory<T> {
     }
 }
 
-impl<T> Zeroize for Memory<T> {
+impl<T: ZeroableMemory> Zeroize for Memory<T> {
     fn zeroize(&mut self) {
         // SAFETY:
         // - contains no references
@@ -48,15 +52,6 @@ impl<T> Memory<T> {
             self.as_mut()
                 .map_unchecked_mut(|m| &mut m.inner)
                 .get_unchecked_mut()
-        }
-    }
-}
-
-impl<T> Zeroize for Pin<&mut Memory<T>> {
-    fn zeroize(&mut self) {
-        // SAFETY: `Memory::zeroize` does not do any moving
-        unsafe {
-            self.as_mut().get_unchecked_mut().zeroize();
         }
     }
 }

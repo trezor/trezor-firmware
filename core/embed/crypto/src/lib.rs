@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 
 use core::hint::black_box;
+use core::pin::Pin;
 
 #[cfg(feature = "aes_gcm")]
 pub mod aesgcm;
@@ -9,6 +10,7 @@ pub mod crc32;
 pub mod curve25519;
 pub mod ed25519;
 mod ffi;
+pub mod hasher;
 pub mod hmac;
 pub mod memory;
 pub mod merkle;

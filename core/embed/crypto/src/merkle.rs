@@ -11,7 +11,7 @@ pub fn merkle_root(elem: &[u8], proof: &[sha256::Digest]) -> sha256::Digest {
     init_ctx!(sha256::Sha256, ctx);
     ctx.update(&[0x00]);
     ctx.update(elem);
-    ctx.finalize_into(&mut out);
+    ctx.finalize(&mut out);
 
     for proof_elem in proof {
         // hash together the current hash and the proof element
@@ -24,7 +24,7 @@ pub fn merkle_root(elem: &[u8], proof: &[sha256::Digest]) -> sha256::Digest {
         ctx.update(&[0x01]);
         ctx.update(min);
         ctx.update(max);
-        ctx.finalize_into(&mut out);
+        ctx.finalize(&mut out);
     }
 
     out

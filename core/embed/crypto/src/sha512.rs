@@ -4,44 +4,45 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::ffi;
 use super::memory::{Memory, init_ctx};
+use crate::hasher::{PinnedHasher, RawHasher};
+use crate::memory::ZeroableMemory;
 
 pub const BLOCK_SIZE: usize = ffi::SHA512_BLOCK_LENGTH as usize;
 pub const DIGEST_SIZE: usize = ffi::SHA512_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-#[derive(Zeroize, ZeroizeOnDrop)]
-pub struct Sha512<'a> {
-    ctx: Pin<&'a mut Memory<ffi::SHA512_CTX>>,
+type Sha512Ctx = ffi::SHA512_CTX;
+
+unsafe impl ZeroableMemory for Sha512Ctx {}
+
+impl RawHasher for Sha512Ctx {
+    type Digest = Digest;
+
+    unsafe fn update(ctx: *mut Self, data: &[u8]) {
+        unsafe { ffi::sha512_Update(ctx, data.as_ptr(), data.len()) };
+    }
+
+    unsafe fn finalize(ctx: *mut Self, output: &mut Self::Digest) {
+        unsafe { ffi::sha512_Final(ctx, output.as_mut_ptr()) };
+    }
 }
+
+pub type Sha512<'a> = PinnedHasher<&'a mut Memory<Sha512Ctx>>;
 
 impl<'a> Sha512<'a> {
     pub fn new(ctx: Pin<&'a mut Memory<ffi::SHA512_CTX>>) -> Self {
         // initialize the context
-        let mut res = Self { ctx };
+        let mut res = Self::new_uninit(ctx);
         // SAFETY: safe with whatever finds itself as memory contents
-        unsafe { ffi::sha512_Init(res.ctx.inner()) };
+        unsafe { ffi::sha512_Init(res.inner()) };
         res
-    }
-
-    pub fn update(&mut self, data: &[u8]) {
-        // SAFETY: ffi
-        unsafe { ffi::sha512_Update(self.ctx.inner(), data.as_ptr(), data.len()) };
-    }
-
-    pub fn memory() -> Memory<ffi::SHA512_CTX> {
-        Memory::default()
-    }
-
-    pub fn finalize_into(mut self, out: &mut Digest) {
-        // SAFETY: ffi
-        unsafe { ffi::sha512_Final(self.ctx.inner(), out.as_mut_ptr()) };
     }
 }
 
 pub fn digest_into(data: &[u8], out: &mut Digest) {
     init_ctx!(Sha512, ctx);
     ctx.update(data);
-    ctx.finalize_into(out);
+    ctx.finalize(out);
 }
 
 pub fn digest(data: &[u8]) -> Digest {
@@ -80,7 +81,7 @@ mod test {
         let mut out = [0u8; DIGEST_SIZE];
 
         init_ctx!(Sha512, ctx);
-        ctx.finalize_into(&mut out);
+        ctx.finalize(&mut out);
 
         let out_hex = hex::encode(out);
         assert_eq!(out_hex, SHA512_EMPTY);
