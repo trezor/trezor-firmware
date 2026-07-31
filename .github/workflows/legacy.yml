@@ -51,8 +51,10 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "export PRODUCTION=1 && uv run legacy/script/cibuild"
+      - run: nix-shell --run "./tools/check-insecure-prng --absent legacy/firmware/trezor.elf"
       - run: nix-shell --run "uv run legacy/script/setup"
       - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
+      - run: nix-shell --run "./tools/check-insecure-prng --absent legacy/firmware/trezor.elf"
       - run: nix-shell --run "uv run make -C legacy/demo"
         if: matrix.coins == 'universal' && matrix.type == 'normal'
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -82,6 +84,8 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run legacy/script/cibuild"
+      # The emulator must contain the insecure PRNG, so renaming or replacing it fails loudly here.
+      - run: nix-shell --run "./tools/check-insecure-prng --present legacy/firmware/trezor.elf"
       - run: cp legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-${{ matrix.coins }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
