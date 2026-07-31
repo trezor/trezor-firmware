@@ -1,3 +1,5 @@
+use rtl::util::FatPtr;
+
 use super::ffi;
 
 #[derive(PartialEq, Debug, Eq, Clone, Copy)]
@@ -8,29 +10,24 @@ pub enum LogLevel {
     Error = ffi::log_level_t_LOG_LEVEL_ERR as _,
 }
 
-impl ffi::log_source_t {
-    fn new(module: &str) -> Self {
-        Self {
-            name: module.as_ptr() as *const cty::c_char,
-            name_len: module.len(),
+impl From<&str> for ffi::log_source_t {
+    fn from(s: &str) -> Self {
+        let ptr = FatPtr::from(s);
+        ffi::log_source_t {
+            name: ptr.ptr(),
+            name_len: ptr.len(),
         }
     }
 }
 
 fn syslog_start_record(module: &str, level: LogLevel) -> bool {
-    let syslog_info = ffi::log_source_t::new(module);
-    unsafe {
-        ffi::syslog_start_record(
-            &syslog_info as *const ffi::log_source_t,
-            level as ffi::log_level_t,
-        )
-    }
+    let syslog_info = module.into();
+    unsafe { ffi::syslog_start_record(&syslog_info, level as ffi::log_level_t) }
 }
 
 fn syslog_write_chunk(text: &str, end_record: bool) -> Result<usize, ()> {
-    let bytes_written = unsafe {
-        ffi::syslog_write_chunk(text.as_ptr() as *const cty::c_char, text.len(), end_record)
-    };
+    let text = FatPtr::from(text);
+    let bytes_written = unsafe { ffi::syslog_write_chunk(text.ptr(), text.len(), end_record) };
     if bytes_written < 0 {
         Err(())
     } else {
