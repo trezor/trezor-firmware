@@ -1,0 +1,12 @@
+[package]
+name = "trezor-crc32"
+description = "CRC-32-IEEE (zlib-style) for Trezor firmware"
+version = "0.1.0"
+edition = "2024"
+authors = ["Trezor Company"]
+readme = "README.md"
+license = "GPL-3.0-only"
+repository = "https://github.com/trezor/trezor-firmware/"
+
+[dev-dependencies]
+hex = "0.4.3"

@@ -5,7 +5,9 @@
 mod alternating_bit;
 pub mod channel;
 pub mod control_byte;
-mod crc32;
+mod crc32 {
+    pub use trezor_crc32::*;
+}
 pub mod credential;
 pub mod error;
 mod fragment;
