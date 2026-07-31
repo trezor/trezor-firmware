@@ -3,6 +3,7 @@ pub mod compile;
 pub mod embed;
 pub mod rust_bindings;
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use color_eyre::Result;
@@ -51,8 +52,9 @@ pub struct CLibrary {
     // from other crates and libraries imported via `pkg-config`.
     external_libs: Vec<String>,
 
-    // Builder for generating Rust bindings to this library.
-    builder: Option<bindgen::Builder>,
+    // Builders for generating Rust bindings to this library, keyed by output
+    // filename.
+    builders: BTreeMap<String, bindgen::Builder>,
 }
 
 impl CLibrary {
@@ -70,7 +72,7 @@ impl CLibrary {
             public_attrs: CompileAttrs::default(),
             libs: Vec::new(),
             external_libs: Vec::new(),
-            builder: None,
+            builders: BTreeMap::new(),
         }
     }
 

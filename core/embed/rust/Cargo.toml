@@ -1,104 +1,21 @@
 [package]
 name = "trezor_lib"
-version = "0.1.0"
+version = "0.0.0"
 authors = ["SatoshiLabs <info@satoshilabs.com>"]
 edition = "2021"
-build = "build.rs"
-
-[features]
-default = ["layout_bolt"]
-crypto = ["dep:crypto"]
-layout_bolt = []
-layout_caesar = []
-layout_delizia = []
-layout_eckhart = []
-micropython = []
-protobuf = ["micropython"]
-ui = []
-dma2d = []
-framebuffer = []
-display_mono = []
-display_rgb565 = ["ui_antialiasing"]
-display_rgba8888 = ["ui_antialiasing"]
-ui_debug = []
-ui_performance_overlay = []
-ui_debug_overlay = []
-ui_antialiasing = []
-ui_blurring = []
-ui_image_buffer = []
-ui_color_32bit = []
-ui_overlay = []
-ui_empty_lock = []
-ui_jpeg = []
-ui_font_kerning = []
-hw_jpeg_decoder = []
-boot_ucb = []
-bootloader = []
-prodtest = []
-button = []
-touch = []
-clippy = []
-debug = ["ui_debug", "dev_keys"]
-debuglink = []
-dev_keys = []
-sbu = []
-haptic = []
-sd_card = []
-rgb_led = []
-power_manager = []
-touch_wakeup = []
-pmic = []
-backlight = []
-usb = []
-optiga = []
-ble = []
-nrf = []
-smp = []
-tropic = []
-serial_number = []
-storage = []
-telemetry = []
-n4w1 = []
-translations = ["crypto"]
-secmon_layout = []
-dbg_console = ["dep:sys"]
-app_loading = []
-thp = ["crypto/thp", "dep:trezor-thp", "dep:zeroize"]
-test = [
-    "backlight",
-    "button",
-    "cc",
-    "crypto",
-    "dbg_console",
-    "dma2d",
-    "debug",
-    "glob",
-    "micropython",
-    "nrf",
-    "optiga",
-    "protobuf",
-    "smp",
-    "storage",
-    "thp",
-    "touch",
-    "translations",
-    "trezor-thp?/use_std",
-    "ui",
-    "ui_jpeg",
-    "ui_font_kerning",
-    "ui_blurring",
-    "ui_image_buffer",
-    "ui_overlay",
-    "ui_empty_lock",
-    "universal_fw",
-]
-universal_fw = []
-with_new_crates = ["dep:io", "dep:xbuild"]
-with_upymod = ["dep:upymod"]
+links = "trezor_lib"
 
 [lib]
 crate-type = ["rlib"]
 doctest = false
+
+[build-dependencies]
+bindgen.workspace = true
+xbuild.workspace = true
+
+[dev-dependencies]
+hex.workspace = true
+serde_json.workspace = true
 
 [dependencies]
 cfg-if.workspace = true
@@ -111,27 +28,147 @@ num-derive.workspace = true
 num-traits.workspace = true
 pareen.workspace = true
 qrcodegen.workspace = true
-rtl.workspace = true
 spin.workspace = true
 static-alloc.workspace = true
+trezor-thp = { workspace = true, optional = true }
 trezor-tjpgdec.workspace = true
 ufmt.workspace = true
 unsize.workspace = true
 without-alloc.workspace = true
-
-crypto = { workspace = true, optional = true }
-io = { workspace = true, optional = true }
-sys = { workspace = true, optional = true }
-trezor-thp = { workspace = true, optional = true }
-upymod = { workspace = true, optional = true }
 zeroize = { workspace = true, optional = true }
 
-[build-dependencies]
-bindgen.workspace = true
-cc = { workspace = true, optional = true }
-glob = { workspace = true, optional = true }
-xbuild = { workspace = true, optional = true }
+# crates in embed/ directory
+crypto.workspace = true
+io.workspace = true
+models.workspace = true
+rtl.workspace = true
+sec.workspace = true
+sys.workspace = true
+upymod = { workspace = true, optional = true }
 
-[dev-dependencies]
-hex.workspace = true
-serde_json.workspace = true
+[features]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
+
+app_loading = []
+backlight = []
+ble = []
+boot_ucb = []
+bootloader = []
+button = []
+clippy = []
+crypto = []
+dbg_console = []
+debug = ["ui_debug", "dev_keys"]
+debuglink = []
+dev_keys = []
+display_mono = []
+display_rgb565 = ["ui_antialiasing"]
+display_rgba8888 = ["ui_antialiasing"]
+dma2d = []
+framebuffer = []
+haptic = []
+hw_jpeg_decoder = []
+layout_bolt = []
+layout_caesar = []
+layout_delizia = []
+layout_eckhart = []
+micropython = ["dep:upymod"]
+n4w1 = []
+nrf = []
+optiga = []
+pmic = []
+power_manager = []
+prodtest = []
+protobuf = ["micropython"]
+rgb_led = []
+sbu = []
+sd_card = []
+secmon_layout = []
+serial_number = []
+smp = []
+storage = []
+telemetry = []
+thp = ["crypto/thp", "dep:trezor-thp", "dep:zeroize"]
+touch = []
+touch_wakeup = []
+translations = ["crypto"]
+tropic = []
+ui = []
+ui_antialiasing = []
+ui_blurring = []
+ui_color_32bit = []
+ui_debug = []
+ui_debug_overlay = []
+ui_empty_lock = []
+ui_font_kerning = []
+ui_image_buffer = []
+ui_jpeg = []
+ui_overlay = []
+ui_performance_overlay = []
+universal_fw = []
+usb = []
+
+# --------------------------------------------------------------------------
+# Unit test configuration
+# --------------------------------------------------------------------------
+
+test = [
+    "crypto/aes_gcm",
+    "emulator",
+    "io/button",
+    "io/display_panel_t2t1",
+    "io/emulator",
+    "io/fancy_fatal_error",
+    "io/kernel_mode",
+    "io/mcu_stm32f429",
+    "io/nrf",
+    "io/secure_mode",
+    "io/touch",
+    "mcu_stm32f429",
+    "models/model_t2t1",
+    "sec/secret",
+    "sys/dbg_console",
+    "upymod/emulator",
+    "upymod/layout_bolt",
+    "upymod/universal_fw",
+
+    "backlight",
+    "button",
+    "crypto",
+    "dbg_console",
+    "debug",
+    "dma2d",
+    "layout_bolt",
+    "micropython",
+    "nrf",
+    "optiga",
+    "protobuf",
+    "smp",
+    "storage",
+    "thp",
+    "touch",
+    "translations",
+    "trezor-thp?/use_std",
+    "ui_blurring",
+    "ui_empty_lock",
+    "ui_font_kerning",
+    "ui_image_buffer",
+    "ui_jpeg",
+    "ui_overlay",
+    "ui",
+    "universal_fw",
+]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = []
+
+emulator = []
+mcu_stm32f429 = ["mcu_stm32f4"]
+mcu_stm32f4 = []
+

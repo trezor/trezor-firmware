@@ -38,8 +38,9 @@
 #include <sec/tropic.h>
 #endif
 
-// Initialize the system and drivers for running tests in the Rust code.
-// The function is called from the Rust before the test main function is run.
+#include <stdlib.h>
+#include "py/builtin.h"
+
 void rust_tests_c_setup(void) {
   system_init(NULL);
 
@@ -64,3 +65,14 @@ void rust_tests_c_setup(void) {
 
   usb_configure(NULL);
 }
+
+void nlr_jump_fail(void *val) {
+  printf("FATAL: uncaught NLR %p\n", val);
+  exit(1);
+}
+
+static void stderr_print_strn(void *env, const char *str, size_t len) {
+  printf("%.*s", (int)len, str);
+}
+
+const mp_print_t mp_stderr_print = {NULL, stderr_print_strn};

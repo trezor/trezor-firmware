@@ -2,14 +2,6 @@ use core::mem;
 
 use crate::align::include_aligned;
 
-#[cfg(not(feature = "with_upymod"))]
-macro_rules! proto_def_path {
-    ($filename:expr) => {
-        concat!(env!("BUILD_DIR"), "/rust/", $filename)
-    };
-}
-
-#[cfg(feature = "with_upymod")]
 macro_rules! proto_def_path {
     ($filename:expr) => {
         concat!(env!("PROTOB_BLOBS_DIR"), "/", $filename)
