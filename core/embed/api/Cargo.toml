@@ -10,9 +10,17 @@ xbuild.workspace = true
 bindgen.workspace = true
 
 [dependencies]
+lock_api.workspace = true
+spin = { workspace = true, features = ["lock_api"] }
+stabby.workspace = true
+talc.workspace = true
+trezor-app-sdk.workspace = true
+
+crypto.workspace = true
 models.workspace = true
 rtl.workspace = true
 sec.workspace = true
+sys.workspace = true
 io.workspace = true
 
 [features]
