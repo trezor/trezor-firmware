@@ -1,6 +1,12 @@
 /// Explicit fat pointer representation
 ///
-/// Useful when passing slices into C
+/// Should be always used when passing slices into C.
+///
+/// Coerces the internal pointer to NULL in case length is zero, to make pointer
+/// validation safer and easier in C. Typically, C will allow either (a) NULL
+/// pointer or (b) pointer to valid memory. But Rust zero-length slices are
+/// pointers whose int value is `align_of<T>`, which is decidedly _not_ valid
+/// memory. This way, C side will be satisfied.
 ///
 /// # Safety
 ///
@@ -57,9 +63,13 @@ impl<T> FatPtr<T> {
 
 impl<T> From<&[T]> for FatPtr<T> {
     fn from(s: &[T]) -> Self {
-        Self {
-            ptr: s.as_ptr(),
-            len: s.len(),
+        if s.is_empty() {
+            Self::null()
+        } else {
+            Self {
+                ptr: s.as_ptr(),
+                len: s.len(),
+            }
         }
     }
 }
@@ -67,9 +77,42 @@ impl<T> From<&[T]> for FatPtr<T> {
 // Helper for converting &str to (signed) char*
 impl From<&str> for FatPtr<cty::c_char> {
     fn from(s: &str) -> Self {
+        let charptr = FatPtr::from(s.as_bytes());
         Self {
-            ptr: s.as_ptr() as *const cty::c_char,
-            len: s.len(),
+            ptr: charptr.ptr() as *const cty::c_char,
+            len: charptr.len(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_fat_ptr() {
+        let s = "Hello, world!";
+        let fp = FatPtr::from(s);
+        assert_eq!(fp.ptr() as usize, s.as_ptr() as usize);
+        assert_eq!(fp.len(), s.len());
+    }
+
+    #[test]
+    fn test_nullptr() {
+        let fp = FatPtr::<i32>::null();
+        assert!(fp.is_null());
+        assert_eq!(fp.ptr(), core::ptr::null());
+        assert_eq!(fp.len(), 0);
+        assert!(fp.is_empty());
+    }
+
+    #[test]
+    fn test_empty_slice() {
+        let s: &[u64] = &[];
+        let fp = FatPtr::from(s);
+        assert!(fp.is_null());
+        assert_eq!(fp.ptr(), core::ptr::null());
+        assert_eq!(fp.len(), 0);
+        assert!(fp.is_empty());
     }
 }
