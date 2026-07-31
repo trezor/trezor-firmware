@@ -50,8 +50,35 @@ void display_io_init_gpio(void) {
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Alternate = 0;
   GPIO_InitStructure.Pin = DISPLAY_PWR_PIN;
-  HAL_GPIO_WritePin(DISPLAY_PWR_PORT, DISPLAY_PWR_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(DISPLAY_PWR_PORT, DISPLAY_PWR_PIN, GPIO_PIN_RESET);
   HAL_GPIO_Init(DISPLAY_PWR_PORT, &GPIO_InitStructure);
+#endif
+
+#ifdef DISPLAY_IM0_PIN
+  // Interface-mode select pins: sampled by the controller only at reset, so
+  // must reach their target level before the reset pulse below is issued.
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Alternate = 0;
+
+  GPIO_InitStructure.Pin = DISPLAY_IM0_PIN;
+#ifdef DISPLAY_I8080_16BIT_DW
+  HAL_GPIO_WritePin(DISPLAY_IM0_PORT, DISPLAY_IM0_PIN,
+                    GPIO_PIN_SET);  // IM0=1: 16-bit bus interface I
+#else
+  HAL_GPIO_WritePin(DISPLAY_IM0_PORT, DISPLAY_IM0_PIN,
+                    GPIO_PIN_RESET);  // IM0=0: 8-bit bus interface I
+#endif
+  HAL_GPIO_Init(DISPLAY_IM0_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = DISPLAY_IM1_PIN;
+  HAL_GPIO_WritePin(DISPLAY_IM1_PORT, DISPLAY_IM1_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_Init(DISPLAY_IM1_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = DISPLAY_IM2_PIN;
+  HAL_GPIO_WritePin(DISPLAY_IM2_PORT, DISPLAY_IM2_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_Init(DISPLAY_IM2_PORT, &GPIO_InitStructure);
 #endif
 
   // LCD_RST
