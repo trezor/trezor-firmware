@@ -60,7 +60,9 @@ void reset_init(uint32_t _strength, bool passphrase_protection,
                 bool pin_protection, const char *language, const char *label,
                 uint32_t u2f_counter, bool _skip_backup, bool _no_backup,
                 bool _entropy_check) {
-  if (_strength != 128 && _strength != 192 && _strength != 256) return;
+  if (_strength != 128 && _strength != 160 && _strength != 192 &&
+      _strength != 224 && _strength != 256)
+    return;
 
   strength = _strength;
   skip_backup = _skip_backup;
