@@ -1,4 +1,6 @@
-enum Qstr {
+#include <stddef.h>
+
+enum Qstr : size_t {
 
 // Copied from `vendor/micropython/py/qstr.h`:
 

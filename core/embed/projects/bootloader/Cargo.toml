@@ -109,8 +109,6 @@ default = [
     "models/bootloader",
     "crypto/ed25519_no_precomp",
 
-    "trezor_lib/with_new_crates", # only for transitional period
-
     "trezor_lib/crypto",
     "trezor_lib/ui",
     "trezor_lib/bootloader",

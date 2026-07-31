@@ -33,14 +33,9 @@ pub fn test(args: TestArgs) -> Result<()> {
     for package in &args.packages {
         let mut cmd = process::Command::new("cargo");
 
-        let test_feature = match package.as_str() {
-            "trezor_lib" => "test_with_new_crates",
-            _ => "test",
-        };
-
         cmd.arg("test")
             .args(["--package", package])
-            .args(["--features", test_feature])
+            .args(["--features", "test"])
             .arg("--")
             .arg("--test-threads=1")
             .arg("--nocapture")

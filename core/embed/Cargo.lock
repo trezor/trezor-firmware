@@ -1002,25 +1002,25 @@ version = "0.1.0"
 
 [[package]]
 name = "trezor_lib"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "bindgen",
- "cc",
  "cfg-if",
  "crypto",
  "cty",
  "easer",
- "glob",
  "heapless",
  "hex",
  "io",
  "log",
  "minicbor",
+ "models",
  "num-derive",
  "num-traits",
  "pareen",
  "qrcodegen",
  "rtl",
+ "sec",
  "serde_json",
  "spin",
  "static-alloc",

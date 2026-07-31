@@ -56,8 +56,8 @@
 #endif
 
 #ifdef BOOTLOADER
-#include "workflow/debuglink.h"
-#include "workflow/workflow_common.h"
+#include "../projects/bootloader/workflow/debuglink.h"
+#include "../projects/bootloader/workflow/workflow_common.h"
 #endif
 
 #include "bip39.h"

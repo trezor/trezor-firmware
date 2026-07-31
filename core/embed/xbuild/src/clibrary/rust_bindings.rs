@@ -6,23 +6,41 @@ use super::CLibrary;
 use crate::helpers::{links_name, path_from_env};
 
 impl CLibrary {
-    /// Configures the bindgen builder with the provided function, allowing
-    /// users to customize the generation of Rust bindings. The function takes
-    /// a `bindgen::Builder` as input and returns a modified builder.
+    /// Configures the default bindgen builder with the provided function.
+    ///
+    /// The function takes a `bindgen::Builder` as input and returns a modified
+    /// builder. The generated bindings use the default output filename.
     pub fn add_rust_bindings(
         &mut self,
         func: impl FnOnce(bindgen::Builder) -> Result<bindgen::Builder>,
     ) -> Result<()> {
-        let builder = self.builder.take().unwrap_or_default();
-        self.builder = Some(func(builder)?);
+        let name = links_name()?;
+        self.add_rust_bindings_ex(&name, func)
+    }
+
+    /// Configures a named bindgen builder with the provided function.
+    ///
+    /// The generated bindings are written to `<name>.rs` in `OUT_DIR`.
+    pub fn add_rust_bindings_ex(
+        &mut self,
+        name: &str,
+        func: impl FnOnce(bindgen::Builder) -> Result<bindgen::Builder>,
+    ) -> Result<()> {
+        let filename = format!("{name}.rs");
+        let builder = self.builders.remove(&filename).unwrap_or_default();
+        self.builders.insert(filename, func(builder)?);
         Ok(())
     }
 
-    /// Generates rust bininding (a .rs file) from the configured builder and
-    /// writes it to the OUT_DIR.
+    /// Generates Rust bindings from all configured builders and writes them to
+    /// the `OUT_DIR`.
     pub(crate) fn generate_rust_bindings(&mut self, use_cc_includes: bool) -> Result<()> {
-        let out_file = path_from_env("OUT_DIR")?.join(links_name()? + ".rs");
-        let content = if let Some(builder) = self.builder.take() {
+        let out_dir = path_from_env("OUT_DIR")?;
+        let default_filename = format!("{}.rs", links_name()?);
+        let builders = std::mem::take(&mut self.builders);
+        let has_default_builder = builders.contains_key(&default_filename);
+
+        if !builders.is_empty() {
             let mut attrs = self.get_merged_attrs();
 
             if use_cc_includes {
@@ -36,35 +54,39 @@ impl CLibrary {
             attrs.remove_flag("-mcmse");
             attrs.remove_flag("-fsingle-precision-constant");
 
-            let mut content = Vec::<u8>::new();
-            builder
-                .clang_args(attrs.to_compiler_args())
-                // Customize the standard types.
-                .use_core()
-                .ctypes_prefix("cty")
-                .size_t_is_usize(true)
-                // Disable the layout tests. They spew out a lot of code-style bindings, and are not
-                // too relevant for our use-case.
-                .layout_tests(false)
-                // Tell cargo to invalidate the built crate whenever any of the
-                // included header files change.
-                .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-                .generate()
-                .context("Unable to generate bindings")?
-                .write(Box::new(&mut content))
-                .context("Unable to write bindings to a buffer")?;
+            for (filename, builder) in builders {
+                let mut content = Vec::<u8>::new();
+                builder
+                    .clang_args(attrs.to_compiler_args())
+                    // Customize the standard types.
+                    .use_core()
+                    .ctypes_prefix("cty")
+                    .size_t_is_usize(true)
+                    // Disable the layout tests. They spew out a lot of code-style bindings, and are
+                    // not too relevant for our use-case.
+                    .layout_tests(false)
+                    // Tell cargo to invalidate the built crate whenever any of the
+                    // included header files change.
+                    .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+                    .generate()
+                    .context("Unable to generate bindings")?
+                    .write(Box::new(&mut content))
+                    .context("Unable to write bindings to a buffer")?;
 
-            content
-        } else {
-            // just empty file
-            Vec::<u8>::new()
-        };
+                // Bindgen writes the output file even if the content is unchanged,
+                // which causes unnecessary recompilations. To avoid this, we
+                // compare the generated file with the existing one and only replace
+                // it if there are changes.
+                maybe_replace(content, &out_dir.join(filename))?;
+            }
+        }
 
-        // Bindgen writes the output file even if the content is unchanged,
-        // which causes unnecessary recompilations. To avoid this, we
-        // compare the generated file with the existing one and only replace
-        // it if there are changes.
-        maybe_replace(content, &out_file)?;
+        // Keep creating an empty default bindings file for crates without a
+        // default bindgen configuration, preserving the existing build-script
+        // contract.
+        if !has_default_builder {
+            maybe_replace(Vec::new(), &out_dir.join(default_filename))?;
+        }
         Ok(())
     }
 }

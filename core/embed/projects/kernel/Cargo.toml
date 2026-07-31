@@ -102,7 +102,6 @@ default = [
     "sec/storage",
     "models/kernel",
     "crypto/aes_gcm",
-    "trezor_lib/with_new_crates", # only for transitional period
     ]
 
 mcu_stm32f4 = []

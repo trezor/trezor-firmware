@@ -155,9 +155,6 @@ default = [
     "crypto/secp256k1_zkp",
     "crypto/aes_gcm",
 
-    "trezor_lib/with_new_crates", # only for transitional period
-    "trezor_lib/with_upymod", # only for transitional period
-
     "trezor_lib/crypto",
     "trezor_lib/micropython",
     "trezor_lib/protobuf",
