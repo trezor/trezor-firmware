@@ -27,8 +27,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         add_driver_none(lib)?;
     } else if cfg!(feature = "display_ltdc_dsi") {
         add_driver_ltdc_dsi(lib)?;
-    } else if cfg!(feature = "display_st7789") {
-        add_driver_st7789(lib)?;
+    } else if cfg!(feature = "display_i8080") {
+        add_driver_i8080(lib)?;
     } else if cfg!(feature = "display_vg2864") {
         add_driver_vg2864(lib)?;
     } else if cfg!(feature = "display_stm32f429i_disc1") {
@@ -75,6 +75,14 @@ fn set_panel_dem240320b1(lib: &mut CLibrary) {
     ]);
 }
 
+fn set_panel_lx200b4501ctp03(lib: &mut CLibrary) {
+    lib.add_defines([
+        ("DISPLAY_PANEL_LX200B4501CTP03", Some("1")),
+        ("DISPLAY_RESX", Some("240")),
+        ("DISPLAY_RESY", Some("320")),
+    ]);
+}
+
 fn set_panel_lx154a2482(lib: &mut CLibrary) {
     lib.add_defines([
         ("DISPLAY_PANEL_LX154A2482", Some("1")),
@@ -111,6 +119,8 @@ fn add_driver_unix(lib: &mut CLibrary) -> Result<()> {
         set_panel_lx154a2482(lib);
     } else if cfg!(feature = "display_panel_dem240320b1") {
         set_panel_dem240320b1(lib);
+    } else if cfg!(feature = "display_panel_lx200b4501ctp03") {
+        set_panel_lx200b4501ctp03(lib);
     } else if cfg!(feature = "display_panel_t2t1") {
         set_panel_t2t1(lib);
     } else if cfg!(feature = "display_panel_vg2864") {
@@ -160,19 +170,22 @@ fn add_driver_ltdc_dsi(lib: &mut CLibrary) -> Result<()> {
     Ok(())
 }
 
-fn add_driver_st7789(lib: &mut CLibrary) -> Result<()> {
+fn add_driver_i8080(lib: &mut CLibrary) -> Result<()> {
     if cfg!(feature = "mcu_stm32u58") {
         lib.add_sources([
-            "display/st-7789/display_driver.c",
-            "display/st-7789/display_io.c",
-            "display/st-7789/display_panel.c",
+            "display/i8080/display_driver.c",
+            "display/i8080/display_io.c",
+            "display/i8080/display_panel.c",
         ]);
         if cfg!(feature = "display_panel_lx154a2482") {
             set_panel_lx154a2482(lib);
-            lib.add_source("display/st-7789/panels/lx154a2482.c");
+            lib.add_source("display/i8080/panels/lx154a2482.c");
         } else if cfg!(feature = "display_panel_dem240320b1") {
             set_panel_dem240320b1(lib);
-            lib.add_source("display/st-7789/panels/dem240320b1.c");
+            lib.add_source("display/i8080/panels/dem240320b1.c");
+        } else if cfg!(feature = "display_panel_lx200b4501ctp03") {
+            set_panel_lx200b4501ctp03(lib);
+            lib.add_source("display/i8080/panels/lx200b4501ctp03.c");
         } else {
             bail_unsupported!();
         }
@@ -180,26 +193,26 @@ fn add_driver_st7789(lib: &mut CLibrary) -> Result<()> {
             lib.add_sources([
                 "display/bg_copy/stm32u5/bg_copy.c",
                 "display/fb_queue/fb_queue.c",
-                "display/st-7789/display_fb.c",
+                "display/i8080/display_fb.c",
             ]);
         } else {
-            lib.add_source("display/st-7789/display_nofb.c");
+            lib.add_source("display/i8080/display_nofb.c");
         }
     } else if cfg!(feature = "mcu_stm32f4") {
         lib.add_sources([
-            "display/st-7789/display_nofb.c",
-            "display/st-7789/display_driver.c",
-            "display/st-7789/display_io.c",
-            "display/st-7789/display_panel.c",
+            "display/i8080/display_nofb.c",
+            "display/i8080/display_driver.c",
+            "display/i8080/display_io.c",
+            "display/i8080/display_panel.c",
         ]);
         if cfg!(feature = "display_panel_t2t1") {
             set_panel_t2t1(lib);
             lib.add_sources([
-                "display/st-7789/panels/t2t1.c",
-                "display/st-7789/panels/tf15411a.c",
-                "display/st-7789/panels/154a.c",
-                "display/st-7789/panels/lx154a2411.c",
-                "display/st-7789/panels/lx154a2422.c",
+                "display/i8080/panels/t2t1.c",
+                "display/i8080/panels/tf15411a.c",
+                "display/i8080/panels/154a.c",
+                "display/i8080/panels/lx154a2411.c",
+                "display/i8080/panels/lx154a2422.c",
             ]);
         } else {
             bail_unsupported!();

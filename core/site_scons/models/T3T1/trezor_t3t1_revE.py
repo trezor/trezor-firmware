@@ -61,11 +61,11 @@ def configure(
     defines += [("USE_SECRET_KEYS", "1")]
 
     if "display" in features_wanted:
-        sources += ["embed/io/display/st-7789/display_fb.c"]
-        sources += ["embed/io/display/st-7789/display_driver.c"]
-        sources += ["embed/io/display/st-7789/display_io.c"]
-        sources += ["embed/io/display/st-7789/display_panel.c"]
-        sources += ["embed/io/display/st-7789/panels/lx154a2482.c"]
+        sources += ["embed/io/display/i8080/display_fb.c"]
+        sources += ["embed/io/display/i8080/display_driver.c"]
+        sources += ["embed/io/display/i8080/display_io.c"]
+        sources += ["embed/io/display/i8080/display_panel.c"]
+        sources += ["embed/io/display/i8080/panels/lx154a2482.c"]
         sources += ["embed/io/display/fb_queue/fb_queue.c"]
         paths += ["embed/io/display/inc"]
         defines += [("USE_DISPLAY", "1")]
