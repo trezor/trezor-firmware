@@ -90,23 +90,35 @@ impl crate::trace::Trace for SelectWordCountScreen {
     }
 }
 
-const MAX_KEYS: usize = 5;
+const MAX_KEYS: usize = 7;
 pub struct ValueKeypad {
     cancel: Button,
     keys: Vec<Button, MAX_KEYS>,
     numbers: Vec<u32, MAX_KEYS>,
+    /// Number of rows of the keypad grid.
+    rows: usize,
+    /// Size of a single key.
+    button_size: Offset,
+    /// Grid cell of the cancel button, in the bottom-left corner.
+    cancel_cell: usize,
     area: Rect,
     pressed: Option<usize>,
 }
 
 impl ValueKeypad {
-    const ROWS: usize = 3;
-    const BUTTON_SIZE: Offset = Offset::new(138, 130);
-    const CANCEL_BUTTON_INDEX: usize = 2;
+    /// Grid used when the values do not fit into a single column.
+    const ROWS_TWO_COLUMNS: usize = 4;
+    const BUTTON_SIZE_TWO_COLUMNS: Offset = Offset::new(138, 76);
+    /// Grid used when all the values fit into a single column.
+    const ROWS_ONE_COLUMN: usize = 3;
+    const BUTTON_SIZE_ONE_COLUMN: Offset = Offset::new(138, 130);
+    /// Number of values from which the two-column grid is used.
+    const TWO_COLUMNS_THRESHOLD: usize = 3;
 
     pub fn new_single_share() -> Self {
-        const NUMBERS: [u32; 5] = [12, 20, 18, 24, 33];
-        const LABELS: [&str; 5] = ["12", "20", "18", "24", "33"];
+        // Values are column-major, with the cancel button in the bottom-left cell.
+        const NUMBERS: [u32; 7] = [12, 18, 21, 15, 20, 24, 33];
+        const LABELS: [&str; 7] = ["12", "18", "21", "15", "20", "24", "33"];
         Self::new(&LABELS, &NUMBERS)
     }
 
@@ -117,11 +129,11 @@ impl ValueKeypad {
     }
 
     /// Convert key index to grid cell index.
-    fn key_2_grid_cell(key: usize) -> usize {
+    fn key_2_grid_cell(&self, key: usize) -> usize {
         // Make sure the key is within bounds.
         debug_assert!(key < MAX_KEYS);
-        // Key with index 2 must be mapped after the cancel button.
-        if key < Self::CANCEL_BUTTON_INDEX {
+        // Keys after the bottom-left cancel button continue in the right column.
+        if key < self.cancel_cell {
             key
         } else {
             key + 1
@@ -131,6 +143,19 @@ impl ValueKeypad {
     fn new(labels: &[&'static str], numbers: &[u32]) -> Self {
         debug_assert_eq!(labels.len(), numbers.len());
         debug_assert!(labels.len() <= MAX_KEYS);
+
+        // A short list of values is laid out in a single column of taller keys.
+        let two_columns = labels.len() >= Self::TWO_COLUMNS_THRESHOLD;
+        let rows = if two_columns {
+            Self::ROWS_TWO_COLUMNS
+        } else {
+            Self::ROWS_ONE_COLUMN
+        };
+        let button_size = if two_columns {
+            Self::BUTTON_SIZE_TWO_COLUMNS
+        } else {
+            Self::BUTTON_SIZE_ONE_COLUMN
+        };
 
         let keys: Vec<Button, MAX_KEYS> = labels
             .iter()
@@ -150,44 +175,40 @@ impl ValueKeypad {
                 .with_radius(12),
             keys,
             numbers,
+            rows,
+            button_size,
+            cancel_cell: rows - 1,
             area: Rect::zero(),
             pressed: None,
         }
     }
 
+    fn vertical_spacing(&self) -> i16 {
+        (self.area.height() - self.button_size.y * self.rows as i16) / (self.rows as i16 - 1)
+    }
+
     fn get_button_border(&self, idx: usize) -> Rect {
         // Make sure the key is within bounds.
         debug_assert!(idx <= MAX_KEYS);
-        match idx {
-            0 => Rect::from_top_left_and_size(self.area.top_left(), Self::BUTTON_SIZE),
-            1 => Rect::from_center_and_size(
-                self.area
-                    .left_center()
-                    .ofs(Offset::x(Self::BUTTON_SIZE.x / 2)),
-                Self::BUTTON_SIZE,
-            ),
-            2 => Rect::from_bottom_left_and_size(self.area.bottom_left(), Self::BUTTON_SIZE),
-            3 => Rect::from_top_right_and_size(self.area.top_right(), Self::BUTTON_SIZE),
-            4 => Rect::from_center_and_size(
-                self.area
-                    .right_center()
-                    .ofs(Offset::x(-Self::BUTTON_SIZE.x / 2)),
-                Self::BUTTON_SIZE,
-            ),
-            5 => Rect::from_bottom_right_and_size(self.area.bottom_right(), Self::BUTTON_SIZE),
-            _ => Rect::zero(), // Default case for out-of-range indices.
-        }
+        let column = idx / self.rows;
+        let row = idx % self.rows;
+        let horizontal_spacing = self.area.width() - 2 * self.button_size.x;
+        let vertical_spacing = self.vertical_spacing();
+        let offset = Offset::new(
+            column as i16 * (self.button_size.x + horizontal_spacing),
+            row as i16 * (self.button_size.y + vertical_spacing),
+        );
+        Rect::from_top_left_and_size(self.area.top_left().ofs(offset), self.button_size)
     }
 
     fn get_touch_expand(&self, idx: usize) -> Insets {
         debug_assert!(idx <= MAX_KEYS); // Ensure the index is within bounds.
 
-        let vertical_spacing = (self.area.height() - Self::BUTTON_SIZE.y * Self::ROWS as i16)
-            / (Self::ROWS as i16 - 1);
+        let vertical_spacing = self.vertical_spacing();
 
-        if idx.is_multiple_of(Self::ROWS) {
+        if idx.is_multiple_of(self.rows) {
             Insets::bottom(vertical_spacing / 2)
-        } else if idx % Self::ROWS == Self::ROWS - 1 {
+        } else if idx % self.rows == self.rows - 1 {
             Insets::top(vertical_spacing / 2)
         } else {
             Insets::new(vertical_spacing / 2, 0, vertical_spacing / 2, 0)
@@ -199,11 +220,11 @@ impl Component for ValueKeypad {
     type Msg = SelectWordCountMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.area = if self.keys.len() < 3 {
+        self.area = if self.keys.len() < Self::TWO_COLUMNS_THRESHOLD {
             // One column
             Rect::from_center_and_size(
                 bounds.center(),
-                Offset::new(Self::BUTTON_SIZE.x, bounds.height()),
+                Offset::new(self.button_size.x, bounds.height()),
             )
         } else {
             // Two columns
@@ -211,17 +232,17 @@ impl Component for ValueKeypad {
         };
 
         for i in 0..self.keys.len() {
-            let cell = Self::key_2_grid_cell(i);
+            let cell = self.key_2_grid_cell(i);
             let border = self.get_button_border(cell);
             let touch_expand = self.get_touch_expand(cell);
             self.keys[i].place(border);
             self.keys[i].set_expanded_touch_area(touch_expand);
         }
 
-        self.cancel
-            .place(self.get_button_border(Self::CANCEL_BUTTON_INDEX));
-        self.cancel
-            .set_expanded_touch_area(self.get_touch_expand(Self::CANCEL_BUTTON_INDEX));
+        let cancel_border = self.get_button_border(self.cancel_cell);
+        let cancel_touch_expand = self.get_touch_expand(self.cancel_cell);
+        self.cancel.place(cancel_border);
+        self.cancel.set_expanded_touch_area(cancel_touch_expand);
 
         bounds
     }

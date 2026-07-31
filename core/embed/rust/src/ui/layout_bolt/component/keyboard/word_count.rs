@@ -41,17 +41,19 @@ pub struct SelectWordCountLayout {
 
 impl SelectWordCountLayout {
     /*
-     * 12 | 18 | 20
-     * ------------
-     * x  | 24 | 33
+     * 12 | 15 | 18 | 20
+     * -----------------
+     *  x | 21 | 24 | 33
      */
     pub const LAYOUT_ALL: SelectWordCountLayout = SelectWordCountLayout {
         choice_buttons: &[
             Btn::new("12", 12, (0, 0)),
-            Btn::new("18", 18, (0, 2)),
-            Btn::new("20", 20, (0, 4)),
-            Btn::new("24", 24, (1, 2)),
-            Btn::new("33", 33, (1, 4)),
+            Btn::new("15", 15, (0, 2)),
+            Btn::new("18", 18, (0, 4)),
+            Btn::new("20", 20, (0, 6)),
+            Btn::new("21", 21, (1, 2)),
+            Btn::new("24", 24, (1, 4)),
+            Btn::new("33", 33, (1, 6)),
         ],
         cancel_button_placement: GridCellSpan {
             from: (1, 0),
@@ -73,7 +75,7 @@ impl SelectWordCountLayout {
 
 pub struct SelectWordCount {
     layout: SelectWordCountLayout,
-    choice_buttons: Vec<Button, 5>,
+    choice_buttons: Vec<Button, 7>,
     cancel_button: Button,
 }
 
@@ -99,8 +101,15 @@ impl Component for SelectWordCount {
     type Msg = SelectWordCountMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (_, bounds) = bounds.split_bottom(2 * theme::BUTTON_HEIGHT + theme::BUTTON_SPACING);
-        let grid = Grid::new(bounds, 2, 6).with_spacing(theme::BUTTON_SPACING);
+        let (rows, columns) = if self.layout.choice_buttons.len() > 5 {
+            (2, 8)
+        } else {
+            (1, 6)
+        };
+        let (_, bounds) = bounds.split_bottom(
+            rows as i16 * theme::BUTTON_HEIGHT + (rows as i16 - 1) * theme::BUTTON_SPACING,
+        );
+        let grid = Grid::new(bounds, rows, columns).with_spacing(theme::BUTTON_SPACING);
         for (i, button) in self.choice_buttons.iter_mut().enumerate() {
             button.place(grid.cells(self.layout.choice_buttons[i].placement));
         }
