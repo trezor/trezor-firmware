@@ -278,7 +278,7 @@ impl<'a> Translations<'a> {
 
         let payload_bytes = payload_reader.rest();
 
-        let payload_digest = sha256::digest(payload_bytes);
+        let payload_digest = sha256::Sha256::digest(payload_bytes);
         if payload_digest != header.data_hash {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
