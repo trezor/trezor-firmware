@@ -4383,6 +4383,15 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumAccessList"]:
+            """
+            Determine whether a value is an Ethereum access list.
+            
+            Parameters:
+            	msg (Any): Value to check.
+            
+            Returns:
+            	bool: `true` if the value is an Ethereum access list, `false` otherwise.
+            """
             return isinstance(msg, cls)
 
     class EthereumAuth7702Entry(protobuf.MessageType):
@@ -4399,10 +4408,28 @@ if TYPE_CHECKING:
             nonce: "int",
             signature: "EthereumAuth7702Signature | None" = None,
         ) -> None:
+            """
+            Initialize an Ethereum authorization entry for a delegated transaction.
+            
+            Parameters:
+            	chain_id (int): Chain identifier for the authorization.
+            	delegate (str): Address authorized to act on behalf of the account.
+            	nonce (int): Nonce associated with the authorization.
+            	signature (EthereumAuth7702Signature | None): Optional authorization signature.
+            """
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumAuth7702Entry"]:
+            """
+            Determine whether a value is an EthereumAuth7702Entry message.
+            
+            Parameters:
+            	msg (Any): Value to inspect.
+            
+            Returns:
+            	bool: `true` if the value is an EthereumAuth7702Entry instance, `false` otherwise.
+            """
             return isinstance(msg, cls)
 
     class EthereumSignTypedData(protobuf.MessageType):

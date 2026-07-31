@@ -5718,6 +5718,14 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         payment_req: Optional["PaymentRequest"] = None,
         supports_definition_request: Optional["bool"] = None,
     ) -> None:
+        """
+        Initialize an Ethereum EIP-1559 transaction signing request.
+        
+        Parameters:
+            data_length (int): Total length of the transaction data.
+            chain_id (int): Ethereum chain identifier.
+            auth_list (Sequence[EthereumAuth7702Entry] | None): Optional EIP-7702 authorization entries.
+        """
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.access_list: Sequence["EthereumAccessList"] = access_list if access_list is not None else []
         self.auth_list: Sequence["EthereumAuth7702Entry"] = auth_list if auth_list is not None else []
@@ -5755,6 +5763,16 @@ class EthereumTxRequest(protobuf.MessageType):
         signature_r: Optional["bytes"] = None,
         signature_s: Optional["bytes"] = None,
     ) -> None:
+        """
+        Initialize an Ethereum transaction request with optional data length, signature components, and authorization signatures.
+        
+        Parameters:
+            auth_list (Optional[Sequence[EthereumAuth7702Signature]]): Authorization signatures returned for the transaction.
+            data_length (Optional[int]): Length of the transaction data.
+            signature_v (Optional[int]): Recovery identifier for the transaction signature.
+            signature_r (Optional[bytes]): First component of the transaction signature.
+            signature_s (Optional[bytes]): Second component of the transaction signature.
+        """
         self.auth_list: Sequence["EthereumAuth7702Signature"] = auth_list if auth_list is not None else []
         self.data_length = data_length
         self.signature_v = signature_v
@@ -5992,6 +6010,7 @@ class EthereumAccessList(protobuf.MessageType):
         address: "str",
         storage_keys: Optional[Sequence["bytes"]] = None,
     ) -> None:
+        """Initialize an access-list entry for an address and its storage keys."""
         self.storage_keys: Sequence["bytes"] = storage_keys if storage_keys is not None else []
         self.address = address
 
