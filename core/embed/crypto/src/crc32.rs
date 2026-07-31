@@ -27,6 +27,12 @@ impl Crc32 {
     }
 }
 
+impl Default for Crc32 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub fn digest(data: &[u8]) -> [u8; 4] {
     Crc32::new().update(data).finalize()
 }
