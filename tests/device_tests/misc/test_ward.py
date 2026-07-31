@@ -414,6 +414,64 @@ def test_ward_ingest_rollback_rejected(session: Session) -> None:
 
 
 @pytest.mark.models("core")
+def test_ward_catchup_adopts_reconstructable_root(session: Session) -> None:
+    """Catch-up happy path: the shared state advances to a new (counter, root) and
+    this device syncs up to it. Because the host-supplied root reconstructs to the
+    WM-attested mac, reconcile adopts it and the device's counter moves forward.
+
+    Simulates a multi-device wallet: a peer commits an update (modelled by the
+    debug root injection, which returns the device MAC the WM stores alongside the
+    head), while this device is one round behind and catches up over sync.
+    """
+    # Round 1: this device is synced at an older head (counter 1, root0).
+    tree = _make_tree()
+    root0 = tree.get_root_hash()
+    counter0, _r, _wid, mac0 = ward.debug_set_root(session, root0)
+    synced0, adopted0, _wid, _rm = _sync_device(session, counter0, root0, mac0)
+    assert synced0 == counter0
+    assert adopted0 == root0
+
+    # A peer advances the shared head to a new root at the next counter.
+    tree.insert(_APP, b"erin", b"data_erin", counter=1)
+    root1 = tree.get_root_hash()
+    assert root1 != root0
+    counter1, _r, _wid, mac1 = ward.debug_set_root(session, root1)
+    assert counter1 > counter0
+
+    # Catch up: a full sync round adopts the advanced, reconstructable head.
+    synced1, adopted1, _wid, _rm = _sync_device(session, counter1, root1, mac1)
+    assert synced1 == counter1
+    assert adopted1 == root1
+
+
+@pytest.mark.models("core")
+def test_ward_catchup_rejects_unreconstructable_root(session: Session) -> None:
+    """Catch-up fail path: the WM attests (counter, mac) for one root, but the host
+    serves a *different* root that does not reconstruct to that mac. reconcile must
+    refuse to adopt the unauthenticated head rather than install it.
+    """
+    tree = _make_tree()
+    tree.insert(_APP, b"erin", b"data_erin", counter=1)
+    root = tree.get_root_hash()
+    counter, _r, _wid, mac = ward.debug_set_root(session, root)
+
+    # The WM signs a valid freshness attestation binding `mac` to `root@counter`.
+    nonce, ward_id = ward.sync(session)
+    assert ward_id is not None
+    sig = sign_wm_attestation(nonce, counter, mac, ward_id)
+    ward.ingest_attestation(session, counter, mac, sig)
+
+    # The host serves a root the attested mac does not commit to: it cannot be
+    # reconstructed against the attestation, so reconcile must reject it.
+    bogus_tree = _make_tree()
+    bogus_tree.insert(_APP, b"mallory", b"data_mallory", counter=1)
+    bogus_root = bogus_tree.get_root_hash()
+    assert bogus_root != root
+    with pytest.raises(TrezorFailure):
+        ward.reconcile(session, bogus_root)
+
+
+@pytest.mark.models("core")
 def test_ward_e2e_in_memory_store_lookup_modify(session: Session) -> None:
     """End-to-end WARD scenario driven through an in-memory Evolu/WM host harness."""
     host = WardHostHarness()
