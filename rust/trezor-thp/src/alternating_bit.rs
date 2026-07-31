@@ -112,12 +112,14 @@ impl ChannelSync {
         self.can_send = false;
     }
 
-    /// Call after receiving an ACK message.
-    pub fn send_mark_delivered(&mut self, sb: SyncBits) {
+    /// Call after receiving an ACK message. Return true if its ACK bit was correct.
+    pub fn send_mark_delivered(&mut self, sb: SyncBits) -> bool {
         if self.sync_send == sb.ack_bit() {
             self.sync_send.increment();
             self.can_send = true;
+            return true;
         }
+        false
     }
 
     /// Call after receving initial fragment of a message.
