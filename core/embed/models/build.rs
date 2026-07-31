@@ -134,7 +134,7 @@ fn main() -> Result<()> {
         }
 
         if cfg!(feature = "production") {
-            lib.add_define("PRODUCTION", None);
+            lib.add_define("PRODUCTION", Some("1"));
         }
 
         if cfg!(feature = "boardloader") {
