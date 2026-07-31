@@ -21,6 +21,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// Guard against this file ever being compiled into a production build.
+#if defined(PRODUCTION) && PRODUCTION
+#error "Insecure PRNG must not be compiled into a production build"
+#endif
+
 #include "rand.h"
 
 #ifdef USE_INSECURE_PRNG
