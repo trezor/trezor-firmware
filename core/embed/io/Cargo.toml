@@ -112,6 +112,7 @@ touch_sitronix = ["sys/i2c_bus"]
 # board TOML, mirroring the display driver/panel split below.
 touch_panel_t2t1 = []
 touch_panel_lx154a2422cpt23 = []
+touch_panel_lx200b4501ctp03 = []
 touch_panel_lx250a2410a = []
 
 framebuffer = []

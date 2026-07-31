@@ -10,7 +10,7 @@ driver = "io/backlight_pwm"
 
 [touch]
 driver = "io/touch_ft6x36"
-panel = "io/touch_panel_lx154a2422cpt23"
+panel = "io/touch_panel_lx200b4501ctp03"
 
 [button]
 
