@@ -16,7 +16,7 @@ models.workspace = true
 [features]
 
 # --------------------------------------------------------------------------
-# Selectable features
+# Selectable components
 # --------------------------------------------------------------------------
 
 emulator = ["models/emulator"]
