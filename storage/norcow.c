@@ -246,6 +246,15 @@ static void compact(void) {
 }
 
 /*
+ * Compact the storage by copying all live entries to the other sector
+ * and erasing the current active sector. This physically destroys deleted
+ * items including their headers.
+ */
+void norcow_compact(void) {
+  compact();
+}
+
+/*
  * Initializes storage
  */
 void norcow_init(uint32_t *norcow_version) {

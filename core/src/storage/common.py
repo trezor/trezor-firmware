@@ -37,6 +37,11 @@ def delete(
     config.delete(app, key, public, writable_locked)
 
 
+def compact() -> None:
+    """Compact the storage, physically erasing deleted items."""
+    config.compact()
+
+
 def set_true_or_delete(app: int, key: int, value: bool, public: bool = False) -> None:
     if value:
         set_bool(app, key, value, public)

@@ -58,6 +58,7 @@ ChangeLanguage = 990
 DataChunkRequest = 991
 DataChunkAck = 992
 SetBrightness = 993
+SetPermanentPassphrase = 1102
 GetSerialNumber = 996
 SerialNumber = 997
 GetAuthenticityProofChunk = 998

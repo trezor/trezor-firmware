@@ -101,6 +101,44 @@ def wipe(session: "Session", bootloader: bool) -> None:
 
 
 @cli.command()
+@with_session()
+def set_permanent_passphrase(session: "Session") -> None:
+    """Make the current passphrase-derived wallet permanent.
+
+    The device overwrites its stored seed with the root key that is currently
+    in memory (old seed + the passphrase you entered). This operation is
+    IRREVERSIBLE: the original seed and all parent/sibling wallets are lost.
+
+    The device continues to work normally, but:
+
+    * You cannot switch back to the original seed or any other passphrase
+      wallet without wiping the device and restoring from a seed backup.
+
+    * "Verify seed" and seed backup no longer apply, because the stored
+      secret is a raw derived key, not a BIP-39/SLIP-39 mnemonic.
+
+    Use this to turn a passphrase-protected sub-wallet into the device's only
+    wallet, reducing exposure if the device is captured.
+    """
+    click.echo(
+        "WARNING: This will permanently overwrite the stored seed with the currently"
+    )
+    click.echo(
+        "derived passphrase-protected root. The original seed and all other"
+    )
+    click.echo("passphrase wallets will be LOST. Continue only if you have backups.")
+    click.echo()
+    click.echo(
+        "NOTE: If you have used a Cardano wallet on this device, it will become"
+    )
+    click.echo("inaccessible because Cardano uses a separate derivation path.")
+    if not click.confirm("Do you want to continue?"):
+        return
+    device.set_permanent_passphrase(session)
+    click.echo("Passphrase set as permanent.")
+
+
+@cli.command()
 @click.option("-m", "--mnemonic", multiple=True)
 @click.option("-p", "--pin", default="")
 @click.option("-r", "--passphrase-protection", is_flag=True)
