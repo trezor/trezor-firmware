@@ -97,9 +97,19 @@ def test_reset_device(session: Session, adapt_flow: FlowAdapter):
 
 
 @pytest.mark.setup_client(uninitialized=True)
+def test_reset_device_160(session: Session):
+    reset_device(session, 160, normal)  # 15 words
+
+
+@pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
 def test_reset_device_192(session: Session, adapt_flow: FlowAdapter):
     reset_device(session, 192, adapt_flow)  # 18 words
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_reset_device_224(session: Session):
+    reset_device(session, 224, normal)  # 21 words
 
 
 @pytest.mark.setup_client(uninitialized=True)

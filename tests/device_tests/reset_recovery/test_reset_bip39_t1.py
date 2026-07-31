@@ -104,8 +104,18 @@ def test_reset_device_128(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
+def test_reset_device_160(session: Session):
+    reset_device(session, 160)
+
+
+@pytest.mark.setup_client(uninitialized=True)
 def test_reset_device_192(session: Session):
     reset_device(session, 192)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_reset_device_224(session: Session):
+    reset_device(session, 224)
 
 
 @pytest.mark.setup_client(uninitialized=True)

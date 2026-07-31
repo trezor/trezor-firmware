@@ -22,7 +22,13 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
-from ..common import MNEMONIC12, LayoutType, MNEMONIC_SLIP39_BASIC_20_3of6
+from ..common import (
+    MNEMONIC12,
+    MNEMONIC15,
+    MNEMONIC21,
+    LayoutType,
+    MNEMONIC_SLIP39_BASIC_20_3of6,
+)
 from . import recovery
 from .common import go_next
 from .test_autolock import PIN4, set_autolock_delay, unlock_dry_run
@@ -125,6 +131,20 @@ def test_recovery_bip39(device_handler: "BackgroundDeviceHandler"):
         recovery.confirm_recovery(debug)
         recovery.select_number_of_words(debug, num_of_words=12)
         recovery.enter_seed(debug, MNEMONIC12.split())
+        recovery.finalize(debug)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.read_timeout(90)
+@pytest.mark.parametrize("mnemonic", (MNEMONIC15, MNEMONIC21), ids=("15", "21"))
+def test_recovery_bip39_additional_lengths(
+    device_handler: "BackgroundDeviceHandler",
+    mnemonic: str,
+):
+    with prepare_recovery_and_evaluate(device_handler) as debug:
+        recovery.confirm_recovery(debug)
+        recovery.select_number_of_words(debug, num_of_words=len(mnemonic.split()))
+        recovery.enter_seed(debug, mnemonic.split())
         recovery.finalize(debug)
 
 

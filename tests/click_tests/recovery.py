@@ -124,7 +124,9 @@ def select_number_of_words(
     def select_caesar() -> "LayoutContent":
         assert debug.layout_type is LayoutType.Caesar
         # navigate to the number and confirm it
-        word_options = (20, 33) if unlock_repeated_backup else (12, 18, 20, 24, 33)
+        word_options = (
+            (20, 33) if unlock_repeated_backup else (12, 15, 18, 20, 21, 24, 33)
+        )
         index = word_options.index(num_of_words)
         for _ in range(index):
             debug.press_right()

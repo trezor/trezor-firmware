@@ -1975,6 +1975,44 @@ class ScreenButtons:
             raise ValueError("Wrong layout type")
 
     def word_count_all_word(self, word_count: int) -> Coords:
+        assert word_count in (12, 15, 18, 20, 21, 24, 33)
+        if self.layout_type is LayoutType.Bolt:
+            coords_map = {
+                12: (self._grid(self._width(), 4, 0), self._grid(self._height(), 4, 2)),
+                15: (self._grid(self._width(), 4, 1), self._grid(self._height(), 4, 2)),
+                18: (self._grid(self._width(), 4, 2), self._grid(self._height(), 4, 2)),
+                20: (self._grid(self._width(), 4, 3), self._grid(self._height(), 4, 2)),
+                21: (self._grid(self._width(), 4, 1), self._grid(self._height(), 4, 3)),
+                24: (self._grid(self._width(), 4, 2), self._grid(self._height(), 4, 3)),
+                33: (self._grid(self._width(), 4, 3), self._grid(self._height(), 4, 3)),
+            }
+        elif self.layout_type is LayoutType.Delizia:
+            coords_map = {
+                12: (self._left(), self._grid(self._height(), 5, 1)),
+                15: (self._right(), self._grid(self._height(), 5, 1)),
+                18: (self._left(), self._grid(self._height(), 5, 2)),
+                20: (self._right(), self._grid(self._height(), 5, 2)),
+                21: (self._left(), self._grid(self._height(), 5, 3)),
+                24: (self._right(), self._grid(self._height(), 5, 3)),
+                33: (self._right(), self._grid(self._height(), 5, 4)),
+            }
+        elif self.layout_type is LayoutType.Eckhart:
+            coords_map = {
+                12: (self._left(), self._grid(self._height(), 6, 2)),
+                15: (self._right(), self._grid(self._height(), 6, 2)),
+                18: (self._left(), self._grid(self._height(), 6, 3)),
+                20: (self._right(), self._grid(self._height(), 6, 3)),
+                21: (self._left(), self._grid(self._height(), 6, 4)),
+                24: (self._right(), self._grid(self._height(), 6, 4)),
+                33: (self._right(), self._grid(self._height(), 6, 5)),
+            }
+        else:
+            raise ValueError("Wrong layout type")
+
+        return coords_map[word_count]
+
+    def word_count_all_word_legacy_layout(self, word_count: int) -> Coords:
+        """Coordinates for released firmware layouts with five word-count choices."""
         assert word_count in (12, 18, 20, 24, 33)
         if self.layout_type is LayoutType.Bolt:
             coords_map = {
@@ -2007,11 +2045,11 @@ class ScreenButtons:
 
     def word_count_all_cancel(self) -> Coords:
         if self.layout_type is LayoutType.Bolt:
-            return self.grid34(0, 3)
+            return self._grid(self._width(), 4, 0), self._grid(self._height(), 4, 3)
         elif self.layout_type is LayoutType.Delizia:
-            return self.grid34(0, 3)
+            return self._left(), self._grid(self._height(), 5, 4)
         elif self.layout_type is LayoutType.Eckhart:
-            return self._grid35(0, 4)
+            return self._left(), self._grid(self._height(), 6, 5)
         else:
             raise ValueError("Wrong layout type")
 
@@ -2029,8 +2067,8 @@ class ScreenButtons:
             }
         elif self.layout_type is LayoutType.Eckhart:
             coords_map = {
-                20: self._grid35(1, 2),
-                33: self._grid35(1, 3),
+                20: (self._mid(), self._grid(self._height(), 6, 2)),
+                33: (self._mid(), self._grid(self._height(), 6, 3)),
             }
         else:
             raise ValueError("Wrong layout type")
@@ -2043,7 +2081,7 @@ class ScreenButtons:
         elif self.layout_type is LayoutType.Delizia:
             return self.grid34(0, 3)
         elif self.layout_type is LayoutType.Eckhart:
-            return self._grid35(1, 4)
+            return self._mid(), self._grid(self._height(), 6, 5)
         else:
             raise ValueError("Wrong layout type")
 
