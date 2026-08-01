@@ -152,7 +152,6 @@ static bool is_retryable(lt_ret_t ret) {
       if (!is_retryable(TROPIC_RETRY_COMMAND_res)) {                      \
         break;                                                            \
       }                                                                   \
-      tropic01_reset();                                                   \
       tropic_deinit();                                                    \
       tropic_init(NULL);                                                  \
       if (TROPIC_RETRY_COMMAND_session_started) {                         \
@@ -762,17 +761,6 @@ static bool set_backup_distribution_version_to(uint32_t distribution_version) {
   return true;
 }
 
-static secbool tropic_restart_chip(void) {
-#ifndef TREZOR_EMULATOR
-  tropic01_reset();
-#endif
-  tropic_deinit();
-  if (tropic_init(NULL) != LT_OK) {
-    return secfalse;
-  }
-  return sectrue;
-}
-
 // Applies `expected_config` and writes the new distribution version to slot 6.
 //
 // Crash-safety: the write order is designed so that a power-cut leaves slot 6
@@ -873,7 +861,11 @@ static secbool set_expected_config(
     return secfalse;
   }
 
-  return tropic_restart_chip();
+  if (lt_reboot(&g_tropic_driver.handle, TR01_REBOOT) != LT_OK) {
+    return secfalse;
+  }
+
+  return sectrue;
 }
 
 // clang-format off
@@ -978,12 +970,22 @@ lt_ret_t tropic_init(cli_t *cli) {
   drv->device.addr = inet_addr("127.0.0.1");
   drv->device.port = get_tropic_model_port();
   drv->handle.l2.device = &drv->device;
-#endif
+#endif  // TREZOR_EMULATOR
 
   // Initialize crypto context
   drv->handle.l3.crypto_ctx = &drv->crypto_ctx;
 
   lt_ret_t ret = lt_init(&drv->handle);
+#if !defined(TREZOR_PRODTEST) && !defined(TREZOR_EMULATOR)
+  // On HW Firmware, retry a failed init.
+  // Prodtest skips it to surface the init error.
+  // Emulator has no retry logic.
+  for (int i = 0; i < TROPIC_MAX_RETRIES - 1 && is_retryable(ret); i++) {
+    lt_deinit(&drv->handle);
+    ret = lt_init(&drv->handle);
+  }
+#endif  // !TREZOR_PRODTEST && !TREZOR_EMULATOR
+
   if (ret != LT_OK) {
 #ifdef TREZOR_PRODTEST
     if (cli) {
