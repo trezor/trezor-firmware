@@ -1555,6 +1555,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__spender;
   MP_QSTR_stellar__timebounds;
   MP_QSTR_stellar__to;
+  MP_QSTR_stellar__token_contract;
   MP_QSTR_stellar__token_info;
   MP_QSTR_stellar__transaction_source;
   MP_QSTR_stellar__transaction_source_diff_warning;

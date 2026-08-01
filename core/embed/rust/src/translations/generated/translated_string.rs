@@ -1689,6 +1689,8 @@ pub enum TranslatedString {
     stellar__to = 1273,  // "To"
     #[cfg(feature = "universal_fw")]
     stellar__transfer_token = 1274,  // "Transfer token"
+    #[cfg(feature = "universal_fw")]
+    stellar__token_contract = 1275,  // "Token contract"
 }
 
 impl TranslatedString {
@@ -2971,6 +2973,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4251,6 +4254,7 @@ impl TranslatedString {
                 19214,
                 19216,
                 19230,
+                19244,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5530,6 +5534,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6810,6 +6815,7 @@ impl TranslatedString {
                 19214,
                 19216,
                 19230,
+                19244,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8089,6 +8095,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9369,6 +9376,7 @@ impl TranslatedString {
                 19214,
                 19216,
                 19230,
+                19244,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10648,6 +10656,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11928,6 +11937,7 @@ impl TranslatedString {
                 19214,
                 19216,
                 19230,
+                19244,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13208,6 +13218,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14488,6 +14499,7 @@ impl TranslatedString {
                 17005,
                 17007,
                 17021,
+                17035,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15767,6 +15779,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17047,6 +17060,7 @@ impl TranslatedString {
                 17005,
                 17007,
                 17021,
+                17035,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18326,6 +18340,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19606,6 +19621,7 @@ impl TranslatedString {
                 17005,
                 17007,
                 17021,
+                17035,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20885,6 +20901,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22165,6 +22182,7 @@ impl TranslatedString {
                 17005,
                 17007,
                 17021,
+                17035,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23445,6 +23463,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24725,6 +24744,7 @@ impl TranslatedString {
                 19103,
                 19105,
                 19119,
+                19133,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26004,6 +26024,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27284,6 +27305,7 @@ impl TranslatedString {
                 19103,
                 19105,
                 19119,
+                19133,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28563,6 +28585,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29843,6 +29866,7 @@ impl TranslatedString {
                 19103,
                 19105,
                 19119,
+                19133,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31122,6 +31146,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32402,6 +32427,7 @@ impl TranslatedString {
                 19103,
                 19105,
                 19119,
+                19133,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33682,6 +33708,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34962,6 +34989,7 @@ impl TranslatedString {
                 20490,
                 20492,
                 20506,
+                20520,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36241,6 +36269,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37521,6 +37550,7 @@ impl TranslatedString {
                 20490,
                 20492,
                 20506,
+                20520,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38800,6 +38830,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -40080,6 +40111,7 @@ impl TranslatedString {
                 20490,
                 20492,
                 20506,
+                20520,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41359,6 +41391,7 @@ impl TranslatedString {
                 "Spender",
                 "To",
                 "Transfer token",
+                "Token contract",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42639,6 +42672,7 @@ impl TranslatedString {
                 20490,
                 20492,
                 20506,
+                20520,
             ];
 
         }
@@ -44077,6 +44111,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_stellar__timebounds, Self::stellar__timebounds),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__to, Self::stellar__to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__token_contract, Self::stellar__token_contract),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__token_info, Self::stellar__token_info),
         #[cfg(feature = "universal_fw")]

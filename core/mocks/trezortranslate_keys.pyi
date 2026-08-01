@@ -986,6 +986,7 @@ class TR:
     stellar__spender: str = "Spender"
     stellar__timebounds: str = "Timebounds"
     stellar__to: str = "To"
+    stellar__token_contract: str = "Token contract"
     stellar__token_info: str = "Token info"
     stellar__transaction_source: str = "Transaction source"
     stellar__transaction_source_diff_warning: str = "Transaction source does not belong to this Trezor."

@@ -407,6 +407,7 @@ async def confirm_sac_invocation(
             format_amount(amount, asset),
             asset,
             TR.words__amount,
+            token_contract=args.contract_address,
         )
         return True
 
@@ -426,6 +427,7 @@ async def confirm_sac_invocation(
             format_amount(amount, asset),
             asset,
             TR.words__amount,
+            token_contract=args.contract_address,
         )
         await layouts.confirm_stellar_valid_until(
             title, action, live_until_ledger, "op_auth_token_valid_until"

@@ -1273,5 +1273,6 @@
   "1271": "stellar__revoke_approval",
   "1272": "stellar__spender",
   "1273": "stellar__to",
-  "1274": "stellar__transfer_token"
+  "1274": "stellar__transfer_token",
+  "1275": "stellar__token_contract"
 }

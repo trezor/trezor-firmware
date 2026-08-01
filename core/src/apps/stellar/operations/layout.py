@@ -480,7 +480,10 @@ async def _confirm_from_account(from_account: str, title: str) -> None:
 
 
 async def _confirm_sac_transfer(
-    transfer: tuple[str, str, int], asset: StellarAsset, source_account: str
+    transfer: tuple[str, str, int],
+    asset: StellarAsset,
+    source_account: str,
+    contract_address: str,
 ) -> None:
     from_account, destination, amount = transfer
 
@@ -492,11 +495,15 @@ async def _confirm_sac_transfer(
         format_amount(amount, asset),
         output_index=0,  # a Soroban operation is always the only one
         asset=asset,
+        token_contract=contract_address,
     )
 
 
 async def _confirm_sac_approve(
-    approve: tuple[str, str, int, int], asset: StellarAsset, source_account: str
+    approve: tuple[str, str, int, int],
+    asset: StellarAsset,
+    source_account: str,
+    contract_address: str,
 ) -> None:
     from_account, spender, amount, live_until_ledger = approve
     title = sac_approve_title(amount)
@@ -520,6 +527,7 @@ async def _confirm_sac_approve(
         format_amount(amount, asset),
         asset,
         TR.words__amount,
+        token_contract=contract_address,
     )
 
     await confirm_stellar_valid_until(
@@ -544,11 +552,15 @@ async def _confirm_invoke_contract(
     if asset is not None:
         transfer = parse_sac_transfer(args)
         if transfer is not None:
-            return await _confirm_sac_transfer(transfer, asset, source_account)
+            return await _confirm_sac_transfer(
+                transfer, asset, source_account, args.contract_address
+            )
 
         approve = parse_sac_approve(args)
         if approve is not None:
-            return await _confirm_sac_approve(approve, asset, source_account)
+            return await _confirm_sac_approve(
+                approve, asset, source_account, args.contract_address
+            )
 
     await confirm_invoke_contract_args(args, br_name_prefix="op_invoke")
 

@@ -1792,6 +1792,7 @@ if not utils.BITCOIN_ONLY:
         amount: str,
         asset: StellarAsset,
         description: str | None = None,
+        token_contract: str | None = None,
     ) -> None:
         from trezor.enums import StellarAssetType
 
@@ -1804,6 +1805,8 @@ if not utils.BITCOIN_ONLY:
                     None,
                 )
             ]
+        if token_contract:
+            info_items.append((TR.stellar__token_contract, token_contract, None))
 
         await confirm_value(
             title,
@@ -1826,6 +1829,7 @@ if not utils.BITCOIN_ONLY:
         asset: StellarAsset | None,
         address_description: str | None = None,
         amount_description: str | None = None,
+        token_contract: str | None = None,
     ) -> None:
         await confirm_address(
             f"{TR.words__recipient} #{output_index + 1}",
@@ -1843,6 +1847,7 @@ if not utils.BITCOIN_ONLY:
                 amount=amount,
                 asset=asset,
                 description=amount_description or TR.words__amount,
+                token_contract=token_contract,
             )
 
     async def confirm_tron_claim(

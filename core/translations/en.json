@@ -2873,6 +2873,7 @@
     "stellar__spender": "Spender",
     "stellar__timebounds": "Timebounds",
     "stellar__to": "To",
+    "stellar__token_contract": "Token contract",
     "stellar__token_info": "Token info",
     "stellar__transaction_source": "Transaction source",
     "stellar__transaction_source_diff_warning": "Transaction source does not belong to this Trezor.",
