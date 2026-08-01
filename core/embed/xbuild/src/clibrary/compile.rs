@@ -5,6 +5,7 @@ use color_eyre::eyre::WrapErr;
 
 use super::CLibrary;
 use crate::attrs::CompileAttrs;
+use crate::cargo_out;
 use crate::dep_tracking::{run_command, run_command_with_cc_dep};
 use crate::helpers::{
     derive_output_path, diagnostics_color_flag, ensure_parent_directory, join_paths_lexically,
@@ -238,23 +239,23 @@ impl CLibrary {
         self.get_public_attrs().export_as_metadata()?;
 
         // Export linked libraries (so the top-level crate can re-export them)
-        println!(
-            "cargo::metadata=public_c_libs={}",
+        cargo_out::metadata(
+            "public_c_libs",
             self.get_libs()
                 .into_iter()
                 .map(|lib| lib.to_string())
                 .collect::<Vec<_>>()
-                .join(";")
+                .join(";"),
         );
 
         // Export linked libraries (so the top-level crate can re-export them)
-        println!(
-            "cargo::metadata=public_c_extlibs={}",
+        cargo_out::metadata(
+            "public_c_extlibs",
             self.get_external_libs()
                 .into_iter()
                 .map(|lib| lib.to_string())
                 .collect::<Vec<_>>()
-                .join(";")
+                .join(";"),
         );
 
         Ok(())
@@ -303,7 +304,7 @@ fn make_static_library(objects: Vec<PathBuf>, lib_name: &str) -> Result<()> {
         .with_context(|| format!("Failed to create static library {}", output.display()))?;
 
     // Expose archive directory to the linker, both for rebuilt and cached archives
-    println!("cargo:rustc-link-search=native={}", out_dir.display());
+    cargo_out::rustc_link_search(format!("native={}", out_dir.display()));
 
     Ok(())
 }

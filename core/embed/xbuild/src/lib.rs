@@ -1,4 +1,5 @@
 mod attrs;
+pub mod cargo_out;
 mod clibrary;
 mod dep_tracking;
 mod helpers;

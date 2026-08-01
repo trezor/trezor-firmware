@@ -10,6 +10,7 @@ use color_eyre::Result;
 use color_eyre::eyre::WrapErr;
 
 use crate::attrs::CompileAttrs;
+use crate::cargo_out;
 use crate::helpers::{library_metadata, relative_to_manifest};
 
 /// A source file entry with optional per-file compile attributes.
@@ -409,7 +410,7 @@ impl CLibrary {
         });
 
         extlib.link_paths.iter().for_each(|path| {
-            println!("cargo:rustc-link-search={}", path.display());
+            cargo_out::rustc_link_search(path.display());
         });
 
         extlib.libs.iter().for_each(|lib| {
