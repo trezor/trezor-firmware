@@ -30,6 +30,8 @@ if not utils.BITCOIN_ONLY:
         _format_sc_val,
         _format_u128,
         _format_u256,
+        _parse_sep41_approve,
+        _parse_sep41_transfer,
     )
     from apps.stellar.operations.layout import _is_root_auth_entry
 
@@ -38,6 +40,14 @@ if not utils.BITCOIN_ONLY:
 
     def _u64(value):
         return StellarSCVal(type=StellarSCValType.SCV_U64, u64=value)
+
+    def _address(value):
+        return StellarSCVal(type=StellarSCValType.SCV_ADDRESS, address=value)
+
+    def _i128(lo, hi=0):
+        return StellarSCVal(
+            type=StellarSCValType.SCV_I128, i128=StellarInt128Parts(hi=hi, lo=lo)
+        )
 
     def _bytes(value):
         return StellarSCVal(type=StellarSCValType.SCV_BYTES, bytes=value)
@@ -223,6 +233,116 @@ class TestStellarFormatScVal(unittest.TestCase):
 # valid contract (C...) strkeys, see test_apps.stellar.address.py for the format
 _CONTRACT_A = "CAAACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6N4O"
 _CONTRACT_B = "CBSGKZTHNBUWU23MNVXG64DROJZXI5LWO54HS6T3PR6X474AQGBIHDKP"
+
+# valid account (G...) strkeys
+_ACCOUNT_A = "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+_ACCOUNT_B = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestStellarParseSep41Call(unittest.TestCase):
+    """The SEP-41 parsers dispatch between the token UI and the raw contract
+    flow: anything but a well-formed call must parse as None (fall back),
+    never as a mangled token operation."""
+
+    def test_parse_sep41_transfer(self):
+        TESTS = [
+            # (function_name, args, expected)
+            (
+                "transfer",
+                [_address(_ACCOUNT_A), _address(_ACCOUNT_B), _i128(500)],
+                (_ACCOUNT_A, _ACCOUNT_B, 500),
+            ),
+            # a zero amount is well-formed
+            (
+                "transfer",
+                [_address(_ACCOUNT_A), _address(_ACCOUNT_B), _i128(0)],
+                (_ACCOUNT_A, _ACCOUNT_B, 0),
+            ),
+            # amounts beyond 64 bits are deliberately still shown
+            (
+                "transfer",
+                [_address(_ACCOUNT_A), _address(_ACCOUNT_B), _i128(0, hi=1)],
+                (_ACCOUNT_A, _ACCOUNT_B, 2**64),
+            ),
+            # a contract can be the sender (e.g. a liquidity pool)
+            (
+                "transfer",
+                [_address(_CONTRACT_A), _address(_ACCOUNT_B), _i128(500)],
+                (_CONTRACT_A, _ACCOUNT_B, 500),
+            ),
+            # not a transfer
+            ("approve", [_address(_ACCOUNT_A), _address(_ACCOUNT_B), _i128(500)], None),
+            # wrong argument count
+            ("transfer", [_address(_ACCOUNT_A), _address(_ACCOUNT_B)], None),
+            (
+                "transfer",
+                [_address(_ACCOUNT_A), _address(_ACCOUNT_B), _i128(500), _u32(1)],
+                None,
+            ),
+            # wrong argument types
+            ("transfer", [_symbol("from"), _address(_ACCOUNT_B), _i128(500)], None),
+            ("transfer", [_address(_ACCOUNT_A), _address(_ACCOUNT_B), _u32(500)], None),
+            # negative amounts always fall back to the generic contract UI
+            (
+                "transfer",
+                [
+                    _address(_ACCOUNT_A),
+                    _address(_ACCOUNT_B),
+                    _i128(0xFFFFFFFFFFFFFFFF, hi=-1),
+                ],
+                None,
+            ),
+        ]
+        for function_name, args, expected in TESTS:
+            call = StellarInvokeContractArgs(
+                contract_address=_CONTRACT_A, function_name=function_name, args=args
+            )
+            self.assertEqual(_parse_sep41_transfer(call), expected)
+
+    def test_parse_sep41_approve(self):
+        approve_args = [
+            _address(_ACCOUNT_A),
+            _address(_ACCOUNT_B),
+            _i128(500),
+            _u32(800_000),
+        ]
+        TESTS = [
+            # (function_name, args, expected)
+            ("approve", approve_args, (_ACCOUNT_A, _ACCOUNT_B, 500, 800_000)),
+            # a zero amount is well-formed (it revokes the approval)
+            (
+                "approve",
+                [_address(_ACCOUNT_A), _address(_ACCOUNT_B), _i128(0), _u32(800_000)],
+                (_ACCOUNT_A, _ACCOUNT_B, 0, 800_000),
+            ),
+            # not an approve
+            ("transfer", approve_args, None),
+            # wrong argument count
+            ("approve", approve_args[:3], None),
+            # live_until_ledger must be a u32
+            (
+                "approve",
+                [_address(_ACCOUNT_A), _address(_ACCOUNT_B), _i128(500), _u64(800_000)],
+                None,
+            ),
+            # negative amounts always fall back to the generic contract UI
+            (
+                "approve",
+                [
+                    _address(_ACCOUNT_A),
+                    _address(_ACCOUNT_B),
+                    _i128(0xFFFFFFFFFFFFFFFF, hi=-1),
+                    _u32(800_000),
+                ],
+                None,
+            ),
+        ]
+        for function_name, args, expected in TESTS:
+            call = StellarInvokeContractArgs(
+                contract_address=_CONTRACT_A, function_name=function_name, args=args
+            )
+            self.assertEqual(_parse_sep41_approve(call), expected)
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

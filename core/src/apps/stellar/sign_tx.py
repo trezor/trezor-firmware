@@ -144,7 +144,14 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
             # Soroban transactions do not support memos
             await layout.require_confirm_memo(memo_type, memo_confirm_text)
 
-        await process_operation(w, op, current_output_index, verifier)  # type: ignore [Argument of type "StellarInvokeHostFunctionOp | MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
+        await process_operation(
+            w,
+            op,  # type: ignore [Argument of type "StellarInvokeHostFunctionOp | MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
+            current_output_index,
+            verifier,
+            msg.source_account,
+            network_passphrase_hash,
+        )
 
         if msg.payment_req:
             assert verifier is not None

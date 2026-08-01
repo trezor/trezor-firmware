@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from consts import StellarMessageType
     from trezor.utils import Writer
 
@@ -12,6 +14,8 @@ async def process_operation(
     op: StellarMessageType,
     output_index: int,
     payment_request_verifier: PaymentRequestVerifier | None,
+    tx_source_account: str,
+    network_id: AnyBytes,
 ) -> None:
     # Importing the stuff inside (only) function saves around 100 bytes here
     # (probably because the local lookup is more efficient than a global lookup)
@@ -80,7 +84,7 @@ async def process_operation(
         await layout.confirm_claim_claimable_balance_op(op)
         serialize.write_claim_claimable_balance_op(w, op)
     elif messages.StellarInvokeHostFunctionOp.is_type_of(op):
-        await layout.confirm_invoke_host_function_op(op)
+        await layout.confirm_invoke_host_function_op(op, tx_source_account, network_id)
         serialize.write_invoke_host_function_op(w, op)
     else:
         raise ValueError("Unknown operation")

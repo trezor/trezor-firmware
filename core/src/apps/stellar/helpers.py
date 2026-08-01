@@ -6,6 +6,8 @@ from trezor.crypto import base32
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
+    from trezor.messages import StellarAsset, StellarInvokeContractArgs
+
 # Stellar strkey version bytes
 # See: https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md
 STRKEY_ED25519_PUBLIC_KEY = const(6)  # G...
@@ -39,6 +41,47 @@ def public_key_from_address(address: str) -> bytes:
 def address_from_public_key(pubkey: AnyBytes) -> str:
     """Returns the base32-encoded version of public key bytes (G...)"""
     return encode_strkey(STRKEY_ED25519_PUBLIC_KEY, pubkey)
+
+
+def sac_address_from_asset(network_id: AnyBytes, asset: StellarAsset) -> str:
+    """Derive the address of the Stellar Asset Contract (SAC) of an asset (C...).
+
+    See https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-02.md#contract-identifier-preimage-type
+    """
+    from trezor.crypto.hashlib import sha256
+
+    from .writers import write_asset, write_bytes_fixed, write_uint32
+
+    w = bytearray()
+    write_uint32(w, 8)  # ENVELOPE_TYPE_CONTRACT_ID
+    write_bytes_fixed(w, network_id, 32)
+    write_uint32(w, 1)  # CONTRACT_ID_PREIMAGE_FROM_ASSET
+    write_asset(w, asset)
+    return encode_strkey(STRKEY_CONTRACT, sha256(w).digest())
+
+
+def resolve_sep41_token(
+    args: StellarInvokeContractArgs, network_id: AnyBytes
+) -> StellarAsset | None:
+    """Resolve token metadata for the dedicated SEP-41 UI.
+
+    Currently, the host may identify a Stellar Asset Contract by supplying its
+    underlying asset. The hint is used only when its derived SAC address matches
+    the invoked contract; an absent, mismatched, or malformed hint leaves the
+    invocation to the generic contract UI.
+    """
+    from trezor.wire import DataError
+
+    asset = args.asset_hint
+    if asset is None:
+        return None
+    try:
+        sac_address = sac_address_from_asset(network_id, asset)
+    except DataError:
+        return None
+    if sac_address != args.contract_address:
+        return None
+    return asset
 
 
 def encode_strkey(version: int, data: AnyBytes) -> str:

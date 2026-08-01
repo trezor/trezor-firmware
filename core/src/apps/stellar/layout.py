@@ -8,8 +8,10 @@ from trezor.wire import DataError, ProcessError
 from apps.common.paths import address_n_to_str
 
 from . import consts
+from .helpers import resolve_sep41_token
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Iterable
 
     from trezor.enums import StellarMemoType
@@ -245,24 +247,28 @@ async def require_confirm_signature_expiration_ledger(
     )
 
 
-async def confirm_invoke_contract_args(
+async def _confirm_invoke_contract_args(
     args: StellarInvokeContractArgs,
     br_name_prefix: str,
-    title: str | None = None,
+    authorization_title: str | None = None,
 ) -> None:
-    # If title is not empty, it is shared across screens;
-    # the per-screen label moves into the description / subtitle.
+    """Confirm a contract call using the generic, unparsed arguments UI.
+
+    `authorization_title` is omitted for the function invoked directly by a
+    transaction. For an authorization-tree node, it identifies the node while
+    each screen's usual title moves into its description or subtitle.
+    """
     await layouts.confirm_address(
-        title or TR.stellar__invoke_contract,
+        authorization_title or TR.stellar__invoke_contract,
         args.contract_address,
-        description=TR.stellar__invoke_contract if title else None,
+        description=TR.stellar__invoke_contract if authorization_title else None,
         br_name=f"{br_name_prefix}_contract_address",
     )
     await layouts.confirm_text(
         f"{br_name_prefix}_function",
-        title or TR.words__function,
+        authorization_title or TR.words__function,
         args.function_name,
-        description=TR.words__function if title else None,
+        description=TR.words__function if authorization_title else None,
     )
     if not args.args:
         return
@@ -272,14 +278,245 @@ async def confirm_invoke_contract_args(
     ]
     await layouts.confirm_properties(
         f"{br_name_prefix}_args",
-        title or TR.words__arguments,
+        authorization_title or TR.words__arguments,
         props,
-        TR.words__arguments if title else None,
+        TR.words__arguments if authorization_title else None,
+    )
+
+
+# SEP-41 token functions given a dedicated UI, see
+# https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md
+_SEP41_TRANSFER = "transfer"
+_SEP41_APPROVE = "approve"
+
+
+def _parse_sep41_transfer(
+    args: StellarInvokeContractArgs,
+) -> tuple[str, str, int] | None:
+    """Read a SEP-41 `transfer(from, to, amount)` call, or None if it is not one."""
+    if args.function_name != _SEP41_TRANSFER or len(args.args) != 3:
+        return None
+    from_address = _sc_address(args.args[0])
+    to_address = _sc_address(args.args[1])
+    amount = _sc_amount(args.args[2])
+    if from_address is None or to_address is None or amount is None:
+        return None
+    return from_address, to_address, amount
+
+
+def _parse_sep41_approve(
+    args: StellarInvokeContractArgs,
+) -> tuple[str, str, int, int] | None:
+    """Read a SEP-41 `approve(from, spender, amount, live_until_ledger)` call."""
+    if args.function_name != _SEP41_APPROVE or len(args.args) != 4:
+        return None
+    from_address = _sc_address(args.args[0])
+    spender = _sc_address(args.args[1])
+    amount = _sc_amount(args.args[2])
+    live_until_ledger = _sc_u32(args.args[3])
+    if (
+        from_address is None
+        or spender is None
+        or amount is None
+        or live_until_ledger is None
+    ):
+        return None
+    return from_address, spender, amount, live_until_ledger
+
+
+def _sc_address(val: StellarSCVal) -> str | None:
+    if val.type != StellarSCValType.SCV_ADDRESS:
+        return None
+    return val.address
+
+
+def _sc_amount(val: StellarSCVal) -> int | None:
+    """Read an amount suitable for the dedicated token UI.
+
+    Stellar Asset Contracts reject negative amounts. Custom SEP-41 contracts
+    may accept them, but we deliberately leave such calls to the raw contract
+    flow instead of presenting them as regular token operations.
+    """
+    if val.type != StellarSCValType.SCV_I128 or val.i128 is None:
+        return None
+    amount = _i128_value(val.i128)
+    if amount < 0:
+        return None
+    return amount
+
+
+def _sc_u32(val: StellarSCVal) -> int | None:
+    if val.type != StellarSCValType.SCV_U32:
+        return None
+    return val.u32
+
+
+async def confirm_invoke_contract(
+    args: StellarInvokeContractArgs,
+    network_id: AnyBytes,
+    authorizing_address: str,
+    authorization_title: str | None = None,
+) -> None:
+    """Confirm a contract call, using the dedicated token UI when possible.
+
+    `authorization_title` is omitted for the host function invoked directly by
+    a transaction; transfers then retain the standard payment-style output
+    screen. An invocation from either kind of authorization tree provides a
+    title identifying the node, and the token action becomes its subtitle.
+
+    `authorizing_address` is used in both contexts to avoid repeating the
+    address that already authorizes the transaction operation or the whole
+    authorization tree.
+    """
+    br_name_prefix = "op_invoke" if authorization_title is None else "op_auth"
+
+    asset = resolve_sep41_token(args, network_id)
+    if asset is not None:
+        transfer = _parse_sep41_transfer(args)
+        if transfer is not None:
+            await _confirm_sep41_transfer(
+                transfer,
+                asset,
+                args.contract_address,
+                authorizing_address,
+                br_name_prefix,
+                authorization_title,
+            )
+            return
+
+        approve = _parse_sep41_approve(args)
+        if approve is not None:
+            await _confirm_sep41_approve(
+                approve,
+                asset,
+                args.contract_address,
+                authorizing_address,
+                br_name_prefix,
+                authorization_title,
+            )
+            return
+
+    await _confirm_invoke_contract_args(
+        args,
+        br_name_prefix,
+        authorization_title,
+    )
+
+
+async def _confirm_sep41_transfer(
+    transfer: tuple[str, str, int],
+    asset: StellarAsset,
+    token_contract: str,
+    authorizing_address: str,
+    br_name_prefix: str,
+    authorization_title: str | None,
+) -> None:
+    """Confirm a parsed SEP-41 transfer using its dedicated token UI."""
+    from_address, to_address, amount = transfer
+    # Without an authorization title, this is the transaction's own action and
+    # is framed like a classic payment. A tree node instead describes what a
+    # signature permits and may belong to another party altogether, so it gets
+    # a neutral, perspective-free label, in line with "Approve token".
+    action = (
+        TR.words__send if authorization_title is None else TR.stellar__transfer_token
+    )
+    screen_title = authorization_title or action
+    # For a direct transaction, "Send" is the title and
+    # `confirm_stellar_output` supplies the recipient context. In an
+    # authorization tree, its node title is retained and the action is shown as
+    # the subtitle.
+    subtitle = "" if authorization_title is None else action
+    if from_address != authorizing_address:
+        await layouts.confirm_stellar_address(
+            screen_title,
+            subtitle,
+            from_address,
+            TR.stellar__from,
+            f"{br_name_prefix}_from",
+        )
+
+    if authorization_title is not None:
+        await layouts.confirm_stellar_address(
+            screen_title,
+            subtitle,
+            to_address,
+            TR.stellar__to,
+            f"{br_name_prefix}_to",
+        )
+        await layouts.confirm_stellar_output_amount(
+            screen_title,
+            subtitle,
+            format_amount(amount, asset),
+            asset,
+            TR.words__amount,
+            token_contract=token_contract,
+        )
+    else:
+        await layouts.confirm_stellar_output(
+            to_address,
+            format_amount(amount, asset),
+            output_index=0,  # a Soroban operation is always the only one
+            asset=asset,
+            token_contract=token_contract,
+        )
+
+
+async def _confirm_sep41_approve(
+    approve: tuple[str, str, int, int],
+    asset: StellarAsset,
+    token_contract: str,
+    authorizing_address: str,
+    br_name_prefix: str,
+    authorization_title: str | None,
+) -> None:
+    """Confirm a parsed SEP-41 approval or revocation using its dedicated UI."""
+    from_address, spender, amount, live_until_ledger = approve
+    action = TR.stellar__revoke_approval if amount == 0 else TR.stellar__approve_token
+    screen_title = authorization_title or action
+    subtitle = "" if authorization_title is None else action
+    if from_address != authorizing_address:
+        await layouts.confirm_stellar_address(
+            screen_title,
+            subtitle,
+            from_address,
+            TR.stellar__from,
+            f"{br_name_prefix}_from",
+        )
+    await layouts.confirm_stellar_address(
+        screen_title,
+        subtitle,
+        spender,
+        TR.stellar__spender,
+        f"{br_name_prefix}_spender",
+    )
+    if amount == 0:
+        # "Revoke approval" already communicates the zero allowance, so
+        # identify the token instead of displaying the omitted amount.
+        display_value = format_asset(asset)
+        value_label = TR.words__token
+    else:
+        display_value = format_amount(amount, asset)
+        value_label = TR.words__amount
+    await layouts.confirm_stellar_output_amount(
+        screen_title,
+        subtitle,
+        display_value,
+        asset,
+        value_label,
+        token_contract=token_contract,
+    )
+    await layouts.confirm_stellar_valid_until(
+        screen_title,
+        subtitle,
+        live_until_ledger,
+        f"{br_name_prefix}_valid_until",
     )
 
 
 async def confirm_authorized_invocation(
     invocation: StellarSorobanAuthorizedInvocation,
+    network_id: AnyBytes,
+    authorizing_address: str,
 ) -> None:
     """Confirm a standalone authorized invocation tree (auth entry signing).
 
@@ -287,11 +524,15 @@ async def confirm_authorized_invocation(
     its root label is empty; sub-invocations are numbered relative to it
     (".1", ".1.2", ...), the same paths they would have inside a transaction.
     """
-    await confirm_invocation(invocation, "")
+    await confirm_invocation(invocation, "", network_id, authorizing_address)
 
 
 async def confirm_invocation(
-    invocation: StellarSorobanAuthorizedInvocation, position: str, is_root: bool = False
+    invocation: StellarSorobanAuthorizedInvocation,
+    position: str,
+    network_id: AnyBytes,
+    authorizing_address: str,
+    is_root: bool = False,
 ) -> None:
     """Confirm an authorized invocation and its sub-invocations recursively.
 
@@ -300,7 +541,8 @@ async def confirm_invocation(
     label plus the dot-delimited path in the auth tree (e.g. "#2", "#2.1" in a
     transaction), or empty for the unlabeled root of a standalone authorization
     entry (whose children are then ".1", ".1.2", ...), so a given entry's
-    children carry the same paths in both flows.
+    children carry the same paths in both flows. `authorizing_address` belongs
+    to the whole tree and is propagated unchanged to every child.
     """
     from trezor.enums import StellarSorobanAuthorizedFunctionType
 
@@ -314,19 +556,22 @@ async def confirm_invocation(
         raise DataError("Stellar: missing contract_fn")
 
     if position:
-        title = f"{TR.words__authorization} {position}"
+        authorization_title = f"{TR.words__authorization} {position}"
     else:
-        title = TR.words__authorization
+        authorization_title = TR.words__authorization
 
     if not is_root:
-        await confirm_invoke_contract_args(
+        await confirm_invoke_contract(
             func.contract_fn,
-            br_name_prefix="op_auth",
-            title=title,
+            network_id,
+            authorizing_address,
+            authorization_title=authorization_title,
         )
 
     for i, sub in enumerate(invocation.sub_invocations):
-        await confirm_invocation(sub, f"{position}.{i + 1}")
+        await confirm_invocation(
+            sub, f"{position}.{i + 1}", network_id, authorizing_address
+        )
 
 
 def _escape_str(s: str) -> str:
@@ -459,11 +704,15 @@ def _format_u128(parts: StellarUInt128Parts) -> str:
     return str(value)
 
 
-def _format_i128(parts: StellarInt128Parts) -> str:
+def _i128_value(parts: StellarInt128Parts) -> int:
     value = ((parts.hi & _MASK64) << 64) | (parts.lo & _MASK64)
     if parts.hi < 0:
         value -= 1 << 128
-    return str(value)
+    return value
+
+
+def _format_i128(parts: StellarInt128Parts) -> str:
+    return str(_i128_value(parts))
 
 
 def _format_u256(parts: StellarUInt256Parts) -> str:
