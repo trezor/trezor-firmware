@@ -52,7 +52,20 @@ pub fn library_metadata(lib_name: &str, kind: &str) -> Result<String> {
     ))
 }
 
+/// Writes a progress message to stderr, but only when trace output is enabled
+#[macro_export]
+macro_rules! trace {
+    ($($arg:tt)*) => {
+        if $crate::trace_enabled() {
+            eprintln!($($arg)*);
+        }
+    };
+}
+
+pub use trace;
+
 /// Measures the execution time of a closure and prints it with the given label
+/// when trace output is enabled.
 pub fn measure_time<T, F>(label: impl AsRef<str>, f: F) -> T
 where
     F: FnOnce() -> T,
@@ -60,8 +73,23 @@ where
     let start_time = std::time::Instant::now();
     let result = f();
     let duration = start_time.elapsed();
-    eprintln!("{}: {:.2?}", label.as_ref(), duration);
+    trace!("{}: {:.2?}", label.as_ref(), duration);
     result
+}
+
+/// Reports whether the build was asked for trace output.
+///
+/// Cargo does not pass its own `--verbose` down to build scripts, so `xtask`
+/// sets `XBUILD_TRACE` alongside it.
+pub fn trace_enabled() -> bool {
+    static TRACE: OnceLock<bool> = OnceLock::new();
+
+    *TRACE.get_or_init(|| {
+        // Without this, toggling the variable would not re-run build scripts
+        // that Cargo considers up to date, and nothing would be logged.
+        cargo_out::rerun_if_env_changed("XBUILD_TRACE");
+        env::var_os("XBUILD_TRACE").is_some_and(|v| !v.is_empty() && v != "0")
+    })
 }
 
 /// Converts `path` to a path relative to `CARGO_MANIFEST_DIR` when possible.

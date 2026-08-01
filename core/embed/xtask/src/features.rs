@@ -156,7 +156,14 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
         cmd.arg("--timings");
     }
 
-    if args.verbose {
+    if args.xbuild_trace {
+        // Cargo does not pass its own verbosity on to build scripts, so
+        // `xbuild` reads the request from the environment instead.
+        cmd.env("XBUILD_TRACE", "1");
+        // `-vv`, not `-v`: Cargo relays build script output only at the second
+        // verbosity level, and would otherwise discard what `xbuild` logs.
+        cmd.arg("-vv");
+    } else if args.verbose {
         cmd.arg("--verbose");
     }
 
