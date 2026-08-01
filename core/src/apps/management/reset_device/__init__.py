@@ -29,10 +29,11 @@ BAK_T_SLIP39_SINGLE_EXT = BackupType.Slip39_Single_Extendable  # global_import_c
 BAK_T_SLIP39_BASIC_EXT = BackupType.Slip39_Basic_Extendable  # global_import_cache
 BAK_T_SLIP39_ADVANCED_EXT = BackupType.Slip39_Advanced_Extendable  # global_import_cache
 _DEFAULT_BACKUP_TYPE = BAK_T_BIP39
+_ENTROPY_SIZE = 32
 
 
 async def reset_device(msg: ResetDevice) -> Success:
-    from trezor import config
+    from trezor import config, utils
     from trezor.crypto import bip39, random
     from trezor.messages import EntropyAck, EntropyRequest, Success
     from trezor.pin import render_empty_loader
@@ -85,7 +86,10 @@ async def reset_device(msg: ResetDevice) -> Success:
     prev_int_entropy = None
     while True:
         # generate internal entropy
-        int_entropy = random.bytes(32, True)
+        int_entropy = random.bytes(_ENTROPY_SIZE, True)
+        if len(int_entropy) != _ENTROPY_SIZE:
+            utils.halt("Invalid internal entropy")
+
         if __debug__:
             storage.debug.reset_internal_entropy[:] = int_entropy
 
@@ -101,6 +105,10 @@ async def reset_device(msg: ResetDevice) -> Success:
             EntropyAck,
         )
         ext_entropy = entropy_ack.entropy
+
+        if len(ext_entropy) * 8 < msg.strength:
+            raise ProcessError("Insufficient external entropy")
+
         # For SLIP-39 this is the Encrypted Master Secret
         secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
 
