@@ -1841,6 +1841,10 @@ if not utils.BITCOIN_ONLY:
                 br_code=ButtonRequestType.SignTx,
             )
 
+    def _stellar_title(title: str, subtitle: str) -> str:
+        # the layouts used here have no subtitle slot, join both parts into the title
+        return f"{title}: {subtitle}" if subtitle else title
+
     async def confirm_stellar_output_amount(
         title: str,
         subtitle: str,
@@ -1861,7 +1865,7 @@ if not utils.BITCOIN_ONLY:
             ]
 
         await confirm_value(
-            title,
+            _stellar_title(title, subtitle),
             amount,
             description,
             br_name="confirm_output_amount",
