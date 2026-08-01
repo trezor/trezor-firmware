@@ -243,7 +243,13 @@ fn command_to_dep_string(cmd: &std::process::Command) -> String {
     text.push_str(&cmd.get_program().to_string_lossy());
     text.push('\n');
     for arg in cmd.get_args() {
-        text.push_str(&arg.to_string_lossy());
+        let arg = arg.to_string_lossy();
+        // Diagnostic coloring has no effect on the produced artifacts, so
+        // toggling it must not invalidate the dependency cache.
+        if arg.starts_with("-fdiagnostics-color") {
+            continue;
+        }
+        text.push_str(&arg);
         text.push('\n');
     }
     text

@@ -1,5 +1,7 @@
 use std::ffi::OsStr;
+use std::io::IsTerminal;
 use std::path::{Component, Path, PathBuf};
+use std::sync::OnceLock;
 use std::{env, fs};
 
 use color_eyre::Result;
@@ -182,6 +184,54 @@ pub fn cargo_target_dir() -> Result<PathBuf> {
     };
 
     Ok(target_dir.to_path_buf())
+}
+
+/// Returns the `-fdiagnostics-color` flag to pass to `tool`, or None if the
+/// tool is not GCC- or Clang-like and would not understand it.
+///
+/// Compiler output is captured (see `emit_command_output`), so the compiler
+/// sees a pipe and disables color unless explicitly told otherwise.
+pub fn diagnostics_color_flag(tool: &cc::Tool) -> Option<&'static str> {
+    if !(tool.is_like_gnu() || tool.is_like_clang()) {
+        return None;
+    }
+
+    Some(if color_diagnostics_enabled() {
+        "-fdiagnostics-color=always"
+    } else {
+        "-fdiagnostics-color=never"
+    })
+}
+
+/// Decides whether compiler diagnostics should be colored.
+///
+/// Explicit settings win, in the usual precedence: `NO_COLOR`, then
+/// `CLICOLOR_FORCE`, then Cargo's own `CARGO_TERM_COLOR`. Otherwise the
+/// destination is auto-detected.
+///
+/// The result is cached: sources compile in parallel and the answer cannot
+/// change during a build.
+fn color_diagnostics_enabled() -> bool {
+    static ENABLED: OnceLock<bool> = OnceLock::new();
+
+    *ENABLED.get_or_init(|| {
+        // https://no-color.org — set to any non-empty value disables color.
+        if env::var_os("NO_COLOR").is_some_and(|v| !v.is_empty()) {
+            return false;
+        }
+
+        // https://bixense.com/clicolors — anything but "0" forces color on.
+        if env::var_os("CLICOLOR_FORCE").is_some_and(|v| !v.is_empty() && v != "0") {
+            return true;
+        }
+
+        match env::var("CARGO_TERM_COLOR").unwrap_or_default().as_str() {
+            "always" => true,
+            "never" => false,
+            // "auto" or unset
+            _ => std::io::stderr().is_terminal(),
+        }
+    })
 }
 
 /// Checks if the `IS_RUST_ANALYZER` environment variable is set,
