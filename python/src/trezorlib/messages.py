@@ -8591,6 +8591,7 @@ class StellarInvokeContractArgs(protobuf.MessageType):
         1: protobuf.Field("contract_address", "string", repeated=False, required=True),
         2: protobuf.Field("function_name", "string", repeated=False, required=True),
         3: protobuf.Field("args", "StellarSCVal", repeated=True, required=False, default=None),
+        4: protobuf.Field("asset_hint", "StellarAsset", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -8599,10 +8600,12 @@ class StellarInvokeContractArgs(protobuf.MessageType):
         contract_address: "str",
         function_name: "str",
         args: Optional[Sequence["StellarSCVal"]] = None,
+        asset_hint: Optional["StellarAsset"] = None,
     ) -> None:
         self.args: Sequence["StellarSCVal"] = args if args is not None else []
         self.contract_address = contract_address
         self.function_name = function_name
+        self.asset_hint = asset_hint
 
 
 class StellarSorobanAuthorizedFunction(protobuf.MessageType):

@@ -6,6 +6,8 @@ from trezor.crypto import base32
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
+    from trezor.messages import StellarAsset
+
 # Stellar strkey version bytes
 # See: https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md
 STRKEY_ED25519_PUBLIC_KEY = const(6)  # G...
@@ -39,6 +41,20 @@ def public_key_from_address(address: str) -> bytes:
 def address_from_public_key(pubkey: AnyBytes) -> str:
     """Returns the base32-encoded version of public key bytes (G...)"""
     return encode_strkey(STRKEY_ED25519_PUBLIC_KEY, pubkey)
+
+
+def sac_address_from_asset(network_id: AnyBytes, asset: StellarAsset) -> str:
+    """Derive the address of the Stellar Asset Contract (SAC) of an asset (C...)."""
+    from trezor.crypto.hashlib import sha256
+
+    from .writers import write_asset, write_bytes_fixed, write_uint32
+
+    w = bytearray()
+    write_uint32(w, 8)  # ENVELOPE_TYPE_CONTRACT_ID
+    write_bytes_fixed(w, network_id, 32)
+    write_uint32(w, 1)  # CONTRACT_ID_PREIMAGE_FROM_ASSET
+    write_asset(w, asset)
+    return encode_strkey(STRKEY_CONTRACT, sha256(w).digest())
 
 
 def encode_strkey(version: int, data: AnyBytes) -> str:

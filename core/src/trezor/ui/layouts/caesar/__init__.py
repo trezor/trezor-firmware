@@ -1845,6 +1845,36 @@ if not utils.BITCOIN_ONLY:
         # the layouts used here have no subtitle slot, join both parts into the title
         return f"{title}: {subtitle}" if subtitle else title
 
+    async def confirm_stellar_address(
+        title: str,
+        subtitle: str,
+        address: str,
+        description: str,
+        br_name: str,
+    ) -> None:
+        await confirm_address(
+            _stellar_title(title, subtitle),
+            address,
+            description=description,
+            verb=TR.buttons__continue,
+            br_name=br_name,
+        )
+
+    async def confirm_stellar_valid_until(
+        title: str,
+        subtitle: str,
+        live_until_ledger: int,
+        br_name: str,
+    ) -> None:
+        await confirm_value(
+            _stellar_title(title, subtitle),
+            str(live_until_ledger),
+            TR.stellar__valid_until_ledger,
+            br_name,
+            is_data=False,
+            verb=TR.buttons__continue,
+        )
+
     async def confirm_stellar_output_amount(
         title: str,
         subtitle: str,

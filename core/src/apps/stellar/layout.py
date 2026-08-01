@@ -11,6 +11,7 @@ from apps.common.paths import address_n_to_str
 from . import consts
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Iterable
 
     from trezor.enums import StellarMemoType
@@ -279,8 +280,163 @@ async def confirm_invoke_contract_args(
     )
 
 
+# SEP-41 token functions given a dedicated UI, see
+# https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md
+_SEP41_TRANSFER = "transfer"
+_SEP41_APPROVE = "approve"
+
+
+def verify_asset_hint(
+    args: StellarInvokeContractArgs, network_id: AnyBytes
+) -> StellarAsset | None:
+    """Resolve the asset whose Stellar Asset Contract (SAC) an invocation targets.
+
+    `asset_hint` is supplied by the host and covered by no signature, so it is
+    trusted only once the SAC address derived from it matches the contract
+    actually being invoked. A hint that does not match aborts the request
+    instead of being silently dropped, so the two can never disagree on screen.
+    Returns None when no hint is given, i.e. the invocation is a plain contract
+    call as far as the device is concerned.
+    """
+    asset = args.asset_hint
+    if asset is None:
+        return None
+
+    from .helpers import sac_address_from_asset
+
+    if sac_address_from_asset(network_id, asset) != args.contract_address:
+        raise DataError("Stellar: asset hint does not match the invoked contract")
+    return asset
+
+
+def parse_sac_transfer(args: StellarInvokeContractArgs) -> tuple[str, str, int] | None:
+    """Read a SEP-41 `transfer(from, to, amount)` call, or None if it is not one."""
+    if args.function_name != _SEP41_TRANSFER or len(args.args) != 3:
+        return None
+    from_address = _sc_address(args.args[0])
+    to_address = _sc_address(args.args[1])
+    amount = _sc_amount(args.args[2])
+    if from_address is None or to_address is None or amount is None:
+        return None
+    return from_address, to_address, amount
+
+
+def parse_sac_approve(
+    args: StellarInvokeContractArgs,
+) -> tuple[str, str, int, int] | None:
+    """Read a SEP-41 `approve(from, spender, amount, live_until_ledger)` call."""
+    if args.function_name != _SEP41_APPROVE or len(args.args) != 4:
+        return None
+    from_address = _sc_address(args.args[0])
+    spender = _sc_address(args.args[1])
+    amount = _sc_amount(args.args[2])
+    live_until_ledger = _sc_u32(args.args[3])
+    if (
+        from_address is None
+        or spender is None
+        or amount is None
+        or live_until_ledger is None
+    ):
+        return None
+    return from_address, spender, amount, live_until_ledger
+
+
+def _sc_address(val: StellarSCVal) -> str | None:
+    if val.type != StellarSCValType.SCV_ADDRESS:
+        return None
+    return val.address
+
+
+def _sc_amount(val: StellarSCVal) -> int | None:
+    """Read a SEP-41 token amount: an i128 that is never negative.
+
+    A negative amount cannot be a well-formed token operation (the SAC rejects
+    it), so showing it as one would only mislead; returning None leaves it to
+    the raw contract flow instead.
+    """
+    if val.type != StellarSCValType.SCV_I128 or val.i128 is None:
+        return None
+    amount = _i128_value(val.i128)
+    if amount < 0:
+        return None
+    return amount
+
+
+def _sc_u32(val: StellarSCVal) -> int | None:
+    if val.type != StellarSCValType.SCV_U32:
+        return None
+    return val.u32
+
+
+def sac_approve_title(amount: int) -> str:
+    """Title of an approve confirmation: an allowance of zero revokes it."""
+    return TR.stellar__revoke_approval if amount == 0 else TR.stellar__approve_token
+
+
+async def confirm_sac_invocation(
+    args: StellarInvokeContractArgs, asset: StellarAsset, title: str
+) -> bool:
+    """Confirm a SEP-41 call on a verified SAC as a token operation.
+
+    The same screens the transaction root gets, titled by the node's tree
+    position ("Authorization #1.1") with the token action as the subtitle;
+    models without a subtitle slot join both into the title, so neither is
+    ever dropped. The asset's issuer sits in the info menu of the amount
+    screen, like it does for payments. Anything but a well-formed
+    `transfer` / `approve` is left to the generic contract flow
+    (returns False).
+    """
+    transfer = parse_sac_transfer(args)
+    if transfer is not None:
+        from_address, to_address, amount = transfer
+        # The transaction root shows a transfer as "Send": it is the
+        # transaction's own action, framed like a classic payment. A tree
+        # node instead describes what a signature permits, an entry may
+        # belong to another party altogether, so it gets a neutral,
+        # perspective-free label, in line with "Approve token".
+        action = TR.stellar__transfer_token
+        await layouts.confirm_stellar_address(
+            title, action, from_address, TR.stellar__from, "op_auth_token_from"
+        )
+        await layouts.confirm_stellar_address(
+            title, action, to_address, TR.stellar__to, "op_auth_token_to"
+        )
+        await layouts.confirm_stellar_output_amount(
+            title,
+            action,
+            format_amount(amount, asset),
+            asset,
+            TR.words__amount,
+        )
+        return True
+
+    approve = parse_sac_approve(args)
+    if approve is not None:
+        from_address, spender, amount, live_until_ledger = approve
+        action = sac_approve_title(amount)
+        await layouts.confirm_stellar_address(
+            title, action, from_address, TR.stellar__from, "op_auth_token_from"
+        )
+        await layouts.confirm_stellar_address(
+            title, action, spender, TR.stellar__spender, "op_auth_token_spender"
+        )
+        await layouts.confirm_stellar_output_amount(
+            title,
+            action,
+            format_amount(amount, asset),
+            asset,
+            TR.words__amount,
+        )
+        await layouts.confirm_stellar_valid_until(
+            title, action, live_until_ledger, "op_auth_token_valid_until"
+        )
+        return True
+
+    return False
+
+
 async def confirm_authorized_invocation(
-    invocation: StellarSorobanAuthorizedInvocation,
+    invocation: StellarSorobanAuthorizedInvocation, network_id: AnyBytes
 ) -> None:
     """Confirm a standalone authorized invocation tree (auth entry signing).
 
@@ -288,11 +444,14 @@ async def confirm_authorized_invocation(
     its root label is empty; sub-invocations are numbered relative to it
     (".1", ".1.2", ...), the same paths they would have inside a transaction.
     """
-    await confirm_invocation(invocation, "")
+    await confirm_invocation(invocation, "", network_id)
 
 
 async def confirm_invocation(
-    invocation: StellarSorobanAuthorizedInvocation, position: str, is_root: bool = False
+    invocation: StellarSorobanAuthorizedInvocation,
+    position: str,
+    network_id: AnyBytes,
+    is_root: bool = False,
 ) -> None:
     """Confirm an authorized invocation and its sub-invocations recursively.
 
@@ -314,20 +473,35 @@ async def confirm_invocation(
     if func.contract_fn is None:
         raise DataError("Stellar: missing contract_fn")
 
+    # Verify the hint of every walked node before any display decision (the
+    # root of an entry may be skipped as a duplicate of the host function),
+    # so a token screen can only ever come from a verified hint and a
+    # mismatch is rejected the moment it is read. Hints in trees the user
+    # never opts into viewing are never walked at all: they influence no
+    # display and no signature.
+    asset = verify_asset_hint(func.contract_fn, network_id)
+
     if position:
         title = f"{TR.words__authorization} {position}"
     else:
         title = TR.words__authorization
 
     if not is_root:
-        await confirm_invoke_contract_args(
-            func.contract_fn,
-            br_name_prefix="op_auth",
-            title=title,
-        )
+        # A verified hint only offers the token presentation: a SAC call
+        # that is not a well-formed transfer/approve (burn, mint, ...) is
+        # still shown as a raw contract call, not rejected.
+        shown = False
+        if asset is not None:
+            shown = await confirm_sac_invocation(func.contract_fn, asset, title)
+        if not shown:
+            await confirm_invoke_contract_args(
+                func.contract_fn,
+                br_name_prefix="op_auth",
+                title=title,
+            )
 
     for i, sub in enumerate(invocation.sub_invocations):
-        await confirm_invocation(sub, f"{position}.{i + 1}")
+        await confirm_invocation(sub, f"{position}.{i + 1}", network_id)
 
 
 def _escape_str(s: str) -> str:
@@ -448,11 +622,15 @@ def _format_u128(parts: StellarUInt128Parts) -> str:
     return str(value)
 
 
-def _format_i128(parts: StellarInt128Parts) -> str:
+def _i128_value(parts: StellarInt128Parts) -> int:
     value = ((parts.hi & _MASK64) << 64) | (parts.lo & _MASK64)
     if parts.hi < 0:
         value -= 1 << 128
-    return str(value)
+    return value
+
+
+def _format_i128(parts: StellarInt128Parts) -> str:
+    return str(_i128_value(parts))
 
 
 def _format_u256(parts: StellarUInt256Parts) -> str:

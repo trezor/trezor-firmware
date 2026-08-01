@@ -15,7 +15,17 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, List, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from . import exceptions, messages
 from .tools import workflow
@@ -95,6 +105,7 @@ DEFAULT_BIP32_PATH = "m/44h/148h/0h"
 
 def from_envelope(
     envelope: "TransactionEnvelope",
+    asset_hints: Iterable["Asset"] = (),
 ) -> Tuple[messages.StellarSignTx, List["StellarMessageType"], messages.StellarTxExt]:
     """Parse a transaction envelope into a tuple of:
 
@@ -102,6 +113,11 @@ def from_envelope(
     operations - a list of protobuf messages, one per operation
     tx_ext - a StellarTxExt describing the transaction extension: v=1 carrying
         the Soroban data for Soroban transactions, otherwise v=0
+
+    Each asset in `asset_hints` is attached to the contract invocations that
+    target its Stellar Asset Contract, letting the device present them as token
+    operations. Hints matching no invocation are ignored; a wrong one is
+    rejected by the device, which re-derives the address itself.
     """
     if not HAVE_STELLAR_SDK:
         raise RuntimeError("Stellar SDK not available")
@@ -149,6 +165,13 @@ def from_envelope(
 
     operations = [_read_operation(op) for op in parsed_tx.operations]
 
+    asset_hints = list(asset_hints)
+    if asset_hints:
+        sacs = _sac_addresses(asset_hints, envelope.network_passphrase)
+        for op in operations:
+            for args in _operation_contract_args(op):
+                _add_asset_hint(args, sacs)
+
     if parsed_tx.soroban_data:
         tx_ext = messages.StellarTxExt(
             v=1,
@@ -162,12 +185,17 @@ def from_envelope(
 
 def from_authorization_entry(
     entry: "xdr.SorobanAuthorizationEntry",
+    network_passphrase: Optional[str] = None,
+    asset_hints: Iterable["Asset"] = (),
 ) -> messages.StellarSorobanAuthorizationWithAddress:
     """Translate a Soroban authorization entry into its signing request payload.
 
     The resulting message carries exactly the fields committed into the
     entry's authorization payload (the WITH_ADDRESS preimage of Protocol 27).
     Only SOROBAN_CREDENTIALS_ADDRESS_V2 entries are supported.
+
+    See `from_envelope` for `asset_hints`. Matching them needs the network the
+    entry is signed for, so `network_passphrase` is required alongside them.
     """
     if not HAVE_STELLAR_SDK:
         raise RuntimeError("Stellar SDK not available")
@@ -180,12 +208,60 @@ def from_authorization_entry(
         )
     credentials = entry.credentials.address_v2
     assert credentials is not None
+
+    invocation = _read_authorized_invocation(entry.root_invocation)
+    asset_hints = list(asset_hints)
+    if asset_hints:
+        if network_passphrase is None:
+            raise ValueError("network_passphrase is required to match asset hints")
+        sacs = _sac_addresses(asset_hints, network_passphrase)
+        for args in _invocation_contract_args(invocation):
+            _add_asset_hint(args, sacs)
+
     return messages.StellarSorobanAuthorizationWithAddress(
         nonce=credentials.nonce.int64,
         signature_expiration_ledger=credentials.signature_expiration_ledger.uint32,
         address=_read_sc_address(credentials.address),
-        invocation=_read_authorized_invocation(entry.root_invocation),
+        invocation=invocation,
     )
+
+
+def _sac_addresses(
+    asset_hints: Iterable["Asset"], network_passphrase: str
+) -> Dict[str, "Asset"]:
+    """Index the hinted assets by the address of their Stellar Asset Contract."""
+    return {asset.contract_id(network_passphrase): asset for asset in asset_hints}
+
+
+def _add_asset_hint(
+    args: messages.StellarInvokeContractArgs, sacs: Dict[str, "Asset"]
+) -> None:
+    asset = sacs.get(args.contract_address)
+    if asset is not None:
+        args.asset_hint = _read_asset(asset)
+
+
+def _invocation_contract_args(
+    invocation: messages.StellarSorobanAuthorizedInvocation,
+) -> Iterator[messages.StellarInvokeContractArgs]:
+    """Walk the contract invocations of an authorized invocation tree."""
+    if invocation.function.contract_fn is not None:
+        yield invocation.function.contract_fn
+    for sub in invocation.sub_invocations:
+        yield from _invocation_contract_args(sub)
+
+
+def _operation_contract_args(
+    op: "StellarMessageType",
+) -> Iterator[messages.StellarInvokeContractArgs]:
+    """Walk the contract invocations an operation displays: the host function
+    it invokes and the authorization trees it carries."""
+    if not isinstance(op, messages.StellarInvokeHostFunctionOp):
+        return
+    if op.function.invoke_contract is not None:
+        yield op.function.invoke_contract
+    for entry in op.auth:
+        yield from _invocation_contract_args(entry.root_invocation)
 
 
 def _read_operation(op: "Operation") -> "StellarMessageType":

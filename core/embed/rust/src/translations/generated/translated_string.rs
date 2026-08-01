@@ -1677,6 +1677,18 @@ pub enum TranslatedString {
     ethereum__subcall = 1267,  // "Subcall"
     #[cfg(feature = "universal_fw")]
     ethereum__subcall_to = 1268,  // "Subcall to"
+    #[cfg(feature = "universal_fw")]
+    stellar__approve_token = 1269,  // "Approve token"
+    #[cfg(feature = "universal_fw")]
+    stellar__from = 1270,  // "From"
+    #[cfg(feature = "universal_fw")]
+    stellar__revoke_approval = 1271,  // "Revoke approval"
+    #[cfg(feature = "universal_fw")]
+    stellar__spender = 1272,  // "Spender"
+    #[cfg(feature = "universal_fw")]
+    stellar__to = 1273,  // "To"
+    #[cfg(feature = "universal_fw")]
+    stellar__transfer_token = 1274,  // "Transfer token"
 }
 
 impl TranslatedString {
@@ -2953,6 +2965,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4227,6 +4245,12 @@ impl TranslatedString {
                 19158,
                 19165,
                 19175,
+                19188,
+                19192,
+                19207,
+                19214,
+                19216,
+                19230,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5500,6 +5524,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6774,6 +6804,12 @@ impl TranslatedString {
                 19158,
                 19165,
                 19175,
+                19188,
+                19192,
+                19207,
+                19214,
+                19216,
+                19230,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8047,6 +8083,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9321,6 +9363,12 @@ impl TranslatedString {
                 19158,
                 19165,
                 19175,
+                19188,
+                19192,
+                19207,
+                19214,
+                19216,
+                19230,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10594,6 +10642,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11868,6 +11922,12 @@ impl TranslatedString {
                 19158,
                 19165,
                 19175,
+                19188,
+                19192,
+                19207,
+                19214,
+                19216,
+                19230,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13142,6 +13202,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14416,6 +14482,12 @@ impl TranslatedString {
                 16949,
                 16956,
                 16966,
+                16979,
+                16983,
+                16998,
+                17005,
+                17007,
+                17021,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15689,6 +15761,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16963,6 +17041,12 @@ impl TranslatedString {
                 16949,
                 16956,
                 16966,
+                16979,
+                16983,
+                16998,
+                17005,
+                17007,
+                17021,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18236,6 +18320,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19510,6 +19600,12 @@ impl TranslatedString {
                 16949,
                 16956,
                 16966,
+                16979,
+                16983,
+                16998,
+                17005,
+                17007,
+                17021,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20783,6 +20879,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22057,6 +22159,12 @@ impl TranslatedString {
                 16949,
                 16956,
                 16966,
+                16979,
+                16983,
+                16998,
+                17005,
+                17007,
+                17021,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23331,6 +23439,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24605,6 +24719,12 @@ impl TranslatedString {
                 19047,
                 19054,
                 19064,
+                19077,
+                19081,
+                19096,
+                19103,
+                19105,
+                19119,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25878,6 +25998,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27152,6 +27278,12 @@ impl TranslatedString {
                 19047,
                 19054,
                 19064,
+                19077,
+                19081,
+                19096,
+                19103,
+                19105,
+                19119,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28425,6 +28557,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29699,6 +29837,12 @@ impl TranslatedString {
                 19047,
                 19054,
                 19064,
+                19077,
+                19081,
+                19096,
+                19103,
+                19105,
+                19119,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30972,6 +31116,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32246,6 +32396,12 @@ impl TranslatedString {
                 19047,
                 19054,
                 19064,
+                19077,
+                19081,
+                19096,
+                19103,
+                19105,
+                19119,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33520,6 +33676,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34794,6 +34956,12 @@ impl TranslatedString {
                 20434,
                 20441,
                 20451,
+                20464,
+                20468,
+                20483,
+                20490,
+                20492,
+                20506,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36067,6 +36235,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37341,6 +37515,12 @@ impl TranslatedString {
                 20434,
                 20441,
                 20451,
+                20464,
+                20468,
+                20483,
+                20490,
+                20492,
+                20506,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38614,6 +38794,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39888,6 +40074,12 @@ impl TranslatedString {
                 20434,
                 20441,
                 20451,
+                20464,
+                20468,
+                20483,
+                20490,
+                20492,
+                20506,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41161,6 +41353,12 @@ impl TranslatedString {
                 "Valid until ledger",
                 "Subcall",
                 "Subcall to",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42435,6 +42633,12 @@ impl TranslatedString {
                 20434,
                 20441,
                 20451,
+                20464,
+                20468,
+                20483,
+                20490,
+                20492,
+                20506,
             ];
 
         }
@@ -43756,6 +43960,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__allow_trust, Self::stellar__allow_trust),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__approve_token, Self::stellar__approve_token),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__balance_id, Self::stellar__balance_id),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__bump_sequence, Self::stellar__bump_sequence),
@@ -43795,6 +44001,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_stellar__ext_auth_message, Self::stellar__ext_auth_message),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__final_confirm, Self::stellar__final_confirm),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__from, Self::stellar__from),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__hash, Self::stellar__hash),
         #[cfg(feature = "universal_fw")]
@@ -43842,6 +44050,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__remove_signer, Self::stellar__remove_signer),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__revoke_approval, Self::stellar__revoke_approval),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__revoke_trust, Self::stellar__revoke_trust),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__selling, Self::stellar__selling),
@@ -43862,13 +44072,19 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__source_account, Self::stellar__source_account),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__spender, Self::stellar__spender),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__timebounds, Self::stellar__timebounds),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__to, Self::stellar__to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__token_info, Self::stellar__token_info),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__transaction_source, Self::stellar__transaction_source),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__transaction_source_diff_warning, Self::stellar__transaction_source_diff_warning),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__transfer_token, Self::stellar__transfer_token),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__trusted_account, Self::stellar__trusted_account),
         #[cfg(feature = "universal_fw")]

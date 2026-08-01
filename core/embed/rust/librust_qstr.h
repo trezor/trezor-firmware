@@ -1496,6 +1496,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__add_trust;
   MP_QSTR_stellar__all_will_be_sent_to;
   MP_QSTR_stellar__allow_trust;
+  MP_QSTR_stellar__approve_token;
   MP_QSTR_stellar__balance_id;
   MP_QSTR_stellar__bump_sequence;
   MP_QSTR_stellar__buying;
@@ -1516,6 +1517,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__ext_auth;
   MP_QSTR_stellar__ext_auth_message;
   MP_QSTR_stellar__final_confirm;
+  MP_QSTR_stellar__from;
   MP_QSTR_stellar__hash;
   MP_QSTR_stellar__high;
   MP_QSTR_stellar__home_domain;
@@ -1539,6 +1541,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__preauth_transaction;
   MP_QSTR_stellar__price_per_template;
   MP_QSTR_stellar__remove_signer;
+  MP_QSTR_stellar__revoke_approval;
   MP_QSTR_stellar__revoke_trust;
   MP_QSTR_stellar__selling;
   MP_QSTR_stellar__set_data;
@@ -1549,10 +1552,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__sign_tx_fee_template;
   MP_QSTR_stellar__sign_with;
   MP_QSTR_stellar__source_account;
+  MP_QSTR_stellar__spender;
   MP_QSTR_stellar__timebounds;
+  MP_QSTR_stellar__to;
   MP_QSTR_stellar__token_info;
   MP_QSTR_stellar__transaction_source;
   MP_QSTR_stellar__transaction_source_diff_warning;
+  MP_QSTR_stellar__transfer_token;
   MP_QSTR_stellar__trusted_account;
   MP_QSTR_stellar__update;
   MP_QSTR_stellar__valid_from;

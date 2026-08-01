@@ -1267,5 +1267,11 @@
   "1265": "stellar__sign_authorization",
   "1266": "stellar__valid_until_ledger",
   "1267": "ethereum__subcall",
-  "1268": "ethereum__subcall_to"
+  "1268": "ethereum__subcall_to",
+  "1269": "stellar__approve_token",
+  "1270": "stellar__from",
+  "1271": "stellar__revoke_approval",
+  "1272": "stellar__spender",
+  "1273": "stellar__to",
+  "1274": "stellar__transfer_token"
 }
