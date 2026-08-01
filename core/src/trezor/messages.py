@@ -6677,6 +6677,7 @@ if TYPE_CHECKING:
         contract_address: "str"
         function_name: "str"
         args: "list[StellarSCVal]"
+        asset_hint: "StellarAsset | None"
 
         def __init__(
             self,
@@ -6684,6 +6685,7 @@ if TYPE_CHECKING:
             contract_address: "str",
             function_name: "str",
             args: "list[StellarSCVal] | None" = None,
+            asset_hint: "StellarAsset | None" = None,
         ) -> None:
             pass
 

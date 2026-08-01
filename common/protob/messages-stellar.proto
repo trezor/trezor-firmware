@@ -388,6 +388,13 @@ message StellarInvokeContractArgs {
     required string contract_address = 1;
     required string function_name = 2;
     repeated StellarSCVal args = 3;
+    // Hint that contract_address is the Stellar Asset Contract (SAC) of this
+    // asset. The device re-derives the SAC address of the asset (CAP-46-2) and
+    // rejects the request unless it matches contract_address, so a wrong hint
+    // cannot mislead the user. When it matches, SEP-41 token functions are
+    // shown as token operations rather than as raw contract calls.
+    // Not part of the XDR, hence never covered by the signature.
+    optional StellarAsset asset_hint = 4;
 }
 
 /**

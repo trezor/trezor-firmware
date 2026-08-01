@@ -5,16 +5,26 @@ from trezor import TR
 from trezor.ui.layouts import (
     confirm_address,
     confirm_properties,
+    confirm_stellar_address,
     confirm_stellar_output,
     confirm_stellar_output_amount,
+    confirm_stellar_valid_until,
     confirm_value,
 )
 from trezor.wire import DataError, ProcessError
 
-from ..layout import confirm_invocation, confirm_invoke_contract_args, format_amount
+from ..layout import (
+    confirm_invocation,
+    confirm_invoke_contract_args,
+    format_amount,
+    parse_sac_approve,
+    parse_sac_transfer,
+    sac_approve_title,
+    verify_asset_hint,
+)
 
 if TYPE_CHECKING:
-    from buffer_types import StrOrBytes
+    from buffer_types import AnyBytes, StrOrBytes
 
     from trezor.messages import (
         StellarAccountMergeOp,
@@ -26,6 +36,7 @@ if TYPE_CHECKING:
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
         StellarHostFunction,
+        StellarInvokeContractArgs,
         StellarInvokeHostFunctionOp,
         StellarManageBuyOfferOp,
         StellarManageDataOp,
@@ -452,19 +463,128 @@ def _is_root_auth_entry(
     return False
 
 
-async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> None:
+async def _confirm_from_account(from_account: str, title: str) -> None:
+    """Confirm the account a SEP-41 token operation draws on.
+
+    Only shown when it is not the account whose signature authorizes the
+    operation anyway, i.e. when another party must have authorized it
+    separately.
+    """
+    await confirm_stellar_address(
+        title,
+        "",
+        from_account,
+        TR.stellar__from,
+        "op_invoke_from",
+    )
+
+
+async def _confirm_sac_transfer(
+    transfer: tuple[str, str, int],
+    asset: StellarAsset,
+    source_account: str,
+    contract_address: str,
+) -> None:
+    from_account, destination, amount = transfer
+
+    if from_account != source_account:
+        await _confirm_from_account(from_account, TR.words__send)
+
+    await confirm_stellar_output(
+        destination,
+        format_amount(amount, asset),
+        output_index=0,  # a Soroban operation is always the only one
+        asset=asset,
+        token_contract=contract_address,
+    )
+
+
+async def _confirm_sac_approve(
+    approve: tuple[str, str, int, int],
+    asset: StellarAsset,
+    source_account: str,
+    contract_address: str,
+) -> None:
+    from_account, spender, amount, live_until_ledger = approve
+    title = sac_approve_title(amount)
+
+    if from_account != source_account:
+        await _confirm_from_account(from_account, title)
+
+    await confirm_stellar_address(
+        title,
+        "",
+        spender,
+        TR.stellar__spender,
+        "op_invoke_spender",
+    )
+
+    # the allowance gets the same screen as a payment amount, with the asset
+    # details (issuer) in its info menu
+    await confirm_stellar_output_amount(
+        title,
+        "",
+        format_amount(amount, asset),
+        asset,
+        TR.words__amount,
+        token_contract=contract_address,
+    )
+
+    await confirm_stellar_valid_until(
+        title,
+        "",
+        live_until_ledger,
+        "op_invoke_valid_until",
+    )
+
+
+async def _confirm_invoke_contract(
+    args: StellarInvokeContractArgs, source_account: str, network_id: AnyBytes
+) -> None:
+    """Confirm the contract call a transaction invokes.
+
+    A call to a verified Stellar Asset Contract gets the payment-like flow of
+    the SEP-41 function it invokes; anything else is shown as a raw contract
+    call.
+    """
+    asset = verify_asset_hint(args, network_id)
+
+    if asset is not None:
+        transfer = parse_sac_transfer(args)
+        if transfer is not None:
+            return await _confirm_sac_transfer(
+                transfer, asset, source_account, args.contract_address
+            )
+
+        approve = parse_sac_approve(args)
+        if approve is not None:
+            return await _confirm_sac_approve(
+                approve, asset, source_account, args.contract_address
+            )
+
+    await confirm_invoke_contract_args(args, br_name_prefix="op_invoke")
+
+
+async def confirm_invoke_host_function_op(
+    op: StellarInvokeHostFunctionOp, tx_source_account: str, network_id: AnyBytes
+) -> None:
     from trezor.enums import StellarHostFunctionType, StellarSorobanCredentialsType
     from trezor.ui.layouts import should_show_more
 
     function = op.function
 
+    # the account whose signature authorizes the operation anyway: its
+    # explicit source account, or the transaction's otherwise
+    source_account = op.source_account or tx_source_account
+
     if function.type == StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT:
         if function.invoke_contract is None:
             raise DataError("Stellar: missing invoke_contract")
 
-        await confirm_invoke_contract_args(
+        await _confirm_invoke_contract(
             function.invoke_contract,
-            br_name_prefix="op_invoke",
+            source_account,
+            network_id,
         )
     else:
         raise ProcessError("Stellar: unsupported host function type")
@@ -491,7 +611,10 @@ async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> No
         ):
             shown += 1
             await _confirm_auth_entry(
-                auth_entry, shown, _is_root_auth_entry(auth_entry, function)
+                auth_entry,
+                shown,
+                network_id,
+                _is_root_auth_entry(auth_entry, function),
             )
         else:
             non_src_entries.append(auth_entry)
@@ -505,12 +628,18 @@ async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> No
         for auth_entry in non_src_entries:
             shown += 1
             await _confirm_auth_entry(
-                auth_entry, shown, _is_root_auth_entry(auth_entry, function)
+                auth_entry,
+                shown,
+                network_id,
+                _is_root_auth_entry(auth_entry, function),
             )
 
 
 async def _confirm_auth_entry(
-    auth: StellarSorobanAuthorizationEntry, position: int, is_root: bool = False
+    auth: StellarSorobanAuthorizationEntry,
+    position: int,
+    network_id: AnyBytes,
+    is_root: bool = False,
 ) -> None:
     from trezor.enums import StellarSorobanCredentialsType
 
@@ -529,4 +658,6 @@ async def _confirm_auth_entry(
 
     # Show the whole authorized invocation tree starting from its root (not just the
     # nested sub-invocations), so the user sees exactly what this signature authorizes.
-    await confirm_invocation(auth.root_invocation, f"#{position}", is_root=is_root)
+    await confirm_invocation(
+        auth.root_invocation, f"#{position}", network_id, is_root=is_root
+    )

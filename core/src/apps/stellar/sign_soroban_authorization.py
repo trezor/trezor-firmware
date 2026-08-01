@@ -46,11 +46,11 @@ async def sign_soroban_authorization(
     # Serialize the ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS preimage
     # (Protocol 27, CAP-46-11/CAP-71). It binds the signature to the
     # authorizing address.
+    network_id = sha256(msg.network_passphrase.encode()).digest()
+
     w = bytearray()
     writers.write_uint32(w, msg.envelope_type)
-    writers.write_bytes_fixed(
-        w, sha256(msg.network_passphrase.encode()).digest(), 32  # network id
-    )
+    writers.write_bytes_fixed(w, network_id, 32)
     writers.write_int64(w, auth.nonce)
     writers.write_uint32(w, auth.signature_expiration_ledger)
     writers.write_sc_address(w, auth.address)
@@ -63,7 +63,7 @@ async def sign_soroban_authorization(
         # which the device account is a signer.
         await layout.require_confirm_auth_on_behalf_of(auth.address)
 
-    await layout.confirm_authorized_invocation(auth.invocation)
+    await layout.confirm_authorized_invocation(auth.invocation, network_id)
     await layout.require_confirm_signature_expiration_ledger(
         auth.signature_expiration_ledger
     )
