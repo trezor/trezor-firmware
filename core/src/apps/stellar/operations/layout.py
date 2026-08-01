@@ -10,10 +10,10 @@ from trezor.ui.layouts import (
 )
 from trezor.wire import DataError, ProcessError
 
-from ..layout import confirm_invocation, confirm_invoke_contract_args, format_amount
+from ..layout import confirm_invocation, confirm_invoke_contract, format_amount
 
 if TYPE_CHECKING:
-    from buffer_types import StrOrBytes
+    from buffer_types import AnyBytes, StrOrBytes
 
     from trezor.messages import (
         StellarAccountMergeOp,
@@ -451,19 +451,26 @@ def _is_root_auth_entry(
     return False
 
 
-async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> None:
+async def confirm_invoke_host_function_op(
+    op: StellarInvokeHostFunctionOp, tx_source_account: str, network_id: AnyBytes
+) -> None:
     from trezor.enums import StellarHostFunctionType, StellarSorobanCredentialsType
     from trezor.ui.layouts import should_show_more
 
     function = op.function
 
+    # the account whose signature authorizes the operation anyway: its
+    # explicit source account, or the transaction's otherwise
+    source_account = op.source_account or tx_source_account
+
     if function.type == StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT:
         if function.invoke_contract is None:
             raise DataError("Stellar: missing invoke_contract")
 
-        await confirm_invoke_contract_args(
+        await confirm_invoke_contract(
             function.invoke_contract,
-            br_name_prefix="op_invoke",
+            network_id,
+            source_account,
         )
     else:
         raise ProcessError("Stellar: unsupported host function type")
@@ -490,7 +497,11 @@ async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> No
         ):
             shown += 1
             await _confirm_auth_entry(
-                auth_entry, shown, _is_root_auth_entry(auth_entry, function)
+                auth_entry,
+                shown,
+                network_id,
+                source_account,
+                is_root=_is_root_auth_entry(auth_entry, function),
             )
         else:
             non_src_entries.append(auth_entry)
@@ -504,28 +515,48 @@ async def confirm_invoke_host_function_op(op: StellarInvokeHostFunctionOp) -> No
         for auth_entry in non_src_entries:
             shown += 1
             await _confirm_auth_entry(
-                auth_entry, shown, _is_root_auth_entry(auth_entry, function)
+                auth_entry,
+                shown,
+                network_id,
+                source_account,
+                is_root=_is_root_auth_entry(auth_entry, function),
             )
 
 
 async def _confirm_auth_entry(
-    auth: StellarSorobanAuthorizationEntry, position: int, is_root: bool = False
+    auth: StellarSorobanAuthorizationEntry,
+    position: int,
+    network_id: AnyBytes,
+    source_account: str,
+    is_root: bool = False,
 ) -> None:
     from trezor.enums import StellarSorobanCredentialsType
 
     creds = auth.credentials
-
-    if creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2:
+    # SOURCE_ACCOUNT credentials authorize the tree through the effective
+    # operation source; address credentials name their authorizing party.
+    if creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT:
+        authorizing_address = source_account
+    elif creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2:
         if creds.address_v2 is None:
             raise DataError("Stellar: missing address_v2 credentials")
 
+        authorizing_address = creds.address_v2.address
         await confirm_address(
             f"{TR.words__authorization} #{position}",
-            creds.address_v2.address,
+            authorizing_address,
             description=TR.words__address,
             br_name="op_auth_entry_address",
         )
+    else:
+        raise ProcessError("Stellar: unsupported credentials type")
 
     # Show the whole authorized invocation tree starting from its root (not just the
     # nested sub-invocations), so the user sees exactly what this signature authorizes.
-    await confirm_invocation(auth.root_invocation, f"#{position}", is_root=is_root)
+    await confirm_invocation(
+        auth.root_invocation,
+        f"#{position}",
+        network_id,
+        authorizing_address,
+        is_root=is_root,
+    )

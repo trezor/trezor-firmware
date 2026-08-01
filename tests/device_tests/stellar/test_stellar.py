@@ -50,6 +50,7 @@
 # 9. Scroll down to the bottom and look at the "signatures" section. The Trezor should generate the same signature
 #
 
+import json
 from base64 import b64decode, b64encode
 
 import pytest
@@ -59,7 +60,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ...common import parametrize_using_common_fixtures
+from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
 from ...input_flows import InputFlowShowAddressQRCode
 from ..payment_req import (
     CoinPurchaseMemo,
@@ -69,6 +70,16 @@ from ..payment_req import (
 )
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.stellar]
+
+
+def parse_asset_hints(parameters):
+    """The fixture's asset hints as SDK objects (SEP-11: `native` or CODE:ISSUER)."""
+    from stellar_sdk import Asset
+
+    return [
+        Asset.native() if hint == "native" else Asset(*hint.split(":"))
+        for hint in parameters.get("asset_hints", ())
+    ]
 
 
 def parameters_to_proto(session, parameters):
@@ -147,7 +158,9 @@ def test_sign_tx(session: Session, parameters, result):
         envelope = TransactionEnvelope.from_xdr(
             parameters["xdr"], parameters["network_passphrase"]
         )
-        tx_parsed, operations_parsed, ext_parsed = stellar.from_envelope(envelope)
+        tx_parsed, operations_parsed, ext_parsed = stellar.from_envelope(
+            envelope, asset_hints=parse_asset_hints(parameters)
+        )
         tx_parsed.address_n = parse_path(parameters["address_n"])
         # payment requests are not encoded in XDR
         tx_parsed.payment_req = tx.payment_req
@@ -188,6 +201,37 @@ def test_sign_tx(session: Session, parameters, result):
 
 
 @pytest.mark.models("core")
+def test_sign_tx_asset_hint_mismatch(session: Session):
+    """A hint that does not derive to the invoked contract is ignored.
+
+    trezorlib never produces such a hint (it only attaches self-derived
+    matches), so forge one directly in the protobuf of a valid fixture.
+    """
+    fixtures = json.loads(
+        (COMMON_FIXTURES_DIR / "stellar" / "sign_tx.json").read_text()
+    )
+    parameters = next(
+        t
+        for t in fixtures["tests"]
+        if t["name"] == "StellarInvokeHostFunction-sac-transfer"
+    )["parameters"]
+    tx, operations, ext = parameters_to_proto(session, parameters)
+
+    hint = operations[0].function.invoke_contract.asset_hint
+    assert hint is not None
+    hint.code = "USDX"
+
+    stellar.sign_tx(
+        session,
+        tx,
+        operations,
+        ext,
+        tx.address_n,
+        tx.network_passphrase,
+    )
+
+
+@pytest.mark.models("core")
 @parametrize_using_common_fixtures("stellar/sign_soroban_authorization.json")
 def test_sign_soroban_authorization(session: Session, parameters, result):
     authorization = protobuf.dict_to_proto(
@@ -201,7 +245,14 @@ def test_sign_soroban_authorization(session: Session, parameters, result):
         from stellar_sdk import xdr as stellar_xdr
 
         entry = stellar_xdr.SorobanAuthorizationEntry.from_xdr(parameters["xdr"])
-        assert stellar.from_authorization_entry(entry) == authorization
+        assert (
+            stellar.from_authorization_entry(
+                entry,
+                parameters["network_passphrase"],
+                asset_hints=parse_asset_hints(parameters),
+            )
+            == authorization
+        )
 
         if "signature" in result:
             assert entry.credentials.address_v2 is not None

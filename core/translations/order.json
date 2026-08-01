@@ -1275,5 +1275,12 @@
   "1273": "buttons__disconnect",
   "1274": "buttons__forget",
   "1275": "buttons__show_next",
-  "1276": "buttons__wipe"
+  "1276": "buttons__wipe",
+  "1277": "stellar__approve_token",
+  "1278": "stellar__from",
+  "1279": "stellar__revoke_approval",
+  "1280": "stellar__spender",
+  "1281": "stellar__to",
+  "1282": "stellar__token_contract",
+  "1283": "stellar__transfer_token"
 }

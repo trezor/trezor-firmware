@@ -1664,6 +1664,20 @@ pub enum TranslatedString {
     buttons__forget = 1274,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Forget"}
     buttons__show_next = 1275,  // {"Bolt": "Show next", "Caesar": "", "Delizia": "", "Eckhart": "Show next"}
     buttons__wipe = 1276,  // "Wipe"
+    #[cfg(feature = "universal_fw")]
+    stellar__approve_token = 1277,  // "Approve token"
+    #[cfg(feature = "universal_fw")]
+    stellar__from = 1278,  // "From"
+    #[cfg(feature = "universal_fw")]
+    stellar__revoke_approval = 1279,  // "Revoke approval"
+    #[cfg(feature = "universal_fw")]
+    stellar__spender = 1280,  // "Spender"
+    #[cfg(feature = "universal_fw")]
+    stellar__to = 1281,  // "To"
+    #[cfg(feature = "universal_fw")]
+    stellar__token_contract = 1282,  // "Token contract"
+    #[cfg(feature = "universal_fw")]
+    stellar__transfer_token = 1283,  // "Transfer token"
 }
 
 impl TranslatedString {
@@ -2948,6 +2962,13 @@ impl TranslatedString {
                 "",
                 "Show next",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4230,6 +4251,13 @@ impl TranslatedString {
                 18939,
                 18948,
                 18952,
+                18965,
+                18969,
+                18984,
+                18991,
+                18993,
+                19007,
+                19021,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5511,6 +5539,13 @@ impl TranslatedString {
                 "",
                 "Show next",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6793,6 +6828,13 @@ impl TranslatedString {
                 18939,
                 18948,
                 18952,
+                18965,
+                18969,
+                18984,
+                18991,
+                18993,
+                19007,
+                19021,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8074,6 +8116,13 @@ impl TranslatedString {
                 "",
                 "Show next",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9356,6 +9405,13 @@ impl TranslatedString {
                 18939,
                 18948,
                 18952,
+                18965,
+                18969,
+                18984,
+                18991,
+                18993,
+                19007,
+                19021,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10637,6 +10693,13 @@ impl TranslatedString {
                 "",
                 "Show next",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11919,6 +11982,13 @@ impl TranslatedString {
                 18939,
                 18948,
                 18952,
+                18965,
+                18969,
+                18984,
+                18991,
+                18993,
+                19007,
+                19021,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13201,6 +13271,13 @@ impl TranslatedString {
                 "",
                 "",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14483,6 +14560,13 @@ impl TranslatedString {
                 16757,
                 16757,
                 16761,
+                16774,
+                16778,
+                16793,
+                16800,
+                16802,
+                16816,
+                16830,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15764,6 +15848,13 @@ impl TranslatedString {
                 "",
                 "",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17046,6 +17137,13 @@ impl TranslatedString {
                 16757,
                 16757,
                 16761,
+                16774,
+                16778,
+                16793,
+                16800,
+                16802,
+                16816,
+                16830,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18327,6 +18425,13 @@ impl TranslatedString {
                 "",
                 "",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19609,6 +19714,13 @@ impl TranslatedString {
                 16757,
                 16757,
                 16761,
+                16774,
+                16778,
+                16793,
+                16800,
+                16802,
+                16816,
+                16830,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20890,6 +21002,13 @@ impl TranslatedString {
                 "",
                 "",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22172,6 +22291,13 @@ impl TranslatedString {
                 16757,
                 16757,
                 16761,
+                16774,
+                16778,
+                16793,
+                16800,
+                16802,
+                16816,
+                16830,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23454,6 +23580,13 @@ impl TranslatedString {
                 "",
                 "",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24736,6 +24869,13 @@ impl TranslatedString {
                 18864,
                 18864,
                 18868,
+                18881,
+                18885,
+                18900,
+                18907,
+                18909,
+                18923,
+                18937,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26017,6 +26157,13 @@ impl TranslatedString {
                 "",
                 "",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27299,6 +27446,13 @@ impl TranslatedString {
                 18864,
                 18864,
                 18868,
+                18881,
+                18885,
+                18900,
+                18907,
+                18909,
+                18923,
+                18937,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28580,6 +28734,13 @@ impl TranslatedString {
                 "",
                 "",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29862,6 +30023,13 @@ impl TranslatedString {
                 18864,
                 18864,
                 18868,
+                18881,
+                18885,
+                18900,
+                18907,
+                18909,
+                18923,
+                18937,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31143,6 +31311,13 @@ impl TranslatedString {
                 "",
                 "",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32425,6 +32600,13 @@ impl TranslatedString {
                 18864,
                 18864,
                 18868,
+                18881,
+                18885,
+                18900,
+                18907,
+                18909,
+                18923,
+                18937,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33707,6 +33889,13 @@ impl TranslatedString {
                 "Forget",
                 "Show next",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34989,6 +35178,13 @@ impl TranslatedString {
                 20275,
                 20284,
                 20288,
+                20301,
+                20305,
+                20320,
+                20327,
+                20329,
+                20343,
+                20357,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36270,6 +36466,13 @@ impl TranslatedString {
                 "Forget",
                 "Show next",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37552,6 +37755,13 @@ impl TranslatedString {
                 20275,
                 20284,
                 20288,
+                20301,
+                20305,
+                20320,
+                20327,
+                20329,
+                20343,
+                20357,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38833,6 +39043,13 @@ impl TranslatedString {
                 "Forget",
                 "Show next",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -40115,6 +40332,13 @@ impl TranslatedString {
                 20275,
                 20284,
                 20288,
+                20301,
+                20305,
+                20320,
+                20327,
+                20329,
+                20343,
+                20357,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41396,6 +41620,13 @@ impl TranslatedString {
                 "Forget",
                 "Show next",
                 "Wipe",
+                "Approve token",
+                "From",
+                "Revoke approval",
+                "Spender",
+                "To",
+                "Token contract",
+                "Transfer token",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42678,6 +42909,13 @@ impl TranslatedString {
                 20275,
                 20284,
                 20288,
+                20301,
+                20305,
+                20320,
+                20327,
+                20329,
+                20343,
+                20357,
             ];
 
         }
@@ -44006,6 +44244,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__allow_trust, Self::stellar__allow_trust),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__approve_token, Self::stellar__approve_token),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__balance_id, Self::stellar__balance_id),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__bump_sequence, Self::stellar__bump_sequence),
@@ -44041,6 +44281,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_stellar__ext_auth_message, Self::stellar__ext_auth_message),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__final_confirm, Self::stellar__final_confirm),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__from, Self::stellar__from),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__hash, Self::stellar__hash),
         #[cfg(feature = "universal_fw")]
@@ -44088,6 +44330,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__remove_signer, Self::stellar__remove_signer),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__revoke_approval, Self::stellar__revoke_approval),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__revoke_trust, Self::stellar__revoke_trust),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__selling, Self::stellar__selling),
@@ -44104,13 +44348,21 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__source_account, Self::stellar__source_account),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__spender, Self::stellar__spender),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__timebounds, Self::stellar__timebounds),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__to, Self::stellar__to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__token_contract, Self::stellar__token_contract),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__token_info, Self::stellar__token_info),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__transaction_source, Self::stellar__transaction_source),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__transaction_source_diff_warning, Self::stellar__transaction_source_diff_warning),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__transfer_token, Self::stellar__transfer_token),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__trusted_account, Self::stellar__trusted_account),
         #[cfg(feature = "universal_fw")]

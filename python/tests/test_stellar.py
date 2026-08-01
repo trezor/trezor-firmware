@@ -24,6 +24,7 @@ try:
         Address,
         Asset,
         AuthorizationFlag,
+        InvokeHostFunction,
         MuxedAccount,
         Network,
         TransactionBuilder,
@@ -979,6 +980,21 @@ SOROBAN_SOURCE = "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
 SOROBAN_CONTRACT = "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI"
 SOROBAN_DESTINATION = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
+# A real asset, so the address of its Stellar Asset Contract can be derived
+# (CAP-46-2) and asset hints matched against invocations of that contract.
+SAC_ASSET = Asset("USDC", "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5")
+SAC_ADDRESS = SAC_ASSET.contract_id(Network.TESTNET_NETWORK_PASSPHRASE)
+SAC_ASSET_HINT = messages.StellarAsset(
+    type=messages.StellarAssetType.ALPHANUM4,
+    code=SAC_ASSET.code,
+    issuer=SAC_ASSET.issuer,
+)
+UNRELATED_ASSET = Asset(
+    "USDX", "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5"
+)
+NATIVE_SAC_ADDRESS = Asset.native().contract_id(Network.TESTNET_NETWORK_PASSPHRASE)
+NATIVE_ASSET_HINT = messages.StellarAsset(type=messages.StellarAssetType.NATIVE)
+
 skip_if_no_protocol_27 = pytest.mark.skipif(
     not stellar.HAVE_STELLAR_SDK_PROTOCOL_27,
     reason="requires Stellar SDK with Protocol 27 support",
@@ -986,13 +1002,16 @@ skip_if_no_protocol_27 = pytest.mark.skipif(
 
 
 def make_soroban_invocation(
-    function_name="transfer", amount=500_111_000, sub_invocations=()
+    function_name="transfer",
+    amount=500_111_000,
+    sub_invocations=(),
+    contract_address=SOROBAN_CONTRACT,
 ):
     return stellar_xdr.SorobanAuthorizedInvocation(
         function=stellar_xdr.SorobanAuthorizedFunction(
             type=stellar_xdr.SorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN,
             contract_fn=stellar_xdr.InvokeContractArgs(
-                contract_address=Address(SOROBAN_CONTRACT).to_xdr_sc_address(),
+                contract_address=Address(contract_address).to_xdr_sc_address(),
                 function_name=stellar_xdr.SCSymbol(function_name.encode()),
                 args=[
                     scval.to_address(SOROBAN_SOURCE),
@@ -1149,3 +1168,112 @@ def test_from_authorization_entry_legacy_address_credentials():
 
     with pytest.raises(ValueError, match="Unsupported SorobanCredentials type"):
         stellar.from_authorization_entry(entry)
+
+
+def make_sac_transfer_tx(auth=()):
+    """A transaction invoking the SAC directly, with optional auth entries."""
+    op = InvokeHostFunction(
+        host_function=stellar_xdr.HostFunction(
+            type=stellar_xdr.HostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT,
+            invoke_contract=stellar_xdr.InvokeContractArgs(
+                contract_address=Address(SAC_ADDRESS).to_xdr_sc_address(),
+                function_name=stellar_xdr.SCSymbol(b"transfer"),
+                args=[
+                    scval.to_address(SOROBAN_SOURCE),
+                    scval.to_address(SOROBAN_DESTINATION),
+                    scval.to_int128(500_111_000),
+                ],
+            ),
+        ),
+        auth=list(auth),
+    )
+    return make_default_tx().append_operation(op).build()
+
+
+def test_from_envelope_asset_hints():
+    # the entry authorizes a non-SAC root with a SAC sub-invocation
+    entry = stellar_xdr.SorobanAuthorizationEntry(
+        credentials=stellar_xdr.SorobanCredentials(
+            type=stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT
+        ),
+        root_invocation=make_soroban_invocation(
+            sub_invocations=[make_soroban_invocation(contract_address=SAC_ADDRESS)]
+        ),
+    )
+    envelope = make_sac_transfer_tx(auth=[entry])
+
+    _, operations, _ = stellar.from_envelope(envelope, asset_hints=[SAC_ASSET])
+
+    op = operations[0]
+    assert op.function.invoke_contract.asset_hint == SAC_ASSET_HINT
+    root = op.auth[0].root_invocation
+    assert root.function.contract_fn.asset_hint is None
+    assert root.sub_invocations[0].function.contract_fn.asset_hint == SAC_ASSET_HINT
+
+
+def test_from_envelope_multiple_asset_hints():
+    # hints are matched to invocations by contract address, so their order
+    # does not matter and each lands only on the calls of its own SAC
+    entry = stellar_xdr.SorobanAuthorizationEntry(
+        credentials=stellar_xdr.SorobanCredentials(
+            type=stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT
+        ),
+        root_invocation=make_soroban_invocation(
+            sub_invocations=[
+                make_soroban_invocation(contract_address=SAC_ADDRESS),
+                make_soroban_invocation(contract_address=NATIVE_SAC_ADDRESS),
+            ]
+        ),
+    )
+    envelope = make_sac_transfer_tx(auth=[entry])
+
+    _, operations, _ = stellar.from_envelope(
+        envelope, asset_hints=[Asset.native(), SAC_ASSET]
+    )
+
+    root = operations[0].auth[0].root_invocation
+    assert root.function.contract_fn.asset_hint is None
+    subs = root.sub_invocations
+    assert subs[0].function.contract_fn.asset_hint == SAC_ASSET_HINT
+    assert subs[1].function.contract_fn.asset_hint == NATIVE_ASSET_HINT
+
+
+def test_from_envelope_unmatched_asset_hint():
+    envelope = make_sac_transfer_tx()
+
+    # a hint whose SAC is not invoked anywhere is dropped, not sent
+    _, operations, _ = stellar.from_envelope(envelope, asset_hints=[UNRELATED_ASSET])
+    assert operations[0].function.invoke_contract.asset_hint is None
+
+    # and no hints means no stamping at all
+    _, operations, _ = stellar.from_envelope(envelope)
+    assert operations[0].function.invoke_contract.asset_hint is None
+
+
+@skip_if_no_protocol_27
+def test_from_authorization_entry_asset_hints():
+    entry = make_authorization_entry(
+        SOROBAN_SOURCE,
+        123456789,
+        600000,
+        sub_invocations=[make_soroban_invocation(contract_address=SAC_ADDRESS)],
+    )
+
+    authorization = stellar.from_authorization_entry(
+        entry, Network.TESTNET_NETWORK_PASSPHRASE, asset_hints=[SAC_ASSET]
+    )
+
+    assert authorization.invocation.function.contract_fn.asset_hint is None
+    sub = authorization.invocation.sub_invocations[0]
+    assert sub.function.contract_fn.asset_hint == SAC_ASSET_HINT
+
+
+@skip_if_no_protocol_27
+def test_from_authorization_entry_hints_require_network_passphrase():
+    entry = make_authorization_entry(SOROBAN_SOURCE, 123456789, 600000)
+
+    with pytest.raises(ValueError, match="network_passphrase is required"):
+        stellar.from_authorization_entry(entry, asset_hints=[SAC_ASSET])
+
+    # an exhausted iterator carries no hints, so no passphrase is needed
+    stellar.from_authorization_entry(entry, asset_hints=iter(()))
