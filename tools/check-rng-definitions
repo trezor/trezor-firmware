@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+#
+# Enumerate every definition of the low-level RNG API in the tree and require
+# each one to be explicitly allowlisted below.
+#
+# Detects alternative RNG implementations that shadow the real one at the call
+# site such as a `static inline` in a header that wins include-path precedence,
+# is inlined into its consumers and leaves no symbol behind. Disassembly would
+# still show every entropy source, while the consumers quietly use the weak
+# version.
+#
+# Usage: check-rng-definitions
+
+set -u
+
+cd "$(dirname "$0")/.."
+
+# Files allowed to define each symbol.
+
+ALLOWED_rng_fill_buffer_strong="
+core/embed/sec/rng/rng_strong.c
+core/embed/sys/smcall/stm32/smcall_stubs.c
+core/embed/sys/syscall/stm32/syscall_stubs.c
+legacy/sec/rng_strong.h
+storage/tests/c/sec/rng_strong.h
+"
+
+ALLOWED_rng_fill_buffer="
+core/embed/sys/rng/stm32/rng.c
+core/embed/sys/rng/unix/rng.c
+core/embed/sys/smcall/stm32/smcall_stubs.c
+core/embed/sys/syscall/stm32/syscall_stubs.c
+legacy/sec/rng_strong.h
+storage/tests/c/sec/rng_strong.h
+"
+
+ALLOWED_random_buffer="
+core/embed/sys/rng/stm32/rng.c
+crypto/rand_insecure.c
+legacy/rng.c
+"
+
+# Files allowed to provide a header at an include path that could shadow the
+# canonical RNG headers. Catches a shim that evades the definition scan
+# entirely, such as a #define macro, which is invisible to both `nm` and the
+# pattern below.
+ALLOWED_HEADER_PATHS="
+core/embed/sec/rng/inc/sec/rng_strong.h
+core/embed/sys/rng/inc/sys/rng.h
+crypto/rand.h
+legacy/sec/rng_strong.h
+storage/tests/c/sec/rng_strong.h
+"
+
+SYMBOLS="rng_fill_buffer_strong rng_fill_buffer random_buffer"
+SHADOWABLE="sec/rng_strong.h sys/rng.h rand.h"
+
+RETURN=0
+
+# Definitions start at column 0 in C; calls are always indented inside a
+# function body. Declarations are excluded by dropping lines ending in ';'.
+# A signature split across lines still puts the symbol on the column-0 line.
+find_definitions() {
+    grep -rEl "^[^ $(printf '\t')/*].*\b$1[ ]*\(" \
+        --include=*.c --include=*.h . 2>/dev/null \
+    | while read -r f; do
+        f=${f#./}
+        case $f in
+            core/build*/*|core/build-xtask/*|.venv/*|*/node_modules/*) continue ;;
+        esac
+        # Re-test the file, dropping declaration-only lines.
+        if grep -qE "^[^ $(printf '\t')/*].*\b$1[ ]*\(" "$f" \
+           && grep -E "^[^ $(printf '\t')/*].*\b$1[ ]*\(" "$f" | grep -qvE ';[ ]*$'
+        then
+            echo "$f"
+        fi
+    done | sort -u
+}
+
+normalize() { tr -s ' \n' '\n' | grep -v '^$' | sort -u; }
+
+compare_sets() {
+    local what=$1 expected=$2 actual=$3
+    local added removed
+    added=$(comm -13 <(printf '%s' "$expected" | normalize) \
+                     <(printf '%s' "$actual" | normalize))
+    removed=$(comm -23 <(printf '%s' "$expected" | normalize) \
+                       <(printf '%s' "$actual" | normalize))
+
+    if [ -n "$added" ]; then
+        echo "FAIL: unexpected $what:"
+        printf '        %s\n' $added
+        echo "      A new RNG implementation can shadow the real one at a call site."
+        echo "      If this is intentional, add it to the allowlist in $0."
+        RETURN=1
+    fi
+    if [ -n "$removed" ]; then
+        echo "FAIL: allowlisted $what no longer present:"
+        printf '        %s\n' $removed
+        echo "      Remove it from the allowlist in $0 so the list stays accurate."
+        RETURN=1
+    fi
+    if [ -z "$added" ] && [ -z "$removed" ]; then
+        echo "OK: $what as allowlisted"
+    fi
+}
+
+for sym in $SYMBOLS; do
+    eval "expected=\$ALLOWED_$sym"
+    actual=$(find_definitions "$sym")
+    if [ -z "$actual" ]; then
+        echo "FAIL: found no definition of '$sym' at all -- has it been renamed?"
+        echo "      If so, this lint is now vacuous; update SYMBOLS in $0."
+        RETURN=1
+        continue
+    fi
+    compare_sets "definitions of $sym" "$expected" "$actual"
+done
+
+headers=""
+for path in $SHADOWABLE; do
+    headers="$headers $(find . -path ./core/build-xtask -prune -o \
+        -path "*/$path" -print 2>/dev/null \
+        | sed 's|^\./||' | grep -v '^core/build')"
+done
+compare_sets "providers of shadowable RNG headers" "$ALLOWED_HEADER_PATHS" "$headers"
+
+if [ $RETURN -ne 0 ]; then
+    echo "ERROR: RNG definition lint failed."
+fi
+exit $RETURN
