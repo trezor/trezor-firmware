@@ -21,9 +21,6 @@
 #include <trezor_types.h>
 
 #include <sec/rng_strong.h>
-#ifdef TREZOR_EMULATOR
-#include <sec/rng_mock.h>
-#endif
 #include <sec/secret_keys.h>
 #include <sec/tropic.h>
 #include <sys/systick.h>
@@ -1117,20 +1114,10 @@ void tropic_get_factory_privkey(curve25519_key privkey) {
   memcpy(privkey, factory_private, sizeof(curve25519_key));
 }
 
-#ifdef TREZOR_EMULATOR
-
-static rng_mock_stream_t random_stream = {.tag = "Tropic"};
-
-void tropic_random_reseed(uint32_t seed) {
-  rng_mock_reseed(&random_stream, seed);
-}
-
-bool tropic_random_buffer(void *buffer, size_t length) {
-  rng_mock_fill(&random_stream, (uint8_t *)buffer, length);
-  return true;
-}
-
-#else  // TREZOR_EMULATOR
+// Gated on the same condition as the mock that replaces it, so the two halves
+// of the choice cannot drift apart: with USE_INSECURE_PRNG the deterministic
+// stream in tropic/unix/tropic_mock.c provides this function instead.
+#ifndef USE_INSECURE_PRNG
 
 bool tropic_random_buffer(void *buffer, size_t length) {
   tropic_driver_t *drv = &g_tropic_driver;
@@ -1146,7 +1133,9 @@ bool tropic_random_buffer(void *buffer, size_t length) {
   return true;
 }
 
-#endif  // TREZOR_EMULATOR
+#elif PRODUCTION
+#error "Tropic entropy source must not be mocked in a production build"
+#endif  // not USE_INSECURE_PRNG
 
 void tropic_random_buffer_time(uint32_t *time_ms) {
   // Assuming the data size is 32 bytes

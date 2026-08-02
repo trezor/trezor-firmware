@@ -21,9 +21,7 @@
 
 #include <sec/optiga.h>
 #include <sec/optiga_common.h>
-#include <sec/rng_mock.h>
 #include <sec/storage.h>
-#include <sys/rng.h>
 
 #include "ecdsa.h"
 #include "nist256p1.h"
@@ -116,17 +114,6 @@ void optiga_pin_stretch_cmac_ecdh_time(
 
 uint32_t optiga_estimate_time_ms(storage_pin_op_t op, uint8_t slot_index) {
   return 0;
-}
-
-static rng_mock_stream_t random_stream = {.tag = "Optiga"};
-
-void optiga_random_reseed(uint32_t seed) {
-  rng_mock_reseed(&random_stream, seed);
-}
-
-bool optiga_random_buffer(uint8_t *dest, size_t size) {
-  rng_mock_fill(&random_stream, dest, size);
-  return true;
 }
 
 void optiga_random_buffer_time(uint32_t *time_ms) {}

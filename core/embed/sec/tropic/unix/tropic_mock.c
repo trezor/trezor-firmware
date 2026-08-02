@@ -22,7 +22,7 @@
 // that a build system which loses the PRODUCTION define fails loudly here
 // instead of silently shipping the insecure PRNG.
 #ifndef PRODUCTION
-#error "PRODUCTION must be defined as 0 or 1 when compiling rng_mock.c"
+#error "PRODUCTION must be defined as 0 or 1 when compiling tropic_mock.c"
 #elif PRODUCTION
 #error "Mock RNG must not be compiled into a production build"
 #endif
@@ -32,34 +32,21 @@
 #endif
 
 #pragma message( \
-    "NOT SUITABLE FOR PRODUCTION USE! Secure element entropy sources are mocked with deterministic streams.")
+    "NOT SUITABLE FOR PRODUCTION USE! Tropic entropy source is mocked with a deterministic stream.")
 
 #include <trezor_rtl.h>
 
 #include <sec/rng_mock.h>
+#include <sec/tropic.h>
 
-#include "sha2.h"
+// Deterministic, Tropic-unique random stream.
+static rng_mock_stream_t random_stream = {.tag = "Tropic"};
 
-void rng_mock_reseed(rng_mock_stream_t* stream, uint32_t seed) {
-  stream->seed = seed;
-  stream->counter = 0;
+void tropic_random_reseed(uint32_t seed) {
+  rng_mock_reseed(&random_stream, seed);
 }
 
-void rng_mock_fill(rng_mock_stream_t* stream, uint8_t* dest, size_t size) {
-  while (size > 0) {
-    uint8_t block[SHA256_DIGEST_LENGTH] = {0};
-    SHA256_CTX ctx = {0};
-    sha256_Init(&ctx);
-    sha256_Update(&ctx, (const uint8_t*)stream->tag, strlen(stream->tag));
-    sha256_Update(&ctx, (const uint8_t*)&stream->seed, sizeof(stream->seed));
-    sha256_Update(&ctx, (const uint8_t*)&stream->counter,
-                  sizeof(stream->counter));
-    sha256_Final(&ctx, block);
-    stream->counter++;
-
-    size_t chunk = MIN(size, sizeof(block));
-    memcpy(dest, block, chunk);
-    dest += chunk;
-    size -= chunk;
-  }
+bool tropic_random_buffer(void* buffer, size_t length) {
+  rng_mock_fill(&random_stream, (uint8_t*)buffer, length);
+  return true;
 }
