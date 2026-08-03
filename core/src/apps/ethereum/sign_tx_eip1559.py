@@ -46,7 +46,6 @@ async def sign_tx_eip1559(
     )
 
     gas_limit = msg.gas_limit  # local_cache_attribute
-    data_length = msg.data_length  # local_cache_attribute
 
     # check
     if len(msg.max_gas_fee) + len(gas_limit) > 30:
@@ -83,7 +82,7 @@ async def sign_tx_eip1559(
     sha = keccak256()
 
     rlp.write(sha, _TX_TYPE)
-    rlp.write_header(sha, _get_digest_length(msg, data_length), rlp.LIST_HEADER_BYTE)
+    rlp.write_header(sha, _get_digest_length(msg), rlp.LIST_HEADER_BYTE)
 
     fields: tuple[rlp.RLPItem, ...] = (
         msg.chain_id,
@@ -128,7 +127,7 @@ async def sign_tx_eip1559(
     return result
 
 
-def _get_digest_length(msg: EthereumSignTxEIP1559, data_length: int) -> int:
+def _get_digest_length(msg: EthereumSignTxEIP1559) -> int:
     length = 0
 
     fields: tuple[rlp.RLPItem, ...] = (
@@ -143,6 +142,7 @@ def _get_digest_length(msg: EthereumSignTxEIP1559, data_length: int) -> int:
     for field in fields:
         length += rlp.length(field)
 
+    data_length = msg.data_length
     length += rlp.header_length(data_length, msg.data_initial_chunk)
     length += data_length
 
