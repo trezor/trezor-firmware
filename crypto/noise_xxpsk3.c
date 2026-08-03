@@ -287,7 +287,9 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
                             ciphertext + plaintext_len, NOISE_TAG_SIZE_BYTES,
                             &ctx) != RETURN_GOOD) {
       memzero(&ctx, sizeof(ctx));
-      memzero(plaintext, plaintext_len);
+      if (plaintext != NULL) {
+        memzero(plaintext, plaintext_len);
+      }
       memzero(nonce_bytes, sizeof(nonce_bytes));
       return false;
     }
@@ -409,8 +411,10 @@ cleanup:
 }
 
 void noise_xxpsk3_responder_deinit(noise_xxpsk3_responder_t *rspn) {
-  // Clear the responder structure
-  memzero(rspn, sizeof(noise_xxpsk3_responder_t));
+  if (rspn != NULL) {
+    // Clear the responder structure
+    memzero(rspn, sizeof(noise_xxpsk3_responder_t));
+  }
 }
 
 bool noise_xxpsk3_responder_handle_request1(
@@ -634,8 +638,10 @@ cleanup:
 }
 
 void noise_xxpsk3_initiator_deinit(noise_xxpsk3_initiator_t *intr) {
-  // Clear the initiator structure
-  memzero(intr, sizeof(noise_xxpsk3_initiator_t));
+  if (intr != NULL) {
+    // Clear the initiator structure
+    memzero(intr, sizeof(noise_xxpsk3_initiator_t));
+  }
 }
 
 bool noise_xxpsk3_initiator_create_request1(
