@@ -322,3 +322,5 @@ if not utils.BITCOIN_ONLY:
     WARDProofAck = 2349
     WARDDiscardPending = 2350
     WARDDiscardPendingAck = 2351
+    WARDExportKeys = 2352
+    WARDExportKeysAck = 2353

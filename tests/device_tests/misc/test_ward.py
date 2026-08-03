@@ -17,9 +17,46 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...device_handler import BackgroundDeviceHandler
-from ...ward_mgr_emu import sign_ward_update, sign_wm_attestation
+from ...ward_mgr_emu import device_ward_keys, sign_ward_update, sign_wm_attestation
 
 _APP = "bitcoin"  # capability principal == queried domain for these tests
+
+# The host tree must use the DEVICE's WARD keys (reproduced from the known test
+# seed) so its entry_keys/leaf commits match the device's and its proofs verify.
+_K_INDEX, _K_DATA = device_ward_keys()
+
+
+def _tree() -> WARDTree:
+    """Host WARDTree keyed by the device's K_index/K_data."""
+    return WARDTree(_K_INDEX, _K_DATA)
+
+
+def _apply_device_leaf(tree: WARDTree, perform_result: tuple) -> None:
+    """Keep the host tree in sync with the device after a write: store the exact
+    encrypted leaf blob the device returned in WARDPerformUpdateAck (its nonce is
+    random, so the host must NOT re-encrypt or roots would diverge). Trailing 5
+    fields of perform_result are (entry_key, entry_type, nonce, tag, ct); empty ct
+    means DELETE."""
+    ek, entry_type, nonce, tag, ct = perform_result[5:10]
+    if ct:
+        tree.set_leaf(ek, nonce, tag, ct, entry_type or "address")
+    elif ek is not None:
+        tree.del_leaf(ek)
+
+
+def _lookup_membership(session: Session, tree: WARDTree, address: bytes):
+    """Membership WARDLookup with the new signature (leaf blob + proof)."""
+    blob = tree.leaf_blob(_APP, address)
+    assert blob is not None, f"{address!r} not in tree"
+    return ward.lookup(
+        session,
+        _APP,
+        address,
+        tree.get_proof(_APP, address),
+        nonce=blob[0],
+        tag=blob[1],
+        ct=blob[2],
+    )
 
 ENTRIES = {
     b"alice": b"data_alice",
@@ -66,7 +103,7 @@ class WardHostHarness:
     """
 
     def __init__(self) -> None:
-        self.tree = WARDTree()
+        self.tree = _tree()
         self.store = InMemoryEvoluStore()
         self.wm = InMemoryWardManager()
         self.queue: list[tuple[bytes, bytes]] = []
@@ -86,26 +123,21 @@ class WardHostHarness:
     def lookup(self, session: Session, address: bytes) -> bytes | None:
         if self.tree.get_counter(_APP, address):
             value = self.tree.get_value(_APP, address)
-            valid, membership, _counter, _wallet_id = ward.lookup(
-                session, _APP,
-                address=address,
-                value=value,
-                proof=self.tree.get_proof(_APP, address),
-                counter=self.tree.get_counter(_APP, address),
+            valid, membership, _counter, _wallet_id = _lookup_membership(
+                session, self.tree, address
             )
             assert valid and membership
             return value
 
-        proof, witness_entry_key, witness_value_hash = (
+        proof, witness_entry_key, witness_commit = (
             self.tree.get_nonmembership_proof(_APP, address)
         )
         valid, membership, _counter, _wallet_id = ward.lookup(
             session, _APP,
-            address=address,
-            value=None,
-            proof=proof,
+            address,
+            proof,
             witness_entry_key=witness_entry_key,
-            witness_value_hash=witness_value_hash,
+            witness_commit=witness_commit,
         )
         assert valid and not membership
         return None
@@ -120,9 +152,8 @@ class WardHostHarness:
         )
         pending_id = _queue_update(session, address, old_value, value or b"")
 
-        c_counter, _root_t, mac_t, wallet_id, ward_id = _perform(
-            session, self.tree, pending_id
-        )
+        res = _perform(session, self.tree, pending_id)
+        c_counter, _root_t, mac_t, wallet_id, ward_id = res[:5]
         mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
         assert ward_id is not None
         sig = self.wm.sign_final(ward_id, c_counter, mac_for_sig)
@@ -130,10 +161,9 @@ class WardHostHarness:
             session, c_counter, mac_t, sig, pending_id
         )
 
-        if value is None:
-            self.tree.delete(_APP, address)
-        else:
-            self.tree.insert(_APP, address, value, counter=c_counter)
+        # Store the device's own encrypted leaf blob (random nonce) so the host
+        # tree tracks the device's authenticated root exactly.
+        _apply_device_leaf(self.tree, res)
 
         expected_root = None if self.tree.is_empty() else self.tree.get_root_hash()
         assert new_root == expected_root
@@ -153,7 +183,7 @@ class WardHostHarness:
 
 
 def _make_tree() -> WARDTree:
-    tree = WARDTree()
+    tree = _tree()
     for addr, val in ENTRIES.items():
         tree.insert(_APP, addr, val, counter=1)
     return tree
@@ -222,12 +252,17 @@ def _perform_and_finalize(
     tree: WARDTree,
     pending_id: int,
 ) -> tuple[int, bytes | None, bytes | None, bytes | None]:
-    """perform_update -> WM-sign -> confirmed_by_wm. Returns the confirm result."""
-    c_counter, _root_t, mac_t, _wallet_id, ward_id = _perform(session, tree, pending_id)
+    """perform_update -> WM-sign -> confirmed_by_wm. Returns the confirm result.
+    Also stores the device-returned leaf blob into `tree` so the host stays in sync
+    with the device's authenticated root (the device is the encryptor)."""
+    res = _perform(session, tree, pending_id)
+    c_counter, _root_t, mac_t, _wallet_id, ward_id = res[:5]
     mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
     assert ward_id is not None
     sig = sign_ward_update(c_counter, mac_for_sig, ward_id)
-    return ward.confirmed_by_wm(session, c_counter, mac_t, sig, pending_id)
+    confirmed = ward.confirmed_by_wm(session, c_counter, mac_t, sig, pending_id)
+    _apply_device_leaf(tree, res)
+    return confirmed
 
 
 def _edit(
@@ -263,7 +298,7 @@ def test_ward_update(session: Session) -> None:
         session, tree, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
 
-    tree.insert(_APP, b"alice", b"data_alice_v2", counter=new_counter)
+    # _edit already synced the device's leaf blob into `tree`.
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
     assert root_mac is not None
@@ -280,7 +315,6 @@ def test_ward_insert(session: Session) -> None:
         session, tree, b"erin", b"", b"data_erin"
     )
 
-    tree.insert(_APP, b"erin", b"data_erin", counter=new_counter)
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
 
@@ -295,7 +329,6 @@ def test_ward_delete(session: Session) -> None:
         session, tree, b"alice", ENTRIES[b"alice"], b""
     )
 
-    tree.delete(_APP, b"alice")
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
 
@@ -311,16 +344,10 @@ def test_ward_counter_advances_only_at_finalize(session: Session) -> None:
     pending_id = _queue_update(
         session, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
-    c_counter, _root_t, mac_t, _wallet_id, ward_id = _perform(session, tree, pending_id)
+    c_counter, _root_t, mac_t, _wallet_id, ward_id, *_ = _perform(session, tree, pending_id)
 
     # After perform, the authenticated root/counter are still the pre-edit ones.
-    valid, membership, dev_counter, _wid = ward.lookup(
-        session, _APP,
-        address=b"alice",
-        value=ENTRIES[b"alice"],
-        counter=tree.get_counter(_APP, b"alice"),
-        proof=tree.get_proof(_APP, b"alice"),
-    )
+    valid, membership, dev_counter, _wid = _lookup_membership(session, tree, b"alice")
     assert valid and membership
     assert dev_counter == counter0  # not advanced yet
 
@@ -339,7 +366,7 @@ def test_ward_finalize_bad_signature_rejected(session: Session) -> None:
     pending_id = _queue_update(
         session, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
-    c_counter, _root_t, mac_t, _wallet_id, _ward_id = _perform(session, tree, pending_id)
+    c_counter, _root_t, mac_t, _wallet_id, _ward_id, *_ = _perform(session, tree, pending_id)
 
     bad_sig = bytes(64)  # not a valid WM signature
     with pytest.raises(TrezorFailure):
@@ -618,7 +645,8 @@ def test_ward_rejected_finalize_keeps_pending_queue(session: Session) -> None:
     pending_id = _queue_update(
         session, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
-    c_counter, _root_t, mac_t, _wallet_id, ward_id = _perform(session, tree, pending_id)
+    res = _perform(session, tree, pending_id)
+    c_counter, _root_t, mac_t, _wallet_id, ward_id = res[:5]
     assert ward_id is not None
     assert _pending_addresses(session) == [b"alice"]
 
@@ -642,7 +670,7 @@ def test_ward_rejected_finalize_keeps_pending_queue(session: Session) -> None:
     counter, new_root, _wid, _mac = ward.confirmed_by_wm(
         session, c_counter, mac_t, good_sig, pending_id
     )
-    tree.insert(_APP, b"alice", b"data_alice_v2", counter=new_counter)
+    _apply_device_leaf(tree, res)
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
     assert _pending_addresses(session) == []
@@ -670,13 +698,7 @@ def test_ward_discard_pending_clears_queue_and_unblocks(session: Session) -> Non
 
     # The counter did not move (discard is not a finalize): the authenticated
     # state is still the pre-edit tree.
-    valid, membership, dev_counter, _wid = ward.lookup(
-        session, _APP,
-        address=b"alice",
-        value=ENTRIES[b"alice"],
-        proof=tree.get_proof(_APP, b"alice"),
-        counter=tree.get_counter(_APP, b"alice"),
-    )
+    valid, membership, dev_counter, _wid = _lookup_membership(session, tree, b"alice")
     assert valid and membership
     assert dev_counter == counter0
 
@@ -684,7 +706,6 @@ def test_ward_discard_pending_clears_queue_and_unblocks(session: Session) -> Non
     pid_bob = _queue_update(session, b"bob", ENTRIES[b"bob"], b"data_bob_v2")
     assert _pending_addresses(session) == [b"bob"]
     counter, new_root, _wid, _mac = _perform_and_finalize(session, tree, pid_bob)
-    tree.insert(_APP, b"bob", b"data_bob_v2", counter=new_counter)
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
 

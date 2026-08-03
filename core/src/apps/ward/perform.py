@@ -14,8 +14,28 @@ async def perform(msg: WARDPerformUpdate) -> WARDPerformUpdateAck:
 
     from apps.common import ward as core
 
-    counter, root, mac, wallet_id, ward_id = await core.perform(msg.pending_id)
+    (
+        counter,
+        root,
+        mac,
+        wallet_id,
+        ward_id,
+        entry_key,
+        entry_type,
+        nonce,
+        tag,
+        ct,
+    ) = await core.perform(msg.pending_id)
 
     return WARDPerformUpdateAck(
-        counter=counter, new_root=root, mac=mac, wallet_id=wallet_id, ward_id=ward_id
+        counter=counter,
+        new_root=root,
+        mac=mac,
+        wallet_id=wallet_id,
+        ward_id=ward_id,
+        entry_key=entry_key,
+        entry_type=entry_type,
+        nonce=nonce,
+        tag=tag,
+        ct=ct,
     )

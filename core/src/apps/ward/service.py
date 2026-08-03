@@ -83,41 +83,118 @@ def sha256d(data: bytes) -> bytes:
 _ENTRY_TYPE_ADDRESS = "address"
 
 
-def entry_key(app_id, identifier: bytes, entry_type: str = _ENTRY_TYPE_ADDRESS) -> bytes:
-    """Domain-separated 32-byte trie key: sha256(app_id || 0x00 || type || 0x00 ||
-    identifier). This IS the trie path (there is no second path-hashing step).
+def entry_key(
+    k_index: bytes,
+    app_id,
+    identifier: bytes,
+    key_type: str = _ENTRY_TYPE_ADDRESS,
+    device_id: int = 0,
+) -> bytes:
+    """Keyed 32-byte trie path (ward-design.md §1/§3):
 
-    Because it is a HASH, a non-membership witness (which carries the neighbour's
-    entry_key) reveals only a hash of another app's identifier -- never the plaintext.
-    The counter is NOT part of entry_key (it lives in value_hash), so an entry keeps
-    one stable path across version bumps. Must stay byte-for-byte identical to the
-    host (`entryKey`) and Python reference (`_entry_key`) implementations."""
+        scope     = app_id || 0x00 || key_type || 0x00 || device_id(1B)
+        entry_key = HMAC-SHA256(K_index, scope || identifier)
+
+    A PRF-derived path, NOT an authenticator (§2.5): only a holder of K_index can
+    compute it, so the host cannot forge a path or brute-force a low-entropy
+    identifier. `device_id`=0 is a global entry; >0 is a device slot (§5). Must stay
+    byte-for-byte identical to trezorlib `ward_crypto.entry_key` and the host."""
+    from trezor.crypto import hmac as crypto_hmac
+
     if app_id is None:
         app_id = b""
     elif isinstance(app_id, str):
         app_id = app_id.encode()
-    return sha256d(app_id + b"\x00" + entry_type.encode() + b"\x00" + identifier)
+    scope = app_id + b"\x00" + key_type.encode() + b"\x00" + bytes([device_id & 0xFF])
+    return crypto_hmac(crypto_hmac.SHA256, k_index, scope + identifier).digest()
 
 
-def value_hash(counter: int, value: bytes) -> bytes:
-    """Hiding commitment to a leaf's value: sha256(counter(4B BE) || value). The
-    counter is committed here (on the value side), never in entry_key. A witness
-    reveals only this hash, so another app never sees the plaintext value. (No salt:
-    low-entropy values remain brute-forceable from value_hash -- accepted for MVP.)"""
-    return sha256d(counter.to_bytes(4, "big") + value)
+def commit_of(nonce: bytes, tag: bytes, ct: bytes) -> bytes:
+    """Keyless leaf-value commitment: sha256(0x02 || nonce || tag || len32(ct) || ct)
+    (§2.2). A host with no keys can still recompute it. len(ct)==0 is a delete."""
+    return sha256d(b"\x02" + nonce + tag + len(ct).to_bytes(4, "big") + ct)
 
 
-def leaf_hash_of(entry_key_: bytes, vhash: bytes) -> bytes:
-    """Two-level leaf: sha256(0x00 || entry_key || value_hash). Takes the value
-    commitment directly, so a verifier can rebuild a witness leaf from two hashes
-    without ever seeing the value/counter behind it."""
-    return sha256d(b"\x00" + entry_key_ + vhash)
+def leaf_hash_of(entry_key_: bytes, commit: bytes) -> bytes:
+    """Leaf: sha256(0x00 || entry_key || commit) (§2.2). Takes the commitment
+    directly, so a verifier can rebuild a witness leaf from (entry_key, commit)."""
+    return sha256d(b"\x00" + entry_key_ + commit)
 
 
-def leaf_hash(entry_key_: bytes, counter: int, value: bytes) -> bytes:
-    """Convenience leaf hash when the caller holds the plaintext value+counter (its
-    own entry): leaf_hash_of(entry_key, value_hash(counter, value))."""
-    return leaf_hash_of(entry_key_, value_hash(counter, value))
+def leaf_hash(entry_key_: bytes, nonce: bytes, tag: bytes, ct: bytes) -> bytes:
+    """Leaf hash from the encrypted blob: leaf_hash_of(entry_key, commit_of(...))."""
+    return leaf_hash_of(entry_key_, commit_of(nonce, tag, ct))
+
+
+# --- leaf value codec (ChaCha20-Poly1305 RFC-7539, 12-byte nonce, §2.1) ---
+
+_AEAD_BUCKETS = (64, 256, 1024, 4096)
+
+
+def _aead_aad(entry_key_: bytes, entry_type: str) -> bytes:
+    return b"\x02" + entry_key_ + entry_type.encode()
+
+
+def _pad_bucket(pt: bytes) -> bytes:
+    for b in _AEAD_BUCKETS:
+        if len(pt) <= b:
+            return pt + b"\x00" * (b - len(pt))
+    rem = (-len(pt)) % _AEAD_BUCKETS[-1]
+    return pt + b"\x00" * rem
+
+
+def encrypt_leaf(
+    k_data: bytes,
+    entry_key_: bytes,
+    entry_type: str,
+    c_leaf: int,
+    identifier: bytes,
+    value: bytes,
+) -> tuple:
+    """Return (nonce, tag, ct). nonce is fresh-random per write (§4.5)."""
+    from trezor.crypto import chacha20poly1305_encrypt, random
+
+    nonce = random.bytes(12)
+    pt = _pad_bucket(
+        c_leaf.to_bytes(4, "big")
+        + len(identifier).to_bytes(2, "big")
+        + identifier
+        + len(value).to_bytes(4, "big")
+        + value
+    )
+    cipher = chacha20poly1305_encrypt(k_data, nonce)
+    cipher.auth(_aead_aad(entry_key_, entry_type))
+    ct = cipher.encrypt(pt)
+    tag = cipher.finish()
+    return nonce, tag, ct
+
+
+def decrypt_leaf(
+    k_data: bytes,
+    entry_key_: bytes,
+    entry_type: str,
+    nonce: bytes,
+    tag: bytes,
+    ct: bytes,
+) -> tuple:
+    """Return (c_leaf, identifier, value). Raises on tag mismatch (hard abort, §3.1)."""
+    from trezor.crypto import AuthenticationError, chacha20poly1305_decrypt
+
+    cipher = chacha20poly1305_decrypt(k_data, nonce)
+    cipher.auth(_aead_aad(entry_key_, entry_type))
+    pt = cipher.decrypt(ct)
+    try:
+        cipher.finish(tag)
+    except AuthenticationError:
+        raise ValueError("WARD leaf AEAD tag mismatch")
+    c_leaf = int.from_bytes(pt[0:4], "big")
+    id_len = int.from_bytes(pt[4:6], "big")
+    off = 6 + id_len
+    identifier = pt[6:off]
+    val_len = int.from_bytes(pt[off : off + 4], "big")
+    off += 4
+    value = pt[off : off + val_len]
+    return c_leaf, identifier, value
 
 
 def addr_bit(entry_key_: bytes, bit: int) -> int:
@@ -144,15 +221,16 @@ def reconstruct(start_hash: bytes, proof: list, entry_key_: bytes) -> bytes:
 
 def verify_proof(
     entry_key_: bytes,
-    counter: int,
-    value: bytes,
+    nonce: bytes,
+    tag: bytes,
+    ct: bytes,
     proof: list,
     expected_root: bytes,
 ) -> bool:
-    """Verify an MPT membership proof for (entry_key, counter, value) against
-    expected_root. The caller holds its own value+counter, so it forms the leaf
-    directly."""
-    node = leaf_hash(entry_key_, counter, value)
+    """Verify an MPT membership proof for the leaf blob (nonce, tag, ct) at
+    entry_key against expected_root. The device forms the leaf from the encrypted
+    blob (commit -> leaf) it holds."""
+    node = leaf_hash(entry_key_, nonce, tag, ct)
     node = reconstruct(node, proof, entry_key_)
     return node == expected_root
 
@@ -160,21 +238,17 @@ def verify_proof(
 def verify_nonmembership(
     entry_key_: bytes,
     witness_entry_key: bytes,
-    witness_value_hash: bytes,
+    witness_commit: bytes,
     proof: list,
     expected_root: bytes,
 ) -> bool:
     """Verify that entry_key is NOT in the tree.
 
-    The caller supplies a witness leaf as two hashes -- (witness_entry_key,
-    witness_value_hash) -- that occupies entry_key's path, revealing nothing about
-    the witness's plaintext identifier or value. We verify:
-      1. The witness leaf, rebuilt from the two hashes, is in the tree.
-      2. witness_entry_key != entry_key.
-      3. witness_entry_key and entry_key share the same bit at every proof position
-         (the witness is the closest leaf to entry_key's path).
-    Soundness: rebuilding the leaf from witness_entry_key binds the presented key to
-    the in-tree leaf, so a lying key cannot pass."""
+    The witness leaf is supplied as two hashes -- (witness_entry_key,
+    witness_commit) -- that occupies entry_key's path, revealing nothing about the
+    witness's plaintext identifier or value. We verify: (1) the witness leaf
+    rebuilt from the two hashes is in the tree; (2) witness_entry_key != entry_key;
+    (3) both share the same bit at every proof position (closest leaf)."""
     if witness_entry_key == entry_key_:
         return False
 
@@ -183,46 +257,39 @@ def verify_nonmembership(
         if addr_bit(entry_key_, bit) != addr_bit(witness_entry_key, bit):
             return False
 
-    witness_leaf = leaf_hash_of(witness_entry_key, witness_value_hash)
+    witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
     return reconstruct(witness_leaf, proof, witness_entry_key) == expected_root
 
 
 def compute_new_root(
     entry_key_: bytes,
-    old_counter: int,
-    old_value: bytes,
-    new_counter: int,
-    new_value: bytes,
+    old_leaf,
+    new_leaf,
     proof: list,
     stored_root,
     witness_entry_key=None,
-    witness_value_hash=None,
+    witness_commit=None,
 ):
-    """Verify (old_counter, old_value, proof) against stored_root, then compute
-    the new root. Returns the new root (None if the tree becomes/stays empty),
-    or raises ValueError if the old-state proof does not verify. Single
-    implementation of the INIT/INSERT/UPDATE/DELETE state machine; update_entry()
-    enforces new_counter == current root counter + 1.
-
-    The write target is the caller's own entry, so old_counter/old_value are the
-    plaintext it already holds. An INSERT witness is a neighbour that may belong to
-    another app, so it is supplied privacy-preservingly as (witness_entry_key,
-    witness_value_hash) -- two hashes only.
-    """
-    inserting = len(old_value) == 0
-    deleting = len(new_value) == 0
+    """Verify the old state (old_leaf, proof) against stored_root, then compute the
+    new root. `old_leaf`/`new_leaf` are (nonce, tag, ct) tuples the device produced,
+    or None: old_leaf=None => INSERT, new_leaf=None => DELETE. Returns the new root
+    (None if the tree becomes/stays empty), or raises ValueError if the old-state
+    proof does not verify. INSERT's witness neighbour may belong to another app, so
+    it is supplied privacy-preservingly as (witness_entry_key, witness_commit)."""
+    inserting = old_leaf is None
+    deleting = new_leaf is None
     if inserting and deleting:
-        raise ValueError("old_value and new_value cannot both be empty")
+        raise ValueError("old_leaf and new_leaf cannot both be empty")
 
     if inserting:
         if len(proof) == 0 and witness_entry_key is None:
             # INIT: tree was empty
             if stored_root is not None:
                 raise ValueError("Tree is not empty; supply non-membership proof")
-            return leaf_hash(entry_key_, new_counter, new_value)
+            return leaf_hash(entry_key_, new_leaf[0], new_leaf[1], new_leaf[2])
 
-        if witness_entry_key is None or witness_value_hash is None:
-            raise ValueError("witness_entry_key/witness_value_hash required for INSERT")
+        if witness_entry_key is None or witness_commit is None:
+            raise ValueError("witness_entry_key/witness_commit required for INSERT")
         if witness_entry_key == entry_key_:
             raise ValueError("witness_entry_key must differ from entry_key")
 
@@ -231,7 +298,7 @@ def compute_new_root(
             if addr_bit(entry_key_, bit) != addr_bit(witness_entry_key, bit):
                 raise ValueError("Witness does not occupy target's path")
 
-        witness_leaf = leaf_hash_of(witness_entry_key, witness_value_hash)
+        witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
         witness_in_tree = reconstruct(witness_leaf, proof, witness_entry_key)
         if witness_in_tree != stored_root:
             raise ValueError("Non-membership proof invalid: witness not in tree")
@@ -244,7 +311,7 @@ def compute_new_root(
         if split_bit is None:
             raise ValueError("entry_key and witness_entry_key are equal")
 
-        new_leaf_t = leaf_hash(entry_key_, new_counter, new_value)
+        new_leaf_t = leaf_hash(entry_key_, new_leaf[0], new_leaf[1], new_leaf[2])
         if addr_bit(entry_key_, split_bit) == 0:
             new_branch = internal_hash(new_leaf_t, witness_leaf)
         else:
@@ -254,7 +321,7 @@ def compute_new_root(
     if deleting:
         if stored_root is None:
             raise ValueError("No Merkle root stored on device")
-        current_leaf = leaf_hash(entry_key_, old_counter, old_value)
+        current_leaf = leaf_hash(entry_key_, old_leaf[0], old_leaf[1], old_leaf[2])
         if reconstruct(current_leaf, proof, entry_key_) != stored_root:
             raise ValueError("Old value proof invalid")
         if len(proof) == 0:
@@ -262,13 +329,14 @@ def compute_new_root(
         sibling_hash = bytes(proof[0][1:])
         return reconstruct(sibling_hash, proof[1:], entry_key_)
 
-    # UPDATE (new_counter is the global stamp; validated by update_entry)
+    # UPDATE
     if stored_root is None:
         raise ValueError("No Merkle root stored on device")
-    current_leaf = leaf_hash(entry_key_, old_counter, old_value)
+    current_leaf = leaf_hash(entry_key_, old_leaf[0], old_leaf[1], old_leaf[2])
     if reconstruct(current_leaf, proof, entry_key_) != stored_root:
         raise ValueError("Old value proof invalid")
-    return reconstruct(leaf_hash(entry_key_, new_counter, new_value), proof, entry_key_)
+    new_leaf_h = leaf_hash(entry_key_, new_leaf[0], new_leaf[1], new_leaf[2])
+    return reconstruct(new_leaf_h, proof, entry_key_)
 
 
 # ---------------------------------------------------------------------------
@@ -385,6 +453,72 @@ async def _derive_mac_key(domain: bytes) -> bytes:
     return crypto_hmac(crypto_hmac.SHA256, base_key, wallet_id).digest()
 
 
+async def _derive_k_index() -> bytes:
+    """K_index = SLIP21(seed, [b"ward", b"K_index"]).key() -- the HMAC key that
+    derives every entry_key path (§1). Seed-scoped and shared across the wallet's
+    devices; the per-device axis lives in the entry_key scope, not the key."""
+    from apps.common import seed as seed_module
+    from apps.common.seed import Slip21Node
+
+    s = await seed_module.get_seed()
+    node = Slip21Node(s)
+    node.derive_path([b"ward", b"K_index"])
+    return node.key()
+
+
+async def _derive_k_data(key_type: str) -> bytes:
+    """K_data(key_type) = SLIP21(seed, [b"ward", b"K_data", key_type]).key() -- a
+    separate AEAD key per entry type (§1), so a PUSH export can hand a host only the
+    types it may decrypt. Must match trezorlib ward_crypto.derive_k_data."""
+    from apps.common import seed as seed_module
+    from apps.common.seed import Slip21Node
+
+    s = await seed_module.get_seed()
+    node = Slip21Node(s)
+    node.derive_path([b"ward", b"K_data", key_type.encode()])
+    return node.key()
+
+
+async def entry_key_for(
+    app_id, identifier: bytes, key_type: str = _ENTRY_TYPE_ADDRESS, device_id: int = 0
+) -> bytes:
+    """Compute the opaque entry_key path for (app_id, identifier) under the active
+    wallet's K_index. Used by the Core gateway to build a WARDProofRequest without
+    leaking the identifier to the host."""
+    k_index = await _derive_k_index()
+    return entry_key(k_index, app_id, identifier, key_type, device_id)
+
+
+async def _confirm_export_keys(key_type: str) -> None:
+    """Trusted confirmation before handing WARD keys to the host (PUSH). Exporting
+    K_index + K_data(key_type) lets the host compute paths and decrypt values for
+    this entry type -- a deliberate, user-approved downgrade of the "host holds no
+    keys" property. Raises ActionCancelled if the user rejects."""
+    from trezor.enums import ButtonRequestType
+    from trezor.ui.layouts import confirm_properties
+
+    await confirm_properties(
+        "ward_export_keys",
+        "Share WARD keys",
+        [
+            ("Give this app the ability to read your", key_type, False),
+            ("entries?", "The app will be able to compute and decrypt them.", False),
+        ],
+        hold=True,
+        br_code=ButtonRequestType.ProtectCall,
+    )
+
+
+async def export_keys(key_type: str = _ENTRY_TYPE_ADDRESS) -> tuple:
+    """PUSH key export: after user confirmation, return (K_index, K_data(key_type)).
+    K_sig is never exported. Per-type K_data means the host only gains the ability to
+    read the requested entry type. Returns (k_index, k_data)."""
+    await _confirm_export_keys(key_type)
+    k_index = await _derive_k_index()
+    k_data = await _derive_k_data(key_type)
+    return k_index, k_data
+
+
 def _compute_mac(key: bytes, *parts: bytes) -> bytes:
     """HMAC-SHA256(key, concatenation of parts)."""
     from trezor.crypto import hmac as crypto_hmac
@@ -402,29 +536,24 @@ def _compute_mac(key: bytes, *parts: bytes) -> bytes:
 
 def compute_root(
     entry_key_: bytes,
-    old_counter: int,
-    old_value: bytes,
-    new_counter: int,
-    new_value: bytes,
+    old_leaf,
+    new_leaf,
     proof: list[bytes],
     stored_root: bytes | None,
     witness_entry_key: bytes | None = None,
-    witness_value_hash: bytes | None = None,
+    witness_commit: bytes | None = None,
 ) -> bytes | None:
-    """Verify the old-state proof against stored_root and return the candidate
-    new root (None if the tree becomes/stays empty). Raises ValueError on a
-    proof that does not verify.
-    """
+    """Verify the old-state proof against stored_root and return the candidate new
+    root (None if the tree becomes/stays empty). `old_leaf`/`new_leaf` are
+    (nonce, tag, ct) tuples or None (INSERT/DELETE)."""
     return compute_new_root(
         entry_key_,
-        old_counter,
-        old_value,
-        new_counter,
-        new_value,
+        old_leaf,
+        new_leaf,
         proof,
         stored_root,
         witness_entry_key=witness_entry_key,
-        witness_value_hash=witness_value_hash,
+        witness_commit=witness_commit,
     )
 
 
@@ -539,13 +668,19 @@ async def discard(
 
 
 async def lookup_label(
-    app_id, address: bytes, value: bytes, proof: list[bytes], counter: int
+    app_id,
+    address: bytes,
+    nonce: bytes,
+    tag: bytes,
+    ct: bytes,
+    proof: list[bytes],
+    key_type: str = _ENTRY_TYPE_ADDRESS,
+    device_id: int = 0,
 ) -> bytes | None:
-    """On-device label lookup: authenticate (app_id, address, value) against the
-    active wallet's stored WARD root and return the verified value, or None if it
-    does not verify (or the tree is empty). Membership-only (the trust-anchor
-    primitive behind Core.lookup_label). The label is bound to its domain: the
-    proof is verified over entry_key(app_id, address).
+    """On-device membership label lookup: authenticate the leaf blob (nonce, tag,
+    ct) at entry_key against the active wallet's stored root and, if it verifies,
+    decrypt and return the value; else None (or empty tree). The proof is verified
+    over entry_key = HMAC(K_index, app_id||0x00||key_type||0x00||device_id||address).
     """
     import storage.ward_head as ward_head
 
@@ -553,10 +688,13 @@ async def lookup_label(
     present, stored_root = ward_head.root_get(wallet_id)
     if not present or stored_root is None:
         return None
-    ek = entry_key(app_id, address)
-    if verify_proof(ek, counter, value, proof, stored_root):
-        return value
-    return None
+    k_index = await _derive_k_index()
+    ek = entry_key(k_index, app_id, address, key_type, device_id)
+    if not verify_proof(ek, nonce, tag, ct, proof, stored_root):
+        return None
+    k_data = await _derive_k_data(key_type)
+    _c, _id, value = decrypt_leaf(k_data, ek, key_type, nonce, tag, ct)
+    return value
 
 
 # ---------------------------------------------------------------------------
@@ -679,27 +817,28 @@ async def queue(
 async def lookup(
     app_id,
     address: bytes,
-    value: bytes | None,
+    nonce: bytes | None,
+    tag: bytes | None,
+    ct: bytes | None,
     proof: list[bytes],
+    key_type: str = _ENTRY_TYPE_ADDRESS,
+    device_id: int = 0,
     witness_entry_key: bytes | None = None,
-    witness_value_hash: bytes | None = None,
-    counter: int | None = None,
+    witness_commit: bytes | None = None,
 ) -> tuple[bool, int, bool, bytes, bytes]:
     """Verify a membership / non-membership proof against the device's
-    authenticated root, within the domain named by app_id. Returns
-    (valid, counter, membership, wallet_id, ward_id).
+    authenticated root. Returns (valid, counter, membership, wallet_id, ward_id).
 
-    The target key is formed on-device: entry_key(app_id, address). A non-membership
-    witness is a tree-internal neighbour that may live in ANY domain, so it is
-    supplied privacy-preservingly as two hashes -- (witness_entry_key,
-    witness_value_hash) -- and used opaquely (never re-keyed and never revealing the
-    neighbour's plaintext identifier or value).
+    The target path is formed on-device: entry_key = HMAC(K_index,
+    app_id||0x00||key_type||0x00||device_id||address). Membership carries the leaf
+    blob (nonce, tag, ct); a non-membership witness is two hashes only
+    (witness_entry_key, witness_commit), used opaquely.
     """
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
-    membership_query = witness_entry_key is None and value is not None
+    membership_query = witness_entry_key is None and ct is not None
 
     wallet_id = await _get_wallet_id()
     ward_id = await _get_ward_id()
@@ -717,20 +856,17 @@ async def lookup(
             ward_id,
         )
 
-    ek = entry_key(app_id, address)
+    k_index = await _derive_k_index()
+    ek = entry_key(k_index, app_id, address, key_type, device_id)
     if not membership_query:
-        if witness_value_hash is None:
-            raise DataError(
-                "witness_value_hash required for non-membership proof"
-            )
+        if witness_commit is None:
+            raise DataError("witness_commit required for non-membership proof")
         valid = verify_nonmembership(
-            ek, witness_entry_key, witness_value_hash, proof, stored_root
+            ek, witness_entry_key, witness_commit, proof, stored_root
         )
         membership = False
     else:
-        if counter is None:
-            raise DataError("counter required for membership proof")
-        valid = verify_proof(ek, counter, value, proof, stored_root)
+        valid = verify_proof(ek, nonce, tag, ct, proof, stored_root)
         membership = True
 
     if __debug__:
@@ -751,11 +887,15 @@ async def lookup(
     return valid, ward_store.get_counter(wallet_id), membership, wallet_id, ward_id
 
 
-async def intent(pending_id: int | None) -> tuple[int, bytes, bytes]:
-    """Resolve pending_id to (resolved_pending_id, address, app_id) for the active
-    wallet. The Core gateway calls this to build the WARDProofRequest (naming the
-    address, its domain, and the pending_id) before pulling the proof for
-    WARDPerformUpdate, so the host serves the proof for the right domain."""
+async def intent(pending_id: int | None) -> tuple[int, bytes]:
+    """Resolve pending_id to (resolved_pending_id, entry_key) for the active wallet.
+    The Core gateway calls this to build the WARDProofRequest carrying the opaque
+    entry_key (computed on-device from the queued intent's app_id/address) before
+    pulling the proof for WARDPerformUpdate. The host serves the proof purely by
+    entry_key and never learns the identifier or domain.
+
+    NOTE: key_type/device_id default to "address"/0 for now (not yet persisted in the
+    pending record); revisit when the store frames them (see TODO_Entry_key_as_MAC)."""
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
@@ -766,40 +906,39 @@ async def intent(pending_id: int | None) -> tuple[int, bytes, bytes]:
         raise DataError("no queued intent to perform")
     _counter, _state, address, _ov, _nv, _root, _mac, app_id = rec
 
+    k_index = await _derive_k_index()
+    ek = entry_key(k_index, app_id, address)
+
     if __debug__:
         from trezor import log
 
-        log.debug(
-            __name__,
-            "intent: wallet_id=%s pending_id=%d address=%s",
-            wallet_id,
-            pid,
-            address,
-        )
+        log.debug(__name__, "intent: wallet_id=%s pending_id=%d", wallet_id, pid)
 
-    return pid, address, app_id
+    return pid, ek
 
 
 async def perform(
     pending_id: int | None,
-    value: bytes | None,
+    ack_nonce: bytes | None,
+    ack_tag: bytes | None,
+    ack_ct: bytes | None,
     proof: list[bytes],
-    counter: int | None,
     witness_entry_key: bytes | None = None,
-    witness_value_hash: bytes | None = None,
-) -> tuple[int, bytes | None, bytes | None, bytes, bytes]:
+    witness_commit: bytes | None = None,
+) -> tuple:
     """Authorize a queued intent using a proof the device PULLED on demand.
 
-    The proof package (value/counter for membership, witness_* for non-membership,
-    empty for an empty tree) is the authoritative current state. This is where the
-    candidate counter is FIRST derived under the strict model: the device is the
-    counter authority and sets counter_T = current authenticated counter + 1 here,
-    inside the WM-synchronized flow -- never at queue time and never from host/app
-    input. Verifies the proof against the stored root, computes (root_T, mac_T) for
-    counter_T, persists counter_T, and marks the intent COMMITTED. The durable
-    counter floor is NOT advanced (that happens at confirm). pending_id selects the
-    intent; if omitted, falls back to the single queued one. Returns
-    (counter_T, root_T, mac_T, wallet_id, ward_id).
+    The pulled ack is the authoritative current state: (nonce, tag, ct) for a
+    membership leaf (UPDATE/DELETE), witness_* for non-membership (INSERT), or empty
+    for an empty tree (INIT). The device derives counter_T = current authenticated
+    counter + 1, encrypts the queued new_value into a fresh leaf blob (the device is
+    the encryptor, §4), computes (root_T, mac_T), persists counter_T, and marks the
+    intent COMMITTED. Since the host cannot compute the encrypted leaf itself, the
+    new blob (entry_key, entry_type, nonce, tag, ct) is returned so the host can
+    store it (ct empty => DELETE). Returns
+    (counter_T, root_T, mac_T, wallet_id, ward_id, entry_key, entry_type, nonce, tag, ct).
+
+    NOTE: key_type/device_id default to "address"/0 (not yet persisted per-intent).
     """
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
@@ -811,73 +950,62 @@ async def perform(
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no queued intent to perform")
-    _counter, _state, _address, _old_value, new_value, _root, _mac, app_id = rec
+    _counter, _state, address, _old_value, new_value, _root, _mac, app_id = rec
 
-    # Bind the candidate to its domain: the leaf key is entry_key(app_id, address),
-    # so this write can only ever produce a leaf under the domain the user approved
-    # at queue time -- it structurally cannot reach another domain's entry.
-    ek = entry_key(app_id, _address)
+    key_type = _ENTRY_TYPE_ADDRESS
+    device_id = 0
+    k_index = await _derive_k_index()
+    # Bind the candidate to its domain/scope: entry_key = HMAC(K_index, scope||id),
+    # so this write can only ever produce a leaf under the scope the user approved.
+    ek = entry_key(k_index, app_id, address, key_type, device_id)
 
-    # Strict model: derive the candidate counter now, from the device's current
-    # authenticated floor -- not from the (unset) queue-time value.
+    # Strict model: derive the candidate counter now, from the device's floor.
     counter_t = ward_store.get_counter(wallet_id) + 1
 
     present, stored_root = ward_head.root_get(wallet_id)
     if not present:
-        # Fresh-wallet INIT: treat "no root in session" as an authenticated empty
-        # tree only when the durable counter floor is still zero.
-        # TODO(handoff, gap 1): this cold-starts a first write without requiring a
-        # prior attested/reconciled round in-session, so firmware alone can't detect a
-        # wrongful cold-start (it leans on the WM co-sign + server CAS). Harden by
-        # requiring an attested round before the first perform. See gaps.md #1.
+        # Fresh-wallet INIT (see gaps.md #1): empty tree only when the floor is 0.
         if ward_store.get_counter(wallet_id) == 0:
             stored_root = None
         else:
             raise DataError("no authenticated root in session")
 
-    # Membership -> value + counter (UPDATE/DELETE); non-membership -> witness_*
-    # (INSERT); empty tree -> no proof (INIT). compute_new_root keys INSERT/INIT off
-    # an empty old_value, so map an absent pulled value to b"".
-    old_value = value if value is not None else b""
-    old_counter = counter if counter is not None else 0
+    # membership ack (UPDATE/DELETE) carries the old leaf blob; witness => INSERT.
+    old_leaf = None
+    if ack_ct is not None and witness_entry_key is None:
+        old_leaf = (ack_nonce, ack_tag, ack_ct)
 
-    if __debug__:
-        from trezor import log
-
-        log.debug(
-            __name__,
-            "perform: verify pending_id=%d wallet_id=%s counter_T=%d proof_len=%d old_counter=%d witness=%s",
-            pid,
-            wallet_id,
-            counter_t,
-            len(proof),
-            old_counter,
-            "yes" if witness_entry_key is not None else "no",
+    # The device encrypts the queued new_value into a fresh leaf (empty => DELETE).
+    deleting = len(new_value) == 0
+    if deleting:
+        new_leaf = None
+        out_nonce, out_tag, out_ct = b"", b"", b""
+    else:
+        k_data = await _derive_k_data(key_type)
+        out_nonce, out_tag, out_ct = encrypt_leaf(
+            k_data, ek, key_type, counter_t, address, new_value
         )
+        new_leaf = (out_nonce, out_tag, out_ct)
 
     try:
         root_t = compute_new_root(
             ek,
-            old_counter,
-            old_value,
-            counter_t,
-            new_value,
+            old_leaf,
+            new_leaf,
             proof,
             stored_root,
             witness_entry_key=witness_entry_key,
-            witness_value_hash=witness_value_hash,
+            witness_commit=witness_commit,
         )
     except ValueError as e:
         raise DataError(str(e))
 
-    # Candidate MAC binds wallet_id and counter_T to root_T.
     if root_t is not None:
         mac_key = await _derive_mac_key(b"root_mac")
         mac_t = _compute_mac(mac_key, wallet_id, counter_t.to_bytes(4, "big"), root_t)
     else:
         mac_t = None
 
-    # Persist the just-derived counter_T alongside the computed (root_T, mac_T).
     ward_store.queue_set_computed(wallet_id, pid, counter_t, root_t, mac_t)
 
     if __debug__:
@@ -885,7 +1013,7 @@ async def perform(
 
         log.debug(
             __name__,
-            "perform: computed candidate wallet_id=%s pending_id=%d counter_T=%d root_T=%s",
+            "perform: candidate wallet_id=%s pending_id=%d counter_T=%d root_T=%s",
             wallet_id,
             pid,
             counter_t,
@@ -893,7 +1021,18 @@ async def perform(
         )
 
     ward_id = await _get_ward_id()
-    return counter_t, root_t, mac_t, wallet_id, ward_id
+    return (
+        counter_t,
+        root_t,
+        mac_t,
+        wallet_id,
+        ward_id,
+        ek,
+        key_type,
+        out_nonce,
+        out_tag,
+        out_ct,
+    )
 
 
 async def finalize(

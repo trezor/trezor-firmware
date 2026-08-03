@@ -21,11 +21,13 @@ async def show_with_proof(msg: "DisplayAddressWithProof") -> "Success":
         status, label = await ward_core.verify_label(
             "display_address",
             msg.address.encode(),
-            msg.value,
+            msg.nonce,
+            msg.tag,
+            msg.ct,
             msg.proof,
-            msg.counter,
+            entry_type=msg.entry_type or "address",
             witness_entry_key=msg.witness_entry_key,
-            witness_value_hash=msg.witness_value_hash,
+            witness_commit=msg.witness_commit,
             domain=msg.app_id,
         )
     except DataError as e:

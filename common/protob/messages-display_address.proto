@@ -49,11 +49,15 @@ message DisplayAddressWithProof {
     optional string subtitle = 3;         // custom subtitle
     optional bool case_sensitive = 4 [default = true];
     optional bool chunkify = 5;           // display the address in chunks of 4 characters
-    optional bytes  value              = 6;  // membership: the value stored at address
+    reserved 6;                              // was plaintext value; membership now carries (nonce,tag,ct)
     repeated bytes  proof              = 7;  // sibling hashes, leaf-to-root (33 bytes each)
-    optional uint32 counter            = 8;  // membership: leaf counter for address
-    optional bytes  witness_entry_key  = 9;  // non-membership: witness leaf entry_key (32B hash; reveals no plaintext)
-    optional bytes  witness_value_hash = 10; // non-membership: witness leaf value_hash = sha256(counter||value)
-    reserved 11;                             // was witness_counter; now committed inside witness_value_hash
+    reserved 8;                              // was counter; C_leaf now lives inside ct
+    optional bytes  witness_entry_key  = 9;  // non-membership: witness leaf entry_key (32B; reveals no plaintext)
+    optional bytes  witness_commit     = 10; // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
+    reserved 11;                             // was witness_counter
     optional string app_id             = 12; // WARD domain to resolve the label in (entry_key input); default "display_address"
+    optional string entry_type         = 13; // clear entry_type (selects K_data); default "address"
+    optional bytes  nonce              = 14; // membership: 12B AEAD nonce
+    optional bytes  tag                = 15; // membership: 16B Poly1305 tag
+    optional bytes  ct                 = 16; // membership: AEAD ciphertext
 }

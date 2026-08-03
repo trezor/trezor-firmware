@@ -12,7 +12,12 @@ from trezorlib import exceptions, ward
 from trezorlib.authdb_tree import WARDTree
 from trezorlib.debuglink import DebugSession as Session
 
-from ...ward_mgr_emu import WMEmulator, wm_initial_sync
+from ...ward_mgr_emu import WMEmulator, device_ward_keys, wm_initial_sync
+
+# The host tree must use the DEVICE's WARD keys (reproduced from the known test
+# seed) so its entry_keys/leaf commits match what the device computes and its
+# membership proofs verify on-device.
+_K_INDEX, _K_DATA = device_ward_keys()
 
 _APP = "bitcoin"  # capability principal == queried domain for these tests
 
@@ -24,13 +29,34 @@ _VALUE = b'TEST:1:{"label":"label1"}'
 _OTHER_VALUE = b'TEST:1:{"label":"label2"}'
 
 
+def _tree() -> WARDTree:
+    """A host WARDTree keyed by the device's K_index/K_data (so proofs verify)."""
+    return WARDTree(_K_INDEX, _K_DATA)
+
+
 def _foreign_tree() -> WARDTree:
     """A tree the device has never seen, with leaves stamped as a real history
     would leave them (counters 1 and 2 => global counter 2)."""
-    tree = WARDTree()
+    tree = _tree()
     tree.insert(_APP, _ADDRESS.encode(), _VALUE, counter=1)
     tree.insert(_APP, _OTHER.encode(), _OTHER_VALUE, counter=2)
     return tree
+
+
+def _lookup(session: Session, tree: WARDTree, address: str):
+    """Membership lookup with the new WARDLookup signature: the leaf blob
+    (nonce, tag, ct) + proof, keyed by the device-formed entry_key."""
+    blob = tree.leaf_blob(_APP, address.encode())
+    assert blob is not None, f"{address} not in tree"
+    return ward.lookup(
+        session,
+        _APP,
+        address.encode(),
+        tree.get_proof(_APP, address.encode()),
+        nonce=blob[0],
+        tag=blob[1],
+        ct=blob[2],
+    )
 
 
 def test_ward_initial_sync_adopts_foreign_tree(session: Session) -> None:
@@ -46,24 +72,12 @@ def test_ward_initial_sync_adopts_foreign_tree(session: Session) -> None:
     assert root_mac is not None
 
     # The adopted root is genuinely authenticated: membership proofs verify
-    # on-device against it, at the leaf counters the WM committed.
-    valid, membership, current, _wallet_id = ward.lookup(
-        session, _APP,
-        _ADDRESS.encode(),
-        _VALUE,
-        tree.get_proof(_APP, _ADDRESS.encode()),
-        counter=1,
-    )
+    # on-device against it.
+    valid, membership, current, _wallet_id = _lookup(session, tree, _ADDRESS)
     assert valid and membership
     assert current == 2
 
-    valid, membership, _current, _wallet_id = ward.lookup(
-        session, _APP,
-        _OTHER.encode(),
-        _OTHER_VALUE,
-        tree.get_proof(_APP, _OTHER.encode()),
-        counter=2,
-    )
+    valid, membership, _current, _wallet_id = _lookup(session, tree, _OTHER)
     assert valid and membership
 
 
@@ -95,13 +109,7 @@ def test_ward_initial_sync_rejects_incorrect_wm_signature(session: Session) -> N
     with pytest.raises(
         exceptions.TrezorFailure, match="no authenticated root in session"
     ):
-        ward.lookup(
-            session, _APP,
-            _ADDRESS.encode(),
-            _VALUE,
-            tree.get_proof(_APP, _ADDRESS.encode()),
-            counter=1,
-        )
+        _lookup(session, tree, _ADDRESS)
 
 
 def test_ward_initial_sync_empty_tree(session: Session) -> None:
@@ -121,7 +129,7 @@ def test_ward_sync_refresh_moves_counter_forward(session: Session) -> None:
     device forward to the newer tree (refresh, not just initial bootstrap)."""
     wm = WMEmulator()
 
-    tree1 = WARDTree()
+    tree1 = _tree()
     tree1.insert(_APP, _ADDRESS.encode(), _VALUE, counter=1)
     counter, root1, _mac = wm_initial_sync(session, wm, tree1, counter=1)
     assert counter == 1
@@ -133,13 +141,7 @@ def test_ward_sync_refresh_moves_counter_forward(session: Session) -> None:
     assert root2 == tree2.get_root_hash()
 
     # The refreshed root authenticates the newly-added entry at the new counter.
-    valid, membership, current, _wallet_id = ward.lookup(
-        session, _APP,
-        _OTHER.encode(),
-        _OTHER_VALUE,
-        tree2.get_proof(_APP, _OTHER.encode()),
-        counter=2,
-    )
+    valid, membership, current, _wallet_id = _lookup(session, tree2, _OTHER)
     assert valid and membership
     assert current == 2
 
@@ -241,7 +243,7 @@ def test_ward_sync_rejects_rollback_after_progress(session: Session) -> None:
     carrying the older counter 1 is rejected."""
     wm = WMEmulator()
 
-    tree1 = WARDTree()
+    tree1 = _tree()
     tree1.insert(_APP, _ADDRESS.encode(), _VALUE, counter=1)
     wm_initial_sync(session, wm, tree1, counter=1)
     _counter, root2, _mac = wm_initial_sync(session, wm, _foreign_tree(), counter=2)

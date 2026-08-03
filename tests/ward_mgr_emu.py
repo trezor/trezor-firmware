@@ -119,6 +119,22 @@ def _slip21_key(seed: bytes, path: list[bytes]) -> bytes:
     return data[32:64]
 
 
+def device_ward_keys(
+    key_type: str = "address",
+    mnemonic: str = DEFAULT_MNEMONIC,
+    passphrase: str = "",
+) -> tuple[bytes, bytes]:
+    """Reproduce the device's WARD keys (K_index, K_data(key_type)) from the known
+    test seed, so a host-side WARDTree computes the SAME entry_keys / leaf commits
+    the device does and its proofs verify on-device. Mirrors
+    ``apps.ward.service._derive_k_index`` / ``_derive_k_data`` and
+    ``trezorlib.ward_crypto`` (SLIP-21 under m/"ward")."""
+    seed = mnemonic_to_seed(mnemonic, passphrase)
+    k_index = _slip21_key(seed, [b"ward", b"K_index"])
+    k_data = _slip21_key(seed, [b"ward", b"K_data", key_type.encode()])
+    return k_index, k_data
+
+
 class WMEmulator:
     """A full in-harness WARD Manager: it signs freshness attestations AND, using
     the known test seed, reproduces the device-keyed ``root_mac`` so it can attest

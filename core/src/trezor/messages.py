@@ -444,23 +444,17 @@ if TYPE_CHECKING:
         script_type: "InputScriptType"
         ignore_xpub_magic: "bool | None"
         chunkify: "bool | None"
-        ward_value: "AnyBytes | None"
-        ward_proof: "list[AnyBytes]"
-        ward_counter: "int | None"
 
         def __init__(
             self,
             *,
             address_n: "list[int] | None" = None,
-            ward_proof: "list[AnyBytes] | None" = None,
             coin_name: "str | None" = None,
             show_display: "bool | None" = None,
             multisig: "MultisigRedeemScriptType | None" = None,
             script_type: "InputScriptType | None" = None,
             ignore_xpub_magic: "bool | None" = None,
             chunkify: "bool | None" = None,
-            ward_value: "AnyBytes | None" = None,
-            ward_counter: "int | None" = None,
         ) -> None:
             pass
 
@@ -3470,12 +3464,14 @@ if TYPE_CHECKING:
         subtitle: "str | None"
         case_sensitive: "bool"
         chunkify: "bool | None"
-        value: "AnyBytes | None"
         proof: "list[AnyBytes]"
-        counter: "int | None"
         witness_entry_key: "AnyBytes | None"
-        witness_value_hash: "AnyBytes | None"
+        witness_commit: "AnyBytes | None"
         app_id: "str | None"
+        entry_type: "str | None"
+        nonce: "AnyBytes | None"
+        tag: "AnyBytes | None"
+        ct: "AnyBytes | None"
 
         def __init__(
             self,
@@ -3486,11 +3482,13 @@ if TYPE_CHECKING:
             subtitle: "str | None" = None,
             case_sensitive: "bool | None" = None,
             chunkify: "bool | None" = None,
-            value: "AnyBytes | None" = None,
-            counter: "int | None" = None,
             witness_entry_key: "AnyBytes | None" = None,
-            witness_value_hash: "AnyBytes | None" = None,
+            witness_commit: "AnyBytes | None" = None,
             app_id: "str | None" = None,
+            entry_type: "str | None" = None,
+            nonce: "AnyBytes | None" = None,
+            tag: "AnyBytes | None" = None,
+            ct: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7554,6 +7552,8 @@ if TYPE_CHECKING:
         address: "AnyBytes"
         new_value: "AnyBytes"
         app_id: "str | None"
+        key_type: "str | None"
+        device_id: "int | None"
 
         def __init__(
             self,
@@ -7561,6 +7561,8 @@ if TYPE_CHECKING:
             address: "AnyBytes",
             new_value: "AnyBytes",
             app_id: "str | None" = None,
+            key_type: "str | None" = None,
+            device_id: "int | None" = None,
         ) -> None:
             pass
 
@@ -7604,6 +7606,11 @@ if TYPE_CHECKING:
         mac: "AnyBytes | None"
         wallet_id: "AnyBytes | None"
         ward_id: "AnyBytes | None"
+        entry_key: "AnyBytes | None"
+        entry_type: "str | None"
+        nonce: "AnyBytes | None"
+        tag: "AnyBytes | None"
+        ct: "AnyBytes | None"
 
         def __init__(
             self,
@@ -7613,6 +7620,11 @@ if TYPE_CHECKING:
             mac: "AnyBytes | None" = None,
             wallet_id: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
+            entry_key: "AnyBytes | None" = None,
+            entry_type: "str | None" = None,
+            nonce: "AnyBytes | None" = None,
+            tag: "AnyBytes | None" = None,
+            ct: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7782,23 +7794,29 @@ if TYPE_CHECKING:
 
     class WARDLookup(protobuf.MessageType):
         address: "AnyBytes"
-        value: "AnyBytes | None"
         proof: "list[AnyBytes]"
         witness_entry_key: "AnyBytes | None"
-        witness_value_hash: "AnyBytes | None"
-        counter: "int | None"
+        witness_commit: "AnyBytes | None"
         app_id: "str | None"
+        key_type: "str | None"
+        device_id: "int | None"
+        nonce: "AnyBytes | None"
+        tag: "AnyBytes | None"
+        ct: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             address: "AnyBytes",
             proof: "list[AnyBytes] | None" = None,
-            value: "AnyBytes | None" = None,
             witness_entry_key: "AnyBytes | None" = None,
-            witness_value_hash: "AnyBytes | None" = None,
-            counter: "int | None" = None,
+            witness_commit: "AnyBytes | None" = None,
             app_id: "str | None" = None,
+            key_type: "str | None" = None,
+            device_id: "int | None" = None,
+            nonce: "AnyBytes | None" = None,
+            tag: "AnyBytes | None" = None,
+            ct: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7863,16 +7881,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WARDProofRequest(protobuf.MessageType):
-        address: "AnyBytes"
         pending_id: "int | None"
-        app_id: "str | None"
+        entry_key: "AnyBytes"
 
         def __init__(
             self,
             *,
-            address: "AnyBytes",
+            entry_key: "AnyBytes",
             pending_id: "int | None" = None,
-            app_id: "str | None" = None,
         ) -> None:
             pass
 
@@ -7881,27 +7897,61 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WARDProofAck(protobuf.MessageType):
-        value: "AnyBytes | None"
         proof: "list[AnyBytes]"
-        counter: "int | None"
         witness_entry_key: "AnyBytes | None"
-        witness_value_hash: "AnyBytes | None"
-        app_id: "str | None"
+        witness_commit: "AnyBytes | None"
+        entry_type: "str | None"
+        nonce: "AnyBytes | None"
+        tag: "AnyBytes | None"
+        ct: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             proof: "list[AnyBytes] | None" = None,
-            value: "AnyBytes | None" = None,
-            counter: "int | None" = None,
             witness_entry_key: "AnyBytes | None" = None,
-            witness_value_hash: "AnyBytes | None" = None,
-            app_id: "str | None" = None,
+            witness_commit: "AnyBytes | None" = None,
+            entry_type: "str | None" = None,
+            nonce: "AnyBytes | None" = None,
+            tag: "AnyBytes | None" = None,
+            ct: "AnyBytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDProofAck"]:
+            return isinstance(msg, cls)
+
+    class WARDExportKeys(protobuf.MessageType):
+        key_type: "str | None"
+
+        def __init__(
+            self,
+            *,
+            key_type: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDExportKeys"]:
+            return isinstance(msg, cls)
+
+    class WARDExportKeysAck(protobuf.MessageType):
+        k_index: "AnyBytes | None"
+        k_data: "AnyBytes | None"
+        key_type: "str | None"
+
+        def __init__(
+            self,
+            *,
+            k_index: "AnyBytes | None" = None,
+            k_data: "AnyBytes | None" = None,
+            key_type: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDExportKeysAck"]:
             return isinstance(msg, cls)
 
     class WARDDiscardPending(protobuf.MessageType):

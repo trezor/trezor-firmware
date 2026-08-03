@@ -137,6 +137,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.ward.reconcile"
     if msg_type == MessageType.WARDLookup:
         return "apps.ward.lookup"
+    if msg_type == MessageType.WARDExportKeys:
+        return "apps.ward.export_keys"
     if __debug__ and msg_type == MessageType.WARDDebugSetRoot:
         return "apps.ward.debug_set_root"
 

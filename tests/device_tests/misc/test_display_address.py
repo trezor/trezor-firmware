@@ -5,11 +5,64 @@ from trezorlib.authdb_tree import WARDTree
 from trezorlib.debuglink import DebugSession as Session
 
 from ...device_handler import BackgroundDeviceHandler
-from ...ward_mgr_emu import sign_ward_update, sign_wm_attestation
+from ...ward_mgr_emu import device_ward_keys, sign_ward_update, sign_wm_attestation
 
 _APP = "bitcoin"  # capability principal == queried domain for these tests
 
 pytestmark = [pytest.mark.models("core")]
+
+# Host tree keyed by the device's WARD keys (reproduced from the known test seed)
+# so its entry_keys/leaf commits match the device's and its proofs verify.
+_K_INDEX, _K_DATA = device_ward_keys()
+
+
+def _tree() -> WARDTree:
+    return WARDTree(_K_INDEX, _K_DATA)
+
+
+def _apply_device_leaf(tree: WARDTree, perform_result: tuple) -> None:
+    """Store the device-returned leaf blob (random nonce) so the host tree tracks the
+    device's authenticated root. perform_result[5:10] = (entry_key, entry_type,
+    nonce, tag, ct); empty ct = DELETE."""
+    ek, entry_type, nonce, tag, ct = perform_result[5:10]
+    if ct:
+        tree.set_leaf(ek, nonce, tag, ct, entry_type or "address")
+    elif ek is not None:
+        tree.del_leaf(ek)
+
+
+def _with_proof(
+    tree: WARDTree, address: str, proof: list
+) -> "messages.DisplayAddressWithProof":
+    """Build a PUSH DisplayAddressWithProof carrying the membership leaf blob
+    (nonce/tag/ct/entry_type) for `address` and the given `proof` (which may be a
+    deliberately wrong proof in negative tests)."""
+    b = tree.leaf_blob(_APP, address.encode())
+    assert b is not None, f"{address} not in tree"
+    return messages.DisplayAddressWithProof(
+        app_id=_APP,
+        address=address,
+        entry_type=b[3],
+        nonce=b[0],
+        tag=b[1],
+        ct=b[2],
+        proof=proof,
+    )
+
+
+def _lookup_membership(session: Session, tree: WARDTree, address: str):
+    """Membership WARDLookup with the new signature (leaf blob + proof)."""
+    b = tree.leaf_blob(_APP, address.encode())
+    assert b is not None, f"{address} not in tree"
+    return ward.lookup(
+        session,
+        _APP,
+        address.encode(),
+        tree.get_proof(_APP, address.encode()),
+        nonce=b[0],
+        tag=b[1],
+        ct=b[2],
+    )
 
 
 def _sync_device(
@@ -44,7 +97,6 @@ def _add_value_via_device(
     address_bytes = address.encode()
     old_counter = tree.get_counter(_APP, address_bytes)
     old_value = tree.get_value(_APP, address_bytes) if old_counter else b""
-    new_counter = counter + 1
 
     with session.test_ctx as client:
         # perform_update pulls the proof for the *current* tree (before this insert).
@@ -61,9 +113,8 @@ def _add_value_via_device(
 
         # perform_update: the device derives counter_T and emits WARDProofRequest,
         # answered by the registered callback; no user interaction.
-        c_counter, _root_t, mac_t, _wallet_id, ward_id = ward.perform_update(
-            session, pending_id
-        )
+        res = ward.perform_update(session, pending_id)
+        c_counter, _root_t, mac_t, _wallet_id, ward_id = res[:5]
         assert ward_id is not None
         mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
         sig = sign_ward_update(c_counter, mac_for_sig, ward_id)
@@ -71,7 +122,8 @@ def _add_value_via_device(
             session, c_counter, mac_t, sig, pending_id
         )
 
-    tree.insert(_APP, address_bytes, value, counter=new_counter)
+    # Store the device's own encrypted leaf blob so the host root matches.
+    _apply_device_leaf(tree, res)
     assert new_root == tree.get_root_hash()
     return counter, root_mac
 
@@ -81,7 +133,7 @@ def test_display_wrong_address_more_labels(session: Session) -> None:
     other_address = "bc1qotheraddress000000000000000000000000000"
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
-    tree = WARDTree()
+    tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     tree.insert(_APP, other_address.encode(), other_value, counter=1)
     proof = tree.get_proof(_APP, other_address.encode())
@@ -92,13 +144,7 @@ def test_display_wrong_address_more_labels(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddressWithProof(
-                        app_id=_APP,
-                        address=address,
-                        value=value,
-                        proof=proof,
-                        counter=1,
-                    ),
+                    _with_proof(tree, address, proof),
                     expect=messages.Success,
                 ),
             )
@@ -117,7 +163,7 @@ def test_display_address_more_labels(session: Session) -> None:
     other_address = "bc1qotheraddress000000000000000000000000000"
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
-    tree = WARDTree()
+    tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     tree.insert(_APP, other_address.encode(), other_value, counter=1)
     proof = tree.get_proof(_APP, address.encode())
@@ -128,13 +174,7 @@ def test_display_address_more_labels(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddressWithProof(
-                        app_id=_APP,
-                        address=address,
-                        value=value,
-                        proof=proof,
-                        counter=1,
-                    ),
+                    _with_proof(tree, address, proof),
                     expect=messages.Success,
                 ),
             )
@@ -154,7 +194,7 @@ def test_display_address_more_labels_via_device(session: Session) -> None:
     other_address = "bc1qotheraddress000000000000000000000000000"
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
-    tree = WARDTree()
+    tree = _tree()
     counter = 0
     root_mac = None
 
@@ -174,13 +214,7 @@ def test_display_address_more_labels_via_device(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddressWithProof(
-                        app_id=_APP,
-                        address=address,
-                        value=value,
-                        proof=proof,
-                        counter=1,
-                    ),
+                    _with_proof(tree, address, proof),
                     expect=messages.Success,
                 ),
             )
@@ -203,7 +237,7 @@ def test_add_value_via_device_increments_leaf_counter(session: Session) -> None:
     address = "bc1qdemoaddress000000000000000000000000000"
     value = b'TEST:1:{"label":"label1"}'
     updated_value = b'TEST:1:{"label":"label1-updated"}'
-    tree = WARDTree()
+    tree = _tree()
     counter = 0
     root_mac = None
 
@@ -220,21 +254,13 @@ def test_add_value_via_device_increments_leaf_counter(session: Session) -> None:
     assert counter == 2
     assert tree.get_counter(_APP, address.encode()) == 2
 
-    # The device's authenticated root binds the leaf at the INCREMENTED counter:
-    # a membership lookup with counter=2 verifies, while the stale counter=1 does
-    # not. (_add_value_via_device already asserts new_root == tree root, so the
-    # device recomputed the root using the bumped leaf counter.)
-    proof = tree.get_proof(_APP, address.encode())
-    valid, membership, current, _wallet_id = ward.lookup(
-        session, _APP, address.encode(), updated_value, proof, counter=2
-    )
+    # The device's authenticated root binds the current leaf: a membership lookup
+    # of the stored blob verifies at the global counter 2. (C_leaf now lives inside
+    # the encrypted ct, so `tree.get_counter` above already decrypted it to 2; there
+    # is no separate stale-counter wire field to probe.)
+    valid, membership, current, _wallet_id = _lookup_membership(session, tree, address)
     assert valid and membership
     assert current == 2
-
-    stale_valid, _membership, _current, _wallet_id = ward.lookup(
-        session, _APP, address.encode(), updated_value, proof, counter=1
-    )
-    assert not stale_valid
 
 
 def test_display_address_single_label(session: Session) -> None:
@@ -242,7 +268,7 @@ def test_display_address_single_label(session: Session) -> None:
     other_address = "bc1qotheraddress000000000000000000000000000"
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
-    tree = WARDTree()
+    tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     proof = tree.get_proof(_APP, address.encode())
     ward.debug_set_root(session, tree.get_root_hash())
@@ -252,13 +278,7 @@ def test_display_address_single_label(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddressWithProof(
-                        app_id=_APP,
-                        address=address,
-                        value=value,
-                        proof=proof,
-                        counter=1,
-                    ),
+                    _with_proof(tree, address, proof),
                     expect=messages.Success,
                 ),
             )
@@ -280,7 +300,7 @@ def test_display_address_unknown_with_wrong_proof(session: Session) -> None:
     other_address = "bc1qotheraddress000000000000000000000000000"
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
-    tree = WARDTree()
+    tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     tree.insert(_APP, other_address.encode(), other_value, counter=1)
     wrong_proof = tree.get_proof(_APP, other_address.encode())
@@ -291,13 +311,7 @@ def test_display_address_unknown_with_wrong_proof(session: Session) -> None:
             dev.run_with_provided_session(
                 session,
                 lambda s: s.call(
-                    messages.DisplayAddressWithProof(
-                        app_id=_APP,
-                        address=address,
-                        value=value,
-                        proof=wrong_proof,
-                        counter=1,
-                    ),
+                    _with_proof(tree, address, wrong_proof),
                     expect=messages.Success,
                 ),
             )
@@ -323,7 +337,7 @@ def test_display_address_more_labels_pull(session: Session) -> None:
     other_address = "bc1qotheraddress000000000000000000000000000"
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
-    tree = WARDTree()
+    tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     tree.insert(_APP, other_address.encode(), other_value, counter=1)
     ward.debug_set_root(session, tree.get_root_hash())
@@ -352,13 +366,13 @@ def test_display_address_more_labels_pull(session: Session) -> None:
 def test_display_address_non_membership_pull(session: Session) -> None:
     """Non-membership on a non-empty tree — impossible in the PUSH model (the
     message has no witness fields) but expressible via PULL, since WARDProofAck
-    carries witness_entry_key/witness_value_hash."""
+    carries witness_entry_key/witness_commit."""
     address = "bc1qdemoaddress000000000000000000000000000"
     other_address = "bc1qotheraddress000000000000000000000000000"
     missing_address = "bc1qlabel3000000000000000000000000000000000"
     value = b'TEST:1:{"label":"label1"}'
     other_value = b'TEST:1:{"label":"label2"}'
-    tree = WARDTree()
+    tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     tree.insert(_APP, other_address.encode(), other_value, counter=1)
     ward.debug_set_root(session, tree.get_root_hash())

@@ -742,6 +742,8 @@ if TYPE_CHECKING:
         WARDProofAck = 2349
         WARDDiscardPending = 2350
         WARDDiscardPendingAck = 2351
+        WARDExportKeys = 2352
+        WARDExportKeysAck = 2353
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

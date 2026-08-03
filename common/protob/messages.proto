@@ -416,6 +416,11 @@ enum MessageType {
     // WARD discard a queued pending edit (unblock the depth-1 offline queue)
     MessageType_WARDDiscardPending = 2350 [(wire_in) = true];
     MessageType_WARDDiscardPendingAck = 2351 [(wire_out) = true];
+    // WARD PUSH key export (host retrieves K_index + per-type K_data to compute
+    // entry_key by identifier and encrypt/decrypt values itself; §0 downgrade for
+    // the push-capable class only)
+    MessageType_WARDExportKeys = 2352 [(wire_in) = true];
+    MessageType_WARDExportKeysAck = 2353 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

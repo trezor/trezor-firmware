@@ -40,49 +40,61 @@ def _authorize(app_id: str, capability: str) -> None:
 async def lookup_label(
     app_id: str,
     address: bytes,
-    value: bytes,
+    nonce: bytes,
+    tag: bytes,
+    ct: bytes,
     proof: list[bytes],
-    counter: int,
+    key_type: str = "address",
+    device_id: int = 0,
 ) -> bytes | None:
-    """GATED on-device label lookup. Authorize `app_id` for `lookup`, then
-    authenticate (address, value) against the device's WARD root. Returns the
-    verified label, or None if the proof does not verify (or the tree is empty).
-    Raises DataError if `app_id` lacks the capability.
-    """
+    """GATED on-device membership label lookup. Authorize `app_id` for `lookup`,
+    then authenticate the leaf blob (nonce, tag, ct) against the device's WARD root
+    and return the decrypted label, or None if it does not verify (or the tree is
+    empty). Raises DataError if `app_id` lacks the capability."""
     _authorize(app_id, "lookup")
     from apps.ward import service
 
-    return await service.lookup_label(app_id, address, value, proof, counter)
+    return await service.lookup_label(
+        app_id, address, nonce, tag, ct, proof, key_type, device_id
+    )
 
 
 async def _classify_label(
     app_id: str,
     address: bytes,
-    value: bytes | None,
+    nonce: bytes | None,
+    tag: bytes | None,
+    ct: bytes | None,
     proof: list[bytes],
-    counter: int | None,
+    entry_type: str = "address",
+    device_id: int = 0,
     witness_entry_key: bytes | None = None,
-    witness_value_hash: bytes | None = None,
+    witness_commit: bytes | None = None,
 ) -> tuple[str, bytes | None]:
-    """Verify a (membership / non-membership) proof against the device's
-    authenticated root and classify it, within the domain named by app_id. Returns
-    (status, label), where status is "unknown" / "membership" / "non-membership" and
-    label is the verified value bytes (only for a valid membership proof, else
-    None). Shared by the PUSH and PULL label paths."""
+    """Verify a (membership / non-membership) proof against the device's root and
+    classify it. Returns (status, label): status ∈ unknown/membership/non-membership;
+    label is the DECRYPTED value only for a valid membership proof. Shared by the
+    PUSH and PULL label paths."""
     valid, _counter, membership, _wallet_id, _ward_id = await lookup(
         app_id,
         address,
-        value,
+        nonce,
+        tag,
+        ct,
         proof,
+        key_type=entry_type,
+        device_id=device_id,
         witness_entry_key=witness_entry_key,
-        witness_value_hash=witness_value_hash,
-        counter=counter,
+        witness_commit=witness_commit,
     )
     if not valid:
         return "unknown", None
     if membership:
-        # `lookup` already verified (address, value, counter) against the root,
-        # so the supplied value is now trusted.
+        from apps.ward import service
+
+        value = await service.lookup_label(
+            app_id, address, nonce, tag, ct, proof, entry_type, device_id
+        )
         return "membership", value
     return "non-membership", None
 
@@ -90,67 +102,81 @@ async def _classify_label(
 async def verify_label(
     app_id: str,
     address: bytes,
-    value: bytes | None,
+    nonce: bytes | None,
+    tag: bytes | None,
+    ct: bytes | None,
     proof: list[bytes],
-    counter: int | None,
+    entry_type: str = "address",
+    device_id: int = 0,
     witness_entry_key: bytes | None = None,
-    witness_value_hash: bytes | None = None,
+    witness_commit: bytes | None = None,
     domain: str | None = None,
 ) -> tuple[str, bytes | None]:
-    """GATED PUSH-path label resolution: classify a proof the host attached
-    up-front (e.g. DisplayAddressWithProof). Returns (status, label). Raises
-    DataError if `app_id` lacks the `lookup` capability.
-
-    `app_id` is the CAPABILITY PRINCIPAL (the on-device app, capability-gated).
-    `domain` is the WARD domain the label lives in and forms entry_key; it defaults
-    to `app_id` (an app resolving its own domain). A display app (principal
-    "display_address") passes the queried domain so it can show any app's label."""
+    """GATED PUSH-path label resolution: classify a proof the host attached up-front
+    (e.g. DisplayAddressWithProof). Returns (status, label). `app_id` is the
+    capability principal (gated); `domain` is the WARD domain that forms entry_key,
+    defaulting to `app_id`."""
     _authorize(app_id, "lookup")
     return await _classify_label(
         domain if domain is not None else app_id,
         address,
-        value,
+        nonce,
+        tag,
+        ct,
         proof,
-        counter,
+        entry_type=entry_type,
+        device_id=device_id,
         witness_entry_key=witness_entry_key,
-        witness_value_hash=witness_value_hash,
+        witness_commit=witness_commit,
     )
 
 
 async def resolve_label(
-    app_id: str, address: bytes, domain: str | None = None
+    app_id: str,
+    address: bytes,
+    domain: str | None = None,
+    entry_type: str = "address",
+    device_id: int = 0,
 ) -> tuple[str, bytes | None]:
-    """GATED PULL-path label resolution for on-device apps.
-
-    Rather than trusting a proof the host pushed up-front, the device PULLS it:
-    it sends a WARDProofRequest naming `address` (and the queried `domain`), the host
-    answers with the WARD entry + proof it holds (WARDProofAck), and this verifies
-    that proof against the device's authenticated root. Returns (status, label).
-
-    `app_id` is the capability principal (gated); `domain` is the WARD domain the
-    label lives in and forms entry_key, defaulting to `app_id`. Reusable by any
-    on-device app that displays an address. Raises DataError if `app_id` lacks the
-    `lookup` capability.
-    """
+    """GATED PULL-path label resolution for on-device apps. The device computes the
+    opaque entry_key path itself, sends a WARDProofRequest carrying only that path
+    (never the identifier or domain), and verifies the host's WARDProofAck against
+    its authenticated root. Returns (status, label)."""
     _authorize(app_id, "lookup")
+    from trezor import log
     from trezor.messages import WARDProofAck, WARDProofRequest
     from trezor.wire import context
 
+    from apps.ward import service
+
     domain = domain if domain is not None else app_id
-    ack = await context.call(
-        WARDProofRequest(address=address, app_id=domain), WARDProofAck
+    ek = await service.entry_key_for(domain, address, entry_type, device_id)
+    log.debug(
+        __name__,
+        "resolve_label: pulling proof for domain=%s entry_type=%s (entry_key computed)",
+        domain,
+        entry_type,
+    )
+    ack = await context.call(WARDProofRequest(entry_key=ek), WARDProofAck)
+    log.debug(
+        __name__,
+        "resolve_label: WARDProofAck membership=%s witness=%s",
+        ack.ct is not None,
+        ack.witness_entry_key is not None,
     )
 
-    # A membership answer carries a value (and no witness); a non-membership
-    # answer carries witness fields (or nothing at all, for an empty tree).
+    # Membership => (nonce, tag, ct); non-membership => witness_* ; empty => nothing.
     return await _classify_label(
         domain,
         address,
-        ack.value,
+        ack.nonce,
+        ack.tag,
+        ack.ct,
         ack.proof,
-        ack.counter,
+        entry_type=entry_type,
+        device_id=device_id,
         witness_entry_key=ack.witness_entry_key,
-        witness_value_hash=ack.witness_value_hash,
+        witness_commit=ack.witness_commit,
     )
 
 
@@ -165,29 +191,33 @@ async def resolve_label(
 async def lookup(
     app_id,
     address: bytes,
-    value: bytes | None,
+    nonce: bytes | None,
+    tag: bytes | None,
+    ct: bytes | None,
     proof: list[bytes],
+    key_type: str = "address",
+    device_id: int = 0,
     witness_entry_key: bytes | None = None,
-    witness_value_hash: bytes | None = None,
-    counter: int | None = None,
+    witness_commit: bytes | None = None,
 ) -> tuple[bool, int, bool, bytes, bytes]:
-    """Verify a membership / non-membership proof against the device's WARD root,
-    in the domain named by app_id. Returns (valid, counter, membership, wallet_id,
-    ward_id). General proof-verification path used by the host WARDLookup handler.
-    The host names the domain; the device forms entry_key(app_id, address). A
-    non-membership witness is passed opaquely as (witness_entry_key,
-    witness_value_hash).
-    """
+    """Verify a membership / non-membership proof against the device's WARD root.
+    Returns (valid, counter, membership, wallet_id, ward_id). The device forms
+    entry_key from (app_id, key_type, device_id, address); membership carries the
+    leaf blob (nonce, tag, ct); a non-membership witness is passed opaquely as
+    (witness_entry_key, witness_commit)."""
     from apps.ward import service
 
     return await service.lookup(
         app_id,
         address,
-        value,
+        nonce,
+        tag,
+        ct,
         proof,
+        key_type=key_type,
+        device_id=device_id,
         witness_entry_key=witness_entry_key,
-        witness_value_hash=witness_value_hash,
-        counter=counter,
+        witness_commit=witness_commit,
     )
 
 
@@ -209,35 +239,33 @@ async def queue(
 
 async def perform(
     pending_id: int | None = None,
-) -> tuple[int, bytes | None, bytes | None, bytes, bytes]:
-    """Authorize a queued intent. Resolves it, PULLS the proof it needs from the
-    host on demand (WARDProofRequest naming address + pending_id -> WARDProofAck),
-    then hands it to the trust anchor to derive counter_T + compute the candidate.
-    The wire I/O (context.call) lives here in the Core gateway, not in the trust
-    anchor. Returns (counter_T, root_T, mac_T, wallet_id, ward_id).
-    """
+) -> tuple:
+    """Authorize a queued intent. Resolves it to its opaque entry_key, PULLS the
+    proof (WARDProofRequest(entry_key, pending_id) -> WARDProofAck), then hands the
+    ack to the trust anchor to derive counter_T + compute the candidate and the new
+    encrypted leaf blob. The wire I/O (context.call) lives here in the Core gateway.
+    Returns (counter_T, root_T, mac_T, wallet_id, ward_id, entry_key, entry_type,
+    nonce, tag, ct) -- the trailing blob lets the host store the leaf it can't
+    compute itself."""
     from apps.ward import service
     from trezor.messages import WARDProofAck, WARDProofRequest
     from trezor.wire import context
 
-    pid, address, app_id = await service.intent(pending_id)
+    pid, ek = await service.intent(pending_id)
 
     ack = await context.call(
-        WARDProofRequest(
-            address=address,
-            pending_id=pid,
-            app_id=app_id.decode() if app_id else None,
-        ),
+        WARDProofRequest(entry_key=ek, pending_id=pid),
         WARDProofAck,
     )
 
     return await service.perform(
         pid,
-        ack.value,
+        ack.nonce,
+        ack.tag,
+        ack.ct,
         ack.proof,
-        ack.counter,
         witness_entry_key=ack.witness_entry_key,
-        witness_value_hash=ack.witness_value_hash,
+        witness_commit=ack.witness_commit,
     )
 
 
@@ -306,3 +334,11 @@ async def debug_set_root(
     from apps.ward import service
 
     return await service.debug_set_root(root)
+
+
+async def export_keys(key_type: str = "address") -> tuple:
+    """PUSH key export (user-confirmed inside the trust anchor). Returns
+    (k_index, k_data) for the requested entry type; K_sig is never exported."""
+    from apps.ward import service
+
+    return await service.export_keys(key_type)

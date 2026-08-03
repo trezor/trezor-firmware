@@ -17,11 +17,14 @@ async def lookup(msg: WARDLookup) -> WARDLookupAck:
     valid, counter, membership, wallet_id, ward_id = await core.lookup(
         msg.app_id,
         msg.address,
-        msg.value,
+        msg.nonce,
+        msg.tag,
+        msg.ct,
         msg.proof,
+        key_type=msg.key_type or "address",
+        device_id=msg.device_id or 0,
         witness_entry_key=msg.witness_entry_key,
-        witness_value_hash=msg.witness_value_hash,
-        counter=msg.counter,
+        witness_commit=msg.witness_commit,
     )
 
     return WARDLookupAck(

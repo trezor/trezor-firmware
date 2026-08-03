@@ -47,9 +47,11 @@ option java_outer_classname = "TrezorMessageWard";
  * @next Failure
  */
 message WARDQueueUpdate {
-    required bytes address   = 1;  // key to update
-    required bytes new_value = 2;  // new value; empty means delete
-    optional string app_id   = 3;  // domain the write targets; leaf key = app_id||0x00||address
+    required bytes  address   = 1;  // identifier to update (== the AEAD-hidden identifier)
+    required bytes  new_value = 2;  // plaintext new value the user confirms; empty means delete
+    optional string app_id    = 3;  // domain; part of scope in entry_key = HMAC(K_index, app_id||0x00||key_type||0x00||device_id||identifier)
+    optional string key_type  = 4;  // scope + entry_type (selects K_data); default "address"
+    optional uint32 device_id = 5;  // scope device slot; 0 = global (§5)
 }
 
 /**
@@ -88,11 +90,19 @@ message WARDPerformUpdate {
  * @end
  */
 message WARDPerformUpdateAck {
-    required uint32 counter   = 1;  // candidate counter_T, derived on-device here (= current attested counter + 1)
-    optional bytes  new_root  = 2;  // candidate root_T; absent if the tree becomes empty (DELETE to empty)
-    optional bytes  mac       = 3;  // mac_T = HMAC(root_mac_key, wallet_id||counter_T||root_T); absent if empty
-    optional bytes  wallet_id = 4;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
-    optional bytes  ward_id   = 5;  // SLIP21-derived WM-facing anchor; the host forwards it to the WM for /commit
+    required uint32 counter    = 1;  // candidate counter_T, derived on-device here (= current attested counter + 1)
+    optional bytes  new_root   = 2;  // candidate root_T; absent if the tree becomes empty (DELETE to empty)
+    optional bytes  mac        = 3;  // mac_T = HMAC(root_mac_key, wallet_id||counter_T||root_T); absent if empty
+    optional bytes  wallet_id  = 4;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    optional bytes  ward_id    = 5;  // SLIP21-derived WM-facing anchor; the host forwards it to the WM for /commit
+    // The device is the encryptor; the host cannot compute the encrypted leaf, so
+    // the device returns it here for the host to store keyed by entry_key. ct empty
+    // = DELETE (remove the leaf at entry_key).
+    optional bytes  entry_key  = 6;  // opaque 32B path the leaf is stored under
+    optional string entry_type = 7;  // clear entry_type (selects K_data on decrypt)
+    optional bytes  nonce      = 8;  // 12B AEAD nonce of the new leaf
+    optional bytes  tag        = 9;  // 16B Poly1305 tag of the new leaf
+    optional bytes  ct         = 10; // AEAD ciphertext of the new leaf (empty = delete)
 }
 
 /**
@@ -247,14 +257,19 @@ message WARDReconcileAck {
  * @next Failure
  */
 message WARDLookup {
-    required bytes  address            = 1;  // raw identifier; the device forms entry_key = sha256(app_id||0x00||type||0x00||address)
-    optional bytes  value              = 2;  // value stored at address (required for membership)
+    required bytes  address            = 1;  // identifier; device forms entry_key = HMAC(K_index, app_id||0x00||key_type||0x00||device_id||identifier)
+    reserved 2;                              // was plaintext value; membership now carries (nonce,tag,ct)
     repeated bytes  proof              = 3;  // sibling hashes, leaf-to-root order (33 bytes each)
-    optional bytes  witness_entry_key  = 4;  // non-membership: witness leaf entry_key (32B hash; reveals no plaintext)
-    optional bytes  witness_value_hash = 5;  // non-membership: witness leaf value_hash = sha256(counter||value)
-    optional uint32 counter            = 6;  // leaf counter for address (required for membership)
-    reserved 7;                              // was witness_counter; now committed inside witness_value_hash
-    optional string app_id             = 8;  // domain scoping the path (entry_key input)
+    optional bytes  witness_entry_key  = 4;  // non-membership: witness leaf entry_key (32B; reveals no plaintext)
+    optional bytes  witness_commit     = 5;  // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
+    reserved 6;                              // was counter; C_leaf now lives inside ct
+    reserved 7;                              // was witness_counter
+    optional string app_id             = 8;  // domain; part of scope
+    optional string key_type           = 9;  // scope + entry_type (selects K_data); default "address"
+    optional uint32 device_id          = 10; // scope device slot; 0 = global
+    optional bytes  nonce              = 11; // membership: 12B AEAD nonce
+    optional bytes  tag                = 12; // membership: 16B Poly1305 tag
+    optional bytes  ct                 = 13; // membership: AEAD ciphertext (empty = delete/absent)
 }
 
 /**
@@ -303,9 +318,10 @@ message WARDDebugSetRootAck {
  * @next WARDProofAck
  */
 message WARDProofRequest {
-    required bytes  address    = 1;  // address the proof is requested for
+    reserved 1;                      // was plaintext address; the device now sends the opaque entry_key path
     optional uint32 pending_id = 2;  // set during WARDPerformUpdate: the queued intent this proof is for
-    optional string app_id     = 3;  // domain the proof is requested for; host serves the proof for this domain
+    reserved 3;                      // was app_id; now folded into entry_key, so the host learns no domain either
+    required bytes  entry_key  = 4;  // 32B HMAC path the device computed locally; the host serves the proof for it
 }
 
 /**
@@ -318,13 +334,42 @@ message WARDProofRequest {
  * @end
  */
 message WARDProofAck {
-    optional bytes  value              = 1;  // value stored at address (membership)
-    repeated bytes  proof              = 2;  // sibling hashes, leaf-to-root order (33 bytes each)
-    optional uint32 counter            = 3;  // leaf counter for address (membership)
-    optional bytes  witness_entry_key  = 4;  // non-membership: witness leaf entry_key (32B hash; reveals no plaintext)
-    optional bytes  witness_value_hash = 5;  // non-membership: witness leaf value_hash = sha256(counter||value)
-    reserved 6;                              // was witness_counter; now committed inside witness_value_hash
-    optional string app_id             = 7;  // domain the answered proof is scoped to (echoes the request)
+    reserved 1;                              // was plaintext value; membership now carries (nonce,tag,ct)
+    repeated bytes  proof             = 2;   // sibling hashes, leaf-to-root order (33 bytes each)
+    reserved 3;                              // was counter; C_leaf now lives inside ct
+    optional bytes  witness_entry_key = 4;   // non-membership: witness leaf entry_key (32B; reveals no plaintext)
+    optional bytes  witness_commit    = 5;   // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
+    reserved 6;                              // was witness_counter
+    reserved 7;                              // was app_id; the host no longer knows the domain (opaque entry_key)
+    optional string entry_type        = 8;   // clear; selects K_data(entry_type) for decrypt
+    optional bytes  nonce             = 9;   // membership: 12B AEAD nonce
+    optional bytes  tag               = 10;  // membership: 16B Poly1305 tag
+    optional bytes  ct                = 11;  // membership: AEAD ciphertext (empty tree: leave all empty)
+}
+
+/**
+ * Request: PUSH key export. The host retrieves the keys it needs to serve the
+ * push flow itself: K_index (to compute entry_key = HMAC(K_index, scope||identifier)
+ * from a plaintext identifier) and K_data(key_type) (to encrypt/decrypt values).
+ * This is a deliberate, gated downgrade of the "Suite holds no keys" property for
+ * the push-capable entry types only; K_sig is NEVER exported. The host is expected
+ * to hold the returned keys in memory only.
+ * @start
+ * @next WARDExportKeysAck
+ * @next Failure
+ */
+message WARDExportKeys {
+    optional string key_type = 1;  // entry_type whose K_data to export; default "address"
+}
+
+/**
+ * Response: the exported keys for the requested key_type.
+ * @end
+ */
+message WARDExportKeysAck {
+    optional bytes  k_index  = 1;  // HMAC-SHA256 key deriving every entry_key path
+    optional bytes  k_data   = 2;  // ChaCha20-Poly1305 key for the requested key_type
+    optional string key_type = 3;  // echoes the requested key_type
 }
 
 /**

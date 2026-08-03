@@ -28,6 +28,8 @@ def queue_update(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
+    key_type: str = "address",
+    device_id: int = 0,
 ) -> tuple[Optional[int], Optional[bytes]]:
     """Queue an edit INTENT (pull model). Carries NO proof.
 
@@ -47,6 +49,8 @@ def queue_update(
             app_id=app_id,
             address=address,
             new_value=new_value,
+            key_type=key_type,
+            device_id=device_id,
         ),
         expect=messages.WARDQueueUpdateAck,
     )
@@ -56,21 +60,36 @@ def queue_update(
 def perform_update(
     session: "Session",
     pending_id: Optional[int] = None,
-) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes], Optional[bytes]]:
+) -> tuple:
     """Authorize a queued intent. The device PULLS the proof it needs mid-call:
     it emits a WARDProofRequest, which the client answers via the registered
     ``ward_proof_callback`` (e.g. ``tree_proof_callback(tree)``) -- so a callback
     MUST be registered before calling this. This is where the device first derives
     counter_T (strict model). pending_id selects the intent; if omitted, the device
-    targets the single queued one. Returns
-    (counter_T, root_T, mac_T, wallet_id, ward_id); root_T/mac_T are None if the
-    candidate empties the tree.
+    targets the single queued one.
+
+    The device is the encryptor, so it also returns the new leaf blob
+    (entry_key, entry_type, nonce, tag, ct) it produced — the host cannot compute it
+    and must store it keyed by entry_key (ct empty => DELETE). Returns
+    (counter_T, root_T, mac_T, wallet_id, ward_id, entry_key, entry_type, nonce, tag, ct);
+    root_T/mac_T are None if the candidate empties the tree.
     """
     resp = session.call(
         messages.WARDPerformUpdate(pending_id=pending_id),
         expect=messages.WARDPerformUpdateAck,
     )
-    return resp.counter, resp.new_root, resp.mac, resp.wallet_id, resp.ward_id
+    return (
+        resp.counter,
+        resp.new_root,
+        resp.mac,
+        resp.wallet_id,
+        resp.ward_id,
+        resp.entry_key,
+        resp.entry_type,
+        resp.nonce,
+        resp.tag,
+        resp.ct,
+    )
 
 
 def confirmed_by_wm(
@@ -179,29 +198,51 @@ def lookup(
     session: "Session",
     app_id: str,
     address: bytes,
-    value: Optional[bytes],
     proof: list[bytes],
-    counter: Optional[int] = None,
+    nonce: Optional[bytes] = None,
+    tag: Optional[bytes] = None,
+    ct: Optional[bytes] = None,
+    key_type: str = "address",
+    device_id: int = 0,
     witness_entry_key: Optional[bytes] = None,
-    witness_value_hash: Optional[bytes] = None,
+    witness_commit: Optional[bytes] = None,
 ) -> tuple[bool, bool, int, Optional[bytes]]:
-    """Verify a proof against the device's authenticated root (formerly
-    authdb.lookup). Returns (valid, membership, counter, wallet_id). The device forms
-    entry_key(app_id, address); a non-membership witness is two hashes only."""
+    """PUSH-verify a proof against the device's authenticated root. Returns
+    (valid, membership, counter, wallet_id). The device forms
+    entry_key = HMAC(K_index, app_id||0x00||key_type||0x00||device_id||address) and,
+    for membership, rebuilds the leaf from (nonce, tag, ct); a non-membership witness
+    is two hashes only (witness_entry_key, witness_commit)."""
     resp = session.call(
         messages.WARDLookup(
             app_id=app_id,
             address=address,
-            value=value,
             proof=proof,
+            nonce=nonce,
+            tag=tag,
+            ct=ct,
+            key_type=key_type,
+            device_id=device_id,
             witness_entry_key=witness_entry_key,
-            witness_value_hash=witness_value_hash,
-            counter=counter,
+            witness_commit=witness_commit,
         ),
         expect=messages.WARDLookupAck,
     )
     membership = resp.membership if resp.membership is not None else True
     return resp.valid, membership, resp.counter, resp.wallet_id
+
+
+def export_keys(
+    session: "Session", key_type: str = "address"
+) -> tuple[Optional[bytes], Optional[bytes], Optional[str]]:
+    """PUSH: retrieve the keys the host needs to serve the push flow itself —
+    K_index (to compute entry_key from a plaintext identifier) and K_data(key_type)
+    (to encrypt/decrypt values). K_sig is never exported. The host should keep the
+    returned keys in memory only. Returns (k_index, k_data, key_type)."""
+    resp = session.call(
+        messages.WARDExportKeys(key_type=key_type),
+        expect=messages.WARDExportKeysAck,
+    )
+    return resp.k_index, resp.k_data, resp.key_type
 
 
 def debug_set_root(
@@ -220,30 +261,31 @@ def debug_set_root(
 # ---------------------------------------------------------------------------
 
 
-def build_proof_ack(
-    tree: "WARDTree", app_id: str, address: bytes
-) -> messages.WARDProofAck:
-    """Answer a WARDProofRequest from `tree` within the domain named by app_id: a
-    membership proof if the entry is present, otherwise a non-membership (witness)
-    proof, or an empty ack for an empty tree. The witness is two hashes only
-    (witness_entry_key, witness_value_hash) — no plaintext leaks across apps."""
+def build_proof_ack(tree: "WARDTree", entry_key: bytes) -> messages.WARDProofAck:
+    """Answer a WARDProofRequest by the opaque `entry_key` path (pull model): a
+    membership proof (entry_type + nonce/tag/ct + proof) if the leaf is present,
+    otherwise a non-membership witness (witness_entry_key, witness_commit), or an
+    empty ack for an empty tree. The host serves purely by entry_key and never
+    learns the identifier or the plaintext value (§3)."""
     if tree.is_empty():
-        return messages.WARDProofAck(app_id=app_id)
-    if tree.get_counter(app_id, address):
+        return messages.WARDProofAck()
+    leaf = tree.get_leaf(entry_key)
+    if leaf is not None:
+        nonce, tag, ct, entry_type = leaf
         return messages.WARDProofAck(
-            value=tree.get_value(app_id, address),
-            proof=tree.get_proof(app_id, address),
-            counter=tree.get_counter(app_id, address),
-            app_id=app_id,
+            proof=tree.get_proof_by_key(entry_key),
+            entry_type=entry_type,
+            nonce=nonce,
+            tag=tag,
+            ct=ct,
         )
-    proof, witness_entry_key, witness_value_hash = tree.get_nonmembership_proof(
-        app_id, address
+    proof, witness_entry_key, witness_commit = tree.get_nonmembership_proof_by_key(
+        entry_key
     )
     return messages.WARDProofAck(
         proof=proof,
         witness_entry_key=witness_entry_key,
-        witness_value_hash=witness_value_hash,
-        app_id=app_id,
+        witness_commit=witness_commit,
     )
 
 
@@ -257,7 +299,7 @@ def tree_proof_callback(
     """
 
     def _callback(msg: messages.WARDProofRequest) -> messages.WARDProofAck:
-        # The device names the domain in the request; serve the proof for it.
-        return build_proof_ack(tree, msg.app_id or "", msg.address)
+        # The device sends the opaque entry_key path; serve the proof for it.
+        return build_proof_ack(tree, msg.entry_key)
 
     return _callback
