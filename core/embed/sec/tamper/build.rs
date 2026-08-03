@@ -9,6 +9,9 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_source("tamper/unix/tamper.c");
     } else if cfg!(feature = "mcu_stm32u5") {
         lib.add_source("tamper/stm32u5/tamper.c");
+    } else if cfg!(feature = "mcu_stm32h5") {
+        // Bring-up mock (tamper detection disabled). TODO: real H5 TAMP driver.
+        lib.add_source("tamper/stm32h5/tamper.c");
     } else {
         bail_unsupported!();
     }
