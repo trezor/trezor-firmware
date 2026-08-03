@@ -12,6 +12,7 @@ if TYPE_CHECKING:
         EthereumSignTxEIP1559,
         EthereumTxRequest,
     )
+    from trezor.utils import HashWriter
 
     from apps.common.keychain import Keychain
 
@@ -32,12 +33,11 @@ async def sign_tx_eip1559(
     defs: Definitions,
 ) -> EthereumTxRequest:
     from trezor import TR, wire
-    from trezor.crypto import rlp  # local_cache_global
     from trezor.ui.layouts import show_continue_in_app
 
     from apps.common import paths
 
-    from .helpers import format_ethereum_amount, get_fee_items_eip1559, keccak256
+    from .helpers import format_ethereum_amount, get_fee_items_eip1559
     from .sign_tx import (
         check_common_fields,
         confirm_tx_data,
@@ -79,23 +79,7 @@ async def sign_tx_eip1559(
             msg.payment_req, slip44_id, keychain, amount_size_bytes=32
         )
 
-    sha = keccak256()
-
-    rlp.write(sha, _TX_TYPE)
-    rlp.write_header(sha, _get_digest_length(msg), rlp.LIST_HEADER_BYTE)
-
-    fields: tuple[rlp.RLPItem, ...] = (
-        msg.chain_id,
-        msg.nonce,
-        msg.max_priority_fee,
-        msg.max_gas_fee,
-        gas_limit,
-        address_bytes,
-        msg.value,
-    )
-    for field in fields:
-        rlp.write(sha, field)
-
+    sha = _start_digest(msg)
     initial_data = await request_initial_data(msg, sha)
 
     # Confirm the transaction, using special layouts for staking, yielding and clear-signing (if supported).
@@ -112,13 +96,7 @@ async def sign_tx_eip1559(
         create_data_chunk_loader(sha),
     )
 
-    # write_access_list (streaming instead of full materialization)
-    payload_length = sum(rlp.length(access_list_item(i)) for i in msg.access_list)
-    rlp.write_header(sha, payload_length, rlp.LIST_HEADER_BYTE)
-    for item in msg.access_list:
-        rlp.write(sha, access_list_item(item))
-
-    digest = sha.get_digest()
+    digest = _finish_digest(msg, sha)
 
     # transaction data confirmed, proceed with signing
     result = _sign_digest(msg, keychain, digest)
@@ -127,31 +105,50 @@ async def sign_tx_eip1559(
     return result
 
 
-def _get_digest_length(msg: EthereumSignTxEIP1559) -> int:
-    length = 0
+def _start_digest(msg: EthereumSignTxEIP1559) -> HashWriter:
+    from .helpers import keccak256
 
     fields: tuple[rlp.RLPItem, ...] = (
+        msg.chain_id,
         msg.nonce,
+        msg.max_priority_fee,
+        msg.max_gas_fee,
         msg.gas_limit,
         bytes_from_address(msg.to),
         msg.value,
-        msg.chain_id,
-        msg.max_gas_fee,
-        msg.max_priority_fee,
     )
-    for field in fields:
-        length += rlp.length(field)
 
-    data_length = msg.data_length
-    length += rlp.header_length(data_length, msg.data_initial_chunk)
-    length += data_length
+    # fields length
+    length = sum(rlp.length(field) for field in fields)
 
-    # access_list_length
+    # calldata length
+    length += rlp.header_length(msg.data_length, msg.data_initial_chunk)
+    length += msg.data_length
+
+    # access_list length (streaming instead of full materialization)
     payload_length = sum(rlp.length(access_list_item(i)) for i in msg.access_list)
     access_list_length = rlp.header_length(payload_length) + payload_length
     length += access_list_length
 
-    return length
+    # hash only `_TX_TYPE`, RLP header and `fields` (see above).
+    # calldata and access_list will be hashed later.
+    sha = keccak256()
+
+    rlp.write(sha, _TX_TYPE)
+    rlp.write_header(sha, length, rlp.LIST_HEADER_BYTE)
+    for field in fields:
+        rlp.write(sha, field)
+    return sha
+
+
+def _finish_digest(msg: EthereumSignTxEIP1559, sha: HashWriter) -> bytes:
+    # write_access list (streaming instead of full materialization)
+    payload_length = sum(rlp.length(access_list_item(i)) for i in msg.access_list)
+    rlp.write_header(sha, payload_length, rlp.LIST_HEADER_BYTE)
+    for item in msg.access_list:
+        rlp.write(sha, access_list_item(item))
+
+    return sha.get_digest()
 
 
 def _sign_digest(
