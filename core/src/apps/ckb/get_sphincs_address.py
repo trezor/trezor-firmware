@@ -69,6 +69,13 @@ def _variant_spx_n(variant: int) -> int:
     return n
 
 
+def _variant_name(variant: int) -> str:
+    """FIPS 205 parameter-set name for a variant ID, e.g. 49 -> SHA2_128S."""
+    family = "SHA2" if variant < 54 else "SHAKE"
+    speed = "F" if variant % 2 == 0 else "S"
+    return f"{family}_{_VARIANT_SPX_N[variant] * 8}{speed}"
+
+
 def _split_extended_mnemonic_to_seed(mnemonic_bytes: bytes) -> bytearray:
     """Convert an extended BIP-39 mnemonic into 3*n bytes of raw entropy.
 
@@ -160,8 +167,16 @@ def _require_sphincs_mnemonic(variant: int) -> bytearray:
         raise DataError("Device not initialized")
 
     seed = _split_extended_mnemonic_to_seed(mnemonic_secret)
-    if len(seed) != 3 * _variant_spx_n(variant):
-        raise DataError("SPHINCS+ variant does not match the stored mnemonic strength")
+    stored_n = len(seed) // 3
+    if stored_n != _variant_spx_n(variant):
+        _wipe(seed)
+        allowed = ", ".join(
+            _variant_name(v) for v in _VALID_VARIANTS if _VARIANT_SPX_N[v] == stored_n
+        )
+        raise DataError(
+            f"SPHINCS+ variant {_variant_name(variant)} does not match the stored "
+            + f"mnemonic strength (valid variants: {allowed})"
+        )
     return seed
 
 
