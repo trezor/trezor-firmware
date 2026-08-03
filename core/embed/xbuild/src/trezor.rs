@@ -230,6 +230,8 @@ impl CLibrary {
                 format!("sys/linker/stm32u5a/{binary_type}.ld")
             } else if has_feature("mcu_stm32u58") {
                 format!("sys/linker/stm32u58/{binary_type}.ld")
+            } else if has_feature("mcu_stm32h5f5") {
+                format!("sys/linker/stm32h5f5/{binary_type}.ld")
             } else if has_feature("mcu_stm32f4") {
                 format!("sys/linker/stm32f4/{binary_type}.ld")
             } else {
