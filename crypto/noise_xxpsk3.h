@@ -70,10 +70,10 @@ typedef struct {
 
 // Random values are used for greater resilience agains glitching attacks.
 typedef enum {
-  WAITING_FOR_REQUEST1 = 0x5091d95c,
-  READY_FOR_RESPONSE1 = 0x252d533a,
-  WAITING_FOR_REQUEST2 = 0xe3b601eb,
-  RSPN_HANDSHAKE_COMPLETE = 0x54acac08
+  NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST1 = 0x5091d95c,
+  NOISE_XXPSK3_RSPN_READY_FOR_RESPONSE1 = 0x252d533a,
+  NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST2 = 0xe3b601eb,
+  NOISE_XXPSK3_RSPN_HANDSHAKE_COMPLETE = 0x54acac08
 } noise_xxpsk3_responder_handshake_stage_t;
 
 typedef struct {
@@ -90,10 +90,10 @@ typedef struct {
 
 // Random values are used for greater resilience agains glitching attacks.
 typedef enum {
-  READY_FOR_REQUEST1 = 0x24a23a5e,
-  WAITING_FOR_RESPONSE1 = 0xa748a792,
-  READY_FOR_REQUEST2 = 0xba244240,
-  INTR_HANDSHAKE_COMPLETE = 0xf149f042
+  NOISE_XXPSK3_INTR_READY_FOR_REQUEST1 = 0x24a23a5e,
+  NOISE_XXPSK3_INTR_WAITING_FOR_RESPONSE1 = 0xa748a792,
+  NOISE_XXPSK3_INTR_READY_FOR_REQUEST2 = 0xba244240,
+  NOISE_XXPSK3_INTR_HANDSHAKE_COMPLETE = 0xf149f042
 } noise_xxpsk3_initiator_handshake_stage_t;
 
 typedef struct {
