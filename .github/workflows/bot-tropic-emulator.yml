@@ -1,0 +1,86 @@
+name: "[Bot] Tropic emulator reminder"
+
+on:
+  pull_request:
+    types: [opened, closed, synchronize]
+    branches: [main]
+    paths:
+      - tests/tropic_model/config.yml
+      - vendor/ts-tvl
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  PULL_COMMENT: |
+    ⚠️ Looks like you modified `tests/tropic_model/config.yml` or updated the `ts-tvl` submodule. Please make a numbered copy and make sure recent upgrade tests use it and pass.
+    <!-- -->
+    After the PR is merged, an issue will be created in [trezor-user-env](https://github.com/trezor/trezor-user-env) to notify maintainers of the change.
+  ISSUE_REPOSITORY: trezor-user-env
+  ISSUE_TITLE: Tropic emulator config/version changed in trezor-firmware
+  ISSUE_BODY: |
+    A change to `tests/tropic_model/config.yml` or `vendor/ts-tvl` has been merged to main branch in trezor-firmware: ${{ github.event.pull_request.html_url }}
+    <!-- -->
+    Please make sure nightly emulators use this new configuration. Feel free to contact the PR author or **#tech_firmware** for help.
+  ISSUE_BODY_PATH: ${{ github.workspace }}/tropic-emulator-issue.md
+
+jobs:
+  pr_comment:
+    name: Post a comment to the pull request
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened' || github.event.action == 'synchronize'
+    permissions:
+      pull-requests: write  # needed to post a comment
+    steps:
+      - name: Find existing pull request comment
+        id: find-comment
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad  # peter-evans/find-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: ui-comment-${{ github.workflow_ref }}
+
+      - name: Post a comment to the pull request
+        if: steps.find-comment.outputs.comment-id == 0
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # peter-evans/create-or-update-comment@v5
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ${{ env.PULL_COMMENT }}
+            <!-- ui-comment-${{ github.workflow_ref }} -->
+          edit-mode: replace
+
+  issue_open:
+    name: Open an issue for trezor-user-env
+    runs-on: ubuntu-latest
+    if: github.event.action == 'closed' && github.event.merged == true
+    env:
+      URL: ${{ github.event.pull_request.html_url }}
+    steps:
+      - name: Generate GitHub App token
+        id: trezor-bot-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # actions/create-github-app-token@v3.1.1
+        with:
+          client-id: ${{ secrets.TREZOR_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            ${{ env.ISSUE_REPOSITORY }}
+          permission-issues: write
+
+      - name: Open the issue
+        run: |
+          echo "${ISSUE_BODY}" > ${ISSUE_BODY_PATH}
+          gh issue create \
+            --repo ${{ github.repository_owner }}/${ISSUE_REPOSITORY} \
+            --title "${ISSUE_TITLE}" \
+            --body-file "${ISSUE_BODY_PATH}"
+          echo "Created issue in ${ISSUE_REPOSITORY}:" >> ${GITHUB_STEP_SUMMARY}
+          echo "### ${ISSUE_TITLE}" >> ${GITHUB_STEP_SUMMARY}
+          cat ${ISSUE_BODY_PATH} >> ${GITHUB_STEP_SUMMARY}
+        env:
+          GH_TOKEN: ${{ steps.trezor-bot-token.outputs.token }}
