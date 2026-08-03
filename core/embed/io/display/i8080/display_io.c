@@ -54,6 +54,27 @@ void display_io_init_gpio(void) {
   HAL_GPIO_Init(DISPLAY_PWR_PORT, &GPIO_InitStructure);
 #endif
 
+#ifdef DISPLAY_IM0_PIN
+  // Interface-mode select pins: sampled by the controller only at reset, so
+  // must reach their target level before the reset pulse below is issued.
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Alternate = 0;
+
+  GPIO_InitStructure.Pin = DISPLAY_IM0_PIN;
+  HAL_GPIO_WritePin(DISPLAY_IM0_PORT, DISPLAY_IM0_PIN, GPIO_PIN_SET);
+  HAL_GPIO_Init(DISPLAY_IM0_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = DISPLAY_IM1_PIN;
+  HAL_GPIO_WritePin(DISPLAY_IM1_PORT, DISPLAY_IM1_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_Init(DISPLAY_IM1_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = DISPLAY_IM2_PIN;
+  HAL_GPIO_WritePin(DISPLAY_IM2_PORT, DISPLAY_IM2_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_Init(DISPLAY_IM2_PORT, &GPIO_InitStructure);
+#endif
+
   // LCD_RST
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;

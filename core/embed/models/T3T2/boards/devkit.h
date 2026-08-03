@@ -65,6 +65,17 @@
 #define DISPLAY_PWR_PORT GPIOF
 #define DISPLAY_PWR_PIN GPIO_PIN_15
 
+// Display interface-mode select pins (IM0-IM2). The GC9307C latches these
+// only at reset to fix its bus protocol, so they must be driven to their
+// target level before the reset pulse in display_panel_init(): IM0=1,
+// IM1=0, IM2=0 (16-bit parallel i8080).
+#define DISPLAY_IM0_PORT GPIOF
+#define DISPLAY_IM0_PIN GPIO_PIN_11
+#define DISPLAY_IM1_PORT GPIOF
+#define DISPLAY_IM1_PIN GPIO_PIN_14
+#define DISPLAY_IM2_PORT GPIOG
+#define DISPLAY_IM2_PIN GPIO_PIN_1
+
 // Backlight: four LED strings driven as synchronized active-low PWM by
 // TIM3 CH1-CH4 on PE3-PE6 (cathodes via 33R), with a common boost supply.
 #define BACKLIGHT_PWM_TIM TIM3
