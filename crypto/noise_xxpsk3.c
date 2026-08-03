@@ -398,7 +398,7 @@ bool noise_xxpsk3_responder_init(
     goto cleanup;
   }
 
-  rspn->handshake_stage = WAITING_FOR_REQUEST1;
+  rspn->handshake_stage = NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST1;
   rspn->initialized = true;
   rspn->has_transport_state = false;
   return true;
@@ -420,7 +420,8 @@ bool noise_xxpsk3_responder_handle_request1(
     return false;
   }
 
-  if (!rspn->initialized || rspn->handshake_stage != WAITING_FOR_REQUEST1 ||
+  if (!rspn->initialized ||
+      rspn->handshake_stage != NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST1 ||
       request == NULL || (payload == NULL && max_payload_size != 0)) {
     goto cleanup;
   }
@@ -457,7 +458,7 @@ bool noise_xxpsk3_responder_handle_request1(
     *payload_size = ciphertext_len - NOISE_TAG_SIZE_BYTES;
   }
 
-  rspn->handshake_stage = READY_FOR_RESPONSE1;
+  rspn->handshake_stage = NOISE_XXPSK3_RSPN_READY_FOR_RESPONSE1;
   return true;
 
 cleanup:
@@ -475,7 +476,7 @@ bool noise_xxpsk3_responder_create_response1(
   noise_xxpsk3_handshake_state_t *state = &rspn->handshake_state;
 
   if (!rspn->initialized || response == NULL || response_size == NULL ||
-      rspn->handshake_stage != READY_FOR_RESPONSE1 ||
+      rspn->handshake_stage != NOISE_XXPSK3_RSPN_READY_FOR_RESPONSE1 ||
       !state->has_remote_ephemeral_public ||
       (payload == NULL && payload_size != 0)) {
     goto cleanup;
@@ -523,7 +524,7 @@ bool noise_xxpsk3_responder_create_response1(
   *response_size =
       2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES + payload_size;
 
-  rspn->handshake_stage = WAITING_FOR_REQUEST2;
+  rspn->handshake_stage = NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST2;
   return true;
 
 cleanup:
@@ -541,7 +542,7 @@ bool noise_xxpsk3_responder_handle_request2(
   noise_xxpsk3_handshake_state_t *state = &rspn->handshake_state;
 
   if (!rspn->initialized || request == NULL ||
-      rspn->handshake_stage != WAITING_FOR_REQUEST2 ||
+      rspn->handshake_stage != NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST2 ||
       !state->has_ephemeral_private ||
       (payload == NULL && max_payload_size != 0)) {
     goto cleanup;
@@ -591,7 +592,7 @@ bool noise_xxpsk3_responder_handle_request2(
   memzero(state, sizeof(noise_xxpsk3_handshake_state_t));
 
   rspn->has_transport_state = true;
-  rspn->handshake_stage = RSPN_HANDSHAKE_COMPLETE;
+  rspn->handshake_stage = NOISE_XXPSK3_RSPN_HANDSHAKE_COMPLETE;
   return true;
 
 cleanup:
@@ -622,7 +623,7 @@ bool noise_xxpsk3_initiator_init(
     goto cleanup;
   }
 
-  intr->handshake_stage = READY_FOR_REQUEST1;
+  intr->handshake_stage = NOISE_XXPSK3_INTR_READY_FOR_REQUEST1;
   intr->initialized = true;
   intr->has_transport_state = false;
   return true;
@@ -644,7 +645,8 @@ bool noise_xxpsk3_initiator_create_request1(
     return false;
   }
 
-  if (!intr->initialized || intr->handshake_stage != READY_FOR_REQUEST1 ||
+  if (!intr->initialized ||
+      intr->handshake_stage != NOISE_XXPSK3_INTR_READY_FOR_REQUEST1 ||
       (payload == NULL && payload_size != 0) || request == NULL ||
       request_size == NULL) {
     goto cleanup;
@@ -672,7 +674,7 @@ bool noise_xxpsk3_initiator_create_request1(
   }
 
   *request_size = NOISE_XXPSK3_DHLEN + payload_size + NOISE_TAG_SIZE_BYTES;
-  intr->handshake_stage = WAITING_FOR_RESPONSE1;
+  intr->handshake_stage = NOISE_XXPSK3_INTR_WAITING_FOR_RESPONSE1;
   return true;
 
 cleanup:
@@ -690,7 +692,8 @@ bool noise_xxpsk3_initiator_handle_response1(noise_xxpsk3_initiator_t *intr,
     return false;
   }
 
-  if (!intr->initialized || intr->handshake_stage != WAITING_FOR_RESPONSE1 ||
+  if (!intr->initialized ||
+      intr->handshake_stage != NOISE_XXPSK3_INTR_WAITING_FOR_RESPONSE1 ||
       response == NULL || (payload == NULL && max_payload_size != 0)) {
     goto cleanup;
   }
@@ -744,7 +747,7 @@ bool noise_xxpsk3_initiator_handle_response1(noise_xxpsk3_initiator_t *intr,
     *payload_size = ciphertext_len - NOISE_TAG_SIZE_BYTES;
   }
 
-  intr->handshake_stage = READY_FOR_REQUEST2;
+  intr->handshake_stage = NOISE_XXPSK3_INTR_READY_FOR_REQUEST2;
 
   return true;
 
@@ -760,7 +763,8 @@ bool noise_xxpsk3_initiator_create_request2(
     return false;
   }
 
-  if (!intr->initialized || intr->handshake_stage != READY_FOR_REQUEST2 ||
+  if (!intr->initialized ||
+      intr->handshake_stage != NOISE_XXPSK3_INTR_READY_FOR_REQUEST2 ||
       (payload == NULL && payload_size != 0) || request == NULL ||
       request_size == NULL) {
     goto cleanup;
@@ -798,7 +802,7 @@ bool noise_xxpsk3_initiator_create_request2(
   memzero(state, sizeof(noise_xxpsk3_handshake_state_t));
   intr->has_transport_state = true;
 
-  intr->handshake_stage = INTR_HANDSHAKE_COMPLETE;
+  intr->handshake_stage = NOISE_XXPSK3_INTR_HANDSHAKE_COMPLETE;
 
   return true;
 
