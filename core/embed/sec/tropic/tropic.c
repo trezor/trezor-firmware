@@ -70,6 +70,9 @@ static const uint8_t TROPIC_BATCHES_V1[][LT_MEMBER_SIZE(
 // {0x19, 0x0a, 0x1f, 0x0f, 0x2c}, {0x19, 0x0c, 0x03, 0x0d, 0x38},
 // };
 
+// How long we wait after `tropic_deinit()` before calling `tropic_init()` again.
+#define TROPIC_RESTART_DELAY_MS 10
+
 // clang-format off
 // Temporary address table for config objects, ordered to match lt_config_t.obj[].
 // Using a local const table instead of `cfg_desc_table` from libtropic because including
@@ -153,6 +156,7 @@ static bool is_retryable(lt_ret_t ret) {
         break;                                                            \
       }                                                                   \
       tropic_deinit();                                                    \
+      systick_delay_ms(TROPIC_RESTART_DELAY_MS);                          \
       tropic_init(NULL);                                                  \
       if (TROPIC_RETRY_COMMAND_session_started) {                         \
         if (tropic_custom_session_start(                                  \
@@ -861,9 +865,10 @@ static secbool set_expected_config(
     return secfalse;
   }
 
-  if (lt_reboot(&g_tropic_driver.handle, TR01_REBOOT) != LT_OK) {
-    return secfalse;
-  }
+  // restart Tropic so the new config takes effect.
+  tropic_deinit();
+  systick_delay_ms(TROPIC_RESTART_DELAY_MS);
+  tropic_init(NULL);
 
   return sectrue;
 }
@@ -982,6 +987,7 @@ lt_ret_t tropic_init(cli_t *cli) {
   // Emulator has no retry logic.
   for (int i = 0; i < TROPIC_MAX_RETRIES - 1 && is_retryable(ret); i++) {
     lt_deinit(&drv->handle);
+    systick_delay_ms(TROPIC_RESTART_DELAY_MS);
     ret = lt_init(&drv->handle);
   }
 #endif  // !TREZOR_PRODTEST && !TREZOR_EMULATOR
