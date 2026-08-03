@@ -21,12 +21,8 @@ if TYPE_CHECKING:
 _TX_TYPE = const(2)
 
 
-def access_list_item_length(item: EthereumAccessList) -> int:
-    address_length = rlp.length(bytes_from_address(item.address))
-    keys_length = rlp.length(item.storage_keys)
-    return (
-        rlp.header_length(address_length + keys_length) + address_length + keys_length
-    )
+def access_list_item(item: EthereumAccessList) -> rlp.RLPItem:
+    return [bytes_from_address(item.address), item.storage_keys]
 
 
 @with_keychain_from_chain_id
@@ -117,16 +113,11 @@ async def sign_tx_eip1559(
         create_data_chunk_loader(sha),
     )
 
-    # write_access_list
-    payload_length = sum(access_list_item_length(i) for i in msg.access_list)
+    # write_access_list (streaming instead of full materialization)
+    payload_length = sum(rlp.length(access_list_item(i)) for i in msg.access_list)
     rlp.write_header(sha, payload_length, rlp.LIST_HEADER_BYTE)
     for item in msg.access_list:
-        address_bytes = bytes_from_address(item.address)
-        address_length = rlp.length(address_bytes)
-        keys_length = rlp.length(item.storage_keys)
-        rlp.write_header(sha, address_length + keys_length, rlp.LIST_HEADER_BYTE)
-        rlp.write(sha, address_bytes)
-        rlp.write(sha, item.storage_keys)
+        rlp.write(sha, access_list_item(item))
 
     digest = sha.get_digest()
 
@@ -156,9 +147,8 @@ def _get_digest_length(msg: EthereumSignTxEIP1559, data_length: int) -> int:
     length += data_length
 
     # access_list_length
-    payload_length = sum(access_list_item_length(i) for i in msg.access_list)
+    payload_length = sum(rlp.length(access_list_item(i)) for i in msg.access_list)
     access_list_length = rlp.header_length(payload_length) + payload_length
-
     length += access_list_length
 
     return length
