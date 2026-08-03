@@ -114,6 +114,18 @@ fn main() -> Result<()> {
                 if cfg!(feature = "secure_mode") || !cfg!(feature = "secmon_layout") {
                     lib.add_flag("-mcmse");
                 }
+            } else if cfg!(feature = "mcu_stm32h5") {
+                lib.add_flags([
+                    "-mthumb",
+                    "-mcpu=cortex-m33",
+                    "-mfloat-abi=hard",
+                    "-mfpu=fpv5-sp-d16",
+                    "-mtune=cortex-m33",
+                ]);
+
+                if cfg!(feature = "secure_mode") || !cfg!(feature = "secmon_layout") {
+                    lib.add_flag("-mcmse");
+                }
             } else {
                 bail_unsupported!();
             }
