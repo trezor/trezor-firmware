@@ -63,6 +63,32 @@ impl ModelConfig {
             mcu => Err(anyhow!("Unknown MCU: {mcu}")),
         }
     }
+
+    /// OpenOCD SWD transport to use for this MCU.
+    ///
+    /// The STM32H5 debug (multiple access ports, TrustZone) is not supported by
+    /// the ST-LINK high-level adapter (hla) transport; its target script
+    /// (stm32h5x.cfg) rejects hla and requires DAP-direct SWD. The STM32U5/F4
+    /// targets use the hla transport.
+    pub fn openocd_transport(&self) -> &'static str {
+        match self.mcu.as_str() {
+            "stm32h5f5" => "dapdirect_swd",
+            _ => "hla_swd",
+        }
+    }
+
+    /// OpenOCD interface script to use for this MCU.
+    ///
+    /// `interface/stlink.cfg` loads the ST-LINK "hla" (high-level adapter)
+    /// driver, which only supports `hla_swd`. The STM32H5 needs the ST-LINK
+    /// loaded as a DAP adapter (`interface/stlink-dap.cfg`, `adapter driver
+    /// st-link`) so the `dapdirect_swd` transport is available.
+    pub fn openocd_interface(&self) -> &'static str {
+        match self.mcu.as_str() {
+            "stm32h5f5" => "interface/stlink-dap.cfg",
+            _ => "interface/stlink.cfg",
+        }
+    }
 }
 
 pub struct Peripheral {
