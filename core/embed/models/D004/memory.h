@@ -95,21 +95,24 @@
 #define STORAGE_2_SECTOR_START 0x1F0
 #define STORAGE_2_SECTOR_END 0x1FF
 
-// RAM layout -- PRELIMINARY, still the U5G9 map (see banner above).
+// RAM layout -- STM32H5F5xx: SRAM1..SRAM5 are contiguous, 1.5 MB total, at the
+// secure alias 0x30000000..0x30180000. D004 is headless (display_none), so the
+// framebuffer regions are small placeholders and the bulk of the SRAM is given
+// to AUX1 / MAIN.
 #define BOOTARGS_START (0x30000000)
 #define BOOTARGS_SIZE 0x200
 
 #define FB1_RAM_START (0x30000200)
-#define FB1_RAM_SIZE (768 * 1024 - 512)
+#define FB1_RAM_SIZE (16 * 1024 - 512)  // headless placeholder
 
-#define MAIN_RAM_START (0x300C0000)
+#define FB2_RAM_START (0x30010000)
+#define FB2_RAM_SIZE (16 * 1024)  // headless placeholder
+
+#define MAIN_RAM_START (0x30020000)
 #define MAIN_RAM_SIZE (64 * 1024)
 
-#define FB2_RAM_START (0x300D0000)
-#define FB2_RAM_SIZE (768 * 1024)
-
-#define AUX1_RAM_START (0x30190000)
-#define AUX1_RAM_SIZE (896 * 1024)
+#define AUX1_RAM_START (0x30030000)
+#define AUX1_RAM_SIZE (1344 * 1024)  // remainder up to 0x30180000 (SRAM end)
 
 // misc
 #define CODE_ALIGNMENT 0x400
