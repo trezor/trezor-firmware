@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - [T3W1] Fix device menu refresh.  [#7202]
 
 ### Security
+- [T3W1] Discard low-order keys in THP Code Entry pairing.
 - Ask user for confirmation of some previously hidden Solana instruction parameters.
 - Solana: Fixed token transfer recipient for ALT addresses.
 - Fix external input misidentification in bitcoin signing.
