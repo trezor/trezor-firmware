@@ -12,6 +12,8 @@ pub enum Model {
     D002,
     #[value(name = "d003")]
     D003,
+    #[value(name = "d004")]
+    D004,
     #[value(name = "t2t1")]
     T2T1,
     #[value(name = "t2b1")]
@@ -40,6 +42,7 @@ impl Model {
             Model::D001 => "D001",
             Model::D002 => "D002",
             Model::D003 => "D003",
+            Model::D004 => "D004",
             Model::T2T1 => "T2T1",
             Model::T2B1 => "T2B1",
             Model::T3B1 => "T3B1",
