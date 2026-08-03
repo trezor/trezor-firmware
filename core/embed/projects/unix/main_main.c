@@ -100,7 +100,8 @@ static void drivers_init(void) {
 #endif
 
 #ifdef USE_TROPIC
-  ensure_true(tropic_init(NULL) == LT_OK, "Failed to initialize Tropic driver");
+  lt_ret_t tropic_ret = tropic_init(NULL);
+  ensure_true(tropic_ret == LT_OK, tropic_init_error_message(tropic_ret));
   ensure(tropic_ensure_configuration(), "Tropic configuration check failed");
 #endif
 

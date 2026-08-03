@@ -71,6 +71,20 @@
 
 lt_ret_t tropic_init(cli_t* cli);
 
+/**
+ * @brief Builds an RSOD message describing a failed `tropic_init()`.
+ *
+ * Intended to be passed to `ensure_true()`, so that the libtropic return code
+ * is visible on screen instead of a generic message:
+ *
+ *   lt_ret_t ret = tropic_init(NULL);
+ *   ensure_true(ret == LT_OK, tropic_init_error_message(ret));
+ *
+ * @param ret Return value of the failed `tropic_init()` call.
+ * @return Pointer to a static buffer holding the message.
+ */
+const char* tropic_init_error_message(lt_ret_t ret);
+
 void tropic01_reset(void);
 
 void tropic_deinit(void);
