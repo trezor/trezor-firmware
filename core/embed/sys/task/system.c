@@ -24,18 +24,31 @@
 
 #ifdef KERNEL_MODE
 
-void system_exit(int exitcode) { systask_exit(NULL, exitcode); }
-
-void system_exit_error_ex(const char* title, size_t title_len,
-                          const char* message, size_t message_len,
-                          const char* footer, size_t footer_len) {
-  systask_exit_error(NULL, title, title_len, message, message_len, footer,
-                     footer_len);
+void __attribute__((noreturn)) system_exit(int exitcode) {
+  systask_exit(NULL, exitcode);
+  while (1) {
+    // This point should never be reached
+  }
 }
 
-void system_exit_fatal_ex(const char* message, size_t message_len,
-                          const char* file, size_t file_len, int line) {
+void __attribute__((noreturn)) system_exit_error_ex(
+    const char* title, size_t title_len, const char* message,
+    size_t message_len, const char* footer, size_t footer_len) {
+  systask_exit_error(NULL, title, title_len, message, message_len, footer,
+                     footer_len);
+  while (1) {
+    // This point should never be reached
+  }
+}
+
+void __attribute__((noreturn)) system_exit_fatal_ex(const char* message,
+                                                    size_t message_len,
+                                                    const char* file,
+                                                    size_t file_len, int line) {
   systask_exit_fatal(NULL, message, message_len, file, file_len, line);
+  while (1) {
+    // This point should never be reached
+  }
 }
 
 #endif  // KERNEL_MODE
