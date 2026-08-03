@@ -47,6 +47,7 @@ RECOVERY_BACK = "\x08"  # backspace character, sent literally
 
 SLIP39_EXTENDABLE_MIN_VERSION = (2, 7, 1)
 ENTROPY_CHECK_MIN_VERSION = (2, 8, 7)
+ENTROPY_CHECK_MIN_VERSION_T1 = (1, 13, 1)
 HOMESCREEN_STREAMING_MIN_VERSION = (2, 8, 11)
 
 
@@ -361,8 +362,9 @@ def setup(
     Returned XPUBs are in the form of tuples (derivation path, xpub).
 
     Specifying an entropy check count other than 0 on devices that don't support it,
-    such as Trezor Model One, will result in an error. If not specified, a random value
-    between 2 and 8 is chosen on supporting devices.
+    i.e. firmware older than 1.13.1 for Trezor Model One or older than 2.8.7 for the
+    core family, will result in an error. If not specified, a random value between 2 and
+    8 is chosen on supporting devices.
 
     Args:
      * client: TrezorClient instance.
@@ -405,8 +407,11 @@ def setup(
         paths = [parse_path("m/84h/0h/0h"), parse_path("m/44h/60h/0h")]
 
     if entropy_check_count is None:
-        if session.version < ENTROPY_CHECK_MIN_VERSION:
-            # includes Trezor One 1.x.x
+        if session.features.model == "1":
+            min_version = ENTROPY_CHECK_MIN_VERSION_T1
+        else:
+            min_version = ENTROPY_CHECK_MIN_VERSION
+        if session.version < min_version:
             entropy_check_count = 0
         else:
             entropy_check_count = random.randint(2, 8)
