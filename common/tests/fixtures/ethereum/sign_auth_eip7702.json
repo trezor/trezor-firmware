@@ -8,7 +8,7 @@
             "name": "ambire_nonce_1_chainid_0_all_networks",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x5A7fC11397E9A8AD41Bf10bF13f22b0A63F96f6D",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "nonce": 1,
                 "chain_id": 0
             },
@@ -36,7 +36,7 @@
             "name": "ambire_nonce_1_chainid_1_mainnet",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x5A7fC11397E9A8AD41Bf10bF13f22b0A63F96f6D",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "nonce": 1,
                 "chain_id": 1
             },
@@ -79,7 +79,7 @@
             "name": "ambire_nonce_3_chainid_8453_base",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x5A7fC11397E9A8AD41Bf10bF13f22b0A63F96f6D",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "nonce": 3,
                 "chain_id": 8453
             },
@@ -93,7 +93,7 @@
             "name": "ambire_nonce_2_chainid_42161_arbitrum",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x5A7fC11397E9A8AD41Bf10bF13f22b0A63F96f6D",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "nonce": 2,
                 "chain_id": 42161
             },
@@ -107,7 +107,7 @@
             "name": "ambire_nonce_2_chainid_123456789_defs",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x5A7fC11397E9A8AD41Bf10bF13f22b0A63F96f6D",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "nonce": 2,
                 "chain_id": 123456789
             },
