@@ -168,8 +168,18 @@ secbool secret_read(uint8_t *data, uint32_t offset, uint32_t len) {
 }
 
 static void secret_disable_access(void) {
+#if defined(STM32H5)
+  // The STM32H5 has no FLASH SECHDPCR; it hides the secret (HDP) area by
+  // advancing the temporal isolation level (HDPL) via SBS. Writing 0x6A to
+  // SBS_HDPLCR.INCR_HDPL increments HDPL by one, after which the current level's
+  // HDP area is inaccessible to all higher levels until reset (RM0517). This
+  // requires the secret sectors to be configured as the HDP area in the flash
+  // option bytes (provisioned via STM32CubeProgrammer).
+  SBS_S->HDPLCR = (0x6A << SBS_HDPLCR_INCR_HDPL_Pos);
+#else
   FLASH->SECHDPCR |= FLASH_SECHDPCR_HDP1_ACCDIS_Msk;
   FLASH->SECHDPCR |= FLASH_SECHDPCR_HDP2_ACCDIS_Msk;
+#endif
 }
 
 // Locks the BHK register. Once locked, the BHK register can't be accessed by

@@ -220,6 +220,30 @@ secbool secure_aes_ecb_decrypt_hw(const uint8_t* input, size_t size,
 }
 
 secbool secure_aes_init(void) {
+#if defined(STM32H5)
+  // Unlike the STM32U5, the STM32H5 SAES has no dedicated secure HSI (SHSI). The
+  // SAES is clocked by the AHB bus clock together with a dedicated RCC kernel
+  // clock. After the clock is enabled and the reset released, the SAES
+  // automatically draws random numbers from the RNG and asserts BUSY in
+  // SAES_SR; it must not be used until BUSY clears (RM0517, "SAES reset and
+  // clocks").
+  //
+  // NOTE: this requires the SAES kernel clock and the RNG to be clocked, which
+  // depends on the full clock configuration in SystemInit (H5 startup TODO).
+  __HAL_RCC_SAES_CLK_ENABLE();
+  __HAL_RCC_SAES_FORCE_RESET();
+  __HAL_RCC_SAES_RELEASE_RESET();
+
+  uint32_t deadline = ticks_timeout(100);
+  while ((SAES->SR & AES_SR_BUSY) != 0U) {
+    if (ticks_expired(deadline)) {
+      secure_aes_deinit();
+      return secfalse;
+    }
+  }
+
+  return sectrue;
+#else
   // Enable SHSI clock
   __HAL_RCC_SHSI_ENABLE();
 
@@ -242,6 +266,7 @@ secbool secure_aes_init(void) {
 cleanup:
   secure_aes_deinit();
   return secfalse;
+#endif
 }
 
 void secure_aes_deinit(void) {
@@ -249,7 +274,8 @@ void secure_aes_deinit(void) {
   __HAL_RCC_SAES_FORCE_RESET();
   __HAL_RCC_SAES_RELEASE_RESET();
 
-  // Disable the Secure Internal High Speed oscillator (SHSI)
+#if !defined(STM32H5)
+  // Disable the Secure Internal High Speed oscillator (SHSI) (STM32U5 only).
   __HAL_RCC_SHSI_DISABLE();
 
   uint32_t deadline = ticks_timeout(2);
@@ -260,6 +286,7 @@ void secure_aes_deinit(void) {
       return;
     }
   }
+#endif
 }
 
 #endif  // SECURE_MODE

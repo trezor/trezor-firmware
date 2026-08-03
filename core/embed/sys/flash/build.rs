@@ -55,7 +55,9 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             lib.add_sources(["flash/stm32u5/flash.c", "flash/stm32u5/flash_otp.c"]);
         }
     } else if cfg!(feature = "mcu_stm32h5") {
-        lib.add_source("flash/stm32h5/flash_layout.c");
+        // flash_layout.c is MCU-agnostic (uses only FLASH_PAGE_SIZE /
+        // FLASH_BASE_* and the model area macros), so it is shared with stm32u5.
+        lib.add_source("flash/stm32u5/flash_layout.c");
 
         lib.add_defines([
             ("FLASH_BLOCK_WORDS", Some("4")),
@@ -64,7 +66,11 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             ("FLASH_PAGE_SIZE", Some("FLASH_SECTOR_SIZE")),
         ]);
 
-        lib.add_sources(["flash/stm32h5/flash.c", "flash/stm32h5/flash_otp.c"]);
+        // flash_otp.c is shared with stm32u5 (same code; both use
+        // FLASH_TYPEPROGRAM_QUADWORD_NS). TODO(H5): the STM32H5 OTP is really
+        // programmed in half-words (FLASH_TYPEPROGRAM_HALFWORD_OTP); revisit
+        // before relying on on-hardware OTP writes.
+        lib.add_sources(["flash/stm32h5/flash.c", "flash/stm32u5/flash_otp.c"]);
     } else {
         bail_unsupported!();
     }
