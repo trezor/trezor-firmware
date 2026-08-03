@@ -21,7 +21,7 @@ thing it needs to emit/maintain (one line per ``core/embed/models/<NAME>``)."""
 
 from typing import Dict, Optional, Tuple
 
-from . import D001, D002, D003, T1B1, T2B1, T2T1, T3B1, T3T1, T3T2, T3W1, ModelData
+from . import D001, D002, D003, D004, T1B1, T2B1, T2T1, T3B1, T3T1, T3T2, T3W1, ModelData
 
 ALL: Tuple[ModelData, ...] = (
     T1B1.MODEL,
@@ -34,6 +34,7 @@ ALL: Tuple[ModelData, ...] = (
     D001.MODEL,
     D002.MODEL,
     D003.MODEL,
+    D004.MODEL,
 )
 
 BY_INTERNAL_NAME: Dict[str, ModelData] = {m.internal_name: m for m in ALL}

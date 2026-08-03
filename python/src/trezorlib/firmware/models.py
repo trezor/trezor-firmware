@@ -39,6 +39,7 @@ class Model(Enum):
     D001 = b"D001"
     D002 = b"D002"
     D003 = b"D003"
+    D004 = b"D004"
 
     # legacy aliases
     ONE = b"T1B1"
@@ -47,6 +48,7 @@ class Model(Enum):
     DISC1 = b"D001"
     DISC2 = b"D002"
     DISC3 = b"D003"
+    DISC4 = b"D004"
 
     @classmethod
     def from_hw_model(cls, hw_model: Self | bytes) -> Model:
@@ -338,3 +340,5 @@ D002 = TREZOR_CORE_DEV
 D002_DEV = TREZOR_CORE_DEV
 D003 = TREZOR_CORE_DEV
 D003_DEV = TREZOR_CORE_DEV
+D004 = TREZOR_CORE_DEV
+D004_DEV = TREZOR_CORE_DEV
