@@ -353,6 +353,8 @@ for TREZOR_MODEL in ${MODELS[@]}; do
       $GIT_CLEAN_REPO
       rm -rf /build/*
       uv run make clean vendor $MAKE_TARGETS QUIET_MODE=1
+      ../tools/check-insecure-prng --absent build-xtask/artifacts/$TREZOR_MODEL/*.elf
+      ../tools/check-rng-strong $TREZOR_MODEL build-xtask/artifacts/$TREZOR_MODEL/*.elf
       for item in bootloader secmon kernel firmware prodtest; do
         # Append the labeled fingerprint, preceded by '# <artifact name>'.
         if [ "\$item" != kernel ] && [ -s build-xtask/artifacts/$TREZOR_MODEL/\$item.bin ]; then
@@ -525,6 +527,7 @@ if echo "${MODELS[@]}" | grep -q T1B1 && echo "${CORE_TARGETS[@]}" | grep -qw fi
       $GIT_CLEAN_REPO
       ln -s /build build
       uv run script/cibuild
+      ../tools/check-insecure-prng --absent firmware/trezor.elf
       mkdir -p build/bootloader build/firmware build/intermediate_fw
       cp bootloader/bootloader.bin build/bootloader/bootloader.bin
       cp intermediate_fw/trezor.bin build/intermediate_fw/inter.bin

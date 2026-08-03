@@ -47,7 +47,7 @@ else
 BLACK_FLAGS=
 endif
 
-style_check: pystyle_check ruststyle_check cstyle_check protostyle_check changelog_check translations_style_check yaml_check docs_summary_check editor_check ## run all style checks
+style_check: pystyle_check ruststyle_check cstyle_check protostyle_check changelog_check translations_style_check yaml_check docs_summary_check editor_check rngdefs_check ## run all style checks
 
 style: pystyle ruststyle cstyle protostyle changelog_style translations_style ## apply all code styles (Python+Rust+C+protobuf+changelog+translation JSON)
 
@@ -125,6 +125,10 @@ cstyle_check: ## run code style check on low-level C code
 cstyle: ## apply code style on low-level C code
 	@echo [CLANG-FORMAT]
 	@clang-format -i $(C_FILES)
+
+rngdefs_check: ## check that no unexpected RNG implementation can shadow the real one
+	@echo [RNG-DEFINITIONS]
+	@./tools/check-rng-definitions
 
 protostyle: ## Format protobuf definitions
 	@echo [PROTOBUF-STYLE]

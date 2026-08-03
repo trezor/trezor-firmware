@@ -320,8 +320,11 @@ def reset(
     )
 
 
+ENTROPY_SIZE = 32
+
+
 def _get_external_entropy() -> bytes:
-    return secrets.token_bytes(32)
+    return secrets.token_bytes(ENTROPY_SIZE)
 
 
 @workflow(refresh_features=True)
@@ -449,7 +452,12 @@ def _reset_no_entropycheck(
     """
     assert msg.entropy_check is False
     session.call(msg, expect=messages.EntropyRequest)
-    session.call(messages.EntropyAck(entropy=get_entropy()), expect=messages.Success)
+    external_entropy = get_entropy()
+    if len(external_entropy) < ENTROPY_SIZE:
+        raise ValueError(
+            f"External entropy must be at least {ENTROPY_SIZE} bytes, got {len(external_entropy)}"
+        )
+    session.call(messages.EntropyAck(entropy=external_entropy), expect=messages.Success)
 
 
 def _reset_with_entropycheck(
@@ -497,12 +505,22 @@ def _reset_with_entropycheck(
 
     def verify_entropy_commitment(
         internal_entropy: bytes | None,
+        prev_internal_entropy: bytes | None,
         external_entropy: bytes,
         entropy_commitment: bytes | None,
         xpubs: list[tuple[Address, str]],
     ) -> None:
         if internal_entropy is None or entropy_commitment is None:
             raise TrezorException("Invalid entropy check response.")
+        # Sanity-check the internal entropy the device revealed.
+        if len(internal_entropy) != ENTROPY_SIZE:
+            raise TrezorException(
+                f"Internal entropy must be {ENTROPY_SIZE} bytes, got {len(internal_entropy)}."
+            )
+        if internal_entropy == internal_entropy[:1] * ENTROPY_SIZE:
+            raise TrezorException("Internal entropy is a constant byte pattern.")
+        if internal_entropy == prev_internal_entropy:
+            raise TrezorException("Internal entropy is a repeat of the previous round.")
         calculated_commitment = hmac.HMAC(
             key=internal_entropy, msg=b"", digestmod=hashlib.sha256
         ).digest()
@@ -520,10 +538,15 @@ def _reset_with_entropycheck(
     xpubs = []
     resp = session.call(reset_msg, expect=messages.EntropyRequest)
     entropy_commitment = resp.entropy_commitment
+    prev_internal_entropy = None
 
     while True:
         # provide external entropy for this round
         external_entropy = get_entropy()
+        if len(external_entropy) < ENTROPY_SIZE:
+            raise ValueError(
+                f"External entropy must be at least {ENTROPY_SIZE} bytes, got {len(external_entropy)}"
+            )
         session.call(
             messages.EntropyAck(entropy=external_entropy),
             expect=messages.EntropyCheckReady,
@@ -550,10 +573,15 @@ def _reset_with_entropycheck(
 
         # Check the entropy commitment from the previous round.
         verify_entropy_commitment(
-            resp.prev_entropy, external_entropy, entropy_commitment, xpubs
+            resp.prev_entropy,
+            prev_internal_entropy,
+            external_entropy,
+            entropy_commitment,
+            xpubs,
         )
         # Update the entropy commitment for the next round.
         entropy_commitment = resp.entropy_commitment
+        prev_internal_entropy = resp.prev_entropy
 
     # TODO when we grow an API for auto-opening an empty passphrase session,
     # we should run the following piece:

@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+#
+# Assert that rng_fill_buffer_strong() in each device ELF is the real
+# implementation, wired to every entropy source the model's hardware provides.
+#
+# For every ELF this checks, on the shipped artifact:
+#
+#   1. rng_fill_buffer_strong is defined exactly once. (or not at all, for
+#      artifacts like bootloaders that have no business with it).
+#   2. Its defining source file (via DWARF debug info) matches the artifact's
+#      role: the real implementation in sec/rng/rng_strong.c for the
+#      secure-domain image, the smcall/syscall stub for images that delegate.
+#      This catches a shim header or stub silently shadowing the real one.
+#   3. For the real implementation, its disassembly references the MCU TRNG
+#      and each secure element the model has.
+#
+# Usage:
+#   check-rng-strong MODEL ELF...
+
+set -u
+
+SYMBOL=rng_fill_buffer_strong
+
+ALL_SE_SOURCES="optiga_random_buffer tropic_random_buffer"
+MCU_SOURCE="rng_fill_buffer"
+
+OBJDUMP=arm-none-eabi-objdump
+ADDR2LINE=arm-none-eabi-addr2line
+
+model_sources() {
+    case "$1" in
+        T2T1|D001)      echo "" ;;
+        T2B1|T3B1|T3T1) echo "optiga_random_buffer" ;;
+        T3W1)           echo "optiga_random_buffer tropic_random_buffer" ;;
+        *)              return 1 ;;
+    esac
+}
+
+is_secmon_model() {
+    case "$1" in
+        T2T1|T2B1|T3B1|T3T1|D001) return 1 ;;
+        *)                        return 0 ;;
+    esac
+}
+
+has_secret_area() {
+    case "$1" in
+        T2T1|D001) return 1 ;;
+        *)         return 0 ;;
+    esac
+}
+
+# Role of an artifact:
+#   real           the genuine implementation, must be present and fully wired
+#   stub:<suffix>  must be defined in a file whose path ends in <suffix>, i.e.
+#                  the stub that forwards to the privileged image
+#   absent         must not contain it
+artifact_role() {
+    local model=$1 base=$2
+    case "$base" in
+        secmon.elf)
+            is_secmon_model "$model" && echo "real" ;;
+        kernel.elf)
+            if is_secmon_model "$model"; then
+                echo "stub:sys/smcall/stm32/smcall_stubs.c"
+            else
+                echo "real"
+            fi ;;
+        firmware.elf)
+            echo "stub:sys/syscall/stm32/syscall_stubs.c" ;;
+        prodtest.elf)
+            if has_secret_area "$model"; then echo "real"; else echo "absent"; fi ;;
+        boardloader.elf|bootloader.elf|bootloader_ci.elf)
+            echo "absent" ;;
+    esac
+}
+
+usage() {
+    echo "Usage: $0 MODEL ELF..." >&2
+    exit 2
+}
+
+[ $# -ge 2 ] || usage
+MODEL=$1
+shift
+
+if ! SOURCES=$(model_sources "$MODEL"); then
+    echo "ERROR: unknown model '$MODEL' -- add it to model_sources in $0"
+    exit 1
+fi
+
+for tool in "$OBJDUMP" "$ADDR2LINE"; do
+    if ! command -v "$tool" > /dev/null; then
+        echo "ERROR: $tool not found"
+        exit 1
+    fi
+done
+
+RETURN=0
+fail() {
+    echo "FAIL: $*"
+    RETURN=1
+}
+
+# Does the disassembly reference the function?
+disasm_refs() {
+    printf '%s\n' "$1" | grep -q -E "<(__)?$2(_veneer)?[>+]"
+}
+
+for file in "$@"; do
+    if [ ! -f "$file" ]; then
+        fail "$file: not found"
+        continue
+    fi
+
+    base=$(basename "$file")
+    role=$(artifact_role "$MODEL" "$base")
+    if [ -z "$role" ]; then
+        fail "$file: no expectation for artifact '$base' of model $MODEL -- add it to artifact_role in $0"
+        continue
+    fi
+
+    symbols=$(nm --defined-only "$file" 2>/dev/null)
+    if [ $? -ne 0 ] || [ -z "$symbols" ]; then
+        fail "$file: no readable symbol table (stripped, or not an object file)"
+        continue
+    fi
+
+    count=$(echo "$symbols" | awk -v s="$SYMBOL" '$NF == s' | wc -l)
+
+    if [ "$role" = absent ]; then
+        if [ "$count" -ne 0 ]; then
+            fail "$file: defines '$SYMBOL' but should not contain it at all"
+        else
+            echo "OK: $file (no $SYMBOL, as expected)"
+        fi
+        continue
+    fi
+
+    if [ "$count" -ne 1 ]; then
+        fail "$file: expected exactly one definition of '$SYMBOL', found $count"
+        continue
+    fi
+
+    # Provenance: the source file that defines the symbol, from DWARF.
+    addr=$(echo "$symbols" | awk -v s="$SYMBOL" '$NF == s { print $1 }')
+    src=$("$ADDR2LINE" -e "$file" "$addr" | cut -d: -f1)
+
+    case "$role" in
+        real)   want_src="sec/rng/rng_strong.c" ;;
+        stub:*) want_src="${role#stub:}" ;;
+    esac
+
+    if [[ $src != *"$want_src" ]]; then
+        fail "$file: '$SYMBOL' is defined in $src, expected ...$want_src"
+        continue
+    fi
+
+    if [ "$role" != real ]; then
+        echo "OK: $file ($SYMBOL is the expected stub from $want_src)"
+        continue
+    fi
+
+    # Real implementation: its body must reference the MCU TRNG and exactly
+    # the model's secure elements.
+    disasm=$("$OBJDUMP" -d --disassemble="$SYMBOL" "$file" 2>/dev/null)
+    if ! printf '%s\n' "$disasm" | grep -q -E "<$SYMBOL>:"; then
+        fail "$file: could not disassemble '$SYMBOL' ($OBJDUMP produced no function body)"
+        continue
+    fi
+
+    bad=0
+    for fn in $MCU_SOURCE $SOURCES; do
+        if ! disasm_refs "$disasm" "$fn"; then
+            fail "$file: '$SYMBOL' does not call $fn -- an entropy source of $MODEL is not wired in"
+            bad=1
+        fi
+    done
+    for fn in $ALL_SE_SOURCES; do
+        case " $SOURCES " in *" $fn "*) continue ;; esac
+        if disasm_refs "$disasm" "$fn"; then
+            fail "$file: '$SYMBOL' calls $fn, which $MODEL does not have"
+            bad=1
+        fi
+    done
+
+    if [ "$bad" -eq 0 ]; then
+        echo "OK: $file ($SYMBOL from $want_src, sources: $MCU_SOURCE ${SOURCES:-<none>})"
+    fi
+done
+
+if [ $RETURN -ne 0 ]; then
+    echo "ERROR: strong RNG provenance check failed."
+fi
+exit $RETURN

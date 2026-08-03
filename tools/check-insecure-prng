@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+#
+# Assert whether the insecure test PRNG is linked into a binary.
+#
+# crypto/rand_insecure.c implements random_buffer() as a deterministic linear
+# congruential generator, for emulator and test builds only. If it reached a
+# device unintentionally, every generated secret would be predictable.
+#
+# Tests whether the random_buffer() definition got linked from rand_insecure.c.
+#
+# Usage:
+#   check-insecure-prng --absent  ELF...   # must NOT contain the PRNG
+#   check-insecure-prng --present ELF...   # MUST be the PRNG's random_buffer
+#
+# Use --present with artifacts that are expected to use the PRNG. Its purpose
+# is to keep --absent honest. If rand_insecure.c is renamed or replaced,
+# --present fails and says so, instead of every --absent check silently
+# passing forever while looking for a file that no longer exists.
+#
+# Needs unstripped ELFs (symbol table to find random_buffer, DWARF to resolve
+# where it came from). A file where either is missing is an error, never a
+# pass.
+
+set -u
+
+SYMBOL=random_buffer
+LCG_FILE=rand_insecure.c
+
+usage() {
+    echo "Usage: $0 --absent|--present ELF..." >&2
+    exit 2
+}
+
+[ $# -ge 2 ] || usage
+
+case "$1" in
+    --absent)  EXPECT=absent ;;
+    --present) EXPECT=present ;;
+    *) usage ;;
+esac
+shift
+
+RETURN=0
+
+for file in "$@"; do
+    if [ ! -f "$file" ]; then
+        echo "ERROR: $file: not found"
+        RETURN=1
+        continue
+    fi
+
+    # nm exits 0 and prints "no symbols" on stderr for a stripped file, so an
+    # empty symbol list must be treated as an error in its own right: with no
+    # symbol table, "symbol not found" would be a vacuous pass.
+    symbols=$(nm --defined-only "$file" 2>/dev/null)
+    if [ $? -ne 0 ] || [ -z "$symbols" ]; then
+        echo "ERROR: $file: no readable symbol table (stripped, or not an object file)"
+        nm --defined-only "$file" 2>&1 >/dev/null | sed 's/^/       /'
+        RETURN=1
+        continue
+    fi
+
+    count=$(echo "$symbols" | awk -v s="$SYMBOL" '$NF == s' | wc -l)
+
+    if [ "$count" -eq 0 ]; then
+        # No random_buffer at all (e.g. nothing in the image calls it and the
+        # linker dropped it). Then no definition of it can be the LCG either.
+        if [ "$EXPECT" = absent ]; then
+            echo "OK: $file (no $SYMBOL linked at all)"
+        else
+            echo "FAIL: $file does not define '$SYMBOL' but is expected to use the insecure PRNG."
+            RETURN=1
+        fi
+        continue
+    fi
+
+    if [ "$count" -ne 1 ]; then
+        echo "ERROR: $file: expected at most one definition of '$SYMBOL', found $count"
+        RETURN=1
+        continue
+    fi
+
+    # Which source file provides the definition, per DWARF. Host addr2line
+    # handles both x86 and ARM ELFs (DWARF is target-independent).
+    addr=$(echo "$symbols" | awk -v s="$SYMBOL" '$NF == s { print $1 }')
+    src=$(addr2line -e "$file" "$addr" 2>/dev/null | cut -d: -f1)
+    if [ -z "$src" ] || [ "$src" = "??" ]; then
+        echo "ERROR: $file: cannot resolve the source of '$SYMBOL' (debug info stripped?)"
+        RETURN=1
+        continue
+    fi
+
+    if [ "$(basename "$src")" = "$LCG_FILE" ]; then
+        is_lcg=yes
+    else
+        is_lcg=no
+    fi
+
+    if [ "$EXPECT" = absent ] && [ "$is_lcg" = yes ]; then
+        echo "FAIL: $file: '$SYMBOL' is the insecure PRNG (defined in $src)!"
+        RETURN=1
+    elif [ "$EXPECT" = present ] && [ "$is_lcg" = no ]; then
+        echo "FAIL: $file: '$SYMBOL' is defined in $src, not in $LCG_FILE."
+        echo "      Either the insecure PRNG was not linked into a build that"
+        echo "      should have it, or the implementation moved, in which case"
+        echo "      update LCG_FILE in $0."
+        RETURN=1
+    else
+        echo "OK: $file ($SYMBOL from $(basename "$src"), expected $EXPECT)"
+    fi
+done
+
+if [ $RETURN -ne 0 ]; then
+    echo "ERROR: insecure PRNG check failed."
+fi
+exit $RETURN
