@@ -50,6 +50,7 @@ impl ModelConfig {
         match self.mcu.as_str() {
             "stm32f427" | "stm32f429" => Ok("thumbv7em-none-eabihf"),
             "stm32u58" | "stm32u5g" | "stm32u5a" => Ok("thumbv8m.main-none-eabihf"),
+            "stm32h5f5" => Ok("thumbv8m.main-none-eabihf"),
             mcu => Err(anyhow!("Unknown MCU: {mcu}")),
         }
     }
@@ -58,6 +59,7 @@ impl ModelConfig {
         match self.mcu.as_str() {
             "stm32f427" | "stm32f429" => Ok("target/stm32f4x.cfg"),
             "stm32u58" | "stm32u5g" | "stm32u5a" => Ok("target/stm32u5x.cfg"),
+            "stm32h5f5" => Ok("target/stm32h5x.cfg"),
             mcu => Err(anyhow!("Unknown MCU: {mcu}")),
         }
     }

@@ -849,7 +849,7 @@ __attribute__((naked, no_stack_protector)) void SecureFault_Handler(void) {
 }
 #endif
 
-#ifdef STM32U5
+#if defined(STM32U5) || defined(STM32H5)
 __attribute__((naked, no_stack_protector)) void GTZC_IRQHandler(void) {
   __asm__ volatile(
       "MRS      R0, MSP               \n"  // R0 = MSP
@@ -861,9 +861,14 @@ __attribute__((naked, no_stack_protector)) void GTZC_IRQHandler(void) {
 
 __attribute__((no_stack_protector, used)) static void nmi_handler(void) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
-#ifdef STM32U5
+#if defined(STM32U5)
   if ((RCC->CIFR & RCC_CIFR_CSSF) != 0) {
     RCC->CICR = RCC_CICR_CSSC;
+#elif defined(STM32H5)
+  // On the STM32H5 the HSE clock-security failure is reported by HSECSSF and
+  // cleared through HSECSSC (there is no combined CSSF flag as on the U5).
+  if ((RCC->CIFR & RCC_CIFR_HSECSSF) != 0) {
+    RCC->CICR = RCC_CICR_HSECSSC;
 #else
   if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
     RCC->CIR = RCC_CIR_CSSC;

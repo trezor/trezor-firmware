@@ -165,7 +165,10 @@ __attribute((naked, noreturn, no_stack_protector)) void system_emergency_rescue(
 
 #endif  // KERNEL_MODE
 
-#ifdef STM32U5
+// STM32U5 and STM32H5 are both Cortex-M33 (ARMv8-M): the fault struct has no
+// sp_lim (stack overflow is reported via the CFSR STKOF flag), unlike the
+// ARMv7-M (STM32F4) variant below.
+#if defined(STM32U5) || defined(STM32H5)
 const char* system_fault_message(const system_fault_t* fault) {
   const char* fault_type = "FAULT";
   switch (fault->irqn) {

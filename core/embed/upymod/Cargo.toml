@@ -26,6 +26,7 @@ mcu_stm32f429 = ["io/mcu_stm32f429", "mcu_stm32f4"]
 mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
 mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
 mcu_stm32u5a = ["io/mcu_stm32u5a", "mcu_stm32u5"]
+mcu_stm32h5f5 = ["io/mcu_stm32h5f5", "mcu_stm32h5"]
 
 # --------------------------------------------------------------------------
 # Selectable components
@@ -73,4 +74,5 @@ default = ["sec/storage", "io/usb_iface_wire"]
 
 mcu_stm32f4 = ["mcu_stm32"]
 mcu_stm32u5 = ["mcu_stm32"]
+mcu_stm32h5 = ["mcu_stm32"]
 mcu_stm32 = []

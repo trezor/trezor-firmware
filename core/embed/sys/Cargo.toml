@@ -27,6 +27,7 @@ mcu_stm32f429 = ["models/mcu_stm32f429", "mcu_stm32f4"]
 mcu_stm32u58 = ["models/mcu_stm32u58", "mcu_stm32u5"]
 mcu_stm32u5g = ["models/mcu_stm32u5g", "mcu_stm32u5"]
 mcu_stm32u5a = ["models/mcu_stm32u5a", "mcu_stm32u5"]
+mcu_stm32h5f5 = ["models/mcu_stm32h5f5", "mcu_stm32h5"]
 
 # --------------------------------------------------------------------------
 # Privilege mode
@@ -77,4 +78,5 @@ test = [
 
 mcu_stm32f4 = ["mcu_stm32"]
 mcu_stm32u5 = ["mcu_stm32"]
+mcu_stm32h5 = ["mcu_stm32"]
 mcu_stm32 = []

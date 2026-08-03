@@ -7,8 +7,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
     if cfg!(feature = "emulator") {
         // No implementation
-    } else if cfg!(feature = "mcu_stm32") {
+    } else if cfg!(feature = "mcu_stm32u5") {
         lib.add_source("trustzone/stm32u5/trustzone.c");
+    } else if cfg!(feature = "mcu_stm32h5") {
+        lib.add_source("trustzone/stm32h5/trustzone.c");
     } else {
         bail_unsupported!();
     }

@@ -54,6 +54,17 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
             lib.add_sources(["flash/stm32u5/flash.c", "flash/stm32u5/flash_otp.c"]);
         }
+    } else if cfg!(feature = "mcu_stm32h5") {
+        lib.add_source("flash/stm32h5/flash_layout.c");
+
+        lib.add_defines([
+            ("FLASH_BLOCK_WORDS", Some("4")),
+            // STM32H5 names the 8 KB unit FLASH_SECTOR_SIZE; the rest of the
+            // tree expects the U5-style FLASH_PAGE_SIZE name (same value).
+            ("FLASH_PAGE_SIZE", Some("FLASH_SECTOR_SIZE")),
+        ]);
+
+        lib.add_sources(["flash/stm32h5/flash.c", "flash/stm32h5/flash_otp.c"]);
     } else {
         bail_unsupported!();
     }

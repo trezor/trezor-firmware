@@ -105,6 +105,20 @@ typedef struct {
             },                                    \
     };                                            \
   })
+#elif defined(STM32H5F5xx)
+// STM32H5F5xx: SRAM1..SRAM5 are contiguous (1.5 MB total) starting at
+// SRAM1_BASE, so a single block covers all startup RAM.
+#define MEMREGION_ALL_STARTUP_RAM                                       \
+  ({                                                                    \
+    (memregion_t){                                                      \
+        .block =                                                        \
+            {                                                           \
+                MEMBLOCK(SRAM1_BASE, SRAM1_SIZE + SRAM2_SIZE +          \
+                                         SRAM3_SIZE + SRAM4_SIZE +      \
+                                         SRAM5_SIZE),                   \
+            },                                                          \
+    };                                                                  \
+  })
 #else
 #error "Unknown STM32 family"
 #endif
