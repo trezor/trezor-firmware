@@ -31,14 +31,13 @@
 
 // STM32H5 option-byte configuration.
 //
-// This mirrors the STM32U5 behaviour: the firmware itself programs the
-// security-critical option bytes to the expected values and re-launches them
-// (which resets the device), rather than relying on external provisioning.
+// The firmware itself programs the security-critical option bytes to the
+// expected values and re-launches them (which resets the device), rather than
+// relying on external provisioning.
 //
-// The STM32H5 uses a "product state" life cycle instead of RDP levels. This
-// driver deliberately KEEPS the product state at its factory default of Open
-// (0xED) — the dev-board equivalent of the U5 non-PRODUCTION RDP level 0, which
-// keeps SWD/debug and re-flashing available. It therefore never writes the
+// The STM32H5 uses a "product state" life cycle. This driver deliberately KEEPS
+// the product state at its factory default of Open (0xED), which keeps SWD/debug
+// and re-flashing available. It therefore never writes the
 // product-state byte (the most brick-prone option byte). It only programs the
 // option bytes that are NOT set by default and that the secure monitor needs:
 //
@@ -57,8 +56,8 @@
 // recoverable with STM32CubeProgrammer if anything is misconfigured.
 //
 // TODO(H5): a PRODUCTION build should additionally move the product state to
-// Closed (0x72) and enable WRP/boot-lock, gated behind `#if PRODUCTION` as on
-// the U5 — those values must be validated on hardware first.
+// Closed (0x72) and enable WRP/boot-lock, gated behind `#if PRODUCTION` —
+// those values must be validated on hardware first.
 
 // Secure watermark / HDP sector ranges (bank 1).
 #define WMSEC_SECTOR_START SECRET_SECTOR_START
@@ -114,7 +113,7 @@ static void flash_set_option_bytes(void) {
   HAL_FLASHEx_OBProgram(&ob);
 
   // Commit the option bytes. This resets the device, so execution normally does
-  // not return past this point (mirrors the U5 OBL_LAUNCH behaviour).
+  // not return past this point.
   HAL_FLASH_OB_Launch();
 
   HAL_FLASH_OB_Lock();

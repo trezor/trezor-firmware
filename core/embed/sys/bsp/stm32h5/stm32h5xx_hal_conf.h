@@ -38,8 +38,8 @@ extern "C" {
 /**
   * @brief This is the list of modules to be used in the HAL driver
   */
-// Trezor D004/STM32H5 bring-up: curated module set mirroring the stm32u5 BSP
-// (minus DSI/GFXMMU which don't exist on H5). Add modules here as the H5 port
+// Trezor D004/STM32H5 bring-up: curated module set for the H5 port (no
+// DSI/GFXMMU — not present on H5). Add modules here as the H5 port
 // grows; every enabled module must have its .c added in sys/bsp/build.rs.
 #define HAL_MODULE_ENABLED
 /* #define HAL_ADC_MODULE_ENABLED */

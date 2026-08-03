@@ -32,7 +32,7 @@
 #define FLASH_BANK_SECTORS 256
 #define FLASH_SECTOR_COUNT (FLASH_BANK_SECTORS * 2)
 
-// STM32H5 flash error/status flags. Unlike U5 there is no PGAERR; the
+// STM32H5 flash error/status flags. There is no PGAERR flag; the
 // alignment/consistency checks are reported through STRBERR and INCERR. Flags
 // are cleared through the dedicated clear registers NSCCR/SECCCR (whose clear
 // bits share the FLASH_SR_* positions), not by writing back to the status
@@ -215,8 +215,7 @@ secbool flash_write_block(uint16_t sector, uint32_t offset,
   return flash_write_quadword(sector, offset, block);
 }
 
-// Note: STM32H5 has no dedicated burst-program mode (the FLASH_TYPEPROGRAM_BURST
-// of the U5 does not exist here), so - like the F4 driver - flash_write_burst is
+// Note: the STM32H5 has no dedicated burst-program mode, so flash_write_burst is
 // intentionally not implemented and USE_FLASH_BURST is left undefined.
 
 #endif  // KERNEL_MODE

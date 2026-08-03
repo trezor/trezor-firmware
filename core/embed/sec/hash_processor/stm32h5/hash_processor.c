@@ -32,8 +32,7 @@
 //
 // The STM32H5 uses the unified HASH HAL API: the algorithm is selected in the
 // init structure and hashing is driven by the generic HAL_HASH_Start /
-// HAL_HASH_Accumulate / HAL_HASH_AccumulateLast functions, unlike the
-// per-algorithm HAL_HASHEx_SHA256_* functions of the STM32U5.
+// HAL_HASH_Accumulate / HAL_HASH_AccumulateLast functions.
 //
 // TODO(H5): this uses the blocking (polling) API only. The DMA path
 // (HAL_HASH_Start_DMA, which on the H5 takes the output buffer directly) can be

@@ -108,7 +108,7 @@ static void tz_configure_sau(void) {
 
 static void tz_enable_gtzc(void) {
   // Enable GTZC (Global Trust-Zone Controller) peripheral clock.
-  // The STM32H5 has a single GTZC instance (no GTZC2, unlike the STM32U5).
+  // The STM32H5 has a single GTZC instance (no GTZC2).
   __HAL_RCC_GTZC1_CLK_ENABLE();
 }
 
@@ -293,14 +293,12 @@ void tz_init(void) {
   // Set GTZC interrupt as secure
   NVIC_ClearTargetState(GTZC_IRQn);
 
-  // System Configuration Controller (SBS on H5, replaces the U5 SYSCFG)
-  // accessible only from secure mode.
+  // System Configuration Controller (SBS) accessible only from secure mode.
   SBS->SECCFGR |= SBS_SECCFGR_FPUSEC | SBS_SECCFGR_CLASSBSEC |
                   SBS_SECCFGR_SBSSEC;
 
-  // All RCC peripherals secure by default. The STM32H5 has no MSI (it uses CSI
-  // instead) and no ICLKSEC bit (the peripheral-kernel clock select is
-  // CKPERSELSEC); the remaining bits match the U5.
+  // All RCC peripherals secure by default. CSISEC covers the CSI oscillator and
+  // CKPERSELSEC the peripheral-kernel clock select.
   const uint32_t RCC_SECCFGR_ALL_BITS =
       RCC_SECCFGR_HSISEC | RCC_SECCFGR_HSESEC | RCC_SECCFGR_CSISEC |
       RCC_SECCFGR_LSISEC | RCC_SECCFGR_LSESEC | RCC_SECCFGR_SYSCLKSEC |
@@ -314,9 +312,9 @@ void tz_init(void) {
   RCC->SECCFGR &= ~RCC_SECCFGR_PLL3SEC;  // PLL3 non-secure
   RCC->PRIVCFGR |= RCC_PRIVCFGR_SPRIV | RCC_PRIVCFGR_NSPRIV;
 
-  // STM32H5 PWR_SECCFGR: WUPn + low-power/backup/regulator bits. The U5 VDMSEC
-  // (voltage monitor) and APCSEC (apply-pull config) bits do not exist here;
-  // the H5 adds SCMSEC (supply config), RETSEC (retention) and VUSBSEC.
+  // PWR_SECCFGR: wake-up pins (WUPn) plus the low-power (LPMSEC), backup
+  // (VBSEC), supply-config (SCMSEC), retention (RETSEC) and VDDUSB (VUSBSEC)
+  // control bits.
   const uint32_t PWR_SECCFGR_ALL_BITS =
       PWR_SECCFGR_WUP1SEC | PWR_SECCFGR_WUP2SEC | PWR_SECCFGR_WUP3SEC |
       PWR_SECCFGR_WUP4SEC | PWR_SECCFGR_WUP5SEC | PWR_SECCFGR_WUP6SEC |
@@ -328,11 +326,10 @@ void tz_init(void) {
   PWR->SECCFGR |= PWR_SECCFGR_ALL_BITS;  // All secure
   PWR->PRIVCFGR |= PWR_PRIVCFGR_NSPRIV | PWR_PRIVCFGR_SPRIV;
 
-  // Make GPDMA1 non-secure & privileged.
-  // The STM32H5 GPDMA1 has 12 channels (0..11); there is no channel 12. Unlike
-  // the U5, the H5 hash processor uses polling (no secure DMA channel), so all
-  // channels are left non-secure.
-  // TODO(H5): if the H5 hash/crypto path is switched to DMA, mark its channel
+  // Make GPDMA1 non-secure & privileged. GPDMA1 has 12 channels (0..11). The
+  // hash processor uses polling (no secure DMA channel), so all channels are
+  // left non-secure.
+  // TODO(H5): if the hash/crypto path is switched to DMA, mark its channel
   // secure here (SECCFGR bit + NVIC_ClearTargetState on that channel's IRQn).
   __HAL_RCC_GPDMA1_CLK_ENABLE();
   GPDMA1->SECCFGR &= ~0xFFFF;
@@ -410,11 +407,11 @@ void tz_init(void) {
   tz_enable_illegal_access_interrupt();
 
   // Lock SAU configuration & AIRCR register against further modifications
-  // (CSLCKR lives in SBS on the H5, replacing the U5 SYSCFG).
+  // (CSLCKR lives in SBS).
   SBS->CSLCKR |= SBS_CSLCKR_LOCKSAU | SBS_CSLCKR_LOCKSVTAIRCR;
 
-  // Lock GTZC peripheral attributes against further modifications. The STM32H5
-  // has a single GTZC instance (no GTZC_TZSC2, unlike the U5).
+  // Lock GTZC peripheral attributes against further modifications. There is a
+  // single GTZC instance (no GTZC_TZSC2).
   GTZC_TZSC1->CR |= GTZC_TZSC_CR_LCK_Msk;
 }
 

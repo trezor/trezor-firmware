@@ -23,11 +23,11 @@
 
 // STM32H5 tamper: BRING-UP MOCK.
 //
-// TODO(H5): implement the real tamper driver. The STM32H5 TAMP peripheral and
-// the internal-tamper source map (ITAMP1..13: voltage/temperature/LSE/RTC
-// overflow/SWD access/ADC watchdog/monotonic counter/crypto fault/IWDG) differ
-// from the STM32U5, and the surrounding PWR/RCC registers (backup domain,
-// PWR->BDCR1 MONEN, RCC PWR clock enable, RTC clock selection) are H5-specific.
+// TODO(H5): implement the real tamper driver. The STM32H5 TAMP peripheral, its
+// internal-tamper source map (ITAMP1..13: voltage/temperature/LSE/RTC
+// overflow/SWD access/ADC watchdog/monotonic counter/crypto fault/IWDG) and the
+// surrounding PWR/RCC registers (backup domain, PWR->BDCR1 MONEN, RCC PWR clock
+// enable, RTC clock selection) still need a proper RM0517-based setup.
 // This mock leaves tamper detection DISABLED so bring-up cannot spuriously trip
 // a tamper reset; it must be replaced with a proper RM0517-based configuration
 // before this model provides any physical-attack protection.

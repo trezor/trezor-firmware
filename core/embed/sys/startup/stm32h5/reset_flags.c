@@ -23,8 +23,8 @@
 
 #ifdef KERNEL_MODE
 
-// Unlike the U5 (which reports reset causes in RCC->CSR), the STM32H5 has a
-// dedicated reset status register RCC->RSR. There is also no OBLRSTF flag.
+// The STM32H5 reports reset causes in the dedicated reset status register
+// RCC->RSR. There is no OBLRSTF flag.
 secbool reset_flags_check(void) {
 #if PRODUCTION
   // this is effective enough that it makes development painful, so only use it
