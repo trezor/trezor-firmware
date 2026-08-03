@@ -20,10 +20,13 @@ env:
   PULL_COMMENT: |
     You have modified Tropic configuration or submodule.
     You should not forget to do a thing.
-  ISSUE_REPOSITORY: mmilata/misc
-  ISSUE_TITLE: Tropic emulator config/version changed in trezor-firmware
+  ISSUE_REPOSITORY: trezor-user-env
+  # ISSUE_TITLE: Tropic emulator config/version changed in trezor-firmware
+  ISSUE_TITLE: Testing trezor-firmware integration, please ignore
   ISSUE_BODY: |
     Pull request: \$URL
+    Feel free to close
+    Or complain to @mmilata
   ISSUE_BODY_PATH: ${{ github.workspace }}/tropic-emulator-issue.md
 
 jobs:
@@ -60,16 +63,23 @@ jobs:
     env:
       URL: ${{ github.event.pull_request.html_url }}
     steps:
-      - name: Write an issue to file
-        run: |
-          echo "${ISSUE_BODY}" > ${ISSUE_BODY_PATH}
+      - name: Generate GitHub App token
+        id: trezor-bot-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # actions/create-github-app-token@v3.1.1
+        with:
+          client-id: ${{ secrets.TREZOR_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            ${{ env.ISSUE_REPOSITORY }}
+          permission-issues: write
 
       - name: Open the issue
-        uses: peter-evans/create-issue-from-file@25d6828eccb16cebfc59d02b568639e7548970f2  # peter-evans/create-issue-from-file@v6
-        with:
-          repository: ${{ env.ISSUE_REPOSITORY }}
-          title: ${{ env.ISSUE_TITLE }}
-          content-filepath: ${{ env.ISSUE_BODY_PATH }}
-          #labels: |
-          #  report
-          #  automated issue
+        run: |
+          echo "${ISSUE_BODY}" > ${ISSUE_BODY_PATH}
+          gh issue create \
+            --repo ${github.repository_owner}/${ISSUE_REPOSITORY} \
+            --title "${ISSUE_TITLE}" \
+            --body-file "${ISSUE_BODY_PATH}"
+        env:
+          GH_TOKEN: ${{ steps.trezor-bot-token.outputs.token }}
