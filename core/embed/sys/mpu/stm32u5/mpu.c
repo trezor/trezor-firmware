@@ -264,14 +264,6 @@ static void mpu_init_fixed_regions(void) {
   DIS_REGION( 2 ); // reserved for applets
   DIS_REGION( 3 ); // reserved for applets
   DIS_REGION( 4 ); // reserved for applets
-
-#elif defined(FIRMWARE)
-  //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, FIRMWARE_START,           FIRMWARE_MAXSIZE,   FLASH_CODE,   NO,    NO );
-  SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,      SRAM,        YES,    NO );
-  DIS_REGION( 2 );
-  DIS_REGION( 3 );
-  SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,      SRAM,        YES,    NO );
 #elif defined(TREZOR_PRODTEST)
   SET_REGION( 0, FIRMWARE_START,           1024,               FLASH_DATA,  YES,    NO );
   SET_REGION( 1, FIRMWARE_START + 1024,    FIRMWARE_MAXSIZE - 1024, FLASH_CODE,   NO,    NO );
