@@ -29,6 +29,11 @@ extern "C" {
 /* Exported types ----------------------------------------------------------------------------------------------------*/
 /* Exported constants ------------------------------------------------------------------------------------------------*/
 
+// D004 uses the STM32H5 USB OTG_FS peripheral with the internal full-speed PHY
+// (DM/DP on PA11/PA12, AF10). The 48 MHz USB kernel clock is HSI48 trimmed by
+// the CRS against the USB SOF (set up in the secure monitor).
+#define USE_USB_FS
+
 /* ########################################### Module Selection ##################################################### */
 /**
   * @brief This is the list of modules to be used in the HAL driver

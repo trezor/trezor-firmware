@@ -72,10 +72,15 @@ void usb_power_init(void) {
 }
 #elif defined(USE_USB_FS) || defined(USE_USB_HS_IN_FS)
 void usb_power_init(void) {
+  // Enable VDDUSB (the full-speed peripheral has no separate HS PHY supply).
+#if defined(STM32H5)
+  // The STM32H5 PWR domain is always clocked; there is no RCC PWR clock gate.
+  HAL_PWREx_EnableVddUSB();
+#else
   __HAL_RCC_PWR_CLK_ENABLE();
-  // Enable VDDUSB (the full-speed peripheral has no separate HS PHY supply)
   HAL_PWREx_EnableVddUSB();
   __HAL_RCC_PWR_CLK_DISABLE();
+#endif
 
   // Configure the HSI48 clock recovery system (CRS). HSI48 (already enabled
   // during the secure clock init) and the CRS configuration live in the
@@ -85,7 +90,13 @@ void usb_power_init(void) {
   __HAL_RCC_CRS_CLK_ENABLE();
   RCC_CRSInitTypeDef crs_init = {0};
   crs_init.Prescaler = RCC_CRS_SYNC_DIV1;
+#if defined(STM32H5)
+  // On the H5 the OTG_FS SOF sync source is named RCC_CRS_SYNC_SOURCE_OTG_FS
+  // (RCC_CRS_SYNC_SOURCE_USB only exists on USB_DRD_FS parts).
+  crs_init.Source = RCC_CRS_SYNC_SOURCE_OTG_FS;
+#else
   crs_init.Source = RCC_CRS_SYNC_SOURCE_USB;
+#endif
   crs_init.Polarity = RCC_CRS_SYNC_POLARITY_RISING;
   crs_init.ReloadValue = __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000, 1000);
   crs_init.ErrorLimitValue = RCC_CRS_ERRORLIMIT_DEFAULT;
