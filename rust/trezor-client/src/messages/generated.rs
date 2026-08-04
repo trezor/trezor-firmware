@@ -107,6 +107,16 @@ trezor_message_impl! {
     BenchmarkResult => MessageType_BenchmarkResult,
     TelemetryGet => MessageType_TelemetryGet,
     Telemetry => MessageType_Telemetry,
+    TrezorAppLoad => MessageType_TrezorAppLoad,
+    TrezorAppLoaded => MessageType_TrezorAppLoaded,
+    TrezorAppHeaderRequest => MessageType_TrezorAppHeaderRequest,
+    TrezorAppHeaderAck => MessageType_TrezorAppHeaderAck,
+    TrezorAppRootPacketRequest => MessageType_TrezorAppRootPacketRequest,
+    TrezorAppRootPacketAck => MessageType_TrezorAppRootPacketAck,
+    TrezorAppDataChunkRequest => MessageType_TrezorAppDataChunkRequest,
+    TrezorAppDataChunkAck => MessageType_TrezorAppDataChunkAck,
+    TrezorAppMessage => MessageType_TrezorAppMessage,
+    TrezorAppResponse => MessageType_TrezorAppResponse,
 }
 
 #[cfg(feature = "bitcoin")]
