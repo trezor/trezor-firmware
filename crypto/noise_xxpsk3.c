@@ -124,9 +124,9 @@ static void hkdf2(const uint8_t *chaining_key, size_t chaining_key_len,
   memzero(buf, sizeof(buf));
 }
 
-static void dh(uint8_t (*output)[NOISE_XXPSK3_DHLEN],
-               const uint8_t (*private_key)[NOISE_XXPSK3_DHLEN],
-               const uint8_t (*public_key)[NOISE_XXPSK3_DHLEN]) {
+static void dh(const uint8_t (*private_key)[NOISE_XXPSK3_DHLEN],
+               const uint8_t (*public_key)[NOISE_XXPSK3_DHLEN],
+               uint8_t (*output)[NOISE_XXPSK3_DHLEN]) {
   curve25519_scalarmult(*output, *private_key, *public_key);
 }
 
@@ -420,7 +420,8 @@ bool noise_xxpsk3_responder_handle_request1(
     return false;
   }
 
-  if (!rspn->initialized || rspn->handshake_stage != NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST1 ||
+  if (!rspn->initialized ||
+      rspn->handshake_stage != NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST1 ||
       request == NULL || (payload == NULL && max_payload_size != 0)) {
     goto cleanup;
   }
@@ -497,8 +498,8 @@ bool noise_xxpsk3_responder_create_response1(
              (uint8_t (*)[NOISE_XXPSK3_DHLEN])response);
 
   uint8_t input_key_material[NOISE_XXPSK3_DHLEN] = {0};
-  dh(&input_key_material, &state->ephemeral_private,
-     &state->remote_ephemeral_public);
+  dh(&state->ephemeral_private, &state->remote_ephemeral_public,
+     &input_key_material);
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
 
@@ -508,8 +509,8 @@ bool noise_xxpsk3_responder_create_response1(
     goto cleanup;
   }
 
-  dh(&input_key_material, &state->static_private,
-     &state->remote_ephemeral_public);
+  dh(&state->static_private, &state->remote_ephemeral_public,
+     &input_key_material);
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
 
@@ -561,8 +562,8 @@ bool noise_xxpsk3_responder_handle_request2(
   state->has_remote_static_public = true;
 
   uint8_t input_key_material[NOISE_XXPSK3_DHLEN] = {0};
-  dh(&input_key_material, &state->ephemeral_private,
-     &state->remote_static_public);
+  dh(&state->ephemeral_private, &state->remote_static_public,
+     &input_key_material);
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
 
@@ -644,7 +645,8 @@ bool noise_xxpsk3_initiator_create_request1(
     return false;
   }
 
-  if (!intr->initialized || intr->handshake_stage != NOISE_XXPSK3_INTR_READY_FOR_REQUEST1 ||
+  if (!intr->initialized ||
+      intr->handshake_stage != NOISE_XXPSK3_INTR_READY_FOR_REQUEST1 ||
       (payload == NULL && payload_size != 0) || request == NULL ||
       request_size == NULL) {
     goto cleanup;
@@ -690,7 +692,8 @@ bool noise_xxpsk3_initiator_handle_response1(noise_xxpsk3_initiator_t *intr,
     return false;
   }
 
-  if (!intr->initialized || intr->handshake_stage != NOISE_XXPSK3_INTR_WAITING_FOR_RESPONSE1 ||
+  if (!intr->initialized ||
+      intr->handshake_stage != NOISE_XXPSK3_INTR_WAITING_FOR_RESPONSE1 ||
       response == NULL || (payload == NULL && max_payload_size != 0)) {
     goto cleanup;
   }
@@ -708,8 +711,8 @@ bool noise_xxpsk3_initiator_handle_response1(noise_xxpsk3_initiator_t *intr,
   ss_mix_key(&state->symmetric_state, &state->remote_ephemeral_public);
 
   uint8_t input_key_material[NOISE_XXPSK3_DHLEN] = {0};
-  dh(&input_key_material, &state->ephemeral_private,
-     &state->remote_ephemeral_public);
+  dh(&state->ephemeral_private, &state->remote_ephemeral_public,
+     &input_key_material);
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
 
@@ -721,8 +724,8 @@ bool noise_xxpsk3_initiator_handle_response1(noise_xxpsk3_initiator_t *intr,
   }
   state->has_remote_static_public = true;
 
-  dh(&input_key_material, &state->ephemeral_private,
-     &state->remote_static_public);
+  dh(&state->ephemeral_private, &state->remote_static_public,
+     &input_key_material);
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
 
@@ -760,7 +763,8 @@ bool noise_xxpsk3_initiator_create_request2(
     return false;
   }
 
-  if (!intr->initialized || intr->handshake_stage != NOISE_XXPSK3_INTR_READY_FOR_REQUEST2 ||
+  if (!intr->initialized ||
+      intr->handshake_stage != NOISE_XXPSK3_INTR_READY_FOR_REQUEST2 ||
       (payload == NULL && payload_size != 0) || request == NULL ||
       request_size == NULL) {
     goto cleanup;
@@ -779,8 +783,8 @@ bool noise_xxpsk3_initiator_create_request2(
   }
 
   uint8_t input_key_material[NOISE_XXPSK3_DHLEN] = {0};
-  dh(&input_key_material, &state->static_private,
-     &state->remote_ephemeral_public);
+  dh(&state->static_private, &state->remote_ephemeral_public,
+     &input_key_material);
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
 
