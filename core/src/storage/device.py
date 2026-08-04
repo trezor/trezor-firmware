@@ -53,6 +53,7 @@ if not utils.BITCOIN_ONLY:
     _BINARY_MNEMONIC = const(0x25)  # bytes
 _DELEGATED_IDENTITY_KEY_ROTATION_INDEX = const(0x26)  # int
 _DISABLE_TAP_TO_WAKE      = const(0x27)  # bool (0x01 or empty)
+_APP_ROOT_PACKET_STATE = const(0x28)  # bytes
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -568,3 +569,21 @@ def set_delegated_identity_key_rotation_index(rotation_index: int) -> None:
     common.set_uint16(
         _NAMESPACE, _DELEGATED_IDENTITY_KEY_ROTATION_INDEX, rotation_index
     )
+
+
+if utils.USE_APP_LOADING:
+
+    def set_app_root_state(state: bytes | None) -> None:
+        """
+        Set the app root state.
+        """
+        if state is None:
+            common.delete(_NAMESPACE, _APP_ROOT_PACKET_STATE)
+        else:
+            common.set(_NAMESPACE, _APP_ROOT_PACKET_STATE, state)
+
+    def get_app_root_state() -> bytes | None:
+        """
+        Get the app root state.
+        """
+        return common.get(_NAMESPACE, _APP_ROOT_PACKET_STATE)

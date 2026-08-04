@@ -305,3 +305,13 @@ if not utils.BITCOIN_ONLY:
     TronDelegateResourceContract = 2211
     TronUnDelegateResourceContract = 2212
     TronWithdrawBalance = 2213
+    ExtAppLoad = 9200
+    ExtAppLoaded = 9201
+    ExtAppHeaderRequest = 9202
+    ExtAppHeaderAck = 9203
+    ExtAppRootPacketRequest = 9204
+    ExtAppRootPacketAck = 9205
+    ExtAppDataChunkRequest = 9206
+    ExtAppDataChunkAck = 9207
+    ExtAppMessage = 9208
+    ExtAppResponse = 9209
