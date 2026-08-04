@@ -458,4 +458,20 @@ bool telemetry_get(telemetry_data_t *out) {
 
 #endif
 
+// =============================================================================
+// mldsa44.h
+// =============================================================================
+
+#ifdef USE_MLDSA44
+
+#include <sec/mldsa44.h>
+
+ts_t mldsa44_verify(const mldsa44_signature_t *sig, const void *m, size_t mlen,
+                    const mldsa44_public_key_t *pk, secbool *valid) {
+  return ts_make(smcall_invoke5((uint32_t)sig, (uint32_t)m, mlen, (uint32_t)pk,
+                                (uint32_t)valid, SMCALL_MLDSA44_VERIFY));
+}
+
+#endif  // USE_MLDSA44
+
 #endif  // defined(KERNEL) && defined(USE_SECMON_LAYOUT)
