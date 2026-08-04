@@ -43,6 +43,12 @@ bool probe_read_access(const void *addr, size_t len) {
     return false;
   }
 
+  // A zero-length access is always safe, even with a non-NULL dangling
+  // pointer (e.g. Rust's `"".as_ptr()`).
+  if (len == 0) {
+    return true;
+  }
+
   if (addr == NULL) {
     return true;
   }
@@ -91,6 +97,11 @@ bool probe_write_access(void *addr, size_t len) {
 
   if (applet == NULL) {
     return false;
+  }
+
+  // A zero-length access is always safe (see note in `probe_read_access`).
+  if (len == 0) {
+    return true;
   }
 
   if (addr == NULL) {
