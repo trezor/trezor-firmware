@@ -1,5 +1,6 @@
 use anyhow::{Result, anyhow};
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use modular_xtask::args::Cmd as ModularCmd;
 use serde::Deserialize;
 
 pub use crate::model::Model;
@@ -150,6 +151,13 @@ pub enum Cmd {
     Combine(CombineArgs),
     /// Print current version of specified project
     PrintVersion(PrintVersionArgs),
+    Modular(ModularArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct ModularArgs {
+    #[command(subcommand)]
+    pub command: ModularCmd,
 }
 
 #[derive(Args, Debug, Clone)]
