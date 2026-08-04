@@ -3,9 +3,10 @@ name: SDK
 # Release-gating checks for the `trezor-app-tool` crate
 # (sdk/crates/trezor-app-tool), the build/test/format driver for modular Trezor
 # apps (invoked from sdk/apps as `cargo app-tool <cmd>`, or via `xtask apps <cmd>`
-# from core/embed/xtask, which just spawns it), and the `trezor-app-build` crate
+# from core/embed/xtask, which just spawns it), the `trezor-app-build` crate
 # (sdk/crates/trezor-app-build), the build-script helpers the apps use for
-# protobuf, translation and linker setup.
+# protobuf, translation and linker setup, and the `trezor-app-sdk` crate
+# (sdk/crates/trezor-app-sdk), the no_std runtime library the apps link against.
 # See sdk/doc/development.md for background on their roles.
 
 on:
@@ -49,6 +50,7 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --run "cd sdk/crates/trezor-app-tool && cargo fmt --check && cargo clippy --all-targets -- -D warnings && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps"
       - run: nix-shell --run "cd sdk/crates/trezor-app-build && cargo fmt --check && cargo clippy --all-targets -- -D warnings && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps"
+      - run: nix-shell --run "cd sdk/crates/trezor-app-sdk && cargo fmt --check && cargo clippy --no-default-features && cargo clippy --all-features && cargo doc --no-deps --all-features"
 
   test:
     name: Unit tests
@@ -61,6 +63,7 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --run "cd sdk/crates/trezor-app-tool && cargo test"
       - run: nix-shell --run "cd sdk/crates/trezor-app-build && cargo test"
+      - run: nix-shell --run "cd sdk/crates/trezor-app-sdk && cargo test --features test"
 
   deps_check:
     name: Dependency check (audit, vet)
@@ -73,3 +76,4 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --run "cd sdk/crates/trezor-app-tool && cargo audit && cargo vet --locked"
       - run: nix-shell --run "cd sdk/crates/trezor-app-build && cargo audit && cargo vet --locked"
+      - run: nix-shell --run "cd sdk/crates/trezor-app-sdk && cargo audit && cargo vet --locked"
