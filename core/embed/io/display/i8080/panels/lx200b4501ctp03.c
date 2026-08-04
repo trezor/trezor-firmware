@@ -34,6 +34,12 @@ void lx200b4501ctp03_init_seq(void) {
   ISSUE_CMD_BYTE(0xFE);
   ISSUE_CMD_BYTE(0xEF);
 
+  // MADCTL: Memory Data Access Control; MX=1, RGB=1 (default orientation is
+  // never re-applied via lx200b4501ctp03_rotate(), so this initial value is
+  // the one that actually takes effect on a default-orientation boot)
+  ISSUE_CMD_BYTE(0x36);
+  ISSUE_DATA_BYTE(0x48);
+
   // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits
   // input)
   ISSUE_CMD_BYTE(0x3A);
@@ -104,6 +110,8 @@ void lx200b4501ctp03_init_seq(void) {
   ISSUE_DATA_BYTE(0x00);
   ISSUE_DATA_BYTE(0x01);
   ISSUE_DATA_BYTE(0x3F);
+
+  ISSUE_CMD_BYTE(0x2C);
 
   // SET_GAMMA1
   ISSUE_CMD_BYTE(0xF0);
