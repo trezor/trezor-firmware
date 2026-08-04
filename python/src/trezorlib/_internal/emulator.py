@@ -99,6 +99,7 @@ class TropicModel:
                 LOG.info("Tropic model seems stuck. Sending kill signal.")
                 self.process.kill()
             _RUNNING_PIDS.remove(self.process)
+            self.process = None
 
     def _launch_process(self) -> subprocess.Popen:
         # Opening the file if it is not already opened
