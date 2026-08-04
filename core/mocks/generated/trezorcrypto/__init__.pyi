@@ -373,30 +373,6 @@ class ripemd160:
         """
 
 
-# upymod/modtrezorcrypto/modtrezorcrypto-sha1.h
-class sha1:
-    """
-    SHA1 context.
-    """
-    block_size: int
-    digest_size: int
-
-    def __init__(self, __data: StrOrBytes | None = None) -> None:
-        """
-        Creates a hash context object.
-        """
-
-    def update(self, __data: StrOrBytes) -> None:
-        """
-        Update the hash context with hashed data.
-        """
-
-    def digest(self) -> bytes:
-        """
-        Returns the digest of hashed data.
-        """
-
-
 # upymod/modtrezorcrypto/modtrezorcrypto-sha256.h
 class sha256:
     """
