@@ -24,6 +24,10 @@
 MP_REGISTER_MODULE(MP_QSTR_trezorui_api, mp_module_trezorui_api);
 #endif
 
+#if MICROPY_PY_TREZORCRYPTO_API
+MP_REGISTER_MODULE(MP_QSTR_trezorcrypto_api, mp_module_trezorcrypto_api);
+#endif
+
 #if MICROPY_PY_TREZORPROTO
 MP_REGISTER_MODULE(MP_QSTR_trezorproto, mp_module_trezorproto);
 #endif
