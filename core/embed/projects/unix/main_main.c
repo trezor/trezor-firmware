@@ -38,8 +38,7 @@
 #include <sys/systimer.h>
 
 #ifdef USE_APP_LOADING
-#include <io/app_cache.h>
-#include <io/app_loader.h>
+#include <io/app_arena.h>
 #endif
 
 #ifdef USE_BUTTON
@@ -125,8 +124,7 @@ static void drivers_init(void) {
 #endif
 
 #ifdef USE_APP_LOADING
-  app_cache_init();
-  app_loader_init();
+  app_arena_init();
 #endif
 }
 
