@@ -22,6 +22,7 @@ if not utils.BITCOIN_ONLY:
         StellarUInt128Parts,
         StellarUInt256Parts,
     )
+    from trezor.wire import DataError
 
     from apps.stellar.layout import (
         _format_i128,
@@ -202,6 +203,21 @@ class TestStellarFormatScVal(unittest.TestCase):
         ]
         for entries, expected in TESTS:
             self.assertEqual(_format_sc_val(_map(entries)), expected)
+
+    def test_missing_val(self):
+        for name, attr in StellarSCValType.__dict__.items():
+            if not name.startswith("SCV_"):
+                continue
+            if attr in (
+                # VOID carries no data
+                StellarSCValType.SCV_VOID,
+                # VEC, MAP use `repeated` fields, so data is never missing
+                StellarSCValType.SCV_VEC,
+                StellarSCValType.SCV_MAP,
+            ):
+                continue
+            with self.assertRaises(DataError):
+                _format_sc_val(StellarSCVal(type=attr))
 
 
 # valid contract (C...) strkeys, see test_apps.stellar.address.py for the format
