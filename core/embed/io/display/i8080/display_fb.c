@@ -141,9 +141,35 @@ static void start_fb_copy(void) {
 
     if (fb_idx >= 0) {
       display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+#ifdef DISPLAY_I8080_8BIT_MSB_FIRST
+      // The GPDMA byte-wide copy below streams the frame buffer as raw
+      // little-endian bytes, but this panel's 8-bit GRAM write convention
+      // expects the high byte of each pixel first (no register to swap
+      // it), so fall back to a synchronous per-pixel copy that reorders
+      // the bytes via ISSUE_PIXEL_DATA instead of DMA-ing it verbatim.
+      //
+      // display_refresh() already called mpu_set_active_fb(NULL, 0) to
+      // revoke unprivileged access to the buffer before handing it off -
+      // that also tears down the *only* MPU region covering the
+      // framebuffer (it lives outside the always-on kernel RAM region),
+      // so it blocks our own privileged CPU reads below too. That was
+      // never a problem for the GPDMA path, since DMA hardware bypasses
+      // the core's MPU entirely. Re-arm the region around this CPU copy
+      // and tear it down again afterwards, same as the BOARDLOADER-only
+      // copy_fb_to_display() does around its equivalent loop.
+      uint8_t *fb_ptr = get_fb_ptr(fb_idx);
+      mpu_set_active_fb(fb_ptr, PHYSICAL_FRAME_BUFFER_SIZE);
+      uint16_t *fb = (uint16_t *)fb_ptr;
+      for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
+        ISSUE_PIXEL_DATA(fb[i]);
+      }
+      mpu_set_active_fb(NULL, 0);
+      bg_copy_callback();
+#else
       bg_copy_start_const_out_8(get_fb_ptr(fb_idx),
                                 (uint8_t *)DISPLAY_DATA_ADDRESS,
                                 PHYSICAL_FRAME_BUFFER_SIZE, bg_copy_callback);
+#endif
     }
   }
 }
@@ -260,9 +286,19 @@ void display_refresh(void) {
 #ifndef DISPLAY_TE_PIN
   // Without a tearing-effect signal there is no interrupt to trigger the
   // copy, so kick it off here (no-op if a copy is already in progress).
+#ifdef DISPLAY_I8080_8BIT_MSB_FIRST
+  // The MSB-first fallback inside start_fb_copy() pushes the whole frame
+  // synchronously and can take a while (no background DMA runs in this
+  // mode), so unlike the DMA-kickoff path below - whose lock only needs to
+  // cover a brief queue/DMA-state update - it must NOT be called with
+  // interrupts locked, or it starves everything else (watchdog, USB, ...)
+  // for the whole frame and faults.
+  start_fb_copy();
+#else
   irq_key_t irq_key = irq_lock();
   start_fb_copy();
   irq_unlock(irq_key);
+#endif
 #endif
 
 #else  // BOARDLOADER
