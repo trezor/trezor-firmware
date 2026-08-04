@@ -4,7 +4,15 @@ from common import *  # isort:skip
 from trezor.wire import DataError
 
 if not utils.BITCOIN_ONLY:
-    from apps.stellar.writers import _write_sc_symbol, write_int32, write_int64
+    from trezor.enums import StellarSCValType
+    from trezor.messages import StellarSCVal
+
+    from apps.stellar.writers import (
+        _write_sc_symbol,
+        write_int32,
+        write_int64,
+        write_sc_val,
+    )
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -78,6 +86,21 @@ class TestStellarWriters(unittest.TestCase):
         ):
             with self.assertRaises(DataError):
                 _write_sc_symbol(bytearray(), symbol)
+
+    def test_missing_val(self):
+        for name, attr in StellarSCValType.__dict__.items():
+            if not name.startswith("SCV_"):
+                continue
+            if attr in (
+                # VOID carries no data
+                StellarSCValType.SCV_VOID,
+                # VEC, MAP use `repeated` fields, so data is never missing
+                StellarSCValType.SCV_VEC,
+                StellarSCValType.SCV_MAP,
+            ):
+                continue
+            with self.assertRaises(DataError):
+                write_sc_val(bytearray(), StellarSCVal(type=attr))
 
 
 if __name__ == "__main__":
