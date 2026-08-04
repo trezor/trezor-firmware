@@ -75,7 +75,7 @@ class SanityCheckedStruct(Struct):
         """
 
         _errors: list[str] = list(errors)
-        is_ok = True
+        is_ok = not _errors
 
         # Parsing and rebuilding does not modify the image bytes
         rebuilt_image = self.build()
