@@ -1,0 +1,26 @@
+[flake8]
+ignore =
+    # E203 whitespace before ':'
+    E203,
+    # E221: multiple spaces before operator
+    E221,
+    # E241: multiple spaces after ':'
+    E241,
+    # E402: module level import not at top of file
+    E402,
+    # E501: line too long
+    E501,
+    # E704: multiple statements on one line (def)
+    E704,
+    # E741: ambiguous variable name
+    E741,
+    # W503: line break before binary operator
+    W503,
+    # flake8-requirements import checks
+    I,
+    # flake8-annotations self/cls type
+    ANN101, ANN102,
+    # flake8-annotations allow Any type
+    ANN401,
+per-file-ignores =
+    */tests/*:ANN
