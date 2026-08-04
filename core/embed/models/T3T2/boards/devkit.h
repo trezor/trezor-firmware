@@ -39,12 +39,16 @@
 #define BATTERY_MEAS_DIVIDER_NUM 1
 #define BATTERY_MEAS_DIVIDER_DEN 1
 
-// GC9307C (LX200B4501CTP03A/B) over 16-bit i8080 FMC bus. Same reset/DC/
-// power-enable wiring is also used by the ST7789-based DEM240320B1 panel
-// (see display/i8080/panels/dem240320b1.c), still supported as an
-// alternate display_panel_dem240320b1 build option.
+// GC9307C (LX200B4501CTP03A/B) over 8-bit i8080 FMC bus (D8-D15 unused;
+// see DISPLAY_IM0-2 below). Same reset/DC/power-enable wiring is also used
+// by the ST7789-based DEM240320B1 panel (see
+// display/i8080/panels/dem240320b1.c), still supported as an alternate
+// display_panel_dem240320b1 build option.
 // The module has no tearing-effect (TE) output, so no DISPLAY_TE_* defines.
-#define DISPLAY_I8080_16BIT_DW 1
+#define DISPLAY_I8080_8BIT_DW 1
+// GC9307C cannot swap GRAM byte order (see display_panel_set_little_endian())
+// and its datasheet Table 11 sends the high byte of each pixel first.
+#define DISPLAY_I8080_8BIT_MSB_FIRST 1
 
 // Use a single framebuffer on this project (lower RAM use; there is no TE
 // signal to drive smooth double-buffered swaps anyway).
@@ -67,8 +71,10 @@
 
 // Display interface-mode select pins (IM0-IM2). The GC9307C latches these
 // only at reset to fix its bus protocol, so they must be driven to their
-// target level before the reset pulse in display_panel_init(): IM0=1,
-// IM1=0, IM2=0 (16-bit parallel i8080).
+// target level before the reset pulse in display_panel_init(): IM0=0,
+// IM1=0, IM2=0 (8-bit parallel i8080-I; IM3 is tied low on the board). The
+// level for IM0 is set in display_io_init_gpio() based on
+// DISPLAY_I8080_8BIT_DW / DISPLAY_I8080_16BIT_DW.
 #define DISPLAY_IM0_PORT GPIOF
 #define DISPLAY_IM0_PIN GPIO_PIN_11
 #define DISPLAY_IM1_PORT GPIOF

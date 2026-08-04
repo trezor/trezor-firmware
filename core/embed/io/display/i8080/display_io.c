@@ -65,7 +65,13 @@ void display_io_init_gpio(void) {
   GPIO_InitStructure.Alternate = 0;
 
   GPIO_InitStructure.Pin = DISPLAY_IM0_PIN;
-  HAL_GPIO_WritePin(DISPLAY_IM0_PORT, DISPLAY_IM0_PIN, GPIO_PIN_SET);
+#ifdef DISPLAY_I8080_16BIT_DW
+  HAL_GPIO_WritePin(DISPLAY_IM0_PORT, DISPLAY_IM0_PIN,
+                    GPIO_PIN_SET);  // IM0=1: 16-bit bus interface I
+#else
+  HAL_GPIO_WritePin(DISPLAY_IM0_PORT, DISPLAY_IM0_PIN,
+                    GPIO_PIN_RESET);  // IM0=0: 8-bit bus interface I
+#endif
   HAL_GPIO_Init(DISPLAY_IM0_PORT, &GPIO_InitStructure);
 
   GPIO_InitStructure.Pin = DISPLAY_IM1_PIN;

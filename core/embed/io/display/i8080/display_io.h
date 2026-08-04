@@ -68,9 +68,18 @@ extern __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS;
 #ifdef DISPLAY_I8080_16BIT_DW
 #define ISSUE_PIXEL_DATA(X) ISSUE_DATA_BYTE(X)
 #elif DISPLAY_I8080_8BIT_DW
+#ifdef DISPLAY_I8080_8BIT_MSB_FIRST
+// Some panels (e.g. GC9307C, see its datasheet Table 11) have no register to
+// swap the byte order of GRAM writes on the 8-bit bus and expect the high
+// byte of each pixel first.
+#define ISSUE_PIXEL_DATA(X)  \
+  ISSUE_DATA_BYTE((X) >> 8); \
+  ISSUE_DATA_BYTE((X) & 0xFF)
+#else
 #define ISSUE_PIXEL_DATA(X)    \
   ISSUE_DATA_BYTE((X) & 0xFF); \
   ISSUE_DATA_BYTE((X) >> 8)
+#endif
 #endif
 
 #endif  // TREZORHAL_DISPLAY_IO_H
