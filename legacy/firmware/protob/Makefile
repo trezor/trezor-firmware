@@ -24,7 +24,10 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature \
 	BleUnpair PaymentNotification Evolu \
 	GetSerialNumber SerialNumber \
-	TelemetryGet, Telemetry
+	TelemetryGet Telemetry \
+	ExtAppLoad ExtAppLoaded ExtAppHeaderRequest ExtAppHeaderAck \
+	ExtAppRootPacketRequest ExtAppRootPacketAck ExtAppDataChunkRequest ExtAppDataChunkAck \
+	ExtAppMessage ExtAppResponse
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum NEM Stellar
