@@ -126,6 +126,10 @@ bool button_fsm_get_event(button_fsm_t* fsm, uint32_t new_state,
 }
 
 bool button_get_event(button_event_t* event) {
+  if (event == NULL) {
+    return false;
+  }
+
   memset(event, 0, sizeof(*event));
 
   uint32_t new_state = button_get_state();
