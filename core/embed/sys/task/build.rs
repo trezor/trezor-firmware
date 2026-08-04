@@ -3,7 +3,7 @@ use xbuild::{CLibrary, Result, bail_unsupported};
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("task/inc");
 
-    lib.add_sources(["task/system.c", "task/sysevent.c"]);
+    lib.add_sources(["task/pminfo.c", "task/system.c", "task/sysevent.c"]);
 
     if cfg!(feature = "applets") {
         lib.add_define("USE_APPLETS", Some("1"));
