@@ -1,0 +1,29 @@
+[project]
+name = "ethereum"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9, <4"
+
+[dependency-groups]
+
+dev = [
+    "pytest>=8.4.1",
+    "pytest-xdist>=3.6.1",
+    "trezor",
+    "Pillow>=11",
+    "dominate",
+    "requests>=2.32.5",
+    "mako>=1.0.7,<2",
+    "protobuf",
+    "ecdsa>=0.16,<0.17",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+addopts = "-q"
+
+[tool.uv.sources]
+trezor = { path = "../../../python", editable = true }
