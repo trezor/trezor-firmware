@@ -7,6 +7,7 @@ links = "api"
 [build-dependencies]
 color-eyre.workspace = true
 xbuild.workspace = true
+bindgen.workspace = true
 
 [dependencies]
 models.workspace = true

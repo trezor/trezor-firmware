@@ -6,6 +6,12 @@ use serde::Deserialize;
 pub use crate::model::Model;
 use crate::options::BuildOptions;
 
+pub struct ResolvedBuild {
+    pub features: Vec<String>,
+    pub target_triple: Option<&'static str>,
+    pub board_header: String,
+}
+
 #[derive(ValueEnum, Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Project {
@@ -152,6 +158,7 @@ pub enum Cmd {
     /// Print current version of specified project
     PrintVersion(PrintVersionArgs),
     Modular(ModularArgs),
+    ApiBindings(ApiArgs),
 }
 
 #[derive(Args, Debug)]
@@ -160,7 +167,7 @@ pub struct ModularArgs {
     pub command: ModularCmd,
 }
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug, Clone, Default)]
 #[command(override_usage = "xtask build <PROJECT> --model <MODEL> [OPTIONS]")]
 pub struct BuildArgs {
     pub project: Project,
@@ -241,8 +248,13 @@ pub struct CombineArgs {
     pub model: Model,
 }
 
-#[derive(Args, Debug)]
 #[command(hide = true)] // Should probably go under some kind of misc subcommand.
 pub struct PrintVersionArgs {
     pub project: Project,
+}
+
+#[derive(Args, Debug)]
+pub struct ApiArgs {
+    #[arg(long, default_value = "false")]
+    pub check_only: bool,
 }
