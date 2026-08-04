@@ -41,10 +41,9 @@ async def sign_tx(
 
     from apps.common import paths
 
-    from .helpers import format_ethereum_amount, get_fee_items_regular, keccak256
+    from .helpers import format_ethereum_amount, get_fee_items_regular
 
     # local_cache_attribute
-    data_length = msg.data_length
     tx_type = msg.tx_type
     network = defs.network
 
@@ -82,15 +81,7 @@ async def sign_tx(
             amount_size_bytes=32,
         )
 
-    sha = keccak256()
-    rlp.write_header(sha, _get_digest_length(msg, data_length), rlp.LIST_HEADER_BYTE)
-
-    if tx_type is not None:
-        rlp.write(sha, tx_type)
-
-    for field in (msg.nonce, msg.gas_price, msg.gas_limit, address_bytes, msg.value):
-        rlp.write(sha, field)
-
+    sha = _start_digest(msg)
     initial_data = await request_initial_data(msg, sha)
 
     # Confirm the transaction, using special layouts for staking, yielding and clear-signing (if supported).
@@ -107,13 +98,7 @@ async def sign_tx(
         create_data_chunk_loader(sha),
     )
 
-    # eip 155 replay protection
-    rlp.write(sha, msg.chain_id)
-    rlp.write(sha, 0)
-    rlp.write(sha, 0)
-
-    digest = sha.get_digest()
-
+    digest = _finish_digest(msg, sha)
     # transaction data confirmed, proceed with signing
     result = _sign_digest(msg, keychain, digest)
 
@@ -257,7 +242,9 @@ async def confirm_tx_data(
         )
 
 
-def _get_digest_length(msg: EthereumSignTx, data_total: int) -> int:
+def _start_digest(msg: EthereumSignTx) -> HashWriter:
+    from .helpers import keccak256
+
     length = 0
     if msg.tx_type is not None:
         length += rlp.length(msg.tx_type)
@@ -268,18 +255,43 @@ def _get_digest_length(msg: EthereumSignTx, data_total: int) -> int:
         msg.gas_limit,
         bytes_from_address(msg.to),
         msg.value,
-        msg.chain_id,
-        0,
-        0,
     )
 
+    # fields length
     for field in fields:
         length += rlp.length(field)
 
+    # calldata length
+    data_total = msg.data_length
     length += rlp.header_length(data_total, msg.data_initial_chunk)
     length += data_total
 
-    return length
+    # EIP-155 elements length
+    length += rlp.length(msg.chain_id)
+    length += rlp.length(0)
+    length += rlp.length(0)
+
+    # hash only RLP header, `msg.tx_type` and `fields` (see above).
+    # calldata and EIP-155 elements will be hashed later.
+    sha = keccak256()
+    rlp.write_header(sha, length, rlp.LIST_HEADER_BYTE)
+
+    if msg.tx_type is not None:
+        rlp.write(sha, msg.tx_type)
+
+    for field in fields:
+        rlp.write(sha, field)
+
+    return sha
+
+
+def _finish_digest(msg: EthereumSignTx, sha: HashWriter) -> bytes:
+    # EIP-155 replay protection
+    rlp.write(sha, msg.chain_id)
+    rlp.write(sha, 0)
+    rlp.write(sha, 0)
+
+    return sha.get_digest()
 
 
 def create_data_chunk_loader(h: HashWriter) -> DataChunkLoader:
