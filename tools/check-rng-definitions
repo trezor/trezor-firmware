@@ -40,6 +40,16 @@ crypto/rand_insecure.c
 legacy/rng.c
 "
 
+ALLOWED_optiga_random_buffer="
+core/embed/sec/optiga/optiga.c
+core/embed/sec/optiga/unix/optiga_mock.c
+"
+
+ALLOWED_tropic_random_buffer="
+core/embed/sec/tropic/tropic.c
+core/embed/sec/tropic/unix/tropic_mock.c
+"
+
 # Files allowed to provide a header at an include path that could shadow the
 # canonical RNG headers. Catches a shim that evades the definition scan
 # entirely, such as a #define macro, which is invisible to both `nm` and the
@@ -52,7 +62,8 @@ legacy/sec/rng_strong.h
 storage/tests/c/sec/rng_strong.h
 "
 
-SYMBOLS="rng_fill_buffer_strong rng_fill_buffer random_buffer"
+SYMBOLS="rng_fill_buffer_strong rng_fill_buffer random_buffer
+         optiga_random_buffer tropic_random_buffer"
 SHADOWABLE="sec/rng_strong.h sys/rng.h rand.h"
 
 RETURN=0
