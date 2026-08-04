@@ -50,13 +50,19 @@ TREZOR_SERVICE_UUID = "8c000001-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_RX = "8c000002-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_TX = "8c000003-a59b-4d58-a9ad-073df69fa1b1"
 
-SCAN_INTERVAL_SECONDS = 3
+SCAN_INTERVAL_SECONDS = 5
+CONNECT_TIMEOUT_SECONDS = 20
 SHUTDOWN_TIMEOUT_SECONDS = 10
 # A single GATT write; a stalled one must not block the caller forever.
 WRITE_TIMEOUT_SECONDS = 5
 CACHE_SCAN_SECONDS = 5
 
 SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
+
+if sys.platform == "darwin":
+    _FULL_LEN = len("ble:00000000-0000-0000-0000-000000000000")
+else:
+    _FULL_LEN = len("ble:00:00:00:00:00:00")
 
 
 class BleTransport(Transport):
@@ -249,12 +255,13 @@ class BleAsync:
     async def scan(self) -> list[tuple[str, str]]:
         LOG.debug("scanning BLE")
 
-        # NOTE BleakScanner.discover(service_uuids=[TREZOR_SERVICE_UUID]) is broken
-        # problem possibly on the bluez side
-
+        # NOTE: filtering by UUIDs may not work on some systems/environments:
+        #       https://github.com/trezor/trezor-suite/pull/21093
+        # NOTE: filtering by UUIDs make bluez-5.87 crash
         devices = await BleakScanner.discover(
             timeout=SCAN_INTERVAL_SECONDS,
             return_adv=True,
+            # service_uuids=[TREZOR_SERVICE_UUID],
         )
 
         # throw away non connected peripherals
@@ -300,7 +307,7 @@ class BleAsync:
         client = BleakClient(
             periph.device,
             services=[TREZOR_SERVICE_UUID],
-            timeout=SCAN_INTERVAL_SECONDS,
+            timeout=CONNECT_TIMEOUT_SECONDS,
             disconnect_callback=disconnect_callback,
         )
         await client.connect()

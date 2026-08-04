@@ -1,0 +1,1 @@
+Improve reliability of BLE transport. Increase the timeout before giving up connection attempt.
