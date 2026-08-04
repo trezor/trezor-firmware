@@ -21,6 +21,11 @@ set -u
 
 SYMBOL=rng_fill_buffer_strong
 
+# Emulator-only mock entropy sources (sec/rng/unix/rng_mock.c). No device
+# artifact may contain them. Conversely, the emulator of a model with SE
+# sources must contain them so that renaming the mock breaks the check.
+MOCK_SYMBOLS="rng_mock_fill rng_mock_reseed"
+
 ALL_SE_SOURCES="optiga_random_buffer tropic_random_buffer"
 MCU_SOURCE="rng_fill_buffer"
 
@@ -55,9 +60,13 @@ has_secret_area() {
 #   stub:<suffix>  must be defined in a file whose path ends in <suffix>, i.e.
 #                  the stub that forwards to the privileged image
 #   absent         must not contain it
+#   emu            emulator: must define the mock entropy sources if the
+#                  model has SE sources (see MOCK_SYMBOLS above)
 artifact_role() {
     local model=$1 base=$2
     case "$base" in
+        firmware-emu)
+            echo "emu" ;;
         secmon.elf)
             is_secmon_model "$model" && echo "real" ;;
         kernel.elf)
@@ -125,6 +134,32 @@ for file in "$@"; do
         fail "$file: no readable symbol table (stripped, or not an object file)"
         continue
     fi
+
+    if [ "$role" = emu ]; then
+        # Symbol presence only: the emulator is not an ARM binary, so the
+        # provenance and disassembly layers below do not apply.
+        if [ -z "$SOURCES" ]; then
+            echo "OK: $file ($MODEL has no SE sources, no mocks to require)"
+            continue
+        fi
+        bad=0
+        for mock in $MOCK_SYMBOLS; do
+            if ! echo "$symbols" | awk -v s="$mock" '$NF == s' | grep -q .; then
+                fail "$file: mock entropy source '$mock' is not defined -- if the mock was renamed, update MOCK_SYMBOLS in $0"
+                bad=1
+            fi
+        done
+        if [ "$bad" -eq 0 ]; then
+            echo "OK: $file (mock entropy sources present:$(printf ' %s' $MOCK_SYMBOLS))"
+        fi
+        continue
+    fi
+
+    for mock in $MOCK_SYMBOLS; do
+        if echo "$symbols" | awk -v s="$mock" '$NF == s' | grep -q .; then
+            fail "$file: defines '$mock' -- an emulator mock entropy source is linked in!"
+        fi
+    done
 
     count=$(echo "$symbols" | awk -v s="$SYMBOL" '$NF == s' | wc -l)
 
