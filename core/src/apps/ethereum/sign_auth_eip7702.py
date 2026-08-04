@@ -92,18 +92,9 @@ async def sign_auth_eip7702(
         )
         done_msg = TR.ethereum__auth_done
 
-    fields: tuple[rlp.RLPItem, ...] = (
-        msg.chain_id,
-        delegate_bytes,
-        msg.nonce,
-    )
-
     sha = keccak256(_MAGIC)
-
-    data_length = sum(rlp.length(field) for field in fields)
-    rlp.write_header(sha, data_length, rlp.LIST_HEADER_BYTE)
-    for field in fields:
-        rlp.write(sha, field)
+    fields: rlp.RLPList = [msg.chain_id, delegate_bytes, msg.nonce]
+    rlp.write(sha, fields)
 
     digest = sha.get_digest()
     node = keychain.derive(msg.address_n)
