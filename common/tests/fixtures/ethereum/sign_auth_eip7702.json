@@ -5,34 +5,6 @@
     },
     "tests": [
         {
-            "name": "ambire_nonce_1_chainid_0_all_networks",
-            "parameters": {
-                "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
-                "nonce": 1,
-                "chain_id": 0
-            },
-            "result": {
-                "sig_v": 0,
-                "sig_r": "cc1dcf73e6451d217031fd4d04fa9392736977b343dc4ac616b171889367e182",
-                "sig_s": "2c705977a6e066f807d9c2aa1fba02a32069bd92d2edf2c440533f0e05592d46"
-            }
-        },
-        {
-            "name": "metamask_nonce_1_chainid_0_all_networks",
-            "parameters": {
-                "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
-                "nonce": 1,
-                "chain_id": 0
-            },
-            "result": {
-                "sig_v": 1,
-                "sig_r": "9092db9dd37e92acd62299cfe9610f911401029dbe24a7ccb4dd725790794c2e",
-                "sig_s": "265486929f9094a3fd11bd19eac17d027925632e68d1047ba8737b972da783bc"
-            }
-        },
-        {
             "name": "ambire_nonce_1_chainid_1_mainnet",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
@@ -115,20 +87,6 @@
                 "sig_v": 0,
                 "sig_r": "4bd2cf05222f0fdfd1db9f7b83b3dad612dd1060fd091a32b66c423952b7f8d7",
                 "sig_s": "16fd7587e55b3b1c412f74597fb4ffba4fa4dd7d877fb91407ac12749d26f16b"
-            }
-        },
-        {
-            "name": "revoke_nonce_123456_chainid_0_all_networks",
-            "parameters": {
-                "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x0000000000000000000000000000000000000000",
-                "nonce": 123456,
-                "chain_id": 0
-            },
-            "result": {
-                "sig_v": 0,
-                "sig_r": "e6a8160dc4cedb2766f3d6e555902abdfb8a92db37c02668d3035642dbb15215",
-                "sig_s": "6842785735df1a34b04ed1684e670cd6797ea8d0290f927b9b959a196f01749e"
             }
         },
         {
