@@ -73,6 +73,11 @@ endif
 ifeq ($(K1N1),1)
 XTASK_BUILD_OPTS += --k1n1
 endif
+ifeq ($(TREZOR_MODEL),T3W1)
+ifneq ($(BITCOIN_ONLY),1)
+XTASK_BUILD_OPTS += --apps
+endif
+endif
 ifeq ($(PRODUCTION),1)
 XTASK_BUILD_OPTS += --production
 endif

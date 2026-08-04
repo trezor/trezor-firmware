@@ -7,6 +7,12 @@
         "main"
     ],
     "cwd": "${workspaceFolder}/core/src",
+    "environment": [
+        {
+            "name": "TREZOR_DISABLE_ANIMATION",
+            "value": "1"
+        }
+    ],
     "linux": {
         "MIMode": "gdb",
         "miDebuggerPath": "gdb"
