@@ -24,6 +24,10 @@
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 
+#ifdef USE_APP_LOADING
+#include <io/app_arena.h>
+#endif
+
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
@@ -259,6 +263,14 @@ static mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         ret->items[1] = MP_OBJ_NEW_SMALL_INT(nfc_event);
         return mp_const_true;
       }
+#endif      
+
+#ifdef USE_APP_LOADING
+    if (signalled.read_ready & (1 << SYSHANDLE_APP_ARENA)) {
+      app_arena_clear_event();
+      ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_APP_ARENA);
+      ret->items[1] = mp_const_none;
+      return mp_const_true;
     }
 #endif
 
