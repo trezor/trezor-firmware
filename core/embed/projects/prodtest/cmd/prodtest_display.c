@@ -82,6 +82,82 @@ static void prodtest_display_bars(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_display_gradient(cli_t* cli) {
+  const char* color = cli_arg(cli, "color");
+
+  uint32_t shades = 0;
+
+  if (!cli_arg_uint32(cli, "shades", &shades) || shades < 1 ||
+      shades > DISPLAY_RESX) {
+    cli_error_arg(cli, "Expecting number of shades in range 1-%d.",
+                  DISPLAY_RESX);
+    return;
+  }
+
+  if (cli_arg_count(cli) > 2) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (strlen(color) != 1 || strchr("RGBWrgbw", color[0]) == NULL) {
+    cli_error_arg(cli, "Expecting a single color letter (RGBW).");
+    return;
+  }
+
+  cli_trace(cli, "Drawing %d shades of '%c'...", shades, color[0]);
+
+  uint16_t col_width = DISPLAY_RESX / shades;
+
+  for (uint32_t i = 0; i < shades; i++) {
+    // Shade 0 is off (channel value 0), the last column is full intensity
+    // (255); with a single shade requested, draw it at full intensity.
+    uint8_t level = (shades > 1) ? (i * 255) / (shades - 1) : 255;
+
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+
+    switch (color[0]) {
+      case 'r':
+      case 'R':
+        r = level;
+        break;
+      case 'g':
+      case 'G':
+        g = level;
+        break;
+      case 'b':
+      case 'B':
+        b = level;
+        break;
+      case 'w':
+      case 'W':
+        r = g = b = level;
+        break;
+    }
+
+    uint16_t x0 = i * col_width;
+    // The last column absorbs the remainder of the integer division so the
+    // gradient always spans the full screen width.
+    uint16_t width = (i == shades - 1) ? (DISPLAY_RESX - x0) : col_width;
+
+    gfx_bitblt_t bb = {
+        .dst_x = x0,
+        .dst_y = 0,
+        .width = width,
+        .height = DISPLAY_RESY,
+        .src_fg = gfx_color_rgb(r, g, b),
+        .src_alpha = 255,
+    };
+
+    display_fill(&bb);
+  }
+
+  display_refresh();
+
+  cli_ok(cli, "");
+}
+
 static void prodtest_display_set_backlight(cli_t* cli) {
   uint32_t level = 0;
 
@@ -130,4 +206,11 @@ PRODTEST_CLI_CMD(
   .func = prodtest_display_set_backlight,
   .info = "Set the display backlight level",
   .args = "<level>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "display-gradient",
+  .func = prodtest_display_gradient,
+  .info = "Display a color gradient (n shades) in vertical columns",
+  .args = "<color> <shades>"
 );
