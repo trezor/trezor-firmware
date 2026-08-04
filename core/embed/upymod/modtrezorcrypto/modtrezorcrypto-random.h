@@ -55,11 +55,7 @@ static mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
   vstr_t vstr = {0};
   vstr_init_len(&vstr, len);
   if (n_args > 1 && mp_obj_is_true(args[1])) {
-    if (!rng_fill_buffer_strong((uint8_t *)vstr.buf, len)) {
-      vstr_clear(&vstr);
-      mp_raise_msg(&mp_type_RuntimeError,
-                   MP_ERROR_TEXT("Failed to get strong randomness."));
-    }
+    rng_fill_buffer_strong((uint8_t *)vstr.buf, len);
   } else {
     rng_fill_buffer((uint8_t *)vstr.buf, len);
   }

@@ -825,16 +825,16 @@ access_violation:
   apptask_access_violation();
 }
 
-bool rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size) {
+void rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size) {
   if (!probe_write_access(buffer, buffer_size)) {
     goto access_violation;
   }
 
-  return rng_fill_buffer_strong(buffer, buffer_size);
+  rng_fill_buffer_strong(buffer, buffer_size);
+  return;
 
 access_violation:
   apptask_access_violation();
-  return false;
 }
 
 // ---------------------------------------------------------------------

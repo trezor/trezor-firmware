@@ -672,9 +672,9 @@ void rng_fill_buffer(void *buffer, size_t buffer_size) {
   syscall_invoke2((uint32_t)buffer, buffer_size, SYSCALL_RNG_FILL_BUFFER);
 }
 
-bool rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
-  return (bool)syscall_invoke2((uint32_t)buffer, buffer_size,
-                               SYSCALL_RNG_FILL_BUFFER_STRONG);
+void rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
+  syscall_invoke2((uint32_t)buffer, buffer_size,
+                  SYSCALL_RNG_FILL_BUFFER_STRONG);
 }
 
 // =============================================================================

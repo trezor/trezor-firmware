@@ -360,7 +360,7 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     case SMCALL_RNG_FILL_BUFFER_STRONG: {
       uint8_t *buffer = (uint8_t *)args[0];
       size_t buffer_size = args[1];
-      args[0] = rng_fill_buffer_strong__verified(buffer, buffer_size);
+      rng_fill_buffer_strong__verified(buffer, buffer_size);
     } break;
 
     case SMCALL_FIRMWARE_GET_VENDOR: {
