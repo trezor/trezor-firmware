@@ -24,6 +24,7 @@ elf_sections = [".secmon_header", ".flash", ".data", ".gnu.sgstubs"]
 
 # xtask build options mapped to the cargo features
 [build-options]
+apps                          = { true = ["app_loading"] }
 bootloader-devel              = { true = ["bootloader_devel"] }
 btc-only                      = { false = ["universal_fw"] }
 dbg-console                   = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
