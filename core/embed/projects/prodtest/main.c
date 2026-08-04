@@ -35,6 +35,7 @@
 #include <sys/systick.h>
 
 #include "commands.h"
+#include "prodtest.h"
 #include "rust_types.h"
 #include "rust_ui_prodtest.h"
 #include "sys/sysevent.h"
@@ -283,7 +284,21 @@ int prodtest_main(void) {
       const cli_command_t *cmd = cli_process_io(&g_cli);
 
       if (cmd != NULL) {
-        screen_prodtest_bars("", 0);
+        // screen_prodtest_bars() calls display_get_frame_buffer() which rotates
+        // the double-buffer queue and reconfigures MPU region 5.  If a
+        // display-image transfer is active, that would invalidate the
+        // framebuffer pointer cached by display-image begin, causing an MPU
+        // fault on the next chunk write.  Suppress ALL UI renders while a
+        // transfer is in progress, not just for the display-image command
+        // itself — any interleaved command (display-set-backlight, display-bars,
+        // …) would otherwise still trigger the same fault.
+        //
+        // g_layout is cleared unconditionally so that screen_prodtest_event()
+        // is never called for touch/button events that arrive between chunks.
+        if (strcmp(cmd->name, "display-image") != 0 &&
+            !prodtest_display_transfer_active()) {
+          screen_prodtest_bars("", 0);
+        }
         memzero(&g_layout, sizeof(g_layout));
         cli_process_command(&g_cli, cmd);
       }

@@ -82,6 +82,82 @@ static void prodtest_display_bars(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_display_gradient(cli_t* cli) {
+  const char* color = cli_arg(cli, "color");
+
+  uint32_t shades = 0;
+
+  if (!cli_arg_uint32(cli, "shades", &shades) || shades < 1 ||
+      shades > DISPLAY_RESX) {
+    cli_error_arg(cli, "Expecting number of shades in range 1-%d.",
+                  DISPLAY_RESX);
+    return;
+  }
+
+  if (cli_arg_count(cli) > 2) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (strlen(color) != 1 || strchr("RGBWrgbw", color[0]) == NULL) {
+    cli_error_arg(cli, "Expecting a single color letter (RGBW).");
+    return;
+  }
+
+  cli_trace(cli, "Drawing %d shades of '%c'...", shades, color[0]);
+
+  uint16_t col_width = DISPLAY_RESX / shades;
+
+  for (uint32_t i = 0; i < shades; i++) {
+    // Shade 0 is off (channel value 0), the last column is full intensity
+    // (255); with a single shade requested, draw it at full intensity.
+    uint8_t level = (shades > 1) ? (i * 255) / (shades - 1) : 255;
+
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+
+    switch (color[0]) {
+      case 'r':
+      case 'R':
+        r = level;
+        break;
+      case 'g':
+      case 'G':
+        g = level;
+        break;
+      case 'b':
+      case 'B':
+        b = level;
+        break;
+      case 'w':
+      case 'W':
+        r = g = b = level;
+        break;
+    }
+
+    uint16_t x0 = i * col_width;
+    // The last column absorbs the remainder of the integer division so the
+    // gradient always spans the full screen width.
+    uint16_t width = (i == shades - 1) ? (DISPLAY_RESX - x0) : col_width;
+
+    gfx_bitblt_t bb = {
+        .dst_x = x0,
+        .dst_y = 0,
+        .width = width,
+        .height = DISPLAY_RESY,
+        .src_fg = gfx_color_rgb(r, g, b),
+        .src_alpha = 255,
+    };
+
+    display_fill(&bb);
+  }
+
+  display_refresh();
+
+  cli_ok(cli, "");
+}
+
 static void prodtest_display_set_backlight(cli_t* cli) {
   uint32_t level = 0;
 
@@ -100,6 +176,81 @@ static void prodtest_display_set_backlight(cli_t* cli) {
   prodtest_show_homescreen();
 
   cli_ok(cli, "");
+}
+
+// State for multi-chunk image receive
+static size_t image_offset = 0;
+static display_fb_info_t image_fb = {0};
+
+bool prodtest_display_transfer_active(void) { return image_fb.ptr != NULL; }
+
+// Receive raw RGB565 image data in chunks and display it.
+//   display-image begin       -- start transfer, returns width/height/stride
+//   display-image chunk <hex> -- append hex-encoded pixel bytes
+//   display-image end         -- refresh display
+//
+// To set the backlight level for the image being shown, send a separate
+// 'display-set-backlight <level>' command before 'display-image begin'
+// (see prodtest_display_set_backlight()).
+static void prodtest_display_image(cli_t* cli) {
+  if (cli_arg_count(cli) < 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  const char* phase = cli_arg(cli, "phase");
+
+  if (0 == strcmp(phase, "begin")) {
+    if (cli_arg_count(cli) > 1) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    if (!display_get_frame_buffer(&image_fb)) {
+      cli_error(cli, CLI_ERROR_FATAL, "Cannot get frame buffer");
+      return;
+    }
+
+    image_offset = 0;
+    cli_ok(cli, "width=%d height=%d stride=%d size=%u", DISPLAY_RESX,
+           DISPLAY_RESY, (int)image_fb.stride, (unsigned)image_fb.size);
+
+  } else if (0 == strcmp(phase, "chunk")) {
+    if (cli_arg_count(cli) < 2) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    if (image_fb.ptr == NULL) {
+      cli_error(cli, CLI_ERROR_FATAL, "Transfer not started. Use 'begin' first.");
+      return;
+    }
+
+    size_t chunk_len = 0;
+    if (!cli_arg_hex(cli, "hex-data", (uint8_t*)image_fb.ptr + image_offset,
+                     image_fb.size - image_offset, &chunk_len)) {
+      cli_error_arg(cli, "Expecting hex-encoded pixel data.");
+      return;
+    }
+
+    image_offset += chunk_len;
+    cli_ok(cli, "%u %u", (unsigned)chunk_len, (unsigned)image_offset);
+
+  } else if (0 == strcmp(phase, "end")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    display_refresh();
+    cli_ok(cli, "displayed %u bytes", (unsigned)image_offset);
+
+    image_offset = 0;
+    image_fb.ptr = NULL;
+
+  } else {
+    cli_error(cli, CLI_ERROR_FATAL, "Unknown phase '%s' (begin|chunk|end)", phase);
+  }
 }
 
 // clang-format off
@@ -130,4 +281,18 @@ PRODTEST_CLI_CMD(
   .func = prodtest_display_set_backlight,
   .info = "Set the display backlight level",
   .args = "<level>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "display-gradient",
+  .func = prodtest_display_gradient,
+  .info = "Display a color gradient (n shades) in vertical columns",
+  .args = "<color> <shades>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "display-image",
+  .func = prodtest_display_image,
+  .info = "Show a raw RGB565 image (begin|chunk <hex>|end)",
+  .args = "<phase> [<hex-data>]"
 );

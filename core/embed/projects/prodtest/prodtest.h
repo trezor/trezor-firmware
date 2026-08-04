@@ -25,3 +25,8 @@
 void prodtest_disable_rgbled_control(void);
 
 void prodtest_show_homescreen(void);
+
+// Returns true while a display-image begin/chunk/end transfer is in progress.
+// Used by main.c to suppress UI renders that would rotate the framebuffer queue
+// and invalidate the MPU region configured by display-image begin.
+bool prodtest_display_transfer_active(void);
