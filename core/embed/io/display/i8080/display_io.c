@@ -52,7 +52,7 @@ void display_io_init_gpio(void) {
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Alternate = 0;
   GPIO_InitStructure.Pin = DISPLAY_PWR_PIN;
-  HAL_GPIO_WritePin(DISPLAY_PWR_PORT, DISPLAY_PWR_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(DISPLAY_PWR_PORT, DISPLAY_PWR_PIN, GPIO_PIN_RESET);
   HAL_GPIO_Init(DISPLAY_PWR_PORT, &GPIO_InitStructure);
 #endif
 
