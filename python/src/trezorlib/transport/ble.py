@@ -47,10 +47,16 @@ TREZOR_SERVICE_UUID = "8c000001-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_RX = "8c000002-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_TX = "8c000003-a59b-4d58-a9ad-073df69fa1b1"
 
-SCAN_INTERVAL_SECONDS = 3
+SCAN_INTERVAL_SECONDS = 5
+CONNECT_TIMEOUT_SECONDS = 20
 SHUTDOWN_TIMEOUT_SECONDS = 10
 
 SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
+
+if sys.platform == "darwin":
+    _FULL_LEN = len("ble:00000000-0000-0000-0000-000000000000")
+else:
+    _FULL_LEN = len("ble:00:00:00:00:00:00")
 
 
 class BleTransport(Transport):
@@ -67,6 +73,14 @@ class BleTransport(Transport):
 
     def get_path(self) -> str:
         return "{}:{}".format(self.PATH_PREFIX, self.device)
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> "BleTransport":
+        # short circuit non-prefix search
+        # full-len path should probably avoid scanning and use BleakScanner.find_device_by_address
+        if not prefix_search and len(path) != _FULL_LEN:
+            raise TransportException(f"BLE device not found: {path}")
+        return super().find_by_path(path, prefix_search)
 
     @classmethod
     def enumerate(
@@ -216,12 +230,10 @@ class BleAsync:
     async def scan(self) -> list[tuple[str, str]]:
         LOG.debug("scanning BLE")
 
-        # NOTE BleakScanner.discover(service_uuids=[TREZOR_SERVICE_UUID]) is broken
-        # problem possibly on the bluez side
-
         devices = await BleakScanner.discover(
             timeout=SCAN_INTERVAL_SECONDS,
             return_adv=True,
+            service_uuids=[TREZOR_SERVICE_UUID],
         )
 
         # throw away non connected peripherals
@@ -267,7 +279,7 @@ class BleAsync:
         client = BleakClient(
             periph.device,
             services=[TREZOR_SERVICE_UUID],
-            timeout=SCAN_INTERVAL_SECONDS,
+            timeout=CONNECT_TIMEOUT_SECONDS,
             disconnect_callback=disconnect_callback,
         )
         await client.connect()
