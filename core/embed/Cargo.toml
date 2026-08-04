@@ -10,7 +10,6 @@ members = [
     "io",
     "upymod",
     "rust",
-    "rust-staticlib",
     "projects/boardloader",
     "projects/bootloader",
     "projects/bootloader_ci",

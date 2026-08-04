@@ -7,7 +7,6 @@ requires-python = ">=3.10,<4"
 dependencies = [
     "trezor",
     "tvl",
-    "scons",
     "protobuf==6.33.5",  # minor needs to be >= than version in shell.nix
     "nanopb>=0.4.3,<0.5",
     "pytest>=9.0.3,<10",

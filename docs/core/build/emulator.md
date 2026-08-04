@@ -12,31 +12,31 @@ If you prefer not to use nix-shell, install the following dependencies manually:
 * __Debian/Ubuntu__:
 
 ```sh
-sudo apt-get install scons libsdl2-dev libsdl2-image-dev llvm-dev libclang-dev clang
+sudo apt-get install libsdl2-dev libsdl2-image-dev llvm-dev libclang-dev clang
 ```
 
 * __Fedora__:
 
 ```sh
-sudo yum install scons SDL2-devel SDL2_image-devel clang-devel
+sudo yum install SDL2-devel SDL2_image-devel clang-devel
 ```
 
 * __OpenSUSE__:
 
 ```sh
-sudo zypper install scons libSDL2-devel libSDL2_image-devel
+sudo zypper install libSDL2-devel libSDL2_image-devel
 ```
 
 * __Arch__:
 
 ```sh
-sudo pacman -S scons sdl2 sdl2_image clang-devel
+sudo pacman -S sdl2 sdl2_image clang-devel
 ```
 
 * __Mac OS X__:
 
 ```sh
-brew install scons sdl2 sdl2_image pkg-config llvm
+brew install sdl2 sdl2_image pkg-config llvm
 ```
 
 * __Windows__: not supported yet, sorry.

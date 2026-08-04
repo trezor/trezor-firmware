@@ -1036,13 +1036,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "trezor_lib_staticlib"
-version = "0.1.0"
-dependencies = [
- "trezor_lib",
-]
-
-[[package]]
 name = "ufmt"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

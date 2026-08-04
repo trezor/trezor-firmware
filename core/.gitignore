@@ -1,14 +1,10 @@
 build/
 build-docker/
 build-xtask/
-.sconsign.dblite
-compile_commands.json
 emu.config
 tests/trezor_monero_tests*
 .coverage
 .coverage.*
 htmlcov/
 mypy_report
-/CMakeLists.txt
-/cmake-build-debug/
 tools/gdb_scripts/*.log
