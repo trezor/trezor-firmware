@@ -217,7 +217,7 @@ def root_update(root_packet: AnyBytes) -> None:
 
 
 # upymod/modtrezorapp/modtrezorapp.c
-def root_is_loaded(ring: int) -> bool:
+def root_is_loaded(ring: uint) -> bool:
     """
     Return True if a root-of-trust is present for the specified ring,
     otherwise return False.
@@ -225,14 +225,14 @@ def root_is_loaded(ring: int) -> bool:
 
 
 # upymod/modtrezorapp/modtrezorapp.c
-def root_timestamp(ring: int) -> int:
+def root_timestamp(ring: uint) -> int:
     """
     Return the timestamp of the root-of-trust for the specified ring.
     """
 
 
 # upymod/modtrezorapp/modtrezorapp.c
-def app_ring_from_header(header: AnyBytes) -> int:
+def app_ring_from_header(header: AnyBytes) -> uint:
     """
     Return the application privilege ring from the provided header.
     """
