@@ -203,3 +203,14 @@ message PaymentRequest {
         required bytes mac = 5;         // the MAC returned by GetAddress
     }
 }
+
+/**
+ * Structure representing a semantic version (major.minor.patch.build)
+ * @embed
+ */
+message Version {
+  required uint32 major = 1;
+  required uint32 minor = 2;
+  optional uint32 patch = 3 [default=0];
+  optional uint32 build = 4 [default=0];
+}

@@ -394,7 +394,7 @@ The coreapp IPC API uses the IPC mechanism provided by the kernel:
 - An application task can send an IPC message to another task by calling `ipc_send()`. This function copies an arbitrary payload, including IPC call arguments, into the recipient task's address space.
 - An application task can wait for an incoming IPC message using the standard polling mechanism. Once the message is signaled, the application can call `ipc_try_receive()` to retrieve it.
 
-The IPC handler in coreapp is implemented in MicroPython, in `core/src/apps/trezorapp/run.py`.
+The IPC handler in coreapp is implemented in MicroPython, in `core/src/apps/extapp/run.py`.
 
 Each IPC call is identified by a _service_ and a _message id_. The following services are currently supported:
 

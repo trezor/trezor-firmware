@@ -407,4 +407,16 @@ enum MessageType {
     // Telemetry
     MessageType_TelemetryGet = 1100 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_Telemetry = 1101 [(bitcoin_only) = true, (wire_out) = true];
+
+    // Trezor Apps
+    MessageType_ExtAppLoad = 9200 [(wire_in) = true];
+    MessageType_ExtAppLoaded = 9201 [(wire_out) = true];
+    MessageType_ExtAppHeaderRequest = 9202 [(wire_out) = true];
+    MessageType_ExtAppHeaderAck = 9203 [(wire_in) = true];
+    MessageType_ExtAppRootPacketRequest = 9204 [(wire_out) = true];
+    MessageType_ExtAppRootPacketAck = 9205 [(wire_in) = true];
+    MessageType_ExtAppDataChunkRequest = 9206 [(wire_out) = true];
+    MessageType_ExtAppDataChunkAck = 9207 [(wire_in) = true];
+    MessageType_ExtAppMessage = 9208 [(wire_in) = true];
+    MessageType_ExtAppResponse = 9209 [(wire_out) = true];
 }
