@@ -133,11 +133,14 @@ typedef struct {
  * @param intr Pointer to the initiator structure to initialize
  * @param psk Pre-shared key for the Noise protocol (32 bytes)
  * @param static_private_key Static private key for the initiator (32 bytes)
+ * @param static_public_key Static public key corresponding to
+ * `static_private_key` (32 bytes)
  * @return true if the initiator was initialized correctly, false otherwise
  */
 bool noise_xxpsk3_initiator_init(
     noise_xxpsk3_initiator_t *intr, const uint8_t psk[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN]);
+    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN]);
 
 /**
  * @brief Deinitialize the initiator structure and clear any sensitive data.
@@ -252,11 +255,14 @@ bool noise_xxpsk3_initiator_create_request2(
  * @param rspn Pointer to the responder structure to initialize
  * @param psk Pre-shared key for the Noise protocol (32 bytes)
  * @param static_private_key Static private key for the responder (32 bytes)
+ * @param static_public_key Static public key corresponding to
+ * `static_private_key` (32 bytes)
  * @return true if the responder was initialized correctly, false otherwise
  */
 bool noise_xxpsk3_responder_init(
     noise_xxpsk3_responder_t *rspn, const uint8_t psk[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN]);
+    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN]);
 
 /**
  * @brief Deinitialize the responder structure and clear any sensitive data.

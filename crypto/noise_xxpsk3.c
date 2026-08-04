@@ -356,6 +356,7 @@ static bool noise_xxpsk3_init_state(
     noise_xxpsk3_handshake_state_t *state,
     const uint8_t psk[NOISE_XXPSK3_DHLEN],
     const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN],
     const uint8_t *prologue, size_t prologue_len) {
   static const uint8_t XX_PROTOCOL_NAME[] = "Noise_XXpsk3_25519_AESGCM_SHA256";
 
@@ -367,7 +368,7 @@ static bool noise_xxpsk3_init_state(
           sizeof(XX_PROTOCOL_NAME) - 1);  // -1 substract the string terminator
 
   memcpy(state->static_private, static_private_key, NOISE_XXPSK3_DHLEN);
-  curve25519_scalarmult_basepoint(state->static_public, state->static_private);
+  memcpy(state->static_public, static_public_key, NOISE_XXPSK3_DHLEN);
 
   ss_mix_hash(&state->symmetric_state, prologue, prologue_len);
 
@@ -383,12 +384,14 @@ static bool noise_xxpsk3_init_state(
 
 bool noise_xxpsk3_responder_init(
     noise_xxpsk3_responder_t *rspn, const uint8_t psk[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN]) {
+    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN]) {
   if (rspn == NULL) {
     return false;
   }
 
-  if (rspn->initialized || psk == NULL || static_private_key == NULL) {
+  if (rspn->initialized || psk == NULL || static_private_key == NULL ||
+      static_public_key == NULL) {
     goto cleanup;
   }
 
@@ -396,7 +399,7 @@ bool noise_xxpsk3_responder_init(
   memset(rspn, 0, sizeof(noise_xxpsk3_responder_t));
 
   if (!noise_xxpsk3_init_state(&rspn->handshake_state, psk, static_private_key,
-                               NULL, 0)) {
+                               static_public_key, NULL, 0)) {
     goto cleanup;
   }
 
@@ -610,12 +613,14 @@ cleanup:
 
 bool noise_xxpsk3_initiator_init(
     noise_xxpsk3_initiator_t *intr, const uint8_t psk[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN]) {
+    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN]) {
   if (intr == NULL) {
     return false;
   }
 
-  if (intr->initialized || psk == NULL || static_private_key == NULL) {
+  if (intr->initialized || psk == NULL || static_private_key == NULL ||
+      static_public_key == NULL) {
     goto cleanup;
   }
 
@@ -623,7 +628,7 @@ bool noise_xxpsk3_initiator_init(
   memset(intr, 0, sizeof(noise_xxpsk3_initiator_t));
 
   if (!noise_xxpsk3_init_state(&intr->handshake_state, psk, static_private_key,
-                               NULL, 0)) {
+                               static_public_key, NULL, 0)) {
     goto cleanup;
   }
 
