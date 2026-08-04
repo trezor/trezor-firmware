@@ -30,6 +30,8 @@ mod macros;
 mod align;
 #[cfg(feature = "debug")]
 mod coverage;
+#[cfg(feature = "micropython")]
+mod crypto;
 #[cfg(feature = "universal_fw")]
 mod definitions;
 mod io;

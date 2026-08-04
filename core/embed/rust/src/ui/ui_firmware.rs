@@ -18,6 +18,9 @@ pub const MAX_MENU_ITEMS: usize = 6;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
 
+/// Maximum IPC message size in bytes for serialized data
+pub const MAX_IPC_SIZE: usize = 1024;
+
 /// One entry of `select_menu()`: its label plus what the entry means.
 ///
 /// TODO: named after `select_menu` only to avoid colliding with the existing
