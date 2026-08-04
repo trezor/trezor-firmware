@@ -25,10 +25,6 @@
 
 #include <pthread.h>
 
-#ifdef USE_DBG_CONSOLE
-#include <sys/dbg_console.h>
-#endif
-
 // Task scheduler state
 typedef struct {
   // Error handler called when a kernel task terminates
@@ -350,46 +346,4 @@ void systask_exit_fatal(systask_t* task, const char* message,
   pminfo->fatal.line = line;
 
   systask_kill(task);
-}
-
-void systask_print_pminfo(systask_t* task) {
-#ifdef USE_DBG_CONSOLE
-
-  const systask_postmortem_t* pminfo = &task->pminfo;
-
-  if (pminfo->reason == TASK_TERM_REASON_EXIT && pminfo->exit.code == 0) {
-    dbg_printf("Task #%u terminated cleanly\n", task->id);
-    return;
-  }
-
-  dbg_printf("Task #%u terminated.\n", task->id);
-
-  switch (pminfo->reason) {
-    case TASK_TERM_REASON_EXIT:
-      dbg_printf("Exit code: %d\n", pminfo->exit.code);
-      break;
-
-    case TASK_TERM_REASON_ERROR:
-      dbg_printf("Error: %s\n", pminfo->error.message);
-      if (pminfo->error.title[0] != '\0') {
-        dbg_printf("Title: %s\n", pminfo->error.title);
-      }
-      if (pminfo->error.footer[0] != '\0') {
-        dbg_printf("Footer: %s\n", pminfo->error.footer);
-      }
-      break;
-
-    case TASK_TERM_REASON_FATAL:
-      dbg_printf("Fatal: %s", pminfo->fatal.expr);
-      if (pminfo->fatal.file[0] != '\0') {
-        dbg_printf(" at %s:%u", pminfo->fatal.file, pminfo->fatal.line);
-      }
-      dbg_printf("\n");
-      break;
-
-    case TASK_TERM_REASON_FAULT:
-      dbg_printf("Fault\n");
-      break;
-  }
-#endif  // USE_DBG_CONSOLE
 }
