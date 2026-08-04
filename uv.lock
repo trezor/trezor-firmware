@@ -12,9 +12,6 @@ resolution-markers = [
 exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "P30D"
 
-[options.exclude-newer-package]
-stellar-sdk = "2026-07-05T00:00:00Z"
-
 [[package]]
 name = "astroid"
 version = "3.3.11"

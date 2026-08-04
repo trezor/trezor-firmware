@@ -43,9 +43,7 @@ extra = ["Pillow>=10"]
 stellar = [
     "stellar-sdk>=13; python_version < '3.10'",
     # Protocol 27 support (SOROBAN_CREDENTIALS_ADDRESS_V2 etc.) requires
-    # stellar-sdk 15, which dropped Python 3.9. stellar-sdk is exempted from
-    # the `exclude-newer = "30 days"` uv policy below (see
-    # `exclude-newer-package`) so the 15.0.0 final can be used right away.
+    # stellar-sdk 15, which dropped Python 3.9.
     "stellar-sdk>=15; python_version >= '3.10'",
 ]
 ble = ["bleak>=1.1.0"]
@@ -75,10 +73,6 @@ build-backend = "flit_core.buildapi"
 [tool.uv]
 package = true
 exclude-newer = "30 days"
-# Exempt stellar-sdk from the 30-day rule so the freshly released 15.0.0
-# final (needed for Protocol 27 support) can be resolved.
-# TODO: remove after 2026-08-04
-exclude-newer-package = { stellar-sdk = "2026-07-05T00:00:00Z" }
 
 [tool.flit.module]
 name = "trezorlib"
