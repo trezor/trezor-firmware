@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use bindgen;
 use color_eyre::Result;
 use color_eyre::eyre::WrapErr;
