@@ -2,7 +2,6 @@
     "include": [
         "src",
         "tools",
-        "site_scons",
         "*.py"
     ],
     "exclude": [

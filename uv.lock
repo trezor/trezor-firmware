@@ -1885,15 +1885,6 @@ wheels = [
 ]
 
 [[package]]
-name = "scons"
-version = "4.9.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c8/c1/30176c76c1ef723fab62e5cdb15d3c972427a146cb6f868748613d7b25af/scons-4.9.1.tar.gz", hash = "sha256:bacac880ba2e86d6a156c116e2f8f2bfa82b257046f3ac2666c85c53c615c338", size = 3252106, upload-time = "2025-03-27T20:42:19.765Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/92/50b739021983b131dcacd57aa8b04d31c5acc2e7e0eb4ed4a362f438c6b7/scons-4.9.1-py3-none-any.whl", hash = "sha256:d2db1a22eb6039e97cbbb0106f18f435af033d0aad190299c9688378e2810a5e", size = 4131331, upload-time = "2025-03-27T20:42:16.665Z" },
-]
-
-[[package]]
 name = "secretstorage"
 version = "3.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2203,7 +2194,6 @@ dependencies = [
     { name = "pytest-xdist" },
     { name = "python-bitcoinlib" },
     { name = "requests" },
-    { name = "scons" },
     { name = "setuptools" },
     { name = "shamir-mnemonic" },
     { name = "slh-dsa" },
@@ -2270,7 +2260,6 @@ requires-dist = [
     { name = "pytest-xdist" },
     { name = "python-bitcoinlib", specifier = ">=0.11.0,<0.12" },
     { name = "requests", specifier = "~=2.32" },
-    { name = "scons" },
     { name = "setuptools", specifier = ">=24.2.0" },
     { name = "shamir-mnemonic", specifier = ">=0.3.0,<0.4" },
     { name = "slh-dsa", specifier = ">=0.1.3,<0.2" },
