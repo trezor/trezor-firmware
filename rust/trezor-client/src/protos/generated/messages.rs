@@ -623,6 +623,26 @@ pub enum MessageType {
     MessageType_TelemetryGet = 1100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_Telemetry)
     MessageType_Telemetry = 1101,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppLoad)
+    MessageType_ExtAppLoad = 9200,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppLoaded)
+    MessageType_ExtAppLoaded = 9201,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppHeaderRequest)
+    MessageType_ExtAppHeaderRequest = 9202,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppHeaderAck)
+    MessageType_ExtAppHeaderAck = 9203,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppRootPacketRequest)
+    MessageType_ExtAppRootPacketRequest = 9204,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppRootPacketAck)
+    MessageType_ExtAppRootPacketAck = 9205,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppDataChunkRequest)
+    MessageType_ExtAppDataChunkRequest = 9206,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppDataChunkAck)
+    MessageType_ExtAppDataChunkAck = 9207,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppMessage)
+    MessageType_ExtAppMessage = 9208,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppResponse)
+    MessageType_ExtAppResponse = 9209,
 }
 
 impl ::protobuf::Enum for MessageType {
@@ -932,6 +952,16 @@ impl ::protobuf::Enum for MessageType {
             9103 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkResult),
             1100 => ::std::option::Option::Some(MessageType::MessageType_TelemetryGet),
             1101 => ::std::option::Option::Some(MessageType::MessageType_Telemetry),
+            9200 => ::std::option::Option::Some(MessageType::MessageType_ExtAppLoad),
+            9201 => ::std::option::Option::Some(MessageType::MessageType_ExtAppLoaded),
+            9202 => ::std::option::Option::Some(MessageType::MessageType_ExtAppHeaderRequest),
+            9203 => ::std::option::Option::Some(MessageType::MessageType_ExtAppHeaderAck),
+            9204 => ::std::option::Option::Some(MessageType::MessageType_ExtAppRootPacketRequest),
+            9205 => ::std::option::Option::Some(MessageType::MessageType_ExtAppRootPacketAck),
+            9206 => ::std::option::Option::Some(MessageType::MessageType_ExtAppDataChunkRequest),
+            9207 => ::std::option::Option::Some(MessageType::MessageType_ExtAppDataChunkAck),
+            9208 => ::std::option::Option::Some(MessageType::MessageType_ExtAppMessage),
+            9209 => ::std::option::Option::Some(MessageType::MessageType_ExtAppResponse),
             _ => ::std::option::Option::None
         }
     }
@@ -1236,6 +1266,16 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_BenchmarkResult" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkResult),
             "MessageType_TelemetryGet" => ::std::option::Option::Some(MessageType::MessageType_TelemetryGet),
             "MessageType_Telemetry" => ::std::option::Option::Some(MessageType::MessageType_Telemetry),
+            "MessageType_ExtAppLoad" => ::std::option::Option::Some(MessageType::MessageType_ExtAppLoad),
+            "MessageType_ExtAppLoaded" => ::std::option::Option::Some(MessageType::MessageType_ExtAppLoaded),
+            "MessageType_ExtAppHeaderRequest" => ::std::option::Option::Some(MessageType::MessageType_ExtAppHeaderRequest),
+            "MessageType_ExtAppHeaderAck" => ::std::option::Option::Some(MessageType::MessageType_ExtAppHeaderAck),
+            "MessageType_ExtAppRootPacketRequest" => ::std::option::Option::Some(MessageType::MessageType_ExtAppRootPacketRequest),
+            "MessageType_ExtAppRootPacketAck" => ::std::option::Option::Some(MessageType::MessageType_ExtAppRootPacketAck),
+            "MessageType_ExtAppDataChunkRequest" => ::std::option::Option::Some(MessageType::MessageType_ExtAppDataChunkRequest),
+            "MessageType_ExtAppDataChunkAck" => ::std::option::Option::Some(MessageType::MessageType_ExtAppDataChunkAck),
+            "MessageType_ExtAppMessage" => ::std::option::Option::Some(MessageType::MessageType_ExtAppMessage),
+            "MessageType_ExtAppResponse" => ::std::option::Option::Some(MessageType::MessageType_ExtAppResponse),
             _ => ::std::option::Option::None
         }
     }
@@ -1539,6 +1579,16 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_BenchmarkResult,
         MessageType::MessageType_TelemetryGet,
         MessageType::MessageType_Telemetry,
+        MessageType::MessageType_ExtAppLoad,
+        MessageType::MessageType_ExtAppLoaded,
+        MessageType::MessageType_ExtAppHeaderRequest,
+        MessageType::MessageType_ExtAppHeaderAck,
+        MessageType::MessageType_ExtAppRootPacketRequest,
+        MessageType::MessageType_ExtAppRootPacketAck,
+        MessageType::MessageType_ExtAppDataChunkRequest,
+        MessageType::MessageType_ExtAppDataChunkAck,
+        MessageType::MessageType_ExtAppMessage,
+        MessageType::MessageType_ExtAppResponse,
     ];
 }
 
@@ -1848,6 +1898,16 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_BenchmarkResult => 295,
             MessageType::MessageType_TelemetryGet => 296,
             MessageType::MessageType_Telemetry => 297,
+            MessageType::MessageType_ExtAppLoad => 298,
+            MessageType::MessageType_ExtAppLoaded => 299,
+            MessageType::MessageType_ExtAppHeaderRequest => 300,
+            MessageType::MessageType_ExtAppHeaderAck => 301,
+            MessageType::MessageType_ExtAppRootPacketRequest => 302,
+            MessageType::MessageType_ExtAppRootPacketAck => 303,
+            MessageType::MessageType_ExtAppDataChunkRequest => 304,
+            MessageType::MessageType_ExtAppDataChunkAck => 305,
+            MessageType::MessageType_ExtAppMessage => 306,
+            MessageType::MessageType_ExtAppResponse => 307,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1866,7 +1926,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xe4i\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\x83m\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2209,17 +2269,27 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     MessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18M\
     essageType_TelemetryGet\x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
     \x01\x12$\n\x15MessageType_Telemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\
-    \x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\
-    \\\"\x04\x08M\x10N\"\x04\x08G\x10J\"\x06\x08\xd9\x03\x10\xda\x03\"\x04\
-    \x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\
-    \x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\x06\x08\xe3\x01\
-    \x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\x01\x10\xe5\x01\
-    \"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\x01\"\x06\x08\
-    \xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\x08\xec\x01\x10\
-    \xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\
-    \x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\
-    \x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezo\
-    r.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
+    \x98\xb5\x18\x01\x12!\n\x16MessageType_ExtAppLoad\x10\xf0G\x1a\x04\x90\
+    \xb5\x18\x01\x12#\n\x18MessageType_ExtAppLoaded\x10\xf1G\x1a\x04\x98\xb5\
+    \x18\x01\x12*\n\x1fMessageType_ExtAppHeaderRequest\x10\xf2G\x1a\x04\x98\
+    \xb5\x18\x01\x12&\n\x1bMessageType_ExtAppHeaderAck\x10\xf3G\x1a\x04\x90\
+    \xb5\x18\x01\x12.\n#MessageType_ExtAppRootPacketRequest\x10\xf4G\x1a\x04\
+    \x98\xb5\x18\x01\x12*\n\x1fMessageType_ExtAppRootPacketAck\x10\xf5G\x1a\
+    \x04\x90\xb5\x18\x01\x12-\n\"MessageType_ExtAppDataChunkRequest\x10\xf6G\
+    \x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_ExtAppDataChunkAck\x10\
+    \xf7G\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_ExtAppMessage\x10\
+    \xf8G\x1a\x04\x90\xb5\x18\x01\x12%\n\x1aMessageType_ExtAppResponse\x10\
+    \xf9G\x1a\x04\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\
+    \x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10J\"\x06\x08\xd9\x03\x10\
+    \xda\x03\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\
+    \xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\
+    \x06\x08\xe3\x01\x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\
+    \x01\x10\xe5\x01\"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\
+    \x01\"\x06\x08\xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\
+    \x08\xec\x01\x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\
+    \x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\
+    \"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.sat\
+    oshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
