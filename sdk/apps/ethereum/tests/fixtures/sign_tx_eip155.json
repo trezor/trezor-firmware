@@ -1,0 +1,217 @@
+{
+    "setup": {
+        "mnemonic": "all all all all all all all all all all all all",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "Ethereum",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "6a6349bddb5749bb8b96ce2566a035ef87a09dbf89b5c7e3dfdf9ed725912f24",
+                "sig_s": "4ae58ccd3bacee07cdc4a3e8540544fd009c4311af7048122da60f2054c07ee4"
+            }
+        },
+        {
+            "name": "ETC",
+            "parameters": {
+                "chain_id": 61,
+                "path": "m/44'/61'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 158,
+                "sig_r": "6f03621da2fe75877494697b0852c379ea3b2c4ec4f99ab9ce0c8753ebbaf3aa",
+                "sig_s": "2b8c8def7534e7bc692ee2975a674a0e31c0dbd9137e53d27dee6b15e121c210"
+            }
+        },
+        {
+            "name": "Auxilium",
+            "parameters": {
+                "chain_id": 28945486,
+                "path": "m/44'/344'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 57891008,
+                "sig_r": "3298b58680045cfb373b9945f17c468a5c5725c9115c7c18915e8c585c67193f",
+                "sig_s": "6bf1c719350150a520d59542815afd8263d7fe7087608051abe7df11dd7fcbec"
+            }
+        },
+        {
+            "name": "Pirl",
+            "parameters": {
+                "chain_id": 3125659152,
+                "path": "m/44'/164'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 6251318340,
+                "sig_r": "a876d3cf19f4f6b51fb980aac49e8bd378b88f11adbebc1be33d7b86eb84a054",
+                "sig_s": "3bee0e5a07661e78c9c4af49c8a42f4735f80cbb82931607ac35fc78f8d5b113"
+            }
+        },
+        {
+            "name": "Unknown_chain_id_eth_path",
+            "parameters": {
+                "chain_id": 609112567,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 1218225170,
+                "sig_r": "0b0f20dc9202db0653a827b9dc924653bc83d67eec9e43d678e0fb6bb3eb6d9e",
+                "sig_s": "5fdbae16da0ffc4d888e915ff210393e5c7655a3c48eaffbbe97d6db428fc277"
+            }
+        },
+        {
+            "name": "Unknown_chain_id_testnet_path",
+            "parameters": {
+                "chain_id": 609112567,
+                "path": "m/44'/1'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 1218225169,
+                "sig_r": "f699de96e886995e460e760839d4f2c7b9f1c98f2d3c108d0add4e8663a679d8",
+                "sig_s": "1447ba45be9fca42bcbf250389403245c8c1b0476e60b96dea320b0a596b5528"
+            }
+        },
+        {
+            "name": "Palm",
+            "parameters": {
+                "chain_id": 11297108109,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 22594216254,
+                "sig_r": "9d05ca7cdcf971f3114c0ef8d636c5aae1353bb227e04ec1198c60d874e676c0",
+                "sig_s": "35414067209e27fb690d9387264c74e334e25a117705f3583fb24434a952c9ca"
+            }
+        },
+        {
+            "name": "max_chain_id",
+            "parameters": {
+                "chain_id": 2147483629,
+                "path": "m/44'/1'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 4294967293,
+                "sig_r": "97f217d851c9f54013d7792d3b06492abbeda334191687323f08e03e979bd6c9",
+                "sig_s": "6a5f60d9abb1fa76be8ab76d3c879e1f0187e432692e3e9adce60642f06abe74"
+            }
+        },
+        {
+            "name": "max_chain_plus_one",
+            "parameters": {
+                "chain_id": 2147483630,
+                "path": "m/44'/1'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 4294967296,
+                "sig_r": "f643499025c61025d27f7815ed1b1dcd92233548ebdd13bdd056e9cf3f84a853",
+                "sig_s": "33f363b014e5a404bec8479bb08649a6843f65c1f3166d3289211fb5361dab45"
+            }
+        },
+        {
+            "name": "max_uint64",
+            "parameters": {
+                "chain_id": 18446744073709551615,
+                "path": "m/44'/1'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 36893488147419103266,
+                "sig_r": "7bf581e8c7ff7d0e94d25eaa476de928d444b180fe50a91374b8883ff5dee3a8",
+                "sig_s": "3a3efa7a3f97043a999b3183d958a03126ec2652608c376c4626850b9b6a33fa"
+            }
+        },
+        {
+            "name": "Ledger Live legacy path",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "08a16c651ffdf9e59c1bd8398d788bc98c86d6c0d7f6bc07977d557b0851c01b",
+                "sig_s": "1e2adc9ef0b7f17a6385230783349706c0cc0bfef40c45ea5b23c09543b17c28"
+            }
+        }
+    ]
+}
