@@ -337,6 +337,12 @@ def _escape_str(s: str) -> str:
 
 def _format_sc_val(val: StellarSCVal) -> str:
     """Format SCVal as a human-readable string, using JSON for complex types."""
+    w = []
+    _format_sc_val_rec(val, w)
+    return "".join(w)
+
+
+def _format_sc_val_rec(val: StellarSCVal, w: list[str]) -> None:
     from trezor.strings import format_duration, format_timestamp
 
     t = val.type
@@ -344,56 +350,56 @@ def _format_sc_val(val: StellarSCVal) -> str:
     if t == StellarSCValType.SCV_BOOL:
         if val.b is None:
             raise DataError("Stellar: missing bool value")
-        return "true" if val.b else "false"
+        return w.append("true" if val.b else "false")
     elif t == StellarSCValType.SCV_VOID:
-        return "void"
+        return w.append("void")
     elif t == StellarSCValType.SCV_U32:
         if val.u32 is None:
             raise DataError("Stellar: missing u32 value")
-        return str(val.u32)
+        return w.append(str(val.u32))
     elif t == StellarSCValType.SCV_I32:
         if val.i32 is None:
             raise DataError("Stellar: missing i32 value")
-        return str(val.i32)
+        return w.append(str(val.i32))
     elif t == StellarSCValType.SCV_U64:
         if val.u64 is None:
             raise DataError("Stellar: missing u64 value")
-        return str(val.u64)
+        return w.append(str(val.u64))
     elif t == StellarSCValType.SCV_I64:
         if val.i64 is None:
             raise DataError("Stellar: missing i64 value")
-        return str(val.i64)
+        return w.append(str(val.i64))
     elif t == StellarSCValType.SCV_TIMEPOINT:
         if val.timepoint is None:
             raise DataError("Stellar: missing timepoint value")
         try:
-            return format_timestamp(val.timepoint)
+            return w.append(format_timestamp(val.timepoint))
         except OverflowError:
-            return str(val.timepoint)
+            return w.append(str(val.timepoint))
     elif t == StellarSCValType.SCV_DURATION:
         if val.duration is None:
             raise DataError("Stellar: missing duration value")
-        return format_duration(val.duration)
+        return w.append(format_duration(val.duration))
     elif t == StellarSCValType.SCV_U128:
         if val.u128 is None:
             raise DataError("Stellar: missing u128 value")
-        return _format_u128(val.u128)
+        return w.append(_format_u128(val.u128))
     elif t == StellarSCValType.SCV_I128:
         if val.i128 is None:
             raise DataError("Stellar: missing i128 value")
-        return _format_i128(val.i128)
+        return w.append(_format_i128(val.i128))
     elif t == StellarSCValType.SCV_U256:
         if val.u256 is None:
             raise DataError("Stellar: missing u256 value")
-        return _format_u256(val.u256)
+        return w.append(_format_u256(val.u256))
     elif t == StellarSCValType.SCV_I256:
         if val.i256 is None:
             raise DataError("Stellar: missing i256 value")
-        return _format_i256(val.i256)
+        return w.append(_format_i256(val.i256))
     elif t == StellarSCValType.SCV_BYTES:
         if val.bytes is None:
             raise DataError("Stellar: missing bytes value")
-        return "0x" + val.bytes.hex()
+        return w.append("0x" + val.bytes.hex())
     elif t == StellarSCValType.SCV_STRING:
         if val.string is None:
             raise DataError("Stellar: missing string value")
@@ -401,42 +407,48 @@ def _format_sc_val(val: StellarSCVal) -> str:
         # forge the surrounding quotes (and thus the vec/map separators). Non-UTF-8
         # bytes can't be shown as text, so render them as hex like SCV_BYTES.
         try:
-            return f'"{_escape_str(bytes(val.string).decode())}"'
+            return w.append(f'"{_escape_str(bytes(val.string).decode())}"')
         except UnicodeError:
-            return "0x" + val.string.hex()
+            return w.append("0x" + val.string.hex())
     elif t == StellarSCValType.SCV_SYMBOL:
         if val.symbol is None:
             raise DataError("Stellar: missing symbol value")
         # Quote and escape like SCV_STRING so the symbol's content can never forge the
         # surrounding vec/map delimiters. A symbol is already a valid UTF-8 str, so no
         # hex fallback is needed (unlike SCV_STRING, which holds raw bytes).
-        return f'"{_escape_str(val.symbol)}"'
+        return w.append(f'"{_escape_str(val.symbol)}"')
     elif t == StellarSCValType.SCV_VEC:
-        return _format_vec_as_json(val.vec)
+        return _format_vec_as_json(val.vec, w)
     elif t == StellarSCValType.SCV_MAP:
-        return _format_map_as_json(val.map)
+        return _format_map_as_json(val.map, w)
     elif t == StellarSCValType.SCV_ADDRESS:
         if val.address is None:
             raise DataError("Stellar: missing address value")
-        return val.address
+        return w.append(val.address)
     else:
         raise DataError(f"Stellar: unsupported SCVal type {t}")
 
 
-def _format_vec_as_json(vec: list[StellarSCVal]) -> str:
+def _format_vec_as_json(vec: list[StellarSCVal], w: list[str]) -> None:
     """Format a vector as JSON array."""
-    items = [_format_sc_val(item) for item in vec]
-    return "[" + ", ".join(items) + "]"
+    w.append("[")
+    for i, item in enumerate(vec):
+        if i > 0:
+            w.append(", ")
+        _format_sc_val_rec(item, w)
+    w.append("]")
 
 
-def _format_map_as_json(map_entries: list[StellarSCValMapEntry]) -> str:
+def _format_map_as_json(map_entries: list[StellarSCValMapEntry], w: list[str]) -> None:
     """Format a map as JSON object."""
-    pairs = []
-    for entry in map_entries:
-        key = _format_sc_val(entry.key)
-        value = _format_sc_val(entry.value)
-        pairs.append(f"{key}: {value}")
-    return "{" + ", ".join(pairs) + "}"
+    w.append("{")
+    for i, entry in enumerate(map_entries):
+        if i > 0:
+            w.append(", ")
+        _format_sc_val_rec(entry.key, w)
+        w.append(": ")
+        _format_sc_val_rec(entry.value, w)
+    w.append("}")
 
 
 _MASK64 = 0xFFFF_FFFF_FFFF_FFFF
