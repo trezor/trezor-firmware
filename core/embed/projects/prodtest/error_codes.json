@@ -392,6 +392,11 @@
       "module": "nfc"
     },
     {
+      "code": 7022,
+      "name": "PRODTEST_ERR_NFC_INIT",
+      "module": "nfc"
+    },
+    {
       "code": 8010,
       "name": "PRODTEST_ERR_NRF_SPI_COMM",
       "module": "nrf"
