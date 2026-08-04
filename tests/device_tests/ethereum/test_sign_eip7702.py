@@ -85,6 +85,7 @@ def test_sign_eip7702_errors(session: Session, parameters, result):
         experimental_features=True,
     )
 
+    assert result["error"]  # make sure it's not an empty string
     with pytest.raises(TrezorFailure, match=result["error"]):
         ethereum.sign_auth_eip7702(
             session,

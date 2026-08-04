@@ -44,17 +44,16 @@ async def sign_auth_eip7702(
 
     chain_id = msg.chain_id
     if chain_id == 0:
-        # special marker making signature valid for all chains
-        network_item = (TR.ethereum__network, TR.ethereum__all_evms, None)
+        raise DataError("chain_id 0 not supported")
+
+    if defs.network is UNKNOWN_NETWORK:
+        network_item = (
+            TR.ethereum__approve_chain_id,
+            f"{chain_id} (0x{chain_id:x})",
+            None,
+        )
     else:
-        if defs.network is UNKNOWN_NETWORK:
-            network_item = (
-                TR.ethereum__approve_chain_id,
-                f"{chain_id} (0x{chain_id:x})",
-                None,
-            )
-        else:
-            network_item = (TR.ethereum__network, defs.network.name, None)
+        network_item = (TR.ethereum__network, defs.network.name, None)
 
     account, account_path = get_account_and_path(msg.address_n)
     if account is None or account_path is None:
