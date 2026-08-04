@@ -15,7 +15,9 @@ pub use color_eyre::eyre::{WrapErr, bail, ensure};
 pub use dep_tracking::{
     format_command_error, needs_rebuild, run_command, run_command_to_file, run_if_changed,
 };
-pub use helpers::{cargo_target_dir, derive_output_path, emit_rerun_if_changed, is_rust_analyzer};
+pub use helpers::{
+    cargo_target_dir, derive_output_path, emit_rerun_if_changed, is_rust_analyzer, path_from_env,
+};
 pub use input_files::InputFiles;
 pub use parallel::{optimal_parallel_job_count, run_parallel};
 pub use trezor::{build, build_and_link, current_model_id, model_ids, vendor_header_path};
