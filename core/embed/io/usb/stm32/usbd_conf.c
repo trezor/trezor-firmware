@@ -334,7 +334,10 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
   {
     /* Disable USB FS Clocks */
     __HAL_RCC_USB_OTG_FS_CLK_DISABLE();
+#if !defined(STM32H5)
+    // The STM32H5 has no gateable SYSCFG/SBS clock to disable here.
     __HAL_RCC_SYSCFG_CLK_DISABLE();
+#endif
   }
 #endif
 #if defined(USE_USB_HS)
@@ -342,7 +345,10 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
   {
     /* Disable USB FS Clocks */
     __HAL_RCC_USB_OTG_HS_CLK_DISABLE();
+#if !defined(STM32H5)
+    // The STM32H5 has no gateable SYSCFG/SBS clock to disable here.
     __HAL_RCC_SYSCFG_CLK_DISABLE();
+#endif
   }
 #endif
 }
@@ -829,7 +835,10 @@ void OTG_HS_IRQHandler(void) {
 }
 #endif
 
-#ifndef STM32U5
+// The STM32H5 has no separate OTG wakeup interrupt vector (the wakeup is folded
+// into the main OTG_FS/HS IRQ), so this STOP-mode clock-restore block and its
+// dedicated *_WKUP_IRQHandlers are compiled only on the STM32F4.
+#if !defined(STM32U5) && !defined(STM32H5)
 /**
   * @brief  This function handles USB OTG Common FS/HS Wakeup functions.
   * @param  *pcd_handle for FS or HS

@@ -33,6 +33,13 @@
 // clock configuration once implemented (see SystemInit TODO below).
 uint32_t SystemCoreClock = 32000000U;
 
+// AHB/APB prescaler decode tables. These are normally provided by the CMSIS
+// system_stm32h5xx.c; since this port supplies its own SystemInit instead, they
+// are defined here for the HAL RCC clock-frequency helpers to link against.
+const uint8_t AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U,
+                                   1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
+const uint8_t APBPrescTable[8] = {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U};
+
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
 
@@ -85,6 +92,16 @@ void SystemInit(void) {
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  // Enable HSI48 and route it to the RNG kernel clock. The RNG has a
+  // clock-error detector (RNG_SR.CECS) and never asserts DRDY if its kernel
+  // clock is missing, so rng_init() would spin forever without a valid source.
+  // HSI48 (48 MHz) also feeds USB later via the CRS. This is a placeholder
+  // until the full clock tree is configured (see banner above).
+  __HAL_RCC_HSI48_ENABLE();
+  while ((RCC->CR & RCC_CR_HSI48RDY) == 0U) {
+  }
+  __HAL_RCC_RNG_CONFIG(RCC_RNGCLKSOURCE_HSI48);
 
   // Running on the reset-default HSI clock (see banner above).
   SystemCoreClock = 32000000U;
