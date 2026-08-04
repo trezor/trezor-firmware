@@ -221,7 +221,7 @@ secbool storage_next_counter__verified(const uint16_t key, uint32_t *count);
 
 void rng_fill_buffer__verified(void *buffer, size_t buffer_size);
 
-bool rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size);
+void rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size);
 
 // ---------------------------------------------------------------------
 #include <io/translations.h>
