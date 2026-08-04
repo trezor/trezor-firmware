@@ -65,9 +65,7 @@ secbool set_random_secret(uint8_t slot, size_t length) {
     goto cleanup;
   }
 
-  if (!rng_fill_buffer_strong(secret, sizeof(secret))) {
-    goto cleanup;
-  }
+  rng_fill_buffer_strong(secret, sizeof(secret));
 
   if (secret_key_set(slot, secret, sizeof(secret)) != sectrue) {
     goto cleanup;

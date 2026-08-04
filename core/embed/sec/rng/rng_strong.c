@@ -35,7 +35,7 @@
 #include "rand.h"
 
 #if defined(USE_OPTIGA) || defined(USE_TROPIC)
-bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
+void rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   rng_fill_buffer(buffer, buffer_size);
 
   uint8_t* dst = (uint8_t*)buffer;
@@ -45,19 +45,19 @@ bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
 
   while (remaining > 0) {
     size_t block_size = MIN(remaining, sizeof(block));
+    // A failed entropy source halts the device with a fatal error to ensure
+    // that the error cannot be accidentally ignored.
 #ifdef USE_OPTIGA
-    if (!optiga_random_buffer(block, block_size)) {
-      return false;
-    }
+    ensure(sectrue * optiga_random_buffer(block, block_size),
+           "Optiga entropy source failed");
 
     for (size_t i = 0; i < block_size; i++) {
       dst[i] ^= block[i];
     }
 #endif
 #ifdef USE_TROPIC
-    if (!tropic_random_buffer(block, block_size)) {
-      return false;
-    }
+    ensure(sectrue * tropic_random_buffer(block, block_size),
+           "Tropic entropy source failed");
 
     for (size_t i = 0; i < block_size; i++) {
       dst[i] ^= block[i];
@@ -68,13 +68,11 @@ bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   }
 
   memzero(block, sizeof(block));
-  return true;
 }
 
 #else  // defined(USE_OPTIGA) || defined(USE_TROPIC)
-bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
+void rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   rng_fill_buffer(buffer, buffer_size);
-  return true;
 }
 #endif
 

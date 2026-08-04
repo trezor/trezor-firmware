@@ -754,11 +754,8 @@ bool optiga_pin_set(
   bool ret = true;
 
   uint8_t hmac_stretching_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
-  if (!rng_fill_buffer_strong(hmac_stretching_secret,
-                              sizeof(hmac_stretching_secret))) {
-    ret = false;
-    goto end;
-  }
+  rng_fill_buffer_strong(hmac_stretching_secret,
+                         sizeof(hmac_stretching_secret));
 
   for (int i = 0; i < STRETCHED_PIN_COUNT; i++) {
     optiga_pin_stretch_hmac_offline(hmac_stretching_secret, stretched_pins[i]);
@@ -766,10 +763,7 @@ bool optiga_pin_set(
 
   // Generate and store the counter-protected PIN secret.
   uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
-  if (!rng_fill_buffer_strong(pin_secret, sizeof(pin_secret))) {
-    ret = false;
-    goto end;
-  }
+  rng_fill_buffer_strong(pin_secret, sizeof(pin_secret));
 
   if (optiga_set_data_object(OID_PIN_SECRET, false, pin_secret,
                              sizeof(pin_secret)) != OPTIGA_SUCCESS) {
