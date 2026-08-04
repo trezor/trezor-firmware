@@ -59,7 +59,6 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 #include "modtrezorcrypto-random.h"
 #include "modtrezorcrypto-ripemd160.h"
 #include "modtrezorcrypto-secp256k1.h"
-#include "modtrezorcrypto-sha1.h"
 #include "modtrezorcrypto-sha256.h"
 #include "modtrezorcrypto-sha3-256.h"
 #include "modtrezorcrypto-sha3-512.h"
@@ -138,7 +137,6 @@ static const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
 #if USE_SECP256K1_ZKP
     {MP_ROM_QSTR(MP_QSTR_bip340), MP_ROM_PTR(&mod_trezorcrypto_bip340_module)},
 #endif
-    {MP_ROM_QSTR(MP_QSTR_sha1), MP_ROM_PTR(&mod_trezorcrypto_Sha1_type)},
     {MP_ROM_QSTR(MP_QSTR_sha256), MP_ROM_PTR(&mod_trezorcrypto_Sha256_type)},
     {MP_ROM_QSTR(MP_QSTR_sha512), MP_ROM_PTR(&mod_trezorcrypto_Sha512_type)},
     {MP_ROM_QSTR(MP_QSTR_sha3_256),

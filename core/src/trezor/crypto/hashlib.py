@@ -4,7 +4,6 @@ from trezorcrypto import (  # noqa: F401
     blake256,
     groestl512,
     ripemd160,
-    sha1,
     sha3_256,
     sha3_512,
     sha256,
