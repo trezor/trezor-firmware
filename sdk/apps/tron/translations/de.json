@@ -1,0 +1,121 @@
+{
+  "header": {
+    "language": "de-DE",
+    "version": "2.11.2"
+  },
+  "translations": {
+    "address__check_with_source": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Überprüfe die Adresse mit der Quelle."
+    },
+    "address__confirmed": {
+      "Bolt": "Empfängeradresse bestätigt",
+      "Caesar": "Empfängeradresse bestätigt",
+      "Delizia": "Empfängeradresse bestätigt.",
+      "Eckhart": "Empfängeradresse bestätigt."
+    },
+    "address__warning_not_yours": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dies ist NICHT deine Adresse"
+    },
+    "address_details__account_info": "Konto-Info",
+    "address_details__derivation_path": "Ableitungspfad",
+    "buttons__cancel": "Abbrechen",
+    "buttons__confirm": "Bestätigen",
+    "buttons__continue": "Weiter",
+    "buttons__hold_to_confirm": {
+      "Bolt": "Halten z. Best.",
+      "Caesar": "Halten z. Best.",
+      "Delizia": "Halten z. Best.",
+      "Eckhart": "Zum Bestätigen halten"
+    },
+    "ethereum__approve_amount_allowance": "Betragslimit",
+    "ethereum__approve_intro": "Prüfe Details u. lasse Token-Ausgaben zu.",
+    "ethereum__approve_intro_revoke": "Prüfe Details u. widerrufe Tokenfreigabe.",
+    "ethereum__approve_intro_title": "Tokenfreigabe",
+    "ethereum__approve_intro_title_revoke": "Token-Widerruf",
+    "ethereum__approve_revoke_from": "Entziehen von",
+    "ethereum__approve_to": "Zulassen für",
+    "ethereum__no_message_field": "Kein Nachrichtenfeld",
+    "ethereum__sign_eip712": "EIP-712-Daten wirklich signieren?",
+    "ethereum__staking_claim": "Einlösen",
+    "ethereum__staking_stake": "Stake",
+    "ethereum__staking_unstake": "Entstaken",
+    "ethereum__title_confirm_message": "Nachr. bestätigen",
+    "ethereum__title_confirm_message_hash": {
+      "Bolt": "Nachricht bestätigen",
+      "Caesar": "Nachricht bestätigen",
+      "Delizia": "Nachrichteneingabe bestätigen",
+      "Eckhart": "Nachr. bestätigen"
+    },
+    "ethereum__title_confirm_typed_data": "Daten bestätigen",
+    "ethereum__title_input_data": "Daten",
+    "ethereum__title_token_contract": {
+      "Bolt": "Token-Contract",
+      "Caesar": "Adresse des Token-Vertrags",
+      "Delizia": "Token-Contract",
+      "Eckhart": "Adresse des Token-Vertrags"
+    },
+    "ethereum__token_contract": {
+      "Bolt": "Adresse des Token-Vertrags",
+      "Caesar": "Tokenvertrag",
+      "Delizia": "Adresse des Token-Vertrags",
+      "Eckhart": "Tokenvertrag"
+    },
+    "ethereum__unknown_contract_address": {
+      "Bolt": "Unbekannte Vertragsadresse",
+      "Caesar": "Unbekannte Vertragsadresse",
+      "Delizia": "Unbekannte Vertragsadresse.",
+      "Eckhart": "Unbekannte Vertragsadresse"
+    },
+    "instructions__continue_in_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "In der App fortfahren",
+      "Eckhart": "In der App fortfahren"
+    },
+    "send__cancel_sign": "Signieren abbrechen",
+    "send__cancel_transaction": "Transaktion abbrechen",
+    "send__send_from": "Senden von",
+    "send__transaction_signed": {
+      "Bolt": "Transaktion signiert",
+      "Caesar": "Transaktion signiert",
+      "Delizia": "Transaktion signiert.",
+      "Eckhart": "Transaktion signiert."
+    },
+    "tron__claim_unfrozen_balance": "Freigegebenes Guthaben beanspruchen?",
+    "tron__claim_voting_rewards": "Abstimmungs-Belohnungen beanspruchen?",
+    "tron__owner_address": "Adresse des Eigentümers",
+    "words__account": "Konto",
+    "words__address": "Adresse",
+    "words__amount": "Betrag",
+    "words__cancel_and_exit": "Abbrechen und schließen",
+    "words__chain": "Chain",
+    "words__confirm_all": "Alles bestätigen",
+    "words__fee_limit": "Gebührenlimit",
+    "words__important": "Wichtig",
+    "words__know_what_your_doing": {
+      "Bolt": "Fahre nur fort, wenn du dir ganz sicher bist!",
+      "Caesar": "Fahre nur fort, wenn du dir ganz sicher bist!",
+      "Delizia": "Fahre nur fort, wenn du dir ganz sicher bist!",
+      "Eckhart": "Fahre nur fort, wenn du weißt was du tust!"
+    },
+    "words__note": "Anmerkung",
+    "words__recipient": "Empfänger",
+    "words__resource": "Ressource",
+    "words__review": "Prüfen",
+    "words__send": "Senden",
+    "words__show_next": "Nächstes anzeigen",
+    "words__title_done": "Fertig",
+    "words__title_information": "Informationen",
+    "words__title_summary": "Zusammenfassung",
+    "words__token": "Token",
+    "words__unlimited": "Unbegrenzt",
+    "words__votes": "Stimmen",
+    "words__voting": "Abstimmung"
+  }
+}
