@@ -857,6 +857,31 @@ def tutorial() -> LayoutContext[UiResult]:
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def process_ipc_message(
+    *,
+    data: bytes,
+) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
+    """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def send_ui_result(
+    *,
+    result: UiResult | int | str | None,
+    ipc_cb: Callable[[bytes], None] | None = None,
+) -> None:
+    """Serialize a UI result into bytes and send it via the ipc_cb callback.."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def deserialize_progress_message(
+    *,
+    data: bytes,
+) -> Obj:
+    """Deserialize a progress message from bytes and return it as a MicroPython object."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 class BacklightLevels:
     """Backlight levels. Values dynamically update based on user settings."""
     MAX: ClassVar[int]
