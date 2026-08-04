@@ -187,7 +187,7 @@ def check(ignore_missing):
 
     If `--ignore-missing` is specified, the check will display coins with missing
     support info, but will not fail when missing coins are found. This is
-    useful in Travis.
+    useful in CI.
     """
     all_coins = coin_info.coin_info()
     coins_dict = all_coins.as_dict()
