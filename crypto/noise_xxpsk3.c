@@ -376,7 +376,6 @@ static bool noise_xxpsk3_init_state(
 
   state->has_ephemeral_private = false;
   state->has_remote_ephemeral_public = false;
-  state->has_remote_static_public = false;
   return true;
 }
 
@@ -541,7 +540,8 @@ cleanup:
 
 bool noise_xxpsk3_responder_handle_request2(
     noise_xxpsk3_responder_t *rspn, const uint8_t *request, size_t request_len,
-    uint8_t *payload, size_t max_payload_size, size_t *payload_size) {
+    uint8_t remote_static_public_key[NOISE_XXPSK3_DHLEN], uint8_t *payload,
+    size_t max_payload_size, size_t *payload_size) {
   if (rspn == NULL) {
     return false;
   }
@@ -549,6 +549,7 @@ bool noise_xxpsk3_responder_handle_request2(
   noise_xxpsk3_handshake_state_t *state = &rspn->handshake_state;
 
   if (!rspn->initialized || request == NULL ||
+      remote_static_public_key == NULL ||
       rspn->handshake_stage != NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST2 ||
       !state->has_ephemeral_private ||
       (payload == NULL && max_payload_size != 0)) {
@@ -562,14 +563,13 @@ bool noise_xxpsk3_responder_handle_request2(
 
   if (!ss_decrypt_and_hash(&state->symmetric_state, request,
                            NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES,
-                           state->remote_static_public)) {
+                           remote_static_public_key)) {
     goto cleanup;
   }
 
-  state->has_remote_static_public = true;
-
   uint8_t input_key_material[NOISE_XXPSK3_DHLEN] = {0};
-  dh(&state->ephemeral_private, &state->remote_static_public,
+  dh(&state->ephemeral_private,
+     (const uint8_t (*)[NOISE_XXPSK3_DHLEN])remote_static_public_key,
      &input_key_material);
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
@@ -603,6 +603,9 @@ bool noise_xxpsk3_responder_handle_request2(
   return true;
 
 cleanup:
+  if (remote_static_public_key != NULL) {
+    memzero(remote_static_public_key, NOISE_XXPSK3_DHLEN);
+  }
   noise_xxpsk3_responder_deinit(rspn);
   return false;
 }
@@ -693,19 +696,18 @@ cleanup:
   return false;
 }
 
-bool noise_xxpsk3_initiator_handle_response1(noise_xxpsk3_initiator_t *intr,
-                                             const uint8_t *response,
-                                             size_t response_len,
-                                             uint8_t *payload,
-                                             size_t max_payload_size,
-                                             size_t *payload_size) {
+bool noise_xxpsk3_initiator_handle_response1(
+    noise_xxpsk3_initiator_t *intr, const uint8_t *response,
+    size_t response_len, uint8_t remote_static_public_key[NOISE_XXPSK3_DHLEN],
+    uint8_t *payload, size_t max_payload_size, size_t *payload_size) {
   if (intr == NULL) {
     return false;
   }
 
   if (!intr->initialized ||
       intr->handshake_stage != NOISE_XXPSK3_INTR_WAITING_FOR_RESPONSE1 ||
-      response == NULL || (payload == NULL && max_payload_size != 0)) {
+      response == NULL || remote_static_public_key == NULL ||
+      (payload == NULL && max_payload_size != 0)) {
     goto cleanup;
   }
 
@@ -730,12 +732,12 @@ bool noise_xxpsk3_initiator_handle_response1(noise_xxpsk3_initiator_t *intr,
   if (!ss_decrypt_and_hash(&state->symmetric_state,
                            response + NOISE_XXPSK3_DHLEN,
                            NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES,
-                           state->remote_static_public)) {
+                           remote_static_public_key)) {
     goto cleanup;
   }
-  state->has_remote_static_public = true;
 
-  dh(&state->ephemeral_private, &state->remote_static_public,
+  dh(&state->ephemeral_private,
+     (const uint8_t (*)[NOISE_XXPSK3_DHLEN])remote_static_public_key,
      &input_key_material);
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
@@ -763,6 +765,9 @@ bool noise_xxpsk3_initiator_handle_response1(noise_xxpsk3_initiator_t *intr,
   return true;
 
 cleanup:
+  if (remote_static_public_key != NULL) {
+    memzero(remote_static_public_key, NOISE_XXPSK3_DHLEN);
+  }
   noise_xxpsk3_initiator_deinit(intr);
   return false;
 }

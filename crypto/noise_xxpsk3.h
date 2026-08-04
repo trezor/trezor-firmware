@@ -61,9 +61,6 @@ typedef struct {
   bool has_remote_ephemeral_public;
   uint8_t remote_ephemeral_public[NOISE_XXPSK3_DHLEN];
 
-  bool has_remote_static_public;
-  uint8_t remote_static_public[NOISE_XXPSK3_DHLEN];
-
 } noise_xxpsk3_handshake_state_t;
 
 #ifdef USE_NOISE_XXPSK3_RESPONDER
@@ -187,17 +184,17 @@ bool noise_xxpsk3_initiator_create_request1(
  * @param intr Pointer to the initiator structure
  * @param response Incoming response buffer
  * @param response_len Length of the incoming response buffer
+ * @param remote_static_public_key Output buffer for the responder's static
+ * public key (32 bytes)
  * @param payload Output buffer for the decrypted payload
  * @param max_payload_size Size of the output buffer
  * @param payload_size Set to the number of decrypted payload bytes
  * @return true if the response was handled correctly, false otherwise
  */
-bool noise_xxpsk3_initiator_handle_response1(noise_xxpsk3_initiator_t *intr,
-                                             const uint8_t *response,
-                                             size_t response_len,
-                                             uint8_t *payload,
-                                             size_t max_payload_size,
-                                             size_t *payload_size);
+bool noise_xxpsk3_initiator_handle_response1(
+    noise_xxpsk3_initiator_t *intr, const uint8_t *response,
+    size_t response_len, uint8_t remote_static_public_key[NOISE_XXPSK3_DHLEN],
+    uint8_t *payload, size_t max_payload_size, size_t *payload_size);
 
 /**
  * @brief Create request2, the third handshake message from the initiator.
@@ -329,6 +326,8 @@ bool noise_xxpsk3_responder_create_response1(
  * @param rspn Pointer to the responder structure
  * @param request Incoming request buffer
  * @param request_len Length of the incoming request buffer
+ * @param remote_static_public_key Output buffer for the initiator's static
+ * public key (32 bytes)
  * @param payload Output buffer for the decrypted payload
  * @param max_payload_size Size of the output buffer
  * @param payload_size Set to the number of decrypted payload bytes
@@ -336,7 +335,8 @@ bool noise_xxpsk3_responder_create_response1(
  */
 bool noise_xxpsk3_responder_handle_request2(
     noise_xxpsk3_responder_t *rspn, const uint8_t *request, size_t request_len,
-    uint8_t *payload, size_t max_payload_size, size_t *payload_size);
+    uint8_t remote_static_public_key[NOISE_XXPSK3_DHLEN], uint8_t *payload,
+    size_t max_payload_size, size_t *payload_size);
 
 #endif /* USE_NOISE_XXPSK3_RESPONDER */
 
