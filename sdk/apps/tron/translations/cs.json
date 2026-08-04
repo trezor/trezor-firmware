@@ -1,0 +1,111 @@
+{
+  "header": {
+    "language": "cs-CZ",
+    "version": "2.11.2"
+  },
+  "translations": {
+    "address__check_with_source": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ověřte adresu podle zdroje."
+    },
+    "address__confirmed": {
+      "Bolt": "Přijímací adresa potvrzena",
+      "Caesar": "Přijímací adresa potvrzena",
+      "Delizia": "Přijímací adresa potvrzena.",
+      "Eckhart": "Přijímací adresa potvrzena."
+    },
+    "address__warning_not_yours": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "To NENÍ vaše adresa"
+    },
+    "address_details__account_info": "Informace o účtu",
+    "address_details__derivation_path": "Derivační cesta",
+    "buttons__cancel": "Zrušit",
+    "buttons__confirm": "Potvrdit",
+    "buttons__continue": "Pokračovat",
+    "buttons__hold_to_confirm": "Potvrdit podržením",
+    "ethereum__approve_amount_allowance": "Limit částky",
+    "ethereum__approve_intro": "Zkontrolujte údaje pro povolení utracení tokenu.",
+    "ethereum__approve_intro_revoke": "Zkontrolujte údaje pro zrušení povolení tokenu.",
+    "ethereum__approve_intro_title": "Schválení tokenu",
+    "ethereum__approve_intro_title_revoke": "Odvolání tokenu",
+    "ethereum__approve_revoke_from": "Zrušit pro",
+    "ethereum__approve_to": "Povolit pro",
+    "ethereum__no_message_field": "Žádné pole zprávy",
+    "ethereum__sign_eip712": "Chcete podepsat typovaná data EIP-712?",
+    "ethereum__staking_claim": "Nárokovat",
+    "ethereum__staking_stake": "Stakovat",
+    "ethereum__staking_unstake": "Zrušit staking",
+    "ethereum__title_confirm_message": "Potvrdit zprávu",
+    "ethereum__title_confirm_message_hash": "Potvrdit hash zprávy",
+    "ethereum__title_confirm_typed_data": {
+      "Bolt": "Potvrdit typovaná data",
+      "Caesar": "Potvrdit typ. data",
+      "Delizia": "Potvrdit typovaná data",
+      "Eckhart": "Potvrdit typovaná data"
+    },
+    "ethereum__title_input_data": "Data",
+    "ethereum__title_token_contract": {
+      "Bolt": "Kontrakt tokenu",
+      "Caesar": "Adresa kontraktu tokenu",
+      "Delizia": "Kontrakt tokenu",
+      "Eckhart": "Adresa kontraktu tokenu"
+    },
+    "ethereum__token_contract": {
+      "Bolt": "Adresa kontraktu tokenu",
+      "Caesar": "Kontrakt tokenu",
+      "Delizia": "Adresa kontraktu tokenu",
+      "Eckhart": "Adresa kontraktu tokenu"
+    },
+    "ethereum__unknown_contract_address": {
+      "Bolt": "Neznámá adresa kontraktu",
+      "Caesar": "Neznámá adresa kontraktu",
+      "Delizia": "Neznámá adresa kontraktu.",
+      "Eckhart": "Neznámá adresa kontraktu tokenu."
+    },
+    "instructions__continue_in_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Pokračujte v aplikaci",
+      "Eckhart": "Pokračujte v aplikaci"
+    },
+    "send__cancel_sign": "Zrušit podpis",
+    "send__cancel_transaction": "Zrušit transakci",
+    "send__send_from": "Odeslat z",
+    "send__transaction_signed": {
+      "Bolt": "Transakce podepsána",
+      "Caesar": "Transakce podepsána",
+      "Delizia": "Transakce podepsána.",
+      "Eckhart": "Transakce podepsána."
+    },
+    "tron__claim_unfrozen_balance": "Vybrat rozmrazený zůstatek?",
+    "tron__claim_voting_rewards": "Vybrat odměny za hlasování?",
+    "tron__owner_address": "Adresa vlastníka",
+    "words__account": "Účet",
+    "words__address": "Adresa",
+    "words__amount": "Částka",
+    "words__cancel_and_exit": "Zrušit a ukončit",
+    "words__chain": "Síť",
+    "words__confirm_all": "Potvrdit vše",
+    "words__fee_limit": "Limit poplatků",
+    "words__important": "Důležité",
+    "words__know_what_your_doing": "Pokračujte, jen pokud víte, co děláte!",
+    "words__note": "Poznámka",
+    "words__recipient": "Příjemce",
+    "words__resource": "Zdroj",
+    "words__review": "Zkontrolovat",
+    "words__send": "Odeslat",
+    "words__show_next": "Ukázat další",
+    "words__title_done": "Hotovo",
+    "words__title_information": "Informace",
+    "words__title_summary": "Souhrn",
+    "words__token": "Token",
+    "words__unlimited": "Bez limitu",
+    "words__votes": "Hlasy",
+    "words__voting": "Hlasování"
+  }
+}
