@@ -3,7 +3,7 @@ pub mod artifacts;
 pub mod cargo;
 pub mod combine;
 pub mod config;
-pub mod feature_resolver;
+pub mod features;
 pub mod flash;
 pub mod helpers;
 pub mod memusage;

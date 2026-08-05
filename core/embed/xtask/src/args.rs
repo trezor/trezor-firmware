@@ -5,13 +5,14 @@ use serde::Deserialize;
 pub use crate::model::Model;
 use crate::options::BuildOptions;
 
-#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(ValueEnum, Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Project {
     Bootloader,
     Boardloader,
     #[value(name = "bootloader_ci")]
     BootloaderCi,
+    #[default]
     Firmware,
     Prodtest,
     Kernel,
@@ -104,9 +105,12 @@ impl Project {
     }
 }
 
-#[derive(ValueEnum, Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+#[derive(ValueEnum, Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ConsoleType {
+    /// No debug console
+    #[default]
+    None,
     Vcp,
     Swo,
     SystemView,

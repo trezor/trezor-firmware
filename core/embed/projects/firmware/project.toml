@@ -1,3 +1,6 @@
+# Project-specific configuration
+
+# Filter of the model/board defined features for this specific project
 uses = [
     "backlight",
     "backup_ram",
@@ -43,8 +46,32 @@ uses = [
     "nem",
 ]
 
+# ELF sections to be included in the final binary.
+# The order of sections is important.
 elf_sections = [".vendorheader", ".header", ".flash", ".data"]
 
 # STM32F4: firmware spans two non-contiguous flash banks (bank2 starts at 0x08100000)
 split_pad_to         = "0x08100000"
 split_part2_sections = [".flash2"]
+
+# xtask build options mapped to the cargo features
+[build-options]
+apps                          = { true = ["app_loading"] }
+benchmark                     = { true = ["benchmark"] }
+block-on-vcp                  = { true = ["block_on_vcp"] }
+bootloader-devel              = { true = ["bootloader_devel"] }
+btc-only                      = { false = ["universal_fw"] }
+dbg-console                   = { vcp = ["dbg_console"], swo = ["dbg_console"], system-view = ["dbg_console"] }
+debug-link                    = { true = ["debuglink", "ui_debug"] }
+disable-animation             = { true = ["disable_animation"] }
+force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
+frozen                        = { true = ["frozen"] }
+log-stack-usage               = { true = ["log_stack_usage"] }
+mem-perf                      = { true = ["memperf"] }
+n4w1                          = { true = ["n4w1"] }
+perf-overlay                  = { true = ["ui_performance_overlay"] }
+production                    = { true = ["production"], false = ["dev_keys"] }
+pyopt                         = { true = ["pyopt"], false = ["debug", "optiga_testing", "ui_debug_overlay"] }
+source-lines                  = { true = ["micropy_enable_source_lines"] }
+storage-insecure-testing-mode = { true = ["storage_insecure_testing_mode"] }
+unsafe-fw                     = { true = ["unsafe_fw"] }

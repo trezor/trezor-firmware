@@ -50,7 +50,7 @@ pub struct PresetsFile {
 
 impl PresetsFile {
     fn load(path: &Path) -> Result<Self> {
-        let content = fs::read_to_string(&path)
+        let content = fs::read_to_string(path)
             .with_context(|| format!("Failed to read build presets: {}", path.display()))?;
         toml::from_str(&content)
             .with_context(|| format!("Failed to parse build presets: {}", path.display()))
@@ -164,6 +164,21 @@ mod tests {
         assert_eq!(options.debug, Some(true));
         assert_eq!(options.debug_link, Some(false));
         assert_eq!(options.frozen, Some(true));
+    }
+
+    #[test]
+    fn rejects_unknown_option_keys() {
+        // Typos must fail to parse. `deny_unknown_fields` on `Preset` is
+        // inert next to `flatten`; the rejection comes from the flattened
+        // `BuildOptions` denying unknown fields, which serde does not
+        // guarantee — this guards it against serde/toml upgrades.
+        let result: Result<PresetsFile, _> = toml::from_str(
+            r#"
+                [[test]]
+                pyoptt = false
+            "#,
+        );
+        assert!(result.is_err());
     }
 
     #[test]

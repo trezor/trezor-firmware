@@ -5,7 +5,7 @@ use serde::Deserialize;
 use crate::config::ModelConfig;
 use crate::helpers;
 
-#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(ValueEnum, Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Model {
     #[value(name = "d001")]
@@ -25,6 +25,7 @@ pub enum Model {
     #[value(name = "t3t2")]
     T3T2,
     #[value(name = "t3w1")]
+    #[default]
     T3W1,
 }
 

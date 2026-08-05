@@ -1,3 +1,6 @@
+# Project-specific configuration
+
+# Filter of the model/board defined features for this specific project
 uses = [
     "backlight",
     "backup_ram",
@@ -22,4 +25,12 @@ uses = [
     "touch",
 ]
 
+# ELF sections to be included in the final binary.
+# The order of sections is important.
 elf_sections = [".header", ".flash", ".data"]
+
+# xtask build options mapped to the cargo features
+[build-options]
+bootloader-devel = { true = ["bootloader_devel"] }
+dbg-console      = { vcp = ["dbg_console_vcp"], swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
+production       = { true = ["production"] }
