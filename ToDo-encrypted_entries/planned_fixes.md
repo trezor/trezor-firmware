@@ -10,6 +10,12 @@ encrypted leaves, plus the concrete fix for each.
 > batch_digest, another-Trezor verification) lives in
 > [`batch_update_security_review.md`](./batch_update_security_review.md) — findings F1–F12,
 > the `t_anchor`/epoch rationale, and the locked design decisions.
+>
+> **Implemented PoC package:** the firmware-facing architecture, sequence diagrams,
+> scaffolding, protobuf surface, and code-focused audit for the current batch-update
+> implementation live in
+> [`batch_update_firmware_guide.md`](./batch_update_firmware_guide.md) and
+> [`batch_update_security_audit_2026-08-05.md`](./batch_update_security_audit_2026-08-05.md).
 
 ## State of the world (as of 2026-08-02)
 

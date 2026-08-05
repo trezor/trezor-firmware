@@ -257,6 +257,39 @@ def main():
         pass
     print(f"5 multi-leaf UPDATE multiproof == oracle ({cases} batches) + gates .. OK")
 
+    # --- 6. another-Trezor AuthCommit CHAIN verify (Phase 4a) ---------------
+    KA2 = b"K" * 32
+    EH = svc.EMPTY_ROOT_HASH
+
+    def cr(i):
+        return bytes([i]) * 32
+
+    def link(fc, fr, tc, tr):
+        return (fc, fr, tc, tr, svc.auth_commit(KA2, WID, fc, fr, tc, tr))
+
+    def fold(links, base=(0, EH)):
+        rc, rr = base
+        for lk in links:
+            rc, rr = svc.verify_chain_step(KA2, WID, rc, rr, lk)
+        return rc, rr
+
+    good = [link(0, EH, 1, cr(1)), link(1, cr(1), 2, cr(2)), link(2, cr(2), 3, cr(3))]
+    assert fold(good) == (3, cr(3))
+    rejects = {
+        "tampered auth_commit": good[:1]
+        + [(1, cr(1), 2, cr(2), bytes([good[1][4][0] ^ 1]) + good[1][4][1:])],
+        "off-path (authorized, wrong from)": good[:1] + [link(1, cr(9), 2, cr(2))],
+        "counter gap": [link(0, EH, 1, cr(1)), link(1, cr(1), 3, cr(3))],
+        "stale/root-resurrection": [link(0, EH, 1, cr(1)), link(5, cr(1), 6, cr(2))],
+    }
+    for name, bad in rejects.items():
+        try:
+            fold(bad)
+            raise AssertionError("chain verify accepted: " + name)
+        except ValueError:
+            pass
+    print("6 chain verify: authorized chain folds; tampered/off-path/gap/stale reject  OK")
+
     print("\nALL WARD BATCH-UPDATE SELF-CHECKS PASSED")
 
 

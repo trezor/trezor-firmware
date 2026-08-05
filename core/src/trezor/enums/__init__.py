@@ -752,6 +752,8 @@ if TYPE_CHECKING:
         WARDPerformRevertAck = 2359
         WARDConfirmRevertByWM = 2360
         WARDConfirmRevertByWMAck = 2361
+        WARDVerifyChain = 2362
+        WARDVerifyChainAck = 2363
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

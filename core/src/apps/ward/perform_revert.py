@@ -27,7 +27,6 @@ async def perform_revert(msg: WARDPerformRevert) -> WARDPerformRevertAck:
         head_mac,
         auth_revert,
         sig,
-        wallet_id,
         ward_id,
     ) = await core.perform_revert(
         msg.stuck_counter, stuck_root, prev_root, msg.forward_auth_commit
@@ -38,7 +37,6 @@ async def perform_revert(msg: WARDPerformRevert) -> WARDPerformRevertAck:
         from_root=from_root,
         new_root=to_root,
         mac=mac,
-        wallet_id=wallet_id,
         ward_id=ward_id,
         head_mac=head_mac,
         auth_revert=auth_revert,

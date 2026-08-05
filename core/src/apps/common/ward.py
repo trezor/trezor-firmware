@@ -424,6 +424,14 @@ async def reconcile(
     return await service.reconcile(root)
 
 
+async def verify_chain(links: list) -> tuple:
+    """Adopt the WM-attested head by verifying the AuthCommit chain (Phase 4a). No
+    proof pull — the host supplies the ordered links from its lineage store."""
+    from apps.ward import service
+
+    return await service.verify_chain(links)
+
+
 async def pending() -> tuple[list[int], list[bytes], bytes, bytes]:
     """Return queued (pending_ids, addresses, wallet_id, ward_id) for the active
     wallet.

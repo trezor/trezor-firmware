@@ -120,8 +120,8 @@ def perform_batch(session: "Session", pending_ids: list) -> tuple:
     PULLS one proof per intent (WARDProofRequest per entry_key), answered by the
     registered ``ward_proof_callback`` — so a callback MUST be registered first. The
     whole batch advances the counter by 1. Returns (counter, from_root, new_root, mac,
-    wallet_id, ward_id, head_mac, auth_commit, sig_commit, leaves) where `leaves` is a
-    list of (entry_key, entry_type, nonce, tag, ct) the host stores keyed by entry_key
+    ward_id, head_mac, auth_commit, sig_commit, leaves) where `leaves` is a list of
+    (entry_key, entry_type, nonce, tag, ct) the host stores keyed by entry_key
     (ct empty => DELETE)."""
     resp = session.call(
         messages.WARDPerformBatch(pending_ids=pending_ids),
@@ -135,7 +135,6 @@ def perform_batch(session: "Session", pending_ids: list) -> tuple:
         resp.from_root,
         resp.new_root,
         resp.mac,
-        resp.wallet_id,
         resp.ward_id,
         resp.head_mac,
         resp.auth_commit,
@@ -152,14 +151,14 @@ def confirmed_batch_by_wm(
 ) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
     """Install a committed batch with the WM's Ed25519 signature over the exact
     device-derived (to_counter, mac_t). Advances the counter by 1 and drops the whole
-    pending set. Returns (counter, new_root, wallet_id, root_mac)."""
+    pending set. Returns (counter, new_root, ward_id, root_mac)."""
     resp = session.call(
         messages.WARDConfirmBatchByWM(
             counter=counter, mac=mac, wm_signature=wm_signature
         ),
         expect=messages.WARDConfirmBatchByWMAck,
     )
-    return resp.counter, resp.new_root, resp.wallet_id, resp.root_mac
+    return resp.counter, resp.new_root, resp.ward_id, resp.root_mac
 
 
 def perform_revert(
@@ -173,7 +172,7 @@ def perform_revert(
     FORWARD AuthCommit that created the current stuck head plus the predecessor root
     it encodes; the device verifies that MAC to prove the predecessor and demotes with
     a FORWARD-incrementing counter (to_counter = stuck_counter + 1). Returns (counter,
-    from_root, new_root, mac, wallet_id, ward_id, head_mac, auth_revert, sig_commit)."""
+    from_root, new_root, mac, ward_id, head_mac, auth_revert, sig_commit)."""
     resp = session.call(
         messages.WARDPerformRevert(
             stuck_counter=stuck_counter,
@@ -188,7 +187,6 @@ def perform_revert(
         resp.from_root,
         resp.new_root,
         resp.mac,
-        resp.wallet_id,
         resp.ward_id,
         resp.head_mac,
         resp.auth_revert,
@@ -203,14 +201,41 @@ def confirmed_revert_by_wm(
     wm_signature: bytes,
 ) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
     """Install a one-step rollback with the WM's signature over (to_counter, mac_t).
-    Returns (counter, new_root, wallet_id, root_mac)."""
+    Returns (counter, new_root, ward_id, root_mac)."""
     resp = session.call(
         messages.WARDConfirmRevertByWM(
             counter=counter, mac=mac, wm_signature=wm_signature
         ),
         expect=messages.WARDConfirmRevertByWMAck,
     )
-    return resp.counter, resp.new_root, resp.wallet_id, resp.root_mac
+    return resp.counter, resp.new_root, resp.ward_id, resp.root_mac
+
+
+def verify_chain(
+    session: "Session", links: list
+) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
+    """Another-Trezor read-only chain verification + adopt (Phase 4a). Run AFTER
+    ingest_attestation (in place of reconcile). `links` is the ordered list of
+    transitions from the device's trusted baseline to the WM head, each a tuple
+    `(from_counter, from_root, to_counter, to_root, auth_commit, sig_commit|None)`
+    (roots in 32-byte MAC-preimage form). The device verifies the AuthCommit chain and
+    adopts the head. Returns `(counter, new_root, ward_id, root_mac)`."""
+    msg_links = [
+        messages.WARDChainLink(
+            from_counter=lk[0],
+            from_root=lk[1],
+            to_counter=lk[2],
+            to_root=lk[3],
+            auth_commit=lk[4],
+            sig_commit=lk[5] if len(lk) > 5 else None,
+        )
+        for lk in links
+    ]
+    resp = session.call(
+        messages.WARDVerifyChain(links=msg_links),
+        expect=messages.WARDVerifyChainAck,
+    )
+    return resp.counter, resp.new_root, resp.ward_id, resp.root_mac
 
 
 def discard_pending(

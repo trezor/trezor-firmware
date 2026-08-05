@@ -439,12 +439,11 @@ message WARDPerformBatchAck {
     optional bytes  from_root    = 2;  // root the batch transitions FROM (empty-tree sentinel if empty)
     optional bytes  new_root     = 3;  // to_root; absent if the tree becomes empty
     optional bytes  mac          = 4;  // root MAC the WM co-signs; absent if empty
-    optional bytes  wallet_id    = 5;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier
-    optional bytes  ward_id      = 6;  // SLIP21 WM-facing anchor; host forwards to the WM
-    required bytes  head_mac     = 7;  // MAC(K_head, TAG_HEAD||ward_id||to_counter||to_root)
-    required bytes  auth_commit  = 8;  // MAC(K_auth, TAG_COMMIT||ward_id||from_c||from_root||to_c||to_root)
-    optional bytes  sig_commit   = 9;  // Ed25519(K_sig, <AuthCommit preimage>); present only when WARD_KSIG is on
-    repeated WARDBatchLeaf leaves = 10; // device-encrypted leaves for the host to store
+    optional bytes  ward_id      = 5;  // SLIP21 WM-facing anchor; host forwards to the WM (the only id the host needs)
+    required bytes  head_mac     = 6;  // MAC(K_head, TAG_HEAD||ward_id||to_counter||to_root)
+    required bytes  auth_commit  = 7;  // MAC(K_auth, TAG_COMMIT||ward_id||from_c||from_root||to_c||to_root)
+    optional bytes  sig_commit   = 8;  // Ed25519(K_sig, <AuthCommit preimage>); present only when WARD_KSIG is on
+    repeated WARDBatchLeaf leaves = 9;  // device-encrypted leaves for the host to store
 }
 
 /**
@@ -469,7 +468,7 @@ message WARDConfirmBatchByWM {
 message WARDConfirmBatchByWMAck {
     required uint32 counter   = 1;  // counter after install (== to_counter)
     optional bytes  new_root  = 2;  // installed root; absent if the tree is now empty
-    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier
+    optional bytes  ward_id   = 3;  // SLIP21 WM-facing anchor
     optional bytes  root_mac  = 4;  // root MAC; absent if empty
 }
 
@@ -502,11 +501,10 @@ message WARDPerformRevertAck {
     optional bytes  from_root    = 2;  // the stuck root being demoted FROM
     optional bytes  new_root     = 3;  // restored predecessor root; absent if it is the empty tree
     optional bytes  mac          = 4;  // root MAC the WM co-signs; absent if empty
-    optional bytes  wallet_id    = 5;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier
-    optional bytes  ward_id      = 6;  // SLIP21 WM-facing anchor; host forwards to the WM
-    required bytes  head_mac     = 7;  // MAC(K_head, TAG_HEAD||ward_id||to_counter||prev_root)
-    required bytes  auth_revert  = 8;  // MAC(K_auth, TAG_REVERT||ward_id||stuck_c||stuck_root||to_c||prev_root)
-    optional bytes  sig_commit   = 9;  // Ed25519(K_sig, <AuthRevert preimage>); present only when WARD_KSIG is on
+    optional bytes  ward_id      = 5;  // SLIP21 WM-facing anchor; host forwards to the WM (the only id the host needs)
+    required bytes  head_mac     = 6;  // MAC(K_head, TAG_HEAD||ward_id||to_counter||prev_root)
+    required bytes  auth_revert  = 7;  // MAC(K_auth, TAG_REVERT||ward_id||stuck_c||stuck_root||to_c||prev_root)
+    optional bytes  sig_commit   = 8;  // Ed25519(K_sig, <AuthRevert preimage>); present only when WARD_KSIG is on
 }
 
 /**
@@ -530,6 +528,47 @@ message WARDConfirmRevertByWM {
 message WARDConfirmRevertByWMAck {
     required uint32 counter   = 1;  // counter after install (== to_counter)
     optional bytes  new_root  = 2;  // installed predecessor root; absent if empty
-    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier
+    optional bytes  ward_id   = 3;  // SLIP21 WM-facing anchor
+    optional bytes  root_mac  = 4;  // root MAC; absent if empty
+}
+
+/**
+ * One authorized transition link in a chain-verification (another-Trezor read-only
+ * sync). Roots are the 32-byte MAC-preimage form (empty-tree sentinel if empty).
+ */
+message WARDChainLink {
+    required uint32 from_counter = 1;
+    optional bytes  from_root    = 2;  // empty-tree sentinel if empty
+    required uint32 to_counter   = 3;
+    optional bytes  to_root      = 4;  // empty-tree sentinel if empty
+    required bytes  auth_commit  = 5;  // MAC(K_auth, TAG_COMMIT||ward_id||from_c||from_root||to_c||to_root)
+    optional bytes  sig_commit   = 6;  // Ed25519(K_sig, <same preimage>); present only when WARD_KSIG
+}
+
+/**
+ * Request: prove the current WM-attested head sits on a fully Trezor-authorized
+ * canonical path. The device folds the ordered links from its trusted baseline (its
+ * current head; genesis for a fresh device) to the head, verifying per link:
+ * contiguity, a +1 counter step, and AuthCommit (+ SigCommit when WARD_KSIG). It
+ * holds only the running head (O(1) RAM) and does NOT reconstruct roots. The chain
+ * must terminate exactly at the attested head (from the open sync round) and its
+ * terminal root must match the attested mac; only then is the head adopted. Run
+ * AFTER WARDIngestAttestation, in place of WARDReconcile.
+ * @start
+ * @next WARDVerifyChainAck
+ * @next Failure
+ */
+message WARDVerifyChain {
+    repeated WARDChainLink links = 1;  // ordered baseline -> head
+}
+
+/**
+ * Response: the adopted head.
+ * @end
+ */
+message WARDVerifyChainAck {
+    required uint32 counter   = 1;  // installed head counter (== attested)
+    optional bytes  new_root  = 2;  // installed root; absent if the tree is empty
+    optional bytes  ward_id   = 3;  // SLIP21 WM-facing anchor
     optional bytes  root_mac  = 4;  // root MAC; absent if empty
 }

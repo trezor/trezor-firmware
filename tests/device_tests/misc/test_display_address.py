@@ -148,9 +148,15 @@ def test_display_wrong_address_more_labels(session: Session) -> None:
                     expect=messages.Success,
                 ),
             )
+            # A mismatched proof is rejected: the device first WARNS that the label
+            # could not be verified, then shows the address titled "unknown" with no
+            # verified label. Acknowledge the warning, then check the address screen.
+            warning = dev.debuglink().read_layout()
+            assert "could not be verified" in warning.screen_content().lower()
+            dev.debuglink().press_yes()
+
             layout = dev.debuglink().read_layout()
             assert layout.title().splitlines()[0].lower() == "unknown"
-            # assert "label1" in layout.title().lower() or layout.subtitle() == "label1"
             content = layout.screen_content()
             assert address in content.replace("\n", "").replace(" ", "")
             dev.debuglink().press_yes()
@@ -315,6 +321,13 @@ def test_display_address_unknown_with_wrong_proof(session: Session) -> None:
                     expect=messages.Success,
                 ),
             )
+            # A mismatched proof is rejected: the device first WARNS that the label
+            # could not be verified, then shows the address titled "unknown" with no
+            # verified label. Acknowledge the warning, then check the address screen.
+            warning = dev.debuglink().read_layout()
+            assert "could not be verified" in warning.screen_content().lower()
+            dev.debuglink().press_yes()
+
             layout = dev.debuglink().read_layout()
             assert layout.title().splitlines()[0].lower() == "unknown"
             content = layout.screen_content()

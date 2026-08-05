@@ -8027,7 +8027,6 @@ if TYPE_CHECKING:
         from_root: "AnyBytes | None"
         new_root: "AnyBytes | None"
         mac: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
         ward_id: "AnyBytes | None"
         head_mac: "AnyBytes"
         auth_commit: "AnyBytes"
@@ -8044,7 +8043,6 @@ if TYPE_CHECKING:
             from_root: "AnyBytes | None" = None,
             new_root: "AnyBytes | None" = None,
             mac: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
             sig_commit: "AnyBytes | None" = None,
         ) -> None:
@@ -8075,7 +8073,7 @@ if TYPE_CHECKING:
     class WARDConfirmBatchByWMAck(protobuf.MessageType):
         counter: "int"
         new_root: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
         root_mac: "AnyBytes | None"
 
         def __init__(
@@ -8083,7 +8081,7 @@ if TYPE_CHECKING:
             *,
             counter: "int",
             new_root: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
             root_mac: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -8117,7 +8115,6 @@ if TYPE_CHECKING:
         from_root: "AnyBytes | None"
         new_root: "AnyBytes | None"
         mac: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
         ward_id: "AnyBytes | None"
         head_mac: "AnyBytes"
         auth_revert: "AnyBytes"
@@ -8132,7 +8129,6 @@ if TYPE_CHECKING:
             from_root: "AnyBytes | None" = None,
             new_root: "AnyBytes | None" = None,
             mac: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
             sig_commit: "AnyBytes | None" = None,
         ) -> None:
@@ -8163,7 +8159,7 @@ if TYPE_CHECKING:
     class WARDConfirmRevertByWMAck(protobuf.MessageType):
         counter: "int"
         new_root: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
         root_mac: "AnyBytes | None"
 
         def __init__(
@@ -8171,13 +8167,71 @@ if TYPE_CHECKING:
             *,
             counter: "int",
             new_root: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
             root_mac: "AnyBytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmRevertByWMAck"]:
+            return isinstance(msg, cls)
+
+    class WARDChainLink(protobuf.MessageType):
+        from_counter: "int"
+        from_root: "AnyBytes | None"
+        to_counter: "int"
+        to_root: "AnyBytes | None"
+        auth_commit: "AnyBytes"
+        sig_commit: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            from_counter: "int",
+            to_counter: "int",
+            auth_commit: "AnyBytes",
+            from_root: "AnyBytes | None" = None,
+            to_root: "AnyBytes | None" = None,
+            sig_commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDChainLink"]:
+            return isinstance(msg, cls)
+
+    class WARDVerifyChain(protobuf.MessageType):
+        links: "list[WARDChainLink]"
+
+        def __init__(
+            self,
+            *,
+            links: "list[WARDChainLink] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDVerifyChain"]:
+            return isinstance(msg, cls)
+
+    class WARDVerifyChainAck(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDVerifyChainAck"]:
             return isinstance(msg, cls)
 
     class WebAuthnListResidentCredentials(protobuf.MessageType):

@@ -332,3 +332,5 @@ if not utils.BITCOIN_ONLY:
     WARDPerformRevertAck = 2359
     WARDConfirmRevertByWM = 2360
     WARDConfirmRevertByWMAck = 2361
+    WARDVerifyChain = 2362
+    WARDVerifyChainAck = 2363

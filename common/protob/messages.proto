@@ -433,6 +433,10 @@ enum MessageType {
     MessageType_WARDPerformRevertAck = 2359 [(wire_out) = true];
     MessageType_WARDConfirmRevertByWM = 2360 [(wire_in) = true];
     MessageType_WARDConfirmRevertByWMAck = 2361 [(wire_out) = true];
+    // WARD another-Trezor chain verification: prove the head sits on a fully
+    // Trezor-authorized canonical path by verifying the AuthCommit chain.
+    MessageType_WARDVerifyChain = 2362 [(wire_in) = true];
+    MessageType_WARDVerifyChainAck = 2363 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

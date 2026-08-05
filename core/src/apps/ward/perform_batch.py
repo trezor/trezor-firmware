@@ -25,7 +25,6 @@ async def perform_batch(msg: WARDPerformBatch) -> WARDPerformBatchAck:
         head_mac,
         auth_commit,
         sig,
-        wallet_id,
         ward_id,
         leaves,
     ) = await core.perform_batch(list(msg.pending_ids))
@@ -35,7 +34,6 @@ async def perform_batch(msg: WARDPerformBatch) -> WARDPerformBatchAck:
         from_root=from_root,  # 32B MAC-preimage form (EMPTY_ROOT_HASH if empty)
         new_root=to_root,
         mac=mac,
-        wallet_id=wallet_id,
         ward_id=ward_id,
         head_mac=head_mac,
         auth_commit=auth_commit,

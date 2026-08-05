@@ -238,6 +238,43 @@ class WMEmulator:
     def transitions(self, ward_id: bytes) -> list[dict]:
         return list(self._history.get(ward_id, []))
 
+    def auth_commit(
+        self,
+        ward_id: bytes,
+        from_counter: int,
+        from_root: Optional[bytes],
+        to_counter: int,
+        to_root: Optional[bytes],
+    ) -> bytes:
+        """Mint an `AuthCommit` with the ward family's `K_auth` reproduced from the
+        test seed (SLIP-21 m/"ward"/"K_auth"), matching `service.auth_commit` byte for
+        byte. Simulates a family peer authorizing a transition; used to build a chain
+        for `ward.verify_chain`. Roots default to the empty-tree sentinel."""
+        k_auth = _slip21_key(self.seed, [b"ward", b"K_auth"])
+        return _hmac_sha256(
+            k_auth,
+            _transition_preimage(
+                _TAG_COMMIT, ward_id, from_counter, from_root, to_counter, to_root
+            ),
+        )
+
+    def chain_links(self, ward_id: bytes) -> list:
+        """Host link-assembly driver: assemble the ordered `verify_chain` links from
+        the stored commit history (a real host assembles the same tuples from its
+        `WardTransition` lineage). Roots are returned in 32-byte MAC-preimage form
+        (empty-tree sentinel for empty). Each link is
+        `(from_counter, from_root, to_counter, to_root, auth_commit, sig_commit)`."""
+        out = []  # type: list[tuple]
+        for t in self.transitions(ward_id):
+            if t["kind"] != "commit":
+                continue
+            fr = t["from_root"] if t["from_root"] is not None else _EMPTY_ROOT_HASH
+            tr = t["to_root"] if t["to_root"] is not None else _EMPTY_ROOT_HASH
+            out.append(
+                (t["from_counter"], fr, t["to_counter"], tr, t["auth"], t["sig_commit"])
+            )
+        return out
+
     def submit_transition(
         self,
         ward_id: bytes,

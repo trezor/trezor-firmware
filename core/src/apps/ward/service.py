@@ -36,6 +36,8 @@ if TYPE_CHECKING:
 # PLACEHOLDER production key (all-zero): production firmware rejects every WM
 # signature until a real WM public key is provisioned here.
 _WM_PUBKEY = b"\x00" * 32
+_ZERO_PUBKEY = b"\x00" * 32  # the "unprovisioned" placeholder value; never verify against it
+_ZERO_SIG = b"\x00" * 64  # a degenerate signature that must never be accepted (see _verify)
 
 if __debug__:
     from ubinascii import unhexlify
@@ -479,7 +481,15 @@ def _verify(message: bytes, signature: bytes) -> bool:
 
     if len(signature) != 64:
         return False
-    if ed25519.verify(_WM_PUBKEY, signature, message):
+    # SECURITY: an all-zero signature must NEVER verify. Combined with an
+    # unprovisioned all-zero _WM_PUBKEY it is a degenerate Ed25519 acceptance
+    # (R=0, S=0 satisfies [S]B = R + [k]A against the identity/low-order public key),
+    # which would let anyone forge a WM attestation with a zero signature. Reject it
+    # explicitly, and never attempt verification against the all-zero placeholder
+    # key itself (it means "no WM key provisioned yet" -> reject, not "accept").
+    if signature == _ZERO_SIG:
+        return False
+    if _WM_PUBKEY != _ZERO_PUBKEY and ed25519.verify(_WM_PUBKEY, signature, message):
         return True
     if __debug__:
         return ed25519.verify(_WM_PUBKEY_DEBUG, signature, message)
@@ -814,6 +824,33 @@ def verify_auth_revert(
         k_auth, ward_id, from_counter, from_root, to_counter, to_root
     )
     return utils.consteq(expected, mac)
+
+
+def verify_chain_step(k_auth, ward_id, running_counter, running_root, link):
+    """One step of the another-Trezor AuthCommit-chain verify (Phase 4a). `link` is
+    `(from_counter, from_root, to_counter, to_root, auth_commit)` (roots in 32-byte
+    MAC-preimage form, EMPTY_ROOT_HASH for empty). Enforces contiguity against the
+    running head, a +1 counter step, and that the transition is Trezor-authorized
+    (`verify_auth_commit`). Returns the advanced `(to_counter, to_root)`, or raises
+    ValueError. Pure + O(1) — the device holds only the running head, never a trie."""
+    from_counter, from_root, to_counter, to_root, auth_commit_mac = (
+        link[0],
+        link[1],
+        link[2],
+        link[3],
+        link[4],
+    )
+    if from_counter != running_counter:
+        raise ValueError("chain: non-contiguous counter")
+    if _root_or_empty(from_root) != _root_or_empty(running_root):
+        raise ValueError("chain: non-contiguous root")
+    if to_counter != running_counter + 1:
+        raise ValueError("chain: counter must increment by exactly one")
+    if not verify_auth_commit(
+        k_auth, ward_id, from_counter, from_root, to_counter, to_root, auth_commit_mac
+    ):
+        raise ValueError("chain: AuthCommit invalid (unauthorized transition)")
+    return to_counter, to_root
 
 
 def sig_commit(k_sig_secret: bytes, preimage: bytes) -> bytes:
@@ -1460,7 +1497,7 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
     (§4.5/F12), and authenticates the transition with `head_mac` + `AuthCommit`
     (+ `SigCommit` when WARD_KSIG). It stores a single committed batch envelope and
     returns `(to_counter, from_root, to_root, mac_t, head_mac, auth_commit, sig,
-    wallet_id, ward_id, leaves)` (from_root in its 32-byte MAC-preimage form,
+    ward_id, leaves)` (from_root in its 32-byte MAC-preimage form,
     EMPTY_ROOT_HASH if empty; to_root is None if the tree becomes empty) where
     `leaves` is a list of `(entry_key, entry_type, nonce, tag, ct)` for the host to
     store (ct empty => DELETE)."""
@@ -1603,7 +1640,6 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
         head_mac_v,
         auth_commit_v,
         sig,
-        wallet_id,
         ward_id,
         leaves,
     )
@@ -1620,7 +1656,7 @@ async def finalize_batch(
     Replay-before-delete / consistency (§4, F7): the WM must co-sign EXACTLY the
     device's committed candidate `(to_counter, mac_t)`, and the stored `AuthCommit`
     (binding `from`→`to`) is re-verified, before anything is installed or dropped. If
-    either fails, the queue is left intact. Returns `(to_counter, root, wallet_id,
+    either fails, the queue is left intact. Returns `(to_counter, root, ward_id,
     root_mac)` with `root`/`root_mac` None for an emptied tree."""
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
@@ -1683,7 +1719,7 @@ async def finalize_batch(
         )
 
     root_mac = None if mac == _ZERO_MAC else mac
-    return to_counter, root_install, wallet_id, root_mac
+    return to_counter, root_install, ward_id, root_mac
 
 
 async def perform_revert(
@@ -1705,7 +1741,7 @@ async def perform_revert(
     MAC-preimage form (EMPTY_ROOT_HASH for empty).
 
     Stores a BATCH_REVERT envelope and returns `(to_counter, from_root, to_root,
-    mac_t, head_mac, auth_revert, sig, wallet_id, ward_id)`."""
+    mac_t, head_mac, auth_revert, sig, ward_id)`."""
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
     from trezor.wire import DataError
@@ -1794,7 +1830,6 @@ async def perform_revert(
         head_mac_v,
         auth_revert_v,
         sig,
-        wallet_id,
         ward_id,
     )
 
@@ -1807,7 +1842,7 @@ async def finalize_revert(
     """Install a one-step rollback after the WM co-signs the demoted head. Mirrors
     `finalize_batch` but verifies the stored **AuthRevert** and requires a
     BATCH_REVERT envelope. Forward-incrementing, so the anti-rollback counter guard
-    still holds. Returns `(to_counter, root, wallet_id, root_mac)`."""
+    still holds. Returns `(to_counter, root, ward_id, root_mac)`."""
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
     from trezor.wire import DataError
@@ -1863,7 +1898,7 @@ async def finalize_revert(
         )
 
     root_mac = None if mac == _ZERO_MAC else mac
-    return to_counter, root_install, wallet_id, root_mac
+    return to_counter, root_install, ward_id, root_mac
 
 
 async def sync() -> tuple[bytes, int, bytes, bytes]:
@@ -1976,6 +2011,93 @@ async def reconcile(
         )
 
     return counter_ext, root, wallet_id, mac_ext
+
+
+async def verify_chain(links: list) -> tuple:
+    """Another-Trezor CHAIN verification + adopt (Phase 4a, read-only). Instead of
+    trusting a single host-supplied root (reconcile), prove the WM-attested head sits
+    on a fully Trezor-authorized canonical path: fold the ordered `links` from the
+    device's trusted baseline (its current head; genesis `(0, empty)` for a fresh
+    device) to the head, verifying per link contiguity + a +1 counter step +
+    `AuthCommit` (+ Ed25519 `SigCommit` when WARD_KSIG). O(1) RAM — only the running
+    head is kept; roots are NOT reconstructed (each link's AuthCommit means a Trezor
+    validated that step's content at write time). The chain must terminate EXACTLY at
+    the attested counter from the open sync round, and its terminal root must match the
+    attested `mac_ext` (ties the authorized chain to WM freshness + defeats
+    root-resurrection). Only then install `root_head`. Each link is
+    `(from_counter, from_root, to_counter, to_root, auth_commit, sig_commit|None)`.
+    Returns `(counter, new_root, ward_id, root_mac)`."""
+    import storage.ward_head as ward_head
+    import storage.ward_store as ward_store
+    from trezor.wire import DataError
+
+    wallet_id = await _get_wallet_id()
+    ctx = ward_head.sync_get(wallet_id)
+    if ctx is None or ctx[1] != ward_head.SYNC_ATTESTED:
+        raise DataError("no attested sync round to verify against")
+    _nonce, _state, counter_ext, mac_ext = ctx
+
+    ward_id = await _get_ward_id()
+    k_auth = await _derive_ward_key(b"K_auth")
+    k_sig_pub = k_sig_pubkey(await _derive_ward_key(b"K_sig")) if WARD_KSIG else None
+
+    # Trusted baseline = the device's current installed head (fresh device: genesis).
+    present, base_root = ward_head.root_get(wallet_id)
+    running_counter = ward_store.get_counter(wallet_id)
+    running_root = _root_or_empty(base_root if present else None)
+
+    for link in links:
+        try:
+            running_counter, running_root = verify_chain_step(
+                k_auth, ward_id, running_counter, running_root, link
+            )
+        except ValueError as e:
+            raise DataError(str(e))
+        if WARD_KSIG:
+            from trezor.crypto.curve import ed25519
+
+            sig = link[5] if len(link) > 5 else None
+            if sig is None:
+                raise DataError("chain: SigCommit required (WARD_KSIG) but missing")
+            preimage = _transition_preimage(
+                _TAG_COMMIT, ward_id, link[0], link[1], link[2], link[3]
+            )
+            if not ed25519.verify(k_sig_pub, sig, preimage):
+                raise DataError("chain: SigCommit invalid")
+
+    # The authorized chain must land EXACTLY on the WM-attested head.
+    if running_counter != counter_ext:
+        raise DataError("chain does not terminate at the attested counter")
+    root_head = None if running_root == EMPTY_ROOT_HASH else running_root
+    if mac_ext is None:
+        if root_head is not None:
+            raise DataError("attested tree is empty but chain reached a non-empty root")
+    else:
+        if root_head is None:
+            raise DataError("attested tree is non-empty but chain reached the empty tree")
+        mac_key = await _derive_mac_key(b"root_mac")
+        computed = _compute_mac(
+            mac_key, wallet_id, counter_ext.to_bytes(4, "big"), root_head
+        )
+        if computed != mac_ext:
+            raise DataError("chain terminal root does not match the attested mac")
+
+    ward_head.root_set(wallet_id, root_head)
+    ward_store.commit_counter(wallet_id, counter_ext)
+    ward_head.sync_clear()
+
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__,
+            "verify_chain: adopted counter=%d via %d authorized link(s) wallet_id=%s",
+            counter_ext,
+            len(links),
+            wallet_id,
+        )
+
+    return counter_ext, root_head, ward_id, mac_ext
 
 
 async def pending() -> tuple[list[int], list[bytes], bytes, bytes]:

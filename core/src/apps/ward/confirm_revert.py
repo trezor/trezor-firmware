@@ -14,10 +14,10 @@ async def confirm_revert(msg: WARDConfirmRevertByWM) -> WARDConfirmRevertByWMAck
 
     from apps.common import ward as core
 
-    counter, root, wallet_id, root_mac = await core.finalize_revert(
+    counter, root, ward_id, root_mac = await core.finalize_revert(
         msg.counter, msg.mac, msg.wm_signature
     )
 
     return WARDConfirmRevertByWMAck(
-        counter=counter, new_root=root, wallet_id=wallet_id, root_mac=root_mac
+        counter=counter, new_root=root, ward_id=ward_id, root_mac=root_mac
     )

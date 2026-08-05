@@ -17,7 +17,12 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...device_handler import BackgroundDeviceHandler
-from ...ward_mgr_emu import device_ward_keys, sign_ward_update, sign_wm_attestation
+from ...ward_mgr_emu import (
+    WMEmulator,
+    device_ward_keys,
+    sign_ward_update,
+    sign_wm_attestation,
+)
 
 _APP = "bitcoin"  # capability principal == queried domain for these tests
 
@@ -334,6 +339,54 @@ def test_ward_delete(session: Session) -> None:
 
 
 @pytest.mark.models("core")
+def test_ward_update_nonmembership_proof_rejected(session: Session) -> None:
+    """Update of an EXISTING entry where the host answers the device's proof pull with
+    a NON-membership witness instead of the membership blob. The device must reject:
+    the target leaf is present, so no valid non-membership proof can occupy its path,
+    and the write fails rather than silently doing an insert / corrupting the root."""
+    from trezorlib import messages, ward_crypto
+
+    tree = _make_tree()
+    _seed_device(session, tree)
+
+    # Queue an update to an existing entry (alice).
+    pending_id = _queue_update(session, b"alice", ENTRIES[b"alice"], b"data_alice_v2")
+
+    # Malicious/buggy host: for alice's entry_key, serve a non-membership witness built
+    # from ANOTHER present entry (bob) — i.e. claim alice is absent. This is the only
+    # way to feed a non-membership ack for a key that is really in the tree.
+    alice_ek = tree._ek(_APP, b"alice", "address", 0)
+    bob_ek = tree._ek(_APP, b"bob", "address", 0)
+    bob_leaf = tree.get_leaf(bob_ek)
+    assert bob_leaf is not None
+    bob_witness = messages.WARDProofAck(
+        proof=tree.get_proof_by_key(bob_ek),
+        witness_entry_key=bob_ek,
+        witness_commit=ward_crypto.commit_of(bob_leaf[0], bob_leaf[1], bob_leaf[2]),
+    )
+
+    def malicious(msg: messages.WARDProofRequest) -> messages.WARDProofAck:
+        if msg.entry_key == alice_ek:
+            return bob_witness  # non-membership where a membership proof is required
+        return ward.build_proof_ack(tree, msg.entry_key)
+
+    session.client.app.ward_proof_callback = malicious
+
+    # The device folds the (bogus) INSERT it was tricked into and fails the witness
+    # path/root check — WARDPerformUpdate returns a Failure.
+    with pytest.raises(TrezorFailure):
+        ward.perform_update(session, pending_id)
+
+    # Fail-closed: nothing was installed and the intent is still queued (the device
+    # counter/root are untouched). Discard it so this negative test leaves no
+    # committed/counter residue for later tests (it must not finalize — that would
+    # mutate the shared, un-wiped emulator storage the other tests run against).
+    assert _pending_addresses(session) == [b"alice"]
+    ward.discard_pending(session, pending_id)
+    assert _pending_addresses(session) == []
+
+
+@pytest.mark.models("core")
 def test_ward_counter_advances_only_at_finalize(session: Session) -> None:
     """queue_update + perform_update must NOT advance the device counter; only the
     WM confirmation does."""
@@ -496,6 +549,77 @@ def test_ward_catchup_rejects_unreconstructable_root(session: Session) -> None:
     assert bogus_root != root
     with pytest.raises(TrezorFailure):
         ward.reconcile(session, bogus_root)
+
+
+def _verify_chain_setup(session: Session, n: int):
+    """Seed a baseline head via debug injection, open + WM-attest a head n steps ahead,
+    and mint a fully Trezor-authorized AuthCommit chain (synthetic roots) for it.
+    Returns (wm, ward_id, c_head, r_head, mac_head, links)."""
+    import hashlib
+
+    wm = WMEmulator()
+    r0 = _make_tree().get_root_hash()
+    c0, _r, wallet_id, _mac = ward.debug_set_root(session, r0)
+
+    roots = [r0] + [hashlib.sha256(b"chain-R%d" % i).digest() for i in range(1, n + 1)]
+    counters = [c0 + i for i in range(n + 1)]
+    c_head, r_head = counters[-1], roots[-1]
+
+    nonce, ward_id = ward.sync(session)
+    assert ward_id is not None
+    mac_head = wm.root_mac(wallet_id, c_head, r_head)
+    ward.ingest_attestation(
+        session, c_head, mac_head, wm.sign_attestation(ward_id, nonce, c_head, mac_head)
+    )
+
+    links = [
+        (
+            counters[i],
+            roots[i],
+            counters[i + 1],
+            roots[i + 1],
+            wm.auth_commit(ward_id, counters[i], roots[i], counters[i + 1], roots[i + 1]),
+            None,
+        )
+        for i in range(n)
+    ]
+    return wm, ward_id, c_head, r_head, mac_head, links
+
+
+@pytest.mark.models("core")
+def test_ward_verify_chain_adopts(session: Session) -> None:
+    """Another-Trezor read-only CHAIN verification: the device adopts the WM-attested
+    head only after verifying a contiguous, fully Trezor-authorized AuthCommit chain
+    from its baseline to that head. (Roots are synthetic — the verifier checks
+    authorization + contiguity, not content, which is the host's keyless replay.)"""
+    _wm, _ward_id, c_head, r_head, mac_head, links = _verify_chain_setup(session, 3)
+
+    counter, new_root, _ward_id, root_mac = ward.verify_chain(session, links)
+
+    assert counter == c_head
+    assert new_root == r_head
+    assert root_mac == mac_head
+
+
+@pytest.mark.models("core")
+def test_ward_verify_chain_rejects_tampered_link(session: Session) -> None:
+    """A single tampered/forged intermediate AuthCommit breaks the chain — the device
+    refuses to adopt, so an off-path or unauthorized step cannot masquerade as
+    canonical (the another-Trezor guarantee)."""
+    _wm, _ward_id, _c_head, _r_head, _mac, links = _verify_chain_setup(session, 3)
+
+    mid = links[1]
+    links[1] = (
+        mid[0],
+        mid[1],
+        mid[2],
+        mid[3],
+        bytes([mid[4][0] ^ 0x01]) + mid[4][1:],  # flip a bit of the AuthCommit
+        None,
+    )
+
+    with pytest.raises(TrezorFailure):
+        ward.verify_chain(session, links)
 
 
 @pytest.mark.models("core")
