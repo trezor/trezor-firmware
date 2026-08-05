@@ -164,28 +164,29 @@ pub struct BuildArgs {
     pub dbg_console: Option<ConsoleType>,
 
     /// Build Bitcoin-only firmware
-    #[arg(long)]
-    pub btc_only: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub btc_only: Option<bool>,
 
     /// Enable production build
-    #[arg(long)]
-    pub production: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub production: Option<bool>,
 
     /// Force bootloader upgrade
     #[arg(long)]
-    pub force_bootloader_upgrade: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub force_bootloader_upgrade: Option<bool>,
 
     /// Use dev bootloader
-    #[arg(long)]
-    pub bootloader_devel: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub bootloader_devel: Option<bool>,
 
     /// Enable unsafe firmware features
-    #[arg(long)]
-    pub unsafe_fw: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub unsafe_fw: Option<bool>,
 
     /// Embed frozen MicroPython modules
-    #[arg(long)]
-    pub frozen: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub frozen: Option<bool>,
 
     /// Include MicroPython source lines
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
@@ -196,67 +197,67 @@ pub struct BuildArgs {
     pub pyopt: Option<bool>,
 
     /// Enable Micropython memory performance measurements
-    #[arg(long)]
-    pub mem_perf: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub mem_perf: Option<bool>,
 
     /// Enable debug link
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     pub debug_link: Option<bool>,
 
     /// Enable N4W1 support
-    #[arg(long)]
-    pub n4w1: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub n4w1: Option<bool>,
 
     /// Disable UI animations
-    #[arg(long)]
-    pub disable_animation: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub disable_animation: Option<bool>,
 
     /// Show UI perf overlay
-    #[arg(long)]
-    pub perf_overlay: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub perf_overlay: Option<bool>,
 
     /// Include crypto benchmarks
-    #[arg(long)]
-    pub benchmark: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub benchmark: Option<bool>,
 
     /// Log stack usage
-    #[arg(long)]
-    pub log_stack_usage: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub log_stack_usage: Option<bool>,
 
     /// Use blocking VCP writes, in order to allow reliable debug data
     /// transmission over VCP. Disabled by default, to prevent debug
     /// firmware from getting stuck while writing log messages (if the host
     /// is not reading them).
-    #[arg(long)]
-    pub block_on_vcp: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub block_on_vcp: Option<bool>,
 
     /// Enable Address Sanitizer (ASAN) instrumentation
-    #[arg(long)]
-    pub asan: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub asan: Option<bool>,
 
     /// Enable external app loading
-    #[arg(long)]
-    pub apps: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub apps: Option<bool>,
 
     /// Disable OPTIGA support
-    #[arg(long)]
-    pub disable_optiga: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub disable_optiga: Option<bool>,
 
     /// Board revision to build for (defaults to model's default_board)
     #[arg(long, short = 'b')]
     pub board: Option<String>,
 
     /// Disable TROPIC support
-    #[arg(long)]
-    pub disable_tropic: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub disable_tropic: Option<bool>,
 
     /// Enable insecure storage test mode
-    #[arg(long)]
-    pub storage_insecure_testing_mode: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub storage_insecure_testing_mode: Option<bool>,
 
     /// Emits memory analysis output (type sizes and stack sizes)
-    #[arg(long)]
-    pub emit_memory_analysis: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    pub emit_memory_analysis: Option<bool>,
 
     /// Output cargo timings
     #[arg(long)]
@@ -310,29 +311,29 @@ impl ResolvedBuildArgs {
             emulator: args.emulator,
             debug: args.debug.unwrap_or(args.emulator),
             dbg_console: args.dbg_console,
-            btc_only: args.btc_only,
-            production: args.production,
-            force_bootloader_upgrade: args.force_bootloader_upgrade,
-            bootloader_devel: args.bootloader_devel,
-            unsafe_fw: args.unsafe_fw,
-            frozen: args.frozen,
+            btc_only: args.btc_only.unwrap_or(false),
+            production: args.production.unwrap_or(false),
+            force_bootloader_upgrade: args.force_bootloader_upgrade.unwrap_or(false),
+            bootloader_devel: args.bootloader_devel.unwrap_or(false),
+            unsafe_fw: args.unsafe_fw.unwrap_or(false),
+            frozen: args.frozen.unwrap_or(false),
             source_lines: args.source_lines.unwrap_or(args.emulator),
             pyopt,
-            mem_perf: args.mem_perf,
+            mem_perf: args.mem_perf.unwrap_or(false),
             debug_link: args.debug_link.unwrap_or(!pyopt),
-            n4w1: args.n4w1,
-            disable_animation: args.disable_animation,
-            perf_overlay: args.perf_overlay,
-            benchmark: args.benchmark,
-            log_stack_usage: args.log_stack_usage,
-            block_on_vcp: args.block_on_vcp,
-            asan: args.asan,
-            apps: args.apps,
-            disable_optiga: args.disable_optiga,
+            n4w1: args.n4w1.unwrap_or(false),
+            disable_animation: args.disable_animation.unwrap_or(false),
+            perf_overlay: args.perf_overlay.unwrap_or(false),
+            benchmark: args.benchmark.unwrap_or(false),
+            log_stack_usage: args.log_stack_usage.unwrap_or(false),
+            block_on_vcp: args.block_on_vcp.unwrap_or(false),
+            asan: args.asan.unwrap_or(false),
+            apps: args.apps.unwrap_or(false),
+            disable_optiga: args.disable_optiga.unwrap_or(false),
             board: args.board.clone(),
-            disable_tropic: args.disable_tropic,
-            storage_insecure_testing_mode: args.storage_insecure_testing_mode,
-            emit_memory_analysis: args.emit_memory_analysis,
+            disable_tropic: args.disable_tropic.unwrap_or(false),
+            storage_insecure_testing_mode: args.storage_insecure_testing_mode.unwrap_or(false),
+            emit_memory_analysis: args.emit_memory_analysis.unwrap_or(false),
             timings: args.timings,
             verbose: args.verbose,
         }
