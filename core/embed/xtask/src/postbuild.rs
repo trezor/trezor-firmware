@@ -4,7 +4,7 @@ use std::{fs, process};
 use anyhow::{Context, Result, ensure};
 
 use crate::args::Project;
-use crate::config::{ModelConfig, ProjectProfile};
+use crate::config::{ModelConfig, ProjectConfig};
 use crate::helpers;
 use crate::model::Model;
 
@@ -17,7 +17,7 @@ pub fn elf_to_bin(
     model_config: &ModelConfig,
     use_dev_keys: bool,
 ) -> Result<PathBuf> {
-    let project_profile = ProjectProfile::load(project)?;
+    let project_config = ProjectConfig::load(project)?;
 
     match project {
         Project::Firmware => {
@@ -25,12 +25,12 @@ pub fn elf_to_bin(
                 // STM32F4 firmware flash is non-contiguous — two banks separated
                 // by the storage area must be extracted and concatenated.
                 // Part1 uses the same elf_sections as the flat (non-split) path.
-                let pad_to = project_profile
+                let pad_to = project_config
                     .split_pad_to
                     .as_deref()
                     .ok_or_else(|| anyhow::anyhow!("firmware project.toml missing split_pad_to"))?;
                 let part2_sections =
-                    project_profile
+                    project_config
                         .split_part2_sections
                         .as_ref()
                         .ok_or_else(|| {
@@ -39,13 +39,13 @@ pub fn elf_to_bin(
                 let part1 = objcopy_ex(
                     source,
                     "part1",
-                    &project_profile.elf_sections,
+                    &project_config.elf_sections,
                     ["--pad-to", pad_to],
                 )?;
                 let part2 = objcopy_ex(source, "part2", part2_sections, [] as [&str; 0])?;
                 concat_files(part1.with_extension("ubin"), [part1, part2])
             } else {
-                objcopy(source, &project_profile.elf_sections)
+                objcopy(source, &project_config.elf_sections)
             }
         }
 
@@ -54,14 +54,14 @@ pub fn elf_to_bin(
                 // On secmon models prodtest is a secmon-signed body with a plain
                 // vendor header prepended. The body is signed before concatenation.
                 let body_sections =
-                    project_profile
+                    project_config
                         .secmon_body_sections
                         .as_ref()
                         .ok_or_else(|| {
                             anyhow::anyhow!("prodtest project.toml missing secmon_body_sections")
                         })?;
                 let header_sections =
-                    project_profile
+                    project_config
                         .secmon_header_sections
                         .as_ref()
                         .ok_or_else(|| {
@@ -73,11 +73,11 @@ pub fn elf_to_bin(
                     objcopy_ex(source, "header.bin", header_sections, [] as [&str; 0])?;
                 concat_files(source.with_extension("bin"), [header_bin, body_bin])
             } else {
-                objcopy(source, &project_profile.elf_sections)
+                objcopy(source, &project_config.elf_sections)
             }
         }
 
-        _ => objcopy(source, &project_profile.elf_sections),
+        _ => objcopy(source, &project_config.elf_sections),
     }
 }
 
