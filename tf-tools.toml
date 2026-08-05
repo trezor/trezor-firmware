@@ -1,0 +1,8 @@
+# Configuration file for the Trezor Firmware Tools VS Code extension.
+
+[paths]
+cargo-workspace = "core/embed"
+debug-templates = "core/embed/xtask/tf-tools/debug"
+build-artifacts = "core/build-xtask/artifacts"
+xtask-presets = "core/embed/xtask"
+manifest = "core/embed/xtask/tf-tools/manifest.yaml"
