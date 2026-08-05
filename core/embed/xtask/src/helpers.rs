@@ -4,7 +4,8 @@ use std::{env, fs};
 use anyhow::{Context, Result, anyhow};
 use cargo_metadata::MetadataCommand;
 
-use crate::args::{Model, Project, ResolvedBuildArgs};
+use crate::args::{Model, Project};
+use crate::options::ResolvedBuildArgs;
 
 /// Returns the path to the built ELF file for the given build arguments.
 pub fn elf_path(args: &ResolvedBuildArgs) -> Result<PathBuf> {
@@ -21,7 +22,7 @@ pub fn profile_dir(args: &ResolvedBuildArgs) -> Result<PathBuf> {
         path = path.join(model_config.target_triple()?);
     }
 
-    let name = match args.profile_name() {
+    let name = match args.cargo_profile_name() {
         "dev" => "debug", // Cargo uses "debug" folder for dev profile
         name => name,
     };

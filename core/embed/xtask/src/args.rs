@@ -1,7 +1,9 @@
 use anyhow::{Result, anyhow};
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use serde::Deserialize;
 
 pub use crate::model::Model;
+use crate::options::BuildOptions;
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Project {
@@ -101,7 +103,7 @@ impl Project {
     }
 }
 
-#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(ValueEnum, Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
 pub enum ConsoleType {
     Vcp,
     Swo,
@@ -155,198 +157,8 @@ pub struct BuildArgs {
     #[arg(long, short = 'e')]
     pub emulator: bool,
 
-    /// Enable debug build
-    #[arg(long, short = 'd', num_args = 0..=1, default_missing_value = "true")]
-    pub debug: Option<bool>,
-
-    /// Debug console backend
-    #[arg(long)]
-    pub dbg_console: Option<ConsoleType>,
-
-    /// Build Bitcoin-only firmware
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub btc_only: Option<bool>,
-
-    /// Enable production build
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub production: Option<bool>,
-
-    /// Force bootloader upgrade
-    #[arg(long)]
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub force_bootloader_upgrade: Option<bool>,
-
-    /// Use dev bootloader
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub bootloader_devel: Option<bool>,
-
-    /// Enable unsafe firmware features
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub unsafe_fw: Option<bool>,
-
-    /// Embed frozen MicroPython modules
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub frozen: Option<bool>,
-
-    /// Include MicroPython source lines
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub source_lines: Option<bool>,
-
-    /// Optimize MicroPython bytecode
-    #[arg(long, num_args = 0..=1, default_missing_value = "true", overrides_with = "pyopt")]
-    pub pyopt: Option<bool>,
-
-    /// Enable Micropython memory performance measurements
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub mem_perf: Option<bool>,
-
-    /// Enable debug link
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub debug_link: Option<bool>,
-
-    /// Enable N4W1 support
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub n4w1: Option<bool>,
-
-    /// Disable UI animations
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub disable_animation: Option<bool>,
-
-    /// Show UI perf overlay
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub perf_overlay: Option<bool>,
-
-    /// Include crypto benchmarks
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub benchmark: Option<bool>,
-
-    /// Log stack usage
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub log_stack_usage: Option<bool>,
-
-    /// Use blocking VCP writes, in order to allow reliable debug data
-    /// transmission over VCP. Disabled by default, to prevent debug
-    /// firmware from getting stuck while writing log messages (if the host
-    /// is not reading them).
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub block_on_vcp: Option<bool>,
-
-    /// Enable Address Sanitizer (ASAN) instrumentation
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub asan: Option<bool>,
-
-    /// Enable external app loading
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub apps: Option<bool>,
-
-    /// Disable OPTIGA support
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub disable_optiga: Option<bool>,
-
-    /// Board revision to build for (defaults to model's default_board)
-    #[arg(long, short = 'b')]
-    pub board: Option<String>,
-
-    /// Disable TROPIC support
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub disable_tropic: Option<bool>,
-
-    /// Enable insecure storage test mode
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub storage_insecure_testing_mode: Option<bool>,
-
-    /// Emits memory analysis output (type sizes and stack sizes)
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    pub emit_memory_analysis: Option<bool>,
-
-    /// Output cargo timings
-    #[arg(long)]
-    pub timings: bool,
-
-    /// Enable verbose output
-    #[arg(long)]
-    pub verbose: bool,
-}
-
-#[derive(Debug, Clone)]
-pub struct ResolvedBuildArgs {
-    pub project: Project,
-    pub model: Model,
-    pub emulator: bool,
-    pub debug: bool,
-    pub dbg_console: Option<ConsoleType>,
-    pub btc_only: bool,
-    pub production: bool,
-    pub force_bootloader_upgrade: bool,
-    pub bootloader_devel: bool,
-    pub unsafe_fw: bool,
-    pub frozen: bool,
-    pub source_lines: bool,
-    pub pyopt: bool,
-    pub mem_perf: bool,
-    pub debug_link: bool,
-    pub n4w1: bool,
-    pub disable_animation: bool,
-    pub perf_overlay: bool,
-    pub benchmark: bool,
-    pub log_stack_usage: bool,
-    pub block_on_vcp: bool,
-    pub asan: bool,
-    pub apps: bool,
-    pub disable_optiga: bool,
-    pub board: Option<String>,
-    pub disable_tropic: bool,
-    pub storage_insecure_testing_mode: bool,
-    pub emit_memory_analysis: bool,
-    pub timings: bool,
-    pub verbose: bool,
-}
-
-impl ResolvedBuildArgs {
-    pub fn from_build_args(args: &BuildArgs) -> Self {
-        let pyopt = args.pyopt.unwrap_or(true);
-        Self {
-            project: args.project,
-            model: args.model,
-            emulator: args.emulator,
-            debug: args.debug.unwrap_or(args.emulator),
-            dbg_console: args.dbg_console,
-            btc_only: args.btc_only.unwrap_or(false),
-            production: args.production.unwrap_or(false),
-            force_bootloader_upgrade: args.force_bootloader_upgrade.unwrap_or(false),
-            bootloader_devel: args.bootloader_devel.unwrap_or(false),
-            unsafe_fw: args.unsafe_fw.unwrap_or(false),
-            frozen: args.frozen.unwrap_or(false),
-            source_lines: args.source_lines.unwrap_or(args.emulator),
-            pyopt,
-            mem_perf: args.mem_perf.unwrap_or(false),
-            debug_link: args.debug_link.unwrap_or(!pyopt),
-            n4w1: args.n4w1.unwrap_or(false),
-            disable_animation: args.disable_animation.unwrap_or(false),
-            perf_overlay: args.perf_overlay.unwrap_or(false),
-            benchmark: args.benchmark.unwrap_or(false),
-            log_stack_usage: args.log_stack_usage.unwrap_or(false),
-            block_on_vcp: args.block_on_vcp.unwrap_or(false),
-            asan: args.asan.unwrap_or(false),
-            apps: args.apps.unwrap_or(false),
-            disable_optiga: args.disable_optiga.unwrap_or(false),
-            board: args.board.clone(),
-            disable_tropic: args.disable_tropic.unwrap_or(false),
-            storage_insecure_testing_mode: args.storage_insecure_testing_mode.unwrap_or(false),
-            emit_memory_analysis: args.emit_memory_analysis.unwrap_or(false),
-            timings: args.timings,
-            verbose: args.verbose,
-        }
-    }
-
-    /// Determines the Cargo profile to use
-    pub fn profile_name(&self) -> &'static str {
-        if self.debug {
-            if self.emulator { "dev" } else { "debug-opt" }
-        } else {
-            "release"
-        }
-    }
+    #[command(flatten)]
+    pub options: BuildOptions,
 }
 
 #[derive(Args, Debug)]
