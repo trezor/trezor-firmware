@@ -20,7 +20,6 @@
 #include <trezor_rtl.h>
 #include <trezor_types.h>
 
-#include <rtl/strutils.h>
 #include <sec/rng_strong.h>
 #include <sec/secret_keys.h>
 #include <sec/tropic.h>
@@ -1006,16 +1005,6 @@ lt_ret_t tropic_init(cli_t *cli) {
   drv->initialized = true;
 
   return LT_OK;
-}
-
-const char *tropic_init_error_message(lt_ret_t ret) {
-  static char message[64] = "";
-
-  message[0] = '\0';
-  cstr_append(message, sizeof(message), "Tropic init failed: ");
-  cstr_append(message, sizeof(message), lt_ret_verbose(ret));
-
-  return message;
 }
 
 void tropic_deinit(void) {

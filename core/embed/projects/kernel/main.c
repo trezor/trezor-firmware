@@ -207,8 +207,7 @@ void drivers_init() {
   optiga_init_and_configure();
 #endif
 #ifdef USE_TROPIC
-  lt_ret_t tropic_ret = tropic_init(NULL);
-  ensure_true(tropic_ret == LT_OK, tropic_init_error_message(tropic_ret));
+  ensure_true(tropic_init(NULL) == LT_OK, "Failed to initialize Tropic driver");
 #endif
 #endif  // SECURE_MODE
 
