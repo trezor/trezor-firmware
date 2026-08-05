@@ -70,7 +70,8 @@ static const uint8_t TROPIC_BATCHES_V1[][LT_MEMBER_SIZE(
 // {0x19, 0x0a, 0x1f, 0x0f, 0x2c}, {0x19, 0x0c, 0x03, 0x0d, 0x38},
 // };
 
-// How long we wait after `tropic_deinit()` before calling `tropic_init()` again.
+// How long we wait after `tropic_deinit()` before calling `tropic_init()`
+// again.
 #define TROPIC_RESTART_DELAY_MS 10
 
 // clang-format off
@@ -157,7 +158,9 @@ static bool is_retryable(lt_ret_t ret) {
       }                                                                   \
       tropic_deinit();                                                    \
       systick_delay_ms(TROPIC_RESTART_DELAY_MS);                          \
-      tropic_init(NULL);                                                  \
+      if (tropic_init(NULL) != LT_OK) {                                   \
+        break;                                                            \
+      }                                                                   \
       if (TROPIC_RETRY_COMMAND_session_started) {                         \
         if (tropic_custom_session_start(                                  \
                 NULL, TROPIC_RETRY_COMMAND_pairing_key_index) != LT_OK) { \

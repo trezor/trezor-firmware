@@ -71,8 +71,6 @@
 
 lt_ret_t tropic_init(cli_t* cli);
 
-void tropic01_reset(void);
-
 void tropic_deinit(void);
 
 typedef struct {
