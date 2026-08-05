@@ -192,7 +192,7 @@ impl BootloaderUI for UIBolt {
         version_cmp: i32,
     ) -> u32 {
         let mut version_str: BootloaderString = String::new();
-        unwrap!(version_str.push_str("Firmware version "));
+        unwrap!(version_str.push_str("Firmware "));
         unwrap!(version_str.push_str(version));
         unwrap!(version_str.push_str("\nby "));
         unwrap!(version_str.push_str(vendor));
@@ -200,7 +200,7 @@ impl BootloaderUI for UIBolt {
         let title_str = if is_newinstall {
             "INSTALL\nFIRMWARE"
         } else if is_newvendor {
-            "CHANGE FIRMWARE\nVENDOR"
+            "CHANGE FIRM-\nWARE VENDOR"
         } else if version_cmp > 0 {
             "UPGRADE\nFIRMWARE"
         } else if version_cmp == 0 {
@@ -273,7 +273,7 @@ impl BootloaderUI for UIBolt {
         unwrap!(title_str.push_str(bld_version));
 
         let mut version_str: BootloaderString = String::new();
-        unwrap!(version_str.push_str("Firmware version "));
+        unwrap!(version_str.push_str("Firmware "));
         unwrap!(version_str.push_str(version));
         unwrap!(version_str.push_str("\nby "));
         unwrap!(version_str.push_str(vendor));

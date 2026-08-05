@@ -204,7 +204,7 @@ impl BootloaderUI for UIDelizia {
         let title_str = if is_newinstall {
             "INSTALL\nFIRMWARE"
         } else if is_newvendor {
-            "CHANGE FIRMWARE\nVENDOR"
+            "CHANGE FIRM-\nWARE VENDOR"
         } else if version_cmp > 0 {
             "UPGRADE\nFIRMWARE"
         } else if version_cmp == 0 {
