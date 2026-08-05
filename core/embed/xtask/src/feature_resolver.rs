@@ -2,7 +2,8 @@ use std::process;
 
 use anyhow::{Result, bail};
 
-use crate::args::{ConsoleType, Project, ResolvedBuildArgs};
+use crate::args::{ConsoleType, Project};
+use crate::options::ResolvedBuildArgs;
 use crate::{config, helpers};
 
 pub struct ResolvedBuildFeatures {
@@ -187,10 +188,10 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
 
     cmd.args(["--package", args.project.package_name(args.emulator)]);
     cmd.args(["--features", &resolved.features.join(",")]);
-    cmd.args(["--profile", args.profile_name()]);
+    cmd.args(["--profile", args.cargo_profile_name()]);
     cmd.env("TREZOR_BOARD_HEADER", &resolved.board_header);
 
-    if args.profile_name() == "release" {
+    if args.cargo_profile_name() == "release" {
         // Required by panic-immediate-abort in the release profile
         rebuild_std = true;
     }
