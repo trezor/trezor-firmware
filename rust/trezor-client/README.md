@@ -2,11 +2,11 @@
 
 [![Downloads][downloads-badge]][crates-io]
 [![License][license-badge]][license-url]
-[![CI Status][actions-badge]][actions-url]
 
-A fork of a [fork](https://github.com/romanz/rust-trezor-api) of a [library](https://github.com/stevenroose/rust-trezor-api) that provides a way to communicate with a Trezor T device from a Rust project.
+A fork of a [fork](https://github.com/romanz/rust-trezor-api) of a [library](https://github.com/stevenroose/rust-trezor-api) that provides a way to communicate with Trezor devices from a Rust project.
 
-Previous iterations provided implementations for Bitcoin only. **This crate also provides an Ethereum interface**, mainly for use in [ethers-rs](https://github.com/gakonst/ethers-rs/).
+Previous iterations provided implementations for Bitcoin only.
+This crate also provides an Ethereum interface, mainly for use in [alloy-rs](https://github.com/alloy-rs/alloy).
 
 ## Requirements
 
