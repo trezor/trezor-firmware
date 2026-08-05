@@ -113,92 +113,79 @@ components:
         template: u5-generic.json
 
 options:
+  - id: btc-only
+    name: Bitcoin Only
+    description: Bitcoin-only firmware, no altcoins.
+    when: component(firmware)
+    group: Features
+    type: checkbox
+
+  - id: bootloader-devel
+    name: Development Bootloader
+    description: Uses the development bootloader.
+    when: all(target(hardware))
+    type: checkbox
+    group: Features
+
+  - id: unsafe-fw
+    name: Unsafe Firmware
+    description: Enables unsafe firmware features.
+    when: all(target(hardware), component(firmware))
+    type: checkbox
+    group: Features
+
+  - id: production
+    name: Production
+    description: Builds a production-signed firmware image.
+    type: checkbox
+    group: Features
+
+  - id: force-bootloader-upgrade
+    name: Force Bootloader Upgrade
+    description: Forces a bootloader upgrade.
+    when: all(target(hardware), component(firmware))
+    type: checkbox
+    group: Features
+
+  - id: apps
+    name: External Apps Support
+    description: Enables external app loading.
+    group: Features
+    when: component(firmware)
+    type: checkbox
+
+  - id: n4w1
+    name: N4W1 Support
+    description: Enables N4W1 support.
+    group: Features
+    when: component(firmware)
+    type: checkbox
+
   - id: debug
     name: Debug Build
     description: Enables debug symbols and disables some optimizations.
     group: Debugging
-    type: multistate
-    states:
-      - value: null
-        name: Default
-        description: Use the toolchain default.
-        default: true
-      - value: "true"
-        name: Enabled
-        description: Force debug symbols on.
-      - value: "false"
-        name: Disabled
-        description: Strip debug symbols.
-
-  - id: dbg-console
-    name: Debug Console
-    description: Selects the debug console backend.
-    group: Debugging
-    when: target(hardware)
-    type: multistate
-    states:
-      - value: null
-        name: Default
-        description: Use the component default.
-        default: true
-      - value: vcp
-        name: VCP
-        description: Route the debug console over virtual COM port.
-      - value: swo
-        name: SWO
-        description: Route the debug console over SWO.
-      - value: system-view
-        name: SystemView
-        description: Route the debug console over SEGGER SystemView.
+    type: checkbox
 
   - id: pyopt
     name: MicroPython Optimization
-    description: Controls MicroPython bytecode optimization.
+    description: Enables MicroPython bytecode optimization.
     group: Debugging
     when: component(firmware)
-    type: multistate
-    states:
-      - value: null
-        name: Default
-        description: Use the target default.
-        default: true
-      - value: "true"
-        name: Enabled
-        description: Optimize MicroPython bytecode.
-      - value: "false"
-        name: Disabled
-        description: Disable MicroPython bytecode optimization.
+    type: checkbox
 
   - id: source-lines
     name: Embed Source Lines
-    description: Controls inclusion of MicroPython source lines.
+    description: Enables inclusion of MicroPython source lines.
     group: Debugging
     when: component(firmware)
-    type: multistate
-    states:
-      - value: null
-        name: Default
-        description: Use the target default.
-        default: true
-      - value: "true"
-        name: Enabled
-        description: Include MicroPython source lines.
-      - value: "false"
-        name: Disabled
-        description: Exclude MicroPython source lines.
+    type: checkbox
 
   - id: frozen
     name: Frozen Modules
     description: Embeds frozen MicroPython modules.
     group: Debugging
-    when: all(component(firmware), target(emulator))
-    type: checkbox
-
-  - id: perf-overlay
-    name: Performance Overlay
-    description: Shows the UI performance overlay.
-    group: Debugging
-    when: not(any(component(boardloader), component(bootloader_ci)))
+    when: component(firmware)
     type: checkbox
 
   - id: benchmark
@@ -222,35 +209,43 @@ options:
     group: Debugging
     type: checkbox
 
-  - id: debug-link
-    name: Debug Link
-    description: Controls debug link support.
-    group: Testing
-    when: any(component(firmware), component(bootloader))
+  - id: dbg-console
+    name: Debug Console
+    description: Selects the debug console backend.
+    group: Debugging
     type: multistate
     states:
-      - value: null
-        name: Default
-        description: Use the target default.
-        default: true
-      - value: "true"
-        name: Enabled
-        description: Enable debug link support.
-      - value: "false"
-        name: Disabled
-        description: Disable debug link support.
+      - value: none
+        name: None
+        description: Disable the debug console.
+      - value: vcp
+        name: VCP
+        description: Route the debug console over virtual COM port.
+      - value: swo
+        name: SWO
+        description: Route the debug console over SWO.
+      - value: system-view
+        name: SystemView
+        description: Route the debug console over SEGGER SystemView.
 
-  - id: n4w1
-    name: N4W1 Support
-    description: Enables N4W1 support.
-    group: Testing
-    when: component(firmware)
+  - id: debug-link
+    name: Debug Link
+    description: Enable debug link support.
+    group: Debugging
+    when: any(component(firmware), component(bootloader))
+    type: checkbox
+
+  - id: perf-overlay
+    name: Performance Overlay
+    description: Shows the UI performance overlay.
+    group: Debugging
+    when: not(any(component(boardloader), component(bootloader_ci)))
     type: checkbox
 
   - id: disable-animation
     name: Disable Animation
     description: Disables UI animations.
-    group: Testing
+    group: Debugging
     when: any(component(firmware), component(bootloader))
     type: checkbox
 
@@ -258,63 +253,19 @@ options:
     name: Disable OPTIGA
     description: Disables OPTIGA support.
     when: component(firmware)
-    group: Testing
+    group: Debugging
     type: checkbox
 
   - id: disable-tropic
     name: Disable TROPIC
-    description: Controls whether TROPIC support is disabled.
+    description: Disables TROPIC support.
     when: component(firmware)
-    group: Testing
+    group: Debugging
     type: checkbox
 
   - id: storage-insecure-testing-mode
     name: Insecure Storage Testing
     description: Enables insecure storage test mode.
-    group: Testing
-    when: all(component(firmware), not(target(emulator)))
-    type: checkbox
-
-  - id: production
-    name: Production
-    description: Builds a production-signed firmware image.
-    type: checkbox
-    group: Signing
-
-  - id: force-bootloader-upgrade
-    name: Force Bootloader Upgrade
-    description: Forces a bootloader upgrade.
-    when: all(target(hardware), component(firmware))
-    type: checkbox
-    group: Signing
-
-  - id: bootloader-devel
-    name: Dev Bootloader
-    description: Uses the development bootloader.
-    when: all(target(hardware))
-    type: checkbox
-    group: Signing
-
-  - id: unsafe-fw
-    name: Unsafe Firmware
-    description: Enables unsafe firmware features.
-    when: all(target(hardware), component(firmware))
-    type: checkbox
-    group: Signing
-
-  - id: btc-only
-    name: Bitcoin Only Firmware
-    description: Toggles Bitcoin-only firmware mode.
+    group: Debugging
     when: component(firmware)
-    type: checkbox
-
-  - id: apps
-    name: External Apps Support
-    description: Enables external app loading.
-    when: component(firmware)
-    type: checkbox
-
-  - id: timings
-    name: Generate Cargo Timings
-    description: Outputs Cargo timings.
     type: checkbox
