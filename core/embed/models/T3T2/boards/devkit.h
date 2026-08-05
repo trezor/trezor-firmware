@@ -45,10 +45,10 @@
 // display/i8080/panels/dem240320b1.c), still supported as an alternate
 // display_panel_dem240320b1 build option.
 // The module has no tearing-effect (TE) output, so no DISPLAY_TE_* defines.
-#define DISPLAY_I8080_8BIT_DW 1
+#define DISPLAY_I8080_16BIT_DW 1
 // GC9307C cannot swap GRAM byte order (see display_panel_set_little_endian())
 // and its datasheet Table 11 sends the high byte of each pixel first.
-#define DISPLAY_I8080_8BIT_MSB_FIRST 1
+//#define DISPLAY_I8080_8BIT_MSB_FIRST 1
 
 // Use a single framebuffer on this project (lower RAM use; there is no TE
 // signal to drive smooth double-buffered swaps anyway).

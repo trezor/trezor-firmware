@@ -141,12 +141,20 @@ static void start_fb_copy(void) {
 
     if (fb_idx >= 0) {
       display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-#ifdef DISPLAY_I8080_8BIT_MSB_FIRST
+#if defined(DISPLAY_I8080_8BIT_MSB_FIRST) || defined(DISPLAY_I8080_16BIT_DW)
       // The GPDMA byte-wide copy below streams the frame buffer as raw
-      // little-endian bytes, but this panel's 8-bit GRAM write convention
-      // expects the high byte of each pixel first (no register to swap
-      // it), so fall back to a synchronous per-pixel copy that reorders
-      // the bytes via ISSUE_PIXEL_DATA instead of DMA-ing it verbatim.
+      // little-endian bytes. That's only safe to DMA verbatim when the bus
+      // is 8 bits wide *and* the panel's GRAM write convention happens to
+      // want LSB-first order (the #else case). Two other cases fall back
+      // to a synchronous per-pixel copy via ISSUE_PIXEL_DATA instead:
+      //  - DISPLAY_I8080_8BIT_MSB_FIRST: the panel wants the high byte of
+      //    each pixel first (no register to swap it), so the bytes need
+      //    reordering, which ISSUE_PIXEL_DATA does with two ordered writes.
+      //  - DISPLAY_I8080_16BIT_DW: the bus is a genuine 16-bit-wide FMC
+      //    bank, so each pixel must go out as a single atomic 16-bit
+      //    store; a byte-wide DMA burst into a 16-bit-wide bank isn't a
+      //    well-defined "half a pixel" write without the FMC's NBL0/NBL1
+      //    byte-lane strobes, which this bank isn't configured to drive.
       //
       // display_refresh() already called mpu_set_active_fb(NULL, 0) to
       // revoke unprivileged access to the buffer before handing it off -
@@ -286,13 +294,13 @@ void display_refresh(void) {
 #ifndef DISPLAY_TE_PIN
   // Without a tearing-effect signal there is no interrupt to trigger the
   // copy, so kick it off here (no-op if a copy is already in progress).
-#ifdef DISPLAY_I8080_8BIT_MSB_FIRST
-  // The MSB-first fallback inside start_fb_copy() pushes the whole frame
-  // synchronously and can take a while (no background DMA runs in this
-  // mode), so unlike the DMA-kickoff path below - whose lock only needs to
-  // cover a brief queue/DMA-state update - it must NOT be called with
-  // interrupts locked, or it starves everything else (watchdog, USB, ...)
-  // for the whole frame and faults.
+#if defined(DISPLAY_I8080_8BIT_MSB_FIRST) || defined(DISPLAY_I8080_16BIT_DW)
+  // The CPU-loop fallback inside start_fb_copy() (MSB-first 8-bit, or
+  // native 16-bit) pushes the whole frame synchronously and can take a
+  // while (no background DMA runs in this mode), so unlike the DMA-kickoff
+  // path below - whose lock only needs to cover a brief queue/DMA-state
+  // update - it must NOT be called with interrupts locked, or it starves
+  // everything else (watchdog, USB, ...) for the whole frame and faults.
   start_fb_copy();
 #else
   irq_key_t irq_key = irq_lock();
