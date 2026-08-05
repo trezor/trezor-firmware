@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
-use crate::args::BuildArgs;
+use crate::args::ResolvedBuildArgs;
 use crate::helpers;
 
 /// Returns whether a filesystem entry exists without following symlinks, so
@@ -64,7 +64,7 @@ fn copy_if_newer(src: &Path, dst: &Path) -> Result<bool> {
 /// Collects build artifacts into `build-xtask/artifacts/{MODEL_ID}/`.
 /// When `is_dependency` is true, the `.bin` file is skipped (only ELF, MAP,
 /// and compile_commands are collected).
-pub fn collect_artifacts(args: &BuildArgs, is_dependency: bool) -> Result<()> {
+pub fn collect_artifacts(args: &ResolvedBuildArgs, is_dependency: bool) -> Result<()> {
     let artifact_dir = helpers::build_dir()?
         .join("artifacts")
         .join(args.model.model_id());

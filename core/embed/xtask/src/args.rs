@@ -267,13 +267,81 @@ pub struct BuildArgs {
     pub verbose: bool,
 }
 
-impl BuildArgs {
+#[derive(Debug, Clone)]
+pub struct ResolvedBuildArgs {
+    pub project: Project,
+    pub model: Model,
+    pub emulator: bool,
+    pub debug: bool,
+    pub dbg_console: Option<ConsoleType>,
+    pub btc_only: bool,
+    pub production: bool,
+    pub force_bootloader_upgrade: bool,
+    pub bootloader_devel: bool,
+    pub unsafe_fw: bool,
+    pub frozen: bool,
+    pub source_lines: bool,
+    pub pyopt: bool,
+    pub mem_perf: bool,
+    pub debug_link: bool,
+    pub n4w1: bool,
+    pub disable_animation: bool,
+    pub perf_overlay: bool,
+    pub benchmark: bool,
+    pub log_stack_usage: bool,
+    pub block_on_vcp: bool,
+    pub asan: bool,
+    pub apps: bool,
+    pub disable_optiga: bool,
+    pub board: Option<String>,
+    pub disable_tropic: bool,
+    pub storage_insecure_testing_mode: bool,
+    pub emit_memory_analysis: bool,
+    pub timings: bool,
+    pub verbose: bool,
+}
+
+impl ResolvedBuildArgs {
+    pub fn from_build_args(args: &BuildArgs) -> Self {
+        let pyopt = args.pyopt.unwrap_or(true);
+        Self {
+            project: args.project,
+            model: args.model,
+            emulator: args.emulator,
+            debug: args.debug.unwrap_or(args.emulator),
+            dbg_console: args.dbg_console,
+            btc_only: args.btc_only,
+            production: args.production,
+            force_bootloader_upgrade: args.force_bootloader_upgrade,
+            bootloader_devel: args.bootloader_devel,
+            unsafe_fw: args.unsafe_fw,
+            frozen: args.frozen,
+            source_lines: args.source_lines.unwrap_or(args.emulator),
+            pyopt,
+            mem_perf: args.mem_perf,
+            debug_link: args.debug_link.unwrap_or(!pyopt),
+            n4w1: args.n4w1,
+            disable_animation: args.disable_animation,
+            perf_overlay: args.perf_overlay,
+            benchmark: args.benchmark,
+            log_stack_usage: args.log_stack_usage,
+            block_on_vcp: args.block_on_vcp,
+            asan: args.asan,
+            apps: args.apps,
+            disable_optiga: args.disable_optiga,
+            board: args.board.clone(),
+            disable_tropic: args.disable_tropic,
+            storage_insecure_testing_mode: args.storage_insecure_testing_mode,
+            emit_memory_analysis: args.emit_memory_analysis,
+            timings: args.timings,
+            verbose: args.verbose,
+        }
+    }
+
     /// Determines the Cargo profile to use
     pub fn profile_name(&self) -> &'static str {
-        if self.emulator && self.debug.unwrap_or(true) {
-            "dev"
-        } else if !self.emulator && self.debug.unwrap_or(false) {
-            "debug-opt"
+        if self.debug {
+            if self.emulator { "dev" } else { "debug-opt" }
         } else {
             "release"
         }
