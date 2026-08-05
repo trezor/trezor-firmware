@@ -3,6 +3,7 @@
 
 # CI and build system
 /.github/ @vdovhanych @mmilata
+/build-docker.sh @tsusanka @andrewkozlik
 /ci/ @vdovhanych @mmilata
 
 # Protobuf definitions
@@ -17,6 +18,7 @@
 /core/embed/rust/src/smp/ @TychoVrahe
 
 # special case apps
+/core/src/apps/bitcoin/ @andrewkozlik
 /core/src/apps/monero/ @onvej-sl
 /core/src/apps/webauthn/ @andrewkozlik
 
