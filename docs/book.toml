@@ -16,3 +16,8 @@ command = "mdbook-mermaid"
 
 [output.html]
 additional-js = ["mermaid.min.js", "mermaid-init.js"]
+
+[output.linkcheck2]
+# needed to render READMES that are outside docs/
+traverse-parent-directories = true
+follow-web-links = true
