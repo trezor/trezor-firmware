@@ -145,16 +145,41 @@ def weth_deployments() -> Iterator[tuple[int, bytes]]:
 % endfor
 
 <%
-_EIP7702_ADDRESSES = [
-    # https://etherscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
-    ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
-    # https://etherscan.io/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
-    ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
-]
+_EIP7702_ADDRESSES = {
+    1: [  # Ethereum
+        # https://etherscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
+        ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
+        # https://etherscan.io/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
+        ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
+    ],
+    100: [  # Gnosis
+        # https://gnosisscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
+        ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
+        # https://gnosisscan.io/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
+        ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
+    ],
+    8453: [  # Base
+        # https://basescan.org/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
+        ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
+        # https://basescan.org/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
+        ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
+    ],
+    42161: [  # Arbitum
+        # https://arbiscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
+        ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
+        # https://arbiscan.io/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
+        ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
+    ]
+}
 %>
-def lookup_eip7702_address(address: bytes) -> str | None:
-% for addr, name in _EIP7702_ADDRESSES:
-    if address == ${fmt_addr(addr)}:
-        return "${name}"
+def lookup_eip7702_address(chain_id: int, address: bytes) -> str | None:
+% for chain_id, items in _EIP7702_ADDRESSES.items():
+    if chain_id == ${chain_id}:
+% for addr, name in items:
+        if address == ${fmt_addr(addr)}:
+            return "${name}"
+% endfor
+        return None
+
 % endfor
     return None
