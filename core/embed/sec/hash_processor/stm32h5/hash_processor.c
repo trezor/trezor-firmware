@@ -43,6 +43,9 @@ HASH_HandleTypeDef hhash = {0};
 void hash_processor_init(void) {
   __HAL_RCC_HASH_CLK_ENABLE();
 
+  // The unified HASH HAL dereferences hhash.Instance in HAL_HASH_Init(); it must
+  // point at the HASH peripheral (a NULL Instance faults at address 0).
+  hhash.Instance = HASH;
   // 8-bit (byte) input data => byte swap; SHA256 algorithm.
   hhash.Init.DataType = HASH_BYTE_SWAP;
   hhash.Init.Algorithm = HASH_ALGOSELECTION_SHA256;

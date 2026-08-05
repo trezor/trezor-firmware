@@ -467,9 +467,8 @@ fn define_model_d004(lib: &mut CLibrary, board_header: &str) -> Result<()> {
         ),
         ("HW_MODEL", Some(model_to_num("D004").to_string().as_str())),
         ("HW_REVISION", Some("0")),
-        // PROVISIONAL: HSE crystal of the STM32H5F5J-DK. Confirm against the
-        // board schematic before relying on the clock configuration.
-        ("HSE_VALUE", Some("25000000")),
+        // HSE is the 48 MHz crystal (X5) on PH0/PH1 of the STM32H5F5J-DK.
+        ("HSE_VALUE", Some("48000000")),
         ("USE_HSE", Some("1")),
         ("USE_BOOTARGS_RSOD", Some("1")),
     ]);

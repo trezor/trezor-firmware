@@ -66,11 +66,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             ("FLASH_PAGE_SIZE", Some("FLASH_SECTOR_SIZE")),
         ]);
 
-        // flash_otp.c is shared with stm32u5 (same code; both use
-        // FLASH_TYPEPROGRAM_QUADWORD_NS). TODO(H5): the STM32H5 OTP is really
-        // programmed in half-words (FLASH_TYPEPROGRAM_HALFWORD_OTP); revisit
-        // before relying on on-hardware OTP writes.
-        lib.add_sources(["flash/stm32h5/flash.c", "flash/stm32u5/flash_otp.c"]);
+        // The STM32H5 OTP handling diverges from the U5 (ECC-protected array
+        // read-gated on the hardware OTP block-lock register), so it has its own
+        // flash_otp.c rather than sharing the U5 one.
+        lib.add_sources(["flash/stm32h5/flash.c", "flash/stm32h5/flash_otp.c"]);
     } else {
         bail_unsupported!();
     }

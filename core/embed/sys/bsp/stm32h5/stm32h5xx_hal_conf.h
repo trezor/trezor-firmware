@@ -29,10 +29,11 @@ extern "C" {
 /* Exported types ----------------------------------------------------------------------------------------------------*/
 /* Exported constants ------------------------------------------------------------------------------------------------*/
 
-// D004 uses the STM32H5 USB OTG_FS peripheral with the internal full-speed PHY
-// (DM/DP on PA11/PA12, AF10). The 48 MHz USB kernel clock is HSI48 trimmed by
-// the CRS against the USB SOF (set up in the secure monitor).
-#define USE_USB_FS
+// The STM32H5F5J-DK routes its USB device port to the OTG_HS peripheral with the
+// embedded high-speed PHY. The PHY reference clock is derived from the 48 MHz HSE
+// (HSE/2 = 24 MHz); see the OTG_HS init in usbd_conf.c.
+#define USE_USB_HS
+#define USE_USB_HS_INTERNAL_PHY
 
 /* ########################################### Module Selection ##################################################### */
 /**
@@ -528,6 +529,22 @@ in voltage and temperature.*/
 #ifdef HAL_PLAY_MODULE_ENABLED
 #include "stm32h5xx_hal_play.h"
 #endif /* HAL_PLAY_MODULE_ENABLED */
+
+/* CMSIS header fixup ------------------------------------------------------------------------------------------------ */
+/* The vendored CMSIS device headers (stm32h5f5xx.h, stm32h5e5xx.h) miscompute
+ * the SECURE alias of OTG_HS: USB_OTG_HS_BASE_S is derived from
+ * AHB1PERIPH_BASE_S instead of AHB2PERIPH_BASE_S, yielding 0x50040000 (an empty
+ * AHB1 hole) instead of the real 0x52040000. The non-secure alias and the FS
+ * secure alias are both correct - only this one line is wrong. On a secure
+ * build USB_OTG_HS resolves to USB_OTG_HS_S, so without this fix every OTG_HS
+ * register access bus-faults. Correct it here (a no-op once the submodule is
+ * updated with the upstream fix). */
+#if defined(USB_OTG_HS_BASE_S)
+#undef USB_OTG_HS_BASE_S
+#define USB_OTG_HS_BASE_S (AHB2PERIPH_BASE_S + 0x20000UL)
+#undef USB_OTG_HS_S
+#define USB_OTG_HS_S ((USB_OTG_GlobalTypeDef *)USB_OTG_HS_BASE_S)
+#endif
 
 /* Exported macro ----------------------------------------------------------------------------------------------------*/
 #ifdef  USE_FULL_ASSERT

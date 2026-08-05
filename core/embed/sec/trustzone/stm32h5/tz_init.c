@@ -48,7 +48,12 @@ static void tz_configure_sau(void) {
   __DSB();
   __ISB();
 
-  SET_REGION(0, 0x0BF90000, 0x00019000, 0);  // OTP etc
+  // The STM32H5 flash OTP / UID region's real data lives at the non-secure
+  // alias 0x08FFF000; a *secure* access to it is an alias/security mismatch that
+  // triggers a fatal secure violation. Expose it as a non-secure SAU window so
+  // the (secure) boot code issues a non-secure access and reads the real data.
+  // (A 4 KB window covers the 2 KB OTP plus the following UID/system data.)
+  SET_REGION(0, 0x08FFF000, 0x1000, 0);  // OTP, UID, etc.
 
   SAU->CTRL =
       ((SAU_INIT_CTRL_ENABLE << SAU_CTRL_ENABLE_Pos) & SAU_CTRL_ENABLE_Msk) |
@@ -224,6 +229,12 @@ void tz_init(void) {
       GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
 
   tz_enable_illegal_access_interrupt();
+
+  // NOTE: the OTG_HS PHY bring-up (clocks, tuning, power) is done in the USB
+  // driver's HAL_PCD_MspInit, matching the CubeMX reference: it must run as one
+  // tight sequence right before the OTG core is first accessed. The SBS PHY
+  // tuner register is writable from there because SystemInit() enables the SBS
+  // peripheral clock.
 }
 #endif  // !SECMON
 

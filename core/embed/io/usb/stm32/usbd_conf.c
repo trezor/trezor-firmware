@@ -128,9 +128,9 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     /* Enable USB FS Clocks */
     __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
 
+    // In non-secure mode this USB power/clock setup is done in the secure
+    // monitor instead.
 #if defined(STM32U5) && defined(SECURE_MODE)
-    // If not in secure mode, this initialization is done
-    // in secure monitor
 
     /* Enable VDDUSB */
     __HAL_RCC_PWR_CLK_ENABLE();
@@ -147,6 +147,29 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     RCC_CRSInitStruct.Source = RCC_CRS_SYNC_SOURCE_USB;
     RCC_CRSInitStruct.Polarity = RCC_CRS_SYNC_POLARITY_RISING;
     RCC_CRSInitStruct.ReloadValue = __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000,1000);
+    RCC_CRSInitStruct.ErrorLimitValue = RCC_CRS_ERRORLIMIT_DEFAULT;
+    RCC_CRSInitStruct.HSI48CalibrationValue = RCC_CRS_HSI48CALIBRATION_DEFAULT;
+    HAL_RCCEx_CRSConfig(&RCC_CRSInitStruct);
+
+#elif defined(STM32H5) && defined(SECURE_MODE)
+
+    /* Select HSI48 as the OTG_FS 48 MHz kernel clock (HSI48 itself is enabled
+       in SystemInit, where it also feeds the RNG). The H5F5 uses the OTG_FS
+       clock selector, not the USB (DRD) one. */
+    __HAL_RCC_OTGFS_CONFIG(RCC_OTGFSCLKSOURCE_HSI48);
+
+    /* Enable the VDDUSB supply for the USB transceiver. The STM32H5 PWR domain
+       is always clocked, so no PWR clock gating is needed. */
+    HAL_PWREx_EnableVddUSB();
+
+    /* Trim HSI48 against the USB start-of-frame using the CRS. The sync source
+       on the H5 OTG_FS is RCC_CRS_SYNC_SOURCE_OTG_FS. */
+    RCC_CRSInitTypeDef RCC_CRSInitStruct = {0};
+    __HAL_RCC_CRS_CLK_ENABLE();
+    RCC_CRSInitStruct.Prescaler = RCC_CRS_SYNC_DIV1;
+    RCC_CRSInitStruct.Source = RCC_CRS_SYNC_SOURCE_OTG_FS;
+    RCC_CRSInitStruct.Polarity = RCC_CRS_SYNC_POLARITY_RISING;
+    RCC_CRSInitStruct.ReloadValue = __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000, 1000);
     RCC_CRSInitStruct.ErrorLimitValue = RCC_CRS_ERRORLIMIT_DEFAULT;
     RCC_CRSInitStruct.HSI48CalibrationValue = RCC_CRS_HSI48CALIBRATION_DEFAULT;
     HAL_RCCEx_CRSConfig(&RCC_CRSInitStruct);
@@ -253,7 +276,38 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     /*OTG_HS PHY enable*/
     HAL_SYSCFG_EnableOTGPHY(SYSCFG_OTG_HS_PHY_ENABLE);
 
+#elif defined(USE_USB_HS_INTERNAL_PHY) && defined(STM32H5)
 
+    // STM32H5 OTG_HS with the embedded high-speed PHY. Ported verbatim from the
+    // CubeMX HAL_PCD_MspInit for the STM32H5F5J-DK: the whole PHY bring-up runs
+    // here, right before HAL_PCD_Init touches the OTG core (which is clocked by
+    // the 60 MHz phy60m_ck the PHY produces). The SBS PHY-tuner register is
+    // writable from here because the SBS peripheral clock is enabled in
+    // SystemInit(). The D+/D- lines use the PHY's dedicated pins, not GPIO.
+    {
+      // OTG_HS PHY reference clock: HSE/2 = 48 MHz / 2 = 24 MHz. This is a
+      // clean, crystal-accurate 24 MHz that matches the OTGPHYREFCKSEL_24M
+      // setting below, so the PHY's internal PLL multiplies it up to the correct
+      // 480 MHz. (The CubeMX reference used PLL3Q from CSI, but its PLL3 config
+      // produces only 16 MHz while still telling the PHY 24 MHz - a mismatch
+      // that leaves the PHY PLL unlocked and the OTG core unclocked.)
+      RCC_PeriphCLKInitTypeDef periph_clk = {0};
+      periph_clk.PeriphClockSelection = RCC_PERIPHCLK_OTGHS;
+      periph_clk.OtghsClockSelection = RCC_OTGHSCLKSOURCE_HSE_DIV2;
+      HAL_RCCEx_PeriphCLKConfig(&periph_clk);
+
+      HAL_PWREx_EnableUSBVoltageDetector();
+      HAL_PWREx_EnableVddUSB();
+
+      __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
+      __HAL_RCC_OTGPHY_CLK_ENABLE();
+      __HAL_RCC_OTGPHY_CONFIG(RCC_OTGPHYREFCKCLKSOURCE_24M);
+
+      HAL_SBS_SetOTGPHYDisconnectThreshold(SBS_OTG_HS_PHY_DISCONNECT_5_9PERCENT);
+      HAL_SBS_SetOTGPHYSquelchThreshold(SBS_OTG_HS_PHY_SQUELCH_15PERCENT);
+
+      HAL_PWREx_EnableUSBOTGHSPhy();
+    }
 
 #else // !USE_USB_HS_IN_FS && !USE_USB_HS_INTERNAL_PHY
 
@@ -535,8 +589,10 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     }
   }
 #endif
-#if defined(USE_USB_HS) && !defined(USE_USB_HS_IN_FS) && defined STM32U5
-  // Trezor T uses the OTG_HS peripheral
+#if defined(USE_USB_HS) && !defined(USE_USB_HS_IN_FS) && \
+    (defined(STM32U5) || defined(STM32H5))
+  // OTG_HS peripheral with the embedded high-speed PHY (Trezor T on U5, D004 on
+  // H5).
   if (pdev->id == USB_PHY_HS_ID) {
     /* Set LL Driver parameters */
           pcd_hs_handle.Instance = USB_OTG_HS;
