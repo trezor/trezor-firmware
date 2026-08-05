@@ -5,5 +5,6 @@ _Note: In this section we describe the internal functioning of the old communica
 
 ## Notable topics
 
+- [Protocol](protocol.md)
 - [Sessions](sessions.md)
 - [Passphrase](passphrase.md)
