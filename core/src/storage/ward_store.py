@@ -8,6 +8,7 @@ _NAMESPACE = common.APP_AUTHDB
 _COUNTERS = const(0x00)  # per-wallet durable counter_loc table
 _QUEUE = const(0x05)  # WARD pending candidates (multi-slot, keyed by pending_id)
 _PENDING_SEQ = const(0x06)  # monotonic pending_id allocator (device-global, never reused)
+_BATCH = const(0x07)  # per-wallet in-flight COMMITTED batch envelope (batch-update)
 
 WALLET_ID_LENGTH = const(20)  # BIP32 Hash160 identifier: RIPEMD160(SHA256(master pubkey))
 ROOT_LENGTH = const(32)
@@ -115,9 +116,13 @@ def bump_counter(wallet_id: bytes) -> int:
 # where each body is:
 #   [pending_id:4][wallet_id:20][counter_T:4][state:1][root_T:32][mac_T:32]
 #   [addr_len:2][address][ov_len:2][old_value][nv_len:2][new_value][aid_len:2][app_id]
+#   [kt_len:2][key_type][device_id:1]
 # app_id (the write's target domain) is length-framed at the tail so the whole
 # round stays bound to dk(app_id, address); records written before app_id existed
-# decode to an empty app_id (the tail read past the buffer yields b"").
+# decode to an empty app_id (the tail read past the buffer yields b""). key_type
+# (the SLIP-21 K_data selector, default b"" == "address") and device_id (the
+# per-device scope slot, §5.1, default 0) are appended likewise, so records written
+# before this scoping existed read past-end as ("address", 0).
 # At WARDQueueUpdate the intent is stored PENDING with counter_T UNSET (0, strict
 # model: the candidate counter is not a queue-time input) and PLACEHOLDER root/mac
 # (not yet computed). At WARDPerformUpdate the device derives counter_T, pulls a
@@ -201,11 +206,13 @@ def _rec_address(body: bytes) -> bytes:
 
 def _parse_body(
     body: bytes,
-) -> tuple[int, int, bytes, bytes, bytes, bytes | None, bytes | None, bytes]:
-    """Return (counter, state, address, old_value, new_value, root, mac, app_id).
-    root/mac are None until the intent is COMMITTED, and also None (empty tree)
-    when a COMMITTED candidate stored EMPTY_ROOT. app_id is the write's target
-    domain (empty bytes for records written before app_id existed)."""
+) -> tuple[int, int, bytes, bytes, bytes, bytes | None, bytes | None, bytes, bytes, int]:
+    """Return (counter, state, address, old_value, new_value, root, mac, app_id,
+    key_type, device_id). root/mac are None until the intent is COMMITTED, and also
+    None (empty tree) when a COMMITTED candidate stored EMPTY_ROOT. app_id is the
+    write's target domain (empty bytes for records written before app_id existed).
+    key_type/device_id are the SLIP-21 K_data selector and per-device scope slot;
+    records written before this scoping existed read past-end as (b"", 0)."""
     counter = int.from_bytes(body[_OFF_CTR : _OFF_CTR + 4], "big")
     state = body[_OFF_STATE]
     root = bytes(body[_OFF_ROOT : _OFF_ROOT + ROOT_LENGTH])
@@ -214,9 +221,36 @@ def _parse_body(
     old_value, off = _read_lv(body, off)
     new_value, off = _read_lv(body, off)
     app_id, off = _read_lv(body, off)
+    # key_type/device_id are appended after app_id. A pre-scoping record ends at
+    # app_id, so these reads fall past the buffer: _read_lv yields b"" and the
+    # device_id byte defaults to 0.
+    key_type, off = _read_lv(body, off)
+    device_id = body[off] if off < len(body) else 0
     if state != QUEUE_COMMITTED or root == EMPTY_ROOT:
-        return counter, state, address, old_value, new_value, None, None, app_id
-    return counter, state, address, old_value, new_value, root, mac, app_id
+        return (
+            counter,
+            state,
+            address,
+            old_value,
+            new_value,
+            None,
+            None,
+            app_id,
+            key_type,
+            device_id,
+        )
+    return (
+        counter,
+        state,
+        address,
+        old_value,
+        new_value,
+        root,
+        mac,
+        app_id,
+        key_type,
+        device_id,
+    )
 
 
 def _build_body(
@@ -230,6 +264,8 @@ def _build_body(
     old_value: bytes,
     new_value: bytes,
     app_id: bytes,
+    key_type: bytes,
+    device_id: int,
 ) -> bytes:
     return (
         pending_id.to_bytes(4, "big")
@@ -246,6 +282,9 @@ def _build_body(
         + new_value
         + len(app_id).to_bytes(2, "big")
         + app_id
+        + len(key_type).to_bytes(2, "big")
+        + key_type
+        + bytes([device_id & 0xFF])
     )
 
 
@@ -257,12 +296,15 @@ def queue_put(
     old_value: bytes,
     new_value: bytes,
     app_id: bytes,
+    key_type: bytes = b"",
+    device_id: int = 0,
 ) -> None:
     """Store an approved edit INTENT as PENDING under pending_id (pull model:
     no proof, no root/mac yet -- those are filled by queue_set_computed at
-    WARDPerformUpdate). app_id binds the round to dk(app_id, address). Replaces any
-    record with the same pending_id; otherwise appends. Raises ValueError if the
-    wallet already holds MAX_PENDING intents.
+    WARDPerformUpdate). app_id binds the round to dk(app_id, address); key_type and
+    device_id scope the entry_key to a K_data type and per-device slot (§5.1).
+    Replaces any record with the same pending_id; otherwise appends. Raises
+    ValueError if the wallet already holds MAX_PENDING intents.
     """
     records = _load_records()
 
@@ -285,6 +327,8 @@ def queue_put(
         old_value,
         new_value,
         app_id,
+        key_type,
+        device_id,
     )
 
     for i in range(len(records)):
@@ -316,9 +360,18 @@ def queue_set_computed(
     for i in range(len(records)):
         body = records[i]
         if _rec_pid(body) == pending_id and _rec_wid(body) == wallet_id:
-            _c, _state, address, old_value, new_value, _r, _m, app_id = _parse_body(
-                body
-            )
+            (
+                _c,
+                _state,
+                address,
+                old_value,
+                new_value,
+                _r,
+                _m,
+                app_id,
+                key_type,
+                device_id,
+            ) = _parse_body(body)
             records[i] = _build_body(
                 pending_id,
                 wallet_id,
@@ -330,6 +383,8 @@ def queue_set_computed(
                 old_value,
                 new_value,
                 app_id,
+                key_type,
+                device_id,
             )
             _save_records(records)
             return
@@ -339,10 +394,14 @@ def queue_set_computed(
 def queue_get(
     wallet_id: bytes,
     pending_id: int,
-) -> tuple[int, int, bytes, bytes, bytes, bytes | None, bytes | None, bytes] | None:
-    """Return (counter, state, address, old_value, new_value, root, mac, app_id) for
-    (wallet_id, pending_id), or None. root/mac are None until COMMITTED (and for a
-    COMMITTED candidate that empties the tree). app_id is the write's target domain."""
+) -> (
+    tuple[int, int, bytes, bytes, bytes, bytes | None, bytes | None, bytes, bytes, int]
+    | None
+):
+    """Return (counter, state, address, old_value, new_value, root, mac, app_id,
+    key_type, device_id) for (wallet_id, pending_id), or None. root/mac are None until
+    COMMITTED (and for a COMMITTED candidate that empties the tree). app_id is the
+    write's target domain; key_type/device_id scope the entry_key."""
     for body in _load_records():
         if _rec_pid(body) == pending_id and _rec_wid(body) == wallet_id:
             return _parse_body(body)
@@ -392,3 +451,146 @@ def queue_drop_all(wallet_id: bytes) -> int:
     if dropped:
         _save_records(kept)
     return dropped
+
+
+# ---------------------------------------------------------------------------
+# In-flight COMMITTED batch envelope (key _BATCH, PERSISTENT). A batch commits N
+# queued intents as ONE root transition, authenticated by head_mac + AuthCommit
+# (batch-update). At most one committed batch per wallet is in flight -- commits
+# serialize by counter -- so a new perform_batch REPLACES the wallet's envelope
+# (any prior candidate becomes stale, like a same-counter sibling in the single-
+# leaf model). Stored as length-framed records `[body_len:2][body]`, one body per
+# wallet, body:
+#   [wallet_id:20][from_counter:4][to_counter:4][from_root:32][to_root:32]
+#   [mac:32][head_mac:32][auth_commit:32][sig_len:2][sig][n:2][pending_id:4]*n
+# from_root/to_root == EMPTY_ROOT means the tree was/became empty. `sig` is the
+# optional Ed25519 SigCommit (empty when WARD_KSIG is off). `mac` is the root MAC
+# the WM co-signs at finalize (all-zero => the batch empties the tree).
+# ---------------------------------------------------------------------------
+
+
+def _batch_wid(body: bytes) -> bytes:
+    """wallet_id of a batch envelope body (prefixed at offset 0, unlike queue
+    records which start with pending_id)."""
+    return bytes(body[0:WALLET_ID_LENGTH])
+
+
+def _load_batches() -> list[bytes]:
+    raw = common.get(_NAMESPACE, _BATCH, public=True)
+    out = []  # type: list[bytes]
+    if not raw:
+        return out
+    off = 0
+    n = len(raw)
+    while off + 2 <= n:
+        body_len = int.from_bytes(raw[off : off + 2], "big")
+        off += 2
+        out.append(bytes(raw[off : off + body_len]))
+        off += body_len
+    return out
+
+
+def _save_batches(bodies: list[bytes]) -> None:
+    if not bodies:
+        common.delete(_NAMESPACE, _BATCH, public=True)
+        return
+    buf = bytearray()
+    for body in bodies:
+        buf += len(body).to_bytes(2, "big")
+        buf += body
+    common.set(_NAMESPACE, _BATCH, bytes(buf), public=True)
+
+
+def batch_put(
+    wallet_id: bytes,
+    from_counter: int,
+    to_counter: int,
+    from_root: bytes,
+    to_root: bytes,
+    mac: bytes,
+    head_mac: bytes,
+    auth_commit: bytes,
+    sig: bytes,
+    pending_ids: list,
+) -> None:
+    """Store (replacing any prior for this wallet) the in-flight committed batch
+    envelope. from_root/to_root must be 32 bytes (EMPTY_ROOT for empty); mac/head_mac/
+    auth_commit 32 bytes each; sig may be empty."""
+    if (
+        len(from_root) != ROOT_LENGTH
+        or len(to_root) != ROOT_LENGTH
+        or len(mac) != 32
+        or len(head_mac) != 32
+        or len(auth_commit) != 32
+    ):
+        raise ValueError("batch envelope field has wrong length")
+    body = (
+        wallet_id
+        + from_counter.to_bytes(4, "big")
+        + to_counter.to_bytes(4, "big")
+        + from_root
+        + to_root
+        + mac
+        + head_mac
+        + auth_commit
+        + len(sig).to_bytes(2, "big")
+        + sig
+        + len(pending_ids).to_bytes(2, "big")
+        + b"".join(p.to_bytes(4, "big") for p in pending_ids)
+    )
+    kept = [b for b in _load_batches() if _batch_wid(b) != wallet_id]
+    kept.append(body)
+    _save_batches(kept)
+
+
+def batch_get(wallet_id: bytes):
+    """Return the wallet's in-flight batch envelope as a dict, or None. Keys:
+    from_counter, to_counter, from_root, to_root, mac, head_mac, auth_commit, sig,
+    pending_ids. Roots/mac are returned verbatim (EMPTY_ROOT / all-zero as stored)."""
+    for body in _load_batches():
+        if _batch_wid(body) != wallet_id:
+            continue
+        off = WALLET_ID_LENGTH
+        from_counter = int.from_bytes(body[off : off + 4], "big")
+        off += 4
+        to_counter = int.from_bytes(body[off : off + 4], "big")
+        off += 4
+        from_root = bytes(body[off : off + ROOT_LENGTH])
+        off += ROOT_LENGTH
+        to_root = bytes(body[off : off + ROOT_LENGTH])
+        off += ROOT_LENGTH
+        mac = bytes(body[off : off + 32])
+        off += 32
+        head_mac = bytes(body[off : off + 32])
+        off += 32
+        auth_commit = bytes(body[off : off + 32])
+        off += 32
+        sig, off = _read_lv(body, off)
+        n = int.from_bytes(body[off : off + 2], "big")
+        off += 2
+        pending_ids = []
+        for _i in range(n):
+            pending_ids.append(int.from_bytes(body[off : off + 4], "big"))
+            off += 4
+        return {
+            "from_counter": from_counter,
+            "to_counter": to_counter,
+            "from_root": from_root,
+            "to_root": to_root,
+            "mac": mac,
+            "head_mac": head_mac,
+            "auth_commit": auth_commit,
+            "sig": sig,
+            "pending_ids": pending_ids,
+        }
+    return None
+
+
+def batch_clear(wallet_id: bytes) -> bool:
+    """Remove the wallet's in-flight batch envelope. Returns True if one existed."""
+    batches = _load_batches()
+    kept = [b for b in batches if _batch_wid(b) != wallet_id]
+    if len(kept) != len(batches):
+        _save_batches(kept)
+        return True
+    return False

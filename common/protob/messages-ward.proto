@@ -398,3 +398,77 @@ message WARDDiscardPendingAck {
     optional bytes  wallet_id         = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier
     optional uint32 pending_id        = 3;  // echoes the requested pending_id; absent in drop-all mode
 }
+
+/**
+ * One device-encrypted leaf produced by a batch commit, for the host to store
+ * keyed by entry_key. ct empty = DELETE (remove the leaf at entry_key).
+ */
+message WARDBatchLeaf {
+    required bytes  entry_key  = 1;  // opaque 32B trie path the leaf is stored under
+    optional string entry_type = 2;  // clear entry_type (selects K_data on decrypt)
+    optional bytes  nonce      = 3;  // 12B AEAD nonce
+    optional bytes  tag        = 4;  // 16B Poly1305 tag
+    optional bytes  ct         = 5;  // AEAD ciphertext (empty = delete)
+}
+
+/**
+ * Request: commit several queued intents as ONE atomic root transition (batch
+ * update). The device pulls a pre-state proof for each intent (one WARDProofRequest
+ * per entry_key), folds them into a single successor root, stamps every leaf at the
+ * one transition counter (counter += 1 for the whole batch), and authenticates the
+ * transition with head_mac + AuthCommit. Order-independent; a duplicate entry_key in
+ * the set is rejected.
+ * @start
+ * @next WARDPerformBatchAck
+ * @next WARDProofRequest
+ * @next Failure
+ */
+message WARDPerformBatch {
+    repeated uint32 pending_ids = 1;  // queued intents to commit together (>=1; no duplicate entry_key)
+}
+
+/**
+ * Response: the authenticated batch candidate. counter is to_counter = from_counter
+ * + 1 (the whole batch is one transition). The host publishes each leaf to the
+ * payload store (parent_hash=from_root, target_hash=new_root) and forwards
+ * (counter, mac, ward_id) to the WM for co-signing.
+ * @end
+ */
+message WARDPerformBatchAck {
+    required uint32 counter      = 1;  // to_counter (= from_counter + 1)
+    optional bytes  from_root    = 2;  // root the batch transitions FROM (empty-tree sentinel if empty)
+    optional bytes  new_root     = 3;  // to_root; absent if the tree becomes empty
+    optional bytes  mac          = 4;  // root MAC the WM co-signs; absent if empty
+    optional bytes  wallet_id    = 5;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier
+    optional bytes  ward_id      = 6;  // SLIP21 WM-facing anchor; host forwards to the WM
+    required bytes  head_mac     = 7;  // MAC(K_head, TAG_HEAD||ward_id||to_counter||to_root)
+    required bytes  auth_commit  = 8;  // MAC(K_auth, TAG_COMMIT||ward_id||from_c||from_root||to_c||to_root)
+    optional bytes  sig_commit   = 9;  // Ed25519(K_sig, <AuthCommit preimage>); present only when WARD_KSIG is on
+    repeated WARDBatchLeaf leaves = 10; // device-encrypted leaves for the host to store
+}
+
+/**
+ * Request: install a committed batch after the WM co-signs its head. The device
+ * re-verifies the WM signature and the stored AuthCommit, checks the counter is
+ * ahead of its floor, then installs (to_counter, to_root) and drops the whole
+ * pending set. The single counter-advancing step for a batch.
+ * @start
+ * @next WARDConfirmBatchByWMAck
+ * @next Failure
+ */
+message WARDConfirmBatchByWM {
+    required uint32 counter      = 1;  // to_counter; must equal the committed batch
+    optional bytes  mac          = 2;  // root MAC; must equal the committed batch (absent iff empty)
+    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||ward_id||counter(4B BE)||mac
+}
+
+/**
+ * Response: the installed batch head.
+ * @end
+ */
+message WARDConfirmBatchByWMAck {
+    required uint32 counter   = 1;  // counter after install (== to_counter)
+    optional bytes  new_root  = 2;  // installed root; absent if the tree is now empty
+    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier
+    optional bytes  root_mac  = 4;  // root MAC; absent if empty
+}

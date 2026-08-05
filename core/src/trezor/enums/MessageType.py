@@ -324,3 +324,7 @@ if not utils.BITCOIN_ONLY:
     WARDDiscardPendingAck = 2351
     WARDExportKeys = 2352
     WARDExportKeysAck = 2353
+    WARDPerformBatch = 2354
+    WARDPerformBatchAck = 2355
+    WARDConfirmBatchByWM = 2356
+    WARDConfirmBatchByWMAck = 2357

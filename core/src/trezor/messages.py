@@ -7986,6 +7986,112 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDDiscardPendingAck"]:
             return isinstance(msg, cls)
 
+    class WARDBatchLeaf(protobuf.MessageType):
+        entry_key: "AnyBytes"
+        entry_type: "str | None"
+        nonce: "AnyBytes | None"
+        tag: "AnyBytes | None"
+        ct: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes",
+            entry_type: "str | None" = None,
+            nonce: "AnyBytes | None" = None,
+            tag: "AnyBytes | None" = None,
+            ct: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDBatchLeaf"]:
+            return isinstance(msg, cls)
+
+    class WARDPerformBatch(protobuf.MessageType):
+        pending_ids: "list[int]"
+
+        def __init__(
+            self,
+            *,
+            pending_ids: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformBatch"]:
+            return isinstance(msg, cls)
+
+    class WARDPerformBatchAck(protobuf.MessageType):
+        counter: "int"
+        from_root: "AnyBytes | None"
+        new_root: "AnyBytes | None"
+        mac: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+        head_mac: "AnyBytes"
+        auth_commit: "AnyBytes"
+        sig_commit: "AnyBytes | None"
+        leaves: "list[WARDBatchLeaf]"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            head_mac: "AnyBytes",
+            auth_commit: "AnyBytes",
+            leaves: "list[WARDBatchLeaf] | None" = None,
+            from_root: "AnyBytes | None" = None,
+            new_root: "AnyBytes | None" = None,
+            mac: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+            sig_commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformBatchAck"]:
+            return isinstance(msg, cls)
+
+    class WARDConfirmBatchByWM(protobuf.MessageType):
+        counter: "int"
+        mac: "AnyBytes | None"
+        wm_signature: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            wm_signature: "AnyBytes",
+            mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmBatchByWM"]:
+            return isinstance(msg, cls)
+
+    class WARDConfirmBatchByWMAck(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmBatchByWMAck"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
         batch_size: "int | None"
 

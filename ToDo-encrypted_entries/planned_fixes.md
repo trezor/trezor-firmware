@@ -5,6 +5,12 @@ Companion to `TODO_Entry_key_as_MAC.md` (the design + what's done) and `ward-des
 divergent** after the migration to `entry_key = HMAC(K_index, scope ‖ identifier)` with
 encrypted leaves, plus the concrete fix for each.
 
+> **Batch-update security review:** the analysis of the proposed batch-update protocol
+> (K_head/K_auth MACs, AuthCommit/AuthRevert, forward-increment rollback, dropped
+> batch_digest, another-Trezor verification) lives in
+> [`batch_update_security_review.md`](./batch_update_security_review.md) — findings F1–F12,
+> the `t_anchor`/epoch rationale, and the locked design decisions.
+
 ## State of the world (as of 2026-08-02)
 
 - **Firmware**: migrated (keyed entry_key, commit/leaf, ChaCha20-Poly1305 encrypt/decrypt,

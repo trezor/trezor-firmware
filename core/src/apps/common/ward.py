@@ -221,20 +221,61 @@ async def lookup(
     )
 
 
+async def lookup_pull(
+    app_id,
+    address: bytes,
+    key_type: str = "address",
+    device_id: int = 0,
+) -> tuple[bool, int, bool, bytes, bytes]:
+    """Host-driven PULL verify: the device computes the target entry_key itself,
+    PULLS the proof from the host on demand (WARDProofRequest -> WARDProofAck), and
+    returns the verdict (valid, counter, membership, wallet_id, ward_id). Ungated
+    (the host is the driver, like `lookup`).
+
+    Unlike the pushed `lookup`, the host never has to know the target entry_key: the
+    device sends it in WARDProofRequest, so a NON-membership verdict for an absent
+    address is device-proven (the host builds the witness from the entry_keys it
+    already stores). The wire I/O lives here in the Core gateway, not the trust
+    anchor. Mirrors `resolve_label`, but returns the verdict rather than a label."""
+    from trezor.messages import WARDProofAck, WARDProofRequest
+    from trezor.wire import context
+
+    from apps.ward import service
+
+    ek = await service.entry_key_for(app_id, address, key_type, device_id)
+    ack = await context.call(WARDProofRequest(entry_key=ek), WARDProofAck)
+
+    return await service.lookup(
+        app_id,
+        address,
+        ack.nonce,
+        ack.tag,
+        ack.ct,
+        ack.proof,
+        key_type=key_type,
+        device_id=device_id,
+        witness_entry_key=ack.witness_entry_key,
+        witness_commit=ack.witness_commit,
+    )
+
+
 async def queue(
     app_id,
     address: bytes,
     new_value: bytes,
+    key_type: str = "address",
+    device_id: int = 0,
 ) -> tuple[int, bytes]:
     """Queue an edit INTENT via the WARD trust anchor (pull model) for the domain
     named by app_id. The trust anchor checks its ACL, shows the domain + new value
     on a trusted screen, and returns (pending_id, wallet_id) only on user approval.
     No proof and no candidate counter here (strict model: counter_T is derived
-    later, inside the WM-synchronized WARDPerformUpdate flow).
+    later, inside the WM-synchronized WARDPerformUpdate flow). key_type/device_id
+    scope the entry_key the candidate will land on (§5.1).
     """
     from apps.ward import service
 
-    return await service.queue(app_id, address, new_value)
+    return await service.queue(app_id, address, new_value, key_type, device_id)
 
 
 async def perform(
@@ -278,6 +319,50 @@ async def finalize(
     from apps.ward import service
 
     return await service.finalize(counter, mac, wm_signature, pending_id)
+
+
+async def perform_batch(pending_ids: list) -> tuple:
+    """Authorize a BATCH of queued intents as ONE root transition. Pulls a pre-state
+    proof for EACH intent (one WARDProofRequest per opaque entry_key), collects the
+    acks, then hands them all to the trust anchor to fold into one successor root and
+    authenticate with head_mac + AuthCommit. The wire I/O lives here in the gateway.
+    Returns (to_counter, to_root, mac_t, head_mac, auth_commit, sig, wallet_id,
+    ward_id, leaves)."""
+    from apps.ward import service
+    from trezor.messages import WARDProofAck, WARDProofRequest
+    from trezor.wire import context
+
+    resolved = []  # type: list[int]
+    acks = []  # type: list[tuple]
+    for pid in pending_ids:
+        rpid, ek = await service.intent(pid)
+        ack = await context.call(
+            WARDProofRequest(entry_key=ek, pending_id=rpid),
+            WARDProofAck,
+        )
+        acks.append(
+            (
+                ack.nonce,
+                ack.tag,
+                ack.ct,
+                ack.proof,
+                ack.witness_entry_key,
+                ack.witness_commit,
+            )
+        )
+        resolved.append(rpid)
+
+    return await service.perform_batch(resolved, acks)
+
+
+async def finalize_batch(
+    counter: int,
+    mac: bytes | None,
+    wm_signature: bytes,
+) -> tuple:
+    from apps.ward import service
+
+    return await service.finalize_batch(counter, mac, wm_signature)
 
 
 async def discard(

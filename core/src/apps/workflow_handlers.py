@@ -123,6 +123,10 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.ward.perform"
     if msg_type == MessageType.WARDConfirmedByWM:
         return "apps.ward.finalize"
+    if msg_type == MessageType.WARDPerformBatch:
+        return "apps.ward.perform_batch"
+    if msg_type == MessageType.WARDConfirmBatchByWM:
+        return "apps.ward.confirm_batch"
     if msg_type == MessageType.WARDDiscardPending:
         return "apps.ward.discard"
 

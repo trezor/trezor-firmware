@@ -780,7 +780,10 @@ class TestWardQueueStorage(unittest.TestCase):
 
         rec = ward_store.queue_get(wallet_id, pid)
         self.assertIsNotNone(rec)
-        counter, state, address, ov, nv, root, mac = rec
+        counter, state, address, ov, nv, root, mac, _aid, kt, did = rec
+        # A default-scope intent frames key_type/device_id ("address"/0).
+        self.assertEqual(kt, b"address")
+        self.assertEqual(did, 0)
         self.assertEqual(counter, 5)
         self.assertEqual(state, ward_store.QUEUE_PENDING)
         self.assertEqual(address, b"alice")
@@ -838,10 +841,141 @@ class TestWardQueueStorage(unittest.TestCase):
         ward_store.queue_put(wallet_id, pid, 5, b"alice", b"o1", b"n1")
         ward_store.queue_put(wallet_id, pid, 6, b"alice2", b"o2", b"n2")
         self.assertEqual(ward_store.queue_count(wallet_id), 1)
-        counter, _s, address, ov, nv, _r, _m = ward_store.queue_get(wallet_id, pid)
+        counter, _s, address, ov, nv, _r, _m, _aid, _kt, _did = ward_store.queue_get(
+            wallet_id, pid
+        )
         self.assertEqual(counter, 6)
         self.assertEqual(address, b"alice2")
         self.assertEqual((ov, nv), (b"o2", b"n2"))
+
+    @mock_storage
+    def test_key_type_device_id_roundtrip(self):
+        """Gap 6: a non-default key_type/device_id are framed at queue time and read
+        back verbatim (they scope the entry_key the candidate lands on)."""
+        import storage.ward_store as ward_store
+
+        wallet_id = self._id(1)
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(
+            wallet_id, pid, 5, b"alice", b"o", b"n", b"bitcoin", b"eth_addr", 3
+        )
+        _c, _s, address, _ov, _nv, _r, _m, app_id, kt, did = ward_store.queue_get(
+            wallet_id, pid
+        )
+        self.assertEqual(app_id, b"bitcoin")
+        self.assertEqual(kt, b"eth_addr")
+        self.assertEqual(did, 3)
+        self.assertEqual(address, b"alice")
+
+    @mock_storage
+    def test_key_type_device_id_survive_set_computed(self):
+        """The scope tail is preserved across the PENDING -> COMMITTED re-encode."""
+        import storage.ward_store as ward_store
+
+        wallet_id = self._id(1)
+        pid = ward_store.queue_alloc_id()
+        ward_store.queue_put(
+            wallet_id, pid, 0, b"alice", b"o", b"n", b"bitcoin", b"eth_addr", 3
+        )
+        ward_store.queue_set_computed(wallet_id, pid, 4, _sha256d(b"r"), _sha256d(b"m"))
+        _c, state, _a, _ov, _nv, _r, _m, app_id, kt, did = ward_store.queue_get(
+            wallet_id, pid
+        )
+        self.assertEqual(state, ward_store.QUEUE_COMMITTED)
+        self.assertEqual(app_id, b"bitcoin")
+        self.assertEqual(kt, b"eth_addr")
+        self.assertEqual(did, 3)
+
+    @mock_storage
+    def test_legacy_record_without_scope_decodes_to_defaults(self):
+        """Gap 6 backward-compat: a record framed before key_type/device_id existed
+        (body ends at app_id) reads its scope tail past-end as (b"", 0)."""
+        import storage.ward_store as ward_store
+
+        # A pre-Gap6 body: prefix + LV(address)+LV(old)+LV(new)+LV(app_id), no scope tail.
+        legacy = (
+            (1).to_bytes(4, "big")  # pending_id
+            + self._id(1)  # wallet_id (20B)
+            + (7).to_bytes(4, "big")  # counter
+            + bytes([ward_store.QUEUE_COMMITTED])  # state
+            + _sha256d(b"root")  # root (32B, != EMPTY_ROOT)
+            + _sha256d(b"mac")  # mac (32B)
+            + len(b"alice").to_bytes(2, "big")
+            + b"alice"
+            + len(b"o").to_bytes(2, "big")
+            + b"o"
+            + len(b"n").to_bytes(2, "big")
+            + b"n"
+            + len(b"bitcoin").to_bytes(2, "big")
+            + b"bitcoin"
+        )
+        counter, _s, address, ov, nv, _r, _m, app_id, kt, did = ward_store._parse_body(
+            legacy
+        )
+        self.assertEqual(counter, 7)
+        self.assertEqual((address, ov, nv), (b"alice", b"o", b"n"))
+        self.assertEqual(app_id, b"bitcoin")
+        self.assertEqual(kt, b"")  # scope tail read past end -> empty
+        self.assertEqual(did, 0)
+
+    @mock_storage
+    def test_batch_envelope_roundtrip(self):
+        """batch-update: the in-flight committed batch envelope round-trips its
+        transition, MACs, optional signature and pending-id set."""
+        import storage.ward_store as ward_store
+
+        wid = self._id(1)
+        fr, tr = _sha256d(b"from"), _sha256d(b"to")
+        mac, hm, ac = _sha256d(b"mac"), _sha256d(b"headmac"), _sha256d(b"authcommit")
+        sig = _sha256d(b"sigA") + _sha256d(b"sigB")  # 64B
+        ward_store.batch_put(wid, 4, 5, fr, tr, mac, hm, ac, sig, [10, 20, 30])
+
+        e = ward_store.batch_get(wid)
+        self.assertEqual((e["from_counter"], e["to_counter"]), (4, 5))
+        self.assertEqual((e["from_root"], e["to_root"]), (fr, tr))
+        self.assertEqual((e["mac"], e["head_mac"], e["auth_commit"]), (mac, hm, ac))
+        self.assertEqual(e["sig"], sig)
+        self.assertEqual(e["pending_ids"], [10, 20, 30])
+
+    @mock_storage
+    def test_batch_envelope_empty_sig_and_wallet_isolation(self):
+        import storage.ward_store as ward_store
+
+        w1, w2 = self._id(1), self._id(2)
+        fr, tr = _sha256d(b"from"), _sha256d(b"to")
+        z = b"\x00" * 32
+        ward_store.batch_put(w1, 4, 5, fr, tr, z, z, z, _sha256d(b"s") * 2, [1])
+        # WARD_KSIG off => empty signature; single pending_id.
+        ward_store.batch_put(w2, 0, 1, fr, tr, z, z, z, b"", [7])
+        self.assertEqual(ward_store.batch_get(w2)["sig"], b"")
+        # w1 is untouched by the w2 write (one envelope per wallet).
+        self.assertEqual(ward_store.batch_get(w1)["pending_ids"], [1])
+        self.assertIsNone(ward_store.batch_get(self._id(3)))
+
+    @mock_storage
+    def test_batch_envelope_replace_and_clear(self):
+        import storage.ward_store as ward_store
+
+        wid = self._id(1)
+        fr, tr = _sha256d(b"from"), _sha256d(b"to")
+        z = b"\x00" * 32
+        ward_store.batch_put(wid, 4, 5, fr, tr, z, z, z, b"", [10])
+        # A new perform_batch replaces the wallet's in-flight envelope.
+        ward_store.batch_put(wid, 5, 6, tr, fr, z, z, z, b"", [99])
+        self.assertEqual(ward_store.batch_get(wid)["pending_ids"], [99])
+        self.assertTrue(ward_store.batch_clear(wid))
+        self.assertIsNone(ward_store.batch_get(wid))
+        self.assertFalse(ward_store.batch_clear(wid))  # idempotent
+
+    @mock_storage
+    def test_batch_envelope_rejects_bad_field_length(self):
+        import storage.ward_store as ward_store
+
+        z = b"\x00" * 32
+        with self.assertRaises(ValueError):
+            ward_store.batch_put(
+                self._id(1), 0, 1, b"\x00" * 31, z, z, z, z, b"", [1]
+            )
 
     @mock_storage
     def test_put_enforces_per_wallet_cap(self):
@@ -866,10 +1000,10 @@ class TestWardQueueStorage(unittest.TestCase):
         mac = _sha256d(b"mac-T")
         pid = ward_store.queue_alloc_id()
         ward_store.queue_put(wallet_id, pid, 1, b"x", b"o", b"n")
-        ward_store.queue_set_computed(wallet_id, pid, root, mac)
+        ward_store.queue_set_computed(wallet_id, pid, 1, root, mac)
 
-        counter, state, address, ov, nv, got_root, got_mac = ward_store.queue_get(
-            wallet_id, pid
+        counter, state, address, ov, nv, got_root, got_mac, _aid, _kt, _did = (
+            ward_store.queue_get(wallet_id, pid)
         )
         self.assertEqual(state, ward_store.QUEUE_COMMITTED)
         self.assertEqual(got_root, root)
@@ -887,7 +1021,7 @@ class TestWardQueueStorage(unittest.TestCase):
         ward_store.queue_put(self._id(1), pid, 1, b"x", b"o", b"n")
         with self.assertRaises(ValueError):
             ward_store.queue_set_computed(
-                self._id(2), pid, _sha256d(b"r"), _sha256d(b"m")
+                self._id(2), pid, 1, _sha256d(b"r"), _sha256d(b"m")
             )
 
     @mock_storage
@@ -899,9 +1033,9 @@ class TestWardQueueStorage(unittest.TestCase):
         wallet_id = self._id(1)
         pid = ward_store.queue_alloc_id()
         ward_store.queue_put(wallet_id, pid, 9, b"bob", b"old_b", b"")
-        ward_store.queue_set_computed(wallet_id, pid, None, None)
-        counter, state, address, ov, nv, root, mac = ward_store.queue_get(
-            wallet_id, pid
+        ward_store.queue_set_computed(wallet_id, pid, 9, None, None)
+        counter, state, address, ov, nv, root, mac, _aid, _kt, _did = (
+            ward_store.queue_get(wallet_id, pid)
         )
         self.assertEqual(counter, 9)
         self.assertEqual(state, ward_store.QUEUE_COMMITTED)
@@ -961,8 +1095,10 @@ class TestWardQueueStorage(unittest.TestCase):
         wallet_id = self._id(1)
         pid = ward_store.queue_alloc_id()
         ward_store.queue_put(wallet_id, pid, 1, b"x", b"o", b"n")
-        ward_store.queue_set_computed(wallet_id, pid, _sha256d(b"r"), _sha256d(b"m"))
-        _c, state, _a, _ov, _nv, _r, _m = ward_store.queue_get(wallet_id, pid)
+        ward_store.queue_set_computed(wallet_id, pid, 1, _sha256d(b"r"), _sha256d(b"m"))
+        _c, state, _a, _ov, _nv, _r, _m, _aid, _kt, _did = ward_store.queue_get(
+            wallet_id, pid
+        )
         self.assertEqual(state, ward_store.QUEUE_COMMITTED)
 
         service.queue_discard(wallet_id, pid)

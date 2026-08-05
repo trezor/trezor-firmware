@@ -339,6 +339,44 @@ def compute_new_root(
     return reconstruct(new_leaf_h, proof, entry_key_)
 
 
+def compute_batch_root(stored_root, ops):
+    """Apply a batch of single-leaf changes to `stored_root` and return the new root
+    (`None` if the tree ends empty).
+
+    Each op is a 6-tuple `(entry_key, old_leaf, new_leaf, proof, witness_entry_key,
+    witness_commit)` with the same semantics as `compute_new_root` (old_leaf=None =>
+    INSERT, new_leaf=None => DELETE), except `proof` is the pre-state proof against
+    the CURRENT running root — not necessarily `stored_root`. The batch is applied as
+    an order-independent sequence of audited `compute_new_root` calls, so the final
+    root is independent of the op order (positions are content-addressed by
+    entry_key, §4.4). A `entry_key` may appear at most once per batch (§4.2) —
+    duplicates are rejected.
+
+    This is the non-streaming O(k·depth) fold (plan D3): the host supplies, per leaf,
+    a proof against the running root, so NO sort and NO interior-sibling multiproof
+    are required, and working memory stays O(depth) — each proof is verified then
+    discarded. Per-leaf counter monotonicity (`C_new > C_old`, §4.5/F12) is enforced
+    by the caller (`perform_batch`) against the decrypted old leaf, not here."""
+    seen = []  # entry_keys already touched in this batch
+    root = stored_root
+    for op in ops:
+        ek = op[0]
+        for prev in seen:
+            if prev == ek:
+                raise ValueError("duplicate entry_key in batch")
+        seen.append(ek)
+        root = compute_new_root(
+            ek,
+            op[1],
+            op[2],
+            op[3],
+            root,
+            witness_entry_key=op[4],
+            witness_commit=op[5],
+        )
+    return root
+
+
 # ---------------------------------------------------------------------------
 # WM attestation verification (formerly apps.authdb._qm).
 # ---------------------------------------------------------------------------
@@ -530,6 +568,159 @@ def _compute_mac(key: bytes, *parts: bytes) -> bytes:
 
 
 # ---------------------------------------------------------------------------
+# Batch-transition authentication (WARD batch-update).
+#
+# A batch commits N queued intents as ONE root transition (from_root -> to_root,
+# counter += 1 for the whole batch -- the counter is a transition/head-generation
+# counter, so a batch of any size and a rollback are each a uniform +1; every leaf in
+# a batch shares C_leaf = to_counter). Two symmetric MACs authenticate it (MANDATORY):
+#   head_mac   = MAC(K_head, TAG_HEAD   || ward_id || counter || root)
+#   AuthCommit = MAC(K_auth, TAG_COMMIT || ward_id || from_c || from_root || to_c || to_root)
+#   AuthRevert = MAC(K_auth, TAG_REVERT || ward_id || from_c || from_root || to_c || to_root)
+# Plus a CONFIG-GATED Ed25519 signature over the AuthCommit preimage, so a hardened
+# WM can pre-filter unauthorized transitions and we can benchmark MAC-only vs
+# MAC+signature (WARD_KSIG):
+#   SigCommit  = Ed25519(K_sig, <same preimage as AuthCommit>)
+#
+# K_head/K_auth/K_sig are SLIP-21 under m/"ward" (seed-scoped, shared across the
+# wallet's devices, like K_index/K_data); the wallet binding is `ward_id` inside
+# every preimage. Domains are disjoint from the WM ATTEST/FINAL preimages and the
+# trie's 0x00-0x03 node prefixes. There is deliberately NO batch_digest: under
+# content-addressed roots the (from_root,to_root) pair the device computes locally
+# already binds the exact logical batch (see ToDo-encrypted_entries/
+# batch_update_security_review.md, D4/F2/F3). Rollback is forward-incrementing
+# (to_counter = from_counter + 1), so the counter is the anti-replay epoch (F1).
+# ---------------------------------------------------------------------------
+
+# Benchmark toggle. When True, perform_batch ALSO produces the Ed25519 SigCommit
+# over the AuthCommit preimage. The symmetric K_head/K_auth MACs are produced
+# regardless. Flip for the MAC-only vs MAC+signature benchmark (D1).
+WARD_KSIG = False
+
+_TAG_HEAD = b"WARD HEAD v1"
+_TAG_COMMIT = b"WARD COMMIT v1"
+_TAG_REVERT = b"WARD REVERT v1"
+
+# Canonical 32-byte stand-in for the empty tree in MAC preimages: empty = H(0x03)
+# (ward-design.md §2.2). The proof/root machine uses `root is None` for empty; the
+# transition MACs need a fixed-width value, so None maps to this sentinel here.
+EMPTY_ROOT_HASH = sha256d(b"\x03")
+
+
+def _root_or_empty(root) -> bytes:
+    """Map a possibly-None root to its 32-byte MAC-preimage form."""
+    return EMPTY_ROOT_HASH if root is None else root
+
+
+async def _derive_ward_key(leaf: bytes) -> bytes:
+    """SLIP21(seed, [b"ward", leaf]).key() -- the shared m/"ward" key family
+    (K_head/K_auth/K_sig). Seed-scoped; the wallet binding is ward_id inside each
+    preimage. Mirrors `_derive_k_index`/`_derive_k_data`."""
+    from apps.common import seed as seed_module
+    from apps.common.seed import Slip21Node
+
+    s = await seed_module.get_seed()
+    node = Slip21Node(s)
+    node.derive_path([b"ward", leaf])
+    return node.key()
+
+
+def head_mac(k_head: bytes, ward_id: bytes, counter: int, root) -> bytes:
+    """head_mac = MAC(K_head, TAG_HEAD || ward_id || counter(4B BE) || root). An
+    integrity token for the head tuple, NOT a freshness token (freshness is the WM
+    nonce challenge) -- always verify it bound to the counter, never by root alone."""
+    return _compute_mac(
+        k_head, _TAG_HEAD, ward_id, counter.to_bytes(4, "big"), _root_or_empty(root)
+    )
+
+
+def _transition_preimage(
+    tag: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_root,
+    to_counter: int,
+    to_root,
+) -> bytes:
+    return (
+        tag
+        + ward_id
+        + from_counter.to_bytes(4, "big")
+        + _root_or_empty(from_root)
+        + to_counter.to_bytes(4, "big")
+        + _root_or_empty(to_root)
+    )
+
+
+def auth_commit(
+    k_auth: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_root,
+    to_counter: int,
+    to_root,
+) -> bytes:
+    """AuthCommit MAC over the forward transition (no batch_digest, D4)."""
+    return _compute_mac(
+        k_auth,
+        _transition_preimage(
+            _TAG_COMMIT, ward_id, from_counter, from_root, to_counter, to_root
+        ),
+    )
+
+
+def auth_revert(
+    k_auth: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_root,
+    to_counter: int,
+    to_root,
+) -> bytes:
+    """AuthRevert MAC over a one-step rollback. to_counter = from_counter + 1
+    (forward-increment, F1); to_root is the restored predecessor root."""
+    return _compute_mac(
+        k_auth,
+        _transition_preimage(
+            _TAG_REVERT, ward_id, from_counter, from_root, to_counter, to_root
+        ),
+    )
+
+
+def verify_auth_commit(
+    k_auth: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_root,
+    to_counter: int,
+    to_root,
+    mac: bytes,
+) -> bool:
+    """Constant-time-ish equality check of an AuthCommit MAC (another-Trezor verify
+    and replay-before-delete)."""
+    from trezor import utils
+
+    expected = auth_commit(
+        k_auth, ward_id, from_counter, from_root, to_counter, to_root
+    )
+    return utils.consteq(expected, mac)
+
+
+def sig_commit(k_sig_secret: bytes, preimage: bytes) -> bytes:
+    """Ed25519 signature over the AuthCommit preimage (config-gated benchmark path,
+    WARD_KSIG). Fixed preimage only -- never a generic sign-arbitrary-bytes API."""
+    from trezor.crypto.curve import ed25519
+
+    return ed25519.sign(k_sig_secret, preimage)
+
+
+def k_sig_pubkey(k_sig_secret: bytes) -> bytes:
+    from trezor.crypto.curve import ed25519
+
+    return ed25519.publickey(k_sig_secret)
+
+
+# ---------------------------------------------------------------------------
 # Root/MAC + pending-queue helpers (formerly apps.ward.__init__).
 # ---------------------------------------------------------------------------
 
@@ -573,12 +764,22 @@ def queue_put(
     old_value: bytes,
     new_value: bytes,
     app_id: bytes = b"",
+    key_type: bytes = b"",
+    device_id: int = 0,
 ) -> None:
     """Store an approved edit intent as PENDING under pending_id (pull model)."""
     import storage.ward_store as ward_store
 
     ward_store.queue_put(
-        wallet_id, pending_id, counter, address, old_value, new_value, app_id
+        wallet_id,
+        pending_id,
+        counter,
+        address,
+        old_value,
+        new_value,
+        app_id,
+        key_type,
+        device_id,
     )
 
 
@@ -651,7 +852,7 @@ async def discard(
     rec = ward_store.queue_get(wallet_id, pending_id)
     if rec is None:
         return None, wallet_id
-    _counter, _state, address, _ov, _nv, _root, _mac, _app_id = rec
+    _counter, _state, address, _ov, _nv, _root, _mac, _app_id, _kt, _did = rec
     ward_store.queue_drop(wallet_id, pending_id)
 
     if __debug__:
@@ -757,12 +958,15 @@ async def queue(
     app_id,
     address: bytes,
     new_value: bytes,
+    key_type: str = _ENTRY_TYPE_ADDRESS,
+    device_id: int = 0,
 ) -> tuple[int, bytes]:
     """Queue an edit INTENT (pull model) for the domain named by app_id. Checks the
     write against the WARD-service ACL, shows the queued change (with its domain) on
     a trusted screen and, ONLY on user approval, allocates a pending_id and stores
-    the intent PENDING together with app_id -- binding the whole round to
-    entry_key(app_id, address). Under the strict counter model the candidate counter is NOT
+    the intent PENDING together with app_id, key_type and device_id -- binding the
+    whole round to entry_key(app_id, key_type, device_id, address). Under the strict
+    counter model the candidate counter is NOT
     derived here: queueing captures user intent only. counter_T is first derived
     inside the WM-synchronized commit flow (WARDPerformUpdate), against the attested
     round state. No proof is taken and the root is NOT computed here either. Returns
@@ -798,8 +1002,19 @@ async def queue(
     await _confirm_update(app_id_b, address, new_value)
 
     pending_id = ward_store.queue_alloc_id()
-    # counter_T left unset (0) at queue time; derived at WARDPerformUpdate.
-    ward_store.queue_put(wallet_id, pending_id, 0, address, b"", new_value, app_id_b)
+    # counter_T left unset (0) at queue time; derived at WARDPerformUpdate. key_type is
+    # framed as bytes; device_id scopes to a per-device slot (§5.1).
+    ward_store.queue_put(
+        wallet_id,
+        pending_id,
+        0,
+        address,
+        b"",
+        new_value,
+        app_id_b,
+        key_type.encode(),
+        device_id,
+    )
 
     if __debug__:
         from trezor import log
@@ -892,10 +1107,8 @@ async def intent(pending_id: int | None) -> tuple[int, bytes]:
     The Core gateway calls this to build the WARDProofRequest carrying the opaque
     entry_key (computed on-device from the queued intent's app_id/address) before
     pulling the proof for WARDPerformUpdate. The host serves the proof purely by
-    entry_key and never learns the identifier or domain.
-
-    NOTE: key_type/device_id default to "address"/0 for now (not yet persisted in the
-    pending record); revisit when the store frames them (see TODO_Entry_key_as_MAC)."""
+    entry_key and never learns the identifier or domain. The pending record's
+    key_type/device_id scope the derived entry_key (empty key_type => "address")."""
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
@@ -904,10 +1117,11 @@ async def intent(pending_id: int | None) -> tuple[int, bytes]:
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no queued intent to perform")
-    _counter, _state, address, _ov, _nv, _root, _mac, app_id = rec
+    _counter, _state, address, _ov, _nv, _root, _mac, app_id, kt, device_id = rec
+    key_type = kt.decode() if kt else _ENTRY_TYPE_ADDRESS
 
     k_index = await _derive_k_index()
-    ek = entry_key(k_index, app_id, address)
+    ek = entry_key(k_index, app_id, address, key_type, device_id)
 
     if __debug__:
         from trezor import log
@@ -938,7 +1152,9 @@ async def perform(
     store it (ct empty => DELETE). Returns
     (counter_T, root_T, mac_T, wallet_id, ward_id, entry_key, entry_type, nonce, tag, ct).
 
-    NOTE: key_type/device_id default to "address"/0 (not yet persisted per-intent).
+    key_type/device_id are read from the pending record (framed at queue time), so the
+    candidate lands on the scoped entry_key the user approved (empty key_type =>
+    "address"). entry_type in the returned blob echoes the resolved key_type.
     """
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
@@ -950,10 +1166,10 @@ async def perform(
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no queued intent to perform")
-    _counter, _state, address, _old_value, new_value, _root, _mac, app_id = rec
-
-    key_type = _ENTRY_TYPE_ADDRESS
-    device_id = 0
+    _counter, _state, address, _old_value, new_value, _root, _mac, app_id, kt, device_id = (
+        rec
+    )
+    key_type = kt.decode() if kt else _ENTRY_TYPE_ADDRESS
     k_index = await _derive_k_index()
     # Bind the candidate to its domain/scope: entry_key = HMAC(K_index, scope||id),
     # so this write can only ever produce a leaf under the scope the user approved.
@@ -1065,7 +1281,7 @@ async def finalize(
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no candidate to finalize")
-    counter, state, _address, _old_value, _new_value, root, mac, _app_id = rec
+    counter, state, _address, _old_value, _new_value, root, mac, _app_id, _kt, _did = rec
 
     if state != ward_store.QUEUE_COMMITTED:
         raise DataError("candidate has not been performed")
@@ -1116,6 +1332,246 @@ async def finalize(
         )
 
     return counter, root, wallet_id, mac
+
+
+async def perform_batch(pending_ids: list, acks: list) -> tuple:
+    """Authorize a BATCH of queued intents as ONE root transition (batch-update).
+
+    `pending_ids` is the ordered set of queued candidates committed together; `acks`
+    is the matching list of pulled pre-state acks (one per pending_id), each a 6-tuple
+    `(nonce, tag, ct, proof, witness_entry_key, witness_commit)` with the same meaning
+    as single-leaf `perform`: membership `(nonce,tag,ct)` for UPDATE/DELETE, `witness_*`
+    for INSERT, empty for INIT. The Core gateway pulls these (one WARDProofRequest per
+    entry_key) before calling.
+
+    The device computes `to_root` over ALL leaves against the current head, stamps
+    every leaf `C_leaf = to_counter = floor + 1` (the whole batch is ONE transition),
+    encrypts each new leaf (random nonce, §4.5), enforces per-leaf `C_new > C_old`
+    (§4.5/F12), and authenticates the transition with `head_mac` + `AuthCommit`
+    (+ `SigCommit` when WARD_KSIG). It stores a single committed batch envelope and
+    returns `(to_counter, from_root, to_root, mac_t, head_mac, auth_commit, sig,
+    wallet_id, ward_id, leaves)` (from_root in its 32-byte MAC-preimage form,
+    EMPTY_ROOT_HASH if empty; to_root is None if the tree becomes empty) where
+    `leaves` is a list of `(entry_key, entry_type, nonce, tag, ct)` for the host to
+    store (ct empty => DELETE)."""
+    import storage.ward_head as ward_head
+    import storage.ward_store as ward_store
+    from trezor.wire import DataError
+
+    if not pending_ids or len(pending_ids) != len(acks):
+        raise DataError("empty or mismatched batch")
+
+    wallet_id = await _get_wallet_id()
+    from_counter = ward_store.get_counter(wallet_id)
+    to_counter = from_counter + 1  # whole batch = one transition (uniform +1)
+
+    present, stored_root = ward_head.root_get(wallet_id)
+    if not present:
+        # Fresh-wallet INIT: empty tree only when the floor is 0 (mirrors `perform`).
+        if from_counter == 0:
+            stored_root = None
+        else:
+            raise DataError("no authenticated root in session")
+
+    k_index = await _derive_k_index()
+
+    ops = []  # (entry_key, old_leaf, new_leaf, proof, witness_ek, witness_commit)
+    leaves = []  # (entry_key, entry_type, nonce, tag, ct) to return to the host
+    for i in range(len(pending_ids)):
+        pid = pending_ids[i]
+        ack = acks[i]
+        ack_nonce, ack_tag, ack_ct, proof, w_ek, w_commit = (
+            ack[0],
+            ack[1],
+            ack[2],
+            ack[3],
+            ack[4],
+            ack[5],
+        )
+
+        rec = ward_store.queue_get(wallet_id, pid)
+        if rec is None:
+            raise DataError("no queued intent to perform in batch")
+        _c, _s, address, _ov, new_value, _r, _m, app_id, kt, device_id = rec
+        key_type = kt.decode() if kt else _ENTRY_TYPE_ADDRESS
+        ek = entry_key(k_index, app_id, address, key_type, device_id)
+
+        # membership ack (UPDATE/DELETE) carries the old blob; witness => INSERT.
+        old_leaf = None
+        if ack_ct is not None and w_ek is None:
+            old_leaf = (ack_nonce, ack_tag, ack_ct)
+            # Leaf-splicing / counter-monotonicity (§4.5, F12): decrypt the current
+            # leaf and require the new stamp to strictly exceed the old one. With the
+            # whole batch at to_counter, this holds iff the old leaf predates the head.
+            k_data_old = await _derive_k_data(key_type)
+            c_old, _id_old, _v_old = decrypt_leaf(
+                k_data_old, ek, key_type, ack_nonce, ack_tag, ack_ct
+            )
+            if to_counter <= c_old:
+                raise DataError("C_new is not ahead of C_old (stale leaf)")
+
+        # Encrypt the new leaf (empty new_value => DELETE).
+        if len(new_value) == 0:
+            new_leaf = None
+            out_nonce, out_tag, out_ct = b"", b"", b""
+        else:
+            k_data = await _derive_k_data(key_type)
+            out_nonce, out_tag, out_ct = encrypt_leaf(
+                k_data, ek, key_type, to_counter, address, new_value
+            )
+            new_leaf = (out_nonce, out_tag, out_ct)
+
+        ops.append((ek, old_leaf, new_leaf, proof, w_ek, w_commit))
+        leaves.append((ek, key_type, out_nonce, out_tag, out_ct))
+
+    # Fold all leaves into one successor root (order-independent, no sort; rejects a
+    # duplicate entry_key within the batch). Each proof is against the running root.
+    try:
+        to_root = compute_batch_root(stored_root, ops)
+    except ValueError as e:
+        raise DataError(str(e))
+
+    # Root MAC the WM co-signs at finalize (None root => empty tree => all-zero MAC).
+    if to_root is not None:
+        mac_key = await _derive_mac_key(b"root_mac")
+        mac_t = _compute_mac(mac_key, wallet_id, to_counter.to_bytes(4, "big"), to_root)
+    else:
+        mac_t = None
+
+    # Transition authentication. Roots are folded to their 32-byte MAC-preimage form
+    # (EMPTY_ROOT_HASH for empty) and stored in that form, so a verifying device reads
+    # exactly what was MAC'd.
+    ward_id = await _get_ward_id()
+    from_root_b = _root_or_empty(stored_root)
+    to_root_b = _root_or_empty(to_root)
+    k_head = await _derive_ward_key(b"K_head")
+    k_auth = await _derive_ward_key(b"K_auth")
+    head_mac_v = head_mac(k_head, ward_id, to_counter, to_root)
+    auth_commit_v = auth_commit(
+        k_auth, ward_id, from_counter, from_root_b, to_counter, to_root_b
+    )
+    sig = b""
+    if WARD_KSIG:
+        k_sig = await _derive_ward_key(b"K_sig")
+        preimage = _transition_preimage(
+            _TAG_COMMIT, ward_id, from_counter, from_root_b, to_counter, to_root_b
+        )
+        sig = sig_commit(k_sig, preimage)
+
+    ward_store.batch_put(
+        wallet_id,
+        from_counter,
+        to_counter,
+        from_root_b,
+        to_root_b,
+        mac_t if mac_t is not None else _ZERO_MAC,
+        head_mac_v,
+        auth_commit_v,
+        sig,
+        pending_ids,
+    )
+
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__,
+            "perform_batch: wallet_id=%s n=%d from=%d to=%d to_root=%s ksig=%s",
+            wallet_id,
+            len(pending_ids),
+            from_counter,
+            to_counter,
+            "EMPTY" if to_root is None else "set",
+            "yes" if WARD_KSIG else "no",
+        )
+
+    return (
+        to_counter,
+        from_root_b,
+        to_root,
+        mac_t,
+        head_mac_v,
+        auth_commit_v,
+        sig,
+        wallet_id,
+        ward_id,
+        leaves,
+    )
+
+
+async def finalize_batch(
+    counter_msg: int,
+    mac_msg: bytes | None,
+    wm_signature: bytes,
+) -> tuple:
+    """Install a committed BATCH after the WM co-signs its head, then drop the whole
+    pending set. The single counter-advancing step for a batch (uniform +1).
+
+    Replay-before-delete / consistency (§4, F7): the WM must co-sign EXACTLY the
+    device's committed candidate `(to_counter, mac_t)`, and the stored `AuthCommit`
+    (binding `from`→`to`) is re-verified, before anything is installed or dropped. If
+    either fails, the queue is left intact. Returns `(to_counter, root, wallet_id,
+    root_mac)` with `root`/`root_mac` None for an emptied tree."""
+    import storage.ward_head as ward_head
+    import storage.ward_store as ward_store
+    from trezor.wire import DataError
+
+    wallet_id = await _get_wallet_id()
+    env = ward_store.batch_get(wallet_id)
+    if env is None:
+        raise DataError("no committed batch to finalize")
+
+    to_counter = env["to_counter"]
+    to_root_b = env["to_root"]
+    mac = env["mac"]
+    msg_mac = mac_msg if mac_msg is not None else _ZERO_MAC
+
+    if counter_msg != to_counter or msg_mac != mac:
+        raise DataError("confirmation does not match the committed batch")
+
+    ward_id = await _get_ward_id()
+    if not verify_ward_final(ward_id, to_counter, mac, wm_signature):
+        raise DataError("WM final attestation verification failed")
+
+    # Re-verify the transition authorization (F7: AuthCommit binds from->to).
+    k_auth = await _derive_ward_key(b"K_auth")
+    if not verify_auth_commit(
+        k_auth,
+        ward_id,
+        env["from_counter"],
+        env["from_root"],
+        to_counter,
+        to_root_b,
+        env["auth_commit"],
+    ):
+        raise DataError("batch AuthCommit verification failed")
+
+    # Anti-rollback: the finalized counter must exceed the durable local floor.
+    if to_counter <= ward_store.get_counter(wallet_id):
+        raise DataError("counter_T is not ahead of counter_loc")
+
+    # Map the empty-tree sentinel back to None for installation.
+    root_install = None if to_root_b == EMPTY_ROOT_HASH else to_root_b
+    ward_head.root_set(wallet_id, root_install)
+    ward_store.commit_counter(wallet_id, to_counter)
+    for pid in env["pending_ids"]:
+        ward_store.queue_drop(wallet_id, pid)
+    ward_store.batch_clear(wallet_id)
+
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__,
+            "finalize_batch: installed wallet_id=%s counter=%d n=%d root=%s",
+            wallet_id,
+            to_counter,
+            len(env["pending_ids"]),
+            "EMPTY" if root_install is None else "set",
+        )
+
+    root_mac = None if mac == _ZERO_MAC else mac
+    return to_counter, root_install, wallet_id, root_mac
 
 
 async def sync() -> tuple[bytes, int, bytes, bytes]:

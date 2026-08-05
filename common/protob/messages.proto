@@ -421,6 +421,12 @@ enum MessageType {
     // the push-capable class only)
     MessageType_WARDExportKeys = 2352 [(wire_in) = true];
     MessageType_WARDExportKeysAck = 2353 [(wire_out) = true];
+    // WARD batch update: N queued intents commit as ONE root transition (counter +1),
+    // authenticated by head_mac + AuthCommit (+ optional Ed25519 SigCommit).
+    MessageType_WARDPerformBatch = 2354 [(wire_in) = true];
+    MessageType_WARDPerformBatchAck = 2355 [(wire_out) = true];
+    MessageType_WARDConfirmBatchByWM = 2356 [(wire_in) = true];
+    MessageType_WARDConfirmBatchByWMAck = 2357 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

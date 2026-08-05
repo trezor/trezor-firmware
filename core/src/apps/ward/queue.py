@@ -14,6 +14,12 @@ async def queue(msg: WARDQueueUpdate) -> WARDQueueUpdateAck:
 
     from apps.common import ward as core
 
-    pending_id, wallet_id = await core.queue(msg.app_id, msg.address, msg.new_value)
+    pending_id, wallet_id = await core.queue(
+        msg.app_id,
+        msg.address,
+        msg.new_value,
+        msg.key_type or "address",
+        msg.device_id or 0,
+    )
 
     return WARDQueueUpdateAck(pending_id=pending_id, wallet_id=wallet_id)

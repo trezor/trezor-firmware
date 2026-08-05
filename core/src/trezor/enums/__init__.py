@@ -744,6 +744,10 @@ if TYPE_CHECKING:
         WARDDiscardPendingAck = 2351
         WARDExportKeys = 2352
         WARDExportKeysAck = 2353
+        WARDPerformBatch = 2354
+        WARDPerformBatchAck = 2355
+        WARDConfirmBatchByWM = 2356
+        WARDConfirmBatchByWMAck = 2357
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

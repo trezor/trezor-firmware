@@ -804,6 +804,10 @@ class MessageType(IntEnum):
     WARDDiscardPendingAck = 2351
     WARDExportKeys = 2352
     WARDExportKeysAck = 2353
+    WARDPerformBatch = 2354
+    WARDPerformBatchAck = 2355
+    WARDConfirmBatchByWM = 2356
+    WARDConfirmBatchByWMAck = 2357
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -9998,6 +10002,130 @@ class WARDDiscardPendingAck(protobuf.MessageType):
         self.discarded_address = discarded_address
         self.wallet_id = wallet_id
         self.pending_id = pending_id
+
+
+class WARDBatchLeaf(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("entry_type", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: "bytes",
+        entry_type: Optional["str"] = None,
+        nonce: Optional["bytes"] = None,
+        tag: Optional["bytes"] = None,
+        ct: Optional["bytes"] = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.entry_type = entry_type
+        self.nonce = nonce
+        self.tag = tag
+        self.ct = ct
+
+
+class WARDPerformBatch(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2354
+    FIELDS = {
+        1: protobuf.Field("pending_ids", "uint32", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pending_ids: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.pending_ids: Sequence["int"] = pending_ids if pending_ids is not None else []
+
+
+class WARDPerformBatchAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2355
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("head_mac", "bytes", repeated=False, required=True),
+        8: protobuf.Field("auth_commit", "bytes", repeated=False, required=True),
+        9: protobuf.Field("sig_commit", "bytes", repeated=False, required=False, default=None),
+        10: protobuf.Field("leaves", "WARDBatchLeaf", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        head_mac: "bytes",
+        auth_commit: "bytes",
+        leaves: Optional[Sequence["WARDBatchLeaf"]] = None,
+        from_root: Optional["bytes"] = None,
+        new_root: Optional["bytes"] = None,
+        mac: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+        sig_commit: Optional["bytes"] = None,
+    ) -> None:
+        self.leaves: Sequence["WARDBatchLeaf"] = leaves if leaves is not None else []
+        self.counter = counter
+        self.head_mac = head_mac
+        self.auth_commit = auth_commit
+        self.from_root = from_root
+        self.new_root = new_root
+        self.mac = mac
+        self.wallet_id = wallet_id
+        self.ward_id = ward_id
+        self.sig_commit = sig_commit
+
+
+class WARDConfirmBatchByWM(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2356
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        wm_signature: "bytes",
+        mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.wm_signature = wm_signature
+        self.mac = mac
+
+
+class WARDConfirmBatchByWMAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2357
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+        root_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.wallet_id = wallet_id
+        self.root_mac = root_mac
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):
