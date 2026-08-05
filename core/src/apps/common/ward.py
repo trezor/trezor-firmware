@@ -365,6 +365,31 @@ async def finalize_batch(
     return await service.finalize_batch(counter, mac, wm_signature)
 
 
+async def perform_revert(
+    stuck_counter: int,
+    stuck_root: bytes,
+    prev_root: bytes,
+    forward_auth_commit: bytes,
+) -> tuple:
+    """Prepare a one-step rollback. No proof pull — the predecessor is proven by the
+    host-supplied forward AuthCommit the trust anchor verifies."""
+    from apps.ward import service
+
+    return await service.perform_revert(
+        stuck_counter, stuck_root, prev_root, forward_auth_commit
+    )
+
+
+async def finalize_revert(
+    counter: int,
+    mac: bytes | None,
+    wm_signature: bytes,
+) -> tuple:
+    from apps.ward import service
+
+    return await service.finalize_revert(counter, mac, wm_signature)
+
+
 async def discard(
     pending_id: int | None = None,
 ) -> tuple[bytes | None, bytes]:

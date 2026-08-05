@@ -808,6 +808,10 @@ class MessageType(IntEnum):
     WARDPerformBatchAck = 2355
     WARDConfirmBatchByWM = 2356
     WARDConfirmBatchByWMAck = 2357
+    WARDPerformRevert = 2358
+    WARDPerformRevertAck = 2359
+    WARDConfirmRevertByWM = 2360
+    WARDConfirmRevertByWMAck = 2361
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -10107,6 +10111,110 @@ class WARDConfirmBatchByWM(protobuf.MessageType):
 
 class WARDConfirmBatchByWMAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2357
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+        root_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.wallet_id = wallet_id
+        self.root_mac = root_mac
+
+
+class WARDPerformRevert(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2358
+    FIELDS = {
+        1: protobuf.Field("stuck_counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("stuck_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("prev_root", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("forward_auth_commit", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        stuck_counter: "int",
+        forward_auth_commit: "bytes",
+        stuck_root: Optional["bytes"] = None,
+        prev_root: Optional["bytes"] = None,
+    ) -> None:
+        self.stuck_counter = stuck_counter
+        self.forward_auth_commit = forward_auth_commit
+        self.stuck_root = stuck_root
+        self.prev_root = prev_root
+
+
+class WARDPerformRevertAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2359
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("head_mac", "bytes", repeated=False, required=True),
+        8: protobuf.Field("auth_revert", "bytes", repeated=False, required=True),
+        9: protobuf.Field("sig_commit", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        head_mac: "bytes",
+        auth_revert: "bytes",
+        from_root: Optional["bytes"] = None,
+        new_root: Optional["bytes"] = None,
+        mac: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+        sig_commit: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.head_mac = head_mac
+        self.auth_revert = auth_revert
+        self.from_root = from_root
+        self.new_root = new_root
+        self.mac = mac
+        self.wallet_id = wallet_id
+        self.ward_id = ward_id
+        self.sig_commit = sig_commit
+
+
+class WARDConfirmRevertByWM(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2360
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        wm_signature: "bytes",
+        mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.wm_signature = wm_signature
+        self.mac = mac
+
+
+class WARDConfirmRevertByWMAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2361
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
         2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),

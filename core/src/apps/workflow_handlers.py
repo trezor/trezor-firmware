@@ -127,6 +127,10 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.ward.perform_batch"
     if msg_type == MessageType.WARDConfirmBatchByWM:
         return "apps.ward.confirm_batch"
+    if msg_type == MessageType.WARDPerformRevert:
+        return "apps.ward.perform_revert"
+    if msg_type == MessageType.WARDConfirmRevertByWM:
+        return "apps.ward.confirm_revert"
     if msg_type == MessageType.WARDDiscardPending:
         return "apps.ward.discard"
 

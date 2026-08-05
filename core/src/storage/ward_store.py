@@ -8,7 +8,11 @@ _NAMESPACE = common.APP_AUTHDB
 _COUNTERS = const(0x00)  # per-wallet durable counter_loc table
 _QUEUE = const(0x05)  # WARD pending candidates (multi-slot, keyed by pending_id)
 _PENDING_SEQ = const(0x06)  # monotonic pending_id allocator (device-global, never reused)
-_BATCH = const(0x07)  # per-wallet in-flight COMMITTED batch envelope (batch-update)
+_BATCH = const(0x07)  # per-wallet in-flight COMMITTED transition envelope (batch-update)
+
+# Envelope kind: a forward batch commit vs a one-step rollback (both share the shape).
+BATCH_COMMIT = const(0x00)
+BATCH_REVERT = const(0x01)
 
 WALLET_ID_LENGTH = const(20)  # BIP32 Hash160 identifier: RIPEMD160(SHA256(master pubkey))
 ROOT_LENGTH = const(32)
@@ -512,10 +516,14 @@ def batch_put(
     auth_commit: bytes,
     sig: bytes,
     pending_ids: list,
+    kind: int = BATCH_COMMIT,
 ) -> None:
-    """Store (replacing any prior for this wallet) the in-flight committed batch
-    envelope. from_root/to_root must be 32 bytes (EMPTY_ROOT for empty); mac/head_mac/
-    auth_commit 32 bytes each; sig may be empty."""
+    """Store (replacing any prior for this wallet) the in-flight committed transition
+    envelope. `kind` = BATCH_COMMIT for a batch commit (auth_commit = AuthCommit,
+    pending_ids = the committed set) or BATCH_REVERT for a one-step rollback
+    (auth_commit slot carries AuthRevert, pending_ids empty). from_root/to_root must be
+    32 bytes (EMPTY_ROOT for empty); mac/head_mac/auth_commit 32 bytes each; sig may be
+    empty."""
     if (
         len(from_root) != ROOT_LENGTH
         or len(to_root) != ROOT_LENGTH
@@ -526,6 +534,7 @@ def batch_put(
         raise ValueError("batch envelope field has wrong length")
     body = (
         wallet_id
+        + bytes([kind & 0xFF])
         + from_counter.to_bytes(4, "big")
         + to_counter.to_bytes(4, "big")
         + from_root
@@ -551,6 +560,8 @@ def batch_get(wallet_id: bytes):
         if _batch_wid(body) != wallet_id:
             continue
         off = WALLET_ID_LENGTH
+        kind = body[off]
+        off += 1
         from_counter = int.from_bytes(body[off : off + 4], "big")
         off += 4
         to_counter = int.from_bytes(body[off : off + 4], "big")
@@ -573,6 +584,7 @@ def batch_get(wallet_id: bytes):
             pending_ids.append(int.from_bytes(body[off : off + 4], "big"))
             off += 4
         return {
+            "kind": kind,
             "from_counter": from_counter,
             "to_counter": to_counter,
             "from_root": from_root,

@@ -328,3 +328,7 @@ if not utils.BITCOIN_ONLY:
     WARDPerformBatchAck = 2355
     WARDConfirmBatchByWM = 2356
     WARDConfirmBatchByWMAck = 2357
+    WARDPerformRevert = 2358
+    WARDPerformRevertAck = 2359
+    WARDConfirmRevertByWM = 2360
+    WARDConfirmRevertByWMAck = 2361

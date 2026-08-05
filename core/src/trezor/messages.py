@@ -8092,6 +8092,94 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmBatchByWMAck"]:
             return isinstance(msg, cls)
 
+    class WARDPerformRevert(protobuf.MessageType):
+        stuck_counter: "int"
+        stuck_root: "AnyBytes | None"
+        prev_root: "AnyBytes | None"
+        forward_auth_commit: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            stuck_counter: "int",
+            forward_auth_commit: "AnyBytes",
+            stuck_root: "AnyBytes | None" = None,
+            prev_root: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformRevert"]:
+            return isinstance(msg, cls)
+
+    class WARDPerformRevertAck(protobuf.MessageType):
+        counter: "int"
+        from_root: "AnyBytes | None"
+        new_root: "AnyBytes | None"
+        mac: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+        head_mac: "AnyBytes"
+        auth_revert: "AnyBytes"
+        sig_commit: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            head_mac: "AnyBytes",
+            auth_revert: "AnyBytes",
+            from_root: "AnyBytes | None" = None,
+            new_root: "AnyBytes | None" = None,
+            mac: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+            sig_commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformRevertAck"]:
+            return isinstance(msg, cls)
+
+    class WARDConfirmRevertByWM(protobuf.MessageType):
+        counter: "int"
+        mac: "AnyBytes | None"
+        wm_signature: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            wm_signature: "AnyBytes",
+            mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmRevertByWM"]:
+            return isinstance(msg, cls)
+
+    class WARDConfirmRevertByWMAck(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmRevertByWMAck"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
         batch_size: "int | None"
 

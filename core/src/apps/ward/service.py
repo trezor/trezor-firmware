@@ -339,42 +339,134 @@ def compute_new_root(
     return reconstruct(new_leaf_h, proof, entry_key_)
 
 
+def _multiproof_root(items, stored_root):
+    """Recompute the trie root over a set of UPDATE items against `stored_root`, and
+    return the new root, via a shape-preserving Merkle multiproof (§4.2).
+
+    Each item is `(entry_key, old_leaf_hash, new_leaf_hash, proof)` where `proof` is
+    the membership proof (bit, sibling) leaf→root of the OLD leaf against
+    `stored_root`. All items must be UPDATES of leaves that already exist, so the
+    trie SHAPE is unchanged and only leaf hashes move — the shared structure of the k
+    proof paths is overlaid into one partial tree, external (boundary) siblings come
+    from the proofs, and internal nodes shared by two batch leaves are recomputed from
+    their children (never from a now-stale proof sibling).
+
+    Crucially this uses proofs against the SINGLE common `stored_root` (exactly what
+    the host serves for the whole batch), not per-leaf running roots. It VERIFIES by
+    recomputing the old root from the overlay and requiring it to equal `stored_root`,
+    then returns the new root with the new leaf hashes substituted. Raises ValueError
+    on any inconsistency (mismatched branch bit / sibling / root)."""
+    # Partial tree keyed by path = tuple of (bit, dir) taken from the root.
+    branch = {}  # path -> branch_bit
+    occupied = set()  # paths on some item's root→leaf walk (real nodes)
+    old_leaf = {}  # path -> old leaf hash
+    new_leaf = {}  # path -> new leaf hash
+    sib_seen = {}  # path -> list of boundary sibling hashes recorded for it
+
+    for ek, oh, nh, proof in items:
+        path = ()
+        occupied.add(path)
+        for elem in reversed(proof):  # root → leaf order
+            b = elem[0]
+            sib = bytes(elem[1:])
+            d = addr_bit(ek, b)
+            if path in branch:
+                if branch[path] != b:
+                    raise ValueError("inconsistent branch bit in batch multiproof")
+            else:
+                branch[path] = b
+            sib_path = path + ((b, 1 - d),)
+            sib_seen.setdefault(sib_path, []).append(sib)
+            path = path + ((b, d),)
+            occupied.add(path)
+        old_leaf[path] = oh
+        new_leaf[path] = nh
+
+    # A non-occupied sibling is an EXTERNAL subtree: every proof that named it must
+    # agree on its hash (this is the cross-proof consistency / verification step).
+    for sib_path, sibs in sib_seen.items():
+        if sib_path in occupied:
+            continue
+        for s in sibs:
+            if s != sibs[0]:
+                raise ValueError("inconsistent boundary sibling in batch multiproof")
+
+    def child_hash(path, leaf_map):
+        if path in occupied:
+            return node_hash(path, leaf_map)
+        sibs = sib_seen.get(path)
+        if not sibs:
+            raise ValueError("missing sibling in batch multiproof")
+        return sibs[0]
+
+    def node_hash(path, leaf_map):
+        if path in leaf_map:
+            return leaf_map[path]
+        if path in branch:
+            b = branch[path]
+            left = child_hash(path + ((b, 0),), leaf_map)
+            right = child_hash(path + ((b, 1),), leaf_map)
+            return internal_hash(left, right)
+        raise ValueError("dangling node in batch multiproof")
+
+    if node_hash((), old_leaf) != stored_root:
+        raise ValueError("batch pre-state proofs do not reconstruct the stored root")
+    return node_hash((), new_leaf)
+
+
 def compute_batch_root(stored_root, ops):
-    """Apply a batch of single-leaf changes to `stored_root` and return the new root
-    (`None` if the tree ends empty).
+    """Apply a batch of leaf changes to `stored_root` and return the new root (`None`
+    if the tree ends empty). Rejects a duplicate `entry_key` within the batch (§4.2).
 
     Each op is a 6-tuple `(entry_key, old_leaf, new_leaf, proof, witness_entry_key,
     witness_commit)` with the same semantics as `compute_new_root` (old_leaf=None =>
-    INSERT, new_leaf=None => DELETE), except `proof` is the pre-state proof against
-    the CURRENT running root — not necessarily `stored_root`. The batch is applied as
-    an order-independent sequence of audited `compute_new_root` calls, so the final
-    root is independent of the op order (positions are content-addressed by
-    entry_key, §4.4). A `entry_key` may appear at most once per batch (§4.2) —
-    duplicates are rejected.
+    INSERT, new_leaf=None => DELETE), and `proof` is the pre-state proof against
+    `stored_root` (the single common base the host serves for the whole batch).
 
-    This is the non-streaming O(k·depth) fold (plan D3): the host supplies, per leaf,
-    a proof against the running root, so NO sort and NO interior-sibling multiproof
-    are required, and working memory stays O(depth) — each proof is verified then
-    discarded. Per-leaf counter monotonicity (`C_new > C_old`, §4.5/F12) is enforced
-    by the caller (`perform_batch`) against the decrypted old leaf, not here."""
-    seen = []  # entry_keys already touched in this batch
-    root = stored_root
+    - A single-op batch (n=1) delegates to the audited `compute_new_root`, so INIT /
+      INSERT / UPDATE / DELETE all keep full generality.
+    - A multi-op batch (n>1) currently supports **UPDATES only** (the trie shape is
+      unchanged) and is folded by a shape-preserving multiproof (`_multiproof_root`)
+      over the common `stored_root` — NOT a sequential running-root apply, which would
+      wrongly reject leaf k's `stored_root`-proof. Insert/delete inside a multi-leaf
+      batch is rejected here; use single-leaf commits for those until the general
+      (shape-changing) multiproof lands.
+
+    Per-leaf counter monotonicity (`C_new > C_old`, §4.5/F12) is enforced by the
+    caller (`perform_batch`), not here."""
+    seen = []
     for op in ops:
         ek = op[0]
         for prev in seen:
             if prev == ek:
                 raise ValueError("duplicate entry_key in batch")
         seen.append(ek)
-        root = compute_new_root(
-            ek,
-            op[1],
-            op[2],
-            op[3],
-            root,
-            witness_entry_key=op[4],
-            witness_commit=op[5],
+
+    if len(ops) == 1:
+        op = ops[0]
+        return compute_new_root(
+            op[0], op[1], op[2], op[3], stored_root,
+            witness_entry_key=op[4], witness_commit=op[5],
         )
-    return root
+
+    items = []
+    for ek, old_leaf, new_leaf, proof, w_ek, w_commit in ops:
+        if old_leaf is None or new_leaf is None or w_ek is not None:
+            raise ValueError(
+                "multi-leaf batch supports UPDATES only; use single-leaf commits "
+                "for insert/delete"
+            )
+        items.append(
+            (
+                ek,
+                leaf_hash(ek, old_leaf[0], old_leaf[1], old_leaf[2]),
+                leaf_hash(ek, new_leaf[0], new_leaf[1], new_leaf[2]),
+                proof,
+            )
+        )
+    if stored_root is None:
+        raise ValueError("multi-leaf update batch requires a non-empty tree")
+    return _multiproof_root(items, stored_root)
 
 
 # ---------------------------------------------------------------------------
@@ -701,6 +793,24 @@ def verify_auth_commit(
     from trezor import utils
 
     expected = auth_commit(
+        k_auth, ward_id, from_counter, from_root, to_counter, to_root
+    )
+    return utils.consteq(expected, mac)
+
+
+def verify_auth_revert(
+    k_auth: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_root,
+    to_counter: int,
+    to_root,
+    mac: bytes,
+) -> bool:
+    """Equality check of an AuthRevert MAC (finalize + another-Trezor verify)."""
+    from trezor import utils
+
+    expected = auth_revert(
         k_auth, ward_id, from_counter, from_root, to_counter, to_root
     )
     return utils.consteq(expected, mac)
@@ -1520,6 +1630,8 @@ async def finalize_batch(
     env = ward_store.batch_get(wallet_id)
     if env is None:
         raise DataError("no committed batch to finalize")
+    if env["kind"] != ward_store.BATCH_COMMIT:
+        raise DataError("in-flight transition is a rollback; use WARDConfirmRevertByWM")
 
     to_counter = env["to_counter"]
     to_root_b = env["to_root"]
@@ -1568,6 +1680,186 @@ async def finalize_batch(
             to_counter,
             len(env["pending_ids"]),
             "EMPTY" if root_install is None else "set",
+        )
+
+    root_mac = None if mac == _ZERO_MAC else mac
+    return to_counter, root_install, wallet_id, root_mac
+
+
+async def perform_revert(
+    stuck_counter: int,
+    stuck_root: bytes,
+    prev_root: bytes,
+    forward_auth_commit: bytes,
+) -> tuple:
+    """Prepare a constrained one-step rollback (ward-design.md §8.2, batch-update).
+
+    The host presents the **forward `AuthCommit` that created the current stuck head**
+    (`stuck_counter`, `stuck_root`) together with the predecessor `prev_root` it
+    encodes. Because `K_auth` is seed-shared, this device verifies that MAC to learn,
+    cryptographically, that `prev_root` was the immediate predecessor of `stuck_root`
+    (F6 — the predecessor is proven by the device family's own signature, NOT by the
+    WM). The demotion is **forward-incrementing** (`to_counter = stuck_counter + 1`,
+    head → `prev_root`), so the counter stays strictly monotone and a stale
+    authorization can never replay after the rollback (F1). All roots are 32-byte
+    MAC-preimage form (EMPTY_ROOT_HASH for empty).
+
+    Stores a BATCH_REVERT envelope and returns `(to_counter, from_root, to_root,
+    mac_t, head_mac, auth_revert, sig, wallet_id, ward_id)`."""
+    import storage.ward_head as ward_head
+    import storage.ward_store as ward_store
+    from trezor.wire import DataError
+
+    if stuck_counter < 1:
+        raise DataError("cannot roll back the genesis head")
+
+    wallet_id = await _get_wallet_id()
+    ward_id = await _get_ward_id()
+
+    # The stuck head MUST be exactly the current authenticated head — bind the COUNTER,
+    # not just the root (roots are content-addressed and repeat; §2.4/§8.2 point 2).
+    cur_counter = ward_store.get_counter(wallet_id)
+    _present, cur_root = ward_head.root_get(wallet_id)
+    if stuck_counter != cur_counter or _root_or_empty(cur_root) != stuck_root:
+        raise DataError("stuck head does not match the current authenticated head")
+
+    # Verify the forward AuthCommit (stuck_counter-1, prev_root) -> (stuck_counter,
+    # stuck_root). Its validity proves prev_root is the immediate predecessor and
+    # fixes the demotion target — it is not a host-named free-form root (§8.2 point 3).
+    k_auth = await _derive_ward_key(b"K_auth")
+    if not verify_auth_commit(
+        k_auth,
+        ward_id,
+        stuck_counter - 1,
+        prev_root,
+        stuck_counter,
+        stuck_root,
+        forward_auth_commit,
+    ):
+        raise DataError("forward AuthCommit invalid; cannot prove the predecessor")
+
+    to_counter = stuck_counter + 1  # forward-increment (F1), even though root goes back
+    to_root = None if prev_root == EMPTY_ROOT_HASH else prev_root
+
+    if to_root is not None:
+        mac_key = await _derive_mac_key(b"root_mac")
+        mac_t = _compute_mac(mac_key, wallet_id, to_counter.to_bytes(4, "big"), to_root)
+    else:
+        mac_t = None
+
+    auth_revert_v = auth_revert(k_auth, ward_id, stuck_counter, stuck_root, to_counter, prev_root)
+    k_head = await _derive_ward_key(b"K_head")
+    head_mac_v = head_mac(k_head, ward_id, to_counter, to_root)
+    sig = b""
+    if WARD_KSIG:
+        k_sig = await _derive_ward_key(b"K_sig")
+        sig = sig_commit(
+            k_sig,
+            _transition_preimage(
+                _TAG_REVERT, ward_id, stuck_counter, stuck_root, to_counter, prev_root
+            ),
+        )
+
+    ward_store.batch_put(
+        wallet_id,
+        stuck_counter,
+        to_counter,
+        stuck_root,
+        prev_root,
+        mac_t if mac_t is not None else _ZERO_MAC,
+        head_mac_v,
+        auth_revert_v,
+        sig,
+        [],
+        ward_store.BATCH_REVERT,
+    )
+
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__,
+            "perform_revert: wallet_id=%s stuck=%d -> to=%d (root back to %s)",
+            wallet_id,
+            stuck_counter,
+            to_counter,
+            "EMPTY" if to_root is None else "prev",
+        )
+
+    return (
+        to_counter,
+        stuck_root,
+        to_root,
+        mac_t,
+        head_mac_v,
+        auth_revert_v,
+        sig,
+        wallet_id,
+        ward_id,
+    )
+
+
+async def finalize_revert(
+    counter_msg: int,
+    mac_msg: bytes | None,
+    wm_signature: bytes,
+) -> tuple:
+    """Install a one-step rollback after the WM co-signs the demoted head. Mirrors
+    `finalize_batch` but verifies the stored **AuthRevert** and requires a
+    BATCH_REVERT envelope. Forward-incrementing, so the anti-rollback counter guard
+    still holds. Returns `(to_counter, root, wallet_id, root_mac)`."""
+    import storage.ward_head as ward_head
+    import storage.ward_store as ward_store
+    from trezor.wire import DataError
+
+    wallet_id = await _get_wallet_id()
+    env = ward_store.batch_get(wallet_id)
+    if env is None:
+        raise DataError("no committed rollback to finalize")
+    if env["kind"] != ward_store.BATCH_REVERT:
+        raise DataError("in-flight transition is a commit; use WARDConfirmBatchByWM")
+
+    to_counter = env["to_counter"]
+    to_root_b = env["to_root"]
+    mac = env["mac"]
+    msg_mac = mac_msg if mac_msg is not None else _ZERO_MAC
+
+    if counter_msg != to_counter or msg_mac != mac:
+        raise DataError("confirmation does not match the committed rollback")
+
+    ward_id = await _get_ward_id()
+    if not verify_ward_final(ward_id, to_counter, mac, wm_signature):
+        raise DataError("WM final attestation verification failed")
+
+    k_auth = await _derive_ward_key(b"K_auth")
+    if not verify_auth_revert(
+        k_auth,
+        ward_id,
+        env["from_counter"],
+        env["from_root"],
+        to_counter,
+        to_root_b,
+        env["auth_commit"],
+    ):
+        raise DataError("rollback AuthRevert verification failed")
+
+    if to_counter <= ward_store.get_counter(wallet_id):
+        raise DataError("counter_T is not ahead of counter_loc")
+
+    root_install = None if to_root_b == EMPTY_ROOT_HASH else to_root_b
+    ward_head.root_set(wallet_id, root_install)
+    ward_store.commit_counter(wallet_id, to_counter)
+    ward_store.batch_clear(wallet_id)
+
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__,
+            "finalize_revert: installed wallet_id=%s counter=%d root=%s",
+            wallet_id,
+            to_counter,
+            "EMPTY" if root_install is None else "prev",
         )
 
     root_mac = None if mac == _ZERO_MAC else mac
