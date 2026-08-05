@@ -1,15 +1,7 @@
-use std::process;
-
 use anyhow::{Result, anyhow};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 pub use crate::model::Model;
-
-pub struct ResolvedBuildFeatures {
-    pub features: Vec<String>,
-    pub target_triple: Option<&'static str>,
-    pub board_header: String,
-}
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Project {
@@ -285,14 +277,6 @@ impl BuildArgs {
         } else {
             "release"
         }
-    }
-
-    pub fn resolve_features(&self) -> Result<ResolvedBuildFeatures> {
-        crate::feature_resolver::resolve_features(self)
-    }
-
-    pub fn configure_cargo(&self, cmd: &mut process::Command) -> Result<()> {
-        crate::feature_resolver::configure_cargo(self, cmd)
     }
 }
 
