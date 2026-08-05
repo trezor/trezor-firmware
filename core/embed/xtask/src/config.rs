@@ -5,6 +5,7 @@ use serde::Deserialize;
 
 use crate::args::Project;
 use crate::helpers::workspace_dir;
+use crate::options::OptionsMap;
 
 #[derive(Deserialize)]
 pub struct ModelConfig {
@@ -150,6 +151,9 @@ pub struct ProjectConfig {
     pub split_pad_to: Option<String>,
     #[serde(default)]
     pub split_part2_sections: Option<Vec<String>>,
+    /// The project's complete mapping from build options to cargo features.
+    #[serde(rename = "build-options")]
+    pub options: OptionsMap,
 }
 
 impl ProjectConfig {
@@ -166,25 +170,45 @@ impl ProjectConfig {
     }
 }
 
+/// Returns the names declared in the `[features]` table of the given
+/// package's Cargo.toml. Used to validate that option-mapped features exist
+/// in the package actually being built.
+pub fn package_features(package: &str) -> Result<HashSet<String>> {
+    let path = workspace_dir()?
+        .join("projects")
+        .join(package)
+        .join("Cargo.toml");
+    let content = std::fs::read_to_string(&path)
+        .with_context(|| format!("Failed to read package manifest: {}", path.display()))?;
+    let manifest: toml::Value = toml::from_str(&content)
+        .with_context(|| format!("Failed to parse package manifest: {}", path.display()))?;
+
+    Ok(manifest
+        .get("features")
+        .and_then(|v| v.as_table())
+        .map(|table| table.keys().cloned().collect())
+        .unwrap_or_default())
+}
+
 #[derive(Deserialize, Default, Clone)]
 pub struct ModelProjectOverride {
     #[serde(default)]
     pub exclude: Vec<String>,
 }
 
-pub struct BoardFeatures {
+pub struct BoardDefinition {
     pub features: Vec<String>,
     pub board_header: String,
 }
 
-pub fn resolve_board_features(
+pub fn resolve_board_definition(
     model_config: &ModelConfig,
     board_id: &str,
+    project_config: &ProjectConfig,
     project: Project,
     emulator: bool,
-) -> Result<BoardFeatures> {
+) -> Result<BoardDefinition> {
     let board_config = BoardConfig::load(&model_config.model_id, board_id)?;
-    let project_config = ProjectConfig::load(project)?;
     let pkg = project.package_name(false);
     let model_override = model_config
         .project_overrides
@@ -238,7 +262,7 @@ pub fn resolve_board_features(
         board_config.header
     };
 
-    Ok(BoardFeatures {
+    Ok(BoardDefinition {
         features,
         board_header,
     })

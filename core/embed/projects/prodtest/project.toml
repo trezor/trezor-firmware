@@ -1,3 +1,6 @@
+# Project-specific configuration
+
+# Filter of the model/board defined features for this specific project
 uses = [
     "backlight",
     "backup_ram",
@@ -43,7 +46,17 @@ uses = [
     "tropic",
 ]
 
+# ELF sections to be included in the final binary.
+# The order of sections is important.
 elf_sections = [".vendorheader", ".header", ".flash", ".data"]
 
 secmon_body_sections   = [".secmon_header", ".flash", ".data"]
 secmon_header_sections = [".vendorheader", ".header"]
+
+# xtask build options mapped to the cargo features.
+[build-options]
+bootloader-devel = { true = ["bootloader_devel"] }
+dbg-console      = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
+debug-link       = { true = ["debuglink", "ui_debug"] }
+perf-overlay     = { true = ["ui_performance_overlay"] }
+production       = { true = ["production"] }

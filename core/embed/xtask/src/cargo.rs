@@ -5,7 +5,7 @@ use owo_colors::OwoColorize;
 
 use crate::args::{BuildArgs, Project, TestArgs};
 use crate::options::ResolvedBuildArgs;
-use crate::{artifacts, feature_resolver, helpers, memusage, postbuild, prebuild};
+use crate::{artifacts, features, helpers, memusage, postbuild, prebuild};
 
 pub fn build(args: BuildArgs) -> Result<()> {
     let resolved_args = ResolvedBuildArgs::from_build_args(&args)?;
@@ -174,7 +174,7 @@ fn run_cargo_subcommand(subcommand: &str, args: &ResolvedBuildArgs) -> Result<()
 
     cmd.arg(subcommand).current_dir(helpers::workspace_dir()?);
 
-    feature_resolver::configure_cargo(args, &mut cmd)
+    features::configure_cargo(args, &mut cmd)
         .context(format!("Failed to construct {} command", subcommand))?;
 
     let project_name = format!("{:?}", args.project).to_lowercase();
