@@ -5,6 +5,7 @@
   - [Build](core/build/index.md)
     - [Embedded](core/build/embedded.md)
     - [Emulator](core/build/emulator.md)
+    - [xtask](core/build/xtask.md)
   - [Emulator](core/emulator/index.md)
     - [Valgrind profiling](core/emulator/valgrind.md)
   - [Event Loop](core/src/event-loop.md)
