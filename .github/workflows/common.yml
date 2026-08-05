@@ -103,6 +103,25 @@ jobs:
       - run: nix-shell --run "uv run make -C storage/tests build"
       - run: nix-shell --run "uv run make -C storage/tests tests_all"
 
+  docs_build:
+    name: Docs build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - name: Install nix
+        uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3  # cachix/install-nix-action@v31.10.6
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - run: |
+          cd docs
+          nix-shell -p mdbook mdbook-mermaid --run "mdbook build"
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: docs-html
+          path: |
+            docs/mdbook*
+          retention-days: 7
+
   docker_build:
     name: Firmware docker build
     # scheduled, manual runs, push to release branches
