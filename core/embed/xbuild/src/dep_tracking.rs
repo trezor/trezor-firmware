@@ -374,11 +374,19 @@ pub fn format_command_error(
         .trim()
         .to_string();
 
-    if !stderr.is_empty() {
+    let mut cmd_str = String::from(cmd.get_program().to_string_lossy());
+    for arg in cmd.get_args() {
+        cmd_str.push(' ');
+        cmd_str.push_str(&arg.to_string_lossy());
+    }
+    let response = format!("Failed to execute:\n   {}\nReason:\n", cmd_str);
+
+    let append = if !stderr.is_empty() {
         stderr
     } else if !stdout.is_empty() {
         stdout
     } else {
         format!("Failed to execute {}", cmd.get_program().to_string_lossy())
-    }
+    };
+    response + &append
 }
