@@ -146,7 +146,7 @@ impl BootloaderUI for UICaesar {
         version_cmp: i32,
     ) -> u32 {
         let mut version_str: BootloaderString = String::new();
-        unwrap!(version_str.push_str("Firmware version "));
+        unwrap!(version_str.push_str("Firmware "));
         unwrap!(version_str.push_str(version));
         unwrap!(version_str.push_str("\nby "));
         unwrap!(version_str.push_str(vendor));
@@ -244,7 +244,7 @@ impl BootloaderUI for UICaesar {
         unwrap!(title_str.push_str(bld_version));
 
         let mut version_str: BootloaderString = String::new();
-        unwrap!(version_str.push_str("Firmware version "));
+        unwrap!(version_str.push_str("Firmware "));
         unwrap!(version_str.push_str(version));
         unwrap!(version_str.push_str("\nby "));
         unwrap!(version_str.push_str(vendor));
