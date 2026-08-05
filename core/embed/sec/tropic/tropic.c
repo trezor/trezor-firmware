@@ -869,7 +869,9 @@ static secbool set_expected_config(
   // restart Tropic so the new config takes effect.
   tropic_deinit();
   systick_delay_ms(TROPIC_RESTART_DELAY_MS);
-  tropic_init(NULL);
+  if (tropic_init(NULL) != LT_OK) {
+    return secfalse;
+  }
 
   return sectrue;
 }
