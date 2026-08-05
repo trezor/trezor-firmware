@@ -18,6 +18,10 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
 
     if args.emulator {
         features.push("emulator".into());
+
+        if args.asan {
+            features.push("asan".into());
+        }
     }
 
     if args.production {
@@ -32,23 +36,15 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
         features.push("force_bootloader_upgrade".into());
     }
 
-    if args.emulator {
-        features.push("dbg_console".into());
-
-        if args.asan {
-            features.push("asan".into());
-        }
-    } else {
-        match (args.project, args.dbg_console) {
-            (Project::Firmware, Some(_)) => features.push("dbg_console".into()),
-            (Project::Secmon, Some(ConsoleType::Vcp)) => (),
-            (Project::Boardloader, Some(ConsoleType::Vcp)) => (),
-            (Project::Prodtest, Some(ConsoleType::Vcp)) => (),
-            (_, Some(ConsoleType::Vcp)) => features.push("dbg_console_vcp".into()),
-            (_, Some(ConsoleType::Swo)) => features.push("dbg_console_swo".into()),
-            (_, Some(ConsoleType::SystemView)) => features.push("dbg_console_system_view".into()),
-            (_, None) => (),
-        }
+    match (args.project, args.dbg_console) {
+        (Project::Firmware, Some(_)) => features.push("dbg_console".into()),
+        (Project::Secmon, Some(ConsoleType::Vcp)) => (),
+        (Project::Boardloader, Some(ConsoleType::Vcp)) => (),
+        (Project::Prodtest, Some(ConsoleType::Vcp)) => (),
+        (_, Some(ConsoleType::Vcp)) => features.push("dbg_console_vcp".into()),
+        (_, Some(ConsoleType::Swo)) => features.push("dbg_console_swo".into()),
+        (_, Some(ConsoleType::SystemView)) => features.push("dbg_console_system_view".into()),
+        (_, None) => (),
     }
 
     if args.project == Project::Firmware {
@@ -80,6 +76,10 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
 
         if args.n4w1 {
             features.push("n4w1".into());
+        }
+
+        if args.frozen {
+            features.push("frozen".into());
         }
     }
 
@@ -143,10 +143,6 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
         if args.debug_link {
             features.push("debuglink".into());
         }
-    }
-
-    if args.project == Project::Firmware && (args.frozen || !args.emulator) {
-        features.push("frozen".into());
     }
 
     // Board and model-intrinsic features from TOML config. The emulator emulates

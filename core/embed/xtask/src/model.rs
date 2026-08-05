@@ -1,10 +1,12 @@
 use anyhow::{Context, Result};
 use clap::ValueEnum;
+use serde::Deserialize;
 
 use crate::config::ModelConfig;
 use crate::helpers;
 
-#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Model {
     #[value(name = "d001")]
     D001,

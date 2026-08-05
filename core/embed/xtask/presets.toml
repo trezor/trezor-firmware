@@ -1,0 +1,56 @@
+# Build presets shared by xtask and tf-tools.
+#
+# Each [[<presets-name>]] table is a preset fragment. Fragments whose optional
+# `when` filter matches are applied in file order; later matching fragments
+# override earlier values. Explicit CLI options override all preset values.
+# Local entries in user-presets.toml are applied after this file and may add or
+# override presets. The local file is ignored by Git.
+#
+# `model` and `project` accept arrays. Selector fields are combined with AND;
+# values within a selector array are combined with OR.
+
+# Build defaults (applied to all builds as a base layer)
+
+[[defaults]]
+when = { emulator = true }
+dbg-console = "swo" # required by prodtest test
+source-lines = true # required by test coverage
+
+[[defaults]]
+when = { emulator = false }
+frozen = true
+pyopt = true
+
+[[test]]
+debug = true
+debug-link = true
+disable-animation = true
+frozen = true
+pyopt = false
+
+[[test]]
+when = { emulator = false }
+storage-insecure-testing-mode = true
+disable-optiga = true
+disable-tropic = true
+
+
+[[dev]]
+when = { emulator = true }
+asan = true
+debug = true
+frozen = false
+pyopt = false
+source-lines = true
+
+[[dev]]
+when = { emulator = false, project = ["firmware", "prodtest"] }
+dbg-console = "swo"
+debug = true
+pyopt = false
+
+# Example of a model- and project-specific fragment:
+#
+# [[profile-id]]
+# when = { model = ["t3t1", "t3t2", "t3w1"], project = ["firmware", "kernel"] }
+# debug-link = true

@@ -8,7 +8,7 @@ use crate::options::ResolvedBuildArgs;
 use crate::{artifacts, feature_resolver, helpers, memusage, postbuild, prebuild};
 
 pub fn build(args: BuildArgs) -> Result<()> {
-    let resolved_args = ResolvedBuildArgs::from_build_args(&args);
+    let resolved_args = ResolvedBuildArgs::from_build_args(&args)?;
 
     build_impl(resolved_args.clone(), false)?;
 
@@ -25,12 +25,12 @@ pub fn build(args: BuildArgs) -> Result<()> {
 }
 
 pub fn clippy(args: BuildArgs) -> Result<()> {
-    let resolved_args = ResolvedBuildArgs::from_build_args(&args);
+    let resolved_args = ResolvedBuildArgs::from_build_args(&args)?;
     run_cargo_subcommand("clippy", &resolved_args)
 }
 
 pub fn check(args: BuildArgs) -> Result<()> {
-    let resolved_args = ResolvedBuildArgs::from_build_args(&args);
+    let resolved_args = ResolvedBuildArgs::from_build_args(&args)?;
     run_cargo_subcommand("check", &resolved_args)
 }
 
