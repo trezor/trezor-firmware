@@ -9,7 +9,7 @@ First packet has the following structure:
 | offset | length | type        | contents                                                                              |
 |--------|--------|-------------|---------------------------------------------------------------------------------------|
 |      0 |      3 | char[3]     | '?##' magic constant                                                                  |
-|      3 |      2 | BE uint16_t | numerical [message type](messages.proto#L76)                                          |
+|      3 |      2 | BE uint16_t | numerical `MessageType` (see: `messages.proto`)                                       |
 |      5 |      4 | BE uint32_t | message size                                                                          |
 |      9 |     55 | uint8_t[55] | first 55 bytes of message encoded in Protocol Buffers (padded with zeroes if shorter) |
 
@@ -25,13 +25,13 @@ Following packets has the following structure:
 To add new message to Trezor protocol follow these steps:
 1. Reconsider if there isn't already a message, that would suit your needs.
 2. Choose the right place (file) to put new message:
-   - [`messages.proto`](messages.proto) are for management of the messages itself (wire type to message type mapping and etc.)
-   - [`messages-common.proto`](messages-common.proto) are for common messages
+   - `messages.proto` are for management of the messages itself (wire type to message type mapping and etc.)
+   - `messages-common.proto` are for common messages
    - all other files have a suffix `messages-SUFFIX.proto`, where suffix describes specific use case of messages contained within the file
 3. Add new message and comment it properly following our [Messages naming and documenting conventions](#messages-naming-and-documenting-conventions).
 4. If message is not embedded in another message, it has to have a wire type number
    assigned. This number is used to map between Trezor wire identifier (uint) and a
-   protobuf message. Mapping is defined in [`messages.proto`](messages.proto#L76).
+   protobuf message. Mapping is defined in `messages.proto`.
 
 Wire identifiers are organized in logical blocks with 100 numbers per block. If you are
 extending an existing application (e.g., Ethereum, Monero, Webauthn, etc.), pick the
