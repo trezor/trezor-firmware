@@ -47,13 +47,9 @@ async def sign_auth_eip7702(
         raise DataError("chain_id 0 not supported")
 
     if defs.network is UNKNOWN_NETWORK:
-        network_item = (
-            TR.ethereum__approve_chain_id,
-            f"{chain_id} (0x{chain_id:x})",
-            None,
-        )
-    else:
-        network_item = (TR.ethereum__network, defs.network.name, None)
+        raise DataError("Unknown network")
+
+    network_item = (TR.ethereum__network, defs.network.name, None)
 
     account, account_path = get_account_and_path(msg.address_n)
     if account is None or account_path is None:
@@ -78,7 +74,7 @@ async def sign_auth_eip7702(
                 "EIP-7702 authorisation not allowed with strict safety checks"
             )
 
-        delegate_name = lookup_eip7702_address(delegate_bytes)
+        delegate_name = lookup_eip7702_address(msg.chain_id, delegate_bytes)
         if delegate_name is None:
             raise DataError("Unknown EIP-7702 delegate address")
 
