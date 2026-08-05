@@ -2,11 +2,11 @@
 
 ## Overview
 
-`Trezor` stores translated strings in `.json` files in [core/translations directory](../../../core/translations) - e.g. [de.json](../../../core/translations/de.json).
+`Trezor` stores translated strings in `.json` files in [core/translations directory](https://github.com/trezor/trezor-firmware/tree/main/core/translations) - e.g. [de.json](https://github.com/trezor/trezor-firmware/blob/main/core/translations/de.json).
 
-When no foreign-language is present, the English version is used - [en.json](../../../core/translations/en.json).
+When no foreign-language is present, the English version is used - [en.json](https://github.com/trezor/trezor-firmware/blob/main/core/translations/en.json).
 
-Translations files contain the translated strings and also all the special font characters as a link to `.json` files in [fonts](../../../core/translations/fonts) directory. Font files are not needed for `english`, which uses just default/built-in `ASCII` characters.
+Translations files contain the translated strings and also all the special font characters as a link to `.json` files in [fonts](https://github.com/trezor/trezor-firmware/tree/core/translations/fonts) directory. Font files are not needed for `english`, which uses just default/built-in `ASCII` characters.
 
 ## Generating blobs
 
