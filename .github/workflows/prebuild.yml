@@ -77,10 +77,9 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: "recursive"
-      - name: Install nix
-        uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3  # cachix/install-nix-action@v31.10.6
+      - uses: ./.github/actions/environment
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
+          pre-download: false
       - name: "Run uv.lock check"
         run: nix-shell --run "make uvlock_check"
 

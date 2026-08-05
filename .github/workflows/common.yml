@@ -16,6 +16,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+permissions:
+  contents: read        # for actions/checkout
+
 jobs:
   crypto_build:
     name: Crypto library
@@ -102,6 +105,25 @@ jobs:
       - run: unset PYTEST_TIMEOUT
       - run: nix-shell --run "uv run make -C storage/tests build"
       - run: nix-shell --run "uv run make -C storage/tests tests_all"
+
+  docs_build:
+    name: Docs build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: ./.github/actions/environment
+        with:
+          pre-download: false
+      - run: |
+          cd docs
+          nix-shell -p mdbook mdbook-mermaid --run "mdbook build"
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: docs-html
+          path: |
+            docs/mdbook*
+          retention-days: 7
+          if-no-files-found: error
 
   docker_build:
     name: Firmware docker build
