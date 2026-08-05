@@ -39,16 +39,29 @@
 #define BATTERY_MEAS_DIVIDER_NUM 1
 #define BATTERY_MEAS_DIVIDER_DEN 1
 
-// GC9307C (LX200B4501CTP03A/B) over 8-bit i8080 FMC bus (D8-D15 unused;
-// see DISPLAY_IM0-2 below). Same reset/DC/power-enable wiring is also used
-// by the ST7789-based DEM240320B1 panel (see
-// display/i8080/panels/dem240320b1.c), still supported as an alternate
-// display_panel_dem240320b1 build option.
+// GC9307C (LX200B4501CTP03A/B) over i8080 FMC bus (see DISPLAY_IM0-2 below).
+// Same reset/DC/power-enable wiring is also used by the ST7789-based
+// DEM240320B1 panel (see display/i8080/panels/dem240320b1.c), still
+// supported as an alternate display_panel_dem240320b1 build option.
 // The module has no tearing-effect (TE) output, so no DISPLAY_TE_* defines.
+//
+// Bus width is a macro-level choice - flip the #if below to switch between
+// the 8-bit and native 16-bit wiring; no other code needs to change.
+#if 0
+// 8-bit i8080 bus (D8-D15 unused). GC9307C cannot swap GRAM byte order (see
+// display_panel_set_little_endian()) and its datasheet Table 11 sends the
+// high byte of each pixel first, so DISPLAY_I8080_8BIT_MSB_FIRST is needed
+// to route the copy through the MSB-first CPU loop instead of a plain
+// byte-wide DMA copy (which would send the bytes in the wrong order).
+#define DISPLAY_I8080_8BIT_DW 1
+#define DISPLAY_I8080_8BIT_MSB_FIRST 1
+#else
+// Native 16-bit i8080 bus (D0-D15 all wired). Each pixel is written to the
+// panel in a single atomic 16-bit bus cycle, so there's no byte-order
+// ambiguity to correct for - the frame buffer is DMA'd across unmodified
+// (see bg_copy_start_const_out_16()).
 #define DISPLAY_I8080_16BIT_DW 1
-// GC9307C cannot swap GRAM byte order (see display_panel_set_little_endian())
-// and its datasheet Table 11 sends the high byte of each pixel first.
-//#define DISPLAY_I8080_8BIT_MSB_FIRST 1
+#endif
 
 // Use a single framebuffer on this project (lower RAM use; there is no TE
 // signal to drive smooth double-buffered swaps anyway).
