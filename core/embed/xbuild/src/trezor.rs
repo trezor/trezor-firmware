@@ -117,7 +117,6 @@ fn get_prodtest_vendor() -> Result<&'static str> {
 /// then compiles the library. Also installs the error reporting handler.
 pub fn build(f: impl FnOnce(&mut CLibrary) -> Result<()>) -> Result<()> {
     color_eyre::install()?;
-    cargo_out::start_buffering();
 
     let mut lib = CLibrary::new();
     configure_compiler_defaults(&mut lib);
@@ -149,7 +148,6 @@ pub fn build(f: impl FnOnce(&mut CLibrary) -> Result<()>) -> Result<()> {
 /// compiles the library, and links it as the specified binary type.
 pub fn build_and_link(target: &str, f: impl FnOnce(&mut CLibrary) -> Result<()>) -> Result<()> {
     color_eyre::install()?;
-    cargo_out::start_buffering();
 
     let mut lib = CLibrary::new();
     configure_compiler_defaults(&mut lib);

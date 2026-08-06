@@ -14,8 +14,7 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::sync::Mutex;
 
-/// Pending directives, or None when nothing is buffering and they should go
-/// straight out.
+/// Pending directives since the first deferred directive after the last flush.
 static PENDING: Mutex<Option<Vec<String>>> = Mutex::new(None);
 
 /// Emits `cargo::warning=` - a message Cargo shows to the user.
@@ -60,24 +59,17 @@ pub fn rerun_if_env_changed(var: &str) {
     defer(format!("cargo::rerun-if-env-changed={var}"));
 }
 
-/// Holds a directive back if a build is in progress, writes it out otherwise.
+/// Holds a directive back until [`flush`] is called.
 fn defer(directive: String) {
-    match PENDING.lock().expect("cargo output poisoned").as_mut() {
-        Some(pending) => pending.push(directive),
-        None => println!("{directive}"),
-    }
+    PENDING
+        .lock()
+        .expect("cargo output poisoned")
+        .get_or_insert_default()
+        .push(directive);
 }
 
-/// Starts collecting directives instead of writing them out.
-///
-/// Anything deferred from here on is written only by a matching [`flush`], so
-/// every path that starts buffering must flush on success.
-pub(crate) fn start_buffering() {
-    *PENDING.lock().expect("cargo output poisoned") = Some(Vec::new());
-}
-
-/// Writes out everything collected since [`start_buffering`] and returns to
-/// writing directives immediately.
+/// Writes out everything collected since the first deferred directive after
+/// the previous flush.
 pub(crate) fn flush() {
     let pending = PENDING.lock().expect("cargo output poisoned").take();
 
