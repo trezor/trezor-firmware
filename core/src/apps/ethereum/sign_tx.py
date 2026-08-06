@@ -91,11 +91,11 @@ async def sign_tx(
     for field in (msg.nonce, msg.gas_price, msg.gas_limit, address_bytes, msg.value):
         rlp.write(sha, field)
 
-    initial_data = await request_initial_data(msg, sha)
+    calldata = await preload_calldata(msg, sha)
 
     # Confirm the transaction, using special layouts for staking, yielding and clear-signing (if supported).
     await confirm_tx_data(
-        initial_data,
+        calldata,
         msg,
         defs,
         address_bytes,
@@ -125,7 +125,30 @@ _MAX_DATA_STORED = const(6144)
 _DATA_CHUNK_SIZE = const(1024)
 
 
-async def request_initial_data(msg: MsgInSignTx, sha: HashWriter) -> AnyBytes:
+class Calldata:
+    def __init__(self, init: memoryview, length: int) -> None:
+        self._init = init
+        self.length = length  # total length
+        self.preloaded = init if len(init) == length else None
+
+    async def confirm(self, data_chunk_loader: DataChunkLoader) -> None:
+        if self.length > 0:
+            from .helpers import DataChunkConfirmer
+
+            data_chunk_confirmer = DataChunkConfirmer(self.length)
+            await data_chunk_confirmer.confirm(self._init)
+            data_left = self.length - len(self._init)
+            while data_left > 0:
+                chunk = await data_chunk_loader(data_left)
+                # `data_chunk_confirmer.confirm` will raise on cancellation,
+                # so `data_chunk_loader`-computed hash will be discarded.
+                await data_chunk_confirmer.confirm(chunk)
+                data_left -= len(chunk)
+
+            await data_chunk_confirmer.confirm_digest()
+
+
+async def preload_calldata(msg: MsgInSignTx, sha: HashWriter) -> Calldata:
     """Request at most `MAX_DATA_STORED` which we keep locally"""
     from trezor.utils import empty_bytearray
 
@@ -143,11 +166,11 @@ async def request_initial_data(msg: MsgInSignTx, sha: HashWriter) -> AnyBytes:
 
     rlp.write_header(sha, data_length, rlp.STRING_HEADER_BYTE, buf)
     sha.extend(buf)
-    return buf
+    return Calldata(memoryview(buf), msg.data_length)
 
 
 async def confirm_tx_data(
-    initial_data: AnyBytes,
+    calldata: Calldata,
     msg: MsgInSignTx,
     defs: Definitions,
     address_bytes: bytes,
@@ -164,36 +187,39 @@ async def confirm_tx_data(
     from .layout import require_confirm_payment_request, require_confirm_tx
 
     # local_cache_attribute
-    data_length = msg.data_length
     network = defs.network
+    preloaded = calldata.preloaded
 
+    # Try to match staking:
     staking_approver = staking.get_approver(
-        msg, network, address_bytes, maximum_fee, fee_items
+        preloaded, msg, network, address_bytes, maximum_fee, fee_items
     )
     if staking_approver is not None:
         if payment_request_verifier is not None:
             raise DataError("Payment Requests don't support staking")
+        # confirm and return
         return await staking_approver
 
+    # Try to match yielding:
     yielding_approver = await yielding.get_approver(
-        msg, initial_data, network, address_bytes, maximum_fee, fee_items, sender_bytes
+        preloaded, msg, network, address_bytes, maximum_fee, fee_items, sender_bytes
     )
     if yielding_approver is not None:
         if payment_request_verifier is not None:
             raise DataError("Payment Requests don't support yielding")
+        # confirm and return
         return await yielding_approver
 
-    value = int.from_bytes(msg.value, "big")
-
-    if len(initial_data) < data_length:
+    if preloaded is None:
         # Don't even attempt to clear sign if we have a calldata larger than `MAX_DATA_STORED`.
         # this is because clear signing doesn't currently support fetching additional data,
         # which is because if it did, we would not be able to fall back to blind signing anymore.
         clear_signed = False
     else:
+        # Try to match clear-signing:
         try:
             clear_signed = await clear_signing.try_confirm(
-                initial_data,
+                preloaded,
                 address_bytes,
                 msg,
                 defs,
@@ -208,8 +234,10 @@ async def confirm_tx_data(
         address_from_bytes(address_bytes, network) if address_bytes else None
     )
 
+    value = int.from_bytes(msg.value, "big")
+
     if payment_request_verifier is not None:
-        if data_length != 0:
+        if calldata.length != 0:
             raise DataError(
                 "Data length must be 0 when `payment_request_verifier` is provided."
             )
@@ -235,13 +263,8 @@ async def confirm_tx_data(
             None,
         )
     elif not clear_signed:
-        if data_length > 0:
-            # Stream, confirm and hash the rest of the calldata chunks.
-            await _confirm_data_chunks(
-                initial_data,
-                data_length,
-                data_chunk_loader,
-            )
+        # Stream, confirm and hash the rest of the calldata chunks.
+        await calldata.confirm(data_chunk_loader)
         # what we want to confirm here is the ETH amount being sent on-chain
         token = None
         return await require_confirm_tx(
@@ -252,7 +275,7 @@ async def confirm_tx_data(
             maximum_fee,
             fee_items,
             token,
-            is_send=(data_length == 0),
+            is_send=(calldata.length == 0),
             chunkify=bool(msg.chunkify),
         )
 
@@ -289,26 +312,6 @@ def create_data_chunk_loader(h: HashWriter) -> DataChunkLoader:
         return chunk
 
     return data_chunk_loader
-
-
-async def _confirm_data_chunks(
-    initial_data: AnyBytes,
-    data_length: int,
-    data_chunk_loader: DataChunkLoader,
-) -> None:
-    from .helpers import DataChunkConfirmer
-
-    data_chunk_confirmer = DataChunkConfirmer(data_length)
-    await data_chunk_confirmer.confirm(initial_data)
-    data_left = data_length - len(initial_data)
-    while data_left > 0:
-        chunk = await data_chunk_loader(data_left)
-        # `data_chunk_confirmer.confirm` will raise on cancellation,
-        # so `data_chunk_loader`-computed hash will be discarded.
-        await data_chunk_confirmer.confirm(chunk)
-        data_left -= len(chunk)
-
-    await data_chunk_confirmer.confirm_digest()
 
 
 async def _get_next_chunk(data_left: int) -> AnyBytes:

@@ -46,7 +46,7 @@ async def sign_tx_eip1559(
         check_common_fields,
         confirm_tx_data,
         create_data_chunk_loader,
-        request_initial_data,
+        preload_calldata,
     )
 
     gas_limit = msg.gas_limit  # local_cache_attribute
@@ -101,11 +101,11 @@ async def sign_tx_eip1559(
     for field in fields:
         rlp.write(sha, field)
 
-    initial_data = await request_initial_data(msg, sha)
+    calldata = await preload_calldata(msg, sha)
 
     # Confirm the transaction, using special layouts for staking, yielding and clear-signing (if supported).
     await confirm_tx_data(
-        initial_data,
+        calldata,
         msg,
         defs,
         address_bytes,
