@@ -15,12 +15,41 @@ message FirmwareErase {
 }
 
 /**
- * Response: Ask for firmware chunk
- * @next FirmwareUpload
+ * Request: Begin a firmware update (phase 1). Carries the new signed boot header
+ * and the new firmware's manifest + Merkle proof. The device authenticates them,
+ * confirms with the user, decides keep-seed, stages the boot header (with the
+ * resolved firmware_type) via the UCB and reboots; the firmware modules are
+ * installed by the freshly-booted bootloader (phase 2). If the bootloader code
+ * is unchanged this is a header-only update (no code streamed).
+ * @start
+ * @next FirmwareRequest
  */
+message FirmwareBegin {
+    required bytes boot_header = 1;     // new signed boot header (TRZQ)
+    required bytes module_headers = 2;  // authenticated firmware manifest (TRZD variant leaf) + per-variant Merkle
+                                        // proof; device folds it to firmware_root
+    optional uint32 code_length = 3;    // new bootloader code available to stream; omit/0 => header-only
+    // (tag 4 was custom_install; removed -- custom is now the authenticated
+    // FW_VARIANT_CUSTOM manifest variant, derived on-device, no host flag)
+    reserved 4;
+    // pq_secure_boot nRF (BLE co-processor) OTA. The nRF MCUboot image is a
+    // model-level leaf in the founder tree, covered by THIS boot header's ONE
+    // signature (co_path folds it to modelRoot). Present iff a new nRF image is
+    // available. nRF is handled directly (it is the BLE transport), not as a
+    // generic co-processor.
+    optional uint32 nrf_length = 5;     // nRF MCUboot image bytes available to stream; omit/0 => no nRF update
+    optional bytes nrf_co_path = 6;     // model-tree co-path (nRF leaf -> modelRoot), 32*depth bytes
+    optional bytes nrf_image_hash = 7;  // SHA-256 of the nRF image; "update required" hint (device compares to the
+                                        // running nRF), NOT a trust input -- authenticity is the co-path fold
+}
+
 message FirmwareRequest {
     required uint32 offset = 1;  // offset of requested firmware chunk
     required uint32 length = 2;  // length of requested firmware chunk
+    // Which image the chunk belongs to: 0 (default) = the primary stream
+    // (bootloader code in phase 1 / firmware in phase 2); k>=1 = the k-th
+    // co-processor image in FirmwareBegin.coprocessors.
+    optional uint32 coprocessor_index = 3;
 }
 
 /**
@@ -30,8 +59,10 @@ message FirmwareRequest {
  * @next Failure
  */
 message FirmwareUpload {
-    required bytes payload = 1;  // firmware to be loaded into device
-    optional bytes hash = 2;     // hash of the payload
+    required bytes payload = 1;    // firmware to be loaded into device
+    optional bytes hash = 2;       // hash of the payload
+    optional bytes prev_hash = 3;  // pq_secure_boot inline smart-hashing: chain H_prev for THIS chunk (outer chunks
+                                   // only; innermost chunk derives the seed; absent for the header/manifest block)
 }
 
 /**
