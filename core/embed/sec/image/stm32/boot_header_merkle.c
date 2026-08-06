@@ -80,14 +80,63 @@ static void boot_header_internal_node(const merkle_proof_node_t* a,
 // Computes the variant leaf: H(0x00 || manifest). The manifest (a firmware
 // directory) is the per-variant node of the firmware tree; this leaf folds via
 // the firmware Merkle proof up to the signed firmware_root.
+//
+// CUSTOM variant (firmware_variant == FW_VARIANT_CUSTOM): EVERYTHING the
+// creator controls is substituted with ZERO before hashing, so ANY creator app
+// (any code, size, or version) authenticates to the ONE founder-signed custom
+// slot:
+//   * the manifest firmware_version (the creator's app version), and
+//   * the app (FW_MODULE_APP) entry's size + code_hash (the contiguous tail of
+//     the entry -- chunk_size sits BEFORE it and is NOT zeroed).
+// The app entry's module_type/flags/addr/chunk_size and the ENTIRE secmon entry
+// stay real -- the founder still binds the secmon and the app's role +
+// placement + chunk_size (a layout param, not creator content). This is
+// the SINGLE place the zero-for-fold substitution happens (device + Python
+// signer in lockstep); the on-flash values are used only for integrity/display.
 static void boot_header_variant_leaf(const firmware_manifest_t* manifest,
                                      size_t len, merkle_proof_node_t* leaf) {
   static const uint8_t prefix0[] = {0x00};
+  static const uint8_t zeros[sizeof(firmware_manifest_entry_t)] = {0};
   const uint8_t* base = (const uint8_t*)manifest;
   IMAGE_HASH_CTX ctx;
   IMAGE_HASH_INIT(&ctx);
   IMAGE_HASH_UPDATE(&ctx, prefix0, sizeof(prefix0));
-  IMAGE_HASH_UPDATE(&ctx, base, len);
+
+  // Non-custom variants: hash the manifest verbatim.
+  if (manifest->firmware_variant != FW_VARIANT_CUSTOM) {
+    IMAGE_HASH_UPDATE(&ctx, base, len);
+    IMAGE_HASH_FINAL(&ctx, leaf->bytes);
+    return;
+  }
+
+  const firmware_manifest_entry_t* app = NULL;
+  for (size_t i = 0; i < manifest->module_count; i++) {
+    if (manifest->entries[i].module_type == FW_MODULE_APP) {
+      app = &manifest->entries[i];
+      break;
+    }
+  }
+  // Region 1: firmware_version. Region 2: app entry [size .. end-of-entry]
+  // (size + code_hash are the entry's contiguous tail).
+  size_t v_off = (size_t)((const uint8_t*)manifest->firmware_version - base);
+  size_t v_len = sizeof(manifest->firmware_version);
+  size_t a_off = app ? (size_t)((const uint8_t*)&app->size - base) : len;
+  size_t a_len =
+      app ? (size_t)((const uint8_t*)(app + 1) - (const uint8_t*)&app->size)
+          : 0;
+
+  if (app == NULL || a_off + a_len > len || a_off < v_off + v_len) {
+    // Malformed custom manifest -> hash verbatim; it won't match a signed leaf.
+    IMAGE_HASH_UPDATE(&ctx, base, len);
+    IMAGE_HASH_FINAL(&ctx, leaf->bytes);
+    return;
+  }
+  // [0,v_off) 0(v_len) [v_off+v_len, a_off) 0(a_len) [a_off+a_len, len)
+  IMAGE_HASH_UPDATE(&ctx, base, v_off);
+  IMAGE_HASH_UPDATE(&ctx, zeros, v_len);
+  IMAGE_HASH_UPDATE(&ctx, base + v_off + v_len, a_off - (v_off + v_len));
+  IMAGE_HASH_UPDATE(&ctx, zeros, a_len);
+  IMAGE_HASH_UPDATE(&ctx, base + a_off + a_len, len - (a_off + a_len));
   IMAGE_HASH_FINAL(&ctx, leaf->bytes);
 }
 
@@ -108,7 +157,8 @@ secbool firmware_manifest_authentic(const firmware_manifest_t* manifest,
     return secfalse;
   }
 
-  // The variant leaf folds (via the proof) up to the signed firmware_root.
+  // The variant leaf folds (via the proof) to the signed firmware_root. For the
+  // custom variant the leaf helper zeroes the app code_hash (see above).
   merkle_proof_node_t node;
   boot_header_variant_leaf(manifest, manifest_len, &node);
   for (size_t i = 0; i < proof_count; i++) {
@@ -177,9 +227,13 @@ secbool firmware_verify_manifest_entry(const firmware_manifest_entry_t* entry,
                                        uintptr_t firmware_base) {
   // Integrity: the module code at firmware_base + entry->addr (entry->size
   // bytes) must reduce to the entry's code_hash via the smart-hashing chain
-  // (firmware_module_code_hash), chunked by the entry's own chunk_size. When the
-  // entry is founder-authenticated (firmware_manifest_authentic), this proves
-  // the code is both founder-committed and non-corrupt.
+  // (firmware_module_code_hash), chunked by the entry's own chunk_size. For an
+  // official variant the entry is founder-authenticated
+  // (firmware_manifest_authentic), so this proves the code is both founder-
+  // committed and non-corrupt. For the CUSTOM variant the app's code_hash is
+  // the creator's (NOT founder-signed -- zeroed in the authenticity fold), so
+  // for the app this is a corruption check only; the secmon's code_hash is
+  // still founder-signed.
   uint8_t digest[IMAGE_HASH_DIGEST_LENGTH];
   firmware_module_code_hash(firmware_base, entry->addr, entry->size,
                             entry->chunk_size, digest);
@@ -191,10 +245,13 @@ secbool firmware_verify_manifest_entry(const firmware_manifest_entry_t* entry,
 secbool firmware_manifest_layout_valid(const firmware_manifest_t* manifest,
                                        uint32_t capacity) {
   // The module code regions (addr/size) drive both the streamed erase+write
-  // (install) and the code hashing (install + EVERY boot). firmware_verify_
-  // manifest would hash `size` bytes at `addr`, so a malformed/hostile manifest
-  // must be rejected FIRST to avoid an out-of-bounds read past the firmware
-  // area. Validate the layout is well-formed + bounded:
+  // (install) and the code hashing (install + EVERY boot). For an official
+  // variant addr/size are founder-authenticated, but for the CUSTOM variant the
+  // app entry's size is zeroed-for-fold (see boot_header_variant_leaf) -- so a
+  // tampered on-flash app size still authenticates, yet
+  // firmware_verify_manifest would hash `size` bytes at `addr`: an
+  // out-of-bounds read past the firmware area if unbounded. Validate the layout
+  // is well-formed + bounded FIRST:
   //   * at least one module; per entry a non-zero chunk_size (the code_hash
   //     chain modulus; the module need NOT be a whole number of chunks -- the
   //     last chunk may be partial) and a non-zero size;
@@ -203,7 +260,12 @@ secbool firmware_manifest_layout_valid(const firmware_manifest_t* manifest,
   //     alignment -- not enforced here, and NOT chunk-aligned);
   //   * wholly inside [.., capacity] (the firmware-area size), overflow-safe.
   // Shared by install (phase 1 pre-confirm, phase 2 pre-write) and boot
-  // (firmware_verify_tree). Bound module_count BEFORE iterating entries[]:
+  // (firmware_verify_tree), so a malformed/hostile manifest is rejected before
+  // any code read. Does NOT check chunk_size against the transport staging
+  // buffer -- that is a streaming concern the install path checks separately.
+  // Bound module_count BEFORE iterating entries[]: at boot this runs before
+  // firmware_manifest_authentic's own module_count<=BOOT_HEADER_MAX_MODULES
+  // check (which is inside firmware_verify_manifest, called after), and
   // firmware_manifest_size()'s `module_count * sizeof(entry)` can wrap 32-bit
   // for a crafted count -- so without this, iterating the raw count could read
   // entries[] past the manifest region.
@@ -211,7 +273,8 @@ secbool firmware_manifest_layout_valid(const firmware_manifest_t* manifest,
       manifest->module_count > BOOT_HEADER_MAX_MODULES) {
     return secfalse;
   }
-  uint32_t prev_end = FW_MANIFEST_REGION;  // first module starts after the header
+  uint32_t prev_end =
+      FW_MANIFEST_REGION;  // first module starts after the header
   for (size_t i = 0; i < manifest->module_count; i++) {
     const firmware_manifest_entry_t* e = &manifest->entries[i];
     const uint32_t cs = e->chunk_size;  // per-module chunk size (chain modulus)
@@ -230,19 +293,24 @@ secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
                                  size_t proof_count,
                                  const merkle_proof_node_t* trusted_root) {
   // 1. Authenticity: variant leaf (+ proof) == firmware_root. The variant leaf
-  //    covers the whole manifest -- incl. firmware_variant + every module's
-  //    code_hash -- so the modules and manifest structure are founder-
-  //    authenticated.
+  //    covers the whole manifest -- incl. firmware_variant + the secmon's
+  //    code_hash -- so the secmon and manifest structure are ALWAYS founder-
+  //    authenticated. For the custom variant the app code_hash is zeroed in the
+  //    leaf (firmware_manifest_authentic), so the app is not founder-bound.
   if (sectrue != firmware_manifest_authentic(manifest, manifest_len, proof,
                                              proof_count, trusted_root)) {
     return secfalse;
   }
 
   // 2. Integrity: every module's code reduces to its directory entry's
-  //    code_hash (via the smart-hashing chain, chunked by the entry's own
-  //    chunk_size). A zero chunk_size is handled safely by
-  //    firmware_module_code_hash (n=0 -> digest != code_hash); the caller's
-  //    firmware_manifest_layout_valid also rejects it up front.
+  // code_hash
+  //    (via the smart-hashing chain, chunked by the entry's own chunk_size).
+  //    For official variants that hash is founder-signed; for the custom app it
+  //    is the creator's (corruption check). No entry is skipped -- the custom
+  //    app is still verified against its own (creator) hash. A zero chunk_size
+  //    is handled safely by firmware_module_code_hash (n=0 -> digest !=
+  //    code_hash); the caller's firmware_manifest_layout_valid also rejects it
+  //    up front.
   for (size_t i = 0; i < manifest->module_count; i++) {
     const firmware_manifest_entry_t* e = &manifest->entries[i];
     if (sectrue != firmware_verify_manifest_entry(e, firmware_base)) {
@@ -262,6 +330,23 @@ uint8_t firmware_type_compose(uint32_t variant) {
 
 uint32_t firmware_type_variant(uint8_t firmware_type) {
   return (uint32_t)firmware_type;
+}
+
+secbool firmware_type_is_custom(uint8_t firmware_type) {
+  return (firmware_type == (uint8_t)FW_VARIANT_CUSTOM) ? sectrue : secfalse;
+}
+
+secbool firmware_type_is_official(uint8_t firmware_type) {
+  // Positive allow-list: official ONLY for a recognized founder variant that is
+  // not custom. A glitched/unknown byte falls through to secfalse (restricted).
+  switch (firmware_type) {
+    case FW_VARIANT_UNIVERSAL:
+    case FW_VARIANT_BITCOIN_ONLY:
+    case FW_VARIANT_PRODTEST:
+      return sectrue;
+    default:
+      return secfalse;  // custom, none, or unknown -> not official
+  }
 }
 
 #endif  // SECURE_MODE || shimmed
