@@ -19,12 +19,20 @@
 
 /**
  * @file battery.h
- * @brief Battery management driver with Extended Kalman Filter fuel gauge
+ * @brief Fuel-gauge (battery state-of-charge) interface.
  *
- * This driver provides battery state estimation using an Extended Kalman Filter
- * (EKF) based fuel gauge algorithm. It estimates the State of Charge (SOC) by
- * processing battery voltage, current, and temperature measurements along with
- * a battery model.
+ * Chemistry-neutral interface between the `managed` power-manager policy and a
+ * concrete fuel-gauge implementation. The board selects an implementation via
+ * `fuel_gauge = "io/fuel_gauge_..."`; the policy speaks only to this header and
+ * never reaches into an implementation's directory. Current implementations:
+ *   - `fuel_gauge/lifepo4/` - Extended Kalman Filter estimator for LiFePO4
+ *     cells (the reference implementation; `P` below is its error covariance).
+ *   - `fuel_gauge/mock/`    - trivial stub for boards with no gauged battery
+ *     (e.g. a latch board); reports a fixed healthy state.
+ *
+ * `P` is treated as opaque estimator state by the policy: it is persisted to
+ * backup RAM and handed back verbatim, but never interpreted. An estimator that
+ * has no covariance (e.g. the mock) simply ignores it.
  *
  * ## Usage:
  * 1. Initialize the driver with `bat_init()`
@@ -152,6 +160,34 @@ ts_t bat_fg_update(uint32_t dt_ms, float voltage_V, float current_mA,
  */
 ts_t bat_fg_compensate_soc(float* soc, uint32_t elapsed_s,
                            float avg_bat_current_mA, float avg_temp_C);
+
+/**
+ * @brief Evaluate the battery-critical (brownout) condition for this chemistry.
+ *
+ * Brownout protection is a *voltage-domain* concern and deliberately does NOT
+ * depend on fuel-gauge precision the chemistry may not be able to deliver. Each
+ * gauge implements the set/clear with hysteresis appropriate to its cell:
+ *   - LiFePO4 (this impl): undervoltage sets it and snaps the SoC estimate to
+ *     empty; recovery is SOC-based, because the flat discharge curve and large
+ *     voltage relaxation make raw voltage misleading at rest, and the persisted
+ *     SoC is what prevents a false boot after hibernation. Only a genuine SoC
+ *     rise (recharge) clears it.
+ *   - Primary cells (future, low-precision gauge): voltage hysteresis + a
+ *     sustained-time debounce, ideally on a load-compensated voltage. There,
+ *     "recovery" means the dip was a transient load sag, not a recharge - which
+ *     needs no SoC precision.
+ *
+ * The caller handles the external-power (USB) override separately, as that is
+ * chemistry-agnostic.
+ *
+ * @param currently_critical Latched critical state (for hysteresis)
+ * @param voltage_V Latest battery voltage [V]
+ * @param current_mA Latest battery current [mA] (positive for discharge)
+ * @param temp_C Latest battery temperature [°C]
+ * @return New critical state
+ */
+bool bat_eval_critical(bool currently_critical, float voltage_V,
+                       float current_mA, float temp_C);
 
 /**
  * @brief Fetch battery cycle count increment from the fuel gauge.
