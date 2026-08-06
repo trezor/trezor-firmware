@@ -112,6 +112,7 @@ static mp_obj_t aes_update(mp_obj_t self, mp_obj_t data, bool encrypt) {
     return mp_const_empty_bytes;
   }
   vstr_t vstr = {0};
+  int ret = 0;
   vstr_init_len(&vstr, buf.len);
   mp_obj_AES_t *o = MP_OBJ_TO_PTR(self);
   switch (o->mode) {
@@ -120,11 +121,11 @@ static mp_obj_t aes_update(mp_obj_t self, mp_obj_t data, bool encrypt) {
         mp_raise_ValueError(MP_ERROR_TEXT("Invalid data length"));
       }
       if (encrypt) {
-        aes_ecb_encrypt(buf.buf, (uint8_t *)vstr.buf, buf.len,
-                        &(o->encrypt_ctx));
+        ret = aes_ecb_encrypt(buf.buf, (uint8_t *)vstr.buf, buf.len,
+                              &(o->encrypt_ctx));
       } else {
-        aes_ecb_decrypt(buf.buf, (uint8_t *)vstr.buf, buf.len,
-                        &(o->decrypt_ctx));
+        ret = aes_ecb_decrypt(buf.buf, (uint8_t *)vstr.buf, buf.len,
+                              &(o->decrypt_ctx));
       }
       break;
     case CBC:
@@ -132,30 +133,33 @@ static mp_obj_t aes_update(mp_obj_t self, mp_obj_t data, bool encrypt) {
         mp_raise_ValueError(MP_ERROR_TEXT("Invalid data length"));
       }
       if (encrypt) {
-        aes_cbc_encrypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
-                        &(o->encrypt_ctx));
+        ret = aes_cbc_encrypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
+                              &(o->encrypt_ctx));
       } else {
-        aes_cbc_decrypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
-                        &(o->decrypt_ctx));
+        ret = aes_cbc_decrypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
+                              &(o->decrypt_ctx));
       }
       break;
     case CFB:
       if (encrypt) {
-        aes_cfb_encrypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
-                        &(o->encrypt_ctx));
+        ret = aes_cfb_encrypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
+                              &(o->encrypt_ctx));
       } else {
-        aes_cfb_decrypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
-                        &(o->encrypt_ctx));  // decrypt uses encrypt_ctx
+        ret = aes_cfb_decrypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
+                              &(o->encrypt_ctx));  // decrypt uses encrypt_ctx
       }
       break;
     case OFB:  // (encrypt == decrypt)
-      aes_ofb_crypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
-                    &(o->encrypt_ctx));
+      ret = aes_ofb_crypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
+                          &(o->encrypt_ctx));
       break;
     case CTR:  // (encrypt == decrypt)
-      aes_ctr_crypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
-                    aes_ctr_cbuf_inc, &(o->encrypt_ctx));
+      ret = aes_ctr_crypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,
+                          aes_ctr_cbuf_inc, &(o->encrypt_ctx));
       break;
+  }
+  if (ret != 0) {
+    mp_raise_type(&mp_type_RuntimeError);
   }
   return mp_obj_new_bytes_from_vstr(&vstr);
 }
