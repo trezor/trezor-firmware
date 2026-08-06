@@ -27,12 +27,7 @@ Last tested with firmware v2.4.2.
 
 ## Credits
 
--   [Trezor](https://github.com/trezor/trezor-firmware)
--   [joshieDo](https://github.com/joshieDo)
--   [Piyush Kumar](https://github.com/wszdexdrf)
--   [stevenroose](https://github.com/stevenroose)
--   [romanz](https://github.com/romanz)
--   [DaniPopes](https://github.com/DaniPopes)
+See the `AUTHORS` file.
 
 [downloads-badge]: https://img.shields.io/crates/d/trezor-client?style=for-the-badge&logo=rust
 [crates-io]: https://crates.io/crates/trezor-client

@@ -1,13 +1,6 @@
 [package]
 name = "trezor-client"
 version = "0.1.6"
-authors = [
-    "Piyush Kumar <piyushkumar2k02@kgpian.iitkgp.ac.in>",
-    "joshieDo <ranriver@protonmail.com>",
-    "DaniPopes <57450786+DaniPopes@users.noreply.github.com>",
-    "Roman Zeyde <me@romanzey.de>",
-    "Steven Roose <steven@stevenroose.org>",
-]
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/trezor/trezor-firmware/tree/master/rust/trezor-client"
 repository = "https://github.com/trezor/trezor-firmware"
