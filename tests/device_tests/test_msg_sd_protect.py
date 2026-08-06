@@ -70,6 +70,7 @@ def test_refresh(session: Session):
     assert session.features.sd_protection is False
 
 
+@pytest.mark.ble(wipe=True)
 def test_wipe(client: Client):
     session = client.get_seedless_session()
     # Enable SD protection
