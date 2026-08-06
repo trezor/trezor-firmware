@@ -359,11 +359,13 @@ static upload_status_t fw_on_headers(image_upload_handler_t *base,
 
 static upload_status_t fw_on_chunk(image_upload_handler_t *base,
                                    protob_io_t *iface, uint32_t image_offset,
-                                   const uint8_t *data, size_t len) {
+                                   const uint8_t *data, size_t len,
+                                   const uint8_t *prev_hash) {
   fw_upload_handler_t *self = (fw_upload_handler_t *)base;
+  (void)prev_hash;  // legacy per-block hashes come from the parsed image header
 
-  // Legacy streams flat at the default IMAGE_CHUNK_SIZE cadence (no block_size /
-  // plan_segments override), so the engine's absolute byte offset maps 1:1 to
+  // Legacy streams flat at the default IMAGE_CHUNK_SIZE cadence (no block_size
+  // / plan_segments override), so the engine's absolute byte offset maps 1:1 to
   // the per-block hash index in the image header.
   uint32_t block_idx = image_offset / IMAGE_CHUNK_SIZE;
 

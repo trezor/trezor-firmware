@@ -68,10 +68,10 @@ extern uint32_t chunk_buffer[];
 
 typedef struct image_upload_handler image_upload_handler_t;
 
-/** Max segments a handler may plan (see `plan_segments`). Sized for the largest
- *  planned layout: a small header segment plus one per image sub-region. A
- *  handler that would need more must fall back to flat (single-segment)
- *  streaming. */
+/** Max segments a handler may plan (see `plan_segments`). Sized for the pq
+ *  firmware handler: 1 header/manifest segment + one per firmware module, so
+ *  keep this >= BOOT_HEADER_MAX_MODULES (8, sec/boot_header.h) + 1. Otherwise
+ * an 8-module manifest that authenticates would be non-installable. */
 #define IMAGE_UPLOAD_MAX_SEGMENTS 9
 
 /** A contiguous, image-relative byte range streamed with its own block cadence
@@ -155,10 +155,11 @@ struct image_upload_handler {
   /** Size of the first prefetch, in bytes: how many bytes the engine fetches up
    *  front and hands to `on_headers` (which must find all it needs to parse
    *  within them). 0 (the default) means IMAGE_INIT_CHUNK_SIZE. A handler whose
-   *  header region is a smaller fixed size may set this lower so the prefetch
-   *  does not reach past the header into the payload. Must be FLASH_BLOCK_SIZE-
-   *  aligned and <= block_size. Set STATICALLY (used before on_headers runs),
-   *  unlike block_size. */
+   *  header region is a smaller fixed size (e.g. the firmware manifest region)
+   *  may set this lower so the prefetch does not reach past the header into the
+   *  payload -- required to later skip an unchanged first module. Must be
+   *  FLASH_BLOCK_SIZE-aligned and <= block_size. Set STATICALLY (used before
+   *  on_headers runs), unlike block_size. */
   uint32_t init_chunk_size;
   /** Workflow result returned on a successful upload. */
   workflow_result_t success_result;
@@ -192,12 +193,16 @@ struct image_upload_handler {
    * written after on_chunk returns).
    * @param data Buffer holding the received block.
    * @param len Number of valid bytes in @p data.
+   * @param prev_hash Optional 32-byte value carried on this block's
+   *        FirmwareUpload (the pq smart-hashing chain H_prev), or NULL if the
+   *        message carried none (e.g. legacy uploads, or the innermost/header
+   *        block). Handlers that don't use it ignore it.
    * @return UPLOAD_OK on success; UPLOAD_ERR_INVALID_CHUNK_HASH to let the
    *         engine retry the block; another negative upload_status_t to fail.
    */
   upload_status_t (*on_chunk)(image_upload_handler_t *self, protob_io_t *iface,
                               uint32_t image_offset, const uint8_t *data,
-                              size_t len);
+                              size_t len, const uint8_t *prev_hash);
 
   /**
    * Finalizes the upload after the last block is verified and written.

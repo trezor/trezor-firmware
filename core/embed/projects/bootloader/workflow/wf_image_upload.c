@@ -153,7 +153,7 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
     }
 
     // Plan the segments to stream. A handler may split the image into segments
-    // (e.g. a header region + one per image sub-region), each streamed with its
+    // (e.g. a header region + one per firmware module), each streamed with its
     // OWN block cadence -- blocks requested from segments[i].offset, so block k
     // of a segment == chunk k. With no plan the whole image is ONE segment;
     // flat streaming is just that degenerate case. Segment 0 always starts at
@@ -173,7 +173,7 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
 
     // Finish segment 0's first block: its head (the init prefetch) is buffered;
     // request the remainder if the block is larger. If the whole first block
-    // fit in the prefetch (a small segment 0, e.g. a fixed-size header region),
+    // fit in the prefetch (a small segment 0, e.g. a manifest-region header),
     // fall straight through to write it.
     uint32_t seg0_end = SEG_END(e);
     uint32_t block_target = MIN(e->block_size, seg0_end - e->stream_offset);
@@ -206,10 +206,15 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
   }
 
   // type-specific per-chunk integrity verification (image_off = bytes already
-  // on flash before this block).
-  upload_status_t cs =
-      handler->on_chunk(handler, iface, image_off, (const uint8_t *)chunk_buffer,
-                        e->chunk_size);
+  // on flash before this block). Pass this block's optional chain H_prev (a
+  // 32-byte value on the FirmwareUpload) if present, else NULL.
+  const uint8_t *prev_hash =
+      (msg.has_prev_hash && msg.prev_hash.size == sizeof(msg.prev_hash.bytes))
+          ? msg.prev_hash.bytes
+          : NULL;
+  upload_status_t cs = handler->on_chunk(handler, iface, image_off,
+                                         (const uint8_t *)chunk_buffer,
+                                         e->chunk_size, prev_hash);
 
   if (cs == UPLOAD_ERR_INVALID_CHUNK_HASH) {
     if (e->chunk_retry > 0) {
