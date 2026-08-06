@@ -9,6 +9,7 @@ pub enum BootloaderWFResult {
     Ok = ffi::workflow_result_t_WF_OK as _,
     OkRebootSelected = ffi::workflow_result_t_WF_OK_REBOOT_SELECTED as _,
     OkFirmwareInstalled = ffi::workflow_result_t_WF_OK_FIRMWARE_INSTALLED as _,
+    OkBootloaderUpdated = ffi::workflow_result_t_WF_OK_BOOTLOADER_UPDATED as _,
     OkDeviceWiped = ffi::workflow_result_t_WF_OK_DEVICE_WIPED as _,
     OkBootloaderUnlocked = ffi::workflow_result_t_WF_OK_BOOTLOADER_UNLOCKED as _,
     OkUiAction = ffi::workflow_result_t_WF_OK_UI_ACTION as _,

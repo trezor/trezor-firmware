@@ -23,9 +23,11 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/boot_header.h>
 #include <sec/fwutils.h>
 #include <sec/image.h>
 #include <sys/flash.h>
+#include <sys/mpu.h>
 #include <sys/systask.h>
 
 #include "blake2s.h"
@@ -104,6 +106,58 @@ int firmware_hash_continue(uint8_t* hash, size_t hash_len) {
   return (100 * ctx->fw_offset) / ctx->fw_size;
 }
 
+#ifdef PQ_SECURE_BOOT
+// Merkle-tree layout: the image starts with a firmware manifest, not a vendor
+// header, so there is nothing to read from the image. Only report a vendor when
+// a firmware image is actually present (manifest magic), and derive the
+// identity from the (write-protected, trusted) firmware_type the bootloader
+// persisted into the signed boot header: its variant names an official image,
+// its custom flag flips it to the UNSAFE marker. Mirrors the bootloader's
+// tree_vendor_str and the UNSAFE-prefix official test in
+// reboot_to_bootloader.py, so device and host agree on official-vs-custom.
+secbool firmware_get_vendor(char* buff, size_t buff_size) {
+  const void* data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
+
+  memset(buff, 0, buff_size);
+
+  if (data == NULL || *(const uint32_t*)data != FW_MANIFEST_MAGIC) {
+    return secfalse;
+  }
+
+  // The boot header lives in the bootloader flash area, which the secmon's
+  // default MPU mode does not map -- switch to MPU_MODE_BOOTLOADER for the read
+  // (same pattern as storage_salt_get).
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
+  const boot_header_auth_t* bl = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_unauth_t* unauth =
+      (bl != NULL) ? boot_header_unauth_get(bl) : NULL;
+  uint8_t fw_type = (unauth != NULL) ? unauth->firmware_type : 0;
+  mpu_restore(mpu_mode);
+
+  // FIH: assume UNSAFE. Only a POSITIVE custom == secfalse AND a known official
+  // variant name a trusted vendor; a glitch, a missing header or an unknown
+  // variant stays UNSAFE.
+  const char* vendor = "UNSAFE, DO NOT USE!";
+  if (firmware_type_is_custom(fw_type) == secfalse) {
+    uint32_t variant = firmware_type_variant(fw_type);
+    if (variant == FW_VARIANT_PRODTEST) {
+      // Founder-signed but factory-only -- must never be used in the field.
+      vendor = "UNSAFE, FACTORY TEST ONLY";
+    } else if (variant == FW_VARIANT_BITCOIN_ONLY) {
+      vendor = "Trezor Bitcoin-only";
+    } else if (variant == FW_VARIANT_UNIVERSAL) {
+      vendor = "Trezor";
+    }
+  }
+
+  size_t len = strlen(vendor);
+  if (buff_size < len + 1) {
+    return secfalse;
+  }
+  memcpy(buff, vendor, len);
+  return sectrue;
+}
+#else
 secbool firmware_get_vendor(char* buff, size_t buff_size) {
   const void* data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
@@ -124,6 +178,7 @@ secbool firmware_get_vendor(char* buff, size_t buff_size) {
 
   return sectrue;
 }
+#endif
 
 void firmware_invalidate_header(void) {
 #ifdef STM32U5

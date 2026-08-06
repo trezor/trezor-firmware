@@ -16,6 +16,12 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_define("STORAGE_INSECURE_TESTING_MODE", Some("1"));
     }
 
+    // Merkle-tree layout: the storage salt's firmware_type comes from the signed
+    // boot header instead of a (now absent) vendor header. See storage_salt.c.
+    if cfg!(feature = "pq_secure_boot") {
+        lib.add_define("PQ_SECURE_BOOT", Some("1"));
+    }
+
     lib.add_source("storage/storage_setup.c");
 
     lib.add_sources_in_dir(
