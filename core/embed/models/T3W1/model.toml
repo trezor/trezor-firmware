@@ -13,6 +13,7 @@ features = [
     "iwdg",
     "lockable_bootloader",
     "mcu_attestation",
+    "pq_secure_boot",
     "rtc",
     "secmon_header",
     "secmon_layout",
