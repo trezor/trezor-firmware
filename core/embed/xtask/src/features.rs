@@ -21,8 +21,16 @@ pub struct ResolvedBuildFeatures {
 /// features tied to build mechanics (model selection, emulator, asan) are
 /// added directly here.
 pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeatures> {
-    if args.storage_insecure_testing_mode && args.production {
-        bail!("storage_insecure_testing_mode cannot be enabled in production builds");
+    if args.production {
+        if args.storage_insecure_testing_mode {
+            bail!("storage_insecure_testing_mode cannot be used in production builds");
+        }
+        if args.disable_optiga {
+            bail!("disable_optiga cannot be used in production builds");
+        }
+        if args.disable_tropic {
+            bail!("disable_tropic cannot be used in production builds");
+        }
     }
 
     let mut features: Vec<String> = vec![args.model.feature_name()];
@@ -177,6 +185,30 @@ mod tests {
         let args = ResolvedBuildArgs {
             production: true,
             storage_insecure_testing_mode: true,
+            ..ResolvedBuildArgs::default()
+        };
+
+        let error = resolve_features(&args).unwrap_err();
+        assert!(error.to_string().contains("production"));
+    }
+
+    #[test]
+    fn rejects_disable_optiga_in_production_builds() {
+        let args = ResolvedBuildArgs {
+            production: true,
+            disable_optiga: true,
+            ..ResolvedBuildArgs::default()
+        };
+
+        let error = resolve_features(&args).unwrap_err();
+        assert!(error.to_string().contains("production"));
+    }
+
+    #[test]
+    fn rejects_disable_tropic_in_production_builds() {
+        let args = ResolvedBuildArgs {
+            production: true,
+            disable_tropic: true,
             ..ResolvedBuildArgs::default()
         };
 
