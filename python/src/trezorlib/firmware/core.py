@@ -284,14 +284,19 @@ class BootHeaderUnauth(SanityCheckedStruct):
 
     # fmt: off
     SUBCON = c.Struct(
-        # Merkle proof
+        # Merkle proof (the BOOTLOADER's own co-path in the founder bootloader tree)
         "merkle_proof" / c.PrefixedArray(c.Int32ul, c.Bytes(32)),
 
         # Signatures
         "slh_signatures" / c.Bytes(7856)[2],
         "ec_signatures" / c.Bytes(64)[2],
 
-        # Other fields that are not part of the signature
+        # Other fields that are not part of the signature. The FIRMWARE Merkle
+        # proof is NOT here: in pq_secure_boot it lives in the firmware image's
+        # manifest region (firmware_manifest_proof_t), so this write-protected
+        # header only carries the storage-domain identity (firmware_type). Future
+        # unauth fields are appended AFTER this, bounded by the FixedSized unauth
+        # region (see BootableImage), so older bins/parsers stay compatible.
         "firmware_type" / c.Aligned(4, c.Byte),
     )
     # fmt: on
@@ -312,7 +317,14 @@ class BootableImage(SanityCheckedStruct):
 
     SUBCON = c.Struct(
         "header" / BootHeader.SUBCON,
-        "unauth" / BootHeaderUnauth.SUBCON,
+        # The unauth part occupies exactly header_len - auth_len bytes. Bounding it
+        # to that region locates the code at header_len regardless of which
+        # (future, optional) unauth fields a given bin carries.
+        "unauth"
+        / c.FixedSized(
+            c.this.header.header_len - c.this.header.auth_len,
+            BootHeaderUnauth.SUBCON,
+        ),
         "_code_offset" / c.Tell,
         "code" / c.Bytes(c.this.header.code_length),
         c.Check(c.this.header.header_len == c.this._code_offset),
