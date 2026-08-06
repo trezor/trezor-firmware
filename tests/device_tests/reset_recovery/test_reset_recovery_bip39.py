@@ -27,6 +27,7 @@ from ...common import MOCK_GET_ENTROPY
 from ...input_flows import InputFlowBip39Recovery, InputFlowBip39ResetBackup
 
 
+@pytest.mark.ble(wipe=True)
 @pytest.mark.models("core")
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client: Client, backup_method: BackupMethod):

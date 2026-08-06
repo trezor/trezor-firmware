@@ -23,6 +23,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
+from trezorlib.transport.ble import BleTransport
 
 from ...common import is_core
 from ...tx_cache import TxCache
@@ -277,7 +278,10 @@ def test_sign_tx_large(session: Session):
     own_output_count = 30
     total_output_count = 1200
     output_denom = 10_000  # sats
-    max_expected_delay = 80  # seconds
+    if isinstance(session.test_ctx.transport, BleTransport):
+        max_expected_delay = 300  # seconds
+    else:
+        max_expected_delay = 80  # seconds
 
     btc.authorize_coinjoin(
         session,

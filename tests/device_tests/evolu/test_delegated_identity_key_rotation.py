@@ -117,6 +117,7 @@ def test_index_management_cannot_overwrite_existing_index(client: Client):
     assert key.rotation_index == 10
 
 
+@pytest.mark.ble(wipe=True)
 def test_rotation_index_wiped_on_device_wipe(client: Client):
     evolu.index_management(client.get_session(), rotation_index=0)
     key_before_wipe_0 = get_delegated_identity_key(client)

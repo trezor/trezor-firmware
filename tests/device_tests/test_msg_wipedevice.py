@@ -25,6 +25,8 @@ from trezorlib.debuglink import load_device
 
 from ..common import MNEMONIC12, get_test_address
 
+pytestmark = [pytest.mark.ble(wipe=True)]
+
 PIN4 = "1234"
 
 
