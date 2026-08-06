@@ -91,6 +91,34 @@ static void boot_header_variant_leaf(const firmware_manifest_t* manifest,
   IMAGE_HASH_FINAL(&ctx, leaf->bytes);
 }
 
+secbool firmware_manifest_authentic(const firmware_manifest_t* manifest,
+                                    size_t manifest_len,
+                                    const merkle_proof_node_t* proof,
+                                    size_t proof_count,
+                                    const merkle_proof_node_t* trusted_root) {
+  if (manifest->magic != FW_MANIFEST_MAGIC) {
+    return secfalse;
+  }
+  if (manifest->module_count == 0 ||
+      manifest->module_count > BOOT_HEADER_MAX_MODULES) {
+    return secfalse;
+  }
+  // Sanity: the passed length must match the manifest's declared size.
+  if (manifest_len != firmware_manifest_size(manifest)) {
+    return secfalse;
+  }
+
+  // The variant leaf folds (via the proof) up to the signed firmware_root.
+  merkle_proof_node_t node;
+  boot_header_variant_leaf(manifest, manifest_len, &node);
+  for (size_t i = 0; i < proof_count; i++) {
+    boot_header_internal_node(&node, &proof[i], &node);
+  }
+  return (memcmp(node.bytes, trusted_root->bytes, sizeof(node.bytes)) == 0)
+             ? sectrue
+             : secfalse;
+}
+
 // Smart-hashing "chain" code hash: the module code is split into chunk_size
 // chunks and folded into a single hash, so an OTA can authenticate each chunk
 // against code_hash as it streams (see docs). Here (boot / whole-module) we
@@ -143,6 +171,86 @@ void firmware_module_code_hash(uintptr_t base, uint32_t addr,
     firmware_module_chain_step(out, (const uint8_t*)(base + addr + off), clen,
                                out);
   }
+}
+
+secbool firmware_verify_manifest_entry(const firmware_manifest_entry_t* entry,
+                                       uintptr_t firmware_base) {
+  // Integrity: the module code at firmware_base + entry->addr (entry->size
+  // bytes) must reduce to the entry's code_hash via the smart-hashing chain
+  // (firmware_module_code_hash), chunked by the entry's own chunk_size. When the
+  // entry is founder-authenticated (firmware_manifest_authentic), this proves
+  // the code is both founder-committed and non-corrupt.
+  uint8_t digest[IMAGE_HASH_DIGEST_LENGTH];
+  firmware_module_code_hash(firmware_base, entry->addr, entry->size,
+                            entry->chunk_size, digest);
+  return (memcmp(digest, entry->code_hash.bytes, IMAGE_HASH_DIGEST_LENGTH) == 0)
+             ? sectrue
+             : secfalse;
+}
+
+secbool firmware_manifest_layout_valid(const firmware_manifest_t* manifest,
+                                       uint32_t capacity) {
+  // The module code regions (addr/size) drive both the streamed erase+write
+  // (install) and the code hashing (install + EVERY boot). firmware_verify_
+  // manifest would hash `size` bytes at `addr`, so a malformed/hostile manifest
+  // must be rejected FIRST to avoid an out-of-bounds read past the firmware
+  // area. Validate the layout is well-formed + bounded:
+  //   * at least one module; per entry a non-zero chunk_size (the code_hash
+  //     chain modulus; the module need NOT be a whole number of chunks -- the
+  //     last chunk may be partial) and a non-zero size;
+  //   * modules ascending + non-overlapping, starting at/after the manifest
+  //     region (module addr/size keep their natural FLASH_BLOCK_SIZE build
+  //     alignment -- not enforced here, and NOT chunk-aligned);
+  //   * wholly inside [.., capacity] (the firmware-area size), overflow-safe.
+  // Shared by install (phase 1 pre-confirm, phase 2 pre-write) and boot
+  // (firmware_verify_tree). Bound module_count BEFORE iterating entries[]:
+  // firmware_manifest_size()'s `module_count * sizeof(entry)` can wrap 32-bit
+  // for a crafted count -- so without this, iterating the raw count could read
+  // entries[] past the manifest region.
+  if (manifest->module_count == 0 ||
+      manifest->module_count > BOOT_HEADER_MAX_MODULES) {
+    return secfalse;
+  }
+  uint32_t prev_end = FW_MANIFEST_REGION;  // first module starts after the header
+  for (size_t i = 0; i < manifest->module_count; i++) {
+    const firmware_manifest_entry_t* e = &manifest->entries[i];
+    const uint32_t cs = e->chunk_size;  // per-module chunk size (chain modulus)
+    if (cs == 0 || e->size == 0 || e->addr < prev_end || e->addr > capacity ||
+        e->size > capacity - e->addr) {
+      return secfalse;
+    }
+    prev_end = e->addr + e->size;  // no overflow: e->size <= capacity - e->addr
+  }
+  return sectrue;
+}
+
+secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
+                                 size_t manifest_len, uintptr_t firmware_base,
+                                 const merkle_proof_node_t* proof,
+                                 size_t proof_count,
+                                 const merkle_proof_node_t* trusted_root) {
+  // 1. Authenticity: variant leaf (+ proof) == firmware_root. The variant leaf
+  //    covers the whole manifest -- incl. firmware_variant + every module's
+  //    code_hash -- so the modules and manifest structure are founder-
+  //    authenticated.
+  if (sectrue != firmware_manifest_authentic(manifest, manifest_len, proof,
+                                             proof_count, trusted_root)) {
+    return secfalse;
+  }
+
+  // 2. Integrity: every module's code reduces to its directory entry's
+  //    code_hash (via the smart-hashing chain, chunked by the entry's own
+  //    chunk_size). A zero chunk_size is handled safely by
+  //    firmware_module_code_hash (n=0 -> digest != code_hash); the caller's
+  //    firmware_manifest_layout_valid also rejects it up front.
+  for (size_t i = 0; i < manifest->module_count; i++) {
+    const firmware_manifest_entry_t* e = &manifest->entries[i];
+    if (sectrue != firmware_verify_manifest_entry(e, firmware_base)) {
+      return secfalse;
+    }
+  }
+
+  return sectrue;
 }
 
 uint8_t firmware_type_compose(uint32_t variant) {
