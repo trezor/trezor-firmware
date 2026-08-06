@@ -181,7 +181,15 @@ static inline bool is_flash_address(uint32_t addr) {
 #endif
 #endif
 
+#ifdef STM32H5
+// STM32H5: the unique device ID sits at FLASH_OTP_BASE + 0x800
+// (UID_BASE = 0x08FFF800), just past the 2 KB OTP - unlike the U5, where it
+// lies within the first 2 KB. Cover the full 4 KB so MPU_MODE_OTP maps the UID
+// (and the following read-only system data), matching the SAU window.
+#define OTP_AND_ID_SIZE 0x1000
+#else
 #define OTP_AND_ID_SIZE 0x800
+#endif
 
 #ifdef SECMON
 extern uint32_t _secmon_size;
