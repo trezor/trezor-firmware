@@ -54,16 +54,23 @@ void fsm_msgCipherKeyValue(const CipherKeyValue *msg) {
   }
 
   RESP_INIT(CipheredKeyValue);
+  bool ok = false;
   if (encrypt) {
     aes_encrypt_ctx ctx;
-    aes_encrypt_key256(data, &ctx);
-    aes_cbc_encrypt(msg->value.bytes, resp->value.bytes, msg->value.size,
-                    data + 32, &ctx);
+    ok = aes_encrypt_key256(data, &ctx) == EXIT_SUCCESS &&
+         aes_cbc_encrypt(msg->value.bytes, resp->value.bytes, msg->value.size,
+                         data + 32, &ctx) == EXIT_SUCCESS;
   } else {
     aes_decrypt_ctx ctx;
-    aes_decrypt_key256(data, &ctx);
-    aes_cbc_decrypt(msg->value.bytes, resp->value.bytes, msg->value.size,
-                    data + 32, &ctx);
+    ok = aes_decrypt_key256(data, &ctx) == EXIT_SUCCESS &&
+         aes_cbc_decrypt(msg->value.bytes, resp->value.bytes, msg->value.size,
+                         data + 32, &ctx) == EXIT_SUCCESS;
+  }
+  if (!ok) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to cipher key value"));
+    layoutHome();
+    return;
   }
   resp->value.size = msg->value.size;
   msg_write(MessageType_MessageType_CipheredKeyValue, resp);

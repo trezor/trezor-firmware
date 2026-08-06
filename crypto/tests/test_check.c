@@ -24,6 +24,7 @@
 #include <assert.h>
 #include <check.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -4518,6 +4519,7 @@ START_TEST(test_aes) {
   aes_decrypt_ctx ctxd;
   uint8_t ibuf[16], obuf[16], iv[16], cbuf[16];
   const char **ivp, **plainp, **cipherp;
+  int res = 0;
 
   // ECB
   static const char *ecb_vector[] = {
@@ -4537,20 +4539,24 @@ START_TEST(test_aes) {
   cipherp = ecb_vector + 1;
   while (*plainp && *cipherp) {
     // encrypt
-    aes_encrypt_key256(
+    res = aes_encrypt_key256(
         fromhex(
             "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"),
         &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     memcpy(ibuf, fromhex(*plainp), 16);
-    aes_ecb_encrypt(ibuf, obuf, 16, &ctxe);
+    res = aes_ecb_encrypt(ibuf, obuf, 16, &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
     // decrypt
-    aes_decrypt_key256(
+    res = aes_decrypt_key256(
         fromhex(
             "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"),
         &ctxd);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     memcpy(ibuf, fromhex(*cipherp), 16);
-    aes_ecb_decrypt(ibuf, obuf, 16, &ctxd);
+    res = aes_ecb_decrypt(ibuf, obuf, 16, &ctxd);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
     plainp += 2;
     cipherp += 2;
@@ -4580,22 +4586,26 @@ START_TEST(test_aes) {
   cipherp = cbc_vector + 2;
   while (*plainp && *cipherp) {
     // encrypt
-    aes_encrypt_key256(
+    res = aes_encrypt_key256(
         fromhex(
             "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"),
         &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     memcpy(iv, fromhex(*ivp), 16);
     memcpy(ibuf, fromhex(*plainp), 16);
-    aes_cbc_encrypt(ibuf, obuf, 16, iv, &ctxe);
+    res = aes_cbc_encrypt(ibuf, obuf, 16, iv, &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
     // decrypt
-    aes_decrypt_key256(
+    res = aes_decrypt_key256(
         fromhex(
             "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"),
         &ctxd);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     memcpy(iv, fromhex(*ivp), 16);
     memcpy(ibuf, fromhex(*cipherp), 16);
-    aes_cbc_decrypt(ibuf, obuf, 16, iv, &ctxd);
+    res = aes_cbc_decrypt(ibuf, obuf, 16, iv, &ctxd);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
     ivp += 3;
     plainp += 3;
@@ -4625,22 +4635,26 @@ START_TEST(test_aes) {
   cipherp = cfb_vector + 2;
   while (*plainp && *cipherp) {
     // encrypt
-    aes_encrypt_key256(
+    res = aes_encrypt_key256(
         fromhex(
             "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"),
         &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     memcpy(iv, fromhex(*ivp), 16);
     memcpy(ibuf, fromhex(*plainp), 16);
-    aes_cfb_encrypt(ibuf, obuf, 16, iv, &ctxe);
+    res = aes_cfb_encrypt(ibuf, obuf, 16, iv, &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
     // decrypt (uses encryption)
-    aes_encrypt_key256(
+    res = aes_encrypt_key256(
         fromhex(
             "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"),
         &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     memcpy(iv, fromhex(*ivp), 16);
     memcpy(ibuf, fromhex(*cipherp), 16);
-    aes_cfb_decrypt(ibuf, obuf, 16, iv, &ctxe);
+    res = aes_cfb_decrypt(ibuf, obuf, 16, iv, &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
     ivp += 3;
     plainp += 3;
@@ -4670,22 +4684,26 @@ START_TEST(test_aes) {
   cipherp = ofb_vector + 2;
   while (*plainp && *cipherp) {
     // encrypt
-    aes_encrypt_key256(
+    res = aes_encrypt_key256(
         fromhex(
             "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"),
         &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     memcpy(iv, fromhex(*ivp), 16);
     memcpy(ibuf, fromhex(*plainp), 16);
-    aes_ofb_encrypt(ibuf, obuf, 16, iv, &ctxe);
+    res = aes_ofb_encrypt(ibuf, obuf, 16, iv, &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
     // decrypt (uses encryption)
-    aes_encrypt_key256(
+    res = aes_encrypt_key256(
         fromhex(
             "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"),
         &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     memcpy(iv, fromhex(*ivp), 16);
     memcpy(ibuf, fromhex(*cipherp), 16);
-    aes_ofb_decrypt(ibuf, obuf, 16, iv, &ctxe);
+    res = aes_ofb_decrypt(ibuf, obuf, 16, iv, &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
     ivp += 3;
     plainp += 3;
@@ -4710,13 +4728,15 @@ START_TEST(test_aes) {
   plainp = ctr_vector;
   cipherp = ctr_vector + 1;
   memcpy(cbuf, fromhex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"), 16);
-  aes_encrypt_key256(
+  res = aes_encrypt_key256(
       fromhex(
           "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"),
       &ctxe);
+  ck_assert_int_eq(res, EXIT_SUCCESS);
   while (*plainp && *cipherp) {
     memcpy(ibuf, fromhex(*plainp), 16);
-    aes_ctr_encrypt(ibuf, obuf, 16, cbuf, aes_ctr_cbuf_inc, &ctxe);
+    res = aes_ctr_encrypt(ibuf, obuf, 16, cbuf, aes_ctr_cbuf_inc, &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
     plainp += 2;
     cipherp += 2;
@@ -4725,16 +4745,57 @@ START_TEST(test_aes) {
   plainp = ctr_vector;
   cipherp = ctr_vector + 1;
   memcpy(cbuf, fromhex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"), 16);
-  aes_encrypt_key256(
+  res = aes_encrypt_key256(
       fromhex(
           "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"),
       &ctxe);
+  ck_assert_int_eq(res, EXIT_SUCCESS);
   while (*plainp && *cipherp) {
     memcpy(ibuf, fromhex(*cipherp), 16);
-    aes_ctr_decrypt(ibuf, obuf, 16, cbuf, aes_ctr_cbuf_inc, &ctxe);
+    res = aes_ctr_decrypt(ibuf, obuf, 16, cbuf, aes_ctr_cbuf_inc, &ctxe);
+    ck_assert_int_eq(res, EXIT_SUCCESS);
     ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
     plainp += 2;
     cipherp += 2;
+  }
+}
+END_TEST
+
+// the AES mode functions take a signed length parameter,
+// negative values have to be rejected
+START_TEST(test_aes_negative_length) {
+  aes_encrypt_ctx ctxe;
+  aes_decrypt_ctx ctxd;
+  uint8_t ibuf[16] = {0};
+  uint8_t obuf[16] = {0};
+  uint8_t iv[16] = {0};
+  uint8_t cbuf[16] = {0};
+
+  // -16 is a negative multiple of AES_BLOCK_SIZE
+  static const int lengths[] = {-1, -16, INT_MIN};
+
+  const uint8_t *key = fromhex(
+      "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4");
+  ck_assert_int_eq(aes_encrypt_key256(key, &ctxe), EXIT_SUCCESS);
+  ck_assert_int_eq(aes_decrypt_key256(key, &ctxd), EXIT_SUCCESS);
+
+  for (size_t i = 0; i < sizeof(lengths) / sizeof(lengths[0]); i++) {
+    int len = lengths[i];
+
+    ck_assert_int_eq(aes_ecb_encrypt(ibuf, obuf, len, &ctxe), EXIT_FAILURE);
+    ck_assert_int_eq(aes_ecb_decrypt(ibuf, obuf, len, &ctxd), EXIT_FAILURE);
+    ck_assert_int_eq(aes_cbc_encrypt(ibuf, obuf, len, iv, &ctxe), EXIT_FAILURE);
+    ck_assert_int_eq(aes_cbc_decrypt(ibuf, obuf, len, iv, &ctxd), EXIT_FAILURE);
+    ck_assert_int_eq(aes_cfb_encrypt(ibuf, obuf, len, iv, &ctxe), EXIT_FAILURE);
+    ck_assert_int_eq(aes_cfb_decrypt(ibuf, obuf, len, iv, &ctxe), EXIT_FAILURE);
+    ck_assert_int_eq(aes_ofb_encrypt(ibuf, obuf, len, iv, &ctxe), EXIT_FAILURE);
+    ck_assert_int_eq(aes_ofb_decrypt(ibuf, obuf, len, iv, &ctxe), EXIT_FAILURE);
+    ck_assert_int_eq(
+        aes_ctr_encrypt(ibuf, obuf, len, cbuf, aes_ctr_cbuf_inc, &ctxe),
+        EXIT_FAILURE);
+    ck_assert_int_eq(
+        aes_ctr_decrypt(ibuf, obuf, len, cbuf, aes_ctr_cbuf_inc, &ctxe),
+        EXIT_FAILURE);
   }
 }
 END_TEST
@@ -12520,6 +12581,7 @@ Suite *test_suite(void) {
 
   tc = tcase_create("aes");
   tcase_add_test(tc, test_aes);
+  tcase_add_test(tc, test_aes_negative_length);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("aes_ccm");

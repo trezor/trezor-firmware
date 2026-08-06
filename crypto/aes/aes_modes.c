@@ -136,10 +136,12 @@ AES_RETURN aes_mode_reset(aes_encrypt_ctx ctx[1])
 
 AES_RETURN aes_ecb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, const aes_encrypt_ctx ctx[1])
-{   int nb = len >> AES_BLOCK_SIZE_P2;
+{   int nb = 0;
 
-    if(len & (AES_BLOCK_SIZE - 1))
+    if(len < 0 || (len & (AES_BLOCK_SIZE - 1)))
         return EXIT_FAILURE;
+
+    nb = len >> AES_BLOCK_SIZE_P2;
 
 #if defined( USE_VIA_ACE_IF_PRESENT )
 
@@ -198,10 +200,12 @@ AES_RETURN aes_ecb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
 
 AES_RETURN aes_ecb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, const aes_decrypt_ctx ctx[1])
-{   int nb = len >> AES_BLOCK_SIZE_P2;
+{   int nb = 0;
 
-    if(len & (AES_BLOCK_SIZE - 1))
+    if(len < 0 || (len & (AES_BLOCK_SIZE - 1)))
         return EXIT_FAILURE;
+
+    nb = len >> AES_BLOCK_SIZE_P2;
 
 #if defined( USE_VIA_ACE_IF_PRESENT )
 
@@ -260,10 +264,12 @@ AES_RETURN aes_ecb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
 
 AES_RETURN aes_cbc_encrypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, unsigned char *iv, const aes_encrypt_ctx ctx[1])
-{   int nb = len >> AES_BLOCK_SIZE_P2;
+{   int nb = 0;
 
-    if(len & (AES_BLOCK_SIZE - 1))
+    if(len < 0 || (len & (AES_BLOCK_SIZE - 1)))
         return EXIT_FAILURE;
+
+    nb = len >> AES_BLOCK_SIZE_P2;
 
 #if defined( USE_VIA_ACE_IF_PRESENT )
 
@@ -358,10 +364,12 @@ AES_RETURN aes_cbc_encrypt(const unsigned char *ibuf, unsigned char *obuf,
 AES_RETURN aes_cbc_decrypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, unsigned char *iv, const aes_decrypt_ctx ctx[1])
 {   unsigned char tmp[AES_BLOCK_SIZE] = {0};
-    int nb = len >> AES_BLOCK_SIZE_P2;
+    int nb = 0;
 
-    if(len & (AES_BLOCK_SIZE - 1))
+    if(len < 0 || (len & (AES_BLOCK_SIZE - 1)))
         return EXIT_FAILURE;
+
+    nb = len >> AES_BLOCK_SIZE_P2;
 
 #if defined( USE_VIA_ACE_IF_PRESENT )
 
@@ -457,6 +465,9 @@ AES_RETURN aes_cbc_decrypt(const unsigned char *ibuf, unsigned char *obuf,
 AES_RETURN aes_cfb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, unsigned char *iv, aes_encrypt_ctx ctx[1])
 {   int cnt = 0, b_pos = (int)ctx->inf.b[2], nb = 0;
+
+    if(len < 0)
+        return EXIT_FAILURE;
 
     if(b_pos)           /* complete any partial block   */
     {
@@ -582,6 +593,9 @@ AES_RETURN aes_cfb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
 AES_RETURN aes_cfb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, unsigned char *iv, aes_encrypt_ctx ctx[1])
 {   int cnt = 0, b_pos = (int)ctx->inf.b[2], nb = 0;
+
+    if(len < 0)
+        return EXIT_FAILURE;
 
     if(b_pos)           /* complete any partial block   */
     {   uint8_t t = 0;
@@ -724,6 +738,9 @@ AES_RETURN aes_ofb_crypt(const unsigned char *ibuf, unsigned char *obuf,
                     int len, unsigned char *iv, aes_encrypt_ctx ctx[1])
 {   int cnt = 0, b_pos = (int)ctx->inf.b[2], nb = 0;
 
+    if(len < 0)
+        return EXIT_FAILURE;
+
     if(b_pos)           /* complete any partial block   */
     {
         while(b_pos < AES_BLOCK_SIZE && cnt < len)
@@ -859,6 +876,9 @@ AES_RETURN aes_ctr_crypt(const unsigned char *ibuf, unsigned char *obuf,
 #else
     uint8_t buf[BFR_LENGTH] = {0};
 #endif
+
+    if(len < 0)
+        return EXIT_FAILURE;
 
     if(b_pos)
     {
