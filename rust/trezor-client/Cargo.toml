@@ -8,7 +8,7 @@ authors = [
     "Roman Zeyde <me@romanzey.de>",
     "Steven Roose <steven@stevenroose.org>",
 ]
-license = "CC0-1.0"
+license = "MIT OR Apache-2.0"
 homepage = "https://github.com/trezor/trezor-firmware/tree/master/rust/trezor-client"
 repository = "https://github.com/trezor/trezor-firmware"
 description = "Client library for interfacing with Trezor hardware wallet devices"
