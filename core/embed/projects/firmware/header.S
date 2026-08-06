@@ -36,4 +36,3 @@ g_header:
     .byte 0                          // sigmask
     . = . + 64                       // sig
 g_header_end:
-

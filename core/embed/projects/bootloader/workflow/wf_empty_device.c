@@ -47,6 +47,9 @@
 workflow_result_t workflow_empty_device(void) {
   ui_set_initial_setup(true);
 
+  // Reached only for a genuinely empty/unprovisioned device (fw_check reported
+  // !header_present), so wiping storage here is safe -- a provisioned device is
+  // routed to the bootloader menu instead and never gets here.
 #ifdef USE_STORAGE_HWKEY
   secret_bhk_regenerate();
 #endif
