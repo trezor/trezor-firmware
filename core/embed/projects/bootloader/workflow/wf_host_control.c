@@ -74,6 +74,11 @@ static workflow_result_t bootloader_process_comm(wire_iface_t *wire_iface) {
     case MessageType_MessageType_FirmwareErase:
       return workflow_firmware_update(&active_iface);
       break;
+#ifdef PQ_SECURE_BOOT
+    case MessageType_MessageType_FirmwareBegin:
+      return workflow_firmware_update_pq(&active_iface);
+      break;
+#endif
 #if defined LOCKABLE_BOOTLOADER
     case MessageType_MessageType_UnlockBootloader:
       return workflow_unlock_bootloader(&active_iface);
