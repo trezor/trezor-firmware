@@ -263,6 +263,7 @@ def test_build_version_mismatch(session: Session):
     # Would be nice to test lower build_version but firmware's is usually 0 and hard to change
 
 
+@pytest.mark.ble(wipe=True)
 def test_language_is_removed_after_wipe(client: Client):
     session = client.get_session()
     assert session.features.language == "en-US"

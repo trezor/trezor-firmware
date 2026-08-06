@@ -433,6 +433,14 @@ def _prepared_test_ctx(
             "  pytest -m 'not sd_card' <test path>"
         )
 
+    ble_marker = request.node.get_closest_marker("ble")
+    if ble_marker and isinstance(_raw_test_ctx.transport, BleTransport):
+        if ble_marker.kwargs.get("skip", False):
+            pytest.skip("Test not supported over BLE")
+
+        if ble_marker.kwargs.get("wipe", False):
+            pytest.skip("Wipe over BLE not implemented yet")
+
     fail_on_gc_leak = not request.config.getoption("ignore_gc_leak")
 
     # First, make sure the device is responsive:
