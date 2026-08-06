@@ -373,6 +373,7 @@ class CoreEmulator(Emulator):
         sdcard: Optional[bytes] = None,
         disable_animation: bool = True,
         heap_size: str = "20M",
+        display_scale: Optional[float] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -390,6 +391,7 @@ class CoreEmulator(Emulator):
         self.disable_animation = disable_animation
         self.main_args = list(main_args)
         self.heap_size = heap_size
+        self.display_scale = display_scale
 
     def make_env(self) -> Dict[str, str]:
         env = super().make_env()
@@ -403,6 +405,8 @@ class CoreEmulator(Emulator):
         if self.headless or self.disable_animation:
             env["TREZOR_DISABLE_FADE"] = "1"
             env["TREZOR_DISABLE_ANIMATION"] = "1"
+        if self.display_scale is not None:
+            env["TREZOR_EMULATOR_SCALE"] = str(self.display_scale)
         env["TROPIC_MODEL_PORT"] = str(self.tropic_port())
 
         return env
