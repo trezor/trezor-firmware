@@ -45,6 +45,11 @@ LOG_DECLARE(display_driver)
 
 #define EMULATOR_BORDER 16
 
+// Limits for the emulator window scale factor. Factors below 1 shrink the
+// window, which is useful for the models with a large window.
+#define EMULATOR_MIN_SCALE 0.25f
+#define EMULATOR_MAX_SCALE 16.0f
+
 #ifdef UI_COLOR_32BIT
 
 #define PIXEL_FORMAT SDL_PIXELFORMAT_ARGB8888
@@ -102,6 +107,30 @@ static display_driver_t g_display_driver = {
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
+#ifndef TREZOR_EMULATOR_RASPI
+// Returns the factor by which the emulator window is scaled, as requested
+// through `TREZOR_EMULATOR_SCALE`. Returns 1, i.e. no scaling, when the
+// variable is unset or does not hold a valid value.
+static float emulator_scale(void) {
+  const char *env_scale = getenv("TREZOR_EMULATOR_SCALE");
+  if (env_scale == NULL || env_scale[0] == '\0') {
+    return 1.0f;
+  }
+
+  char *end = NULL;
+  const float scale = strtof(env_scale, &end);
+  // Negated comparisons so that NaN, which compares false either way, is
+  // rejected as well.
+  if (end == NULL || *end != '\0' || !(scale >= EMULATOR_MIN_SCALE) ||
+      !(scale <= EMULATOR_MAX_SCALE)) {
+    LOG_WARN("ignoring out-of-range TREZOR_EMULATOR_SCALE '%s'", env_scale);
+    return 1.0f;
+  }
+
+  return scale;
+}
+#endif
+
 bool display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
@@ -127,7 +156,10 @@ bool display_init(display_content_mode_t mode) {
 #ifdef TREZOR_EMULATOR_RASPI
       SDL_WINDOW_FULLSCREEN;
 #else
-      0;  // windows are visible by default in SDL3
+      // Windows are visible by default in SDL3. Keep this one hidden until its
+      // final size is known, otherwise it is mapped at the unscaled size first
+      // and visibly resized once the scale factor has been applied below.
+      SDL_WINDOW_HIDDEN;
 #endif
 
   // SDL3 renderer creation can fail on Wayland.
@@ -192,6 +224,7 @@ bool display_init(display_content_mode_t mode) {
                                    SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX,
                                    DISPLAY_RESY);
   SDL_SetTextureBlendMode(drv->texture, SDL_BLENDMODE_BLEND);
+  SDL_SetTextureScaleMode(drv->texture, SDL_SCALEMODE_NEAREST);
 #ifdef __APPLE__
   // macOS Mojave SDL black screen workaround
   SDL_PumpEvents();
@@ -232,15 +265,68 @@ bool display_init(display_content_mode_t mode) {
   if (drv->background) {
     SDL_SetTextureBlendMode(drv->background, SDL_BLENDMODE_NONE);
   }
+  // Size of the coordinate space all drawing is done in, and the window size at
+  // the default scale of 1.
+  int logical_width;
+  int logical_height;
+
   if (drv->background || drv->foreground) {
+    logical_width = WINDOW_WIDTH;
+    logical_height = WINDOW_HEIGHT;
     sdl_touch_offset_x = TOUCH_OFFSET_X;
     sdl_touch_offset_y = TOUCH_OFFSET_Y;
   } else {
-    SDL_SetWindowSize(drv->window, DISPLAY_RESX + 2 * EMULATOR_BORDER,
-                      DISPLAY_RESY + 2 * EMULATOR_BORDER);
+    logical_width = DISPLAY_RESX + 2 * EMULATOR_BORDER;
+    logical_height = DISPLAY_RESY + 2 * EMULATOR_BORDER;
     sdl_touch_offset_x = EMULATOR_BORDER;
     sdl_touch_offset_y = EMULATOR_BORDER;
   }
+
+#ifdef TREZOR_EMULATOR_RASPI
+  // The window is fullscreen on the Raspberry Pi display, so scaling it would
+  // have no effect there.
+  const float scale = 1.0f;
+#else
+  const float scale = emulator_scale();
+#endif
+
+  // The requested factor is turned into a window size in whole pixels right
+  // away, so everything below reasons about integers only. Comparing the result
+  // against the unscaled size also avoids testing the factor itself for
+  // equality with 1.
+  const int window_width = (int)(logical_width * scale + 0.5f);
+  const int window_height = (int)(logical_height * scale + 0.5f);
+
+  // The window was created at `WINDOW_WIDTH` x `WINDOW_HEIGHT`, so it only
+  // needs resizing when the final size differs from that.
+  if (window_width != WINDOW_WIDTH || window_height != WINDOW_HEIGHT) {
+    SDL_SetWindowSize(drv->window, window_width, window_height);
+  }
+
+  if (window_width != logical_width || window_height != logical_height) {
+    // Keep drawing in unscaled display coordinates and let SDL scale the
+    // result to the window. Letterboxing keeps the aspect ratio intact when
+    // rounding to whole pixels does not divide evenly, and it also lets
+    // `sdl_display_window_to_display()` map input coordinates back.
+    SDL_SetRenderLogicalPresentation(drv->renderer, logical_width,
+                                     logical_height,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    // Nearest-neighbour sampling, set when the texture was created, keeps
+    // whole-number enlarging crisp. Any other factor needs interpolation,
+    // otherwise rows and columns of pixels are dropped outright.
+    if (window_width % logical_width != 0 ||
+        window_height % logical_height != 0) {
+      SDL_SetTextureScaleMode(drv->texture, SDL_SCALEMODE_LINEAR);
+    }
+  }
+
+  // The window size is final, so it is safe to map it now. Present the cleared
+  // renderer first so that the window does not appear with undefined contents.
+  // A no-op on the Raspberry Pi, where the window was never hidden.
+  SDL_RenderClear(drv->renderer);
+  SDL_RenderPresent(drv->renderer);
+  SDL_ShowWindow(drv->window);
+
 #if !USE_BACKLIGHT
   // some models do not have backlight capabilities in hardware, so
   // setting its value here for emulator to avoid
@@ -263,6 +349,22 @@ bool display_init(display_content_mode_t mode) {
 
   drv->initialized = true;
   return true;
+}
+
+void sdl_display_window_to_display(float window_x, float window_y,
+                                   int *display_x, int *display_y) {
+  display_driver_t *drv = &g_display_driver;
+
+  float x = window_x;
+  float y = window_y;
+
+  // Undoes the window scaling; a no-op when the window is not scaled.
+  if (drv->initialized) {
+    SDL_RenderCoordinatesFromWindow(drv->renderer, window_x, window_y, &x, &y);
+  }
+
+  *display_x = (int)x;
+  *display_y = (int)y;
 }
 
 void display_deinit(display_content_mode_t mode) {
