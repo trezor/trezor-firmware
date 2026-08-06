@@ -58,6 +58,7 @@ def test_pin(session: Session):
         assert isinstance(resp, messages.Address)
 
 
+@pytest.mark.ble(wipe=True)
 @pytest.mark.models("core")
 def test_softlock_instability(session: Session):
 
