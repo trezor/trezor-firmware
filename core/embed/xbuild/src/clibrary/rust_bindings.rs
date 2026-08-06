@@ -58,6 +58,8 @@ impl CLibrary {
                 let mut content = Vec::<u8>::new();
                 builder
                     .clang_args(attrs.to_compiler_args())
+                    // -Wall/-Werror (e.g. the self-assign in stm32u5xx_ll_adc.h).
+                    .clang_arg("-Wno-self-assign")
                     // Customize the standard types.
                     .use_core()
                     .ctypes_prefix("cty")

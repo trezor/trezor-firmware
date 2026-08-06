@@ -12,9 +12,15 @@ driver = "io/backlight_pwm"
 driver = "io/touch_ft6x36"
 panel = "io/touch_panel_lx154a2422cpt23"
 
+[button]
+
 [optiga]
 
 [tropic]
+
+[power_manager]
+pmic = "io/pmic_power_latch"
+fuel_gauge = "io/fuel_gauge_mock"
 
 [ble]
 
