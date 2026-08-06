@@ -1810,11 +1810,11 @@
       "Eckhart": ""
     },
     "pin__diff_from_wipe_code": "The new PIN must be different from your wipe code.",
-    "pin__disabled": "PIN protection\nturned off.",
+    "pin__disabled": "PIN protection turned off.",
     "pin__enabled": {
-      "Bolt": "PIN protection\nturned on.",
-      "Caesar": "PIN protection\nturned on.",
-      "Delizia": "PIN protection\nturned on.",
+      "Bolt": "PIN protection turned on.",
+      "Caesar": "PIN protection turned on.",
+      "Delizia": "PIN protection turned on.",
       "Eckhart": ""
     },
     "pin__enter": "Enter PIN",
