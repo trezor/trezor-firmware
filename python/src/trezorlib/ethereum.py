@@ -16,7 +16,17 @@
 
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AnyStr,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from typing_extensions import Self
 
@@ -221,6 +231,7 @@ class SignTxResult:
     v: int
     r: bytes
     s: bytes
+    auth7702_list: list[Sequence[bytes]]
 
     def signature_tuple(self) -> Tuple[int, bytes, bytes]:
         return (self.v, self.r, self.s)
@@ -233,7 +244,12 @@ class SignTxResult:
             and msg.signature_s is not None
         ):
             # We got an EthereumTxRequest containing the signature which means we are done.
-            return cls(v=msg.signature_v, r=msg.signature_r, s=msg.signature_s)
+            return cls(
+                v=msg.signature_v,
+                r=msg.signature_r,
+                s=msg.signature_s,
+                auth7702_list=[i.items for i in msg.auth7702_list],
+            )
         else:
             return None  # We are not done yet.
 
@@ -345,6 +361,7 @@ def sign_tx_eip1559(
     payment_req: Optional[messages.PaymentRequest] = None,
     supports_definition_request: Optional[bool] = None,
     definition_source: Optional["Source"] = None,
+    auth7702: Optional[messages.EthereumAuth7702] = None,
 ) -> SignTxResult:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -364,6 +381,7 @@ def sign_tx_eip1559(
         chunkify=chunkify,
         payment_req=payment_req,
         supports_definition_request=supports_definition_request,
+        auth7702=auth7702,
     )
 
     return _ethereum_sign_loop(session, msg, data, definition_source)

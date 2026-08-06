@@ -9,6 +9,7 @@ from .keychain import with_keychain_from_chain_id
 if TYPE_CHECKING:
     from trezor.messages import (
         EthereumAccessList,
+        EthereumAuth7702Tuple,
         EthereumSignTxEIP1559,
         EthereumTxRequest,
     )
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
 
 
 _TX_TYPE = const(2)
+_TX_TYPE_EIP7702 = const(4)
 
 
 def access_list_item(item: EthereumAccessList) -> rlp.RLPItem:
@@ -56,6 +58,31 @@ async def sign_tx_eip1559(
 
     # have a user confirm signing
     await paths.validate_path(keychain, msg.address_n)
+
+    # may raise on error / unsupported delegation
+    auth7702_list: list[EthereumAuth7702Tuple] = []
+    if msg.auth7702 is not None:
+        from trezor.messages import EthereumSignAuth7702
+
+        from .sign_auth_eip7702 import sign_auth_eip7702
+
+        # EIP-7702 authorization tuple: [chain_id, delegate, nonce, y_parity, r, s]
+        # Confirm, sign, include in transaction digest and return to the host.
+        auth7702_list = [
+            await sign_auth_eip7702(
+                msg=EthereumSignAuth7702(
+                    address_n=msg.address_n,
+                    chain_id=msg.chain_id,
+                    delegate=msg.auth7702.delegate,
+                    # authorization tuple nonce must be (tx.nonce + 1)
+                    nonce=int.from_bytes(msg.nonce, "big") + 1,
+                    definitions=msg.definitions,
+                ),
+                keychain=keychain,
+                defs=defs,
+            )
+        ]
+
     sender_bytes = keychain.derive(msg.address_n).ethereum_pubkeyhash()
     address_bytes = bytes_from_address(msg.to)
 
@@ -79,7 +106,8 @@ async def sign_tx_eip1559(
             msg.payment_req, slip44_id, keychain, amount_size_bytes=32
         )
 
-    sha = _start_digest(msg)
+    auth7702_rlp: rlp.RLPList = [i.items for i in auth7702_list]
+    sha = _start_digest(msg, auth7702_rlp)
     initial_data = await request_initial_data(msg, sha)
 
     # Confirm the transaction, using special layouts for staking, yielding and clear-signing (if supported).
@@ -96,16 +124,20 @@ async def sign_tx_eip1559(
         create_data_chunk_loader(sha),
     )
 
-    digest = _finish_digest(msg, sha)
+    digest = _finish_digest(msg, auth7702_rlp, sha)
 
     # transaction data confirmed, proceed with signing
     result = _sign_digest(msg, keychain, digest)
+
+    # EIP-7702 authorization list (if not empty)
+    if auth7702_list:
+        result.auth7702_list = auth7702_list
 
     show_continue_in_app(TR.send__transaction_signed)
     return result
 
 
-def _start_digest(msg: EthereumSignTxEIP1559) -> HashWriter:
+def _start_digest(msg: EthereumSignTxEIP1559, auth7702_rlp: rlp.RLPList) -> HashWriter:
     from .helpers import keccak256
 
     fields: tuple[rlp.RLPItem, ...] = (
@@ -130,10 +162,17 @@ def _start_digest(msg: EthereumSignTxEIP1559) -> HashWriter:
     access_list_length = rlp.header_length(payload_length) + payload_length
     length += access_list_length
 
+    tx_type = _TX_TYPE
+    # EIP-7702 authorization list (if not empty)
+    if auth7702_rlp:
+        length += rlp.length(auth7702_rlp)
+        tx_type = _TX_TYPE_EIP7702
+
     # hash only `_TX_TYPE`, RLP header and `fields` (see above).
     # calldata and access_list will be hashed later.
     sha = keccak256()
-    sha.append(_TX_TYPE)
+    # different transaction type is used for EIP-7702 authorization
+    sha.append(tx_type)
 
     rlp.write_header(sha, length, rlp.LIST_HEADER_BYTE)
     for field in fields:
@@ -141,12 +180,18 @@ def _start_digest(msg: EthereumSignTxEIP1559) -> HashWriter:
     return sha
 
 
-def _finish_digest(msg: EthereumSignTxEIP1559, sha: HashWriter) -> bytes:
+def _finish_digest(
+    msg: EthereumSignTxEIP1559, auth7702_rlp: rlp.RLPList, sha: HashWriter
+) -> bytes:
     # write_access list (streaming instead of full materialization)
     payload_length = sum(rlp.length(access_list_item(i)) for i in msg.access_list)
     rlp.write_header(sha, payload_length, rlp.LIST_HEADER_BYTE)
     for item in msg.access_list:
         rlp.write(sha, access_list_item(item))
+
+    # EIP-7702 authorization list (if not empty)
+    if auth7702_rlp:
+        rlp.write(sha, auth7702_rlp)
 
     return sha.get_digest()
 
