@@ -21,12 +21,12 @@
 
 #include <trezor_types.h>
 
-// Charging current limits
-// - range of pmic is 32-800mA
-// - used battery limit is 180mA
-#define PMIC_CHARGING_LIMIT_MIN 32       // mA
-#define PMIC_CHARGING_LIMIT_MAX 180      // mA
-#define PMIC_CHARGING_LIMIT_DEFAULT 180  // mA
+// Core PMIC interface: init/measure/suspend/ship-mode - the surface every PMIC
+// driver implements (npm1300, npm2100, power latch, ...).
+//
+// The charger / buck-regulator surface (charging control, current limits, buck
+// mode) lives in pmic/pmic_charger.h and is implemented only by charger-capable
+// PMICs. See that header.
 
 typedef struct {
   // Battery voltage [V]
@@ -41,6 +41,10 @@ typedef struct {
   float ntc_temp;
   // Die temperature [°C]
   float die_temp;
+  // --- Charger-specific fields ---------------------------------------------
+  // Populated only by charger-capable PMICs (npm1300); other drivers leave
+  // them zero. (A future cleanup may split these into a separate report; kept
+  // inline for now to avoid churning every consumer.)
   // IBAT_MEAS_STATUS register value
   // (for debugging purposes, see the datasheet)
   uint8_t ibat_meas_status;
@@ -122,30 +126,5 @@ bool pmic_measure(pmic_report_callback_t callback, void* context);
 // is stored in the `report` structure.
 bool pmic_measure_sync(pmic_report_t* report);
 
-// Enables or disables the charging.
-//
-// The function returns `false` if the operation cannot be performed.
-bool pmic_set_charging(bool enable);
-
-// Sets the charging current limit [mA].
-//
-// The current value must be in the range defined by the
-// `NPM1300_CHARGING_LIMIT_MIN` and `NPM1300_CHARGING_LIMIT_MAX` constants.
-//
-// The function returns `false` if the operation cannot be performed.
-bool pmic_set_charging_limit(int i_charge);
-
-// Gets the charging current limit [mA].
-int pmic_get_charging_limit(void);
-
-typedef enum {
-  PMIC_BUCK_MODE_AUTO,
-  PMIC_BUCK_MODE_PWM,
-  PMIC_BUCK_MODE_PFM,
-} pmic_buck_mode_t;
-
-// Set the buck voltage regulator mode
-bool pmic_set_buck_mode(pmic_buck_mode_t buck_mode);
-
-// Clears all battery charger errors.
-bool pmic_clear_charger_errors(void);
+// Charging control, current limits and buck-regulator mode are part of the
+// charger extension - see pmic/pmic_charger.h.
