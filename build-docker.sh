@@ -370,7 +370,10 @@ for TREZOR_MODEL in ${MODELS[@]}; do
           mkdir -p /build/\$item/
           gzip build-xtask/artifacts/$TREZOR_MODEL/\$item.elf
           cp -v build-xtask/artifacts/$TREZOR_MODEL/\$item* /build/\$item/
-          cp -v build-xtask/artifacts/pub/\$item-$TREZOR_MODEL-*.bin /build/\$item/ || true  # n/a for kernel
+          pub_bin=(build-xtask/artifacts/pub/\$item-$TREZOR_MODEL-*.bin)
+          if [ -f "\$pub_bin" ]; then
+            cp -v "\${pub_bin[@]}" /build/\$item/
+          fi  # no pub bin for kernel, or for secmon when built only as a dependency
         fi
       done
       chown -R $USER:$GROUP /build
