@@ -29,6 +29,10 @@
 #include <sys/mpu.h>
 #include <sys/rng.h>
 
+#ifdef PQ_SECURE_BOOT
+#include <sec/boot_header.h>
+#endif
+
 #include "../storage_salt.h"
 
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
@@ -36,13 +40,29 @@
 void storage_salt_get(storage_salt_t* salt) {
   memset(salt, 0, sizeof(*salt));
 
+#ifdef PQ_SECURE_BOOT
+  // Merkle-tree layout: there is no vendor header. The storage-domain identity
+  // is the firmware_type the bootloader persists into the signed boot header
+  // (trusted because that region is write-protected from firmware). The boot
+  // header lives in the bootloader flash area, which the secmon's default MPU
+  // mode does not map -- switch to MPU_MODE_BOOTLOADER for the read.
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
+  const boot_header_auth_t* bl = boot_header_auth_get(BOOTLOADER_START);
+  ensure((bl != NULL) * sectrue, "Invalid boot header");
+  const boot_header_unauth_t* unauth = boot_header_unauth_get(bl);
+  ensure((unauth != NULL) * sectrue, "Invalid boot header");
+  uint16_t fw_type = unauth->firmware_type;
+  mpu_restore(mpu_mode);
+#else
   vendor_header vhdr = {0};
   ensure(read_vendor_header((const uint8_t*)FIRMWARE_START,
                             VENDOR_HEADER_MAX_SIZE, &vhdr),
          NULL);
+  uint16_t fw_type = vhdr.fw_type;
+#endif
 
   _Static_assert(SECRET_KEY_STORAGE_SALT_SIZE <= sizeof(salt->bytes));
-  secbool retval = secret_key_storage_salt(vhdr.fw_type, salt->bytes);
+  secbool retval = secret_key_storage_salt(fw_type, salt->bytes);
 
 #if PRODUCTION
   ensure(retval, "Failed to get storage salt");
