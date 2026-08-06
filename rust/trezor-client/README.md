@@ -1,7 +1,6 @@
 # trezor-client
 
 [![Downloads][downloads-badge]][crates-io]
-[![License][license-badge]][license-url]
 
 A fork of a [fork](https://github.com/romanz/rust-trezor-api) of a [library](https://github.com/stevenroose/rust-trezor-api) that provides a way to communicate with Trezor devices from a Rust project.
 
@@ -36,5 +35,3 @@ Last tested with firmware v2.4.2.
 
 [downloads-badge]: https://img.shields.io/crates/d/trezor-client?style=for-the-badge&logo=rust
 [crates-io]: https://crates.io/crates/trezor-client
-[license-badge]: https://img.shields.io/badge/license-CC0--1.0-blue.svg?style=for-the-badge
-[license-url]: https://github.com/trezor/trezor-firmware/blob/master/rust/trezor-client/LICENSE
