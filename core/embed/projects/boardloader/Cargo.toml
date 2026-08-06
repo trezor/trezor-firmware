@@ -31,8 +31,8 @@ sys.workspace = true
 bootloader_devel = ["sec/bootloader_devel"]
 clippy = []
 emulator = ["io/emulator"]
-dbg_console_swo = ["dbg_console"]
-dbg_console_system_view = ["dbg_console", "sys/system_view"]
+dbg_console_swo = ["dbg_console", "sys/dbg_console_swo"]
+dbg_console_system_view = ["dbg_console", "sys/dbg_console_system_view"]
 production = ["io/production"]
 
 # --------------------------------------------------------------------------
