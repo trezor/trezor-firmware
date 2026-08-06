@@ -24,6 +24,7 @@ typedef enum _MessageType {
     MessageType_MessageType_ButtonAck = 27,
     MessageType_MessageType_GetFeatures = 55,
     MessageType_MessageType_UnlockBootloader = 96,
+    MessageType_MessageType_FirmwareBegin = 106,
     MessageType_MessageType_DebugLinkDecision = 100,
     MessageType_MessageType_DebugLinkGetState = 101,
     MessageType_MessageType_DebugLinkState = 102,
@@ -141,16 +142,32 @@ typedef struct _FirmwareErase {
     uint32_t length;
 } FirmwareErase;
 
+typedef struct _FirmwareBegin {
+    pb_callback_t boot_header;
+    pb_callback_t module_headers;
+    bool has_code_length;
+    uint32_t code_length;
+    bool has_nrf_length;
+    uint32_t nrf_length;
+    pb_callback_t nrf_co_path;
+    pb_callback_t nrf_image_hash;
+} FirmwareBegin;
+
 typedef struct _FirmwareRequest {
     uint32_t offset;
     uint32_t length;
+    bool has_coprocessor_index;
+    uint32_t coprocessor_index;
 } FirmwareRequest;
 
 typedef PB_BYTES_ARRAY_T(32) FirmwareUpload_hash_t;
+typedef PB_BYTES_ARRAY_T(32) FirmwareUpload_prev_hash_t;
 typedef struct _FirmwareUpload {
     pb_callback_t payload;
     bool has_hash;
     FirmwareUpload_hash_t hash;
+    bool has_prev_hash;
+    FirmwareUpload_prev_hash_t prev_hash;
 } FirmwareUpload;
 
 typedef struct _UnlockBootloader {
@@ -191,6 +208,7 @@ extern "C" {
 
 
 
+
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
@@ -202,8 +220,9 @@ extern "C" {
 #define ButtonRequest_init_default               {false, _ButtonRequestType_MIN}
 #define ButtonAck_init_default                   {0}
 #define FirmwareErase_init_default               {false, 0}
-#define FirmwareRequest_init_default             {0, 0}
-#define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}}
+#define FirmwareBegin_init_default               {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
+#define FirmwareRequest_init_default             {0, 0, false, 0}
+#define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}, false, {0, {0}}}
 #define UnlockBootloader_init_default            {0}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
@@ -215,8 +234,9 @@ extern "C" {
 #define ButtonRequest_init_zero                  {false, _ButtonRequestType_MIN}
 #define ButtonAck_init_zero                      {0}
 #define FirmwareErase_init_zero                  {false, 0}
-#define FirmwareRequest_init_zero                {0, 0}
-#define FirmwareUpload_init_zero                 {{{NULL}, NULL}, false, {0, {0}}}
+#define FirmwareBegin_init_zero                  {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
+#define FirmwareRequest_init_zero                {0, 0, false, 0}
+#define FirmwareUpload_init_zero                 {{{NULL}, NULL}, false, {0, {0}}, false, {0, {0}}}
 #define UnlockBootloader_init_zero               {0}
 
 /* Field tags (for use in manual encoding/decoding) */
@@ -253,10 +273,18 @@ extern "C" {
 #define Failure_message_tag                      2
 #define ButtonRequest_code_tag                   1
 #define FirmwareErase_length_tag                 1
+#define FirmwareBegin_boot_header_tag            1
+#define FirmwareBegin_module_headers_tag         2
+#define FirmwareBegin_code_length_tag            3
+#define FirmwareBegin_nrf_length_tag             5
+#define FirmwareBegin_nrf_co_path_tag            6
+#define FirmwareBegin_nrf_image_hash_tag         7
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
+#define FirmwareRequest_coprocessor_index_tag    3
 #define FirmwareUpload_payload_tag               1
 #define FirmwareUpload_hash_tag                  2
+#define FirmwareUpload_prev_hash_tag             3
 
 /* Struct field encoding specification for nanopb */
 #define Initialize_FIELDLIST(X, a) \
@@ -336,15 +364,27 @@ X(a, STATIC,   OPTIONAL, UINT32,   length,            1)
 #define FirmwareErase_CALLBACK NULL
 #define FirmwareErase_DEFAULT NULL
 
+#define FirmwareBegin_FIELDLIST(X, a) \
+X(a, CALLBACK, REQUIRED, BYTES,    boot_header,       1) \
+X(a, CALLBACK, REQUIRED, BYTES,    module_headers,    2) \
+X(a, STATIC,   OPTIONAL, UINT32,   code_length,       3) \
+X(a, STATIC,   OPTIONAL, UINT32,   nrf_length,        5) \
+X(a, CALLBACK, OPTIONAL, BYTES,    nrf_co_path,       6) \
+X(a, CALLBACK, OPTIONAL, BYTES,    nrf_image_hash,    7)
+#define FirmwareBegin_CALLBACK pb_default_field_callback
+#define FirmwareBegin_DEFAULT NULL
+
 #define FirmwareRequest_FIELDLIST(X, a) \
 X(a, STATIC,   REQUIRED, UINT32,   offset,            1) \
-X(a, STATIC,   REQUIRED, UINT32,   length,            2)
+X(a, STATIC,   REQUIRED, UINT32,   length,            2) \
+X(a, STATIC,   OPTIONAL, UINT32,   coprocessor_index,   3)
 #define FirmwareRequest_CALLBACK NULL
 #define FirmwareRequest_DEFAULT NULL
 
 #define FirmwareUpload_FIELDLIST(X, a) \
 X(a, CALLBACK, REQUIRED, BYTES,    payload,           1) \
-X(a, STATIC,   OPTIONAL, BYTES,    hash,              2)
+X(a, STATIC,   OPTIONAL, BYTES,    hash,              2) \
+X(a, STATIC,   OPTIONAL, BYTES,    prev_hash,         3)
 #define FirmwareUpload_CALLBACK pb_default_field_callback
 #define FirmwareUpload_DEFAULT NULL
 
@@ -363,6 +403,7 @@ extern const pb_msgdesc_t Failure_msg;
 extern const pb_msgdesc_t ButtonRequest_msg;
 extern const pb_msgdesc_t ButtonAck_msg;
 extern const pb_msgdesc_t FirmwareErase_msg;
+extern const pb_msgdesc_t FirmwareBegin_msg;
 extern const pb_msgdesc_t FirmwareRequest_msg;
 extern const pb_msgdesc_t FirmwareUpload_msg;
 extern const pb_msgdesc_t UnlockBootloader_msg;
@@ -378,18 +419,20 @@ extern const pb_msgdesc_t UnlockBootloader_msg;
 #define ButtonRequest_fields &ButtonRequest_msg
 #define ButtonAck_fields &ButtonAck_msg
 #define FirmwareErase_fields &FirmwareErase_msg
+#define FirmwareBegin_fields &FirmwareBegin_msg
 #define FirmwareRequest_fields &FirmwareRequest_msg
 #define FirmwareUpload_fields &FirmwareUpload_msg
 #define UnlockBootloader_fields &UnlockBootloader_msg
 
 /* Maximum encoded size of messages (where known) */
+/* FirmwareBegin_size depends on runtime parameters */
 /* FirmwareUpload_size depends on runtime parameters */
 #define ButtonAck_size                           0
 #define ButtonRequest_size                       2
 #define Failure_size                             260
 #define Features_size                            527
 #define FirmwareErase_size                       6
-#define FirmwareRequest_size                     12
+#define FirmwareRequest_size                     18
 #define GetFeatures_size                         0
 #define Initialize_size                          0
 #define MESSAGES_PB_H_MAX_SIZE                   Features_size

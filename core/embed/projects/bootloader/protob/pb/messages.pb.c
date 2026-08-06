@@ -36,6 +36,9 @@ PB_BIND(ButtonAck, ButtonAck, AUTO)
 PB_BIND(FirmwareErase, FirmwareErase, AUTO)
 
 
+PB_BIND(FirmwareBegin, FirmwareBegin, AUTO)
+
+
 PB_BIND(FirmwareRequest, FirmwareRequest, AUTO)
 
 

@@ -61,6 +61,16 @@ secbool recv_msg_ping(protob_io_t *iface, Ping *msg);
 
 secbool recv_msg_firmware_erase(protob_io_t *iface, FirmwareErase *msg);
 
+#ifdef PQ_SECURE_BOOT
+// Receives a FirmwareBegin: the boot header (into bh_buf) and module headers
+// (into mh_buf) are decoded via nanopb callbacks; their lengths are returned in
+// *bh_len / *mh_len. `msg` receives the scalar fields (code_length).
+secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
+                                uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
+                                uint8_t *mh_buf, size_t mh_size,
+                                size_t *mh_len);
+#endif
+
 secbool recv_msg_firmware_upload(protob_io_t *iface, FirmwareUpload *msg,
                                  void *ctx,
                                  void (*data_cb)(size_t len, void *ctx),
