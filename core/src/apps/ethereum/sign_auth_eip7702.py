@@ -1,3 +1,4 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import TR
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 
     from .definitions import Definitions
 
-_MAGIC = b"\x05"
+_MAGIC = const(5)
 
 _REVOKE_ADDRESS = b"\x00" * 20
 
@@ -92,7 +93,9 @@ async def sign_auth_eip7702(
         )
         done_msg = TR.ethereum__auth_done
 
-    sha = keccak256(_MAGIC)
+    sha = keccak256()
+    sha.append(_MAGIC)
+
     fields: rlp.RLPList = [msg.chain_id, delegate_bytes, msg.nonce]
     rlp.write(sha, fields)
 
