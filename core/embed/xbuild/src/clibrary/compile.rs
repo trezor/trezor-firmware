@@ -221,10 +221,11 @@ impl CLibrary {
     ///
     /// Returns an error if preprocessing fails.
     pub fn preprocess_file(&self, input: &Path, output: &Path) -> Result<()> {
-        let mut cmd = self
-            .get_merged_attrs()
-            .get_configured_compiler()
-            .to_command();
+        let tool = self.get_merged_attrs().get_configured_compiler();
+        let mut cmd = tool.to_command();
+        if let Some(flag) = diagnostics_color_flag(&tool) {
+            cmd.arg(flag);
+        }
 
         cmd.arg("-E").arg(input).arg("-o").arg(output);
 
