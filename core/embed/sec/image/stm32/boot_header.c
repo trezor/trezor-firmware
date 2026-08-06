@@ -24,10 +24,25 @@
 
 #include <rtl/sizedefs.h>
 #include <sec/boot_header.h>
+#include <sec/image.h>
 #include <sec/image_hash_conf.h>
 
 #include <../vendor/sphincsplus/ref/api.h>
 #include <ed25519-donna/ed25519.h>
+
+// fw_variant_t shares the vendor_fw_type_t vocabulary (legacy vendor header /
+// model vendorheader JSONs) so a variant maps to the same firmware_type byte in
+// both schemes. Keep these in sync.
+_Static_assert((int)FW_VARIANT_NONE == (int)VENDOR_FW_TYPE_RESERVED,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_CUSTOM == (int)VENDOR_FW_TYPE_CUSTOM,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_UNIVERSAL == (int)VENDOR_FW_TYPE_UNIVERSAL,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_BITCOIN_ONLY == (int)VENDOR_FW_TYPE_BTC_ONLY,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_PRODTEST == (int)VENDOR_FW_TYPE_PRODTEST,
+               "fw variant");
 
 static const uint8_t * const BOARDLOADER_PQ_KEYS[] = {
 #if BOOTLOADER_DEVEL
@@ -179,7 +194,7 @@ const boot_header_auth_t* boot_header_auth_get(uint32_t address) {
 
   // Check if the hardware model and revision match
   if (hdr->hw_model != HW_MODEL || hdr->hw_revision != HW_REVISION) {
-    return secfalse;
+    return NULL;
   }
 
   // Check if the header contains a valid Merkle proof
