@@ -28,6 +28,12 @@
 
 workflow_result_t workflow_firmware_update(protob_io_t *iface);
 
+#ifdef PQ_SECURE_BOOT
+// Phase 1 of a Merkle-tree firmware update: stage the new boot header (with the
+// resolved firmware_type) via the UCB and reboot; phase 2 installs the modules.
+workflow_result_t workflow_firmware_update_pq(protob_io_t *iface);
+#endif
+
 workflow_result_t workflow_wipe_device(protob_io_t *iface);
 
 #ifdef LOCKABLE_BOOTLOADER

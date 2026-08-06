@@ -28,6 +28,7 @@ uses = [
     "nrf",
     "optiga",
     "power_manager",
+    "pq_secure_boot",
     "pvd",
     "rgb_led",
     "rtc",
@@ -48,7 +49,12 @@ uses = [
 
 # ELF sections to be included in the final binary.
 # The order of sections is important.
-elf_sections = [".vendorheader", ".header", ".flash", ".data"]
+# ".manifest" is the firmware manifest region at the image start in the
+# Merkle-tree layout (absent, thus a no-op, on legacy builds); in the tree layout
+# prodtest is just code committed directly by the manifest. ".vendorheader" and
+# ".header" are the legacy vendor + image headers (absent, thus no-ops, in the
+# tree layout).
+elf_sections = [".manifest", ".vendorheader", ".header", ".flash", ".data"]
 
 secmon_body_sections   = [".secmon_header", ".flash", ".data"]
 secmon_header_sections = [".vendorheader", ".header"]

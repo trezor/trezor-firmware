@@ -21,6 +21,7 @@
 #include <trezor_model.h>
 
 #include <sec/board_capabilities.h>
+#include <sec/boot_header.h>
 #include <sec/boot_image.h>
 #include <sec/monoctr.h>
 #include <sec/option_bytes.h>
@@ -160,6 +161,10 @@ static void secmon_panic(const systask_postmortem_t* pminfo) {
 // defined in linker script
 extern uint32_t _secmon_size;
 #define SECMON_SIZE ((uint32_t)&_secmon_size)
+
+// Merkle-tree layout: the kernel+coreapp module code starts right after the
+// secmon module (no per-module header). _secmon_size spans the manifest region
+// plus the secmon code, i.e. exactly the offset to the kernel's vector table.
 #define KERNEL_START (FIRMWARE_START + SECMON_SIZE)
 
 int main(void) {

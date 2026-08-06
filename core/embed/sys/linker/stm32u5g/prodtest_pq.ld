@@ -1,0 +1,123 @@
+ENTRY(reset_handler)
+
+/* Merkle-tree layout (pq_secure_boot feature): prodtest is a single secure module
+   (its own variant). The firmware manifest ("firmware directory") occupies
+   FW_MANIFEST_REGION at the image start, before the module header + code. This is
+   prodtest.ld with ONLY the FLASH header layout swapped to the tree format
+   (manifest + TRZM module header, replacing the legacy vendor/image/secmon
+   headers); the RAM layout, stack and prodtest-specific sections are unchanged. */
+FW_MANIFEST_REGION = 0x400;
+/* Smart-hashing chunk size stamped into the manifest entry by manifest_header.S
+   (the code_hash chain folds chunks of this size; the last chunk may be partial).
+   NOT a layout/padding constant. Must match FW_CHUNK_SIZE in sec/boot_header.h. */
+FW_CHUNK_SIZE = 0x2000;
+
+MEMORY {
+  FLASH  (rx)    : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
+  MAIN_RAM (rw)  : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
+  AUX1_RAM (rw)  : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
+  BOOT_ARGS (rw) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
+  FB1_RAM (rw)   : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
+  FB2_RAM (rw)   : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
+}
+
+_stack_section_start = ADDR(.stack);
+_stack_section_end = ADDR(.stack) + SIZEOF(.stack);
+
+_data_section_loadaddr = LOADADDR(.data);
+_data_section_start = ADDR(.data);
+_data_section_end = ADDR(.data) + SIZEOF(.data);
+
+_bss_section_start = ADDR(.bss);
+_bss_section_end = ADDR(.bss) + SIZEOF(.bss);
+
+_bootargs_ram_start = BOOTARGS_START;
+_bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
+
+/* Tree module code size -- what the manifest entry's size / code_hash cover:
+   everything after the manifest region. Mirrors firmware_pq.ld. */
+_codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data);
+
+/* The single prodtest module's code region, self-described by the manifest
+   entry (emitted by manifest_header.S). There is no per-module header. */
+_manifest_module_addr = ADDR(.padding) - FIRMWARE_START;
+_manifest_module_size = _codelen;
+
+SECTIONS {
+  /* Firmware manifest ("firmware directory") at the image start -- prodtest's
+     single-module variant leaf (see manifest_header.S). Padded to
+     FW_MANIFEST_REGION there; the entry's addr/size come from manifest_header.S
+     and the post-build step fills its code_hash. */
+  .manifest : ALIGN(CODE_ALIGNMENT) {
+    KEEP(*(.manifest));
+  } >FLASH AT>FLASH
+
+  .padding : ALIGN(4) {
+    . = ALIGN(4);
+    . = ALIGN(CODE_ALIGNMENT);
+  } >FLASH AT>FLASH
+
+  .flash : ALIGN(CODE_ALIGNMENT) {
+    KEEP(*(.vector_table));
+    . = ALIGN(4);
+    *(.text*);
+    . = ALIGN(4);
+    *(.rodata*);
+    . = ALIGN(4);
+
+    _prodtest_cli_cmd_section_start = .;
+    KEEP(*(.prodtest_cli_cmd))
+    _prodtest_cli_cmd_section_end = .;
+    . = ALIGN(4);
+
+    _unit_test_section_start = .;
+    KEEP(*(.unit_test))
+    _unit_test_section_end = .;
+
+    . = ALIGN(512);
+  } >FLASH AT>FLASH
+
+  .stack : ALIGN(8) {
+    . += 128K; /* Overflow causes UsageFault */
+  } >AUX1_RAM
+
+  .data : ALIGN(4) {
+    *(.data*);
+    . = ALIGN(512);
+  } >AUX1_RAM AT>FLASH
+
+  /DISCARD/ : {
+    *(.ARM.exidx*);
+  }
+
+  /* End of code/data in FLASH */
+  _image_flash_end = LOADADDR(.data) + SIZEOF(.data);
+
+  .bss : ALIGN(4) {
+    *(.no_dma_buffers*);
+    *(.bss*);
+    . = ALIGN(4);
+  } >AUX1_RAM
+
+  .fb1 : ALIGN(4) {
+    *(.fb1*);
+    . = ALIGN(4);
+  } >FB1_RAM
+
+  .fb2 : ALIGN(4) {
+    *(.fb2*);
+    . = ALIGN(4);
+  } >FB2_RAM
+
+  .buf : ALIGN(4) {
+    *(.buf*);
+    . = ALIGN(4);
+  } >AUX1_RAM
+
+  .boot_args : ALIGN(8) {
+    *(.boot_command*);
+    . = ALIGN(8);
+    *(.boot_args*);
+    . = ALIGN(8);
+  } >BOOT_ARGS
+}
