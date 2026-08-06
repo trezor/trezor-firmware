@@ -23,8 +23,9 @@ from enum import Enum
 
 import construct as c
 from construct_classes import subcon
+from slhdsa import PublicKey, sha2_128s
 
-from .. import cosi, merkle_tree
+from .. import _ed25519, cosi, merkle_tree
 from ..construct_helpers import EnumAdapter, Reserved, TupleAdapter
 from . import consts, models, util
 from .models import Model
@@ -284,14 +285,19 @@ class BootHeaderUnauth(SanityCheckedStruct):
 
     # fmt: off
     SUBCON = c.Struct(
-        # Merkle proof
+        # Merkle proof (the BOOTLOADER's own co-path in the founder bootloader tree)
         "merkle_proof" / c.PrefixedArray(c.Int32ul, c.Bytes(32)),
 
         # Signatures
         "slh_signatures" / c.Bytes(7856)[2],
         "ec_signatures" / c.Bytes(64)[2],
 
-        # Other fields that are not part of the signature
+        # Other fields that are not part of the signature. The FIRMWARE Merkle
+        # proof is NOT here: in pq_secure_boot it lives in the firmware image's
+        # manifest region (firmware_manifest_proof_t), so this write-protected
+        # header only carries the storage-domain identity (firmware_type). Future
+        # unauth fields are appended AFTER this, bounded by the FixedSized unauth
+        # region (see BootableImage), so older bins/parsers stay compatible.
         "firmware_type" / c.Aligned(4, c.Byte),
     )
     # fmt: on
@@ -312,7 +318,14 @@ class BootableImage(SanityCheckedStruct):
 
     SUBCON = c.Struct(
         "header" / BootHeader.SUBCON,
-        "unauth" / BootHeaderUnauth.SUBCON,
+        # The unauth part occupies exactly header_len - auth_len bytes. Bounding it
+        # to that region locates the code at header_len regardless of which
+        # (future, optional) unauth fields a given bin carries.
+        "unauth"
+        / c.FixedSized(
+            c.this.header.header_len - c.this.header.auth_len,
+            BootHeaderUnauth.SUBCON,
+        ),
         "_code_offset" / c.Tell,
         "code" / c.Bytes(c.this.header.code_length),
         c.Check(c.this.header.header_len == c.this._code_offset),
@@ -384,3 +397,53 @@ class BootableImage(SanityCheckedStruct):
         if dev_keys:
             return models.ROOT_ED25519_KEYS_DEV
         return models.ROOT_ED25519_KEYS
+
+    def verify(self, dev_keys: bool = False) -> None:
+        """Verify the boot header's hybrid founder signatures.
+
+        Both an SLH-DSA and an Ed25519 signature per selected key, over the
+        Merkle root this header folds to -- so a valid signature also pins the
+        header's own co-path, and with it `firmware_root`.
+
+        Lives on the public class, not in _internal, because verification is
+        something a HOST does: trezorctl checks a release before uploading it.
+        Signing stays in _internal, which is why only that side holds private
+        keys.
+        """
+        digest = self.merkle_root()
+
+        hash_fn = self.get_hash_params().hash_function
+        mask = self.header.sigmask
+
+        if (mask.bit_length() > len(self.public_ec_keys(dev_keys))) or (
+            mask.bit_length() > len(self.public_pq_keys(dev_keys))
+        ):
+            raise ValueError("Sigmask specifies more public keys than provided.")
+
+        # Verify ed25519 signatures
+        if mask.bit_count() != len(self.unauth.ec_signatures):
+            raise ValueError("Sigmask does not specify valid number of ed25519 keys.")
+
+        sig_idx = 0
+        for pubkey_idx, key in enumerate(self.public_ec_keys(dev_keys)):
+            if not (mask & (1 << pubkey_idx)):
+                continue
+            ext_digest = hash_fn(digest + self.unauth.slh_signatures[sig_idx]).digest()
+            try:
+                _ed25519.checkvalid(self.unauth.ec_signatures[sig_idx], ext_digest, key)
+            except _ed25519.SignatureMismatch:
+                raise util.InvalidSignatureError("Invalid bootloader signature")
+            sig_idx += 1
+
+        # Verify slh-dsa signatures
+        if mask.bit_count() != len(self.unauth.slh_signatures):
+            raise ValueError("Sigmask does not specify valid number of slh-dsa keys.")
+
+        sig_idx = 0
+        for pubkey_idx, key in enumerate(self.public_pq_keys(dev_keys)):
+            if not (mask & (1 << pubkey_idx)):
+                continue
+            pq_key = PublicKey.from_digest(key, sha2_128s)
+            if not pq_key.verify(digest, self.unauth.slh_signatures[sig_idx]):
+                raise util.InvalidSignatureError("Invalid bootloader signature")
+            sig_idx += 1

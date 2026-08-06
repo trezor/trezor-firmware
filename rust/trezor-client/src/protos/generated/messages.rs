@@ -157,6 +157,8 @@ pub enum MessageType {
     MessageType_FirmwareRequest = 8,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ProdTestT1)
     MessageType_ProdTestT1 = 32,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_FirmwareBegin)
+    MessageType_FirmwareBegin = 106,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BleUnpair)
     MessageType_BleUnpair = 8001,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_GetPublicKey)
@@ -699,6 +701,7 @@ impl ::protobuf::Enum for MessageType {
             7 => ::std::option::Option::Some(MessageType::MessageType_FirmwareUpload),
             8 => ::std::option::Option::Some(MessageType::MessageType_FirmwareRequest),
             32 => ::std::option::Option::Some(MessageType::MessageType_ProdTestT1),
+            106 => ::std::option::Option::Some(MessageType::MessageType_FirmwareBegin),
             8001 => ::std::option::Option::Some(MessageType::MessageType_BleUnpair),
             11 => ::std::option::Option::Some(MessageType::MessageType_GetPublicKey),
             12 => ::std::option::Option::Some(MessageType::MessageType_PublicKey),
@@ -1003,6 +1006,7 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_FirmwareUpload" => ::std::option::Option::Some(MessageType::MessageType_FirmwareUpload),
             "MessageType_FirmwareRequest" => ::std::option::Option::Some(MessageType::MessageType_FirmwareRequest),
             "MessageType_ProdTestT1" => ::std::option::Option::Some(MessageType::MessageType_ProdTestT1),
+            "MessageType_FirmwareBegin" => ::std::option::Option::Some(MessageType::MessageType_FirmwareBegin),
             "MessageType_BleUnpair" => ::std::option::Option::Some(MessageType::MessageType_BleUnpair),
             "MessageType_GetPublicKey" => ::std::option::Option::Some(MessageType::MessageType_GetPublicKey),
             "MessageType_PublicKey" => ::std::option::Option::Some(MessageType::MessageType_PublicKey),
@@ -1306,6 +1310,7 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_FirmwareUpload,
         MessageType::MessageType_FirmwareRequest,
         MessageType::MessageType_ProdTestT1,
+        MessageType::MessageType_FirmwareBegin,
         MessageType::MessageType_BleUnpair,
         MessageType::MessageType_GetPublicKey,
         MessageType::MessageType_PublicKey,
