@@ -133,8 +133,8 @@ def _start_digest(msg: EthereumSignTxEIP1559) -> HashWriter:
     # hash only `_TX_TYPE`, RLP header and `fields` (see above).
     # calldata and access_list will be hashed later.
     sha = keccak256()
+    sha.append(_TX_TYPE)
 
-    rlp.write(sha, _TX_TYPE)
     rlp.write_header(sha, length, rlp.LIST_HEADER_BYTE)
     for field in fields:
         rlp.write(sha, field)
