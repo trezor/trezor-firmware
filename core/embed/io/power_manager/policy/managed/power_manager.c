@@ -36,9 +36,9 @@
 #include <sec/telemetry.h>
 #endif
 
-#include "../battery/battery.h"
-#include "../power_manager_poll.h"
-#include "../stwlc38/stwlc38.h"
+#include "../../fuel_gauge/battery.h"
+#include "../../power_manager_poll.h"
+#include "../../wireless/stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 // Global driver instance
@@ -67,6 +67,12 @@ pm_status_t pm_init(bool inherit_state) {
     pm_deinit();
     return PM_ERROR;
   }
+#ifdef USE_WIRELESS_CHARGER
+  if (!stwlc38_init()) {
+    pm_deinit();
+    return PM_ERROR;
+  }
+#endif
 
 #ifdef USE_WIRELESS_CHARGER
   if (!stwlc38_init()) {

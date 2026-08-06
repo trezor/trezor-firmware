@@ -32,6 +32,7 @@
 #include <io/suspend.h>
 #endif
 
+#include "../pmic_charger.h"
 #include "npm1300_defs.h"
 
 #ifdef KERNEL_MODE
@@ -148,9 +149,9 @@ typedef struct {
   bool charging_requested;
 
   // Buck voltage regulator mode
-  pmic_buck_mode_t buck_mode;            // written value
-  pmic_buck_mode_t buck_mode_requested;  // requested value
-  pmic_buck_mode_t buck_mode_set;        // value beeing written
+  npm1300_buck_mode_t buck_mode;            // written value
+  npm1300_buck_mode_t buck_mode_requested;  // requested value
+  npm1300_buck_mode_t buck_mode_set;        // value beeing written
 
   // Enter ship mode
   bool shipmode_requested;
@@ -377,9 +378,9 @@ bool pmic_init(void) {
   drv->i_charge_set = drv->i_charge;
   drv->i_charge_requested = drv->i_charge;
 
-  drv->buck_mode_requested = PMIC_BUCK_MODE_AUTO;
-  drv->buck_mode_set = PMIC_BUCK_MODE_AUTO;
-  drv->buck_mode = PMIC_BUCK_MODE_AUTO;
+  drv->buck_mode_requested = NPM1300_BUCK_MODE_AUTO;
+  drv->buck_mode_set = NPM1300_BUCK_MODE_AUTO;
+  drv->buck_mode = NPM1300_BUCK_MODE_AUTO;
 
   drv->i2c_bus = i2c_bus_open(NPM1300_I2C_INSTANCE);
   if (drv->i2c_bus == NULL) {
@@ -551,7 +552,7 @@ bool pmic_set_charging(bool enable) {
   return true;
 }
 
-bool pmic_set_buck_mode(pmic_buck_mode_t buck_mode) {
+bool npm1300_set_buck_mode(npm1300_buck_mode_t buck_mode) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   if (!drv->initialized) {
@@ -1066,9 +1067,9 @@ static void npm1300_fsm_continue(npm1300_driver_t* drv) {
     }
   } else if (drv->buck_mode != drv->buck_mode_requested) {
     drv->buck_mode_set = drv->buck_mode_requested;
-    if (drv->buck_mode_set == PMIC_BUCK_MODE_PWM) {
+    if (drv->buck_mode_set == NPM1300_BUCK_MODE_PWM) {
       npm1300_i2c_submit(drv, npm1300_ops_buck_pwm);
-    } else if (drv->buck_mode_set == PMIC_BUCK_MODE_PFM) {
+    } else if (drv->buck_mode_set == NPM1300_BUCK_MODE_PFM) {
       npm1300_i2c_submit(drv, npm1300_ops_buck_pfm);
     } else {
       npm1300_i2c_submit(drv, npm1300_ops_buck_auto);

@@ -29,8 +29,9 @@
 #include <sec/telemetry.h>
 #endif
 
-#include "../battery/battery.h"
-#include "../stwlc38/stwlc38.h"
+#include "../../fuel_gauge/battery.h"
+#include "../../pmic/pmic_charger.h"
+#include "../../wireless/stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 #ifdef PM_ENABLE_TEMP_CONTROL
@@ -183,6 +184,13 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   }
 }
 
+#ifndef USE_CHARGER
+// No charger on this PMIC (e.g. power latch): the charging controller is a
+// no-op. The public charging API (pm_charging_enable/disable/set_max_current)
+// still exists but does nothing, and the state machine never enters
+// PM_STATE_CHARGING because usb/wireless are never reported connected.
+void pm_charging_controller(pm_driver_t* drv) { (void)drv; }
+#else
 void pm_charging_controller(pm_driver_t* drv) {
   if (drv->charging_enabled == false) {
     // Charging is disabled
@@ -267,6 +275,7 @@ void pm_charging_controller(pm_driver_t* drv) {
     pmic_set_charging(true);
   }
 }
+#endif  // USE_CHARGER
 
 #ifdef PM_ENABLE_TEMP_CONTROL
 
@@ -329,20 +338,20 @@ static void pm_parse_power_source_state(pm_driver_t* drv) {
     }
   }
 
-  bat_fg_state_t fg_state;
-  bat_fg_get_state(&fg_state);
-
-  // Check battery voltage for critical (undervoltage) threshold
-  if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THR_V) &&
-      !drv->battery_critical && !drv->usb_connected) {
-    // Force Fuel gauge to 0, keep the covariance
-    bat_fg_set_soc(0.0f, fg_state.P);
-    drv->battery_critical = true;
-
-  } else if (fg_state.soc_latched >= (PM_BATTERY_CRITICAL_RECOVERY_SOC) ||
-             drv->usb_connected) {
-    // Restore the battery critical state
+  // Battery-critical (brownout) evaluation.
+  //
+  // Brownout is a safety concern and is kept out of the fuel-gauge precision
+  // budget: USB present means we are externally powered, so never
+  // brownout-critical; otherwise the decision (including hysteresis and the
+  // set/clear thresholds) is delegated to the chemistry-specific gauge, which
+  // knows what its cell and precision can actually support. See
+  // bat_eval_critical().
+  if (drv->usb_connected) {
     drv->battery_critical = false;
+  } else {
+    drv->battery_critical =
+        bat_eval_critical(drv->battery_critical, drv->pmic_data.vbat,
+                          drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
   }
 }
 

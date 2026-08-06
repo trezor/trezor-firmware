@@ -26,13 +26,15 @@
 #include <sys/rtc_scheduler.h>
 #include <sys/systimer.h>
 
-#include "../stwlc38/stwlc38.h"
+#include "../../pmic/pmic_charger.h"
+#include "../../wireless/stwlc38/stwlc38.h"
 
 // Power manager thresholds & timings
 #define PM_TIMER_PERIOD_MS 100
 #define PM_SHUTDOWN_TIMEOUT_MS 15000
-#define PM_BATTERY_UNDERVOLT_THR_V 3.0f
-#define PM_BATTERY_CRITICAL_RECOVERY_SOC 0.02f
+// Battery-critical (brownout) thresholds moved into the chemistry-specific
+// gauge (see bat_eval_critical() in fuel_gauge/*), since the correct set/clear
+// mechanism depends on the cell and the gauge's precision.
 #define PM_BATTERY_LOW_THRESHOLD_SOC 15
 #define PM_BATTERY_CHARGING_CURRENT_MAX PMIC_CHARGING_LIMIT_MAX
 #define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
@@ -50,8 +52,12 @@
 
 #define PM_STABILIZATION_TIMEOUT_MS 2000
 
-// Thermal controller switch, comment out to disable the thermal controller
+// Thermal controller switch, comment out to disable the thermal controller.
+// The thermal controller limits the *charging* current by temperature, so it
+// is only meaningful when a charger is present.
+#ifdef USE_CHARGER
 #define PM_ENABLE_TEMP_CONTROL
+#endif
 
 // Temperature controller parameters
 #define PM_TEMP_CONTROL_IDLE_PERIOD_MS 2 * 60 * 1000  // 2 minutes

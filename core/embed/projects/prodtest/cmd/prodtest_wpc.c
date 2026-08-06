@@ -26,7 +26,7 @@
 #include <sys/systick.h>
 
 #include <stdlib.h>
-#include "../stwlc38/stwlc38.h"
+#include "../wireless/stwlc38/stwlc38.h"
 
 #include "prodtest_error_codes.h"
 
