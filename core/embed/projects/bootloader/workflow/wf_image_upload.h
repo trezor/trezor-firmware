@@ -68,6 +68,20 @@ extern uint32_t chunk_buffer[];
 
 typedef struct image_upload_handler image_upload_handler_t;
 
+/** Max segments a handler may plan (see `plan_segments`). Sized for the largest
+ *  planned layout: a small header segment plus one per image sub-region. A
+ *  handler that would need more must fall back to flat (single-segment)
+ *  streaming. */
+#define IMAGE_UPLOAD_MAX_SEGMENTS 9
+
+/** A contiguous, image-relative byte range streamed with its own block cadence
+ *  (blocks requested from `offset`, so block k == chunk k of that range).
+ *  offset/length are relative to the image start (i.e. to `target_offset`). */
+typedef struct {
+  uint32_t offset;
+  uint32_t length;
+} image_segment_t;
+
 /**
  * Type-specific UI callbacks for an image upload.
  *
@@ -127,6 +141,25 @@ struct image_upload_handler {
   uint32_t target_offset;
   /** Upper bound on the declared image size, in bytes. */
   uint32_t max_size;
+  /** Transport block size: how many bytes the engine requests + writes per
+   *  FirmwareRequest/FirmwareUpload round. 0 (the default) means
+   * IMAGE_CHUNK_SIZE
+   *  -- the full staging buffer, best throughput, used for plain images (e.g.
+   *  the bootloader code). A handler may set this in `on_headers` to a SMALLER,
+   *  FLASH_BLOCK_SIZE-aligned value (e.g. the authenticated firmware
+   * chunk_size) so blocks arrive at the granularity it verifies -- earlier
+   * per-chunk rejection. Must be in [IMAGE_INIT_CHUNK_SIZE, IMAGE_CHUNK_SIZE];
+   * the engine clamps to that range. The staging buffer stays IMAGE_CHUNK_SIZE
+   * regardless, so this never enlarges a request beyond the buffer. */
+  uint32_t block_size;
+  /** Size of the first prefetch, in bytes: how many bytes the engine fetches up
+   *  front and hands to `on_headers` (which must find all it needs to parse
+   *  within them). 0 (the default) means IMAGE_INIT_CHUNK_SIZE. A handler whose
+   *  header region is a smaller fixed size may set this lower so the prefetch
+   *  does not reach past the header into the payload. Must be FLASH_BLOCK_SIZE-
+   *  aligned and <= block_size. Set STATICALLY (used before on_headers runs),
+   *  unlike block_size. */
+  uint32_t init_chunk_size;
   /** Workflow result returned on a successful upload. */
   workflow_result_t success_result;
   /** Type-specific UI callbacks. */
@@ -135,8 +168,9 @@ struct image_upload_handler {
   /**
    * Validates the image headers and runs user confirmation / policy.
    *
-   * Called once with the first IMAGE_INIT_CHUNK_SIZE bytes, which contain all
-   * headers. On success the engine fetches the remainder of the image.
+   * Called once with the first init_chunk_size bytes, which contain all
+   * headers. On success the engine plans the segments and fetches the rest of
+   * the image.
    *
    * @param self Handler instance.
    * @param iface Protobuf I/O interface used to send failure / abort messages.
@@ -149,22 +183,24 @@ struct image_upload_handler {
                                 size_t len);
 
   /**
-   * Verifies a fully-received chunk before it is written to flash.
+   * Verifies a fully-received block before it is written to flash.
    *
    * @param self Handler instance.
    * @param iface Protobuf I/O interface used to send failure messages.
-   * @param block_idx Zero-based index of the chunk within the image.
-   * @param data Buffer holding the received chunk.
+   * @param image_offset Absolute image-relative byte offset of this block's
+   *        start (== the bytes already on flash before it; this block is
+   * written after on_chunk returns).
+   * @param data Buffer holding the received block.
    * @param len Number of valid bytes in @p data.
    * @return UPLOAD_OK on success; UPLOAD_ERR_INVALID_CHUNK_HASH to let the
    *         engine retry the block; another negative upload_status_t to fail.
    */
   upload_status_t (*on_chunk)(image_upload_handler_t *self, protob_io_t *iface,
-                              uint32_t block_idx, const uint8_t *data,
+                              uint32_t image_offset, const uint8_t *data,
                               size_t len);
 
   /**
-   * Finalizes the upload after the last chunk is verified and written.
+   * Finalizes the upload after the last block is verified and written.
    *
    * @param self Handler instance.
    * @param iface Protobuf I/O interface used to send failure messages.
@@ -172,14 +208,34 @@ struct image_upload_handler {
    */
   upload_status_t (*on_finish)(image_upload_handler_t *self,
                                protob_io_t *iface);
+
+  /**
+   * Optional. Plans the segments to stream, called once right after
+   * `on_headers` (so the handler has parsed any directory it needs). Fills
+   * `out` with the ascending, non-overlapping ranges to stream, each with its
+   * own block cadence (from segments[i].offset, so block k of a segment ==
+   * chunk k); returns the count. Segment 0 must start at offset 0 (its head is
+   * the header prefetch). If NULL (or 0 returned), the whole image is streamed
+   * as one contiguous segment (flat).
+   *
+   * @param self Handler instance.
+   * @param image_size Declared total image size, in bytes.
+   * @param out Caller array to fill, length `max`.
+   * @param max Capacity of `out` (== IMAGE_UPLOAD_MAX_SEGMENTS).
+   * @return Number of segments written to `out` (0..max).
+   */
+  size_t (*plan_segments)(image_upload_handler_t *self, uint32_t image_size,
+                          image_segment_t *out, size_t max);
 };
 
 /**
  * Runs the chunked image upload driven by @p handler.
  *
- * Streams and writes the image to the handler's target area, and drives
- * per-chunk verification and finalization. The caller is responsible for the
- * type-specific erase/length handshake and passes the declared image size in.
+ * The engine owns the transport (request/receive loop, retries, timeout,
+ * progress UI) and the flash erase+write. It fetches init_chunk_size bytes,
+ * calls `on_headers`, then `plan_segments` (a NULL/0 plan means one whole-image
+ * segment); each segment streams with its own block cadence, calling `on_chunk`
+ * per block and `on_finish` at the end.
  *
  * @param iface Protobuf I/O interface to communicate with the host.
  * @param handler Per-image-type handler describing validation and destination.
