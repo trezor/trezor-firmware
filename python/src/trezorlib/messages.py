@@ -671,8 +671,6 @@ class MessageType(IntEnum):
     EthereumSignTypedHash = 470
     EthereumDefinitionRequest = 471
     EthereumDefinitionAck = 472
-    EthereumSignAuth7702 = 473
-    EthereumAuth7702Signature = 474
     NEMGetAddress = 67
     NEMAddress = 68
     NEMSignTx = 69
@@ -5928,7 +5926,7 @@ class EthereumDefinitions(protobuf.MessageType):
 
 
 class EthereumSignAuth7702(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 473
+    MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
@@ -5954,7 +5952,7 @@ class EthereumSignAuth7702(protobuf.MessageType):
 
 
 class EthereumAuth7702Signature(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 474
+    MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("signature_v", "uint32", repeated=False, required=True),
         2: protobuf.Field("signature_r", "bytes", repeated=False, required=True),

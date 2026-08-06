@@ -6,7 +6,6 @@ from trezor.crypto.curve import secp256k1
 from trezor.messages import EthereumAuth7702Signature
 from trezor.wire import DataError, ProcessError
 
-from .keychain import with_keychain_from_chain_id
 from .networks import UNKNOWN_NETWORK
 from .sc_constants import lookup_eip7702_address
 
@@ -22,7 +21,6 @@ _MAGIC = const(5)
 _REVOKE_ADDRESS = b"\x00" * 20
 
 
-@with_keychain_from_chain_id
 async def sign_auth_eip7702(
     msg: EthereumSignAuth7702,
     keychain: Keychain,
