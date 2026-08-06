@@ -106,20 +106,32 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         ]);
 
         // Fuel gauge (SoC estimator). The `managed` policy speaks only to the
-        // chemistry-neutral fuel_gauge/battery.h interface; the board picks a
-        // concrete implementation via `fuel_gauge = "io/fuel_gauge_..."`, an axis
-        // mirroring the PMIC selector above. LiFePO4 is the only impl today.
-        ensure!(
+        // chemistry-neutral fuel_gauge/battery.h interface; the board picks a concrete
+        // implementation via `fuel_gauge = "io/fuel_gauge_..."`. Table + "exactly
+        // one" check, like the PMIC selector above, so a missing or duplicate
+        // selection is a clear build error.
+        let selected = [
             cfg!(feature = "fuel_gauge_lifepo4"),
-            "power_manager: a fuel gauge must be selected \
-             (set `fuel_gauge = \"io/fuel_gauge_lifepo4\"` in the board's \
-             [power_manager] section)"
+            cfg!(feature = "fuel_gauge_mock"),
+        ]
+        .iter()
+        .filter(|on| **on)
+        .count();
+        ensure!(
+            selected == 1,
+            "power_manager: exactly one fuel gauge must be selected \
+             (set `fuel_gauge = \"io/fuel_gauge_lifepo4|_mock\"` in the board's \
+             [power_manager] section), found {selected}"
         );
-        lib.add_sources([
-            "power_manager/fuel_gauge/lifepo4/battery.c",
-            "power_manager/fuel_gauge/lifepo4/fuel_gauge.c",
-            "power_manager/fuel_gauge/lifepo4/battery_model.c",
-        ]);
+        if cfg!(feature = "fuel_gauge_lifepo4") {
+            lib.add_sources([
+                "power_manager/fuel_gauge/lifepo4/battery.c",
+                "power_manager/fuel_gauge/lifepo4/fuel_gauge.c",
+                "power_manager/fuel_gauge/lifepo4/battery_model.c",
+            ]);
+        } else {
+            lib.add_source("power_manager/fuel_gauge/mock/battery.c");
+        }
     }
 
     Ok(())
