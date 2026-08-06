@@ -20,6 +20,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <limits.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -142,6 +143,47 @@ __attribute__((noreturn)) void crash(void) {
   // intentionally exit the program
   // the fuzzer framework treats this as a crash
   exit(1);
+}
+
+/* Fuzzer signed length handling */
+
+// Some target functions take a signed length parameter. The regular harness
+// bookkeeping is based on the unsigned `fuzzer_length` and can therefore never
+// express a negative length, which leaves missing lower-bound checks in such
+// functions undetected. This decider steers the length values that the
+// harnesses pass to those functions.
+uint8_t fuzzer_signed_length_decision = 0;
+
+// Translate the length of a buffer prepared by a harness into the signed length
+// parameter of a target function.
+// Most of the time the actual `length` is returned. Depending on the fuzzer
+// input, an invalid negative value is returned instead, which the target
+// function is expected to reject instead of acting on it.
+int fuzzer_signed_length(size_t length) {
+  // the harnesses are expected to operate on much smaller buffers
+  if (length > INT_MAX) {
+    crash();
+  }
+
+  // The invalid values only need to reach a handful of rejection branches,
+  // which are covered once and then have nothing left to explore. The vast
+  // majority of the value range therefore maps to the real length, so that the
+  // regular code paths of the target functions keep most of the fuzzing budget.
+  switch (fuzzer_signed_length_decision & 0x1f) {
+    case 1:
+      // the smallest invalid value, it passes checks such as (length <= max)
+      return -1;
+    case 2:
+      // an extreme value where the negation overflows
+      return INT_MIN;
+    case 3:
+      // the negated real length preserves properties such as block alignment,
+      // which helps to get past sanity checks of the target function
+      return -(int)length;
+    default:
+      // the real length of the prepared buffer
+      return (int)length;
+  }
 }
 
 // IDEA are there advantages to turning this into a macro?
@@ -1018,20 +1060,24 @@ int fuzz_aes(void) {
   memcpy(ibuf, fuzzer_input(16), 16);
   memcpy(iv, fuzzer_input(16), 16);
 
-  aes_ecb_encrypt(ibuf, obuf, 16, &ctxe);
-  aes_ecb_decrypt(ibuf, obuf, 16, &ctxd);
+  // the AES mode functions take a signed length parameter,
+  // cover the invalid negative range as well
+  int len = fuzzer_signed_length(sizeof(ibuf));
 
-  aes_cbc_encrypt(ibuf, obuf, 16, iv, &ctxe);
-  aes_cbc_decrypt(ibuf, obuf, 16, iv, &ctxd);
+  aes_ecb_encrypt(ibuf, obuf, len, &ctxe);
+  aes_ecb_decrypt(ibuf, obuf, len, &ctxd);
 
-  aes_cfb_encrypt(ibuf, obuf, 16, iv, &ctxe);
-  aes_cfb_decrypt(ibuf, obuf, 16, iv, &ctxe);
+  aes_cbc_encrypt(ibuf, obuf, len, iv, &ctxe);
+  aes_cbc_decrypt(ibuf, obuf, len, iv, &ctxd);
 
-  aes_ofb_encrypt(ibuf, obuf, 16, iv, &ctxe);
-  aes_ofb_decrypt(ibuf, obuf, 16, iv, &ctxe);
+  aes_cfb_encrypt(ibuf, obuf, len, iv, &ctxe);
+  aes_cfb_decrypt(ibuf, obuf, len, iv, &ctxe);
 
-  aes_ctr_encrypt(ibuf, obuf, 16, cbuf, aes_ctr_cbuf_inc, &ctxe);
-  aes_ctr_decrypt(ibuf, obuf, 16, cbuf, aes_ctr_cbuf_inc, &ctxe);
+  aes_ofb_encrypt(ibuf, obuf, len, iv, &ctxe);
+  aes_ofb_decrypt(ibuf, obuf, len, iv, &ctxe);
+
+  aes_ctr_encrypt(ibuf, obuf, len, cbuf, aes_ctr_cbuf_inc, &ctxe);
+  aes_ctr_decrypt(ibuf, obuf, len, cbuf, aes_ctr_cbuf_inc, &ctxe);
   return 0;
 }
 
@@ -1460,7 +1506,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   // data[1] is reserved for explicit sub decisions
   // uint8_t target_sub_decision = data[1];
 
-  // data[2] is reserved for future use
+  // data[2] steers the values that are passed to target functions with a signed
+  // length parameter, see fuzzer_signed_length()
+  fuzzer_signed_length_decision = data[2];
 
   // assign the fuzzer payload data for the target functions
   fuzzer_ptr = data + META_HEADER_SIZE;
