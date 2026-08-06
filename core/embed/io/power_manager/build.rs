@@ -104,19 +104,41 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
         // Fuel gauge (SoC estimator). The `managed` policy speaks only to the
         // chemistry-neutral fuel_gauge/battery.h interface; the board picks a
-        // concrete implementation via `fuel_gauge = "io/fuel_gauge_..."`, an axis
-        // mirroring the PMIC selector above. LiFePO4 is the only impl today.
+        // concrete implementation via `fuel_gauge = "io/fuel_gauge_..."`.
+        //
+        // (feature name, sources) for each enabled gauge, then the same
+        // "exactly one" check as the PMIC selector above. The sources come from
+        // the table rather than a trailing `else`, so adding a gauge without
+        // wiring up its sources is a build error instead of silently linking
+        // another implementation.
+        let mut gauges: Vec<(&str, &[&str])> = Vec::new();
+        if cfg!(feature = "fuel_gauge_lifepo4") {
+            gauges.push((
+                "fuel_gauge_lifepo4",
+                &[
+                    "power_manager/fuel_gauge/lifepo4/battery.c",
+                    "power_manager/fuel_gauge/lifepo4/fuel_gauge.c",
+                    "power_manager/fuel_gauge/lifepo4/battery_model.c",
+                ],
+            ));
+        }
+        if cfg!(feature = "fuel_gauge_mock") {
+            gauges.push((
+                "fuel_gauge_mock",
+                &["power_manager/fuel_gauge/mock/battery.c"],
+            ));
+        }
+
         ensure!(
-            cfg!(feature = "fuel_gauge_lifepo4"),
-            "power_manager: a fuel gauge must be selected \
-             (set `fuel_gauge = \"io/fuel_gauge_lifepo4\"` in the board's \
-             [power_manager] section)"
+            gauges.len() == 1,
+            "power_manager: exactly one fuel gauge must be selected \
+             (set `fuel_gauge = \"io/fuel_gauge_...\"` in the board's \
+             [power_manager] section), found {}: {:?}",
+            gauges.len(),
+            gauges.iter().map(|(f, _)| *f).collect::<Vec<_>>()
         );
-        lib.add_sources([
-            "power_manager/fuel_gauge/lifepo4/battery.c",
-            "power_manager/fuel_gauge/lifepo4/fuel_gauge.c",
-            "power_manager/fuel_gauge/lifepo4/battery_model.c",
-        ]);
+        let (_feature, sources) = gauges[0];
+        lib.add_sources(sources);
     }
 
     Ok(())
