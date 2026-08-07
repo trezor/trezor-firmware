@@ -170,7 +170,7 @@ def from_envelope(
         sacs = _sac_addresses(asset_hints, envelope.network_passphrase)
         for op in operations:
             for args in _operation_contract_args(op):
-                _add_asset_hint(args, sacs)
+                args.asset_hint = sacs.get(args.contract_address)
 
     if parsed_tx.soroban_data:
         tx_ext = messages.StellarTxExt(
@@ -216,7 +216,7 @@ def from_authorization_entry(
             raise ValueError("network_passphrase is required to match asset hints")
         sacs = _sac_addresses(asset_hints, network_passphrase)
         for args in _invocation_contract_args(invocation):
-            _add_asset_hint(args, sacs)
+            args.asset_hint = sacs.get(args.contract_address)
 
     return messages.StellarSorobanAuthorizationWithAddress(
         nonce=credentials.nonce.int64,
@@ -228,17 +228,12 @@ def from_authorization_entry(
 
 def _sac_addresses(
     asset_hints: Iterable["Asset"], network_passphrase: str
-) -> Dict[str, "Asset"]:
+) -> Dict[str, messages.StellarAsset]:
     """Index the hinted assets by the address of their Stellar Asset Contract."""
-    return {asset.contract_id(network_passphrase): asset for asset in asset_hints}
-
-
-def _add_asset_hint(
-    args: messages.StellarInvokeContractArgs, sacs: Dict[str, "Asset"]
-) -> None:
-    asset = sacs.get(args.contract_address)
-    if asset is not None:
-        args.asset_hint = _read_asset(asset)
+    return {
+        asset.contract_id(network_passphrase): _read_asset(asset)
+        for asset in asset_hints
+    }
 
 
 def _invocation_contract_args(
