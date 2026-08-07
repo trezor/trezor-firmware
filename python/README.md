@@ -1,6 +1,6 @@
 # trezorlib
 
-[![repology](https://repology.org/badge/tiny-repos/python:trezor.svg)](https://repology.org/metapackage/python:trezor) [![image](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
+[![repology](https://repology.org/badge/tiny-repos/python:trezor.svg)](https://repology.org/metapackage/python:trezor)
 
 Python library and command-line client for communicating with Trezor
 Hardware Wallet.

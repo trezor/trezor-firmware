@@ -1,7 +1,5 @@
 # trezor-crypto
 
-[![Build Status](https://travis-ci.org/trezor/trezor-crypto.svg?branch=master)](https://travis-ci.org/trezor/trezor-crypto) [![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
-
 Heavily optimized cryptography algorithms for embedded devices.
 
 These include:
