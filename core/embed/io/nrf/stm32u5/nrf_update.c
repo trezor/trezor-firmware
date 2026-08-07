@@ -198,7 +198,8 @@ bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
   return true;
 }
 
-bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
+bool nrf_update_with_progress(const uint8_t *image_ptr, size_t image_len,
+                              void (*progress)(uint32_t done, uint32_t total)) {
   nrf_reboot_to_bootloader();
   nrf_set_dfu_mode(true);
 
@@ -214,7 +215,7 @@ bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
   bool result = false;
   do {
     result = smp_upload_app_image(image_ptr, image_len, sha256,
-                                  SHA256_DIGEST_LENGTH);
+                                  SHA256_DIGEST_LENGTH, progress);
     try_cntr++;
   } while (!result && try_cntr < 3);
 
@@ -226,6 +227,14 @@ bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
   nrf_set_dfu_mode(false);
 
   return result;
+}
+
+bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
+  // No progress reporting on this (syscall) path -- the SMP upload's per-chunk
+  // callback would cross the kernel/user boundary. The bootloader OTA path
+  // calls nrf_update_with_progress directly (no syscall) to drive its progress
+  // bar.
+  return nrf_update_with_progress(image_ptr, image_len, NULL);
 }
 
 #endif

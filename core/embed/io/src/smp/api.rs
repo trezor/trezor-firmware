@@ -59,6 +59,7 @@ unsafe extern "C" fn smp_upload_app_image(
     len: cty::size_t,
     image_hash: *const cty::uint8_t,
     image_hash_len: cty::size_t,
+    progress: Option<extern "C" fn(cty::uint32_t, cty::uint32_t)>,
 ) -> bool {
     // SAFETY: caller must provide valid pointers + lengths
     let data = unsafe { CSlice::from_ptr_and_len(data, len) };
@@ -67,6 +68,7 @@ unsafe extern "C" fn smp_upload_app_image(
     upload::upload_image(
         data.as_slice().unwrap_or_default(),
         image_hash.as_slice().unwrap_or_default(),
+        progress,
     )
 }
 
