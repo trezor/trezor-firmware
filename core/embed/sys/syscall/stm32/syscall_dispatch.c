@@ -675,7 +675,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_RNG_FILL_BUFFER_STRONG: {
       void *buffer = (void *)args[0];
       size_t buffer_size = (size_t)args[1];
-      args[0] = rng_fill_buffer_strong__verified(buffer, buffer_size);
+      rng_fill_buffer_strong__verified(buffer, buffer_size);
     } break;
 
     case SYSCALL_FIRMWARE_GET_VENDOR: {

@@ -35,11 +35,13 @@
  * The function requires that Optiga and/or Tropic to be initialized
  * if they are enabled by USE_OPTIGA/USE_TROPIC.
  *
+ * If any entropy source fails, the function halts the device with a
+ * fatal error instead of returning. This is to ensure that a failure
+ * to generate strong randomness cannot be accidentally overlooked.
+ *
  * @param buffer Buffer to fill with random bytes.
  * @param buffer_size Size of the buffer in bytes.
- *
- * @return True on success, false on failure.
  */
-bool __wur rng_fill_buffer_strong(void* buffer, size_t buffer_size);
+void rng_fill_buffer_strong(void* buffer, size_t buffer_size);
 
 void rng_fill_buffer_strong_time(uint32_t* time_ms);

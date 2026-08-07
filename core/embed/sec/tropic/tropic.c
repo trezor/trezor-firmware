@@ -1382,9 +1382,7 @@ bool tropic_pin_set(
     goto cleanup;
   }
 
-  if (!rng_fill_buffer_strong(reset_key, TROPIC_MAC_AND_DESTROY_SIZE)) {
-    goto cleanup;
-  }
+  rng_fill_buffer_strong(reset_key, TROPIC_MAC_AND_DESTROY_SIZE);
 
   if (!update_change_pin_counter()) {
     goto cleanup;

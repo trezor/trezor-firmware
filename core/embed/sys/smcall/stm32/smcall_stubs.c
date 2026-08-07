@@ -343,9 +343,8 @@ void rng_fill_buffer(void *buffer, size_t buffer_size) {
   smcall_invoke2((uint32_t)buffer, buffer_size, SMCALL_RNG_FILL_BUFFER);
 }
 
-bool rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
-  return (bool)smcall_invoke2((uint32_t)buffer, buffer_size,
-                              SMCALL_RNG_FILL_BUFFER_STRONG);
+void rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
+  smcall_invoke2((uint32_t)buffer, buffer_size, SMCALL_RNG_FILL_BUFFER_STRONG);
 }
 
 // =============================================================================
