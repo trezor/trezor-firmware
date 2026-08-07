@@ -78,6 +78,44 @@ const flash_area_t STAGING_AREA = {
             .num_sectors = STAGING_SECTOR_COUNT,
         },
 };
+
+// nRF OTA staging scratch, at the FRONT of the firmware
+// region (compile-time const -- unlike FIRMWARE_AREA there is no secmon split
+// at this layer). Capped to NRF_STAGING_MAXSIZE so it sits far below
+// STAGING_AREA (the firmware tail): the upload engine erases to the END of its
+// target area, and STAGING_AREA overlaps that tail, so a full-FIRMWARE_AREA
+// scratch would erase the pending bootloader. The static_assert proves
+// NRF_STAGING_AREA and STAGING_AREA cannot overlap. The region holds old
+// firmware (secmon+kernel) that the coupled update reinstalls in phase 2, so
+// clobbering it is expected. Sized for the largest nRF image we actually stage,
+// with margin:
+//   ~174 kB  classic release image (Ed25519 only)
+//   ~191 kB  + founder material (2x SLH-DSA 7856 B + 2x Ed25519 + co-path)
+//   ~280 kB  DEBUG build of the same (RTT console + logging) + founder material
+// A debug PQ-native image at 279 kB overflowed the previous 256 kB cap (which
+// left only 248 kB usable, one sector going to the staging descriptor) and
+// phase 1 rejected it as "nRF image size invalid". 384 kB keeps headroom for
+// debug builds. There is room: the static_assert below allows ~345 sectors
+// before the bootloader staging tail. The extra cost is only that a few more
+// sectors of the old firmware get erased -- which phase 2 reinstalls anyway.
+#ifndef NRF_STAGING_MAXSIZE
+#define NRF_STAGING_MAXSIZE (48 * 8 * 1024)  // 384 kB
+#endif
+#define NRF_STAGING_SECTOR_COUNT (NRF_STAGING_MAXSIZE / FLASH_PAGE_SIZE)
+_Static_assert(
+    NRF_STAGING_MAXSIZE % FLASH_PAGE_SIZE == 0,
+    "NRF_STAGING_MAXSIZE must be a multiple of the flash sector size");
+_Static_assert(FIRMWARE_SECTOR_START + NRF_STAGING_SECTOR_COUNT <=
+                   FIRMWARE_SECTOR_END - STAGING_SECTOR_COUNT + 1,
+               "nRF staging scratch would overlap the bootloader staging tail");
+const flash_area_t NRF_STAGING_AREA = {
+    .num_subareas = 1,
+    .subarea[0] =
+        {
+            .first_sector = FIRMWARE_SECTOR_START,
+            .num_sectors = NRF_STAGING_SECTOR_COUNT,
+        },
+};
 #endif  // USE_BOOT_UCB
 
 void flash_init(void) {
