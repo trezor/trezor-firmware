@@ -43,9 +43,3 @@ pub mod bootloader;
 
 #[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub mod layout_buf;
-
-#[cfg(feature = "nrf")]
-pub mod irq;
-
-#[cfg(feature = "nrf")]
-pub mod nrf;

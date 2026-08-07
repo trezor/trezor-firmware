@@ -1,9 +1,10 @@
 use minicbor::Encoder;
+use rtl::error::unwrap;
 use sys::time::Duration;
 
 use super::{
-    receiver_acquire, receiver_release, send_request, wait_for_response, MsgType, SmpBuffer,
-    SmpHeader, SMP_CMD_ID_IMAGE_UPLOAD, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_WRITE,
+    MsgType, SMP_CMD_ID_IMAGE_UPLOAD, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_WRITE, SmpBuffer,
+    SmpHeader, receiver_acquire, receiver_release, send_request, wait_for_response,
 };
 
 const CHUNK_SIZE: usize = 256;
