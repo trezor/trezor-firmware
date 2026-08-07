@@ -1,10 +1,14 @@
 use std::ffi::OsStr;
+use std::io::IsTerminal;
 use std::path::{Component, Path, PathBuf};
+use std::sync::OnceLock;
 use std::{env, fs};
 
 use color_eyre::Result;
 use color_eyre::eyre::{WrapErr, eyre};
 use pathdiff::diff_paths;
+
+use crate::cargo_out;
 
 /// Checks if the parent directory of the given output path exists,
 /// and creates it if it doesn't.
@@ -48,7 +52,20 @@ pub fn library_metadata(lib_name: &str, kind: &str) -> Result<String> {
     ))
 }
 
+/// Writes a progress message to stderr, but only when trace output is enabled
+#[macro_export]
+macro_rules! trace {
+    ($($arg:tt)*) => {
+        if $crate::trace_enabled() {
+            eprintln!($($arg)*);
+        }
+    };
+}
+
+pub use trace;
+
 /// Measures the execution time of a closure and prints it with the given label
+/// when trace output is enabled.
 pub fn measure_time<T, F>(label: impl AsRef<str>, f: F) -> T
 where
     F: FnOnce() -> T,
@@ -56,8 +73,23 @@ where
     let start_time = std::time::Instant::now();
     let result = f();
     let duration = start_time.elapsed();
-    eprintln!("{}: {:.2?}", label.as_ref(), duration);
+    trace!("{}: {:.2?}", label.as_ref(), duration);
     result
+}
+
+/// Reports whether the build was asked for trace output.
+///
+/// Cargo does not pass its own `--verbose` down to build scripts, so `xtask`
+/// sets `XBUILD_TRACE` alongside it.
+pub fn trace_enabled() -> bool {
+    static TRACE: OnceLock<bool> = OnceLock::new();
+
+    *TRACE.get_or_init(|| {
+        // Without this, toggling the variable would not re-run build scripts
+        // that Cargo considers up to date, and nothing would be logged.
+        cargo_out::rerun_if_env_changed("XBUILD_TRACE");
+        env::var_os("XBUILD_TRACE").is_some_and(|v| !v.is_empty() && v != "0")
+    })
 }
 
 /// Converts `path` to a path relative to `CARGO_MANIFEST_DIR` when possible.
@@ -184,6 +216,54 @@ pub fn cargo_target_dir() -> Result<PathBuf> {
     Ok(target_dir.to_path_buf())
 }
 
+/// Returns the `-fdiagnostics-color` flag to pass to `tool`, or None if the
+/// tool is not GCC- or Clang-like and would not understand it.
+///
+/// Compiler output is captured (see `emit_command_output`), so the compiler
+/// sees a pipe and disables color unless explicitly told otherwise.
+pub fn diagnostics_color_flag(tool: &cc::Tool) -> Option<&'static str> {
+    if !(tool.is_like_gnu() || tool.is_like_clang()) {
+        return None;
+    }
+
+    Some(if color_diagnostics_enabled() {
+        "-fdiagnostics-color=always"
+    } else {
+        "-fdiagnostics-color=never"
+    })
+}
+
+/// Decides whether compiler diagnostics should be colored.
+///
+/// Explicit settings win, in the usual precedence: `NO_COLOR`, then
+/// `CLICOLOR_FORCE`, then Cargo's own `CARGO_TERM_COLOR`. Otherwise the
+/// destination is auto-detected.
+///
+/// The result is cached: sources compile in parallel and the answer cannot
+/// change during a build.
+fn color_diagnostics_enabled() -> bool {
+    static ENABLED: OnceLock<bool> = OnceLock::new();
+
+    *ENABLED.get_or_init(|| {
+        // https://no-color.org — set to any non-empty value disables color.
+        if env::var_os("NO_COLOR").is_some_and(|v| !v.is_empty()) {
+            return false;
+        }
+
+        // https://bixense.com/clicolors — anything but "0" forces color on.
+        if env::var_os("CLICOLOR_FORCE").is_some_and(|v| !v.is_empty() && v != "0") {
+            return true;
+        }
+
+        match env::var("CARGO_TERM_COLOR").unwrap_or_default().as_str() {
+            "always" => true,
+            "never" => false,
+            // "auto" or unset
+            _ => std::io::stderr().is_terminal(),
+        }
+    })
+}
+
 /// Checks if the `IS_RUST_ANALYZER` environment variable is set,
 /// which indicates that Rust Analyzer is running.
 pub fn is_rust_analyzer() -> bool {
@@ -197,6 +277,6 @@ where
     P: AsRef<Path>,
 {
     for file in files {
-        println!("cargo:rerun-if-changed={}", file.as_ref().display());
+        cargo_out::rerun_if_changed(file);
     }
 }

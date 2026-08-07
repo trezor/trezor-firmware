@@ -1,11 +1,14 @@
 use std::fs;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 use color_eyre::Result;
 use color_eyre::eyre::{WrapErr, ensure};
 
-use crate::helpers::{delete_file_if_exists, emit_rerun_if_changed, ensure_parent_directory};
+use crate::helpers::{
+    delete_file_if_exists, emit_rerun_if_changed, ensure_parent_directory, trace,
+};
 
 /// Runs a command with dependency tracking and optional C compiler dependency
 /// file support.
@@ -83,13 +86,17 @@ where
             .output()
             .with_context(|| format!("Failed to execute {:?}", cmd))?;
 
+        // Print the command's own diagnostics (warnings on success, errors on
+        // failure) before turning the exit status into an error.
+        emit_command_output(&cmd_output, true);
+
         // Check if the command executed successfully
         ensure!(
             cmd_output.status.success(),
-            format_command_error(cmd, &cmd_output)
+            command_failed_error(cmd, cmd_output.status)
         );
 
-        eprintln!("@@ command executed: {:?}", cmd);
+        trace!("@@ command executed: {:?}", cmd);
 
         Ok(())
     })
@@ -136,10 +143,13 @@ where
             .output()
             .with_context(|| format!("Failed to execute {:?}", cmd))?;
 
+        // Only stderr is forwarded here - stdout is the payload written below
+        emit_command_output(&cmd_output, false);
+
         // Check if the command executed successfully
         ensure!(
             cmd_output.status.success(),
-            format_command_error(cmd, &cmd_output)
+            command_failed_error(cmd, cmd_output.status)
         );
 
         // Ensure the output directory exists before writing the output
@@ -149,7 +159,7 @@ where
         fs::write(&output, &cmd_output.stdout)
             .with_context(|| format!("Failed to write to {}", output.as_ref().display()))?;
 
-        eprintln!("@@ command executed: {:?}", cmd);
+        trace!("@@ command executed: {:?}", cmd);
 
         Ok(())
     })
@@ -235,7 +245,13 @@ fn command_to_dep_string(cmd: &std::process::Command) -> String {
     text.push_str(&cmd.get_program().to_string_lossy());
     text.push('\n');
     for arg in cmd.get_args() {
-        text.push_str(&arg.to_string_lossy());
+        let arg = arg.to_string_lossy();
+        // Diagnostic coloring has no effect on the produced artifacts, so
+        // toggling it must not invalidate the dependency cache.
+        if arg.starts_with("-fdiagnostics-color") {
+            continue;
+        }
+        text.push_str(&arg);
         text.push('\n');
     }
     text
@@ -361,24 +377,27 @@ where
     Ok(())
 }
 
-// Formats the error message from a failed command execution, prioritizing
-// stderr, then stdout, and finally a generic message if both are empty.
-pub fn format_command_error(
-    cmd: &std::process::Command,
-    cmd_output: &std::process::Output,
-) -> String {
-    let stderr = String::from_utf8_lossy(&cmd_output.stderr)
-        .trim()
-        .to_string();
-    let stdout = String::from_utf8_lossy(&cmd_output.stdout)
-        .trim()
-        .to_string();
+/// Forwards a command's captured output to this process's stderr.
+///
+/// Diagnostics are written as-is instead of being folded into an error message,
+/// so the compiler's own formatting (carets, colors) survives and multi-line
+/// output is not swallowed by the error reporter.
+pub fn emit_command_output(cmd_output: &std::process::Output, with_stdout: bool) {
+    let stdout: &[u8] = if with_stdout { &cmd_output.stdout } else { &[] };
 
-    if !stderr.is_empty() {
-        stderr
-    } else if !stdout.is_empty() {
-        stdout
-    } else {
-        format!("Failed to execute {}", cmd.get_program().to_string_lossy())
-    }
+    let stderr = io::stderr();
+    let mut lock = stderr.lock();
+    let _ = lock.write_all(stdout);
+    let _ = lock.write_all(&cmd_output.stderr);
+    let _ = lock.flush();
+}
+
+/// Builds the short one-line error for a command that exited with a failure
+/// status
+fn command_failed_error(cmd: &std::process::Command, status: std::process::ExitStatus) -> String {
+    format!(
+        "{} failed with {}",
+        cmd.get_program().to_string_lossy(),
+        status
+    )
 }
