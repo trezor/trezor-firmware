@@ -350,11 +350,11 @@ def _sc_address(val: StellarSCVal) -> str | None:
 
 
 def _sc_amount(val: StellarSCVal) -> int | None:
-    """Read a SEP-41 token amount: an i128 that is never negative.
+    """Read an amount suitable for the dedicated token UI.
 
-    A negative amount cannot be a well-formed token operation (the SAC rejects
-    it), so showing it as one would only mislead; returning None leaves it to
-    the raw contract flow instead.
+    Stellar Asset Contracts reject negative amounts. Custom SEP-41 contracts
+    may accept them, but we deliberately leave such calls to the raw contract
+    flow instead of presenting them as regular token operations.
     """
     if val.type != StellarSCValType.SCV_I128 or val.i128 is None:
         return None

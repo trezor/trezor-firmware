@@ -267,7 +267,7 @@ class TestStellarParseSep41Call(unittest.TestCase):
             # wrong argument types
             ("transfer", [_symbol("from"), _address(_ACCOUNT_B), _i128(500)], None),
             ("transfer", [_address(_ACCOUNT_A), _address(_ACCOUNT_B), _u32(500)], None),
-            # a negative amount cannot be a well-formed token operation
+            # negative amounts always fall back to the generic contract UI
             (
                 "transfer",
                 [
@@ -310,7 +310,7 @@ class TestStellarParseSep41Call(unittest.TestCase):
                 [_address(_ACCOUNT_A), _address(_ACCOUNT_B), _i128(500), _u64(800_000)],
                 None,
             ),
-            # a negative amount cannot be a well-formed token operation
+            # negative amounts always fall back to the generic contract UI
             (
                 "approve",
                 [
