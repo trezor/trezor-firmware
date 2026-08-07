@@ -114,10 +114,19 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len) {
     return;
   }
 
+  if (len * 8 < strength) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Insufficient external entropy"));
+    memzero(int_entropy, sizeof(int_entropy));
+    reset_state = RESET_NONE;
+    layoutHome();
+    return;
+  }
+
   uint8_t secret[SHA256_DIGEST_LENGTH] = {0};
   SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
-  SHA256_UPDATE_BYTES(&ctx, int_entropy, 32);
+  SHA256_UPDATE_BYTES(&ctx, int_entropy, sizeof(int_entropy));
   sha256_Update(&ctx, ext_entropy, len);
   sha256_Final(&ctx, secret);
   reset_mnemonic = mnemonic_from_data(secret, strength / 8);
@@ -251,8 +260,8 @@ void reset_abort(void) {
 #if DEBUG_LINK
 
 uint32_t reset_get_int_entropy(uint8_t *entropy) {
-  memcpy(entropy, int_entropy, 32);
-  return 32;
+  memcpy(entropy, int_entropy, sizeof(int_entropy));
+  return sizeof(int_entropy);
 }
 
 const char *reset_get_word(void) { return current_word; }
