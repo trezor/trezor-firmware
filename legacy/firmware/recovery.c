@@ -476,7 +476,9 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
                    bool pin_protection, const char *language, const char *label,
                    bool _enforce_wordlist, uint32_t input_method,
                    uint32_t u2f_counter, bool _dry_run) {
-  if (_word_count != 12 && _word_count != 18 && _word_count != 24) return;
+  if (_word_count != 12 && _word_count != 15 && _word_count != 18 &&
+      _word_count != 21 && _word_count != 24)
+    return;
 
   if (_word_count < 24 &&
       input_method == RecoveryDeviceInputMethod_ScrambledWords &&

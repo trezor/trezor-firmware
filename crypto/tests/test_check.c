@@ -6519,6 +6519,11 @@ START_TEST(test_mnemonic) {
       "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
       "ac27495480225222079d7be181583751e86f571027b0497b5b5d11218e0a8a1333257291"
       "7f0f8e5a589620c6f15b11c61dee327651a14c34e18231052e48c069",
+      "0000000000000000000000000000000000000000",
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon abandon abandon abandon address",
+      "fa08713f46bf5cb48728ceb70e3aae1bc53c5cb7b4e29c5610261d1cbb7be3bed4d80525"
+      "6fec515754d2be35974fc5da678168e9d9bb0cb70948026923b0def3",
       "000000000000000000000000000000000000000000000000",
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon abandon abandon abandon agent",
@@ -6539,6 +6544,12 @@ START_TEST(test_mnemonic) {
       "when",
       "0cd6e5d827bb62eb8fc1e262254223817fd068a74b5b449cc2f667c3f1f985a76379b433"
       "48d952e2265b4cd129090758b3e3c2c49103b5051aac2eaeb890a528",
+      "00000000000000000000000000000000000000000000000000000000",
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon admit",
+      "e7dadc189d2e8d07ac278d9ec98a1d2d327e4a6b7df494c00cbf2cbf2d3543dac7000fc"
+      "72d4ada8d9997dc8db388ff22c6d79f604a7455f2df5534a28eee04c6",
       "0000000000000000000000000000000000000000000000000000000000000000",
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
@@ -6694,6 +6705,8 @@ START_TEST(test_mnemonic_check) {
       "cage above",
       "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon abandon abandon abandon address",
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon abandon abandon abandon agent",
       "legal winner thank year wave sausage worth useful legal winner thank "
       "year wave sausage worth useful legal will",
@@ -6701,6 +6714,9 @@ START_TEST(test_mnemonic_check) {
       "cage absurd amount doctor acoustic avoid letter always",
       "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo "
       "when",
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon admit",
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon art",
@@ -6750,6 +6766,8 @@ START_TEST(test_mnemonic_check) {
       "cage above",
       "above zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
       "above abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon abandon abandon abandon address",
+      "above abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon abandon abandon abandon agent",
       "above winner thank year wave sausage worth useful legal winner thank "
       "year wave sausage worth useful legal will",
@@ -6757,6 +6775,9 @@ START_TEST(test_mnemonic_check) {
       "cage absurd amount doctor acoustic avoid letter always",
       "above zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo "
       "when",
+      "above abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon admit",
       "above abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon art",
@@ -6876,6 +6897,9 @@ START_TEST(test_mnemonic_to_bits) {
       "cage above",
       "ffffffffffffffffffffffffffffffff",
       "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
+      "0000000000000000000000000000000000000000",
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon abandon abandon abandon address",
       "000000000000000000000000000000000000000000000000",
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon abandon abandon abandon agent",
@@ -6888,6 +6912,10 @@ START_TEST(test_mnemonic_to_bits) {
       "ffffffffffffffffffffffffffffffffffffffffffffffff",
       "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo "
       "when",
+      "00000000000000000000000000000000000000000000000000000000",
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon admit",
       "0000000000000000000000000000000000000000000000000000000000000000",
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "

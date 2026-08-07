@@ -477,7 +477,7 @@ message WipeDevice {}
  * @next Failure
  */
 message LoadDevice {
-    repeated string mnemonics = 1;  // seed encoded as mnemonic (12, 18 or 24 words for BIP39, 20 or 33 for SLIP39)
+    repeated string mnemonics = 1;  // seed encoded as mnemonic (12/15/18/21/24 words for BIP39, 20 or 33 for SLIP39)
     optional string pin = 3;        // set PIN protection
     optional bool passphrase_protection = 4;           // enable master node encryption using passphrase
     optional string language = 5 [deprecated = true];  // deprecated (use ChangeLanguage)

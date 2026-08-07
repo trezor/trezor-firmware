@@ -331,8 +331,10 @@ def _validate_reset_device(msg: ResetDevice) -> None:
         if msg.strength not in (128, 256):
             raise ProcessError("Invalid strength (has to be 128 or 256 bits)")
     elif backup_type == BAK_T_BIP39:
-        if msg.strength not in (128, 192, 256):
-            raise ProcessError("Invalid strength (has to be 128, 192 or 256 bits)")
+        if msg.strength not in (128, 160, 192, 224, 256):
+            raise ProcessError(
+                "Invalid strength (has to be 128, 160, 192, 224 or 256 bits)"
+            )
     else:
         raise ProcessError("Backup type not implemented")
 

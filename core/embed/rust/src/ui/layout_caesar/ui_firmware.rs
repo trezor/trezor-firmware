@@ -912,6 +912,7 @@ impl FirmwareUI for UICaesar {
         current: usize,
         _cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        let items: Vec<TString<'static>, 7> = items.into_iter().collect();
         // Returning the index of the selected menu item
         let layout = RootComponent::new(
             SimpleChoice::new(items, ChoiceControls::Cancellable, TR::buttons__view.into())
@@ -928,7 +929,7 @@ impl FirmwareUI for UICaesar {
         description: TString<'static>,
         words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let words: Vec<TString<'static>, 5> = Vec::from_iter(words);
+        let words: Vec<TString<'static>, 7> = Vec::from_iter(words);
         // Returning the index of the selected word, not the word itself
         let layout = RootComponent::new(
             Frame::new(
@@ -944,11 +945,11 @@ impl FirmwareUI for UICaesar {
 
     fn select_word_count(recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error> {
         let title: TString = TR::word_count__title.into();
-        let choices: Vec<TString<'static>, 5> = {
+        let choices: Vec<TString<'static>, 7> = {
             let nums: &[&str] = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
                 &["20", "33"]
             } else {
-                &["12", "18", "20", "24", "33"]
+                &["12", "15", "18", "20", "21", "24", "33"]
             };
             nums.iter().map(|&num| num.into()).collect()
         };

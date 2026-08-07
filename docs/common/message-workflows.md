@@ -254,7 +254,7 @@ confirmed by pressing "I understand" on the device. After confirmation,
 the device produces internal entropy which is a random value of 32 bytes,
 requests external entropy which is produced in the host computer and computes
 the mnemonic (recovery seed) using internal, external entropy and the given
-strength (12, 18 or 24 words). Trezor Suite
+strength in bits (128, 160, 192, 224 or 256, i.e. 12, 15, 18, 21 or 24 words). Trezor Suite
 interface doesn't provide an option to choose how many words there should
 be in the generated mnemonic (recovery seed). It is hardcoded to 12
 words for Trezor Model T but if done with python's trezorctl command it

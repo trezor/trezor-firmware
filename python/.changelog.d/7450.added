@@ -1,0 +1,1 @@
+Allow 15 and 21 words in `device.recover` and 160/224-bit strength in `device.setup`.

@@ -19,7 +19,7 @@ import pytest
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import DebugSession as Session
 
-from ...common import MNEMONIC12
+from ...common import MNEMONIC12, MNEMONIC15, MNEMONIC21
 from ...input_flows import InputFlowBip39Recovery
 
 pytestmark = pytest.mark.models("core")
@@ -47,19 +47,21 @@ def test_tt_pin_passphrase(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_tt_nopin_nopassphrase(session: Session):
+@pytest.mark.parametrize("mnemonic", (MNEMONIC12, MNEMONIC15, MNEMONIC21))
+def test_tt_nopin_nopassphrase(session: Session, mnemonic: str):
     with session.test_ctx as client:
-        IF = InputFlowBip39Recovery(session, MNEMONIC12.split(" "))
+        IF = InputFlowBip39Recovery(session, mnemonic.split(" "))
         client.set_input_flow(IF.get())
         device.recover(
             session,
+            word_count=len(mnemonic.split(" ")),
             pin_protection=False,
             passphrase_protection=False,
             label="hello",
             backup_method=messages.BackupMethod.Display,
         )
 
-    assert session.debug.state().mnemonic_secret.decode() == MNEMONIC12
+    assert session.debug.state().mnemonic_secret.decode() == mnemonic
     assert session.features.pin_protection is False
     assert session.features.passphrase_protection is False
     assert session.features.backup_type is messages.BackupType.Bip39

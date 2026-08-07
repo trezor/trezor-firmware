@@ -40,6 +40,8 @@ if TYPE_CHECKING:
 # fmt: off
 #                1      2     3    4      5      6      7     8      9    10    11    12
 MNEMONIC12 = "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
+MNEMONIC15 = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon address"
+MNEMONIC21 = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon admit"
 MNEMONIC_SLIP39_BASIC_20_3of6 = [
     "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
     "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
@@ -140,12 +142,12 @@ def generate_entropy(
     strength: int, internal_entropy: bytes, external_entropy: bytes
 ) -> bytes:
     """
-    strength - length of produced seed. One of 128, 192, 256
+    strength - length of produced seed. One of 128, 160, 192, 224, 256
     random - binary stream of random data from external HRNG
     """
     import hashlib
 
-    if strength not in (128, 192, 256):
+    if strength not in (128, 160, 192, 224, 256):
         raise ValueError("Invalid strength")
 
     if not internal_entropy:

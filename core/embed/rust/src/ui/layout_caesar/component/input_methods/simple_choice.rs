@@ -10,7 +10,7 @@ use crate::ui::shape::Renderer;
 
 // So that there is only one implementation, and not multiple generic ones
 // as would be via `const N: usize` generics.
-const MAX_LENGTH: usize = 5;
+const MAX_LENGTH: usize = 7;
 
 struct ChoiceFactorySimple {
     choices: Vec<TString<'static>, MAX_LENGTH>,

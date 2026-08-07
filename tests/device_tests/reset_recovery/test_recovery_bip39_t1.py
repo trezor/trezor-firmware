@@ -21,7 +21,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.tools import parse_path
 
-from ...common import MNEMONIC12, get_test_address
+from ...common import MNEMONIC12, MNEMONIC15, MNEMONIC21, get_test_address
 
 PIN4 = "1234"
 PIN6 = "789456"
@@ -112,7 +112,8 @@ def test_pin_passphrase(test_ctx: TrezorTestContext):
         get_test_address(session)
 
 
-def test_nopin_nopassphrase(test_ctx: TrezorTestContext):
+@pytest.mark.parametrize("mnemonic_str", (MNEMONIC12, MNEMONIC15, MNEMONIC21))
+def test_nopin_nopassphrase(test_ctx: TrezorTestContext, mnemonic_str: str):
     session = test_ctx.get_seedless_session()
 
     # `ScrambledWords` is disabled by default for shorter mnemonics.
@@ -120,10 +121,11 @@ def test_nopin_nopassphrase(test_ctx: TrezorTestContext):
         session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
 
-    mnemonic = MNEMONIC12.split(" ")
+    mnemonic = mnemonic_str.split(" ")
+    word_count = len(mnemonic)
     ret = session.call_raw(
         messages.RecoveryDevice(
-            word_count=12,
+            word_count=word_count,
             passphrase_protection=False,
             pin_protection=False,
             label="label",
@@ -138,7 +140,7 @@ def test_nopin_nopassphrase(test_ctx: TrezorTestContext):
     ret = session.call_raw(messages.ButtonAck())
 
     fakes = 0
-    for _ in range(int(12 * 2)):
+    for _ in range(24):
         assert isinstance(ret, messages.WordRequest)
         word, pos = debug.read_recovery_word()
 
@@ -152,12 +154,11 @@ def test_nopin_nopassphrase(test_ctx: TrezorTestContext):
     # Workflow succesfully ended
     assert isinstance(ret, messages.Success)
 
-    # 12 expected fake words and all words of mnemonic are used
-    assert fakes == 12
-    assert mnemonic == [None] * 12
+    assert fakes == 24 - word_count
+    assert mnemonic == [None] * word_count
 
     # Mnemonic is the same
-    assert debug.state().mnemonic_secret == MNEMONIC12.encode()
+    assert debug.state().mnemonic_secret == mnemonic_str.encode()
 
     session = test_ctx.get_session()
     assert session.features.pin_protection is False

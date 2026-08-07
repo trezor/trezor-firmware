@@ -318,7 +318,8 @@ void fsm_msgResetDevice(const ResetDevice *msg) {
   CHECK_NOT_INITIALIZED
 
   CHECK_PARAM(!msg->has_strength || msg->strength == 128 ||
-                  msg->strength == 192 || msg->strength == 256,
+                  msg->strength == 160 || msg->strength == 192 ||
+                  msg->strength == 224 || msg->strength == 256,
               _("Invalid seed strength"));
 
   fsm_abortWorkflows();
@@ -518,7 +519,8 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
   }
 
   CHECK_PARAM(!msg->has_word_count || msg->word_count == 12 ||
-                  msg->word_count == 18 || msg->word_count == 24,
+                  msg->word_count == 15 || msg->word_count == 18 ||
+                  msg->word_count == 21 || msg->word_count == 24,
               _("Invalid word count"));
 
   recovery_init(msg->has_word_count ? msg->word_count : 12,

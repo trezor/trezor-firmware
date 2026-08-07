@@ -357,6 +357,26 @@ def setup_params(request: pytest.FixtureRequest) -> SetupParams:
     return SetupParams.from_request(request)
 
 
+@pytest.fixture(scope="function", autouse=True)
+def read_timeout(request: pytest.FixtureRequest) -> t.Generator[None, None, None]:
+    """Raise the host read timeout for tests marked with `read_timeout`.
+
+    Entering a long mnemonic through the UI can take longer than the default
+    timeout, which exists only to prevent the suite from hanging on packet loss.
+    """
+    marker = request.node.get_closest_marker("read_timeout")
+    if marker is None:
+        yield
+        return
+
+    previous = client_module._DEFAULT_READ_TIMEOUT
+    client_module._DEFAULT_READ_TIMEOUT = float(marker.args[0])
+    try:
+        yield
+    finally:
+        client_module._DEFAULT_READ_TIMEOUT = previous
+
+
 @pytest.fixture(scope="function")
 def _prepared_test_ctx(
     request: pytest.FixtureRequest,
@@ -625,6 +645,10 @@ def pytest_configure(config: "Config") -> None:
     config.addinivalue_line(
         "markers",
         'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',
+    )
+    config.addinivalue_line(
+        "markers",
+        "read_timeout(seconds): raise the host read timeout for tests with long on-device interaction",
     )
     with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
         for line in f:

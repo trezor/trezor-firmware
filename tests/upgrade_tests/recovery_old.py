@@ -25,7 +25,7 @@ def select_number_of_words(
         debug.click(debug.screen_buttons.ok())
     if tag_version is None or tag_version > (2, 8, 8):
         # layout changed after adding the cancel button
-        coords = debug.screen_buttons.word_count_all_word(num_of_words)
+        coords = debug.screen_buttons.word_count_all_word_legacy_layout(num_of_words)
     else:
         word_option_offset = 6
         word_options = (12, 18, 20, 24, 33)
