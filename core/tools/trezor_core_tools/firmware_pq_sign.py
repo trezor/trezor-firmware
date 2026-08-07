@@ -26,9 +26,15 @@ import argparse
 import json
 from pathlib import Path
 
-from trezor_core_tools import firmware_module
+from trezor_core_tools import firmware_module, nrf_tree
 
 from trezorlib._internal import firmware_headers
+
+# MCUboot IMAGE_TLV_SHA256 -- the image hash the nRF's MCUboot computes and that
+# nrf_get_info() reports (io/nrf/stm32u5/nrf_update.c). This is the value the
+# device compares against FirmwareBegin.nrf_image_hash to decide "update
+# required"; it is NOT a trust input (authenticity is the co-path fold).
+MCUBOOT_TLV_SHA256 = 0x10
 
 
 def _variant_info(firmware: Path) -> dict:
@@ -56,11 +62,22 @@ def _variant_info(firmware: Path) -> dict:
 
 
 def sign_firmware_images(
-    firmwares: list[Path], bootloader: Path
-) -> tuple[list[dict], bytes, firmware_headers.BootloaderV2Image]:
+    firmwares: list[Path],
+    bootloader: Path,
+    nrf: Path | None = None,
+    nrf_pq_native: bool = False,
+) -> tuple[list[dict], bytes, firmware_headers.BootloaderV2Image, dict | None]:
     """Fill each variant's manifest code_hashes (at the template chunk_size),
     compute the founder firmware_root over all variants, sign the bootloader, and
-    attach each variant's proof. Returns (variants, firmware_root, bl)."""
+    attach each variant's proof. Returns (variants, firmware_root, bl, nrf_info).
+
+    Without `nrf` the bootloader is signed with an EMPTY model path (modelRoot ==
+    model leaf) -- the historical single-leaf signing. With `nrf`, the nRF MCUboot
+    image becomes a peer leaf in the model tree: modelRoot = tree(model_leaf,
+    nrf_leaf, ..padded); the boot header carries the model co-path for its own
+    leaf and is signed over modelRoot -- the ONE signature covers the nRF too. The
+    returned nrf_info carries what the OTA client puts in FirmwareBegin (the nRF
+    co-path, image length, and the update-required hash); None when no nRF."""
     variants = [_variant_info(f) for f in firmwares]
     leaves = [v["leaf"] for v in variants]
 
@@ -79,13 +96,85 @@ def sign_firmware_images(
         v["path"].write_bytes(fw_ba)
         v["fw"] = bytes(fw_ba)
 
-    # Fold firmware_root into the bootloader header's firmware_root and re-sign.
+    # Fold firmware_root into the bootloader header's firmware_root (authenticated
+    # field), THEN sign. The model leaf commits the whole authenticated header, so
+    # firmware_root must be set before the leaf is read.
     bl = firmware_headers.BootloaderV2Image.parse(bootloader.read_bytes())
     bl.header.firmware_root = firmware_root
-    bl.sign_with_devkeys()
+
+    nrf_info: dict | None = None
+    if nrf is None:
+        # Single-leaf signing: empty model path, modelRoot == model leaf.
+        bl.sign_with_devkeys()
+    else:
+        # Model-tree signing: nRF image is a peer leaf under modelRoot.
+        nrf_image = nrf.read_bytes()
+        if nrf_pq_native:
+            # PQ-NATIVE: give the image its own copy of the founder material so its
+            # MCUboot can verify the tree itself (CONFIG_BOOT_PQ_SECURE_BOOT), instead
+            # of trusting the STM's install-time check.
+            #
+            # Stamp the founder sigmask into the image's PROTECTED TLV first: the
+            # signer owns that field exactly as it owns the boot header's sigmask
+            # (set value -> compute leaf -> sign), which is what makes it COMMITTED
+            # (inside the leaf, so the signature attests to which keys signed) while
+            # still costing only a re-sign -- not an nRF rebuild -- on key rotation.
+            # Must precede the leaf computation below.
+            nrf_sigmask = bl.header.sigmask
+            nrf_image = nrf_tree.set_protected_sigmask(nrf_image, nrf_sigmask)
+            # Then the founder records: placeholders now (their SIZES are inside the
+            # leaf), values once the signature exists.
+            nrf_image = nrf_tree.add_pq_placeholders(nrf_image)
+        model_val = nrf_tree.model_leaf_value(bl)  # sizes model path -> stable leaf
+        # The nRF slot value is MCUboot's SIGNED REGION, not the whole image (the
+        # unprotected TLVs carry signatures -- see nrf_tree.nrf_leaf).
+        model_root, model_proofs = nrf_tree.build_model_tree(
+            [model_val, nrf_tree.nrf_leaf_value(nrf_image)]
+        )
+        nrf_tree.sign_bootloader_in_tree(bl, model_proofs[0])  # co-path + sign
+        assert bl.merkle_root() == model_root, "boot-header fold != modelRoot"
+
+        if nrf_pq_native:
+            # The founder signature over modelRoot covers the nRF leaf too, so the
+            # image embeds THE SAME signature bytes the boot header carries -- no
+            # separate nRF signing.
+            #
+            # The sigmask was stamped BEFORE the leaf was computed, using the value
+            # the header carried then; signing may set it again. If those ever differ
+            # the nRF would carry a mask naming the wrong keys and would reject the
+            # image at BOOT -- a late, confusing failure -- so fail here instead.
+            if bl.header.sigmask != nrf_sigmask:
+                raise SystemExit(
+                    f"sigmask changed during signing (stamped 0x{nrf_sigmask:02x}, "
+                    f"header now 0x{bl.header.sigmask:02x}); the nRF image's "
+                    "protected sigmask is inside its leaf, so it must be stamped with "
+                    "the final value before the tree is built"
+                )
+            nrf_image = nrf_tree.fill_pq_material(
+                nrf_image,
+                list(bl.unauth.slh_signatures),
+                list(bl.unauth.ec_signatures),
+                model_proofs[1],
+            )
+            # Re-pad for the OTA engine's flash-aligned size requirement (padding is
+            # outside the leaf and past tlv_end, so it affects neither check).
+            nrf_image += b"\x00" * ((-len(nrf_image)) % 16)
+            nrf.write_bytes(nrf_image)
+        image_hash = nrf_tree.mcuboot_find_tlv(nrf_image, MCUBOOT_TLV_SHA256)
+        if image_hash is None:
+            raise SystemExit(f"{nrf}: nRF MCUboot image has no SHA256 TLV (0x10)")
+        nrf_info = {
+            "image_name": nrf.name,
+            "length": len(nrf_image),  # grown if PQ-native (founder TLVs appended)
+            "pq_native": nrf_pq_native,
+            "image_hash": image_hash,
+            "co_path": model_proofs[1],  # nRF leaf -> modelRoot
+            "model_root": model_root,
+            "model_id": nrf_tree.mcuboot_model_id(nrf_image),
+        }
     bootloader.write_bytes(bl.build())
 
-    return variants, firmware_root, bl
+    return variants, firmware_root, bl, nrf_info
 
 
 def _short(b: bytes) -> str:
@@ -110,6 +199,22 @@ def main() -> None:
         required=True,
         help="bootloader.bin (re-signed in place)",
     )
+    ap.add_argument(
+        "--nrf",
+        type=Path,
+        help="signed nRF MCUboot image (e.g. trezor-ble.bin). If given, it is "
+        "committed as a model-tree leaf under the ONE boot-header signature, and "
+        "its OTA co-path + hash are written to --manifest-out for the update client.",
+    )
+    ap.add_argument(
+        "--nrf-pq-native",
+        action="store_true",
+        help="make the nRF image PQ-NATIVE: embed the founder signature + co-path in "
+        "its own TLVs so its MCUboot verifies the founder tree itself "
+        "(CONFIG_BOOT_PQ_SECURE_BOOT) instead of trusting the STM's install-time "
+        "check. Requires an nRF bootloader built with that option, and the image's "
+        "protected sigmask TLV must name the signing founder keys.",
+    )
     ap.add_argument("--manifest-out", type=Path)
     ap.add_argument(
         "--vector-out", type=Path, help="write the first variant's raw manifest bytes"
@@ -132,7 +237,9 @@ def main() -> None:
     if args.install_proof and args.bare:
         raise SystemExit("--bare and --install-proof are mutually exclusive")
 
-    variants, firmware_root, bl = sign_firmware_images(args.firmware, args.bootloader)
+    variants, firmware_root, bl, nrf_info = sign_firmware_images(
+        args.firmware, args.bootloader, args.nrf, args.nrf_pq_native
+    )
 
     single = len(variants) == 1
     print(
@@ -149,6 +256,17 @@ def main() -> None:
         # proof just baked into the image must read back identically.
         assert firmware_module._fold_proof(leaf, proof) == firmware_root
         assert firmware_module.read_manifest_proof(v["fw"]) == proof
+
+    if nrf_info is not None:
+        # The nRF leaf (H(0x00 || image)) folded through its co-path must equal the
+        # signed modelRoot (== bl.merkle_root()). Mirrors the device install check.
+        assert nrf_info["model_root"] == bytes(bl.merkle_root())
+        print(
+            f"nRF leaf        : {nrf_info['image_name']} "
+            f"model_id={nrf_info['model_id'].decode(errors='replace')} "
+            f"{nrf_info['length']} B, co-path {len(nrf_info['co_path'])} node(s)"
+        )
+        print("  committed under the ONE boot-header signature (modelRoot leaf)")
 
     # For a direct flash (no OTA) the proof already rides in the firmware image;
     # we only stamp the variant into the bootloader's firmware_type so the device
@@ -183,23 +301,30 @@ def main() -> None:
     if args.vector_out:
         args.vector_out.write_bytes(variants[0]["manifest"])
     if args.manifest_out:
-        args.manifest_out.write_text(
-            json.dumps(
+        bundle = {
+            "firmware_root": firmware_root.hex(),
+            "variants": [
                 {
-                    "firmware_root": firmware_root.hex(),
-                    "variants": [
-                        {
-                            "firmware": v["path"].name,
-                            "leaf": v["leaf"].hex(),
-                            "proof": [n.hex() for n in v["proof"]],
-                        }
-                        for v in variants
-                    ],
-                    "bootloader_signed_root": bl.merkle_root().hex(),
-                },
-                indent=2,
-            )
-        )
+                    "firmware": v["path"].name,
+                    "leaf": v["leaf"].hex(),
+                    "proof": [n.hex() for n in v["proof"]],
+                }
+                for v in variants
+            ],
+            "bootloader_signed_root": bl.merkle_root().hex(),
+        }
+        if nrf_info is not None:
+            # What the OTA client feeds to FirmwareBegin (nrf_co_path / nrf_length
+            # / nrf_image_hash); model_root is the signed modelRoot for reference.
+            bundle["nrf"] = {
+                "image": nrf_info["image_name"],
+                "model_id": nrf_info["model_id"].decode(errors="replace"),
+                "length": nrf_info["length"],
+                "image_hash": nrf_info["image_hash"].hex(),
+                "co_path": [n.hex() for n in nrf_info["co_path"]],
+                "model_root": nrf_info["model_root"].hex(),
+            }
+        args.manifest_out.write_text(json.dumps(bundle, indent=2))
 
     print("\nverification:")
     try:
