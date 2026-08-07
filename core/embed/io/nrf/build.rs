@@ -6,10 +6,6 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
     lib.add_define("USE_NRF", Some("1"));
 
-    // TODO: remove this hack when nrf related code in trezor_lib is
-    // moved to this crate
-    lib.add_private_include("../rust");
-
     if cfg!(feature = "emulator") {
         lib.add_sources(["nrf/unix/nrf.c"]);
     } else if cfg!(feature = "mcu_stm32u5") {
