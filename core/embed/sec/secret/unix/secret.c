@@ -24,6 +24,7 @@
 
 #include <sec/rsod_special.h>
 #include <sec/secret.h>
+#include "rtl/secbool.h"
 
 #ifdef KERNEL_MODE
 
@@ -36,13 +37,25 @@ static secbool bootloader_locked = secfalse;
 #endif
 
 #ifdef SECRET_KEY_SLOT_0_LEN
-static uint8_t secret_key_slot0[SECRET_KEY_SLOT_0_LEN] = {0};
+static uint8_t secret_key_slot0[SECRET_KEY_SLOT_0_LEN] = {
+    0xb8, 0x8d, 0x6c, 0x53, 0x28, 0x46, 0x5f, 0x3d, 0x58, 0x05, 0xc5,
+    0xf4, 0x68, 0x8a, 0xd7, 0xf8, 0x08, 0xc0, 0x8e, 0x11, 0x68, 0xf0,
+    0x47, 0x93, 0x58, 0xfd, 0xbb, 0xb8, 0xf8, 0x2b, 0xe0, 0xce};
+_Static_assert(SECRET_KEY_SLOT_0_LEN == 32);
 #endif
 #ifdef SECRET_KEY_SLOT_1_LEN
-static uint8_t secret_key_slot1[SECRET_KEY_SLOT_1_LEN] = {0};
+static uint8_t secret_key_slot1[SECRET_KEY_SLOT_1_LEN] = {
+    0x98, 0xf3, 0xff, 0x58, 0xe8, 0xa3, 0xc5, 0xe2, 0x38, 0x51, 0x7a,
+    0x77, 0x28, 0xf0, 0x4d, 0xd7, 0x08, 0x2e, 0x5d, 0x1b, 0xe8, 0xea,
+    0x61, 0x46, 0xb8, 0x28, 0x50, 0xdf, 0x58, 0xe1, 0x12, 0xd4};
+_Static_assert(SECRET_KEY_SLOT_1_LEN == 32);
 #endif
 #ifdef SECRET_KEY_SLOT_2_LEN
-static uint8_t secret_key_slot2[SECRET_KEY_SLOT_2_LEN] = {0};
+static uint8_t secret_key_slot2[SECRET_KEY_SLOT_2_LEN] = {
+    0x31, 0xe9, 0x0a, 0xf1, 0x50, 0x45, 0x10, 0xee, 0x4e, 0xfd, 0x79,
+    0x13, 0x33, 0x41, 0x48, 0x15, 0x89, 0xa2, 0x89, 0x5c, 0xc5, 0xfb,
+    0xb1, 0x3e, 0xd5, 0x71, 0x1c, 0x1e, 0x9b, 0x81, 0x98, 0x72};
+_Static_assert(SECRET_KEY_SLOT_2_LEN == 32);
 #endif
 
 #ifdef SECRET_LOCK_SLOT_OFFSET
@@ -93,7 +106,7 @@ void secret_erase(void) {
   for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
     uint8_t* slot_ptr = secret_get_slot_ptr(i);
     if (slot_ptr != NULL) {
-      memzero(slot_ptr, secret_get_slot_len(i));
+      memset(slot_ptr, 0xff, secret_get_slot_len(i));
     }
   }
 }
@@ -141,11 +154,23 @@ secbool secret_key_get(uint8_t slot, uint8_t* dest, size_t len) {
     return secfalse;
   }
 
+  bool is_valid = false;
+  for (int i = 0; i < len; i++) {
+    if (slot_ptr[i] != 0xFF && slot_ptr[i] != 0x00) {
+      is_valid = true;
+      break;
+    }
+  }
+
+  if (!is_valid) {
+    return secfalse;
+  }
+
   memcpy(dest, slot_ptr, len);
   return sectrue;
 }
 
-static secbool secret_key_present(uint8_t slot) {
+secbool secret_key_writable(uint8_t slot) {
   if (slot >= SECRET_NUM_KEY_SLOTS) {
     return secfalse;
   }
@@ -155,16 +180,18 @@ static secbool secret_key_present(uint8_t slot) {
     return secfalse;
   }
 
-  for (size_t i = 0; i < secret_get_slot_len(slot); i++) {
-    if (slot_ptr[i] != 0) {
-      return sectrue;
+  size_t len = secret_get_slot_len(slot);
+  if (len == 0) {
+    return secfalse;
+  }
+
+  for (int i = 0; i < len; i++) {
+    if (slot_ptr[i] != 0xFF) {
+      return secfalse;
     }
   }
-  return secfalse;
-}
 
-secbool secret_key_writable(uint8_t slot) {
-  return secret_key_present(slot) == secfalse;
+  return sectrue;
 }
 
 void secret_reset(void) {}

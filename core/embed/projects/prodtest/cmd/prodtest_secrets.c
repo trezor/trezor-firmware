@@ -39,7 +39,9 @@
 
 #ifdef USE_OPTIGA
 #include <sec/optiga.h>
+#ifndef TREZOR_EMULATOR
 #include "prodtest_optiga.h"
+#endif
 #endif
 
 #ifdef USE_TROPIC
@@ -105,7 +107,7 @@ static void prodtest_secrets_init(cli_t* cli) {
   }
 #endif
 
-#ifdef USE_OPTIGA
+#if defined(USE_OPTIGA) && !defined(TREZOR_EMULATOR)
   // Make sure that Optiga isn't locked so that we don't overwrite the MCU's
   // pairing secrets.
   optiga_locked_status optiga_status = get_optiga_locked_status(cli);

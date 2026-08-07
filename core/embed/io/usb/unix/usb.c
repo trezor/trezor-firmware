@@ -21,6 +21,7 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
@@ -39,6 +40,12 @@
 
 #define USBD_MAX_NUM_INTERFACES 8
 
+#define USB_RX_BUFFER_SIZE 64
+
+// These applies only to the USB VCP interface
+#define USB_TX_BUFFER_SIZE 128
+#define USB_FLUSH_INTERVAL_MS 10
+
 typedef enum {
   USB_IFACE_TYPE_DISABLED = 0,
   USB_IFACE_TYPE_VCP = 1,
@@ -51,14 +58,21 @@ typedef struct {
   usb_iface_type_t type;
   uint16_t port;
   emu_sock_t sock;
-  uint8_t msg[64];
-  int msg_len;
+  uint8_t rx_buf[USB_RX_BUFFER_SIZE];
+  int rx_len;
+  pthread_mutex_t tx_lock;
+  uint8_t tx_buf[USB_TX_BUFFER_SIZE];
+  size_t tx_len;
+  pthread_t flush_thread;
+  bool flush_thread_running;
 } usb_iface_t;
 
 static usb_iface_t usb_ifaces[USBD_MAX_NUM_INTERFACES];
 
 // forward declaration
 static const syshandle_vmt_t usb_iface_handle_vmt;
+static void *usb_flush_thread(void *arg);
+static void usb_flush(usb_iface_t *iface);
 
 secbool usb_init(const usb_dev_info_t *dev_info) {
   UNUSED(dev_info);
@@ -68,8 +82,11 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
     iface->type = USB_IFACE_TYPE_DISABLED;
     iface->port = 0;
     sock_init(&iface->sock);
-    memzero(&iface->msg, sizeof(usb_ifaces[i].msg));
-    iface->msg_len = 0;
+    memzero(&iface->rx_buf, sizeof(usb_ifaces[i].rx_buf));
+    iface->rx_len = 0;
+    pthread_mutex_init(&iface->tx_lock, NULL);
+    iface->tx_len = 0;
+    iface->flush_thread_running = false;
   }
   return sectrue;
 }
@@ -94,6 +111,11 @@ secbool usb_start(const usb_start_params_t *params) {
     ensure(sectrue *
                syshandle_register(iface->handle, &usb_iface_handle_vmt, iface),
            NULL);
+
+    if (iface->type == USB_IFACE_TYPE_VCP) {
+      iface->flush_thread_running = true;
+      pthread_create(&iface->flush_thread, NULL, usb_flush_thread, iface);
+    }
   }
 
   return sectrue;
@@ -102,6 +124,19 @@ secbool usb_start(const usb_start_params_t *params) {
 void usb_stop(void) {
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     usb_iface_t *iface = &usb_ifaces[i];
+
+    if (iface->flush_thread_running) {
+      pthread_mutex_lock(&iface->tx_lock);
+      iface->flush_thread_running = false;
+      pthread_mutex_unlock(&iface->tx_lock);
+
+      pthread_join(iface->flush_thread, NULL);
+
+      pthread_mutex_lock(&iface->tx_lock);
+      usb_flush(iface);
+      pthread_mutex_unlock(&iface->tx_lock);
+    }
+
     sock_stop(&iface->sock);
     syshandle_unregister(iface->handle);
   }
@@ -147,7 +182,7 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
 }
 
 static secbool usb_emulated_poll_read(usb_iface_t *iface) {
-  if (iface->msg_len > 0) {
+  if (iface->rx_len > 0) {
     return sectrue;
   }
 
@@ -155,7 +190,8 @@ static secbool usb_emulated_poll_read(usb_iface_t *iface) {
     return secfalse;
   }
 
-  size_t len = sock_recvfrom(&iface->sock, iface->msg, sizeof(iface->msg));
+  size_t len =
+      sock_recvfrom(&iface->sock, iface->rx_buf, sizeof(iface->rx_buf));
   if (!len) {
     return secfalse;
   }
@@ -163,13 +199,13 @@ static secbool usb_emulated_poll_read(usb_iface_t *iface) {
   static const char *ping_req = "PINGPING";
   static const char *ping_resp = "PONGPONG";
   if (len == strlen(ping_req) &&
-      0 == memcmp(ping_req, iface->msg, strlen(ping_req))) {
+      0 == memcmp(ping_req, iface->rx_buf, strlen(ping_req))) {
     sock_sendto(&iface->sock, (const uint8_t *)ping_resp, strlen(ping_resp));
-    memzero(iface->msg, sizeof(iface->msg));
+    memzero(iface->rx_buf, sizeof(iface->rx_buf));
     return secfalse;
   }
 
-  iface->msg_len = len;
+  iface->rx_len = len;
 
   return sectrue;
 }
@@ -179,18 +215,18 @@ static secbool usb_emulated_poll_write(usb_iface_t *iface) {
 }
 
 static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, uint32_t len) {
-  if (iface->msg_len > 0) {
-    if (iface->msg_len < len) {
-      len = iface->msg_len;
+  if (iface->rx_len > 0) {
+    if (iface->rx_len < len) {
+      len = iface->rx_len;
     }
-    memcpy(buf, iface->msg, len);
+    memcpy(buf, iface->rx_buf, len);
 
     if (iface->type == USB_IFACE_TYPE_VCP) {
-      iface->msg_len -= len;
-      memmove(iface->msg, iface->msg + len, iface->msg_len);
+      iface->rx_len -= len;
+      memmove(iface->rx_buf, iface->rx_buf + len, iface->rx_len);
     } else {
-      iface->msg_len = 0;
-      memzero(iface->msg, sizeof(iface->msg));
+      iface->rx_len = 0;
+      memzero(iface->rx_buf, sizeof(iface->rx_buf));
     }
     return len;
   }
@@ -198,9 +234,56 @@ static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, uint32_t len) {
   return 0;
 }
 
+static void usb_flush(usb_iface_t *iface) {
+  if (iface->tx_len > 0) {
+    sock_sendto(&iface->sock, iface->tx_buf, iface->tx_len);
+    iface->tx_len = 0;
+  }
+}
+
+static void *usb_flush_thread(void *arg) {
+  usb_iface_t *iface = (usb_iface_t *)arg;
+
+  while (true) {
+    usleep(USB_FLUSH_INTERVAL_MS * 1000);
+
+    pthread_mutex_lock(&iface->tx_lock);
+    if (!iface->flush_thread_running) {
+      pthread_mutex_unlock(&iface->tx_lock);
+      break;
+    }
+    usb_flush(iface);
+    pthread_mutex_unlock(&iface->tx_lock);
+  }
+
+  return NULL;
+}
+
 static ssize_t usb_emulated_write(usb_iface_t *iface, const uint8_t *buf,
                                   uint32_t len) {
-  return sock_sendto(&iface->sock, buf, len);
+  if (iface->type != USB_IFACE_TYPE_VCP) {
+    return sock_sendto(&iface->sock, buf, len);
+  }
+
+  pthread_mutex_lock(&iface->tx_lock);
+
+  size_t written = 0;
+  while (written < len) {
+    size_t space = sizeof(iface->tx_buf) - iface->tx_len;
+    size_t chunk = MIN(space, (size_t)len - written);
+
+    memcpy(&iface->tx_buf[iface->tx_len], buf + written, chunk);
+    iface->tx_len += chunk;
+    written += chunk;
+
+    if (iface->tx_len == sizeof(iface->tx_buf)) {
+      usb_flush(iface);
+    }
+  }
+
+  pthread_mutex_unlock(&iface->tx_lock);
+
+  return (ssize_t)written;
 }
 
 secbool usb_configured(void) {

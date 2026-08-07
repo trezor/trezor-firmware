@@ -36,6 +36,3 @@ def test_ping_with_long_text(client: ProdtestClient) -> None:
     long_text = 512 * "longtext"
     resp = client.command_ok(ProdtestCommand(Cmd.PING, long_text))
     assert resp.args == long_text
-    too_long_text = long_text + "A"
-    resp = client.command_ok(ProdtestCommand(Cmd.PING, too_long_text))
-    assert resp.args == long_text

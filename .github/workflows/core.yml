@@ -251,7 +251,7 @@ jobs:
       - run: nix-shell --run "uv run make -C core test_emu_sanity"  # sanity check non-frozen emulator
       - name: Start Tropic model
         if: ${{ matrix.model == 'T3W1' }}
-        run: nix-shell --run "uv run model_server tcp -c tests/tropic_model/config.yml > tests/trezor-tropic-model.log 2>&1 &"
+        run: nix-shell --run "uv run model_server tcp -c tests/tropic_model/firmware_config.yml > tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core test"
 
   core_unit_rust_test:
