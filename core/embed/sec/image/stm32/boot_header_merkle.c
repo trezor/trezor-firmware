@@ -16,22 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#pragma once
-
 /*
  * Firmware Merkle tree math + module/type helpers, shared verbatim by the
  * embedded build (boot_header.c) and the host cross-validation harness
  * (tests/fw_merkle/crossvalidate.c). One source guarantees the on-device and
  * host implementations are byte-identical.
  *
- * NOTE: this header contains function DEFINITIONS. Include it in exactly one
- * translation unit per program (boot_header.c on device; the harness on host).
- *
- * Dependencies (types, IMAGE_HASH_* macros, memcmp, secbool) are pulled from
- * the real headers below so an IDE resolves the symbols. The host harness
- * defines BOOT_HEADER_MERKLE_SHIMMED and supplies its own minimal shims to
- * avoid dragging in the embedded include tree.
+ * The functions it exports are declared in sec/boot_header.h. The few kept
+ * non-static so the harness can compare intermediate values are declared in
+ * boot_header_merkle_internal.h.
  */
 
 /* The whole file is secure-mode only on device, exactly as boot_header.c is.
@@ -49,15 +42,6 @@
 #include <sec/boot_header.h>
 #include <sec/image_hash_conf.h>
 #endif
-
-// Combines two nodes into their parent: H(0x01 || min(a,b) || max(a,b)).
-static void boot_header_internal_node(const merkle_proof_node_t* a,
-                                      const merkle_proof_node_t* b,
-                                      merkle_proof_node_t* out) {
-  static const uint8_t prefix1[] = {0x01};
-  IMAGE_HASH_CTX ctx;
-  IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, prefix1, sizeof(prefix1));
 
 // Combines two nodes into their parent: H(0x01 || min(a,b) || max(a,b)).
 static void boot_header_internal_node(const merkle_proof_node_t* a,
@@ -207,9 +191,8 @@ void firmware_module_chain_step(const uint8_t* h_prev, const uint8_t* data,
   IMAGE_HASH_FINAL(&ctx, out);
 }
 
-void firmware_module_code_hash(uintptr_t base, uint32_t addr,
-                                      uint32_t size, uint32_t chunk_size,
-                                      uint8_t* out) {
+void firmware_module_code_hash(uintptr_t base, uint32_t addr, uint32_t size,
+                               uint32_t chunk_size, uint8_t* out) {
   // seed, then fold chunks last -> first (variant A) with the shared step, so
   // the whole-module recompute and the streaming per-chunk verify use identical
   // primitives.
@@ -319,6 +302,50 @@ secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
   }
 
   return sectrue;
+}
+
+// Generic Merkle leaf hash H(0x00 || data). The firmware variant leaf
+// (boot_header_variant_leaf) is the manifest-specific case; this is the plain
+// leaf used for the nRF (over MCUboot's signed region) -- see
+// nrf_image_verify_in_tree.
+void merkle_leaf_hash(const uint8_t* data, size_t len,
+                      merkle_proof_node_t* out) {
+  static const uint8_t prefix0[] = {0x00};
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  IMAGE_HASH_UPDATE(&ctx, prefix0, sizeof(prefix0));
+  IMAGE_HASH_UPDATE(&ctx, data, len);
+  IMAGE_HASH_FINAL(&ctx, out->bytes);
+}
+
+// Fold a MODEL-tree slot value up to modelRoot.
+//
+// A slot value is the 32 bytes a co-processor (or anything else sharing the
+// model tree) is committed by; this hashes it into a leaf and folds the
+// co-path. Nothing here knows what produced the value -- which is the point:
+// every slot folds identically, so adding a second co-processor needs no new
+// fold.
+//
+// The caller must ALSO pin the value to the right device where that matters:
+// every model's slot hangs under the same modelRoot, so a passing fold proves
+// founder-commitment, not identity. Mirrors the firmware-variant fold
+// (firmware_manifest_authentic), one tree level up.
+secbool boot_header_verify_slot(const uint8_t* slot_value,
+                                const merkle_proof_node_t* proof,
+                                size_t proof_count,
+                                const merkle_proof_node_t* trusted_model_root) {
+  if (slot_value == NULL || trusted_model_root == NULL) {
+    return secfalse;
+  }
+  merkle_proof_node_t node;
+  merkle_leaf_hash(slot_value, IMAGE_HASH_DIGEST_LENGTH, &node);
+  for (size_t i = 0; i < proof_count; i++) {
+    boot_header_internal_node(&node, &proof[i], &node);
+  }
+  return (memcmp(node.bytes, trusted_model_root->bytes, sizeof(node.bytes)) ==
+          0)
+             ? sectrue
+             : secfalse;
 }
 
 uint8_t firmware_type_compose(uint32_t variant) {

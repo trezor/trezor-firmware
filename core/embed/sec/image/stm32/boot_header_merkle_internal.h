@@ -39,6 +39,23 @@
 #pragma once
 
 /**
+ * @brief Merkle LEAF hash: H(0x00 || data).
+ *
+ * Counterpart to boot_header_internal_node(). The 0x00/0x01 domain split is
+ * what stops a leaf being replayed as an internal node, so the two belong
+ * together; neither is nRF- or firmware-specific.
+ *
+ * Declared here rather than kept static because the cross-validation harness
+ * compares this exact value against the nRF's and the host signer's.
+ *
+ * @param data  bytes to commit
+ * @param len   length of @p data
+ * @param out   [out] the resulting leaf
+ */
+void merkle_leaf_hash(const uint8_t* data, size_t len,
+                      merkle_proof_node_t* out);
+
+/**
  * @brief Smart-hashing chain over one firmware module's code.
  *
  * Declared here so the cross-validation harness can compare it against the
