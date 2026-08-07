@@ -23,9 +23,9 @@ bool backup_ram_init(void) { return true; }
 
 void backup_ram_deinit(void) {}
 
-bool backup_ram_erase(void) { return false; }
+bool backup_ram_erase(void) { return true; }
 
-bool backup_ram_erase_protected(void) { return false; }
+bool backup_ram_erase_protected(void) { return true; }
 
 bool backup_ram_erase_item(uint16_t key) { return false; }
 

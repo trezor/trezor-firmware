@@ -31,6 +31,8 @@ static int get_otp_block(monoctr_type_t type) {
       return FLASH_OTP_BLOCK_BOOTLOADER_VERSION;
     case MONOCTR_FIRMWARE_VERSION:
       return FLASH_OTP_BLOCK_FIRMWARE_VERSION;
+    case MONOCTR_SECMON_VERSION:
+      return 31;  // Workaround until we implement monoctrl properly for STM32U5
     default:
       return -1;
   }
