@@ -8,6 +8,7 @@
 #include <SDL3/SDL.h>
 
 #include <io/display.h>
+#include <sec/monoctr.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
@@ -226,6 +227,12 @@ int main(int argc, char **argv) {
   const uint8_t otp_data[] = {set_variant, color_variant, bitcoin_only};
   (void)!flash_otp_write(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, otp_data,
                          sizeof(otp_data));
+
+  // initialize monotonic counters
+  monoctr_write(MONOCTR_FIRMWARE_VERSION, 0);
+#ifdef USE_SECMON_VERIFICATION
+  monoctr_write(MONOCTR_SECMON_VERSION, 0);
+#endif
 
   int exit_code = bootloader_main();
 
