@@ -168,7 +168,9 @@ test = [
 
 default = []
 
-emulator = []
+# TODO: should we propagate the emulator feature here? some say yes, some say no.
+# For now we propagate, but this is NOT a project wide policy.
+emulator = ["io/emulator", "upymod?/emulator"]
 mcu_stm32f429 = ["mcu_stm32f4"]
 mcu_stm32f4 = []
 
