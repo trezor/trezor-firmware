@@ -188,6 +188,20 @@ bool nrf_update_required(const uint8_t *image_ptr, size_t image_len);
 bool nrf_update(const uint8_t *image_ptr, size_t image_len);
 
 /**
+ * @brief Like nrf_update, but reports SMP-upload progress via `progress`
+ * (done_bytes, total_bytes) per chunk. For direct (non-syscall) callers such as
+ * the bootloader OTA workflow, which drive a progress bar during the push.
+ *
+ * @param image_ptr  Pointer to the firmware image in memory
+ * @param image_len  Length of the firmware image in bytes
+ * @param progress   Per-chunk callback (may be NULL); NOT usable across the
+ *                   kernel/user syscall boundary -- see nrf_update.
+ * @return true if the update process was initiated
+ */
+bool nrf_update_with_progress(const uint8_t *image_ptr, size_t image_len,
+                              void (*progress)(uint32_t done, uint32_t total));
+
+/**
  * @brief Authenticate pairing of nRF chip with Trezor
  *
  * @return true if nrf chip is properly paired
