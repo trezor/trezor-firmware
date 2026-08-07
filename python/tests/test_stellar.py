@@ -1170,7 +1170,7 @@ def test_from_authorization_entry_legacy_address_credentials():
         stellar.from_authorization_entry(entry)
 
 
-def make_invoke_host_function_tx(auth=()):
+def make_sac_transfer_tx(auth=()):
     """A transaction invoking the SAC directly, with optional auth entries."""
     op = InvokeHostFunction(
         host_function=stellar_xdr.HostFunction(
@@ -1200,7 +1200,7 @@ def test_from_envelope_asset_hints():
             sub_invocations=[make_soroban_invocation(contract_address=SAC_ADDRESS)]
         ),
     )
-    envelope = make_invoke_host_function_tx(auth=[entry])
+    envelope = make_sac_transfer_tx(auth=[entry])
 
     _, operations, _ = stellar.from_envelope(envelope, asset_hints=[SAC_ASSET])
 
@@ -1225,7 +1225,7 @@ def test_from_envelope_multiple_asset_hints():
             ]
         ),
     )
-    envelope = make_invoke_host_function_tx(auth=[entry])
+    envelope = make_sac_transfer_tx(auth=[entry])
 
     _, operations, _ = stellar.from_envelope(
         envelope, asset_hints=[Asset.native(), SAC_ASSET]
@@ -1239,7 +1239,7 @@ def test_from_envelope_multiple_asset_hints():
 
 
 def test_from_envelope_unmatched_asset_hint():
-    envelope = make_invoke_host_function_tx()
+    envelope = make_sac_transfer_tx()
 
     # a hint whose SAC is not invoked anywhere is dropped, not sent
     _, operations, _ = stellar.from_envelope(envelope, asset_hints=[UNRELATED_ASSET])
