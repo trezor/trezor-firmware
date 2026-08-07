@@ -26,6 +26,7 @@
 #include <io/rsod.h>
 #include <io/usb_config.h>
 #include <sec/image.h>
+#include <sec/monoctr.h>
 #include <sec/random_delays.h>
 #include <sec/rsod_special.h>
 #include <sec/unit_properties.h>
@@ -161,6 +162,8 @@ static void display_touch_init(secbool manufacturing_mode,
 
 static secbool boot_sequence(void) {
   secbool stay_in_bootloader = secfalse;
+
+  monoctr_init();
 
 #ifdef USE_SECRET
   secret_init();

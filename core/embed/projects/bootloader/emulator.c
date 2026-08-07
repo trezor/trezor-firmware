@@ -8,6 +8,7 @@
 #include <SDL3/SDL.h>
 
 #include <io/display.h>
+#include <sec/monoctr.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
