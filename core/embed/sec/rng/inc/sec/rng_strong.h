@@ -44,4 +44,15 @@
  */
 void rng_fill_buffer_strong(void* buffer, size_t buffer_size);
 
+/**
+ * @brief Estimates the duration of a 32-byte `rng_fill_buffer_strong()`
+ * call and adds the result to `*time_ms`.
+ *
+ * Used to precompute the duration of operations that call
+ * `rng_fill_buffer_strong()`, e.g. to render progress bars. Accumulates the
+ * expected time of each enabled secure element's TRNG request. The MCU's
+ * TRNG duration is negligible and not counted.
+ *
+ * @param time_ms Running total in milliseconds to add the estimate to.
+ */
 void rng_fill_buffer_strong_time(uint32_t* time_ms);
