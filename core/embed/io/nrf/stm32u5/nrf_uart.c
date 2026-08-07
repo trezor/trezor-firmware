@@ -26,7 +26,7 @@
 #include <sys/mpu.h>
 
 #include "../nrf_internal.h"
-#include "rust_smp.h"
+#include "../rust_smp.h"
 #include "sys/systick.h"
 
 extern nrf_driver_t g_nrf_driver;
