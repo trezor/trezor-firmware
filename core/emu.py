@@ -127,6 +127,7 @@ def _from_env(name: str) -> bool:
 @click.option("-d", "--production/--no-production", default=_from_env("PYOPT"), help="Production mode (debuglink disabled)")
 @click.option("-D", "--debugger", is_flag=True, help="Run emulator in debugger (gdb/lldb)")
 @click.option("-e", "--erase", is_flag=True, help="Erase profile before running")
+@click.option("--display-scale", type=click.FloatRange(0.25, 16), default=1, show_default=True, help="Scale emulator window by this factor, e.g. 0.5 for half size")
 @click.option("--executable", type=click.Path(exists=True, dir_okay=False), default=os.environ.get("MICROPYTHON"), help="Alternate emulator executable")
 @click.option("-g", "--profiling/--no-profiling", default=_from_env("TREZOR_PROFILING"), help="Run with profiler wrapper")
 @click.option("-G", "--alloc-profiling/--no-alloc-profiling", default=_from_env("TREZOR_MEMPERF"), help="Profile memory allocation (requires special micropython build)")
@@ -156,6 +157,7 @@ def cli(
     production: bool,
     debugger: bool,
     erase: bool,
+    display_scale: float,
     executable: str | Path,
     profiling: bool,
     alloc_profiling: bool,
@@ -279,6 +281,7 @@ def cli(
         disable_animation=disable_animation,
         workdir=SRC_DIR,
         tropic_model_port=TropicModel.DEFAULT_PORT,
+        display_scale=display_scale,
     )
 
     emulator_env = dict(
