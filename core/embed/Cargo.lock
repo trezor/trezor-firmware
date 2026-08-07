@@ -485,7 +485,6 @@ dependencies = [
  "rtl",
  "sec",
  "sys",
- "trezor_lib",
  "xbuild",
 ]
 

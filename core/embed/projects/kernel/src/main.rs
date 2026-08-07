@@ -1,4 +1,5 @@
 #![no_std]
 #![no_main]
 
-use trezor_lib as _;
+// force pull in Rust generated symbols
+use io as _;
