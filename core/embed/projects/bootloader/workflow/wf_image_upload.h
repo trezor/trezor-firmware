@@ -161,8 +161,20 @@ struct image_upload_handler {
    *  FLASH_BLOCK_SIZE-aligned and <= block_size. Set STATICALLY (used before
    *  on_headers runs), unlike block_size. */
   uint32_t init_chunk_size;
+  /** Image index sent in every FirmwareRequest so the host knows which image
+   *  these chunks are for: 0 (default) = the primary stream (bootloader code /
+   *  firmware); k>=1 = the k-th co-processor image
+   * (FirmwareBegin.coprocessors). Lets one phase-1 session stream several
+   * images (bl code + co-procs). */
+  uint32_t request_index;
   /** Workflow result returned on a successful upload. */
   workflow_result_t success_result;
+  /** If true, the engine does NOT send the terminal wire Success on completion
+   *  (the caller does). Used when this upload is a sub-stream of a larger
+   *  exchange that must emit exactly one Success (e.g. the nRF image inside a
+   *  header-only phase 1). success_result is still returned and ui->success
+   *  still runs. */
+  bool suppress_success;
   /** Type-specific UI callbacks. */
   const image_upload_ui_t *ui;
 

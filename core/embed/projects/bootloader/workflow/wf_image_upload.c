@@ -42,11 +42,18 @@
 #define SEG_END(e) ((e)->image_total)
 #endif
 
-/* Only the PQ firmware handler lowers the initial prefetch below the default, so
- * every other build reads a field that is always zero. */
+/* Three handler knobs only a PQ/nRF build ever sets: an image staged behind an
+ * already-written prefix (target_offset), a handler that draws its own success
+ * screen (suppress_success), and a smaller initial prefetch (init_chunk_size).
+ * Spelling out their constant values elsewhere lets those builds drop the reads
+ * and the branches they feed. */
 #ifdef PQ_SECURE_BOOT
+#define HANDLER_TARGET_OFFSET(h) ((h)->target_offset)
+#define HANDLER_SUPPRESS_SUCCESS(h) ((h)->suppress_success)
 #define HANDLER_INIT_CHUNK(h) ((h)->init_chunk_size)
 #else
+#define HANDLER_TARGET_OFFSET(h) (0u)
+#define HANDLER_SUPPRESS_SUCCESS(h) (false)
 #define HANDLER_INIT_CHUNK(h) (0u)
 #endif
 
@@ -180,9 +187,9 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
     if (e->chunk_size < block_target) {
       e->read_offset = e->chunk_size;
       e->chunk_requested = block_target - e->chunk_size;
-      if (sectrue !=
-          send_msg_request_firmware(iface, e->stream_offset + e->read_offset,
-                                    e->chunk_requested)) {
+      if (sectrue != send_msg_request_firmware(
+                         iface, e->stream_offset + e->read_offset,
+                         e->chunk_requested, handler->request_index)) {
         return UPLOAD_ERR_COMMUNICATION;
       }
       return UPLOAD_IN_PROGRESS;
@@ -199,7 +206,8 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
 
   // should not happen, but double-check
   if (flash_area_get_address(handler->target_area,
-                             handler->target_offset + image_off, 0) == NULL) {
+                             HANDLER_TARGET_OFFSET(handler) + image_off,
+                             0) == NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Firmware too big");
     return UPLOAD_ERR_FIRMWARE_TOO_BIG;
@@ -224,8 +232,9 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
       memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
       e->chunk_size = 0;
 
-      if (sectrue !=
-          send_msg_request_firmware(iface, image_off, e->chunk_requested)) {
+      if (sectrue != send_msg_request_firmware(iface, image_off,
+                                               e->chunk_requested,
+                                               handler->request_index)) {
         return UPLOAD_ERR_COMMUNICATION;
       }
       return UPLOAD_IN_PROGRESS;
@@ -242,7 +251,7 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
   // erase (rolling cursor) + write this block
   const uint32_t *src = (const uint32_t *)chunk_buffer;
   uint32_t bytes_remaining = e->chunk_size;
-  uint32_t write_offset = handler->target_offset + image_off;
+  uint32_t write_offset = HANDLER_TARGET_OFFSET(handler) + image_off;
 
   ensure((e->chunk_size % FLASH_BLOCK_SIZE == 0) * sectrue, NULL);
 
@@ -300,7 +309,8 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
     e->chunk_size = 0;
     memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
     if (sectrue != send_msg_request_firmware(iface, e->stream_offset,
-                                             e->chunk_requested)) {
+                                             e->chunk_requested,
+                                             handler->request_index)) {
       return UPLOAD_ERR_COMMUNICATION;
     }
     return UPLOAD_IN_PROGRESS;
@@ -320,7 +330,12 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
     // handler has already sent its own failure message
     return fs;
   }
-  send_msg_success(iface, NULL);
+  // A sub-stream (e.g. the nRF image inside a header-only phase 1) defers the
+  // terminal Success to its caller so phase 1 emits exactly ONE Success -- the
+  // host can't disambiguate multiple, especially when a sub-stream is skipped.
+  if (!HANDLER_SUPPRESS_SUCCESS(handler)) {
+    send_msg_success(iface, NULL);
+  }
   return UPLOAD_OK;
 }
 
@@ -332,7 +347,7 @@ workflow_result_t run_image_upload(protob_io_t *iface,
       .handler = handler,
       // Start erasing at the base offset so an already-written prefix (e.g. a
       // staged boot header) is preserved.
-      .erase_offset = handler->target_offset,
+      .erase_offset = HANDLER_TARGET_OFFSET(handler),
       // Full staging buffer by default; a handler may shrink it in on_headers.
       .block_size = IMAGE_CHUNK_SIZE,
       // Header prefetch size; a handler may shrink it (used before on_headers).
@@ -353,7 +368,8 @@ workflow_result_t run_image_upload(protob_io_t *iface,
     // request the header prefetch (segment 0's head)
     e.chunk_requested =
         (image_size > e.init_chunk_size) ? e.init_chunk_size : image_size;
-    if (sectrue != send_msg_request_firmware(iface, 0, e.chunk_requested)) {
+    if (sectrue != send_msg_request_firmware(iface, 0, e.chunk_requested,
+                                             handler->request_index)) {
       handler->ui->fail(UPLOAD_ERR_COMMUNICATION);
       return WF_ERROR;
     }

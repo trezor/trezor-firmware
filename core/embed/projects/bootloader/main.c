@@ -108,6 +108,7 @@
 #include "ui_helpers.h"
 #include "version_check.h"
 #include "wire/wire_iface_usb.h"
+#include "workflow/wf_nrf_ota.h"
 #include "workflow/workflow.h"
 
 #ifdef DEBUGLINK
@@ -579,6 +580,15 @@ int bootloader_main(void) {
   // wait a bit so that the empty lock icon is visible
   // (on a real device, we are waiting for touch init which takes longer)
   hal_delay(400);
+#endif
+
+#if defined(PQ_SECURE_BOOT) && defined(USE_SMP)
+  // Finish any interrupted coupled boot+nRF update BEFORE using the (BLE) host
+  // link: autonomously push a staged nRF image to the co-processor (a no-op on
+  // a normal boot). The push cannot run during a host connection on a BLE-only
+  // device (it reboots the nRF = the link), so it is deferred to here. See
+  // nrf_ota_resume_boot / nrf_staging.h.
+  nrf_ota_resume_boot();
 #endif
 
   volatile secbool auto_upgrade = secfalse;

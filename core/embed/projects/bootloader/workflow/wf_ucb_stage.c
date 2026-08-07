@@ -64,8 +64,10 @@ static secbool stage_copy_current_code(uint32_t offset, uint32_t len) {
 }
 #endif  // BOARDLOADER_UCB_ZERO_ADDR_BUG
 
-upload_status_t ucb_stage_commit(const flash_area_t *staging_area,
-                                 bool header_only, protob_io_t *iface) {
+upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
+                                 bool header_only, protob_io_t *iface,
+                                 merkle_proof_node_t *out_root,
+                                 uint32_t *out_code_address) {
   // The boot header is staged at the start of the staging area.
   uint32_t staged = (uint32_t)(uintptr_t)flash_area_get_address(
       staging_area, 0, sizeof(boot_header_auth_t));
@@ -130,14 +132,29 @@ upload_status_t ucb_stage_commit(const flash_area_t *staging_area,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
   }
 
-  // Hand off to the boardloader: it re-verifies and installs on the next boot.
-  if (sectrue != boot_ucb_write(staged, ucb_code_address)) {
-    send_msg_failure(iface, FailureType_Failure_ProcessError,
-                     "Failed to write boot UCB");
-    return UPLOAD_ERR_COMMUNICATION;
+  // Hand the signature-verified modelRoot back (the root the new boot header
+  // commits to): co-processor images are peer leaves under it, so this is what
+  // the caller folds them against -- valid for BOTH header-only (current code)
+  // and full (staged new code), always after the signature check above.
+  if (out_root != NULL) {
+    memcpy(out_root->bytes, merkle_root.bytes, sizeof(out_root->bytes));
   }
-
+  // The code address the UCB must record. The install itself is NOT armed here:
+  // the caller arms it (ucb_stage_arm) only AFTER any co-processor updates
+  // succeed, so a partial update can never leave the new bootloader installed
+  // against an old, possibly-incompatible co-processor (a brick). See
+  // wf_firmware_update_pq.
+  *out_code_address = ucb_code_address;
   return UPLOAD_OK;
+}
+
+secbool ucb_stage_arm(const flash_area_t *staging_area, uint32_t code_address) {
+  // Arm the boot update control block: the boardloader re-verifies and installs
+  // the staged bootloader on the next boot. This is the point of no return for
+  // the bootloader swap -- call it LAST, after co-processors are updated.
+  uint32_t staged = (uint32_t)(uintptr_t)flash_area_get_address(
+      staging_area, 0, sizeof(boot_header_auth_t));
+  return boot_ucb_write(staged, code_address);
 }
 
 secbool ucb_stage_write_header(const uint8_t *data, uint32_t len) {

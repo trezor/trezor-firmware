@@ -49,7 +49,7 @@ secbool send_msg_failure(protob_io_t *iface, FailureType type, const char *msg);
 secbool send_msg_success(protob_io_t *iface, const char *msg);
 
 secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
-                                  uint32_t length);
+                                  uint32_t length, uint32_t coprocessor_index);
 
 secbool recv_msg_initialize(protob_io_t *iface, Initialize *msg);
 
@@ -62,13 +62,28 @@ secbool recv_msg_ping(protob_io_t *iface, Ping *msg);
 secbool recv_msg_firmware_erase(protob_io_t *iface, FirmwareErase *msg);
 
 #ifdef PQ_SECURE_BOOT
+// Optional nRF OTA outputs from FirmwareBegin (see wf_firmware_update_pq /
+// wf_nrf_ota). The two bytes fields are decoded into the caller's buffers; the
+// decoded lengths are returned in *_len (0 if the field is absent). Pass NULL
+// to recv_msg_firmware_begin to ignore the nRF fields.
+typedef struct {
+  uint8_t *co_path_buf;
+  size_t co_path_size;
+  size_t co_path_len;  // out
+  uint8_t *image_hash_buf;
+  size_t image_hash_size;
+  size_t image_hash_len;  // out
+} firmware_begin_nrf_t;
+
 // Receives a FirmwareBegin: the boot header (into bh_buf) and module headers
 // (into mh_buf) are decoded via nanopb callbacks; their lengths are returned in
-// *bh_len / *mh_len. `msg` receives the scalar fields (code_length).
+// *bh_len / *mh_len. `msg` receives the scalar fields (code_length,
+// nrf_length). If `nrf` is non-NULL, the nRF co-path + image-hash bytes fields
+// are decoded into its buffers and their lengths returned in nrf->*_len.
 secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
                                 uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
-                                uint8_t *mh_buf, size_t mh_size,
-                                size_t *mh_len);
+                                uint8_t *mh_buf, size_t mh_size, size_t *mh_len,
+                                firmware_begin_nrf_t *nrf);
 #endif
 
 secbool recv_msg_firmware_upload(protob_io_t *iface, FirmwareUpload *msg,
