@@ -21,6 +21,8 @@
 
 #include <trezor_types.h>
 
+#include <io/nrf.h>
+
 /**
  * @brief Parsed nRF application version in format
  * "major.minor.revision[.build_num]".
@@ -88,9 +90,11 @@ void smp_process_rx_byte(uint8_t byte);
  * @param len Size of image buffer in bytes.
  * @param image_hash Pointer to hash bytes (may be NULL if not used).
  * @param image_hash_len Length of hash (e.g. 32 for SHA-256).
+ * @param progress Optional; NULL for no reporting.
  * @return true if upload completed successfully, false on error.
  *
  * @note Caller must ensure image fits partition and hash matches expected size.
  */
 bool smp_upload_app_image(const uint8_t* data, size_t len,
-                          const uint8_t* image_hash, size_t image_hash_len);
+                          const uint8_t* image_hash, size_t image_hash_len,
+                          nrf_progress_callback_t progress);
