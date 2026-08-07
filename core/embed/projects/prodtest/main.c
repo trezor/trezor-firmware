@@ -28,6 +28,7 @@
 #include <io/usb_config.h>
 #include <rtl/cli.h>
 #include <sec/board_capabilities.h>
+#include <sec/monoctr.h>
 #include <sec/rsod_special.h>
 #include <sec/unit_properties.h>
 #include <sys/flash_otp.h>
@@ -149,6 +150,7 @@ static bool g_rgbled_control_disabled = false;
 void prodtest_disable_rgbled_control(void) { g_rgbled_control_disabled = true; }
 
 static void drivers_init(void) {
+  monoctr_init();
   parse_boardloader_capabilities();
   unit_properties_init();
 

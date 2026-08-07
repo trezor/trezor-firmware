@@ -26,6 +26,8 @@
 #include <sys/flash.h>
 #include <sys/mpu.h>
 
+void monoctr_init(void) {}
+
 static int32_t get_offset(monoctr_type_t type) {
   switch (type) {
     case MONOCTR_BOOTLOADER_VERSION:

@@ -32,6 +32,8 @@
 static uint8_t dummy_version = 0;
 #endif
 
+void monoctr_init(void) {}
+
 #if PRODUCTION
 static int get_otp_block(monoctr_type_t type) {
   switch (type) {
