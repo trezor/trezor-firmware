@@ -88,7 +88,6 @@ sbu = []
 sd_card = []
 secmon_layout = []
 serial_number = []
-smp = []
 storage = []
 telemetry = []
 thp = ["crypto/thp", "dep:trezor-thp", "dep:zeroize"]
@@ -146,7 +145,6 @@ test = [
     "nrf",
     "optiga",
     "protobuf",
-    "smp",
     "storage",
     "thp",
     "touch",
@@ -168,7 +166,9 @@ test = [
 
 default = []
 
-emulator = []
+# TODO: should we propagate the emulator feature here? some say yes, some say no.
+# For now we propagate, but this is NOT a project wide policy.
+emulator = ["io/emulator", "upymod?/emulator"]
 mcu_stm32f429 = ["mcu_stm32f4"]
 mcu_stm32f4 = []
 

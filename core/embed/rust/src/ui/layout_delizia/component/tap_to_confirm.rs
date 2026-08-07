@@ -1,7 +1,8 @@
 use pareen;
+use sys::time::Duration;
 
 use super::{theme, Button, ButtonContent, ButtonMsg};
-use crate::time::{Duration, Stopwatch};
+use crate::time::Stopwatch;
 use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::constant::screen;
 use crate::ui::display::toif::Icon;

@@ -27,6 +27,10 @@ fn main() -> Result<()> {
             // Add syscall stubs when linking in the emulator, which doesn't have a
             // real kernel to link against.
             lib.add_source("src/test_setup.c");
+        } else {
+            // Compile a dummy source file to ensure the library is created
+            // (=> metadata are passed to higher-level crates)
+            lib.add_source("_dummy.c");
         }
 
         Ok(())
@@ -321,9 +325,6 @@ fn generate_trezorhal_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("pm_hibernate")
             .allowlist_function("pm_charging_enable")
             .allowlist_function("pm_charging_disable")
-            // irq
-            .allowlist_function("irq_lock_fn")
-            .allowlist_function("irq_unlock_fn")
             // nrf
             .allowlist_function("nrf_send_uart_data")
             // c_layout

@@ -1,4 +1,5 @@
 use heapless::Vec;
+use sys::time::Duration;
 
 use super::super::component::Button;
 use super::super::firmware::{
@@ -11,7 +12,6 @@ use super::super::theme::gradient::Gradient;
 use super::super::theme::{self};
 use crate::error::{self};
 use crate::strutil::TString;
-use crate::time::Duration;
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, VecExt,

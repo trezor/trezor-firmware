@@ -1,6 +1,18 @@
 use heapless::String;
 use ufmt::uwrite;
 
+mod intro;
+mod menu;
+mod welcome;
+
+mod connect;
+
+use sys::time;
+
+use self::connect::Connect;
+use self::intro::Intro;
+use self::menu::Menu;
+use self::welcome::Welcome;
 use super::component::bl_confirm::{Confirm, ConfirmMsg};
 use super::component::{ResultScreen, WelcomeScreen};
 use super::theme::bootloader::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, ICON_SUCCESS};
@@ -16,20 +28,6 @@ use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point};
 use crate::ui::layout::simplified::{show, ReturnToC};
 use crate::ui::shape;
 use crate::ui::shape::render_on_display;
-
-mod intro;
-mod menu;
-mod welcome;
-
-mod connect;
-
-use connect::Connect;
-use intro::Intro;
-use menu::Menu;
-use welcome::Welcome;
-
-use crate::time::Duration;
-use crate::trezorhal::time;
 use crate::ui::ui_bootloader::BootloaderUI;
 use crate::ui::util::animation_disabled;
 
@@ -88,7 +86,7 @@ impl UICaesar {
 impl BootloaderUI for UICaesar {
     fn screen_welcome() -> (u32, u32) {
         // let the previous screen on for some time
-        time::sleep(Duration::from_millis(1500));
+        time::sleep(time::Duration::from_millis(1500));
         let mut frame = Welcome::new();
         run(&mut frame, true, true)
     }

@@ -1,7 +1,8 @@
+use sys::time::Duration;
+
 use super::super::component::{Button, ButtonMsg};
 use super::{theme, HoldToConfirmAnim};
 use crate::strutil::TString;
-use crate::time::Duration;
 use crate::translations::TR;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{self, HapticEffect};

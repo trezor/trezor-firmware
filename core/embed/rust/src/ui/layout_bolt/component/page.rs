@@ -1,12 +1,13 @@
 use core::cell::Cell;
 
+use sys::time::Instant;
+
 use super::{
     theme, Button, ButtonContent, ButtonMsg, ButtonStyleSheet, Loader, LoaderMsg, ScrollBar, Swipe,
     SwipeDirection,
 };
 use crate::error::Error;
 use crate::strutil::TString;
-use crate::time::Instant;
 use crate::translations::TR;
 use crate::ui::component::paginated::PageMsg;
 use crate::ui::component::{Component, ComponentExt, Event, EventCtx, Pad, Paginate};

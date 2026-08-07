@@ -1,8 +1,9 @@
+use sys::time::Duration;
+
 use super::super::fonts;
 use super::loader::DEFAULT_DURATION_MS;
 use super::theme;
 use crate::strutil::TString;
-use crate::time::Duration;
 use crate::ui::component::{Component, Event, EventCtx, Never};
 use crate::ui::display::{Font, Icon};
 use crate::ui::event::PhysicalButton;

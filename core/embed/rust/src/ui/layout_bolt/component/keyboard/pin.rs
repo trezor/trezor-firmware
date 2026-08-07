@@ -1,11 +1,12 @@
 use core::mem;
 
+use sys::time::Duration;
+
 use super::super::super::fonts;
 use super::super::button::ButtonMsg::{self, Clicked};
 use super::super::button::{Button, ButtonContent};
 use super::super::theme;
 use crate::strutil::{ShortString, TString};
-use crate::time::Duration;
 use crate::trezorhal::random;
 use crate::ui::component::base::ComponentExt;
 use crate::ui::component::text::TextStyle;

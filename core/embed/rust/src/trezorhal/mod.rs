@@ -32,8 +32,6 @@ pub mod wordlist;
 
 pub mod secbool;
 
-pub mod time;
-
 #[cfg(feature = "ui")]
 pub mod sysevent;
 
@@ -45,9 +43,3 @@ pub mod bootloader;
 
 #[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub mod layout_buf;
-
-#[cfg(feature = "nrf")]
-pub mod irq;
-
-#[cfg(feature = "nrf")]
-pub mod nrf;

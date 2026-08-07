@@ -1,11 +1,13 @@
 use core::sync::atomic::{AtomicBool, Ordering};
 
+use sys::time::{Duration, Instant};
+
 use super::super::super::component::{ConnectionIndicator, FuelGauge};
 use super::super::constant::SCREEN;
 use super::super::theme;
 use super::helpers::{render_pill_shaped_background, SHADOW_HEIGHT};
 use crate::strutil::TString;
-use crate::time::{Duration, Instant, Stopwatch};
+use crate::time::Stopwatch;
 use crate::ui::component::{Component, Event, EventCtx, Label, Never, Timer};
 use crate::ui::event::TouchEvent;
 use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};

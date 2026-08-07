@@ -27,7 +27,7 @@
 #include <sys/systick.h>
 
 #include "../nrf_internal.h"
-#include "rust_smp.h"
+#include "../rust_smp.h"
 #include "sha2.h"
 
 #define IMAGE_HASH_LEN 32

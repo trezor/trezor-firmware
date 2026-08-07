@@ -2,12 +2,9 @@ use xbuild::{CLibrary, Result, bail_unsupported};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("nrf/inc");
+    lib.add_rust_bindings(add_rust_bindings)?;
 
     lib.add_define("USE_NRF", Some("1"));
-
-    // TODO: remove this hack when nrf related code in trezor_lib is
-    // moved to this crate
-    lib.add_private_include("../rust");
 
     if cfg!(feature = "emulator") {
         lib.add_sources(["nrf/unix/nrf.c"]);
@@ -33,4 +30,12 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
+    let builder = builder
+        .header("nrf/inc/io/nrf.h")
+        .allowlist_function("nrf_send_uart_data");
+
+    Ok(builder)
 }

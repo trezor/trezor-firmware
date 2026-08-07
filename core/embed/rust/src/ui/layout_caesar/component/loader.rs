@@ -1,6 +1,7 @@
+use sys::time::{Duration, Instant};
+
 use super::{theme, Progress};
 use crate::strutil::TString;
-use crate::time::{Duration, Instant};
 use crate::ui::animation::Animation;
 use crate::ui::component::{Child, Component, Event, EventCtx};
 use crate::ui::display::{self, Color, Font, LOADER_MAX};

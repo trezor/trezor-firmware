@@ -1,4 +1,6 @@
-use crate::time::{Duration, Stopwatch};
+use sys::time::Duration;
+
+use crate::time::Stopwatch;
 use crate::ui::component::base::{AttachType, EventPropagation};
 use crate::ui::component::{Component, Event, EventCtx, Paginate};
 use crate::ui::constant::screen;

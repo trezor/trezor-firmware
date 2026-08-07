@@ -1,6 +1,7 @@
+use sys::time::Instant;
+
 use super::super::theme;
 use crate::strutil::TString;
-use crate::time::Instant;
 use crate::ui::component::{Component, Event, EventCtx, Marquee, Never};
 use crate::ui::geometry::{Alignment, Offset, Rect};
 use crate::ui::shape;
