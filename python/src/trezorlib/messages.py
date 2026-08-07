@@ -4895,6 +4895,817 @@ class EthereumDisplayFormatInfo(protobuf.MessageType):
         self.intent = intent
 
 
+class WARDQueueUpdate(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2330
+    FIELDS = {
+        1: protobuf.Field("address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("new_value", "bytes", repeated=False, required=True),
+        3: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+        4: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
+        5: protobuf.Field("device_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "bytes",
+        new_value: "bytes",
+        app_id: Optional["str"] = None,
+        key_type: Optional["str"] = None,
+        device_id: Optional["int"] = None,
+    ) -> None:
+        self.address = address
+        self.new_value = new_value
+        self.app_id = app_id
+        self.key_type = key_type
+        self.device_id = device_id
+
+
+class WARDQueueUpdateAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2331
+    FIELDS = {
+        2: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pending_id: Optional["int"] = None,
+        wallet_id: Optional["bytes"] = None,
+    ) -> None:
+        self.pending_id = pending_id
+        self.wallet_id = wallet_id
+
+
+class WARDPerformUpdate(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2332
+    FIELDS = {
+        1: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pending_id: Optional["int"] = None,
+    ) -> None:
+        self.pending_id = pending_id
+
+
+class WARDPerformUpdateAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2333
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("entry_type", "string", repeated=False, required=False, default=None),
+        11: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+        mac: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+        entry_key: Optional["bytes"] = None,
+        entry_type: Optional["str"] = None,
+        content: Optional["LeafContent"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.mac = mac
+        self.wallet_id = wallet_id
+        self.ward_id = ward_id
+        self.entry_key = entry_key
+        self.entry_type = entry_type
+        self.content = content
+
+
+class WARDConfirmedByWM(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2334
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+        4: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        wm_signature: "bytes",
+        mac: Optional["bytes"] = None,
+        pending_id: Optional["int"] = None,
+    ) -> None:
+        self.counter = counter
+        self.wm_signature = wm_signature
+        self.mac = mac
+        self.pending_id = pending_id
+
+
+class WARDConfirmedByWMAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2335
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+        root_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.wallet_id = wallet_id
+        self.root_mac = root_mac
+
+
+class WARDSync(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2336
+
+
+class WARDSyncAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2337
+    FIELDS = {
+        1: protobuf.Field("nonce", "bytes", repeated=False, required=True),
+        2: protobuf.Field("version", "uint32", repeated=False, required=True),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce: "bytes",
+        version: "int",
+        wallet_id: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+    ) -> None:
+        self.nonce = nonce
+        self.version = version
+        self.wallet_id = wallet_id
+        self.ward_id = ward_id
+
+
+class WARDIngestAttestation(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2338
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        wm_signature: "bytes",
+        mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.wm_signature = wm_signature
+        self.mac = mac
+
+
+class WARDIngestAttestationAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2339
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        wallet_id: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.wallet_id = wallet_id
+
+
+class WARDListPendingEdits(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2340
+
+
+class WARDListPendingEditsAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2341
+    FIELDS = {
+        1: protobuf.Field("addresses", "bytes", repeated=True, required=False, default=None),
+        2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("pending_ids", "uint32", repeated=True, required=False, default=None),
+        4: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        addresses: Optional[Sequence["bytes"]] = None,
+        pending_ids: Optional[Sequence["int"]] = None,
+        wallet_id: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+    ) -> None:
+        self.addresses: Sequence["bytes"] = addresses if addresses is not None else []
+        self.pending_ids: Sequence["int"] = pending_ids if pending_ids is not None else []
+        self.wallet_id = wallet_id
+        self.ward_id = ward_id
+
+
+class WARDReconcile(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2342
+    FIELDS = {
+        1: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        root: Optional["bytes"] = None,
+    ) -> None:
+        self.root = root
+
+
+class WARDReconcileAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2343
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+        root_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.wallet_id = wallet_id
+        self.root_mac = root_mac
+
+
+class WARDLookup(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2344
+    FIELDS = {
+        1: protobuf.Field("address", "bytes", repeated=False, required=True),
+        3: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
+        4: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
+        8: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+        9: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
+        10: protobuf.Field("device_id", "uint32", repeated=False, required=False, default=None),
+        14: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "bytes",
+        proof: Optional[Sequence["bytes"]] = None,
+        witness_entry_key: Optional["bytes"] = None,
+        witness_commit: Optional["bytes"] = None,
+        app_id: Optional["str"] = None,
+        key_type: Optional["str"] = None,
+        device_id: Optional["int"] = None,
+        content: Optional["LeafContent"] = None,
+    ) -> None:
+        self.proof: Sequence["bytes"] = proof if proof is not None else []
+        self.address = address
+        self.witness_entry_key = witness_entry_key
+        self.witness_commit = witness_commit
+        self.app_id = app_id
+        self.key_type = key_type
+        self.device_id = device_id
+        self.content = content
+
+
+class WARDLookupAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2345
+    FIELDS = {
+        1: protobuf.Field("valid", "bool", repeated=False, required=True),
+        2: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        3: protobuf.Field("membership", "bool", repeated=False, required=False, default=None),
+        4: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        valid: "bool",
+        counter: "int",
+        membership: Optional["bool"] = None,
+        wallet_id: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+    ) -> None:
+        self.valid = valid
+        self.counter = counter
+        self.membership = membership
+        self.wallet_id = wallet_id
+        self.ward_id = ward_id
+
+
+class WARDDebugSetRoot(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2346
+    FIELDS = {
+        1: protobuf.Field("root", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        root: "bytes",
+    ) -> None:
+        self.root = root
+
+
+class WARDDebugSetRootAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2347
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+        root_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.wallet_id = wallet_id
+        self.root_mac = root_mac
+
+
+class WARDProofRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2348
+    FIELDS = {
+        2: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: "bytes",
+        pending_id: Optional["int"] = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.pending_id = pending_id
+
+
+class WARDProofAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2349
+    FIELDS = {
+        2: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
+        4: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
+        8: protobuf.Field("entry_type", "string", repeated=False, required=False, default=None),
+        12: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        proof: Optional[Sequence["bytes"]] = None,
+        witness_entry_key: Optional["bytes"] = None,
+        witness_commit: Optional["bytes"] = None,
+        entry_type: Optional["str"] = None,
+        content: Optional["LeafContent"] = None,
+    ) -> None:
+        self.proof: Sequence["bytes"] = proof if proof is not None else []
+        self.witness_entry_key = witness_entry_key
+        self.witness_commit = witness_commit
+        self.entry_type = entry_type
+        self.content = content
+
+
+class WARDExportKeys(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2352
+    FIELDS = {
+        1: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        key_type: Optional["str"] = None,
+    ) -> None:
+        self.key_type = key_type
+
+
+class WARDExportKeysAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2353
+    FIELDS = {
+        1: protobuf.Field("k_index", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("k_data", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        k_index: Optional["bytes"] = None,
+        k_data: Optional["bytes"] = None,
+        key_type: Optional["str"] = None,
+    ) -> None:
+        self.k_index = k_index
+        self.k_data = k_data
+        self.key_type = key_type
+
+
+class WARDDiscardPending(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2350
+    FIELDS = {
+        1: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pending_id: Optional["int"] = None,
+    ) -> None:
+        self.pending_id = pending_id
+
+
+class WARDDiscardPendingAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2351
+    FIELDS = {
+        1: protobuf.Field("discarded_address", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        discarded_address: Optional["bytes"] = None,
+        wallet_id: Optional["bytes"] = None,
+        pending_id: Optional["int"] = None,
+    ) -> None:
+        self.discarded_address = discarded_address
+        self.wallet_id = wallet_id
+        self.pending_id = pending_id
+
+
+class EncryptedLeaf(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce: Optional["bytes"] = None,
+        tag: Optional["bytes"] = None,
+        ct: Optional["bytes"] = None,
+    ) -> None:
+        self.nonce = nonce
+        self.tag = tag
+        self.ct = ct
+
+
+class PlaintextLeaf(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("content", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        content: Optional["bytes"] = None,
+    ) -> None:
+        self.content = content
+
+
+class LeafContent(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("encoding", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("encrypted", "EncryptedLeaf", repeated=False, required=False, default=None),
+        3: protobuf.Field("plaintext", "PlaintextLeaf", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        encoding: Optional["int"] = None,
+        encrypted: Optional["EncryptedLeaf"] = None,
+        plaintext: Optional["PlaintextLeaf"] = None,
+    ) -> None:
+        self.encoding = encoding
+        self.encrypted = encrypted
+        self.plaintext = plaintext
+
+
+class WARDBatchLeaf(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("entry_type", "string", repeated=False, required=False, default=None),
+        6: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: "bytes",
+        entry_type: Optional["str"] = None,
+        content: Optional["LeafContent"] = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.entry_type = entry_type
+        self.content = content
+
+
+class WARDPerformBatch(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2354
+    FIELDS = {
+        1: protobuf.Field("pending_ids", "uint32", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        pending_ids: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.pending_ids: Sequence["int"] = pending_ids if pending_ids is not None else []
+
+
+class WARDPerformBatchAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2355
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("head_mac", "bytes", repeated=False, required=True),
+        7: protobuf.Field("auth_commit", "bytes", repeated=False, required=True),
+        8: protobuf.Field("sig_commit", "bytes", repeated=False, required=False, default=None),
+        9: protobuf.Field("leaves", "WARDBatchLeaf", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        head_mac: "bytes",
+        auth_commit: "bytes",
+        leaves: Optional[Sequence["WARDBatchLeaf"]] = None,
+        from_root: Optional["bytes"] = None,
+        new_root: Optional["bytes"] = None,
+        mac: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+        sig_commit: Optional["bytes"] = None,
+    ) -> None:
+        self.leaves: Sequence["WARDBatchLeaf"] = leaves if leaves is not None else []
+        self.counter = counter
+        self.head_mac = head_mac
+        self.auth_commit = auth_commit
+        self.from_root = from_root
+        self.new_root = new_root
+        self.mac = mac
+        self.ward_id = ward_id
+        self.sig_commit = sig_commit
+
+
+class WARDConfirmBatchByWM(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2356
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        wm_signature: "bytes",
+        mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.wm_signature = wm_signature
+        self.mac = mac
+
+
+class WARDConfirmBatchByWMAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2357
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+        root_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.ward_id = ward_id
+        self.root_mac = root_mac
+
+
+class WARDPerformRevert(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2358
+    FIELDS = {
+        1: protobuf.Field("stuck_counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("stuck_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("prev_root", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("forward_auth_commit", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        stuck_counter: "int",
+        forward_auth_commit: "bytes",
+        stuck_root: Optional["bytes"] = None,
+        prev_root: Optional["bytes"] = None,
+    ) -> None:
+        self.stuck_counter = stuck_counter
+        self.forward_auth_commit = forward_auth_commit
+        self.stuck_root = stuck_root
+        self.prev_root = prev_root
+
+
+class WARDPerformRevertAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2359
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("head_mac", "bytes", repeated=False, required=True),
+        7: protobuf.Field("auth_revert", "bytes", repeated=False, required=True),
+        8: protobuf.Field("sig_commit", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        head_mac: "bytes",
+        auth_revert: "bytes",
+        from_root: Optional["bytes"] = None,
+        new_root: Optional["bytes"] = None,
+        mac: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+        sig_commit: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.head_mac = head_mac
+        self.auth_revert = auth_revert
+        self.from_root = from_root
+        self.new_root = new_root
+        self.mac = mac
+        self.ward_id = ward_id
+        self.sig_commit = sig_commit
+
+
+class WARDConfirmRevertByWM(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2360
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        wm_signature: "bytes",
+        mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.wm_signature = wm_signature
+        self.mac = mac
+
+
+class WARDConfirmRevertByWMAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2361
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+        root_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.ward_id = ward_id
+        self.root_mac = root_mac
+
+
+class WARDChainLink(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("from_counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("to_counter", "uint32", repeated=False, required=True),
+        4: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("auth_commit", "bytes", repeated=False, required=True),
+        6: protobuf.Field("sig_commit", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        from_counter: "int",
+        to_counter: "int",
+        auth_commit: "bytes",
+        from_root: Optional["bytes"] = None,
+        to_root: Optional["bytes"] = None,
+        sig_commit: Optional["bytes"] = None,
+    ) -> None:
+        self.from_counter = from_counter
+        self.to_counter = to_counter
+        self.auth_commit = auth_commit
+        self.from_root = from_root
+        self.to_root = to_root
+        self.sig_commit = sig_commit
+
+
+class WARDVerifyChain(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2362
+    FIELDS = {
+        1: protobuf.Field("links", "WARDChainLink", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        links: Optional[Sequence["WARDChainLink"]] = None,
+    ) -> None:
+        self.links: Sequence["WARDChainLink"] = links if links is not None else []
+
+
+class WARDVerifyChainAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2363
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: "int",
+        new_root: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+        root_mac: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.ward_id = ward_id
+        self.root_mac = root_mac
+
+
 class DisplayAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 123
     FIELDS = {
@@ -4937,9 +5748,7 @@ class DisplayAddressWithProof(protobuf.MessageType):
         10: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
         12: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
         13: protobuf.Field("entry_type", "string", repeated=False, required=False, default=None),
-        14: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
-        15: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
-        16: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
+        17: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4955,9 +5764,7 @@ class DisplayAddressWithProof(protobuf.MessageType):
         witness_commit: Optional["bytes"] = None,
         app_id: Optional["str"] = None,
         entry_type: Optional["str"] = None,
-        nonce: Optional["bytes"] = None,
-        tag: Optional["bytes"] = None,
-        ct: Optional["bytes"] = None,
+        content: Optional["LeafContent"] = None,
     ) -> None:
         self.proof: Sequence["bytes"] = proof if proof is not None else []
         self.address = address
@@ -4969,9 +5776,7 @@ class DisplayAddressWithProof(protobuf.MessageType):
         self.witness_commit = witness_commit
         self.app_id = app_id
         self.entry_type = entry_type
-        self.nonce = nonce
-        self.tag = tag
-        self.ct = ct
+        self.content = content
 
 
 class EosGetPublicKey(protobuf.MessageType):
@@ -9515,787 +10320,6 @@ class TronRawParameter(protobuf.MessageType):
     ) -> None:
         self.type_url = type_url
         self.value = value
-
-
-class WARDQueueUpdate(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2330
-    FIELDS = {
-        1: protobuf.Field("address", "bytes", repeated=False, required=True),
-        2: protobuf.Field("new_value", "bytes", repeated=False, required=True),
-        3: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
-        4: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
-        5: protobuf.Field("device_id", "uint32", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        address: "bytes",
-        new_value: "bytes",
-        app_id: Optional["str"] = None,
-        key_type: Optional["str"] = None,
-        device_id: Optional["int"] = None,
-    ) -> None:
-        self.address = address
-        self.new_value = new_value
-        self.app_id = app_id
-        self.key_type = key_type
-        self.device_id = device_id
-
-
-class WARDQueueUpdateAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2331
-    FIELDS = {
-        2: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
-        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        pending_id: Optional["int"] = None,
-        wallet_id: Optional["bytes"] = None,
-    ) -> None:
-        self.pending_id = pending_id
-        self.wallet_id = wallet_id
-
-
-class WARDPerformUpdate(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2332
-    FIELDS = {
-        1: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        pending_id: Optional["int"] = None,
-    ) -> None:
-        self.pending_id = pending_id
-
-
-class WARDPerformUpdateAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2333
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
-        6: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
-        7: protobuf.Field("entry_type", "string", repeated=False, required=False, default=None),
-        8: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
-        9: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
-        10: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        new_root: Optional["bytes"] = None,
-        mac: Optional["bytes"] = None,
-        wallet_id: Optional["bytes"] = None,
-        ward_id: Optional["bytes"] = None,
-        entry_key: Optional["bytes"] = None,
-        entry_type: Optional["str"] = None,
-        nonce: Optional["bytes"] = None,
-        tag: Optional["bytes"] = None,
-        ct: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.new_root = new_root
-        self.mac = mac
-        self.wallet_id = wallet_id
-        self.ward_id = ward_id
-        self.entry_key = entry_key
-        self.entry_type = entry_type
-        self.nonce = nonce
-        self.tag = tag
-        self.ct = ct
-
-
-class WARDConfirmedByWM(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2334
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
-        4: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        wm_signature: "bytes",
-        mac: Optional["bytes"] = None,
-        pending_id: Optional["int"] = None,
-    ) -> None:
-        self.counter = counter
-        self.wm_signature = wm_signature
-        self.mac = mac
-        self.pending_id = pending_id
-
-
-class WARDConfirmedByWMAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2335
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        new_root: Optional["bytes"] = None,
-        wallet_id: Optional["bytes"] = None,
-        root_mac: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.new_root = new_root
-        self.wallet_id = wallet_id
-        self.root_mac = root_mac
-
-
-class WARDSync(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2336
-
-
-class WARDSyncAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2337
-    FIELDS = {
-        1: protobuf.Field("nonce", "bytes", repeated=False, required=True),
-        2: protobuf.Field("version", "uint32", repeated=False, required=True),
-        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        nonce: "bytes",
-        version: "int",
-        wallet_id: Optional["bytes"] = None,
-        ward_id: Optional["bytes"] = None,
-    ) -> None:
-        self.nonce = nonce
-        self.version = version
-        self.wallet_id = wallet_id
-        self.ward_id = ward_id
-
-
-class WARDIngestAttestation(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2338
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        wm_signature: "bytes",
-        mac: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.wm_signature = wm_signature
-        self.mac = mac
-
-
-class WARDIngestAttestationAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2339
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        wallet_id: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.wallet_id = wallet_id
-
-
-class WARDListPendingEdits(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2340
-
-
-class WARDListPendingEditsAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2341
-    FIELDS = {
-        1: protobuf.Field("addresses", "bytes", repeated=True, required=False, default=None),
-        2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("pending_ids", "uint32", repeated=True, required=False, default=None),
-        4: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        addresses: Optional[Sequence["bytes"]] = None,
-        pending_ids: Optional[Sequence["int"]] = None,
-        wallet_id: Optional["bytes"] = None,
-        ward_id: Optional["bytes"] = None,
-    ) -> None:
-        self.addresses: Sequence["bytes"] = addresses if addresses is not None else []
-        self.pending_ids: Sequence["int"] = pending_ids if pending_ids is not None else []
-        self.wallet_id = wallet_id
-        self.ward_id = ward_id
-
-
-class WARDReconcile(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2342
-    FIELDS = {
-        1: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        root: Optional["bytes"] = None,
-    ) -> None:
-        self.root = root
-
-
-class WARDReconcileAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2343
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        new_root: Optional["bytes"] = None,
-        wallet_id: Optional["bytes"] = None,
-        root_mac: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.new_root = new_root
-        self.wallet_id = wallet_id
-        self.root_mac = root_mac
-
-
-class WARDLookup(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2344
-    FIELDS = {
-        1: protobuf.Field("address", "bytes", repeated=False, required=True),
-        3: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
-        4: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
-        8: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
-        9: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
-        10: protobuf.Field("device_id", "uint32", repeated=False, required=False, default=None),
-        11: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
-        12: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
-        13: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        address: "bytes",
-        proof: Optional[Sequence["bytes"]] = None,
-        witness_entry_key: Optional["bytes"] = None,
-        witness_commit: Optional["bytes"] = None,
-        app_id: Optional["str"] = None,
-        key_type: Optional["str"] = None,
-        device_id: Optional["int"] = None,
-        nonce: Optional["bytes"] = None,
-        tag: Optional["bytes"] = None,
-        ct: Optional["bytes"] = None,
-    ) -> None:
-        self.proof: Sequence["bytes"] = proof if proof is not None else []
-        self.address = address
-        self.witness_entry_key = witness_entry_key
-        self.witness_commit = witness_commit
-        self.app_id = app_id
-        self.key_type = key_type
-        self.device_id = device_id
-        self.nonce = nonce
-        self.tag = tag
-        self.ct = ct
-
-
-class WARDLookupAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2345
-    FIELDS = {
-        1: protobuf.Field("valid", "bool", repeated=False, required=True),
-        2: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        3: protobuf.Field("membership", "bool", repeated=False, required=False, default=None),
-        4: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        valid: "bool",
-        counter: "int",
-        membership: Optional["bool"] = None,
-        wallet_id: Optional["bytes"] = None,
-        ward_id: Optional["bytes"] = None,
-    ) -> None:
-        self.valid = valid
-        self.counter = counter
-        self.membership = membership
-        self.wallet_id = wallet_id
-        self.ward_id = ward_id
-
-
-class WARDDebugSetRoot(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2346
-    FIELDS = {
-        1: protobuf.Field("root", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        root: "bytes",
-    ) -> None:
-        self.root = root
-
-
-class WARDDebugSetRootAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2347
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        new_root: Optional["bytes"] = None,
-        wallet_id: Optional["bytes"] = None,
-        root_mac: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.new_root = new_root
-        self.wallet_id = wallet_id
-        self.root_mac = root_mac
-
-
-class WARDProofRequest(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2348
-    FIELDS = {
-        2: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
-        4: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        entry_key: "bytes",
-        pending_id: Optional["int"] = None,
-    ) -> None:
-        self.entry_key = entry_key
-        self.pending_id = pending_id
-
-
-class WARDProofAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2349
-    FIELDS = {
-        2: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
-        4: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
-        8: protobuf.Field("entry_type", "string", repeated=False, required=False, default=None),
-        9: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
-        10: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
-        11: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        proof: Optional[Sequence["bytes"]] = None,
-        witness_entry_key: Optional["bytes"] = None,
-        witness_commit: Optional["bytes"] = None,
-        entry_type: Optional["str"] = None,
-        nonce: Optional["bytes"] = None,
-        tag: Optional["bytes"] = None,
-        ct: Optional["bytes"] = None,
-    ) -> None:
-        self.proof: Sequence["bytes"] = proof if proof is not None else []
-        self.witness_entry_key = witness_entry_key
-        self.witness_commit = witness_commit
-        self.entry_type = entry_type
-        self.nonce = nonce
-        self.tag = tag
-        self.ct = ct
-
-
-class WARDExportKeys(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2352
-    FIELDS = {
-        1: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        key_type: Optional["str"] = None,
-    ) -> None:
-        self.key_type = key_type
-
-
-class WARDExportKeysAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2353
-    FIELDS = {
-        1: protobuf.Field("k_index", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("k_data", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        k_index: Optional["bytes"] = None,
-        k_data: Optional["bytes"] = None,
-        key_type: Optional["str"] = None,
-    ) -> None:
-        self.k_index = k_index
-        self.k_data = k_data
-        self.key_type = key_type
-
-
-class WARDDiscardPending(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2350
-    FIELDS = {
-        1: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        pending_id: Optional["int"] = None,
-    ) -> None:
-        self.pending_id = pending_id
-
-
-class WARDDiscardPendingAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2351
-    FIELDS = {
-        1: protobuf.Field("discarded_address", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("wallet_id", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        discarded_address: Optional["bytes"] = None,
-        wallet_id: Optional["bytes"] = None,
-        pending_id: Optional["int"] = None,
-    ) -> None:
-        self.discarded_address = discarded_address
-        self.wallet_id = wallet_id
-        self.pending_id = pending_id
-
-
-class WARDBatchLeaf(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
-        2: protobuf.Field("entry_type", "string", repeated=False, required=False, default=None),
-        3: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        entry_key: "bytes",
-        entry_type: Optional["str"] = None,
-        nonce: Optional["bytes"] = None,
-        tag: Optional["bytes"] = None,
-        ct: Optional["bytes"] = None,
-    ) -> None:
-        self.entry_key = entry_key
-        self.entry_type = entry_type
-        self.nonce = nonce
-        self.tag = tag
-        self.ct = ct
-
-
-class WARDPerformBatch(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2354
-    FIELDS = {
-        1: protobuf.Field("pending_ids", "uint32", repeated=True, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        pending_ids: Optional[Sequence["int"]] = None,
-    ) -> None:
-        self.pending_ids: Sequence["int"] = pending_ids if pending_ids is not None else []
-
-
-class WARDPerformBatchAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2355
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
-        6: protobuf.Field("head_mac", "bytes", repeated=False, required=True),
-        7: protobuf.Field("auth_commit", "bytes", repeated=False, required=True),
-        8: protobuf.Field("sig_commit", "bytes", repeated=False, required=False, default=None),
-        9: protobuf.Field("leaves", "WARDBatchLeaf", repeated=True, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        head_mac: "bytes",
-        auth_commit: "bytes",
-        leaves: Optional[Sequence["WARDBatchLeaf"]] = None,
-        from_root: Optional["bytes"] = None,
-        new_root: Optional["bytes"] = None,
-        mac: Optional["bytes"] = None,
-        ward_id: Optional["bytes"] = None,
-        sig_commit: Optional["bytes"] = None,
-    ) -> None:
-        self.leaves: Sequence["WARDBatchLeaf"] = leaves if leaves is not None else []
-        self.counter = counter
-        self.head_mac = head_mac
-        self.auth_commit = auth_commit
-        self.from_root = from_root
-        self.new_root = new_root
-        self.mac = mac
-        self.ward_id = ward_id
-        self.sig_commit = sig_commit
-
-
-class WARDConfirmBatchByWM(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2356
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        wm_signature: "bytes",
-        mac: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.wm_signature = wm_signature
-        self.mac = mac
-
-
-class WARDConfirmBatchByWMAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2357
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        new_root: Optional["bytes"] = None,
-        ward_id: Optional["bytes"] = None,
-        root_mac: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.new_root = new_root
-        self.ward_id = ward_id
-        self.root_mac = root_mac
-
-
-class WARDPerformRevert(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2358
-    FIELDS = {
-        1: protobuf.Field("stuck_counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("stuck_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("prev_root", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("forward_auth_commit", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        stuck_counter: "int",
-        forward_auth_commit: "bytes",
-        stuck_root: Optional["bytes"] = None,
-        prev_root: Optional["bytes"] = None,
-    ) -> None:
-        self.stuck_counter = stuck_counter
-        self.forward_auth_commit = forward_auth_commit
-        self.stuck_root = stuck_root
-        self.prev_root = prev_root
-
-
-class WARDPerformRevertAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2359
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
-        6: protobuf.Field("head_mac", "bytes", repeated=False, required=True),
-        7: protobuf.Field("auth_revert", "bytes", repeated=False, required=True),
-        8: protobuf.Field("sig_commit", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        head_mac: "bytes",
-        auth_revert: "bytes",
-        from_root: Optional["bytes"] = None,
-        new_root: Optional["bytes"] = None,
-        mac: Optional["bytes"] = None,
-        ward_id: Optional["bytes"] = None,
-        sig_commit: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.head_mac = head_mac
-        self.auth_revert = auth_revert
-        self.from_root = from_root
-        self.new_root = new_root
-        self.mac = mac
-        self.ward_id = ward_id
-        self.sig_commit = sig_commit
-
-
-class WARDConfirmRevertByWM(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2360
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        wm_signature: "bytes",
-        mac: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.wm_signature = wm_signature
-        self.mac = mac
-
-
-class WARDConfirmRevertByWMAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2361
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        new_root: Optional["bytes"] = None,
-        ward_id: Optional["bytes"] = None,
-        root_mac: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.new_root = new_root
-        self.ward_id = ward_id
-        self.root_mac = root_mac
-
-
-class WARDChainLink(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("from_counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("to_counter", "uint32", repeated=False, required=True),
-        4: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("auth_commit", "bytes", repeated=False, required=True),
-        6: protobuf.Field("sig_commit", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        from_counter: "int",
-        to_counter: "int",
-        auth_commit: "bytes",
-        from_root: Optional["bytes"] = None,
-        to_root: Optional["bytes"] = None,
-        sig_commit: Optional["bytes"] = None,
-    ) -> None:
-        self.from_counter = from_counter
-        self.to_counter = to_counter
-        self.auth_commit = auth_commit
-        self.from_root = from_root
-        self.to_root = to_root
-        self.sig_commit = sig_commit
-
-
-class WARDVerifyChain(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2362
-    FIELDS = {
-        1: protobuf.Field("links", "WARDChainLink", repeated=True, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        links: Optional[Sequence["WARDChainLink"]] = None,
-    ) -> None:
-        self.links: Sequence["WARDChainLink"] = links if links is not None else []
-
-
-class WARDVerifyChainAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2363
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
-        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("root_mac", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: "int",
-        new_root: Optional["bytes"] = None,
-        ward_id: Optional["bytes"] = None,
-        root_mac: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.new_root = new_root
-        self.ward_id = ward_id
-        self.root_mac = root_mac
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

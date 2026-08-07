@@ -16,14 +16,15 @@ async def show_with_proof(msg: "DisplayAddressWithProof") -> "Success":
 
     from apps.common import ward as ward_core
 
+    m_nonce, m_tag, m_ct = ward_core.read_leaf_content(msg.content)
     label_text: str | None = None
     try:
         status, label = await ward_core.verify_label(
             "display_address",
             msg.address.encode(),
-            msg.nonce,
-            msg.tag,
-            msg.ct,
+            m_nonce,
+            m_tag,
+            m_ct,
             msg.proof,
             entry_type=msg.entry_type or "address",
             witness_entry_key=msg.witness_entry_key,

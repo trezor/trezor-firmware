@@ -236,7 +236,19 @@ class WMEmulator:
         return self._heads.get(ward_id, (0, None, None))
 
     def transitions(self, ward_id: bytes) -> list[dict]:
+        """The authoritative, CONTIGUOUS transition history for ward_id (non-omission
+        by construction: the CAS only ever appends a successor of the current head, so
+        `to_counter` runs 1,2,3,… with each `from_root` == the prior `to_root`)."""
         return list(self._history.get(ward_id, []))
+
+    def get_record(self, ward_id: bytes, to_counter: int):
+        """The authoritative TransitionRecord that produced head `to_counter`, or None.
+        Keys: ward_id, from_counter, from_root, to_counter, to_root, auth_commit (+ the
+        WM-held mac, sig_commit, kind)."""
+        for t in self._history.get(ward_id, []):
+            if t["to_counter"] == to_counter:
+                return t
+        return None
 
     def auth_commit(
         self,
@@ -271,7 +283,7 @@ class WMEmulator:
             fr = t["from_root"] if t["from_root"] is not None else _EMPTY_ROOT_HASH
             tr = t["to_root"] if t["to_root"] is not None else _EMPTY_ROOT_HASH
             out.append(
-                (t["from_counter"], fr, t["to_counter"], tr, t["auth"], t["sig_commit"])
+                (t["from_counter"], fr, t["to_counter"], tr, t["auth_commit"], t["sig_commit"])
             )
         return out
 
@@ -318,14 +330,21 @@ class WMEmulator:
                 raise ValueError("WM: SigCommit verification failed (unauthorised transition)")
 
         self._heads[ward_id] = (to_counter, _norm_root(to_root), mac)
+        # The authoritative TransitionRecord (Phase 3a): the canonical
+        # (ward_id, from_counter, from_root, to_counter, to_root, auth_commit) the WM
+        # stores as transition authority. `mac`/`sig_commit`/`kind` are WM-held extras
+        # (the root MAC it co-signs, the optional Ed25519 pre-filter sig, and commit vs
+        # revert). NO batch_digest (dropped, D4 — (from_root,to_root) already pin the
+        # logical batch under content-addressed roots).
         self._history.setdefault(ward_id, []).append(
             {
+                "ward_id": ward_id,
                 "from_counter": from_counter,
                 "from_root": _norm_root(from_root),
                 "to_counter": to_counter,
                 "to_root": _norm_root(to_root),
+                "auth_commit": auth,
                 "mac": mac,
-                "auth": auth,
                 "sig_commit": sig_commit,
                 "kind": kind,
             }

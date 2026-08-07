@@ -98,12 +98,20 @@ def entry_key(
     return _hmac.new(k_index, msg, hashlib.sha256).digest()
 
 
-def commit_of(nonce: bytes, tag: bytes, ct: bytes) -> bytes:
-    """commit = SHA-256(0x02 || nonce || tag || len32(ct) || ct) (§2.2).
+# Leaf-content mode (must mirror core service.py WARD_PLAINTEXT_LEAVES for the host
+# oracle / proof serving to match the device). False = encrypted leaves; True = plaintext
+# leaves (host-inspectable). The wire is a self-describing oneof either way; this const
+# picks the commit domain tag + codec. Tests flip it to exercise both modes.
+WARD_PLAINTEXT_LEAVES = False
 
-    Keyless by design: a host holding no keys can still recompute it during
-    hydration. A len(ct)==0 leaf is a delete (resolves to the empty sentinel)."""
-    return sha256(b"\x02" + nonce + tag + len(ct).to_bytes(4, "big") + ct)
+
+def commit_of(nonce: bytes, tag: bytes, ct: bytes) -> bytes:
+    """Keyless leaf-value commitment (§2.2); a host with no keys can still recompute it.
+    Domain-separated by leaf mode: encrypted = SHA-256(0x02 || nonce || tag || len32(ct)
+    || ct); plaintext = SHA-256(0x04 || len32(content) || content) (nonce/tag empty,
+    ct == content). A len(ct)==0 leaf is a delete (resolves to the empty sentinel)."""
+    tag_byte = b"\x04" if WARD_PLAINTEXT_LEAVES else b"\x02"
+    return sha256(tag_byte + nonce + tag + len(ct).to_bytes(4, "big") + ct)
 
 
 def leaf_hash_of(entry_key_: bytes, commit: bytes) -> bytes:
@@ -175,3 +183,62 @@ def decrypt_leaf(
     off += 4
     value = pt[off:off + val_len]
     return c_leaf, identifier, value
+
+
+# --- plaintext leaf codec (no encryption; host-inspectable dev mode) ---
+# content = C_leaf(4B BE) || len16(identifier) || identifier || len32(value) || value
+# (the same packed plaintext, minus the AEAD and the bucket padding). The "ct" slot of
+# the (nonce, tag, ct) blob carries `content`; nonce/tag stay empty.
+
+
+def pack_leaf(c_leaf: int, identifier: bytes, value: bytes) -> bytes:
+    """Plaintext leaf content (no encryption). Mirrors encrypt_leaf's plaintext."""
+    return (
+        c_leaf.to_bytes(4, "big")
+        + len(identifier).to_bytes(2, "big")
+        + identifier
+        + len(value).to_bytes(4, "big")
+        + value
+    )
+
+
+def unpack_leaf(content: bytes) -> Tuple[int, bytes, bytes]:
+    """Return (c_leaf, identifier, value) from a plaintext leaf `content`."""
+    c_leaf = int.from_bytes(content[0:4], "big")
+    id_len = int.from_bytes(content[4:6], "big")
+    off = 6 + id_len
+    identifier = content[6:off]
+    val_len = int.from_bytes(content[off:off + 4], "big")
+    off += 4
+    value = content[off:off + val_len]
+    return c_leaf, identifier, value
+
+
+def encode_leaf(
+    k_data: bytes,
+    entry_key_: bytes,
+    entry_type: Union[str, bytes],
+    c_leaf: int,
+    identifier: bytes,
+    value: bytes,
+    nonce: bytes = None,
+) -> Tuple[bytes, bytes, bytes]:
+    """(nonce, tag, ct) for the current leaf mode — plaintext (b"", b"", content) or
+    the AEAD blob. Mirrors core service.py _encode_leaf."""
+    if WARD_PLAINTEXT_LEAVES:
+        return b"", b"", pack_leaf(c_leaf, identifier, value)
+    return encrypt_leaf(k_data, entry_key_, entry_type, c_leaf, identifier, value, nonce)
+
+
+def decode_leaf(
+    k_data: bytes,
+    entry_key_: bytes,
+    entry_type: Union[str, bytes],
+    nonce: bytes,
+    tag: bytes,
+    ct: bytes,
+) -> Tuple[int, bytes, bytes]:
+    """(c_leaf, identifier, value) for the current leaf mode. Mirrors core _decode_leaf."""
+    if WARD_PLAINTEXT_LEAVES:
+        return unpack_leaf(ct)
+    return decrypt_leaf(k_data, entry_key_, entry_type, nonce, tag, ct)

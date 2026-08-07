@@ -43,9 +43,7 @@ def _with_proof(
         app_id=_APP,
         address=address,
         entry_type=b[3],
-        nonce=b[0],
-        tag=b[1],
-        ct=b[2],
+        content=ward.make_leaf_content(b[0], b[1], b[2]),
         proof=proof,
     )
 
@@ -152,7 +150,9 @@ def test_display_wrong_address_more_labels(session: Session) -> None:
             # could not be verified, then shows the address titled "unknown" with no
             # verified label. Acknowledge the warning, then check the address screen.
             warning = dev.debuglink().read_layout()
-            assert "could not be verified" in warning.screen_content().lower()
+            # screen_content wraps across lines; normalise newlines before matching.
+            warning_text = warning.screen_content().lower().replace("\n", " ")
+            assert "could not be verified" in warning_text
             dev.debuglink().press_yes()
 
             layout = dev.debuglink().read_layout()
@@ -325,7 +325,9 @@ def test_display_address_unknown_with_wrong_proof(session: Session) -> None:
             # could not be verified, then shows the address titled "unknown" with no
             # verified label. Acknowledge the warning, then check the address screen.
             warning = dev.debuglink().read_layout()
-            assert "could not be verified" in warning.screen_content().lower()
+            # screen_content wraps across lines; normalise newlines before matching.
+            warning_text = warning.screen_content().lower().replace("\n", " ")
+            assert "could not be verified" in warning_text
             dev.debuglink().press_yes()
 
             layout = dev.debuglink().read_layout()

@@ -35,7 +35,5 @@ async def perform(msg: WARDPerformUpdate) -> WARDPerformUpdateAck:
         ward_id=ward_id,
         entry_key=entry_key,
         entry_type=entry_type,
-        nonce=nonce,
-        tag=tag,
-        ct=ct,
+        content=core.make_leaf_content(nonce, tag, ct),
     )

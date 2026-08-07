@@ -479,5 +479,81 @@ class TestWardAttestation(unittest.TestCase):
         self.assertFalse(verify_wm_attestation(wallet_id, nonce, 6, mac, sig))
 
 
+class TestWardProofSoundness(unittest.TestCase):
+    """Proof-level checks for the hardened WARD trie verifier."""
+
+    def _proof_elem(self, split_bit, skiplen, sibling):
+        return split_bit.to_bytes(2, "big") + skiplen.to_bytes(2, "big") + sibling
+
+    def test_nonmembership_rejects_relabelled_witness_path(self):
+        from apps.ward import service
+
+        target = bytes([0x40]) + b"\x00" * 31   # 0100....
+        witness = bytes([0x60]) + b"\x00" * 31  # 0110....
+        other = bytes([0x80]) + b"\x00" * 31    # 1000....
+
+        target_commit = b"T" * 32
+        witness_commit = b"W" * 32
+        other_commit = b"B" * 32
+
+        target_leaf = service.leaf_hash_of(target, target_commit)
+        witness_leaf = service.leaf_hash_of(witness, witness_commit)
+        other_leaf = service.leaf_hash_of(other, other_commit)
+
+        left = service.internal_hash(2, 1, target_leaf, witness_leaf)
+        root = service.internal_hash(0, 0, left, other_leaf)
+
+        honest_proof = [
+            self._proof_elem(2, 1, target_leaf),
+            self._proof_elem(0, 0, other_leaf),
+        ]
+        self.assertFalse(
+            service.verify_nonmembership(target, witness, witness_commit, honest_proof, root)
+        )
+
+        forged_proof = [
+            self._proof_elem(1, 0, target_leaf),
+            self._proof_elem(0, 0, other_leaf),
+        ]
+        self.assertFalse(
+            service.verify_nonmembership(target, witness, witness_commit, forged_proof, root)
+        )
+
+    def test_insert_rejects_forged_nonmembership_witness(self):
+        from apps.ward import service
+
+        target = bytes([0x40]) + b"\x00" * 31   # actually present in the tree
+        witness = bytes([0x60]) + b"\x00" * 31
+        other = bytes([0x80]) + b"\x00" * 31
+
+        target_commit = b"T" * 32
+        witness_commit = b"W" * 32
+        other_commit = b"B" * 32
+
+        target_leaf = service.leaf_hash_of(target, target_commit)
+        witness_leaf = service.leaf_hash_of(witness, witness_commit)
+        other_leaf = service.leaf_hash_of(other, other_commit)
+
+        left = service.internal_hash(2, 1, target_leaf, witness_leaf)
+        root = service.internal_hash(0, 0, left, other_leaf)
+
+        forged_proof = [
+            self._proof_elem(1, 0, target_leaf),
+            self._proof_elem(0, 0, other_leaf),
+        ]
+
+        new_leaf = (b"N" * 12, b"G" * 16, b"ciphertext")
+        with self.assertRaises(ValueError):
+            service.compute_new_root(
+                target,
+                None,
+                new_leaf,
+                forged_proof,
+                root,
+                witness_entry_key=witness,
+                witness_commit=witness_commit,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

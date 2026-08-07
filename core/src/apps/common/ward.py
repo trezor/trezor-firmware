@@ -37,6 +37,48 @@ def _authorize(app_id: str, capability: str) -> None:
         raise DataError("app not authorized for WARD " + capability)
 
 
+# --- LeafContent wire <-> (nonce, tag, ct) codec (see service.WARD_PLAINTEXT_LEAVES) ---
+# The wire carries a self-describing LeafContent (EncryptedLeaf | PlaintextLeaf); the
+# firmware works internally on the (nonce, tag, ct) triple. These two helpers are the
+# only place that maps between the two, and they enforce that the received encoding
+# matches this build's leaf mode (an encrypted-only release rejects a plaintext leaf).
+
+
+def make_leaf_content(nonce: bytes, tag: bytes, ct: bytes):
+    """Build a LeafContent for this build's leaf mode from a (nonce, tag, ct) triple.
+    Plaintext mode carries `ct` as the packed content (nonce/tag empty)."""
+    from trezor.messages import EncryptedLeaf, LeafContent, PlaintextLeaf
+
+    from apps.ward import service
+
+    if service.WARD_PLAINTEXT_LEAVES:
+        return LeafContent(encoding=1, plaintext=PlaintextLeaf(content=ct))
+    return LeafContent(encoding=0, encrypted=EncryptedLeaf(nonce=nonce, tag=tag, ct=ct))
+
+
+def read_leaf_content(content) -> tuple:
+    """Read a LeafContent into a (nonce, tag, ct) triple. `content is None` (no leaf
+    on the wire: a pull request, an empty tree, or a non-membership ack) returns
+    (None, None, None). Rejects a leaf whose encoding does not match this build."""
+    from trezor.wire import DataError
+
+    from apps.ward import service
+
+    if content is None:
+        return None, None, None
+    if (content.encoding or 0) == 1:
+        if not service.WARD_PLAINTEXT_LEAVES:
+            raise DataError("WARD: plaintext leaf but firmware is encrypted-only")
+        p = content.plaintext
+        return b"", b"", (p.content if (p is not None and p.content is not None) else b"")
+    if service.WARD_PLAINTEXT_LEAVES:
+        raise DataError("WARD: encrypted leaf but firmware is plaintext-only")
+    e = content.encrypted
+    if e is None:
+        return None, None, None
+    return e.nonce, e.tag, e.ct
+
+
 async def lookup_label(
     app_id: str,
     address: bytes,
@@ -158,10 +200,11 @@ async def resolve_label(
         entry_type,
     )
     ack = await context.call(WARDProofRequest(entry_key=ek), WARDProofAck)
+    a_nonce, a_tag, a_ct = read_leaf_content(ack.content)
     log.debug(
         __name__,
         "resolve_label: WARDProofAck membership=%s witness=%s",
-        ack.ct is not None,
+        ack.content is not None,
         ack.witness_entry_key is not None,
     )
 
@@ -169,9 +212,9 @@ async def resolve_label(
     return await _classify_label(
         domain,
         address,
-        ack.nonce,
-        ack.tag,
-        ack.ct,
+        a_nonce,
+        a_tag,
+        a_ct,
         ack.proof,
         entry_type=entry_type,
         device_id=device_id,
@@ -244,13 +287,14 @@ async def lookup_pull(
 
     ek = await service.entry_key_for(app_id, address, key_type, device_id)
     ack = await context.call(WARDProofRequest(entry_key=ek), WARDProofAck)
+    a_nonce, a_tag, a_ct = read_leaf_content(ack.content)
 
     return await service.lookup(
         app_id,
         address,
-        ack.nonce,
-        ack.tag,
-        ack.ct,
+        a_nonce,
+        a_tag,
+        a_ct,
         ack.proof,
         key_type=key_type,
         device_id=device_id,
@@ -298,12 +342,13 @@ async def perform(
         WARDProofRequest(entry_key=ek, pending_id=pid),
         WARDProofAck,
     )
+    a_nonce, a_tag, a_ct = read_leaf_content(ack.content)
 
     return await service.perform(
         pid,
-        ack.nonce,
-        ack.tag,
-        ack.ct,
+        a_nonce,
+        a_tag,
+        a_ct,
         ack.proof,
         witness_entry_key=ack.witness_entry_key,
         witness_commit=ack.witness_commit,
@@ -340,11 +385,12 @@ async def perform_batch(pending_ids: list) -> tuple:
             WARDProofRequest(entry_key=ek, pending_id=rpid),
             WARDProofAck,
         )
+        a_nonce, a_tag, a_ct = read_leaf_content(ack.content)
         acks.append(
             (
-                ack.nonce,
-                ack.tag,
-                ack.ct,
+                a_nonce,
+                a_tag,
+                a_ct,
                 ack.proof,
                 ack.witness_entry_key,
                 ack.witness_commit,

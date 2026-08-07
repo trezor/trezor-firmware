@@ -105,6 +105,32 @@ def test_wrong_and_forged_entry_key_rejected(keys):
     assert not WARDTree.verify_proof_by_key(os.urandom(32), na, ta, ca, proof_a, root)
 
 
+def test_nonmembership_relabelled_proof_rejected():
+    t = WARDTree()
+    target = bytes([0x40]) + b"\x00" * 31
+    witness = bytes([0x60]) + b"\x00" * 31
+    other = bytes([0x80]) + b"\x00" * 31
+
+    target_blob = (b"n" * 12, b"t" * 16, b"target", "address")
+    witness_blob = (b"w" * 12, b"g" * 16, b"witness", "address")
+    other_blob = (b"o" * 12, b"h" * 16, b"other", "address")
+    t.set_leaf(target, target_blob[0], target_blob[1], target_blob[2], target_blob[3])
+    t.set_leaf(witness, witness_blob[0], witness_blob[1], witness_blob[2], witness_blob[3])
+    t.set_leaf(other, other_blob[0], other_blob[1], other_blob[2], other_blob[3])
+
+    root = t.get_root_hash()
+    proof = t.get_proof_by_key(witness)
+    witness_commit = wc.commit_of(witness_blob[0], witness_blob[1], witness_blob[2])
+
+    assert not WARDTree.verify_nonmembership_by_key(target, witness, witness_commit, proof, root)
+
+    forged = [
+        (1).to_bytes(2, "big") + (0).to_bytes(2, "big") + proof[0][4:],
+        proof[1],
+    ]
+    assert not WARDTree.verify_nonmembership_by_key(target, witness, witness_commit, forged, root)
+
+
 def test_push_flow_with_exported_keys():
     """PUSH: a host holding the exported K_index/K_data(type) computes entry_key from
     a plaintext identifier, builds the leaf+proof itself, and the device verifies it

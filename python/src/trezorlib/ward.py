@@ -78,6 +78,7 @@ def perform_update(
         messages.WARDPerformUpdate(pending_id=pending_id),
         expect=messages.WARDPerformUpdateAck,
     )
+    p_nonce, p_tag, p_ct = read_leaf_content(resp.content)
     return (
         resp.counter,
         resp.new_root,
@@ -86,9 +87,9 @@ def perform_update(
         resp.ward_id,
         resp.entry_key,
         resp.entry_type,
-        resp.nonce,
-        resp.tag,
-        resp.ct,
+        p_nonce,
+        p_tag,
+        p_ct,
     )
 
 
@@ -128,7 +129,8 @@ def perform_batch(session: "Session", pending_ids: list) -> tuple:
         expect=messages.WARDPerformBatchAck,
     )
     leaves = [
-        (lf.entry_key, lf.entry_type, lf.nonce, lf.tag, lf.ct) for lf in resp.leaves
+        (lf.entry_key, lf.entry_type, *read_leaf_content(lf.content))
+        for lf in resp.leaves
     ]
     return (
         resp.counter,
@@ -340,9 +342,7 @@ def lookup(
             app_id=app_id,
             address=address,
             proof=proof,
-            nonce=nonce,
-            tag=tag,
-            ct=ct,
+            content=make_leaf_content(nonce, tag, ct),
             key_type=key_type,
             device_id=device_id,
             witness_entry_key=witness_entry_key,
@@ -384,6 +384,41 @@ def debug_set_root(
 # ---------------------------------------------------------------------------
 
 
+def make_leaf_content(
+    nonce: Optional[bytes], tag: Optional[bytes], ct: Optional[bytes]
+) -> Optional["messages.LeafContent"]:
+    """Wrap a (nonce, tag, ct) leaf triple in a self-describing LeafContent for the
+    current leaf mode (ward_crypto.WARD_PLAINTEXT_LEAVES). Returns None when there is
+    no leaf material (nonce and ct both None: a non-membership / pull answer)."""
+    from . import ward_crypto
+
+    if nonce is None and ct is None:
+        return None
+    if ward_crypto.WARD_PLAINTEXT_LEAVES:
+        return messages.LeafContent(
+            encoding=1, plaintext=messages.PlaintextLeaf(content=ct or b"")
+        )
+    return messages.LeafContent(
+        encoding=0, encrypted=messages.EncryptedLeaf(nonce=nonce, tag=tag, ct=ct)
+    )
+
+
+def read_leaf_content(
+    content: Optional["messages.LeafContent"],
+) -> tuple[Optional[bytes], Optional[bytes], Optional[bytes]]:
+    """Read a LeafContent into a (nonce, tag, ct) triple (None,None,None if absent).
+    The host is keyless and carries whatever encoding the device produced."""
+    if content is None:
+        return None, None, None
+    if (content.encoding or 0) == 1:
+        p = content.plaintext
+        return b"", b"", (p.content if (p is not None and p.content is not None) else b"")
+    e = content.encrypted
+    if e is None:
+        return None, None, None
+    return e.nonce, e.tag, e.ct
+
+
 def build_proof_ack(tree: "WARDTree", entry_key: bytes) -> messages.WARDProofAck:
     """Answer a WARDProofRequest by the opaque `entry_key` path (pull model): a
     membership proof (entry_type + nonce/tag/ct + proof) if the leaf is present,
@@ -398,9 +433,7 @@ def build_proof_ack(tree: "WARDTree", entry_key: bytes) -> messages.WARDProofAck
         return messages.WARDProofAck(
             proof=tree.get_proof_by_key(entry_key),
             entry_type=entry_type,
-            nonce=nonce,
-            tag=tag,
-            ct=ct,
+            content=make_leaf_content(nonce, tag, ct),
         )
     proof, witness_entry_key, witness_commit = tree.get_nonmembership_proof_by_key(
         entry_key

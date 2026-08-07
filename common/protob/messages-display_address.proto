@@ -2,6 +2,7 @@ syntax = "proto2";
 package hw.trezor.messages.display_address;
 
 import "messages-common.proto";
+import "messages-ward.proto";
 import "options.proto";
 
 option java_outer_classname = "TrezorMessageDisplayAddress";
@@ -57,7 +58,6 @@ message DisplayAddressWithProof {
     reserved 11;                             // was witness_counter
     optional string app_id             = 12; // WARD domain to resolve the label in (entry_key input); default "display_address"
     optional string entry_type         = 13; // clear entry_type (selects K_data); default "address"
-    optional bytes  nonce              = 14; // membership: 12B AEAD nonce
-    optional bytes  tag                = 15; // membership: 16B Poly1305 tag
-    optional bytes  ct                 = 16; // membership: AEAD ciphertext
+    reserved 14, 15, 16;                     // were flat nonce/tag/ct; now inside content
+    optional ward.LeafContent content  = 17; // membership leaf value; absent = non-membership
 }

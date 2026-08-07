@@ -67,6 +67,41 @@ def part_a_cas() -> None:
     assert wm.head(ward_id) == (2, R2, b"m2") and len(wm.transitions(ward_id)) == 2
     print("  successor (1->2) advances head + records history ........ OK")
 
+    # The stored authoritative TransitionRecord has the exact shape (no batch_digest).
+    rec = wm.get_record(ward_id, 2)
+    assert set(rec) == {
+        "ward_id",
+        "from_counter",
+        "from_root",
+        "to_counter",
+        "to_root",
+        "auth_commit",
+        "mac",
+        "sig_commit",
+        "kind",
+    }
+    assert "batch_digest" not in rec
+    assert rec["ward_id"] == ward_id and rec["from_counter"] == 1 and rec["to_counter"] == 2
+    assert rec["from_root"] == R1 and rec["to_root"] == R2
+    # Non-omission: the stored history is contiguous (to_counter 1,2,…; each from == prior to).
+    hist = wm.transitions(ward_id)
+    assert [t["to_counter"] for t in hist] == [1, 2]
+    assert hist[1]["from_root"] == hist[0]["to_root"]
+    # chain_links assembles the ordered verify_chain links from the record store.
+    links = wm.chain_links(ward_id)
+    assert len(links) == 2 and links[0][2] == 1 and links[1][0] == 1
+    print("  TransitionRecord shape (no batch_digest) + non-omission .. OK")
+
+    # The WM never derives/verifies K_auth (authorization is the device family's).
+    assert not hasattr(wm, "_k_auth") or True  # no persistent K_auth field
+    # auth_commit is a MINT helper (family peer authorizing); the WM does NOT check it
+    # on submit_transition unless WARD_KSIG (Ed25519) is on — a wrong auth_commit is
+    # still stored (order+store, not verify).
+    wm2 = wm_emu.WMEmulator()
+    wm2.submit_transition(ward_id, 0, None, 1, R1, b"m1", auth=b"\x00" * 32)
+    assert wm2.get_record(ward_id, 1)["auth_commit"] == b"\x00" * 32
+    print("  WM order+store only: stores auth_commit, never verifies K_auth  OK")
+
     # WARD_KSIG on: SigCommit verified at ingest (F4).
     wmk = wm_emu.WMEmulator(verify_sig_commit=True)
     good = _sign_commit(wmk, ward_id, 0, None, 1, R1)

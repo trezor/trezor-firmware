@@ -111,10 +111,27 @@ def entry_key(
     return crypto_hmac(crypto_hmac.SHA256, k_index, scope + identifier).digest()
 
 
+# Leaf-content mode (dev switch). False = encrypted leaves (production); True =
+# plaintext leaves (host-inspectable; debug/emulator/benchmark builds only). The wire
+# is a self-describing oneof either way (EncryptedLeaf|PlaintextLeaf); this const is the
+# build's mode and picks the commit domain tag + the encode/decode codec. The plaintext
+# codec (pack_leaf/unpack_leaf) is compiled in only under __debug__, so a release build
+# cannot produce or read a plaintext leaf. See ward-design.md / plan Phase 5.
+WARD_PLAINTEXT_LEAVES = False
+
+# Enabling plaintext leaves in a non-debug (release) build is a misconfiguration: the
+# codec is compiled out, so fail loudly at import rather than at first write.
+if WARD_PLAINTEXT_LEAVES and not __debug__:
+    raise RuntimeError("WARD_PLAINTEXT_LEAVES requires a __debug__ build")
+
+
 def commit_of(nonce: bytes, tag: bytes, ct: bytes) -> bytes:
-    """Keyless leaf-value commitment: sha256(0x02 || nonce || tag || len32(ct) || ct)
-    (§2.2). A host with no keys can still recompute it. len(ct)==0 is a delete."""
-    return sha256d(b"\x02" + nonce + tag + len(ct).to_bytes(4, "big") + ct)
+    """Keyless leaf-value commitment (§2.2). A host with no keys can still recompute it;
+    len(ct)==0 is a delete. Domain-separated by leaf mode so an encrypted and a plaintext
+    leaf can never collide: encrypted = sha256(0x02 || nonce || tag || len32(ct) || ct);
+    plaintext = sha256(0x04 || len32(content) || content) (nonce/tag empty, ct==content)."""
+    tag_byte = b"\x04" if WARD_PLAINTEXT_LEAVES else b"\x02"
+    return sha256d(tag_byte + nonce + tag + len(ct).to_bytes(4, "big") + ct)
 
 
 def leaf_hash_of(entry_key_: bytes, commit: bytes) -> bytes:
@@ -199,25 +216,108 @@ def decrypt_leaf(
     return c_leaf, identifier, value
 
 
+# --- plaintext leaf codec (dev-only; compiled out of release builds) ---
+# Same packed layout as the encrypted plaintext, minus the AEAD and the bucket padding:
+#   content = C_leaf(4B BE) || len16(identifier) || identifier || len32(value) || value
+# The "ct" slot of the (nonce, tag, ct) triple carries `content`; nonce/tag stay empty.
+
+if __debug__:
+
+    def pack_leaf(c_leaf: int, identifier: bytes, value: bytes) -> bytes:
+        """Plaintext leaf content (no encryption). Mirrors encrypt_leaf's plaintext."""
+        return (
+            c_leaf.to_bytes(4, "big")
+            + len(identifier).to_bytes(2, "big")
+            + identifier
+            + len(value).to_bytes(4, "big")
+            + value
+        )
+
+    def unpack_leaf(content: bytes) -> tuple:
+        """Return (c_leaf, identifier, value) from a plaintext leaf `content`."""
+        c_leaf = int.from_bytes(content[0:4], "big")
+        id_len = int.from_bytes(content[4:6], "big")
+        off = 6 + id_len
+        identifier = content[6:off]
+        val_len = int.from_bytes(content[off : off + 4], "big")
+        off += 4
+        value = content[off : off + val_len]
+        return c_leaf, identifier, value
+
+
+def _encode_leaf(
+    k_data: bytes,
+    entry_key_: bytes,
+    entry_type: str,
+    c_leaf: int,
+    identifier: bytes,
+    value: bytes,
+) -> tuple:
+    """Produce the (nonce, tag, ct) triple for the current leaf mode. Plaintext mode
+    returns (b"", b"", content); encrypted mode returns the AEAD blob (§2.1)."""
+    if WARD_PLAINTEXT_LEAVES:
+        return b"", b"", pack_leaf(c_leaf, identifier, value)
+    return encrypt_leaf(k_data, entry_key_, entry_type, c_leaf, identifier, value)
+
+
+def _decode_leaf(
+    k_data: bytes,
+    entry_key_: bytes,
+    entry_type: str,
+    nonce: bytes,
+    tag: bytes,
+    ct: bytes,
+) -> tuple:
+    """Return (c_leaf, identifier, value) for the current leaf mode. Plaintext mode
+    parses `ct` as the packed content; encrypted mode AEAD-decrypts (§3.1)."""
+    if WARD_PLAINTEXT_LEAVES:
+        return unpack_leaf(ct)
+    return decrypt_leaf(k_data, entry_key_, entry_type, nonce, tag, ct)
+
+
 def addr_bit(entry_key_: bytes, bit: int) -> int:
     return (entry_key_[bit // 8] >> (7 - (bit % 8))) & 1
 
 
-def internal_hash(left: bytes, right: bytes) -> bytes:
-    return sha256d(b"\x01" + left + right)
+def _u16be(n: int) -> bytes:
+    return n.to_bytes(2, "big")
+
+
+def internal_hash(split_bit: int, skiplen: int, left: bytes, right: bytes) -> bytes:
+    return sha256d(b"\x01" + _u16be(split_bit) + _u16be(skiplen) + left + right)
+
+
+def _parse_proof_elem(elem: bytes) -> tuple:
+    if len(elem) != 36:
+        raise ValueError("invalid proof element length")
+    return int.from_bytes(elem[0:2], "big"), int.from_bytes(elem[2:4], "big"), bytes(elem[4:])
+
+
+def _proof_steps_root_to_leaf(proof: list) -> list:
+    steps = []
+    start_bit = 0
+    for elem in reversed(proof):
+        split_bit, skiplen, sibling = _parse_proof_elem(elem)
+        if split_bit >= 256:
+            raise ValueError("proof split_bit out of range")
+        if split_bit < start_bit or skiplen != split_bit - start_bit:
+            raise ValueError("proof skiplen inconsistent with branch position")
+        steps.append((split_bit, skiplen, sibling))
+        start_bit = split_bit + 1
+    return steps
 
 
 def reconstruct(start_hash: bytes, proof: list, entry_key_: bytes) -> bytes:
     """Walk proof from leaf toward root, rebuilding hashes. entry_key_ is the 32-byte
     trie path of the leaf the walk starts from."""
+    _proof_steps_root_to_leaf(proof)
     node = start_hash
     for elem in proof:
-        bit = elem[0]
-        sibling = bytes(elem[1:])
-        if addr_bit(entry_key_, bit) == 0:
-            node = internal_hash(node, sibling)
+        split_bit, skiplen, sibling = _parse_proof_elem(elem)
+        if addr_bit(entry_key_, split_bit) == 0:
+            node = internal_hash(split_bit, skiplen, node, sibling)
         else:
-            node = internal_hash(sibling, node)
+            node = internal_hash(split_bit, skiplen, sibling, node)
     return node
 
 
@@ -254,9 +354,13 @@ def verify_nonmembership(
     if witness_entry_key == entry_key_:
         return False
 
-    for elem in proof:
-        bit = elem[0]
-        if addr_bit(entry_key_, bit) != addr_bit(witness_entry_key, bit):
+    try:
+        steps = _proof_steps_root_to_leaf(proof)
+    except ValueError:
+        return False
+
+    for split_bit, _skiplen, _sibling in steps:
+        if addr_bit(entry_key_, split_bit) != addr_bit(witness_entry_key, split_bit):
             return False
 
     witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
@@ -295,9 +399,9 @@ def compute_new_root(
         if witness_entry_key == entry_key_:
             raise ValueError("witness_entry_key must differ from entry_key")
 
-        for elem in proof:
-            bit = elem[0]
-            if addr_bit(entry_key_, bit) != addr_bit(witness_entry_key, bit):
+        steps = _proof_steps_root_to_leaf(proof)
+        for split_bit, _skiplen, _sibling in steps:
+            if addr_bit(entry_key_, split_bit) != addr_bit(witness_entry_key, split_bit):
                 raise ValueError("Witness does not occupy target's path")
 
         witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
@@ -312,12 +416,16 @@ def compute_new_root(
                 break
         if split_bit is None:
             raise ValueError("entry_key and witness_entry_key are equal")
+        parent_split = _parse_proof_elem(proof[0])[0] if len(proof) > 0 else -1
+        if split_bit <= parent_split:
+            raise ValueError("insert split_bit must be below the witness path")
+        new_skiplen = split_bit - (parent_split + 1)
 
         new_leaf_t = leaf_hash(entry_key_, new_leaf[0], new_leaf[1], new_leaf[2])
         if addr_bit(entry_key_, split_bit) == 0:
-            new_branch = internal_hash(new_leaf_t, witness_leaf)
+            new_branch = internal_hash(split_bit, new_skiplen, new_leaf_t, witness_leaf)
         else:
-            new_branch = internal_hash(witness_leaf, new_leaf_t)
+            new_branch = internal_hash(split_bit, new_skiplen, witness_leaf, new_leaf_t)
         return reconstruct(new_branch, proof, witness_entry_key)
 
     if deleting:
@@ -328,7 +436,7 @@ def compute_new_root(
             raise ValueError("Old value proof invalid")
         if len(proof) == 0:
             return None
-        sibling_hash = bytes(proof[0][1:])
+        _split_bit, _skiplen, sibling_hash = _parse_proof_elem(proof[0])
         return reconstruct(sibling_hash, proof[1:], entry_key_)
 
     # UPDATE
@@ -359,7 +467,7 @@ def _multiproof_root(items, stored_root):
     then returns the new root with the new leaf hashes substituted. Raises ValueError
     on any inconsistency (mismatched branch bit / sibling / root)."""
     # Partial tree keyed by path = tuple of (bit, dir) taken from the root.
-    branch = {}  # path -> branch_bit
+    branch = {}  # path -> (branch_bit, skiplen)
     occupied = set()  # paths on some item's root→leaf walk (real nodes)
     old_leaf = {}  # path -> old leaf hash
     new_leaf = {}  # path -> new leaf hash
@@ -369,14 +477,16 @@ def _multiproof_root(items, stored_root):
         path = ()
         occupied.add(path)
         for elem in reversed(proof):  # root → leaf order
-            b = elem[0]
-            sib = bytes(elem[1:])
+            b, skiplen, sib = _parse_proof_elem(elem)
             d = addr_bit(ek, b)
             if path in branch:
-                if branch[path] != b:
-                    raise ValueError("inconsistent branch bit in batch multiproof")
+                if branch[path] != (b, skiplen):
+                    raise ValueError("inconsistent branch metadata in batch multiproof")
             else:
-                branch[path] = b
+                exp_start = path[-1][0] + 1 if path else 0
+                if skiplen != b - exp_start:
+                    raise ValueError("inconsistent skiplen in batch multiproof")
+                branch[path] = (b, skiplen)
             sib_path = path + ((b, 1 - d),)
             sib_seen.setdefault(sib_path, []).append(sib)
             path = path + ((b, d),)
@@ -405,10 +515,10 @@ def _multiproof_root(items, stored_root):
         if path in leaf_map:
             return leaf_map[path]
         if path in branch:
-            b = branch[path]
+            b, skiplen = branch[path]
             left = child_hash(path + ((b, 0),), leaf_map)
             right = child_hash(path + ((b, 1),), leaf_map)
-            return internal_hash(left, right)
+            return internal_hash(b, skiplen, left, right)
         raise ValueError("dangling node in batch multiproof")
 
     if node_hash((), old_leaf) != stored_root:
@@ -1041,7 +1151,7 @@ async def lookup_label(
     if not verify_proof(ek, nonce, tag, ct, proof, stored_root):
         return None
     k_data = await _derive_k_data(key_type)
-    _c, _id, value = decrypt_leaf(k_data, ek, key_type, nonce, tag, ct)
+    _c, _id, value = _decode_leaf(k_data, ek, key_type, nonce, tag, ct)
     return value
 
 
@@ -1345,7 +1455,7 @@ async def perform(
         out_nonce, out_tag, out_ct = b"", b"", b""
     else:
         k_data = await _derive_k_data(key_type)
-        out_nonce, out_tag, out_ct = encrypt_leaf(
+        out_nonce, out_tag, out_ct = _encode_leaf(
             k_data, ek, key_type, counter_t, address, new_value
         )
         new_leaf = (out_nonce, out_tag, out_ct)
@@ -1551,7 +1661,7 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
             # leaf and require the new stamp to strictly exceed the old one. With the
             # whole batch at to_counter, this holds iff the old leaf predates the head.
             k_data_old = await _derive_k_data(key_type)
-            c_old, _id_old, _v_old = decrypt_leaf(
+            c_old, _id_old, _v_old = _decode_leaf(
                 k_data_old, ek, key_type, ack_nonce, ack_tag, ack_ct
             )
             if to_counter <= c_old:
@@ -1563,7 +1673,7 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
             out_nonce, out_tag, out_ct = b"", b"", b""
         else:
             k_data = await _derive_k_data(key_type)
-            out_nonce, out_tag, out_ct = encrypt_leaf(
+            out_nonce, out_tag, out_ct = _encode_leaf(
                 k_data, ek, key_type, to_counter, address, new_value
             )
             new_leaf = (out_nonce, out_tag, out_ct)

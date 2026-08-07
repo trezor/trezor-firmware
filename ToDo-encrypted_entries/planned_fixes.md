@@ -200,7 +200,7 @@ the full current state; it is **not** the design's model.
 
 **What the design requires (§2.1 / §2.4 / §7):**
 - Each Evolu record carries `parent_hash` (root this batch transitions **from**) and `target_hash`
-  (root this batch transitions **to**). These are unauthenticated hydration hints (§2.4).
+  (root this batch transitions **to**). These are unauthenticated reconstruction hints (§2.4).
 - Hydration (§7) = **backward walk** from the WARD head: select records with `target_hash = root_head`,
   read their `parent_hash`, repeat to a baseline/snapshot; then **forward replay**; then a
   **per-batch root check** — recompute the root after applying batch B and require it to equal
@@ -224,7 +224,7 @@ the full current state; it is **not** the design's model.
    so an entry links to its batch.
 2. **Store `parent_hash`/`target_hash` on the record too** (design §2.1 shape) for the Evolu provider,
    so a fresh Suite can do the backward walk from the relay's record set without a side table.
-3. **Implement §7 hydration** in `@trezor/ward`: `hydrate(records)` = backward walk
+3. **Implement §7 reconstruction** in `@trezor/ward`: `hydrate(records)` = backward walk
    `target_root → prev_root` from the head, forward replay of each batch's leaf blobs (keyed by
    entry_key — needs Gap 2), and a **per-batch root check** (`computeRootFromBlobs(state_after_B) ===
    B.target_root`), rejecting a batch whose replay root ≠ its `target_root` (§8.1 case 3/5 → rollback).
@@ -238,7 +238,7 @@ the full current state; it is **not** the design's model.
 
 **Depends on:** Gap 2 (entry_key-keyed records) — reconstruction replays leaf blobs keyed by entry_key.
 
-Priority: **high** (this is the actual design hydration/verification model; the current
+Priority: **high** (this is the actual design reconstruction/verification model; the current
 "rebuild-from-all-current-rows" only holds for one always-online host and gives no per-batch/lineage
 verification, no fast-forward, no rollback).
 
@@ -247,7 +247,7 @@ verification, no fast-forward, no rollback).
 1. Gap 4 (rebuild) — unblocks a clean connect build/type-check.
 2. Gap 1 (wardVerify non-membership pull) — closes the last correctness hole in the working flows.
 3. **Gap 2 (first-class entry_key column)** — foundational record shape; prerequisite for 4 and 5.
-4. **Gap 10 (per-batch lineage + §7 hydration/verification)** — the real reconstruction model
+4. **Gap 10 (per-batch lineage + §7 reconstruction/verification)** — the real reconstruction model
    (parent_hash/target_hash + target_root_mac + per-batch root check); also unlocks §3.1 fast-forward
    and §8.2 rollback. Depends on Gap 2.
 5. Gap 7 decisions → Gap 6 (per-type/device store framing) — enables the per-device use case.
@@ -281,7 +281,7 @@ is a prerequisite for Gap 10; Gap 1 and Gap 6 are independent. Not yet implement
 - `proof`/`app`: `blobRows()` reads the top-level `entryKey`; `buildAckByKey` membership uses indexed
   `getByEntryKey` (O(1)) instead of O(n) `find`. Reuse `commitOf`/`proofByKey`/`nonMembershipByKey`.
 
-## Gap 10 — per-batch root lineage + §7 hydration (host TS) [needs Gap 2]
+## Gap 10 — per-batch root lineage + §7 reconstruction (host TS) [needs Gap 2]
 - Storage (`storage/sqlite` + contract + in-memory): `transitions` table keyed `(ward_id, counter)`:
   `prev_root`, `target_root`, `target_root_mac` (+ optional `wm_signature`, `t_anchor`); methods
   `putTransition`/`getTransitions`. Stamp each `addresses` row with its `counter` (== C_leaf); persist
@@ -289,7 +289,7 @@ is a prerequisite for Gap 10; Gap 1 and Gap 6 are independent. Not yet implement
 - Populate (`api/wardUpdate.ts`): after `session.confirm`, `putTransition(wardId, {counter:
   installed.counter, prevRoot: tree?.root ?? '', targetRoot: installed.root, targetRootMac:
   installed.rootMac})` — all host-side already.
-- `hydrate(records, transitions, headRoot)` in `packages/ward/src/app`: backward walk
+- `hydrate(records, transitions, headRoot)` in `packages/ward/src/app`: backward-walk reconstruction
   `target_root→prev_root` from head; forward replay of each batch's leaf blobs by `entry_key`;
   per-batch root check `computeRootFromBlobs(state_after_B) === B.target_root` (mismatch ⇒ reject,
   §8.1 case 3/5); verify each `target_root_mac` vs counter (+ CAS/WM sig contiguity if stored); ignore
@@ -316,7 +316,7 @@ is a prerequisite for Gap 10; Gap 1 and Gap 6 are independent. Not yet implement
 - Gap 2: `@trezor/ward` jest (`getByEntryKey` hit; membership indexed) + `type-check`.
 - Gap 10: jest — N fixture batches + transitions; `hydrate` reproduces head root, passes per-batch
   checks; tampered target_root / omitted batch rejected; orphan ignored. Emulator: several `dbchange`,
-  then fresh-host hydrate matches device root.
+  then fresh-host reconstruction matches device root.
 - Gap 1: emulator `dblookup` of absent address → `valid:true/isMember:false`; false non-membership
   caught on-device.
 - Gap 6: emulator `dbchange` with non-default `key_type`/`device_id` → distinct `entry_key` path; slots

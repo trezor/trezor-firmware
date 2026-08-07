@@ -102,7 +102,7 @@ order: `Gap 2 (done) → E1 → E2 → Gap 1 → E3 → E4 → Gap 10 → E5`.
 ### Phase E5 — Evolu provider (Gap 5)  [suite-desktop]
 - Implement `WardProvider` against Evolu, records **keyed by `entry_key`**, storing only
   `(entry_type, nonce, tag, ct, counter, prev_root/target_root)` — **no plaintext**. Rendering via the
-  E2 exported keys. Reuse the Gap 10 lineage/hydration for reconstruction.
+  E2 exported keys. Reuse the Gap 10 lineage/reconstruction path.
 
 ---
 
@@ -125,7 +125,7 @@ frozen vectors together, then connect rebuilds in order **@trezor/protobuf → c
   **without** exported keys can still serve proofs by `entry_key` but cannot render plaintext.
 - **E4:** wire audit — reads carry only `entry_key` (no plaintext identifier); `WARDExportKeys` prompts
   an on-device confirm; the plaintext PUSH `WARDLookup` path is gone.
-- **E5:** Evolu provider round-trips blob-only records + hydrates via lineage; matches the device root.
+- **E5:** Evolu provider round-trips blob-only records + reconstructs via lineage; matches the device root.
 - **Regression:** `pytest tests/device_tests/misc/test_ward*.py` green; connect jest green after rebuild.
 
 ## 5. Explicit non-goals / accepted exposures (from scaffolding §5 / §11)

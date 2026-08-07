@@ -23,19 +23,20 @@ async def lookup(msg: WARDLookup) -> WARDLookupAck:
 
     key_type = msg.key_type or "address"
     device_id = msg.device_id or 0
-    pull = msg.nonce is None and msg.ct is None and msg.witness_entry_key is None
+    pull = msg.content is None and msg.witness_entry_key is None
 
     if pull:
         valid, counter, membership, wallet_id, ward_id = await core.lookup_pull(
             msg.app_id, msg.address, key_type=key_type, device_id=device_id
         )
     else:
+        m_nonce, m_tag, m_ct = core.read_leaf_content(msg.content)
         valid, counter, membership, wallet_id, ward_id = await core.lookup(
             msg.app_id,
             msg.address,
-            msg.nonce,
-            msg.tag,
-            msg.ct,
+            m_nonce,
+            m_tag,
+            m_ct,
             msg.proof,
             key_type=key_type,
             device_id=device_id,

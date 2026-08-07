@@ -43,9 +43,7 @@ async def perform_batch(msg: WARDPerformBatch) -> WARDPerformBatchAck:
             WARDBatchLeaf(
                 entry_key=ek,
                 entry_type=entry_type,
-                nonce=nonce,
-                tag=tag,
-                ct=ct,
+                content=core.make_leaf_content(nonce, tag, ct),
             )
             for (ek, entry_type, nonce, tag, ct) in leaves
         ],

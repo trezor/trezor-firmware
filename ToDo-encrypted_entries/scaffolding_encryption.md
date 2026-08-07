@@ -406,7 +406,7 @@ key_type = "address"
 device_id = 0
 ```
 
-### Gap E: lineage / hydration model is still incomplete
+### Gap E: lineage / reconstruction model is still incomplete
 
 Today the host reconstructs the current root from all current blob rows.
 
@@ -415,7 +415,7 @@ What is still missing is the design-level lineage model:
 - per-transition `parent_hash` / `target_hash`
 - stored root MAC per transition
 - optional stored WM final signature / anchor
-- backward-walk hydration from a head root
+- backward-walk reconstruction from a head root
 - forward replay with per-batch root checks
 
 So the current implementation works as a single-host current-state cache, but not
@@ -446,7 +446,7 @@ Planned from `planned_fixes.md` and `TODO_Entry_key_as_MAC.md`:
 
 This is the main host data-model cleanup needed after the crypto migration.
 
-### 7.3 Persist batch lineage and implement proper hydration
+### 7.3 Persist batch lineage and implement proper reconstruction
 
 Planned from `planned_fixes.md`:
 
@@ -490,7 +490,7 @@ Still planned:
 
 - implement a real Evolu `WardProvider`
 - store encrypted blob records shaped around `entry_key`
-- support the lineage/hydration model rather than the sqlite-only local cache shape
+- support the lineage/reconstruction model rather than the sqlite-only local cache shape
 
 ## 8. Important design clarifications
 
@@ -534,7 +534,7 @@ Still planned:
 
 - device-proven non-membership in `wardVerify`
 - first-class `entry_key` storage shape
-- per-batch lineage and hydration
+- per-batch lineage and reconstruction
 - persistent `key_type` / `device_id` through queued writes
 - optional host-blind mode
 - Evolu-native provider

@@ -290,6 +290,62 @@ def main():
             pass
     print("6 chain verify: authorized chain folds; tampered/off-path/gap/stale reject  OK")
 
+    # --- 7. plaintext leaf mode: 0x04 domain, codec + oracle parity ---------
+    import trezorlib.ward_crypto as wc
+
+    # A fixed UPDATE batch, folded once per mode. The (entry_key, blob) set is identical;
+    # only the leaf mode (hence the commit domain tag) changes, so the two roots MUST
+    # differ (domain separation) while each still matches its own oracle (codec parity).
+    pkeys = [hashlib.sha256(b"pk%d" % i).digest() for i in range(6)]
+
+    def build(pt: bool):
+        svc.WARD_PLAINTEXT_LEAVES = pt
+        wc.WARD_PLAINTEXT_LEAVES = pt
+        # plaintext leaves carry empty nonce/tag with the packed content in the ct slot;
+        # encrypted leaves carry a real AEAD triple.
+        def blob(i, v):
+            if pt:
+                return (b"", b"", wc.pack_leaf(1000 + i, b"id%d" % i, b"val%d" % v))
+            return (bytes([i & 0xFF]) * 12, bytes([i & 0xFF]) * 16, b"ct%d.%d" % (i, v))
+
+        base = WARDTree()
+        blobs = {k: blob(i, 0) for i, k in enumerate(pkeys)}
+        for k, b in blobs.items():
+            base.set_leaf(k, *b)
+        R0 = base.get_root_hash()
+        expect = WARDTree()
+        for k, b in blobs.items():
+            expect.set_leaf(k, *b)
+        ops = []
+        for i, k in enumerate(pkeys[:3]):
+            new = blob(i, 9)
+            ops.append((k, blobs[k][:3], new[:3], base.get_proof_by_key(k), None, None))
+            expect.set_leaf(k, *new)
+        got = svc.compute_batch_root(R0, ops)
+        assert got == expect.get_root_hash(), "batch fold != oracle in %s mode" % (
+            "plaintext" if pt else "encrypted"
+        )
+        return got
+
+    enc_root = build(False)
+    pt_root = build(True)  # leaves consts flipped to plaintext for the checks below
+
+    # commit domain tag: plaintext = sha256(0x04 || len32(content) || content); the codec
+    # (pack/unpack) mirrors host<->firmware and round-trips.
+    content = wc.pack_leaf(7, b"addr", b"value")
+    assert svc.commit_of(b"", b"", content) == hashlib.sha256(
+        b"\x04" + len(content).to_bytes(4, "big") + content
+    ).digest()
+    assert svc.commit_of(b"", b"", content) == wc.commit_of(b"", b"", content)
+    assert wc.unpack_leaf(content) == (7, b"addr", b"value")
+    assert svc.unpack_leaf(content) == (7, b"addr", b"value")
+    assert enc_root != pt_root, "encrypted and plaintext roots must differ (0x02 vs 0x04)"
+
+    # restore the production default so a later import sees encrypted mode.
+    svc.WARD_PLAINTEXT_LEAVES = False
+    wc.WARD_PLAINTEXT_LEAVES = False
+    print("7 plaintext mode: 0x04 commit + pack/unpack parity + oracle fold ... OK")
+
     print("\nALL WARD BATCH-UPDATE SELF-CHECKS PASSED")
 
 

@@ -3,20 +3,21 @@
 Path-compressed positional trie keyed by the 32-byte ``entry_key``
 (``HMAC(K_index, scope ‖ identifier)`` — see ``ward_crypto``). Leaves store the
 opaque AEAD blob ``(nonce, tag, ct)``; the trie hashes only the keyless
-commitment, so a host holding no keys can still hydrate and prove
+commitment, so a host holding no keys can still reconstruct and prove
 (ward-design.md §2.2):
 
   commit   = SHA-256(0x02 || nonce || tag || len32(ct) || ct)
   leaf     = SHA-256(0x00 || entry_key || commit)
-  internal = SHA-256(0x01 || left || right)          — positional, no sorting
+  internal = SHA-256(0x01 || split_bit_u16 || skiplen_u16 || left || right)
+                                                    — positional, no sorting
 
 The trie is **key-first**: every operation takes a precomputed ``entry_key``
 (the device computes it; a keyless host never can). Non-membership witnesses
 travel as two hashes ``(witness_entry_key, witness_commit)`` and reveal neither
 the neighbour's identifier nor its plaintext value.
 
-Proof format (leaf→root order): each element is 33 bytes, 1-byte bit-position
-(0-255) + 32-byte sibling hash. O(log N).
+Proof format (leaf→root order): each element is 36 bytes,
+2-byte split_bit + 2-byte skiplen + 32-byte sibling hash. O(log N).
 
 Empty tree: ``get_root_hash()`` returns ``EMPTY_ROOT`` (all-zero); test
 ``is_empty()`` rather than comparing against it.
@@ -48,8 +49,22 @@ def _addr_bit(entry_key: bytes, bit: int) -> int:
     return (entry_key[bit // 8] >> (7 - (bit % 8))) & 1
 
 
-def _internal_hash(left: bytes, right: bytes) -> bytes:
-    return ward_crypto.sha256(b"\x01" + left + right)
+def _u16be(n: int) -> bytes:
+    return n.to_bytes(2, "big")
+
+
+def _internal_hash(split_bit: int, skiplen: int, left: bytes, right: bytes) -> bytes:
+    return ward_crypto.sha256(b"\x01" + _u16be(split_bit) + _u16be(skiplen) + left + right)
+
+
+def _proof_elem(split_bit: int, skiplen: int, sibling: bytes) -> bytes:
+    return _u16be(split_bit) + _u16be(skiplen) + sibling
+
+
+def _parse_proof_elem(elem: bytes) -> tuple[int, int, bytes]:
+    if len(elem) != 36:
+        raise ValueError("invalid proof element length")
+    return int.from_bytes(elem[0:2], "big"), int.from_bytes(elem[2:4], "big"), elem[4:]
 
 
 # --- internal MPT node types ---
@@ -63,10 +78,11 @@ class _LeafNode:
 
 
 class _BranchNode:
-    __slots__ = ("bit", "left", "right")
+    __slots__ = ("bit", "skiplen", "left", "right")
 
-    def __init__(self, bit: int, left, right) -> None:
+    def __init__(self, bit: int, skiplen: int, left, right) -> None:
         self.bit = bit
+        self.skiplen = skiplen
         self.left = left
         self.right = right
 
@@ -83,15 +99,20 @@ def _build_mpt(leaves: List[_LeafNode], start_bit: int):
     if len(leaves) == 1:
         return leaves[0]
     bit = _find_split_bit(leaves, start_bit)
+    skiplen = bit - start_bit
     left = [l for l in leaves if _addr_bit(l.addr_hash, bit) == 0]
     right = [l for l in leaves if _addr_bit(l.addr_hash, bit) == 1]
-    return _BranchNode(bit, _build_mpt(left, bit + 1), _build_mpt(right, bit + 1))
+    return _BranchNode(
+        bit, skiplen, _build_mpt(left, bit + 1), _build_mpt(right, bit + 1)
+    )
 
 
 def _hash_mpt(node) -> bytes:
     if isinstance(node, _LeafNode):
         return node.leaf_hash
-    return _internal_hash(_hash_mpt(node.left), _hash_mpt(node.right))
+    return _internal_hash(
+        node.bit, node.skiplen, _hash_mpt(node.left), _hash_mpt(node.right)
+    )
 
 
 def _walk_proof(root, target_key: bytes) -> List[bytes]:
@@ -103,16 +124,33 @@ def _walk_proof(root, target_key: bytes) -> List[bytes]:
         if _addr_bit(target_key, node.bit) == 0:
             left_hash = walk(node.left)
             right_hash = _hash_mpt(node.right)
-            proof.append(bytes([node.bit]) + right_hash)
-            return _internal_hash(left_hash, right_hash)
+            proof.append(_proof_elem(node.bit, node.skiplen, right_hash))
+            return _internal_hash(node.bit, node.skiplen, left_hash, right_hash)
         else:
             left_hash = _hash_mpt(node.left)
             right_hash = walk(node.right)
-            proof.append(bytes([node.bit]) + left_hash)
-            return _internal_hash(left_hash, right_hash)
+            proof.append(_proof_elem(node.bit, node.skiplen, left_hash))
+            return _internal_hash(node.bit, node.skiplen, left_hash, right_hash)
 
     walk(root)
     return proof  # post-order walk → already leaf-to-root order
+
+
+def _proof_steps_root_to_leaf(proof: List[bytes]) -> Optional[List[tuple[int, int, bytes]]]:
+    steps: List[tuple[int, int, bytes]] = []
+    start_bit = 0
+    try:
+        for elem in reversed(proof):
+            split_bit, skiplen, sibling = _parse_proof_elem(elem)
+            if split_bit >= 256:
+                return None
+            if split_bit < start_bit or skiplen != split_bit - start_bit:
+                return None
+            steps.append((split_bit, skiplen, sibling))
+            start_bit = split_bit + 1
+    except ValueError:
+        return None
+    return steps
 
 
 class WARDTree:
@@ -176,7 +214,7 @@ class WARDTree:
         if counter is None:
             counter = self.get_counter(app_id, identifier, key_type, device_id) + 1
         ek = self._ek(app_id, identifier, key_type, device_id)
-        nonce, tag, ct = ward_crypto.encrypt_leaf(
+        nonce, tag, ct = ward_crypto.encode_leaf(
             self._k_data, ek, key_type, counter, identifier, value
         )
         self.set_leaf(ek, nonce, tag, ct, key_type)
@@ -194,7 +232,7 @@ class WARDTree:
         if leaf is None:
             return 0
         ek = self._ek(app_id, identifier, key_type, device_id)
-        c, _id, _v = ward_crypto.decrypt_leaf(self._k_data, ek, key_type, leaf[0], leaf[1], leaf[2])
+        c, _id, _v = ward_crypto.decode_leaf(self._k_data, ek, key_type, leaf[0], leaf[1], leaf[2])
         return c
 
     def get_value(
@@ -204,7 +242,7 @@ class WARDTree:
         if leaf is None:
             return b""
         ek = self._ek(app_id, identifier, key_type, device_id)
-        _c, _id, v = ward_crypto.decrypt_leaf(self._k_data, ek, key_type, leaf[0], leaf[1], leaf[2])
+        _c, _id, v = ward_crypto.decode_leaf(self._k_data, ek, key_type, leaf[0], leaf[1], leaf[2])
         return v
 
     def get_proof(
@@ -300,10 +338,16 @@ class WARDTree:
         root: bytes,
     ) -> bool:
         """Verify a membership proof for the leaf blob at *entry_key*."""
+        if _proof_steps_root_to_leaf(proof) is None:
+            return False
         node = ward_crypto.leaf_hash_of(entry_key, ward_crypto.commit_of(nonce, tag, ct))
         for elem in proof:
-            bit, sibling = elem[0], elem[1:]
-            node = _internal_hash(node, sibling) if _addr_bit(entry_key, bit) == 0 else _internal_hash(sibling, node)
+            split_bit, skiplen, sibling = _parse_proof_elem(elem)
+            node = (
+                _internal_hash(split_bit, skiplen, node, sibling)
+                if _addr_bit(entry_key, split_bit) == 0
+                else _internal_hash(split_bit, skiplen, sibling, node)
+            )
         return node == root
 
     @staticmethod
@@ -319,12 +363,19 @@ class WARDTree:
             return len(proof) == 0 and root == EMPTY_ROOT
         if witness_commit is None or witness_entry_key == entry_key:
             return False
+        steps = _proof_steps_root_to_leaf(proof)
+        if steps is None:
+            return False
         # every branch bit in the proof must agree between target and witness
-        for elem in proof:
-            if _addr_bit(entry_key, elem[0]) != _addr_bit(witness_entry_key, elem[0]):
+        for split_bit, _skiplen, _sibling in steps:
+            if _addr_bit(entry_key, split_bit) != _addr_bit(witness_entry_key, split_bit):
                 return False
         node = ward_crypto.leaf_hash_of(witness_entry_key, witness_commit)
         for elem in proof:
-            bit, sibling = elem[0], elem[1:]
-            node = _internal_hash(node, sibling) if _addr_bit(witness_entry_key, bit) == 0 else _internal_hash(sibling, node)
+            split_bit, skiplen, sibling = _parse_proof_elem(elem)
+            node = (
+                _internal_hash(split_bit, skiplen, node, sibling)
+                if _addr_bit(witness_entry_key, split_bit) == 0
+                else _internal_hash(split_bit, skiplen, sibling, node)
+            )
         return node == root

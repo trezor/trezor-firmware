@@ -3434,6 +3434,726 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumDisplayFormatInfo"]:
             return isinstance(msg, cls)
 
+    class WARDQueueUpdate(protobuf.MessageType):
+        address: "AnyBytes"
+        new_value: "AnyBytes"
+        app_id: "str | None"
+        key_type: "str | None"
+        device_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            address: "AnyBytes",
+            new_value: "AnyBytes",
+            app_id: "str | None" = None,
+            key_type: "str | None" = None,
+            device_id: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDQueueUpdate"]:
+            return isinstance(msg, cls)
+
+    class WARDQueueUpdateAck(protobuf.MessageType):
+        pending_id: "int | None"
+        wallet_id: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            pending_id: "int | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDQueueUpdateAck"]:
+            return isinstance(msg, cls)
+
+    class WARDPerformUpdate(protobuf.MessageType):
+        pending_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            pending_id: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformUpdate"]:
+            return isinstance(msg, cls)
+
+    class WARDPerformUpdateAck(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        mac: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+        entry_key: "AnyBytes | None"
+        entry_type: "str | None"
+        content: "LeafContent | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            mac: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+            entry_key: "AnyBytes | None" = None,
+            entry_type: "str | None" = None,
+            content: "LeafContent | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformUpdateAck"]:
+            return isinstance(msg, cls)
+
+    class WARDConfirmedByWM(protobuf.MessageType):
+        counter: "int"
+        mac: "AnyBytes | None"
+        wm_signature: "AnyBytes"
+        pending_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            wm_signature: "AnyBytes",
+            mac: "AnyBytes | None" = None,
+            pending_id: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmedByWM"]:
+            return isinstance(msg, cls)
+
+    class WARDConfirmedByWMAck(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmedByWMAck"]:
+            return isinstance(msg, cls)
+
+    class WARDSync(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSync"]:
+            return isinstance(msg, cls)
+
+    class WARDSyncAck(protobuf.MessageType):
+        nonce: "AnyBytes"
+        version: "int"
+        wallet_id: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            nonce: "AnyBytes",
+            version: "int",
+            wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSyncAck"]:
+            return isinstance(msg, cls)
+
+    class WARDIngestAttestation(protobuf.MessageType):
+        counter: "int"
+        mac: "AnyBytes | None"
+        wm_signature: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            wm_signature: "AnyBytes",
+            mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDIngestAttestation"]:
+            return isinstance(msg, cls)
+
+    class WARDIngestAttestationAck(protobuf.MessageType):
+        counter: "int"
+        wallet_id: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            wallet_id: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDIngestAttestationAck"]:
+            return isinstance(msg, cls)
+
+    class WARDListPendingEdits(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDListPendingEdits"]:
+            return isinstance(msg, cls)
+
+    class WARDListPendingEditsAck(protobuf.MessageType):
+        addresses: "list[AnyBytes]"
+        wallet_id: "AnyBytes | None"
+        pending_ids: "list[int]"
+        ward_id: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            addresses: "list[AnyBytes] | None" = None,
+            pending_ids: "list[int] | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDListPendingEditsAck"]:
+            return isinstance(msg, cls)
+
+    class WARDReconcile(protobuf.MessageType):
+        root: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            root: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDReconcile"]:
+            return isinstance(msg, cls)
+
+    class WARDReconcileAck(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDReconcileAck"]:
+            return isinstance(msg, cls)
+
+    class WARDLookup(protobuf.MessageType):
+        address: "AnyBytes"
+        proof: "list[AnyBytes]"
+        witness_entry_key: "AnyBytes | None"
+        witness_commit: "AnyBytes | None"
+        app_id: "str | None"
+        key_type: "str | None"
+        device_id: "int | None"
+        content: "LeafContent | None"
+
+        def __init__(
+            self,
+            *,
+            address: "AnyBytes",
+            proof: "list[AnyBytes] | None" = None,
+            witness_entry_key: "AnyBytes | None" = None,
+            witness_commit: "AnyBytes | None" = None,
+            app_id: "str | None" = None,
+            key_type: "str | None" = None,
+            device_id: "int | None" = None,
+            content: "LeafContent | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDLookup"]:
+            return isinstance(msg, cls)
+
+    class WARDLookupAck(protobuf.MessageType):
+        valid: "bool"
+        counter: "int"
+        membership: "bool | None"
+        wallet_id: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            valid: "bool",
+            counter: "int",
+            membership: "bool | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDLookupAck"]:
+            return isinstance(msg, cls)
+
+    class WARDDebugSetRoot(protobuf.MessageType):
+        root: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            root: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDebugSetRoot"]:
+            return isinstance(msg, cls)
+
+    class WARDDebugSetRootAck(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDebugSetRootAck"]:
+            return isinstance(msg, cls)
+
+    class WARDProofRequest(protobuf.MessageType):
+        pending_id: "int | None"
+        entry_key: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes",
+            pending_id: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDProofRequest"]:
+            return isinstance(msg, cls)
+
+    class WARDProofAck(protobuf.MessageType):
+        proof: "list[AnyBytes]"
+        witness_entry_key: "AnyBytes | None"
+        witness_commit: "AnyBytes | None"
+        entry_type: "str | None"
+        content: "LeafContent | None"
+
+        def __init__(
+            self,
+            *,
+            proof: "list[AnyBytes] | None" = None,
+            witness_entry_key: "AnyBytes | None" = None,
+            witness_commit: "AnyBytes | None" = None,
+            entry_type: "str | None" = None,
+            content: "LeafContent | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDProofAck"]:
+            return isinstance(msg, cls)
+
+    class WARDExportKeys(protobuf.MessageType):
+        key_type: "str | None"
+
+        def __init__(
+            self,
+            *,
+            key_type: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDExportKeys"]:
+            return isinstance(msg, cls)
+
+    class WARDExportKeysAck(protobuf.MessageType):
+        k_index: "AnyBytes | None"
+        k_data: "AnyBytes | None"
+        key_type: "str | None"
+
+        def __init__(
+            self,
+            *,
+            k_index: "AnyBytes | None" = None,
+            k_data: "AnyBytes | None" = None,
+            key_type: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDExportKeysAck"]:
+            return isinstance(msg, cls)
+
+    class WARDDiscardPending(protobuf.MessageType):
+        pending_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            pending_id: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDiscardPending"]:
+            return isinstance(msg, cls)
+
+    class WARDDiscardPendingAck(protobuf.MessageType):
+        discarded_address: "AnyBytes | None"
+        wallet_id: "AnyBytes | None"
+        pending_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            discarded_address: "AnyBytes | None" = None,
+            wallet_id: "AnyBytes | None" = None,
+            pending_id: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDiscardPendingAck"]:
+            return isinstance(msg, cls)
+
+    class EncryptedLeaf(protobuf.MessageType):
+        nonce: "AnyBytes | None"
+        tag: "AnyBytes | None"
+        ct: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            nonce: "AnyBytes | None" = None,
+            tag: "AnyBytes | None" = None,
+            ct: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EncryptedLeaf"]:
+            return isinstance(msg, cls)
+
+    class PlaintextLeaf(protobuf.MessageType):
+        content: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            content: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["PlaintextLeaf"]:
+            return isinstance(msg, cls)
+
+    class LeafContent(protobuf.MessageType):
+        encoding: "int | None"
+        encrypted: "EncryptedLeaf | None"
+        plaintext: "PlaintextLeaf | None"
+
+        def __init__(
+            self,
+            *,
+            encoding: "int | None" = None,
+            encrypted: "EncryptedLeaf | None" = None,
+            plaintext: "PlaintextLeaf | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["LeafContent"]:
+            return isinstance(msg, cls)
+
+    class WARDBatchLeaf(protobuf.MessageType):
+        entry_key: "AnyBytes"
+        entry_type: "str | None"
+        content: "LeafContent | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes",
+            entry_type: "str | None" = None,
+            content: "LeafContent | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDBatchLeaf"]:
+            return isinstance(msg, cls)
+
+    class WARDPerformBatch(protobuf.MessageType):
+        pending_ids: "list[int]"
+
+        def __init__(
+            self,
+            *,
+            pending_ids: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformBatch"]:
+            return isinstance(msg, cls)
+
+    class WARDPerformBatchAck(protobuf.MessageType):
+        counter: "int"
+        from_root: "AnyBytes | None"
+        new_root: "AnyBytes | None"
+        mac: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+        head_mac: "AnyBytes"
+        auth_commit: "AnyBytes"
+        sig_commit: "AnyBytes | None"
+        leaves: "list[WARDBatchLeaf]"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            head_mac: "AnyBytes",
+            auth_commit: "AnyBytes",
+            leaves: "list[WARDBatchLeaf] | None" = None,
+            from_root: "AnyBytes | None" = None,
+            new_root: "AnyBytes | None" = None,
+            mac: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+            sig_commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformBatchAck"]:
+            return isinstance(msg, cls)
+
+    class WARDConfirmBatchByWM(protobuf.MessageType):
+        counter: "int"
+        mac: "AnyBytes | None"
+        wm_signature: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            wm_signature: "AnyBytes",
+            mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmBatchByWM"]:
+            return isinstance(msg, cls)
+
+    class WARDConfirmBatchByWMAck(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmBatchByWMAck"]:
+            return isinstance(msg, cls)
+
+    class WARDPerformRevert(protobuf.MessageType):
+        stuck_counter: "int"
+        stuck_root: "AnyBytes | None"
+        prev_root: "AnyBytes | None"
+        forward_auth_commit: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            stuck_counter: "int",
+            forward_auth_commit: "AnyBytes",
+            stuck_root: "AnyBytes | None" = None,
+            prev_root: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformRevert"]:
+            return isinstance(msg, cls)
+
+    class WARDPerformRevertAck(protobuf.MessageType):
+        counter: "int"
+        from_root: "AnyBytes | None"
+        new_root: "AnyBytes | None"
+        mac: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+        head_mac: "AnyBytes"
+        auth_revert: "AnyBytes"
+        sig_commit: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            head_mac: "AnyBytes",
+            auth_revert: "AnyBytes",
+            from_root: "AnyBytes | None" = None,
+            new_root: "AnyBytes | None" = None,
+            mac: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+            sig_commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformRevertAck"]:
+            return isinstance(msg, cls)
+
+    class WARDConfirmRevertByWM(protobuf.MessageType):
+        counter: "int"
+        mac: "AnyBytes | None"
+        wm_signature: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            wm_signature: "AnyBytes",
+            mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmRevertByWM"]:
+            return isinstance(msg, cls)
+
+    class WARDConfirmRevertByWMAck(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmRevertByWMAck"]:
+            return isinstance(msg, cls)
+
+    class WARDChainLink(protobuf.MessageType):
+        from_counter: "int"
+        from_root: "AnyBytes | None"
+        to_counter: "int"
+        to_root: "AnyBytes | None"
+        auth_commit: "AnyBytes"
+        sig_commit: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            from_counter: "int",
+            to_counter: "int",
+            auth_commit: "AnyBytes",
+            from_root: "AnyBytes | None" = None,
+            to_root: "AnyBytes | None" = None,
+            sig_commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDChainLink"]:
+            return isinstance(msg, cls)
+
+    class WARDVerifyChain(protobuf.MessageType):
+        links: "list[WARDChainLink]"
+
+        def __init__(
+            self,
+            *,
+            links: "list[WARDChainLink] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDVerifyChain"]:
+            return isinstance(msg, cls)
+
+    class WARDVerifyChainAck(protobuf.MessageType):
+        counter: "int"
+        new_root: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+        root_mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int",
+            new_root: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+            root_mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDVerifyChainAck"]:
+            return isinstance(msg, cls)
+
     class DisplayAddress(protobuf.MessageType):
         address: "str"
         title: "str | None"
@@ -3469,9 +4189,7 @@ if TYPE_CHECKING:
         witness_commit: "AnyBytes | None"
         app_id: "str | None"
         entry_type: "str | None"
-        nonce: "AnyBytes | None"
-        tag: "AnyBytes | None"
-        ct: "AnyBytes | None"
+        content: "LeafContent | None"
 
         def __init__(
             self,
@@ -3486,9 +4204,7 @@ if TYPE_CHECKING:
             witness_commit: "AnyBytes | None" = None,
             app_id: "str | None" = None,
             entry_type: "str | None" = None,
-            nonce: "AnyBytes | None" = None,
-            tag: "AnyBytes | None" = None,
-            ct: "AnyBytes | None" = None,
+            content: "LeafContent | None" = None,
         ) -> None:
             pass
 
@@ -7546,692 +8262,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TronRawParameter"]:
-            return isinstance(msg, cls)
-
-    class WARDQueueUpdate(protobuf.MessageType):
-        address: "AnyBytes"
-        new_value: "AnyBytes"
-        app_id: "str | None"
-        key_type: "str | None"
-        device_id: "int | None"
-
-        def __init__(
-            self,
-            *,
-            address: "AnyBytes",
-            new_value: "AnyBytes",
-            app_id: "str | None" = None,
-            key_type: "str | None" = None,
-            device_id: "int | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDQueueUpdate"]:
-            return isinstance(msg, cls)
-
-    class WARDQueueUpdateAck(protobuf.MessageType):
-        pending_id: "int | None"
-        wallet_id: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            pending_id: "int | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDQueueUpdateAck"]:
-            return isinstance(msg, cls)
-
-    class WARDPerformUpdate(protobuf.MessageType):
-        pending_id: "int | None"
-
-        def __init__(
-            self,
-            *,
-            pending_id: "int | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformUpdate"]:
-            return isinstance(msg, cls)
-
-    class WARDPerformUpdateAck(protobuf.MessageType):
-        counter: "int"
-        new_root: "AnyBytes | None"
-        mac: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
-        ward_id: "AnyBytes | None"
-        entry_key: "AnyBytes | None"
-        entry_type: "str | None"
-        nonce: "AnyBytes | None"
-        tag: "AnyBytes | None"
-        ct: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            new_root: "AnyBytes | None" = None,
-            mac: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-            ward_id: "AnyBytes | None" = None,
-            entry_key: "AnyBytes | None" = None,
-            entry_type: "str | None" = None,
-            nonce: "AnyBytes | None" = None,
-            tag: "AnyBytes | None" = None,
-            ct: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformUpdateAck"]:
-            return isinstance(msg, cls)
-
-    class WARDConfirmedByWM(protobuf.MessageType):
-        counter: "int"
-        mac: "AnyBytes | None"
-        wm_signature: "AnyBytes"
-        pending_id: "int | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            wm_signature: "AnyBytes",
-            mac: "AnyBytes | None" = None,
-            pending_id: "int | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmedByWM"]:
-            return isinstance(msg, cls)
-
-    class WARDConfirmedByWMAck(protobuf.MessageType):
-        counter: "int"
-        new_root: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
-        root_mac: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            new_root: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-            root_mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmedByWMAck"]:
-            return isinstance(msg, cls)
-
-    class WARDSync(protobuf.MessageType):
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSync"]:
-            return isinstance(msg, cls)
-
-    class WARDSyncAck(protobuf.MessageType):
-        nonce: "AnyBytes"
-        version: "int"
-        wallet_id: "AnyBytes | None"
-        ward_id: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            nonce: "AnyBytes",
-            version: "int",
-            wallet_id: "AnyBytes | None" = None,
-            ward_id: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSyncAck"]:
-            return isinstance(msg, cls)
-
-    class WARDIngestAttestation(protobuf.MessageType):
-        counter: "int"
-        mac: "AnyBytes | None"
-        wm_signature: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            wm_signature: "AnyBytes",
-            mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDIngestAttestation"]:
-            return isinstance(msg, cls)
-
-    class WARDIngestAttestationAck(protobuf.MessageType):
-        counter: "int"
-        wallet_id: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            wallet_id: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDIngestAttestationAck"]:
-            return isinstance(msg, cls)
-
-    class WARDListPendingEdits(protobuf.MessageType):
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDListPendingEdits"]:
-            return isinstance(msg, cls)
-
-    class WARDListPendingEditsAck(protobuf.MessageType):
-        addresses: "list[AnyBytes]"
-        wallet_id: "AnyBytes | None"
-        pending_ids: "list[int]"
-        ward_id: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            addresses: "list[AnyBytes] | None" = None,
-            pending_ids: "list[int] | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-            ward_id: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDListPendingEditsAck"]:
-            return isinstance(msg, cls)
-
-    class WARDReconcile(protobuf.MessageType):
-        root: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            root: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDReconcile"]:
-            return isinstance(msg, cls)
-
-    class WARDReconcileAck(protobuf.MessageType):
-        counter: "int"
-        new_root: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
-        root_mac: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            new_root: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-            root_mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDReconcileAck"]:
-            return isinstance(msg, cls)
-
-    class WARDLookup(protobuf.MessageType):
-        address: "AnyBytes"
-        proof: "list[AnyBytes]"
-        witness_entry_key: "AnyBytes | None"
-        witness_commit: "AnyBytes | None"
-        app_id: "str | None"
-        key_type: "str | None"
-        device_id: "int | None"
-        nonce: "AnyBytes | None"
-        tag: "AnyBytes | None"
-        ct: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            address: "AnyBytes",
-            proof: "list[AnyBytes] | None" = None,
-            witness_entry_key: "AnyBytes | None" = None,
-            witness_commit: "AnyBytes | None" = None,
-            app_id: "str | None" = None,
-            key_type: "str | None" = None,
-            device_id: "int | None" = None,
-            nonce: "AnyBytes | None" = None,
-            tag: "AnyBytes | None" = None,
-            ct: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDLookup"]:
-            return isinstance(msg, cls)
-
-    class WARDLookupAck(protobuf.MessageType):
-        valid: "bool"
-        counter: "int"
-        membership: "bool | None"
-        wallet_id: "AnyBytes | None"
-        ward_id: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            valid: "bool",
-            counter: "int",
-            membership: "bool | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-            ward_id: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDLookupAck"]:
-            return isinstance(msg, cls)
-
-    class WARDDebugSetRoot(protobuf.MessageType):
-        root: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            root: "AnyBytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDebugSetRoot"]:
-            return isinstance(msg, cls)
-
-    class WARDDebugSetRootAck(protobuf.MessageType):
-        counter: "int"
-        new_root: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
-        root_mac: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            new_root: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-            root_mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDebugSetRootAck"]:
-            return isinstance(msg, cls)
-
-    class WARDProofRequest(protobuf.MessageType):
-        pending_id: "int | None"
-        entry_key: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            entry_key: "AnyBytes",
-            pending_id: "int | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDProofRequest"]:
-            return isinstance(msg, cls)
-
-    class WARDProofAck(protobuf.MessageType):
-        proof: "list[AnyBytes]"
-        witness_entry_key: "AnyBytes | None"
-        witness_commit: "AnyBytes | None"
-        entry_type: "str | None"
-        nonce: "AnyBytes | None"
-        tag: "AnyBytes | None"
-        ct: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            proof: "list[AnyBytes] | None" = None,
-            witness_entry_key: "AnyBytes | None" = None,
-            witness_commit: "AnyBytes | None" = None,
-            entry_type: "str | None" = None,
-            nonce: "AnyBytes | None" = None,
-            tag: "AnyBytes | None" = None,
-            ct: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDProofAck"]:
-            return isinstance(msg, cls)
-
-    class WARDExportKeys(protobuf.MessageType):
-        key_type: "str | None"
-
-        def __init__(
-            self,
-            *,
-            key_type: "str | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDExportKeys"]:
-            return isinstance(msg, cls)
-
-    class WARDExportKeysAck(protobuf.MessageType):
-        k_index: "AnyBytes | None"
-        k_data: "AnyBytes | None"
-        key_type: "str | None"
-
-        def __init__(
-            self,
-            *,
-            k_index: "AnyBytes | None" = None,
-            k_data: "AnyBytes | None" = None,
-            key_type: "str | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDExportKeysAck"]:
-            return isinstance(msg, cls)
-
-    class WARDDiscardPending(protobuf.MessageType):
-        pending_id: "int | None"
-
-        def __init__(
-            self,
-            *,
-            pending_id: "int | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDiscardPending"]:
-            return isinstance(msg, cls)
-
-    class WARDDiscardPendingAck(protobuf.MessageType):
-        discarded_address: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
-        pending_id: "int | None"
-
-        def __init__(
-            self,
-            *,
-            discarded_address: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
-            pending_id: "int | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDiscardPendingAck"]:
-            return isinstance(msg, cls)
-
-    class WARDBatchLeaf(protobuf.MessageType):
-        entry_key: "AnyBytes"
-        entry_type: "str | None"
-        nonce: "AnyBytes | None"
-        tag: "AnyBytes | None"
-        ct: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            entry_key: "AnyBytes",
-            entry_type: "str | None" = None,
-            nonce: "AnyBytes | None" = None,
-            tag: "AnyBytes | None" = None,
-            ct: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDBatchLeaf"]:
-            return isinstance(msg, cls)
-
-    class WARDPerformBatch(protobuf.MessageType):
-        pending_ids: "list[int]"
-
-        def __init__(
-            self,
-            *,
-            pending_ids: "list[int] | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformBatch"]:
-            return isinstance(msg, cls)
-
-    class WARDPerformBatchAck(protobuf.MessageType):
-        counter: "int"
-        from_root: "AnyBytes | None"
-        new_root: "AnyBytes | None"
-        mac: "AnyBytes | None"
-        ward_id: "AnyBytes | None"
-        head_mac: "AnyBytes"
-        auth_commit: "AnyBytes"
-        sig_commit: "AnyBytes | None"
-        leaves: "list[WARDBatchLeaf]"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            head_mac: "AnyBytes",
-            auth_commit: "AnyBytes",
-            leaves: "list[WARDBatchLeaf] | None" = None,
-            from_root: "AnyBytes | None" = None,
-            new_root: "AnyBytes | None" = None,
-            mac: "AnyBytes | None" = None,
-            ward_id: "AnyBytes | None" = None,
-            sig_commit: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformBatchAck"]:
-            return isinstance(msg, cls)
-
-    class WARDConfirmBatchByWM(protobuf.MessageType):
-        counter: "int"
-        mac: "AnyBytes | None"
-        wm_signature: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            wm_signature: "AnyBytes",
-            mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmBatchByWM"]:
-            return isinstance(msg, cls)
-
-    class WARDConfirmBatchByWMAck(protobuf.MessageType):
-        counter: "int"
-        new_root: "AnyBytes | None"
-        ward_id: "AnyBytes | None"
-        root_mac: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            new_root: "AnyBytes | None" = None,
-            ward_id: "AnyBytes | None" = None,
-            root_mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmBatchByWMAck"]:
-            return isinstance(msg, cls)
-
-    class WARDPerformRevert(protobuf.MessageType):
-        stuck_counter: "int"
-        stuck_root: "AnyBytes | None"
-        prev_root: "AnyBytes | None"
-        forward_auth_commit: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            stuck_counter: "int",
-            forward_auth_commit: "AnyBytes",
-            stuck_root: "AnyBytes | None" = None,
-            prev_root: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformRevert"]:
-            return isinstance(msg, cls)
-
-    class WARDPerformRevertAck(protobuf.MessageType):
-        counter: "int"
-        from_root: "AnyBytes | None"
-        new_root: "AnyBytes | None"
-        mac: "AnyBytes | None"
-        ward_id: "AnyBytes | None"
-        head_mac: "AnyBytes"
-        auth_revert: "AnyBytes"
-        sig_commit: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            head_mac: "AnyBytes",
-            auth_revert: "AnyBytes",
-            from_root: "AnyBytes | None" = None,
-            new_root: "AnyBytes | None" = None,
-            mac: "AnyBytes | None" = None,
-            ward_id: "AnyBytes | None" = None,
-            sig_commit: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDPerformRevertAck"]:
-            return isinstance(msg, cls)
-
-    class WARDConfirmRevertByWM(protobuf.MessageType):
-        counter: "int"
-        mac: "AnyBytes | None"
-        wm_signature: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            wm_signature: "AnyBytes",
-            mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmRevertByWM"]:
-            return isinstance(msg, cls)
-
-    class WARDConfirmRevertByWMAck(protobuf.MessageType):
-        counter: "int"
-        new_root: "AnyBytes | None"
-        ward_id: "AnyBytes | None"
-        root_mac: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            new_root: "AnyBytes | None" = None,
-            ward_id: "AnyBytes | None" = None,
-            root_mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDConfirmRevertByWMAck"]:
-            return isinstance(msg, cls)
-
-    class WARDChainLink(protobuf.MessageType):
-        from_counter: "int"
-        from_root: "AnyBytes | None"
-        to_counter: "int"
-        to_root: "AnyBytes | None"
-        auth_commit: "AnyBytes"
-        sig_commit: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            from_counter: "int",
-            to_counter: "int",
-            auth_commit: "AnyBytes",
-            from_root: "AnyBytes | None" = None,
-            to_root: "AnyBytes | None" = None,
-            sig_commit: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDChainLink"]:
-            return isinstance(msg, cls)
-
-    class WARDVerifyChain(protobuf.MessageType):
-        links: "list[WARDChainLink]"
-
-        def __init__(
-            self,
-            *,
-            links: "list[WARDChainLink] | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDVerifyChain"]:
-            return isinstance(msg, cls)
-
-    class WARDVerifyChainAck(protobuf.MessageType):
-        counter: "int"
-        new_root: "AnyBytes | None"
-        ward_id: "AnyBytes | None"
-        root_mac: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int",
-            new_root: "AnyBytes | None" = None,
-            ward_id: "AnyBytes | None" = None,
-            root_mac: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDVerifyChainAck"]:
             return isinstance(msg, cls)
 
     class WebAuthnListResidentCredentials(protobuf.MessageType):
