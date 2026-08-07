@@ -22,6 +22,7 @@ reboot is best-effort. Needs a device or emulator to exercise end-to-end.
 from __future__ import annotations
 
 import argparse
+import json
 import struct
 import sys
 import tempfile
@@ -132,7 +133,23 @@ def main() -> None:
         action="store_true",
         help="skip the pre-upload consistency guard (not recommended)",
     )
-    ap.add_argument("--reconnect-retries", type=int, default=30)
+    ap.add_argument(
+        "--skip-nrf",
+        action="store_true",
+        help="do not OTA the nRF image even if the bundle carries one",
+    )
+    ap.add_argument(
+        "--force-nrf",
+        action="store_true",
+        help="TEST: omit the nRF image-hash hint so the device can't skip the "
+        "update-required check and always streams+pushes the nRF (the image is "
+        "still fold-verified). Use to exercise the push when the nRF is already "
+        "current.",
+    )
+    # The phase-2 boot can run an autonomous nRF push (~30 s, nRF in DFU) BEFORE
+    # the device re-advertises/enumerates, so the reconnect window must comfortably
+    # exceed boardloader-install + push + enumeration. ~1 attempt/sec.
+    ap.add_argument("--reconnect-retries", type=int, default=120)
     ap.add_argument(
         "--tamper",
         choices=sorted(_TAMPERS),
@@ -173,6 +190,33 @@ def main() -> None:
         args.firmware = args.firmware or bundle_dir / f"{args.variant}.bin"
     if args.bootloader is None or args.firmware is None:
         raise SystemExit("need --bootloader + --firmware, or --bundle + --variant")
+
+    # nRF OTA payload from the bundle's bundle.json `nrf` block (co-path + image
+    # hash + image file). The nRF image is committed as a model-tree leaf under
+    # the same boot-header signature (see firmware_pq_sign.py --nrf); here we
+    # carry the co-path + image so phase 1 can stream it.
+    nrf_image: bytes | None = None
+    nrf_co_path: bytes | None = None
+    nrf_image_hash: bytes | None = None
+    if args.bundle is not None and not args.skip_nrf:
+        bundle_json = bundle_dir / "bundle.json"
+        nrf_meta = (
+            json.loads(bundle_json.read_text()).get("nrf")
+            if bundle_json.exists()
+            else None
+        )
+        if nrf_meta:
+            nrf_image = (bundle_dir / nrf_meta["image"]).read_bytes()
+            nrf_co_path = b"".join(bytes.fromhex(n) for n in nrf_meta["co_path"])
+            nrf_image_hash = bytes.fromhex(nrf_meta["image_hash"])
+            if len(nrf_image) != nrf_meta["length"]:
+                raise SystemExit(
+                    f"nRF image length {len(nrf_image)} != bundle.json {nrf_meta['length']}"
+                )
+            if args.force_nrf:
+                # Omit the hint -> the device's skip-check can't match -> it always
+                # streams + pushes (the image is still fold-verified on-device).
+                nrf_image_hash = None
 
     # --- Pre-upload guard: refuse to OTA an unsigned bootloader or a variant whose
     #     proof does not fold to its firmware_root (reuses the build-time guard). The
@@ -223,6 +267,11 @@ def main() -> None:
     mode = f"bl code available ({len(bl_code)} B); device decides header-only vs full"
     if is_custom:
         mode += " [CUSTOM/unofficial]"
+    if nrf_image is not None:
+        mode += (
+            f" + nRF OTA available ({len(nrf_image)} B, "
+            f"{len(nrf_co_path) // 32}-node co-path; device decides update-required)"
+        )
     print(
         f"boot header: {len(boot_header)} B | manifest: {len(manifest)} B | "
         f"proof: {len(proof)} node(s) | modules: {names} | "
@@ -289,26 +338,42 @@ def main() -> None:
         _client, session = connect()
         if session.features.bootloader_mode is not True:
             raise SystemExit("device must be in bootloader mode")
-        streamed = firmware.firmware_begin(
-            session, boot_header, module_headers, code=bl_code
+        served = firmware.firmware_begin(
+            session,
+            boot_header,
+            module_headers,
+            code=bl_code,
+            nrf_image=nrf_image,
+            nrf_co_path=nrf_co_path,
+            nrf_image_hash=nrf_image_hash,
         )
-        # Both cases stage the new boot header and reboot; the boardloader applies
-        # it via the UCB, then the freshly-booted bootloader installs the firmware
-        # modules (phase 2). Only the full path also replaces the bootloader code.
-        if streamed:
-            done = (
-                "full bootloader streamed -- device's choice); device is rebooting "
-                "to install the new bootloader, then the firmware (phase 2)"
+        # `served` = bytes the device actually pulled per image. Report exactly
+        # what happened so an nRF that was skipped (already current) is visible
+        # rather than silent. Both cases stage the new boot header + reboot; the
+        # boardloader installs it, then the freshly-booted bootloader installs the
+        # firmware modules (phase 2). The nRF is only STAGED here (host->STM); the
+        # STM->nRF push runs autonomously on the phase-2 boot, before firmware.
+        bl_done = (
+            f"full bootloader streamed ({served['code']} B)"
+            if served["code"]
+            else "header-only (bootloader code unchanged)"
+        )
+        if nrf_image is None:
+            nrf_done = "no nRF in bundle"
+        elif served["nrf"]:
+            nrf_done = (
+                f"nRF STAGED ({served['nrf']} B streamed; pushed on the phase-2 boot)"
             )
         else:
-            done = (
-                "header-only -- device's choice, bootloader code unchanged); device "
-                "is rebooting to apply the new boot header, then install the firmware "
-                "(phase 2)"
-            )
-        print(f"phase 1 done ({done} ...")
+            nrf_done = "nRF not staged (device reports it already current)"
+        print(f"phase 1 done: {bl_done}; {nrf_done}; rebooting -> phase 2 ...")
 
         # --- Reconnect across the boardloader-mediated reboot ---
+        # On the phase-2 boot the new bootloader may FIRST push the staged nRF
+        # (deferred from phase 1) over serial recovery -- ~30 s during which the
+        # nRF is in DFU and the device does not advertise/enumerate. The retry
+        # window (--reconnect-retries) is sized to wait that out; a slow reconnect
+        # here is expected on a coupled boot+nRF update, not a failure.
         time.sleep(3)
         session2 = connect(retries=args.reconnect_retries)[1]
         print("reconnected in bootloader mode; phase 2: streaming firmware ...")
