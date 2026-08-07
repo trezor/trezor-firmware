@@ -17,8 +17,8 @@ from ..layout import (
     confirm_invocation,
     confirm_invoke_contract_args,
     format_amount,
-    parse_sac_approve,
-    parse_sac_transfer,
+    parse_sep41_approve,
+    parse_sep41_transfer,
     sac_approve_title,
     verify_asset_hint,
 )
@@ -550,13 +550,13 @@ async def _confirm_invoke_contract(
     asset = verify_asset_hint(args, network_id)
 
     if asset is not None:
-        transfer = parse_sac_transfer(args)
+        transfer = parse_sep41_transfer(args)
         if transfer is not None:
             return await _confirm_sac_transfer(
                 transfer, asset, source_account, args.contract_address
             )
 
-        approve = parse_sac_approve(args)
+        approve = parse_sep41_approve(args)
         if approve is not None:
             return await _confirm_sac_approve(
                 approve, asset, source_account, args.contract_address

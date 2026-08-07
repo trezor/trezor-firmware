@@ -309,7 +309,9 @@ def verify_asset_hint(
     return asset
 
 
-def parse_sac_transfer(args: StellarInvokeContractArgs) -> tuple[str, str, int] | None:
+def parse_sep41_transfer(
+    args: StellarInvokeContractArgs,
+) -> tuple[str, str, int] | None:
     """Read a SEP-41 `transfer(from, to, amount)` call, or None if it is not one."""
     if args.function_name != _SEP41_TRANSFER or len(args.args) != 3:
         return None
@@ -321,7 +323,7 @@ def parse_sac_transfer(args: StellarInvokeContractArgs) -> tuple[str, str, int] 
     return from_address, to_address, amount
 
 
-def parse_sac_approve(
+def parse_sep41_approve(
     args: StellarInvokeContractArgs,
 ) -> tuple[str, str, int, int] | None:
     """Read a SEP-41 `approve(from, spender, amount, live_until_ledger)` call."""
@@ -386,7 +388,7 @@ async def confirm_sac_invocation(
     `transfer` / `approve` is left to the generic contract flow
     (returns False).
     """
-    transfer = parse_sac_transfer(args)
+    transfer = parse_sep41_transfer(args)
     if transfer is not None:
         from_address, to_address, amount = transfer
         # The transaction root shows a transfer as "Send": it is the
@@ -411,7 +413,7 @@ async def confirm_sac_invocation(
         )
         return True
 
-    approve = parse_sac_approve(args)
+    approve = parse_sep41_approve(args)
     if approve is not None:
         from_address, spender, amount, live_until_ledger = approve
         action = sac_approve_title(amount)

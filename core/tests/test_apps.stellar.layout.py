@@ -29,8 +29,8 @@ if not utils.BITCOIN_ONLY:
         _format_sc_val,
         _format_u128,
         _format_u256,
-        parse_sac_approve,
-        parse_sac_transfer,
+        parse_sep41_approve,
+        parse_sep41_transfer,
     )
     from apps.stellar.operations.layout import _is_root_auth_entry
 
@@ -224,12 +224,12 @@ _ACCOUNT_B = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVV"
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestStellarParseSacCall(unittest.TestCase):
+class TestStellarParseSep41Call(unittest.TestCase):
     """The SEP-41 parsers dispatch between the token UI and the raw contract
     flow: anything but a well-formed call must parse as None (fall back),
     never as a mangled token operation."""
 
-    def test_parse_sac_transfer(self):
+    def test_parse_sep41_transfer(self):
         TESTS = [
             # (function_name, args, expected)
             (
@@ -282,9 +282,9 @@ class TestStellarParseSacCall(unittest.TestCase):
             call = StellarInvokeContractArgs(
                 contract_address=_CONTRACT_A, function_name=function_name, args=args
             )
-            self.assertEqual(parse_sac_transfer(call), expected)
+            self.assertEqual(parse_sep41_transfer(call), expected)
 
-    def test_parse_sac_approve(self):
+    def test_parse_sep41_approve(self):
         approve_args = [
             _address(_ACCOUNT_A),
             _address(_ACCOUNT_B),
@@ -326,7 +326,7 @@ class TestStellarParseSacCall(unittest.TestCase):
             call = StellarInvokeContractArgs(
                 contract_address=_CONTRACT_A, function_name=function_name, args=args
             )
-            self.assertEqual(parse_sac_approve(call), expected)
+            self.assertEqual(parse_sep41_approve(call), expected)
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
