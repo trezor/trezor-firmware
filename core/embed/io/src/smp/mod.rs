@@ -12,10 +12,11 @@ use core::convert::Infallible;
 use base64::{base64_decode, base64_encode};
 use crc16::crc16_itu_t;
 use minicbor::encode::write::Write;
+use rtl::error::{fatal_error, unwrap};
+use sys::irq::{irq_lock, irq_unlock};
 use sys::time::{Duration, Instant};
 
-use crate::trezorhal::irq::{irq_lock, irq_unlock};
-use crate::trezorhal::nrf::send_data;
+use crate::nrf::send_data;
 
 pub const SMP_HEADER_SIZE: usize = 8;
 

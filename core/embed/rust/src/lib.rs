@@ -48,9 +48,6 @@ mod trezorhal;
 #[cfg(feature = "ui")]
 pub mod ui;
 
-#[cfg(feature = "smp")]
-pub mod smp;
-
 pub mod util;
 
 #[cfg(feature = "bootloader")]

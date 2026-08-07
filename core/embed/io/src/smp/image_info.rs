@@ -1,10 +1,11 @@
 use minicbor::data::Type;
-use minicbor::{decode, Decoder, Encoder};
+use minicbor::{Decoder, Encoder, decode};
+use rtl::error::unwrap;
 use sys::time::Duration;
 
 use super::{
-    receiver_acquire, receiver_release, send_request, wait_for_response, MsgType, SmpBuffer,
-    SmpHeader, SMP_CMD_ID_IMAGE_STATE, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_READ,
+    MsgType, SMP_CMD_ID_IMAGE_STATE, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_READ, SmpBuffer,
+    SmpHeader, receiver_acquire, receiver_release, send_request, wait_for_response,
 };
 
 /// MCUboot-compatible version structure matching image header format

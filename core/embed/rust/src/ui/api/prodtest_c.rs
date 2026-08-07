@@ -2,6 +2,7 @@
 use cty::int16_t;
 #[cfg(feature = "touch")]
 use heapless::Vec;
+use rtl::util::from_c_array;
 
 use crate::trezorhal::layout_buf::{c_layout_t, LayoutBuffer};
 use crate::trezorhal::sysevent::{parse_event, sysevents_t};
@@ -11,7 +12,6 @@ use crate::ui::ui_prodtest::{ProdtestLayoutType, ProdtestUI};
 use crate::ui::ModelUI;
 #[cfg(feature = "touch")]
 use crate::ui::{event::TouchEvent, layout::simplified::touch_unpack};
-use crate::util::from_c_array;
 
 #[no_mangle]
 extern "C" fn screen_prodtest_event(layout: *mut c_layout_t, signalled: &sysevents_t) -> u32 {

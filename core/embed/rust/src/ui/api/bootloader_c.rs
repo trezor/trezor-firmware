@@ -1,7 +1,8 @@
+use rtl::util::{from_c_array, from_c_str};
+
 use crate::strutil::hexlify;
 use crate::ui::ui_bootloader::BootloaderUI;
 use crate::ui::ModelUI;
-use crate::util::{from_c_array, from_c_str};
 
 #[no_mangle]
 extern "C" fn screen_welcome(ui_action_result: *mut u32) -> u32 {
