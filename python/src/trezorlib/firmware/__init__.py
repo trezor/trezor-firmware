@@ -138,8 +138,11 @@ def firmware_begin(
     boot_header: bytes,
     module_headers: bytes,
     code: t.Optional[bytes] = None,
+    nrf_image: t.Optional[bytes] = None,
+    nrf_co_path: t.Optional[bytes] = None,
+    nrf_image_hash: t.Optional[bytes] = None,
     progress_update: t.Callable[[int], t.Any] = lambda _: None,
-) -> bool:
+) -> t.Dict[str, int]:
     """Phase 1 of a Merkle-tree firmware update.
 
     Sends the new signed boot header and the new firmware's module headers. The
@@ -151,8 +154,13 @@ def firmware_begin(
     DEVICE decides whether it is used: if the device's current bootloader code
     already conforms to the new header it does a header-only update and requests
     nothing; otherwise it requests + streams the code (full bootloader update).
-    Returns True iff the device streamed the code. If `code` is None the device
-    can only do a header-only update and will fail if the code actually changed.
+    If `code` is None the device can only do a header-only update and will fail
+    if the code actually changed.
+
+    Returns a dict of bytes actually streamed per image, keyed "code" and "nrf"
+    -- so the caller can tell a full-bootloader update (code > 0) from
+    header-only (code == 0), and whether the nRF was actually pushed (nrf > 0)
+    versus skipped by the device as already-current/absent (nrf == 0).
 
     After the device reboots and the boardloader installs the new boot header,
     reconnect and call `update()` with the firmware modules to run phase 2.
@@ -162,6 +170,15 @@ def firmware_begin(
     the authenticated variant itself -- it requires an unlocked bootloader and
     runs the firmware unprivileged with a boot warning, storage-isolated. No host
     flag is needed.
+
+    Provide `nrf_image` + `nrf_co_path` (+ `nrf_image_hash`, an update-required
+    hint) to also OTA the nRF (BLE co-processor) firmware in the same session:
+    the nRF MCUboot image is a model-tree leaf under the same boot-header
+    signature, delivered while the current bootloader still provides the (BLE)
+    link. A phase-1 FirmwareRequest carries `coprocessor_index`: 0 = the
+    bootloader code, 1 = the nRF image -- so serve the matching source (the
+    device rejects nothing here; the two never overlap on offset). If the running
+    nRF is already current the device requests nothing for it.
     """
     if session.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
@@ -171,23 +188,31 @@ def firmware_begin(
             boot_header=boot_header,
             module_headers=module_headers,
             code_length=len(code) if code else None,
+            nrf_length=len(nrf_image) if nrf_image else None,
+            nrf_co_path=nrf_co_path,
+            nrf_image_hash=nrf_image_hash,
         )
     )
 
-    # The device drives: it requests the code only if its current bootloader code
-    # does not conform to the new header (otherwise it goes straight to Success).
-    streamed = False
+    # The device drives the request loop, tagging each FirmwareRequest with the
+    # image it wants: coprocessor_index 0 = the bootloader code (requested only if
+    # the current code does not conform to the new header), 1 = the nRF image.
+    # Track bytes served per image so the caller knows what the device actually
+    # pulled (an already-current nRF is simply never requested).
+    served = {"code": 0, "nrf": 0}
     while isinstance(resp, messages.FirmwareRequest):
-        assert code is not None, "device requested bootloader code but none supplied"
-        streamed = True
+        is_nrf = (resp.coprocessor_index or 0) != 0
+        src = nrf_image if is_nrf else code
+        assert src is not None, "device requested image bytes but none supplied"
         length = resp.length
-        payload = code[resp.offset : resp.offset + length]
+        payload = src[resp.offset : resp.offset + length]
         digest = blake2s(payload).digest()
         resp = session.call(messages.FirmwareUpload(payload=payload, hash=digest))
+        served["nrf" if is_nrf else "code"] += length
         progress_update(length)
 
     messages.Success.ensure_isinstance(resp)
-    return streamed
+    return served
 
 
 def get_hash(session: Session, challenge: bytes | None) -> bytes:

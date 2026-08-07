@@ -143,11 +143,15 @@ def sign(
     output: Path,
     variants: list[str],
     flash_target: str | None,
+    nrf: Path | None = None,
+    nrf_pq_native: bool = False,
 ) -> None:
     """Fold the founder firmware_root over all variants into the bootloader, re-sign,
     and bake each variant's proof into its firmware.bin. By default the bootloader is
     left BARE (firmware_type=0) so firmware must be installed via OTA; with a
-    flash_target, that variant's firmware_type is stamped in for direct-flashing."""
+    flash_target, that variant's firmware_type is stamped in for direct-flashing.
+    With `nrf`, the nRF image is committed as a model-tree leaf under the same
+    signature and its OTA co-path/hash are recorded in bundle.json."""
     cmd = [sys.executable, str(SIGNER)]
     for v in variants:
         cmd += ["--firmware", str(output / f"{v}.bin")]
@@ -157,6 +161,10 @@ def sign(
         "--manifest-out",
         str(output / "bundle.json"),
     ]
+    if nrf is not None:
+        cmd += ["--nrf", str(nrf)]
+        if nrf_pq_native:
+            cmd += ["--nrf-pq-native"]
     if flash_target is None:
         cmd += ["--bare"]
     else:
@@ -248,15 +256,60 @@ def check(output: Path, variants: list[str], flash_target: str | None) -> list[s
     return problems
 
 
-def zip_bundle(output: Path, variants: list[str]) -> Path:
+def default_nrf_image(model: str, bootloader_devel: bool) -> Path | None:
+    """The committed nRF MCUboot image for this model, matching what the coreapp
+    would embed (firmware/build.rs: trezor-ble{-dev}.bin). None if absent."""
+    suffix = "-dev" if bootloader_devel else ""
+    path = CORE / "embed" / "models" / model / f"trezor-ble{suffix}.bin"
+    return path if path.exists() else None
+
+
+def warn_if_nrf_stale(committed: Path) -> None:
+    """Warn when a FRESHER nRF build is sitting in nordic/ unstaged.
+
+    The committed image is what gets signed as the model-tree leaf and embedded in
+    the coreapp. Building the nRF does NOT update it -- build_sign_flash.sh -d -s
+    does the copy -- so it is entirely possible to sign a leaf that is weeks older
+    than the image you just built, with nothing to tell you. That silence has
+    already cost a debugging session, hence this check.
+    """
+    built = (
+        CORE.parent / "nordic" / "trezor" / "build" / "trezor-ble" / "zephyr"
+        / "zephyr.trz.bin"
+    )
+    try:
+        if not built.exists():
+            return
+        b, c = built.stat().st_mtime, committed.stat().st_mtime
+        if b <= c:
+            return
+    except OSError:
+        return
+    from datetime import datetime as _dt
+
+    fmt = "%Y-%m-%d %H:%M"
+    print(
+        f"WARNING: a newer nRF build exists but was never staged:\n"
+        f"    built    {_dt.fromtimestamp(b).strftime(fmt)}  {built}\n"
+        f"    signing  {_dt.fromtimestamp(c).strftime(fmt)}  {committed}\n"
+        f"  The tree leaf and the embedded coreapp image will both be the OLDER\n"
+        f"  one. To stage the fresh build, re-run the nRF build with -d -s\n"
+        f"  (build_sign_flash.sh), or pass --nrf <path> to use it for the tree only."
+    )
+
+
+def zip_bundle(output: Path, variants: list[str], nrf_name: str | None = None) -> Path:
     """Pack the bundle into a single portable <name>.zip (flat: bootloader.bin, each
-    <variant>.bin, bundle.json). Each <variant>.bin is self-contained (its Merkle
-    proof is baked into the manifest region). firmware_pq_update.py accepts this zip
-    directly via `--bundle <zip> --variant <name>` (it extracts to a temp dir)."""
+    <variant>.bin, bundle.json, and the nRF image if present). Each <variant>.bin is
+    self-contained (its Merkle proof is baked into the manifest region).
+    firmware_pq_update.py accepts this zip directly via `--bundle <zip> --variant
+    <name>` (it extracts to a temp dir)."""
     zip_path = output.parent / f"{output.name}.zip"
     files = [output / "bootloader.bin", output / "bundle.json"]
     for v in variants:
         files.append(output / f"{v}.bin")
+    if nrf_name is not None:
+        files.append(output / nrf_name)
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for f in files:
             if f.exists():
@@ -269,6 +322,7 @@ def _summary(
     variants: list[str],
     flash_target: str | None,
     archive: Path | None = None,
+    nrf_name: str | None = None,
 ) -> None:
     rel = output.relative_to(CORE) if output.is_relative_to(CORE) else output
     print(f"\nbundle OK -> {rel}/")
@@ -283,6 +337,8 @@ def _summary(
     )
     for v in variants:
         print(f"  {v}.bin  (proof baked in)")
+    if nrf_name is not None:
+        print(f"  {nrf_name}  (nRF leaf; co-path in bundle.json)")
     print("  bundle.json")
     if archive is not None:
         arel = archive.relative_to(CORE) if archive.is_relative_to(CORE) else archive
@@ -324,6 +380,24 @@ def main() -> None:
         "--flash-target",
         help="stamp THIS variant's firmware_type into the bootloader for direct "
         "flashing (default: none -> BARE bootloader; install firmware via OTA)",
+    )
+    ap.add_argument(
+        "--nrf",
+        type=Path,
+        help="signed nRF MCUboot image to commit as a model-tree leaf + include in "
+        "the OTA bundle (default: the model's committed trezor-ble{-dev}.bin)",
+    )
+    ap.add_argument(
+        "--nrf-pq-native",
+        action="store_true",
+        help="build the nRF image as PQ-NATIVE (founder signature + co-path embedded "
+        "in its TLVs, verified by its own MCUboot). Needs an nRF bootloader built "
+        "with CONFIG_BOOT_FOUNDER_TREE=y.",
+    )
+    ap.add_argument(
+        "--no-nrf",
+        action="store_true",
+        help="do not include the nRF image (single-leaf bootloader signing)",
     )
     # Two independent axes (do NOT conflate):
     #   --production      : build settings / feature set.
@@ -369,6 +443,21 @@ def main() -> None:
     if flash_target is not None and flash_target not in variants:
         raise SystemExit(f"--flash-target {flash_target} not among variants {variants}")
 
+    # Resolve the nRF image: explicit --nrf, else the model's committed image
+    # (matching what the coreapp embeds), unless --no-nrf. Copied into the bundle
+    # under its own name so bundle.json's "image" ref + the zip are self-contained.
+    nrf_src: Path | None = None
+    if not args.no_nrf:
+        nrf_src = args.nrf or default_nrf_image(args.model, args.bootloader_devel)
+        if args.nrf and not args.nrf.exists():
+            raise SystemExit(f"--nrf {args.nrf}: not found")
+        # Only meaningful for the committed image: an explicit --nrf is the caller
+        # saying which one they want.
+        if nrf_src is not None and not args.nrf:
+            warn_if_nrf_stale(nrf_src)
+    nrf_in_bundle: Path | None = None
+    nrf_name: str | None = None
+
     if not args.check_only:
         if not args.skip_build:
             build(
@@ -378,7 +467,25 @@ def main() -> None:
                 args.production,
                 args.bootloader_devel,
             )
-        sign(output, variants, flash_target)
+        if nrf_src is not None:
+            nrf_name = nrf_src.name
+            nrf_in_bundle = output / nrf_name
+            # Pad the bundle copy to the flash write block (16 B on U5): the OTA
+            # upload engine requires a flash-aligned image size, but an MCUboot
+            # image is an arbitrary length. MCUboot reads by its header sizes and
+            # ignores trailing bytes, so the padding is inert for the nRF. It is
+            # also outside the model-tree leaf, which covers only MCUboot's signed
+            # region (nrf_tree.nrf_leaf), so the fold is independent of how the
+            # image is padded. Copied (not padded in place) so the committed source
+            # is never modified.
+            raw = nrf_src.read_bytes()
+            nrf_in_bundle.write_bytes(raw + b"\x00" * ((-len(raw)) % 16))
+        sign(output, variants, flash_target, nrf_in_bundle, args.nrf_pq_native)
+    elif nrf_src is not None:
+        # check-only: the image was copied into the bundle by a prior run
+        nrf_name = nrf_src.name
+        if not (output / nrf_name).exists():
+            nrf_name = None
 
     problems = check(output, variants, flash_target)
     if problems:
@@ -386,8 +493,8 @@ def main() -> None:
         for p in problems:
             print(f"  - {p}", file=sys.stderr)
         raise SystemExit(1)
-    archive = zip_bundle(output, variants)
-    _summary(output, variants, flash_target, archive)
+    archive = zip_bundle(output, variants, nrf_name)
+    _summary(output, variants, flash_target, archive, nrf_name)
 
 
 if __name__ == "__main__":
