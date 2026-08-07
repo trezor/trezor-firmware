@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import atexit
 import logging
 import os
 import platform
+import shutil
 import signal
 import subprocess
 import sys
@@ -34,6 +36,28 @@ TREZOR_STORAGE_FILES = (
     "trezor.flash",
     "trezor.sdcard",
 )
+
+
+def kill_process(process: subprocess.Popen) -> None:
+    """Kill a process we spawned, unless it is gone already."""
+    if process.poll() is None:
+        process.kill()
+
+
+def stop_tropic_model(tropic_model: TropicModel) -> None:
+    """Shut the Tropic01 model down. Safe to call more than once."""
+    try:
+        tropic_model.stop()
+    except Exception as exc:
+        click.echo(f"Error stopping Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+
+
+def _exit_on_signal(signum: int, frame: object) -> None:
+    """Turn a termination signal into a normal exit, so that cleanup runs.
+
+    `atexit` hooks are skipped when the default signal disposition kills us.
+    """
+    sys.exit(128 + signum)
 
 
 def run_command_with_emulator(emulator: CoreEmulator, command: list[str]) -> int:
@@ -68,13 +92,46 @@ def watch_emulator(emulator: CoreEmulator) -> int:
     return 0
 
 
+def wait_for_debugger(
+    dbg_command: list[str], env: dict[str, str], run_command: list[str] = []
+) -> int:
+    """Run the debugger in the foreground and return its exit code.
+
+    With `-c`, the given command drives the session instead: we wait for the
+    command and return its exit code, stopping the debugger afterwards. Note
+    that the command starts right away, before any debugger has attached.
+
+    Deliberately not `os.execvpe()`: exec skips all of our cleanup, most notably
+    shutting the Tropic01 model down, and a leaked model server silently keeps
+    listening on the same port as the next one.
+    """
+    dbg_process = subprocess.Popen(dbg_command, env=env)
+    # If we are killed before the debugger is, don't leave the emulator behind
+    # holding the Tropic01 model port and the emulator's UDP ports.
+    atexit.register(kill_process, dbg_process)
+    run_process = (
+        subprocess.Popen(run_command, env=env, shell=True) if run_command else None
+    )
+    # Same as in `run_emulator()`: the OS delivers Ctrl-C to every process in
+    # the group, so the debugger gets it too - ignore it here and just wait.
+    # Installed after the spawns, so that the children keep the default
+    # disposition.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    if run_process is None:
+        return dbg_process.wait()
+
+    rc = run_process.wait()
+    dbg_process.send_signal(signal.SIGINT)
+    return rc
+
+
 def run_debugger(
     emulator: CoreEmulator,
     gdb_script_file: str | Path | None,
     valgrind: bool = False,
     run_command: list[str] = [],
-    tropic_model: TropicModel | None = None,
-) -> None:
+) -> int:
     os.chdir(emulator.workdir)
     env = emulator.make_env()
     if valgrind:
@@ -102,16 +159,35 @@ def run_debugger(
         dbg_command += ["--args", str(emulator.executable)]
         dbg_command += emulator.make_args()
 
-    if not run_command:
-        if tropic_model and tropic_model.process and tropic_model.process.pid:
-            click.echo(f"Warning: Tropic01 model (PID {tropic_model.process.pid}) left running", err=True)
-        os.execvpe(dbg_command[0], dbg_command, env)
-    else:
-        dbg_process = subprocess.Popen(dbg_command, env=env)
-        run_process = subprocess.Popen(run_command, env=env, shell=True)
-        rc = run_process.wait()
-        dbg_process.send_signal(signal.SIGINT)
-        sys.exit(rc)
+    return wait_for_debugger(dbg_command, env, run_command)
+
+
+def run_gdbserver(
+    emulator: CoreEmulator,
+    port: int,
+    run_command: list[str] = [],
+) -> int:
+    if shutil.which("gdbserver") is None:
+        raise click.ClickException(
+            "gdbserver not found in PATH. Use -D to run the debugger locally instead."
+        )
+
+    os.chdir(emulator.workdir)
+    env = emulator.make_env()
+    # `--once` ties the emulator's lifetime to the debug session: gdbserver
+    # exits when the client disconnects instead of leaving the emulator running
+    # and waiting for another connection.
+    dbg_command = [
+        "gdbserver",
+        "--once",
+        f"localhost:{port}",
+        str(emulator.executable),
+    ]
+    dbg_command += emulator.make_args()
+
+    click.echo(f"Emulator stopped at entry, waiting for debugger on localhost:{port}")
+
+    return wait_for_debugger(dbg_command, env, run_command)
 
 
 def _from_env(name: str) -> bool:
@@ -130,6 +206,7 @@ def _from_env(name: str) -> bool:
 @click.option("--executable", type=click.Path(exists=True, dir_okay=False), default=os.environ.get("MICROPYTHON"), help="Alternate emulator executable")
 @click.option("-g", "--profiling/--no-profiling", default=_from_env("TREZOR_PROFILING"), help="Run with profiler wrapper")
 @click.option("-G", "--alloc-profiling/--no-alloc-profiling", default=_from_env("TREZOR_MEMPERF"), help="Profile memory allocation (requires special micropython build)")
+@click.option("--gdbserver", metavar="PORT", type=int, is_flag=False, flag_value=2345, default=None, help="Run emulator under gdbserver, listening on PORT (default 2345)")
 @click.option("-h", "--headless", is_flag=True, help="Headless mode (no display, disables animation)")
 @click.option("--heap-size", metavar="SIZE", default="20M", help="Configure heap size")
 @click.option("--main", help="Path to python main file")
@@ -159,6 +236,7 @@ def cli(
     executable: str | Path,
     profiling: bool,
     alloc_profiling: bool,
+    gdbserver: int | None,
     headless: bool,
     heap_size: str,
     main: str,
@@ -207,8 +285,11 @@ def cli(
     if command and not run_command:
         raise click.ClickException("Extra arguments found. Did you mean to use -c?")
 
-    if watch and (command or debugger):
-        raise click.ClickException("Cannot use -w together with -c or -D")
+    if watch and (command or debugger or gdbserver is not None):
+        raise click.ClickException("Cannot use -w together with -c, -D or --gdbserver")
+
+    if gdbserver is not None and (debugger or valgrind):
+        raise click.ClickException("Cannot use --gdbserver together with -D or -V")
 
     if watch and inotify is None:
         raise click.ClickException("inotify module is missing, install with pip")
@@ -222,7 +303,7 @@ def cli(
     if slip0014:
         mnemonics = [" ".join(["all"] * 12)]
 
-    if mnemonics and debugger:
+    if mnemonics and (debugger or gdbserver is not None):
         raise click.ClickException("Cannot load mnemonics when running in debugger")
 
     if mnemonics and production:
@@ -311,46 +392,53 @@ def cli(
             tropic_model.start()
         except Exception as exc:
             click.echo(f"Failed to start Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+        # Shut the model down on every exit path, not just the happy one: an
+        # exception, `sys.exit()`, or a signal would otherwise leave it
+        # listening on its port, where the next run silently finds it again.
+        atexit.register(stop_tropic_model, tropic_model)
+        for sig in (signal.SIGTERM, signal.SIGHUP):
+            signal.signal(sig, _exit_on_signal)
 
-    if debugger or valgrind:
-        run_debugger(emulator, script_gdb_file, valgrind, command, tropic_model)
-        raise RuntimeError("run_debugger should not return")
-
-    emulator.start()
-
-    if mnemonics:
-        if slip0014:
-            label = "SLIP-0014"
-        elif profile:
-            label = profile_dir.name
-        else:
-            label = "Emulator"
-
-        assert emulator.client is not None
-        emulator.client.wipe_device()
-        trezorlib.debuglink.load_device(
-            emulator.client.get_session(passphrase=None),
-            mnemonics,
-            pin=None,
-            passphrase_protection=False,
-            label=label,
-        )
-
-    if record_dir:
-        record_screen(emulator.transport, record_dir)
-
-    if run_command:
-        ret = run_command_with_emulator(emulator, command)
-    elif watch:
-        ret = watch_emulator(emulator)
+    if gdbserver is not None:
+        ret = run_gdbserver(emulator, gdbserver, command)
+    elif debugger or valgrind:
+        ret = run_debugger(emulator, script_gdb_file, valgrind, command)
+        
     else:
-        ret = run_emulator(emulator)
+        emulator.start()
+
+        if mnemonics:
+            if slip0014:
+                label = "SLIP-0014"
+            elif profile:
+                label = profile_dir.name
+            else:
+                label = "Emulator"
+
+            assert emulator.client is not None
+            emulator.client.wipe_device()
+            trezorlib.debuglink.load_device(
+                emulator.client.get_session(passphrase=None),
+                mnemonics,
+                pin=None,
+                passphrase_protection=False,
+                label=label,
+            )
+
+        if record_dir:
+            record_screen(emulator.transport, record_dir)
+
+        if run_command:
+            ret = run_command_with_emulator(emulator, command)
+        elif watch:
+            ret = watch_emulator(emulator)
+        else:
+            ret = run_emulator(emulator)
 
     if tropic_model:
-        try:
-            tropic_model.stop()
-        except Exception as exc:
-            click.echo(f"Error stopping Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+        # Explicit, so that it happens before the profile directory goes away;
+        # the `atexit` hook above is only the fallback.
+        stop_tropic_model(tropic_model)
 
     if tempdir is not None:
         tempdir.cleanup()
