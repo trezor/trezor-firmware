@@ -152,10 +152,15 @@ secbool recv_msg_firmware_erase(protob_io_t *iface, FirmwareErase *msg) {
 }
 
 secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
-                                  uint32_t length) {
+                                  uint32_t length, uint32_t coprocessor_index) {
   MSG_SEND_INIT(FirmwareRequest);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, offset);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(length, length);
+  // 0 => the primary stream (bootloader code / firmware); the host omits it.
+  // k>=1 identifies the k-th co-processor image so the host serves its bytes.
+  if (coprocessor_index != 0) {
+    MSG_SEND_ASSIGN_VALUE(coprocessor_index, coprocessor_index);
+  }
   return MSG_SEND(FirmwareRequest);
 }
 
@@ -231,18 +236,32 @@ static bool read_into_buffer(pb_istream_t *stream, const pb_field_t *field,
 
 secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
                                 uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
-                                uint8_t *mh_buf, size_t mh_size,
-                                size_t *mh_len) {
+                                uint8_t *mh_buf, size_t mh_size, size_t *mh_len,
+                                firmware_begin_nrf_t *nrf) {
   buf_ctx_t bh_ctx = {.buffer = bh_buf, .buffer_size = bh_size, .len = 0};
   buf_ctx_t mh_ctx = {.buffer = mh_buf, .buffer_size = mh_size, .len = 0};
+  buf_ctx_t cp_ctx = {0};
+  buf_ctx_t ih_ctx = {0};
 
   MSG_RECV_INIT(FirmwareBegin);
   MSG_RECV_CALLBACK(boot_header, read_into_buffer, &bh_ctx);
   MSG_RECV_CALLBACK(module_headers, read_into_buffer, &mh_ctx);
+  if (nrf != NULL) {
+    cp_ctx.buffer = nrf->co_path_buf;
+    cp_ctx.buffer_size = nrf->co_path_size;
+    ih_ctx.buffer = nrf->image_hash_buf;
+    ih_ctx.buffer_size = nrf->image_hash_size;
+    MSG_RECV_CALLBACK(nrf_co_path, read_into_buffer, &cp_ctx);
+    MSG_RECV_CALLBACK(nrf_image_hash, read_into_buffer, &ih_ctx);
+  }
   secbool result = MSG_RECV(FirmwareBegin);
   memcpy(msg, &msg_recv, sizeof(FirmwareBegin));
   *bh_len = bh_ctx.len;
   *mh_len = mh_ctx.len;
+  if (nrf != NULL) {
+    nrf->co_path_len = cp_ctx.len;
+    nrf->image_hash_len = ih_ctx.len;
+  }
   return result;
 }
 

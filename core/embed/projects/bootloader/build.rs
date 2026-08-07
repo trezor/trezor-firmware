@@ -64,6 +64,13 @@ fn main() -> Result<()> {
             lib.add_define("PQ_SECURE_BOOT", Some("1"));
             lib.add_source("fw_check_pq.c");
             lib.add_source("workflow/wf_firmware_update_pq.c");
+            // nRF (BLE co-processor) OTA rides FirmwareBegin and needs the SMP
+            // serial-recovery push (USE_SMP). nrf_staging.c persists the staged
+            // image + descriptor across the reboot for the deferred phase-2 push.
+            if cfg!(feature = "smp") {
+                lib.add_source("workflow/wf_nrf_ota.c");
+                lib.add_source("nrf_staging.c");
+            }
         } else {
             lib.add_source("fw_check.c");
             lib.add_source("workflow/wf_firmware_update.c");
