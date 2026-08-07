@@ -537,6 +537,41 @@ secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
 secbool firmware_verify_manifest_entry(const firmware_manifest_entry_t* entry,
                                        uintptr_t firmware_base);
 
+/** Upper bound on a model-tree co-path (MODEL_TREE_DEPTH is 4 today).
+ *
+ *  Bounds an UNTRUSTED proof_count before it is used in size arithmetic, so it
+ * is load-bearing rather than cosmetic. Declared beside
+ * boot_header_verify_slot, which takes the count, and there is exactly ONE
+ * definition: the fold, the OTA workflow, the staging descriptor and the shape
+ * check all share it, where they previously each had a copy (two of them under
+ * the same name in different headers).
+ */
+#define MODEL_TREE_MAX_PROOF_NODES 32U
+
+/**
+ * @brief Fold a MODEL-tree slot value up to `trusted_model_root`.
+ *
+ * A slot value is the 32 bytes something sharing the model tree is committed by
+ * -- today a co-processor's firmware image hash. This hashes it into a leaf and
+ * folds the co-path; it knows nothing about what produced the value, so every
+ * slot folds the same way and a second co-processor needs no new fold.
+ *
+ * A passing fold proves founder-commitment, NOT identity: every model's slot
+ * hangs under the same modelRoot. Callers that need identity must pin it
+ * separately.
+ *
+ * @param slot_value   the committed 32-byte value
+ * @param proof        co-path from the slot up to modelRoot
+ * @param proof_count  number of co-path nodes (bound by
+ * MODEL_TREE_MAX_PROOF_NODES)
+ * @param trusted_model_root modelRoot recomputed from the verified boot header
+ * @return secbool -- sectrue iff the fold reaches `trusted_model_root`
+ */
+secbool boot_header_verify_slot(const uint8_t* slot_value,
+                                const merkle_proof_node_t* proof,
+                                size_t proof_count,
+                                const merkle_proof_node_t* trusted_model_root);
+
 /**
  * Smart-hashing chain primitives shared by the whole-module recompute
  * (firmware_module_code_hash / firmware_verify_manifest_entry) and the
