@@ -43,6 +43,29 @@ def test_import_all_transports():
     assert UdpTransport
 
 
+def test_udp_transport_throttles_packets():
+    from trezorlib.transport.udp import UdpTransport
+
+    transport = UdpTransport()
+    transport.socket = mock.Mock()
+    packet = bytes(64)
+    chunk_count = UdpTransport.MAX_CHUNKS_PER_WINDOW + 1
+
+    with (
+        mock.patch(
+            "trezorlib.transport.udp.time.monotonic",
+            side_effect=[0.0] * chunk_count + [UdpTransport.CHUNK_WINDOW],
+        ) as monotonic,
+        mock.patch("trezorlib.transport.udp.time.sleep") as sleep,
+    ):
+        for _ in range(chunk_count):
+            transport.write_chunk(packet)
+
+    assert transport.socket.sendall.call_count == chunk_count
+    assert monotonic.call_count == chunk_count + 1
+    sleep.assert_called_once_with(UdpTransport.CHUNK_WINDOW)
+
+
 def test_transport_dependencies():
     import trezorlib.transport.hid as hid_transport
 

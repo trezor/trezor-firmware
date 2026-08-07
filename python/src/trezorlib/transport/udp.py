@@ -19,7 +19,8 @@ from __future__ import annotations
 import logging
 import socket
 import time
-from typing import TYPE_CHECKING, Iterable, Tuple
+from collections import deque
+from typing import TYPE_CHECKING, Deque, Iterable, Tuple
 
 from ..log import DUMP_PACKETS
 from . import Timeout, Transport, TransportException
@@ -39,6 +40,8 @@ class UdpTransport(Transport):
     PATH_PREFIX = "udp"
     ENABLED = True
     CHUNK_SIZE = 64
+    MAX_CHUNKS_PER_WINDOW = 100
+    CHUNK_WINDOW = 0.05  # s
 
     def __init__(self, device: str | None = None) -> None:
         if not device:
@@ -51,6 +54,7 @@ class UdpTransport(Transport):
         self.device: Tuple[str, int] = (host, port)
 
         self.socket: socket.socket | None = None
+        self._sent_at: Deque[float] = deque()
         super().__init__()
 
     @classmethod
@@ -105,10 +109,23 @@ class UdpTransport(Transport):
             self.socket.close()
         self.socket = None
 
+    def _throttle_send(self) -> None:
+        now = time.monotonic()
+        while self._sent_at and now - self._sent_at[0] >= self.CHUNK_WINDOW:
+            self._sent_at.popleft()
+        if len(self._sent_at) >= self.MAX_CHUNKS_PER_WINDOW:
+            time.sleep(self.CHUNK_WINDOW - (now - self._sent_at[0]))
+            now = time.monotonic()
+            while self._sent_at and now - self._sent_at[0] >= self.CHUNK_WINDOW:
+                self._sent_at.popleft()
+        self._sent_at.append(now)
+
     def write_chunk(self, chunk: bytes, /) -> None:
         assert self.socket is not None
         if len(chunk) != 64:
             raise TransportException("Unexpected data length")
+
+        self._throttle_send()
         LOG.log(DUMP_PACKETS, f"sending packet: {chunk.hex()}")
         self.socket.sendall(chunk)
 
