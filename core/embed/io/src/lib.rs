@@ -3,6 +3,13 @@
 #![feature(custom_test_frameworks)]
 #![reexport_test_harness_main = "test_main"]
 
+mod ffi;
+
+#[cfg(feature = "nrf")]
+pub mod nrf;
+#[cfg(feature = "smp")]
+pub mod smp;
+
 #[cfg(test)]
 #[unsafe(no_mangle)]
 pub fn main() -> i32 {

@@ -2,6 +2,7 @@ use xbuild::{CLibrary, Result, bail_unsupported};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("nrf/inc");
+    lib.add_rust_bindings(add_rust_bindings)?;
 
     lib.add_define("USE_NRF", Some("1"));
 
@@ -33,4 +34,12 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
+    let builder = builder
+        .header("nrf/inc/io/nrf.h")
+        .allowlist_function("nrf_send_uart_data");
+
+    Ok(builder)
 }

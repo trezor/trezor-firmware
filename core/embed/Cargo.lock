@@ -448,8 +448,12 @@ dependencies = [
 name = "io"
 version = "0.0.0"
 dependencies = [
+ "bindgen",
  "color-eyre",
+ "cty",
+ "minicbor",
  "models",
+ "rtl",
  "sec",
  "sys",
  "xbuild",

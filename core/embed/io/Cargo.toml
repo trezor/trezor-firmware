@@ -5,11 +5,16 @@ edition = "2024"
 links = "io"
 
 [build-dependencies]
+bindgen.workspace = true
 color-eyre.workspace = true
 xbuild.workspace = true
 
 [dependencies]
+cty.workspace = true
+minicbor = { workspace = true, optional = true }
+
 models.workspace = true
+rtl.workspace = true
 sec.workspace = true
 sys.workspace = true
 
@@ -60,7 +65,7 @@ raspi_emulator = []
 rgb_led = []
 sbu = []
 sd_card = []
-smp = []
+smp = ["minicbor", "nrf"]
 suspend = ["sec/suspend"]
 touch = []
 touch_wakeup = []

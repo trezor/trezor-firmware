@@ -1,8 +1,9 @@
 use minicbor::Encoder;
+use rtl::error::unwrap;
 
 use super::{
-    send_request, SmpBuffer, SmpHeader, SMP_CMD_ID_RESET, SMP_GROUP_OS, SMP_HEADER_SIZE,
-    SMP_OP_READ,
+    SMP_CMD_ID_RESET, SMP_GROUP_OS, SMP_HEADER_SIZE, SMP_OP_READ, SmpBuffer, SmpHeader,
+    send_request,
 };
 
 pub fn send() {

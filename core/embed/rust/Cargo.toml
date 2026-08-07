@@ -88,7 +88,6 @@ sbu = []
 sd_card = []
 secmon_layout = []
 serial_number = []
-smp = []
 storage = []
 telemetry = []
 thp = ["crypto/thp", "dep:trezor-thp", "dep:zeroize"]
@@ -146,7 +145,6 @@ test = [
     "nrf",
     "optiga",
     "protobuf",
-    "smp",
     "storage",
     "thp",
     "touch",
