@@ -116,8 +116,9 @@ def from_envelope(
 
     Each asset in `asset_hints` is attached to the contract invocations that
     target its Stellar Asset Contract, letting the device present them as token
-    operations. Hints matching no invocation are ignored; a wrong one is
-    rejected by the device, which re-derives the address itself.
+    operations. Hints matching no invocation are ignored. The device re-derives
+    the address before using a hint and falls back to the raw contract UI if it
+    does not match.
     """
     if not HAVE_STELLAR_SDK:
         raise RuntimeError("Stellar SDK not available")

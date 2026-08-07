@@ -13,6 +13,7 @@ from trezor.ui.layouts import (
 )
 from trezor.wire import DataError, ProcessError
 
+from ..helpers import resolve_sep41_token
 from ..layout import (
     confirm_invocation,
     confirm_invoke_contract_args,
@@ -20,7 +21,6 @@ from ..layout import (
     parse_sep41_approve,
     parse_sep41_transfer,
     sac_approve_title,
-    verify_asset_hint,
 )
 
 if TYPE_CHECKING:
@@ -547,7 +547,7 @@ async def _confirm_invoke_contract(
     the SEP-41 function it invokes; anything else is shown as a raw contract
     call.
     """
-    asset = verify_asset_hint(args, network_id)
+    asset = resolve_sep41_token(args, network_id)
 
     if asset is not None:
         transfer = parse_sep41_transfer(args)

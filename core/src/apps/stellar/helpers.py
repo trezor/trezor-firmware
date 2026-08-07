@@ -6,7 +6,7 @@ from trezor.crypto import base32
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
-    from trezor.messages import StellarAsset
+    from trezor.messages import StellarAsset, StellarInvokeContractArgs
 
 # Stellar strkey version bytes
 # See: https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md
@@ -58,6 +58,24 @@ def sac_address_from_asset(network_id: AnyBytes, asset: StellarAsset) -> str:
     write_uint32(w, 1)  # CONTRACT_ID_PREIMAGE_FROM_ASSET
     write_asset(w, asset)
     return encode_strkey(STRKEY_CONTRACT, sha256(w).digest())
+
+
+def resolve_sep41_token(
+    args: StellarInvokeContractArgs, network_id: AnyBytes
+) -> StellarAsset | None:
+    """Resolve token metadata for the dedicated SEP-41 UI.
+
+    Currently, the host may identify a Stellar Asset Contract by supplying its
+    underlying asset. The hint is used only when its derived SAC address matches
+    the invoked contract; an absent or mismatched hint leaves the invocation to
+    the generic contract UI.
+    """
+    asset = args.asset_hint
+    if asset is None:
+        return None
+    if sac_address_from_asset(network_id, asset) != args.contract_address:
+        return None
+    return asset
 
 
 def encode_strkey(version: int, data: AnyBytes) -> str:

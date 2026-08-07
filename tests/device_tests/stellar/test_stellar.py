@@ -203,7 +203,7 @@ def test_sign_tx(session: Session, parameters, result):
 
 @pytest.mark.models("core")
 def test_sign_tx_asset_hint_mismatch(session: Session):
-    """A hint that does not derive to the invoked contract aborts the request.
+    """A hint that does not derive to the invoked contract is ignored.
 
     trezorlib never produces such a hint (it only attaches self-derived
     matches), so forge one directly in the protobuf of a valid fixture.
@@ -222,15 +222,14 @@ def test_sign_tx_asset_hint_mismatch(session: Session):
     assert hint is not None
     hint.code = "USDX"
 
-    with pytest.raises(TrezorFailure, match="asset hint does not match"):
-        stellar.sign_tx(
-            session,
-            tx,
-            operations,
-            ext,
-            tx.address_n,
-            tx.network_passphrase,
-        )
+    stellar.sign_tx(
+        session,
+        tx,
+        operations,
+        ext,
+        tx.address_n,
+        tx.network_passphrase,
+    )
 
 
 @pytest.mark.models("core")

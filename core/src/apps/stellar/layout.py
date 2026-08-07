@@ -9,6 +9,7 @@ from trezor.wire import DataError, ProcessError
 from apps.common.paths import address_n_to_str
 
 from . import consts
+from .helpers import resolve_sep41_token
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -286,29 +287,6 @@ _SEP41_TRANSFER = "transfer"
 _SEP41_APPROVE = "approve"
 
 
-def verify_asset_hint(
-    args: StellarInvokeContractArgs, network_id: AnyBytes
-) -> StellarAsset | None:
-    """Resolve the asset whose Stellar Asset Contract (SAC) an invocation targets.
-
-    `asset_hint` is supplied by the host and covered by no signature, so it is
-    trusted only once the SAC address derived from it matches the contract
-    actually being invoked. A hint that does not match aborts the request
-    instead of being silently dropped, so the two can never disagree on screen.
-    Returns None when no hint is given, i.e. the invocation is a plain contract
-    call as far as the device is concerned.
-    """
-    asset = args.asset_hint
-    if asset is None:
-        return None
-
-    from .helpers import sac_address_from_asset
-
-    if sac_address_from_asset(network_id, asset) != args.contract_address:
-        raise DataError("Stellar: asset hint does not match the invoked contract")
-    return asset
-
-
 def parse_sep41_transfer(
     args: StellarInvokeContractArgs,
 ) -> tuple[str, str, int] | None:
@@ -477,13 +455,13 @@ async def confirm_invocation(
     if func.contract_fn is None:
         raise DataError("Stellar: missing contract_fn")
 
-    # Verify the hint of every walked node before any display decision (the
+    # Resolve the hint of every walked node before any display decision (the
     # root of an entry may be skipped as a duplicate of the host function),
-    # so a token screen can only ever come from a verified hint and a
-    # mismatch is rejected the moment it is read. Hints in trees the user
-    # never opts into viewing are never walked at all: they influence no
-    # display and no signature.
-    asset = verify_asset_hint(func.contract_fn, network_id)
+    # so a token screen can only ever come from a matching hint. A mismatched
+    # hint falls back to the generic contract UI. Hints in trees the user never
+    # opts into viewing are never walked at all: they influence no display and
+    # no signature.
+    asset = resolve_sep41_token(func.contract_fn, network_id)
 
     if position:
         title = f"{TR.words__authorization} {position}"
