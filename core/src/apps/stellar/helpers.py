@@ -44,7 +44,10 @@ def address_from_public_key(pubkey: AnyBytes) -> str:
 
 
 def sac_address_from_asset(network_id: AnyBytes, asset: StellarAsset) -> str:
-    """Derive the address of the Stellar Asset Contract (SAC) of an asset (C...)."""
+    """Derive the address of the Stellar Asset Contract (SAC) of an asset (C...).
+
+    See https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-02.md#contract-identifier-preimage-type
+    """
     from trezor.crypto.hashlib import sha256
 
     from .writers import write_asset, write_bytes_fixed, write_uint32
