@@ -1,88 +1,62 @@
-use core::mem::MaybeUninit;
+use core::ops::DerefMut;
 use core::pin::Pin;
 
-use zeroize::{Zeroize, ZeroizeOnDrop};
-
 use super::ffi;
-use super::memory::{Memory, init_ctx};
+use super::memory::Memory;
+use crate::hasher::{PinnedHasher, RawHasher};
+use crate::init_ctx;
+use crate::memory::ZeroableMemory;
 
 pub const BLOCK_SIZE: usize = ffi::SHA256_BLOCK_LENGTH as usize;
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-#[derive(Zeroize, ZeroizeOnDrop)]
-pub struct Sha256<'a> {
-    ctx: Pin<&'a mut Memory<ffi::SHA256_CTX>>,
-}
+pub type Sha256Ctx = ffi::SHA256_CTX;
 
-impl<'a> Sha256<'a> {
-    pub fn new(mut ctx: Pin<&'a mut Memory<ffi::SHA256_CTX>>) -> Self {
-        // initialize the context
-        // SAFETY: safe with whatever finds itself as memory contents
-        unsafe { ffi::sha256_Init(ctx.inner()) };
-        Self { ctx }
-    }
+// SAFETY: SHA256_CTX is valid when zeroed
+unsafe impl ZeroableMemory for Sha256Ctx {}
 
-    pub fn update(&mut self, data: &[u8]) {
+impl Sha256Ctx {
+    // SAFETY: this does not need to be unsafe because the constructed
+    // context only has public data (the initial state)
+    pub fn init_raw(&mut self) {
         // SAFETY: safe
-        unsafe { ffi::sha256_Update(self.ctx.inner(), data.as_ptr(), data.len()) };
-    }
-
-    pub fn memory() -> Memory<ffi::SHA256_CTX> {
-        Memory::default()
-    }
-
-    pub fn finalize_into(mut self, out: &mut Digest) {
-        // SAFETY: safe
-        unsafe { ffi::sha256_Final(self.ctx.inner(), out.as_mut_ptr()) };
+        unsafe { ffi::sha256_Init(self) };
     }
 }
 
-pub fn digest_into(data: &[u8], out: &mut Digest) {
-    init_ctx!(Sha256, ctx);
-    ctx.update(data);
-    ctx.finalize_into(out);
+impl RawHasher for Memory<Sha256Ctx> {
+    type Digest = Digest;
+
+    unsafe fn update_raw(&mut self, data: &[u8]) {
+        unsafe { ffi::sha256_Update(self.as_mut(), data.as_ptr(), data.len()) };
+    }
+
+    unsafe fn finalize_raw(&mut self) -> Self::Digest {
+        let mut digest = [0u8; DIGEST_SIZE];
+        unsafe { ffi::sha256_Final(self.as_mut(), digest.as_mut_ptr()) };
+        digest
+    }
+}
+
+pub fn sha256_new<D>(mut ctx: Pin<D>) -> PinnedHasher<D>
+where
+    D: DerefMut<Target = Memory<Sha256Ctx>>,
+{
+    let mut mut_ctx = ctx.as_mut();
+    unsafe {
+        // SAFETY: init_raw does not invalidate the pin
+        mut_ctx.inner().init_raw();
+        // SAFETY: context is initialized
+        PinnedHasher::new_no_init(ctx)
+    }
 }
 
 pub fn digest(data: &[u8]) -> Digest {
-    let mut out = Digest::default();
-    digest_into(data, &mut out);
-    out
-}
-
-// Unpinned variant for use with noise-protocol which does not guarantee
-// pinning. If possible please use [`Sha256`] above.
-#[derive(Clone)]
-pub struct NoPinSha256 {
-    ctx: ffi::SHA256_CTX,
-}
-
-impl Drop for NoPinSha256 {
-    fn drop(&mut self) {
-        // C implementation zeroes the state
-        // SAFETY: ffi
-        unsafe { ffi::sha256_Final(&mut self.ctx as *mut _, core::ptr::null_mut()) };
-    }
-}
-
-impl Default for NoPinSha256 {
-    fn default() -> Self {
-        let mut ctx = unsafe { MaybeUninit::<ffi::SHA256_CTX>::zeroed().assume_init() };
-        unsafe { ffi::sha256_Init(&mut ctx) };
-        Self { ctx }
-    }
-}
-
-impl NoPinSha256 {
-    pub fn update(&mut self, data: &[u8]) {
-        // SAFETY: ffi
-        unsafe { ffi::sha256_Update(&mut self.ctx as *mut _, data.as_ptr(), data.len()) };
-    }
-
-    pub fn finalize_into(mut self, out: &mut Digest) {
-        // SAFETY: ffi
-        unsafe { ffi::sha256_Final(&mut self.ctx as *mut _, out.as_mut_ptr()) };
-    }
+    init_ctx!(ctx);
+    let mut sha = sha256_new(ctx);
+    sha.update(data);
+    sha.finalize()
 }
 
 #[cfg(test)]
@@ -104,10 +78,9 @@ mod test {
 
     #[test]
     fn test_empty_ctx() {
-        let mut out = Digest::default();
-
-        init_ctx!(Sha256, ctx);
-        ctx.finalize_into(&mut out);
+        init_ctx!(ctx);
+        let mut sha = sha256_new(ctx);
+        let out = sha.finalize();
 
         let out_hex = hex::encode(out);
         assert_eq!(out_hex, SHA256_EMPTY.to_string());

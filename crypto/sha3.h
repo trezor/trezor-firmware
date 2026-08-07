@@ -59,6 +59,8 @@ typedef struct SHA3_CTX
 	unsigned block_size;
 } SHA3_CTX;
 
+void keccak_Init(SHA3_CTX *ctx, unsigned bits);
+
 /* methods for calculating the hash function */
 
 void sha3_224_Init(SHA3_CTX *ctx);

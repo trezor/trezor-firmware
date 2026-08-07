@@ -44,7 +44,7 @@ static uint64_t keccak_round_constants[NumberOfRounds] = {
 };
 
 /* Initializing a sha3 context for given number of output bits */
-static void keccak_Init(SHA3_CTX *ctx, unsigned bits)
+void keccak_Init(SHA3_CTX *ctx, unsigned bits)
 {
 	/* NB: The Keccak capacity parameter = bits * 2 */
 	unsigned rate = 1600 - bits * 2;
