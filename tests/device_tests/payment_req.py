@@ -4,7 +4,6 @@ from hashlib import sha256
 from ecdsa import NIST256p, SigningKey
 
 from trezorlib import messages
-from trezorlib.client import Session
 from trezorlib.tools import compact_size
 
 SLIP44_ID_UNDEFINED = 0xFFFF_FFFF
@@ -48,7 +47,6 @@ def hash_bytes_prefixed(hasher, data) -> None:
 
 
 def make_payment_request(
-    session: Session,
     recipient_name,
     slip44,
     outputs,

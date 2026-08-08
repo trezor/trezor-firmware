@@ -96,7 +96,6 @@ def test_signtx_payment_req_swap_with_text_and_refund(
     nonce = misc.get_nonce(session)
 
     payment_req = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=1,
         outputs=[(o.amount, o.address) for o in outputs],
@@ -250,7 +249,6 @@ def test_payment_request(session: Session, payment_request_params):
                 )
         payment_reqs.append(
             make_payment_request(
-                session,
                 recipient_name="trezor.io",
                 slip44=1,
                 outputs=request_outputs,
@@ -293,7 +291,6 @@ def test_payment_req_wrong_amount(session: Session):
     outputs[1].payment_req_index = 0
     outputs[2].payment_req_index = None
     payment_req = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=1,
         outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
@@ -322,7 +319,6 @@ def test_payment_req_amount_encoding_bytes(session: Session):
     outputs[1].payment_req_index = 0
     outputs[2].payment_req_index = None
     payment_req = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=1,
         outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
@@ -355,7 +351,6 @@ def test_payment_req_wrong_mac_refund(session: Session):
     outputs[1].payment_req_index = 0
     outputs[2].payment_req_index = None
     payment_req = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=1,
         outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
@@ -395,7 +390,6 @@ def test_payment_req_wrong_mac_purchase(session: Session):
     outputs[1].payment_req_index = 0
     outputs[2].payment_req_index = None
     payment_req = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=1,
         outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
@@ -425,7 +419,6 @@ def test_payment_req_wrong_output(session: Session):
     outputs[1].payment_req_index = 0
     outputs[2].payment_req_index = None
     payment_req = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=1,
         outputs=[(txo.amount, txo.address) for txo in outputs[:2]],

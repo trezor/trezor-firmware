@@ -759,7 +759,6 @@ def test_signtx_payment_req(
 
     params = dict(example_input_data["parameters"])
     params["payment_req"] = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=60,
         outputs=[(int(params["value"], 16), params["to_address"])],
@@ -799,7 +798,6 @@ def test_signtx_payment_req_long_value(
 
     params = dict(example_input_data_long_value["parameters"])
     params["payment_req"] = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=60,
         outputs=[(int(params["value"], 16), params["to_address"])],
@@ -816,7 +814,6 @@ def test_signtx_payment_req_long_value(
 
     params = dict(example_input_data_too_long_value["parameters"])
     params["payment_req"] = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=60,
         outputs=[(int(params["value"], 16), params["to_address"])],
