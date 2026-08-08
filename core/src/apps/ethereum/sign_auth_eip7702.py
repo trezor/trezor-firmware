@@ -3,10 +3,9 @@ from typing import TYPE_CHECKING
 
 from trezor import TR
 from trezor.crypto.curve import secp256k1
-from trezor.messages import EthereumAuth7702Signature
+from trezor.messages import EthereumAuth7702Tuple
 from trezor.wire import DataError, ProcessError
 
-from .keychain import with_keychain_from_chain_id
 from .networks import UNKNOWN_NETWORK
 from .sc_constants import lookup_eip7702_address
 
@@ -22,18 +21,17 @@ _MAGIC = const(5)
 _REVOKE_ADDRESS = b"\x00" * 20
 
 
-@with_keychain_from_chain_id
 async def sign_auth_eip7702(
-    msg: EthereumSignAuth7702,
-    keychain: Keychain,
-    defs: Definitions,
-) -> EthereumAuth7702Signature:
+    msg: EthereumSignAuth7702, keychain: Keychain, defs: Definitions
+) -> EthereumAuth7702Tuple:
+    """
+    Confirm and sign a single EIP-7702 authorization/revocation tuple.
+    """
 
     from trezor.crypto import rlp
     from trezor.ui.layouts import (
         confirm_ethereum_eip7702_auth,
         confirm_ethereum_eip7702_revoke,
-        show_continue_in_app,
     )
 
     from apps.common import paths, safety_checks
@@ -55,7 +53,8 @@ async def sign_auth_eip7702(
     if account is None or account_path is None:
         raise DataError("Unknown account")
 
-    if msg.nonce >= 0xFFFFFFFFFFFFFFFF:
+    nonce = msg.nonce
+    if nonce >= 0xFFFFFFFFFFFFFFFF:
         raise DataError("Invalid nonce")
 
     delegate_bytes = bytes_from_address(msg.delegate)
@@ -65,16 +64,15 @@ async def sign_auth_eip7702(
             network_item=network_item,
             account=account,
             account_path=account_path,
-            nonce=msg.nonce,
+            nonce=nonce,
         )
-        done_msg = TR.ethereum__revoke_done
     else:
         if safety_checks.is_strict():
             raise ProcessError(
                 "EIP-7702 authorisation not allowed with strict safety checks"
             )
 
-        delegate_name = lookup_eip7702_address(msg.chain_id, delegate_bytes)
+        delegate_name = lookup_eip7702_address(chain_id, delegate_bytes)
         if delegate_name is None:
             raise DataError("Unknown EIP-7702 delegate address")
 
@@ -84,14 +82,13 @@ async def sign_auth_eip7702(
             network_item=network_item,
             account=account,
             account_path=account_path,
-            nonce=msg.nonce,
+            nonce=nonce,
         )
-        done_msg = TR.ethereum__auth_done
 
     sha = keccak256()
     sha.append(_MAGIC)
 
-    fields: rlp.RLPList = [msg.chain_id, delegate_bytes, msg.nonce]
+    fields: rlp.RLPList = [chain_id, delegate_bytes, nonce]
     rlp.write(sha, fields)
 
     digest = sha.get_digest()
@@ -99,9 +96,14 @@ async def sign_auth_eip7702(
     signature = secp256k1.sign(
         node.private_key(), digest, False, secp256k1.CANONICAL_SIG_ETHEREUM
     )
-    show_continue_in_app(done_msg)
-    return EthereumAuth7702Signature(
-        signature_v=signature[0] - 27,
-        signature_r=signature[1:33],
-        signature_s=signature[33:],
+    # EIP-7702 authorization tuple: [chain_id, delegate, nonce, y_parity, r, s]
+    return EthereumAuth7702Tuple(
+        items=[
+            rlp.int_to_bytes(chain_id),
+            delegate_bytes,
+            rlp.int_to_bytes(nonce),
+            rlp.int_to_bytes(signature[0] - 27),
+            signature[1:33],
+            signature[33:],
+        ]
     )

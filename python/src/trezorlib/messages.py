@@ -671,8 +671,6 @@ class MessageType(IntEnum):
     EthereumSignTypedHash = 470
     EthereumDefinitionRequest = 471
     EthereumDefinitionAck = 472
-    EthereumSignAuth7702 = 473
-    EthereumAuth7702Signature = 474
     NEMGetAddress = 67
     NEMAddress = 68
     NEMSignTx = 69
@@ -5695,6 +5693,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         13: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
         14: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
         15: protobuf.Field("supports_definition_request", "bool", repeated=False, required=False, default=None),
+        16: protobuf.Field("auth7702", "EthereumAuth7702", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5715,6 +5714,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         chunkify: Optional["bool"] = None,
         payment_req: Optional["PaymentRequest"] = None,
         supports_definition_request: Optional["bool"] = None,
+        auth7702: Optional["EthereumAuth7702"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.access_list: Sequence["EthereumAccessList"] = access_list if access_list is not None else []
@@ -5731,6 +5731,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         self.chunkify = chunkify
         self.payment_req = payment_req
         self.supports_definition_request = supports_definition_request
+        self.auth7702 = auth7702
 
 
 class EthereumTxRequest(protobuf.MessageType):
@@ -5740,16 +5741,19 @@ class EthereumTxRequest(protobuf.MessageType):
         2: protobuf.Field("signature_v", "uint32", repeated=False, required=False, default=None),
         3: protobuf.Field("signature_r", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("signature_s", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("auth7702_list", "EthereumAuth7702Tuple", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
+        auth7702_list: Optional[Sequence["EthereumAuth7702Tuple"]] = None,
         data_length: Optional["int"] = None,
         signature_v: Optional["int"] = None,
         signature_r: Optional["bytes"] = None,
         signature_s: Optional["bytes"] = None,
     ) -> None:
+        self.auth7702_list: Sequence["EthereumAuth7702Tuple"] = auth7702_list if auth7702_list is not None else []
         self.data_length = data_length
         self.signature_v = signature_v
         self.signature_r = signature_r
@@ -5928,7 +5932,7 @@ class EthereumDefinitions(protobuf.MessageType):
 
 
 class EthereumSignAuth7702(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 473
+    MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
@@ -5954,7 +5958,7 @@ class EthereumSignAuth7702(protobuf.MessageType):
 
 
 class EthereumAuth7702Signature(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 474
+    MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("signature_v", "uint32", repeated=False, required=True),
         2: protobuf.Field("signature_r", "bytes", repeated=False, required=True),
@@ -5988,6 +5992,34 @@ class EthereumAccessList(protobuf.MessageType):
     ) -> None:
         self.storage_keys: Sequence["bytes"] = storage_keys if storage_keys is not None else []
         self.address = address
+
+
+class EthereumAuth7702(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("delegate", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        delegate: "str",
+    ) -> None:
+        self.delegate = delegate
+
+
+class EthereumAuth7702Tuple(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("items", "bytes", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        items: Optional[Sequence["bytes"]] = None,
+    ) -> None:
+        self.items: Sequence["bytes"] = items if items is not None else []
 
 
 class EthereumSignTypedData(protobuf.MessageType):
