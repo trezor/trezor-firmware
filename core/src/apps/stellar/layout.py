@@ -361,8 +361,8 @@ async def confirm_sac_invocation(
     The same screens the transaction root gets, titled by the node's tree
     position ("Authorization #1.1") with the token action as the subtitle;
     models without a subtitle slot join both into the title, so neither is
-    ever dropped. The asset's issuer sits in the info menu of the amount
-    screen, like it does for payments. Anything but a well-formed
+    ever dropped. When shown, the asset's issuer sits in the info menu of
+    the amount screen, like it does for payments. Anything but a well-formed
     `transfer` / `approve` is left to the generic contract flow
     (returns False).
     """
@@ -401,12 +401,20 @@ async def confirm_sac_invocation(
         await layouts.confirm_stellar_address(
             title, action, spender, TR.stellar__spender, "op_auth_token_spender"
         )
+        if amount == 0:
+            # "Revoke approval" already communicates the zero allowance, so
+            # identify the token instead of displaying the omitted amount.
+            display_value = format_asset(asset)
+            value_label = TR.words__token
+        else:
+            display_value = format_amount(amount, asset)
+            value_label = TR.words__amount
         await layouts.confirm_stellar_output_amount(
             title,
             action,
-            format_amount(amount, asset),
+            display_value,
             asset,
-            TR.words__amount,
+            value_label,
             token_contract=args.contract_address,
         )
         await layouts.confirm_stellar_valid_until(

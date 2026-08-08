@@ -15,6 +15,7 @@ from trezor.wire import DataError, ProcessError
 
 from ..helpers import resolve_sep41_token
 from ..layout import (
+    _confirm_sep41_token_details,
     confirm_invocation,
     confirm_invoke_contract_args,
     format_amount,
@@ -519,16 +520,19 @@ async def _confirm_sac_approve(
         "op_invoke_spender",
     )
 
-    # the allowance gets the same screen as a payment amount, with the asset
-    # details (issuer) in its info menu
-    await confirm_stellar_output_amount(
-        title,
-        "",
-        format_amount(amount, asset),
-        asset,
-        TR.words__amount,
-        token_contract=contract_address,
-    )
+    if amount == 0:
+        # "Revoke approval" already communicates a zero allowance, but the
+        # token still needs to be identified when the amount screen is omitted.
+        await _confirm_sep41_token_details(title, "", asset, contract_address)
+    else:
+        await confirm_stellar_output_amount(
+            title,
+            "",
+            format_amount(amount, asset),
+            asset,
+            TR.words__amount,
+            token_contract=contract_address,
+        )
 
     await confirm_stellar_valid_until(
         title,
