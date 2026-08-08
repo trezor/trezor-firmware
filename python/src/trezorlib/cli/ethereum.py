@@ -481,7 +481,7 @@ def sign_tx(
     if is_eip1559:
         assert max_gas_fee is not None
         assert max_priority_fee is not None
-        sig = ethereum.sign_tx_eip1559(
+        res = ethereum.sign_tx_eip1559(
             session,
             n=address_n,
             nonce=nonce,
@@ -502,7 +502,7 @@ def sign_tx(
         if gas_price is None:
             gas_price = _get_web3().eth.gas_price
         assert gas_price is not None
-        sig = ethereum.sign_tx(
+        res = ethereum.sign_tx(
             session,
             n=address_n,
             tx_type=tx_type,
@@ -518,6 +518,8 @@ def sign_tx(
             supports_definition_request=True,
             definition_source=DEFINITIONS_SOURCE,
         )
+
+    sig = res.signature_tuple()
 
     to = ethereum.decode_hex(to_address)
 

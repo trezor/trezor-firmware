@@ -15,7 +15,10 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import re
-from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple, Union
+
+from typing_extensions import Self
 
 from . import exceptions, messages
 from .tools import prepare_message_bytes, workflow
@@ -213,29 +216,41 @@ def _answer_definition_request(
     )
 
 
+@dataclass
+class SignTxResult:
+    v: int
+    r: bytes
+    s: bytes
+
+    def signature_tuple(self) -> Tuple[int, bytes, bytes]:
+        return (self.v, self.r, self.s)
+
+    @classmethod
+    def from_response(cls, msg: messages.EthereumTxRequest) -> Optional[Self]:
+        if (
+            msg.signature_v is not None
+            and msg.signature_r is not None
+            and msg.signature_s is not None
+        ):
+            # We got an EthereumTxRequest containing the signature which means we are done.
+            return cls(v=msg.signature_v, r=msg.signature_r, s=msg.signature_s)
+        else:
+            return None  # We are not done yet.
+
+
 def _ethereum_sign_loop(
     session: "Session",
-    msg_type: type,
-    response: Any,
+    msg: Union[messages.EthereumSignTx, messages.EthereumSignTxEIP1559],
     data: bytes,
-    chain_id: int,
     definition_source: Optional["Source"],
-) -> Tuple[int, bytes, bytes]:
+) -> SignTxResult:
     """Shared request/response loop for sign_tx and sign_tx_eip1559."""
+    response = session.call(msg)
+
     while True:
         if isinstance(response, messages.EthereumTxRequest):
-            if (
-                response.signature_v is not None
-                and response.signature_r is not None
-                and response.signature_s is not None
-            ):
-                # We got an EthereumTxRequest containing the signature which means we are done.
-                if msg_type is messages.EthereumSignTx:
-                    # https://github.com/trezor/trezor-core/pull/311
-                    # Only signature bit returned. Recalculate signature_v.
-                    if response.signature_v <= 1:
-                        response.signature_v += 2 * chain_id + 35
-                return response.signature_v, response.signature_r, response.signature_s
+            if (result := SignTxResult.from_response(response)) is not None:
+                return result
             else:
                 assert response.data_length is not None
                 # We got an EthereumTxRequest asking for more data.
@@ -277,7 +292,7 @@ def sign_tx(
     payment_req: Optional[messages.PaymentRequest] = None,
     supports_definition_request: Optional[bool] = None,
     definition_source: Optional["Source"] = None,
-) -> Tuple[int, bytes, bytes]:
+) -> SignTxResult:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
 
@@ -303,11 +318,12 @@ def sign_tx(
     data, chunk = data[1024:], data[:1024]
     msg.data_initial_chunk = chunk
 
-    response = session.call(msg)
-
-    return _ethereum_sign_loop(
-        session, messages.EthereumSignTx, response, data, chain_id, definition_source
-    )
+    sig = _ethereum_sign_loop(session, msg, data, definition_source)
+    # https://github.com/trezor/trezor-core/pull/311
+    # Only signature bit returned. Recalculate signature_v.
+    if sig.v <= 1:
+        sig.v += 2 * chain_id + 35
+    return sig
 
 
 @workflow(capability=messages.Capability.Ethereum)
@@ -329,7 +345,7 @@ def sign_tx_eip1559(
     payment_req: Optional[messages.PaymentRequest] = None,
     supports_definition_request: Optional[bool] = None,
     definition_source: Optional["Source"] = None,
-) -> Tuple[int, bytes, bytes]:
+) -> SignTxResult:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
     msg = messages.EthereumSignTxEIP1559(
@@ -350,16 +366,7 @@ def sign_tx_eip1559(
         supports_definition_request=supports_definition_request,
     )
 
-    response = session.call(msg)
-
-    return _ethereum_sign_loop(
-        session,
-        messages.EthereumSignTxEIP1559,
-        response,
-        data,
-        chain_id,
-        definition_source,
-    )
+    return _ethereum_sign_loop(session, msg, data, definition_source)
 
 
 @workflow(capability=messages.Capability.Ethereum)

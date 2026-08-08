@@ -1,0 +1,1 @@
+Ethereum `sign_tx()` and `sign_tx_eip1559()` return `SignTxResult` instead of a tuple.
