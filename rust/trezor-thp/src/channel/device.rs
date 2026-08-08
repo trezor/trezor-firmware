@@ -409,7 +409,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     /// True if handshake finished and [`ChannelOpen::complete()`] can be called.
     pub fn handshake_done(&self) -> bool {
         // Done only after peer acknowledges completion response.
-        matches!(self.state, HandshakeState::SendingCompletionResponse { .. })
+        matches!(self.state, HandshakeState::SendingCompletionResponse { .. }) // XXX really sent?
             && matches!(self.channel.send_state, SendState::Idle)
     }
 

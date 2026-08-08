@@ -36,6 +36,7 @@ from trezorlib.debuglink import TrezorTestContext
 from trezorlib.device import apply_settings
 from trezorlib.transport import enumerate_devices, get_transport
 from trezorlib.transport.ble import BleTransport
+from trezorlib.transport.webusb import WebUsbTransport
 
 # register rewrites before importing from local package
 # so that we see details of failed asserts from this module
@@ -216,9 +217,27 @@ def _raw_test_ctx(request: pytest.FixtureRequest) -> TrezorTestContext:
     return test_ctx
 
 
-def _test_ctx_from_path(path: str | None, interact: bool) -> TrezorTestContext:
-    transport = get_transport(path)
-    return TrezorTestContext(transport, auto_interact=not interact, force_wipe=True)
+def _usb_debuglink() -> WebUsbTransport | None:
+    usb_devices = list(WebUsbTransport.enumerate())
+    if len(usb_devices) != 1:
+        LOG.error(f"Found {len(usb_devices)} USB devices, DebugLink disabled.")
+        return None
+    return usb_devices[0].find_debug()
+
+
+def _test_ctx_from_path(path: str, interact: bool) -> TrezorTestContext:
+    prefix_search = path.find(":") + 1 == len(path)  # support paths like "ble:"
+    transport = get_transport(path, prefix_search=prefix_search)
+
+    debug_transport = None
+    if path.startswith("ble:") and not interact:
+        debug_transport = _usb_debuglink()
+    return TrezorTestContext(
+        transport,
+        auto_interact=not interact,
+        debug_transport=debug_transport,
+        force_wipe=True,
+    )
 
 
 def _find_test_ctx(interact: bool) -> TrezorTestContext:
@@ -413,6 +432,14 @@ def _prepared_test_ctx(
             "To skip all such tests, run:\n"
             "  pytest -m 'not sd_card' <test path>"
         )
+
+    ble_marker = request.node.get_closest_marker("ble")
+    if ble_marker and isinstance(_raw_test_ctx.transport, BleTransport):
+        if ble_marker.kwargs.get("skip", False):
+            pytest.skip("Test not supported over BLE")
+
+        if ble_marker.kwargs.get("wipe", False):
+            pytest.skip("Wipe over BLE not implemented yet")
 
     fail_on_gc_leak = not request.config.getoption("ignore_gc_leak")
 

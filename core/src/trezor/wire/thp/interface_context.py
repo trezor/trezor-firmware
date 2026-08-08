@@ -16,7 +16,8 @@ if __debug__:
 
 if utils.USE_BLE:
     import trezorble as ble
-    from trezor.workflow import idle_timer
+
+    # from trezor.workflow import idle_timer
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
     from typing import Any, Generator
 
 
-_TRACE = const(False)
+_TRACE = const(True)
 
 # Preempt a stale channel if another channel becomes active and we allowed enough time for the host to respond.
 # It allows interrupting a "stuck" THP workflow using a different channel on the same interface.
@@ -182,9 +183,9 @@ class InterfaceContext:
                 yield self._read_box
 
             packet_len = yield self._read
-            if utils.USE_BLE and self._iface is ble.interface:
-                # prevent auto-lock while handling longer workflows on Bluetooth
-                idle_timer.touch()
+            # if utils.USE_BLE and self._iface is ble.interface:
+            #    # prevent auto-lock while handling longer workflows on Bluetooth
+            #    idle_timer.touch()  # FIXME test_autolock_ignores_getaddress
 
             assert packet_len == self._iface.RX_PACKET_LEN
 

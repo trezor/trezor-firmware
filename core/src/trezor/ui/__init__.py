@@ -457,6 +457,23 @@ class Layout(Generic[T]):
                             event,
                             ",".join(ble.connection_flags()),
                         )
+                        evname = {
+                            0: "none",
+                            1: "connected",
+                            2: "disconnected",
+                            3: "pairing_request",
+                            4: "pairing_cancelled",
+                            5: "pairing_completed",
+                            6: "pairing_not_needed",
+                            7: "connection_switched",
+                            255: "emulator_ping",
+                        }
+                        log.debug(
+                            __name__,
+                            "BLE event: %s, state: %s",
+                            evname.get(event[0], "unknown"),
+                            ",".join(ble.connection_flags() or ("none",)),
+                        )
                     self._event(self.layout.ble_event, *event)
             except Shutdown:
                 return

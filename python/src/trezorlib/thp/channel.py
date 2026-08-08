@@ -442,15 +442,19 @@ class Channel:
 
     def _send_ack(self, acked_message: Message) -> None:
         if self.is_ack_piggybacking_allowed and self._active_contexts:
+            LOG.debug("active contexts, not sending standalone ack")
             # Skip explicit THP ACK during workflow - the next request will piggyback the correct ACK bit
             return
 
+        if self.is_ack_piggybacking_allowed:
+            LOG.warning("no active contexts, sending standalone ack")
         ack = control_byte.make_ack_for(acked_message.ctrl_byte)
         ack_message = Message(ack, acked_message.cid, b"")
 
         thp_io.write_payload_to_wire(self.transport, ack_message)
 
     def _flush_ack(self) -> None:
+        LOG.warning("flush ack")
         ack = control_byte.make_ack(not self.sync_bit_receive)
         ack_message = Message(ack, self.channel_id, b"")
 

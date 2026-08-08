@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from .session_context import GenericSessionContext
 
 
-_TRACE = const(False)
+_TRACE = const(True)
 
 TREZOR_STATE_UNPAIRED = const(0x00)
 TREZOR_STATE_PAIRED = const(0x01)

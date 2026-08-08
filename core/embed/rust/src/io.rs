@@ -62,7 +62,7 @@ impl<'a> InputStream<'a> {
         let mut shift = 0;
         loop {
             let byte = self.read_byte()?;
-            uint += (u64::from(byte) & 0x7F) << shift;
+            uint += (u64::from(byte) & 0x7F) << shift; // should error on overflow
             shift += 7;
             if byte & 0x80 == 0 {
                 break;

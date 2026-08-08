@@ -24,6 +24,8 @@ workflow.start_default()
 if utils.USE_BLE:
     import trezorble as ble
 
+    log.debug(__name__, "BLE flags: %s", ",".join(ble.connection_flags() or ("none",)))
+
     # initialize the wire codec over USB & BLE
     wire.setup(usb.iface_wire, ble.interface)
 else:

@@ -100,6 +100,9 @@ async def handle_device_menu() -> None:
         connected_idx = _find_device(connected_addr, bonds) if ble_enabled else None
         if __debug__:
             log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
+            log.debug(
+                __name__, "BLE flags: %s", ",".join(ble.connection_flags() or ("none",))
+            )
         hostname_map = {e.mac_addr: e for e in paired_cache.load()}
         paired_devices = [_get_hostinfo(bond, hostname_map) for bond in bonds]
 
