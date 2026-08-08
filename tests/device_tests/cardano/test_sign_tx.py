@@ -150,7 +150,6 @@ def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool =
         memos = [purchase_memo, refund_memo, text_details_memo]
         nonce = misc.get_nonce(session)
         payment_request = make_payment_request(
-            session,
             recipient_name="trezor.io",
             slip44=1815,
             outputs=[(o[0].amount, o[0].address) for o in outputs],

@@ -148,7 +148,6 @@ def test_signtx_payment_req(session: Session):
     )
     nonce = misc.get_nonce(session)
     payment_req = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=144,
         outputs=[(msg.payment.amount, msg.payment.destination)],
@@ -184,7 +183,6 @@ def test_signtx_payment_req(session: Session):
     nonce = misc.get_nonce(session)
     address = f"{msg.payment.destination}?dt={msg.payment.destination_tag}"
     payment_req = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=144,
         outputs=[(msg.payment.amount, address)],

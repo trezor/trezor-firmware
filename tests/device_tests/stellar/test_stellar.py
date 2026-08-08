@@ -108,7 +108,6 @@ def parameters_to_proto(session, parameters):
         memos = [purchase_memo, refund_memo, text_details_memo]
         nonce = misc.get_nonce(session)
         payment_request = make_payment_request(
-            session,
             recipient_name="trezor.io",
             slip44=148,
             outputs=[

@@ -39,7 +39,6 @@ def test_paymentnotification(session: Session):
 
     nonce = misc.get_nonce(session)
     payment_request = make_payment_request(
-        session,
         recipient_name="trezor.io",
         slip44=None,
         outputs=None,
