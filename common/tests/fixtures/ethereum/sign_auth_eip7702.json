@@ -117,17 +117,17 @@
             }
         },
         {
-            "name": "revoke_nonce_0_chainid_123456789_defs",
+            "name": "revoke_nonce_67_chainid_123456789_defs",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x0000000000000000000000000000000000000000",
-                "nonce": 0,
+                "nonce": 67,
                 "chain_id": 123456789
             },
             "result": {
                 "sig_v": 1,
-                "sig_r": "dbfcec89e34039831441c02101e0ee217da668efb6d37ab4c35c0aa3454865a0",
-                "sig_s": "1ec4a7afcb7b36a84a4ae37d7ac2ae7e5bfd06868e04847be6f3882603dc83f7"
+                "sig_r": "0231bb8d2416518bef150eb4c4e1c20dc33657f3abfea3c155b30f4e310d5131",
+                "sig_s": "145a986372d8fe47dacd6d5af31efe18a935e46d0a80f7a5b5aef503902b7a0b"
             }
         }
     ]
