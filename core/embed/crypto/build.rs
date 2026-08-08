@@ -14,13 +14,34 @@ fn main() -> Result<()> {
         lib.add_include("inc");
 
         let attrs = CompileAttrs::new()
+            .with_flag("-W")
+            .with_flag("-Wall")
+            .with_flag("-Wextra")
+            .with_flag("-Wimplicit-function-declaration")
+            .with_flag("-Wredundant-decls")
+            .with_flag("-Wstrict-prototypes")
+            .with_flag("-Wundef")
+            .with_flag("-Wshadow")
+            .with_flag("-Wpointer-arith")
+            .with_flag("-Wformat")
+            .with_flag("-Wreturn-type")
+            .with_flag("-Wsign-compare")
+            .with_flag("-Wmultichar")
+            .with_flag("-Wformat-nonliteral")
+            .with_flag("-Winit-self")
+            .with_flag("-Wuninitialized")
+            .with_flag("-Wformat-security")
+            .with_flag("-Wno-missing-braces")
+            .with_flag("-Wno-unused-function")
+            .with_flag("-Werror")
+            .with_flag("-Wno-incompatible-pointer-types")
             .with_flag("-ftrivial-auto-var-init=zero")
             .with_flag("-ffreestanding");
 
         add_crypto_base(lib, &attrs)?;
 
         if cfg!(feature = "insecure_prng") {
-            add_insecure_prng(lib)?;
+            add_insecure_prng(lib, &attrs)?;
         }
 
         if cfg!(feature = "aes_gcm") {
@@ -195,14 +216,14 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
     Ok(())
 }
 
-fn add_insecure_prng(lib: &mut CLibrary) -> Result<()> {
+fn add_insecure_prng(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
     if cfg!(feature = "production") {
         if !xbuild::is_rust_analyzer() {
             bail!("insecure_prng cannot be enabled in production builds");
         }
     }
     lib.add_define("USE_INSECURE_PRNG", Some("1"));
-    lib.add_source(PathBuf::from(CRYPTO_PATH).join("rand_insecure.c"));
+    lib.add_source_with_attrs(PathBuf::from(CRYPTO_PATH).join("rand_insecure.c"), Some(attrs.clone()));
 
     Ok(())
 }
@@ -238,15 +259,12 @@ fn add_noise(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
     Ok(())
 }
 
-fn add_secp256k1_zkp(lib: &mut CLibrary, _attrs: &CompileAttrs) -> Result<()> {
-    // Deliberately not inheriting `attrs`: they include
-    // `-ftrivial-auto-var-init=zero`, which we'd like to apply to the whole
+fn add_secp256k1_zkp(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
+    let mut attrs = attrs.clone();
+    // Remove `-ftrivial-auto-var-init=zero`, which we'd like to apply to the whole
     // crypto library, but the resulting code growth overflows the bootloader
     // flash, where secp256k1 is also used.
-    // let attrs = attrs.clone().with_flag("-Wno-unused-function");
-    let attrs = CompileAttrs::new()
-        .with_flag("-ffreestanding")
-        .with_flag("-Wno-unused-function");
+    attrs.remove_flag("-ftrivial-auto-var-init=zero");
 
     lib.add_defines([
         ("USE_SECP256K1_ZKP", None),
@@ -296,8 +314,6 @@ fn add_sphincsplus(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
 
     lib.add_define("PARAMS", Some("sphincs-sha2-128s"));
 
-    let attrs = attrs.clone().with_flag("-Wno-incompatible-pointer-types");
-
     lib.add_sources_in_dir_with_attrs(
         SPHINCSPLUS_PATH,
         [
@@ -310,7 +326,7 @@ fn add_sphincsplus(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
             "utils.c",
             "wots.c",
         ],
-        Some(attrs),
+        Some(attrs.clone()),
     );
     Ok(())
 }
