@@ -5,24 +5,13 @@ from trezor import TR
 from trezor.ui.layouts import (
     confirm_address,
     confirm_properties,
-    confirm_stellar_address,
     confirm_stellar_output,
     confirm_stellar_output_amount,
-    confirm_stellar_valid_until,
     confirm_value,
 )
 from trezor.wire import DataError, ProcessError
 
-from ..helpers import resolve_sep41_token
-from ..layout import (
-    _confirm_sep41_token_details,
-    confirm_invocation,
-    confirm_invoke_contract_args,
-    format_amount,
-    parse_sep41_approve,
-    parse_sep41_transfer,
-    sac_approve_title,
-)
+from ..layout import confirm_invocation, confirm_invoke_contract, format_amount
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
@@ -37,7 +26,6 @@ if TYPE_CHECKING:
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
         StellarHostFunction,
-        StellarInvokeContractArgs,
         StellarInvokeHostFunctionOp,
         StellarManageBuyOfferOp,
         StellarManageDataOp,
@@ -464,111 +452,6 @@ def _is_root_auth_entry(
     return False
 
 
-async def _confirm_from_account(from_account: str, title: str) -> None:
-    """Confirm the account a SEP-41 token operation draws on.
-
-    Only shown when it is not the account whose signature authorizes the
-    operation anyway, i.e. when another party must have authorized it
-    separately.
-    """
-    await confirm_stellar_address(
-        title,
-        "",
-        from_account,
-        TR.stellar__from,
-        "op_invoke_from",
-    )
-
-
-async def _confirm_sac_transfer(
-    transfer: tuple[str, str, int],
-    asset: StellarAsset,
-    source_account: str,
-    contract_address: str,
-) -> None:
-    from_account, destination, amount = transfer
-
-    if from_account != source_account:
-        await _confirm_from_account(from_account, TR.words__send)
-
-    await confirm_stellar_output(
-        destination,
-        format_amount(amount, asset),
-        output_index=0,  # a Soroban operation is always the only one
-        asset=asset,
-        token_contract=contract_address,
-    )
-
-
-async def _confirm_sac_approve(
-    approve: tuple[str, str, int, int],
-    asset: StellarAsset,
-    source_account: str,
-    contract_address: str,
-) -> None:
-    from_account, spender, amount, live_until_ledger = approve
-    title = sac_approve_title(amount)
-
-    if from_account != source_account:
-        await _confirm_from_account(from_account, title)
-
-    await confirm_stellar_address(
-        title,
-        "",
-        spender,
-        TR.stellar__spender,
-        "op_invoke_spender",
-    )
-
-    if amount == 0:
-        # "Revoke approval" already communicates a zero allowance, but the
-        # token still needs to be identified when the amount screen is omitted.
-        await _confirm_sep41_token_details(title, "", asset, contract_address)
-    else:
-        await confirm_stellar_output_amount(
-            title,
-            "",
-            format_amount(amount, asset),
-            asset,
-            TR.words__amount,
-            token_contract=contract_address,
-        )
-
-    await confirm_stellar_valid_until(
-        title,
-        "",
-        live_until_ledger,
-        "op_invoke_valid_until",
-    )
-
-
-async def _confirm_invoke_contract(
-    args: StellarInvokeContractArgs, source_account: str, network_id: AnyBytes
-) -> None:
-    """Confirm the contract call a transaction invokes.
-
-    A call to a verified Stellar Asset Contract gets the payment-like flow of
-    the SEP-41 function it invokes; anything else is shown as a raw contract
-    call.
-    """
-    asset = resolve_sep41_token(args, network_id)
-
-    if asset is not None:
-        transfer = parse_sep41_transfer(args)
-        if transfer is not None:
-            return await _confirm_sac_transfer(
-                transfer, asset, source_account, args.contract_address
-            )
-
-        approve = parse_sep41_approve(args)
-        if approve is not None:
-            return await _confirm_sac_approve(
-                approve, asset, source_account, args.contract_address
-            )
-
-    await confirm_invoke_contract_args(args, br_name_prefix="op_invoke")
-
-
 async def confirm_invoke_host_function_op(
     op: StellarInvokeHostFunctionOp, tx_source_account: str, network_id: AnyBytes
 ) -> None:
@@ -585,10 +468,11 @@ async def confirm_invoke_host_function_op(
         if function.invoke_contract is None:
             raise DataError("Stellar: missing invoke_contract")
 
-        await _confirm_invoke_contract(
+        await confirm_invoke_contract(
             function.invoke_contract,
-            source_account,
             network_id,
+            source_account,
+            is_transaction_host_function=True,
         )
     else:
         raise ProcessError("Stellar: unsupported host function type")
