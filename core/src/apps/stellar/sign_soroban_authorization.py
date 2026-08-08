@@ -63,7 +63,9 @@ async def sign_soroban_authorization(
         # which the device account is a signer.
         await layout.require_confirm_auth_on_behalf_of(auth.address)
 
-    await layout.confirm_authorized_invocation(auth.invocation, network_id)
+    await layout.confirm_authorized_invocation(
+        auth.invocation, network_id, auth.address
+    )
     await layout.require_confirm_signature_expiration_ledger(
         auth.signature_expiration_ledger
     )

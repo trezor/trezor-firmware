@@ -353,8 +353,18 @@ def sac_approve_title(amount: int) -> str:
     return TR.stellar__revoke_approval if amount == 0 else TR.stellar__approve_token
 
 
+def _should_show_from_address(
+    from_address: str, authorizing_address: str | None
+) -> bool:
+    """Show `from` unless the same address already authorizes the whole tree."""
+    return authorizing_address is None or from_address != authorizing_address
+
+
 async def confirm_sac_invocation(
-    args: StellarInvokeContractArgs, asset: StellarAsset, title: str
+    args: StellarInvokeContractArgs,
+    asset: StellarAsset,
+    title: str,
+    authorizing_address: str | None,
 ) -> bool:
     """Confirm a SEP-41 call on a verified SAC as a token operation.
 
@@ -364,7 +374,9 @@ async def confirm_sac_invocation(
     ever dropped. When shown, the asset's issuer sits in the info menu of
     the amount screen, like it does for payments. Anything but a well-formed
     `transfer` / `approve` is left to the generic contract flow
-    (returns False).
+    (returns False). The `from` address is omitted only when it repeats the
+    address that authorizes the whole invocation tree; if that address is
+    unknown (`None`), `from` is shown.
     """
     transfer = parse_sep41_transfer(args)
     if transfer is not None:
@@ -375,9 +387,10 @@ async def confirm_sac_invocation(
         # belong to another party altogether, so it gets a neutral,
         # perspective-free label, in line with "Approve token".
         action = TR.stellar__transfer_token
-        await layouts.confirm_stellar_address(
-            title, action, from_address, TR.stellar__from, "op_auth_token_from"
-        )
+        if _should_show_from_address(from_address, authorizing_address):
+            await layouts.confirm_stellar_address(
+                title, action, from_address, TR.stellar__from, "op_auth_token_from"
+            )
         await layouts.confirm_stellar_address(
             title, action, to_address, TR.stellar__to, "op_auth_token_to"
         )
@@ -395,9 +408,10 @@ async def confirm_sac_invocation(
     if approve is not None:
         from_address, spender, amount, live_until_ledger = approve
         action = sac_approve_title(amount)
-        await layouts.confirm_stellar_address(
-            title, action, from_address, TR.stellar__from, "op_auth_token_from"
-        )
+        if _should_show_from_address(from_address, authorizing_address):
+            await layouts.confirm_stellar_address(
+                title, action, from_address, TR.stellar__from, "op_auth_token_from"
+            )
         await layouts.confirm_stellar_address(
             title, action, spender, TR.stellar__spender, "op_auth_token_spender"
         )
@@ -426,7 +440,9 @@ async def confirm_sac_invocation(
 
 
 async def confirm_authorized_invocation(
-    invocation: StellarSorobanAuthorizedInvocation, network_id: AnyBytes
+    invocation: StellarSorobanAuthorizedInvocation,
+    network_id: AnyBytes,
+    authorizing_address: str,
 ) -> None:
     """Confirm a standalone authorized invocation tree (auth entry signing).
 
@@ -434,13 +450,14 @@ async def confirm_authorized_invocation(
     its root label is empty; sub-invocations are numbered relative to it
     (".1", ".1.2", ...), the same paths they would have inside a transaction.
     """
-    await confirm_invocation(invocation, "", network_id)
+    await confirm_invocation(invocation, "", network_id, authorizing_address)
 
 
 async def confirm_invocation(
     invocation: StellarSorobanAuthorizedInvocation,
     position: str,
     network_id: AnyBytes,
+    authorizing_address: str | None,
     is_root: bool = False,
 ) -> None:
     """Confirm an authorized invocation and its sub-invocations recursively.
@@ -450,7 +467,8 @@ async def confirm_invocation(
     label plus the dot-delimited path in the auth tree (e.g. "#2", "#2.1" in a
     transaction), or empty for the unlabeled root of a standalone authorization
     entry (whose children are then ".1", ".1.2", ...), so a given entry's
-    children carry the same paths in both flows.
+    children carry the same paths in both flows. `authorizing_address` belongs
+    to the whole tree and is propagated unchanged to every child.
     """
     from trezor.enums import StellarSorobanAuthorizedFunctionType
 
@@ -482,7 +500,9 @@ async def confirm_invocation(
         # still shown as a raw contract call, not rejected.
         shown = False
         if asset is not None:
-            shown = await confirm_sac_invocation(func.contract_fn, asset, title)
+            shown = await confirm_sac_invocation(
+                func.contract_fn, asset, title, authorizing_address
+            )
         if not shown:
             await confirm_invoke_contract_args(
                 func.contract_fn,
@@ -491,7 +511,9 @@ async def confirm_invocation(
             )
 
     for i, sub in enumerate(invocation.sub_invocations):
-        await confirm_invocation(sub, f"{position}.{i + 1}", network_id)
+        await confirm_invocation(
+            sub, f"{position}.{i + 1}", network_id, authorizing_address
+        )
 
 
 def _escape_str(s: str) -> str:

@@ -618,7 +618,8 @@ async def confirm_invoke_host_function_op(
                 auth_entry,
                 shown,
                 network_id,
-                _is_root_auth_entry(auth_entry, function),
+                source_account,
+                is_root=_is_root_auth_entry(auth_entry, function),
             )
         else:
             non_src_entries.append(auth_entry)
@@ -635,7 +636,8 @@ async def confirm_invoke_host_function_op(
                 auth_entry,
                 shown,
                 network_id,
-                _is_root_auth_entry(auth_entry, function),
+                source_account,
+                is_root=_is_root_auth_entry(auth_entry, function),
             )
 
 
@@ -643,19 +645,26 @@ async def _confirm_auth_entry(
     auth: StellarSorobanAuthorizationEntry,
     position: int,
     network_id: AnyBytes,
+    source_account: str,
     is_root: bool = False,
 ) -> None:
     from trezor.enums import StellarSorobanCredentialsType
 
     creds = auth.credentials
+    # SOURCE_ACCOUNT credentials authorize the tree through the effective
+    # operation source; address credentials name their authorizing party.
+    authorizing_address: str | None = None
 
-    if creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2:
+    if creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT:
+        authorizing_address = source_account
+    elif creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2:
         if creds.address_v2 is None:
             raise DataError("Stellar: missing address_v2 credentials")
 
+        authorizing_address = creds.address_v2.address
         await confirm_address(
             f"{TR.words__authorization} #{position}",
-            creds.address_v2.address,
+            authorizing_address,
             description=TR.words__address,
             br_name="op_auth_entry_address",
         )
@@ -663,5 +672,9 @@ async def _confirm_auth_entry(
     # Show the whole authorized invocation tree starting from its root (not just the
     # nested sub-invocations), so the user sees exactly what this signature authorizes.
     await confirm_invocation(
-        auth.root_invocation, f"#{position}", network_id, is_root=is_root
+        auth.root_invocation,
+        f"#{position}",
+        network_id,
+        authorizing_address,
+        is_root=is_root,
     )
