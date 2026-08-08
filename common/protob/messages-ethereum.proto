@@ -2,6 +2,7 @@ syntax = "proto2";
 package hw.trezor.messages.ethereum;
 
 import "messages-common.proto";
+import "options.proto";
 
 // Sugar for easier handling in Java
 option java_outer_classname = "TrezorMessageEthereum";
@@ -100,9 +101,19 @@ message EthereumSignTxEIP1559 {
     optional common.PaymentRequest payment_req = 14;      // SLIP-24 payment request
     optional bool supports_definition_request = 15;       // whether the client supports EthereumDefinitionRequest
 
+    optional EthereumAuth7702 auth7702 = 16
+        [(experimental_field) = true];  // EIP-7702 delegate to authorize/revoke (only on Core)
+
     message EthereumAccessList {
         required string address = 1;
         repeated bytes storage_keys = 2;
+    }
+
+    message EthereumAuth7702 {
+        option (experimental_message) = true;
+
+        required string delegate = 1;  // address of the code that will be delegated to the EOA
+                                       // if all zeroes, delegation is revoked
     }
 }
 
@@ -118,9 +129,18 @@ message EthereumTxRequest {
     optional uint32 data_length = 1;  // Number of bytes being requested (<= 1024)
 
     // Done. Return signature.
-    optional uint32 signature_v = 2;  // Computed signature (recovery parameter, limited to 27 or 28)
-    optional bytes signature_r = 3;   // Computed signature R component (256 bit)
-    optional bytes signature_s = 4;   // Computed signature S component (256 bit)
+    optional uint32 signature_v = 2;    // Computed signature (recovery parameter, limited to 27 or 28)
+    optional bytes signature_r = 3;     // Computed signature R component (256 bit)
+    optional bytes signature_s = 4;     // Computed signature S component (256 bit)
+    repeated EthereumAuth7702Tuple auth7702_list = 5
+        [(experimental_field) = true];  // EIP-7702 authorization list of tuples (if requested above).
+
+    message EthereumAuth7702Tuple {
+        option (experimental_message) = true;
+
+        repeated bytes items = 1;  // EIP-7702 authorization tuple: [chain_id, delegate, nonce, y_parity, r, s]
+                                   // integers are encoded using minimal big-endian serialization
+    }
 }
 
 /**
