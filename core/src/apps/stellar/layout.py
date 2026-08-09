@@ -360,8 +360,8 @@ def _sc_u32(val: StellarSCVal) -> int | None:
     return val.u32
 
 
-def _sep41_approve_title(amount: int) -> str:
-    """Title of an approve confirmation: an allowance of zero revokes it."""
+def _sep41_approve_action(amount: int) -> str:
+    """Approve action label: an allowance of zero revokes it."""
     return TR.stellar__revoke_approval if amount == 0 else TR.stellar__approve_token
 
 
@@ -497,7 +497,7 @@ async def _confirm_sep41_token(
     approve = parse_sep41_approve(args)
     if approve is not None:
         from_address, spender, amount, live_until_ledger = approve
-        action = _sep41_approve_title(amount)
+        action = _sep41_approve_action(amount)
         screen_title = authorization_title or action
         subtitle = "" if is_transaction_host_function else action
         if _should_show_from_address(from_address, authorizing_address):
