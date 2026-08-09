@@ -251,19 +251,20 @@ async def require_confirm_signature_expiration_ledger(
 async def confirm_invoke_contract_args(
     args: StellarInvokeContractArgs,
     is_transaction_host_function: bool,
-    title: str | None = None,
+    authorization_title: str | None = None,
 ) -> None:
     """Confirm a contract call using the generic, unparsed arguments UI.
 
     `is_transaction_host_function` is True for the function invoked directly
-    by a transaction and False for a node of an authorization tree. Tree nodes
-    must provide `title`; it identifies their position while each screen's
-    usual title moves into its description or subtitle.
+    by a transaction and False for a node of an authorization tree. Direct calls
+    omit `authorization_title`. Tree nodes must provide it to identify their
+    position while each screen's usual title moves into its description or
+    subtitle.
     """
-    authorization_title: str | None = None
-    if not is_transaction_host_function:
-        assert title is not None
-        authorization_title = title
+    if is_transaction_host_function:
+        assert authorization_title is None
+    else:
+        assert authorization_title is not None
 
     await layouts.confirm_address(
         authorization_title or TR.stellar__invoke_contract,
@@ -377,17 +378,19 @@ async def confirm_invoke_contract(
     network_id: AnyBytes,
     authorizing_address: str | None,
     is_transaction_host_function: bool,
-    title: str | None = None,
+    authorization_title: str | None = None,
 ) -> None:
     """Confirm a contract call, using the dedicated token UI when possible.
 
     `is_transaction_host_function` explicitly distinguishes the two callers:
 
     - True: the host function invoked directly by a transaction. Transfers
-      retain the standard payment-style output screen and `title` is omitted.
+      retain the standard payment-style output screen and `authorization_title`
+      is omitted.
     - False: an invocation displayed from an authorization tree, whether the
-      tree is embedded in a transaction or signed standalone. `title` is
-      required and identifies the node; the token action becomes its subtitle.
+      tree is embedded in a transaction or signed standalone.
+      `authorization_title` is required and identifies the node; the token
+      action becomes its subtitle.
 
     `authorizing_address` is used in both contexts to avoid repeating the
     address that already authorizes the transaction operation or the whole
@@ -395,50 +398,54 @@ async def confirm_invoke_contract(
     """
     asset = resolve_sep41_token(args, network_id)
     if asset is not None:
-        if await _confirm_sep41_token(
+        if await _try_confirm_sep41_token_call(
             args,
             asset,
             authorizing_address,
             is_transaction_host_function,
-            title,
+            authorization_title,
         ):
             return
 
-    await confirm_invoke_contract_args(args, is_transaction_host_function, title)
+    await confirm_invoke_contract_args(
+        args, is_transaction_host_function, authorization_title
+    )
 
 
-async def _confirm_sep41_token(
+async def _try_confirm_sep41_token_call(
     args: StellarInvokeContractArgs,
     asset: StellarAsset,
     authorizing_address: str | None,
     is_transaction_host_function: bool,
-    title: str | None,
+    authorization_title: str | None,
 ) -> bool:
-    """Confirm a supported SEP-41 call as a token operation.
+    """Try to confirm a supported SEP-41 call as a token operation.
 
-    The calling contexts determine `is_transaction_host_function` and `title`:
+    The calling contexts determine `is_transaction_host_function` and
+    `authorization_title`:
 
-    - A host function invoked directly by a transaction uses True and `None`.
-      The token action itself is the screen title: "Send", "Approve token", or
+    - A host function invoked directly by a transaction uses
+      `is_transaction_host_function=True` and `authorization_title=None`. The
+      token action itself is the screen title: "Send", "Approve token", or
       "Revoke approval" for an approval amount of zero.
-    - An authorization-tree node embedded in a transaction uses False and a
-      positional title such as "Authorization #1" or "Authorization #1.1".
-    - A standalone authorization-entry node uses False and a title such as
+    - An authorization-tree node embedded in a transaction uses
+      `is_transaction_host_function=False` and a positional title such as
+      "Authorization #1" or "Authorization #1.1".
+    - A standalone authorization-entry node also uses
+      `is_transaction_host_function=False`, with a title such as
       "Authorization" or "Authorization .1".
 
     For authorization-tree nodes, the title identifies the node while the
     token action ("Transfer token", "Approve token", or "Revoke approval") is
     shown as its subtitle.
 
-    Anything but a well-formed `transfer` or `approve` is left to the generic
-    contract flow (returns False).
+    Returns True after handling a well-formed `transfer` or `approve`. Anything
+    else returns False so the caller can use the generic contract flow.
     """
     if is_transaction_host_function:
-        assert title is None
-        authorization_title = None
+        assert authorization_title is None
     else:
-        assert title is not None
-        authorization_title = title
+        assert authorization_title is not None
 
     transfer = parse_sep41_transfer(args)
     if transfer is not None:
@@ -585,9 +592,9 @@ async def confirm_invocation(
         raise DataError("Stellar: missing contract_fn")
 
     if position:
-        title = f"{TR.words__authorization} {position}"
+        authorization_title = f"{TR.words__authorization} {position}"
     else:
-        title = TR.words__authorization
+        authorization_title = TR.words__authorization
 
     if not is_root:
         await confirm_invoke_contract(
@@ -595,7 +602,7 @@ async def confirm_invocation(
             network_id,
             authorizing_address,
             is_transaction_host_function=False,
-            title=title,
+            authorization_title=authorization_title,
         )
 
     for i, sub in enumerate(invocation.sub_invocations):
