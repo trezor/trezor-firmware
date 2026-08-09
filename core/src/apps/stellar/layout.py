@@ -251,6 +251,7 @@ async def require_confirm_signature_expiration_ledger(
 async def confirm_invoke_contract_args(
     args: StellarInvokeContractArgs,
     is_transaction_host_function: bool,
+    br_name_prefix: str,
     authorization_title: str | None = None,
 ) -> None:
     """Confirm a contract call using the generic, unparsed arguments UI.
@@ -272,10 +273,10 @@ async def confirm_invoke_contract_args(
         description=(
             None if is_transaction_host_function else TR.stellar__invoke_contract
         ),
-        br_name="op_invoke_contract_address",
+        br_name=f"{br_name_prefix}_contract_address",
     )
     await layouts.confirm_text(
-        "op_invoke_function",
+        f"{br_name_prefix}_function",
         authorization_title or TR.words__function,
         args.function_name,
         description=None if is_transaction_host_function else TR.words__function,
@@ -287,7 +288,7 @@ async def confirm_invoke_contract_args(
         for i, arg in enumerate(args.args)
     ]
     await layouts.confirm_properties(
-        "op_invoke_args",
+        f"{br_name_prefix}_args",
         authorization_title or TR.words__arguments,
         props,
         None if is_transaction_host_function else TR.words__arguments,
@@ -396,6 +397,8 @@ async def confirm_invoke_contract(
     address that already authorizes the transaction operation or the whole
     authorization tree.
     """
+    br_name_prefix = "op_invoke" if is_transaction_host_function else "op_auth"
+
     asset = resolve_sep41_token(args, network_id)
     if asset is not None:
         if await _try_confirm_sep41_token_call(
@@ -403,12 +406,16 @@ async def confirm_invoke_contract(
             asset,
             authorizing_address,
             is_transaction_host_function,
+            br_name_prefix,
             authorization_title,
         ):
             return
 
     await confirm_invoke_contract_args(
-        args, is_transaction_host_function, authorization_title
+        args,
+        is_transaction_host_function,
+        br_name_prefix,
+        authorization_title,
     )
 
 
@@ -417,6 +424,7 @@ async def _try_confirm_sep41_token_call(
     asset: StellarAsset,
     authorizing_address: str | None,
     is_transaction_host_function: bool,
+    br_name_prefix: str,
     authorization_title: str | None,
 ) -> bool:
     """Try to confirm a supported SEP-41 call as a token operation.
@@ -472,7 +480,7 @@ async def _try_confirm_sep41_token_call(
                 subtitle,
                 from_address,
                 TR.stellar__from,
-                "op_invoke_from",
+                f"{br_name_prefix}_from",
             )
 
         if not is_transaction_host_function:
@@ -481,7 +489,7 @@ async def _try_confirm_sep41_token_call(
                 subtitle,
                 to_address,
                 TR.stellar__to,
-                "op_invoke_to",
+                f"{br_name_prefix}_to",
             )
             await layouts.confirm_stellar_output_amount(
                 screen_title,
@@ -513,14 +521,14 @@ async def _try_confirm_sep41_token_call(
                 subtitle,
                 from_address,
                 TR.stellar__from,
-                "op_invoke_from",
+                f"{br_name_prefix}_from",
             )
         await layouts.confirm_stellar_address(
             screen_title,
             subtitle,
             spender,
             TR.stellar__spender,
-            "op_invoke_spender",
+            f"{br_name_prefix}_spender",
         )
         if amount == 0:
             # "Revoke approval" already communicates the zero allowance, so
@@ -542,7 +550,7 @@ async def _try_confirm_sep41_token_call(
             screen_title,
             subtitle,
             live_until_ledger,
-            "op_invoke_valid_until",
+            f"{br_name_prefix}_valid_until",
         )
         return True
 
