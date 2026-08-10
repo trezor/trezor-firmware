@@ -262,16 +262,14 @@ async def _confirm_invoke_contract_args(
     await layouts.confirm_address(
         authorization_title or TR.stellar__invoke_contract,
         args.contract_address,
-        description=(
-            None if authorization_title is None else TR.stellar__invoke_contract
-        ),
+        description=TR.stellar__invoke_contract if authorization_title else None,
         br_name=f"{br_name_prefix}_contract_address",
     )
     await layouts.confirm_text(
         f"{br_name_prefix}_function",
         authorization_title or TR.words__function,
         args.function_name,
-        description=(None if authorization_title is None else TR.words__function),
+        description=TR.words__function if authorization_title else None,
     )
     if not args.args:
         return
@@ -283,7 +281,7 @@ async def _confirm_invoke_contract_args(
         f"{br_name_prefix}_args",
         authorization_title or TR.words__arguments,
         props,
-        None if authorization_title is None else TR.words__arguments,
+        TR.words__arguments if authorization_title else None,
     )
 
 
