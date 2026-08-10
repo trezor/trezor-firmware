@@ -362,13 +362,6 @@ def _sc_u32(val: StellarSCVal) -> int | None:
     return val.u32
 
 
-def _should_show_from_address(
-    from_address: str, authorizing_address: str
-) -> bool:
-    """Show `from` unless the same address already authorizes the whole tree."""
-    return from_address != authorizing_address
-
-
 async def confirm_invoke_contract(
     args: StellarInvokeContractArgs,
     network_id: AnyBytes,
@@ -462,7 +455,7 @@ async def _confirm_sep41_transfer(
     # Authorization tree: "Authorization #..." is the title and
     # "Transfer token" is the subtitle.
     subtitle = "" if is_transaction_host_function else action
-    if _should_show_from_address(from_address, authorizing_address):
+    if from_address != authorizing_address:
         await layouts.confirm_stellar_address(
             screen_title,
             subtitle,
@@ -516,7 +509,7 @@ async def _confirm_sep41_approve(
     action = TR.stellar__revoke_approval if amount == 0 else TR.stellar__approve_token
     screen_title = authorization_title or action
     subtitle = "" if is_transaction_host_function else action
-    if _should_show_from_address(from_address, authorizing_address):
+    if from_address != authorizing_address:
         await layouts.confirm_stellar_address(
             screen_title,
             subtitle,
