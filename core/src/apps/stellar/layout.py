@@ -248,7 +248,7 @@ async def require_confirm_signature_expiration_ledger(
     )
 
 
-async def confirm_invoke_contract_args(
+async def _confirm_invoke_contract_args(
     args: StellarInvokeContractArgs,
     is_transaction_host_function: bool,
     br_name_prefix: str,
@@ -411,7 +411,7 @@ async def confirm_invoke_contract(
         ):
             return
 
-    await confirm_invoke_contract_args(
+    await _confirm_invoke_contract_args(
         args,
         is_transaction_host_function,
         br_name_prefix,
