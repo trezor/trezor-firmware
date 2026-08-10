@@ -67,6 +67,15 @@
 
 /*
  ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ ******************************************************************************
  * GLOBAL DEFINES
  ******************************************************************************
  */
@@ -274,7 +283,7 @@ ReturnCode rfalNfcaPollerSelect( const uint8_t *nfcid1, uint8_t nfcidLen, rfalNf
  * \return RFAL_ERR_CRC          : CRC error detected
  * \return RFAL_ERR_FRAMING      : Framing error detected
  * \return RFAL_ERR_PROTO        : Protocol error detected
- * \return RFAL_ERR_NONE         : No error, SEL_RES received
+ * \return RFAL_ERR_NONE         : No error
  *****************************************************************************
  */
 ReturnCode rfalNfcaPollerStartSelect( const uint8_t *nfcid1, uint8_t nfcidLen, rfalNfcaSelRes *selRes );
@@ -295,6 +304,7 @@ ReturnCode rfalNfcaPollerStartSelect( const uint8_t *nfcid1, uint8_t nfcidLen, r
  * \return RFAL_ERR_CRC          : CRC error detected
  * \return RFAL_ERR_FRAMING      : Framing error detected
  * \return RFAL_ERR_PROTO        : Protocol error detected
+ * \return RFAL_ERR_BUSY         : Operation is ongoing
  * \return RFAL_ERR_NONE         : No error, SEL_RES received
  *****************************************************************************
  */
@@ -342,6 +352,7 @@ ReturnCode rfalNfcaPollerStartSleep( void );
  * \return RFAL_ERR_WRONG_STATE  : RFAL not initialized or incorrect mode
  * \return RFAL_ERR_PARAM        : Invalid parameters
  * \return RFAL_ERR_IO           : Generic internal error
+ * \return RFAL_ERR_BUSY         : Operation is ongoing
  * \return RFAL_ERR_NONE         : No error
  *****************************************************************************
  */
@@ -388,7 +399,7 @@ ReturnCode rfalNfcaPollerTechnologyDetection( rfalComplianceMode compMode, rfalN
  * \return RFAL_ERR_WRONG_STATE  : RFAL not initialized or incorrect mode
  * \return RFAL_ERR_PARAM        : Invalid parameters
  * \return RFAL_ERR_IO           : Generic internal error
- * \return RFAL_ERR_NONE         : No error, one or more device in the field
+ * \return RFAL_ERR_NONE         : No error
  *****************************************************************************
  */
 ReturnCode rfalNfcaPollerStartTechnologyDetection( rfalComplianceMode compMode, rfalNfcaSensRes *sensRes );
@@ -403,6 +414,7 @@ ReturnCode rfalNfcaPollerStartTechnologyDetection( rfalComplianceMode compMode, 
  * \return RFAL_ERR_WRONG_STATE  : RFAL not initialized or incorrect mode
  * \return RFAL_ERR_PARAM        : Invalid parameters
  * \return RFAL_ERR_IO           : Generic internal error
+ * \return RFAL_ERR_BUSY         : Operation is ongoing
  * \return RFAL_ERR_NONE         : No error, one or more device in the field
  *****************************************************************************
  */
@@ -419,7 +431,7 @@ ReturnCode rfalNfcaPollerGetTechnologyDetectionStatus( void );
  * This method executes anti collision loop and select the device with higher NFCID1
  * 
  * When devLimit = 0 it is configured to perform collision detection only. Once a collision 
- * is detected the collision resolution is aborted immidiatly. If only one device is found
+ * is detected the collision resolution is aborted immediately. If only one device is found
  * with no collisions, it will properly resolved. 
  *
  * \param[in]  devLimit    : device limit value (CON_DEVICES_LIMIT)
@@ -457,7 +469,7 @@ ReturnCode rfalNfcaPollerSingleCollisionResolution( uint8_t devLimit, bool *coll
  *  
  *  
  * When devLimit = 0 it is configured to perform collision detection only. Once a collision 
- * is detected the collision resolution is aborted immidiatly. If only one device is found
+ * is detected the collision resolution is aborted immediately. If only one device is found
  * with no collisions, it will properly resolved.
  *
  *
@@ -514,7 +526,7 @@ ReturnCode rfalNfcaPollerSleepFullCollisionResolution( uint8_t devLimit, rfalNfc
  *  
  *  
  * When devLimit = 0 it is configured to perform collision detection only. Once a collision 
- * is detected the collision resolution is aborted immidiatly. If only one device is found
+ * is detected the collision resolution is aborted immediately. If only one device is found
  * with no collisions, it will properly resolved.
  *
  *
@@ -542,6 +554,7 @@ ReturnCode rfalNfcaPollerStartFullCollisionResolution( rfalComplianceMode compMo
  *  \return RFAL_ERR_CRC          : CRC error detected
  *  \return RFAL_ERR_FRAMING      : Framing error detected
  *  \return RFAL_ERR_PROTO        : Protocol error detected
+ *  \return RFAL_ERR_BUSY         : Operation is ongoing
  *  \return RFAL_ERR_NONE         : No error, activation successful
  *****************************************************************************
  */
@@ -562,6 +575,10 @@ ReturnCode rfalNfcaPollerGetFullCollisionResolutionStatus( void );
  */
 bool rfalNfcaListenerIsSleepReq( const uint8_t *buf, uint16_t bufLen );
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_NFCA_H */
 

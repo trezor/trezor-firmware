@@ -40,6 +40,15 @@
 #include "rfal_analogConfig.h"
 #include "st25r3916_com.h"
 
+/*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 
 /*
  ******************************************************************************
@@ -976,5 +985,9 @@ const uint8_t rfalAnalogConfigDefaultSettings[] = {
 };
 
 #endif /* ST25R3916|B */
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* ST25R3916_ANALOGCONFIG_H */

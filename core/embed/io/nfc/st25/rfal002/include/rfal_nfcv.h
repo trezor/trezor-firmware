@@ -58,6 +58,15 @@
 
 /*
  ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ ******************************************************************************
  * GLOBAL DEFINES
  ******************************************************************************
  */
@@ -756,6 +765,10 @@ ReturnCode rfalNfcvPollerExtendedGetSystemInformation( uint8_t flags, const uint
  *****************************************************************************
  */
 ReturnCode rfalNfcvPollerTransceiveReq( uint8_t cmd, uint8_t flags, uint8_t param, const uint8_t* uid, const uint8_t *data, uint16_t dataLen, uint8_t* rxBuf, uint16_t rxBufLen, uint16_t *rcvLen );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_NFCV_H */
 

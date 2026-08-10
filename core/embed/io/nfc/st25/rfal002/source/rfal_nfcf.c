@@ -118,7 +118,7 @@ typedef struct
 
 
 
-/*! Colission Resolution states */
+/*! Collision Resolution states */
 typedef enum{
     RFAL_NFCF_CR_POLL,                     /*!< Poll Request                    */
     RFAL_NFCF_CR_PARSE,                    /*!< Parse Poll Response             */
@@ -127,7 +127,7 @@ typedef enum{
 
 
 
-/*! Colission Resolution context */
+/*! Collision Resolution context */
 typedef struct{
     rfalNfcfGreedyF       greedyF;
     uint8_t               devLimit;        /*!< Device limit to be used                                 */
@@ -498,7 +498,7 @@ ReturnCode rfalNfcfPollerCheck( const uint8_t* nfcid2, const rfalNfcfServBlockLi
         {
             ret = RFAL_ERR_REQUEST;
         }
-        /* CHECK succesfull, remove header */
+        /* CHECK successful, remove header */
         else
         {
             (*rcvdLen) -= (RFAL_NFCF_LENGTH_LEN + RFAL_NFCF_CHECKUPDATE_RES_NOB_POS);

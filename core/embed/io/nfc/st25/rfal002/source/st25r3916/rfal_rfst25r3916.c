@@ -1486,6 +1486,9 @@ ReturnCode rfalStartTransceive( const rfalTransceiveContext *ctx )
             /* Start NRT manually, if FWT = 0 (wait endlessly for Rx) chip will ignore anyhow */
             st25r3916ExecuteCommand( ST25R3916_CMD_START_NO_RESPONSE_TIMER );
 
+            /*Check if Observation Mode is enabled and set it on ST25R391x */
+            rfalCheckEnableObsModeRx();
+            
             gRFAL.TxRx.state  = RFAL_TXRX_STATE_RX_IDLE;
         }
         
@@ -1819,7 +1822,7 @@ static void rfalPrepareTransceive( void )
         /* In Active Poller mode GT PPON1 is used to ensure FDT Poll */
         else if( gRFAL.mode == RFAL_MODE_POLL_ACTIVE_P2P )
         {
-            st25r3916WriteRegister( ST25R3916_REG_FIELD_ON_GT, (uint8_t)rfalConv1fcTo2018fc(gRFAL.timings.FDTPoll) );
+            st25r3916WriteRegister( ST25R3916_REG_FIELD_ON_GT, (uint8_t)rfalConv1fcTo2048fc(gRFAL.timings.FDTPoll) );
         }
         else
         {
@@ -2226,6 +2229,7 @@ static void rfalTransceiveTx( void )
                 break;
             }
             
+            /*Check if Observation Mode is enabled and set it on ST25R391x */
             rfalCheckEnableObsModeRx();
             
             /* Goto Rx */
@@ -3006,7 +3010,7 @@ ReturnCode rfalISO14443AStartTransceiveAnticollisionFrame( uint8_t *buf, uint8_t
     }
     
     /*******************************************************************************/
-    /* Set speficic Analog Config for Anticolission if needed */
+    /* Set speficic Analog Config for Anticollision if needed */
     rfalSetAnalogConfig( (RFAL_ANALOG_CONFIG_POLL | RFAL_ANALOG_CONFIG_TECH_NFCA | RFAL_ANALOG_CONFIG_BITRATE_COMMON | RFAL_ANALOG_CONFIG_ANTICOL) );
     
     
@@ -3120,7 +3124,7 @@ ReturnCode rfalISO15693TransceiveAnticollisionFrame( uint8_t *txBuf, uint8_t txB
     }
     
     /*******************************************************************************/
-    /* Set speficic Analog Config for Anticolission if needed */
+    /* Set speficic Analog Config for Anticollision if needed */
     rfalSetAnalogConfig( (RFAL_ANALOG_CONFIG_POLL | RFAL_ANALOG_CONFIG_TECH_NFCV | RFAL_ANALOG_CONFIG_BITRATE_COMMON | RFAL_ANALOG_CONFIG_ANTICOL) );
     
     
@@ -3696,7 +3700,7 @@ static ReturnCode rfalRunListenModeWorker( void )
                 *gRFAL.Lm.rxLen  -= ((*gRFAL.Lm.rxLen > RFAL_CRC_LEN) ? RFAL_CRC_LEN : *gRFAL.Lm.rxLen);
                 *gRFAL.Lm.rxLen   = (uint16_t)rfalConvBytesToBits( *gRFAL.Lm.rxLen );
                 gRFAL.Lm.dataFlag = true;
-				
+                
                 /*Check if Observation Mode was enabled and disable it on ST25R391x */
                 rfalCheckDisableObsMode();
             }
@@ -3959,7 +3963,7 @@ ReturnCode rfalListenStop( void )
     
     /*Check if Observation Mode was enabled and disable it on ST25R391x */
     rfalCheckDisableObsMode();
-	
+    
     /* Re-Enable the Oscillator if not running */
     st25r3916OscOn();
     
@@ -4259,7 +4263,7 @@ ReturnCode rfalListenSetState( rfalLmState newSt )
                 /* ReEnable the receiver */
                 st25r3916ExecuteCommand( ST25R3916_CMD_CLEAR_FIFO );
                 st25r3916ExecuteCommand( ST25R3916_CMD_UNMASK_RECEIVE_DATA );
-    			
+                
                 /*******************************************************************************/
                 /*Check if Observation Mode is enabled and set it on ST25R391x */
                 rfalCheckEnableObsModeRx();

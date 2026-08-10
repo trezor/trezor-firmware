@@ -82,11 +82,20 @@
 #include "rfal_features.h"
 
 /*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
 ******************************************************************************
 * GLOBAL DEFINES
 ******************************************************************************
 */
-#define RFAL_VERSION                               0x040002U                                    /*!< RFAL Current Version: v4.0.2                      */
+#define RFAL_VERSION                               0x040200U                                    /*!< RFAL Current Version: v4.2.0                      */
 
 #define RFAL_FWT_NONE                              0xFFFFFFFFU                                  /*!< Disabled FWT: Wait forever for a response         */
 #define RFAL_GT_NONE                               RFAL_TIMING_NONE                             /*!< Disabled GT: No GT will be applied after Field On */
@@ -163,7 +172,7 @@
 #define rfalConv1fcTo512fc( t )              (uint32_t)( (uint32_t)(t) / RFAL_1FC_IN_512FC )                             /*!< Converts the given t from 1/fc  to 512/fc  */
 #define rfalConv512fcTo1fc( t )              (uint32_t)( (uint32_t)(t) * RFAL_1FC_IN_512FC )                             /*!< Converts the given t from 512/fc to 1/fc   */
 
-#define rfalConv1fcTo2018fc( t )             (uint32_t)( (uint32_t)(t) / RFAL_1FC_IN_2048FC )                            /*!< Converts the given t from 1/fc to 2048/fc  */
+#define rfalConv1fcTo2048fc( t )             (uint32_t)( (uint32_t)(t) / RFAL_1FC_IN_2048FC )                            /*!< Converts the given t from 1/fc to 2048/fc  */
 #define rfalConv2048fcTo1fc( t )             (uint32_t)( (uint32_t)(t) * RFAL_1FC_IN_2048FC )                            /*!< Converts the given t from 2048/fc to 1/fc  */
 
 #define rfalConv1fcTo4096fc( t )             (uint32_t)( (uint32_t)(t) / RFAL_1FC_IN_4096FC )                            /*!< Converts the given t from 1/fc to 4096/fc  */
@@ -1767,6 +1776,10 @@ ReturnCode rfalLowPowerModeStart( rfalLpMode mode );
  */
 ReturnCode rfalLowPowerModeStop( void );
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_RF_H */
 

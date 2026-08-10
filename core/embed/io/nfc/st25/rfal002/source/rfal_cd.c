@@ -301,7 +301,7 @@ ReturnCode rfalCdGetDetectCardStatus( void )
             }
         
             rfalNfcbPollerInitialize();                        /* Initialize for NFC-B */
-            rfalFieldOnAndStartGT();                           /* Turns the Field On if not already and start GT timer */
+            (void)rfalFieldOnAndStartGT();                     /* Turns the Field On if not already and start GT timer */
         
             gCd.st = RFAL_CD_ST_NFCB_TECHDET;
             break;
@@ -398,7 +398,7 @@ ReturnCode rfalCdGetDetectCardStatus( void )
             }
             
             rfalNfcfPollerInitialize(RFAL_BR_212);             /* Initialize for NFC-F */
-            rfalFieldOnAndStartGT();                           /* Turns the Field On if not already and start GT timer */
+            (void)rfalFieldOnAndStartGT();                     /* Turns the Field On if not already and start GT timer */
         
             gCd.st = RFAL_CD_ST_NFCF_TECHDET_START;
             break;
@@ -422,7 +422,7 @@ ReturnCode rfalCdGetDetectCardStatus( void )
             err = rfalNfcfPollerGetCheckPresenceStatus();
             if( err == RFAL_ERR_BUSY )
             {
-                break;                                         /* Wait until NFC-F Technlogy Detection is completed */
+                break;                                         /* Wait until NFC-F Technology Detection is completed */
             }
             
             if( gCd.skipTechFound )                            /* Verify if we are performing multi technology check */
@@ -499,7 +499,7 @@ ReturnCode rfalCdGetDetectCardStatus( void )
         case RFAL_CD_ST_NFCV_INIT:
             
             rfalNfcvPollerInitialize();                        /* Initialize for NFC-V */
-            rfalFieldOnAndStartGT();                           /* Turns the Field On if not already and start GT timer */
+            (void)rfalFieldOnAndStartGT();                     /* Turns the Field On if not already and start GT timer */
         
             gCd.st = RFAL_CD_ST_NFCV_TECHDET;
             break;

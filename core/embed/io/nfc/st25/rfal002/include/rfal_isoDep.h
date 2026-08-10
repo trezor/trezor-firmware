@@ -56,6 +56,15 @@
 #include "rfal_platform.h"
 #include "rfal_nfcb.h"
 
+/*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 
 /*
  ******************************************************************************
@@ -72,6 +81,33 @@
     #define RFAL_FEATURE_ISO_DEP_IBLOCK_MAX_LEN  (1U)    /*!< ISO-DEP I-Block max length, set to "none" */
     #define RFAL_FEATURE_ISO_DEP_APDU_MAX_LEN    (1U)    /*!< ISO-DEP APDU max length, set to "none"    */
 #endif /* !RFAL_FEATURE_ISO_DEP */
+
+
+
+/*
+******************************************************************************
+* KNOWN INCOMPATIBILITIES
+******************************************************************************
+*/
+
+/*******************************************************************************/
+/* NFC standards (NFC Forum, ISO14443, EMVCo) define a parameter which 
+    represents  the Data rate Sent by Initiator|PCD|Poller as DSI
+   MIPI Alliance specification Display Serial Interface (DSI) uses same acronym.
+   On certain STM32 MCUs (e.g STM32F469, STM32L4R9, STM32U599, etc (AN4860)) have a
+    dedicated peripheral for DSI support.
+    
+   There is a known incompatibility with the STM32 HAL for these devices where a 
+   define uses the term DSI (without prefix), which conflicts with the 
+   DSI parameter|field used in NFC.
+   
+   A known mitigation is to undefine DSI in case the MIPI-DSI Host is 
+    not used (#undef DSI) on user defined rfal_platform.h
+*/
+    
+#ifdef DSI_ID
+    #error "RFAL: Incompatibility identified. Check need for STM32 MIPI-DSI Host "
+#endif /* DSI */
 
 /*
  ******************************************************************************
@@ -325,7 +361,7 @@ typedef struct {
     rfalBitRate        DSI_ID;             /*!< Bit Rate coding from Listener (PICC) to Poller (PCD) */
     rfalBitRate        DRI;             /*!< Bit Rate coding from Poller (PCD) to Listener (PICC) */
     uint8_t            DID;             /*!< Device ID                                            */
-    uint8_t            NAD;             /*!< Node ADdress                                         */
+    uint8_t            NAD;             /*!< Node Address                                         */
     bool               supDID;          /*!< DID supported flag                                   */
     bool               supNAD;          /*!< NAD supported flag                                   */
     bool               supAdFt;         /*!< Advanced Features supported flag                     */
@@ -614,7 +650,7 @@ uint16_t rfalIsoDepGetMaxInfLen( void );
  *  
  *  This method triggers a ISO-DEP Transceive containing a complete or 
  *  partial APDU
- *  It transmits the given message and handles all protocol retransmitions,
+ *  It transmits the given message and handles all protocol retransmissions,
  *  error handling and control messages
  *  
  *  The txBuf  contains a complete or partial APDU (INF) to be transmitted 
@@ -669,7 +705,7 @@ ReturnCode rfalIsoDepGetTransceiveStatus( void );
  *  \brief ISO-DEP Start APDU Transceive 
  *  
  *  This method triggers a ISO-DEP Transceive containing a complete APDU
- *  It transmits the given message and handles all protocol retransmitions,
+ *  It transmits the given message and handles all protocol retransmissions,
  *  error handling and control messages
  *  
  *  The txBuf  contains a complete APDU to be transmitted 
@@ -705,6 +741,7 @@ ReturnCode rfalIsoDepStartApduTransceive( rfalIsoDepApduTxRxParam param );
  */
 ReturnCode rfalIsoDepGetApduTransceiveStatus( void );
 
+
 /*! 
  *****************************************************************************
  *  \brief  ISO-DEP Send RATS
@@ -713,7 +750,7 @@ ReturnCode rfalIsoDepGetApduTransceiveStatus( void );
  *  ISO-DEP layer (ISO14443-4) and checks if the received ATS is valid
  *   
  *  \param[in]  FSDI   : Frame Size Device Integer to be used
- *  \param[in]  DID    : Device ID to be used or RFAL_ISODEP_NO_DID for not use DID  
+ *  \param[in]  DID    : Device ID to be used or RFAL_ISODEP_NO_DID to disable DID usage 
  *  \param[out] ats    : pointer to place the ATS Response
  *  \param[out] atsLen : pointer to place the ATS length
  *
@@ -771,7 +808,7 @@ ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI_ID, rfalBitRate DRI, rfal
  *  \param[in]  DRI       : DRI code the divisor from Poller (PCD) to Listener (PICC)
  *  \param[in]  FSDI      : PCD's Frame Size to be announced on the ATTRIB
  *  \param[in]  PARAM3    : ATTRIB PARAM1 byte (protocol type)
- *  \param[in]  DID       : Device ID to be used or RFAL_ISODEP_NO_DID for not use DID
+ *  \param[in]  DID       : Device ID to be used or RFAL_ISODEP_NO_DID to disable DID usage
  *  \param[in]  HLInfo    : pointer to Higher layer INF (NULL if none)
  *  \param[in]  HLInfoLen : Length HLInfo
  *  \param[in]  fwt       : Frame Waiting Time to be used (from SENSB_RES)
@@ -796,7 +833,7 @@ ReturnCode rfalIsoDepATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate 
  *  \brief  Deselect PICC
  *
  *  This function sends a deselect command to PICC and waits for its
- *  responce in a blocking way
+ *  response in a blocking way
  *
  *  \return RFAL_ERR_NONE    : Deselect successfully sent and acknowledged by PICC 
  *  \return RFAL_ERR_PROTO   : Protocol error occurred
@@ -811,8 +848,7 @@ ReturnCode rfalIsoDepDeselect( void );
  *****************************************************************************
  *  \brief  Start Deselect 
  *
- *  This function starts the exchange to send deselect command to PICC and 
- *  waits for its response
+ *  This function starts the exchange to send deselect command to PICC 
  *
  *  \return RFAL_ERR_NONE    : Deselect successfully sent and acknowledged by PICC 
  *  \return RFAL_ERR_PROTO   : Protocol error occurred
@@ -827,8 +863,7 @@ ReturnCode rfalIsoDepStartDeselect( void );
  *****************************************************************************
  *  \brief  Deselect Get Status
  *
- *  This function sends a deselect command to PICC and waits for it`s
- *  responce in a blocking way
+ *  This function gets the status of the Deselect 
  *
  *  \return RFAL_ERR_NONE    : Deselect successfully sent and acknowledged by PICC 
  *  \return RFAL_ERR_PROTO   : Protocol error occurred
@@ -849,7 +884,7 @@ ReturnCode rfalIsoDepGetDeselectStatus( void );
  *  Once Activated all details of the device are provided on isoDepDev
  *   
  *  \param[in]  FSDI          : Frame Size Device Integer to be used
- *  \param[in]  DID           : Device ID to be used or RFAL_ISODEP_NO_DID for not use DID
+ *  \param[in]  DID           : Device ID to be used or RFAL_ISODEP_NO_DID to disable DID usage
  *  \param[in]  maxBR         : Max bit rate supported by the Poller
  *  \param[out] rfalIsoDepDev : ISO-DEP information of the activated Listen device
  *
@@ -877,7 +912,7 @@ ReturnCode rfalIsoDepPollAHandleActivation( rfalIsoDepFSxI FSDI, uint8_t DID, rf
  *  Once Activated all details of the device are provided on isoDepDev
  *   
  *  \param[in]  FSDI           : Frame Size Device Integer to be used
- *  \param[in]  DID            : Device ID to be used or RFAL_ISODEP_NO_DID for not use DID
+ *  \param[in]  DID            : Device ID to be used or RFAL_ISODEP_NO_DID to disable DID usage
  *  \param[in]  maxBR          : Max bit rate supported by the Poller
  *  \param[in]  PARAM1         : ATTRIB PARAM1 byte (communication parameters)
  *  \param[in]  nfcbDev        : pointer to the NFC-B Device containing the SENSB_RES
@@ -903,7 +938,7 @@ ReturnCode rfalIsoDepPollBHandleActivation( rfalIsoDepFSxI FSDI, uint8_t DID, rf
  *****************************************************************************
  *  \brief  ISO-DEP Poller Handle S(Parameters)
  *   
- *  This checks if PICC supports S(PARAMETERS), retieves PICC's
+ *  This checks if PICC supports S(PARAMETERS), retrieves PICC's
  *  capabilities and sets the Bit Rate at the highest supported by both
  *  devices
  *   
@@ -925,6 +960,49 @@ ReturnCode rfalIsoDepPollHandleSParameters( rfalIsoDepDevice *rfalIsoDepDev, rfa
 
 /*!
  *****************************************************************************
+ *  \brief ISO-DEP Start Presence Check 
+ *  
+ *  Triggers a ISO-DEP Presence Check, using R(NACK) acknowledgement 
+ *  as per ISO14443-4 Method 2.
+ *  
+ *  \warning This shall be used only after a successful activation of a device 
+ *           supporting ISO-DEP via the ISO-DEP Activation handler or 
+ *           after a successful PDU exchange
+ *  \warning This method cannot be used while an I-Block or APDU Transceive is ongoing
+ *
+ *  \see rfalIsoDepPollPresenceCheckGetStatus
+ *                     
+ *  \return RFAL_ERR_PARAM       : Bad request
+ *  \return RFAL_ERR_WRONG_STATE : The module is not in a proper state
+ *  \return RFAL_ERR_NONE        : The Transceive request has been started
+ *****************************************************************************
+ */
+ReturnCode rfalIsoDepPollPresenceCheckStart( void );
+
+
+/*!
+ *****************************************************************************
+ *  \brief Get the Presence Check status
+ *  
+ *  Returns the status of the ISO-DEP Presence Check
+ *
+ *  \warning This methods shall only be called after successful Presence Check 
+ *            start and is ongoing
+ *
+ *  \see rfalIsoDepPollPresenceCheckStart
+ *              
+ *  
+ *  \return RFAL_ERR_NONE      : Transceive has been completed successfully
+ *  \return RFAL_ERR_BUSY      : Transceive is ongoing
+ *  \return RFAL_ERR_PROTO     : Protocol error occurred
+ *  \return RFAL_ERR_TIMEOUT   : Timeout error occurred
+ *****************************************************************************
+ */
+ReturnCode rfalIsoDepPollGetPresenceCheckStatus( void );
+
+
+/*!
+ *****************************************************************************
  *  \brief  ISO-DEP Poller Start NFC-A Activation 
  *
  *  This starts a NFC-A Activation into ISO-DEP layer (ISO14443-4) with the given
@@ -936,7 +1014,7 @@ ReturnCode rfalIsoDepPollHandleSParameters( rfalIsoDepDevice *rfalIsoDepDev, rfa
  *  \see rfalIsoDepPollAGetActivationStatus
  *
  *  \param[in]  FSDI          : Frame Size Device Integer to be used
- *  \param[in]  DID           : Device ID to be used or RFAL_ISODEP_NO_DID for not use DID
+ *  \param[in]  DID           : Device ID to be used or RFAL_ISODEP_NO_DID to disable DID usage
  *  \param[in]  maxBR         : Max bit rate supported by the Poller
  *  \param[out] rfalIsoDepDev : ISO-DEP information of the activated Listen device
  *
@@ -989,7 +1067,7 @@ ReturnCode rfalIsoDepPollAGetActivationStatus( void );
  *  \see rfalIsoDepPollBGetActivationStatus
  *
  *  \param[in]  FSDI          : Frame Size Device Integer to be used
- *  \param[in]  DID           : Device ID to be used or RFAL_ISODEP_NO_DID for not use DID
+ *  \param[in]  DID           : Device ID to be used or RFAL_ISODEP_NO_DID to disable DID usage
  *  \param[in]  maxBR         : Max bit rate supported by the Poller
  *  \param[in]  PARAM1        : ATTRIB PARAM1 byte (communication parameters)
  *  \param[in]  nfcbDev       : pointer to the NFC-B Device containing the SENSB_RES
@@ -1033,6 +1111,10 @@ ReturnCode rfalIsoDepPollBStartActivation( rfalIsoDepFSxI FSDI, uint8_t DID, rfa
  */
 ReturnCode rfalIsoDepPollBGetActivationStatus( void );
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_ISODEP_H_ */
 

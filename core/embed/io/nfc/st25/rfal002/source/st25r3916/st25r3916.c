@@ -130,6 +130,7 @@ ReturnCode st25r3916Initialize( void )
 
     if( !st25r3916CheckChipID( NULL ) )
     {
+        /* Invalid or unexpected ST25R device IC type */
         platformErrorHandle();
         return RFAL_ERR_HW_MISMATCH;
     }
@@ -152,14 +153,14 @@ ReturnCode st25r3916Initialize( void )
 
 #ifdef ST25R_SELFTEST
     /******************************************************************************
-     * Check communication interface: 
-     *  - write a pattern in a register
-     *  - reads back the register value
-     *  - return RFAL_ERR_IO in case the read value is different
-     */
+     * Check communication interface:                                             *
+     *  - write a pattern in a register                                           *
+     *  - reads back the register value                                           *
+     *  - return RFAL_ERR_IO in case the read value is different                  */
     st25r3916WriteRegister( ST25R3916_REG_BIT_RATE, ST25R3916_TEST_REG_PATTERN );
     if( !st25r3916CheckReg( ST25R3916_REG_BIT_RATE, (ST25R3916_REG_BIT_RATE_rxrate_mask | ST25R3916_REG_BIT_RATE_txrate_mask), ST25R3916_TEST_REG_PATTERN ) )
     {
+        /* Unable to retrieve back the written pattern from ST25R register - serial communication (SPI | I2C) not operational */
         platformErrorHandle();
         return RFAL_ERR_IO;
     }
@@ -178,6 +179,7 @@ ReturnCode st25r3916Initialize( void )
     st25r3916ExecuteCommand( ST25R3916_CMD_START_WUP_TIMER );
     if(st25r3916WaitForInterruptsTimed(ST25R3916_IRQ_MASK_WT, ST25R3916_TEST_WU_TOUT) == 0U )
     {
+        /* Unable to observe the IRQ from ST25R - ST25R IRQ | ISR not operational */
         platformErrorHandle();
         return RFAL_ERR_TIMEOUT;
     }
@@ -190,6 +192,7 @@ ReturnCode st25r3916Initialize( void )
     ret = st25r3916OscOn();
     if( ret != RFAL_ERR_NONE )
     {
+        /* Unable to enable ST25R Oscillator and enter RD */
         platformErrorHandle();
         return ret;
     }
@@ -221,6 +224,7 @@ ReturnCode st25r3916Initialize( void )
     st25r3916SetStartGPTimer( (uint16_t)ST25R3916_TEST_TMR_TOUT_8FC, ST25R3916_REG_TIMER_EMV_CONTROL_gptc_no_trigger);
     if( st25r3916WaitForInterruptsTimed( ST25R3916_IRQ_MASK_GPE, (ST25R3916_TEST_TMR_TOUT - ST25R3916_TEST_TMR_TOUT_DELTA)) != 0U )
     {
+        /* ST25R IRQ observed prematurely - MCU\SW timer abstraction not operational or inacurate */
         platformErrorHandle();
         return RFAL_ERR_SYSTEM;
     }
@@ -229,8 +233,9 @@ ReturnCode st25r3916Initialize( void )
     st25r3916ExecuteCommand( ST25R3916_CMD_STOP );                                     
     st25r3916ClearAndEnableInterrupts( ST25R3916_IRQ_MASK_GPE );
     st25r3916SetStartGPTimer( (uint16_t)ST25R3916_TEST_TMR_TOUT_8FC, ST25R3916_REG_TIMER_EMV_CONTROL_gptc_no_trigger );
-    if(st25r3916WaitForInterruptsTimed( ST25R3916_IRQ_MASK_GPE, (ST25R3916_TEST_TMR_TOUT + ST25R3916_TEST_TMR_TOUT_DELTA)) == 0U )
+    if( st25r3916WaitForInterruptsTimed( ST25R3916_IRQ_MASK_GPE, (ST25R3916_TEST_TMR_TOUT + ST25R3916_TEST_TMR_TOUT_DELTA)) == 0U )
     {
+        /* Unable to observe ST25R IRQ whithin the expected time - MCU\SW timer abstraction not operational or inacurate */
         platformErrorHandle();
         return RFAL_ERR_SYSTEM;
     }
@@ -368,7 +373,7 @@ ReturnCode st25r3916AdjustRegulators( uint16_t* result_mV )
     {
         if( st25r3916CheckReg( ST25R3916_REG_IO_CONF2, ST25R3916_REG_IO_CONF2_sup3V, ST25R3916_REG_IO_CONF2_sup3V )  )
         {
-            result -= ((result>4U) ? (5U) : 0U);          /* In 3.3V mode [0,4] are not used                       */
+            result -= ((result>4U) ? (5U) : 0U);         /* In 3.3V mode [0,4] are not used                       */
             *result_mV = 2400U;                          /* Minimum regulated voltage 2.4V in case of 3.3V supply */
         }
         else

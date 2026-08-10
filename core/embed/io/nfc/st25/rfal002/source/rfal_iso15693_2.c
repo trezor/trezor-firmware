@@ -227,7 +227,7 @@ ReturnCode rfalIso15693VCDCode(uint8_t* buffer, uint16_t length, bool sendCrc, b
         /* send data */
         err = txFunc(buffer[*offset], outputBuf, outputBufSize, &filled_size);
         (*actOutBufSize) += filled_size;
-        outputBuf = &outputBuf[filled_size];	/* MISRA 18.4: Avoid pointer arithmetic */
+        outputBuf = &outputBuf[filled_size];    /* MISRA 18.4: Avoid pointer arithmetic */
         outputBufSize -= filled_size;
         if (err == RFAL_ERR_NONE) {
             (*offset)++;
@@ -253,7 +253,7 @@ ReturnCode rfalIso15693VCDCode(uint8_t* buffer, uint16_t length, bool sendCrc, b
         transbuf[1] = (uint8_t)((crc >> 8) & 0xffU);
         err = txFunc(transbuf[*offset - length], outputBuf, outputBufSize, &filled_size);
         (*actOutBufSize) += filled_size;
-        outputBuf = &outputBuf[filled_size];	/* MISRA 18.4: Avoid pointer arithmetic */
+        outputBuf = &outputBuf[filled_size];    /* MISRA 18.4: Avoid pointer arithmetic */
         outputBufSize -= filled_size;
         if (err == RFAL_ERR_NONE) {
             (*offset)++;
@@ -299,8 +299,8 @@ ReturnCode rfalIso15693VICCDecode(const uint8_t *inBuf,
     /* first check for valid SOF. Since it starts with 3 unmodulated pulses it is 0x17. */
     if ((inBuf[0] & 0x1fU) != 0x17U)
     {
-		ISO_15693_DEBUG("0x%x\n", iso15693PhyBitBuffer[0]);
-		return RFAL_ERR_FRAMING;
+        ISO_15693_DEBUG("0x%x\n", iso15693PhyBitBuffer[0]);
+        return RFAL_ERR_FRAMING;
     }
     ISO_15693_DEBUG("SOF\n");
 

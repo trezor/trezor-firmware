@@ -262,7 +262,7 @@ ReturnCode rfalNfcDeactivate( rfalNfcDeactivateType deactType )
         return RFAL_ERR_WRONG_STATE;
     }
     
-    /* Check valid paramters for the deactivation types */
+    /* Check valid parameters for the deactivation types */
     if( ( (deactType == RFAL_NFC_DEACTIVATE_SLEEP) && rfalNfcIsRemDevPoller(gNfcDev.activeDev->type) )       || 
         ( (deactType == RFAL_NFC_DEACTIVATE_DISCOVERY)  && (gNfcDev.disc.techs2Find == RFAL_NFC_TECH_NONE) )    )
     {
@@ -481,7 +481,7 @@ void rfalNfcWorker( void )
         case RFAL_NFC_STATE_POLL_ACTIVATION:
             
             err = rfalNfcPollActivation( gNfcDev.selDevIdx );
-            if( err != RFAL_ERR_BUSY )                                                     /* Wait until all Activation is complete */
+            if( err != RFAL_ERR_BUSY )                                                     /* Wait until Activation is complete     */
             {
                 if( err != RFAL_ERR_NONE )                                                 /* Check if activation has failed        */
                 {
@@ -534,6 +534,7 @@ void rfalNfcWorker( void )
                 }
                 else
                 {
+                    gNfcDev.techDctCnt = 0;
                     gNfcDev.state = ( (gNfcDev.deactType == RFAL_NFC_DEACTIVATE_DISCOVERY) ? RFAL_NFC_STATE_START_DISCOVERY : RFAL_NFC_STATE_IDLE );
                 }
                 
@@ -752,7 +753,7 @@ ReturnCode rfalNfcDataExchangeStart( uint8_t *txData, uint16_t txDataLen, uint8_
                 break;
         }
         
-        /* If a transceive has succesfully started flag Data Exchange as ongoing */
+        /* If a transceive has successfully started flag Data Exchange as ongoing */
         if( err == RFAL_ERR_NONE )
         {
             gNfcDev.dataExErr = RFAL_ERR_BUSY;
@@ -839,7 +840,7 @@ ReturnCode rfalNfcDataExchangeGetStatus( void )
         {
             RFAL_EXIT_ON_ERR( gNfcDev.dataExErr, rfalListenSleepStart( RFAL_LM_STATE_SLEEP_A, gNfcDev.rxBuf.rfBuf, sizeof(gNfcDev.rxBuf.rfBuf), &gNfcDev.rxLen ) );
             
-            /* If set Sleep was succesfull keep restore the Sleep request signal */
+            /* If set Sleep was successful keep restore the Sleep request signal */
             gNfcDev.dataExErr = RFAL_ERR_SLEEP_REQ;
         }
     #endif /* RFAL_FEATURE_LISTEN_MODE */
@@ -1553,6 +1554,8 @@ static ReturnCode rfalNfcPollActivation( uint8_t devIt )
                 return RFAL_ERR_BUSY;
             }
             
+            nfcaType = gNfcDev.devList[devIt].dev.nfca.type;
+            
             if( gNfcDev.devList[devIt].dev.nfca.isSleep )                             /* Check if desired device is in Sleep */
             {
                 if( !gNfcDev.isOperOngoing )
@@ -1560,10 +1563,17 @@ static ReturnCode rfalNfcPollActivation( uint8_t devIt )
                     /* Wake up all cards  */
                     RFAL_EXIT_ON_ERR( err, rfalNfcaPollerCheckPresence( RFAL_14443A_SHORTFRAME_CMD_WUPA, &gNfcDev.sensRes ) );
                     
-                    /* Select specific device */
-                    RFAL_EXIT_ON_ERR( err, rfalNfcaPollerStartSelect( gNfcDev.devList[devIt].dev.nfca.nfcId1, gNfcDev.devList[devIt].dev.nfca.nfcId1Len, &gNfcDev.devList[devIt].dev.nfca.selRes ) ); 
-                    
-                    gNfcDev.isOperOngoing = true;
+                    /* Check if T1T - no device selection */
+                    if( nfcaType == RFAL_NFCA_T1T )
+                    {
+                        gNfcDev.devList[devIt].dev.nfca.isSleep = false;
+                    }
+                    else
+                    {
+                        /* Select specific device */
+                        RFAL_EXIT_ON_ERR( err, rfalNfcaPollerStartSelect( gNfcDev.devList[devIt].dev.nfca.nfcId1, gNfcDev.devList[devIt].dev.nfca.nfcId1Len, &gNfcDev.devList[devIt].dev.nfca.selRes ) ); 
+                        gNfcDev.isOperOngoing = true;
+                    }
                 }
                 else
                 {
@@ -1594,7 +1604,6 @@ static ReturnCode rfalNfcPollActivation( uint8_t devIt )
             gNfcDev.devList[devIt].nfcidLen = gNfcDev.devList[devIt].dev.nfca.nfcId1Len;
             
             /* If device supports multiple technologies assign protocol requested */
-            nfcaType = gNfcDev.devList[devIt].dev.nfca.type;
             if( nfcaType == RFAL_NFCA_T4T_NFCDEP )
             {
                 nfcaType = ( (gNfcDev.disc.p2pNfcaPrio) ? RFAL_NFCA_NFCDEP : RFAL_NFCA_T4T);
@@ -2192,8 +2201,8 @@ static ReturnCode rfalNfcDeactivation( void )
     RFAL_NO_WARNING( ret );
     
     
-    /* Check if a device has been activated */
-    if( gNfcDev.activeDev != NULL )
+    /* Check if a device has been activated and deactivation has not started */
+    if( (gNfcDev.activeDev != NULL) && (!gNfcDev.isDeactivating)  )
     {
         if( rfalNfcIsRemDevListener( gNfcDev.activeDev->type ) )                          /* Listen mode no additional deactivation to be performed*/
         {
@@ -2201,7 +2210,21 @@ static ReturnCode rfalNfcDeactivation( void )
             {
                 /*******************************************************************************/
                 case RFAL_NFC_INTERFACE_RF:
-                    break;                                                                /* No specific deactivation to be performed */
+                
+            #if RFAL_FEATURE_NFCA                
+                    /* In case T2T set device to sleep - restricted on DEACTIVATE_SLEEP */
+                    if( (gNfcDev.deactType == RFAL_NFC_DEACTIVATE_SLEEP)                                                             && 
+                        (gNfcDev.activeDev->type == RFAL_NFC_LISTEN_TYPE_NFCA) && (gNfcDev.activeDev->dev.nfca.type == RFAL_NFCA_T2T)  )
+                    {
+                        ret = rfalNfcaPollerSleep();
+                        
+                        aux                   = true;                                     /* Mark device as deselected */
+                        gNfcDev.isOperOngoing = false;
+                    }
+            #endif /* RFAL_FEATURE_NFCA */
+                
+                    /* No specific deactivation to be performed for T1T, T3T or T5T */
+                    break;                                                                
                 
                 /*******************************************************************************/
             #if RFAL_FEATURE_ISO_DEP && RFAL_FEATURE_ISO_DEP_POLL

@@ -60,6 +60,15 @@
 #include "rfal_utils.h"
 #include "rfal_rf.h"
 
+/*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 
 /*
  ******************************************************************************
@@ -73,8 +82,9 @@
     #undef RFAL_FEATURE_NFC_DEP_BLOCK_MAX_LEN
     #undef RFAL_FEATURE_NFC_DEP_PDU_MAX_LEN
 
-    #define RFAL_FEATURE_NFC_DEP_BLOCK_MAX_LEN   2U      /*!< NFC-DEP Block/Payload length, set to "none" */ /* MISRA: Some compilers treat an array of length one declared as the final member of a struct as a flexible array member.*/
-    #define RFAL_FEATURE_NFC_DEP_PDU_MAX_LEN     2U      /*!< NFC-DEP PDU length, set to "none"           */ /* MISRA: Some compilers treat an array of length one declared as the final member of a struct as a flexible array member.*/
+    /* MISRA: Some compilers treat an array of length one declared as the final member of a struct as a flexible array member.*/
+    #define RFAL_FEATURE_NFC_DEP_BLOCK_MAX_LEN   2U      /*!< NFC-DEP Block/Payload length, set to "none" */ 
+    #define RFAL_FEATURE_NFC_DEP_PDU_MAX_LEN     2U      /*!< NFC-DEP PDU length, set to "none"           */
 #endif /* !RFAL_FEATURE_NFC_DEP  */
 
 /*
@@ -730,7 +740,7 @@ ReturnCode rfalNfcDepGetTransceiveStatus( void );
  * \brief Start PDU Transceive 
  * 
  * This method triggers a NFC-DEP Transceive containing a complete PDU
- * It transmits the given message and handles all protocol retransmitions,
+ * It transmits the given message and handles all protocol retransmissions,
  * error handling and control messages
  * 
  * The txBuf  contains a complete PDU to be transmitted 
@@ -768,6 +778,10 @@ ReturnCode rfalNfcDepStartPduTransceive( rfalNfcDepPduTxRxParam param );
  *****************************************************************************
  */
 ReturnCode rfalNfcDepGetPduTransceiveStatus( void );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_NFCDEP_H_ */
 

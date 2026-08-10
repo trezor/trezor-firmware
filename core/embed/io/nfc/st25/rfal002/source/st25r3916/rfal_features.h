@@ -27,6 +27,15 @@
  *  \author Gustavo Patricio 
  *
  *  \brief RFAL Features/Capabilities Definition for ST25R3916
+ * 
+ *  This lists the ST25R device capabilities. It is used by the RFAL to map 
+ *  individual ST25R capabilities while supporting multiple ST25R devices 
+ *  with different feature sets.
+ *  It is not used to enable or disable features|modules of the RFAL, such
+ *  is performed on the user defined rfal_platform.h
+ *
+ *  \attention Do not modify this file.
+ *
  */
 
 
@@ -39,6 +48,15 @@
 ******************************************************************************
 */
 #include "rfal_platform.h"
+
+/*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 /*
 ******************************************************************************
@@ -69,14 +87,14 @@
 
 
 /*******************************************************************************/
-#define RFAL_SUPPORT_BR_RW_106                      true         /*!< RFAL RW  106 Bit Rate support switch   */
-#define RFAL_SUPPORT_BR_RW_212                      true         /*!< RFAL RW  212 Bit Rate support switch   */
-#define RFAL_SUPPORT_BR_RW_424                      true         /*!< RFAL RW  424 Bit Rate support switch   */
-#define RFAL_SUPPORT_BR_RW_848                      true         /*!< RFAL RW  848 Bit Rate support switch   */
-#define RFAL_SUPPORT_BR_RW_1695                     false        /*!< RFAL RW 1695 Bit Rate support switch   */
-#define RFAL_SUPPORT_BR_RW_3390                     false        /*!< RFAL RW 3390 Bit Rate support switch   */
-#define RFAL_SUPPORT_BR_RW_6780                     false        /*!< RFAL RW 6780 Bit Rate support switch   */
-#define RFAL_SUPPORT_BR_RW_13560                    false        /*!< RFAL RW 6780 Bit Rate support switch   */
+#define RFAL_SUPPORT_BR_RW_106                      true         /*!< RFAL RW   106 Bit Rate support switch  */
+#define RFAL_SUPPORT_BR_RW_212                      true         /*!< RFAL RW   212 Bit Rate support switch  */
+#define RFAL_SUPPORT_BR_RW_424                      true         /*!< RFAL RW   424 Bit Rate support switch  */
+#define RFAL_SUPPORT_BR_RW_848                      true         /*!< RFAL RW   848 Bit Rate support switch  */
+#define RFAL_SUPPORT_BR_RW_1695                     false        /*!< RFAL RW  1695 Bit Rate support switch  */
+#define RFAL_SUPPORT_BR_RW_3390                     false        /*!< RFAL RW  3390 Bit Rate support switch  */
+#define RFAL_SUPPORT_BR_RW_6780                     false        /*!< RFAL RW  6780 Bit Rate support switch  */
+#define RFAL_SUPPORT_BR_RW_13560                    false        /*!< RFAL RW 13560 Bit Rate support switch  */
 
 
 /*******************************************************************************/
@@ -205,5 +223,9 @@ typedef struct
         bool             irqWu;           /*!< Capacitive WU IRQ received (cleared upon read)             */
     }cap;                                 /*!< Capacitive                                                 */
 } rfalWakeUpInfo;
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_FEATURES_H */

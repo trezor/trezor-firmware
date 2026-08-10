@@ -58,6 +58,15 @@
 #include "rfal_utils.h"
 #include "rfal_rf.h"
 
+/*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 
 /*****************************************************************************
  *  RF Chip                                                                  *  
@@ -431,6 +440,10 @@ ReturnCode rfalChipMeasureCurrent( uint8_t* result );
  *****************************************************************************
  */
 ReturnCode rfalChipSetAntennaMode( bool single, bool rfiox );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_CHIP_H */
 

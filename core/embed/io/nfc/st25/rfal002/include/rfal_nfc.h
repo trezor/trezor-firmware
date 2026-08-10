@@ -68,6 +68,15 @@
 #include "rfal_nfcDep.h"
 #include "rfal_isoDep.h"
 
+/*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 
 /*
 ******************************************************************************
@@ -222,12 +231,12 @@ typedef ReturnCode (* rfalNfcPropCallback)(void);
 
 /*! Struct that holds the Proprietary NFC callbacks                                                                                  */
 typedef struct{
-    rfalNfcPropCallback    rfalNfcpPollerInitialize;                    /*!< Prorietary NFC Initialization callback                  */
-    rfalNfcPropCallback    rfalNfcpPollerTechnologyDetection;           /*!< Prorietary NFC Technoly Detection callback              */
-    rfalNfcPropCallback    rfalNfcpPollerStartCollisionResolution;      /*!< Prorietary NFC Start Collision Resolution callback      */
-    rfalNfcPropCallback    rfalNfcpPollerGetCollisionResolutionStatus;  /*!< Prorietary NFC Get Collision Resolution status callback */
-    rfalNfcPropCallback    rfalNfcpStartActivation;                     /*!< Prorietary NFC Start Activation callback                */
-    rfalNfcPropCallback    rfalNfcpGetActivationStatus;                 /*!< Prorietary NFC Get Activation status callback           */
+    rfalNfcPropCallback    rfalNfcpPollerInitialize;                    /*!< Proprietary NFC Initialization callback                 */
+    rfalNfcPropCallback    rfalNfcpPollerTechnologyDetection;           /*!< Proprietary NFC Technology Detection callback           */
+    rfalNfcPropCallback    rfalNfcpPollerStartCollisionResolution;      /*!< Proprietary NFC Start Collision Resolution callback     */
+    rfalNfcPropCallback    rfalNfcpPollerGetCollisionResolutionStatus;  /*!< Proprietary NFC Get Collision Resolution status callback*/
+    rfalNfcPropCallback    rfalNfcpStartActivation;                     /*!< Proprietary NFC Start Activation callback               */
+    rfalNfcPropCallback    rfalNfcpGetActivationStatus;                 /*!< Proprietary NFC Get Activation status callback          */
 } rfalNfcPropCallbacks;
 
 
@@ -246,7 +255,7 @@ typedef struct{
     uint8_t                GBLen;                            /*!< Length of the General Bytes                    NCI 2.1  Table 29   */
     rfalBitRate            ap2pBR;                           /*!< Bit rate to poll for AP2P                      NCI 2.1  Table 31   */
     bool                   p2pNfcaPrio;                      /*!< NFC-A P2P (true) or ISO14443-4/T4T (false) priority                */
-    rfalNfcPropCallbacks   propNfc;                          /*!< Proprietary Technlogy callbacks                                    */
+    rfalNfcPropCallbacks   propNfc;                          /*!< Proprietary Technology  callbacks                                  */
                                                                                                                                     
                                                                                                                                     
     rfalIsoDepFSxI         isoDepFS;                         /*!< ISO-DEP Poller announced maximum frame size   Digital 2.2 Table 60 */
@@ -469,6 +478,10 @@ ReturnCode rfalNfcDataExchangeGetStatus( void );
  *****************************************************************************
  */
 ReturnCode rfalNfcDeactivate( rfalNfcDeactivateType deactType );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_NFC_H */
 

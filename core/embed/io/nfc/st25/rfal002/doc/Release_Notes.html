@@ -89,7 +89,7 @@ div.Section1
             <h1 style="margin-bottom: 18pt; text-align: center;" align="center"><span style="font-size: 20pt; font-family: Verdana; color:#3CB4E6;">Release
 Notes for RFAL software Library</span><span style="font-size: 20pt; font-family: Verdana;"><o:p></o:p></span></h1>
             <p class="MsoNormal" style="text-align: center;" align="center"><span style="font-size: 10pt; font-family: Arial; color: black;">Copyright
-2017-2025 STMicroelectronics</span><span style="color: black;"><u1:p></u1:p><o:p></o:p></span></p>
+2017-2026 STMicroelectronics</span><span style="color: black;"><u1:p></u1:p><o:p></o:p></span></p>
             <p class="MsoNormal" style="text-align: center;" align="center"><span style="font-size: 10pt; font-family: Arial; color: black;"><img style="border: 0px solid ; width: 104px; height: 77px;" alt="" id="_x0000_i1025" src="_htmresc/st_logo.png"></span><span style="font-size: 10pt;"><o:p></o:p></span></p>
             </td>
           </tr>
@@ -130,6 +130,21 @@ The RFAL encapsulates the different RF ICs (ST25R3911, ST25R3916, ST25R200, ST25
             <h2 style="background:#3CB4E6 none repeat scroll 0% 50%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;"><a name="History"></a><span style="font-size: 12pt; color: white;">Update History</span></h2>
             <br>
 			
+			<h3 style="background:#3CB4E6 none repeat scroll 0% 50%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial; margin-right: 500pt; width: 186px;"><span style="font-size: 10pt; font-family: Arial; color: white;">V4.2.0 / 12-Jun-2026</span></h3>
+             <p class="MsoNormal" style="margin: 4.5pt 0cm 4.5pt 18pt;"><b style=""><u><span style="font-size: 10pt; font-family: Verdana; color: black;"></span></u></b></p>
+            <p class="MsoNormal" style="margin: 4.5pt 0cm 4.5pt 18pt;"><b style=""><u><span style="font-size: 10pt; font-family: Verdana; color: black;">Main Changes<o:p></o:p></span></u></b></p>
+            <ul style="margin-top: 0cm;" type="square">
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Extended ST25R500 DPO CR functionality (AN6514).                                                                    <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Extended ISO-DEP to support applications to trigger a Presence Check via R(NACK)                                    <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  C linkage guards added                                                                                              <span style="font-weight: bold; font-style: italic;"></span></span></li>			  
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Extended  NFC/HL layer to support Deactivate(Sleep) for T2T                                                         <span style="font-weight: bold; font-style: italic;"></span></span></li>
+			  <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  NFC/HL layer Deactivation enforced a defined number of polls before WU (for all deactivation types)                 <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Adjust Regulators sequence updated to restore the RF Carrier to its previous state at the end (ST25R200 / ST2R500)  <span style="font-weight: bold; font-style: italic;"></span></span></li>              
+			  <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  ST25R500 Analog Config updated: NFC-B SOF/EOF set to 10;2;10 ETUs | Lowered data level for NFC-A and NFC-B 848kbps  <span style="font-weight: bold; font-style: italic;"></span></span></li>              
+			  <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Several driver improvements and fixes                                                                               <span style="font-weight: bold; font-style: italic;"></span></span></li>
+            </ul>
+            <br>
+			
 			<h3 style="background:#3CB4E6 none repeat scroll 0% 50%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial; margin-right: 500pt; width: 186px;"><span style="font-size: 10pt; font-family: Arial; color: white;">V4.0.2 / 02-Apr-2025</span></h3>
              <p class="MsoNormal" style="margin: 4.5pt 0cm 4.5pt 18pt;"><b style=""><u><span style="font-size: 10pt; font-family: Verdana; color: black;"></span></u></b></p>
             <p class="MsoNormal" style="margin: 4.5pt 0cm 4.5pt 18pt;"><b style=""><u><span style="font-size: 10pt; font-family: Verdana; color: black;">Main Changes<o:p></o:p></span></u></b></p>
@@ -148,7 +163,7 @@ The RFAL encapsulates the different RF ICs (ST25R3911, ST25R3916, ST25R200, ST25
 			  <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Improve portability using uintptr_t (C99)                                                                           <span style="font-weight: bold; font-style: italic;"></span></span></li>
               <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Added support for Direct Command chaining                                                                           <span style="font-weight: bold; font-style: italic;"></span></span></li>
               <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Several improvements on Card Detection and Heartbeat                                                                <span style="font-weight: bold; font-style: italic;"></span></span></li>
-              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  DPO module extended. Configurable measurement and adjust methods, interfaces and new adjustment flag added.         <span style="font-weight: bold; font-style: italic;"></span></span></li>              
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  DPO module extended. Configurable measurement and adjust methods, interfaces and new adjustment flag added          <span style="font-weight: bold; font-style: italic;"></span></span></li>              
               <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  DPO CR (Current Regulation) added (ST25R500 only)                                                                   <span style="font-weight: bold; font-style: italic;"></span></span></li>
               <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Added Dynamic LMA module. Optional LMA adjustments can be used in Listen/CE mode                                    <span style="font-weight: bold; font-style: italic;"></span></span></li>
               <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Several new APIs added in rfalChip section for more measurments and adjustments                                     <span style="font-weight: bold; font-style: italic;"></span></span></li>

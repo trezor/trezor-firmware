@@ -282,7 +282,7 @@ ReturnCode rfalDpoAdjust( void )
     }
     
     /* Apply new configs if there was a change on DPO level or RFAL mode|bitrate  */
-    /* Also adjust power in case mode is not yet set and a different table entry|setting is applicbale */
+    /* Also adjust power in case mode is not yet set and a different table entry|setting is applicable */
     if( (mode != gRfalDpo.curMode) || (br != gRfalDpo.curBR) || (tableEntry != gRfalDpo.tableEntry) || ((mode == RFAL_MODE_NONE) && (tableEntry != gRfalDpo.tableEntry)) || (gRfalDpo.forceAdj) )
     {
         /* Update local context */

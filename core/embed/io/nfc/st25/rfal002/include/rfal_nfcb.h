@@ -62,6 +62,15 @@
 
 /*
  ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ ******************************************************************************
  * GLOBAL DEFINES
  ******************************************************************************
  */
@@ -259,7 +268,7 @@ ReturnCode rfalNfcbPollerCheckPresence( rfalNfcbSensCmd cmd, rfalNfcbSlots slots
  * \return RFAL_ERR_WRONG_STATE  : RFAL not initialized or incorrect mode
  * \return RFAL_ERR_PARAM        : Invalid parameters
  * \return RFAL_ERR_IO           : Generic internal error
- * \return RFAL_ERR_NONE         : No error, SENSB_RES received
+ * \return RFAL_ERR_NONE         : No error
  *****************************************************************************
  */
 ReturnCode rfalNfcbPollerStartCheckPresence( rfalNfcbSensCmd cmd, rfalNfcbSlots slots, rfalNfcbSensbRes *sensbRes, uint8_t *sensbResLen );
@@ -280,6 +289,7 @@ ReturnCode rfalNfcbPollerStartCheckPresence( rfalNfcbSensCmd cmd, rfalNfcbSlots 
  * \return RFAL_ERR_CRC          : CRC error detected, one or more device in the field
  * \return RFAL_ERR_FRAMING      : Framing error detected, one or more device in the field
  * \return RFAL_ERR_PROTO        : Protocol error detected, invalid SENSB_RES received
+ * \return RFAL_ERR_BUSY         : Operation is ongoing
  * \return RFAL_ERR_NONE         : No error, SENSB_RES received
  *****************************************************************************
  */
@@ -342,7 +352,7 @@ ReturnCode rfalNfcbPollerSlotMarker( uint8_t slotCode, rfalNfcbSensbRes *sensbRe
  * \return RFAL_ERR_WRONG_STATE  : RFAL not initialized or incorrect mode
  * \return RFAL_ERR_PARAM        : Invalid parameters
  * \return RFAL_ERR_IO           : Generic internal error
- * \return RFAL_ERR_NONE         : No error, SEL_RES received
+ * \return RFAL_ERR_NONE         : No error
  *****************************************************************************
  */
 ReturnCode rfalNfcbPollerStartSlotMarker( uint8_t slotCode, rfalNfcbSensbRes *sensbRes, uint8_t *sensbResLen );
@@ -363,6 +373,7 @@ ReturnCode rfalNfcbPollerStartSlotMarker( uint8_t slotCode, rfalNfcbSensbRes *se
  * \return RFAL_ERR_CRC          : CRC error detected
  * \return RFAL_ERR_FRAMING      : Framing error detected
  * \return RFAL_ERR_PROTO        : Protocol error detected
+ * \return RFAL_ERR_BUSY         : Operation is ongoing
  * \return RFAL_ERR_NONE         : No error, SEL_RES received
  *****************************************************************************
  */
@@ -402,7 +413,7 @@ ReturnCode rfalNfcbPollerTechnologyDetection( rfalComplianceMode compMode, rfalN
  * \return RFAL_ERR_WRONG_STATE  : RFAL not initialized or incorrect mode
  * \return RFAL_ERR_PARAM        : Invalid parameters
  * \return RFAL_ERR_IO           : Generic internal error
- * \return RFAL_ERR_NONE         : No error, one or more device in the field
+ * \return RFAL_ERR_NONE         : No error
  *****************************************************************************
  */
 ReturnCode rfalNfcbPollerStartTechnologyDetection( rfalComplianceMode compMode, rfalNfcbSensbRes *sensbRes, uint8_t *sensbResLen );
@@ -417,6 +428,7 @@ ReturnCode rfalNfcbPollerStartTechnologyDetection( rfalComplianceMode compMode, 
  * \return RFAL_ERR_WRONG_STATE  : RFAL not initialized or incorrect mode
  * \return RFAL_ERR_PARAM        : Invalid parameters
  * \return RFAL_ERR_IO           : Generic internal error
+ * \return RFAL_ERR_BUSY         : Operation is ongoing
  * \return RFAL_ERR_NONE         : No error, one or more device in the field
  *****************************************************************************
  */
@@ -566,7 +578,8 @@ ReturnCode rfalNfcbPollerStartSlottedCollisionResolution( rfalComplianceMode com
  *  \return RFAL_ERR_CRC          : CRC error detected
  *  \return RFAL_ERR_FRAMING      : Framing error detected
  *  \return RFAL_ERR_PROTO        : Protocol error detected
- *  \return RFAL_ERR_NONE         : No error, activation successful
+ *  \return RFAL_ERR_BUSY         : Operation is ongoing
+ *  \return RFAL_ERR_NONE         : No error, collision resolution successful
  *****************************************************************************
  */
 ReturnCode rfalNfcbPollerGetCollisionResolutionStatus( void );
@@ -585,6 +598,10 @@ ReturnCode rfalNfcbPollerGetCollisionResolutionStatus( void );
  *****************************************************************************
  */
 uint32_t rfalNfcbTR2ToFDT( uint8_t tr2Code );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_NFCB_H */
 

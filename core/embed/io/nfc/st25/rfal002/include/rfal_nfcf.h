@@ -59,6 +59,15 @@
 
 /*
  ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ ******************************************************************************
  * GLOBAL DEFINES
  ******************************************************************************
  */
@@ -78,8 +87,8 @@
 #define RFAL_NFCF_POLL_MAXCARDS                 16U      /*!< Max number slots/cards 16                         */
 
 
-#define RFAL_NFCF_CMD_POS                        0U      /*!< Command/Responce code length                      */
-#define RFAL_NFCF_CMD_LEN                        1U      /*!< Command/Responce code length                      */
+#define RFAL_NFCF_CMD_POS                        0U      /*!< Command/Response code length                      */
+#define RFAL_NFCF_CMD_LEN                        1U      /*!< Command/Response code length                      */
 #define RFAL_NFCF_LENGTH_LEN                     1U      /*!< LEN field length                                  */
 #define RFAL_NFCF_HEADER_LEN                     (RFAL_NFCF_LENGTH_LEN + RFAL_NFCF_CMD_LEN) /*!< Header length  */
 
@@ -250,7 +259,7 @@ ReturnCode rfalNfcfPollerCheckPresence( void );
  * 
  * \return RFAL_ERR_WRONG_STATE  : RFAL not initialized or incorrect mode
  * \return RFAL_ERR_PARAM        : Invalid parameters
- * \return RFAL_ERR_NONE         : No error and some NFC-F device was detected
+ * \return RFAL_ERR_NONE         : No error
  *
  *****************************************************************************
  */
@@ -269,6 +278,7 @@ ReturnCode rfalNfcfPollerStartCheckPresence( void );
  * \return RFAL_ERR_FRAMING      : Framing error detected
  * \return RFAL_ERR_PROTO        : Protocol error detected
  * \return RFAL_ERR_TIMEOUT      : Timeout error, no listener device detected
+ * \return RFAL_ERR_BUSY         : Operation is ongoing
  * \return RFAL_ERR_NONE         : No error and some NFC-F device was detected
  *
  *****************************************************************************
@@ -366,6 +376,7 @@ ReturnCode rfalNfcfPollerStartCollisionResolution( rfalComplianceMode compMode, 
  * \return RFAL_ERR_FRAMING      : Framing error detected
  * \return RFAL_ERR_PROTO        : Protocol error detected
  * \return RFAL_ERR_TIMEOUT      : Timeout error, no listener device detected
+ * \return RFAL_ERR_BUSY         : Operation is ongoing
  * \return RFAL_ERR_NONE         : No error and some NFC-F device was detected
  *
  *****************************************************************************
@@ -378,7 +389,7 @@ ReturnCode rfalNfcfPollerGetCollisionResolutionStatus( void );
  * \brief  NFC-F Poller Check/Read
  *  
  * It computes a Check / Read command accoring to T3T 1.0 and JIS X6319-4 and 
- * sends it to PICC. If sucessfully, the rxBuf will contain the the number of 
+ * sends it to PICC. If successful, the rxBuf will contain the the number of 
  * blocks in the first byte followed by the blocks data.
  *
  * \param[in]  nfcid2      : nfcid2 of the device
@@ -443,6 +454,10 @@ ReturnCode rfalNfcfPollerUpdate( const uint8_t* nfcid2, const rfalNfcfServBlockL
  */
 bool rfalNfcfListenerIsT3TReq( const uint8_t* buf, uint16_t bufLen, uint8_t* nfcid2 );
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_NFCF_H */
 

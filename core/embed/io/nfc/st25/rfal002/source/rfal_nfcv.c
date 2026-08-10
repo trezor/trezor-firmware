@@ -780,6 +780,7 @@ ReturnCode rfalNfcvPollerTransceiveReq( uint8_t cmd, uint8_t flags, uint8_t para
     ReturnCode         ret;
     rfalNfcvGenericReq req;
     uint8_t            msgIt;
+    uint8_t            maxDataLen;
     rfalBitRate        rxBR;
     bool               fastMode;
     bool               specialFrame;
@@ -788,13 +789,16 @@ ReturnCode rfalNfcvPollerTransceiveReq( uint8_t cmd, uint8_t flags, uint8_t para
     fastMode     = false;
     specialFrame = false;
     
+    /* Calculate maxDataLen */
+    maxDataLen = RFAL_NFCV_MAX_GEN_DATA_LEN;
+    if( param != RFAL_NFCV_PARAM_SKIP )   { maxDataLen -= RFAL_NFCV_PARAM_LEN; }
+    if( uid != NULL )                     { maxDataLen -= RFAL_NFCV_UID_LEN;   }
+    
     /* Check for valid parameters */
-    if( (rxBuf == NULL) || (rcvLen == NULL) || ((dataLen > 0U) && (data == NULL))                                                        || 
-        (dataLen > ((uid != NULL) ? RFAL_NFCV_MAX_GEN_DATA_LEN : (RFAL_NFCV_MAX_GEN_DATA_LEN - RFAL_NFCV_UID_LEN - RFAL_NFCV_PARAM_LEN)))  )
+    if( (rxBuf == NULL) || (rcvLen == NULL) || ((dataLen > 0U) && (data == NULL)) || (dataLen > maxDataLen) )
     {
         return RFAL_ERR_PARAM;
     }
-    
     
     /* Check if the command is an ST's Fast command */
     if( (param == RFAL_NFCV_ST_IC_MFG_CODE) && 

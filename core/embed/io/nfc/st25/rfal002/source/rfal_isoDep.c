@@ -341,6 +341,7 @@ typedef enum
     ISODEP_ST_PCD_TX,               /*!< PCD Transmission State         */
     ISODEP_ST_PCD_RX,               /*!< PCD Reception State            */
     ISODEP_ST_PCD_WAIT_DSL,         /*!< PCD Wait for DSL response      */
+    ISODEP_ST_PCD_WAIT_PRESENCE,    /*!< PCD Wait Presence check        */
         
     ISODEP_ST_PICC_ACT_ATS,         /*!< PICC has replied to RATS (ATS) */
     ISODEP_ST_PICC_ACT_ATTRIB,      /*!< PICC has replied to ATTRIB     */
@@ -364,7 +365,7 @@ typedef struct{
   
   uint8_t         blockNumber;   /*!< Current block number                      */
   uint8_t         did;           /*!< Current DID                               */
-  uint8_t         nad;           /*!< Current DID                               */
+  uint8_t         nad;           /*!< Current NAD                               */
   uint8_t         cntIRetrys;    /*!< I-Block retry counter                     */
   uint8_t         cntRRetrys;    /*!< R-Block retry counter                     */
   uint8_t         cntSDslRetrys; /*!< S(DESELECT) retry counter                 */
@@ -690,6 +691,8 @@ void rfalIsoDepInitialize( void )
     gIsoDep.fsx          = (uint16_t)RFAL_ISODEP_FSX_16;
     gIsoDep.ourFsx       = (uint16_t)RFAL_ISODEP_FSX_16;
     gIsoDep.hdrLen       = RFAL_ISODEP_PCB_LEN;
+    gIsoDep.fwt          = rfalIsoDepFWI2FWT(RFAL_ISODEP_FWI_DEFAULT);
+    gIsoDep.dFwt         = RFAL_ISODEP_DFWT_20;
     
     gIsoDep.rxLen        = NULL;
     gIsoDep.rxBuf        = NULL;
@@ -759,8 +762,8 @@ static ReturnCode rfalIsoDepDataExchangePCD( uint16_t *outActRxLen, bool *outIsC
         
     /* Calculate header required and check if the buffers InfPositions are suitable */    
     gIsoDep.hdrLen = RFAL_ISODEP_PCB_LEN;
-    if ((gIsoDep.did != RFAL_ISODEP_NO_DID) && (gIsoDep.did != RFAL_ISODEP_DID_00))  { gIsoDep.hdrLen  += RFAL_ISODEP_DID_LEN;  }
-    if (gIsoDep.nad != RFAL_ISODEP_NO_NAD)  { gIsoDep.hdrLen  += RFAL_ISODEP_NAD_LEN;  }
+    if( (gIsoDep.did != RFAL_ISODEP_NO_DID) && (gIsoDep.did != RFAL_ISODEP_DID_00) )  { gIsoDep.hdrLen  += RFAL_ISODEP_DID_LEN;  }
+    if( gIsoDep.nad != RFAL_ISODEP_NO_NAD )                                           { gIsoDep.hdrLen  += RFAL_ISODEP_NAD_LEN;  }
     
     /* Check if there is enough space before the infPos to append ISO-DEP headers on rx and tx */
     if( (gIsoDep.rxBufInfPos < gIsoDep.hdrLen) || (gIsoDep.txBufInfPos < gIsoDep.hdrLen) )
@@ -790,6 +793,7 @@ static ReturnCode rfalIsoDepDataExchangePCD( uint16_t *outActRxLen, bool *outIsC
             /* fall through */
           
         /*******************************************************************************/
+        case ISODEP_ST_PCD_WAIT_PRESENCE:   /*  PRQA S 2003 # MISRA 16.3 - Intentional fall through */
         case ISODEP_ST_PCD_WAIT_DSL:   /*  PRQA S 2003 # MISRA 16.3 - Intentional fall through */
         case ISODEP_ST_PCD_RX:
                       
@@ -922,6 +926,12 @@ static ReturnCode rfalIsoDepDataExchangePCD( uint16_t *outActRxLen, bool *outIsC
                     }
                     else
                     {
+                        /* Check if is a Presence check response */
+                        if( gIsoDep.state == ISODEP_ST_PCD_WAIT_PRESENCE )
+                        {
+                            return RFAL_ERR_NONE;
+                        }
+                        
                         /* Rule 6 - R-ACK with wrong block number retransmit                          */
                         /* Digital 2.0  16.2.5.4 - Retransmit maximum two times                       */
                         /* EMVCo 3.0 10.3.4.3 -  PCD may re-transmit the last I-Block or report error */
@@ -934,7 +944,7 @@ static ReturnCode rfalIsoDepDataExchangePCD( uint16_t *outActRxLen, bool *outIsC
                         return RFAL_ERR_TIMEOUT; /* NFC Forum mandates timeout or transmission error depending on previous errors */
                     }
                 }
-                else  /* Unexcpected R-Block */
+                else  /* Unexpected R-Block */
                 {
                     return RFAL_ERR_PROTO;
                 }
@@ -1196,7 +1206,7 @@ ReturnCode rfalIsoDepListenStartActivation( rfalIsoDepAtsParam *atsParam, const 
         /* If requested copy RATS to device info */
         if( actParam.isoDepDev != NULL )
         {
-            RFAL_MEMCPY( (uint8_t*)&actParam.isoDepDev->activation.A.Poller.RATS, buffer, sizeof(rfalIsoDepRats) );	/* Copy RATS' CMD + PARAM */
+            RFAL_MEMCPY( (uint8_t*)&actParam.isoDepDev->activation.A.Poller.RATS, buffer, sizeof(rfalIsoDepRats) ); /* Copy RATS' CMD + PARAM */
         }
         
         
@@ -1395,7 +1405,7 @@ ReturnCode rfalIsoDepListenGetActivationStatus( void )
             {
                 uint8_t newdri = ((uint8_t*)gIsoDep.actvParam.rxBuf)[RFAL_ISODEP_PPS_PPS1_POS] & RFAL_ISODEP_PPS1_DxI_MASK;                                 /* MISRA 10.8 */
                 uint8_t newdsi = (((uint8_t*)gIsoDep.actvParam.rxBuf)[RFAL_ISODEP_PPS_PPS1_POS] >> RFAL_ISODEP_PPS1_DSI_SHIFT) & RFAL_ISODEP_PPS1_DxI_MASK; /* MISRA 10.8 */
-				/* PRQA S 4342 2 # MISRA 10.5 - Layout of enum rfalBitRate and above masks guarantee no invalid enum values to be created */
+                /* PRQA S 4342 2 # MISRA 10.5 - Layout of enum rfalBitRate and above masks guarantee no invalid enum values to be created */
                 dri = (rfalBitRate) (newdri); 
                 dsi = (rfalBitRate) (newdsi);
                                 
@@ -1615,7 +1625,7 @@ static ReturnCode rfalIsoDepDataExchangePICC( void )
                     break;
 
                 /*******************************************************************************/
-				default:
+                default:
                     return ret;
             }
             break;
@@ -2254,9 +2264,7 @@ ReturnCode rfalIsoDepPollAGetActivationStatus( void )
                         }
                     }
                     
-                    gIsoDep.actvDev->info.FSx  = rfalIsoDepFSxI2FSx(gIsoDep.actvDev->info.FSxI);
-                    gIsoDep.fsx                = gIsoDep.actvDev->info.FSx;
-    
+                    gIsoDep.actvDev->info.FSx  = rfalIsoDepFSxI2FSx(gIsoDep.actvDev->info.FSxI);    
                     gIsoDep.actvDev->info.SFGT = rfalIsoDepSFGI2SFGT( (uint8_t)gIsoDep.actvDev->info.SFGI );
                     
                     /* Ensure SFGT before following frame (reuse RFAL GT timer) */
@@ -2268,6 +2276,14 @@ ReturnCode rfalIsoDepPollAGetActivationStatus( void )
                     
                     gIsoDep.actvDev->info.DID = ( (gIsoDep.actvDev->info.supDID) ? gIsoDep.did : RFAL_ISODEP_NO_DID);
                     gIsoDep.actvDev->info.NAD = RFAL_ISODEP_NO_NAD;
+                    
+                    
+                    /*******************************************************************************/
+                    /* Store already FS info,  rfalIsoDepGetMaxInfLen() may be called before setting TxRx params */
+                    /* Store already FWT info, rfalIsoDepPollPresenceCheck() may be called before setting TxRx params */
+                    gIsoDep.fsx  = gIsoDep.actvDev->info.FSx;
+                    gIsoDep.fwt  = gIsoDep.actvDev->info.FWT;
+                    gIsoDep.dFwt = gIsoDep.actvDev->info.dFWT;
                     
                     
                     /*******************************************************************************/
@@ -2471,7 +2487,10 @@ ReturnCode rfalIsoDepPollBGetActivationStatus( void )
         
         /*******************************************************************************/
         /* Store already FS info,  rfalIsoDepGetMaxInfLen() may be called before setting TxRx params */
-        gIsoDep.fsx    = gIsoDep.actvDev->info.FSx;
+        /* Store already FWT info, rfalIsoDepPollPresenceCheck() may be called before setting TxRx params */
+        gIsoDep.fsx  = gIsoDep.actvDev->info.FSx;
+        gIsoDep.fwt  = gIsoDep.actvDev->info.FWT;
+        gIsoDep.dFwt = gIsoDep.actvDev->info.dFWT;
     }
     
     return ret;
@@ -2601,6 +2620,54 @@ ReturnCode rfalIsoDepPollHandleSParameters( rfalIsoDepDevice *rfalIsoDepDev, rfa
     rfalIsoDepDev->info.DSI_ID = rxBR;
     
     return RFAL_ERR_NONE;
+}
+
+
+/*******************************************************************************/
+ReturnCode rfalIsoDepPollPresenceCheckStart( void )
+{
+    ReturnCode ret;
+    
+    /* Check for valid state */
+    if( (gIsoDep.role  == ISODEP_ROLE_PICC) || (gIsoDep.isRxChaining) || (gIsoDep.isTxChaining) ||
+        (gIsoDep.state == ISODEP_ST_PCD_TX) || (gIsoDep.state == ISODEP_ST_PCD_WAIT_DSL)          )
+    {
+        return RFAL_ERR_WRONG_STATE;
+    }
+    
+    /*******************************************************************************/
+    /* Using local static vars and static config to cope with a Presence check     *
+     * after RATS\ATTRIB without any I-Block exchanged                             */
+    gIsoDep.rxLen       = &gIsoDep.ctrlRxLen;
+    gIsoDep.rxBuf       = gIsoDep.ctrlBuf;
+    gIsoDep.rxBufLen    = ISODEP_CONTROLMSG_BUF_LEN - (RFAL_ISODEP_PCB_LEN + RFAL_ISODEP_DID_LEN);
+    gIsoDep.rxBufInfPos = (RFAL_ISODEP_PCB_LEN + RFAL_ISODEP_DID_LEN);
+    gIsoDep.txBufInfPos = (RFAL_ISODEP_PCB_LEN + RFAL_ISODEP_DID_LEN);
+    
+    /* Presence chek via R(NAK)->R(ACK) exchange
+     *   ISO14443-4  6.6.6  PICC presence check - Method 2
+     *   EMVCo 4.0   9.5.2  Presence Check (Optional 9.5.0.1)
+     *   NCI 2.3   8.3.2.5  RF_ISO_DEP_NAK_PRESENCE
+    */
+    
+    RFAL_EXIT_ON_ERR( ret, rfalIsoDepTx( rfalIsoDep_PCBRNAK( gIsoDep.blockNumber ), gIsoDep.ctrlBuf, &gIsoDep.ctrlBuf[RFAL_ISODEP_PCB_LEN + RFAL_ISODEP_DID_LEN], 0, (gIsoDep.fwt + gIsoDep.dFwt) ) );
+    
+    gIsoDep.state = ISODEP_ST_PCD_WAIT_PRESENCE;
+    return RFAL_ERR_NONE;
+}
+
+
+/*******************************************************************************/
+ReturnCode rfalIsoDepPollGetPresenceCheckStatus( void )
+{
+    bool dummyB;
+    
+    if( (gIsoDep.role == ISODEP_ROLE_PICC) || (gIsoDep.state != ISODEP_ST_PCD_WAIT_PRESENCE) )
+    {
+        return RFAL_ERR_WRONG_STATE;
+    }
+    
+    return rfalIsoDepDataExchangePCD( gIsoDep.rxLen, &dummyB );
 }
 
 
