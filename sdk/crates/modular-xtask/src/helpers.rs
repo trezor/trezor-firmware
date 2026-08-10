@@ -66,6 +66,23 @@ pub fn is_workspace() -> Result<bool> {
     }
 }
 
+/// Returns the root of the trezor-firmware repository holding the cargo workspace.
+pub fn repo_root() -> Result<PathBuf> {
+    let marker = Path::new("core").join("tools").join("trezor_core_tools");
+    let workspace = root_dir()?;
+
+    workspace
+        .ancestors()
+        .find(|dir| dir.join(&marker).is_dir())
+        .map(Path::to_path_buf)
+        .ok_or_else(|| {
+            anyhow!(
+                "Failed to locate the repository root above {}",
+                workspace.display()
+            )
+        })
+}
+
 pub fn app_package(package_name: &str) -> Result<Package> {
     let metadata = MetadataCommand::new()
         .no_deps()

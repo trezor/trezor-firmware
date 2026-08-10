@@ -25,6 +25,13 @@ pub fn build(args: &BuildArgs) -> Result<()> {
     postbuild::publish_artifact(&elf_path, &app, args.model, args.emulator)?;
     postbuild::publish_artifact(&bin_path, &app, args.model, args.emulator)?;
 
+    if args.production {
+        // The proofs would have to be covered by a production-signed RootPacket.
+        println!("xtask: Skipping app proofs (production build, dev keys not applicable)");
+    } else {
+        postbuild::generate_app_proofs(args.model, args.emulator)?;
+    }
+
     Ok(())
 }
 

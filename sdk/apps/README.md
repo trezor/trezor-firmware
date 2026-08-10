@@ -34,6 +34,10 @@ Emulator debug build with English language for T3W1 model:
 xtask modular build -p ethereum -m t3w1 --lang en -d -e
 ```
 
+Besides the app image (`<app>.elf`), the build writes everything needed to load the app into the artifact directory: the app's Merkle proof (`<app>.proof`) and the timestamped, dev-signed root packet of the app's ring (`rootpacket_0-timestamped-signed.tmr` for ring 0, `rootpacket_12-timestamped-signed.tmr` for rings 1 and 2).
+
+The proofs cover all apps published for the model, so every build refreshes the whole artifact directory. Production builds (`--production`) are skipped, as they need a production-signed root packet.
+
 ### Other Commands
 
 Available commands: `clippy`, `check`, `clean`, `fmt`
