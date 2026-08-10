@@ -250,28 +250,20 @@ async def require_confirm_signature_expiration_ledger(
 
 async def _confirm_invoke_contract_args(
     args: StellarInvokeContractArgs,
-    is_transaction_host_function: bool,
     br_name_prefix: str,
     authorization_title: str | None = None,
 ) -> None:
     """Confirm a contract call using the generic, unparsed arguments UI.
 
-    `is_transaction_host_function` is True for the function invoked directly
-    by a transaction and False for a node of an authorization tree. Direct calls
-    omit `authorization_title`. Tree nodes must provide it to identify their
-    position while each screen's usual title moves into its description or
-    subtitle.
+    `authorization_title` is omitted for the function invoked directly by a
+    transaction. For an authorization-tree node, it identifies the node while
+    each screen's usual title moves into its description or subtitle.
     """
-    if is_transaction_host_function:
-        assert authorization_title is None
-    else:
-        assert authorization_title is not None
-
     await layouts.confirm_address(
         authorization_title or TR.stellar__invoke_contract,
         args.contract_address,
         description=(
-            None if is_transaction_host_function else TR.stellar__invoke_contract
+            None if authorization_title is None else TR.stellar__invoke_contract
         ),
         br_name=f"{br_name_prefix}_contract_address",
     )
@@ -279,7 +271,7 @@ async def _confirm_invoke_contract_args(
         f"{br_name_prefix}_function",
         authorization_title or TR.words__function,
         args.function_name,
-        description=None if is_transaction_host_function else TR.words__function,
+        description=(None if authorization_title is None else TR.words__function),
     )
     if not args.args:
         return
@@ -291,7 +283,7 @@ async def _confirm_invoke_contract_args(
         f"{br_name_prefix}_args",
         authorization_title or TR.words__arguments,
         props,
-        None if is_transaction_host_function else TR.words__arguments,
+        None if authorization_title is None else TR.words__arguments,
     )
 
 
@@ -366,26 +358,20 @@ async def confirm_invoke_contract(
     args: StellarInvokeContractArgs,
     network_id: AnyBytes,
     authorizing_address: str,
-    is_transaction_host_function: bool,
     authorization_title: str | None = None,
 ) -> None:
     """Confirm a contract call, using the dedicated token UI when possible.
 
-    `is_transaction_host_function` explicitly distinguishes the two callers:
-
-    - True: the host function invoked directly by a transaction. Transfers
-      retain the standard payment-style output screen and `authorization_title`
-      is omitted.
-    - False: an invocation displayed from an authorization tree, whether the
-      tree is embedded in a transaction or signed standalone.
-      `authorization_title` is required and identifies the node; the token
-      action becomes its subtitle.
+    `authorization_title` is omitted for the host function invoked directly by
+    a transaction; transfers then retain the standard payment-style output
+    screen. An invocation from either kind of authorization tree provides a
+    title identifying the node, and the token action becomes its subtitle.
 
     `authorizing_address` is used in both contexts to avoid repeating the
     address that already authorizes the transaction operation or the whole
     authorization tree.
     """
-    br_name_prefix = "op_invoke" if is_transaction_host_function else "op_auth"
+    br_name_prefix = "op_invoke" if authorization_title is None else "op_auth"
 
     asset = resolve_sep41_token(args, network_id)
     if asset is not None:
@@ -396,7 +382,6 @@ async def confirm_invoke_contract(
                 asset,
                 args.contract_address,
                 authorizing_address,
-                is_transaction_host_function,
                 br_name_prefix,
                 authorization_title,
             )
@@ -409,7 +394,6 @@ async def confirm_invoke_contract(
                 asset,
                 args.contract_address,
                 authorizing_address,
-                is_transaction_host_function,
                 br_name_prefix,
                 authorization_title,
             )
@@ -417,7 +401,6 @@ async def confirm_invoke_contract(
 
     await _confirm_invoke_contract_args(
         args,
-        is_transaction_host_function,
         br_name_prefix,
         authorization_title,
     )
@@ -428,33 +411,24 @@ async def _confirm_sep41_transfer(
     asset: StellarAsset,
     token_contract: str,
     authorizing_address: str,
-    is_transaction_host_function: bool,
     br_name_prefix: str,
     authorization_title: str | None,
 ) -> None:
     """Confirm a parsed SEP-41 transfer using its dedicated token UI."""
-    if is_transaction_host_function:
-        assert authorization_title is None
-    else:
-        assert authorization_title is not None
-
     from_address, to_address, amount = transfer
-    # The transaction root shows a transfer as "Send": it is the
-    # transaction's own action, framed like a classic payment. A tree
-    # node instead describes what a signature permits, an entry may
-    # belong to another party altogether, so it gets a neutral,
-    # perspective-free label, in line with "Approve token".
+    # Without an authorization title, this is the transaction's own action and
+    # is framed like a classic payment. A tree node instead describes what a
+    # signature permits and may belong to another party altogether, so it gets
+    # a neutral, perspective-free label, in line with "Approve token".
     action = (
-        TR.words__send
-        if is_transaction_host_function
-        else TR.stellar__transfer_token
+        TR.words__send if authorization_title is None else TR.stellar__transfer_token
     )
     screen_title = authorization_title or action
-    # Direct transaction: "Send" is the title, while
-    # `confirm_stellar_output` supplies the recipient context.
-    # Authorization tree: "Authorization #..." is the title and
-    # "Transfer token" is the subtitle.
-    subtitle = "" if is_transaction_host_function else action
+    # For a direct transaction, "Send" is the title and
+    # `confirm_stellar_output` supplies the recipient context. In an
+    # authorization tree, its node title is retained and the action is shown as
+    # the subtitle.
+    subtitle = "" if authorization_title is None else action
     if from_address != authorizing_address:
         await layouts.confirm_stellar_address(
             screen_title,
@@ -464,7 +438,7 @@ async def _confirm_sep41_transfer(
             f"{br_name_prefix}_from",
         )
 
-    if not is_transaction_host_function:
+    if authorization_title is not None:
         await layouts.confirm_stellar_address(
             screen_title,
             subtitle,
@@ -495,20 +469,14 @@ async def _confirm_sep41_approve(
     asset: StellarAsset,
     token_contract: str,
     authorizing_address: str,
-    is_transaction_host_function: bool,
     br_name_prefix: str,
     authorization_title: str | None,
 ) -> None:
     """Confirm a parsed SEP-41 approval or revocation using its dedicated UI."""
-    if is_transaction_host_function:
-        assert authorization_title is None
-    else:
-        assert authorization_title is not None
-
     from_address, spender, amount, live_until_ledger = approve
     action = TR.stellar__revoke_approval if amount == 0 else TR.stellar__approve_token
     screen_title = authorization_title or action
-    subtitle = "" if is_transaction_host_function else action
+    subtitle = "" if authorization_title is None else action
     if from_address != authorizing_address:
         await layouts.confirm_stellar_address(
             screen_title,
@@ -600,7 +568,6 @@ async def confirm_invocation(
             func.contract_fn,
             network_id,
             authorizing_address,
-            is_transaction_host_function=False,
             authorization_title=authorization_title,
         )
 

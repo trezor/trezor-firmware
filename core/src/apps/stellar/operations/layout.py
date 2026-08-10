@@ -472,7 +472,6 @@ async def confirm_invoke_host_function_op(
             function.invoke_contract,
             network_id,
             source_account,
-            is_transaction_host_function=True,
         )
     else:
         raise ProcessError("Stellar: unsupported host function type")
