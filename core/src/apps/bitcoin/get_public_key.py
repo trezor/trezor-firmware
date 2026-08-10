@@ -18,8 +18,10 @@ async def get_public_key(
     from trezor.enums import InputScriptType
     from trezor.messages import HDNodeType, PublicKey, UnlockPath
 
-    from apps.common import coininfo, paths
+    from apps.common import coininfo, lock_manager, paths
     from apps.common.keychain import ForbiddenKeyPath, get_keychain
+
+    lock_manager.touch_idle_timer_if_ble()
 
     coin_name = msg.coin_name or "Bitcoin"
     script_type = msg.script_type or InputScriptType.SPENDADDRESS

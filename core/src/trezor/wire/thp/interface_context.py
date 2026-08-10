@@ -16,7 +16,6 @@ if __debug__:
 
 if utils.USE_BLE:
     import trezorble as ble
-    from trezor.workflow import idle_timer
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -183,10 +182,6 @@ class InterfaceContext:
                 yield self._read_box
 
             packet_len = yield self._read
-            if utils.USE_BLE and self._iface is ble.interface:
-                # prevent auto-lock while handling longer workflows on Bluetooth
-                idle_timer.touch()
-
             assert packet_len == self._iface.RX_PACKET_LEN
 
             self._iface.read(packet_buffer, 0)

@@ -13,10 +13,12 @@ async def get_public_key(msg: EosGetPublicKey, keychain: Keychain) -> EosPublicK
     from trezor.crypto.curve import secp256k1
     from trezor.messages import EosPublicKey
 
-    from apps.common import paths
+    from apps.common import lock_manager, paths
 
     from .helpers import public_key_to_wif
     from .layout import require_get_public_key
+
+    lock_manager.touch_idle_timer_if_ble()
 
     await paths.validate_path(keychain, msg.address_n)
 

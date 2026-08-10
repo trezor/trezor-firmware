@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
 
-from apps.common import seed
+from apps.common import lock_manager, seed
 from apps.common.keychain import with_slip44_keychain
 
 from . import CURVE, PATTERNS, SLIP44_ID
@@ -19,6 +19,8 @@ async def get_public_key(
 ) -> SolanaPublicKey:
     from trezor.messages import SolanaPublicKey
     from trezor.ui.layouts import show_pubkey
+
+    lock_manager.touch_idle_timer_if_ble()
 
     public_key = derive_public_key(keychain, msg.address_n)
 
