@@ -81,7 +81,7 @@ impl Ord for Instant {
             // See explanation on MAX_DIFFERENCE_IN_MILLIS
             self.millis
                 .wrapping_sub(rhs.millis)
-                .cmp(&MAX_DIFFERENCE_IN_MILLIS)
+                .cmp(&(MAX_DIFFERENCE_IN_MILLIS + 1))
                 .reverse()
         }
     }
@@ -103,6 +103,20 @@ mod tests {
         let earlier = Instant { millis: u32::MAX };
         let later = earlier.checked_add(milli).unwrap();
         assert_eq!(later, Instant { millis: 0 });
+        assert!(earlier < later);
+    }
+
+    #[test]
+    fn instant_ord_eq_consistent_at_max_difference() {
+        let earlier = Instant { millis: 0 };
+        let later = earlier
+            .checked_add(Duration::from_millis(MAX_DIFFERENCE_IN_MILLIS))
+            .unwrap();
+        assert_ne!(earlier, later);
+        // Difference of exactly MAX_DIFFERENCE_IN_MILLIS must not yield Equal
+        // (that would break the Ord/Eq contract with derived PartialEq).
+        assert_eq!(later.cmp(&earlier), Ordering::Greater);
+        assert_eq!(earlier.cmp(&later), Ordering::Less);
         assert!(earlier < later);
     }
 }
