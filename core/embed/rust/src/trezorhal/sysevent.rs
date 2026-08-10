@@ -163,16 +163,12 @@ pub fn sysevents_poll(ifaces: &[Syshandle]) -> Option<Event> {
     let awaited = Sysevents::reading_from(ifaces);
     let mut signalled = Sysevents::zeroed();
 
-    let deadline = Instant::now().checked_add(Duration::from_millis(100)).unwrap();
+    let deadline = Instant::now()
+        .checked_add(Duration::from_millis(100))
+        .unwrap();
 
     // SAFETY: safe.
-    unsafe {
-        ffi::sysevents_poll(
-            &awaited as _,
-            &mut signalled as _,
-            deadline.to_millis(),
-        )
-    };
+    unsafe { ffi::sysevents_poll(&awaited as _, &mut signalled as _, deadline.to_millis()) };
 
     parse_event(&signalled)
 }

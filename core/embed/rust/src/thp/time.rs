@@ -1,6 +1,5 @@
-use trezor_thp::channel::retransmit_after_ms;
-
 use sys::time::{Duration, Instant};
+use trezor_thp::channel::retransmit_after_ms;
 
 const MAX_LATENCY_MS: Duration = Duration::from_millis(800);
 

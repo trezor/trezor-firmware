@@ -39,7 +39,8 @@ impl<T> FatPtr<T> {
 
     /// View the fat pointer as a slice
     ///
-    /// Returns `None` if the fat pointer is null, a possibly empty slice otherwise.
+    /// Returns `None` if the fat pointer is null, a possibly empty slice
+    /// otherwise.
     ///
     /// The returned slice borrows from `self`, so its lifetime is capped by the
     /// scope of the `FatPtr` value. This is appropriate for a certain style of
