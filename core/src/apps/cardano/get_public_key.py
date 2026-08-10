@@ -17,9 +17,11 @@ async def get_public_key(
     from trezor import log, wire
     from trezor.ui.layouts import show_pubkey
 
-    from apps.common import paths
+    from apps.common import lock_manager, paths
 
     from .helpers.paths import SCHEMA_MINT, SCHEMA_PUBKEY
+
+    lock_manager.touch_idle_timer_if_ble()
 
     address_n = msg.address_n  # local_cache_attribute
 

@@ -11,6 +11,7 @@ async def get_public_key(msg: EthereumGetPublicKey) -> EthereumPublicKey:
     from apps.bitcoin import get_public_key as bitcoin_get_public_key
 
     # we use the Bitcoin format for Ethereum xpubs
+    # it calls lock_manager.touch_idle_timer_if_ble() so we don't have to
     btc_pubkey_msg = GetPublicKey(address_n=msg.address_n)
     resp = await bitcoin_get_public_key.get_public_key(btc_pubkey_msg)
 

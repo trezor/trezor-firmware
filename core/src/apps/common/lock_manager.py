@@ -140,6 +140,21 @@ def with_prolonged_suspend_time(
         return func
 
 
+if utils.USE_BLE:
+
+    def touch_idle_timer_if_ble() -> None:
+        """Prevent auto-lock during account discovery over Bluetooth.
+        See also https://github.com/trezor/trezor-firmware/issues/7522"""
+        ctx = context.get_context()
+        if ctx.iface is ble.interface:
+            workflow.idle_timer.touch()
+
+else:
+
+    def touch_idle_timer_if_ble() -> None:
+        pass
+
+
 def set_homescreen() -> None:
     import storage.recovery as storage_recovery
 

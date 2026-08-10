@@ -15,9 +15,11 @@ async def get_public_key(msg: TezosGetPublicKey, keychain: Keychain) -> TezosPub
     from trezor.messages import TezosPublicKey
     from trezor.ui.layouts import show_pubkey
 
-    from apps.common import paths, seed
+    from apps.common import lock_manager, paths, seed
 
     from . import helpers
+
+    lock_manager.touch_idle_timer_if_ble()
 
     await paths.validate_path(keychain, msg.address_n)
 
