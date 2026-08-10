@@ -4,8 +4,8 @@ use super::component::{
     check_homescreen_format, AddressDetails, Bip39Input, Button, ButtonMsg, ButtonPage,
     ButtonStyleSheet, CancelConfirmMsg, CoinJoinProgress, Dialog, FidoConfirm, Frame, Homescreen,
     IconDialog, Lockscreen, MnemonicKeyboard, NumberInputDialog, PassphraseKeyboard, PinKeyboard,
-    Progress, SelectWordCount, SelectWordCountLayout, SetBrightnessDialog, ShareWords, SimplePage,
-    Slip39Input,
+    Progress, SelectMenu, SelectWordCount, SelectWordCountLayout, SetBrightnessDialog, ShareWords,
+    SimplePage, Slip39Input,
 };
 use super::{fonts, theme, UIBolt};
 use crate::error::{value_error, Error};
@@ -719,11 +719,12 @@ impl FirmwareUI for UIBolt {
     }
 
     fn select_menu(
-        _items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
         _current: usize,
-        _cancel: Option<TString<'static>>,
+        cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
+        let layout = RootComponent::new(SelectMenu::new(items, cancel));
+        Ok(layout)
     }
 
     fn select_word(
