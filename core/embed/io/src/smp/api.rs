@@ -1,5 +1,5 @@
 use rtl::error::unwrap;
-use rtl::util::from_c_array;
+use rtl::util::{FatPtr, from_c_array};
 
 use super::{echo, image_info, process_rx_byte, reset, upload};
 
@@ -60,8 +60,12 @@ extern "C" fn smp_upload_app_image(
     image_hash: *const cty::uint8_t,
     image_hash_len: cty::size_t,
 ) -> bool {
-    let data_slice = unsafe { core::slice::from_raw_parts(data, len) };
-    let hash_slice = unsafe { core::slice::from_raw_parts(image_hash, image_hash_len) };
+    let data = FatPtr::from_ptr_and_len(data, len);
+    let image_hash = FatPtr::from_ptr_and_len(image_hash, image_hash_len);
+
+    // SAFETY: we trust the caller with the validity of passed in pointers and lengths
+    let data_slice = unsafe { data.as_slice() }.unwrap_or(&[]);
+    let hash_slice = unsafe { image_hash.as_slice() }.unwrap_or(&[]);
 
     upload::upload_image(data_slice, hash_slice)
 }

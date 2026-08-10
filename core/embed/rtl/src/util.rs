@@ -28,17 +28,36 @@ impl<T> FatPtr<T> {
         }
     }
 
-    /// Convert the fat pointer into a slice
+    /// Create a fat pointer from a ptr + len
+    pub fn from_ptr_and_len(ptr: *const T, len: usize) -> Self {
+        if ptr.is_null() {
+            Self::null()
+        } else {
+            Self { ptr, len }
+        }
+    }
+
+    /// View the fat pointer as a slice
     ///
-    /// Returns `None` if the fat pointer is null, a slice otherwise.
+    /// Returns `None` if the fat pointer is null, a possibly empty slice otherwise.
+    ///
+    /// The returned slice borrows from `self`, so its lifetime is capped by the
+    /// scope of the `FatPtr` value. This is appropriate for a certain style of
+    /// C FFI calls, where you create a `FatPtr` from an incoming ptr+len, then
+    /// pass the result of `as_slice()` into Rust code for processing. In such
+    /// case the lifetime guarantees that the slice will stop existing when we
+    /// return back to C.
     ///
     /// # Safety
     ///
-    /// The call reduces to [`core::slice::from_raw_parts`], so all its safety
-    /// properties apply.
-    pub unsafe fn into_slice<'a>(self) -> Option<&'a [T]> {
+    /// If the pointer is non-null and length is non-zero, the call reduces to
+    /// [`core::slice::from_raw_parts`], so all its safety properties apply; in
+    /// short, the pointer must point to valid aligned memory of length `len`.
+    pub unsafe fn as_slice(&self) -> Option<&[T]> {
         if self.ptr.is_null() {
             None
+        } else if self.len == 0 {
+            Some(&[])
         } else {
             Some(unsafe { core::slice::from_raw_parts(self.ptr, self.len) })
         }
