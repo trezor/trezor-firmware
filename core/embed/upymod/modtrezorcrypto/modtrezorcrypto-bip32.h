@@ -525,7 +525,7 @@ MP_DEFINE_CONST_OBJ_TYPE(mod_trezorcrypto_HDNode_type,
 
 /// mock:global
 
-/// def from_seed(seed: AnyBytes, curve_name: str) -> HDNode:
+/// def from_seed(seed: securebytes, curve_name: str) -> HDNode:
 ///     """
 ///     Construct a BIP0032 HD node from a BIP0039 seed value.
 ///     """

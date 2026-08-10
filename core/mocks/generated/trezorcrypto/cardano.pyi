@@ -19,21 +19,21 @@ def derive_icarus(
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
-def from_secret(secret: AnyBytes) -> HDNode:
+def from_secret(secret: securebytes) -> HDNode:
     """
     Creates a Cardano HD node from a master secret.
     """
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
-def from_seed_slip23(seed: AnyBytes) -> HDNode:
+def from_seed_slip23(seed: securebytes) -> HDNode:
     """
     Creates a Cardano HD node from a seed via SLIP-23 derivation.
     """
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
-def from_seed_ledger(seed: AnyBytes) -> HDNode:
+def from_seed_ledger(seed: securebytes) -> HDNode:
     """
     Creates a Cardano HD node from a seed via Ledger derivation.
     """

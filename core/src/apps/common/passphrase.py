@@ -3,11 +3,14 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 from trezor import utils
+from trezor.secbytes import EMPTY_SECURESTR, classify, declassify
 from trezor.wire import DataError
 
 MAX_PASSPHRASE_LEN = const(128)
 
 if TYPE_CHECKING:
+    from buffer_types import securestr
+
     from trezor.messages import ThpCreateNewSession
 
 if __debug__:
@@ -18,7 +21,7 @@ def is_enabled() -> bool:
     return storage_device.is_passphrase_enabled()
 
 
-async def get_passphrase(msg: ThpCreateNewSession) -> str:
+async def get_passphrase(msg: ThpCreateNewSession) -> securestr:
     passphrase_always_on_device = storage_device.get_passphrase_always_on_device()
 
     # Device setting "disabled passphrase protection" is ignored
@@ -38,27 +41,27 @@ async def get_passphrase(msg: ThpCreateNewSession) -> str:
     if msg.on_device or passphrase_always_on_device:
         passphrase = await _get_on_device()
     else:
-        passphrase = msg.passphrase or ""
+        passphrase = classify(msg.passphrase or "")
         if passphrase:
             await _handle_displaying_passphrase_from_host(passphrase)
 
-    if len(passphrase.encode()) > MAX_PASSPHRASE_LEN:
+    if len(declassify(passphrase).encode()) > MAX_PASSPHRASE_LEN:
         raise DataError(f"Maximum passphrase length is {MAX_PASSPHRASE_LEN} bytes")
 
     return passphrase
 
 
-async def _get_on_device() -> str:
+async def _get_on_device() -> securestr:
     from trezor import workflow
     from trezor.ui.layouts import request_passphrase_on_device
 
     workflow.close_others()  # request exclusive UI access
     passphrase = await request_passphrase_on_device(MAX_PASSPHRASE_LEN)
 
-    return passphrase
+    return classify(passphrase)
 
 
-async def _handle_displaying_passphrase_from_host(passphrase: str) -> None:
+async def _handle_displaying_passphrase_from_host(passphrase: securestr) -> None:
     from trezor.ui.layouts import (
         confirm_hidden_passphrase_from_host,
         show_passphrase_from_host,
@@ -68,32 +71,34 @@ async def _handle_displaying_passphrase_from_host(passphrase: str) -> None:
     if storage_device.get_hide_passphrase_from_host():
         await confirm_hidden_passphrase_from_host()
     else:
-        await show_passphrase_from_host(passphrase)
+        await show_passphrase_from_host(declassify(passphrase))
 
 
 if not utils.USE_THP:
 
-    async def get() -> str:
+    async def get() -> securestr:
         from trezor import workflow
 
         if not is_enabled():
-            return ""
+            return EMPTY_SECURESTR
         else:
             workflow.close_others()  # request exclusive UI access
             if storage_device.get_passphrase_always_on_device():
                 from trezor.ui.layouts import request_passphrase_on_device
 
-                passphrase = await request_passphrase_on_device(MAX_PASSPHRASE_LEN)
+                passphrase = classify(
+                    await request_passphrase_on_device(MAX_PASSPHRASE_LEN)
+                )
             else:
                 passphrase = await _request_on_host()
-            if len(passphrase.encode()) > MAX_PASSPHRASE_LEN:
+            if len(declassify(passphrase).encode()) > MAX_PASSPHRASE_LEN:
                 raise DataError(
                     f"Maximum passphrase length is {MAX_PASSPHRASE_LEN} bytes"
                 )
 
             return passphrase
 
-    async def _request_on_host() -> str:
+    async def _request_on_host() -> securestr:
         from trezor import loop, workflow
         from trezor.messages import PassphraseAck, PassphraseRequest
         from trezor.ui.layouts import request_passphrase_on_host
@@ -117,15 +122,18 @@ if not utils.USE_THP:
 
             if passphrase is not None:
                 raise DataError("Passphrase provided when it should not be")
-            return await request_passphrase_on_device(MAX_PASSPHRASE_LEN)
+            return classify(await request_passphrase_on_device(MAX_PASSPHRASE_LEN))
 
         if passphrase is None:
             raise DataError(
                 "Passphrase not provided and on_device is False. Use empty string to set an empty passphrase."
             )
 
+        # narrowing above is done on the plain `str`; mark it only once it is settled
+        secret = classify(passphrase)
+
         # non-empty passphrase
         if passphrase:
-            await _handle_displaying_passphrase_from_host(passphrase)
+            await _handle_displaying_passphrase_from_host(secret)
 
-        return passphrase
+        return secret

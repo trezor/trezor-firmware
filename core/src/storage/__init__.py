@@ -2,6 +2,7 @@
 from typing import TYPE_CHECKING
 
 from storage import cache, common, device
+from trezor.secbytes import declassify
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -54,7 +55,8 @@ def reset(excluded: tuple[AnyBytes, AnyBytes] | None) -> None:
     wipe_cache(excluded)
     common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
     if utils.USE_THP:
-        common.set(common.APP_DEVICE, device.DEVICE_SECRET, device_secret)
+        # written back to generic persistent storage, so it stops being tracked
+        common.set(common.APP_DEVICE, device.DEVICE_SECRET, declassify(device_secret))
         common.set(
             common.APP_DEVICE,
             device.CRED_AUTH_KEY_COUNTER,

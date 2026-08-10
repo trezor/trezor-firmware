@@ -1,10 +1,14 @@
 import utime
-from typing import Any, NoReturn
+from typing import TYPE_CHECKING, Any, NoReturn
 
 from storage.cache_common import APP_COMMON_REQUEST_PIN_LAST_UNLOCK
 from trezor import TR, config, utils, wire
+from trezor.secbytes import EMPTY_SECURESTR, classify, declassify
 from trezor.ui.layouts import show_error_and_raise
 from trezor.wire import context
+
+if TYPE_CHECKING:
+    from buffer_types import securestr
 
 
 async def _request_sd_salt(
@@ -33,13 +37,15 @@ async def request_pin(
     prompt: str,
     attempts_remaining: int | None = None,
     allow_cancel: bool = True,
-) -> str:
+) -> securestr:
     from trezor.ui.layouts import request_pin_on_device
 
-    return await request_pin_on_device(prompt, attempts_remaining, allow_cancel)
+    return classify(
+        await request_pin_on_device(prompt, attempts_remaining, allow_cancel)
+    )
 
 
-async def request_pin_confirm(*args: Any, **kwargs: Any) -> str:
+async def request_pin_confirm(*args: Any, **kwargs: Any) -> securestr:
     from trezor.ui.layouts import confirm_reenter_pin, pin_mismatch_popup
 
     while True:
@@ -53,12 +59,12 @@ async def request_pin_confirm(*args: Any, **kwargs: Any) -> str:
 
 async def request_pin_and_sd_salt(
     prompt: str, allow_cancel: bool = True
-) -> tuple[str, bytearray | None]:
+) -> tuple[securestr, bytearray | None]:
     if config.has_pin():
         pin = await request_pin(prompt, config.get_pin_rem(), allow_cancel)
-        config.ensure_not_wipe_code(pin)
+        config.ensure_not_wipe_code(declassify(pin))
     else:
-        pin = ""
+        pin = EMPTY_SECURESTR
 
     salt = await _request_sd_salt()
 
@@ -95,23 +101,27 @@ async def verify_user_pin(
     if config.has_pin():
         from trezor.ui.layouts import request_pin_on_device
 
-        pin = await request_pin_on_device(prompt, config.get_pin_rem(), allow_cancel)
-        config.ensure_not_wipe_code(pin)
+        pin = classify(
+            await request_pin_on_device(prompt, config.get_pin_rem(), allow_cancel)
+        )
+        config.ensure_not_wipe_code(declassify(pin))
     else:
-        pin = ""
+        pin = EMPTY_SECURESTR
 
     salt = await _request_sd_salt(raise_cancelled_on_unavailable=True)
-    if config.unlock(pin, salt):
+    if config.unlock(declassify(pin), salt):
         _set_last_unlock_time()
         return
     elif not config.has_pin():
         raise RuntimeError
 
     while retry:
-        pin = await request_pin_on_device(
-            TR.pin__enter, config.get_pin_rem(), allow_cancel, wrong_pin=True
+        pin = classify(
+            await request_pin_on_device(
+                TR.pin__enter, config.get_pin_rem(), allow_cancel, wrong_pin=True
+            )
         )
-        if config.unlock(pin, salt):
+        if config.unlock(declassify(pin), salt):
             _set_last_unlock_time()
             return
 

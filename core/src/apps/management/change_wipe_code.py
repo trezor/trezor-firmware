@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING
 
 from trezor import TR
+from trezor.secbytes import EMPTY_SECURESTR, declassify
 
 if TYPE_CHECKING:
+    from buffer_types import securestr
     from collections.abc import Awaitable
 
     from trezor.messages import ChangeWipeCode, Success
@@ -36,16 +38,16 @@ async def change_wipe_code(msg: ChangeWipeCode) -> Success:
 
     if not msg.remove:
         # Pre-check the entered PIN.
-        if config.has_pin() and not config.check_pin(pin, salt):
+        if config.has_pin() and not config.check_pin(declassify(pin), salt):
             await error_pin_invalid()
 
         # Get new wipe code.
         wipe_code = await _request_wipe_code_confirm(pin)
     else:
-        wipe_code = ""
+        wipe_code = EMPTY_SECURESTR
 
     # Write into storage.
-    if not config.change_wipe_code(pin, salt, wipe_code):
+    if not config.change_wipe_code(declassify(pin), salt, declassify(wipe_code)):
         await error_pin_invalid()
 
     if wipe_code:
@@ -95,7 +97,7 @@ def _require_confirm_action(
     raise ProcessError("Wipe code protection is already disabled")
 
 
-async def _request_wipe_code_confirm(pin: str) -> str:
+async def _request_wipe_code_confirm(pin: securestr) -> securestr:
     from trezor.ui.layouts import (
         confirm_reenter_pin,
         pin_mismatch_popup,

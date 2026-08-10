@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING
 
 from storage import common
 from trezor import utils
+from trezor.secbytes import classify
 
 if TYPE_CHECKING:
-    from buffer_types import AnyBytes
+    from buffer_types import AnyBytes, securebytes
     from typing import Literal
 
     from trezor.enums import BackupType, DisplayRotation
@@ -457,7 +458,7 @@ def get_hide_passphrase_from_host() -> bool:
 
 if utils.USE_THP:
 
-    def get_device_secret() -> bytes:
+    def get_device_secret() -> securebytes:
         """
         Device secret is used to derive keys that are independent of the seed.
         """
@@ -467,7 +468,7 @@ if utils.USE_THP:
 
             device_secret = random.bytes(16, True)
             common.set(_NAMESPACE, DEVICE_SECRET, device_secret)
-        return device_secret
+        return classify(device_secret)
 
     def get_cred_auth_key_counter() -> bytes:
         return common.get(_NAMESPACE, CRED_AUTH_KEY_COUNTER) or bytes(4)

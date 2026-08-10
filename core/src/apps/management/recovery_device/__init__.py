@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.enums import RecoveryType
+from trezor.secbytes import declassify
 
 if TYPE_CHECKING:
     from trezor.messages import RecoveryDevice, Success
@@ -90,7 +91,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
         # set up pin if requested
         if msg.pin_protection:
             newpin = await request_pin_confirm(allow_cancel=False)
-            if not config.change_pin(newpin, None):
+            if not config.change_pin(declassify(newpin), None):
                 raise wire.ProcessError("Failed to set PIN")
 
         storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
@@ -105,7 +106,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
         await prompt_recovery_check(recovery_type)
 
         curpin, salt = await request_pin_and_sd_salt(TR.pin__enter)
-        if not config.check_pin(curpin, salt):
+        if not config.check_pin(declassify(curpin), salt):
             await error_pin_invalid()
 
     storage_recovery.set_in_progress(True)

@@ -2,10 +2,13 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 from trezor import utils
+from trezor.secbytes import EMPTY_SECURESTR, classify, declassify
 
 from . import backup_types
 
 if TYPE_CHECKING:
+    from buffer_types import securebytes, securestr
+
     from trezor.enums import BackupType
     from trezor.ui import ProgressLayout
 
@@ -33,13 +36,16 @@ def is_bip39() -> bool:
 
 
 def get_seed(
-    passphrase: str = "",
+    passphrase: securestr = EMPTY_SECURESTR,
     progress_bar: bool = True,
     mnemonic_secret: bytes | None = None,
-) -> bytes:
+) -> securebytes:
     mnemonic_secret = mnemonic_secret or get_secret()
     if mnemonic_secret is None:
         raise ValueError  # Mnemonic not set
+
+    # the passphrase is handed to trezorcrypto here, so it stops being tracked
+    plain_passphrase = declassify(passphrase)
 
     render_func = None
     if progress_bar and not utils.DISABLE_ANIMATION:
@@ -49,7 +55,7 @@ def get_seed(
     if is_bip39():
         from trezor.crypto import bip39
 
-        seed = bip39.seed(mnemonic_secret.decode(), passphrase, render_func)
+        seed = bip39.seed(mnemonic_secret.decode(), plain_passphrase, render_func)
 
     else:  # SLIP-39
         from trezor.crypto import slip39
@@ -62,23 +68,23 @@ def get_seed(
             raise RuntimeError
         seed = slip39.decrypt(
             mnemonic_secret,
-            passphrase.encode(),
+            plain_passphrase.encode(),
             iteration_exponent,
             identifier,
             extendable,
             render_func,
         )
 
-    return seed
+    return classify(seed)
 
 
 if not utils.BITCOIN_ONLY:
 
     def derive_cardano_icarus(
-        passphrase: str = "",
+        passphrase: securestr = EMPTY_SECURESTR,
         trezor_derivation: bool = True,
         progress_bar: bool = True,
-    ) -> bytes:
+    ) -> securebytes:
         if not is_bip39():
             raise ValueError  # should not be called for SLIP-39
 
@@ -93,14 +99,15 @@ if not utils.BITCOIN_ONLY:
 
         from trezor.crypto import cardano
 
+        # the passphrase is handed to trezorcrypto here, so it stops being tracked
         seed = cardano.derive_icarus(
             binary_mnemonic,
-            passphrase,
+            declassify(passphrase),
             trezor_derivation,
             render_func,
         )
         _finish_progress()
-        return seed
+        return classify(seed)
 
 
 _progress_obj: ProgressLayout | None = None

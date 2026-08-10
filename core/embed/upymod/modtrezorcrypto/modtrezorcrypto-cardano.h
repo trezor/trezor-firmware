@@ -93,7 +93,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_cardano_derive_icarus_obj, 3, 4,
     mod_trezorcrypto_cardano_derive_icarus);
 
-/// def from_secret(secret: AnyBytes) -> HDNode:
+/// def from_secret(secret: securebytes) -> HDNode:
 ///     """
 ///     Creates a Cardano HD node from a master secret.
 ///     """
@@ -121,7 +121,7 @@ static mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_from_secret_obj,
                                  mod_trezorcrypto_from_secret);
 
-/// def from_seed_slip23(seed: AnyBytes) -> HDNode:
+/// def from_seed_slip23(seed: securebytes) -> HDNode:
 ///     """
 ///     Creates a Cardano HD node from a seed via SLIP-23 derivation.
 ///     """
@@ -164,7 +164,7 @@ static mp_obj_t mod_trezorcrypto_from_seed_slip23(mp_obj_t seed) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_from_seed_slip23_obj,
                                  mod_trezorcrypto_from_seed_slip23);
 
-/// def from_seed_ledger(seed: AnyBytes) -> HDNode:
+/// def from_seed_ledger(seed: securebytes) -> HDNode:
 ///     """
 ///     Creates a Cardano HD node from a seed via Ledger derivation.
 ///     """

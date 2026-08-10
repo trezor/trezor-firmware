@@ -4,6 +4,7 @@ import storage.device as storage_device
 from storage.cache_common import APP_COMMON_SEED, APP_COMMON_SEED_WITHOUT_PASSPHRASE
 from trezor import utils
 from trezor.crypto import hmac
+from trezor.secbytes import declassify
 from trezor.wire import context
 from trezor.wire.context import get_context
 from trezor.wire.errors import DataError
@@ -14,6 +15,8 @@ from . import mnemonic
 from .passphrase import get_passphrase
 
 if TYPE_CHECKING:
+    from buffer_types import securebytes
+
     from trezor.crypto import bip32
     from trezor.messages import ThpCreateNewSession
     from trezor.wire.protocol_common import Context
@@ -43,12 +46,16 @@ class Slip21Node:
     https://github.com/satoshilabs/slips/blob/master/slip-0021.md.
     """
 
-    def __init__(self, seed: bytes | None = None, data: bytes | None = None) -> None:
+    def __init__(
+        self, seed: securebytes | None = None, data: bytes | None = None
+    ) -> None:
         assert seed is None or data is None, "Specify exactly one of: seed, data"
         if data is not None:
             self.data = data
         elif seed is not None:
-            self.data = hmac(hmac.SHA512, b"Symmetric key seed", seed).digest()
+            self.data = hmac(
+                hmac.SHA512, b"Symmetric key seed", declassify(seed)
+            ).digest()
         else:
             raise ValueError  # neither seed nor data specified
 
@@ -70,8 +77,8 @@ class Slip21Node:
 
 if utils.USE_THP:
 
-    async def get_seed() -> bytes:  # type: ignore [obscured-by-same-name]
-        common_seed = context.cache_get(APP_COMMON_SEED)
+    async def get_seed() -> securebytes:  # type: ignore [obscured-by-same-name]
+        common_seed = context.cache_get_secret(APP_COMMON_SEED)
         assert common_seed is not None
         return common_seed
 
@@ -93,7 +100,7 @@ if utils.USE_THP:
 
             passphrase = await get_passphrase(msg)
             common_seed = mnemonic.get_seed(passphrase)
-            ctx.cache.set(APP_COMMON_SEED, common_seed)
+            ctx.cache.set_secret(APP_COMMON_SEED, common_seed)
 
     else:
         # === Cardano variant ===
@@ -112,7 +119,7 @@ if utils.USE_THP:
 
             passphrase = await get_passphrase(msg)
             common_seed = mnemonic.get_seed(passphrase)
-            ctx.cache.set(APP_COMMON_SEED, common_seed)
+            ctx.cache.set_secret(APP_COMMON_SEED, common_seed)
 
             if msg.derive_cardano:
                 from apps.cardano.seed import derive_and_store_secrets
@@ -125,8 +132,8 @@ else:  # v1 protocol
         # === Bitcoin-only variant ===
         # We use the simple version of `get_seed` that never needs to derive anything else.
 
-        @cache.stored_async(APP_COMMON_SEED)
-        async def get_seed() -> bytes:
+        @cache.stored_async_secure(APP_COMMON_SEED)
+        async def get_seed() -> securebytes:
             raise_if_not_initialized()
 
             passphrase = await get_passphrase_legacy()
@@ -137,10 +144,10 @@ else:  # v1 protocol
         # We want to derive both the normal seed and the Cardano seed together, AND
         # expose a method for Cardano to do the same
 
-        @cache.stored_async(APP_COMMON_SEED)
-        async def get_seed() -> bytes:
+        @cache.stored_async_secure(APP_COMMON_SEED)
+        async def get_seed() -> securebytes:
             await derive_and_store_roots_legacy()
-            common_seed = context.cache_get(APP_COMMON_SEED)
+            common_seed = context.cache_get_secret(APP_COMMON_SEED)
             assert common_seed is not None
             return common_seed
 
@@ -160,7 +167,7 @@ else:  # v1 protocol
 
             if need_seed:
                 common_seed = mnemonic.get_seed(passphrase)
-                ctx.cache.set(APP_COMMON_SEED, common_seed)
+                ctx.cache.set_secret(APP_COMMON_SEED, common_seed)
 
             if need_cardano_secret:
                 from apps.cardano.seed import derive_and_store_secrets
@@ -168,8 +175,8 @@ else:  # v1 protocol
                 derive_and_store_secrets(ctx, passphrase)
 
 
-@cache.stored(APP_COMMON_SEED_WITHOUT_PASSPHRASE)
-def _get_seed_without_passphrase() -> bytes:
+@cache.stored_secure(APP_COMMON_SEED_WITHOUT_PASSPHRASE)
+def _get_seed_without_passphrase() -> securebytes:
     if not storage_device.is_initialized():
         raise Exception("Device is not initialized")
     return mnemonic.get_seed(progress_bar=False)

@@ -18,7 +18,7 @@ from trezor import loop, protobuf, utils
 from .protocol_common import Context, Message
 
 if TYPE_CHECKING:
-    from buffer_types import AnyBytes
+    from buffer_types import AnyBytes, securebytes
     from collections.abc import Callable, Coroutine, Generator
     from typing import Any, TypeVar, overload
 
@@ -198,6 +198,19 @@ def cache_is_set(key: int) -> bool:
 def cache_set(key: int, value: AnyBytes) -> None:
     cache = _get_cache_for_key(key)
     cache.set(key, value)
+
+
+if TYPE_CHECKING:
+    # Secret-typed views of `cache_get`/`cache_set` -- the same functions at
+    # runtime, see `DataCache.get_secret`.
+
+    def cache_get_secret(key: int) -> securebytes | None: ...
+
+    def cache_set_secret(key: int, value: securebytes) -> None: ...
+
+else:
+    cache_get_secret = cache_get
+    cache_set_secret = cache_set
 
 
 def cache_set_bool(key: int, value: bool) -> None:

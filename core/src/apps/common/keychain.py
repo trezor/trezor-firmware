@@ -6,6 +6,7 @@ from trezor.wire import DataError
 from . import paths, safety_checks
 
 if TYPE_CHECKING:
+    from buffer_types import securebytes
     from collections.abc import Awaitable, Callable, Iterable
     from typing import Any, TypeVar
 
@@ -78,7 +79,7 @@ class LRUCache:
 class Keychain:
     def __init__(
         self,
-        seed: bytes,
+        seed: securebytes,
         curve: str,
         schemas: Iterable[paths.PathSchemaType],
         slip21_namespaces: Iterable[paths.Slip21Path] = (),

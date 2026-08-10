@@ -7,6 +7,7 @@ import trezorui_api
 from trezor import TR
 from trezor.crypto import hmac, slip39
 from trezor.enums import BackupType, MessageType
+from trezor.secbytes import declassify
 from trezor.ui.layouts import BR_CODE_OTHER, confirm_action, confirm_properties
 from trezor.wire import ProcessError
 
@@ -84,7 +85,7 @@ async def reset_device(msg: ResetDevice) -> Success:
     # request and set new PIN
     if msg.pin_protection:
         newpin = await request_pin_confirm()
-        if not config.change_pin(newpin, None):
+        if not config.change_pin(declassify(newpin), None):
             raise ProcessError("Failed to set PIN")
 
     prev_int_entropy = None

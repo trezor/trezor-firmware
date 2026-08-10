@@ -3,12 +3,15 @@ from typing import TYPE_CHECKING
 from trezor.wire import context
 
 if TYPE_CHECKING:
+    from buffer_types import securebytes
     from collections.abc import Awaitable, Callable
     from typing import ParamSpec
 
     P = ParamSpec("P")
     ByteFunc = Callable[P, bytes]
     AsyncByteFunc = Callable[P, Awaitable[bytes]]
+    SecureByteFunc = Callable[P, securebytes]
+    AsyncSecureByteFunc = Callable[P, Awaitable[securebytes]]
 
 
 def stored(key: int) -> Callable[[ByteFunc[P]], ByteFunc[P]]:
@@ -59,3 +62,20 @@ def stored_async(key: int) -> Callable[[AsyncByteFunc[P]], AsyncByteFunc[P]]:
         return wrapper
 
     return decorator
+
+
+if TYPE_CHECKING:
+    # Secret-typed views of `stored`/`stored_async`, for keys whose value is
+    # secret material. The same decorators at runtime -- only the annotations
+    # differ, so that the marking survives the cache round-trip instead of
+    # decaying to `bytes` at the decorator boundary.
+
+    def stored_secure(key: int) -> Callable[[SecureByteFunc[P]], SecureByteFunc[P]]: ...
+
+    def stored_async_secure(
+        key: int,
+    ) -> Callable[[AsyncSecureByteFunc[P]], AsyncSecureByteFunc[P]]: ...
+
+else:
+    stored_secure = stored
+    stored_async_secure = stored_async

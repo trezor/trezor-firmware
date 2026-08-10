@@ -2,6 +2,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import utils
+from trezor.secbytes import classify, declassify
 
 if utils.USE_THP:
     # Cache keys for THP
@@ -24,7 +25,7 @@ APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
 
 
 if TYPE_CHECKING:
-    from buffer_types import AnyBytes
+    from buffer_types import AnyBytes, securebytes
     from collections.abc import Sequence
     from typing import TypeVar, overload
 
@@ -95,6 +96,25 @@ class DataCache:
         assert int.from_bytes(encoded, "big") == value
 
         self.set(key, encoded)
+
+    # Secret-typed views of `get`/`set`, for keys whose value is secret material
+    # (the seed, the Cardano Icarus secrets), so that a secret keeps its
+    # `securebytes` marking across the cache instead of decaying to `bytes`.
+    #
+    # These must delegate rather than alias `get`/`set` directly: `SessionlessCache`
+    # overrides both to strip SESSIONLESS_FLAG, and a class-body alias would bind
+    # the base method statically and skip that override.
+    #
+    # Which keys are secret is a convention, not something the checker can enforce:
+    # the key constants are `const()`, and annotating those would defeat
+    # MicroPython's const folding (see vendor/micropython/py/parse.c).
+
+    def get_secret(self, key: int) -> securebytes | None:
+        value = self.get(key)
+        return classify(value) if value is not None else None
+
+    def set_secret(self, key: int, value: securebytes) -> None:
+        self.set(key, declassify(value))
 
     def delete(self, key: int) -> None:
         utils.ensure(key < len(self.fields))

@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor import TR, config, utils, wire
+from trezor.secbytes import EMPTY_SECURESTR, declassify
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
@@ -40,17 +41,17 @@ async def change_pin(msg: ChangePin) -> Success:
 
     # check the entered pin before getting new pin
     if config.has_pin():
-        if not config.check_pin(curpin, salt):
+        if not config.check_pin(declassify(curpin), salt):
             await error_pin_invalid()
 
     # get new pin
     if not msg.remove:
         newpin = await request_pin_confirm()
     else:
-        newpin = ""
+        newpin = EMPTY_SECURESTR
 
     # write into storage
-    if not config.change_pin(newpin, salt):
+    if not config.change_pin(declassify(newpin), salt):
         await error_pin_matches_wipe_code()
 
     utils.notify_send(utils.NOTIFY_PIN_CHANGE)
@@ -63,7 +64,7 @@ async def change_pin(msg: ChangePin) -> Success:
     else:
         msg_wire = "PIN removed"
 
-    await success_pin_change(curpin, newpin)
+    await success_pin_change(declassify(curpin), declassify(newpin))
     return Success(message=msg_wire)
 
 

@@ -15,6 +15,7 @@ from apps.common.seed import get_seed
 from .helpers.paths import BYRON_ROOT, MINTING_ROOT, MULTISIG_ROOT, SHELLEY_ROOT
 
 if TYPE_CHECKING:
+    from buffer_types import securestr
     from collections.abc import Awaitable, Callable
     from typing import TypeVar
 
@@ -121,7 +122,7 @@ def is_minting_path(path: Bip32Path) -> bool:
     return path[: len(MINTING_ROOT)] == MINTING_ROOT
 
 
-def derive_and_store_secrets(ctx: Context, passphrase: str) -> None:
+def derive_and_store_secrets(ctx: Context, passphrase: securestr) -> None:
     assert device.is_initialized()
     assert ctx.cache.get_bool(APP_COMMON_DERIVE_CARDANO)
 
@@ -143,8 +144,8 @@ def derive_and_store_secrets(ctx: Context, passphrase: str) -> None:
     else:
         icarus_trezor_secret = icarus_secret
 
-    ctx.cache.set(APP_CARDANO_ICARUS_SECRET, icarus_secret)
-    ctx.cache.set(APP_CARDANO_ICARUS_TREZOR_SECRET, icarus_trezor_secret)
+    ctx.cache.set_secret(APP_CARDANO_ICARUS_SECRET, icarus_secret)
+    ctx.cache.set_secret(APP_CARDANO_ICARUS_TREZOR_SECRET, icarus_trezor_secret)
 
 
 async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychain:
@@ -168,13 +169,13 @@ async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychai
         cache_entry = APP_CARDANO_ICARUS_TREZOR_SECRET
 
     # _get_secret
-    secret = context.cache_get(cache_entry)
+    secret = context.cache_get_secret(cache_entry)
     if not utils.USE_THP:
         if secret is None:
             from apps.common.seed import derive_and_store_roots_legacy
 
             await derive_and_store_roots_legacy()
-            secret = context.cache_get(cache_entry)
+            secret = context.cache_get_secret(cache_entry)
     assert secret is not None
 
     root = cardano.from_secret(secret)
