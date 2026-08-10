@@ -478,8 +478,9 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
                    uint32_t u2f_counter, bool _dry_run) {
   if (_word_count != 12 && _word_count != 18 && _word_count != 24) return;
 
-  if (_word_count < 24 &&
-      input_method == RecoveryDeviceInputMethod_ScrambledWords &&
+  const bool use_advanced =
+      (input_method & RecoveryDeviceInputMethod_Matrix) != 0;
+  if (_word_count < 24 && !use_advanced &&
       config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Advanced recovery must be used."));
@@ -519,7 +520,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
   }
 
   // Prefer matrix recovery if the host supports it.
-  if ((input_method & RecoveryDeviceInputMethod_Matrix) != 0) {
+  if (use_advanced) {
     recovery_mode = RECOVERY_MATRIX;
     next_matrix();
   } else {
