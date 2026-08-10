@@ -102,6 +102,9 @@ ssize_t syshandle_read_blocking(syshandle_t handle, void* buffer,
  * @param data Pointer to the data to write
  * @param data_size Size of the data in bytes
  * @param timeout Timeout in milliseconds, 0 means no timeout
+ *
+ * @return Number of bytes written.
+ *         Returns a negative error value only if no bytes were written.
  */
 ssize_t syshandle_write_blocking(syshandle_t handle, const void* data,
                                  size_t data_size, uint32_t timeout);
