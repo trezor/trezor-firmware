@@ -27,6 +27,8 @@ mod page;
 mod progress;
 mod result;
 mod scroll;
+#[cfg(feature = "micropython")]
+mod select_menu;
 #[cfg(feature = "storage")]
 mod set_brightness;
 #[cfg(feature = "translations")]
@@ -64,6 +66,8 @@ pub use page::ButtonPage;
 pub use progress::Progress;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
+#[cfg(feature = "micropython")]
+pub use select_menu::{SelectMenu, SelectMenuMsg};
 #[cfg(feature = "storage")]
 pub use set_brightness::SetBrightnessDialog;
 #[cfg(feature = "translations")]
