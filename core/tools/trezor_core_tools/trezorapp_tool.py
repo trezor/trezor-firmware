@@ -174,10 +174,9 @@ def build_rootpackets(apps: tuple[Path, ...], out_dir: Path) -> None:
         )
 
 
-def _create_rootpacket(
-    ring_mask: int, root_rings: list[bytes], out_file: Path | None
-) -> None:
-    rp = RootPacket(
+def _make_root_packet(ring_mask: int, root_rings: list[bytes]) -> RootPacket:
+    """Build an unsigned, unstamped RootPacket covering the given ring roots."""
+    return RootPacket(
         auth=RootPacketAuth(
             ring_mask=ring_mask,
             reserved=b"\x00" * 2,
@@ -189,6 +188,12 @@ def _create_rootpacket(
         signature_0=b"\x00" * 2420,
         signature_1=b"\x00" * 2420,
     )
+
+
+def _create_rootpacket(
+    ring_mask: int, root_rings: list[bytes], out_file: Path | None
+) -> None:
+    rp = _make_root_packet(ring_mask, root_rings)
     rp_bytes = rp.build()
     print("\nRoot packet raw_bytes:")
     print(rp_bytes.hex())
@@ -241,6 +246,74 @@ def _app_filename(header: AppHeader) -> str:
     """Canonical on-disk name: ``{app_id}_{v0.v1.v2.v3}.tapp``."""
     version = ".".join(str(v) for v in header.version)
     return f"{header.id}_{version}.tapp"
+
+
+def _read_app_info(path: Path) -> AppInfo:
+    """Parse the app at `path`, leaving the file where it is."""
+    app = AppImage.parse(path.read_bytes())
+    return AppInfo(path, app.header_hash(), app.header.app_ring)
+
+
+# Rings sharing a single RootPacket, as (ring_mask, rings, base name).
+ROOT_PACKET_GROUPS: tuple[tuple[int, tuple[int, ...], str], ...] = (
+    (1, (0,), "rootpacket_0"),
+    (6, (1, 2), "rootpacket_12"),
+)
+
+
+@cli.command(name="build-dev-bundle")
+@click.argument(
+    "apps",
+    nargs=-1,
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+)
+@click.option(
+    "-o",
+    "--out-dir",
+    type=click.Path(dir_okay=True, file_okay=False, path_type=Path),
+    default=None,
+    help="Directory for the RootPacket(s). Defaults to the first app's directory.",
+)
+def build_dev_bundle(apps: tuple[Path, ...], out_dir: Path | None) -> None:
+    """Build proofs and timestamped, dev-signed RootPacket(s) for APPS.
+
+    Unlike `build-rootpackets`, the apps stay where they are under their original
+    names and each proof is written next to its app as '<app>.proof'. The
+    RootPacket(s) are written as 'rootpacket_0-timestamped-signed.tmr' and
+    'rootpacket_12-timestamped-signed.tmr' — the layout trezorlib expects when
+    loading an app from a directory.
+
+    All apps of a given ring must be passed at once: adding an app later changes
+    the ring's Merkle root and invalidates the proofs of the other apps in it.
+    """
+    out_dir = out_dir if out_dir is not None else apps[0].parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    app_infos = [_read_app_info(path) for path in apps]
+
+    for ring_mask, rings, name in ROOT_PACKET_GROUPS:
+        trees = {ring: _get_tree(_filter_apps(app_infos, ring), ring) for ring in rings}
+        if not any(trees.values()):
+            continue
+
+        for ring, tree in trees.items():
+            if tree is not None:
+                _create_proofs(_filter_apps(app_infos, ring), tree, store=True)
+
+        rp = _make_root_packet(
+            ring_mask=ring_mask,
+            root_rings=[
+                tree.get_root_hash() if tree is not None else b"\x00" * 32
+                for tree in trees.values()
+            ],
+        )
+        stamp = _apply_timestamp(rp)
+        _apply_dev_signatures(rp)
+
+        out_file = out_dir / f"{name}-timestamped-signed.tmr"
+        out_file.write_bytes(rp.build())
+        print(f"Dev-signed RootPacket (timestamp {stamp}) written to {out_file}")
 
 
 def _get_app_info_list(
@@ -367,6 +440,27 @@ def show(rootpacket: Path) -> None:
     _print_root_packet(rp)
 
 
+def _apply_timestamp(rp: RootPacket) -> int:
+    """Stamp `rp` in place with the current time; returns the seconds since genesis."""
+    # Signed offset (in seconds) from the genesis; may be negative before the genesis.
+    time_signed = int((datetime.now(timezone.utc) - TIMESTAMP_GENESIS).total_seconds())
+    # The on-device field is a uint32, so store the two's-complement of the signed value.
+    rp.auth.timestamp = time_signed & 0xFFFFFFFF
+    return time_signed
+
+
+def _apply_dev_signatures(rp: RootPacket) -> bytes:
+    """Sign `rp` in place with both dev keys; returns the signed digest."""
+    keys = [mldsa.MLDSA44PrivateKey.from_seed_bytes(seed) for seed in DEV_SIGNING_SEEDS]
+
+    rp.sigmask = 0b11
+    digest = rp.digest()
+
+    rp.signature_0 = keys[0].sign(digest)
+    rp.signature_1 = keys[1].sign(digest)
+    return digest
+
+
 @cli.command()
 @click.argument(
     "rootpacket",
@@ -377,16 +471,11 @@ def timestamp(rootpacket: Path) -> None:
     rp = RootPacket.parse(rootpacket.read_bytes())
     _print_root_packet(rp)
 
-    time_now = datetime.now(timezone.utc)
-    # Signed offset (in seconds) from the genesis; may be negative before the genesis.
-    time_signed = int((time_now - TIMESTAMP_GENESIS).total_seconds())
-    print(f"\nCurrent time (human):   {time_now.isoformat()}")
+    time_signed = _apply_timestamp(rp)
+    print(f"\nCurrent time (human):   {datetime.now(timezone.utc).isoformat()}")
     print(
         f"Current time (genesis): {time_signed} seconds since {TIMESTAMP_GENESIS.isoformat()}"
     )
-
-    # The on-device field is a uint32, so store the two's-complement of the signed value.
-    rp.auth.timestamp = time_signed & 0xFFFFFFFF
 
     out_file = _suffixed_path(rootpacket, "timestamped")
     out_file.write_bytes(rp.build())
@@ -403,13 +492,7 @@ def sign(rootpacket: Path) -> None:
     rp = RootPacket.parse(rootpacket.read_bytes())
     _print_root_packet(rp)
 
-    keys = [mldsa.MLDSA44PrivateKey.from_seed_bytes(seed) for seed in DEV_SIGNING_SEEDS]
-
-    rp.sigmask = 0b11
-    digest = rp.digest()
-
-    rp.signature_0 = keys[0].sign(digest)
-    rp.signature_1 = keys[1].sign(digest)
+    digest = _apply_dev_signatures(rp)
 
     out_file = _suffixed_path(rootpacket, "signed")
     out_file.write_bytes(rp.build())
