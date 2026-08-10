@@ -363,16 +363,16 @@ def _sc_u32(val: StellarSCVal) -> int | None:
 
 
 def _should_show_from_address(
-    from_address: str, authorizing_address: str | None
+    from_address: str, authorizing_address: str
 ) -> bool:
     """Show `from` unless the same address already authorizes the whole tree."""
-    return authorizing_address is None or from_address != authorizing_address
+    return from_address != authorizing_address
 
 
 async def confirm_invoke_contract(
     args: StellarInvokeContractArgs,
     network_id: AnyBytes,
-    authorizing_address: str | None,
+    authorizing_address: str,
     is_transaction_host_function: bool,
     authorization_title: str | None = None,
 ) -> None:
@@ -434,7 +434,7 @@ async def _confirm_sep41_transfer(
     transfer: tuple[str, str, int],
     asset: StellarAsset,
     token_contract: str,
-    authorizing_address: str | None,
+    authorizing_address: str,
     is_transaction_host_function: bool,
     br_name_prefix: str,
     authorization_title: str | None,
@@ -501,7 +501,7 @@ async def _confirm_sep41_approve(
     approve: tuple[str, str, int, int],
     asset: StellarAsset,
     token_contract: str,
-    authorizing_address: str | None,
+    authorizing_address: str,
     is_transaction_host_function: bool,
     br_name_prefix: str,
     authorization_title: str | None,
@@ -573,7 +573,7 @@ async def confirm_invocation(
     invocation: StellarSorobanAuthorizedInvocation,
     position: str,
     network_id: AnyBytes,
-    authorizing_address: str | None,
+    authorizing_address: str,
     is_root: bool = False,
 ) -> None:
     """Confirm an authorized invocation and its sub-invocations recursively.

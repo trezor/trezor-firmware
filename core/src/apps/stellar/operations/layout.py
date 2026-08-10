@@ -537,8 +537,6 @@ async def _confirm_auth_entry(
     creds = auth.credentials
     # SOURCE_ACCOUNT credentials authorize the tree through the effective
     # operation source; address credentials name their authorizing party.
-    authorizing_address: str | None = None
-
     if creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT:
         authorizing_address = source_account
     elif creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2:
@@ -552,6 +550,8 @@ async def _confirm_auth_entry(
             description=TR.words__address,
             br_name="op_auth_entry_address",
         )
+    else:
+        raise ProcessError("Stellar: unsupported credentials type")
 
     # Show the whole authorized invocation tree starting from its root (not just the
     # nested sub-invocations), so the user sees exactly what this signature authorizes.
