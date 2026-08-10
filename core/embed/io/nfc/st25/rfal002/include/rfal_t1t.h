@@ -59,6 +59,15 @@
 
 /*
  ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ ******************************************************************************
  * GLOBAL DEFINES
  ******************************************************************************
  */
@@ -170,6 +179,10 @@ ReturnCode rfalT1TPollerRall( const uint8_t* uid, uint8_t* rxBuf, uint16_t rxBuf
  *****************************************************************************
  */
 ReturnCode rfalT1TPollerWrite( const uint8_t* uid, uint8_t address, uint8_t data );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_T1T_H */
 

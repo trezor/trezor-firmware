@@ -54,6 +54,15 @@
 
 /*
  ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ ******************************************************************************
  * GLOBAL DEFINES
  ******************************************************************************
  */
@@ -85,15 +94,15 @@ typedef enum
 /*! Card Detection result|outcome type                                                                         */
 typedef enum
 {
-    RFAL_CD_NOT_FOUND          = 0,  /*<! No NFC device found                                                  */
-    RFAL_CD_SINGLE_DEV         = 1,  /*<! An NFC card was found                                                */
-    RFAL_CD_MULTIPLE_DEV       = 2,  /*<! Multiple NFC devices found                                           */
-    RFAL_CD_MULTIPLE_TECH      = 3,  /*<! Multiple NFC technologies observed in a single RF carrier            */
-    RFAL_CD_CARD_TECH          = 4,  /*<! A card-exclusive NFC technology found                                */
-    RFAL_CD_SINGLE_MULTI_TECH  = 5,  /*<! A single NFC device which supports multiple technologies found       */
-    RFAL_CD_SINGLE_P2P         = 6,  /*<! A single NFC device which supports NFC-DEP|P2P found                 */
-    RFAL_CD_SINGLE_HB          = 7,  /*<! A single NFC device where heartbeat was detected                     */
-    RFAL_CD_UNKOWN             = 8   /*<! Unable to complete the Card Detection due to unknow|unexpected event */
+    RFAL_CD_NOT_FOUND          = 0,  /*!< No NFC device found                                                  */
+    RFAL_CD_SINGLE_DEV         = 1,  /*!< An NFC card was found                                                */
+    RFAL_CD_MULTIPLE_DEV       = 2,  /*!< Multiple NFC devices found                                           */
+    RFAL_CD_MULTIPLE_TECH      = 3,  /*!< Multiple NFC technologies observed in a single RF carrier            */
+    RFAL_CD_CARD_TECH          = 4,  /*!< A card-exclusive NFC technology found                                */
+    RFAL_CD_SINGLE_MULTI_TECH  = 5,  /*!< A single NFC device which supports multiple technologies found       */
+    RFAL_CD_SINGLE_P2P         = 6,  /*!< A single NFC device which supports NFC-DEP|P2P found                 */
+    RFAL_CD_SINGLE_HB          = 7,  /*!< A single NFC device where heartbeat was detected                     */
+    RFAL_CD_UNKOWN             = 8   /*!< Unable to complete the Card Detection due to unknow|unexpected event */
 }
 rfalCdDetType;
 
@@ -167,6 +176,10 @@ ReturnCode rfalCdStartDetectCard( rfalCdRes *result );
  */
 ReturnCode rfalCdGetDetectCardStatus( void );
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_CD_H */
 

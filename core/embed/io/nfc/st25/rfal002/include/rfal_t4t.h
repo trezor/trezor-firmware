@@ -62,6 +62,15 @@
 
 /*
  ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ ******************************************************************************
  * GLOBAL DEFINES
  ******************************************************************************
  */
@@ -76,7 +85,7 @@
 #define RFAL_T4T_ISO7816_P1_SELECT_BY_FILEID                  0x00U                          /*!< P1 value for Select by file identifier                          */
 #define RFAL_T4T_ISO7816_P2_SELECT_FIRST_OR_ONLY_OCCURENCE    0x00U                          /*!<      b2b1 P2 value for First or only occurence                  */
 #define RFAL_T4T_ISO7816_P2_SELECT_RETURN_FCI_TEMPLATE        0x00U                          /*!< b4b3      P2 value for Return FCI template                      */
-#define RFAL_T4T_ISO7816_P2_SELECT_NO_RESPONSE_DATA           0x0CU                          /*!< b4b3      P2 value for No responce data                         */
+#define RFAL_T4T_ISO7816_P2_SELECT_NO_RESPONSE_DATA           0x0CU                          /*!< b4b3      P2 value for No response data                         */
 
 #define RFAL_T4T_ISO7816_STATUS_COMPLETE                      0x9000U                        /*!< Command completed \ Normal processing - No further qualification*/
 
@@ -347,6 +356,10 @@ ReturnCode rfalT4TPollerComposeWriteData( rfalIsoDepApduBufFormat *cApduBuf, uin
  *****************************************************************************
  */
 ReturnCode rfalT4TPollerComposeWriteDataODO( rfalIsoDepApduBufFormat *cApduBuf, uint32_t offset, const uint8_t* data, uint8_t dataLen, uint16_t *cApduLen );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_T4T_H */
 

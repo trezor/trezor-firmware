@@ -33,6 +33,8 @@
  *  Users can and shall define their on configuration acording 
  *  to their speficic system needs on rfal_platform.h.
  *
+ * \attention Do not modify this file.
+ *
  * \addtogroup RFAL
  * @{
  *  
@@ -47,6 +49,15 @@
 ******************************************************************************
 */
 #include "rfal_features.h"
+
+/*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 
 /*
@@ -298,7 +309,7 @@
     #endif /* platformI2CTx */                                                                           
                                                                                                          
     #ifndef platformI2CRx                                                                                
-        #define platformI2CRx( txBuf, len )            /*!< I2C Receive                                  */
+        #define platformI2CRx( rxBuf, len )            /*!< I2C Receive                                  */
     #endif /* platformI2CRx */                                                                           
                                                                                                          
     #ifndef platformI2CStart                                                                              
@@ -322,6 +333,10 @@
     #endif /* platformI2CSlaveAddrRD */
     
 #endif /* RFAL_USE_I2C */
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif  /* RFAL_CONFIG_H */
 

@@ -42,8 +42,17 @@
 ******************************************************************************
 */
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 
+/*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 /*
 ******************************************************************************
@@ -97,7 +106,7 @@ typedef uint16_t      ReturnCode; /*!< Standard Return Code type from function. 
 #define RFAL_ERR_HW_OVERRUN                     ((ReturnCode)30U) /*!< lost one or more received bytes */
 #define RFAL_ERR_RELEASE_REQ                    ((ReturnCode)31U) /*!< device requested release */
 #define RFAL_ERR_SLEEP_REQ                      ((ReturnCode)32U) /*!< device requested sleep */
-#define RFAL_ERR_WRONG_STATE                    ((ReturnCode)33U) /*!< incorrent state for requested operation */
+#define RFAL_ERR_WRONG_STATE                    ((ReturnCode)33U) /*!< incorrect state for requested operation */
 #define RFAL_ERR_MAX_RERUNS                     ((ReturnCode)34U) /*!< blocking procedure reached maximum runs */
 #define RFAL_ERR_DISABLED                       ((ReturnCode)35U) /*!< operation aborted due to disabled configuration */ 
 #define RFAL_ERR_HW_MISMATCH                    ((ReturnCode)36U) /*!< expected hw do not match  */
@@ -138,6 +147,7 @@ typedef uint16_t      ReturnCode; /*!< Standard Return Code type from function. 
 #define RFAL_SIZEOF_ARRAY(a)     (sizeof(a) / sizeof((a)[0]))  /*!< Compute the size of an array           */
 #define RFAL_MAX(a, b)           (((a) > (b)) ? (a) : (b))     /*!< Return the maximum of the 2 values     */
 #define RFAL_MIN(a, b)           (((a) < (b)) ? (a) : (b))     /*!< Return the minimum of the 2 values     */
+#define RFAL_DELTA(a, b)         (((a) > (b)) ? ((a)-(b)) : ((b)-(a))) /*!< Return the delta between 2 values */
 #define RFAL_GETU16(a)           (((uint16_t)(a)[0] << 8) | (uint16_t)(a)[1])/*!< Cast two Big Endian 8-bits byte array to 16-bits unsigned */
 #define RFAL_GETU32(a)           (((uint32_t)(a)[0] << 24) | ((uint32_t)(a)[1] << 16) | ((uint32_t)(a)[2] << 8) | ((uint32_t)(a)[3])) /*!< Cast four Big Endian 8-bit byte array to 32-bit unsigned */
 
@@ -160,11 +170,39 @@ static inline int32_t RFAL_BYTECMP(void *s1, const void *s2, uint32_t n)    { re
 #define RFAL_NO_WARNING(v)      ((void) (v)) /*!< Macro to suppress compiler warning */
 
 
+
+/*
+******************************************************************************
+* RFAL GUARDS / CHECKS / INCOMPATIBILITIES
+******************************************************************************
+*/
+
+
 #ifndef NULL
   #define NULL (void*)0                 /*!< represents a NULL pointer */
 #endif /* !NULL */
 
+/*******************************************************************************/
+/* RFAL requires definition of its types - RFAL User Manual (UM2890).
+    C standard library is typically used (stdint.h stdbool.h), but user defined 
+    types are also possible.
+    bool values must be preprocessor integer constants (e.g. stdbool) and not 
+    enum/tydefs which are not intepreted by C preprocessor.
+*/
+#ifndef __cplusplus
+    #ifndef bool
+        #error "RFAL: Invalid Configuration. bool definition apparently missing. "
+    #endif
+    #if (false != 0)
+        #error "RFAL: Invalid Configuration. Unexpected defintion of the boolean false "
+    #endif
+#endif /* __cplusplus */
 
+
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif  /* RFAL_UTILS_H */
 

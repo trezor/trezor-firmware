@@ -57,6 +57,15 @@
 
 /*
  ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ ******************************************************************************
  * GLOBAL DEFINES
  ******************************************************************************
  */
@@ -337,6 +346,10 @@ ReturnCode rfalSt25tbPollerCompletion( void );
  */
 ReturnCode rfalSt25tbPollerResetToInventory( void );
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_ST25TB_H */
 

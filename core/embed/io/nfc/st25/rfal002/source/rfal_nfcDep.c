@@ -135,7 +135,7 @@
 #define NFCIP_MIN_TXERROR_LEN           4U               /*!< Minimum frame length with error to be ignored  Digital 1.0 14.12.5.4 */
 
 #define NFCIP_REQ                       (uint8_t)0xD4U   /*!<NFCIP REQuest code                                     */
-#define NFCIP_RES                       (uint8_t)0xD5U   /*!<NFCIP RESponce code                                    */
+#define NFCIP_RES                       (uint8_t)0xD5U   /*!<NFCIP RESponse code                                    */
 
 #define NFCIP_BS_MASK                   0x0FU            /*!< Bit mask for BS value on a ATR REQ/RES                */
 #define NFCIP_BR_MASK                   NFCIP_BS_MASK    /*!< Bit mask for BR value on a ATR REQ/RES                */
@@ -497,23 +497,23 @@ static ReturnCode nfcipDataRx( bool blocking );
 /*******************************************************************************/
 static bool nfcipDxIsSupported( uint8_t Dx, uint8_t BRx, uint8_t BSx )
 {
-	uint8_t Bx;
-	
-	/* Take the min of the possible bit rates, we'll use one for both directions */
-	Bx = RFAL_MIN(BRx, BSx);
-	
-	/* Lower bit rates must be supported for P2P */
-	if( (Dx <= (uint8_t)RFAL_NFCDEP_Dx_04_424) )
-	{
-		return true;
-	}
-	
-	if( (Dx == (uint8_t)RFAL_NFCDEP_Dx_08_848) && (Bx >= (uint8_t)RFAL_NFCDEP_Bx_08_848) )
-	{
-		return true;
-	}
-
-	return false;
+    uint8_t Bx;
+    
+    /* Take the min of the possible bit rates, we'll use one for both directions */
+    Bx = RFAL_MIN(BRx, BSx);
+    
+    /* Lower bit rates must be supported for P2P */
+    if( (Dx <= (uint8_t)RFAL_NFCDEP_Dx_04_424) )
+    {
+        return true;
+    }
+    
+    if( (Dx == (uint8_t)RFAL_NFCDEP_Dx_08_848) && (Bx >= (uint8_t)RFAL_NFCDEP_Bx_08_848) )
+    {
+        return true;
+    }
+    
+    return false;
 }
 
 
@@ -534,16 +534,16 @@ static ReturnCode nfcipTxRx( rfalNfcDepCmd cmd, uint8_t* txBuf, uint32_t fwt, ui
     
     
     /*******************************************************************************/
-	/* Transmission                                                                */
-	/*******************************************************************************/
+    /* Transmission                                                                */
+    /*******************************************************************************/
     if(txBuf != NULL)                                              /* if nothing to Tx, just do Rx */               
     {
         RFAL_EXIT_ON_ERR( ret, nfcipTx( cmd, txBuf, paylBuf, paylBufLen, 0, fwt ) ); 
     }
     
     /*******************************************************************************/
-	/* Reception                                                                   */
-	/*******************************************************************************/
+    /* Reception                                                                   */
+    /*******************************************************************************/
     ret = nfcipDataRx( true );
     if( ret != RFAL_ERR_NONE )
     {
@@ -551,8 +551,8 @@ static ReturnCode nfcipTxRx( rfalNfcDepCmd cmd, uint8_t* txBuf, uint32_t fwt, ui
     }
     
     /*******************************************************************************/    
-    *rxActLen = *rxBuf;                                      		/* Use LEN byte instead due to with/without CRC modes */
-    return RFAL_ERR_NONE;                                         		/* Tx and Rx completed successfully                   */
+    *rxActLen = *rxBuf;                                             /* Use LEN byte instead due to with/without CRC modes */
+    return RFAL_ERR_NONE;                                           /* Tx and Rx completed successfully                   */
 }
 
 
@@ -728,14 +728,14 @@ static ReturnCode nfcipInitiatorHandleDEP( ReturnCode rxRes, uint16_t rxLen, uin
     /* Digital 1.0 14.15.5.5 Protocol Error  */
     if( gNfcip.rxBuf[rxMsgIt++] != NFCIP_RES )
     {
-    	nfcipLogW( " NFCIP(I) error %02X instead of %02X \r\n", gNfcip.rxBuf[(rxMsgIt-1U)], NFCIP_RES );
+        nfcipLogW( " NFCIP(I) error %02X instead of %02X \r\n", gNfcip.rxBuf[(rxMsgIt-1U)], NFCIP_RES );
         return RFAL_ERR_PROTO;
     }
     
     /* Digital 1.0 14.15.5.5 Protocol Error  */
     if( gNfcip.rxBuf[rxMsgIt++] != (uint8_t)NFCIP_CMD_DEP_RES )
     {
-    	nfcipLogW( " NFCIP(I) error %02X instead of %02X \r\n", gNfcip.rxBuf[(rxMsgIt-1U)], NFCIP_CMD_DEP_RES );
+        nfcipLogW( " NFCIP(I) error %02X instead of %02X \r\n", gNfcip.rxBuf[(rxMsgIt-1U)], NFCIP_CMD_DEP_RES );
         return RFAL_ERR_PROTO;
     }
     
@@ -1719,7 +1719,7 @@ void rfalNfcDepSetDeactivatingCallback( rfalNfcDepDeactCallback pFunc )
 void rfalNfcDepInitialize( void )
 {
     nfcipLogD( " NFCIP Ini() \r\n" );
-	
+    
     gNfcip.state          = NFCIP_ST_IDLE;
     gNfcip.isDeactivating = NULL;
     
@@ -1765,7 +1765,7 @@ void rfalNfcDepInitialize( void )
 static void nfcipSetDEPParams( const rfalNfcDepDEPParams *DEPParams )
 {
     nfcipLogD( " NFCIP SetDEP() txLen: %d \r\n", DEPParams->txBufLen );
-	
+    
     gNfcip.isTxChaining = DEPParams->txChaining;
     gNfcip.txBuf        = DEPParams->txBuf;
     gNfcip.rxBuf        = DEPParams->rxBuf;

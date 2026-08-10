@@ -320,7 +320,7 @@ ReturnCode rfalNfcbPollerGetCheckPresenceStatus( void )
 
     RFAL_EXIT_ON_BUSY( ret, rfalGetTransceiveStatus() );
     
-    /* Covert bits to bytes (u8) */
+    /* Convert bits to bytes (u8) */
     (*gRfalNfcb.DT.sensbResLen) = (uint8_t)rfalConvBitsToBytes(gRfalNfcb.DT.rxLen);
     
     /*  Check if a transmission error was detected */
@@ -409,7 +409,7 @@ ReturnCode rfalNfcbPollerGetSlotMarkerStatus( void )
 
     RFAL_EXIT_ON_BUSY( ret, rfalGetTransceiveStatus() );
     
-    /* Covert bits to bytes (u8) */
+    /* Convert bits to bytes (u8) */
     (*gRfalNfcb.DT.sensbResLen) = (uint8_t)rfalConvBitsToBytes(gRfalNfcb.DT.rxLen);
     
     /*  Check if a transmission error was detected */

@@ -36,8 +36,22 @@
 #ifndef ST25R3916_AAT_H
 #define ST25R3916_AAT_H
 
+/*
+******************************************************************************
+* INCLUDES
+******************************************************************************
+*/
 #include "rfal_platform.h"
 #include "rfal_utils.h"
+
+/*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 /*
 ******************************************************************************
@@ -106,5 +120,9 @@ struct st25r3916AatTuneResult{
  *****************************************************************************
  */
 extern ReturnCode st25r3916AatTune(const struct st25r3916AatTuneParams *tuningParams, struct st25r3916AatTuneResult *tuningStatus);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* ST25R3916_AAT_H */

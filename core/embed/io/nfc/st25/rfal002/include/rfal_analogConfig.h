@@ -54,6 +54,15 @@
 
 /*
  ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ ******************************************************************************
  * DEFINES
  ******************************************************************************
  */
@@ -423,6 +432,10 @@ ReturnCode rfalSetAnalogConfig( rfalAnalogConfigId configId );
  */
 uint16_t rfalAnalogConfigGenModeID( rfalMode md, rfalBitRate br, uint16_t dir );
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_ANALOG_CONFIG_H */
 

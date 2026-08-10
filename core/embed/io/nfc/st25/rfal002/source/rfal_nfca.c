@@ -124,7 +124,7 @@ typedef struct{
 }rfalNfcaTechDetParams;
 
 
-/*! Colission Resolution states */
+/*! Collision Resolution states */
 typedef enum{
     RFAL_NFCA_CR_IDLE,                      /*!< IDLE state                      */
     RFAL_NFCA_CR_CL,                        /*!< New Cascading Level state       */
@@ -136,7 +136,7 @@ typedef enum{
 }rfalNfcaColResState;
 
 
-/*! Full Colission Resolution states */
+/*! Full Collision Resolution states */
 typedef enum{
     RFAL_NFCA_CR_FULL_START,                /*!< Start Full Collision Resolution state                   */
     RFAL_NFCA_CR_FULL_SLPCHECK,             /*!< Sleep and Check for restart state                       */
@@ -144,7 +144,7 @@ typedef enum{
 }rfalNfcaFColResState;
 
 
-/*! Colission Resolution context */
+/*! Collision Resolution context */
 typedef struct{
     uint8_t               devLimit;         /*!< Device limit to be used                                 */
     rfalComplianceMode    compMode;         /*!< Compliancy mode to be used                              */
@@ -170,7 +170,7 @@ typedef struct{
 }rfalNfcaColResParams;
 
 
-/*! Colission Resolution context */
+/*! Collision Resolution context */
 typedef struct{
     
     uint8_t               cascadeLv;        /*!< Current Cascading Level                                 */
@@ -340,7 +340,7 @@ static ReturnCode rfalNfcaPollerGetSingleCollisionResolutionStatus( void )
                 break;
             }
 
-            /* Covert rxLen into bytes */
+            /* Convert rxLen into bytes */
             gNfca.CR.rxLen = rfalConvBitsToBytes( gNfca.CR.rxLen );
             
             
@@ -820,6 +820,8 @@ ReturnCode rfalNfcaPollerFullCollisionResolution( rfalComplianceMode compMode, u
     return ret;
 }
 
+
+/*******************************************************************************/
 ReturnCode rfalNfcaPollerSleepFullCollisionResolution( uint8_t devLimit, rfalNfcaListenDevice *nfcaDevList, uint8_t *devCnt )
 {
     bool       firstRound;
@@ -847,7 +849,7 @@ ReturnCode rfalNfcaPollerSleepFullCollisionResolution( uint8_t devLimit, rfalNfc
         {
             *devCnt += tmpDevCnt;
 
-            /* Check whether to seacrh for more devices */
+            /* Check whether to search for more devices */
             if( *devCnt < devLimit )
             {
                 /* Set last found device to sleep (all others are slept already) */
@@ -892,7 +894,7 @@ ReturnCode rfalNfcaPollerStartSelect( const uint8_t *nfcid1, uint8_t nfcidLen, r
     }
     
     
-    /* Calculate Cascate Level */
+    /* Calculate Cascade Level */
     gNfca.SEL.fCascadeLv = rfalNfcaNfcidLen2CL( nfcidLen );
     gNfca.SEL.cascadeLv  = RFAL_NFCA_SEL_CASCADE_L1;
     

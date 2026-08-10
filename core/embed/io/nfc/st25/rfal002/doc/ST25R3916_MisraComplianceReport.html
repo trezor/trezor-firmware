@@ -159,7 +159,7 @@ background:     DeepSkyBlue;
   <div id="head">
   <div class="ptitle"><h2>Helix QAC GEP/GCS/GRP Report for MISRA</h2></div>
   <div class="stitle"><h4><i>Note: This report is generated using Helix QAC version: 2024.1, property of Programming Research Limited, a Perforce company.</i></h4></div>
-  <div class="stitle">Project &nbsp;&nbsp;: nucleo/Firmware/nucleo/PRQA/RFAL-ST25R3916<br/>Status at: 04 Apr, 2025 at 14:15:36<br/><i>Report script last update: August 2, 2024</i></div>
+  <div class="stitle">Project &nbsp;&nbsp;: nucleo/Firmware/nucleo/PRQA/RFAL-ST25R3916<br/>Status at: 24 Jul, 2026 at 15:35:48<br/><i>Report script last update: August 2, 2024</i></div>
   <div class="headcontent">
     <div class="toc">
       <ol>
@@ -241,11 +241,11 @@ the variables length has been consequently set to a dedicated value (cf 'namelen
       <ul>RFAL-ST25R3916</ul><br>
     <li>RFAL informations:</li>
       <ul>Path: rfal</ul>
-      <ul>Version: v4.0.2</ul>
+      <ul>Version: v4.2.0</ul>
           <br>    <li>Project repositories SHA1:</li>
-      <ul><b>common</b>: 9658154</ul>
-      <ul><b>nucleo</b>: d85b3e3</ul>
-      <ul><b>rfal</b>: 645759e</ul>
+      <ul><b>common</b>: b1e76a7</ul>
+      <ul><b>nucleo</b>: 605d5d0</ul>
+      <ul><b>rfal</b>: 5ea6d52</ul>
   <br>
   </ul>
 <h3><a name="Assistance">3. Assistance/Enforcement</a></h3>
@@ -9669,7 +9669,7 @@ This section targets to provide an overview of Deviation Records.
   <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
   </tr>
   <tr>
-    <td width=4%>275</td>
+    <td width=4%>284</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9687,19 +9687,7 @@ This section targets to provide an overview of Deviation Records.
   <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
   </tr>
   <tr>
-    <td width=4%>288</td>
-    <td align=center width=4%>1</td>
-    <td><center><table width=98%>
-  <tr>
-    <td width=12%>qac-0750</td>
-    <td width=88%>A union type specifier has been defined.</td>
-  </tr>
-</table></center>
-</td>
-    <td width=45%>MISRA 19.2 - Both members of the union will not be used concurrently, device is only of type A or B at a time. Thus no problem can occur.</td>
-    </tr>
-  <tr>
-    <td width=4%>68-70</td>
+    <td width=4%>77-79</td>
     <td align=center width=4%>2</td>
     <td><center><table width=98%>
   <tr>
@@ -9710,14 +9698,8 @@ This section targets to provide an overview of Deviation Records.
 </td>
     <td width=45%>MISRA 20.5 - #undef used to ease user defined configuration and memory optimization</td>
     </tr>
-</table></center>
-<h4>File: rfal/include/rfal_nfc.h</h4>
-<center><table class="docTable" width=98%>
-  <colgroup span="10" class="columns"></colgroup>
-  <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
-  </tr>
   <tr>
-    <td width=4%>269</td>
+    <td width=4%>324</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9726,10 +9708,16 @@ This section targets to provide an overview of Deviation Records.
   </tr>
 </table></center>
 </td>
-    <td width=45%>MISRA 19.2 - Members of the union will not be used concurrently, only one interface at a time</td>
+    <td width=45%>MISRA 19.2 - Both members of the union will not be used concurrently, device is only of type A or B at a time. Thus no problem can occur.</td>
     </tr>
+</table></center>
+<h4>File: rfal/include/rfal_nfc.h</h4>
+<center><table class="docTable" width=98%>
+  <colgroup span="10" class="columns"></colgroup>
+  <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
+  </tr>
   <tr>
-    <td width=4%>212</td>
+    <td width=4%>221</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9741,7 +9729,19 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 19.2 - Members of the union will not be used concurrently, only one protocol at a time</td>
     </tr>
   <tr>
-    <td width=4%>200</td>
+    <td width=4%>278</td>
+    <td align=center width=4%>1</td>
+    <td><center><table width=98%>
+  <tr>
+    <td width=12%>qac-0750</td>
+    <td width=88%>A union type specifier has been defined.</td>
+  </tr>
+</table></center>
+</td>
+    <td width=45%>MISRA 19.2 - Members of the union will not be used concurrently, only one interface at a time</td>
+    </tr>
+  <tr>
+    <td width=4%>209</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9759,7 +9759,7 @@ This section targets to provide an overview of Deviation Records.
   <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
   </tr>
   <tr>
-    <td width=4%>72-74</td>
+    <td width=4%>81-83</td>
     <td align=center width=4%>2</td>
     <td><center><table width=98%>
   <tr>
@@ -9771,7 +9771,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 20.5 - #undef used to ease user defined configuration and memory optimization</td>
     </tr>
   <tr>
-    <td width=4%>316</td>
+    <td width=4%>326</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9789,7 +9789,7 @@ This section targets to provide an overview of Deviation Records.
   <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
   </tr>
   <tr>
-    <td width=4%>221</td>
+    <td width=4%>230</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9807,19 +9807,7 @@ This section targets to provide an overview of Deviation Records.
   <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
   </tr>
   <tr>
-    <td width=4%>1398-1400</td>
-    <td align=center width=4%>2</td>
-    <td><center><table width=98%>
-  <tr>
-    <td width=12%>qac-4342</td>
-    <td width=88%>An expression of 'essentially unsigned' type (%1s) is being cast to enum type '%2s'.</td>
-  </tr>
-</table></center>
-</td>
-    <td width=45%>MISRA 10.5 - Layout of enum rfalBitRate and above masks guarantee no invalid enum values to be created</td>
-    </tr>
-  <tr>
-    <td width=4%>1358</td>
+    <td width=4%>796</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9831,19 +9819,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>2183-2184</td>
-    <td align=center width=4%>1</td>
-    <td><center><table width=98%>
-  <tr>
-    <td width=12%>qac-4342</td>
-    <td width=88%>An expression of 'essentially unsigned' type (%1s) is being cast to enum type '%2s'.</td>
-  </tr>
-</table></center>
-</td>
-    <td width=45%>MISRA 10.5 - Layout of enum rfalIsoDepFSxI is guaranteed whithin 4bit range</td>
-    </tr>
-  <tr>
-    <td width=4%>2730</td>
+    <td width=4%>2797</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9855,19 +9831,19 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 11.3 - Intentional safe cast to avoiding large buffer duplication</td>
     </tr>
   <tr>
-    <td width=4%>793</td>
-    <td align=center width=4%>1</td>
+    <td width=4%>1408-1410</td>
+    <td align=center width=4%>2</td>
     <td><center><table width=98%>
   <tr>
-    <td width=12%>qac-2003</td>
-    <td width=88%>The preceding 'switch' clause is not empty and does not end with a 'jump' statement. Execution will fall through.</td>
+    <td width=12%>qac-4342</td>
+    <td width=88%>An expression of 'essentially unsigned' type (%1s) is being cast to enum type '%2s'.</td>
   </tr>
 </table></center>
 </td>
-    <td width=45%>MISRA 16.3 - Intentional fall through</td>
+    <td width=45%>MISRA 10.5 - Layout of enum rfalBitRate and above masks guarantee no invalid enum values to be created</td>
     </tr>
   <tr>
-    <td width=4%>413</td>
+    <td width=4%>414</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9879,7 +9855,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 19.2 - Members of the union will not be used concurrently, only one frame at a time</td>
     </tr>
   <tr>
-    <td width=4%>2563</td>
+    <td width=4%>2193-2194</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9888,10 +9864,22 @@ This section targets to provide an overview of Deviation Records.
   </tr>
 </table></center>
 </td>
-    <td width=45%>MISRA 10.5 - Layout of enum rfalBitRate and above clamping of maxTxBR guarantee no invalid enum values to be created</td>
+    <td width=45%>MISRA 10.5 - Layout of enum rfalIsoDepFSxI is guaranteed whithin 4bit range</td>
     </tr>
   <tr>
-    <td width=4%>2556</td>
+    <td width=4%>2860</td>
+    <td align=center width=4%>1</td>
+    <td><center><table width=98%>
+  <tr>
+    <td width=12%>qac-2003</td>
+    <td width=88%>The preceding 'switch' clause is not empty and does not end with a 'jump' statement. Execution will fall through.</td>
+  </tr>
+</table></center>
+</td>
+    <td width=45%>MISRA 16.3 - Intentional fall through</td>
+    </tr>
+  <tr>
+    <td width=4%>2719</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9900,10 +9888,10 @@ This section targets to provide an overview of Deviation Records.
   </tr>
 </table></center>
 </td>
-    <td width=45%>MISRA 10.5 - Layout of enum rfalBitRate and above clamping of maxTxBR guarantee no invalid enum values to be created</td>
+    <td width=45%>MISRA 10.5 - Layout of enum rfalBitRate and range of loop variable guarantee no invalid enum values to be created</td>
     </tr>
   <tr>
-    <td width=4%>2277-2278</td>
+    <td width=4%>2293-2294</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9915,7 +9903,19 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 11.3 - Intentional safe cast to avoiding buffer duplication</td>
     </tr>
   <tr>
-    <td width=4%>1025</td>
+    <td width=4%>2582</td>
+    <td align=center width=4%>1</td>
+    <td><center><table width=98%>
+  <tr>
+    <td width=12%>qac-4342</td>
+    <td width=88%>An expression of 'essentially unsigned' type (%1s) is being cast to enum type '%2s'.</td>
+  </tr>
+</table></center>
+</td>
+    <td width=45%>MISRA 10.5 - Layout of enum rfalBitRate and above clamping of maxTxBR guarantee no invalid enum values to be created</td>
+    </tr>
+  <tr>
+    <td width=4%>1035</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9927,7 +9927,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>2793</td>
+    <td width=4%>1368</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9939,7 +9939,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>2652</td>
+    <td width=4%>2706</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9951,7 +9951,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 10.5 - Layout of enum rfalBitRate and range of loop variable guarantee no invalid enum values to be created</td>
     </tr>
   <tr>
-    <td width=4%>2639</td>
+    <td width=4%>2575</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -9960,7 +9960,7 @@ This section targets to provide an overview of Deviation Records.
   </tr>
 </table></center>
 </td>
-    <td width=45%>MISRA 10.5 - Layout of enum rfalBitRate and range of loop variable guarantee no invalid enum values to be created</td>
+    <td width=45%>MISRA 10.5 - Layout of enum rfalBitRate and above clamping of maxTxBR guarantee no invalid enum values to be created</td>
     </tr>
 </table></center>
 <h4>File: rfal/source/rfal_nfc.c</h4>
@@ -9969,7 +9969,7 @@ This section targets to provide an overview of Deviation Records.
   <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
   </tr>
   <tr>
-    <td width=4%>1924</td>
+    <td width=4%>1933</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10005,7 +10005,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 2.1 - Unreachable code due to configuration option being set/unset</td>
     </tr>
   <tr>
-    <td width=4%>2150</td>
+    <td width=4%>2159</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10179,7 +10179,7 @@ This section targets to provide an overview of Deviation Records.
   <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
   </tr>
   <tr>
-    <td width=4%>679-680</td>
+    <td width=4%>688-689</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10191,7 +10191,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 8.6 - Externally generated table included by the library</td>
     </tr>
   <tr>
-    <td width=4%>679-680</td>
+    <td width=4%>688-689</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10209,7 +10209,19 @@ This section targets to provide an overview of Deviation Records.
   <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
   </tr>
   <tr>
-    <td width=4%>52-53</td>
+    <td width=4%>60-61</td>
+    <td align=center width=4%>1</td>
+    <td><center><table width=98%>
+  <tr>
+    <td width=12%>qac-3406</td>
+    <td width=88%>Object/function '%s', with external linkage, has been defined in a header file.</td>
+  </tr>
+</table></center>
+</td>
+    <td width=45%>MISRA 8.6 - Externally generated table included by the library</td>
+    </tr>
+  <tr>
+    <td width=4%>60-61</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10220,18 +10232,6 @@ This section targets to provide an overview of Deviation Records.
 </td>
     <td width=45%>MISRA 8.9 - Externally generated table included by the library</td>
     </tr>
-  <tr>
-    <td width=4%>52-53</td>
-    <td align=center width=4%>1</td>
-    <td><center><table width=98%>
-  <tr>
-    <td width=12%>qac-3406</td>
-    <td width=88%>Object/function '%s', with external linkage, has been defined in a header file.</td>
-  </tr>
-</table></center>
-</td>
-    <td width=45%>MISRA 8.6 - Externally generated table included by the library</td>
-    </tr>
 </table></center>
 <h4>File: rfal/source/st25r3916/rfal_dpoTbl.h</h4>
 <center><table class="docTable" width=98%>
@@ -10239,7 +10239,7 @@ This section targets to provide an overview of Deviation Records.
   <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
   </tr>
   <tr>
-    <td width=4%>66-67</td>
+    <td width=4%>74-75</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10251,7 +10251,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 8.6 - Externally generated table included by the library</td>
     </tr>
   <tr>
-    <td width=4%>66-67</td>
+    <td width=4%>74-75</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10269,28 +10269,16 @@ This section targets to provide an overview of Deviation Records.
   <tr><th>Lines</th><th>Count</th><th>Suppressed Qacs</th><th>Comment</th></tr>
   </tr>
   <tr>
-    <td width=4%>3637</td>
+    <td width=4%>1654</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
-    <td width=12%>qac-4342</td>
-    <td width=88%>An expression of 'essentially unsigned' type (%1s) is being cast to enum type '%2s'.</td>
+    <td width=12%>m3cm-5209</td>
+    <td width=88%>Use of basic type '%s'.</td>
   </tr>
 </table></center>
 </td>
-    <td width=45%>MISRA 10.5 - Guaranteed that no invalid enum values may be created. See also equalityGuard_RFAL_BR_106 ff.</td>
-    </tr>
-  <tr>
-    <td width=4%>2011</td>
-    <td align=center width=4%>1</td>
-    <td><center><table width=98%>
-  <tr>
-    <td width=12%>qac-2003</td>
-    <td width=88%>The preceding 'switch' clause is not empty and does not end with a 'jump' statement. Execution will fall through.</td>
-  </tr>
-</table></center>
-</td>
-    <td width=45%>MISRA 16.3 - Intentional fall through</td>
+    <td width=45%>MISRA 4.9 - External function (sqrt()) requires double</td>
     </tr>
   <tr>
     <td width=4%>1070</td>
@@ -10305,19 +10293,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 2.1 - Inconsistently marked as unreachable code</td>
     </tr>
   <tr>
-    <td width=4%>1651</td>
-    <td align=center width=4%>1</td>
-    <td><center><table width=98%>
-  <tr>
-    <td width=12%>m3cm-5209</td>
-    <td width=88%>Use of basic type '%s'.</td>
-  </tr>
-</table></center>
-</td>
-    <td width=45%>MISRA 4.9 - External function (sqrt()) requires double</td>
-    </tr>
-  <tr>
-    <td width=4%>2083</td>
+    <td width=4%>2532</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10329,7 +10305,19 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>2135</td>
+    <td width=4%>3641</td>
+    <td align=center width=4%>1</td>
+    <td><center><table width=98%>
+  <tr>
+    <td width=12%>qac-4342</td>
+    <td width=88%>An expression of 'essentially unsigned' type (%1s) is being cast to enum type '%2s'.</td>
+  </tr>
+</table></center>
+</td>
+    <td width=45%>MISRA 10.5 - Guaranteed that no invalid enum values may be created. See also equalityGuard_RFAL_BR_106 ff.</td>
+    </tr>
+  <tr>
+    <td width=4%>2639</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10341,7 +10329,19 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>2213</td>
+    <td width=4%>3874</td>
+    <td align=center width=4%>1</td>
+    <td><center><table width=98%>
+  <tr>
+    <td width=12%>qac-4342</td>
+    <td width=88%>An expression of 'essentially unsigned' type (%1s) is being cast to enum type '%2s'.</td>
+  </tr>
+</table></center>
+</td>
+    <td width=45%>MISRA 10.5 - Guaranteed that no invalid enum values may be created. See also equalityGuard_RFAL_BR_106 ff.</td>
+    </tr>
+  <tr>
+    <td width=4%>2216</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10353,7 +10353,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>2440</td>
+    <td width=4%>1998</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10365,7 +10365,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>1980</td>
+    <td width=4%>2138</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10377,16 +10377,28 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>3368</td>
+    <td width=4%>2086</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
-    <td width=12%>qac-0759</td>
-    <td width=88%>An object of union type has been defined.</td>
+    <td width=12%>qac-2003</td>
+    <td width=88%>The preceding 'switch' clause is not empty and does not end with a 'jump' statement. Execution will fall through.</td>
   </tr>
 </table></center>
 </td>
-    <td width=45%>MISRA 19.2 - Allocating Union where members are of the same type, just different names.  Thus no problem can occur.</td>
+    <td width=45%>MISRA 16.3 - Intentional fall through</td>
+    </tr>
+  <tr>
+    <td width=4%>2014</td>
+    <td align=center width=4%>1</td>
+    <td><center><table width=98%>
+  <tr>
+    <td width=12%>qac-2003</td>
+    <td width=88%>The preceding 'switch' clause is not empty and does not end with a 'jump' statement. Execution will fall through.</td>
+  </tr>
+</table></center>
+</td>
+    <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
     <td width=4%>279</td>
@@ -10401,7 +10413,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 19.2 - Both members are of the same type, just different names.  Thus no problem can occur.</td>
     </tr>
   <tr>
-    <td width=4%>3618</td>
+    <td width=4%>2444</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10413,7 +10425,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>1995</td>
+    <td width=4%>2359</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10425,7 +10437,7 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>2355</td>
+    <td width=4%>1983</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10437,31 +10449,19 @@ This section targets to provide an overview of Deviation Records.
     <td width=45%>MISRA 16.3 - Intentional fall through</td>
     </tr>
   <tr>
-    <td width=4%>3870</td>
+    <td width=4%>3372</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
-    <td width=12%>qac-4342</td>
-    <td width=88%>An expression of 'essentially unsigned' type (%1s) is being cast to enum type '%2s'.</td>
+    <td width=12%>qac-0759</td>
+    <td width=88%>An object of union type has been defined.</td>
   </tr>
 </table></center>
 </td>
-    <td width=45%>MISRA 10.5 - Guaranteed that no invalid enum values may be created. See also equalityGuard_RFAL_BR_106 ff.</td>
+    <td width=45%>MISRA 19.2 - Allocating Union where members are of the same type, just different names.  Thus no problem can occur.</td>
     </tr>
   <tr>
-    <td width=4%>2528</td>
-    <td align=center width=4%>1</td>
-    <td><center><table width=98%>
-  <tr>
-    <td width=12%>qac-2003</td>
-    <td width=88%>The preceding 'switch' clause is not empty and does not end with a 'jump' statement. Execution will fall through.</td>
-  </tr>
-</table></center>
-</td>
-    <td width=45%>MISRA 16.3 - Intentional fall through</td>
-    </tr>
-  <tr>
-    <td width=4%>2635</td>
+    <td width=4%>3622</td>
     <td align=center width=4%>1</td>
     <td><center><table width=98%>
   <tr>
@@ -10497,7 +10497,7 @@ There are no duplicated suppressions.
   <colgroup span="10" class="columns"></colgroup>
   <tr><th>Line</th><th>Unused Qacs</th><th>Comment</th></tr>
   <tr>
-    <td width=4%>83</td>
+    <td width=4%>89</td>
     <td><center><table width=98%>
   <tr>
     <td width=12%>qac-0431</td>
@@ -10508,7 +10508,7 @@ There are no duplicated suppressions.
     <td width=45%>MISRA 1.1 - string.h from Cosmic only provides functions with low qualified parameters</td>
 </tr>
   <tr>
-    <td width=4%>81</td>
+    <td width=4%>91</td>
     <td><center><table width=98%>
   <tr>
     <td width=12%>qac-0431</td>
@@ -10524,7 +10524,7 @@ There are no duplicated suppressions.
   <colgroup span="10" class="columns"></colgroup>
   <tr><th>Line</th><th>Unused Qacs</th><th>Comment</th></tr>
   <tr>
-    <td width=4%>72</td>
+    <td width=4%>81</td>
     <td><center><table width=98%>
 </table></center>
 </td>
@@ -10545,6 +10545,22 @@ There are no duplicated suppressions.
 </table></center>
 </td>
     <td width=45%>CERT INT30 - Intentional underflow, part of the coding</td>
+</tr>
+</table></center>
+<h4>File: rfal/source/rfal_isoDep.c</h4>
+<center><table class="docTable" width=98%>
+  <colgroup span="10" class="columns"></colgroup>
+  <tr><th>Line</th><th>Unused Qacs</th><th>Comment</th></tr>
+  <tr>
+    <td width=4%>797</td>
+    <td><center><table width=98%>
+  <tr>
+    <td width=12%>qac-2003</td>
+    <td width=88%>The preceding 'switch' clause is not empty and does not end with a 'jump' statement. Execution will fall through.</td>
+  </tr>
+</table></center>
+</td>
+    <td width=45%>MISRA 16.3 - Intentional fall through</td>
 </tr>
 </table></center>
 <h4>File: rfal/source/rfal_nfc.c</h4>
@@ -10568,7 +10584,7 @@ There are no duplicated suppressions.
   <colgroup span="10" class="columns"></colgroup>
   <tr><th>Line</th><th>Unused Qacs</th><th>Comment</th></tr>
   <tr>
-    <td width=4%>405</td>
+    <td width=4%>414</td>
     <td><center><table width=98%>
   <tr>
     <td width=12%>qac-3674</td>
@@ -10579,18 +10595,18 @@ There are no duplicated suppressions.
     <td width=45%>CERT ARR02 - Flexible array will be used with sizeof, on adding elements error-prone manual update of size would be required</td>
 </tr>
   <tr>
-    <td width=4%>678</td>
+    <td width=4%>415</td>
     <td><center><table width=98%>
   <tr>
-    <td width=12%>qac-3674</td>
-    <td width=88%>Array size defined implicitly by the number of initializers.</td>
+    <td width=12%>qac-3406</td>
+    <td width=88%>Object/function '%s', with external linkage, has been defined in a header file.</td>
   </tr>
 </table></center>
 </td>
-    <td width=45%>CERT ARR02 - Flexible array will be used with sizeof, on adding elements error-prone manual update of size would be required</td>
+    <td width=45%>MISRA 8.6 - Externally generated table included by the library</td>
 </tr>
   <tr>
-    <td width=4%>406</td>
+    <td width=4%>415</td>
     <td><center><table width=98%>
   <tr>
     <td width=12%>rcma-1514</td>
@@ -10601,15 +10617,15 @@ There are no duplicated suppressions.
     <td width=45%>MISRA 8.9 - Externally generated table included by the library</td>
 </tr>
   <tr>
-    <td width=4%>406</td>
+    <td width=4%>687</td>
     <td><center><table width=98%>
   <tr>
-    <td width=12%>qac-3406</td>
-    <td width=88%>Object/function '%s', with external linkage, has been defined in a header file.</td>
+    <td width=12%>qac-3674</td>
+    <td width=88%>Array size defined implicitly by the number of initializers.</td>
   </tr>
 </table></center>
 </td>
-    <td width=45%>MISRA 8.6 - Externally generated table included by the library</td>
+    <td width=45%>CERT ARR02 - Flexible array will be used with sizeof, on adding elements error-prone manual update of size would be required</td>
 </tr>
 </table></center>
 <h4>File: rfal/source/st25r3916/rfal_dlmaTbl.h</h4>
@@ -10617,7 +10633,7 @@ There are no duplicated suppressions.
   <colgroup span="10" class="columns"></colgroup>
   <tr><th>Line</th><th>Unused Qacs</th><th>Comment</th></tr>
   <tr>
-    <td width=4%>51</td>
+    <td width=4%>59</td>
     <td><center><table width=98%>
   <tr>
     <td width=12%>qac-3674</td>
@@ -10633,7 +10649,7 @@ There are no duplicated suppressions.
   <colgroup span="10" class="columns"></colgroup>
   <tr><th>Line</th><th>Unused Qacs</th><th>Comment</th></tr>
   <tr>
-    <td width=4%>53</td>
+    <td width=4%>61</td>
     <td><center><table width=98%>
   <tr>
     <td width=12%>qac-3674</td>
@@ -10644,7 +10660,7 @@ There are no duplicated suppressions.
     <td width=45%>CERT ARR02 - Flexible array will be used with sizeof, on adding elements error-prone manual update of size would be required</td>
 </tr>
   <tr>
-    <td width=4%>54</td>
+    <td width=4%>62</td>
     <td><center><table width=98%>
   <tr>
     <td width=12%>rcma-1514</td>
@@ -10655,18 +10671,7 @@ There are no duplicated suppressions.
     <td width=45%>MISRA 8.9 - Externally generated table included by the library</td>
 </tr>
   <tr>
-    <td width=4%>65</td>
-    <td><center><table width=98%>
-  <tr>
-    <td width=12%>qac-3674</td>
-    <td width=88%>Array size defined implicitly by the number of initializers.</td>
-  </tr>
-</table></center>
-</td>
-    <td width=45%>CERT ARR02 - Flexible array will be used with sizeof, on adding elements error-prone manual update of size would be required</td>
-</tr>
-  <tr>
-    <td width=4%>54</td>
+    <td width=4%>62</td>
     <td><center><table width=98%>
   <tr>
     <td width=12%>qac-3406</td>
@@ -10676,13 +10681,24 @@ There are no duplicated suppressions.
 </td>
     <td width=45%>MISRA 8.6 - Externally generated table included by the library</td>
 </tr>
+  <tr>
+    <td width=4%>73</td>
+    <td><center><table width=98%>
+  <tr>
+    <td width=12%>qac-3674</td>
+    <td width=88%>Array size defined implicitly by the number of initializers.</td>
+  </tr>
+</table></center>
+</td>
+    <td width=45%>CERT ARR02 - Flexible array will be used with sizeof, on adding elements error-prone manual update of size would be required</td>
+</tr>
 </table></center>
 <h4>File: rfal/source/st25r3916/rfal_rfst25r3916.c</h4>
 <center><table class="docTable" width=98%>
   <colgroup span="10" class="columns"></colgroup>
   <tr><th>Line</th><th>Unused Qacs</th><th>Comment</th></tr>
   <tr>
-    <td width=4%>2984</td>
+    <td width=4%>2988</td>
     <td><center><table width=98%>
   <tr>
     <td width=12%>qac-3462</td>
@@ -10693,7 +10709,7 @@ There are no duplicated suppressions.
     <td width=45%>CERT PRE31 - Intentional usage, Code reviewed</td>
 </tr>
   <tr>
-    <td width=4%>3209</td>
+    <td width=4%>3213</td>
     <td><center><table width=98%>
   <tr>
     <td width=12%>qac-3462</td>

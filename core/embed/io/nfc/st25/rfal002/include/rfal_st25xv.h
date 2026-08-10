@@ -58,12 +58,19 @@
 
 /*
  ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ ******************************************************************************
  * GLOBAL DEFINES
  ******************************************************************************
  */
 
- 
-#define RFAL_NFCV_BLOCKNUM_M24LR_LEN                     2U      /*!< Block Number length of MR24LR tags: 16 bits                */
 
 /*! 
  *****************************************************************************
@@ -790,6 +797,10 @@ ReturnCode rfalST25TV512CPollerReadConfiguration(uint8_t flags, const uint8_t* u
  *****************************************************************************
  */
 ReturnCode rfalST25TV512CPollerWriteConfiguration(uint8_t flags, const uint8_t* uid, uint8_t fid, uint8_t pid, const uint8_t *data, uint8_t dataLen );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_ST25xV_H */
 

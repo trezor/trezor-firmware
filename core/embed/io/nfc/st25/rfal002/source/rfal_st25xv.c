@@ -62,7 +62,7 @@
 
 /*
  ******************************************************************************
- * GLOBAL DEFINES
+ * LOCAL DEFINES
  ******************************************************************************
  */
 
@@ -81,7 +81,7 @@
 #define RFAL_ST25TV02K_TBOOT_RF          1U     /*!< RF Boot time (Minimum time from carrier generation to first data) */
 #define RFAL_ST25TV02K_TRF_OFF           2U     /*!< RF OFF time                                                       */
 
-#define RFAL_ST25xV_FDT_POLL_MAX         rfalConvMsTo1fc(20) /*!< Maximum Wait time FDTV,EOF 20 ms    Digital 2.1  B.5 */   
+#define RFAL_ST25xV_FDT_POLL_MAX         rfalConvMsTo1fc(20) /*!< Maximum Wait time FDTV,EOF 20 ms    Digital 2.1  B.5 */
 #define RFAL_NFCV_FLAG_POS               0U     /*!< Flag byte position                                                */
 #define RFAL_NFCV_FLAG_LEN               1U     /*!< Flag byte length                                                  */
 
@@ -282,7 +282,7 @@ static ReturnCode rfalST25xVPollerGenericWriteMessage( uint8_t cmd, uint8_t flag
 /*******************************************************************************/
 ReturnCode rfalST25xVPollerM24LRReadSingleBlock( uint8_t flags, const uint8_t* uid, uint16_t blockNum, uint8_t* rxBuf, uint16_t rxBufLen, uint16_t *rcvLen )
 {
-    uint8_t data[RFAL_NFCV_BLOCKNUM_M24LR_LEN];
+    uint8_t data[RFAL_NFCV_BLOCKNUM_EXTENDED_LEN];
     uint8_t dataLen;
     
     dataLen = 0;
@@ -297,7 +297,7 @@ ReturnCode rfalST25xVPollerM24LRReadSingleBlock( uint8_t flags, const uint8_t* u
 /*******************************************************************************/
 ReturnCode rfalST25xVPollerM24LRWriteSingleBlock( uint8_t flags, const uint8_t* uid, uint16_t blockNum, const uint8_t* wrData, uint8_t blockLen )
 {
-    uint8_t            data[(RFAL_NFCV_BLOCKNUM_M24LR_LEN + RFAL_NFCV_MAX_BLOCK_LEN)];
+    uint8_t            data[(RFAL_NFCV_BLOCKNUM_EXTENDED_LEN + RFAL_NFCV_MAX_BLOCK_LEN)];
     uint8_t            dataLen;
     uint16_t           rcvLen;
     rfalNfcvGenericRes res;
@@ -322,7 +322,7 @@ ReturnCode rfalST25xVPollerM24LRWriteSingleBlock( uint8_t flags, const uint8_t* 
 /*******************************************************************************/
 ReturnCode rfalST25xVPollerM24LRReadMultipleBlocks( uint8_t flags, const uint8_t* uid, uint16_t firstBlockNum, uint8_t numOfBlocks, uint8_t* rxBuf, uint16_t rxBufLen, uint16_t *rcvLen )
 {
-    uint8_t data[(RFAL_NFCV_BLOCKNUM_M24LR_LEN + RFAL_NFCV_BLOCKNUM_M24LR_LEN)];
+    uint8_t data[(RFAL_NFCV_BLOCKNUM_EXTENDED_LEN + RFAL_NFCV_BLOCKNUM_EXTENDED_LEN)];
     uint8_t dataLen;
     
     dataLen = 0U;
@@ -348,7 +348,7 @@ ReturnCode rfalST25xVPollerFastReadSingleBlock( uint8_t flags, const uint8_t* ui
 /*******************************************************************************/
 ReturnCode rfalST25xVPollerM24LRFastReadSingleBlock( uint8_t flags, const uint8_t* uid, uint16_t blockNum, uint8_t* rxBuf, uint16_t rxBufLen, uint16_t *rcvLen )
 {
-    uint8_t data[RFAL_NFCV_BLOCKNUM_M24LR_LEN];
+    uint8_t data[RFAL_NFCV_BLOCKNUM_EXTENDED_LEN];
     uint8_t dataLen;
     
     dataLen = 0;
@@ -363,7 +363,7 @@ ReturnCode rfalST25xVPollerM24LRFastReadSingleBlock( uint8_t flags, const uint8_
 /*******************************************************************************/
 ReturnCode rfalST25xVPollerM24LRFastReadMultipleBlocks( uint8_t flags, const uint8_t* uid, uint16_t firstBlockNum, uint8_t numOfBlocks, uint8_t* rxBuf, uint16_t rxBufLen, uint16_t *rcvLen )
 {
-    uint8_t data[(RFAL_NFCV_BLOCKNUM_M24LR_LEN + RFAL_NFCV_BLOCKNUM_M24LR_LEN)];
+    uint8_t data[(RFAL_NFCV_BLOCKNUM_EXTENDED_LEN + RFAL_NFCV_BLOCKNUM_EXTENDED_LEN)];
     uint8_t dataLen;
     
     dataLen = 0U;

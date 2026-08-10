@@ -258,7 +258,7 @@ static void st25r3916comTx( const uint8_t* txBuf, uint16_t txLen, bool last, boo
 /*******************************************************************************/
 static void st25r3916comRx( uint8_t* rxBuf, uint16_t rxLen )
 {
-#ifndef ST25R_COM_SINGLETXRX
+#if !defined(ST25R_COM_SINGLETXRX) && !defined(RFAL_USE_I2C)
     uint8_t  dummyBuf;
     uint16_t rxIt;
 #endif /* ST25R_COM_SINGLETXRX */

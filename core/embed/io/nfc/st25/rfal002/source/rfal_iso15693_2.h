@@ -44,6 +44,15 @@
 #include "rfal_utils.h"
 
 /*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
 ******************************************************************************
 * GLOBAL DATATYPES
 ******************************************************************************
@@ -191,6 +200,10 @@ extern ReturnCode rfalIso15693VICCDecode(const uint8_t *inBuf,
                                           uint16_t* bitsBeforeCol,
                                           uint16_t ignoreBits,
                                           bool picopassMode );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* RFAL_ISO_15693_2_H */
 

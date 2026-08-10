@@ -40,6 +40,14 @@
  */
 #include "rfal_dpo.h"
 
+/*
+ ******************************************************************************
+ * C LINKAGE GUARD
+ ******************************************************************************
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 /*
  ******************************************************************************
@@ -72,7 +80,9 @@ const rfalDpoEntry rfalDpoDefaultSettings [] = {
     };
     
 #endif /* ST25R3916 */
- 
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* ST25R3916_DPO_H */
