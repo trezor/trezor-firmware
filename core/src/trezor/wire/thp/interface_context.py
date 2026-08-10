@@ -272,7 +272,7 @@ class InterfaceContext:
         except Exception as exc:
             if __debug__:
                 log.exception(__name__, exc)
-            self.active_channel.kill(exc)
+            self.active_channel.clear(exc=exc)
             self.active_channel = None
         self.clear_closed_sessions()
 
