@@ -5,7 +5,8 @@ use super::component::{
     DialogMsg, FidoConfirm, FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog,
     Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog,
     NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg,
-    Progress, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog, SimplePage,
+    Progress, SelectMenu, SelectMenuMsg, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog,
+    SimplePage,
 };
 use crate::error::Error;
 use crate::micropython::obj::Obj;
@@ -48,6 +49,18 @@ impl TryFrom<SelectWordMsg> for Obj {
     fn try_from(value: SelectWordMsg) -> Result<Self, Self::Error> {
         match value {
             SelectWordMsg::Selected(i) => i.try_into(),
+        }
+    }
+}
+
+impl ComponentMsgObj for SelectMenu {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            SelectMenuMsg::Selected(i) => i.try_into(),
+            SelectMenuMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            // Closing the menu without a choice is a confirmation, not a
+            // cancellation (same as on other layouts).
+            SelectMenuMsg::Closed => Ok(CONFIRMED.as_obj()),
         }
     }
 }
