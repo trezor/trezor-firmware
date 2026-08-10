@@ -54,6 +54,7 @@ void rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
     for (size_t i = 0; i < block_size; i++) {
       dst[i] ^= block[i];
     }
+    memzero(block, sizeof(block));  // clear entropy from Optiga
 #endif
 #ifdef USE_TROPIC
     ensure(sectrue * tropic_random_buffer(block, block_size),
@@ -62,12 +63,11 @@ void rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
     for (size_t i = 0; i < block_size; i++) {
       dst[i] ^= block[i];
     }
+    memzero(block, sizeof(block));  // clear entropy from Tropic
 #endif
     dst += block_size;
     remaining -= block_size;
   }
-
-  memzero(block, sizeof(block));
 }
 
 #else  // defined(USE_OPTIGA) || defined(USE_TROPIC)
