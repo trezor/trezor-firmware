@@ -22,6 +22,7 @@ APP_MISC_COSI_NONCE = const(4 | SESSIONLESS_FLAG)
 APP_MISC_COSI_COMMITMENT = const(5 | SESSIONLESS_FLAG)
 APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
 
+# Order and membership are part of the ciphertext layout -- see `EncryptableDataCache`.
 CACHE_ENCRYPTED_KEYS_SEEDLESS = (APP_COMMON_SEED_WITHOUT_PASSPHRASE,)
 
 
@@ -79,7 +80,9 @@ class DataCache:
             return int.from_bytes(encoded, "big")
 
     def is_set(self, key: int) -> bool:
-        self.check_key(key)
+        # Bounds only, deliberately not `check_key`: membership is not secret -- it is the
+        # ciphertext layout -- so this stays answerable while encrypted.
+        utils.ensure(key < len(self.fields))
         return self.data[key][0] == 1
 
     def set(self, key: int, value: AnyBytes) -> None:
@@ -115,7 +118,8 @@ class DataCache:
             self.delete(i)
 
     def _get_length(self, key: int) -> int:
-        self.check_key(key)
+        # Bounds only, deliberately not `check_key`: field sizes are constants.
+        utils.ensure(key < len(self.fields))
         return self.fields[key]
 
 
@@ -137,7 +141,13 @@ _TAG_LENGTH = const(16)
 
 class EncryptableDataCache(DataCache):
     """
-    A DataCache that supports encryption and decryption of its fields.
+    A DataCache whose sensitive fields are encrypted while the device is locked.
+
+    The fields listed by `fields_to_encrypt()` that are *set* are encrypted together as
+    one ChaCha20-Poly1305 stream, with a single nonce and tag. Unset fields are skipped,
+    so which fields are set, and their order, are part of the ciphertext layout: decrypt
+    must consume the keystream in the same order and lengths or the tag check fails.
+    `check_key` keeps that set stable by refusing writes and deletes while encrypted.
     """
 
     def __init__(self) -> None:
@@ -145,12 +155,15 @@ class EncryptableDataCache(DataCache):
         self.nonce = bytearray(_NONCE_LENGTH)
         self.authentication_tag = bytearray(_TAG_LENGTH)
         self.is_encrypted: bool = False
+        self.was_preauthorized: bool = False
 
     @staticmethod
     def _get_cache_encryption_key() -> bytes:
         """
-        Returns the seed encryption key for a given session ID.
-        The key is derived from the device secret and the session ID.
+        Returns the cache encryption key, derived from the device secret.
+
+        The path is constant, so this is one key for every cache and every lock cycle --
+        keystream separation comes from the per-cache random nonce, not from the key.
         """
         from storage.device import get_device_secret
 
@@ -158,24 +171,52 @@ class EncryptableDataCache(DataCache):
         path = [b"TREZOR", b"STORAGE", b"CACHE", b"encryption_key"]
         return _get_slip21_key(path, device_secret)
 
+    def check_key(self, key: int) -> None:
+        """
+        Do not allow access to an encrypted field's *value*. Reading one would hand out
+        ciphertext; writing or deleting one would shift the shared keystream and break
+        every field after it, so the whole cache would fail to decrypt. `is_set` and
+        `_get_length` bypass this on purpose -- neither touches the value.
+        """
+        super().check_key(key)
+        if self.is_encrypted and self._is_encrypted_field(key):
+            raise RuntimeError  # encrypted fields are inaccessible while locked
+
+    def _is_encrypted_field(self, key: int) -> bool:
+        return key in self.fields_to_encrypt()
+
     def clear(self) -> None:
+        # `is_encrypted` must come first: `delete` refuses encrypted fields,
+        # so the other order would raise on the first encrypted field.
+        self.is_encrypted = False
         super().clear()
         # Zero in place to keep the preallocated buffers
         self.nonce[:] = bytes(_NONCE_LENGTH)
         self.authentication_tag[:] = bytes(_TAG_LENGTH)
-        self.is_encrypted = False
+        self.was_preauthorized = False
 
     def encrypt(self) -> None:
         """
-        Encrypts seeds in all the cached sessions and the sessionless cache.
+        Encrypts this cache's set encrypted fields into one ChaCha20-Poly1305 stream.
+
+        No-op if there is nothing to protect, or if the plaintext is deliberate
+        (preauthorized). Any failure is fatal -- `storage.cache.encrypt_cache` halts on it.
         """
         from trezorcrypto import chacha20poly1305_encrypt, random
 
-        if self.is_encrypted or self.is_empty() or self.is_preauthorized():
+        if self.is_encrypted or not self.has_secrets():
+            return
+        if self.is_preauthorized():
+            # Plaintext secrets are deliberate here; remember that, so the invariant
+            # check can tell this apart from a lock path that skipped encryption.
+            self.was_preauthorized = True
             return
 
-        # An unused nonce/tag is erased (all-zero); a non-zero value here means
-        # `is_encrypted` has desynced from the buffers.
+
+        # An unused nonce/tag is erased (all-zero), so a live one here means a previous
+        # encrypt or decrypt died part-way. Re-encrypting over it would double-encrypt the
+        # fields already done, and that stream is self-consistent -- the tag would verify
+        # on unlock and `get` would return garbage as a seed, with no error anywhere.
         if any(self.nonce) or any(self.authentication_tag):
             raise RuntimeError  # nonce and tag must be erased before encrypt
 
@@ -186,16 +227,21 @@ class EncryptableDataCache(DataCache):
         for field in self.fields_to_encrypt():
             value = self.get(field)
             if value is not None:
+                # ChaCha20 is a stream cipher and the tag is kept outside the field, so
+                # the ciphertext is the same length as the plaintext and fits back in.
                 self.set(field, cipher.encrypt(value))
         self.authentication_tag[:] = cipher.finish()
         self.is_encrypted = True
 
     def decrypt(self) -> None:
         """
-        Decrypts seeds in all the cached sessions and the sessionless cache.
+        Decrypts this cache's fields, verifying the authentication tag.
+
+        Any failure is fatal -- `storage.cache.decrypt_cache` halts on it.
         """
         from trezorcrypto import chacha20poly1305_decrypt
 
+        self.was_preauthorized = False  # plaintext secrets are no longer deliberate
         if not self.is_encrypted:
             return
 
@@ -207,6 +253,9 @@ class EncryptableDataCache(DataCache):
         encryption_key = self._get_cache_encryption_key()
         cipher = chacha20poly1305_decrypt(encryption_key, self.nonce)
 
+        # The cache is not decrypted yet, but this lifts the restriction on accessing
+        # (`self.get()`) encrypted fields so that they can be decrypted in the next step.
+        self.is_encrypted = False
         decrypted_fields = {}
         for field in self.fields_to_encrypt():
             value = self.get(field)
@@ -218,7 +267,6 @@ class EncryptableDataCache(DataCache):
         # Erase the now-spent nonce and tag; zero in place to keep the buffers.
         self.nonce[:] = bytes(_NONCE_LENGTH)
         self.authentication_tag[:] = bytes(_TAG_LENGTH)
-        self.is_encrypted = False
 
     def is_preauthorized(self) -> bool:
         """
@@ -228,18 +276,17 @@ class EncryptableDataCache(DataCache):
 
     def fields_to_encrypt(self) -> Sequence[int]:
         """
-        Returns a sequence of field indices that should be encrypted.
+        Returns the field indices to encrypt. Order and membership are part of the
+        ciphertext layout -- changing either is a format change, not a refactor.
         """
         raise NotImplementedError  # fields_to_encrypt must be implemented by subclasses
 
-    def is_empty(self) -> bool:
-        """
-        Checks if the session has no data set for the fields to encrypt.
-        """
+    def has_secrets(self) -> bool:
+        """Checks if any field that needs encrypting is set."""
         for field in self.fields_to_encrypt():
-            if self.get(field):
-                return False
-        return True
+            if self.is_set(field):
+                return True
+        return False
 
 
 class SessionlessCache(EncryptableDataCache):
@@ -291,6 +338,9 @@ class SessionlessCache(EncryptableDataCache):
 
     def fields_to_encrypt(self) -> Sequence[int]:
         return CACHE_ENCRYPTED_KEYS_SEEDLESS
+
+    def _is_encrypted_field(self, key: int) -> bool:
+        return super()._is_encrypted_field(key | SESSIONLESS_FLAG)
 
     def is_preauthorized(self) -> bool:
         # Sessionless cache cannot be preauthorized.

@@ -1,6 +1,6 @@
 import builtins
 from micropython import const
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING
 
 from storage.cache_common import (
     CHANNEL_ID,
@@ -12,6 +12,7 @@ from storage.cache_common import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from typing import Sequence
 
 # THP specific constants
 _MAX_SESSIONS_COUNT = const(20)

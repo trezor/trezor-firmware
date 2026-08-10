@@ -2,11 +2,12 @@ import builtins
 import gc
 from typing import TYPE_CHECKING
 
-from storage.cache_common import SESSIONLESS_FLAG, SessionlessCache
+from storage.cache_common import SESSIONLESS_FLAG, SessionlessCache, EncryptableDataCache
 from trezor import utils
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from typing import Sequence
 
 # Cache initialization
 _SESSIONLESS_CACHE = SessionlessCache()
@@ -23,6 +24,9 @@ else:
 
 _PROTOCOL_CACHE.initialize()
 _SESSIONLESS_CACHE.clear()
+
+# Built once, at import: the lock path must not allocate.
+_ALL_CACHES: Sequence[EncryptableDataCache] = _PROTOCOL_CACHE._SESSIONS + [_SESSIONLESS_CACHE]
 
 gc.collect()
 
@@ -49,6 +53,8 @@ def get_int_all_sessions(key: int) -> builtins.set[int]:
     If the key has the `SESSIONLESS_FLAG` set, the values are retrieved
     from the sessionless cache. Otherwise, the values are fetched
     from the protocol cache.
+
+    `key` must not be an encrypted field -- `get` raises on those while locked.
     """
     if key & SESSIONLESS_FLAG:
         values = builtins.set()
@@ -79,31 +85,46 @@ homescreen_shown: object | None = None
 autolock_last_touch: int | None = None
 
 
+# Either direction can leave a cache whose ciphertext reads back as plaintext: `encrypt`
+# sets `is_encrypted` last, `decrypt` clears it before verifying the tag. Continuing would
+# serve that to `get_seed`. The caches deliberately do not repair themselves -- halting is
+# the whole mechanism, so do not narrow the `except`, and do not skip to the next cache.
+
+
 def encrypt_cache() -> None:
     """
     Encrypts seeds in all the cached sessions and the sessionless cache.
     """
-    exceptions = []
-    for session in _PROTOCOL_CACHE._SESSIONS + [_SESSIONLESS_CACHE]:
+    for session in _ALL_CACHES:
         try:
             session.encrypt()
         except Exception as e:
-            session.clear()
-            exceptions.append(e)
-    if exceptions:
-        raise exceptions[0]
+            if __debug__:
+                from trezor import log
+                log.exception(__name__, e)
+            utils.halt(e.__class__.__name__)
 
 
 def decrypt_cache() -> None:
     """
     Decrypts seeds in all the cached sessions and the sessionless cache.
     """
-    exceptions = []
-    for session in _PROTOCOL_CACHE._SESSIONS + [_SESSIONLESS_CACHE]:
+    for session in _ALL_CACHES:
         try:
             session.decrypt()
         except Exception as e:
-            session.clear()
-            exceptions.append(e)
-    if exceptions:
-        raise exceptions[0]
+            if __debug__:
+                from trezor import log
+                log.exception(__name__, e)
+            utils.halt(e.__class__.__name__)
+
+if __debug__:
+
+    def no_unexpected_plaintext() -> bool:
+        """True if every cache that should have been encrypted was."""
+        for session in _ALL_CACHES:
+            if session.has_secrets() and not (
+                session.is_encrypted or session.is_preauthorized() or session.was_preauthorized
+            ):
+                return False
+        return True

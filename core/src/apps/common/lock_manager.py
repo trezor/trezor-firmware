@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+import storage
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
 from trezor import config, io, utils, wire, workflow
@@ -186,11 +187,8 @@ def can_lock_device() -> bool:
 
 
 def lock_device(interrupt_workflow: bool = True) -> None:
-    from storage.cache import encrypt_cache
-
     if can_lock_device():
-        encrypt_cache()
-        config.lock()
+        storage.lock()
         filters.append(_pinlock_filter)
         set_homescreen()
         if interrupt_workflow:
@@ -228,8 +226,6 @@ async def unlock_device() -> None:
     If the storage is locked, attempt to unlock it. Reset the homescreen and the wire
     handler.
     """
-    from storage.cache import decrypt_cache
-
     from apps.common.request_pin import verify_user_pin
 
     global _SCREENSAVER_IS_ON
@@ -237,7 +233,6 @@ async def unlock_device() -> None:
     if not config.is_unlocked():
         # verify_user_pin will raise if the PIN was invalid
         await verify_user_pin()
-        decrypt_cache()
         # non-public config settings are now available
         reload_settings_from_storage()
 

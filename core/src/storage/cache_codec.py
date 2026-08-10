@@ -1,13 +1,13 @@
 import builtins
 from micropython import const
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING
 
 from storage.cache_common import EncryptableDataCache
 from trezor import utils
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import TypeVar
+    from typing import Sequence, TypeVar
 
     T = TypeVar("T")
 

@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+import storage
 import storage.device as storage_device
 import storage.sd_salt as storage_sd_salt
 from trezor import TR, config, wire
@@ -67,7 +68,7 @@ async def _sd_protect_enable(msg: SdProtect) -> Success:
     # Get and check the current PIN.
     if config.has_pin():
         pin = await request_pin(TR.pin__enter, config.get_pin_rem())
-        if not config.unlock(pin, None):
+        if not storage.unlock(pin, None):
             await error_pin_invalid()
     else:
         pin = ""
@@ -113,7 +114,7 @@ async def _sd_protect_disable(msg: SdProtect) -> Success:
 
     if config.has_pin():
         # Check PIN.
-        if not config.unlock(pin, salt):
+        if not storage.unlock(pin, salt):
             await error_pin_invalid()
 
     # Remove salt from storage.
@@ -152,7 +153,7 @@ async def _sd_protect_refresh(msg: SdProtect) -> Success:
 
     if config.has_pin():
         # Check PIN.
-        if not config.unlock(pin, old_salt):
+        if not storage.unlock(pin, old_salt):
             await error_pin_invalid()
 
     # Change salt.

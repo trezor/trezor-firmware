@@ -1,6 +1,7 @@
 import utime
 from typing import Any, NoReturn
 
+import storage
 from storage.cache_common import APP_COMMON_REQUEST_PIN_LAST_UNLOCK
 from trezor import TR, config, utils, wire
 from trezor.ui.layouts import show_error_and_raise
@@ -101,7 +102,7 @@ async def verify_user_pin(
         pin = ""
 
     salt = await _request_sd_salt(raise_cancelled_on_unavailable=True)
-    if config.unlock(pin, salt):
+    if storage.unlock(pin, salt):
         _set_last_unlock_time()
         return
     elif not config.has_pin():
@@ -111,7 +112,7 @@ async def verify_user_pin(
         pin = await request_pin_on_device(
             TR.pin__enter, config.get_pin_rem(), allow_cancel, wrong_pin=True
         )
-        if config.unlock(pin, salt):
+        if storage.unlock(pin, salt):
             _set_last_unlock_time()
             return
 
