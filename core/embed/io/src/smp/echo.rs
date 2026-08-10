@@ -1,7 +1,7 @@
 use minicbor::data::Type;
 use minicbor::{Decoder, Encoder, decode};
-use sys::time::Duration;
 use rtl::error::unwrap;
+use sys::time::Duration;
 
 use super::{
     MsgType, SMP_CMD_ID_ECHO, SMP_GROUP_OS, SMP_HEADER_SIZE, SMP_OP_READ, SmpBuffer, SmpHeader,

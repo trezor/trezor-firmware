@@ -63,7 +63,8 @@ extern "C" fn smp_upload_app_image(
     let data = FatPtr::from_ptr_and_len(data, len);
     let image_hash = FatPtr::from_ptr_and_len(image_hash, image_hash_len);
 
-    // SAFETY: we trust the caller with the validity of passed in pointers and lengths
+    // SAFETY: we trust the caller with the validity of passed in pointers and
+    // lengths
     let data_slice = unsafe { data.as_slice() }.unwrap_or(&[]);
     let hash_slice = unsafe { image_hash.as_slice() }.unwrap_or(&[]);
 
