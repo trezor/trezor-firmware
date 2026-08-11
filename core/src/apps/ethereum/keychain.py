@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
     from trezor.messages import (
         EthereumGetAddress,
-        EthereumSignAuth7702,
         EthereumSignMessage,
         EthereumSignTx,
         EthereumSignTxEIP1559,
@@ -37,7 +36,6 @@ if TYPE_CHECKING:
     # messages for "with_keychain_from_chain_id" decorator
     HandlerChainIdArg = TypeVar(
         "HandlerChainIdArg",
-        EthereumSignAuth7702,
         EthereumSignTx,
         EthereumSignTxEIP1559,
     )
