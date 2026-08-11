@@ -724,6 +724,33 @@ def test_cancel_authorization(session: Session):
         )
 
 
+def test_preauthorized_message_type(session: Session):
+    # Ensure that a preauthorization cannot be used by a message type that it wasn't granted for.
+
+    btc.authorize_coinjoin(
+        session,
+        coordinator="www.example.com",
+        max_rounds=10,
+        max_coordinator_fee_rate=500_000,  # 0.5 %
+        max_fee_per_kvbyte=3500,
+        n=parse_path("m/10025h/1h/0h/1h"),
+        coin_name="Testnet",
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+
+    # Only SignTx and GetOwnershipProof may use the preauthorization, so GetAddress must
+    # not gain access to the SLIP-25 account without going through UnlockPath.
+    session.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
+
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.get_address(
+            session,
+            "Testnet",
+            parse_path("m/10025h/1h/0h/1h/0/0"),
+            script_type=messages.InputScriptType.SPENDTAPROOT,
+        )
+
+
 def test_get_public_key(session: Session):
     ACCOUNT_PATH = parse_path("m/10025h/1h/0h/1h")
     EXPECTED_XPUB = "tpubDEMKm4M3S2Grx5DHTfbX9et5HQb9KhdjDCkUYdH9gvVofvPTE6yb2MH52P9uc4mx6eFohUmfN1f4hhHNK28GaZnWRXr3b8KkfFcySo1SmXU"
