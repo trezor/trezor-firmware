@@ -1971,6 +1971,193 @@ START_TEST(test_bip32_vector_4) {
 }
 END_TEST
 
+// Base58Check-encodes a 78-byte extended key with the given key material.
+static void build_xkey(uint32_t version, const uint8_t *key33, char *str,
+                       size_t strsize) {
+  uint8_t node_data[78] = {0};
+  node_data[0] = version >> 24;
+  node_data[1] = version >> 16;
+  node_data[2] = version >> 8;
+  node_data[3] = version;
+  node_data[4] = 1;                   // depth
+  memset(node_data + 13, 0x42, 32);   // chain code
+  memcpy(node_data + 45, key33, 33);  // key material
+  base58_encode_check(node_data, sizeof(node_data), HASHER_SHA2D, str, strsize);
+}
+
+START_TEST(test_bip32_deserialize_invalid) {
+  char str[XPUB_MAXLEN] = {0};
+  uint8_t key[33] = {0};
+  HDNode node = {0};
+
+  const curve_info *secp = get_curve_by_name(SECP256K1_NAME);
+  const curve_info *ed = get_curve_by_name(ED25519_NAME);
+  ck_assert(secp != NULL);
+  ck_assert(ed != NULL);
+
+  // secp256k1 group order
+  uint8_t order[32] = {0};
+  memcpy(
+      order,
+      fromhex(
+          "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"),
+      32);
+  uint8_t order_minus_one[32] = {0};
+  memcpy(order_minus_one, order, 32);
+  order_minus_one[31] -= 1;
+
+  // hdnode_validate_private_key() accepts exactly [1, order-1]
+  uint8_t priv[32] = {0};
+  ck_assert(!hdnode_validate_private_key(secp, priv));
+  memcpy(priv, order, 32);
+  ck_assert(!hdnode_validate_private_key(secp, priv));
+  memcpy(priv, order_minus_one, 32);
+  ck_assert(hdnode_validate_private_key(secp, priv));
+  memset(priv, 0, sizeof(priv));
+  priv[31] = 1;
+  ck_assert(hdnode_validate_private_key(secp, priv));
+  // curves without ecdsa parameters take any 32-byte string
+  memset(priv, 0, sizeof(priv));
+  ck_assert(hdnode_validate_private_key(ed, priv));
+
+  // hdnode_validate_public_key() accepts genuine keys of both parities
+  bool seen_even = false, seen_odd = false;
+  for (uint8_t i = 0; i < 16; i++) {
+    uint8_t seed[16] = {0};
+    seed[0] = i;
+    hdnode_from_seed(seed, sizeof(seed), SECP256K1_NAME, &node);
+    ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
+    ck_assert(hdnode_validate_public_key(secp, node.public_key));
+    if (node.public_key[0] == 0x02) seen_even = true;
+    if (node.public_key[0] == 0x03) seen_odd = true;
+  }
+  ck_assert(seen_even);
+  ck_assert(seen_odd);
+  memcpy(key, node.public_key, 33);
+
+  // the generator point is on the curve
+  uint8_t generator[33] = {0};
+  generator[0] = 0x02;
+  memcpy(
+      generator + 1,
+      fromhex(
+          "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"),
+      32);
+  ck_assert(hdnode_validate_public_key(secp, generator));
+
+  // flipping the parity byte of a valid key keeps it on the curve
+  uint8_t flipped[33] = {0};
+  memcpy(flipped, key, 33);
+  flipped[0] ^= 0x01;
+  ck_assert(hdnode_validate_public_key(secp, flipped));
+
+  // only 0x02 and 0x03 prefixes are accepted
+  uint8_t bad_prefix[33] = {0};
+  memcpy(bad_prefix, key, 33);
+  const uint8_t prefixes[] = {0x00, 0x01, 0x04, 0x05, 0x06, 0x07, 0xff};
+  for (size_t i = 0; i < sizeof(prefixes); i++) {
+    bad_prefix[0] = prefixes[i];
+    ck_assert(!hdnode_validate_public_key(secp, bad_prefix));
+  }
+
+  // x with no square root on the curve
+  uint8_t offcurve[33] = {0};
+  offcurve[0] = 0x02;
+  offcurve[32] = 0x05;  // x^3 + 7 is not a quadratic residue for x = 5
+  ck_assert(!hdnode_validate_public_key(secp, offcurve));
+  offcurve[32] = 0x00;  // nor for x = 0
+  ck_assert(!hdnode_validate_public_key(secp, offcurve));
+  offcurve[32] = 0x01;  // but x = 1 is a valid point
+  ck_assert(hdnode_validate_public_key(secp, offcurve));
+  offcurve[32] = 0x05;  // restore the off-curve x for the tests below
+
+  // x must be reduced modulo the field prime
+  uint8_t too_large[33] = {0};
+  memset(too_large, 0xff, sizeof(too_large));
+  too_large[0] = 0x02;
+  ck_assert(!hdnode_validate_public_key(secp, too_large));
+  memcpy(
+      too_large + 1,  // x == p exactly
+      fromhex(
+          "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f"),
+      32);
+  ck_assert(!hdnode_validate_public_key(secp, too_large));
+
+  // curves without ecdsa parameters check prefix is 0x00
+  uint8_t ed_key[33] = {0};
+  ck_assert(hdnode_validate_public_key(ed, ed_key));
+  // a valid secp256k1 key is not a valid ed25519 node key
+  ck_assert(!hdnode_validate_public_key(ed, generator));
+  ck_assert(!hdnode_validate_public_key(ed, offcurve));
+  // invalid prefix is rejected
+  ed_key[0] = 0x40;
+  ck_assert(!hdnode_validate_public_key(ed, ed_key));
+  // key material is not checked
+  ed_key[0] = 0x00;
+  memset(ed_key + 1, 0xff, 32);
+  ck_assert(hdnode_validate_public_key(ed, ed_key));
+
+  // the deserializer rejects a private key outside [1, order-1]
+  memset(key, 0, sizeof(key));
+  build_xkey(VERSION_PRIVATE, key, str, sizeof(str));
+  ck_assert_int_eq(hdnode_deserialize_private(str, VERSION_PRIVATE,
+                                              SECP256K1_NAME, &node, NULL),
+                   -5);
+
+  memset(key, 0, sizeof(key));
+  memcpy(key + 1, order, 32);
+  build_xkey(VERSION_PRIVATE, key, str, sizeof(str));
+  ck_assert_int_eq(hdnode_deserialize_private(str, VERSION_PRIVATE,
+                                              SECP256K1_NAME, &node, NULL),
+                   -5);
+
+  memset(key, 0, sizeof(key));
+  memcpy(key + 1, order_minus_one, 32);
+  build_xkey(VERSION_PRIVATE, key, str, sizeof(str));
+  ck_assert_int_eq(hdnode_deserialize_private(str, VERSION_PRIVATE,
+                                              SECP256K1_NAME, &node, NULL),
+                   0);
+  ck_assert_mem_eq(node.private_key, order_minus_one, 32);
+
+  // and a public key that is not a point on the curve
+  build_xkey(VERSION_PUBLIC, offcurve, str, sizeof(str));
+  ck_assert_int_eq(hdnode_deserialize_public(str, VERSION_PUBLIC,
+                                             SECP256K1_NAME, &node, NULL),
+                   -5);
+  ck_assert_int_eq(
+      hdnode_from_xpub(1, 0, node.chain_code, offcurve, SECP256K1_NAME, &node),
+      0);
+
+  // hdnode_public_ckd() rejects an off-curve point
+  HDNode unchecked = {0};
+  unchecked.curve = secp;
+  memcpy(unchecked.public_key, offcurve, 33);
+  unchecked.is_public_key_set = true;
+  ck_assert_int_eq(hdnode_public_ckd(&unchecked, 0), 0);
+
+  build_xkey(VERSION_PUBLIC, too_large, str, sizeof(str));
+  ck_assert_int_eq(hdnode_deserialize_public(str, VERSION_PUBLIC,
+                                             SECP256K1_NAME, &node, NULL),
+                   -5);
+
+  // a genuine public key still round-trips
+  HDNode seeded = {0};
+  hdnode_from_seed(fromhex("000102030405060708090a0b0c0d0e0f"), 16,
+                   SECP256K1_NAME, &seeded);
+  ck_assert_int_eq(hdnode_fill_public_key(&seeded), 0);
+  build_xkey(VERSION_PUBLIC, seeded.public_key, str, sizeof(str));
+  ck_assert_int_eq(hdnode_deserialize_public(str, VERSION_PUBLIC,
+                                             SECP256K1_NAME, &node, NULL),
+                   0);
+  ck_assert_mem_eq(node.public_key, seeded.public_key, 33);
+
+  // an unknown curve name must not be dereferenced
+  ck_assert_int_eq(
+      hdnode_deserialize_public(str, VERSION_PUBLIC, "foobar", &node, NULL),
+      -4);
+}
+END_TEST
+
 START_TEST(test_bip32_compare) {
   HDNode node1, node2, node3;
   int i, r;
@@ -12247,6 +12434,7 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_bip32_vector_2);
   tcase_add_test(tc, test_bip32_vector_3);
   tcase_add_test(tc, test_bip32_vector_4);
+  tcase_add_test(tc, test_bip32_deserialize_invalid);
   tcase_add_test(tc, test_bip32_compare);
   tcase_add_test(tc, test_bip32_cache_1);
   tcase_add_test(tc, test_bip32_cache_2);
