@@ -58,17 +58,19 @@ def create_transfer_token_instruction(
     token_mint="GHArwcWCuk9WkUG4XKUbt935rKfmBmywbEWyFxdH3mou",
     destination_account="92YgwqTtTWB7qY92JT6mbL2WCmhAs7LPZL4jLcizNfwx",
     owner="14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+    mint_is_reference=False,
     destination_is_reference=False,
+    owner_is_reference=False,
 ):
     return create_mock_instruction(
         program_id,
         instruction_id,
         {
-            "token_mint": create_account(token_mint),
+            "token_mint": create_account(token_mint, mint_is_reference),
             "destination_account": create_account(
                 destination_account, destination_is_reference
             ),
-            "owner": create_account(owner),
+            "owner": create_account(owner, owner_is_reference),
         },
     )
 
@@ -218,6 +220,24 @@ class TestSolanaPredefinedTransactions(unittest.TestCase):
             [
                 create_transfer_token_instruction(),
                 create_transfer_token_instruction(destination_is_reference=True),
+            ],
+            # ALT-referenced token mint, can't be resolved on-device
+            [
+                create_transfer_token_instruction(mint_is_reference=True),
+            ],
+            # one direct and one ALT-referenced token mint
+            [
+                create_transfer_token_instruction(),
+                create_transfer_token_instruction(mint_is_reference=True),
+            ],
+            # ALT-referenced owner, can't be resolved on-device
+            [
+                create_transfer_token_instruction(owner_is_reference=True),
+            ],
+            # one direct and one ALT-referenced owner
+            [
+                create_transfer_token_instruction(),
+                create_transfer_token_instruction(owner_is_reference=True),
             ],
         ]
 
