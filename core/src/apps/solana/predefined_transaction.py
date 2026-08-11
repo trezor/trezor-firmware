@@ -318,6 +318,8 @@ async def try_confirm_staking_transaction(
 
         if base58.encode(init.custodian) != _SYSTEM_PROGRAM_ID:
             return False
+        if init.unix_timestamp != 0 or init.epoch != 0:
+            return False
 
         stake_account = create.created_account[0]
         if stake_account != init.uninitialized_stake_account[0]:
