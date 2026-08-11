@@ -25,10 +25,10 @@
 #define NFC_MAX_UID_BUF_SIZE ((NFC_MAX_UID_LEN + 1) * 2)
 
 /**
- * @brief Must corespond to RFAL_FEATURE_ISO_DEP_IBLOCK_MAX_LEN in
+ * @brief Must correspond to RFAL_FEATURE_ISO_DEP_APDU_MAX_LEN in
  * rfal_platform.h
  */
-#define NFC_MAX_APDU_LEN 256
+#define NFC_MAX_APDU_LEN 512
 
 /** @brief Supported NFC types. **/
 typedef enum {
