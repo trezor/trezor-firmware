@@ -1,0 +1,64 @@
+{
+    "setup": {
+        "mnemonic": "sudden conduct build spoil sight stairs corn congress enjoy plastic online leader",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "metamask_authorize",
+            "parameters": {
+                "comment": "txid=0x876aaa1c0ebd442b54e3d5aa1b789fae6257d6b425e0bccba3d8de7aa0027bd7",
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "chain_id": 1,
+                "to_address": "0x14495E5EF84823170B62176913d798B26a1a1A69",
+                "nonce": 0,
+                "value": 0,
+                "gas_limit": 69573,
+                "max_gas_fee": 132809059,
+                "max_priority_fee": 100000
+            },
+            "result": {
+                "auth7702_list_hex": [
+                    [
+                        "01",
+                        "63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                        "01",
+                        "01",
+                        "d426d296c73c62e5d5528e1cea701dd55060cc34264f33412ef2ea7c5007d380",
+                        "7f83c40c1080483ecb8ba26a91f1408a2d3186f2577c4f563c2b95b467f78ed7"
+                    ]
+                ],
+                "tx_bytes_hex": "04f8c80180830186a08407ea816383010fc59414495e5ef84823170b62176913d798b26a1a1a698080c0f85cf85a019463c0c19a282a1b52b07dd5a65b58948a07dae32b0101a0d426d296c73c62e5d5528e1cea701dd55060cc34264f33412ef2ea7c5007d380a07f83c40c1080483ecb8ba26a91f1408a2d3186f2577c4f563c2b95b467f78ed780a00ebf86aed4ee9b2a9fc8c1e39d91ebcb19a8cf54449a5f823d63c3cfc428ffada028c2eb4d75d2d78844a8521bbbffc26fdcab7e670ad768b28031532b9e488022"
+            }
+        },
+        {
+            "name": "metamask_revoke",
+            "parameters": {
+                "comment": "txid=0x592a79f5a8404da6dea891f11f42d884585ad5180ca8647c2c076090b97084d5",
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x0000000000000000000000000000000000000000",
+                "chain_id": 1,
+                "to_address": "0x14495E5EF84823170B62176913d798B26a1a1A69",
+                "nonce": 2,
+                "value": 0,
+                "gas_limit": 69655,
+                "max_gas_fee": 129853037,
+                "max_priority_fee": 100000
+            },
+            "result": {
+                "auth7702_list_hex": [
+                    [
+                        "01",
+                        "0000000000000000000000000000000000000000",
+                        "03",
+                        "01",
+                        "3a4f2e8e70d2174356396d914ead9c0efa97fdbfee50baa3f6776d7e27b334c3",
+                        "663d78fbc752214d6f6c58d1d6ea837de7edbca815060170aff07d4f8f3c6471"
+                    ]
+                ],
+                "tx_bytes_hex": "04f8c80102830186a08407bd666d830110179414495e5ef84823170b62176913d798b26a1a1a698080c0f85cf85a019400000000000000000000000000000000000000000301a03a4f2e8e70d2174356396d914ead9c0efa97fdbfee50baa3f6776d7e27b334c3a0663d78fbc752214d6f6c58d1d6ea837de7edbca815060170aff07d4f8f3c647180a0b99bf4d14da2a4be21296f7a630247e2df1cfe92e2378d7953d6b6891e9d0d69a04092b5ef8655d6f92df283195c9e5195dff96b48bea65f98e6a4d0ae6253593b"
+            }
+        }
+    ]
+}

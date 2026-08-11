@@ -9,11 +9,14 @@
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
-                "nonce": 1,
-                "chain_id": 0
+                "tuple_nonce": 1,
+                "chain_id": 0,
+                "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "value": 0,
+                "data": ""
             },
             "result": {
-                "error": "DataError: chain_id 0 not supported"
+                "error": "DataError: Chain ID out of bounds"
             }
         },
         {
@@ -21,11 +24,14 @@
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
-                "nonce": 1,
-                "chain_id": 0
+                "tuple_nonce": 1,
+                "chain_id": 0,
+                "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "value": 0,
+                "data": ""
             },
             "result": {
-                "error": "DataError: chain_id 0 not supported"
+                "error": "DataError: Chain ID out of bounds"
             }
         },
         {
@@ -33,11 +39,14 @@
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x0000000000000000000000000000000000000000",
-                "nonce": 123456,
-                "chain_id": 0
+                "tuple_nonce": 123456,
+                "chain_id": 0,
+                "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "value": 0,
+                "data": ""
             },
             "result": {
-                "error": "DataError: chain_id 0 not supported"
+                "error": "DataError: Chain ID out of bounds"
             }
         },
         {
@@ -45,8 +54,11 @@
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9",
-                "nonce": 123456,
-                "chain_id": 1
+                "tuple_nonce": 123456,
+                "chain_id": 1,
+                "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "value": 0,
+                "data": ""
             },
             "result": {
                 "error": "DataError: Unknown EIP-7702 delegate address"
@@ -57,11 +69,14 @@
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
-                "nonce": 1,
-                "chain_id": 200901
+                "tuple_nonce": 1,
+                "chain_id": 200901,
+                "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "value": 0,
+                "data": ""
             },
             "result": {
-                "error": "DataError: Unknown network"
+                "error": "DataError: EIP-7702: unknown network"
             }
         },
         {
@@ -69,11 +84,75 @@
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
-                "nonce": 18446744073709551615,
-                "chain_id": 1
+                "tuple_nonce": 18446744073709551615,
+                "chain_id": 1,
+                "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "value": 0,
+                "data": ""
             },
             "result": {
-                "error": "DataError: Invalid nonce"
+                "error": "DataError: EIP-7702: invalid nonce"
+            }
+        },
+        {
+            "name": "metamask_payment_request_chainid_1_mainnet",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "tuple_nonce": 1,
+                "chain_id": 1,
+                "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "value": 0,
+                "data": "",
+                "payment_req": true
+            },
+            "result": {
+                "error": "DataError: EIP-7702: unsupported payment request"
+            }
+        },
+        {
+            "name": "metamask_nonzero_value_chainid_1_mainnet",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "tuple_nonce": 1,
+                "chain_id": 1,
+                "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "value": 6789,
+                "data": ""
+            },
+            "result": {
+                "error": "DataError: EIP-7702: non-zero value"
+            }
+        },
+        {
+            "name": "metamask_nonempty_data_chainid_1_mainnet",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "tuple_nonce": 1,
+                "chain_id": 1,
+                "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "value": 0,
+                "data": "12345678"
+            },
+            "result": {
+                "error": "DataError: EIP-7702: non-empty calldata"
+            }
+        },
+        {
+            "name": "metamask_empty_dest_chainid_1_mainnet",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "tuple_nonce": 1,
+                "chain_id": 1,
+                "to_address": "",
+                "value": 0,
+                "data": "12345678"
+            },
+            "result": {
+                "error": "DataError: EIP-7702: empty destination"
             }
         }
     ]
