@@ -1963,7 +1963,17 @@
     },
     {
       "code": 26013,
-      "name": "PRODTEST_ERR_NFC_BACKUP_HANDSHAKE_FAILED",
+      "name": "PRODTEST_ERR_NFC_BACKUP_PSK_EXCHANGE_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26014,
+      "name": "PRODTEST_ERR_NFC_BACKUP_NOISE_HANDSHAKE_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26015,
+      "name": "PRODTEST_ERR_NFC_BACKUP_LARGE_MESSAGE_FAILED",
       "module": "nfc-backup"
     }
   ]
