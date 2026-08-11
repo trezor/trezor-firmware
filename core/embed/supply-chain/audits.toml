@@ -18,6 +18,12 @@ criteria = "safe-to-deploy"
 version = "0.2.1"
 notes = "I am the maintainer of the crate, which is a fork based on noise-protocol-0.2.0. I am not a cryptography expert. The original crate has no unsafe code, nor filesystem or network access. It closely follows the structure of the Noise Protocol Framework specification."
 
+[[audits.trezor-noise-protocol]]
+who = "Petr Sedláček <petrsedlacek.km@seznam.cz>"
+criteria = "safe-to-deploy"
+version = "0.2.1"
+notes = "Reviewed the diff between the original noise-protocol-0.2.0 crate and the fork."
+
 [[audits.ufmt-write]]
 who = "matejcik <ja@matejcik.cz>"
 criteria = "safe-to-deploy"
