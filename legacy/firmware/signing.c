@@ -1387,6 +1387,8 @@ static bool init_coinjoin(const SignTx *msg,
   if (strcmp(coin->coin_name, authorization->coin_name) != 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Unauthorized operation."));
+    signing_abort();
+    return false;
   }
 
   memcpy(&coinjoin_authorization, authorization,
