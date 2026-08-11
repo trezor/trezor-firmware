@@ -10,10 +10,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '15 23 * * *'  # every day @ 23:15
-  push:
-    branches:
-      - 'release/**'
-      - 'secfix/**'
+  push:  # TODO FIXME
 
 # cancel any previous runs on the same PR
 concurrency:
@@ -890,9 +887,9 @@ jobs:
         with:
           pattern: core-firmware-*-*-normal
           path: downloaded-artifacts
-          skip-decompress: true
       - name: Run unpack-artifacts.py
         run: |
+          find downloaded-artifacts
           mkdir -p to-upload/firmware
           python tools/unpack-artifacts.py \
               --releases common/releases.json \
