@@ -453,6 +453,32 @@ void fsm_abortWorkflows(void) {
 #endif
 }
 
+// Which messages may make use of an authorization granted by DoPreauthorized.
+static bool fsm_isPreauthorizedMessage(MessageType message_type) {
+  return message_type == MessageType_MessageType_SignTx ||
+         message_type == MessageType_MessageType_GetOwnershipProof;
+}
+
+// Which messages may make use of a path unlocked by UnlockPath.
+static bool fsm_isUnlockPathMessage(MessageType message_type) {
+  return message_type == MessageType_MessageType_GetAddress ||
+         message_type == MessageType_MessageType_GetPublicKey ||
+         message_type == MessageType_MessageType_SignTx;
+}
+
+void fsm_preMsgCleanup(MessageType message_type) {
+  // Drop the authorization and the unlocked path before processing a message
+  // which they do not apply to, so that it cannot gain access to the SLIP-25
+  // account without the user's confirmation.
+  if (!fsm_isPreauthorizedMessage(message_type)) {
+    authorization_type = 0;
+  }
+
+  if (!fsm_isUnlockPathMessage(message_type)) {
+    unlock_path = 0;
+  }
+}
+
 void fsm_postMsgCleanup(MessageType message_type) {
   if (message_type != MessageType_MessageType_DoPreauthorized) {
     authorization_type = 0;

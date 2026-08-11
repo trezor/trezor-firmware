@@ -61,6 +61,7 @@ void MessageProcessFunc(char type, char dir, uint16_t msg_id, void *ptr) {
   const struct MessagesMap_t *m = MessagesMap;
   while (m->type) {
     if (type == m->type && dir == m->dir && msg_id == m->msg_id) {
+      fsm_preMsgCleanup(msg_id);
       m->process_func(ptr);
       fsm_postMsgCleanup(msg_id);
       return;
