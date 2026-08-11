@@ -519,6 +519,8 @@ def sign_tx(
             definition_source=DEFINITIONS_SOURCE,
         )
 
+    sig = (sig.v, sig.r, sig.s)
+
     to = ethereum.decode_hex(to_address)
 
     if is_eip1559:

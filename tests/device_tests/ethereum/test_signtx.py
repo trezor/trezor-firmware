@@ -93,7 +93,7 @@ def _do_test_signtx(
     with session.test_ctx as client:
         if input_flow:
             client.set_input_flow(input_flow)
-        sig_v, sig_r, sig_s = ethereum.sign_tx(
+        sig = ethereum.sign_tx(
             session,
             n=parse_path(parameters["path"]),
             nonce=int(parameters["nonce"], 16),
@@ -110,13 +110,13 @@ def _do_test_signtx(
         )
 
     expected_v = 2 * parameters["chain_id"] + 35
-    assert sig_v in (
+    assert sig.v in (
         expected_v,
         expected_v + 1,
     )  # 'y-coordinate' sign bit encodes chain_id: EIP-155
-    assert sig_r.hex() == result["sig_r"]
-    assert sig_s.hex() == result["sig_s"]
-    assert sig_v == result["sig_v"]
+    assert sig.r.hex() == result["sig_r"]
+    assert sig.s.hex() == result["sig_s"]
+    assert sig.v == result["sig_v"]
 
 
 # Directory of dev-signed Ethereum definitions (network / token / clear-signing
@@ -136,7 +136,7 @@ def test_signtx_external_definitions(
     chain_id = parameters["chain_id"]
     with session.test_ctx as client:
         client.set_input_flow(InputFlowConfirmAllWarnings(session).get())
-        sig_v, sig_r, sig_s = ethereum.sign_tx(
+        sig = ethereum.sign_tx(
             session,
             n=parse_path(parameters["path"]),
             nonce=int(parameters["nonce"], 16),
@@ -156,13 +156,13 @@ def test_signtx_external_definitions(
         )
 
     expected_v = 2 * chain_id + 35
-    assert sig_v in (
+    assert sig.v in (
         expected_v,
         expected_v + 1,
     )  # 'y-coordinate' sign bit encodes chain_id: EIP-155
-    assert sig_r.hex() == result["sig_r"]
-    assert sig_s.hex() == result["sig_s"]
-    assert sig_v == result["sig_v"]
+    assert sig.r.hex() == result["sig_r"]
+    assert sig.s.hex() == result["sig_s"]
+    assert sig.v == result["sig_v"]
 
 
 # Data taken from sign_tx_eip1559.json["tests"][0]
@@ -255,7 +255,7 @@ def test_signtx_eip1559(
     with session.test_ctx as client:
         if not session.debug.legacy_debug:
             client.set_input_flow(InputFlowConfirmAllWarnings(session).get())
-        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+        sig = ethereum.sign_tx_eip1559(
             session,
             n=parse_path(parameters["path"]),
             nonce=int(parameters["nonce"], 16),
@@ -270,9 +270,9 @@ def test_signtx_eip1559(
             chunkify=chunkify,
         )
 
-    assert sig_r.hex() == result["sig_r"]
-    assert sig_s.hex() == result["sig_s"]
-    assert sig_v == result["sig_v"]
+    assert sig.r.hex() == result["sig_r"]
+    assert sig.s.hex() == result["sig_s"]
+    assert sig.v == result["sig_v"]
 
 
 def test_sanity_checks(session: Session):
@@ -468,7 +468,7 @@ def test_signtx_eip1559_access_list(
     expected_sig: tuple[int, str, str] | None,
 ):
     with session.test_ctx:
-        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+        sig = ethereum.sign_tx_eip1559(
             session,
             n=parse_path("m/44h/60h/0h/0/100"),
             nonce=0,
@@ -482,7 +482,7 @@ def test_signtx_eip1559_access_list(
         )
 
     if expected_sig is not None:
-        assert (sig_v, sig_r.hex(), sig_s.hex()) == expected_sig
+        assert (sig.v, sig.r.hex(), sig.s.hex()) == expected_sig
 
 
 def test_sanity_checks_eip1559(session: Session):
@@ -682,7 +682,7 @@ def test_signtx_error(session: Session, parameters: dict, result: dict):
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking_eip1559.json")
 def test_signtx_staking_eip1559(session: Session, parameters: dict, result: dict):
     with session.test_ctx:
-        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+        sig = ethereum.sign_tx_eip1559(
             session,
             n=parse_path(parameters["path"]),
             nonce=int(parameters["nonce"], 16),
@@ -696,9 +696,9 @@ def test_signtx_staking_eip1559(session: Session, parameters: dict, result: dict
             definitions=None,
             chunkify=True,
         )
-    assert sig_r.hex() == result["sig_r"]
-    assert sig_s.hex() == result["sig_s"]
-    assert sig_v == result["sig_v"]
+    assert sig.r.hex() == result["sig_r"]
+    assert sig.s.hex() == result["sig_s"]
+    assert sig.v == result["sig_v"]
 
 
 @pytest.mark.models("core")
