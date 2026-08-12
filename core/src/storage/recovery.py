@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from storage import common
 
 if TYPE_CHECKING:
+    from trezor.crypto import slip39
     from trezor.enums import RecoveryType
 
 # Namespace:
@@ -117,13 +118,15 @@ def set_slip39_remaining_shares(shares_remaining: int, group_index: int) -> None
     common.set(_NAMESPACE, _REMAINING, remaining)
 
 
-def get_slip39_remaining_shares(group_index: int) -> int | None:
+def get_slip39_remaining_shares(share: slip39.Share) -> int:
+    """Return number of remaining shares in this group."""
     from trezor.crypto.slip39 import MAX_SHARE_COUNT
 
     _require_progress()
+    group_index = share.group_index  # local_cache_attribute
     remaining = common.get(_NAMESPACE, _REMAINING)
     if remaining is None or remaining[group_index] == MAX_SHARE_COUNT:
-        return None
+        return share.threshold
     else:
         return remaining[group_index]
 

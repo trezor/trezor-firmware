@@ -63,9 +63,7 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
     if share.group_count != storage_recovery.get_slip39_group_count():
         raise RuntimeError("Slip39: Group count does not match")
 
-    remaining_for_share = (
-        storage_recovery.get_slip39_remaining_shares(group_index) or share.threshold
-    )
+    remaining_for_share = storage_recovery.get_slip39_remaining_shares(share)
     storage_recovery.set_slip39_remaining_shares(remaining_for_share - 1, group_index)
     remaining[group_index] = remaining_for_share - 1
     storage_recovery_shares.set(share.index, group_index, words)

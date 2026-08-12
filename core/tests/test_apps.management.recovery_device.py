@@ -43,7 +43,7 @@ class TestSlip39(unittest.TestCase):
         )
         self.assertEqual(share.identifier, storage.recovery.get_slip39_identifier())
         self.assertEqual(share.extendable, False)
-        self.assertEqual(storage.recovery.get_slip39_remaining_shares(0), 2)
+        self.assertEqual(storage.recovery.get_slip39_remaining_shares(share), 2)
         self.assertEqual(
             storage.recovery_shares.get(share.index, share.group_index), first
         )
@@ -52,7 +52,7 @@ class TestSlip39(unittest.TestCase):
         second = MNEMONIC_SLIP39_BASIC_20_3of6[1]
         secret, share = process_slip39(second)
         self.assertIsNone(secret)
-        self.assertEqual(storage.recovery.get_slip39_remaining_shares(0), 1)
+        self.assertEqual(storage.recovery.get_slip39_remaining_shares(share), 1)
         self.assertEqual(
             storage.recovery_shares.get(share.index, share.group_index), second
         )
@@ -64,7 +64,7 @@ class TestSlip39(unittest.TestCase):
         third = MNEMONIC_SLIP39_BASIC_20_3of6[2]
         secret, share = process_slip39(third)
         self.assertEqual(secret, b"I\x1by[\x80\xfc!\xcc\xdfFl\x0f\xbc\x98\xc8\xfc")
-        self.assertEqual(storage.recovery.get_slip39_remaining_shares(0), 0)
+        self.assertEqual(storage.recovery.get_slip39_remaining_shares(share), 0)
         self.assertEqual(
             storage.recovery_shares.get(share.index, share.group_index), third
         )
