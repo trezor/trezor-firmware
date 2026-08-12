@@ -93,14 +93,11 @@ async def confirm_instruction(
             if property_template.optional and value is None:
                 continue
 
-            if ui_property.default_value_to_hide == value:
-                continue
-
-            if (
-                property_template.is_pubkey()
-                and ui_property.default_value_to_hide == "signer"
-                and signer_public_key == value
-            ):
+            default_value_to_hide = ui_property.default_value_to_hide
+            if default_value_to_hide == "signer":
+                if property_template.is_pubkey() and signer_public_key == value:
+                    continue
+            elif default_value_to_hide == value:
                 continue
 
             args = []
