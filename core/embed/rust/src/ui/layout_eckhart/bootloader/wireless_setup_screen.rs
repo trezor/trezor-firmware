@@ -11,17 +11,17 @@ use crate::ui::shape::{self, Renderer};
 
 /// Full-screen component for the wireless setup screen. It shows instructions
 /// for the user and QR code to download the Trezor Suite app.
-pub struct WirelessSetupScreen {
+pub struct WirelessSetupScreen<'a> {
     /// Header with the device name
-    header: BldHeader<'static>,
+    header: BldHeader<'a>,
     /// Instruction text for the user
-    instruction: Label<'static>,
+    instruction: Label<'a>,
     /// Area for the QR code
     qr_area: Rect,
     /// Action bar to invoke more info
     action_bar: BldActionBar,
     /// More info section that can be toggled
-    more_info: MoreInfo<'static>,
+    more_info: MoreInfo<'a>,
     /// Flag to indicate if the more info section is currently showing
     more_info_showing: bool,
 }
@@ -33,8 +33,8 @@ struct MoreInfo<'a> {
     action_bar: BldActionBar,
 }
 
-impl WirelessSetupScreen {
-    pub fn new(name: TString<'static>) -> Self {
+impl<'a> WirelessSetupScreen<'a> {
+    pub fn new(name: TString<'a>) -> Self {
         let instruction = Label::left_aligned(
             "Get the Trezor Suite app to begin setup.".into(),
             theme::TEXT_NORMAL,
@@ -96,7 +96,7 @@ impl WirelessSetupScreen {
     }
 }
 
-impl Component for WirelessSetupScreen {
+impl Component for WirelessSetupScreen<'_> {
     type Msg = PairingMsg;
 
     fn place(&mut self, _bounds: Rect) -> Rect {

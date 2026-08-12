@@ -6,12 +6,12 @@ pub trait BootloaderUI {
     fn screen_connect(initial_setup: bool, show_menu: bool) -> (u32, u32);
 
     #[cfg(feature = "ble")]
-    fn screen_pairing_mode(_initial_setup: bool, _name: &'static str) -> (u32, u32) {
+    fn screen_pairing_mode(_initial_setup: bool, _name: &str) -> (u32, u32) {
         unimplemented!();
     }
 
     #[cfg(feature = "ble")]
-    fn screen_wireless_setup(_name: &'static str) -> (u32, u32) {
+    fn screen_wireless_setup(_name: &str) -> (u32, u32) {
         unimplemented!();
     }
 
@@ -60,7 +60,7 @@ pub trait BootloaderUI {
         warning: bool,
         vendor_str: Option<&str>,
         version: [u8; 4],
-        vendor_img: &'static [u8],
+        vendor_img: &[u8],
         wait: i32,
     );
 

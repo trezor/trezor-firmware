@@ -24,21 +24,21 @@ impl ReturnToC for PairingMsg {
     }
 }
 
-pub struct PairingModeScreen {
-    header: BldHeader<'static>,
-    name: Label<'static>,
-    message: Label<'static>,
-    footer: Label<'static>,
+pub struct PairingModeScreen<'a> {
+    header: BldHeader<'a>,
+    name: Label<'a>,
+    message: Label<'a>,
+    footer: Label<'a>,
     screen_border: Option<ScreenBorder>,
 }
 
-impl PairingModeScreen {
+impl<'a> PairingModeScreen<'a> {
     const TEXT_NORMAL_GREEN_LIME: TextStyle = TextStyle {
         text_color: theme::GREEN_LIME,
         ..theme::TEXT_NORMAL
     };
 
-    pub fn new(name: TString<'static>) -> Self {
+    pub fn new(name: TString<'a>) -> Self {
         Self {
             header: BldHeader::new("Pair new device".into()).with_close_button(),
             name: Label::left_aligned(name, Self::TEXT_NORMAL_GREEN_LIME),
@@ -55,7 +55,7 @@ impl PairingModeScreen {
     }
 }
 
-impl Component for PairingModeScreen {
+impl Component for PairingModeScreen<'_> {
     type Msg = PairingMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -104,7 +104,7 @@ impl Component for PairingModeScreen {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for PairingModeScreen {
+impl crate::trace::Trace for PairingModeScreen<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PairingMode");
         t.string("name", *self.name.text());

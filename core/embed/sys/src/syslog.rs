@@ -1,4 +1,4 @@
-use rtl::util::FatPtr;
+use rtl::util::CSlice;
 
 use super::ffi;
 
@@ -12,7 +12,7 @@ pub enum LogLevel {
 
 impl From<&str> for ffi::log_source_t {
     fn from(s: &str) -> Self {
-        let ptr = FatPtr::from(s);
+        let ptr = CSlice::from(s);
         ffi::log_source_t {
             name: ptr.ptr(),
             name_len: ptr.len(),
@@ -26,7 +26,7 @@ fn syslog_start_record(module: &str, level: LogLevel) -> bool {
 }
 
 fn syslog_write_chunk(text: &str, end_record: bool) -> Result<usize, ()> {
-    let text = FatPtr::from(text);
+    let text = CSlice::from(text);
     let bytes_written = unsafe { ffi::syslog_write_chunk(text.ptr(), text.len(), end_record) };
     if bytes_written < 0 {
         Err(())
