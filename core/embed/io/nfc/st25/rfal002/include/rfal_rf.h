@@ -238,7 +238,7 @@
 */
 
 /* RFAL Guard Time (GT) default values                 */
-#define    RFAL_GT_NFCA                      rfalConvMsTo1fc(5U)     /*!< GTA  Digital 2.0  6.10.4.1 & B.2                                                                 */
+#define    RFAL_GT_NFCA                      rfalConvMsTo1fc(20U)    /*!< GTA  Digital 2.0  6.10.4.1 & B.2                                                                 */
 #define    RFAL_GT_NFCB                      rfalConvMsTo1fc(5U)     /*!< GTB  Digital 2.0  7.9.4.1  & B.3                                                                 */
 #define    RFAL_GT_NFCF                      rfalConvMsTo1fc(20U)    /*!< GTF  Digital 2.0  8.7.4.1  & B.4                                                                 */
 #define    RFAL_GT_NFCV                      rfalConvMsTo1fc(5U)     /*!< GTV  Digital 2.0  9.7.5.1  & B.5                                                                 */
