@@ -133,7 +133,8 @@ static void management_send_bonds(void) {
   bt_addr_le_t addr_list[CONFIG_BT_MAX_PAIRED] = {0};
   size_t bond_count = bonds_get_all(addr_list, CONFIG_BT_MAX_PAIRED);
 
-  uint8_t tx_data[1 + (CONFIG_BT_MAX_PAIRED * (1 + BT_ADDR_SIZE))] = {0};
+  // Event byte and bond count, followed by one record per bond
+  uint8_t tx_data[2 + (CONFIG_BT_MAX_PAIRED * (1 + BT_ADDR_SIZE))] = {0};
 
   tx_data[0] = INTERNAL_EVENT_BOND_LIST;
   tx_data[1] = bond_count;
