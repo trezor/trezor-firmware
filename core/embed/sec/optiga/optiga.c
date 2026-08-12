@@ -260,9 +260,10 @@ bool optiga_random_buffer(uint8_t *dest, size_t size) {
   }
 
   if (size < OPTIGA_RANDOM_MIN_SIZE) {
-    static uint8_t buffer[OPTIGA_RANDOM_MIN_SIZE] = {0};
+    uint8_t buffer[OPTIGA_RANDOM_MIN_SIZE] = {0};
     optiga_result ret = optiga_get_random(buffer, OPTIGA_RANDOM_MIN_SIZE);
     memcpy(dest, buffer, size);
+    memzero(buffer, sizeof(buffer));
     return ret == OPTIGA_SUCCESS;
   }
 
@@ -275,6 +276,7 @@ void optiga_random_buffer_time(uint32_t *time_ms) {
 }
 
 static bool read_metadata(uint16_t oid, optiga_metadata *metadata) {
+  // Must be static: the parsed metadata items point into this buffer
   static uint8_t serialized[OPTIGA_MAX_METADATA_SIZE] = {0};
   size_t size = 0;
   if (optiga_get_data_object(oid, true, serialized, sizeof(serialized),
