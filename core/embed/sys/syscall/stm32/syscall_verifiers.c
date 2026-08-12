@@ -199,7 +199,11 @@ void ipc_message_free__verified(ipc_message_t *msg) {
   // because the msg->data is treated as a "token" and validated
   // in the ipc_message_free() itself.
 
-  ipc_message_free(msg);
+  // Work on a copy so that the token cannot be changed after it has been
+  // validated by the implementation.
+  ipc_message_t msg_copy = *msg;
+
+  ipc_message_free(&msg_copy);
   return;
 
 access_violation:
@@ -230,11 +234,15 @@ bool boot_image_check__verified(const boot_image_t *image) {
     goto access_violation;
   }
 
-  if (!probe_read_access(image->image_ptr, image->image_size)) {
+  // Work on a copy so that the verified fields cannot differ from
+  // the ones the implementation uses.
+  boot_image_t image_copy = *image;
+
+  if (!probe_read_access(image_copy.image_ptr, image_copy.image_size)) {
     goto access_violation;
   }
 
-  return boot_image_check(image);
+  return boot_image_check(&image_copy);
 
 access_violation:
   apptask_access_violation();
@@ -246,11 +254,15 @@ void boot_image_replace__verified(const boot_image_t *image) {
     goto access_violation;
   }
 
-  if (!probe_read_access(image->image_ptr, image->image_size)) {
+  // Work on a copy so that the verified fields cannot differ from
+  // the ones the implementation uses.
+  boot_image_t image_copy = *image;
+
+  if (!probe_read_access(image_copy.image_ptr, image_copy.image_size)) {
     goto access_violation;
   }
 
-  boot_image_replace(image);
+  boot_image_replace(&image_copy);
   return;
 
 access_violation:
