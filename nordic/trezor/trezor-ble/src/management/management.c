@@ -176,6 +176,11 @@ static void mgmt_process_challenge(uint8_t *data, uint16_t len) {
 }
 
 static void process_command(uint8_t *data, uint16_t len) {
+  if (len < 1) {
+    LOG_WRN("Empty command, dropping");
+    return;
+  }
+
   uint8_t cmd = data[0];
   switch (cmd) {
     case MGMT_CMD_SYSTEM_OFF:

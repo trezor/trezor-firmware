@@ -152,7 +152,21 @@ static void management_update_battery(uint8_t level) {
   bt_bas_set_battery_level(level);
 }
 
+// Rejects a command shorter than its handler requires. Expands to a `break`,
+// so it can only be used directly in the switch in `process_command()`.
+#define BREAK_IF_TOO_SHORT(_min)                              \
+  if (len < (_min)) {                                         \
+    LOG_WRN("Command 0x%02x too short (%u bytes)", cmd, len); \
+    success = false;                                          \
+    break;                                                    \
+  }
+
 static void process_command(uint8_t *data, uint16_t len) {
+  if (len < 1) {
+    LOG_WRN("Empty command, dropping");
+    return;
+  }
+
   uint8_t cmd = data[0];
   bool success = true;
   bool send_response = true;
@@ -162,6 +176,8 @@ static void process_command(uint8_t *data, uint16_t len) {
       ble_management_send_status_event();
       break;
     case INTERNAL_CMD_ADVERTISING_ON: {
+      BREAK_IF_TOO_SHORT(sizeof(cmd_advertising_on_t));
+
       cmd_advertising_on_t *cmd = (cmd_advertising_on_t *)data;
 
       int name_len = strnlen(cmd->name, BLE_ADV_NAME_LEN);
@@ -186,6 +202,8 @@ static void process_command(uint8_t *data, uint16_t len) {
       // pb_msg_ack();
       break;
     case INTERNAL_CMD_ALLOW_PAIRING: {
+      BREAK_IF_TOO_SHORT(sizeof(cmd_allow_pairing_t));
+
       cmd_allow_pairing_t *cmd = (cmd_allow_pairing_t *)data;
 
       pairing_num_comp_reply(true, cmd->code);
@@ -209,6 +227,8 @@ static void process_command(uint8_t *data, uint16_t len) {
       send_response = false;
     } break;
     case INTERNAL_CMD_SET_BUSY: {
+      BREAK_IF_TOO_SHORT(sizeof(cmd_set_busy_t));
+
       ble_set_busy_flag(data[1]);
     } break;
     case INTERNAL_CMD_GET_BOND_LIST: {
@@ -227,9 +247,13 @@ static void process_command(uint8_t *data, uint16_t len) {
       }
     } break;
     case INTERNAL_CMD_BATTERY_UPDATE: {
+      BREAK_IF_TOO_SHORT(2);
+
       management_update_battery(data[1]);
     } break;
     case INTERNAL_CMD_SET_TX_POWER: {
+      BREAK_IF_TOO_SHORT(2);
+
       int8_t tx_power = (int8_t)data[1];
       if (ble_set_tx_power(tx_power) != 0) {
         success = false;
@@ -247,6 +271,8 @@ static void process_command(uint8_t *data, uint16_t len) {
     }
   }
 }
+
+#undef BREAK_IF_TOO_SHORT
 
 void ble_management_init(void) { k_sem_give(&ble_management_ok); }
 
