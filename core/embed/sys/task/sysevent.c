@@ -110,7 +110,7 @@ ssize_t syshandle_read(syshandle_t handle, void *buffer, size_t buffer_size) {
 ssize_t syshandle_write(syshandle_t handle, const void *data,
                         size_t data_size) {
   if (handle >= SYSHANDLE_COUNT) {
-    return false;
+    return -1;
   }
 
   sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
