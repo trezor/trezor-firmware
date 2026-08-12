@@ -45,7 +45,7 @@ version = "1.0.13"
 criteria = "safe-to-deploy"
 
 [[exemptions.anyhow]]
-version = "1.0.102"
+version = "1.0.104"
 criteria = "safe-to-deploy"
 
 [[exemptions.backtrace]]
@@ -231,7 +231,7 @@ version = "0.6.8"
 criteria = "safe-to-deploy"
 
 [[exemptions.spin]]
-version = "0.9.8"
+version = "0.9.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.static-alloc]]
