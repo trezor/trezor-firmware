@@ -198,7 +198,8 @@ void spi_thread(void) {
 
     uint8_t crc = crc8(rx_data, PACKET_DATA_SIZE - 1, 0x07, 0, false);
 
-    if (crc == rx_msg->crc && (rx_msg->service_id & 0xF0) == 0xA0) {
+    if (crc == rx_msg->crc && (rx_msg->service_id & 0xF0) == 0xA0 &&
+        rx_msg->msg_len <= MAX_SPI_DATA_SIZE) {
       process_rx_msg(rx_msg->service_id & 0xF, rx_msg->data, rx_msg->msg_len);
     } else {
       if (rx_msg->service_id != 0) {
