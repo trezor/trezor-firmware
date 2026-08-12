@@ -61,9 +61,14 @@ bool trz_comm_send_msg(nrf_service_id_t service, const uint8_t *data,
 }
 
 void process_rx_msg(uint8_t service_id, uint8_t *data, uint32_t len) {
-  trz_packet_t *buf = k_malloc(sizeof(*buf));
-
   atomic_set(&g_suspended_flag, 0);
+
+  if (len > PACKET_DATA_SIZE) {
+    LOG_WRN("Received message too long (%u bytes), dropping", len);
+    return;
+  }
+
+  trz_packet_t *buf = k_malloc(sizeof(*buf));
 
   if (!buf) {
     LOG_WRN("Not able to allocate receive buffer");
