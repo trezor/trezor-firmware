@@ -86,8 +86,8 @@ int scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
 int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
                   const uint8_t *pub_key, uint8_t *session_key);
 void compress_coords(const curve_point *cp, uint8_t *compressed);
-void uncompress_coords(const ecdsa_curve *curve, uint8_t odd,
-                       const bignum256 *x, bignum256 *y);
+int uncompress_coords(const ecdsa_curve *curve, uint8_t odd, const bignum256 *x,
+                      bignum256 *y);
 int ecdsa_uncompress_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key,
                             uint8_t *uncompressed);
 
