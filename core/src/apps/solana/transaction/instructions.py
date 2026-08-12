@@ -1915,19 +1915,19 @@ def get_instruction(
                         "unix_timestamp",
                         None,
                         "Time",
-                        0,
+                        "none",
                     ),
                     UIProperty(
                         "epoch",
                         None,
                         "Epoch",
-                        0,
+                        "none",
                     ),
                     UIProperty(
                         "custodian",
                         None,
                         "New lockup authority",
-                        None,
+                        "none",
                     ),
                     UIProperty(
                         None,
@@ -2285,13 +2285,13 @@ def get_instruction(
                         "unix_timestamp",
                         None,
                         "Time",
-                        0,
+                        "none",
                     ),
                     UIProperty(
                         "epoch",
                         None,
                         "Epoch",
-                        0,
+                        "none",
                     ),
                     UIProperty(
                         None,
