@@ -213,7 +213,7 @@ clippy:
 	xtask clippy -e -m $(TREZOR_MODEL) firmware
 
 audit_rust: ## run cargo audit on rust dependencies
-	cd embed ; cargo audit
+	cd embed ; cargo audit --deny warnings
 
 vet_rust: ## run cargo vet on rust dependencies
 	cd embed ; cargo vet --locked
