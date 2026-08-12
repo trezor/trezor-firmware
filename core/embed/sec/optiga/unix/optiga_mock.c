@@ -19,10 +19,8 @@
 
 #include <trezor_rtl.h>
 
-#include <sys/rng.h>
+#include <sec/optiga.h>
 #include <sys/rng_mock.h>
-
-#include "rand.h"
 
 // Guard against this file ever being compiled into a bare-metal build.
 
@@ -43,17 +41,16 @@ _Static_assert(sizeof(void*) == 8,
 
 #ifdef USE_INSECURE_PRNG
 
-// Deterministic, MCU-unique random stream.
-static rng_mock_stream_t random_stream = {.tag = "<PRNG-MCU>"};
+// Deterministic, Optiga-unique random stream.
+static rng_mock_stream_t random_stream = {.tag = "<PRNG-Optiga>"};
 
-void rng_reseed(uint32_t seed) { rng_mock_reseed(&random_stream, seed); }
-
-void rng_fill_buffer(void* buffer, size_t buffer_size) {
-  rng_mock_fill(&random_stream, (uint8_t*)buffer, buffer_size);
+void optiga_random_reseed(uint32_t seed) {
+  rng_mock_reseed(&random_stream, seed);
 }
 
-// Implements random_buffer() function declared in crypto/rand.h
-// as a wrapper for rng_fill_buffer().
-void random_buffer(uint8_t* buf, size_t len) { rng_fill_buffer(buf, len); }
+bool optiga_random_buffer(uint8_t* dest, size_t size) {
+  rng_mock_fill(&random_stream, dest, size);
+  return true;
+}
 
 #endif  // USE_INSECURE_PRNG

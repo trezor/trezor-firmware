@@ -31,6 +31,16 @@ void rng_init(void);
 
 #endif
 
+#ifdef TREZOR_EMULATOR
+/**
+ * @brief Reseeds the deterministic random number
+ * generator used in the emulator.
+ *
+ * @param seed The seed to use for reseeding.
+ */
+void rng_reseed(uint32_t seed);
+#endif
+
 /**
  * @brief Fills a buffer with random bytes using the hardware RNG
  *

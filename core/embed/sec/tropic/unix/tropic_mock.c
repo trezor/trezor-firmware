@@ -19,17 +19,14 @@
 
 #include <trezor_rtl.h>
 
-#include <sys/rng.h>
+#include <sec/tropic.h>
 #include <sys/rng_mock.h>
-
-#include "rand.h"
-
-// Guard against this file ever being compiled into a bare-metal build.
 
 #ifndef TREZOR_EMULATOR
 #error "Mock RNG must not be compiled into a non-emulator build"
 #endif
 
+// Guard against this file ever being compiled into a bare-metal build.
 _Static_assert(sizeof(void*) == 8,
                "Mock RNG compiled for a 32-bit target -- device build?");
 
@@ -43,17 +40,20 @@ _Static_assert(sizeof(void*) == 8,
 
 #ifdef USE_INSECURE_PRNG
 
-// Deterministic, MCU-unique random stream.
-static rng_mock_stream_t random_stream = {.tag = "<PRNG-MCU>"};
+// Deterministic, Tropic-unique random stream.
+static rng_mock_stream_t random_stream = {.tag = "<PRNG-Tropic>"};
 
-void rng_reseed(uint32_t seed) { rng_mock_reseed(&random_stream, seed); }
-
-void rng_fill_buffer(void* buffer, size_t buffer_size) {
-  rng_mock_fill(&random_stream, (uint8_t*)buffer, buffer_size);
+void tropic_random_reseed(uint32_t seed) {
+  rng_mock_reseed(&random_stream, seed);
 }
 
-// Implements random_buffer() function declared in crypto/rand.h
-// as a wrapper for rng_fill_buffer().
-void random_buffer(uint8_t* buf, size_t len) { rng_fill_buffer(buf, len); }
+bool tropic_random_buffer(void* buffer, size_t length) {
+  if (!tropic_session_start()) {
+    return false;
+  }
+
+  rng_mock_fill(&random_stream, (uint8_t*)buffer, length);
+  return true;
+}
 
 #endif  // USE_INSECURE_PRNG
