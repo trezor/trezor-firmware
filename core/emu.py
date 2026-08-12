@@ -36,6 +36,17 @@ TREZOR_STORAGE_FILES = (
 )
 
 
+def erase_storage(profile_dir: Path) -> list[str]:
+    """Erase the emulator storage, return the names of the files that were removed."""
+    erased = []
+    for entry in TREZOR_STORAGE_FILES:
+        path = profile_dir / entry
+        if path.exists():
+            path.unlink()
+            erased.append(entry)
+    return erased
+
+
 def run_command_with_emulator(emulator: CoreEmulator, command: list[str]) -> int:
     with emulator:
         # first start the subprocess
@@ -256,8 +267,7 @@ def cli(
         profile_dir = Path("/var/tmp")
 
     if erase:
-        for entry in TREZOR_STORAGE_FILES:
-            (profile_dir / entry).unlink(missing_ok=True)
+        erase_storage(profile_dir)
 
     if quiet:
         output = None
@@ -306,11 +316,24 @@ def cli(
             profile_dir=str(profile_dir),
             configfile=tropic_emulator_config,
             port=TropicModel.DEFAULT_PORT,
+            reuse_existing=True,
         )
         try:
             tropic_model.start()
         except Exception as exc:
             click.echo(f"Failed to start Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+        else:
+            if tropic_model.reused:
+                click.echo(f"Reusing Tropic01 model on port {tropic_model.port}")
+            else:
+                # The model we just started has empty R-memory, so the keys that
+                # storage keeps in there are gone and it could not be unlocked. The
+                # storage and the model state are only valid as a pair.
+                erased = erase_storage(profile_dir)
+                if erased:
+                    click.echo(
+                        f"Erased {', '.join(erased)}: started a fresh Tropic01 model"
+                    )
 
     if debugger or valgrind:
         run_debugger(emulator, script_gdb_file, valgrind, command, tropic_model)
