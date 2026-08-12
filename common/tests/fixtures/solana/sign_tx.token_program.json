@@ -325,6 +325,47 @@
       }
     },
     {
+      "description": "Set Authority - remove authority",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 1
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "FUqrjRRtF1LiptdFqaFxipE8R3YfCE4k56xwm5n1piqX",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 2,
+              "accounts": {
+                "mint_account": 1,
+                "current_authority": 0,
+                "multisig_signers": []
+              },
+              "data": {
+                "instruction_id": 6,
+                "authority_type": 0,
+                "new_authority": {
+                  "is_included": 0
+                }
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "29af6a6a960b6e6a7cd67a07310c2f19267f4135750ac6575aab6e9e7df6dc43417883db032b0a67381c5f5495e47770c36095065755f9f9e0197bbb75124c0a"
+      }
+    },
+    {
       "description": "Mint To",
       "parameters": {
         "address": "m/44'/501'/0'/0'",

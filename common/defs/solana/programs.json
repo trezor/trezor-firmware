@@ -757,16 +757,17 @@
             {
               "parameter": "unix_timestamp",
               "display_name": "Time",
-              "default_value_to_hide": 0
+              "default_value_to_hide": "none"
             },
             {
               "parameter": "epoch",
               "display_name": "Epoch",
-              "default_value_to_hide": 0
+              "default_value_to_hide": "none"
             },
             {
               "parameter": "custodian",
-              "display_name": "New lockup authority"
+              "display_name": "New lockup authority",
+              "default_value_to_hide": "none"
             },
             {
               "account": "lockup_or_withdraw_authority",
@@ -1020,12 +1021,12 @@
             {
               "parameter": "unix_timestamp",
               "display_name": "Time",
-              "default_value_to_hide": 0
+              "default_value_to_hide": "none"
             },
             {
               "parameter": "epoch",
               "display_name": "Epoch",
-              "default_value_to_hide": 0
+              "default_value_to_hide": "none"
             },
             {
               "account": "new_lockup_authority",

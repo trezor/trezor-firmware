@@ -1,0 +1,1 @@
+Solana: Ask user for confirmation of optional instruction parameters that were previously hidden, e.g. when unsetting a token authority.

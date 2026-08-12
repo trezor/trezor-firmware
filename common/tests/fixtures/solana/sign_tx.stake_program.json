@@ -360,6 +360,53 @@
       }
     },
     {
+      "description": "Set Lockup - clear lockup with zero values",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 1
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "Stake11111111111111111111111111111111111111"
+          ],
+          "blockhash": "ENP1bFTWGR7GiPcPg7TB9ekX82xaham8aFkB7vQeoNaZ",
+          "instructions": [
+            {
+              "program_index": 2,
+              "accounts": {
+                "initialized_stake_account": 1,
+                "lockup_or_withdraw_authority": 0
+              },
+              "data": {
+                "instruction_id": 6,
+                "unix_timestamp": {
+                  "is_included": 1,
+                  "value": 0
+                },
+                "epoch": {
+                  "is_included": 1,
+                  "value": 0
+                },
+                "custodian": {
+                  "is_included": 0
+                }
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "cdfb4dee4c413b9538196b41bc7d97325e3b7f2042eee9b0d3b1c374512f1af9e0f8f5f5f5453441fee3fdda917aff75399b9a87b2c993912f5c9a2087eb000a"
+      }
+    },
+    {
       "description": "Merge",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
@@ -647,6 +694,50 @@
       },
       "result": {
         "expected_signature": "42b06682b7cc946143dece29c7014e408d37768d8dcd28c5293c0b13c35000cbf771886dfd4a2f1cad487621b46167d4b32ecc51c605bef0f450da6761952e05"
+      }
+    },
+    {
+      "description": "Set Lockup Checked - clear lockup with zero values",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 1
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "Stake11111111111111111111111111111111111111"
+          ],
+          "blockhash": "2UZYH9e662w7SoLiwnGyGZY1Mn5YjEkWEozZGm5ViR6Q",
+          "instructions": [
+            {
+              "program_index": 2,
+              "accounts": {
+                "stake_account": 1,
+                "lockup_or_withdraw_authority": 0
+              },
+              "data": {
+                "instruction_id": 12,
+                "unix_timestamp": {
+                  "is_included": 1,
+                  "value": 0
+                },
+                "epoch": {
+                  "is_included": 1,
+                  "value": 0
+                }
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "f243707a5c71ad44c9dd13530403a1ed5d9936dafe0b95c6e368dbd2023feebd47447a510c0453afe4eb35ee5dcebe62454730b11b63d2f8b1500a2fec717202"
       }
     },
     {

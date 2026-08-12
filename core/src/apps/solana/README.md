@@ -212,7 +212,7 @@ The `programs.json` file serves as a structured configuration file in the Solana
       - `account`: Reference to one account in the references list identified by its `name`
       - `parameter`: Reference to one parameter in the parameters list identified by its `name`
       - `display_name`: A human-readable label for the parameter or account, suitable for user interfaces.
-      - `default_value_to_hide`: Optional. If this value is found in the account / parameter, the UI property will not be shown for confirmation. This is useful when the default value is considered safe. In particular, if the value of the property is a public key, and the special word `"signer"` is used for `default_value_to_hide`, the UI property will be hidden if the public key matches the Trezor's account.
+      - `default_value_to_hide`: Optional. If this value is found in the account / parameter, the UI property will not be shown for confirmation. This is useful when the default value is considered safe. Two special words are recognized: if `"signer"` is used and the value of the property is a public key, the UI property will be hidden if the public key matches the Trezor's account; if `"none"` is used, the UI property will be hidden if its value is `None` (an absent optional parameter, which is otherwise displayed as `None`). An absent optional account reference is always hidden, regardless of `default_value_to_hide`.
 
 Certain types of parameters, specified in `types` dict of the `programs.json` file, have special formatting capabilities.
 In particular, the type `token_amount` is a regular `u64` type, but the formatter function accepts additional parameters:

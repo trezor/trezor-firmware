@@ -90,26 +90,33 @@ async def confirm_instruction(
             property_template = instruction.get_property_template(ui_property.parameter)
             value = instruction.parsed_data[ui_property.parameter]
 
-            if property_template.optional and value is None:
-                continue
-
             default_value_to_hide = ui_property.default_value_to_hide
-            if default_value_to_hide == "signer":
+            if default_value_to_hide == "none":
+                if value is None:
+                    continue
+            elif default_value_to_hide == "signer":
                 if property_template.is_pubkey() and signer_public_key == value:
                     continue
-            elif default_value_to_hide == value:
-                continue
+            elif default_value_to_hide is not None:
+                if default_value_to_hide == value:
+                    continue
 
-            args = []
-            for arg in property_template.args:
-                if arg == "#definitions":
-                    args.append(definitions)
-                elif arg in instruction.parsed_data:
-                    args.append(instruction.parsed_data[arg])
-                elif arg in instruction.parsed_accounts:
-                    args.append(instruction.parsed_accounts[arg][0])
-                else:
-                    raise ValueError  # Invalid property template
+            if value is None:
+                # only optional parameters can be None
+                formatted_value = "None"
+            else:
+                args = []
+                for arg in property_template.args:
+                    if arg == "#definitions":
+                        args.append(definitions)
+                    elif arg in instruction.parsed_data:
+                        args.append(instruction.parsed_data[arg])
+                    elif arg in instruction.parsed_accounts:
+                        args.append(instruction.parsed_accounts[arg][0])
+                    else:
+                        raise ValueError  # Invalid property template
+
+                formatted_value = property_template.format(value, *args)
 
             await confirm_properties(
                 br_name="confirm_instruction",
@@ -118,7 +125,7 @@ async def confirm_instruction(
                 props=(
                     (
                         ui_property.display_name,
-                        property_template.format(value, *args),
+                        formatted_value,
                         True,
                     ),
                 ),
