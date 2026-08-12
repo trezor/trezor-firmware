@@ -1123,15 +1123,25 @@ jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input) {
     goto access_violation;
   }
 
-  if (input->offset > input->size) {
+  // Work on a copy so that the verified fields cannot differ from
+  // the ones the implementation uses.
+  jpegdec_input_t input_copy = *input;
+
+  if (input_copy.offset > input_copy.size) {
     goto access_violation;
   }
 
-  if (!probe_read_access(input->data, input->size - input->offset)) {
+  // `jpegdec_process()` consumes `data[offset]` up to `data[size]`
+  if (!probe_read_access(input_copy.data, input_copy.size)) {
     goto access_violation;
   }
 
-  return jpegdec_process(input);
+  jpegdec_state_t state = jpegdec_process(&input_copy);
+
+  // `jpegdec_process()` advances `offset` by the number of consumed bytes
+  *input = input_copy;
+
+  return state;
 
 access_violation:
   apptask_access_violation();
