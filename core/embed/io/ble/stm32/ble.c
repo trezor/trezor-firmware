@@ -1361,10 +1361,12 @@ void ble_notify(const uint8_t *data, size_t len) {
   }
 
   uint8_t cmd[32] = {0};
-  cmd[0] = INTERNAL_CMD_NOTIFY;
-  memcpy(&cmd[1], data, MIN(len, sizeof(data) - 1));
+  const size_t payload_len = MIN(len, sizeof(cmd) - 1);
 
-  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, cmd, MIN(32, len + 1), NULL, NULL);
+  cmd[0] = INTERNAL_CMD_NOTIFY;
+  memcpy(&cmd[1], data, payload_len);
+
+  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, cmd, payload_len + 1, NULL, NULL);
 }
 
 void ble_set_enabled(bool enabled) {
