@@ -1,7 +1,7 @@
 
 .PHONY: help \
 	vendor \
-	run emu \
+	run emu tropic_model \
 	test test_rust \
 	test_emu_sanity test_emu test_emu_multicore test_emu_monero \
 	test_emu_u2f test_emu_fido2 \
@@ -44,6 +44,7 @@ TESTPATH = $(CURDIR)/../tests
 
 EMU = $(CURDIR)/emu.py
 EMU_LOG_FILE ?= $(TESTPATH)/trezor.log
+TREZOR_PROFILE_DIR ?= /var/tmp
 EMU_TEST_ARGS = --disable-animation --headless --output=$(EMU_LOG_FILE) --temporary-profile
 EMU_TEST = $(EMU) $(EMU_TEST_ARGS) -c
 
@@ -118,6 +119,12 @@ run: ## run unix port
 
 emu: ## run emulator
 	$(EMU)
+
+# A newly started model has empty R-memory, so the emulator's storage could
+# not be unlocked. Erase the storage the new model invalidates.
+tropic_model: ## erase emulator storage and run Tropic01 model
+	rm -f $(TREZOR_PROFILE_DIR)/trezor.flash $(TREZOR_PROFILE_DIR)/trezor.sdcard
+	model_server tcp -c $(TESTPATH)/tropic_model/config.yml
 
 ## test commands:
 
