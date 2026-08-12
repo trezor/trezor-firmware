@@ -171,6 +171,8 @@ _EIP7702_ADDRESSES = {
         ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
     ]
 }
+if 0 in _EIP7702_ADDRESSES:
+    raise RuntimeError('"All chains" delegation is explicitly not supported')
 %>
 def lookup_eip7702_address(chain_id: int, address: bytes) -> str | None:
 % for chain_id, items in _EIP7702_ADDRESSES.items():
