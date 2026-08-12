@@ -97,6 +97,8 @@ static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USBIF_write_obj,
 /// def write_blocking(self, msg: AnyBytes, timeout_ms: int) -> int:
 ///     """
 ///     Sends message using USB interface.
+///     Returns the number of bytes written, or a negative error value only if
+///     no bytes were written.
 ///     """
 static mp_obj_t mod_trezorio_USBIF_write_blocking(mp_obj_t self, mp_obj_t msg,
                                                   mp_obj_t timeout_ms) {

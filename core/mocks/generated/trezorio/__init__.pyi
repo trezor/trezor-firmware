@@ -80,6 +80,8 @@ class USBIF:
     def write_blocking(self, msg: AnyBytes, timeout_ms: int) -> int:
         """
         Sends message using USB interface.
+        Returns the number of bytes written, or a negative error value only if
+        no bytes were written.
         """
 
     def read(self, buf: bytearray, offset: int = 0) -> int:

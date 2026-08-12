@@ -519,7 +519,9 @@ async def send_cmd(cmd: Cmd, iface: HID) -> None:
         seq += 1
 
 
-def send_cmd_sync(cmd: Cmd, iface: HID) -> None:
+def try_send_cmd_sync(cmd: Cmd, iface: HID) -> None:
+    """Try to send `cmd` synchronously, but don't fail if HID interface is blocked."""
+
     init_desc = frame_init()
     cont_desc = frame_cont()
     offset = 0
@@ -532,7 +534,10 @@ def send_cmd_sync(cmd: Cmd, iface: HID) -> None:
     frm.bcnt = datalen
 
     offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
-    iface.write(buf)
+    # Note: `write_blocking()` with zero timeout doesn't raise an exception.
+    if iface.write_blocking(buf, 0) != len(buf):
+        # If first packet is blocked, skip the rest.
+        return
 
     if offset < datalen:
         frm = overlay_struct(buf, cont_desc)
@@ -571,7 +576,9 @@ class KeepaliveCallback:
         self.iface = iface
 
     def __call__(self) -> None:
-        send_cmd_sync(cmd_keepalive(self.cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
+        try_send_cmd_sync(
+            cmd_keepalive(self.cid, _KEEPALIVE_STATUS_PROCESSING), self.iface
+        )
 
 
 async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
@@ -843,14 +850,16 @@ class Fido2ConfirmMakeCredential(Fido2State):
         cid = self.cid  # local_cache_attribute
 
         self._cred.generate_id()
-        send_cmd_sync(cmd_keepalive(cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
+        try_send_cmd_sync(cmd_keepalive(cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
         response_data = _cbor_make_credential_sign(
             self._client_data_hash, self._cred, self._user_verification
         )
 
         cmd = Cmd(cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
         if self._resident:
-            send_cmd_sync(cmd_keepalive(cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
+            try_send_cmd_sync(
+                cmd_keepalive(cid, _KEEPALIVE_STATUS_PROCESSING), self.iface
+            )
             if not store_resident_credential(self._cred):
                 cmd = cbor_error(cid, _ERR_KEY_STORE_FULL)
         await send_cmd(cmd, self.iface)
@@ -911,7 +920,9 @@ class Fido2ConfirmGetAssertion(Fido2State):
 
         assert self._selected_cred is not None
         try:
-            send_cmd_sync(cmd_keepalive(cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
+            try_send_cmd_sync(
+                cmd_keepalive(cid, _KEEPALIVE_STATUS_PROCESSING), self.iface
+            )
             response_data = cbor_get_assertion_sign(
                 self._client_data_hash,
                 self._selected_cred.rp_id_hash,
