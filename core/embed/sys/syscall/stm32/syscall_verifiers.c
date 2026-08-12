@@ -44,6 +44,18 @@
     goto access_violation;                                                     \
   }
 
+// The macros above multiply a stride by a height into a `size_t`. That cannot
+// overflow while both dimensions stay 16-bit, since an unsigned product needs
+// only as many bits as its operands have together. Widening any of the fields
+// would need a checked multiply here instead.
+_Static_assert(sizeof(((gfx_bitblt_t *)0)->dst_stride) +
+                           sizeof(((gfx_bitblt_t *)0)->height) <=
+                       sizeof(size_t) &&
+                   sizeof(((gfx_bitblt_t *)0)->src_stride) +
+                           sizeof(((gfx_bitblt_t *)0)->height) <=
+                       sizeof(size_t),
+               "bitblt dimensions may overflow the probe length");
+
 // ---------------------------------------------------------------------
 
 void sysevents_poll__verified(const sysevents_t *awaited,
