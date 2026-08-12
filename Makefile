@@ -8,6 +8,19 @@
 	protostyle protostyle_check \
 	defs_check \
 	ruststyle ruststyle_check \
+	sdk_fmt sdk_fmt_check \
+	sdk_check sdk_clippy \
+	sdk_test sdk_doctest sdk_doc \
+	sdk_audit sdk_vet \
+	modular_xtask_fmt modular_xtask_fmt_check \
+	modular_xtask_check modular_xtask_clippy \
+	modular_xtask_test modular_xtask_doctest modular_xtask_doc \
+	modular_xtask_audit modular_xtask_vet \
+	extapp_build_firmware extapp_build_emu \
+	extapp_unit_tests extapp_device_tests \
+	extapp_fmt extapp_fmt_check \
+	extapp_py_style extapp_py_style_check \
+	extapp_clippy extapp_vet \
 	typecheck pyright \
 	mocks mocks_check \
 	templates templates_check \
@@ -155,17 +168,143 @@ ruststyle: ## apply code style on rust sources
 	@cd core/embed ; cargo fmt
 	make -C rust style
 	xtask modular fmt
-	@cd sdk/crates/modular-xtask ; cargo fmt
-	@cd sdk/crates/trezor-app-sdk ; cargo fmt
+	make modular_xtask_fmt
+	make sdk_fmt
 
 ruststyle_check: ## run code style check on rust sources
 	@echo [RUSTFMT]
 	@cd core/embed ; cargo fmt -- --check
 	make -C rust style_check
 	xtask modular fmt-check
-	@cd sdk/crates/modular-xtask ; cargo fmt -- --check
+	make modular_xtask_fmt_check
+	make sdk_fmt_check
+
+## sdk commands:
+
+sdk_fmt: ## apply code style on the trezor-app-sdk crate
+	@echo [SDK-RUSTFMT]
+	@cd sdk/crates/trezor-app-sdk ; cargo fmt
+
+sdk_fmt_check: ## run code style check on the trezor-app-sdk crate
+	@echo [SDK-RUSTFMT]
 	@cd sdk/crates/trezor-app-sdk ; cargo fmt -- --check
 
+sdk_check: ## run cargo check on the trezor-app-sdk crate across its feature sets
+	@echo [SDK-CHECK]
+	@cd sdk/crates/trezor-app-sdk ; cargo check
+	@cd sdk/crates/trezor-app-sdk ; cargo check --no-default-features
+	@cd sdk/crates/trezor-app-sdk ; cargo check --features debug
+	@cd sdk/crates/trezor-app-sdk ; cargo check --features test
+	@cd sdk/crates/trezor-app-sdk ; cargo check --all-features
+
+sdk_clippy: ## run clippy on the trezor-app-sdk crate
+	@echo [SDK-CLIPPY]
+	@cd sdk/crates/trezor-app-sdk ; cargo clippy --no-default-features
+	@cd sdk/crates/trezor-app-sdk ; cargo clippy --all-features
+
+sdk_test: ## run unit tests for the trezor-app-sdk crate
+	@echo [SDK-TEST]
+	@cd sdk/crates/trezor-app-sdk ; cargo test --lib --features test
+
+sdk_doctest: ## run doc tests for the trezor-app-sdk crate
+	@echo [SDK-DOCTEST]
+	@cd sdk/crates/trezor-app-sdk ; cargo test --doc --features test
+
+sdk_doc: ## build documentation for the trezor-app-sdk crate
+	@echo [SDK-DOC]
+	@cd sdk/crates/trezor-app-sdk ; cargo doc --no-deps --all-features
+
+sdk_audit: ## run cargo audit on the trezor-app-sdk crate's dependencies
+	@echo [SDK-AUDIT]
+	@cd sdk/crates/trezor-app-sdk ; cargo audit
+
+sdk_vet: ## run cargo vet on the trezor-app-sdk crate's dependencies
+	@echo [SDK-VET]
+	@cd sdk/crates/trezor-app-sdk ; cargo vet --locked
+
+## modular-xtask commands:
+
+modular_xtask_fmt: ## apply code style on the modular-xtask crate
+	@echo [MODULAR-XTASK-RUSTFMT]
+	@cd sdk/crates/modular-xtask ; cargo fmt
+
+modular_xtask_fmt_check: ## run code style check on the modular-xtask crate
+	@echo [MODULAR-XTASK-RUSTFMT]
+	@cd sdk/crates/modular-xtask ; cargo fmt -- --check
+
+modular_xtask_check: ## run cargo check on the modular-xtask crate
+	@echo [MODULAR-XTASK-CHECK]
+	@cd sdk/crates/modular-xtask ; cargo check --all-targets
+
+modular_xtask_clippy: ## run clippy on the modular-xtask crate
+	@echo [MODULAR-XTASK-CLIPPY]
+	@cd sdk/crates/modular-xtask ; cargo clippy --all-targets
+
+modular_xtask_test: ## run unit tests for the modular-xtask crate
+	@echo [MODULAR-XTASK-TEST]
+	@cd sdk/crates/modular-xtask ; cargo test --lib
+
+modular_xtask_doctest: ## run doc tests for the modular-xtask crate
+	@echo [MODULAR-XTASK-DOCTEST]
+	@cd sdk/crates/modular-xtask ; cargo test --doc
+
+modular_xtask_doc: ## build documentation for the modular-xtask crate
+	@echo [MODULAR-XTASK-DOC]
+	@cd sdk/crates/modular-xtask ; cargo doc --no-deps
+
+modular_xtask_audit: ## run cargo audit on the modular-xtask crate's dependencies
+	@echo [MODULAR-XTASK-AUDIT]
+	@cd sdk/crates/modular-xtask ; cargo audit
+
+modular_xtask_vet: ## run cargo vet on the modular-xtask crate's dependencies
+	@echo [MODULAR-XTASK-VET]
+	@cd sdk/crates/modular-xtask ; cargo vet --locked
+
+## extapp commands:
+
+EXTAPP ?= tron
+EXTAPP_MODEL ?= t3w1
+EXTAPP_LANG ?= en
+
+extapp_build_firmware: ## build an extapp's firmware (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
+	@echo [EXTAPP-BUILD-FIRMWARE]
+	@xtask modular build -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG)
+
+extapp_build_emu: ## build an extapp's emulator (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
+	@echo [EXTAPP-BUILD-EMU]
+	@xtask modular build -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG) -e
+
+extapp_unit_tests: ## run unit tests for an extapp (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
+	@echo [EXTAPP-UNIT-TESTS]
+	@xtask modular unit-tests -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG)
+
+extapp_device_tests: ## run device tests for an extapp against a universal firmware emulator (set EXTAPP/EXTAPP_MODEL)
+	@echo [EXTAPP-DEVICE-TESTS]
+	@core/emu.py --disable-animation --headless --temporary-profile -c xtask modular device-tests -p $(EXTAPP) -m $(EXTAPP_MODEL) -e
+
+extapp_fmt: ## apply code style on all extapps
+	@echo [EXTAPP-RUSTFMT]
+	@xtask modular fmt
+
+extapp_fmt_check: ## run code style check on all extapps
+	@echo [EXTAPP-RUSTFMT]
+	@xtask modular fmt-check
+
+extapp_py_style: ## apply python style on an extapp's tests (set EXTAPP)
+	@echo [EXTAPP-PYSTYLE]
+	@xtask modular py-style -p $(EXTAPP)
+
+extapp_py_style_check: ## run python style check on an extapp's tests (set EXTAPP)
+	@echo [EXTAPP-PYSTYLE-CHECK]
+	@xtask modular py-style-check -p $(EXTAPP)
+
+extapp_clippy: ## run clippy on an extapp (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
+	@echo [EXTAPP-CLIPPY]
+	@xtask modular clippy -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG)
+
+extapp_vet: ## run cargo vet on all extapps' dependencies
+	@echo [EXTAPP-VET]
+	@cd sdk/apps ; cargo vet --locked
 
 typecheck: pyright
 

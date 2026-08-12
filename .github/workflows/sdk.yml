@@ -1,0 +1,331 @@
+name: SDK
+
+# Release-gating checks for the sdk/ tree: the `trezor-app-sdk` crate
+# (sdk/crates/trezor-app-sdk), the no_std runtime library modular Trezor apps
+# link against, the `modular-xtask` crate (sdk/crates/modular-xtask), the
+# build/test driver for modular Trezor apps (invoked as `xtask modular <cmd>`,
+# and consumed as a path dependency by core/embed/xtask), and the extapps
+# themselves (sdk/apps/*), which must build for both firmware and emulator
+# targets. These must all pass before a release of either crate is cut. See
+# sdk/doc/development.md for background on their roles.
+
+on:
+  pull_request:
+    paths:
+      - 'sdk/**'
+      - '.github/workflows/sdk.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 23 * * *'  # every day @ 23:17
+  push:
+    branches:
+      - 'release/**'
+      - 'secfix/**'
+    paths:
+      - 'sdk/**'
+
+# cancel any previous runs on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sdk_fmt_check:
+    name: trezor-app-sdk / Format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make sdk_fmt_check"
+
+  sdk_check:
+    name: trezor-app-sdk / Cargo check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make sdk_check"
+
+  sdk_clippy:
+    name: trezor-app-sdk / Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make sdk_clippy"
+
+  sdk_unit_tests:
+    name: trezor-app-sdk / Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make sdk_test"
+
+  sdk_doc_tests:
+    name: trezor-app-sdk / Doc tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make sdk_doctest"
+
+  sdk_doc_build:
+    name: trezor-app-sdk / Doc build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make sdk_doc"
+
+  sdk_deps_check:
+    name: trezor-app-sdk / Dependency check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make sdk_audit"
+      - run: nix-shell --run "make sdk_vet"
+
+  modular_xtask_fmt_check:
+    name: modular-xtask / Format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make modular_xtask_fmt_check"
+
+  modular_xtask_check:
+    name: modular-xtask / Cargo check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make modular_xtask_check"
+
+  modular_xtask_clippy:
+    name: modular-xtask / Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make modular_xtask_clippy"
+
+  modular_xtask_unit_tests:
+    name: modular-xtask / Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make modular_xtask_test"
+
+  modular_xtask_doc_tests:
+    name: modular-xtask / Doc tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make modular_xtask_doctest"
+
+  modular_xtask_doc_build:
+    name: modular-xtask / Doc build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make modular_xtask_doc"
+
+  modular_xtask_deps_check:
+    name: modular-xtask / Dependency check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make modular_xtask_audit"
+      - run: nix-shell --run "make modular_xtask_vet"
+
+  extapp_firmware:
+    name: extapp / Build firmware (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [tron]
+        model: [t3w1]
+        lang: [en]
+    env:
+      EXTAPP: ${{ matrix.app }}
+      EXTAPP_MODEL: ${{ matrix.model }}
+      EXTAPP_LANG: ${{ matrix.lang }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run make extapp_build_firmware"
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: extapp-firmware-${{ matrix.app }}-${{ matrix.model }}-${{ matrix.lang }}
+          path: sdk/apps/target/artifacts/${{ matrix.model }}/*
+          retention-days: 7
+
+  extapp_emu:
+    name: extapp / Build emu (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [tron]
+        model: [t3w1]
+        lang: [en]
+    env:
+      EXTAPP: ${{ matrix.app }}
+      EXTAPP_MODEL: ${{ matrix.model }}
+      EXTAPP_LANG: ${{ matrix.lang }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run make extapp_build_emu"
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: extapp-emu-${{ matrix.app }}-${{ matrix.model }}-${{ matrix.lang }}
+          path: sdk/apps/target/artifacts/${{ matrix.model }}-emu/*
+          retention-days: 7
+
+  extapp_unit_tests:
+    name: extapp / Unit tests (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [tron]
+        model: [t3w1]
+        lang: [en]
+    env:
+      EXTAPP: ${{ matrix.app }}
+      EXTAPP_MODEL: ${{ matrix.model }}
+      EXTAPP_LANG: ${{ matrix.lang }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run make extapp_unit_tests"
+
+  extapp_device_test:
+    name: extapp / Device tests (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
+    runs-on: ubuntu-latest
+    needs: extapp_emu
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [tron]
+        model: [t3w1]
+        lang: [en]
+    env:
+      EXTAPP: ${{ matrix.app }}
+      EXTAPP_MODEL: ${{ matrix.model }}
+      EXTAPP_LANG: ${{ matrix.lang }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+        with:
+          name: extapp-emu-${{ matrix.app }}-${{ matrix.model }}-${{ matrix.lang }}
+          path: sdk/apps/target/artifacts/${{ matrix.model }}-emu
+      - uses: ./.github/actions/environment
+      # Core must be built universal (not btconly) so external-app support is
+      # compiled in for this model, and with debug link enabled (PYOPT=0) so
+      # the device tests can drive it. See core/Makefile's XTASK_BUILD_OPTS.
+      - run: nix-shell --run "export TREZOR_MODEL=$(echo ${{ matrix.model }} | tr a-z A-Z); export BITCOIN_ONLY=0; export PYOPT=0; uv run make -C core build_unix"
+      - run: nix-shell --run "uv run make extapp_device_tests"
+
+  extapp_fmt_check:
+    name: extapp / Format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run make extapp_fmt_check"
+
+  extapp_py_style_check:
+    name: extapp / Python style check (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [tron]
+    env:
+      EXTAPP: ${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run make extapp_py_style_check"
+
+  extapp_clippy:
+    name: extapp / Clippy (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [tron]
+        model: [t3w1]
+        lang: [en]
+    env:
+      EXTAPP: ${{ matrix.app }}
+      EXTAPP_MODEL: ${{ matrix.model }}
+      EXTAPP_LANG: ${{ matrix.lang }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run make extapp_clippy"
+
+  extapp_vet:
+    name: extapp / Dependency check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make extapp_vet"
