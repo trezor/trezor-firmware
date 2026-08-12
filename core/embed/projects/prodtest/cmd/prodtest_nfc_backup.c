@@ -51,6 +51,122 @@ typedef struct {
     uint8_t  signature[64];               // Ed25519 Signature (64 bytes)
 } nfc_backup_certificate_t;
 
+
+typedef ts_t (*on_tap_callback_t) (cli_t *cli);
+
+static ts_t nfc_poll_start(cli_t *cli) {
+
+  ts_t status;
+
+  status = nfc_init();
+  if (ts_error(status)) {
+    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_INIT, "NFC initialization failed");
+    return status;
+  }
+
+  status = nfc_start_discovery();
+  if (ts_error(status)) {
+    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_DISCOVERY,
+              "NFC start discovery failed");
+    return status;
+  }
+
+  // Clear leftover events
+  nfc_event_t event_flag;
+  sysevents_t awaited_events = {0};
+  sysevents_t signalled_events = {0};
+
+  nfc_get_event(&event_flag);
+  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
+  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
+
+  return TS_OK;
+
+}
+
+static ts_t nfc_wait_for_tap(cli_t *cli, on_tap_callback_t callback) {
+
+  TSH_DECLARE;
+  ts_t status;
+
+  TSH_CHECK_ARG(cli != NULL);
+  TSH_CHECK_ARG(callback != NULL);
+
+  cli_trace(cli, "Tap NFC backup card.");
+
+  sysevents_t awaited_events = {0};
+  sysevents_t signalled_events = {0};
+  nfc_event_t event_flag;
+  
+  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
+  
+  while (true) {
+
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "Aborted.");
+      goto cleanup;
+    }
+
+    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
+
+    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC) == 0) {
+      continue;
+    }
+
+    if (!nfc_get_event(&event_flag)) {
+      continue;
+    }
+
+    if (event_flag == NFC_EVENT_CONNECTED) {
+      
+      cli_trace(cli, "NFC card detected.");
+
+      nfc_dev_info_t dev_info;
+      nfc_get_device_info(&dev_info);
+
+      if (dev_info.type != NFC_DEV_TYPE_A) {
+        cli_error(cli, PRODTEST_ERR_NFC_BACKUP_UNEXPECTED_CARD_TYPE,
+                  "Unexpected card type (%d)", dev_info.type);
+        goto cleanup;
+      }
+
+      // Call ON-TAP callback function
+      status = (callback)(cli);
+      TSH_CHECK_OK(status);
+      break;
+
+    }
+  }
+
+cleanup:
+  TSH_RETURN;
+
+}
+
+static void nfc_poll_stop(void) {
+  nfc_stop_discovery();
+  nfc_deinit();
+}
+
+static ts_t nfc_backup_tap(cli_t *cli, on_tap_callback_t callback) {
+  ts_t status;
+
+  status = nfc_poll_start(cli);
+  if (ts_error(status)) {
+    return  status;
+  }
+
+  status = nfc_wait_for_tap(cli, callback);
+  if (ts_error(status)) {
+    nfc_poll_stop();
+    return status;
+  }
+
+  nfc_poll_stop();
+  return TS_OK;
+}
+
+
 // Helper to parse ASN.1 Tag-Length-Value (TLV) headers
 static const uint8_t *asn1_parse_header(const uint8_t *p, const uint8_t *end, 
                                         uint8_t *tag, size_t *len) {
@@ -315,7 +431,6 @@ static void print_certificate(cli_t *cli, nfc_backup_certificate_t const* cert){
 
 }
 
-
 static ts_t nfc_backup_compose_apdu(uint8_t cla, uint8_t ins, uint8_t p1,
                                     uint8_t p2, const uint8_t* data,
                                     size_t data_len, nfc_apdu_message_t* apdu) {
@@ -351,6 +466,7 @@ cleanup:
 }
 
 static ts_t nfc_backup_noise(cli_t* cli, uint8_t (*psk)[32]) {
+
   TSH_DECLARE;
   ts_t status;
 
@@ -418,6 +534,7 @@ cleanup:
 }
 
 static ts_t nfc_backup_handshake(cli_t* cli) {
+
   TSH_DECLARE;
   ts_t status = TS_OK;
 
@@ -463,7 +580,7 @@ static ts_t nfc_backup_handshake(cli_t* cli) {
 
   status = nfc_backup_noise(cli, &psk);
   if (ts_error(status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_NOISE_HANDSHAKE_FAILED,
+    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_NOISE_FAILED,
               "NFC noise handshake failed");
     goto cleanup;
   }
@@ -474,278 +591,94 @@ cleanup:
   return status;
 }
 
+
+
+static ts_t nfc_backup_read_pin_counter(cli_t* cli) {
+  
+  TSH_DECLARE;
+  ts_t status;
+
+  nfc_apdu_message_t cmd = {0};
+  nfc_apdu_message_t rsp = {0};
+
+  status = nfc_backup_compose_apdu(0x80, 0x02, 0x00, 0x00, NULL, 0, &cmd);
+  TSH_CHECK_OK(status);
+
+  status = nfc_transceive(&cmd, &rsp);
+  TSH_CHECK_OK(status);
+
+  TSH_CHECK(rsp.data_len == 3U, TS_EINVAL);
+  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U && rsp.data[rsp.data_len - 1] == 0x00U, TS_EINVAL);
+
+  uint8_t pin_counter = rsp.data[0];
+  cli_trace(cli, "PIN counter: %u", pin_counter);
+
+cleanup:
+  TSH_RETURN;
+
+}
+ 
+static ts_t nfc_backup_activate_flashloader(cli_t* cli) {
+  
+  TSH_DECLARE;
+  ts_t status;
+
+  nfc_apdu_message_t cmd = {
+    .data = {0xC2, 0xA0, 0x00, 0x00, 0x00},
+    .data_len = 5
+  };
+  nfc_apdu_message_t rsp = {0};
+
+  status = nfc_transceive(&cmd, &rsp);
+  TSH_CHECK_OK(status);
+
+  TSH_CHECK(rsp.data_len == 2U, TS_EINVAL);
+  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U && rsp.data[rsp.data_len - 1] == 0x00U, TS_EINVAL);
+
+cleanup:
+  TSH_RETURN;
+}
+
 static void prodtest_nfc_backup_handshake(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
+  
+  ts_t status = nfc_backup_tap(cli, &nfc_backup_handshake);
 
-  ts_t status;
-
-  status = nfc_init();
   if (ts_error(status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_INIT, "NFC initialization failed");
-    goto cleanup;
+    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_HANDSHAKE_FAILED,
+              "NFC handshake failed");
+  } else {
+    cli_ok(cli, "");
   }
 
-  status = nfc_start_discovery();
-  if (ts_error(status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_DISCOVERY,
-              "NFC start discovery failed");
-    goto cleanup;
-  }
-
-  cli_trace(cli, "Tap NFC backup card.");
-
-  // Clear leftover events
-  nfc_event_t event_flag;
-  sysevents_t awaited_events = {0};
-  sysevents_t signalled_events = {0};
-
-  nfc_get_event(&event_flag);
-  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
-  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
-
-  while (true) {
-    if (cli_aborted(cli)) {
-      cli_trace(cli, "Aborted.");
-      goto cleanup;
-    }
-
-    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
-
-    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC) == 0) {
-      continue;
-    }
-
-    if (!nfc_get_event(&event_flag)) {
-      continue;
-    }
-
-    if (event_flag == NFC_EVENT_CONNECTED) {
-      cli_trace(cli, "NFC card detected.");
-
-      nfc_dev_info_t dev_info;
-      nfc_get_device_info(&dev_info);
-      if (dev_info.type != NFC_DEV_TYPE_A) {
-        cli_error(cli, PRODTEST_ERR_NFC_BACKUP_UNEXPECTED_CARD_TYPE,
-                  "Unexpected card type (%d)", dev_info.type);
-        goto cleanup;
-      }
-
-      status = nfc_backup_handshake(cli);
-
-      break;
-    }
-  }
-
-  cli_ok(cli, "");
-
-cleanup:
-  nfc_stop_discovery();
-  nfc_deinit();
 }
 
-static void prodtest_nfc_backup_large_message(cli_t* cli) {
+static void prodtest_nfc_backup_read_pin_counter(cli_t* cli) {
+  
+  ts_t status = nfc_backup_tap(cli, &nfc_backup_read_pin_counter);
 
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  ts_t status;
-
-  status = nfc_init();
   if (ts_error(status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_INIT, "NFC initialization failed");
-    goto cleanup;
+    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_READ_PIN_COUNTER_FAILED,
+              "NFC read PIN counter failed");
+  } else {
+    cli_ok(cli, "");
   }
 
-  status = nfc_start_discovery();
-  if (ts_error(status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_DISCOVERY,
-              "NFC start discovery failed");
-    goto cleanup;
-  }
-
-  cli_trace(cli, "Tap NFC backup card.");
-
-  // Clear leftover events
-  nfc_event_t event_flag;
-  sysevents_t awaited_events = {0};
-  sysevents_t signalled_events = {0};
-
-  nfc_get_event(&event_flag);
-  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
-  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
-
-  while (true) {
-    if (cli_aborted(cli)) {
-      cli_trace(cli, "Aborted.");
-      goto cleanup;
-    }
-
-    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
-
-    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC) == 0) {
-      continue;
-    }
-
-    if (!nfc_get_event(&event_flag)) {
-      continue;
-    }
-
-    if (event_flag == NFC_EVENT_CONNECTED) {
-      cli_trace(cli, "NFC card detected.");
-
-      nfc_dev_info_t dev_info;
-      nfc_get_device_info(&dev_info);
-      if (dev_info.type != NFC_DEV_TYPE_A) {
-        cli_error(cli, PRODTEST_ERR_NFC_BACKUP_UNEXPECTED_CARD_TYPE,
-                  "Unexpected card type (%d)", dev_info.type);
-        goto cleanup;
-      }
-
-      nfc_apdu_message_t cmd = {0};
-      nfc_apdu_message_t resp = {0};
-      char text[1100] = {0};
-      uint8_t data[500] = {0};
-
-      for (size_t i = 0; i < sizeof(data); i++) {
-        data[i] = (uint8_t)i;
-      }
-
-      status = nfc_backup_compose_apdu(0xCC, 0x01, 0x00, 0x00, data, sizeof(data), &cmd);
-      if(ts_error(status)) {
-        cli_error(cli, PRODTEST_ERR_NFC_BACKUP_LARGE_MESSAGE_FAILED,
-                  "Failed to compose large message APDU");
-        goto cleanup;
-      }
-
-      cli_trace(cli, "Sending large message of size: %zu bytes", cmd.data_len);
-
-      if(!cstr_encode_hex(text, sizeof(text), cmd.data, cmd.data_len)) {
-        cli_error(cli, PRODTEST_ERR_NFC_BACKUP_LARGE_MESSAGE_FAILED,
-                  "Failed to encode large message to hex");
-        goto cleanup;
-      }
-
-      cli_trace(cli, "Sending large message: %s", text);
-
-      status = nfc_transceive(&cmd, &resp);
-
-      if (ts_error(status)) {
-        cli_error(cli, PRODTEST_ERR_NFC_BACKUP_LARGE_MESSAGE_FAILED,
-                  "NFC large message test failed");
-        goto cleanup;
-      }else{
-
-        cstr_encode_hex(text, sizeof(text), resp.data, resp.data_len);
-        cli_trace(cli, "Received response: %s", text);
-
-      }
-
-      break;
-    }
-  }
-
-  cli_ok(cli, "");
-
-cleanup:
-  nfc_stop_discovery();
-  nfc_deinit();
 }
+
 
 static void prodtest_nfc_backup_activate_flashloader(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
 
-  ts_t status;
+  ts_t status = nfc_backup_tap(cli, &nfc_backup_activate_flashloader);
 
-  status = nfc_init();
   if (ts_error(status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_INIT, "NFC initialization failed");
-    goto cleanup;
+    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_ACTIVATE_FLASHLOADER_FAILED,
+              "NFC activate flashloader failed");
+  } else {
+    cli_ok(cli, "");
   }
-
-  status = nfc_start_discovery();
-  if (ts_error(status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_DISCOVERY,
-              "NFC start discovery failed");
-    goto cleanup;
-  }
-
-  cli_trace(cli, "Tap NFC backup card.");
-
-  // Clear leftover events
-  nfc_event_t event_flag;
-  sysevents_t awaited_events = {0};
-  sysevents_t signalled_events = {0};
-
-  nfc_get_event(&event_flag);
-  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
-  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
-
-  while (true) {
-    if (cli_aborted(cli)) {
-      cli_trace(cli, "Aborted.");
-      goto cleanup;
-    }
-
-    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
-
-    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC) == 0) {
-      continue;
-    }
-
-    if (!nfc_get_event(&event_flag)) {
-      continue;
-    }
-
-    if (event_flag == NFC_EVENT_CONNECTED) {
-      
-      cli_trace(cli, "NFC card detected.");
-
-      nfc_dev_info_t dev_info;
-      nfc_get_device_info(&dev_info);
-      if (dev_info.type != NFC_DEV_TYPE_A) {
-        cli_error(cli, PRODTEST_ERR_NFC_BACKUP_UNEXPECTED_CARD_TYPE,
-                  "Unexpected card type (%d)", dev_info.type);
-        goto cleanup;
-      }
-
-      nfc_apdu_message_t cmd = {
-        .data = {0xC2, 0xA0, 0x00, 0x00, 0x00}, .data_len = 5};
-      nfc_apdu_message_t resp = {0};
-
-
-      status = nfc_transceive(&cmd, &resp);
-      
-      if (ts_error(status)) {
-        cli_error(cli, PRODTEST_ERR_NFC_BACKUP_LARGE_MESSAGE_FAILED,
-                  "Command failed.");
-        goto cleanup;
-      }else{
-        
-        char text[20] = {0};
-        cstr_encode_hex(text, sizeof(text), resp.data, resp.data_len);
-        cli_trace(cli, "Received response: %s", text);
-        break;
-
-      }
-    }
-
-  }
-
-cli_ok(cli, "");
-
-cleanup:
-  nfc_stop_discovery();
-  nfc_deinit();
 
 }
+
 
 // clang-format off
 
@@ -757,11 +690,32 @@ PRODTEST_CLI_CMD(
 );
 
 PRODTEST_CLI_CMD(
-  .name = "nfc-backup-large_message",
-  .func = prodtest_nfc_backup_large_message,
-  .info = "Run nfc-backup large message test",
+  .name = "nfc-backup-read-pin-counter",
+  .func = prodtest_nfc_backup_read_pin_counter,
+  .info = "Run nfc-backup read pin counter",
   .args = ""
 );
+
+// PRODTEST_CLI_CMD(
+//   .name = "nfc-backup-read-success-log",
+//   .func = prodtest_nfc_backup_read_success_log,
+//   .info = "Run nfc-backup read success log",
+//   .args = ""
+// );
+
+// PRODTEST_CLI_CMD(
+//   .name = "nfc-backup-read-failure-logs",
+//   .func = prodtest_nfc_backup_read_failure_logs,
+//   .info = "Run nfc-backup read failure logs",
+//   .args = ""
+// );
+
+// PRODTEST_CLI_CMD(
+//   .name = "nfc-backup-read-seed-metadata",
+//   .func = prodtest_nfc_backup_read_seed_metadata,
+//   .info = "Run nfc-backup read seed metadata",
+//   .args = ""
+// );
 
 PRODTEST_CLI_CMD(
   .name = "nfc-backup-activate-flashloader",
@@ -769,5 +723,8 @@ PRODTEST_CLI_CMD(
   .info = "Run nfc-backup activate flashloader test",
   .args = ""
 );
+
+
+
 
 #endif  // USE_NFC

@@ -1968,12 +1968,22 @@
     },
     {
       "code": 26014,
-      "name": "PRODTEST_ERR_NFC_BACKUP_NOISE_HANDSHAKE_FAILED",
+      "name": "PRODTEST_ERR_NFC_BACKUP_NOISE_FAILED",
       "module": "nfc-backup"
     },
     {
       "code": 26015,
-      "name": "PRODTEST_ERR_NFC_BACKUP_LARGE_MESSAGE_FAILED",
+      "name": "PRODTEST_ERR_NFC_BACKUP_HANDSHAKE_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26016,
+      "name": "PRODTEST_ERR_NFC_BACKUP_READ_PIN_COUNTER_FAILED",
+      "module": "nfc-backup"
+    },
+    {
+      "code": 26017,
+      "name": "PRODTEST_ERR_NFC_BACKUP_ACTIVATE_FLASHLOADER_FAILED",
       "module": "nfc-backup"
     }
   ]
