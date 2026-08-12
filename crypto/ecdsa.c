@@ -936,18 +936,45 @@ void compress_coords(const curve_point *cp, uint8_t *compressed) {
   bn_write_be(&cp->x, compressed + 1);
 }
 
-void uncompress_coords(const ecdsa_curve *curve, uint8_t odd,
-                       const bignum256 *x, bignum256 *y) {
+// Computes the y coordinate with the given parity of the curve point with the
+// given x coordinate. On success (x, y) is a valid public key, in case of
+// failure y is set to zero.
+int uncompress_coords(const ecdsa_curve *curve, uint8_t odd, const bignum256 *x,
+                      bignum256 *y) {
+  bignum256 y_2 = {0}, y_2_check = {0};
+
+  // verify x is in range [0,p-1]
+  if (!bn_is_less(x, &curve->prime)) {
+    bn_zero(y);
+    return 0;
+  }
+
   // y^2 = x^3 + a*x + b
-  memcpy(y, x, sizeof(bignum256));       // y is x
-  bn_multiply(x, y, &curve->prime);      // y is x^2
-  bn_subi(y, -curve->a, &curve->prime);  // y is x^2 + a
-  bn_multiply(x, y, &curve->prime);      // y is x^3 + ax
-  bn_add(y, &curve->b);                  // y is x^3 + ax + b
-  bn_sqrt(y, &curve->prime);             // y = sqrt(y)
+  memcpy(&y_2, x, sizeof(bignum256));         // y_2 is x
+  bn_multiply(x, &y_2, &curve->prime);        // y_2 is x^2
+  bn_subi(&y_2, -curve->a, &curve->prime);    // y_2 is x^2 + a
+  bn_multiply(x, &y_2, &curve->prime);        // y_2 is x^3 + ax
+  bn_addmod(&y_2, &curve->b, &curve->prime);  // y_2 is x^3 + ax + b
+  bn_mod(&y_2, &curve->prime);
+
+  bn_copy(&y_2, y);
+  bn_sqrt(y, &curve->prime);  // y = sqrt(y_2)
+
+  // bn_sqrt() returns a meaningless value if y_2 is not a quadratic residue
+  bn_copy(y, &y_2_check);
+  bn_multiply(y, &y_2_check, &curve->prime);  // y_2_check is y^2
+  bn_mod(&y_2_check, &curve->prime);
+  if (!bn_is_equal(&y_2_check, &y_2)) {
+    // x is invalid (x^3 + ax + b is a non-residue)
+    bn_zero(y);
+    return 0;
+  }
+
   if ((odd & 0x01) != (y->val[0] & 1)) {
     bn_subtract(&curve->prime, y, y);  // y = -y
   }
+
+  return 1;
 }
 
 int ecdsa_read_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key,
@@ -962,8 +989,8 @@ int ecdsa_read_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key,
   }
   if (pub_key[0] == 0x02 || pub_key[0] == 0x03) {  // compute missing y coords
     bn_read_be(pub_key + 1, &(pub->x));
-    uncompress_coords(curve, pub_key[0], &(pub->x), &(pub->y));
-    return ecdsa_validate_pubkey(curve, pub);
+    // uncompress_coords validates the resulting point
+    return uncompress_coords(curve, pub_key[0], &(pub->x), &(pub->y));
   }
   // error
   return 0;
@@ -1045,13 +1072,9 @@ int tc_ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key,
   memcpy(&cp.x, &r, sizeof(bignum256));
   if (recid & 2) {
     bn_add(&cp.x, &curve->order);
-    if (!bn_is_less(&cp.x, &curve->prime)) {
-      return 1;
-    }
   }
-  // compute y from x
-  uncompress_coords(curve, recid & 1, &cp.x, &cp.y);
-  if (!ecdsa_validate_pubkey(curve, &cp)) {
+  // compute y from x and validate the point
+  if (!uncompress_coords(curve, recid & 1, &cp.x, &cp.y)) {
     return 1;
   }
   // e = -digest

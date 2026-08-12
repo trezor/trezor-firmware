@@ -10413,7 +10413,7 @@ static void test_compress_coord(const char *k_raw) {
 
   bignum256 x = {0}, y = {0};
   bn_read_be(compress + 1, &x);
-  uncompress_coords(curve, compress[0], &x, &y);
+  ck_assert_int_eq(uncompress_coords(curve, compress[0], &x, &y), 1);
 
   ck_assert(bn_is_equal(&expected_coords.x, &x));
   ck_assert(bn_is_equal(&expected_coords.y, &y));
@@ -10435,6 +10435,57 @@ START_TEST(test_compress_coords) {
 
   for (int i = 0; i < (int)(sizeof(k_raw) / sizeof(*k_raw)); i++)
     test_compress_coord(k_raw[i]);
+}
+END_TEST
+
+static void test_uncompress_coord_invalid(const ecdsa_curve *curve,
+                                          const bignum256 *x) {
+  bignum256 y = {0};
+
+  for (uint8_t odd = 0x02; odd <= 0x03; odd++) {
+    bn_one(&y);
+    ck_assert_int_eq(uncompress_coords(curve, odd, x, &y), 0);
+    ck_assert(bn_is_zero(&y));
+  }
+}
+
+static void test_uncompress_coord_non_residue(const ecdsa_curve *curve,
+                                              uint32_t x_raw) {
+  bignum256 x = {0};
+  bn_read_uint32(x_raw, &x);
+  test_uncompress_coord_invalid(curve, &x);
+}
+
+static void test_uncompress_coord_out_of_range(const ecdsa_curve *curve) {
+  bignum256 x = {0};
+
+  // x == prime
+  bn_copy(&curve->prime, &x);
+  test_uncompress_coord_invalid(curve, &x);
+
+  // x == prime + 1
+  bn_addi(&x, 1);
+  test_uncompress_coord_invalid(curve, &x);
+
+  // x == 2^256 - 1
+  bn_read_be(
+      fromhex(
+          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+      &x);
+  test_uncompress_coord_invalid(curve, &x);
+}
+
+START_TEST(test_uncompress_coords_invalid) {
+  // x coordinates for which x^3 + a*x + b is not a quadratic residue,
+  // i.e. there is no curve point with the given x coordinate
+  test_uncompress_coord_non_residue(&secp256k1, 5);
+  test_uncompress_coord_non_residue(&secp256k1, 7);
+  test_uncompress_coord_non_residue(&nist256p1, 1);
+  test_uncompress_coord_non_residue(&nist256p1, 2);
+
+  // x coordinates which are not fully reduced modulo prime
+  test_uncompress_coord_out_of_range(&secp256k1);
+  test_uncompress_coord_out_of_range(&nist256p1);
 }
 END_TEST
 
@@ -12461,6 +12512,7 @@ Suite *test_suite(void) {
 
   tc = tcase_create("compress_coords");
   tcase_add_test(tc, test_compress_coords);
+  tcase_add_test(tc, test_uncompress_coords_invalid);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("zkp_bip340");
