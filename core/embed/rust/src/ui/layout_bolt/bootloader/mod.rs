@@ -361,7 +361,7 @@ impl BootloaderUI for UIBolt {
         warning: bool,
         vendor_str: Option<&str>,
         version: [u8; 4],
-        vendor_img: &'static [u8],
+        vendor_img: &[u8],
         wait: i32,
     ) {
         let bg_color = if warning {
@@ -442,7 +442,7 @@ impl BootloaderUI for UIBolt {
     }
 
     #[cfg(feature = "ble")]
-    fn screen_pairing_mode(initial_setup: bool, _name: &'static str) -> (u32, u32) {
+    fn screen_pairing_mode(initial_setup: bool, _name: &str) -> (u32, u32) {
         let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
 
         let btn = if initial_setup {

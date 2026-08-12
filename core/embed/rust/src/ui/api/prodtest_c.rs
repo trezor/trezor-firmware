@@ -2,7 +2,7 @@
 use cty::int16_t;
 #[cfg(feature = "touch")]
 use heapless::Vec;
-use rtl::util::from_c_array;
+use rtl::CSlice;
 
 use crate::trezorhal::layout_buf::{c_layout_t, LayoutBuffer};
 use crate::trezorhal::sysevent::{parse_event, sysevents_t};
@@ -27,13 +27,11 @@ extern "C" fn screen_prodtest_event(layout: *mut c_layout_t, signalled: &syseven
 
 #[no_mangle]
 extern "C" fn screen_prodtest_welcome(layout: *mut c_layout_t, id: *const cty::c_char, id_len: u8) {
-    let id = if id.is_null() {
-        None
-    } else {
-        unsafe { from_c_array(id, id_len as usize) }
-    };
+    let id = unsafe { CSlice::from_ptr_and_len(id, id_len as usize) };
 
-    let mut screen = <ModelUI as ProdtestUI>::CLayoutType::init_welcome(id);
+    let mut screen = <ModelUI as ProdtestUI>::CLayoutType::init_welcome(unsafe {
+        id.into_unbounded_ascii_str()
+    });
     screen.show();
     // SAFETY: calling code is supposed to give us exclusive access to the layout
     let mut layout = unsafe { LayoutBuffer::new(layout) };
@@ -42,9 +40,9 @@ extern "C" fn screen_prodtest_welcome(layout: *mut c_layout_t, id: *const cty::c
 
 #[no_mangle]
 extern "C" fn screen_prodtest_show_text(text: *const cty::c_char, text_len: u8) {
-    let text = unwrap!(unsafe { from_c_array(text, text_len as usize) });
+    let text = unsafe { CSlice::from_ptr_and_len(text, text_len as usize) };
 
-    ModelUI::screen_prodtest_show_text(text);
+    ModelUI::screen_prodtest_show_text(text.as_ascii_str().unwrap_or_default());
 }
 
 #[no_mangle]
@@ -54,8 +52,8 @@ extern "C" fn screen_prodtest_border() {
 
 #[no_mangle]
 extern "C" fn screen_prodtest_bars(colors: *const cty::c_char, colors_len: u8) {
-    let colors: &str = unwrap!(unsafe { from_c_array(colors, colors_len as usize) });
-    ModelUI::screen_prodtest_bars(colors);
+    let colors = unsafe { CSlice::from_ptr_and_len(colors, colors_len as usize) };
+    ModelUI::screen_prodtest_bars(colors.as_ascii_str().unwrap_or_default());
 }
 
 #[no_mangle]

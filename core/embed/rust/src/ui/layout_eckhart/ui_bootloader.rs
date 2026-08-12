@@ -112,7 +112,7 @@ impl BootloaderUI for UIEckhart {
     }
 
     #[cfg(feature = "ble")]
-    fn screen_pairing_mode(initial_setup: bool, name: &'static str) -> (u32, u32) {
+    fn screen_pairing_mode(initial_setup: bool, name: &str) -> (u32, u32) {
         let mut screen = PairingModeScreen::new(name.into());
         if !initial_setup {
             screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
@@ -121,7 +121,7 @@ impl BootloaderUI for UIEckhart {
     }
 
     #[cfg(feature = "ble")]
-    fn screen_wireless_setup(name: &'static str) -> (u32, u32) {
+    fn screen_wireless_setup(name: &str) -> (u32, u32) {
         let mut screen = WirelessSetupScreen::new(name.into());
         run(&mut screen, true, true)
     }
@@ -397,7 +397,7 @@ impl BootloaderUI for UIEckhart {
         warning: bool,
         vendor_str: Option<&str>,
         version: [u8; 4],
-        vendor_img: &'static [u8],
+        vendor_img: &[u8],
         wait: i32,
     ) {
         let bg_color = if warning {
