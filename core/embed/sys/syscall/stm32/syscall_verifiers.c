@@ -1019,7 +1019,12 @@ access_violation:
 }
 
 uint8_t ble_get_bond_list__verified(bt_le_addr_t *bonds, size_t count) {
-  if (!probe_write_access(bonds, sizeof(bt_le_addr_t) * count)) {
+  // Reject counts for which the size below would overflow
+  if (count > SIZE_MAX / sizeof(*bonds)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bonds, sizeof(*bonds) * count)) {
     goto access_violation;
   }
 
