@@ -208,7 +208,9 @@ access_violation:
 
 bool ipc_send__verified(systask_id_t remote, uint32_t fn, const void *data,
                         size_t data_size) {
-  if (!probe_read_access(data, data_size)) {
+  // NULL data is allowed for a zero-length message, `ipc_send()` rejects it
+  // for any other size
+  if (!probe_read_access_opt(data, data_size)) {
     goto access_violation;
   }
 
@@ -429,7 +431,8 @@ access_violation:
 }
 
 secbool usb_start__verified(const usb_start_params_t *params) {
-  if (!probe_read_access(params, sizeof(*params))) {
+  // NULL params is allowed and keeps the settings from usb_init()
+  if (!probe_read_access_opt(params, sizeof(*params))) {
     goto access_violation;
   }
 
@@ -658,7 +661,8 @@ access_violation:
 
 #ifdef USE_TELEMETRY
 bool telemetry_get__verified(telemetry_data_t *out) {
-  if (!probe_write_access(out, sizeof(*out))) {
+  // NULL out is allowed and only queries whether telemetry is available
+  if (!probe_write_access_opt(out, sizeof(*out))) {
     goto access_violation;
   }
 
@@ -685,7 +689,8 @@ static secbool storage_callback_wrapper(uint32_t wait, uint32_t progress,
 }
 
 void storage_setup__verified(PIN_UI_WAIT_CALLBACK callback) {
-  if (!probe_execute_access(callback)) {
+  // NULL callback is allowed and disables the UI progress callback
+  if (!probe_execute_access_opt(callback)) {
     goto access_violation;
   }
   storage_callback = callback;
@@ -704,7 +709,8 @@ storage_unlock_result_t storage_unlock__verified(const uint8_t *pin,
     goto access_violation;
   }
 
-  if (!probe_read_access(ext_salt, EXTERNAL_SALT_SIZE)) {
+  // NULL ext_salt is allowed and means no external salt is used
+  if (!probe_read_access_opt(ext_salt, EXTERNAL_SALT_SIZE)) {
     goto access_violation;
   }
 
@@ -721,7 +727,8 @@ storage_pin_change_result_t storage_change_pin__verified(
     goto access_violation;
   }
 
-  if (!probe_read_access(new_ext_salt, EXTERNAL_SALT_SIZE)) {
+  // NULL new_ext_salt is allowed and means no external salt is used
+  if (!probe_read_access_opt(new_ext_salt, EXTERNAL_SALT_SIZE)) {
     goto access_violation;
   }
 
@@ -753,7 +760,8 @@ secbool storage_change_wipe_code__verified(const uint8_t *pin, size_t pin_len,
     goto access_violation;
   }
 
-  if (!probe_read_access(ext_salt, EXTERNAL_SALT_SIZE)) {
+  // NULL ext_salt is allowed and means no external salt is used
+  if (!probe_read_access_opt(ext_salt, EXTERNAL_SALT_SIZE)) {
     goto access_violation;
   }
 
@@ -771,7 +779,8 @@ access_violation:
 
 secbool storage_get__verified(const uint16_t key, void *val,
                               const uint16_t max_len, uint16_t *len) {
-  if (!probe_write_access(val, max_len)) {
+  // NULL val is allowed and queries the value length only
+  if (!probe_write_access_opt(val, max_len)) {
     goto access_violation;
   }
 
@@ -908,7 +917,8 @@ access_violation:
 #ifdef USE_BLE
 
 bool ble_enter_pairing_mode__verified(const uint8_t *name, size_t name_len) {
-  if (!probe_read_access(name, name_len)) {
+  // NULL name is allowed and keeps the advertising name unchanged
+  if (!probe_read_access_opt(name, name_len)) {
     goto access_violation;
   }
 
@@ -995,7 +1005,8 @@ access_violation:
 }
 
 bool ble_unpair__verified(const bt_le_addr_t *addr) {
-  if (!probe_read_access(addr, sizeof(*addr))) {
+  // NULL addr is allowed and unpairs the currently connected device
+  if (!probe_read_access_opt(addr, sizeof(*addr))) {
     goto access_violation;
   }
 
@@ -1089,7 +1100,8 @@ access_violation:
 }
 
 pm_status_t pm_suspend__verified(wakeup_flags_t *wakeup_reason) {
-  if (!probe_write_access(wakeup_reason, sizeof(*wakeup_reason))) {
+  // NULL wakeup_reason is allowed and means the caller isn't interested
+  if (!probe_write_access_opt(wakeup_reason, sizeof(*wakeup_reason))) {
     goto access_violation;
   }
 
