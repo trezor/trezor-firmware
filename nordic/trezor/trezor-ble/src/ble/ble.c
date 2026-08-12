@@ -148,12 +148,19 @@ void ble_write_thread(void) {
     /* Wait indefinitely for data to be sent over bluetooth */
     trz_packet_t *buf = trz_comm_poll_data(NRF_SERVICE_BLE);
 
+    // The address prefix is stripped below, so it has to be there
+    if (buf->len < BLE_RX_ADDR_PREFIX_SIZE) {
+      LOG_WRN("Data too short (%u bytes), dropping", buf->len);
+      k_free(buf);
+      continue;
+    }
+
     struct bt_conn *conn = connection_get_current();
 
     if (conn == NULL) {
       LOG_WRN("No active BLE connection, cannot send data");
       k_free(buf);
-      return;
+      continue;
     }
 
     const bt_addr_le_t *addr = bt_conn_get_dst(conn);
@@ -162,12 +169,20 @@ void ble_write_thread(void) {
         memcmp(addr->a.val, &buf->data[1], BT_ADDR_SIZE) != 0) {
       LOG_WRN("Address mismatch, cannot send data");
       k_free(buf);
-      return;
+      continue;
     }
 
     trz_packet_t *data_to_send = k_malloc(sizeof(*data_to_send));
-    data_to_send->len = buf->len - 1 - BT_ADDR_SIZE;
-    memcpy(data_to_send->data, &buf->data[1 + BT_ADDR_SIZE], data_to_send->len);
+
+    if (data_to_send == NULL) {
+      LOG_WRN("Not able to allocate send buffer");
+      k_free(buf);
+      continue;
+    }
+
+    data_to_send->len = buf->len - BLE_RX_ADDR_PREFIX_SIZE;
+    memcpy(data_to_send->data, &buf->data[BLE_RX_ADDR_PREFIX_SIZE],
+           data_to_send->len);
     k_free(buf);
 
     if (service_send(conn, data_to_send)) {
