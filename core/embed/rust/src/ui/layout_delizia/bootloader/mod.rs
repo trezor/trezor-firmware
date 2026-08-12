@@ -396,7 +396,7 @@ impl BootloaderUI for UIDelizia {
         warning: bool,
         vendor_str: Option<&str>,
         version: [u8; 4],
-        vendor_img: &'static [u8],
+        vendor_img: &[u8],
         wait: i32,
     ) {
         let bg_color = if warning {

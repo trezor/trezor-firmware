@@ -1,4 +1,4 @@
-use rtl::util::{from_c_array, from_c_str};
+use rtl::CSlice;
 
 use crate::strutil::hexlify;
 use crate::ui::ui_bootloader::BootloaderUI;
@@ -38,8 +38,8 @@ extern "C" fn screen_install_confirm(
     is_newinstall: bool,
     version_cmp: cty::c_int,
 ) -> u32 {
-    let text = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
-    let version = unwrap!(unsafe { from_c_str(version) });
+    let text = unsafe { CSlice::from_ptr_and_len(vendor_str, vendor_str_len as usize) };
+    let version = unsafe { CSlice::from_c_str(version) };
 
     let mut fingerprint_buffer: [u8; 64] = [0; 64];
     let fingerprint_str = unsafe {
@@ -49,8 +49,8 @@ extern "C" fn screen_install_confirm(
     };
 
     ModelUI::screen_install_confirm(
-        text,
-        version,
+        unwrap!(text.as_ascii_str()),
+        unwrap!(version.as_ascii_str()),
         fingerprint_str,
         should_keep_seed,
         is_newvendor,
@@ -95,11 +95,16 @@ extern "C" fn screen_intro(
     version: *const cty::c_char,
     fw_ok: bool,
 ) -> u32 {
-    let vendor = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
-    let version = unwrap!(unsafe { from_c_str(version) });
-    let bld_version = unwrap!(unsafe { from_c_str(bld_version) });
+    let vendor = unsafe { CSlice::from_ptr_and_len(vendor_str, vendor_str_len as usize) };
+    let version = unsafe { CSlice::from_c_str(version) };
+    let bld_version = unsafe { CSlice::from_c_str(bld_version) };
 
-    ModelUI::screen_intro(bld_version, vendor, version, fw_ok)
+    ModelUI::screen_intro(
+        unwrap!(bld_version.as_ascii_str()),
+        unwrap!(vendor.as_ascii_str()),
+        unwrap!(version.as_ascii_str()),
+        fw_ok,
+    )
 }
 
 #[no_mangle]
@@ -122,7 +127,9 @@ extern "C" fn screen_boot(
     vendor_img_len: usize,
     wait: i32,
 ) {
-    let vendor_str = unsafe { from_c_array(vendor_str, vendor_str_len) };
+    let vendor_str = unsafe { CSlice::from_ptr_and_len(vendor_str, vendor_str_len as usize) };
+    // vendor_img MUST be a pointer to 'static memory, which is why we're
+    // sidestepping CSlice's rules
     let vendor_img =
         unsafe { core::slice::from_raw_parts(vendor_img as *const u8, vendor_img_len) };
 
@@ -130,7 +137,13 @@ extern "C" fn screen_boot(
     // starting with the major version.
     let version = version.to_le_bytes();
 
-    ModelUI::screen_boot(warning, vendor_str, version, vendor_img, wait);
+    ModelUI::screen_boot(
+        warning,
+        vendor_str.as_ascii_str(),
+        version,
+        vendor_img,
+        wait,
+    )
 }
 
 #[no_mangle]
@@ -185,9 +198,10 @@ extern "C" fn screen_pairing_mode(
     name_len: usize,
     ui_action_result: *mut u32,
 ) -> u32 {
-    let name = unsafe { from_c_array(name, name_len).unwrap_or("") };
+    let name = unsafe { CSlice::from_ptr_and_len(name, name_len as usize) };
 
-    let (res, ui_res) = ModelUI::screen_pairing_mode(initial_setup, name);
+    let (res, ui_res) =
+        ModelUI::screen_pairing_mode(initial_setup, name.as_ascii_str().unwrap_or_default());
     unsafe {
         *ui_action_result = ui_res;
     }
@@ -201,9 +215,9 @@ extern "C" fn screen_wireless_setup(
     name_len: usize,
     ui_action_result: *mut u32,
 ) -> u32 {
-    let name = unsafe { from_c_array(name, name_len).unwrap_or("") };
+    let name = unsafe { CSlice::from_ptr_and_len(name, name_len as usize) };
 
-    let (res, ui_res) = ModelUI::screen_wireless_setup(name);
+    let (res, ui_res) = ModelUI::screen_wireless_setup(name.as_ascii_str().unwrap_or_default());
     unsafe {
         *ui_action_result = ui_res;
     }
