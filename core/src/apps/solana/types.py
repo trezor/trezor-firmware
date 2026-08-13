@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
     T = TypeVar("T")
 else:
-    IntEnum = object
+    IntEnum = int
     T = 0
     Generic = {T: object}
 

@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     # but not (None, somelist)
     OptionalTuple2 = tuple[None, None] | tuple[A, B]
 else:
-    IntEnum = object
+    IntEnum = int
 
 
 class Encoding(IntEnum):
