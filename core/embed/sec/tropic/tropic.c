@@ -23,6 +23,7 @@
 #include <sec/rng_strong.h>
 #include <sec/secret_keys.h>
 #include <sec/tropic.h>
+#include <sys/rng_use_flags.h>
 #include <sys/systick.h>
 
 #include "bignum.h"
@@ -1186,6 +1187,8 @@ bool tropic_random_buffer(void *buffer, size_t length) {
     dst += chunk;
     remaining -= chunk;
   }
+
+  rng_use_flag_set(RNG_TYPE_TROPIC);
 
   return true;
 }
