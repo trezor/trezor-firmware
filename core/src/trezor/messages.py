@@ -7955,6 +7955,40 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDGetEntry"]:
             return isinstance(msg, cls)
 
+    class WARDSetEntry(protobuf.MessageType):
+        app_id: "str | None"
+        identifier: "AnyBytes | None"
+        value: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            app_id: "str | None" = None,
+            identifier: "AnyBytes | None" = None,
+            value: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSetEntry"]:
+            return isinstance(msg, cls)
+
+    class WARDDeleteEntry(protobuf.MessageType):
+        app_id: "str | None"
+        identifier: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            app_id: "str | None" = None,
+            identifier: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDeleteEntry"]:
+            return isinstance(msg, cls)
+
     class WARDEntryRequest(protobuf.MessageType):
         app_id: "str | None"
         identifier: "AnyBytes | None"

@@ -767,6 +767,8 @@ if TYPE_CHECKING:
         WARDGetEntry = 2300
         WARDEntryRequest = 2301
         WARDEntryAck = 2302
+        WARDSetEntry = 2303
+        WARDDeleteEntry = 2304
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

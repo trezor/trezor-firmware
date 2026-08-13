@@ -12,6 +12,13 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
  * mid-workflow: it emits WARDEntryRequest naming what it wants, the host answers
  * WARDEntryAck, and the device displays the value.
  *
+ * Reads (WARDGetEntry) and writes (WARDSetEntry, WARDDeleteEntry) both hang off that
+ * one pull. On a write the device pulls the CURRENT value first, so it can show the
+ * user what is about to be replaced or removed rather than only what is arriving. The
+ * device performs no write itself: on Success the HOST applies the change to its own
+ * store. In this phase the device is a confirmation screen, not the writer; that
+ * inverts in a later phase, when the device becomes the writer and encryptor.
+ *
  * Nothing here is authenticated. There is no keyed path, no proof, no root and no
  * encryption in this phase, so the host may return any value for any request. The
  * device therefore labels what it shows as UNVERIFIED. Later phases add, in order:
@@ -37,8 +44,43 @@ message WARDGetEntry {
 }
 
 /**
+ * Request: create or replace the WARD entry the HOST holds for (app_id, identifier).
+ *
+ * The device pulls the current value first, so an ADD and an OVERWRITE are different
+ * screens and the user sees the value being replaced. On Success the host performs the
+ * write.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message WARDSetEntry {
+    optional string app_id     = 1;  // domain that owns the entry
+    optional bytes  identifier = 2;  // key within that domain
+    optional bytes  value      = 3;  // the new value; empty is allowed, absent is not
+}
+
+/**
+ * Request: delete the WARD entry the HOST holds for (app_id, identifier).
+ *
+ * Deliberately a SEPARATE message rather than a `delete` flag on WARDSetEntry. A flag
+ * is silently droppable -- a host that rebuilds its params field-by-field and forgets
+ * to forward it turns every delete into a write of the wrong value, which is exactly
+ * the bug this protocol hit before. A distinct message cannot degrade that way.
+ *
+ * The device pulls the entry first so it can show what is being removed, and refuses
+ * if the host reports no such entry -- there is then nothing to confirm.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message WARDDeleteEntry {
+    optional string app_id     = 1;  // domain that owns the entry
+    optional bytes  identifier = 2;  // key within that domain
+}
+
+/**
  * Response: device -> host, sent mid-workflow. Names the entry the device wants.
- * The host must reply with WARDEntryAck.
+ * Emitted by all three requests above. The host must reply with WARDEntryAck.
  * @next WARDEntryAck
  */
 message WARDEntryRequest {

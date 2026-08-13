@@ -832,6 +832,8 @@ class MessageType(IntEnum):
     WARDGetEntry = 2300
     WARDEntryRequest = 2301
     WARDEntryAck = 2302
+    WARDSetEntry = 2303
+    WARDDeleteEntry = 2304
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -9971,6 +9973,43 @@ class TronRawParameter(protobuf.MessageType):
 
 class WARDGetEntry(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2300
+    FIELDS = {
+        1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        app_id: Optional["str"] = None,
+        identifier: Optional["bytes"] = None,
+    ) -> None:
+        self.app_id = app_id
+        self.identifier = identifier
+
+
+class WARDSetEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2303
+    FIELDS = {
+        1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        app_id: Optional["str"] = None,
+        identifier: Optional["bytes"] = None,
+        value: Optional["bytes"] = None,
+    ) -> None:
+        self.app_id = app_id
+        self.identifier = identifier
+        self.value = value
+
+
+class WARDDeleteEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2304
     FIELDS = {
         1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
         2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
