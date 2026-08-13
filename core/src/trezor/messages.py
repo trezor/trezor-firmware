@@ -8003,18 +8003,144 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDEntryRequest"]:
             return isinstance(msg, cls)
 
-    class WARDEntryAck(protobuf.MessageType):
-        value: "AnyBytes | None"
+    class EncryptedLeaf(protobuf.MessageType):
+        nonce: "AnyBytes | None"
+        tag: "AnyBytes | None"
+        ct: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            value: "AnyBytes | None" = None,
+            nonce: "AnyBytes | None" = None,
+            tag: "AnyBytes | None" = None,
+            ct: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EncryptedLeaf"]:
+            return isinstance(msg, cls)
+
+    class PlaintextLeaf(protobuf.MessageType):
+        content: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            content: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["PlaintextLeaf"]:
+            return isinstance(msg, cls)
+
+    class LeafContent(protobuf.MessageType):
+        encoding: "int | None"
+        encrypted: "EncryptedLeaf | None"
+        plaintext: "PlaintextLeaf | None"
+
+        def __init__(
+            self,
+            *,
+            encoding: "int | None" = None,
+            encrypted: "EncryptedLeaf | None" = None,
+            plaintext: "PlaintextLeaf | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["LeafContent"]:
+            return isinstance(msg, cls)
+
+    class PlainIdentity(protobuf.MessageType):
+        identifier: "AnyBytes | None"
+        app_id: "str | None"
+        device_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            identifier: "AnyBytes | None" = None,
+            app_id: "str | None" = None,
+            device_id: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["PlainIdentity"]:
+            return isinstance(msg, cls)
+
+    class EncryptedIdentity(protobuf.MessageType):
+        nonce: "AnyBytes | None"
+        tag: "AnyBytes | None"
+        ct: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            nonce: "AnyBytes | None" = None,
+            tag: "AnyBytes | None" = None,
+            ct: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EncryptedIdentity"]:
+            return isinstance(msg, cls)
+
+    class LeafIdentity(protobuf.MessageType):
+        encoding: "int | None"
+        key_type: "str | None"
+        encrypted: "EncryptedIdentity | None"
+        plain: "PlainIdentity | None"
+
+        def __init__(
+            self,
+            *,
+            encoding: "int | None" = None,
+            key_type: "str | None" = None,
+            encrypted: "EncryptedIdentity | None" = None,
+            plain: "PlainIdentity | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["LeafIdentity"]:
+            return isinstance(msg, cls)
+
+    class WARDEntryAck(protobuf.MessageType):
+        identity: "LeafIdentity | None"
+        content: "LeafContent | None"
+
+        def __init__(
+            self,
+            *,
+            identity: "LeafIdentity | None" = None,
+            content: "LeafContent | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDEntryAck"]:
+            return isinstance(msg, cls)
+
+    class WARDLeafAck(protobuf.MessageType):
+        entry_key: "AnyBytes | None"
+        identity: "LeafIdentity | None"
+        content: "LeafContent | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes | None" = None,
+            identity: "LeafIdentity | None" = None,
+            content: "LeafContent | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDLeafAck"]:
             return isinstance(msg, cls)
 
     class WebAuthnListResidentCredentials(protobuf.MessageType):

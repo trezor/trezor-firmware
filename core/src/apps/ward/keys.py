@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Sequence
 
-_ENTRY_TYPE_ADDRESS = "address"
+ENTRY_TYPE_ADDRESS = "address"
 
 
 async def _derive_slip21(path: "Sequence[bytes]") -> bytes:
@@ -78,7 +78,7 @@ def entry_key(
     k_path: bytes,
     app_id: str | bytes | None,
     identifier: bytes,
-    key_type: str = _ENTRY_TYPE_ADDRESS,
+    key_type: str = ENTRY_TYPE_ADDRESS,
     device_id: int = 0,
 ) -> bytes:
     """The keyed 32-byte path for one entry: HMAC-SHA256(K_path, scope || identifier)."""
@@ -90,7 +90,7 @@ def entry_key(
 async def entry_key_for(
     app_id: str | bytes | None,
     identifier: bytes,
-    key_type: str = _ENTRY_TYPE_ADDRESS,
+    key_type: str = ENTRY_TYPE_ADDRESS,
     device_id: int = 0,
 ) -> bytes:
     """Derive the keyed path for (app_id, identifier) under the active wallet's K_path.

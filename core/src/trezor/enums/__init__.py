@@ -769,6 +769,7 @@ if TYPE_CHECKING:
         WARDEntryAck = 2302
         WARDSetEntry = 2303
         WARDDeleteEntry = 2304
+        WARDLeafAck = 2305
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

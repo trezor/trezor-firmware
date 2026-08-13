@@ -834,6 +834,7 @@ class MessageType(IntEnum):
     WARDEntryAck = 2302
     WARDSetEntry = 2303
     WARDDeleteEntry = 2304
+    WARDLeafAck = 2305
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -10039,18 +10040,158 @@ class WARDEntryRequest(protobuf.MessageType):
         self.entry_key = entry_key
 
 
-class WARDEntryAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2302
+class EncryptedLeaf(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+        1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        value: Optional["bytes"] = None,
+        nonce: Optional["bytes"] = None,
+        tag: Optional["bytes"] = None,
+        ct: Optional["bytes"] = None,
     ) -> None:
-        self.value = value
+        self.nonce = nonce
+        self.tag = tag
+        self.ct = ct
+
+
+class PlaintextLeaf(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("content", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        content: Optional["bytes"] = None,
+    ) -> None:
+        self.content = content
+
+
+class LeafContent(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("encoding", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("encrypted", "EncryptedLeaf", repeated=False, required=False, default=None),
+        3: protobuf.Field("plaintext", "PlaintextLeaf", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        encoding: Optional["int"] = None,
+        encrypted: Optional["EncryptedLeaf"] = None,
+        plaintext: Optional["PlaintextLeaf"] = None,
+    ) -> None:
+        self.encoding = encoding
+        self.encrypted = encrypted
+        self.plaintext = plaintext
+
+
+class PlainIdentity(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("device_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        identifier: Optional["bytes"] = None,
+        app_id: Optional["str"] = None,
+        device_id: Optional["int"] = None,
+    ) -> None:
+        self.identifier = identifier
+        self.app_id = app_id
+        self.device_id = device_id
+
+
+class EncryptedIdentity(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce: Optional["bytes"] = None,
+        tag: Optional["bytes"] = None,
+        ct: Optional["bytes"] = None,
+    ) -> None:
+        self.nonce = nonce
+        self.tag = tag
+        self.ct = ct
+
+
+class LeafIdentity(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("encoding", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("encrypted", "EncryptedIdentity", repeated=False, required=False, default=None),
+        4: protobuf.Field("plain", "PlainIdentity", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        encoding: Optional["int"] = None,
+        key_type: Optional["str"] = None,
+        encrypted: Optional["EncryptedIdentity"] = None,
+        plain: Optional["PlainIdentity"] = None,
+    ) -> None:
+        self.encoding = encoding
+        self.key_type = key_type
+        self.encrypted = encrypted
+        self.plain = plain
+
+
+class WARDEntryAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2302
+    FIELDS = {
+        2: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
+        3: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        identity: Optional["LeafIdentity"] = None,
+        content: Optional["LeafContent"] = None,
+    ) -> None:
+        self.identity = identity
+        self.content = content
+
+
+class WARDLeafAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2305
+    FIELDS = {
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
+        3: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: Optional["bytes"] = None,
+        identity: Optional["LeafIdentity"] = None,
+        content: Optional["LeafContent"] = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.identity = identity
+        self.content = content
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

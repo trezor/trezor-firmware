@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""WARD client -- phase 1: plaintext, PULL-only.
+"""WARD client -- plaintext leaf, PULL-only, keyed path.
 
 The device stores no entries. It asks the host for the one it needs mid-workflow, so
 the host must be prepared to answer a device-initiated `WARDEntryRequest` while its own
@@ -22,14 +22,19 @@ call is still in flight. That is the same shape as `btc.sign_tx` answering `TxRe
 call, inspect what came back, answer it, repeat until the workflow returns.
 
 Writes work the same way and pull too: the device asks for the CURRENT value so it can
-show what is being replaced or removed. The device does not write -- on `Success` the
-CALLER applies the change to its own store. Nothing is authenticated in this phase; see
-messages-ward.proto.
+show what is being replaced or removed. The device does not write -- it returns the leaf
+it built and the CALLER applies it, see `apply`. Nothing is authenticated in this phase;
+see messages-ward.proto.
 
 **The store is keyed by the opaque `entry_key`, not by the identifier.** The device
 derives that key from a seed this library does not have, so a host CANNOT compute it --
 that is the whole point, and why every call returns the key it was asked for. Anything
 here that could derive an entry_key would defeat the property being bought.
+
+**The stored unit is a two-part leaf the DEVICE builds.** A write returns that leaf and
+the caller stores it verbatim. Do not assemble one here: while the parts are plaintext a
+host technically could, but that stops being true the moment they are sealed, and code
+that quietly relies on it now would break then.
 """
 
 from __future__ import annotations
@@ -43,20 +48,36 @@ if TYPE_CHECKING:
 
     from .client import Session
 
-# Answers a device pull: entry_key -> value, or None for "no such entry".
-EntryProvider = Callable[[bytes], Optional[bytes]]
+
+class Leaf(NamedTuple):
+    """A stored WARD leaf, exactly as the device handed it over.
+
+    Opaque to the host: it holds these two parts and gives them back when asked for the
+    path they sit at. Both parts empty means the entry was deleted.
+    """
+
+    identity: Optional[messages.LeafIdentity]
+    content: Optional[messages.LeafContent]
+
+
+# Answers a device pull: entry_key -> leaf, or None for "no such entry".
+EntryProvider = Callable[[bytes], Optional[Leaf]]
 
 
 class WardResult(NamedTuple):
     """What a WARD call returns.
 
-    `entry_key` is the opaque 32-byte path the device asked about. Callers need it to
+    `entry_key` is the opaque 32-byte path the device asked about; callers need it to
     apply a confirmed write or delete, since it is the key their store is organised by
     and they have no other way to learn it.
+
+    `leaf` is the leaf the device built, present for writes and deletes and None for a
+    read. For a delete both its parts are empty and the record should be removed.
     """
 
-    success: messages.Success
+    response: protobuf.MessageType
     entry_key: bytes
+    leaf: Optional[Leaf] = None
 
 
 def _call_answering_pulls(
@@ -81,7 +102,17 @@ def _call_answering_pulls(
 
     while isinstance(res, messages.WARDEntryRequest):
         entry_key = res.entry_key or b""
-        res = session.call(messages.WARDEntryAck(value=provider(entry_key)))
+        held = provider(entry_key)
+        ack = messages.WARDEntryAck()
+        if held is not None:
+            # Hand back exactly what was stored. Absent fields mean "no such entry".
+            ack = messages.WARDEntryAck(identity=held.identity, content=held.content)
+        res = session.call(ack)
+
+    if isinstance(res, messages.WARDLeafAck):
+        return WardResult(
+            res, res.entry_key or entry_key, Leaf(res.identity, res.content)
+        )
 
     if not isinstance(res, messages.Success):
         raise RuntimeError(
@@ -99,9 +130,9 @@ def get_entry(
 ) -> WardResult:
     """Ask the device to display the host-held entry for (app_id, identifier).
 
-    The device derives the keyed path and asks `provider` for it; `provider` returning
-    None means "no such entry" -- the device says so on screen rather than showing an
-    empty value.
+    The device derives the keyed path and asks `provider` for the leaf at it; `provider`
+    returning None means "no such entry" -- the device says so on screen rather than
+    showing an empty value. Returns no leaf, since a read builds none.
     """
     return _call_answering_pulls(
         session,
@@ -123,9 +154,9 @@ def set_entry(
     screen when the entry is new and an "Update entry" screen naming what it replaces
     when it is not.
 
-    **The device does not write.** On `Success` the caller must apply the change to its
-    own store, under the returned `entry_key`; a `Success` that the caller ignores means
-    the user confirmed a write that never happened.
+    **The device does not write.** It returns the leaf it built and the caller must store
+    it verbatim under the returned `entry_key` -- see `apply`. A result the caller ignores
+    means the user confirmed a write that never happened.
 
     `value` is typed Optional only so callers can exercise the device-side validation --
     an absent value is rejected, because writing "nothing specified" as if it were an
@@ -150,8 +181,8 @@ def delete_entry(
     fails with "no such entry" if `provider` reports none -- delete is deliberately not
     idempotent here, since a no-op delete means the caller and its own store disagree.
 
-    **The device does not delete.** On `Success` the caller must remove the entry from
-    its own store, under the returned `entry_key`.
+    **The device does not delete.** It returns a leaf with both parts empty and the
+    caller must remove the record at the returned `entry_key` -- see `apply`.
     """
     return _call_answering_pulls(
         session,
@@ -160,8 +191,8 @@ def delete_entry(
     )
 
 
-def dict_provider(entries: dict[bytes, bytes]) -> EntryProvider:
-    """An `EntryProvider` backed by a plain dict keyed by `entry_key`.
+def dict_provider(entries: dict[bytes, Leaf]) -> EntryProvider:
+    """An `EntryProvider` backed by a plain dict of `entry_key -> Leaf`.
 
     This is what stands in for the host database in this phase; later phases replace it
     with a real store that also holds the proof material. Note what it is NOT keyed by:
@@ -169,10 +200,35 @@ def dict_provider(entries: dict[bytes, bytes]) -> EntryProvider:
     it is why a host cannot enumerate or correlate what it holds.
 
     Reads only. Applying a confirmed write or delete to `entries` is the caller's job --
-    see `set_entry` and `delete_entry`, which return the key to apply it under.
+    see `set_entry` and `delete_entry`, which return both the key and the leaf.
     """
 
-    def provider(entry_key: bytes) -> Optional[bytes]:
+    def provider(entry_key: bytes) -> Optional[Leaf]:
         return entries.get(entry_key)
 
     return provider
+
+
+def apply(entries: dict[bytes, Leaf], result: WardResult) -> None:
+    """Apply a confirmed write or delete to a `dict_provider`-style store.
+
+    The device confirmed and built the leaf; persisting it is the host's job, and a
+    result the caller drops on the floor means the user approved a change that never
+    happened. A leaf whose content part is empty is a delete, so the record goes away
+    rather than being kept as a tombstone.
+    """
+    if result.leaf is None:
+        raise ValueError("this result carries no leaf; nothing to apply")
+
+    content = result.leaf.content
+    body = None
+    if content is not None:
+        if content.plaintext is not None:
+            body = content.plaintext.content
+        elif content.encrypted is not None:
+            body = content.encrypted.ct
+
+    if not body:
+        entries.pop(result.entry_key, None)
+    else:
+        entries[result.entry_key] = result.leaf

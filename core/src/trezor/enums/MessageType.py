@@ -310,3 +310,4 @@ if not utils.BITCOIN_ONLY:
     WARDEntryAck = 2302
     WARDSetEntry = 2303
     WARDDeleteEntry = 2304
+    WARDLeafAck = 2305
