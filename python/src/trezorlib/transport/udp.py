@@ -33,6 +33,26 @@ SOCKET_TIMEOUT = 0.1
 LOG = logging.getLogger(__name__)
 
 
+class _SendRateLimiter:
+    def __init__(self, max_events: int, window: float) -> None:
+        self.max_events = max_events
+        self.window = window
+        self._events: Deque[float] = deque()
+
+    def wait(self) -> None:
+        now = time.monotonic()
+        self._discard_expired(now)
+        while len(self._events) >= self.max_events:
+            time.sleep(self.window - (now - self._events[0]))
+            now = time.monotonic()
+            self._discard_expired(now)
+        self._events.append(now)
+
+    def _discard_expired(self, now: float) -> None:
+        while self._events and now - self._events[0] >= self.window:
+            self._events.popleft()
+
+
 class UdpTransport(Transport):
 
     DEFAULT_HOST = "127.0.0.1"
@@ -40,8 +60,8 @@ class UdpTransport(Transport):
     PATH_PREFIX = "udp"
     ENABLED = True
     CHUNK_SIZE = 64
-    MAX_CHUNKS_PER_WINDOW = 100
-    CHUNK_WINDOW = 0.05  # s
+    SEND_WINDOW_MAX_CHUNKS = 100
+    SEND_WINDOW_SEC = 0.05
 
     def __init__(self, device: str | None = None) -> None:
         if not device:
@@ -54,7 +74,9 @@ class UdpTransport(Transport):
         self.device: Tuple[str, int] = (host, port)
 
         self.socket: socket.socket | None = None
-        self._sent_at: Deque[float] = deque()
+        self._send_limiter = _SendRateLimiter(
+            self.SEND_WINDOW_MAX_CHUNKS, self.SEND_WINDOW_SEC
+        )
         super().__init__()
 
     @classmethod
@@ -109,23 +131,12 @@ class UdpTransport(Transport):
             self.socket.close()
         self.socket = None
 
-    def _throttle_send(self) -> None:
-        now = time.monotonic()
-        while self._sent_at and now - self._sent_at[0] >= self.CHUNK_WINDOW:
-            self._sent_at.popleft()
-        if len(self._sent_at) >= self.MAX_CHUNKS_PER_WINDOW:
-            time.sleep(self.CHUNK_WINDOW - (now - self._sent_at[0]))
-            now = time.monotonic()
-            while self._sent_at and now - self._sent_at[0] >= self.CHUNK_WINDOW:
-                self._sent_at.popleft()
-        self._sent_at.append(now)
-
     def write_chunk(self, chunk: bytes, /) -> None:
         assert self.socket is not None
         if len(chunk) != 64:
             raise TransportException("Unexpected data length")
 
-        self._throttle_send()
+        self._send_limiter.wait()
         LOG.log(DUMP_PACKETS, f"sending packet: {chunk.hex()}")
         self.socket.sendall(chunk)
 
