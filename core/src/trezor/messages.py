@@ -8155,6 +8155,9 @@ if TYPE_CHECKING:
         proof: "list[AnyBytes]"
         witness_entry_key: "AnyBytes | None"
         witness_commit: "AnyBytes | None"
+        sibling_split_bit: "int | None"
+        sibling_left: "AnyBytes | None"
+        sibling_right: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8164,25 +8167,14 @@ if TYPE_CHECKING:
             content: "LeafContent | None" = None,
             witness_entry_key: "AnyBytes | None" = None,
             witness_commit: "AnyBytes | None" = None,
+            sibling_split_bit: "int | None" = None,
+            sibling_left: "AnyBytes | None" = None,
+            sibling_right: "AnyBytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDEntryAck"]:
-            return isinstance(msg, cls)
-
-    class WARDDebugSetRoot(protobuf.MessageType):
-        root: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            root: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDDebugSetRoot"]:
             return isinstance(msg, cls)
 
     class WARDLeafAck(protobuf.MessageType):

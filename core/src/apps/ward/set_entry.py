@@ -22,9 +22,11 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from .common import WARNING_UNVERIFIED, display_bytes, pull_entry, require_key
+    from .common import WARNING_UNVERIFIED, display_bytes, pull_leaf, require_key
     from .keys import ENTRY_TYPE_ADDRESS, derive_k_data, derive_k_ident, entry_key_for
     from .leaf import encode_content, encode_identity, make_leaf_content, make_leaf_identity
+    from .root import get_root, set_root
+    from .trie import compute_new_root
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
@@ -36,7 +38,7 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
 
     key_type = ENTRY_TYPE_ADDRESS
     entry_key = await entry_key_for(app_id, identifier, key_type)
-    old = await pull_entry(entry_key, key_type)
+    old, old_leaf, material = await pull_leaf(entry_key, key_type)
 
     props = [
         ("Domain", app_id, False),
@@ -58,6 +60,21 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
         await derive_k_ident(key_type), entry_key, key_type, identifier, app_id
     )
     val_part = encode_content(await derive_k_data(key_type), entry_key, key_type, value)
+
+    # The device DERIVES its own new root rather than being told one. That is what makes
+    # the root worth anything: it is a value the device computed from a state the host had
+    # to prove, not a number it was handed.
+    proof, witness_entry_key, witness_commit, _sibling = material
+    new_root = compute_new_root(
+        entry_key,
+        old_leaf,
+        (key_type, id_part, val_part),
+        proof,
+        get_root(),
+        witness_entry_key=witness_entry_key,
+        witness_commit=witness_commit,
+    )
+    set_root(new_root)
 
     return WARDLeafAck(
         entry_key=entry_key,

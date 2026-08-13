@@ -184,6 +184,25 @@ class WardTrie:
         self._proof(self._build(sorted(self._leaves), 0), entry_key, out)
         return out
 
+    def sibling_decomposition(self, entry_key: bytes):
+        """(split_bit, left, right) for the sibling that a delete would promote.
+
+        None when the sibling is a leaf: a leaf has no skiplen and promotes exactly. When
+        it is a BRANCH the device must re-derive it at the shallower depth, and can only do
+        that from its pieces -- see `trie.compute_new_root`.
+        """
+        proof = self.membership_proof(entry_key)
+        if not proof:
+            return None
+        node = self._build(sorted(self._leaves), 0)
+        split0 = int.from_bytes(proof[0][0:2], "big")
+        while node[0] == "branch" and node[1] != split0:
+            node = node[3] if addr_bit(entry_key, node[1]) == 0 else node[4]
+        sibling = node[4] if addr_bit(entry_key, split0) == 0 else node[3]
+        if sibling[0] == "leaf":
+            return None
+        return sibling[1], self._hash(sibling[3]), self._hash(sibling[4])
+
     def nonmembership_proof(self, entry_key: bytes):
         """(proof, witness_entry_key, witness_commit) for a key that is absent.
 

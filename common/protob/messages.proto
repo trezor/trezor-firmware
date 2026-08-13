@@ -405,7 +405,7 @@ enum MessageType {
     MessageType_WARDSetEntry = 2303 [(wire_in) = true];
     MessageType_WARDDeleteEntry = 2304 [(wire_in) = true];
     MessageType_WARDLeafAck = 2305 [(wire_out) = true];
-    MessageType_WARDDebugSetRoot = 2306 [(wire_in) = true];
+    reserved 2306;  // was WARDDebugSetRoot: the device derives its own root now
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

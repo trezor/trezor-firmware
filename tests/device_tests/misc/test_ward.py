@@ -117,17 +117,6 @@ def _expected(br_name: str, final=m.Success) -> list:
     return [m.WARDEntryRequest, m.ButtonRequest(name=br_name), final]
 
 
-def _sync_root(session: Session, store: WardTrie) -> None:
-    """Tell the device the store's current root.
-
-    Stands in for the attestation that will eventually deliver a root the device can
-    trust by itself. Every write changes the root, so a test that forgets to call this
-    leaves the device on a stale root -- which the device will then correctly reject,
-    since that is exactly the rollback it is now able to detect.
-    """
-    ward.debug_set_root(session, store.root())
-
-
 def _write(session: Session, store: WardTrie, call, br_name: str) -> tuple:
     """Run a write/delete, walking its screen, and return (result, recorder)."""
     rec = _Recorded()
@@ -148,21 +137,14 @@ def _read(session: Session, store: WardTrie, call) -> tuple:
     return res, rec
 
 
-def _seed(
-    session: Session,
-    store: WardTrie,
-    identifier: bytes,
-    value: bytes,
-    sync_root: bool = True,
-) -> bytes:
+def _seed(session: Session, store: WardTrie, identifier: bytes, value: bytes) -> bytes:
     """Create an entry the only way a host can: ask the device to build the leaf.
 
     The host cannot synthesise one -- that is the point of the device being the encoder --
     so every fixture below goes through a real confirmed write.
 
-    `sync_root=False` leaves the device holding NO root, which is the state a release
-    build is in. Use it to isolate the AEAD layer: with a root held, the root check runs
-    first and catches tampering before the tag ever gets a chance to.
+    The device derives and records its own root as part of that write, so there is nothing
+    to tell it afterwards.
     """
     res, _rec = _write(
         session,
@@ -171,8 +153,6 @@ def _seed(
         "ward_set_entry",
     )
     ward.apply(store, res)
-    if sync_root:
-        _sync_root(session, store)
     return res.entry_key
 
 
@@ -360,15 +340,15 @@ def test_ward_delete_returns_a_leaf_with_both_parts_empty(session: Session):
 
 @pytest.mark.models("core")
 def test_ward_rejects_a_tampered_leaf(session: Session):
-    """A leaf the host edited fails the tag check ON THE DEVICE.
+    """A leaf the host edited is refused.
 
-    This is the first thing in the whole subsystem the device can actually REJECT. Before
-    sealing, any bytes the host returned were accepted and displayed.
+    Two layers would each catch this and the ROOT gets there first, because a changed
+    ciphertext changes the leaf hash. That makes the tag unreachable on this path, so the
+    seal itself is pinned by the unit tests (`TestWardSealedLeaf`) rather than here; what
+    this asserts is that the device refuses at all.
     """
     store = WardTrie()
-    # deliberately no root: this test is about the SEAL, and with a root held the root
-    # check would reject the edit first (a changed ciphertext changes the leaf hash)
-    key = _seed(session, store, b"addr1", b"Petr_label", sync_root=False)
+    key = _seed(session, store, b"addr1", b"Petr_label")
 
     sealed = store.blobs[key].content.encrypted
     flipped = bytes([sealed.ct[0] ^ 1]) + sealed.ct[1:]
@@ -380,7 +360,7 @@ def test_ward_rejects_a_tampered_leaf(session: Session):
         ),
     ))
 
-    with pytest.raises(exceptions.TrezorFailure, match="tag mismatch"):
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
         ward.get_entry(session, _APP, b"addr1", ward.store_provider(store))
 
 
@@ -388,19 +368,18 @@ def test_ward_rejects_a_tampered_leaf(session: Session):
 def test_ward_rejects_a_leaf_served_from_another_path(session: Session):
     """The host answers a request for one entry with a different entry's real leaf.
 
-    Every byte is authentic -- it is a leaf this device sealed -- so only the AAD's
-    binding to entry_key catches it. The keyed path alone could not: the host chooses
-    which stored bytes to hand back.
+    Every byte is authentic -- this device sealed it -- so neither the keyed path nor the
+    ciphertext is wrong; only its POSITION is. The root catches it here (the leaf is not at
+    that path in the tree), and the AAD binding would too. The keyed path alone could not:
+    the host chooses which stored bytes to hand back.
     """
     store = WardTrie()
-    # no root here either -- see the tampered-leaf test; the AAD binding is what is
-    # under test, and the root check would otherwise get there first
-    key1 = _seed(session, store, b"addr1", b"one", sync_root=False)
-    key2 = _seed(session, store, b"addr2", b"two", sync_root=False)
+    key1 = _seed(session, store, b"addr1", b"one")
+    key2 = _seed(session, store, b"addr2", b"two")
 
     swapped = WardTrie()
     swapped.set(key1, store.blobs[key2])
-    with pytest.raises(exceptions.TrezorFailure, match="tag mismatch"):
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
         ward.get_entry(session, _APP, b"addr1", ward.store_provider(swapped))
 
 
@@ -647,21 +626,16 @@ def test_ward_rejects_a_rolled_back_leaf(session: Session):
     key = _seed(session, store, b"addr1", b"old_value")
     stale_leaf = store.blobs[key]
 
-    _write(
+    # One applied update. The device derives a new root from it, so the leaf above is now
+    # history -- and the store must be kept in step, or the NEXT pull would serve a proof
+    # against a root the device has already moved past.
+    res, _rec = _write(
         session,
         store,
         lambda p: ward.set_entry(session, _APP, b"addr1", b"new_value", p),
         "ward_set_entry",
     )
-    # apply the update, so the device's root moves on from the old value
-    res, _rec = _write(
-        session,
-        store,
-        lambda p: ward.set_entry(session, _APP, b"addr1", b"newer_value", p),
-        "ward_set_entry",
-    )
     ward.apply(store, res)
-    _sync_root(session, store)
 
     rolled_back = WardTrie()
     rolled_back.set(key, stale_leaf)

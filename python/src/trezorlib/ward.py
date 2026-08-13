@@ -77,6 +77,11 @@ class Answer(NamedTuple):
     proof: Optional[list] = None
     witness_entry_key: Optional[bytes] = None
     witness_commit: Optional[bytes] = None
+    # Delete only, and only for a branch sibling -- the device re-derives it at the
+    # shallower depth it moves to. See messages-ward.proto.
+    sibling_split_bit: Optional[int] = None
+    sibling_left: Optional[bytes] = None
+    sibling_right: Optional[bytes] = None
 
 
 # Answers a device pull, keyed by the opaque path.
@@ -131,6 +136,9 @@ def _call_answering_pulls(
                 proof=answer.proof or [],
                 witness_entry_key=answer.witness_entry_key,
                 witness_commit=answer.witness_commit,
+                sibling_split_bit=answer.sibling_split_bit,
+                sibling_left=answer.sibling_left,
+                sibling_right=answer.sibling_right,
             )
         )
 
@@ -216,18 +224,6 @@ def delete_entry(
     )
 
 
-def debug_set_root(session: "Session", root: Optional[bytes]) -> messages.Success:
-    """Seed the root the device verifies proofs against. DEBUG BUILDS ONLY.
-
-    Stands in for the attestation that will eventually deliver a root the device can
-    trust on its own. Until then a release build has no way to set one, so it verifies
-    nothing -- see messages-ward.proto.
-    """
-    return session.call(
-        messages.WARDDebugSetRoot(root=root or b""), expect=messages.Success
-    )
-
-
 def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
     """A leaf whose content body is empty is a deletion, not an empty-valued entry."""
     if leaf is None or leaf.content is None:
@@ -250,8 +246,13 @@ def store_provider(store) -> EntryProvider:
 
     def provider(entry_key: bytes) -> Answer:
         if entry_key in store:
+            sib = store.sibling_decomposition(entry_key)
             return Answer(
-                leaf=store.blobs[entry_key], proof=store.membership_proof(entry_key)
+                leaf=store.blobs[entry_key],
+                proof=store.membership_proof(entry_key),
+                sibling_split_bit=None if sib is None else sib[0],
+                sibling_left=None if sib is None else sib[1],
+                sibling_right=None if sib is None else sib[2],
             )
         proof, witness_key, witness_commit = store.nonmembership_proof(entry_key)
         return Answer(

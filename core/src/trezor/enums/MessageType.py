@@ -311,4 +311,3 @@ if not utils.BITCOIN_ONLY:
     WARDSetEntry = 2303
     WARDDeleteEntry = 2304
     WARDLeafAck = 2305
-    WARDDebugSetRoot = 2306
