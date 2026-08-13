@@ -55,6 +55,7 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
         ("AES_192", None),
         ("USE_KECCAK", Some("1")),
         ("USE_BIP32_CACHE", Some("0")),
+        ("USE_BIP39_CACHE", Some("0")),
     ]);
 
     if cfg!(feature = "ed25519_no_precomp") {
