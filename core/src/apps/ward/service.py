@@ -1175,28 +1175,42 @@ def _acl_allows(app_id, capability: str) -> bool:
 
 
 async def _confirm_update(app_id, address: bytes, new_value: bytes) -> None:
-    """Trusted on-device confirmation of a WARD edit intent. Shows the target
-    domain (app_id) so the user approves "change the <domain> entry for X". Raises
-    ActionCancelled if the user rejects; returns normally on approval."""
+    """Trusted on-device confirmation of a WARD edit intent. Shows the target domain
+    (app_id) so the user approves "change the <domain> entry for X". Raises
+    ActionCancelled if the user rejects; returns normally on approval.
+
+    A DELETE gets its own screen and its own br_name ("ward_delete"): it is a
+    destructive, irreversible operation -- the leaf is removed from the trie, not set
+    to an empty value -- so it must not be presented as just another edit, and a
+    caller/test/input-flow must be able to tell the two button requests apart.
+    """
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_properties
-
-    if len(new_value) == 0:
-        title = "Delete WARD entry"
-    else:
-        title = "Queue WARD entry"
 
     # PropertyType is a 3-tuple (name, value, is_data); is_data=True renders the
     # value as monospace data. The domain is shown first: it is the on-device
     # authorization that binds this write to entry_key(app_id, address).
-    props = [("Domain", _display_bytes(app_id), False), ("Key", _display_bytes(address), True)]
-    if len(new_value) != 0:
-        props.append(("New value", _display_bytes(new_value), True))
+    domain = ("Domain", _display_bytes(app_id), False)
+    key = ("Key", _display_bytes(address), True)
+
+    if len(new_value) == 0:
+        await confirm_properties(
+            "ward_delete",
+            "Delete WARD entry",
+            [
+                domain,
+                key,
+                ("Warning", "This entry will be permanently removed.", False),
+            ],
+            hold=True,
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
+        return
 
     await confirm_properties(
         "ward_update",
-        title,
-        props,
+        "Queue WARD entry",
+        [domain, key, ("New value", _display_bytes(new_value), True)],
         hold=True,
         br_code=ButtonRequestType.ConfirmOutput,
     )

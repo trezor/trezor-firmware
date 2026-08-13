@@ -396,3 +396,86 @@ def test_frozen_vectors():
         wc.leaf_hash_of(mac, commit).hex()
         == "ff2d92fe3997f4c2201aa3060c3b2f2fa8bf7e72f463caa63489c95122c57400"
     )
+
+
+# --- delete round: absence must be PROVABLE afterwards ---
+
+
+def test_nonmembership_verifies_after_delete(keys):
+    """The property `dbdelete` asserts on-device: once a leaf is fully deleted, the path
+    is provably ABSENT against the NEW root. A tombstone would still prove membership;
+    a broken delete would leave a root nothing verifies against."""
+    kp, ki, kd = keys
+    t = WARDTree(kp, kd, ki)
+
+    macs = {}
+    for ident in (b"alice", b"deleteMe", b"carol"):
+        mac = wc.leaf_identity_mac(kp, "bitcoin", ident)
+        macs[ident] = mac
+        t.set_leaf(mac, _leaf(ki, kd, mac, ident, b"v-" + ident, 1))
+
+    target = macs[b"deleteMe"]
+    root_before = t.get_root_hash()
+    # present beforehand: membership verifies, and non-membership is not even buildable
+    assert WARDTree.verify_proof_by_key(
+        target, t.get_leaf(target), t.get_proof_by_key(target), root_before
+    )
+    with pytest.raises(ValueError):
+        t.get_nonmembership_proof_by_key(target)
+
+    # full delete (both parts empty)
+    t.set_leaf(target, _leaf(ki, kd, target, b"deleteMe", b"", 2))
+    root_after = t.get_root_hash()
+    assert root_after != root_before, "the delete must move the root"
+    assert t.get_leaf(target) is None
+
+    # THE assertion: absence verifies against the new root
+    proof, w_key, w_commit = t.get_nonmembership_proof_by_key(target)
+    assert WARDTree.verify_nonmembership_by_key(target, w_key, w_commit, proof, root_after)
+    # and the witness is a DIFFERENT, still-present leaf
+    assert w_key != target and t.get_leaf(w_key) is not None
+
+    # the stale non-membership proof must not verify against the OLD root
+    assert not WARDTree.verify_nonmembership_by_key(target, w_key, w_commit, proof, root_before)
+
+    # survivors still prove membership under the new root
+    for ident in (b"alice", b"carol"):
+        mac = macs[ident]
+        assert WARDTree.verify_proof_by_key(
+            mac, t.get_leaf(mac), t.get_proof_by_key(mac), root_after
+        )
+
+
+def test_nonmembership_after_deleting_last_leaf(keys):
+    """Deleting the only leaf empties the tree; absence is then the empty-tree case
+    (no witness), which must still verify."""
+    kp, ki, kd = keys
+    t = WARDTree(kp, kd, ki)
+    mac = wc.leaf_identity_mac(kp, "bitcoin", b"only")
+    t.set_leaf(mac, _leaf(ki, kd, mac, b"only", b"v", 1))
+    assert not t.is_empty()
+
+    t.set_leaf(mac, _leaf(ki, kd, mac, b"only", b"", 2))
+    assert t.is_empty() and t.get_root_hash() == EMPTY_ROOT
+
+    proof, w_key, w_commit = t.get_nonmembership_proof_by_key(mac)
+    assert (proof, w_key, w_commit) == ([], None, None)
+    assert WARDTree.verify_nonmembership_by_key(mac, w_key, w_commit, proof, t.get_root_hash())
+
+
+def test_deleted_leaf_cannot_be_revived_by_replaying_its_proof(keys):
+    """A host that keeps the pre-delete membership proof must not be able to pass it off
+    against the post-delete root."""
+    kp, ki, kd = keys
+    t = WARDTree(kp, kd, ki)
+    other = wc.leaf_identity_mac(kp, "bitcoin", b"other")
+    t.set_leaf(other, _leaf(ki, kd, other, b"other", b"v", 1))
+    mac = wc.leaf_identity_mac(kp, "bitcoin", b"gone")
+    leaf = _leaf(ki, kd, mac, b"gone", b"v", 1)
+    t.set_leaf(mac, leaf)
+
+    stale_proof = t.get_proof_by_key(mac)
+    t.set_leaf(mac, _leaf(ki, kd, mac, b"gone", b"", 2))
+    root_after = t.get_root_hash()
+
+    assert not WARDTree.verify_proof_by_key(mac, leaf, stale_proof, root_after)

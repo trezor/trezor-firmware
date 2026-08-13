@@ -370,6 +370,36 @@ def test_ward_delete(session: Session) -> None:
 
 
 @pytest.mark.models("core")
+def test_ward_delete_shows_a_dedicated_delete_screen(session: Session) -> None:
+    """A delete is destructive and irreversible (the leaf leaves the trie), so it gets
+    its own confirm screen -- titled "Delete WARD entry", carrying a warning, and NOT
+    showing a "New value" row. An empty new_value is what selects it."""
+    tree = _make_tree()
+    _seed_device(session, tree)
+
+    with session.test_ctx as client:
+        with BackgroundDeviceHandler(client) as dev:
+            dev.run_with_provided_session(
+                session,
+                lambda s: ward.queue_update(s, _APP, b"alice", ENTRIES[b"alice"], b""),
+            )
+            layout = dev.debuglink().read_layout()
+            title = layout.title().lower()
+            content = layout.screen_content().lower().replace("\n", " ")
+
+            assert "delete" in title, f"delete screen must say so, got title={title!r}"
+            assert "permanently removed" in content, "the screen must warn it is destructive"
+            # the update-only row must be absent: there is no new value in a delete
+            assert "new value" not in content
+            # the entry being deleted is still identified
+            assert "alice" in content
+
+            dev.debuglink().press_yes()
+            pending_id = dev.result()
+    assert pending_id is not None
+
+
+@pytest.mark.models("core")
 def test_ward_delete_returns_no_leaf_parts(session: Session) -> None:
     """The device's WARDPerformUpdateAck for a delete carries BOTH leaf parts empty.
     A populated identity part would be a tombstone — but the leaf is removed from the
