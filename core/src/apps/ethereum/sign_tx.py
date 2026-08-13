@@ -51,7 +51,7 @@ async def sign_tx(
 
     address_bytes = bytes_from_address(msg.to)
 
-    valid_tx_types = (1, 6, None)
+    valid_tx_types = (1, None)
     if tx_type not in valid_tx_types:
         raise DataError("tx_type out of bounds")
     if len(msg.gas_price) + len(msg.gas_limit) > 30:
