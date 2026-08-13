@@ -82,15 +82,19 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "uv run make -C core build_boardloader"
-        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
-      - run: nix-shell --run "uv run make -C core build_bootloader"
-        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+        run: |
+          nix-shell --run "uv run make -C core build_boardloader"
+          nix-shell --run "uv run ./tools/check-insecure-prng.py --absent core/build-xtask/artifacts/latest/boardloader.bin"
+          nix-shell --run "uv run make -C core build_bootloader"
+          nix-shell --run "uv run ./tools/check-insecure-prng.py --absent core/build-xtask/artifacts/latest/bootloader.bin"
+          nix-shell --run "uv run make -C core build_prodtest"
+          nix-shell --run "uv run ./tools/check-insecure-prng.py --absent core/build-xtask/artifacts/latest/prodtest.bin"
       - run: nix-shell --run "uv run make -C core build_bootloader_ci"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink' && matrix.model == 'T2T1'
-      - run: nix-shell --run "uv run make -C core build_prodtest"
-        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
-      - run: nix-shell --run "uv run make -C core build_firmware"
+      - run: |
+          nix-shell --run "uv run make -C core build_firmware"
+          nix-shell --run "uv run ./tools/check-insecure-prng.py --absent core/build-xtask/artifacts/latest/firmware.bin"
       - run: nix-shell --run "uv run ./tools/print-rust-stack-sizes.py | sort -k1 -n | tail -n 50"
       # - run: nix-shell --run "uv run ./tools/print-rust-type-sizes.sh core/build/firmware/rust-type-sizes.log" | awk '$1 >= 1000' | sort -k1 -n
       - run: nix-shell --run "uv run ./tools/check-bitcoin-only core/build-xtask/artifacts/latest/firmware.bin"
@@ -141,6 +145,7 @@ jobs:
       - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal' && matrix.asan == 'noasan'
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
+      - run: nix-shell --run "uv run ./tools/check-insecure-prng.py --present --model $TREZOR_MODEL core/build-xtask/artifacts/latest/firmware-emu"
       - run: nix-shell --run "uv run make -C core test_emu_sanity"
       - run: cp core/build-xtask/artifacts/latest/firmware-emu core/build-xtask/artifacts/latest/firmware-emu-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.n1w1 && '-n1w1' || '' }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
