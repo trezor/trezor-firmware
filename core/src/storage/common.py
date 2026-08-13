@@ -13,6 +13,7 @@ APP_DEVICE             = const(0x01)
 APP_RECOVERY           = const(0x02)
 APP_RECOVERY_SHARES    = const(0x03)
 APP_WEBAUTHN           = const(0x04)
+APP_WARD               = const(0x05)
 # fmt: on
 
 _FALSE_BYTE = b"\x00"

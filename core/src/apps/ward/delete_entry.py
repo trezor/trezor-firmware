@@ -55,13 +55,13 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
     # removing a leaf re-parents its sibling, whose hash commits to a skiplen measured
     # from its old parent -- see `trie.compute_new_root`.
     proof, _witness_key, _witness_commit, sibling_node = material
-    set_root(
+    await set_root(
         compute_new_root(
             entry_key,
             old_leaf,
             None,
             proof,
-            get_root(),
+            await get_root(),
             sibling_node=sibling_node,
         )
     )
