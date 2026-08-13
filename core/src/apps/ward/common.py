@@ -51,7 +51,7 @@ def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, byt
     return app_id, identifier
 
 
-async def pull_entry(entry_key: bytes) -> bytes | None:
+async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
     """PULL the host's current value for an already-derived keyed path.
 
     This is the one mechanism the whole subsystem is built on: the device holds nothing,
@@ -62,11 +62,20 @@ async def pull_entry(entry_key: bytes) -> bytes | None:
     The request names ONLY the opaque path -- see `keys.entry_key_for`. Callers must
     derive it themselves and must never pass through a host-supplied value.
 
-    Returns None when the host reports no such entry, which stays distinct from b"" --
-    an entry that exists and whose value happens to be empty.
+    What comes back is a two-part LEAF, which this decodes down to the value the screens
+    care about. Returns None when the host holds no such entry OR the leaf it returned
+    is a tombstone; both mean "nothing here". That stays distinct from b"" -- an entry
+    that exists and whose value happens to be empty.
+
+    The identity part is deliberately NOT returned. Nothing reads it yet: the device
+    already knows the identifier and app_id (it derived the path from them), so the
+    identity part is write-only until there is a consumer that does not -- host-blind
+    reconstruction, or enumerating entries without knowing their identifiers.
     """
     from trezor.messages import WARDEntryAck, WARDEntryRequest
     from trezor.wire import context
+
+    from .leaf import decode_content, read_leaf_content
 
     # Mirrors apps/webauthn/list_resident_credentials.py, which uses the same primitive
     # to ask the host for data mid-workflow.
@@ -74,4 +83,9 @@ async def pull_entry(entry_key: bytes) -> bytes | None:
         WARDEntryRequest(entry_key=entry_key),
         expected_type=WARDEntryAck,
     )
-    return ack.value
+
+    decoded = decode_content(entry_key, key_type, read_leaf_content(ack.content))
+    if decoded is None:
+        return None
+    _c_leaf, value = decoded
+    return value
