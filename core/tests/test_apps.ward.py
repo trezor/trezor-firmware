@@ -7,6 +7,8 @@ from apps.ward.keys import _scope, entry_key
 from apps.ward import leaf as L
 from apps.ward.trie import (
     addr_bit,
+    compute_new_root,
+    internal_hash,
     validate_proof_shape,
     verify_membership,
     verify_nonmembership,
@@ -562,6 +564,146 @@ class TestWardTrie(unittest.TestCase):
         self.assertEqual(len(validate_proof_shape(full)), 256)
         with self.assertRaises(DataError):
             validate_proof_shape(full + [bytes([1, 0]) + bytes([0, 0]) + bytes(32)])
+
+
+class TestWardComputeNewRoot(unittest.TestCase):
+    """The device deriving the root that replaces the current one.
+
+    Every case here is checked against the root a canonical REBUILD would produce, which
+    is the property that matters: a device whose root drifts from the canonical one still
+    verifies its own proofs happily, and only diverges when some other party rebuilds the
+    tree -- at which point the whole entry set is unreachable. A test that merely asserted
+    "some root came back" would not have caught either bug below.
+    """
+
+    KT = "address"
+    EMPTY = (1, b"", b"", b"")
+
+    def _key(self, bits):
+        """A 32-byte path beginning with `bits`, padded with zeros."""
+        out = bytearray(32)
+        for i, b in enumerate(bits):
+            if b:
+                out[i // 8] |= 1 << (7 - (i % 8))
+        return bytes(out)
+
+    def _leaf(self, tag):
+        return (self.KT, self.EMPTY, (1, b"", b"", tag))
+
+    def _commit(self, tag):
+        return commit_of(self.KT, self.EMPTY, (1, b"", b"", tag))
+
+    def _lh(self, key, tag):
+        return leaf_hash_of(key, self._commit(tag))
+
+    @staticmethod
+    def _elem(split_bit, skiplen, sibling):
+        return split_bit.to_bytes(2, "big") + skiplen.to_bytes(2, "big") + sibling
+
+    def test_first_insert_needs_an_empty_device(self):
+        """With no proof and no witness the device's own record is the only authority."""
+        k = self._key([0])
+        self.assertEqual(
+            compute_new_root(k, None, self._leaf(b"a"), [], None), self._lh(k, b"a")
+        )
+        # ...and the same call is refused once the device holds a root
+        with self.assertRaises(DataError):
+            compute_new_root(k, None, self._leaf(b"a"), [], bytes(32))
+
+    def test_update_must_prove_the_current_leaf(self):
+        """A host cannot swap a value without first proving what is there now."""
+        a, b = self._key([0]), self._key([1])
+        la, lb = self._lh(a, b"a"), self._lh(b, b"b")
+        root = internal_hash(0, 0, la, lb)
+        proof = [self._elem(0, 0, lb)]
+
+        self.assertEqual(
+            compute_new_root(a, self._leaf(b"a"), self._leaf(b"a2"), proof, root),
+            internal_hash(0, 0, self._lh(a, b"a2"), lb),
+        )
+        with self.assertRaises(DataError):
+            compute_new_root(a, self._leaf(b"WRONG"), self._leaf(b"a2"), proof, root)
+
+    def test_delete_promotes_a_leaf_sibling_exactly(self):
+        """A leaf has no skiplen, so promoting it needs no correction."""
+        a, b = self._key([0]), self._key([1])
+        la, lb = self._lh(a, b"a"), self._lh(b, b"b")
+        root = internal_hash(0, 0, la, lb)
+        proof = [self._elem(0, 0, lb)]
+        # one leaf left, and a single-leaf tree's root IS that leaf hash
+        self.assertEqual(compute_new_root(a, self._leaf(b"a"), None, proof, root), lb)
+
+    def test_delete_reparents_a_branch_sibling(self):
+        """THE bug this test exists for.
+
+        Deleting `a` collapses the root branch, so the b/c branch moves up a level and
+        must absorb the collapsed depth into its own skiplen. Its hash commits to the old
+        skiplen and the device holds only that hash -- so the sibling arrives decomposed
+        and the device re-derives it. Promoting the hash unchanged, which is the obvious
+        way to write this, yields a root no rebuild agrees with.
+        """
+        a = self._key([0])
+        b = self._key([1, 0, 0, 0, 0, 0])
+        c = self._key([1, 0, 0, 0, 0, 1])
+        la, lb, lc = self._lh(a, b"a"), self._lh(b, b"b"), self._lh(c, b"c")
+
+        # b and c first differ at bit 5; under the root branch at bit 0 that is skiplen 4
+        bc_old = internal_hash(5, 4, lb, lc)
+        root = internal_hash(0, 0, la, bc_old)
+        proof = [self._elem(0, 0, bc_old)]
+
+        # afterwards b/c IS the root, so its skiplen counts from bit 0 instead: 5
+        canonical = internal_hash(5, 5, lb, lc)
+        got = compute_new_root(
+            a, self._leaf(b"a"), None, proof, root, sibling_node=(5, lb, lc)
+        )
+        self.assertEqual(got, canonical)
+        self.assertTrue(got != bc_old)  # what the naive promotion would have returned
+
+        # the decomposition is checked against the proof, not trusted
+        with self.assertRaises(DataError):
+            compute_new_root(
+                a, self._leaf(b"a"), None, proof, root, sibling_node=(5, lb, la)
+            )
+
+    def test_insert_above_an_existing_branch(self):
+        """The second bug: the new key parts from its witness inside a COMPRESSED run.
+
+        Path compression only compares the bits the tree branches on, so two keys can
+        agree at every one of them and still diverge above an existing branch -- the
+        ordinary case for a random key, not a corner one. The new node is spliced in
+        there and the branch below is re-parented, which the device can fix itself since
+        that node is on the path it is folding.
+        """
+        b = self._key([0, 0, 0, 0, 0, 0])
+        c = self._key([0, 0, 0, 0, 0, 1])
+        a = self._key([0, 0, 1])  # agrees with b at bit 0, parts at bit 2
+        lb, lc, la = self._lh(b, b"b"), self._lh(c, b"c"), self._lh(a, b"a")
+
+        root = internal_hash(5, 5, lb, lc)  # two leaves: the b/c branch is the root
+        proof = [self._elem(5, 5, lc)]  # witness is b
+
+        got = compute_new_root(
+            a, None, self._leaf(b"a"), proof, root,
+            witness_entry_key=b, witness_commit=self._commit(b"b"),
+        )
+        # canonical: root branches at bit 2, b/c hangs below with skiplen 5-(2+1) = 2
+        self.assertEqual(got, internal_hash(2, 2, internal_hash(5, 2, lb, lc), la))
+
+    def test_insert_below_the_witness_path(self):
+        """The simpler case: the keys part deeper than every existing branch."""
+        b = self._key([0])
+        c = self._key([1])
+        a = self._key([0, 1])  # agrees with b at bit 0, parts at bit 1
+        lb, lc, la = self._lh(b, b"b"), self._lh(c, b"c"), self._lh(a, b"a")
+
+        root = internal_hash(0, 0, lb, lc)
+        proof = [self._elem(0, 0, lc)]
+        got = compute_new_root(
+            a, None, self._leaf(b"a"), proof, root,
+            witness_entry_key=b, witness_commit=self._commit(b"b"),
+        )
+        self.assertEqual(got, internal_hash(0, 0, internal_hash(1, 0, lb, la), lc))
 
 
 if __name__ == "__main__":
