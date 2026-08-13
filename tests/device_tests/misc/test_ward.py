@@ -21,7 +21,12 @@ does not have, asks the host for the leaf at THAT path, and displays what comes 
 host's store is keyed by the opaque key and holds two sealed blobs -- no identifier and no
 value anywhere in it.
 
-These tests assert five separable things:
+Once the device holds a root (seeded here by a debug-only message, standing in for the
+attestation that will deliver one for real), the host must PROVE its answers: a present
+leaf comes with a membership proof, an absent one with a witness. That is what finally
+makes a stale or suppressed entry detectable.
+
+These tests assert six separable things:
   - the pull happens, and names only the opaque key (protocol);
   - the key is the RIGHT one, i.e. the actual HMAC of the scope (crypto, via the
     test-only oracle in `tests/ward_keys.py`);
@@ -29,8 +34,9 @@ These tests assert five separable things:
     the same value (framing);
   - what the host holds reveals nothing, and a leaf that was tampered with or served from
     another path is REJECTED (confidentiality and authenticity);
-  - the screen still warns, because sealing proves a value authentic without proving it
-    current (UI).
+  - a stale leaf or an unproved denial is REJECTED against the trusted root (freshness);
+  - the screen still warns, because even a verified answer rides on a root nothing has
+    attested yet (UI).
 
 The host never builds a leaf -- it cannot, having none of the keys -- so entries are
 created by asking the device, which is also how a real host must work.
@@ -44,6 +50,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutContent
 
 from ...input_flows import InputFlowConfirmAllWarnings
+from ...ward_trie import WardTrie
 from ...ward_keys import (
     bip39_seed,
     derive_k_data,
@@ -110,31 +117,52 @@ def _expected(br_name: str, final=m.Success) -> list:
     return [m.WARDEntryRequest, m.ButtonRequest(name=br_name), final]
 
 
-def _write(session: Session, store: dict, call, br_name: str) -> tuple:
+def _sync_root(session: Session, store: WardTrie) -> None:
+    """Tell the device the store's current root.
+
+    Stands in for the attestation that will eventually deliver a root the device can
+    trust by itself. Every write changes the root, so a test that forgets to call this
+    leaves the device on a stale root -- which the device will then correctly reject,
+    since that is exactly the rollback it is now able to detect.
+    """
+    ward.debug_set_root(session, store.root())
+
+
+def _write(session: Session, store: WardTrie, call, br_name: str) -> tuple:
     """Run a write/delete, walking its screen, and return (result, recorder)."""
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected(br_name, m.WARDLeafAck))
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        res = call(ward.dict_provider(store))
+        res = call(ward.store_provider(store))
     return res, rec
 
 
-def _read(session: Session, store: dict, call) -> tuple:
+def _read(session: Session, store: WardTrie, call) -> tuple:
     """Run a read, walking its screen, and return (result, recorder)."""
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected("ward_get_entry"))
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        res = call(ward.dict_provider(store))
+        res = call(ward.store_provider(store))
     return res, rec
 
 
-def _seed(session: Session, store: dict, identifier: bytes, value: bytes) -> bytes:
+def _seed(
+    session: Session,
+    store: WardTrie,
+    identifier: bytes,
+    value: bytes,
+    sync_root: bool = True,
+) -> bytes:
     """Create an entry the only way a host can: ask the device to build the leaf.
 
     The host cannot synthesise one -- that is the point of the device being the encoder --
     so every fixture below goes through a real confirmed write.
+
+    `sync_root=False` leaves the device holding NO root, which is the state a release
+    build is in. Use it to isolate the AEAD layer: with a root held, the root check runs
+    first and catches tampering before the tag ever gets a chance to.
     """
     res, _rec = _write(
         session,
@@ -143,6 +171,8 @@ def _seed(session: Session, store: dict, identifier: bytes, value: bytes) -> byt
         "ward_set_entry",
     )
     ward.apply(store, res)
+    if sync_root:
+        _sync_root(session, store)
     return res.entry_key
 
 
@@ -157,7 +187,7 @@ def test_ward_pull_names_only_the_opaque_key(session: Session):
 
     def provider(entry_key: bytes):
         asked.append(entry_key)
-        return None
+        return ward.Answer()
 
     rec = _Recorded()
     with session.test_ctx as ctx:
@@ -181,7 +211,7 @@ def test_ward_pull_key_is_the_expected_hmac(session: Session):
     wrong SLIP-21 label, or built the scope differently, would still pass every other
     test in this file while putting every entry at the wrong path.
     """
-    res, _rec = _read(session, {}, lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    res, _rec = _read(session, WardTrie(), lambda p: ward.get_entry(session, _APP, b"addr1", p))
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
 
 
@@ -194,7 +224,7 @@ def test_ward_pull_key_is_deterministic_and_domain_separated(session: Session):
     without any knowledge of the seed.
     """
     keys = [
-        _read(session, {}, lambda p, a=app: ward.get_entry(session, a, b"addr1", p))[
+        _read(session, WardTrie(), lambda p, a=app: ward.get_entry(session, a, b"addr1", p))[
             0
         ].entry_key
         for app in (_APP, _APP, "OTHER")
@@ -213,7 +243,7 @@ def test_ward_rejects_nul_in_app_id(session: Session):
     UTF-8, so this is reachable input. Fails before any pull or screen.
     """
     with pytest.raises(exceptions.TrezorFailure, match="NUL"):
-        ward.get_entry(session, "bad\x00app", b"addr1", lambda _k: None)
+        ward.get_entry(session, "bad\x00app", b"addr1", lambda _k: ward.Answer())
 
 
 # --- the leaf ---------------------------------------------------------------------
@@ -227,10 +257,10 @@ def test_ward_leaf_round_trips_through_the_host(session: Session):
     This is the framing assertion: it would fail on any disagreement between the
     device's encode and decode paths, or on the host mangling what it stored.
     """
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     key = _seed(session, store, b"addr1", b"Petr_label")
 
-    assert list(store) == [key]
+    assert list(store.blobs) == [key]
     _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
     assert "Petr_label" in rec.text
 
@@ -243,9 +273,9 @@ def test_ward_leaf_is_sealed_and_hides_what_it_holds(session: Session):
     inferred from the encoding byte -- a build that set encoding=0 while forgetting to
     seal would pass a weaker check.
     """
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     key = _seed(session, store, b"addr1", b"Petr_label")
-    leaf = store[key]
+    leaf = store.blobs[key]
 
     # both parts sealed: the encrypted arm is set, the readable arm is not
     for part in (leaf.identity, leaf.content):
@@ -273,9 +303,9 @@ def test_ward_sealed_leaf_really_contains_the_preimage(session: Session):
     the path from it -- so this is currently the only thing that looks inside it. It is
     populated now so the leaf reaches its final shape before anything hashes it.
     """
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     key = _seed(session, store, b"addr1", b"Petr_label")
-    leaf = store[key]
+    leaf = store.blobs[key]
 
     identity = open_identity(_K_IDENT, key, "address", leaf.identity.encrypted)
     assert unpack_identity(identity) == (b"addr1", _APP.encode(), 0)
@@ -292,12 +322,12 @@ def test_ward_sealed_part_is_bound_to_its_path(session: Session):
     different entry's leaf -- a swap the keyed path alone would not catch, since the host
     chooses which stored bytes to hand back.
     """
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     key = _seed(session, store, b"addr1", b"Petr_label")
     other_key = expected_entry_key(_K_PATH, _APP, b"addr2")
 
     with pytest.raises(Exception):
-        open_content(_K_DATA, other_key, "address", store[key].content.encrypted)
+        open_content(_K_DATA, other_key, "address", store.blobs[key].content.encrypted)
 
 
 @pytest.mark.models("core")
@@ -307,7 +337,7 @@ def test_ward_delete_returns_a_leaf_with_both_parts_empty(session: Session):
     The reference keeps the identity part alive on delete, which leaves behind a record
     of which entries once existed.
     """
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     key = _seed(session, store, b"addr1", b"doomed")
 
     res, _rec = _write(
@@ -325,7 +355,7 @@ def test_ward_delete_returns_a_leaf_with_both_parts_empty(session: Session):
     assert res.leaf.identity.plain.identifier is None
 
     ward.apply(store, res)
-    assert store == {}
+    assert len(store) == 0
 
 
 @pytest.mark.models("core")
@@ -335,21 +365,23 @@ def test_ward_rejects_a_tampered_leaf(session: Session):
     This is the first thing in the whole subsystem the device can actually REJECT. Before
     sealing, any bytes the host returned were accepted and displayed.
     """
-    store: dict[bytes, ward.Leaf] = {}
-    key = _seed(session, store, b"addr1", b"Petr_label")
+    store = WardTrie()
+    # deliberately no root: this test is about the SEAL, and with a root held the root
+    # check would reject the edit first (a changed ciphertext changes the leaf hash)
+    key = _seed(session, store, b"addr1", b"Petr_label", sync_root=False)
 
-    sealed = store[key].content.encrypted
+    sealed = store.blobs[key].content.encrypted
     flipped = bytes([sealed.ct[0] ^ 1]) + sealed.ct[1:]
-    store[key] = ward.Leaf(
-        store[key].identity,
+    store.set(key, ward.Leaf(
+        store.blobs[key].identity,
         m.LeafContent(
             encoding=0,
             encrypted=m.EncryptedLeaf(nonce=sealed.nonce, tag=sealed.tag, ct=flipped),
         ),
-    )
+    ))
 
     with pytest.raises(exceptions.TrezorFailure, match="tag mismatch"):
-        ward.get_entry(session, _APP, b"addr1", ward.dict_provider(store))
+        ward.get_entry(session, _APP, b"addr1", ward.store_provider(store))
 
 
 @pytest.mark.models("core")
@@ -360,13 +392,16 @@ def test_ward_rejects_a_leaf_served_from_another_path(session: Session):
     binding to entry_key catches it. The keyed path alone could not: the host chooses
     which stored bytes to hand back.
     """
-    store: dict[bytes, ward.Leaf] = {}
-    key1 = _seed(session, store, b"addr1", b"one")
-    key2 = _seed(session, store, b"addr2", b"two")
+    store = WardTrie()
+    # no root here either -- see the tampered-leaf test; the AAD binding is what is
+    # under test, and the root check would otherwise get there first
+    key1 = _seed(session, store, b"addr1", b"one", sync_root=False)
+    key2 = _seed(session, store, b"addr2", b"two", sync_root=False)
 
-    swapped = {key1: store[key2]}
+    swapped = WardTrie()
+    swapped.set(key1, store.blobs[key2])
     with pytest.raises(exceptions.TrezorFailure, match="tag mismatch"):
-        ward.get_entry(session, _APP, b"addr1", ward.dict_provider(swapped))
+        ward.get_entry(session, _APP, b"addr1", ward.store_provider(swapped))
 
 
 # --- read -------------------------------------------------------------------------
@@ -375,7 +410,7 @@ def test_ward_rejects_a_leaf_served_from_another_path(session: Session):
 @pytest.mark.models("core")
 def test_ward_get_entry_pulls_and_shows(session: Session):
     """The device pulls the value from the host and renders it."""
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     key = _seed(session, store, b"addr1", b"Petr_label")
 
     res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
@@ -395,7 +430,7 @@ def test_ward_get_entry_pulls_and_shows(session: Session):
 def test_ward_get_entry_absent_is_distinct_from_empty(session: Session):
     """A missing entry (provider returns None) must not look like an entry whose value
     happens to be empty: the device says it was not found."""
-    _res, rec = _read(session, {}, lambda p: ward.get_entry(session, _APP, b"nope", p))
+    _res, rec = _read(session, WardTrie(), lambda p: ward.get_entry(session, _APP, b"nope", p))
 
     assert "entry not found" in rec.title
     assert "no entry" in rec.text.lower()
@@ -409,7 +444,7 @@ def test_ward_get_entry_empty_value_is_shown_as_an_entry(session: Session):
     empty value as an empty part -- i.e. as a delete -- and so could not represent this
     state at all. The value survives a real write and a real read.
     """
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     _seed(session, store, b"addr1", b"")
     assert len(store) == 1  # an empty value is a STORED entry, not a deletion
 
@@ -423,7 +458,7 @@ def test_ward_get_entry_empty_value_is_shown_as_an_entry(session: Session):
 @pytest.mark.models("core")
 def test_ward_get_entry_serves_the_right_one_of_several(session: Session):
     """The store holds several leaves under opaque keys and serves the one asked for."""
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     _seed(session, store, b"addr1", b"one")
     _seed(session, store, b"addr2", b"two")
     assert len(store) == 2
@@ -441,7 +476,7 @@ def test_ward_get_entry_serves_the_right_one_of_several(session: Session):
 def test_ward_set_entry_add_shows_the_new_value(session: Session):
     """Writing a key the host does not hold is an ADD: nothing is being replaced, so the
     screen must not claim otherwise."""
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
 
     res, rec = _write(
         session,
@@ -457,7 +492,7 @@ def test_ward_set_entry_add_shows_the_new_value(session: Session):
     # the device built the leaf; storing it is the host's job, under the key it was given
     # -- which the host could not have computed for itself
     ward.apply(store, res)
-    assert list(store) == [expected_entry_key(_K_PATH, _APP, b"addr1")]
+    assert list(store.blobs) == [expected_entry_key(_K_PATH, _APP, b"addr1")]
 
 
 @pytest.mark.models("core")
@@ -469,7 +504,7 @@ def test_ward_set_entry_update_names_the_value_it_replaces(session: Session):
     The old value is read back out of a leaf the device built earlier, so this also
     proves the decode path against real stored bytes rather than a fixture.
     """
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     key = _seed(session, store, b"addr1", b"old_label")
 
     res, rec = _write(
@@ -488,7 +523,7 @@ def test_ward_set_entry_update_names_the_value_it_replaces(session: Session):
     # the write lands on the SAME key it read from -- an update, not a second entry
     assert res.entry_key == key
     ward.apply(store, res)
-    assert list(store) == [key]
+    assert list(store.blobs) == [key]
 
 
 @pytest.mark.models("core")
@@ -498,7 +533,7 @@ def test_ward_set_entry_rejects_an_absent_value(session: Session):
     This fails before the pull, so there is no input flow and no screen.
     """
     with pytest.raises(exceptions.TrezorFailure, match="value is required"):
-        ward.set_entry(session, _APP, b"addr1", None, lambda _k: None)
+        ward.set_entry(session, _APP, b"addr1", None, lambda _k: ward.Answer())
 
 
 # --- delete -----------------------------------------------------------------------
@@ -508,7 +543,7 @@ def test_ward_set_entry_rejects_an_absent_value(session: Session):
 def test_ward_delete_entry_names_the_value_being_removed(session: Session):
     """Confirming a deletion by key alone tells the user nothing about what they lose,
     so the device pulls the entry and puts its value on screen."""
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     doomed = _seed(session, store, b"addr1", b"doomed_label")
     keep = _seed(session, store, b"addr2", b"keep_me")
 
@@ -527,7 +562,7 @@ def test_ward_delete_entry_names_the_value_being_removed(session: Session):
 
     # the device confirmed; the host performs the removal -- and only of that one entry
     ward.apply(store, res)
-    assert list(store) == [keep]
+    assert list(store.blobs) == [keep]
 
 
 @pytest.mark.models("core")
@@ -540,7 +575,7 @@ def test_ward_delete_entry_refuses_when_the_host_holds_nothing(session: Session)
     surfacing. The failure arrives after the pull but before any screen.
     """
     with pytest.raises(exceptions.TrezorFailure, match="no such entry"):
-        ward.delete_entry(session, _APP, b"ghost", lambda _k: None)
+        ward.delete_entry(session, _APP, b"ghost", lambda _k: ward.Answer())
 
 
 @pytest.mark.models("core")
@@ -550,7 +585,7 @@ def test_ward_delete_entry_deletes_an_empty_valued_entry(session: Session):
     The absent/empty distinction has to hold on this path too, or empty entries become
     undeletable -- the device would refuse, reading "empty" as "not there".
     """
-    store: dict[bytes, ward.Leaf] = {}
+    store = WardTrie()
     _seed(session, store, b"addr1", b"")
 
     res, rec = _write(
@@ -562,7 +597,7 @@ def test_ward_delete_entry_deletes_an_empty_valued_entry(session: Session):
 
     assert "delete entry" in rec.title
     ward.apply(store, res)
-    assert store == {}
+    assert len(store) == 0
 
 
 # --- shared validation ------------------------------------------------------------
@@ -572,15 +607,15 @@ def test_ward_delete_entry_deletes_an_empty_valued_entry(session: Session):
 @pytest.mark.parametrize(
     "call",
     [
-        pytest.param(lambda s: ward.get_entry(s, _APP, b"", lambda _k: None), id="get"),
+        pytest.param(lambda s: ward.get_entry(s, _APP, b"", lambda _k: ward.Answer()), id="get"),
         pytest.param(
-            lambda s: ward.set_entry(s, _APP, b"", b"v", lambda _k: None), id="set"
+            lambda s: ward.set_entry(s, _APP, b"", b"v", lambda _k: ward.Answer()), id="set"
         ),
         pytest.param(
-            lambda s: ward.delete_entry(s, _APP, b"", lambda _k: None), id="delete"
+            lambda s: ward.delete_entry(s, _APP, b"", lambda _k: ward.Answer()), id="delete"
         ),
         pytest.param(
-            lambda s: ward.get_entry(s, "", b"addr1", lambda _k: None), id="get-no-app"
+            lambda s: ward.get_entry(s, "", b"addr1", lambda _k: ward.Answer()), id="get-no-app"
         ),
     ],
 )
@@ -594,3 +629,106 @@ def test_ward_rejects_an_incomplete_key(session: Session, call):
     """
     with pytest.raises(exceptions.TrezorFailure, match="required"):
         call(session)
+
+
+# --- proofs against the trusted root ----------------------------------------------
+
+
+@pytest.mark.models("core")
+def test_ward_rejects_a_rolled_back_leaf(session: Session):
+    """The host serves an OLDER version of an entry it really did hold once.
+
+    Every byte is authentic -- this device sealed that leaf, for this very path -- so
+    neither the keyed path nor the AEAD can catch it. Only the root can: the old leaf
+    hashes to a root the device no longer trusts. This is the first time WARD can detect
+    a rollback, and it is the reason a root is worth having at all.
+    """
+    store = WardTrie()
+    key = _seed(session, store, b"addr1", b"old_value")
+    stale_leaf = store.blobs[key]
+
+    _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"new_value", p),
+        "ward_set_entry",
+    )
+    # apply the update, so the device's root moves on from the old value
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"newer_value", p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+    _sync_root(session, store)
+
+    rolled_back = WardTrie()
+    rolled_back.set(key, stale_leaf)
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
+        ward.get_entry(session, _APP, b"addr1", ward.store_provider(rolled_back))
+
+
+@pytest.mark.models("core")
+def test_ward_rejects_an_unproved_denial(session: Session):
+    """The host hides an entry by claiming it holds none.
+
+    Suppression is the other half of what a root buys. Without a proof the device would
+    have to take "no such entry" on trust, and a host could bury any entry it disliked.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"present")
+
+    def denies_everything(_entry_key: bytes) -> ward.Answer:
+        return ward.Answer()
+
+    with pytest.raises(exceptions.TrezorFailure, match="witness"):
+        ward.get_entry(session, _APP, b"addr1", denies_everything)
+
+
+@pytest.mark.models("core")
+def test_ward_rejects_a_membership_answer_without_a_proof(session: Session):
+    """A leaf offered with no proof at all is refused once a root is held.
+
+    TWO entries, not one: in a single-leaf tree the root IS the leaf hash, so the empty
+    proof is the correct proof and withholding it proves nothing. This test only means
+    something where a real proof would have had to be non-empty.
+    """
+    store = WardTrie()
+    key = _seed(session, store, b"addr1", b"present")
+    _seed(session, store, b"addr2", b"other")
+    assert len(store.membership_proof(key)) > 0  # the proof being withheld is real
+
+    def no_proof(_entry_key: bytes) -> ward.Answer:
+        return ward.Answer(leaf=store.blobs[key], proof=[])
+
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
+        ward.get_entry(session, _APP, b"addr1", no_proof)
+
+
+@pytest.mark.models("core")
+def test_ward_accepts_a_proved_absence(session: Session):
+    """The converse: a properly witnessed absence is accepted and shown as not found.
+
+    Without this the rejection tests above would pass just as well on a device that
+    refused every denial, which would be useless rather than secure.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"present")
+
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"absent", p)
+    )
+    assert "entry not found" in rec.title
+
+
+@pytest.mark.models("core")
+def test_ward_verifies_a_present_entry_against_the_root(session: Session):
+    """And a well-proved present entry still shows its value."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"Petr_label")
+
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p)
+    )
+    assert "Petr_label" in rec.text

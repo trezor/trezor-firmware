@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""WARD client -- plaintext leaf, PULL-only, keyed path.
+"""WARD client -- sealed leaf, PULL-only, keyed path, proofs against a root.
 
 The device stores no entries. It asks the host for the one it needs mid-workflow, so
 the host must be prepared to answer a device-initiated `WARDEntryRequest` while its own
@@ -23,8 +23,10 @@ call, inspect what came back, answer it, repeat until the workflow returns.
 
 Writes work the same way and pull too: the device asks for the CURRENT value so it can
 show what is being replaced or removed. The device does not write -- it returns the leaf
-it built and the CALLER applies it, see `apply`. Nothing is authenticated in this phase;
-see messages-ward.proto.
+it built and the CALLER applies it, see `apply`.
+
+The host must also PROVE its answers once the device holds a root: a present leaf comes
+with a membership proof, an absent one with a witness. See `Answer`.
 
 **The store is keyed by the opaque `entry_key`, not by the identifier.** The device
 derives that key from a seed this library does not have, so a host CANNOT compute it --
@@ -60,8 +62,25 @@ class Leaf(NamedTuple):
     content: Optional[messages.LeafContent]
 
 
-# Answers a device pull: entry_key -> leaf, or None for "no such entry".
-EntryProvider = Callable[[bytes], Optional[Leaf]]
+class Answer(NamedTuple):
+    """What the host hands back for one path.
+
+    A leaf alone is not enough once the device holds a root: the answer has to be
+    provable. `proof` accompanies a present leaf; `witness_*` accompany an absent one,
+    since absence is shown by exhibiting the leaf that occupies the path instead.
+
+    An all-empty Answer says "the tree is empty", which only a device holding no root can
+    accept.
+    """
+
+    leaf: Optional[Leaf] = None
+    proof: Optional[list] = None
+    witness_entry_key: Optional[bytes] = None
+    witness_commit: Optional[bytes] = None
+
+
+# Answers a device pull, keyed by the opaque path.
+EntryProvider = Callable[[bytes], Answer]
 
 
 class WardResult(NamedTuple):
@@ -102,12 +121,18 @@ def _call_answering_pulls(
 
     while isinstance(res, messages.WARDEntryRequest):
         entry_key = res.entry_key or b""
-        held = provider(entry_key)
-        ack = messages.WARDEntryAck()
-        if held is not None:
-            # Hand back exactly what was stored. Absent fields mean "no such entry".
-            ack = messages.WARDEntryAck(identity=held.identity, content=held.content)
-        res = session.call(ack)
+        answer = provider(entry_key)
+        leaf = answer.leaf
+        # Hand back exactly what was stored. Absent identity+content means "no entry".
+        res = session.call(
+            messages.WARDEntryAck(
+                identity=leaf.identity if leaf is not None else None,
+                content=leaf.content if leaf is not None else None,
+                proof=answer.proof or [],
+                witness_entry_key=answer.witness_entry_key,
+                witness_commit=answer.witness_commit,
+            )
+        )
 
     if isinstance(res, messages.WARDLeafAck):
         return WardResult(
@@ -191,44 +216,63 @@ def delete_entry(
     )
 
 
-def dict_provider(entries: dict[bytes, Leaf]) -> EntryProvider:
-    """An `EntryProvider` backed by a plain dict of `entry_key -> Leaf`.
+def debug_set_root(session: "Session", root: Optional[bytes]) -> messages.Success:
+    """Seed the root the device verifies proofs against. DEBUG BUILDS ONLY.
 
-    This is what stands in for the host database in this phase; later phases replace it
-    with a real store that also holds the proof material. Note what it is NOT keyed by:
-    there is no identifier anywhere in it, which is the property the keyed path buys, and
-    it is why a host cannot enumerate or correlate what it holds.
+    Stands in for the attestation that will eventually deliver a root the device can
+    trust on its own. Until then a release build has no way to set one, so it verifies
+    nothing -- see messages-ward.proto.
+    """
+    return session.call(
+        messages.WARDDebugSetRoot(root=root or b""), expect=messages.Success
+    )
 
-    Reads only. Applying a confirmed write or delete to `entries` is the caller's job --
-    see `set_entry` and `delete_entry`, which return both the key and the leaf.
+
+def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
+    """A leaf whose content body is empty is a deletion, not an empty-valued entry."""
+    if leaf is None or leaf.content is None:
+        return True
+    content = leaf.content
+    if content.plaintext is not None:
+        return not content.plaintext.content
+    if content.encrypted is not None:
+        return not content.encrypted.ct
+    return True
+
+
+def store_provider(store) -> EntryProvider:
+    """An `EntryProvider` backed by anything with the `WardTrie` shape.
+
+    Serving needs NO key: the leaf commitment is over the encoded parts, so a host proves
+    what it holds without being able to read it. Note also what the store is not keyed by
+    -- there is no identifier in it anywhere, which is what the keyed path buys.
     """
 
-    def provider(entry_key: bytes) -> Optional[Leaf]:
-        return entries.get(entry_key)
+    def provider(entry_key: bytes) -> Answer:
+        if entry_key in store:
+            return Answer(
+                leaf=store.blobs[entry_key], proof=store.membership_proof(entry_key)
+            )
+        proof, witness_key, witness_commit = store.nonmembership_proof(entry_key)
+        return Answer(
+            proof=proof, witness_entry_key=witness_key, witness_commit=witness_commit
+        )
 
     return provider
 
 
-def apply(entries: dict[bytes, Leaf], result: WardResult) -> None:
-    """Apply a confirmed write or delete to a `dict_provider`-style store.
+def apply(store, result: WardResult) -> None:
+    """Apply a confirmed write or delete to the caller's store.
 
     The device confirmed and built the leaf; persisting it is the host's job, and a
     result the caller drops on the floor means the user approved a change that never
-    happened. A leaf whose content part is empty is a delete, so the record goes away
-    rather than being kept as a tombstone.
+    happened. An empty content body is a delete, so the record goes away rather than
+    being kept as a tombstone.
     """
     if result.leaf is None:
         raise ValueError("this result carries no leaf; nothing to apply")
 
-    content = result.leaf.content
-    body = None
-    if content is not None:
-        if content.plaintext is not None:
-            body = content.plaintext.content
-        elif content.encrypted is not None:
-            body = content.encrypted.ct
-
-    if not body:
-        entries.pop(result.entry_key, None)
+    if leaf_is_delete(result.leaf):
+        store.remove(result.entry_key)
     else:
-        entries[result.entry_key] = result.leaf
+        store.set(result.entry_key, result.leaf)

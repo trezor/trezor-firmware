@@ -53,6 +53,7 @@ class SessionThpCache(DataCache):
                 96,  # APP_CARDANO_ICARUS_SECRET
                 96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
                 0,  # APP_MONERO_LIVE_REFRESH
+                32,  # APP_WARD_ROOT
             )
         super().__init__()
 

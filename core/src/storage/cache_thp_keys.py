@@ -17,3 +17,4 @@ if utils.USE_THP:
         APP_CARDANO_ICARUS_SECRET = const(9)
         APP_CARDANO_ICARUS_TREZOR_SECRET = const(10)
         APP_MONERO_LIVE_REFRESH = const(11)
+        APP_WARD_ROOT = const(12)
