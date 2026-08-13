@@ -181,6 +181,37 @@ message WARDEntryAck {
     reserved 1;                            // was a bare `value`; the unit is a leaf now
     optional LeafIdentity identity = 2;    // absent together with content = no such entry
     optional LeafContent  content  = 3;
+
+    // Proof that this answer matches the tree the device already trusts. Elements are
+    // 36 bytes each -- u16be(split_bit) || u16be(skiplen) || sibling(32B) -- in
+    // LEAF-TO-ROOT order.
+    //
+    //   membership     : identity + content + proof
+    //   non-membership : no identity/content; proof + witness_entry_key + witness_commit
+    //   empty tree     : nothing at all
+    //
+    // Absence needs a witness because a binary trie has no "absent" node to point at:
+    // the host exhibits the leaf that already occupies the path the requested key would
+    // take. It travels as two hashes, so serving an absence proof reveals nothing about
+    // the witness's own identifier or value.
+    repeated bytes proof             = 4;
+    optional bytes witness_entry_key = 5;
+    optional bytes witness_commit    = 6;
+}
+
+/**
+ * Request: DEBUG BUILDS ONLY. Seed the root the device verifies proofs against.
+ *
+ * A proof is only worth checking against a root the host did not choose, so the device
+ * needs a root of its own. Until roots are attested, this is how tests give it one --
+ * hence debug-only: a release build has no way to set a root, and therefore verifies
+ * nothing yet and keeps saying so on screen.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message WARDDebugSetRoot {
+    optional bytes root = 1;  // 32B trie root; absent or empty = the tree is empty
 }
 
 /**

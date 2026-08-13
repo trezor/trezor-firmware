@@ -770,6 +770,7 @@ if TYPE_CHECKING:
         WARDSetEntry = 2303
         WARDDeleteEntry = 2304
         WARDLeafAck = 2305
+        WARDDebugSetRoot = 2306
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

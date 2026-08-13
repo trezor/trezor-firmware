@@ -835,6 +835,7 @@ class MessageType(IntEnum):
     WARDSetEntry = 2303
     WARDDeleteEntry = 2304
     WARDLeafAck = 2305
+    WARDDebugSetRoot = 2306
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -10162,16 +10163,39 @@ class WARDEntryAck(protobuf.MessageType):
     FIELDS = {
         2: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
         3: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+        4: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
+        5: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
+        proof: Optional[Sequence["bytes"]] = None,
         identity: Optional["LeafIdentity"] = None,
         content: Optional["LeafContent"] = None,
+        witness_entry_key: Optional["bytes"] = None,
+        witness_commit: Optional["bytes"] = None,
     ) -> None:
+        self.proof: Sequence["bytes"] = proof if proof is not None else []
         self.identity = identity
         self.content = content
+        self.witness_entry_key = witness_entry_key
+        self.witness_commit = witness_commit
+
+
+class WARDDebugSetRoot(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2306
+    FIELDS = {
+        1: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        root: Optional["bytes"] = None,
+    ) -> None:
+        self.root = root
 
 
 class WARDLeafAck(protobuf.MessageType):
