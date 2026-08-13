@@ -402,6 +402,8 @@ enum MessageType {
     MessageType_WARDGetEntry = 2300 [(wire_in) = true];
     MessageType_WARDEntryRequest = 2301 [(wire_out) = true];
     MessageType_WARDEntryAck = 2302 [(wire_in) = true];
+    MessageType_WARDSetEntry = 2303 [(wire_in) = true];
+    MessageType_WARDDeleteEntry = 2304 [(wire_in) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
