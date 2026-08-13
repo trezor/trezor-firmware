@@ -4,15 +4,18 @@ from common import *  # isort:skip
 from trezor.wire import DataError
 
 from apps.ward.keys import _scope, entry_key
+from apps.ward import leaf as L
 from apps.ward.leaf import (
     EMPTY_PART,
     ENC_ENCRYPTED,
     ENC_PLAINTEXT,
+    commit_of,
     decode_content,
     decode_identity,
     encode_content,
     encode_identity,
     is_delete,
+    leaf_hash_of,
     pack_content,
     pack_identity,
     part_bytes,
@@ -140,6 +143,8 @@ class TestWardKeys(unittest.TestCase):
 class TestWardLeaf(unittest.TestCase):
     EK = bytes(range(32))
     KT = "address"
+    K_IDENT = bytes(range(32, 64))
+    K_DATA = bytes(range(64, 96))
 
     def test_part_framing(self):
         """part = encoding(1B) || len8(nonce) || nonce || len8(tag) || tag
@@ -200,8 +205,8 @@ class TestWardLeaf(unittest.TestCase):
         These two must stay distinguishable, or an entry whose value is empty can neither
         be represented nor deleted.
         """
-        empty_value = encode_content(self.EK, self.KT, b"")
-        deleted = encode_content(self.EK, self.KT, None)
+        empty_value = encode_content(self.K_DATA, self.EK, self.KT, b"")
+        deleted = encode_content(self.K_DATA, self.EK, self.KT, None)
 
         self.assertFalse(is_delete(empty_value))
         self.assertTrue(is_delete(deleted))
@@ -209,24 +214,195 @@ class TestWardLeaf(unittest.TestCase):
         self.assertEqual(deleted, EMPTY_PART)
 
         # ...and an empty value survives the round trip AS an empty value
-        self.assertEqual(decode_content(self.EK, self.KT, empty_value), (0, b""))
-        self.assertIsNone(decode_content(self.EK, self.KT, deleted))
+        self.assertEqual(decode_content(self.K_DATA, self.EK, self.KT, empty_value), (0, b""))
+        self.assertIsNone(decode_content(self.K_DATA, self.EK, self.KT, deleted))
 
     def test_content_round_trip(self):
-        part = encode_content(self.EK, self.KT, b"hello", c_leaf=9)
-        self.assertEqual(decode_content(self.EK, self.KT, part), (9, b"hello"))
+        part = encode_content(self.K_DATA, self.EK, self.KT, b"hello", c_leaf=9)
+        self.assertEqual(decode_content(self.K_DATA, self.EK, self.KT, part), (9, b"hello"))
 
     def test_identity_round_trip(self):
-        part = encode_identity(self.EK, self.KT, b"alice", "bitcoin", 7)
-        self.assertEqual(decode_identity(self.EK, self.KT, part), (b"alice", b"bitcoin", 7))
-        self.assertIsNone(decode_identity(self.EK, self.KT, EMPTY_PART))
+        part = encode_identity(self.K_IDENT, self.EK, self.KT, b"alice", "bitcoin", 7)
+        self.assertEqual(
+            decode_identity(self.K_IDENT, self.EK, self.KT, part), (b"alice", b"bitcoin", 7)
+        )
+        self.assertIsNone(decode_identity(self.K_IDENT, self.EK, self.KT, EMPTY_PART))
 
     def test_a_delete_empties_both_parts(self):
         """A full delete leaves no tombstone. The reference keeps the identity part
         alive, which preserves a record of which entries once existed."""
         self.assertTrue(is_delete(EMPTY_PART))
-        self.assertIsNone(decode_identity(self.EK, self.KT, EMPTY_PART))
-        self.assertIsNone(decode_content(self.EK, self.KT, EMPTY_PART))
+        self.assertIsNone(decode_identity(self.K_IDENT, self.EK, self.KT, EMPTY_PART))
+        self.assertIsNone(decode_content(self.K_DATA, self.EK, self.KT, EMPTY_PART))
+
+
+class TestWardSealedLeaf(unittest.TestCase):
+    """The sealed leaf, pinned against the reference's own published vectors.
+
+    The nonce is passed explicitly so these are known-answer tests; production leaves it
+    None and a fresh one is generated per write.
+    """
+
+    NONCE = b"\x5a" * 12
+    KT = "address"
+
+    def setUp(self):
+        self.k_path = slip21_key(SEED, [b"ward", b"K_path"])
+        self.k_ident = slip21_key(SEED, [b"ward", b"K_ident", b"address"])
+        self.k_data = slip21_key(SEED, [b"ward", b"K_data", b"address"])
+        self.ek = entry_key(self.k_path, "bitcoin", b"alice", "address", 7)
+
+    def _leaf(self):
+        id_part = encode_identity(
+            self.k_ident, self.ek, self.KT, b"alice", "bitcoin", 7, nonce=self.NONCE
+        )
+        val_part = encode_content(
+            self.k_data, self.ek, self.KT, b"data_alice", c_leaf=5, nonce=self.NONCE
+        )
+        return id_part, val_part
+
+    def test_frozen_commit_and_leaf_hash(self):
+        """The whole sealed leaf, byte-for-byte against the reference.
+
+        This is the strongest cross-implementation check available: it pins the SLIP-21
+        labels, the scope, both plaintext layouts, the part framing, the AAD, the bucket
+        padding and the commitment in a single pair of constants. If any one of them
+        drifts, this fails.
+        """
+        id_part, val_part = self._leaf()
+        commit = commit_of(self.KT, id_part, val_part)
+        self.assertEqual(
+            commit,
+            bytes.fromhex(
+                "4e2f5c55548a63a56e10eed9b00b4eaebe7b27ece484aefe319ffdd5b8c3e534"
+            ),
+        )
+        self.assertEqual(
+            leaf_hash_of(self.ek, commit),
+            bytes.fromhex(
+                "ff2d92fe3997f4c2201aa3060c3b2f2fa8bf7e72f463caa63489c95122c57400"
+            ),
+        )
+
+    def test_seal_then_open(self):
+        id_part, val_part = self._leaf()
+        self.assertEqual(id_part[0], ENC_ENCRYPTED)
+        self.assertEqual(val_part[0], ENC_ENCRYPTED)
+        self.assertEqual(len(id_part[1]), 12)  # nonce
+        self.assertEqual(len(id_part[2]), 16)  # Poly1305 tag
+        self.assertEqual(
+            decode_identity(self.k_ident, self.ek, self.KT, id_part),
+            (b"alice", b"bitcoin", 7),
+        )
+        self.assertEqual(
+            decode_content(self.k_data, self.ek, self.KT, val_part), (5, b"data_alice")
+        )
+
+    def test_ciphertext_hides_the_plaintext(self):
+        """Neither the identifier nor the value may appear in what the host receives."""
+        id_part, val_part = self._leaf()
+        for part in (id_part, val_part):
+            self.assertTrue(b"alice" not in part[3])
+            self.assertTrue(b"data_alice" not in part[3])
+            self.assertTrue(b"bitcoin" not in part[3])
+
+    def test_padding_hides_the_length(self):
+        """Ciphertext is padded to a bucket, so its length leaks only a coarse band."""
+        short = encode_content(self.k_data, self.ek, self.KT, b"x", nonce=self.NONCE)
+        longer = encode_content(
+            self.k_data, self.ek, self.KT, b"y" * 40, nonce=self.NONCE
+        )
+        self.assertEqual(len(short[3]), 64)
+        self.assertEqual(len(longer[3]), 64)  # same bucket => same ciphertext length
+        big = encode_content(
+            self.k_data, self.ek, self.KT, b"z" * 200, nonce=self.NONCE
+        )
+        self.assertEqual(len(big[3]), 256)
+
+    def test_a_tampered_part_is_rejected(self):
+        """Any edit to the tag or the ciphertext must fail the tag check."""
+        _id_part, val_part = self._leaf()
+        encoding, nonce, tag, ct = val_part
+
+        bad_tag = (encoding, nonce, bytes([tag[0] ^ 1]) + tag[1:], ct)
+        with self.assertRaises(DataError):
+            decode_content(self.k_data, self.ek, self.KT, bad_tag)
+
+        bad_ct = (encoding, nonce, tag, bytes([ct[0] ^ 1]) + ct[1:])
+        with self.assertRaises(DataError):
+            decode_content(self.k_data, self.ek, self.KT, bad_ct)
+
+    def test_a_part_cannot_be_moved_to_another_path(self):
+        """The AAD binds a part to its entry_key, so replaying it elsewhere fails.
+
+        This is what stops a host from answering a request for one entry with another
+        entry's leaf -- the swap that the keyed path alone would not catch.
+        """
+        _id_part, val_part = self._leaf()
+        other_ek = entry_key(self.k_path, "bitcoin", b"bob", "address", 7)
+        with self.assertRaises(DataError):
+            decode_content(self.k_data, other_ek, self.KT, val_part)
+
+    def test_a_part_cannot_be_consumed_as_the_other_part(self):
+        """Distinct AAD domains stop an identity part being opened as a content part."""
+        id_part, val_part = self._leaf()
+        with self.assertRaises(DataError):
+            decode_content(self.k_ident, self.ek, self.KT, id_part)
+        with self.assertRaises(DataError):
+            decode_identity(self.k_data, self.ek, self.KT, val_part)
+
+    def test_a_part_cannot_be_opened_under_another_key_type(self):
+        """key_type is in the AAD as well as selecting the key."""
+        id_part, _val_part = self._leaf()
+        with self.assertRaises(DataError):
+            decode_identity(self.k_ident, self.ek, "label", id_part)
+
+    def test_fresh_nonce_per_write(self):
+        """Sealing the same value twice must not reuse a nonce.
+
+        Reuse under ChaCha20-Poly1305 loses confidentiality AND tag unforgeability, and a
+        rollback legitimately revisits a leaf, so the nonce must never be derived from it.
+        """
+        a = encode_content(self.k_data, self.ek, self.KT, b"same")
+        b = encode_content(self.k_data, self.ek, self.KT, b"same")
+        self.assertNotEqual(a[1], b[1])
+        self.assertNotEqual(a[3], b[3])
+
+    def test_plaintext_mode_round_trips(self):
+        """The per-part dev switch works, and independently per part.
+
+        The reference has these flags but never exercises them, so its plaintext branches
+        were unreachable and untested.
+        """
+        try:
+            L.WARD_PLAINTEXT_CONTENT = True
+            part = encode_content(self.k_data, self.ek, self.KT, b"readable")
+            self.assertEqual(part[0], ENC_PLAINTEXT)
+            self.assertEqual(part[1], b"")  # no nonce
+            self.assertTrue(b"readable" in part[3])  # host-inspectable, as intended
+            self.assertEqual(
+                decode_content(self.k_data, self.ek, self.KT, part), (0, b"readable")
+            )
+            # ...and the other part is unaffected
+            id_part = encode_identity(
+                self.k_ident, self.ek, self.KT, b"alice", "bitcoin", 7
+            )
+            self.assertEqual(id_part[0], ENC_ENCRYPTED)
+        finally:
+            L.WARD_PLAINTEXT_CONTENT = False
+
+    def test_an_empty_part_survives_a_sealed_build(self):
+        """A delete's empty part is plaintext-encoded by construction, so the codec must
+        accept it even in a sealed build -- otherwise a build rejects its own delete."""
+        from trezor.messages import LeafContent, PlaintextLeaf
+
+        wire = LeafContent(encoding=ENC_PLAINTEXT, plaintext=PlaintextLeaf(content=b""))
+        self.assertTrue(is_delete(L.read_leaf_content(wire)))
+
+        # a NON-empty plaintext part, by contrast, must be refused
+        wire = LeafContent(encoding=ENC_PLAINTEXT, plaintext=PlaintextLeaf(content=b"x"))
+        with self.assertRaises(DataError):
+            L.read_leaf_content(wire)
 
 
 if __name__ == "__main__":
