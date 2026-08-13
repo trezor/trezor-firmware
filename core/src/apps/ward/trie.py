@@ -187,3 +187,154 @@ def verify_nonmembership(
 
     witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
     return reconstruct(witness_leaf, proof, witness_entry_key) == expected_root
+
+
+def _leaf_of(entry_key: bytes, leaf) -> bytes:
+    from .leaf import leaf_hash
+
+    return leaf_hash(entry_key, leaf[0], leaf[1], leaf[2])
+
+
+def compute_new_root(
+    entry_key: bytes,
+    old_leaf,
+    new_leaf,
+    proof: "list[bytes]",
+    stored_root: bytes | None,
+    witness_entry_key: bytes | None = None,
+    witness_commit: bytes | None = None,
+    sibling_node: "tuple[int, bytes, bytes] | None" = None,
+) -> bytes | None:
+    """Verify the CURRENT state, then derive the root that replaces it.
+
+    `old_leaf` / `new_leaf` are (key_type, id_part, val_part) triples the device built, or
+    None: old_leaf=None inserts, new_leaf=None deletes. Returns the new root, or None if
+    the tree becomes empty. Raises rather than returning a bool -- a write must abort, not
+    proceed on a false.
+
+    The point of this function is that the device never takes the host's word for the
+    state it is replacing. In every branch but the very first insert, the host must PROVE
+    the current leaf (or the current absence) against the root the device already holds,
+    before the device will compute anything from it. A host cannot walk the device through
+    a fabricated present to land it on a chosen future.
+
+    `sibling_node` is (split_bit, left, right) for the collapsing sibling on a DELETE --
+    see below for why a delete needs it.
+    """
+    from trezor.wire import DataError
+
+    from .leaf import leaf_hash_of
+
+    inserting = old_leaf is None
+    deleting = new_leaf is None
+    if inserting and deleting:
+        raise DataError("WARD: nothing to write")
+
+    if inserting:
+        if not proof and witness_entry_key is None:
+            # The very first entry: there is no state to prove, so the device's OWN
+            # record that it holds no root is the only authority accepted here.
+            if stored_root is not None:
+                raise DataError("WARD: tree is not empty; a witness is required")
+            return _leaf_of(entry_key, new_leaf)
+
+        if witness_entry_key is None or witness_commit is None:
+            raise DataError("WARD: insert needs a non-membership witness")
+        if witness_entry_key == entry_key:
+            raise DataError("WARD: witness must differ from entry_key")
+
+        for split_bit, _skiplen, _sibling in validate_proof_shape(proof):
+            if addr_bit(entry_key, split_bit) != addr_bit(witness_entry_key, split_bit):
+                raise DataError("WARD: witness does not occupy the target's path")
+
+        witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
+        if reconstruct(witness_leaf, proof, witness_entry_key) != stored_root:
+            raise DataError("WARD: witness is not in the tree")
+
+        # Where the two paths part is computed HERE, never taken from the host: it decides
+        # where the new leaf is spliced in, so a host-chosen value would let it graft the
+        # entry somewhere structurally inconsistent with the rest of the tree.
+        split_bit = -1
+        for b in range(_MAX_BITS):
+            if addr_bit(entry_key, b) != addr_bit(witness_entry_key, b):
+                split_bit = b
+                break
+        if split_bit < 0:
+            raise DataError("WARD: entry_key and witness are equal")
+
+        # The new branch goes at `split_bit`, which is NOT necessarily below every branch
+        # on the witness's path. Path compression means the two keys are only compared at
+        # the bits the tree actually branches on, so they can agree at all of those and
+        # still part inside a compressed run -- i.e. ABOVE an existing branch. That is the
+        # ordinary case for a random key, not a corner one.
+        #
+        # Splicing there re-parents the branch immediately below, whose hash commits to a
+        # skiplen measured from its old parent. Unlike the delete case the device can fix
+        # this itself: that node is ON the path it is folding, so it holds both children
+        # and simply re-folds it at the new depth.
+        below = []
+        idx = 0
+        while idx < len(proof):
+            sb, _sk, _sib = _parse_proof_elem(proof[idx])
+            if sb <= split_bit:
+                break
+            below.append(proof[idx])
+            idx += 1
+
+        node = witness_leaf
+        for i, elem in enumerate(below):
+            sb, sk, sib = _parse_proof_elem(elem)
+            if i == len(below) - 1:
+                # the top of the spliced-off subtree: re-parented under the new branch
+                sk = sb - (split_bit + 1)
+            if addr_bit(witness_entry_key, sb) == 0:
+                node = internal_hash(sb, sk, node, sib)
+            else:
+                node = internal_hash(sb, sk, sib, node)
+
+        parent_split = _parse_proof_elem(proof[idx])[0] if idx < len(proof) else -1
+        new_leaf_h = _leaf_of(entry_key, new_leaf)
+        skiplen = split_bit - (parent_split + 1)
+        if addr_bit(entry_key, split_bit) == 0:
+            branch = internal_hash(split_bit, skiplen, new_leaf_h, node)
+        else:
+            branch = internal_hash(split_bit, skiplen, node, new_leaf_h)
+
+        # above the splice the two keys agree, so folding by either path is the same
+        return reconstruct(branch, proof[idx:], witness_entry_key)
+
+    # Both DELETE and UPDATE must first prove the leaf they claim to be replacing.
+    if stored_root is None:
+        raise DataError("WARD: no trusted root")
+    current = _leaf_of(entry_key, old_leaf)
+    if reconstruct(current, proof, entry_key) != stored_root:
+        raise DataError("WARD: current entry does not match the trusted root")
+
+    if not deleting:
+        return reconstruct(_leaf_of(entry_key, new_leaf), proof, entry_key)
+
+    if not proof:
+        return None  # the last leaf is gone; the tree is empty
+
+    # Deleting collapses the branch above, and the sibling takes its place. That REPARENTS
+    # the sibling, and a node's hash commits to its own skiplen, which is measured from
+    # its parent -- so the sibling's hash is stale the moment it moves, and the device
+    # holds only that hash. Promoting it unchanged (as one might reasonably write this)
+    # yields a root no canonical rebuild agrees with, and only when the sibling is a
+    # BRANCH: a leaf has no skiplen and promotes exactly.
+    #
+    # So a branch sibling must arrive decomposed, and the device re-derives it. Nothing is
+    # trusted: the pieces are checked against the sibling hash the proof already committed
+    # to, then re-hashed at the shallower depth.
+    split_bit, skiplen, sibling = _parse_proof_elem(proof[0])
+    if sibling_node is not None:
+        sib_split, left, right = sibling_node
+        if sib_split <= split_bit or sib_split >= _MAX_BITS:
+            raise DataError("WARD: sibling split_bit is not below the collapsing branch")
+        if internal_hash(sib_split, sib_split - (split_bit + 1), left, right) != sibling:
+            raise DataError("WARD: sibling decomposition does not match the proof")
+        # its parent moves up by the collapsed branch, so it absorbs that branch's own
+        # skiplen plus the level itself
+        sibling = internal_hash(sib_split, sib_split - (split_bit + 1) + skiplen + 1, left, right)
+
+    return reconstruct(sibling, proof[1:], entry_key)
