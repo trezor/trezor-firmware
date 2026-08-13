@@ -6,11 +6,21 @@ option java_outer_classname = "TrezorMessageWard";
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
 /**
- * WARD phase 1: PLAINTEXT, PULL-ONLY.
+ * WARD phase 1: PLAINTEXT, PULL-ONLY, KEYED PATH.
  *
  * The device stores no entries. When it needs one it PULLS it from the host
  * mid-workflow: it emits WARDEntryRequest naming what it wants, the host answers
  * WARDEntryAck, and the device displays the value.
+ *
+ * What it names is an opaque 32-byte keyed path (see WARDEntryRequest), never the
+ * identifier. The host's store is therefore keyed by HMAC output, so persisted host
+ * state -- and any backup or sync derived from it -- contains no identifiers.
+ *
+ * The requests below still carry app_id and identifier, because the host has to say
+ * which entry it wants operated on and the device needs both to derive the path. So
+ * this does NOT hide from the host what the host itself just asked about; the win is
+ * over the host's STORAGE. Hiding the request too arrives when the caller is an
+ * on-device app rather than the host.
  *
  * Reads (WARDGetEntry) and writes (WARDSetEntry, WARDDeleteEntry) both hang off that
  * one pull. On a write the device pulls the CURRENT value first, so it can show the
@@ -79,13 +89,23 @@ message WARDDeleteEntry {
 }
 
 /**
- * Response: device -> host, sent mid-workflow. Names the entry the device wants.
- * Emitted by all three requests above. The host must reply with WARDEntryAck.
- * @next WARDEntryAck
+ * Response: device -> host, sent mid-workflow. Names the entry the device wants, as an
+ * OPAQUE KEYED PATH. Emitted by all three requests above; the host must reply with
+ * WARDEntryAck.
+ *
+ * The device derives entry_key itself and NEVER accepts one from the host, so the host
+ * cannot steer a read or a write at a slot of its choosing:
+ *
+ *   K_path    = SLIP21(seed, ["ward", "K_path"])
+ *   scope     = app_id || 0x00 || key_type || 0x00 || device_id(1B)
+ *   entry_key = HMAC-SHA256(K_path, scope || identifier)
+ *
+ * K_path is passphrase-dependent, so every hidden wallet has its own key space and the
+ * same identifier maps to different paths under different passphrases.
  */
 message WARDEntryRequest {
-    optional string app_id     = 1;  // echoes the requested domain
-    optional bytes  identifier = 2;  // echoes the requested key
+    reserved 1, 2;                  // were app_id, identifier -- now folded into entry_key
+    optional bytes entry_key = 3;   // 32B keyed path; the host serves by this alone
 }
 
 /**

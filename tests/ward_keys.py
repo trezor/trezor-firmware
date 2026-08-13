@@ -1,0 +1,73 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
+"""TEST-ONLY oracle for the WARD keyed path.
+
+**A real host cannot do this and must never try.** Deriving `entry_key` needs the seed,
+which is exactly what a host does not have -- that is the property the keyed path buys,
+and it is why `trezorlib.ward` deliberately has no derivation in it. This module exists
+only so tests can assert that the device asked for the *right* opaque key rather than
+merely some 32 bytes.
+
+Kept in `tests/` rather than `trezorlib/` on purpose: the reference implementation put
+its equivalent in a host-side tree object that then held `K_path`, which conflated "the
+store" with "the deriver" and made it easy to write host code that could not exist in
+production.
+
+Mirrors `core/src/apps/ward/keys.py`; the shared vectors are pinned in
+`core/tests/test_apps.ward.py`.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import hmac
+
+__all__ = ["bip39_seed", "slip21_key", "derive_k_path", "entry_key"]
+
+
+def bip39_seed(mnemonic: str, passphrase: str = "") -> bytes:
+    """BIP-39 seed: PBKDF2-HMAC-SHA512(mnemonic, "mnemonic" + passphrase, 2048)."""
+    return hashlib.pbkdf2_hmac(
+        "sha512", mnemonic.encode(), b"mnemonic" + passphrase.encode(), 2048, 64
+    )
+
+
+def slip21_key(seed: bytes, path: list[bytes]) -> bytes:
+    """SLIP-0021 symmetric derivation; returns the node's 32-byte key (data[32:64])."""
+    data = hmac.new(b"Symmetric key seed", seed, hashlib.sha512).digest()
+    for label in path:
+        h = hmac.new(data[0:32], b"\x00", hashlib.sha512)
+        h.update(label)
+        data = h.digest()
+    return data[32:64]
+
+
+def derive_k_path(seed: bytes) -> bytes:
+    """K_path = SLIP21(seed, ["ward", "K_path"])."""
+    return slip21_key(seed, [b"ward", b"K_path"])
+
+
+def entry_key(
+    k_path: bytes,
+    app_id: str,
+    identifier: bytes,
+    key_type: str = "address",
+    device_id: int = 0,
+) -> bytes:
+    """entry_key = HMAC-SHA256(K_path, app_id || 0x00 || key_type || 0x00 || dev || id)."""
+    scope = app_id.encode() + b"\x00" + key_type.encode() + b"\x00" + bytes([device_id])
+    return hmac.new(k_path, scope + identifier, hashlib.sha256).digest()

@@ -10028,18 +10028,15 @@ class WARDDeleteEntry(protobuf.MessageType):
 class WARDEntryRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2301
     FIELDS = {
-        1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
-        2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        app_id: Optional["str"] = None,
-        identifier: Optional["bytes"] = None,
+        entry_key: Optional["bytes"] = None,
     ) -> None:
-        self.app_id = app_id
-        self.identifier = identifier
+        self.entry_key = entry_key
 
 
 class WARDEntryAck(protobuf.MessageType):

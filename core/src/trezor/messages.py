@@ -7990,14 +7990,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WARDEntryRequest(protobuf.MessageType):
-        app_id: "str | None"
-        identifier: "AnyBytes | None"
+        entry_key: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            app_id: "str | None" = None,
-            identifier: "AnyBytes | None" = None,
+            entry_key: "AnyBytes | None" = None,
         ) -> None:
             pass
 
