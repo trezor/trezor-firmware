@@ -39,10 +39,27 @@ async def get_root() -> bytes | None:
     return ward_store.get_root(await derive_wallet_id())
 
 
-async def set_root(root: bytes | None) -> None:
-    """Record the root the device just derived. Callers must have computed it themselves."""
+async def get_counter() -> int:
+    """The anti-rollback floor for the active wallet."""
     import storage.ward as ward_store
 
     from .keys import derive_wallet_id
 
-    ward_store.set_root(await derive_wallet_id(), root)
+    return ward_store.get_counter(await derive_wallet_id())
+
+
+async def set_root(root: bytes | None, counter: int | None = None) -> None:
+    """Record the root the device just derived, and optionally a new counter.
+
+    `counter=None` keeps the stored counter, which is what an ordinary write does: the
+    device advances the tree without an attestation, so nothing has told it a new counter
+    is current. Only the sync round moves the counter, and only ever forward.
+    """
+    import storage.ward as ward_store
+
+    from .keys import derive_wallet_id
+
+    wallet_id = await derive_wallet_id()
+    if counter is None:
+        counter = ward_store.get_counter(wallet_id)
+    ward_store.set_root(wallet_id, root, counter)

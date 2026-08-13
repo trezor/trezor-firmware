@@ -42,6 +42,9 @@ __all__ = [
     "derive_k_path",
     "derive_k_ident",
     "derive_k_data",
+    "derive_ward_id",
+    "derive_k_mac",
+    "root_mac",
     "entry_key",
     "open_content",
     "open_identity",
@@ -70,6 +73,33 @@ def slip21_key(seed: bytes, path: list[bytes]) -> bytes:
 def derive_k_path(seed: bytes) -> bytes:
     """K_path = SLIP21(seed, ["ward", "K_path"])."""
     return slip21_key(seed, [b"ward", b"K_path"])
+
+
+def derive_ward_id(seed: bytes) -> bytes:
+    """The handle the WM knows this wallet by."""
+    return slip21_key(seed, [b"ward", b"ward_id"])
+
+
+def derive_k_mac(seed: bytes) -> bytes:
+    """K_mac, which MACs the root the WM attests. A real host has neither this nor a way
+    to obtain it -- that is what stops the WM fabricating state."""
+    return slip21_key(seed, [b"ward", b"K_mac"])
+
+
+def root_mac(k_mac: bytes, ward_id: bytes, counter: int, root) -> bytes:
+    """HMAC(K_mac, b"WARD ROOT v1" || ward_id || counter(4B BE) || root).
+
+    An absent root -- the empty tree -- macs the all-zero root, so "empty" is still bound
+    to a counter rather than being unbound.
+    """
+    return hmac.new(
+        k_mac,
+        b"WARD ROOT v1"
+        + ward_id
+        + counter.to_bytes(4, "big")
+        + (root if root is not None else bytes(32)),
+        hashlib.sha256,
+    ).digest()
 
 
 def derive_k_ident(seed: bytes, key_type: str = "address") -> bytes:

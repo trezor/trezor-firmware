@@ -35,9 +35,17 @@ def display_bytes(value: bytes) -> str:
     try:
         return value.decode()
     except UnicodeError:
-        from ubinascii import hexlify
+        # NOT `ubinascii` -- this firmware has no such module, and the mistake hides:
+        # the fallback only runs for non-UTF-8 values, which tests rarely supply.
+        return value.hex()
 
-        return hexlify(value).decode()
+
+def require_initialized() -> None:
+    """Every WARD request needs a seed: the keyed path, the leaf keys and ward_id all
+    derive from it."""
+    from apps.common.seed import raise_if_not_initialized
+
+    raise_if_not_initialized()
 
 
 def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, bytes]":
@@ -51,9 +59,7 @@ def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, byt
     """
     from trezor.wire import DataError
 
-    from apps.common.seed import raise_if_not_initialized
-
-    raise_if_not_initialized()
+    require_initialized()
 
     if not app_id or not identifier:
         raise DataError("app_id and identifier are required")

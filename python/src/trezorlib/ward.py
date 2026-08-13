@@ -224,6 +224,32 @@ def delete_entry(
     )
 
 
+def sync(session: "Session") -> messages.WARDSyncAck:
+    """Open a sync round: the device mints the nonce the WM must sign against."""
+    return session.call(messages.WARDSync(), expect=messages.WARDSyncAck)
+
+
+def ingest_attestation(
+    session: "Session", counter: int, mac: bytes, wm_signature: bytes
+) -> messages.WARDIngestAttestationAck:
+    """Deliver the WM's signed (counter, mac) for the open round."""
+    return session.call(
+        messages.WARDIngestAttestation(
+            counter=counter, mac=mac, wm_signature=wm_signature
+        ),
+        expect=messages.WARDIngestAttestationAck,
+    )
+
+
+def reconcile(
+    session: "Session", root: Optional[bytes]
+) -> messages.WARDReconcileAck:
+    """Supply the root and adopt it, if it matches what was attested."""
+    return session.call(
+        messages.WARDReconcile(root=root), expect=messages.WARDReconcileAck
+    )
+
+
 def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
     """A leaf whose content body is empty is a deletion, not an empty-valued entry."""
     if leaf is None or leaf.content is None:

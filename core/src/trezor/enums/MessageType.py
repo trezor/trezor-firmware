@@ -311,3 +311,9 @@ if not utils.BITCOIN_ONLY:
     WARDSetEntry = 2303
     WARDDeleteEntry = 2304
     WARDLeafAck = 2305
+    WARDSync = 2307
+    WARDSyncAck = 2308
+    WARDIngestAttestation = 2309
+    WARDIngestAttestationAck = 2310
+    WARDReconcile = 2311
+    WARDReconcileAck = 2312

@@ -52,12 +52,14 @@ _ZERO_PUBKEY = b"\x00" * 32
 _ZERO_SIG = b"\x00" * 64
 
 if __debug__:
-    from ubinascii import unhexlify
-
     # Well-known debug key, accepted on debug builds only. Its Ed25519 seed is the ASCII
-    # string b"AUTHDB QM DEBUG KEY SEED v1 ...." -- tests sign with it.
-    _WM_PUBKEY_DEBUG = unhexlify(
-        b"17b4c21f6b55935405d5a48ee3f2f29f42d78c9a650d8f686a705b21ef62b0b6"
+    # string b"AUTHDB QM DEBUG KEY SEED v1 ...." -- tests sign with it, and a unit test
+    # asserts this constant really is that seed's public key.
+    #
+    # Spelled as bytes rather than decoded from hex: this firmware has no `ubinascii`.
+    _WM_PUBKEY_DEBUG = (
+        b"\x17\xb4\xc2\x1fkU\x93T\x05\xd5\xa4\x8e\xe3\xf2\xf2\x9f"
+        b"\x42\xd7\x8c\x9ae\r\x8fhjp[!\xefb\xb0\xb6"
     )
 
 

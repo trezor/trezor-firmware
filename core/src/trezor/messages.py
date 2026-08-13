@@ -8195,6 +8195,90 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDLeafAck"]:
             return isinstance(msg, cls)
 
+    class WARDSync(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSync"]:
+            return isinstance(msg, cls)
+
+    class WARDSyncAck(protobuf.MessageType):
+        nonce: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            nonce: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDSyncAck"]:
+            return isinstance(msg, cls)
+
+    class WARDIngestAttestation(protobuf.MessageType):
+        counter: "int | None"
+        mac: "AnyBytes | None"
+        wm_signature: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int | None" = None,
+            mac: "AnyBytes | None" = None,
+            wm_signature: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDIngestAttestation"]:
+            return isinstance(msg, cls)
+
+    class WARDIngestAttestationAck(protobuf.MessageType):
+        counter: "int | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDIngestAttestationAck"]:
+            return isinstance(msg, cls)
+
+    class WARDReconcile(protobuf.MessageType):
+        root: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            root: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDReconcile"]:
+            return isinstance(msg, cls)
+
+    class WARDReconcileAck(protobuf.MessageType):
+        counter: "int | None"
+        new_root: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int | None" = None,
+            new_root: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDReconcileAck"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
         batch_size: "int | None"
 
