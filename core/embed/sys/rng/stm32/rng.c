@@ -24,6 +24,7 @@
 #include <trezor_rtl.h>
 
 #include <sys/rng.h>
+#include <sys/rng_use_flags.h>
 
 #include "rand.h"
 
@@ -76,6 +77,8 @@ void rng_fill_buffer(void* buffer, size_t buffer_size) {
     uint32_t r = rng_get_u32();
     memcpy(dst, &r, remaining);
   }
+
+  rng_use_flag_set(RNG_TYPE_MCU);
 }
 
 #endif  // SECURE_MODE

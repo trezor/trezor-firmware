@@ -28,6 +28,7 @@
 #include <sec/rng_strong.h>
 #include <sec/secret_keys.h>
 #include <sec/storage.h>
+#include <sys/rng_use_flags.h>
 #include "ecdsa.h"
 #include "hash_to_curve.h"
 #include "hmac.h"
@@ -251,22 +252,26 @@ void optiga_set_sec_max(void) {
 }
 
 bool optiga_random_buffer(uint8_t *dest, size_t size) {
-  while (size > OPTIGA_RANDOM_MAX_SIZE) {
-    if (optiga_get_random(dest, OPTIGA_RANDOM_MAX_SIZE) != OPTIGA_SUCCESS) {
+  while (size >= OPTIGA_RANDOM_MIN_SIZE) {
+    size_t chunk = MIN(size, OPTIGA_RANDOM_MAX_SIZE);
+    if (optiga_get_random(dest, chunk) != OPTIGA_SUCCESS) {
       return false;
     }
-    dest += OPTIGA_RANDOM_MAX_SIZE;
-    size -= OPTIGA_RANDOM_MAX_SIZE;
+    dest += chunk;
+    size -= chunk;
   }
 
-  if (size < OPTIGA_RANDOM_MIN_SIZE) {
-    static uint8_t buffer[OPTIGA_RANDOM_MIN_SIZE] = {0};
-    optiga_result ret = optiga_get_random(buffer, OPTIGA_RANDOM_MIN_SIZE);
+  if (size > 0) {
+    uint8_t buffer[OPTIGA_RANDOM_MIN_SIZE] = {0};
+    if (optiga_get_random(buffer, OPTIGA_RANDOM_MIN_SIZE) != OPTIGA_SUCCESS) {
+      return false;
+    }
     memcpy(dest, buffer, size);
-    return ret == OPTIGA_SUCCESS;
+    memzero(buffer, sizeof(buffer));
   }
 
-  return optiga_get_random(dest, size) == OPTIGA_SUCCESS;
+  rng_use_flag_set(RNG_TYPE_OPTIGA);
+  return true;
 }
 
 void optiga_random_buffer_time(uint32_t *time_ms) {
