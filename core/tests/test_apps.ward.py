@@ -4,6 +4,7 @@ from common import *  # isort:skip
 from trezor.wire import DataError
 
 from apps.ward.keys import _scope, entry_key
+from apps.ward import attest as A
 from apps.ward import leaf as L
 from apps.ward.trie import (
     addr_bit,
@@ -704,6 +705,105 @@ class TestWardComputeNewRoot(unittest.TestCase):
             witness_entry_key=b, witness_commit=self._commit(b"b"),
         )
         self.assertEqual(got, internal_hash(0, 0, internal_hash(1, 0, lb, la), lc))
+
+
+class TestWardAttestation(unittest.TestCase):
+    """The WM's freshness signature and the root MAC it signs.
+
+    The WM cannot compute a mac -- K_mac never leaves the device -- so it can only ever
+    REPLAY a (counter, mac) pair this wallet genuinely reached. That, plus a counter
+    floor, is the entire freshness guarantee; the tests below pin both halves.
+    """
+
+    # The well-known debug WM seed. Its public key is compiled into attest.py.
+    WM_SEED = b"AUTHDB QM DEBUG KEY SEED v1 ...."
+    WARD_ID = bytes(range(32))
+    NONCE = bytes(range(32, 64))
+    K_MAC = bytes(range(64, 96))
+    ROOT = bytes([7]) * 32
+
+    def _sign(self, message, seed=None):
+        from trezor.crypto.curve import ed25519
+
+        return ed25519.sign(seed or self.WM_SEED, message)
+
+    def test_debug_key_matches_its_seed(self):
+        """The compiled debug pubkey really is this seed's, or every test below is vacuous."""
+        from trezor.crypto.curve import ed25519
+
+        self.assertEqual(ed25519.publickey(self.WM_SEED), A._WM_PUBKEY_DEBUG)
+
+    def test_production_key_is_unprovisioned(self):
+        """Shipping with a placeholder is correct: a device that accepted a WM key from
+        whoever offered one would be checking freshness against an adversary's clock."""
+        self.assertEqual(A._WM_PUBKEY, bytes(32))
+
+    def test_root_mac_binds_everything_it_names(self):
+        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        self.assertEqual(len(mac), 32)
+        # the counter, which is the point: roots repeat whenever contents repeat, so a mac
+        # over the root alone would name a shape rather than a moment
+        self.assertNotEqual(mac, A.root_mac(self.K_MAC, self.WARD_ID, 6, self.ROOT))
+        self.assertNotEqual(mac, A.root_mac(self.K_MAC, self.WARD_ID, 5, bytes([8]) * 32))
+        self.assertNotEqual(mac, A.root_mac(self.K_MAC, bytes(32), 5, self.ROOT))
+        self.assertNotEqual(mac, A.root_mac(bytes(32), self.WARD_ID, 5, self.ROOT))
+
+    def test_the_empty_tree_is_attestable_too(self):
+        """An absent root macs the all-zero root rather than being skipped, so "empty" is
+        still bound to a counter -- otherwise a WM could attest empty at any counter."""
+        empty5 = A.root_mac(self.K_MAC, self.WARD_ID, 5, None)
+        self.assertNotEqual(empty5, A.root_mac(self.K_MAC, self.WARD_ID, 6, None))
+        self.assertNotEqual(empty5, A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT))
+
+    def test_attestation_preimage_layout(self):
+        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        self.assertEqual(
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac),
+            b"WARD ATTEST v1"
+            + bytes([1])
+            + self.NONCE
+            + self.WARD_ID
+            + (5).to_bytes(4, "big")
+            + mac,
+        )
+
+    def test_a_genuine_attestation_verifies(self):
+        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac))
+        self.assertTrue(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, sig))
+
+    def test_every_signed_field_is_bound(self):
+        """Changing anything the signature covers must break it -- notably the nonce, which
+        is what stops a host stockpiling anchors and replaying one later."""
+        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac))
+
+        self.assertFalse(A.verify_attestation(self.WARD_ID, bytes(32), 5, mac, sig))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 6, mac, sig))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, bytes(32), sig))
+        self.assertFalse(A.verify_attestation(bytes(32), self.NONCE, 5, mac, sig))
+
+    def test_another_signer_is_refused(self):
+        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        pre = A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac)
+        sig = self._sign(pre, seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, sig))
+
+    def test_a_zero_signature_never_verifies(self):
+        """Not paranoia. Against the all-zero placeholder key an all-zero signature is a
+        DEGENERATE acceptance -- R=0, S=0 satisfies [S]B = R + [k]A when A is the identity
+        -- so an unprovisioned device would accept an attestation carrying no signature at
+        all. Both halves are refused: the zero signature, and verifying against the
+        placeholder key.
+        """
+        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, bytes(64)))
+
+    def test_a_malformed_signature_is_refused(self):
+        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, sig[:63]))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, sig + b"\x00"))
 
 
 if __name__ == "__main__":
