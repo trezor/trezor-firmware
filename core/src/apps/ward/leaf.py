@@ -9,19 +9,25 @@
 `key_type` is always clear -- it selects the two keys that will seal the parts -- and
 travels on the identity part rather than being repeated per part.
 
+Each part is SEALED with ChaCha20-Poly1305 under a device-only key -- the identity under
+K_ident(key_type), the content under K_data(key_type) -- so the host holds two opaque
+blobs it can neither read nor forge. The AAD binds a part to its path, its part-domain
+and its key_type:
+
+    aad = domain(1B) || entry_key || key_type
+
+so a part cannot be replayed as the other part, nor moved to another path: both fail the
+tag check.
+
+What sealing does NOT buy: freshness or existence. The host can still return an older
+sealed leaf for the same path, or claim it holds none. Only a proof against an attested
+root detects those, which is why the screens still warn.
+
+THE DEVICE BUILDS THE LEAF -- now a hard fact, not a convention: the host has none of
+the keys, so it cannot produce a part at all.
+
 Byte-for-byte identical to the reference implementation, so its published leaf vectors
-apply; see `core/tests/test_apps.ward.py`.
-
-THE DEVICE BUILDS THE LEAF. The host stores what it is given and must not synthesise
-one. While the bodies are plaintext a host could technically build its own, so the rule
-is a convention here -- but it becomes a hard fact once the parts are sealed under
-device-only keys, and the protocol is shaped for that now so nothing has to change then.
-
-FIXME(ward): the parts are NOT YET SEALED. Sealing replaces the bodies below with
-ChaCha20-Poly1305 ciphertext under K_ident/K_data with the AAD binding entry_key, which
-is why `entry_key` and `key_type` are already parameters of every encode/decode call
-here despite being unused: only the bodies of these functions change, never their
-callers.
+pin this code; see `core/tests/test_apps.ward.py`.
 """
 
 from typing import TYPE_CHECKING
@@ -41,15 +47,96 @@ ENC_PLAINTEXT = 1
 # -- makes an empty-valued entry impossible to represent and impossible to delete.
 EMPTY_PART: "Part" = (ENC_PLAINTEXT, b"", b"", b"")
 
-# Per-part mode. The two parts are INDEPENDENT: a build may seal one and leave the other
-# readable. Both are plaintext for now, which is the only mode that exists.
-#
-# FIXME(ward): when sealing lands these default to False (encrypted) and plaintext
-# becomes a debug-only switch, guarded by `if plaintext and not __debug__: raise`. That
-# guard is deliberately absent while plaintext is the ONLY mode, since it would make a
-# production build impossible.
-WARD_PLAINTEXT_IDENTITY = True
-WARD_PLAINTEXT_CONTENT = True
+# Per-part mode (dev switch). False = sealed, which is what production ships; True leaves
+# that part host-inspectable. The two parts are INDEPENDENT: a build may seal the identity
+# and leave the content readable, or the reverse. The wire is self-describing either way,
+# and each part's encoding byte sits inside its framing, so the modes cannot collide.
+WARD_PLAINTEXT_IDENTITY = False
+WARD_PLAINTEXT_CONTENT = False
+
+if (WARD_PLAINTEXT_IDENTITY or WARD_PLAINTEXT_CONTENT) and not __debug__:
+    # A release build must never hand the host a readable part. Failing at import is the
+    # point: this is not a condition to discover from a screenshot months later.
+    raise RuntimeError("WARD plaintext leaf parts require a __debug__ build")
+
+# --- AEAD (ChaCha20-Poly1305, RFC-7539, 12-byte nonce) ---
+
+# Ciphertext is padded up to the next bucket so its length leaks only a coarse band
+# rather than the exact size of the value. Plaintext parts are NOT padded: the body is
+# readable anyway, so padding would buy nothing and only complicate the layout.
+_AEAD_BUCKETS = (64, 256, 1024, 4096)
+
+# Part-domain separation, inside the AAD. Distinct constants are what stop an identity
+# part from ever being consumed as a content part.
+_AAD_IDENTITY = b"\x03"
+_AAD_CONTENT = b"\x02"
+
+
+def _aead_aad(domain: bytes, entry_key: bytes, key_type: str) -> bytes:
+    """Bind a part to its leaf, its part-domain and its key_type.
+
+    Including entry_key is what makes a sealed part unmovable: replaying it under another
+    path changes the AAD and the tag check fails.
+    """
+    return domain + entry_key + key_type.encode()
+
+
+def _pad_bucket(pt: bytes) -> bytes:
+    for b in _AEAD_BUCKETS:
+        if len(pt) <= b:
+            return pt + b"\x00" * (b - len(pt))
+    return pt + b"\x00" * ((-len(pt)) % _AEAD_BUCKETS[-1])
+
+
+def _seal(
+    key: bytes, domain: bytes, entry_key: bytes, key_type: str, pt: bytes, nonce: bytes
+) -> "Part":
+    """Seal one part. The NONCE IS AN ARGUMENT, never generated here.
+
+    Generation lives in the two encode_* functions, which is the only place it should:
+    that keeps this function deterministic and therefore pinnable by a known-answer test,
+    while leaving exactly one line in the module capable of getting nonce generation
+    wrong.
+    """
+    from trezor.crypto import chacha20poly1305_encrypt
+
+    cipher = chacha20poly1305_encrypt(key, nonce)
+    cipher.auth(_aead_aad(domain, entry_key, key_type))
+    ct = cipher.encrypt(_pad_bucket(pt))
+    return (ENC_ENCRYPTED, nonce, cipher.finish(), ct)
+
+
+def _open(
+    key: bytes, domain: bytes, entry_key: bytes, key_type: str, part: "Part"
+) -> bytes:
+    """Open one sealed part, or raise. Padding is left on; the unpackers tolerate it."""
+    from trezor.crypto import AuthenticationError, chacha20poly1305_decrypt
+    from trezor.wire import DataError
+
+    _encoding, nonce, tag, ct = part
+    cipher = chacha20poly1305_decrypt(key, nonce)
+    cipher.auth(_aead_aad(domain, entry_key, key_type))
+    pt = cipher.decrypt(ct)
+    try:
+        cipher.finish(tag)
+    except AuthenticationError:
+        # The host returned a part that was not sealed for this path, this part-domain
+        # and this key_type -- forged, corrupted, or lifted from another entry.
+        raise DataError("WARD leaf AEAD tag mismatch")
+    return pt
+
+
+def _fresh_nonce() -> bytes:
+    """A fresh 12 bytes per part per write -- NEVER derived from the leaf.
+
+    Deriving it from (entry_key, C_leaf) would be catastrophic here, because a rollback
+    legitimately re-visits a pair that has already been sealed, and a repeated
+    (key, nonce) under ChaCha20-Poly1305 loses both confidentiality and the tag's
+    unforgeability.
+    """
+    from trezor.crypto import random
+
+    return random.bytes(12)
 
 # C_leaf is the global root counter stamped onto a leaf when it changes. It lives inside
 # the content body and never in entry_key, so an entry keeps one stable path across
@@ -120,24 +207,37 @@ def unpack_identity(pt: bytes) -> "tuple[bytes, bytes, int]":
 
 
 def encode_identity(
+    k_ident: bytes,
     entry_key: bytes,
     key_type: str,
     identifier: bytes,
     app_id: str | bytes,
     device_id: int = 0,
+    nonce: bytes | None = None,
 ) -> "Part":
-    """Build the identity part. `entry_key`/`key_type` are the future AEAD AAD."""
-    return (ENC_PLAINTEXT, b"", b"", pack_identity(identifier, app_id, device_id))
+    """Build the identity part, sealed unless this build leaves identities readable.
+
+    `nonce` is for known-answer tests ONLY; production must leave it None so a fresh one
+    is generated per write.
+    """
+    pt = pack_identity(identifier, app_id, device_id)
+    if WARD_PLAINTEXT_IDENTITY:
+        return (ENC_PLAINTEXT, b"", b"", pt)
+    return _seal(
+        k_ident, _AAD_IDENTITY, entry_key, key_type, pt, nonce or _fresh_nonce()
+    )
 
 
 def decode_identity(
-    entry_key: bytes, key_type: str, part: "Part | None"
+    k_ident: bytes, entry_key: bytes, key_type: str, part: "Part | None"
 ) -> "tuple[bytes, bytes, int] | None":
     """Recover (identifier, app_id, device_id), or None for a deleted part."""
     if is_delete(part):
         return None
     assert part is not None
-    return unpack_identity(part[3])
+    if part[0] == ENC_PLAINTEXT:
+        return unpack_identity(part[3])
+    return unpack_identity(_open(k_ident, _AAD_IDENTITY, entry_key, key_type, part))
 
 
 # --- content part ----------------------------------------------------------------
@@ -156,29 +256,80 @@ def unpack_content(pt: bytes) -> "tuple[int, bytes]":
 
 
 def encode_content(
+    k_data: bytes,
     entry_key: bytes,
     key_type: str,
     value: bytes | None,
     c_leaf: int = C_LEAF_UNUSED,
+    nonce: bytes | None = None,
 ) -> "Part":
     """Build the content part. `value=None` means DELETE; b"" is a real empty value.
 
     Note the asymmetry with the reference, which returns an empty part for any
     zero-length value and so cannot tell an empty entry from a deleted one.
+
+    `nonce` is for known-answer tests ONLY; production must leave it None.
     """
     if value is None:
         return EMPTY_PART
-    return (ENC_PLAINTEXT, b"", b"", pack_content(c_leaf, value))
+    pt = pack_content(c_leaf, value)
+    if WARD_PLAINTEXT_CONTENT:
+        return (ENC_PLAINTEXT, b"", b"", pt)
+    return _seal(k_data, _AAD_CONTENT, entry_key, key_type, pt, nonce or _fresh_nonce())
 
 
 def decode_content(
-    entry_key: bytes, key_type: str, part: "Part | None"
+    k_data: bytes, entry_key: bytes, key_type: str, part: "Part | None"
 ) -> "tuple[int, bytes] | None":
     """Recover (c_leaf, value), or None for a deleted part."""
     if is_delete(part):
         return None
     assert part is not None
-    return unpack_content(part[3])
+    if part[0] == ENC_PLAINTEXT:
+        return unpack_content(part[3])
+    return unpack_content(_open(k_data, _AAD_CONTENT, entry_key, key_type, part))
+
+
+# --- leaf commitment -------------------------------------------------------------
+# The trie will hash THIS, not the value. It belongs to the leaf rather than to the trie:
+# it is a function of the parts alone, and a host holding no keys can still recompute it,
+# which is what lets one serve proofs without being able to read anything.
+
+
+def commit_of(key_type: str, id_part: "Part | None", val_part: "Part | None") -> bytes:
+    """commit = sha256(0x02 || len8(key_type) || key_type
+    || len32(id_part) || id_part || len32(val_part) || val_part)."""
+    from trezor.crypto.hashlib import sha256
+
+    kt = key_type.encode()
+    id_bytes = part_bytes(id_part)
+    val_bytes = part_bytes(val_part)
+    return sha256(
+        b"\x02"
+        + bytes([len(kt)])
+        + kt
+        + len(id_bytes).to_bytes(4, "big")
+        + id_bytes
+        + len(val_bytes).to_bytes(4, "big")
+        + val_bytes
+    ).digest()
+
+
+def leaf_hash_of(entry_key: bytes, commit: bytes) -> bytes:
+    """leaf = sha256(0x00 || entry_key || commit).
+
+    Takes the commitment rather than the parts, so a verifier can rebuild a witness leaf
+    from (entry_key, commit) without ever holding the parts themselves.
+    """
+    from trezor.crypto.hashlib import sha256
+
+    return sha256(b"\x00" + entry_key + commit).digest()
+
+
+def leaf_hash(
+    entry_key: bytes, key_type: str, id_part: "Part | None", val_part: "Part | None"
+) -> bytes:
+    return leaf_hash_of(entry_key, commit_of(key_type, id_part, val_part))
 
 
 # --- wire <-> part codec ---------------------------------------------------------
@@ -206,10 +357,13 @@ def read_leaf_content(content: "Any") -> "Part | None":
     if content is None:
         return None
     if (content.encoding or ENC_ENCRYPTED) == ENC_PLAINTEXT:
-        if not WARD_PLAINTEXT_CONTENT:
-            raise DataError("WARD: plaintext content but firmware is encrypted-only")
         p = content.plaintext
         body = p.content if (p is not None and p.content is not None) else b""
+        # An EMPTY body is a delete and carries nothing, so its encoding byte is
+        # immaterial: accept it in either mode. Without this a sealed build would reject
+        # its own delete leaf, since EMPTY_PART is plaintext-encoded by construction.
+        if len(body) > 0 and not WARD_PLAINTEXT_CONTENT:
+            raise DataError("WARD: plaintext content but firmware is encrypted-only")
         return (ENC_PLAINTEXT, b"", b"", body)
     if WARD_PLAINTEXT_CONTENT:
         raise DataError("WARD: encrypted content but firmware is plaintext-only")
@@ -249,11 +403,13 @@ def read_leaf_identity(identity: "Any") -> "tuple[str | None, Part | None]":
         return None, None
     key_type = identity.key_type or ENTRY_TYPE_ADDRESS
     if (identity.encoding or ENC_ENCRYPTED) == ENC_PLAINTEXT:
-        if not WARD_PLAINTEXT_IDENTITY:
-            raise DataError("WARD: plaintext identity but firmware is encrypted-only")
         p = identity.plain
         if p is None or p.identifier is None:
+            # No body: a delete's empty part, acceptable in either mode -- see the same
+            # reasoning in read_leaf_content.
             return key_type, None
+        if not WARD_PLAINTEXT_IDENTITY:
+            raise DataError("WARD: plaintext identity but firmware is encrypted-only")
         body = pack_identity(p.identifier, p.app_id or b"", p.device_id or 0)
         return key_type, (ENC_PLAINTEXT, b"", b"", body)
     if WARD_PLAINTEXT_IDENTITY:

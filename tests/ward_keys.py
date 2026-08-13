@@ -36,7 +36,18 @@ from __future__ import annotations
 import hashlib
 import hmac
 
-__all__ = ["bip39_seed", "slip21_key", "derive_k_path", "entry_key"]
+__all__ = [
+    "bip39_seed",
+    "slip21_key",
+    "derive_k_path",
+    "derive_k_ident",
+    "derive_k_data",
+    "entry_key",
+    "open_content",
+    "open_identity",
+    "unpack_content",
+    "unpack_identity",
+]
 
 
 def bip39_seed(mnemonic: str, passphrase: str = "") -> bytes:
@@ -61,6 +72,16 @@ def derive_k_path(seed: bytes) -> bytes:
     return slip21_key(seed, [b"ward", b"K_path"])
 
 
+def derive_k_ident(seed: bytes, key_type: str = "address") -> bytes:
+    """K_ident(key_type) = SLIP21(seed, ["ward", "K_ident", key_type])."""
+    return slip21_key(seed, [b"ward", b"K_ident", key_type.encode()])
+
+
+def derive_k_data(seed: bytes, key_type: str = "address") -> bytes:
+    """K_data(key_type) = SLIP21(seed, ["ward", "K_data", key_type])."""
+    return slip21_key(seed, [b"ward", b"K_data", key_type.encode()])
+
+
 def entry_key(
     k_path: bytes,
     app_id: str,
@@ -71,3 +92,48 @@ def entry_key(
     """entry_key = HMAC-SHA256(K_path, app_id || 0x00 || key_type || 0x00 || dev || id)."""
     scope = app_id.encode() + b"\x00" + key_type.encode() + b"\x00" + bytes([device_id])
     return hmac.new(k_path, scope + identifier, hashlib.sha256).digest()
+
+
+# --- opening a sealed part -------------------------------------------------------
+# Also test-only. A real host holds neither K_ident nor K_data and cannot open a part;
+# these exist so a test can prove that what the device sealed really does contain what it
+# claimed, and that the AAD really is bound to the path.
+
+_AAD_IDENTITY = b"\x03"
+_AAD_CONTENT = b"\x02"
+
+
+def _open(key: bytes, domain: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
+    """Open a sealed part. `part` is a LeafContent.encrypted / LeafIdentity.encrypted."""
+    from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+
+    aad = domain + entry_key_ + key_type.encode()
+    # `cryptography` expects the tag appended to the ciphertext; the wire keeps them apart
+    return ChaCha20Poly1305(key).decrypt(part.nonce, part.ct + part.tag, aad)
+
+
+def open_identity(k_ident: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
+    return _open(k_ident, _AAD_IDENTITY, entry_key_, key_type, part)
+
+
+def open_content(k_data: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
+    return _open(k_data, _AAD_CONTENT, entry_key_, key_type, part)
+
+
+def unpack_identity(pt: bytes) -> tuple[bytes, bytes, int]:
+    """len16(identifier) || identifier || len8(app_id) || app_id || device_id(1B)."""
+    id_len = int.from_bytes(pt[0:2], "big")
+    off = 2 + id_len
+    identifier = pt[2:off]
+    aid_len = pt[off]
+    off += 1
+    app_id = pt[off : off + aid_len]
+    off += aid_len
+    return identifier, app_id, pt[off]
+
+
+def unpack_content(pt: bytes) -> tuple[int, bytes]:
+    """C_leaf(4B BE) || len32(value) || value."""
+    c_leaf = int.from_bytes(pt[0:4], "big")
+    val_len = int.from_bytes(pt[4:8], "big")
+    return c_leaf, pt[8 : 8 + val_len]

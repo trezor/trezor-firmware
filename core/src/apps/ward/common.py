@@ -3,15 +3,24 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.ui.layouts import StrPropertyType
 
-# Every phase-1 screen carries this. The value on screen came from the host and nothing
-# on the device authenticates it -- no keyed path, no proof, no root, no encryption --
-# so the host can return any value for any request and the device cannot tell.
+# Every screen carries this. Sealing the leaf narrowed what needs warning about, but did
+# not remove it:
 #
-# FIXME(ward): do NOT remove this warning until the proof path lands and the device can
-# actually reject a wrong answer.
+#   the host CANNOT forge a value, or move a leaf from one path to another -- the AEAD tag
+#   fails, so anything that reaches a screen really was sealed by this device for this
+#   path;
+#   the host CAN return an OLDER sealed leaf for that path, or claim it holds none at all.
+#
+# So the value is authentic but its freshness is unproven, and that is what the wording
+# has to say. It would be actively worse to soften this to "encrypted": a decrypted value
+# looks authoritative on screen, so a vaguer warning next to a more trustworthy value
+# misleads more than the blunt version did.
+#
+# FIXME(ward): do NOT remove this warning until proofs against an attested root land --
+# only those detect a stale leaf or a suppressed entry.
 WARNING_UNVERIFIED: "StrPropertyType" = (
     "Warning",
-    "Not verified by this device.",
+    "Not proven current; may be out of date.",
     False,
 )
 
@@ -75,6 +84,7 @@ async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
     from trezor.messages import WARDEntryAck, WARDEntryRequest
     from trezor.wire import context
 
+    from .keys import derive_k_data
     from .leaf import decode_content, read_leaf_content
 
     # Mirrors apps/webauthn/list_resident_credentials.py, which uses the same primitive
@@ -84,7 +94,13 @@ async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
         expected_type=WARDEntryAck,
     )
 
-    decoded = decode_content(entry_key, key_type, read_leaf_content(ack.content))
+    part = read_leaf_content(ack.content)
+    if part is None:
+        return None
+
+    # Opening is also the only authenticity check available at this phase: a part the host
+    # forged, corrupted, or lifted from another path fails the tag and raises here.
+    decoded = decode_content(await derive_k_data(key_type), entry_key, key_type, part)
     if decoded is None:
         return None
     _c_leaf, value = decoded

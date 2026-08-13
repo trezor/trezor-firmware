@@ -23,7 +23,7 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
     from trezor.wire import DataError
 
     from .common import WARNING_UNVERIFIED, display_bytes, pull_entry, require_key
-    from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
+    from .keys import ENTRY_TYPE_ADDRESS, derive_k_data, derive_k_ident, entry_key_for
     from .leaf import encode_content, encode_identity, make_leaf_content, make_leaf_identity
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
@@ -52,9 +52,12 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
 
     await confirm_properties("ward_set_entry", title, props)
 
-    # Built only after confirmation, so a rejected write produces no leaf at all.
-    id_part = encode_identity(entry_key, key_type, identifier, app_id)
-    val_part = encode_content(entry_key, key_type, value)
+    # Sealed only after confirmation, so a rejected write produces no leaf at all -- and
+    # burns no nonce.
+    id_part = encode_identity(
+        await derive_k_ident(key_type), entry_key, key_type, identifier, app_id
+    )
+    val_part = encode_content(await derive_k_data(key_type), entry_key, key_type, value)
 
     return WARDLeafAck(
         entry_key=entry_key,
