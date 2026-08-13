@@ -1,6 +1,6 @@
 {
   "cwd": "${workspaceFolder}",
-  "executable": "${tfTools.executablePath}",
+  "executable": "${tbench.executablePath}",
   "request": "attach",
   "type": "cortex-debug",
   "runToEntryPoint": "main",
@@ -9,7 +9,7 @@
     "interface/stlink.cfg",
     "target/stm32f4x.cfg"
   ],
-  "svdFile": "core/embed/.tf-tools/svd/STM32F427.svd",
+  "svdFile": "core/embed/xtask/tbench/svd/STM32F427.svd",
   "swoConfig": {
     "enabled": true,
     "cpuFrequency": 180000000,

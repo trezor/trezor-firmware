@@ -1,0 +1,8 @@
+# Configuration file for the Trezor Bench VS Code extension.
+
+[paths]
+cargo-workspace = "core/embed"
+debug-templates = "core/embed/xtask/tbench/debug"
+build-artifacts = "core/build-xtask/artifacts"
+xtask-presets = "core/embed/xtask"
+manifest = "core/embed/xtask/tbench/manifest.yaml"

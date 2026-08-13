@@ -1,5 +1,5 @@
 {
-    "executable": "${tfTools.executablePath}",
+    "executable": "${tbench.artifactPath}/secmon.elf",
     "request": "attach",
     "type": "cortex-debug",
     "runToEntryPoint": "main",
@@ -8,9 +8,11 @@
         "interface/stlink.cfg",
         "target/stm32u5x.cfg"
     ],
-    "svdFile": "core/embed/.tf-tools/svd/STM32U5Gx.svd",
+    "svdFile": "core/embed/xtask/tbench/svd/STM32U5Gx.svd",
     "postAttachCommands": [
-        "monitor adapter speed 8000"
+        "monitor adapter speed 2000",
+        "add-symbol-file ${tbench.artifactPath}/kernel.elf",
+        "add-symbol-file ${tbench.executablePath}"
     ],
     "swoConfig": {
         "enabled": true,

@@ -1,5 +1,5 @@
 {
-    "executable": "${tfTools.artifactPath}/kernel.elf",
+    "executable": "${tbench.artifactPath}/kernel.elf",
     "request": "attach",
     "type": "cortex-debug",
     "runToEntryPoint": "main",
@@ -8,10 +8,10 @@
         "interface/stlink.cfg",
         "target/stm32f4x.cfg"
     ],
-    "svdFile": "core/embed/.tf-tools/svd/STM32F427.svd",
+    "svdFile": "core/embed/xtask/tbench/svd/STM32F427.svd",
     "postAttachCommands": [
         "monitor adapter speed 8000",
-        "add-symbol-file ${tfTools.executablePath}"
+        "add-symbol-file ${tbench.executablePath}"
     ],
     "swoConfig": {
         "enabled": true,

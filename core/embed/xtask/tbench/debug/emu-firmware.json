@@ -1,8 +1,12 @@
 {
     "type": "cppdbg",
     "request": "launch",
-    "program": "${tfTools.executablePath}",
-    "cwd": "${workspaceFolder}/core",
+    "program": "${tbench.executablePath}",
+    "args": [
+        "-m",
+        "main"
+    ],
+    "cwd": "${workspaceFolder}/core/src",
     "linux": {
         "MIMode": "gdb",
         "miDebuggerPath": "gdb"

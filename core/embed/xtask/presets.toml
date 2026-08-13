@@ -1,4 +1,4 @@
-# Build presets shared by xtask and tf-tools.
+# Build presets shared by xtask and Trezor Bench VSCode Extension.
 #
 # Each [[<presets-name>]] table is a preset fragment. Fragments whose optional
 # `when` filter matches are applied in file order; later matching fragments
