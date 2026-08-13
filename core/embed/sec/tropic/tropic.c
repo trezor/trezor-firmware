@@ -1134,8 +1134,17 @@ bool tropic_random_buffer(void *buffer, size_t length) {
     return false;
   }
 
-  if (LT_OK != lt_random_value_get(&drv->handle, buffer, length)) {
-    return false;
+  uint8_t *dst = (uint8_t *)buffer;
+  size_t remaining = length;
+
+  while (remaining > 0) {
+    // lt_random_value_get() uses uint8_t as a size parameter
+    size_t chunk = remaining > 255 ? 255 : remaining;
+    if (LT_OK != lt_random_value_get(&drv->handle, dst, chunk)) {
+      return false;
+    }
+    dst += chunk;
+    remaining -= chunk;
   }
 
   return true;
