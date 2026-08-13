@@ -77,11 +77,6 @@ class USBIF:
         Sends message using USB interface.
         """
 
-    def write_blocking(self, msg: AnyBytes, timeout_ms: int) -> int:
-        """
-        Sends message using USB interface.
-        """
-
     def read(self, buf: bytearray, offset: int = 0) -> int:
         """
         Reads message using USB interface
