@@ -6,6 +6,7 @@ use super::error::Error;
 use super::ffi;
 
 /// A pointer type for values on the garbage-collected heap.
+#[derive(Debug)]
 pub struct Gc<T: ?Sized>(NonNull<T>);
 
 impl<T: ?Sized> Clone for Gc<T> {
@@ -114,7 +115,7 @@ impl<T: ?Sized> Gc<T> {
     /// - previously allocated through `Gc::new()` or `gc_alloc()`, or
     /// - through the MicroPython interpreter, or
     /// - one of the GC roots (sys.argv, sys.modules, etc.).
-    pub unsafe fn from_raw(ptr: *mut T) -> Self {
+    pub const unsafe fn from_raw(ptr: *mut T) -> Self {
         // SAFETY: The caller must guarantee that `ptr` is something the MicroPython GC
         // can reason about.
         unsafe { Self(NonNull::new_unchecked(ptr)) }
@@ -122,7 +123,7 @@ impl<T: ?Sized> Gc<T> {
 
     /// Convert `this` into a raw pointer. This will _not_ drop the contained
     /// value.
-    pub fn into_raw(this: Self) -> *mut T {
+    pub const fn into_raw(this: Self) -> *mut T {
         this.0.as_ptr()
     }
 
