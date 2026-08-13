@@ -1,20 +1,24 @@
+use spin::mutex::MutexGuard;
 use trezor_thp::channel::{
     Phase, APP_HEADER_LEN, MAX_CREDENTIAL_LEN, MAX_DEVICE_PROPERTIES_LEN, SEND_BUFFER_OVERHEAD,
 };
 
-use super::{TrezorInResult, CANNOT_UNLOCK, THP_AUX, THP_CONTEXT};
-use crate::error::Error;
+use super::error::{Error, THP_EXCEPTION_TYPE};
+use super::{ThpContext, TrezorInResult, THP_AUX, THP_CONTEXT};
 use crate::micropython::buffer::{get_buffer, get_buffer_mut};
 use crate::micropython::macros::{
     attr_tuple, obj_fn_0, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_kw, obj_module, obj_type,
 };
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
-use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
 use crate::micropython::typ::FullType;
-use crate::micropython::{exception, util};
+use crate::micropython::{util, Error as MpyError, Obj};
+
+fn try_lock_thp() -> Result<MutexGuard<'static, ThpContext>, Error> {
+    THP_CONTEXT.try_lock().ok_or(Error::CannotUnlock)
+}
 
 extern "C" fn thp_init(iface_num: Obj, device_properties: Obj) -> Obj {
     let block = || {
@@ -22,7 +26,7 @@ extern "C" fn thp_init(iface_num: Obj, device_properties: Obj) -> Obj {
         // SAFETY: reference is discarded at the end of this block.
         let device_properties = unsafe { get_buffer(device_properties)? };
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         thp.add_interface(iface_num, device_properties)?;
 
         #[cfg(feature = "debug")]
@@ -42,7 +46,7 @@ extern "C" fn thp_packet_in(iface_num: Obj, buffer_view: Obj, credential_fn: Obj
         // SAFETY: reference is discarded at the end of this block.
         let buffer = unsafe { get_buffer(buffer_view)? };
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         let res = thp.packet_in(iface_num, buffer, credential_fn)?;
         res.try_into()
     };
@@ -62,7 +66,7 @@ extern "C" fn thp_packet_in_channel(
         // SAFETY: reference is discarded at the end of this block.
         let receive_buffer = unsafe { get_buffer_mut(receive_buffer)? };
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         let res = thp.packet_in_channel(channel_id, packet_buffer, receive_buffer)?;
         res.try_into()
     };
@@ -76,7 +80,7 @@ extern "C" fn thp_packet_out(iface_num: Obj, packet_buffer: Obj) -> Obj {
         // SAFETY: reference is discarded at the end of this block.
         let packet_buffer = unsafe { get_buffer_mut(packet_buffer)? };
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         let written = thp.packet_out(iface_num, packet_buffer)?;
         Ok(written.into())
     };
@@ -92,7 +96,7 @@ extern "C" fn thp_packet_out_channel(channel_id: Obj, send_buffer: Obj, packet_b
         // SAFETY: reference is discarded at the end of this block.
         let packet_buffer = unsafe { get_buffer_mut(packet_buffer)? };
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         let written = thp.packet_out_channel(channel_id, send_buffer, packet_buffer)?;
         Ok(written.into())
     };
@@ -107,7 +111,7 @@ extern "C" fn thp_message_out(channel_id: Obj, receive_buffer_obj: Obj) -> Obj {
         let (sid, message_type, message_len) = {
             // SAFETY: reference is discarded at the end of this block.
             let receive_buffer = unsafe { get_buffer_mut(receive_buffer_obj)? };
-            let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+            let mut thp = try_lock_thp()?;
             thp.message_out(channel_id, receive_buffer)?
         };
         // Something is very wrong if message is longer than 64k, OK to panic.
@@ -130,7 +134,7 @@ extern "C" fn thp_message_in(channel_id: Obj, plaintext_len: Obj, send_buffer: O
         // SAFETY: reference is discarded at the end of this block.
         let send_buffer = unsafe { get_buffer_mut(send_buffer)? };
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         thp.message_in(channel_id, plaintext_len, send_buffer)?;
         Ok(Obj::const_none())
     };
@@ -142,7 +146,7 @@ extern "C" fn thp_message_retransmit(channel_id: Obj) -> Obj {
     let block = || {
         let channel_id: u16 = channel_id.try_into()?;
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         let channel_ok = thp.message_retransmit(channel_id)?;
         Ok(channel_ok.into())
     };
@@ -154,7 +158,7 @@ extern "C" fn thp_send_transport_busy(channel_id: Obj) -> Obj {
     let block = || {
         let channel_id: u16 = channel_id.try_into()?;
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         thp.send_transport_busy(channel_id)?;
         Ok(Obj::const_none())
     };
@@ -166,7 +170,7 @@ extern "C" fn thp_channel_info(channel_id: Obj) -> Obj {
     let block = || {
         let channel_id: u16 = channel_id.try_into()?;
 
-        let thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let thp = try_lock_thp()?;
 
         let (last_write_age_ms, phase) = thp.channel_info(channel_id)?;
         let hash = thp.handshake_hash(channel_id)?;
@@ -179,7 +183,7 @@ extern "C" fn thp_channel_info(channel_id: Obj) -> Obj {
         };
 
         let credential = {
-            let aux = THP_AUX.try_lock().ok_or(CANNOT_UNLOCK)?;
+            let aux = THP_AUX.try_lock().ok_or(Error::CannotUnlock)?;
             aux.get_credential(channel_id).try_into()?
         };
 
@@ -199,7 +203,7 @@ extern "C" fn thp_channel_paired(channel_id: Obj) -> Obj {
     let block = || {
         let channel_id: u16 = channel_id.try_into()?;
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         let replaced_channel_id = thp.channel_paired(channel_id)?;
         replaced_channel_id.try_into()
     };
@@ -211,7 +215,7 @@ extern "C" fn thp_channel_close(channel_id: Obj) -> Obj {
     let block = || {
         let channel_id: u16 = channel_id.try_into()?;
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         thp.channel_close(channel_id);
         Ok(Obj::const_none())
     };
@@ -226,7 +230,7 @@ extern "C" fn thp_channel_close_all(n_args: usize, args: *const Obj, kwargs: *mu
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         thp.channel_close_all(exclude_channel_id);
         Ok(Obj::const_none())
     };
@@ -238,7 +242,7 @@ extern "C" fn thp_channel_update_last_usage(channel_id: Obj) -> Obj {
     let block = || {
         let channel_id: u16 = channel_id.try_into()?;
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         thp.channel_update_last_usage(channel_id);
         Ok(Obj::const_none())
     };
@@ -248,7 +252,7 @@ extern "C" fn thp_channel_update_last_usage(channel_id: Obj) -> Obj {
 
 extern "C" fn thp_channel_was_closed() -> Obj {
     let block = || {
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         let closed = thp.channel_was_closed();
         Ok(closed.into())
     };
@@ -260,7 +264,7 @@ extern "C" fn thp_channel_is_open(channel_id: Obj) -> Obj {
     let block = || {
         let channel_id: u16 = channel_id.try_into()?;
 
-        let thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let thp = try_lock_thp()?;
         let ok = thp.channel_is_open(channel_id);
         Ok(ok.into())
     };
@@ -272,7 +276,7 @@ extern "C" fn thp_next_timeout(iface_num: Obj) -> Obj {
     let block = || {
         let iface_num: u8 = iface_num.try_into()?;
 
-        let thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let thp = try_lock_thp()?;
         match thp.next_timeout(iface_num)? {
             None => Ok(Obj::const_none()),
             Some((channel_id, timeout_ms)) => (channel_id, timeout_ms).try_into(),
@@ -286,7 +290,7 @@ extern "C" fn thp_handshake_key(iface_num: Obj, local_static_privkey: Obj) -> Ob
     let block = || {
         let iface_num: u8 = iface_num.try_into()?;
 
-        let mut thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
+        let mut thp = try_lock_thp()?;
         if local_static_privkey == Obj::const_none() {
             thp.send_device_locked(iface_num)?;
         } else {
@@ -299,10 +303,6 @@ extern "C" fn thp_handshake_key(iface_num: Obj, local_static_privkey: Obj) -> Ob
 
     unsafe { util::try_or_raise(block) }
 }
-
-#[allow(non_upper_case_globals)]
-pub static ThpError: FullType =
-    exception::define_exception(Qstr::MP_QSTR_ThpError, exception::Exception);
 
 static FAILED_TYPE: FullType = obj_type! { name: Qstr::MP_QSTR_FAILED, };
 static KEY_REQUIRED_TYPE: FullType = obj_type! { name: Qstr::MP_QSTR_KEY_REQUIRED, };
@@ -319,9 +319,9 @@ pub static ACK_OBJ: SimpleTypeObj = SimpleTypeObj::new(&ACK_TYPE);
 pub static MESSAGE_READY_ACK_OBJ: SimpleTypeObj = SimpleTypeObj::new(&MESSAGE_READY_ACK_TYPE);
 
 impl TryFrom<TrezorInResult> for Obj {
-    type Error = Error;
+    type Error = MpyError;
 
-    fn try_from(val: TrezorInResult) -> Result<Obj, Error> {
+    fn try_from(val: TrezorInResult) -> Result<Obj, MpyError> {
         Ok(match val {
             TrezorInResult::None => Obj::const_none(),
             TrezorInResult::Route {
@@ -357,7 +357,7 @@ pub static mp_module_trezorthp: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorthp.to_obj(),
 
     /// ThpError: type[Exception]
-    Qstr::MP_QSTR_ThpError => ThpError.as_type().as_obj(),
+    Qstr::MP_QSTR_ThpError => THP_EXCEPTION_TYPE.as_type().as_obj(),
 
     /// MESSAGE_READY: object
     Qstr::MP_QSTR_MESSAGE_READY => MESSAGE_READY_OBJ.as_obj(),
