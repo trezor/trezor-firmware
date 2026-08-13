@@ -33,7 +33,7 @@ class Typecode(IntEnum):
 
 # Byte length of a receiver.
 # Saves 30 bytes over `def receiver_length(typecode: Typecode) -> int`
-RECEIVER_LENGTHS = {
+RECEIVER_LENGTHS: dict[int, int] = {
     Typecode.P2PKH: 20,
     Typecode.P2SH: 20,
     Typecode.SAPLING: 43,
@@ -127,7 +127,7 @@ def decode(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
 
         length = read_compact_size(r)
         # if the typecode of the receiver is known, then verify receiver length
-        expected_length = RECEIVER_LENGTHS.get(Typecode(typecode))
+        expected_length = RECEIVER_LENGTHS.get(typecode)
         if expected_length is not None and length != expected_length:
             raise DataError("Unexpected receiver length")
 
