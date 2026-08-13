@@ -519,7 +519,7 @@ async def send_cmd(cmd: Cmd, iface: HID) -> None:
         seq += 1
 
 
-def send_keepalive_sync(cid: int, status: int, iface: HID) -> None:
+def try_send_keepalive_sync(cid: int, status: int, iface: HID) -> None:
     cmd = cmd_keepalive(cid, status)
     init_desc = frame_init()
     datalen = len(cmd.data)
@@ -531,7 +531,12 @@ def send_keepalive_sync(cid: int, status: int, iface: HID) -> None:
 
     offset = utils.memcpy(frm.data, 0, cmd.data, 0, datalen)
     assert offset == datalen  # 1-byte payload fits into one USB packet
-    iface.write(buf)
+    try:
+        iface.write(buf)
+    except OSError as e:
+        # Don't fail the workflow, if the USB interface is blocked.
+        if __debug__:
+            log.warning(__name__, "Keepalive %s skipped: %s", status, e)
 
 
 async def handle_reports(iface: HID) -> None:
@@ -558,7 +563,7 @@ class KeepaliveCallback:
         self.iface = iface
 
     def __call__(self) -> None:
-        send_keepalive_sync(self.cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
+        try_send_keepalive_sync(self.cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
 
 
 async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
@@ -830,14 +835,14 @@ class Fido2ConfirmMakeCredential(Fido2State):
         cid = self.cid  # local_cache_attribute
 
         self._cred.generate_id()
-        send_keepalive_sync(cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
+        try_send_keepalive_sync(cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
         response_data = _cbor_make_credential_sign(
             self._client_data_hash, self._cred, self._user_verification
         )
 
         cmd = Cmd(cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
         if self._resident:
-            send_keepalive_sync(cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
+            try_send_keepalive_sync(cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
             if not store_resident_credential(self._cred):
                 cmd = cbor_error(cid, _ERR_KEY_STORE_FULL)
         await send_cmd(cmd, self.iface)
@@ -898,7 +903,7 @@ class Fido2ConfirmGetAssertion(Fido2State):
 
         assert self._selected_cred is not None
         try:
-            send_keepalive_sync(cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
+            try_send_keepalive_sync(cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
             response_data = cbor_get_assertion_sign(
                 self._client_data_hash,
                 self._selected_cred.rp_id_hash,
