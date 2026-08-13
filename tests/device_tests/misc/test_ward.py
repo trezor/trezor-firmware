@@ -51,8 +51,12 @@ from trezorlib.debuglink import LayoutContent
 
 from ...input_flows import InputFlowConfirmAllWarnings
 from ...ward_trie import WardTrie
+from ...ward_wm import MockWM
 from ...ward_keys import (
     bip39_seed,
+    derive_k_mac,
+    derive_ward_id,
+    root_mac,
     derive_k_data,
     derive_k_ident,
     derive_k_path,
@@ -71,6 +75,8 @@ _SEED = bip39_seed(" ".join(["all"] * 12))
 _K_PATH = derive_k_path(_SEED)
 _K_IDENT = derive_k_ident(_SEED)
 _K_DATA = derive_k_data(_SEED)
+_K_MAC = derive_k_mac(_SEED)
+_WARD_ID = derive_ward_id(_SEED)
 
 
 class _Recorded:
@@ -105,6 +111,19 @@ class _Recorded:
     def text(self) -> str:
         """Every page's body, case preserved -- values under test are case-sensitive."""
         return "\n".join(self._texts)
+
+    @property
+    def squashed(self) -> str:
+        """The body with all whitespace removed.
+
+        A value long enough to WRAP gets a space inserted mid-token by the layout --
+        `from_another_device` renders as `from_another_d evice` -- so a substring match on
+        `text` fails for a reason that has nothing to do with what was shown.
+        `text_content()` repairs hyphen-broken words but not plain wraps.
+
+        Match VALUES here; match prose in `text`, where the spacing is the point.
+        """
+        return "".join("".join(self._texts).split())
 
 
 def _expected(br_name: str, final=m.Success) -> list:
@@ -755,3 +774,199 @@ def test_ward_root_survives_a_new_session(session: Session):
 # would need `setup_client(passphrase=True)` and two explicit passphrases, and the keys the
 # oracle in this file derives assume the default empty one. Worth adding, but it needs that
 # fixture work first rather than a guess at it.
+
+
+# --- the sync round: adopting a tree the device did not build ----------------------
+
+
+def _subset(store: WardTrie, keys) -> WardTrie:
+    """A trie holding some of `store`'s leaves -- a shape the device never computed.
+
+    Assembled from leaves the device really did seal, so they still open; only the TREE is
+    new. Building one by writing into a second empty store does not work: the device's root
+    tracks whichever store it last wrote through, so a pull against the other one cannot
+    produce a witness and fails before the test reaches its point.
+    """
+    out = WardTrie()
+    for k in keys:
+        out.set(k, store.blobs[k])
+    return out
+
+
+def _attest(session: Session, wm: MockWM, store: WardTrie, counter: int) -> None:
+    """Run a full sync round: nonce, WM attestation, root.
+
+    The WM is told the mac rather than computing it -- it holds no key and could not. That
+    asymmetry is the whole point, so the helper preserves it rather than reaching into the
+    store on the WM's behalf.
+    """
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
+    wm.publish(ack.ward_id, counter, mac)
+    _c, _m, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, counter, mac, sig)
+    ward.reconcile(session, store.root())
+
+
+@pytest.mark.models("core")
+def test_ward_adopts_an_attested_tree_it_never_built(session: Session):
+    """The device adopts a tree built somewhere else, and then verifies against it.
+
+    This is what the sync round is for. `foreign` was never written through this device --
+    it holds entries the device has no record of -- and after one attested round the
+    device checks proofs against it and rejects its own former tree.
+
+    (A genuinely blank device cannot be staged here: the root lives in flash keyed by
+    wallet, so a new session inherits it. Adopting at a higher counter exercises the same
+    path, and additionally shows a local tree being superseded -- the documented window
+    where writes that never reached the WM are discarded.)
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"local_only")
+    foreign_key = _seed(session, store, b"elsewhere", b"from_another_device")
+
+    # a tree the device never built: the same leaves, minus one
+    foreign = _subset(store, [foreign_key])
+
+    wm = MockWM()
+    _attest(session, wm, foreign, counter=1)
+
+    _res, rec = _read(
+        session, foreign, lambda p: ward.get_entry(session, _APP, b"elsewhere", p)
+    )
+    assert "from_another_device" in rec.squashed  # long enough to wrap; see `squashed`
+    assert foreign_key in foreign.blobs
+
+    # ...and the entry the adopted tree does not contain is now provably absent, which the
+    # device could not have concluded from a tree it computed itself
+    _res, rec = _read(
+        session, foreign, lambda p: ward.get_entry(session, _APP, b"addr1", p)
+    )
+    assert "entry not found" in rec.title
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_an_attestation_from_the_wrong_signer(session: Session):
+    """Only the provisioned WM key counts. Everything else about the message can be
+    perfectly well-formed."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+
+    impostor = MockWM(seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, 1, store.root())
+    sig = impostor.sign(ack.ward_id, ack.nonce, 1, mac)
+
+    with pytest.raises(exceptions.TrezorFailure, match="attestation verification failed"):
+        ward.ingest_attestation(session, 1, mac, sig)
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_an_attestation_bound_to_another_nonce(session: Session):
+    """A stockpiled anchor is useless: the signature is bound to a nonce the device minted
+    for THIS round, which the WM could not have known in advance.
+
+    Without this a host could collect signed anchors while the network was in a state it
+    liked and serve one whenever it suited.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = MockWM()
+
+    # an anchor signed against an earlier round's nonce
+    stale_ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, 1, store.root())
+    stale_sig = wm.sign(stale_ack.ward_id, stale_ack.nonce, 1, mac)
+
+    ward.sync(session)  # a new round, a new nonce
+    with pytest.raises(exceptions.TrezorFailure, match="attestation verification failed"):
+        ward.ingest_attestation(session, 1, mac, stale_sig)
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_a_root_that_does_not_match_the_attested_mac(session: Session):
+    """The mac is what binds the WM's claim to actual contents.
+
+    The attestation here is genuine and current; only the root is swapped. The host cannot
+    produce a mac for a tree of its choosing -- K_mac never leaves the device -- so this is
+    the substitution the mac exists to catch.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    other_key = _seed(session, store, b"addr2", b"w")
+    other = _subset(store, [other_key])  # a different root; reconcile fails on the mac
+
+    wm = MockWM()
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, 5, store.root())
+    wm.publish(ack.ward_id, 5, mac)
+    _c, _m, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, 5, mac, sig)
+
+    with pytest.raises(exceptions.TrezorFailure, match="does not match the attested mac"):
+        ward.reconcile(session, other.root())
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_an_attested_counter_below_the_floor(session: Session):
+    """Anti-rollback. A WM cannot forge a mac, so its remaining freedom is to replay a
+    state this wallet really did reach -- and the counter floor is what bounds which."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = MockWM()
+
+    _attest(session, wm, store, counter=7)
+
+    ack = ward.sync(session)
+    old_mac = root_mac(_K_MAC, _WARD_ID, 3, store.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, 3, old_mac)
+    with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
+        ward.ingest_attestation(session, 3, old_mac, sig)
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_a_different_state_at_the_same_counter(session: Session):
+    """One counter names one state.
+
+    Roots repeat whenever contents repeat, so a counter is what distinguishes moments. If
+    the WM attests the counter this device already holds, the state it names has to be the
+    state the device already has -- otherwise one of them is wrong, and adopting either
+    silently discards the other.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = MockWM()
+    _attest(session, wm, store, counter=4)
+
+    other_key = _seed(session, store, b"addr9", b"other")
+    divergent = _subset(store, [other_key])
+
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, 4, divergent.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, 4, mac)
+    ward.ingest_attestation(session, 4, mac, sig)
+    with pytest.raises(exceptions.TrezorFailure, match="counter matches but the root differs"):
+        ward.reconcile(session, divergent.root())
+
+
+@pytest.mark.models("core")
+def test_ward_reconcile_needs_an_attestation_first(session: Session):
+    """A root on its own adopts nothing -- otherwise the host could simply announce one."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+
+    ward.sync(session)  # round open, nothing attested
+    with pytest.raises(exceptions.TrezorFailure, match="no attested sync round"):
+        ward.reconcile(session, store.root())
+
+
+@pytest.mark.models("core")
+def test_ward_an_attestation_cannot_be_adopted_twice(session: Session):
+    """The round closes on adoption, so a replayed reconcile has nothing to act on."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = MockWM()
+    _attest(session, wm, store, counter=2)
+
+    with pytest.raises(exceptions.TrezorFailure, match="no attested sync round"):
+        ward.reconcile(session, store.root())

@@ -229,3 +229,95 @@ message WARDLeafAck {
     optional LeafIdentity identity  = 2;
     optional LeafContent  content   = 3;  // empty part = the entry was deleted
 }
+
+/**
+ * The SYNC ROUND: how a device learns which tree is current.
+ *
+ *   WARDSync              device mints a nonce for this round
+ *   WARDIngestAttestation host delivers the WM's signed (counter, mac); device checks it
+ *   WARDReconcile         host supplies the root; device binds it to the attested mac
+ *                         and adopts it
+ *
+ * Three messages rather than one because the nonce must be minted BEFORE the host talks
+ * to the WM -- that is what stops a host stockpiling signed anchors and replaying an old
+ * one. The WM must sign a value it could not have known in advance.
+ *
+ * The WM is not trusted with contents. It signs a `mac` it cannot compute (see
+ * WARDIngestAttestation), so a malicious WM can only replay a state this wallet genuinely
+ * reached, never invent one; the counter floor bounds which replays are accepted.
+ */
+
+/**
+ * Request: begin a sync round.
+ * @start
+ * @next WARDSyncAck
+ * @next Failure
+ */
+message WARDSync {
+}
+
+/**
+ * Response: the nonce this round is bound to, and the handle the WM knows the wallet by.
+ * @end
+ */
+message WARDSyncAck {
+    optional bytes nonce   = 1;  // 32B, minted now; the WM attestation must echo it
+    optional bytes ward_id = 2;  // 32B opaque wallet handle; the host forwards it to the WM
+}
+
+/**
+ * Request: deliver the WM's attestation of the current (counter, mac).
+ *
+ * The device verifies an Ed25519 signature over
+ *
+ *   b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac
+ *
+ * under the provisioned WM key, requires the nonce to be this round's, and requires
+ * counter >= the device's stored counter (anti-rollback). It then records the attested
+ * pair for the round -- adopting nothing yet, because the root has not been seen.
+ *
+ * `mac` is HMAC(K_mac, ...) over the root; K_mac never leaves the device, so the WM signs
+ * this without being able to produce it.
+ * @start
+ * @next WARDIngestAttestationAck
+ * @next Failure
+ */
+message WARDIngestAttestation {
+    optional uint32 counter      = 1;  // the counter the WM claims is current
+    optional bytes  mac          = 2;  // 32B mac over the root at that counter
+    optional bytes  wm_signature = 3;  // 64B Ed25519 over the preimage above
+}
+
+/**
+ * Response: the accepted counter.
+ * @end
+ */
+message WARDIngestAttestationAck {
+    optional uint32 counter = 1;
+}
+
+/**
+ * Request: supply the root, and adopt it.
+ *
+ * The device recomputes the mac over this root at the attested counter and requires it to
+ * equal what the WM signed. That is what binds the freshness authority's claim to actual
+ * contents: the host cannot substitute a different tree, because it cannot produce a mac.
+ *
+ * An absent root means the empty tree, which has its own mac at each counter rather than
+ * being unbound -- otherwise a WM could attest "empty" for any counter it liked.
+ * @start
+ * @next WARDReconcileAck
+ * @next Failure
+ */
+message WARDReconcile {
+    optional bytes root = 1;  // 32B, or absent for the empty tree
+}
+
+/**
+ * Response: the state the device adopted.
+ * @end
+ */
+message WARDReconcileAck {
+    optional uint32 counter  = 1;
+    optional bytes  new_root = 2;  // absent if the adopted tree is empty
+}

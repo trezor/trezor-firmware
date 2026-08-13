@@ -835,6 +835,12 @@ class MessageType(IntEnum):
     WARDSetEntry = 2303
     WARDDeleteEntry = 2304
     WARDLeafAck = 2305
+    WARDSync = 2307
+    WARDSyncAck = 2308
+    WARDIngestAttestation = 2309
+    WARDIngestAttestationAck = 2310
+    WARDReconcile = 2311
+    WARDReconcileAck = 2312
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -10210,6 +10216,92 @@ class WARDLeafAck(protobuf.MessageType):
         self.entry_key = entry_key
         self.identity = identity
         self.content = content
+
+
+class WARDSync(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2307
+
+
+class WARDSyncAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2308
+    FIELDS = {
+        1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+    ) -> None:
+        self.nonce = nonce
+        self.ward_id = ward_id
+
+
+class WARDIngestAttestation(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2309
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: Optional["int"] = None,
+        mac: Optional["bytes"] = None,
+        wm_signature: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.mac = mac
+        self.wm_signature = wm_signature
+
+
+class WARDIngestAttestationAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2310
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: Optional["int"] = None,
+    ) -> None:
+        self.counter = counter
+
+
+class WARDReconcile(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2311
+    FIELDS = {
+        1: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        root: Optional["bytes"] = None,
+    ) -> None:
+        self.root = root
+
+
+class WARDReconcileAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2312
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: Optional["int"] = None,
+        new_root: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):
