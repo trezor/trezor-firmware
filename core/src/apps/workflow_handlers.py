@@ -151,6 +151,12 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ward.set_entry"
         if msg_type == MessageType.WARDDeleteEntry:
             return "apps.ward.delete_entry"
+        if msg_type == MessageType.WARDSync:
+            return "apps.ward.sync"
+        if msg_type == MessageType.WARDIngestAttestation:
+            return "apps.ward.ingest"
+        if msg_type == MessageType.WARDReconcile:
+            return "apps.ward.reconcile"
 
         # webauthn
         if msg_type == MessageType.WebAuthnListResidentCredentials:

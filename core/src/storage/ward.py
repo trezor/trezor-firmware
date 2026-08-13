@@ -30,8 +30,9 @@ from storage import common
 
 _WALLET_ID_LEN = const(16)
 _ROOT_LEN = const(32)
+_COUNTER_LEN = const(4)
 
-# 8 wallets at 48 bytes each. Raising this costs flash and nothing else.
+# 8 wallets at 52 bytes each. Raising this costs flash and nothing else.
 MAX_WALLETS = const(8)
 _FIRST_KEY = const(1)
 
@@ -65,8 +66,23 @@ def get_root(wallet_id: bytes) -> bytes | None:
     return root
 
 
-def set_root(wallet_id: bytes, root: bytes | None) -> None:
-    """Record this wallet's root. A None root means the tree is now empty."""
+def get_counter(wallet_id: bytes) -> int:
+    """The anti-rollback floor: the highest counter this wallet has accepted.
+
+    Zero for a wallet the device has never seen, which is also the state in which no
+    counter check can help -- there is nothing yet to be monotone with respect to.
+    """
+    index = _find(wallet_id)
+    if index is None:
+        return 0
+    rec = _slot(index)
+    assert rec is not None
+    off = _WALLET_ID_LEN + _ROOT_LEN
+    return int.from_bytes(rec[off : off + _COUNTER_LEN], "big")
+
+
+def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> None:
+    """Record this wallet's root and counter. A None root means the tree is now empty."""
     if len(wallet_id) != _WALLET_ID_LEN:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
 
@@ -84,5 +100,7 @@ def set_root(wallet_id: bytes, root: bytes | None) -> None:
     common.set(
         common.APP_WARD,
         index + _FIRST_KEY,
-        wallet_id + (root if root is not None else bytes(_ROOT_LEN)),
+        wallet_id
+        + (root if root is not None else bytes(_ROOT_LEN))
+        + counter.to_bytes(_COUNTER_LEN, "big"),
     )

@@ -406,6 +406,12 @@ enum MessageType {
     MessageType_WARDDeleteEntry = 2304 [(wire_in) = true];
     MessageType_WARDLeafAck = 2305 [(wire_out) = true];
     reserved 2306;  // was WARDDebugSetRoot: the device derives its own root now
+    MessageType_WARDSync = 2307 [(wire_in) = true];
+    MessageType_WARDSyncAck = 2308 [(wire_out) = true];
+    MessageType_WARDIngestAttestation = 2309 [(wire_in) = true];
+    MessageType_WARDIngestAttestationAck = 2310 [(wire_out) = true];
+    MessageType_WARDReconcile = 2311 [(wire_in) = true];
+    MessageType_WARDReconcileAck = 2312 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
