@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from apps.common.coininfo import CoinInfo
 else:
-    IntEnum = object
+    IntEnum = int
 
 
 BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet", "Signet")

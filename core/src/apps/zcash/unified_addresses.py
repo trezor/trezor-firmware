@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from apps.common.coininfo import CoinInfo
 else:
-    IntEnum = object
+    IntEnum = int
 
 
 # Saves 50 bytes over `def prefix(coin: CoinInfo) -> str`

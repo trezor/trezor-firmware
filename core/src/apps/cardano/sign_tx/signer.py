@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
     CardanoTxResponseType = CardanoTxItemAck | messages.CardanoTxWitnessResponse
 else:
-    IntEnum = object
+    IntEnum = int
 
 
 _MINTING_POLICY_ID_LENGTH = const(28)
