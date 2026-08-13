@@ -1,0 +1,56 @@
+syntax = "proto2";
+package hw.trezor.messages.ward;
+
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageWard";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+
+/**
+ * WARD phase 1: PLAINTEXT, PULL-ONLY.
+ *
+ * The device stores no entries. When it needs one it PULLS it from the host
+ * mid-workflow: it emits WARDEntryRequest naming what it wants, the host answers
+ * WARDEntryAck, and the device displays the value.
+ *
+ * Nothing here is authenticated. There is no keyed path, no proof, no root and no
+ * encryption in this phase, so the host may return any value for any request. The
+ * device therefore labels what it shows as UNVERIFIED. Later phases add, in order:
+ * the keyed path (so the request stops naming the identifier in the clear), the
+ * proof (so a wrong answer can be rejected), and the sealed leaf (so the host
+ * cannot read the value either).
+ *
+ * All fields are `optional` deliberately. A proto2 `required` field that a caller
+ * forgets to set is an encode-time failure in every binding, which has bitten this
+ * protocol before; the handler validates instead.
+ */
+
+/**
+ * Request: show the WARD entry the HOST holds for (app_id, identifier).
+ * The device pulls the value and displays it; it keeps nothing.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message WARDGetEntry {
+    optional string app_id     = 1;  // domain that owns the entry; namespaces the lookup
+    optional bytes  identifier = 2;  // key within that domain (e.g. an address)
+}
+
+/**
+ * Response: device -> host, sent mid-workflow. Names the entry the device wants.
+ * The host must reply with WARDEntryAck.
+ * @next WARDEntryAck
+ */
+message WARDEntryRequest {
+    optional string app_id     = 1;  // echoes the requested domain
+    optional bytes  identifier = 2;  // echoes the requested key
+}
+
+/**
+ * Request: host -> device. The value for the entry the device just asked for.
+ * An ABSENT value means "no such entry" -- distinct from a present-but-empty one.
+ * UNAUTHENTICATED: nothing binds this to the device.
+ */
+message WARDEntryAck {
+    optional bytes value = 1;  // absent = no such entry; empty = an entry with no value
+}

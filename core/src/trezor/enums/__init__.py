@@ -766,6 +766,9 @@ if TYPE_CHECKING:
         TronDelegateResourceContract = 2211
         TronUnDelegateResourceContract = 2212
         TronWithdrawBalance = 2213
+        WARDGetEntry = 2300
+        WARDEntryRequest = 2301
+        WARDEntryAck = 2302
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102
