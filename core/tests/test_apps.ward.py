@@ -5,6 +5,12 @@ from trezor.wire import DataError
 
 from apps.ward.keys import _scope, entry_key
 from apps.ward import leaf as L
+from apps.ward.trie import (
+    addr_bit,
+    validate_proof_shape,
+    verify_membership,
+    verify_nonmembership,
+)
 from apps.ward.leaf import (
     EMPTY_PART,
     ENC_ENCRYPTED,
@@ -403,6 +409,159 @@ class TestWardSealedLeaf(unittest.TestCase):
         wire = LeafContent(encoding=ENC_PLAINTEXT, plaintext=PlaintextLeaf(content=b"x"))
         with self.assertRaises(DataError):
             L.read_leaf_content(wire)
+
+
+class TestWardTrie(unittest.TestCase):
+    """The trie verifier, pinned against vectors that trezorlib, the firmware reference
+    and @trezor/ward all agree on.
+
+    They come from a fixed four-leaf tree; only the leaf whose path starts with bit 0 is
+    alone on that side, so its membership proof is a single element. The same element is
+    the absence proof for any other key starting with 0, since a lookup for one lands on
+    that leaf.
+
+    Conformance vectors carry more weight for a trie than usual: a verifier cannot detect
+    a non-canonical tree from one path (see the module docstring), so agreement between
+    implementations is what keeps everyone building the same shape.
+    """
+
+    ROOT = bytes.fromhex(
+        "acfe9d9b2c3069070aeb21d72dd53cd7dd3245016ba461c09451d715cb2a6a2d"
+    )
+    MEMBER = bytes.fromhex(
+        "358b7591f24d313e523c7b34b8bd513e4310e08d058aee11d679ba41958853fe"
+    )
+    ABSENT = bytes.fromhex(
+        "5ad38304b535c2987dbd24657c1a11b884984ff600d9f389deb0d4e634fee792"
+    )
+    WITNESS_COMMIT = bytes.fromhex(
+        "2a36629301c9f5965be929bdbb741bbf5980f3829349748045ce20130496bb54"
+    )
+    PROOF = [
+        bytes.fromhex(
+            "00000000e96a5c3627be9ad15ae404da1ac72b42f1a602039dbc46fa22eb52e6071949d3"
+        )
+    ]
+    ID_PART = (
+        0,
+        bytes.fromhex("111111111111111111111111"),
+        bytes.fromhex("21212121212121212121212121212121"),
+        bytes.fromhex("6964656e746974792d31"),
+    )
+    VAL_PART = (
+        0,
+        bytes.fromhex("313131313131313131313131"),
+        bytes.fromhex("41414141414141414141414141414141"),
+        bytes.fromhex("636970686572746578742d31"),
+    )
+
+    def test_bit_order_is_msb_first(self):
+        """bit 0 is the TOP bit of byte 0. Getting this backwards would still produce a
+        self-consistent trie that disagrees with every other implementation."""
+        key = bytes.fromhex("80" + "00" * 31)
+        self.assertEqual([addr_bit(key, i) for i in range(3)], [1, 0, 0])
+        key = bytes.fromhex("01" + "00" * 31)
+        self.assertEqual(addr_bit(key, 7), 1)
+        self.assertEqual(addr_bit(key, 0), 0)
+        # bit 8 is the top bit of byte 1
+        self.assertEqual(addr_bit(bytes.fromhex("00" + "80" + "00" * 30), 8), 1)
+
+    def test_frozen_membership_proof(self):
+        """The commit, the proof and the root, byte-for-byte across three impls."""
+        self.assertEqual(commit_of("address", self.ID_PART, self.VAL_PART), self.WITNESS_COMMIT)
+        self.assertEqual(len(self.PROOF[0]), 36)
+        self.assertTrue(
+            verify_membership(
+                self.MEMBER, "address", self.ID_PART, self.VAL_PART, self.PROOF, self.ROOT
+            )
+        )
+
+    def test_frozen_nonmembership_proof(self):
+        """Absence is proved by the leaf that occupies the absent key's path."""
+        self.assertTrue(
+            verify_nonmembership(
+                self.ABSENT, self.MEMBER, self.WITNESS_COMMIT, self.PROOF, self.ROOT
+            )
+        )
+
+    def test_membership_against_a_wrong_root_fails(self):
+        self.assertFalse(
+            verify_membership(
+                self.MEMBER, "address", self.ID_PART, self.VAL_PART, self.PROOF, bytes(32)
+            )
+        )
+
+    def test_membership_of_a_mutated_leaf_fails(self):
+        """Any edit to either part changes the commit, hence the leaf, hence the root."""
+        for part in ("id", "val"):
+            idp, valp = self.ID_PART, self.VAL_PART
+            if part == "id":
+                idp = (idp[0], idp[1], idp[2], idp[3] + b"x")
+            else:
+                valp = (valp[0], valp[1], valp[2], valp[3] + b"x")
+            self.assertFalse(
+                verify_membership(self.MEMBER, "address", idp, valp, self.PROOF, self.ROOT)
+            )
+        # ...and so does the key_type, which is why it is inside the commit
+        self.assertFalse(
+            verify_membership(
+                self.MEMBER, "label", self.ID_PART, self.VAL_PART, self.PROOF, self.ROOT
+            )
+        )
+
+    def test_witness_equal_to_target_proves_nothing(self):
+        """Otherwise a membership proof would double as a proof of absence."""
+        self.assertFalse(
+            verify_nonmembership(
+                self.MEMBER, self.MEMBER, self.WITNESS_COMMIT, self.PROOF, self.ROOT
+            )
+        )
+
+    def test_relabelled_split_bit_is_rejected(self):
+        """THE malleability attack, and the reason split_bit is inside the node hash.
+
+        The sibling hash is untouched and the chain would still fold to the same value
+        under the old format, where the bit index was unauthenticated metadata. A host
+        that could relabel hops could manufacture a witness relationship and prove a
+        PRESENT key absent.
+        """
+        relabelled = [bytes([0, 1]) + self.PROOF[0][2:]]
+        try:
+            self.assertFalse(
+                verify_nonmembership(
+                    self.ABSENT, self.MEMBER, self.WITNESS_COMMIT, relabelled, self.ROOT
+                )
+            )
+        except DataError:
+            pass  # rejected by the shape check before any hashing -- also correct
+
+    def test_proof_shape_is_enforced(self):
+        """A proof must describe a real root-to-leaf path before anything is hashed."""
+        good = self.PROOF[0]
+        for bad in (
+            good[:35],  # wrong element length
+            bytes([1, 0]) + bytes([0, 0]) + good[4:],  # split_bit >= 256
+            bytes([0, 5]) + bytes([0, 0]) + good[4:],  # skiplen != split_bit - start_bit
+        ):
+            with self.assertRaises(DataError):
+                validate_proof_shape([bad])
+
+        # split bits must strictly increase from the root down
+        with self.assertRaises(DataError):
+            validate_proof_shape(
+                [
+                    bytes([0, 5]) + bytes([0, 5]) + good[4:],
+                    bytes([0, 2]) + bytes([0, 2]) + good[4:],
+                ]
+            )
+
+    def test_proof_length_is_bounded_by_the_key_space(self):
+        """No cap is needed: split_bit strictly increases and stays under 256, so a valid
+        proof cannot exceed 256 elements however many the host sends."""
+        full = [bytes([0, b]) + bytes([0, 0]) + bytes(32) for b in range(255, -1, -1)]
+        self.assertEqual(len(validate_proof_shape(full)), 256)
+        with self.assertRaises(DataError):
+            validate_proof_shape(full + [bytes([1, 0]) + bytes([0, 0]) + bytes(32)])
 
 
 if __name__ == "__main__":
