@@ -94,29 +94,6 @@ static mp_obj_t mod_trezorio_USBIF_write(mp_obj_t self, mp_obj_t msg) {
 static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USBIF_write_obj,
                                  mod_trezorio_USBIF_write);
 
-/// def write_blocking(self, msg: AnyBytes, timeout_ms: int) -> int:
-///     """
-///     Sends message using USB interface.
-///     """
-static mp_obj_t mod_trezorio_USBIF_write_blocking(mp_obj_t self, mp_obj_t msg,
-                                                  mp_obj_t timeout_ms) {
-  mp_obj_USBIF_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t buf = {0};
-  mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
-
-  if (buf.len != USB_PACKET_LEN) {
-    mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid buffer length"));
-  }
-
-  uint32_t timeout = trezor_obj_get_uint(timeout_ms);
-
-  ssize_t r = syshandle_write_blocking(o->handle, buf.buf, buf.len, timeout);
-
-  return MP_OBJ_NEW_SMALL_INT(r);
-}
-static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_USBIF_write_blocking_obj,
-                                 mod_trezorio_USBIF_write_blocking);
-
 /// def read(self, buf: bytearray, offset: int = 0) -> int:
 ///     """
 ///     Reads message using USB interface
@@ -168,8 +145,6 @@ static const mp_rom_map_elem_t mod_trezorio_USBIF_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_iface_num),
      MP_ROM_PTR(&mod_trezorio_USBIF_iface_num_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_USBIF_write_obj)},
-    {MP_ROM_QSTR(MP_QSTR_write_blocking),
-     MP_ROM_PTR(&mod_trezorio_USBIF_write_blocking_obj)},
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_USBIF_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_RX_PACKET_LEN), MP_ROM_INT(USB_PACKET_LEN)},
     {MP_ROM_QSTR(MP_QSTR_TX_PACKET_LEN), MP_ROM_INT(USB_PACKET_LEN)},

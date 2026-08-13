@@ -519,11 +519,9 @@ async def send_cmd(cmd: Cmd, iface: HID) -> None:
         seq += 1
 
 
-def send_cmd_sync(cmd: Cmd, iface: HID) -> None:
+def send_keepalive_sync(cid: int, status: int, iface: HID) -> None:
+    cmd = cmd_keepalive(cid, status)
     init_desc = frame_init()
-    cont_desc = frame_cont()
-    offset = 0
-    seq = 0
     datalen = len(cmd.data)
 
     buf, frm = make_struct(init_desc)
@@ -531,20 +529,9 @@ def send_cmd_sync(cmd: Cmd, iface: HID) -> None:
     frm.cmd = cmd.cmd
     frm.bcnt = datalen
 
-    offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
+    offset = utils.memcpy(frm.data, 0, cmd.data, 0, datalen)
+    assert offset == datalen  # 1-byte payload fits into one USB packet
     iface.write(buf)
-
-    if offset < datalen:
-        frm = overlay_struct(buf, cont_desc)
-
-    while offset < datalen:
-        frm.seq = seq
-        copied = utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
-        offset += copied
-        if copied < _FRAME_CONT_SIZE:
-            frm.data[copied:] = bytearray(_FRAME_CONT_SIZE - copied)
-        iface.write_blocking(buf, 1000)
-        seq += 1
 
 
 async def handle_reports(iface: HID) -> None:
@@ -571,7 +558,7 @@ class KeepaliveCallback:
         self.iface = iface
 
     def __call__(self) -> None:
-        send_cmd_sync(cmd_keepalive(self.cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
+        send_keepalive_sync(self.cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
 
 
 async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
@@ -843,14 +830,14 @@ class Fido2ConfirmMakeCredential(Fido2State):
         cid = self.cid  # local_cache_attribute
 
         self._cred.generate_id()
-        send_cmd_sync(cmd_keepalive(cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
+        send_keepalive_sync(cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
         response_data = _cbor_make_credential_sign(
             self._client_data_hash, self._cred, self._user_verification
         )
 
         cmd = Cmd(cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
         if self._resident:
-            send_cmd_sync(cmd_keepalive(cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
+            send_keepalive_sync(cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
             if not store_resident_credential(self._cred):
                 cmd = cbor_error(cid, _ERR_KEY_STORE_FULL)
         await send_cmd(cmd, self.iface)
@@ -911,7 +898,7 @@ class Fido2ConfirmGetAssertion(Fido2State):
 
         assert self._selected_cred is not None
         try:
-            send_cmd_sync(cmd_keepalive(cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
+            send_keepalive_sync(cid, _KEEPALIVE_STATUS_PROCESSING, self.iface)
             response_data = cbor_get_assertion_sign(
                 self._client_data_hash,
                 self._selected_cred.rp_id_hash,
