@@ -15,10 +15,11 @@ async def get_entry(msg: WARDGetEntry) -> Success:
     from trezor.ui.layouts import confirm_properties
 
     from .common import WARNING_UNVERIFIED, display_bytes, pull_entry, require_key
+    from .keys import entry_key_for
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
-    value = await pull_entry(app_id, identifier)
+    value = await pull_entry(await entry_key_for(app_id, identifier))
 
     # An ABSENT value means "no such entry"; a present-but-empty one is an entry whose
     # value happens to be empty. Keep those distinguishable on screen.

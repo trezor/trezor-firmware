@@ -21,6 +21,7 @@ async def set_entry(msg: WARDSetEntry) -> Success:
     from trezor.wire import DataError
 
     from .common import WARNING_UNVERIFIED, display_bytes, pull_entry, require_key
+    from .keys import entry_key_for
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
@@ -30,7 +31,7 @@ async def set_entry(msg: WARDSetEntry) -> Success:
     if value is None:
         raise DataError("value is required")
 
-    old = await pull_entry(app_id, identifier)
+    old = await pull_entry(await entry_key_for(app_id, identifier))
 
     props = [
         ("Domain", app_id, False),

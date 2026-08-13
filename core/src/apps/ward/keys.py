@@ -1,0 +1,101 @@
+"""WARD key derivation and the keyed path (entry_key, a.k.a. LeafIdentityMAC).
+
+    K_path    = SLIP21(seed, [b"ward", b"K_path"]).key()
+    scope     = app_id || 0x00 || key_type || 0x00 || device_id(1B)
+    entry_key = HMAC-SHA256(K_path, scope || identifier)
+
+Byte-for-byte identical to the reference implementation, so its published vectors pin
+this code -- see `core/tests/test_apps.ward.py`. Do not "improve" the layout without
+changing those vectors and the TS host together.
+
+K_path is derived from the passphrase-dependent seed, so each hidden wallet has its own
+key space: the same identifier maps to a different path under a different passphrase.
+
+Siblings reserved under the same [b"ward"] root, for later phases: K_ident(key_type) and
+K_data(key_type) at [b"ward", b"K_ident"/b"K_data", key_type], which seal the two leaf
+parts once leaves stop being plaintext.
+"""
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Sequence
+
+_ENTRY_TYPE_ADDRESS = "address"
+
+
+async def _derive_slip21(path: "Sequence[bytes]") -> bytes:
+    from apps.common.seed import Slip21Node, get_seed
+
+    node = Slip21Node(await get_seed())
+    node.derive_path(path)
+    return node.key()
+
+
+async def derive_k_path() -> bytes:
+    """K_path = SLIP21(seed, [b"ward", b"K_path"]).key()."""
+    return await _derive_slip21([b"ward", b"K_path"])
+
+
+def _scope(app_id: str | bytes | None, key_type: str, device_id: int) -> bytes:
+    """scope = app_id || 0x00 || key_type || 0x00 || device_id(1B).
+
+    The fields are 0x00-DELIMITED rather than length-prefixed, which is only unambiguous
+    while neither app_id nor key_type can contain 0x00 -- otherwise the same bytes could
+    be re-split into a different (app_id, key_type, device_id, identifier) tuple and two
+    distinct entries would share one entry_key. For example
+
+        app_id="x", key_type="address",     device_id=0,    identifier=b"\\x00foo"
+        app_id="x", key_type="address\\0\\0", device_id=0x66, identifier=b"oo"
+
+    both encode to b"x\\x00address\\x00\\x00\\x00foo". app_id arrives from the host as a
+    protobuf string and 0x00 is valid UTF-8, so this is reachable input, not a
+    hypothetical. Hence the checks below.
+
+    `identifier` is exempt: it is the terminal field, so it may contain 0x00 freely.
+
+    FIXME(ward): length-prefixing both fields behind a version byte would make this
+    injective by construction rather than by validation. That is a wire break shared with
+    the TS host, so it waits for a deliberate compatibility bump.
+    """
+    from trezor.wire import DataError
+
+    if app_id is None:
+        app_id = b""
+    elif isinstance(app_id, str):
+        app_id = app_id.encode()
+
+    key_type_bytes = key_type.encode()
+    if b"\x00" in app_id or b"\x00" in key_type_bytes:
+        raise DataError("app_id and key_type must not contain NUL")
+    if not 0 <= device_id <= 0xFF:
+        raise DataError("device_id must be a single byte")
+
+    return app_id + b"\x00" + key_type_bytes + b"\x00" + bytes([device_id])
+
+
+def entry_key(
+    k_path: bytes,
+    app_id: str | bytes | None,
+    identifier: bytes,
+    key_type: str = _ENTRY_TYPE_ADDRESS,
+    device_id: int = 0,
+) -> bytes:
+    """The keyed 32-byte path for one entry: HMAC-SHA256(K_path, scope || identifier)."""
+    from trezor.crypto import hmac
+
+    return hmac(hmac.SHA256, k_path, _scope(app_id, key_type, device_id) + identifier).digest()
+
+
+async def entry_key_for(
+    app_id: str | bytes | None,
+    identifier: bytes,
+    key_type: str = _ENTRY_TYPE_ADDRESS,
+    device_id: int = 0,
+) -> bytes:
+    """Derive the keyed path for (app_id, identifier) under the active wallet's K_path.
+
+    This is the only way an entry_key is ever produced. Nothing accepts one from the
+    host, so the host cannot aim a read or a write at a slot of its choosing.
+    """
+    return entry_key(await derive_k_path(), app_id, identifier, key_type, device_id)
