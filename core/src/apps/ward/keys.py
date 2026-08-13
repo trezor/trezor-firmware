@@ -48,6 +48,27 @@ async def derive_wallet_id() -> bytes:
     return (await _derive_slip21([b"ward", b"wallet_id"]))[:16]
 
 
+async def derive_ward_id() -> bytes:
+    """The 32-byte handle the WM knows this wallet by.
+
+    Diverges from the reference, which routes this through
+    RIPEMD160(SHA256(secp256k1 master pubkey)) -- dragging a BIP-32 key in purely to
+    build an identifier. A SLIP-21 leaf gives the same thing: passphrase-dependent, so it
+    distinguishes wallets, and opaque, so a WM learns nothing from it but that two
+    requests concern the same wallet (which it must know to keep a counter at all).
+    """
+    return await _derive_slip21([b"ward", b"ward_id"])
+
+
+async def derive_k_mac() -> bytes:
+    """K_mac, which MACs the root the WM attests. Never leaves the device.
+
+    Its whole purpose is that the WM cannot compute one: it can sign a mac, so it can
+    replay a state this wallet reached, but it can never fabricate one.
+    """
+    return await _derive_slip21([b"ward", b"K_mac"])
+
+
 async def derive_k_ident(key_type: str) -> bytes:
     """K_ident(key_type) = SLIP21(seed, [b"ward", b"K_ident", key_type]).key().
 
