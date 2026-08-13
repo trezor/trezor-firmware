@@ -3,6 +3,12 @@
 A proof only means something when checked against a root the host did not choose. This
 holds that root, in the SESSION CACHE.
 
+The device DERIVES it: every confirmed write recomputes the root from a state the host had
+to prove (see `trie.compute_new_root`), so this is a value the device computed, never one
+it was handed. There is deliberately no way for the host to set it -- an earlier
+`WARDDebugSetRoot` existed only while writes could not derive one, and was removed rather
+than left as a back door into the one number the whole scheme rests on.
+
 Two reasons it must live there rather than in a module global, and the first is fatal:
 
   - Module state does not survive a workflow. `trezor.wire` wraps every request in
@@ -14,11 +20,11 @@ Two reasons it must live there rather than in a module global, and the first is 
     hidden wallet has its own trie and therefore its own root; a root shared across
     sessions would belong to whichever wallet happened to set it last.
 
-FIXME(ward, TRANSITIONAL): the root is only settable by `WARDDebugSetRoot` in a debug
-build, and does not survive a restart. Making it permanent means persisting it, and a
-root worth persisting has to be an ATTESTED one -- otherwise the device is storing a
-number it was simply handed. That arrives with the freshness round; this exists so the
-verification path can be wired and tested before then.
+FIXME(ward, TRANSITIONAL): the root does not survive a restart, so a device that reboots
+forgets its tree and verifies nothing again until the next write. Persisting it needs a
+per-wallet slot in flash -- the trie is passphrase-dependent, so one device holds one root
+PER hidden wallet -- and a counter, because roots repeat whenever contents repeat and so
+cannot identify a state by themselves. That is the next step.
 
 WHAT A ROOT HERE DOES AND DOES NOT PROVE. Given one, the device can reject a leaf the
 host forged, edited, moved between paths, or invented, and can reject a claim of absence
@@ -45,7 +51,7 @@ def get_root() -> bytes | None:
 
 
 def set_root(root: bytes | None) -> None:
-    """Set the trusted root for this session. Debug builds only -- see `debug_set_root`."""
+    """Record the root the device just derived. Callers must have computed it themselves."""
     from storage.cache_common import APP_WARD_ROOT
     from trezor.wire import context
 

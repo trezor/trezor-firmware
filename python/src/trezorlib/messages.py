@@ -837,7 +837,6 @@ class MessageType(IntEnum):
     WARDSetEntry = 2303
     WARDDeleteEntry = 2304
     WARDLeafAck = 2305
-    WARDDebugSetRoot = 2306
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -10214,6 +10213,9 @@ class WARDEntryAck(protobuf.MessageType):
         4: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
         5: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("sibling_split_bit", "uint32", repeated=False, required=False, default=None),
+        8: protobuf.Field("sibling_left", "bytes", repeated=False, required=False, default=None),
+        9: protobuf.Field("sibling_right", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10224,26 +10226,18 @@ class WARDEntryAck(protobuf.MessageType):
         content: Optional["LeafContent"] = None,
         witness_entry_key: Optional["bytes"] = None,
         witness_commit: Optional["bytes"] = None,
+        sibling_split_bit: Optional["int"] = None,
+        sibling_left: Optional["bytes"] = None,
+        sibling_right: Optional["bytes"] = None,
     ) -> None:
         self.proof: Sequence["bytes"] = proof if proof is not None else []
         self.identity = identity
         self.content = content
         self.witness_entry_key = witness_entry_key
         self.witness_commit = witness_commit
-
-
-class WARDDebugSetRoot(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2306
-    FIELDS = {
-        1: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        root: Optional["bytes"] = None,
-    ) -> None:
-        self.root = root
+        self.sibling_split_bit = sibling_split_bit
+        self.sibling_left = sibling_left
+        self.sibling_right = sibling_right
 
 
 class WARDLeafAck(protobuf.MessageType):

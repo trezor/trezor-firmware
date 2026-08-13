@@ -60,26 +60,25 @@ def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, byt
     return app_id, identifier
 
 
-async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
-    """PULL the host's current value for an already-derived keyed path.
+async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
+    """PULL the host's leaf for an already-derived keyed path, verified.
 
     This is the one mechanism the whole subsystem is built on: the device holds nothing,
     so it asks the host mid-workflow and the host answers while its own call is still in
-    flight. Reads show what comes back; writes use it to learn the value they are about
-    to replace or remove.
+    flight. The request names ONLY the opaque path -- see `keys.entry_key_for`.
 
-    The request names ONLY the opaque path -- see `keys.entry_key_for`. Callers must
-    derive it themselves and must never pass through a host-supplied value.
+    Returns `(value, old_leaf, write_material)`:
 
-    What comes back is a two-part LEAF, which this decodes down to the value the screens
-    care about. Returns None when the host holds no such entry OR the leaf it returned
-    is a tombstone; both mean "nothing here". That stays distinct from b"" -- an entry
-    that exists and whose value happens to be empty.
+      value           the decoded value, or None when nothing is there (no such entry, or
+                      a tombstone). Distinct from b"", an entry whose value IS empty.
+      old_leaf        (key_type, id_part, val_part) as received, or None -- what a write
+                      must prove it is replacing.
+      write_material  (proof, witness_entry_key, witness_commit, sibling_node), which a
+                      write feeds to `trie.compute_new_root`.
 
-    The identity part is deliberately NOT returned. Nothing reads it yet: the device
-    already knows the identifier and app_id (it derived the path from them), so the
-    identity part is write-only until there is a consumer that does not -- host-blind
-    reconstruction, or enumerating entries without knowing their identifiers.
+    The identity part is returned but nothing reads it yet: the device already knows the
+    identifier and app_id, having derived the path from them, so it is carried only
+    because the leaf hash commits to it.
     """
     from trezor.messages import WARDEntryAck, WARDEntryRequest
     from trezor.wire import context
@@ -99,33 +98,52 @@ async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
         expected_type=WARDEntryAck,
     )
 
-    part = read_leaf_content(ack.content)
-    key_type_from_wire, id_part = read_leaf_identity(ack.identity)
-    present = part is not None and not is_delete(part)
+    val_part = read_leaf_content(ack.content)
+    wire_key_type, id_part = read_leaf_identity(ack.identity)
+    present = val_part is not None and not is_delete(val_part)
+    leaf_key_type = wire_key_type or key_type
 
-    # Check the answer against the root the device trusts, BEFORE opening anything. A
-    # host that says "no such entry" has to prove it, or it could hide any entry it
-    # dislikes simply by denying it exists.
+    # Check the answer against the root the device trusts, BEFORE opening anything. A host
+    # that says "no such entry" has to prove it, or it could hide any entry it dislikes
+    # simply by denying it exists.
     _verify_against_root(
         entry_key,
-        key_type_from_wire or key_type,
+        leaf_key_type,
         id_part,
-        part,
+        val_part,
         present,
         ack.proof,
         ack.witness_entry_key,
         ack.witness_commit,
     )
 
+    sibling_node = None
+    if ack.sibling_split_bit is not None:
+        sibling_node = (
+            ack.sibling_split_bit,
+            ack.sibling_left or b"",
+            ack.sibling_right or b"",
+        )
+    material = (
+        ack.proof,
+        ack.witness_entry_key,
+        ack.witness_commit,
+        sibling_node,
+    )
+
     if not present:
-        return None
+        return None, None, material
 
     # Opening is the other half of authenticity: a part the host forged, corrupted, or
     # lifted from another path fails the tag and raises here.
-    decoded = decode_content(await derive_k_data(key_type), entry_key, key_type, part)
-    if decoded is None:
-        return None
-    _c_leaf, value = decoded
+    decoded = decode_content(await derive_k_data(key_type), entry_key, key_type, val_part)
+    value = None if decoded is None else decoded[1]
+    return value, (leaf_key_type, id_part, val_part), material
+
+
+async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
+    """Just the value, for the read path -- see `pull_leaf`."""
+    value, _old_leaf, _material = await pull_leaf(entry_key, key_type)
     return value
 
 
