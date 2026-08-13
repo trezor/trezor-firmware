@@ -305,3 +305,6 @@ if not utils.BITCOIN_ONLY:
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
     TronWithdrawBalance = 2213
+    WARDGetEntry = 2300
+    WARDEntryRequest = 2301
+    WARDEntryAck = 2302
