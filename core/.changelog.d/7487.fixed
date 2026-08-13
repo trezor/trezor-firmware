@@ -1,0 +1,1 @@
+Don't fail FIDO interaction if keepalive message is blocked.
