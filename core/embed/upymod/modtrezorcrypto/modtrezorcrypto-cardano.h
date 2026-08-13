@@ -108,6 +108,7 @@ static mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
       mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
   const int res = hdnode_from_secret_cardano(bufinfo.buf, &o->hdnode);
   if (res != 1) {
+    memzero(&o->hdnode, sizeof(o->hdnode));
     m_del_obj(mp_obj_HDNode_t, o);
     mp_raise_msg(
         &mp_type_RuntimeError,
@@ -131,25 +132,25 @@ static mp_obj_t mod_trezorcrypto_from_seed_slip23(mp_obj_t seed) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid seed"));
   }
 
-  uint8_t secret[CARDANO_SECRET_LENGTH] = {0};
-  HDNode hdnode = {0};
-  int res = 0;
+  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
+      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
 
-  res = secret_from_seed_cardano_slip23(bufinfo.buf, bufinfo.len, secret);
-  if (res != 1) {
+  uint8_t secret[CARDANO_SECRET_LENGTH] = {0};
+  if (secret_from_seed_cardano_slip23(bufinfo.buf, bufinfo.len, secret) != 1) {
+    memzero(secret, sizeof(secret));
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Unexpected failure in SLIP-23 derivation."));
   }
-  res = hdnode_from_secret_cardano(secret, &hdnode);
+
+  const int res = hdnode_from_secret_cardano(secret, &o->hdnode);
+  memzero(secret, sizeof(secret));
   if (res != 1) {
+    memzero(&o->hdnode, sizeof(o->hdnode));
     mp_raise_msg(
         &mp_type_RuntimeError,
         MP_ERROR_TEXT("Unexpected failure in constructing Cardano node."));
   }
 
-  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
-      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
-  o->hdnode = hdnode;
   o->fingerprint = hdnode_fingerprint(&o->hdnode);
   return MP_OBJ_FROM_PTR(o);
 }
@@ -168,25 +169,25 @@ static mp_obj_t mod_trezorcrypto_from_seed_ledger(mp_obj_t seed) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid seed"));
   }
 
-  uint8_t secret[CARDANO_SECRET_LENGTH] = {0};
-  HDNode hdnode = {0};
-  int res = 0;
+  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
+      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
 
-  res = secret_from_seed_cardano_ledger(bufinfo.buf, bufinfo.len, secret);
-  if (res != 1) {
+  uint8_t secret[CARDANO_SECRET_LENGTH] = {0};
+  if (secret_from_seed_cardano_ledger(bufinfo.buf, bufinfo.len, secret) != 1) {
+    memzero(secret, sizeof(secret));
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Unexpected failure in Ledger derivation."));
   }
-  res = hdnode_from_secret_cardano(secret, &hdnode);
+
+  const int res = hdnode_from_secret_cardano(secret, &o->hdnode);
+  memzero(secret, sizeof(secret));
   if (res != 1) {
+    memzero(&o->hdnode, sizeof(o->hdnode));
     mp_raise_msg(
         &mp_type_RuntimeError,
         MP_ERROR_TEXT("Unexpected failure in constructing Cardano node."));
   }
 
-  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
-      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
-  o->hdnode = hdnode;
   o->fingerprint = hdnode_fingerprint(&o->hdnode);
   return MP_OBJ_FROM_PTR(o);
 }
