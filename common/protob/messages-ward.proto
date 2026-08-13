@@ -24,17 +24,18 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
  *
  * Reads (WARDGetEntry) and writes (WARDSetEntry, WARDDeleteEntry) both hang off that
  * one pull. On a write the device pulls the CURRENT value first, so it can show the
- * user what is about to be replaced or removed rather than only what is arriving. The
- * device performs no write itself: on Success the HOST applies the change to its own
- * store. In this phase the device is a confirmation screen, not the writer; that
- * inverts in a later phase, when the device becomes the writer and encryptor.
+ * user what is about to be replaced or removed rather than only what is arriving.
  *
- * Nothing here is authenticated. There is no keyed path, no proof, no root and no
- * encryption in this phase, so the host may return any value for any request. The
- * device therefore labels what it shows as UNVERIFIED. Later phases add, in order:
- * the keyed path (so the request stops naming the identifier in the clear), the
- * proof (so a wrong answer can be rejected), and the sealed leaf (so the host
- * cannot read the value either).
+ * The stored unit is a two-part LEAF (see LeafIdentity / LeafContent), which the DEVICE
+ * builds and returns (WARDLeafAck); the host stores it verbatim and applies the change
+ * to its own store. The device still keeps nothing of its own.
+ *
+ * Nothing here is authenticated. There is no proof and no root in this phase, so the
+ * host may return any leaf for any path -- including a stale one, or none at all -- and
+ * the device cannot tell. It therefore labels what it shows as UNVERIFIED. Sealing the
+ * leaf (next) makes a leaf unforgeable and unmovable between paths, but it does NOT fix
+ * staleness or suppression; only the proof and an attested root do, so the warning
+ * outlives the encryption.
  *
  * All fields are `optional` deliberately. A proto2 `required` field that a caller
  * forgets to set is an encode-time failure in every binding, which has bitten this
@@ -57,10 +58,10 @@ message WARDGetEntry {
  * Request: create or replace the WARD entry the HOST holds for (app_id, identifier).
  *
  * The device pulls the current value first, so an ADD and an OVERWRITE are different
- * screens and the user sees the value being replaced. On Success the host performs the
- * write.
+ * screens and the user sees the value being replaced. The device returns the leaf it
+ * built (WARDLeafAck) and the host stores it.
  * @start
- * @next Success
+ * @next WARDLeafAck
  * @next Failure
  */
 message WARDSetEntry {
@@ -80,7 +81,7 @@ message WARDSetEntry {
  * The device pulls the entry first so it can show what is being removed, and refuses
  * if the host reports no such entry -- there is then nothing to confirm.
  * @start
- * @next Success
+ * @next WARDLeafAck
  * @next Failure
  */
 message WARDDeleteEntry {
@@ -109,10 +110,91 @@ message WARDEntryRequest {
 }
 
 /**
- * Request: host -> device. The value for the entry the device just asked for.
- * An ABSENT value means "no such entry" -- distinct from a present-but-empty one.
- * UNAUTHENTICATED: nothing binds this to the device.
+ * A leaf is TWO independently encoded parts, each a self-describing "manual oneof":
+ * trezor's protobuf codegen has no `oneof`, so mutual exclusivity is a code invariant
+ * and `encoding` selects which submessage is meaningful. (Same pattern as
+ * PaymentRequestMemo in messages-common.proto.)
+ *
+ *   LeafIdentity  the keyed-path preimage: identifier + app_id + device_id
+ *   LeafContent   C_leaf + value
+ *
+ * `key_type` is ALWAYS CLEAR -- it selects both of the keys that will seal the parts --
+ * and lives on LeafIdentity so it is not repeated per part.
+ *
+ *   part(p) = encoding(1B)||len8(nonce)||nonce||len8(tag)||tag||len32(body)||body
+ *
+ * Each part's encoding byte sits inside that framing, so a sealed and an unsealed part
+ * can never collide once both modes exist.
+ *
+ * THE DEVICE PRODUCES THE LEAF; the host stores it verbatim and must not synthesise
+ * one. That is not enforceable while the parts are plaintext, but it becomes a hard
+ * fact the moment they are sealed under device-only keys, so the protocol is shaped for
+ * it now rather than being changed later.
+ *
+ * An EMPTY part (empty body) means DELETED. Note this differs from an entry whose value
+ * merely happens to be empty, which is a PRESENT part whose body carries a zero-length
+ * value -- see WARDEntryAck. Conflating the two would make empty-valued entries
+ * indistinguishable from deleted ones, and so impossible to represent or to delete.
+ */
+message EncryptedLeaf {
+    optional bytes nonce = 1;  // 12B AEAD nonce
+    optional bytes tag   = 2;  // 16B Poly1305 tag
+    optional bytes ct    = 3;  // AEAD ciphertext (empty = delete)
+}
+message PlaintextLeaf {
+    optional bytes content = 1;  // C_leaf(4B)||len32(value)||value (empty = delete)
+}
+message LeafContent {
+    optional uint32 encoding         = 1;  // 0 = encrypted (default), 1 = plaintext
+    optional EncryptedLeaf encrypted = 2;  // set when encoding = 0
+    optional PlaintextLeaf plaintext = 3;  // set when encoding = 1
+}
+
+message PlainIdentity {
+    optional bytes  identifier = 1;  // the otherwise-hidden identifier, in the clear
+    optional string app_id     = 2;  // domain that owns the entry
+    optional uint32 device_id  = 3;  // scope device slot; 0 = global
+}
+message EncryptedIdentity {
+    optional bytes nonce = 1;  // 12B AEAD nonce
+    optional bytes tag   = 2;  // 16B Poly1305 tag
+    optional bytes ct    = 3;  // AEAD over len16(identifier)||identifier||len8(app_id)||app_id||device_id(1B)
+}
+message LeafIdentity {
+    optional uint32 encoding             = 1;  // 0 = encrypted (default), 1 = plaintext
+    optional string key_type             = 2;  // ALWAYS CLEAR -- selects both leaf keys
+    optional EncryptedIdentity encrypted = 3;  // set when encoding = 0
+    optional PlainIdentity     plain     = 4;  // set when encoding = 1
+}
+
+/**
+ * Request: host -> device. The leaf the host holds for the path the device just asked
+ * about, exactly as the device once handed it over.
+ *
+ * BOTH FIELDS ABSENT means "no such entry". That is distinct from a leaf whose content
+ * body carries a zero-length value, which is an entry that exists and whose value
+ * happens to be empty.
+ *
+ * UNAUTHENTICATED: nothing here binds the leaf to the device or proves it is current.
  */
 message WARDEntryAck {
-    optional bytes value = 1;  // absent = no such entry; empty = an entry with no value
+    reserved 1;                            // was a bare `value`; the unit is a leaf now
+    optional LeafIdentity identity = 2;    // absent together with content = no such entry
+    optional LeafContent  content  = 3;
+}
+
+/**
+ * Response: device -> host, ending a WARDSetEntry or WARDDeleteEntry.
+ *
+ * Carries the leaf the DEVICE built, because the host cannot build one itself once the
+ * parts are sealed -- it has none of the keys. The host stores this verbatim under
+ * entry_key; for a delete, both parts are empty and the host removes the record.
+ *
+ * The host has no other way to learn entry_key, so this is also how a newly created
+ * entry acquires its key.
+ */
+message WARDLeafAck {
+    optional bytes        entry_key = 1;  // 32B keyed path this leaf belongs at
+    optional LeafIdentity identity  = 2;
+    optional LeafContent  content   = 3;  // empty part = the entry was deleted
 }

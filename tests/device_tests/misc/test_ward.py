@@ -14,18 +14,23 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""WARD phase 1: plaintext, PULL-only, keyed path.
+"""WARD: plaintext two-part leaf, PULL-only, keyed path.
 
 The device holds nothing. It derives an opaque 32-byte `entry_key` from a seed the host
-does not have, asks the host for THAT, and displays what comes back. The host's store is
-keyed by the opaque key and contains no identifiers at all.
+does not have, asks the host for the leaf at THAT path, and displays what comes back.
+The host's store is keyed by the opaque key and contains no identifiers of its own.
 
-These tests assert three separate things, which is worth keeping distinct:
+These tests assert four separable things:
   - the pull happens, and names only the opaque key (protocol);
   - the key is the RIGHT one, i.e. the actual HMAC of the scope (crypto, via the
     test-only oracle in `tests/ward_keys.py`);
+  - a leaf the device built survives a round trip through the host and decodes back to
+    the same value (framing);
   - the screen shows the value and labels it unverified, which it is -- nothing in this
     phase authenticates it (UI).
+
+Note the host never builds a leaf: entries are created by asking the device, exactly as a
+real host must once the parts are sealed and it has none of the keys.
 """
 
 import pytest
@@ -80,24 +85,50 @@ class _Recorded:
         return "\n".join(self._texts)
 
 
-def _expected(br_name: str) -> list:
+def _expected(br_name: str, final=m.Success) -> list:
     """The full PULL round: the device asks for the entry, we answer, then it confirms.
 
     Pinning the sequence is what proves the pull happened at the protocol level; the
-    screen assertions only prove what was rendered. Every request in this phase has the
-    same shape, differing only in the screen it ends on.
+    screen assertions only prove what was rendered. A read ends in Success; a write or
+    delete ends in WARDLeafAck, because the host needs the leaf the device built.
     """
-    return [m.WARDEntryRequest, m.ButtonRequest(name=br_name), m.Success]
+    return [m.WARDEntryRequest, m.ButtonRequest(name=br_name), final]
 
 
-def _recording_provider(store: dict[bytes, bytes], asked: list[bytes]):
-    """A dict-backed provider that also records the keys it was asked for."""
+def _write(session: Session, store: dict, call, br_name: str) -> tuple:
+    """Run a write/delete, walking its screen, and return (result, recorder)."""
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(_expected(br_name, m.WARDLeafAck))
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        res = call(ward.dict_provider(store))
+    return res, rec
 
-    def provider(entry_key: bytes):
-        asked.append(entry_key)
-        return store.get(entry_key)
 
-    return provider
+def _read(session: Session, store: dict, call) -> tuple:
+    """Run a read, walking its screen, and return (result, recorder)."""
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(_expected("ward_get_entry"))
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        res = call(ward.dict_provider(store))
+    return res, rec
+
+
+def _seed(session: Session, store: dict, identifier: bytes, value: bytes) -> bytes:
+    """Create an entry the only way a host can: ask the device to build the leaf.
+
+    The host cannot synthesise one -- that is the point of the device being the encoder --
+    so every fixture below goes through a real confirmed write.
+    """
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, identifier, value, p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+    return res.entry_key
 
 
 # --- the keyed path --------------------------------------------------------------
@@ -105,20 +136,19 @@ def _recording_provider(store: dict[bytes, bytes], asked: list[bytes]):
 
 @pytest.mark.models("core")
 def test_ward_pull_names_only_the_opaque_key(session: Session):
-    """The request must carry a 32-byte key and NOTHING that reveals the entry.
-
-    This is the property the whole step exists for, so it is asserted directly on the
-    bytes rather than inferred: neither the domain nor the identifier may appear anywhere
-    in what the host receives.
-    """
+    """The request must carry a 32-byte key and NOTHING that reveals the entry."""
     identifier = b"addr1"
     asked: list[bytes] = []
+
+    def provider(entry_key: bytes):
+        asked.append(entry_key)
+        return None
 
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected("ward_get_entry"))
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.get_entry(session, _APP, identifier, _recording_provider({}, asked))
+        ward.get_entry(session, _APP, identifier, provider)
 
     assert len(asked) == 1
     key = asked[0]
@@ -136,16 +166,8 @@ def test_ward_pull_key_is_the_expected_hmac(session: Session):
     wrong SLIP-21 label, or built the scope differently, would still pass every other
     test in this file while putting every entry at the wrong path.
     """
-    identifier = b"addr1"
-    asked: list[bytes] = []
-
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_get_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.get_entry(session, _APP, identifier, _recording_provider({}, asked))
-
-    assert asked == [expected_entry_key(_K_PATH, _APP, identifier)]
+    res, _rec = _read(session, {}, lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
 
 
 @pytest.mark.models("core")
@@ -156,20 +178,13 @@ def test_ward_pull_key_is_deterministic_and_domain_separated(session: Session):
     one app's entry from resolving another's. Both are observable from the host side
     without any knowledge of the seed.
     """
-    identifier = b"addr1"
-    asked: list[bytes] = []
-    provider = _recording_provider({}, asked)
-
-    for app_id in (_APP, _APP, "OTHER"):
-        rec = _Recorded()
-        with session.test_ctx as ctx:
-            ctx.set_expected_responses(_expected("ward_get_entry"))
-            ctx.set_input_flow(
-                InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
-            )
-            ward.get_entry(session, app_id, identifier, provider)
-
-    first, again, other = asked
+    keys = [
+        _read(session, {}, lambda p, a=app: ward.get_entry(session, a, b"addr1", p))[
+            0
+        ].entry_key
+        for app in (_APP, _APP, "OTHER")
+    ]
+    first, again, other = keys
     assert first == again
     assert first != other
 
@@ -183,7 +198,76 @@ def test_ward_rejects_nul_in_app_id(session: Session):
     UTF-8, so this is reachable input. Fails before any pull or screen.
     """
     with pytest.raises(exceptions.TrezorFailure, match="NUL"):
-        ward.get_entry(session, "bad\x00app", b"addr1", lambda _k: b"x")
+        ward.get_entry(session, "bad\x00app", b"addr1", lambda _k: None)
+
+
+# --- the leaf ---------------------------------------------------------------------
+
+
+@pytest.mark.models("core")
+def test_ward_leaf_round_trips_through_the_host(session: Session):
+    """A leaf the device built, stored verbatim by the host, decodes back to the same
+    value when the device reads it again.
+
+    This is the framing assertion: it would fail on any disagreement between the
+    device's encode and decode paths, or on the host mangling what it stored.
+    """
+    store: dict[bytes, ward.Leaf] = {}
+    key = _seed(session, store, b"addr1", b"Petr_label")
+
+    assert list(store) == [key]
+    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    assert "Petr_label" in rec.text
+
+
+@pytest.mark.models("core")
+def test_ward_leaf_identity_carries_the_preimage(session: Session):
+    """The identity part is populated with the keyed path's preimage.
+
+    Nothing reads it yet -- the device already knows these values, having derived the
+    path from them -- so it is write-only until there is a consumer that does not, such
+    as reconstructing entries without knowing their identifiers. It is filled now so the
+    leaf reaches its final shape before anything hashes it.
+
+    It is PLAINTEXT at this step, which is exactly why the store is not yet confidential:
+    this assertion inverts once the parts are sealed.
+    """
+    store: dict[bytes, ward.Leaf] = {}
+    key = _seed(session, store, b"addr1", b"Petr_label")
+
+    identity = store[key].identity
+    assert identity is not None
+    assert identity.encoding == 1  # plaintext
+    assert identity.key_type == "address"
+    assert identity.plain is not None
+    assert identity.plain.identifier == b"addr1"
+    assert identity.plain.app_id == _APP
+    assert identity.plain.device_id == 0
+
+
+@pytest.mark.models("core")
+def test_ward_delete_returns_a_leaf_with_both_parts_empty(session: Session):
+    """A full delete, not a tombstone: the host removes the record entirely.
+
+    The reference keeps the identity part alive on delete, which leaves behind a record
+    of which entries once existed.
+    """
+    store: dict[bytes, ward.Leaf] = {}
+    key = _seed(session, store, b"addr1", b"doomed")
+
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        "ward_delete_entry",
+    )
+    assert res.entry_key == key
+    assert res.leaf is not None
+    assert res.leaf.content.plaintext.content == b""
+    assert res.leaf.identity.plain.identifier is None
+
+    ward.apply(store, res)
+    assert store == {}
 
 
 # --- read -------------------------------------------------------------------------
@@ -192,23 +276,15 @@ def test_ward_rejects_nul_in_app_id(session: Session):
 @pytest.mark.models("core")
 def test_ward_get_entry_pulls_and_shows(session: Session):
     """The device pulls the value from the host and renders it."""
-    asked: list[bytes] = []
-    key = expected_entry_key(_K_PATH, _APP, b"addr1")
+    store: dict[bytes, ward.Leaf] = {}
+    key = _seed(session, store, b"addr1", b"Petr_label")
 
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_get_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        res = ward.get_entry(
-            session, _APP, b"addr1", _recording_provider({key: b"Petr_label"}, asked)
-        )
+    res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
 
-    # the device asked the host for exactly the key we expected -- i.e. it really pulled
-    assert asked == [key]
     assert res.entry_key == key
-    assert res.success.message == "WARD entry shown"
+    assert res.response.message == "WARD entry shown"
+    assert res.leaf is None  # a read builds no leaf
 
-    # the pulled value reached the screen, and it is marked unverified
     assert "unverified entry" in rec.title
     assert "Petr_label" in rec.text
     assert "not verified" in rec.text.lower()
@@ -218,11 +294,7 @@ def test_ward_get_entry_pulls_and_shows(session: Session):
 def test_ward_get_entry_absent_is_distinct_from_empty(session: Session):
     """A missing entry (provider returns None) must not look like an entry whose value
     happens to be empty: the device says it was not found."""
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_get_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.get_entry(session, _APP, b"nope", lambda _k: None)
+    _res, rec = _read(session, {}, lambda p: ward.get_entry(session, _APP, b"nope", p))
 
     assert "entry not found" in rec.title
     assert "no entry" in rec.text.lower()
@@ -230,13 +302,17 @@ def test_ward_get_entry_absent_is_distinct_from_empty(session: Session):
 
 @pytest.mark.models("core")
 def test_ward_get_entry_empty_value_is_shown_as_an_entry(session: Session):
-    """The converse of the above: a present-but-empty value IS an entry, so the screen
-    must not claim it was not found."""
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_get_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.get_entry(session, _APP, b"empty", lambda _k: b"")
+    """The converse of the above, end to end: a present-but-empty value IS an entry.
+
+    This is the assertion that pins the divergence from the reference, which encodes any
+    empty value as an empty part -- i.e. as a delete -- and so could not represent this
+    state at all. The value survives a real write and a real read.
+    """
+    store: dict[bytes, ward.Leaf] = {}
+    _seed(session, store, b"addr1", b"")
+    assert len(store) == 1  # an empty value is a STORED entry, not a deletion
+
+    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
 
     assert "unverified entry" in rec.title
     assert "not found" not in rec.title
@@ -244,20 +320,15 @@ def test_ward_get_entry_empty_value_is_shown_as_an_entry(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_get_entry_uses_the_dict_provider(session: Session):
-    """The dict-backed provider stands in for the host DB -- keyed by entry_key only."""
-    entries = {
-        expected_entry_key(_K_PATH, _APP, b"addr1"): b"one",
-        expected_entry_key(_K_PATH, _APP, b"addr2"): b"two",
-    }
+def test_ward_get_entry_serves_the_right_one_of_several(session: Session):
+    """The store holds several leaves under opaque keys and serves the one asked for."""
+    store: dict[bytes, ward.Leaf] = {}
+    _seed(session, store, b"addr1", b"one")
+    _seed(session, store, b"addr2", b"two")
+    assert len(store) == 2
 
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_get_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.get_entry(session, _APP, b"addr2", ward.dict_provider(entries))
+    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr2", p))
 
-    # the right one of the two, not just any
     assert "two" in rec.text
     assert "one" not in rec.text
 
@@ -269,42 +340,43 @@ def test_ward_get_entry_uses_the_dict_provider(session: Session):
 def test_ward_set_entry_add_shows_the_new_value(session: Session):
     """Writing a key the host does not hold is an ADD: nothing is being replaced, so the
     screen must not claim otherwise."""
-    entries: dict[bytes, bytes] = {}
+    store: dict[bytes, ward.Leaf] = {}
 
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_set_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        res = ward.set_entry(
-            session, _APP, b"addr1", b"fresh", ward.dict_provider(entries)
-        )
+    res, rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"fresh", p),
+        "ward_set_entry",
+    )
 
-    assert res.success.message == "WARD write confirmed"
     assert "add entry" in rec.title
     assert "fresh" in rec.text
     assert "replaces" not in rec.text.lower()
 
-    # the device confirmed; applying it is the host's job, under the key it was given --
-    # which the host could not have computed for itself
-    entries[res.entry_key] = b"fresh"
-    assert entries == {expected_entry_key(_K_PATH, _APP, b"addr1"): b"fresh"}
+    # the device built the leaf; storing it is the host's job, under the key it was given
+    # -- which the host could not have computed for itself
+    ward.apply(store, res)
+    assert list(store) == [expected_entry_key(_K_PATH, _APP, b"addr1")]
 
 
 @pytest.mark.models("core")
 def test_ward_set_entry_update_names_the_value_it_replaces(session: Session):
     """Writing a key the host already holds is an OVERWRITE. Silently replacing a value
     the user cannot see is the failure mode this screen exists to prevent, so BOTH the
-    old and the new value must be on screen."""
-    key = expected_entry_key(_K_PATH, _APP, b"addr1")
-    entries = {key: b"old_label"}
+    old and the new value must be on screen.
 
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_set_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        res = ward.set_entry(
-            session, _APP, b"addr1", b"new_label", ward.dict_provider(entries)
-        )
+    The old value is read back out of a leaf the device built earlier, so this also
+    proves the decode path against real stored bytes rather than a fixture.
+    """
+    store: dict[bytes, ward.Leaf] = {}
+    key = _seed(session, store, b"addr1", b"old_label")
+
+    res, rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"new_label", p),
+        "ward_set_entry",
+    )
 
     assert "update entry" in rec.title
     # the old value is not merely present, it is labelled as the one being replaced
@@ -314,30 +386,18 @@ def test_ward_set_entry_update_names_the_value_it_replaces(session: Session):
 
     # the write lands on the SAME key it read from -- an update, not a second entry
     assert res.entry_key == key
-    entries[res.entry_key] = b"new_label"
-    assert entries == {key: b"new_label"}
-
-
-@pytest.mark.models("core")
-def test_ward_set_entry_accepts_an_empty_value(session: Session):
-    """b"" is a legitimate value to write -- distinct from not specifying one."""
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_set_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.set_entry(session, _APP, b"addr1", b"", lambda _k: None)
-
-    assert "add entry" in rec.title
+    ward.apply(store, res)
+    assert list(store) == [key]
 
 
 @pytest.mark.models("core")
 def test_ward_set_entry_rejects_an_absent_value(session: Session):
-    """...whereas an absent value is refused, rather than silently blanking the entry.
+    """An absent value is refused, rather than silently blanking the entry.
 
     This fails before the pull, so there is no input flow and no screen.
     """
     with pytest.raises(exceptions.TrezorFailure, match="value is required"):
-        ward.set_entry(session, _APP, b"addr1", None, lambda _k: b"x")
+        ward.set_entry(session, _APP, b"addr1", None, lambda _k: None)
 
 
 # --- delete -----------------------------------------------------------------------
@@ -347,33 +407,33 @@ def test_ward_set_entry_rejects_an_absent_value(session: Session):
 def test_ward_delete_entry_names_the_value_being_removed(session: Session):
     """Confirming a deletion by key alone tells the user nothing about what they lose,
     so the device pulls the entry and puts its value on screen."""
-    doomed = expected_entry_key(_K_PATH, _APP, b"addr1")
-    keep = expected_entry_key(_K_PATH, _APP, b"addr2")
-    entries = {doomed: b"doomed_label", keep: b"keep_me"}
+    store: dict[bytes, ward.Leaf] = {}
+    doomed = _seed(session, store, b"addr1", b"doomed_label")
+    keep = _seed(session, store, b"addr2", b"keep_me")
 
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_delete_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        res = ward.delete_entry(session, _APP, b"addr1", ward.dict_provider(entries))
+    res, rec = _write(
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        "ward_delete_entry",
+    )
 
-    assert res.success.message == "WARD delete confirmed"
+    assert res.entry_key == doomed
     assert "delete entry" in rec.title
     # the value is labelled as the one being removed, not just shown
     assert "deleting value" in rec.text.lower()
     assert "doomed_label" in rec.text
 
     # the device confirmed; the host performs the removal -- and only of that one entry
-    assert res.entry_key == doomed
-    del entries[res.entry_key]
-    assert entries == {keep: b"keep_me"}
+    ward.apply(store, res)
+    assert list(store) == [keep]
 
 
 @pytest.mark.models("core")
 def test_ward_delete_entry_refuses_when_the_host_holds_nothing(session: Session):
     """The host asked to delete an entry and then, answering the pull, said it holds no
     such entry. That is a contradiction, so the device refuses rather than returning a
-    Success the host could bank as a completed delete.
+    leaf the host could bank as a completed delete.
 
     Delete is deliberately NOT idempotent here: a no-op delete is a host bug worth
     surfacing. The failure arrives after the pull but before any screen.
@@ -384,21 +444,24 @@ def test_ward_delete_entry_refuses_when_the_host_holds_nothing(session: Session)
 
 @pytest.mark.models("core")
 def test_ward_delete_entry_deletes_an_empty_valued_entry(session: Session):
-    """An entry whose value is empty still exists, so deleting it must be allowed --
-    the absent/empty distinction has to hold on this path too, or empty entries become
-    undeletable."""
-    entries = {expected_entry_key(_K_PATH, _APP, b"addr1"): b""}
+    """An entry whose value is empty still exists, so deleting it must be allowed.
 
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_delete_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        res = ward.delete_entry(session, _APP, b"addr1", ward.dict_provider(entries))
+    The absent/empty distinction has to hold on this path too, or empty entries become
+    undeletable -- the device would refuse, reading "empty" as "not there".
+    """
+    store: dict[bytes, ward.Leaf] = {}
+    _seed(session, store, b"addr1", b"")
+
+    res, rec = _write(
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        "ward_delete_entry",
+    )
 
     assert "delete entry" in rec.title
-
-    del entries[res.entry_key]
-    assert entries == {}
+    ward.apply(store, res)
+    assert store == {}
 
 
 # --- shared validation ------------------------------------------------------------
@@ -408,15 +471,15 @@ def test_ward_delete_entry_deletes_an_empty_valued_entry(session: Session):
 @pytest.mark.parametrize(
     "call",
     [
-        pytest.param(lambda s: ward.get_entry(s, _APP, b"", lambda _k: b"x"), id="get"),
+        pytest.param(lambda s: ward.get_entry(s, _APP, b"", lambda _k: None), id="get"),
         pytest.param(
-            lambda s: ward.set_entry(s, _APP, b"", b"v", lambda _k: b"x"), id="set"
+            lambda s: ward.set_entry(s, _APP, b"", b"v", lambda _k: None), id="set"
         ),
         pytest.param(
-            lambda s: ward.delete_entry(s, _APP, b"", lambda _k: b"x"), id="delete"
+            lambda s: ward.delete_entry(s, _APP, b"", lambda _k: None), id="delete"
         ),
         pytest.param(
-            lambda s: ward.get_entry(s, "", b"addr1", lambda _k: b"x"), id="get-no-app"
+            lambda s: ward.get_entry(s, "", b"addr1", lambda _k: None), id="get-no-app"
         ),
     ],
 )

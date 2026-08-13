@@ -4,6 +4,21 @@ from common import *  # isort:skip
 from trezor.wire import DataError
 
 from apps.ward.keys import _scope, entry_key
+from apps.ward.leaf import (
+    EMPTY_PART,
+    ENC_ENCRYPTED,
+    ENC_PLAINTEXT,
+    decode_content,
+    decode_identity,
+    encode_content,
+    encode_identity,
+    is_delete,
+    pack_content,
+    pack_identity,
+    part_bytes,
+    unpack_content,
+    unpack_identity,
+)
 
 # Seed used by the reference implementation's own vectors, so the constants below are
 # directly comparable with them.
@@ -120,6 +135,98 @@ class TestWardKeys(unittest.TestCase):
         # and a different K_path (i.e. a different wallet/passphrase) must too
         other = slip21_key(bytes.fromhex("22" * 64), [b"ward", b"K_path"])
         self.assertNotEqual(base, entry_key(other, "app", b"id"))
+
+
+class TestWardLeaf(unittest.TestCase):
+    EK = bytes(range(32))
+    KT = "address"
+
+    def test_part_framing(self):
+        """part = encoding(1B) || len8(nonce) || nonce || len8(tag) || tag
+        || len32(body) || body."""
+        self.assertEqual(
+            part_bytes((ENC_ENCRYPTED, b"\xaa" * 12, b"\xbb" * 16, b"body")),
+            bytes([0])
+            + bytes([12])
+            + b"\xaa" * 12
+            + bytes([16])
+            + b"\xbb" * 16
+            + (4).to_bytes(4, "big")
+            + b"body",
+        )
+        # plaintext carries no nonce or tag, so both length bytes are zero
+        self.assertEqual(
+            part_bytes((ENC_PLAINTEXT, b"", b"", b"xy")),
+            bytes([1]) + bytes([0]) + bytes([0]) + (2).to_bytes(4, "big") + b"xy",
+        )
+        # None is the empty part, not a crash
+        self.assertEqual(part_bytes(None), part_bytes(EMPTY_PART))
+
+    def test_pack_identity_layout(self):
+        """len16(identifier) || identifier || len8(app_id) || app_id || device_id(1B)."""
+        self.assertEqual(
+            pack_identity(b"alice", "bitcoin", 7),
+            (5).to_bytes(2, "big") + b"alice" + bytes([7]) + b"bitcoin" + bytes([7]),
+        )
+        self.assertEqual(unpack_identity(pack_identity(b"alice", "bitcoin", 7)),
+                         (b"alice", b"bitcoin", 7))
+        # empty identifier and empty app_id are representable
+        self.assertEqual(unpack_identity(pack_identity(b"", b"", 0)), (b"", b"", 0))
+        # padding past the end is tolerated, which is what sealing will add
+        padded = pack_identity(b"alice", "bitcoin", 7) + b"\x00" * 40
+        self.assertEqual(unpack_identity(padded), (b"alice", b"bitcoin", 7))
+
+    def test_pack_identity_rejects_oversized_fields(self):
+        """The length prefixes are 2 bytes and 1 byte, so longer fields have no encoding."""
+        with self.assertRaises(DataError):
+            pack_identity(b"x", "a" * 256, 0)
+        with self.assertRaises(DataError):
+            pack_identity(b"x", "a", 256)
+
+    def test_pack_content_layout(self):
+        """C_leaf(4B BE) || len32(value) || value."""
+        self.assertEqual(
+            pack_content(5, b"data_alice"),
+            (5).to_bytes(4, "big") + (10).to_bytes(4, "big") + b"data_alice",
+        )
+        self.assertEqual(unpack_content(pack_content(5, b"data_alice")), (5, b"data_alice"))
+        padded = pack_content(5, b"v") + b"\x00" * 50
+        self.assertEqual(unpack_content(padded), (5, b"v"))
+
+    def test_empty_value_is_not_a_delete(self):
+        """The divergence from the reference, which returns an empty part for any empty
+        value and so cannot tell an empty entry from a deleted one.
+
+        These two must stay distinguishable, or an entry whose value is empty can neither
+        be represented nor deleted.
+        """
+        empty_value = encode_content(self.EK, self.KT, b"")
+        deleted = encode_content(self.EK, self.KT, None)
+
+        self.assertFalse(is_delete(empty_value))
+        self.assertTrue(is_delete(deleted))
+        self.assertNotEqual(part_bytes(empty_value), part_bytes(deleted))
+        self.assertEqual(deleted, EMPTY_PART)
+
+        # ...and an empty value survives the round trip AS an empty value
+        self.assertEqual(decode_content(self.EK, self.KT, empty_value), (0, b""))
+        self.assertIsNone(decode_content(self.EK, self.KT, deleted))
+
+    def test_content_round_trip(self):
+        part = encode_content(self.EK, self.KT, b"hello", c_leaf=9)
+        self.assertEqual(decode_content(self.EK, self.KT, part), (9, b"hello"))
+
+    def test_identity_round_trip(self):
+        part = encode_identity(self.EK, self.KT, b"alice", "bitcoin", 7)
+        self.assertEqual(decode_identity(self.EK, self.KT, part), (b"alice", b"bitcoin", 7))
+        self.assertIsNone(decode_identity(self.EK, self.KT, EMPTY_PART))
+
+    def test_a_delete_empties_both_parts(self):
+        """A full delete leaves no tombstone. The reference keeps the identity part
+        alive, which preserves a record of which entries once existed."""
+        self.assertTrue(is_delete(EMPTY_PART))
+        self.assertIsNone(decode_identity(self.EK, self.KT, EMPTY_PART))
+        self.assertIsNone(decode_content(self.EK, self.KT, EMPTY_PART))
 
 
 if __name__ == "__main__":
