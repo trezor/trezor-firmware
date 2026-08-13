@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from trezor.wire import WireInterface
 else:
-    IntEnum = object
+    IntEnum = int
 
 
 class ThpUnallocatedSessionError(WireError):
