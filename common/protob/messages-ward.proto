@@ -197,22 +197,22 @@ message WARDEntryAck {
     repeated bytes proof             = 4;
     optional bytes witness_entry_key = 5;
     optional bytes witness_commit    = 6;
+
+    // DELETE only, and only when the deleted leaf's sibling is a BRANCH.
+    //
+    // Removing a leaf collapses the branch above it, so the sibling moves up a level.
+    // A node's hash commits to its own skiplen, which is measured from its parent, so a
+    // re-parented sibling's hash is stale the instant it moves -- and the proof carries
+    // only that hash. The device therefore needs the sibling decomposed, to re-derive it
+    // at the shallower depth. Nothing is trusted: the device checks these pieces against
+    // the sibling hash the proof already committed to.
+    //
+    // Omit for a leaf sibling: a leaf has no skiplen and promotes exactly.
+    optional uint32 sibling_split_bit = 7;
+    optional bytes  sibling_left      = 8;
+    optional bytes  sibling_right     = 9;
 }
 
-/**
- * Request: DEBUG BUILDS ONLY. Seed the root the device verifies proofs against.
- *
- * A proof is only worth checking against a root the host did not choose, so the device
- * needs a root of its own. Until roots are attested, this is how tests give it one --
- * hence debug-only: a release build has no way to set a root, and therefore verifies
- * nothing yet and keeps saying so on screen.
- * @start
- * @next Success
- * @next Failure
- */
-message WARDDebugSetRoot {
-    optional bytes root = 1;  // 32B trie root; absent or empty = the tree is empty
-}
 
 /**
  * Response: device -> host, ending a WARDSetEntry or WARDDeleteEntry.

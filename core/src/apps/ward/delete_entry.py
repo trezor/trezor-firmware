@@ -23,15 +23,17 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from .common import WARNING_UNVERIFIED, display_bytes, pull_entry, require_key
+    from .common import WARNING_UNVERIFIED, display_bytes, pull_leaf, require_key
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
     from .leaf import EMPTY_PART, make_leaf_content, make_leaf_identity
+    from .root import get_root, set_root
+    from .trie import compute_new_root
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
     key_type = ENTRY_TYPE_ADDRESS
     entry_key = await entry_key_for(app_id, identifier, key_type)
-    current = await pull_entry(entry_key, key_type)
+    current, old_leaf, material = await pull_leaf(entry_key, key_type)
     if current is None:
         # The host asked to delete this entry and, answering the pull, reported that it
         # does not hold it -- a contradiction, so one side is wrong. Refuse rather than
@@ -48,6 +50,21 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
     ]
 
     await confirm_properties("ward_delete_entry", "Delete entry", props, hold=True)
+
+    # Derive the root the deletion leaves behind. The sibling decomposition matters here:
+    # removing a leaf re-parents its sibling, whose hash commits to a skiplen measured
+    # from its old parent -- see `trie.compute_new_root`.
+    proof, _witness_key, _witness_commit, sibling_node = material
+    set_root(
+        compute_new_root(
+            entry_key,
+            old_leaf,
+            None,
+            proof,
+            get_root(),
+            sibling_node=sibling_node,
+        )
+    )
 
     return WARDLeafAck(
         entry_key=entry_key,
