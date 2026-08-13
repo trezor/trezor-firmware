@@ -14,16 +14,18 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""WARD phase 1: plaintext, PULL-only.
+"""WARD phase 1: plaintext, PULL-only, keyed path.
 
-The device holds nothing. It asks the host for the entry mid-workflow and displays it.
-These tests assert the pull actually happens (the host is asked for exactly what the
-caller named) and that the screen labels the value as unverified -- which it is, since
-nothing in this phase authenticates it.
+The device holds nothing. It derives an opaque 32-byte `entry_key` from a seed the host
+does not have, asks the host for THAT, and displays what comes back. The host's store is
+keyed by the opaque key and contains no identifiers at all.
 
-Writes pull too, so the device can show what is being replaced or removed. The device
-never writes; the host applies the change after Success, which the write tests below do
-explicitly.
+These tests assert three separate things, which is worth keeping distinct:
+  - the pull happens, and names only the opaque key (protocol);
+  - the key is the RIGHT one, i.e. the actual HMAC of the scope (crypto, via the
+    test-only oracle in `tests/ward_keys.py`);
+  - the screen shows the value and labels it unverified, which it is -- nothing in this
+    phase authenticates it (UI).
 """
 
 import pytest
@@ -34,8 +36,14 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutContent
 
 from ...input_flows import InputFlowConfirmAllWarnings
+from ...ward_keys import bip39_seed, derive_k_path
+from ...ward_keys import entry_key as expected_entry_key
 
 _APP = "TEST"
+
+# The device under test is set up with the default mnemonic and no passphrase
+# (`SetupParams` in tests/conftest.py), so the oracle can reproduce its K_path.
+_K_PATH = derive_k_path(bip39_seed(" ".join(["all"] * 12)))
 
 
 class _Recorded:
@@ -82,27 +90,123 @@ def _expected(br_name: str) -> list:
     return [m.WARDEntryRequest, m.ButtonRequest(name=br_name), m.Success]
 
 
+def _recording_provider(store: dict[bytes, bytes], asked: list[bytes]):
+    """A dict-backed provider that also records the keys it was asked for."""
+
+    def provider(entry_key: bytes):
+        asked.append(entry_key)
+        return store.get(entry_key)
+
+    return provider
+
+
+# --- the keyed path --------------------------------------------------------------
+
+
+@pytest.mark.models("core")
+def test_ward_pull_names_only_the_opaque_key(session: Session):
+    """The request must carry a 32-byte key and NOTHING that reveals the entry.
+
+    This is the property the whole step exists for, so it is asserted directly on the
+    bytes rather than inferred: neither the domain nor the identifier may appear anywhere
+    in what the host receives.
+    """
+    identifier = b"addr1"
+    asked: list[bytes] = []
+
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(_expected("ward_get_entry"))
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        ward.get_entry(session, _APP, identifier, _recording_provider({}, asked))
+
+    assert len(asked) == 1
+    key = asked[0]
+    assert len(key) == 32
+    assert identifier not in key
+    assert _APP.encode() not in key
+
+
+@pytest.mark.models("core")
+def test_ward_pull_key_is_the_expected_hmac(session: Session):
+    """The key is not merely opaque, it is the RIGHT 32 bytes.
+
+    Computed independently from the device's known test seed -- see the warning in
+    tests/ward_keys.py about why only a test may do this. A device that derived from the
+    wrong SLIP-21 label, or built the scope differently, would still pass every other
+    test in this file while putting every entry at the wrong path.
+    """
+    identifier = b"addr1"
+    asked: list[bytes] = []
+
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(_expected("ward_get_entry"))
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        ward.get_entry(session, _APP, identifier, _recording_provider({}, asked))
+
+    assert asked == [expected_entry_key(_K_PATH, _APP, identifier)]
+
+
+@pytest.mark.models("core")
+def test_ward_pull_key_is_deterministic_and_domain_separated(session: Session):
+    """Same (app_id, identifier) -> same key; different app_id -> different key.
+
+    Determinism is what makes the store usable at all; domain separation is what stops
+    one app's entry from resolving another's. Both are observable from the host side
+    without any knowledge of the seed.
+    """
+    identifier = b"addr1"
+    asked: list[bytes] = []
+    provider = _recording_provider({}, asked)
+
+    for app_id in (_APP, _APP, "OTHER"):
+        rec = _Recorded()
+        with session.test_ctx as ctx:
+            ctx.set_expected_responses(_expected("ward_get_entry"))
+            ctx.set_input_flow(
+                InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+            )
+            ward.get_entry(session, app_id, identifier, provider)
+
+    first, again, other = asked
+    assert first == again
+    assert first != other
+
+
+@pytest.mark.models("core")
+def test_ward_rejects_nul_in_app_id(session: Session):
+    """The scope's 0x00 delimiters are only unambiguous while the fields exclude 0x00.
+
+    Otherwise the same preimage re-splits into a different tuple and two distinct
+    entries collide on one key. app_id arrives as a protobuf string and 0x00 is valid
+    UTF-8, so this is reachable input. Fails before any pull or screen.
+    """
+    with pytest.raises(exceptions.TrezorFailure, match="NUL"):
+        ward.get_entry(session, "bad\x00app", b"addr1", lambda _k: b"x")
+
+
 # --- read -------------------------------------------------------------------------
 
 
 @pytest.mark.models("core")
 def test_ward_get_entry_pulls_and_shows(session: Session):
     """The device pulls the value from the host and renders it."""
-    asked: list[tuple[str, bytes]] = []
-
-    def provider(app_id: str, identifier: bytes):
-        asked.append((app_id, identifier))
-        return b"Petr_label"
+    asked: list[bytes] = []
+    key = expected_entry_key(_K_PATH, _APP, b"addr1")
 
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected("ward_get_entry"))
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        res = ward.get_entry(session, _APP, b"addr1", provider)
+        res = ward.get_entry(
+            session, _APP, b"addr1", _recording_provider({key: b"Petr_label"}, asked)
+        )
 
-    # the device asked the host for exactly what we named -- i.e. it really pulled
-    assert asked == [(_APP, b"addr1")]
-    assert res.message == "WARD entry shown"
+    # the device asked the host for exactly the key we expected -- i.e. it really pulled
+    assert asked == [key]
+    assert res.entry_key == key
+    assert res.success.message == "WARD entry shown"
 
     # the pulled value reached the screen, and it is marked unverified
     assert "unverified entry" in rec.title
@@ -118,7 +222,7 @@ def test_ward_get_entry_absent_is_distinct_from_empty(session: Session):
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected("ward_get_entry"))
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.get_entry(session, _APP, b"nope", lambda _a, _i: None)
+        ward.get_entry(session, _APP, b"nope", lambda _k: None)
 
     assert "entry not found" in rec.title
     assert "no entry" in rec.text.lower()
@@ -132,7 +236,7 @@ def test_ward_get_entry_empty_value_is_shown_as_an_entry(session: Session):
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected("ward_get_entry"))
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.get_entry(session, _APP, b"empty", lambda _a, _i: b"")
+        ward.get_entry(session, _APP, b"empty", lambda _k: b"")
 
     assert "unverified entry" in rec.title
     assert "not found" not in rec.title
@@ -141,8 +245,11 @@ def test_ward_get_entry_empty_value_is_shown_as_an_entry(session: Session):
 
 @pytest.mark.models("core")
 def test_ward_get_entry_uses_the_dict_provider(session: Session):
-    """The dict-backed provider stands in for the host DB in this phase."""
-    entries = {(_APP, b"addr1"): b"one", (_APP, b"addr2"): b"two"}
+    """The dict-backed provider stands in for the host DB -- keyed by entry_key only."""
+    entries = {
+        expected_entry_key(_K_PATH, _APP, b"addr1"): b"one",
+        expected_entry_key(_K_PATH, _APP, b"addr2"): b"two",
+    }
 
     rec = _Recorded()
     with session.test_ctx as ctx:
@@ -162,7 +269,7 @@ def test_ward_get_entry_uses_the_dict_provider(session: Session):
 def test_ward_set_entry_add_shows_the_new_value(session: Session):
     """Writing a key the host does not hold is an ADD: nothing is being replaced, so the
     screen must not claim otherwise."""
-    entries: dict[tuple[str, bytes], bytes] = {}
+    entries: dict[bytes, bytes] = {}
 
     rec = _Recorded()
     with session.test_ctx as ctx:
@@ -172,14 +279,15 @@ def test_ward_set_entry_add_shows_the_new_value(session: Session):
             session, _APP, b"addr1", b"fresh", ward.dict_provider(entries)
         )
 
-    assert res.message == "WARD write confirmed"
+    assert res.success.message == "WARD write confirmed"
     assert "add entry" in rec.title
     assert "fresh" in rec.text
     assert "replaces" not in rec.text.lower()
 
-    # the device confirmed; applying it is the host's job
-    entries[(_APP, b"addr1")] = b"fresh"
-    assert entries == {(_APP, b"addr1"): b"fresh"}
+    # the device confirmed; applying it is the host's job, under the key it was given --
+    # which the host could not have computed for itself
+    entries[res.entry_key] = b"fresh"
+    assert entries == {expected_entry_key(_K_PATH, _APP, b"addr1"): b"fresh"}
 
 
 @pytest.mark.models("core")
@@ -187,13 +295,16 @@ def test_ward_set_entry_update_names_the_value_it_replaces(session: Session):
     """Writing a key the host already holds is an OVERWRITE. Silently replacing a value
     the user cannot see is the failure mode this screen exists to prevent, so BOTH the
     old and the new value must be on screen."""
-    entries = {(_APP, b"addr1"): b"old_label"}
+    key = expected_entry_key(_K_PATH, _APP, b"addr1")
+    entries = {key: b"old_label"}
 
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected("ward_set_entry"))
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.set_entry(session, _APP, b"addr1", b"new_label", ward.dict_provider(entries))
+        res = ward.set_entry(
+            session, _APP, b"addr1", b"new_label", ward.dict_provider(entries)
+        )
 
     assert "update entry" in rec.title
     # the old value is not merely present, it is labelled as the one being replaced
@@ -201,8 +312,10 @@ def test_ward_set_entry_update_names_the_value_it_replaces(session: Session):
     assert "old_label" in rec.text
     assert "new_label" in rec.text
 
-    entries[(_APP, b"addr1")] = b"new_label"
-    assert entries == {(_APP, b"addr1"): b"new_label"}
+    # the write lands on the SAME key it read from -- an update, not a second entry
+    assert res.entry_key == key
+    entries[res.entry_key] = b"new_label"
+    assert entries == {key: b"new_label"}
 
 
 @pytest.mark.models("core")
@@ -212,7 +325,7 @@ def test_ward_set_entry_accepts_an_empty_value(session: Session):
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected("ward_set_entry"))
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.set_entry(session, _APP, b"addr1", b"", lambda _a, _i: None)
+        ward.set_entry(session, _APP, b"addr1", b"", lambda _k: None)
 
     assert "add entry" in rec.title
 
@@ -224,7 +337,7 @@ def test_ward_set_entry_rejects_an_absent_value(session: Session):
     This fails before the pull, so there is no input flow and no screen.
     """
     with pytest.raises(exceptions.TrezorFailure, match="value is required"):
-        ward.set_entry(session, _APP, b"addr1", None, lambda _a, _i: b"x")
+        ward.set_entry(session, _APP, b"addr1", None, lambda _k: b"x")
 
 
 # --- delete -----------------------------------------------------------------------
@@ -234,7 +347,9 @@ def test_ward_set_entry_rejects_an_absent_value(session: Session):
 def test_ward_delete_entry_names_the_value_being_removed(session: Session):
     """Confirming a deletion by key alone tells the user nothing about what they lose,
     so the device pulls the entry and puts its value on screen."""
-    entries = {(_APP, b"addr1"): b"doomed_label", (_APP, b"addr2"): b"keep_me"}
+    doomed = expected_entry_key(_K_PATH, _APP, b"addr1")
+    keep = expected_entry_key(_K_PATH, _APP, b"addr2")
+    entries = {doomed: b"doomed_label", keep: b"keep_me"}
 
     rec = _Recorded()
     with session.test_ctx as ctx:
@@ -242,15 +357,16 @@ def test_ward_delete_entry_names_the_value_being_removed(session: Session):
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
         res = ward.delete_entry(session, _APP, b"addr1", ward.dict_provider(entries))
 
-    assert res.message == "WARD delete confirmed"
+    assert res.success.message == "WARD delete confirmed"
     assert "delete entry" in rec.title
     # the value is labelled as the one being removed, not just shown
     assert "deleting value" in rec.text.lower()
     assert "doomed_label" in rec.text
 
     # the device confirmed; the host performs the removal -- and only of that one entry
-    del entries[(_APP, b"addr1")]
-    assert entries == {(_APP, b"addr2"): b"keep_me"}
+    assert res.entry_key == doomed
+    del entries[res.entry_key]
+    assert entries == {keep: b"keep_me"}
 
 
 @pytest.mark.models("core")
@@ -263,7 +379,7 @@ def test_ward_delete_entry_refuses_when_the_host_holds_nothing(session: Session)
     surfacing. The failure arrives after the pull but before any screen.
     """
     with pytest.raises(exceptions.TrezorFailure, match="no such entry"):
-        ward.delete_entry(session, _APP, b"ghost", lambda _a, _i: None)
+        ward.delete_entry(session, _APP, b"ghost", lambda _k: None)
 
 
 @pytest.mark.models("core")
@@ -271,17 +387,17 @@ def test_ward_delete_entry_deletes_an_empty_valued_entry(session: Session):
     """An entry whose value is empty still exists, so deleting it must be allowed --
     the absent/empty distinction has to hold on this path too, or empty entries become
     undeletable."""
-    entries = {(_APP, b"addr1"): b""}
+    entries = {expected_entry_key(_K_PATH, _APP, b"addr1"): b""}
 
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected("ward_delete_entry"))
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
-        ward.delete_entry(session, _APP, b"addr1", ward.dict_provider(entries))
+        res = ward.delete_entry(session, _APP, b"addr1", ward.dict_provider(entries))
 
     assert "delete entry" in rec.title
 
-    del entries[(_APP, b"addr1")]
+    del entries[res.entry_key]
     assert entries == {}
 
 
@@ -292,23 +408,20 @@ def test_ward_delete_entry_deletes_an_empty_valued_entry(session: Session):
 @pytest.mark.parametrize(
     "call",
     [
+        pytest.param(lambda s: ward.get_entry(s, _APP, b"", lambda _k: b"x"), id="get"),
         pytest.param(
-            lambda s: ward.get_entry(s, _APP, b"", lambda _a, _i: b"x"), id="get"
+            lambda s: ward.set_entry(s, _APP, b"", b"v", lambda _k: b"x"), id="set"
         ),
         pytest.param(
-            lambda s: ward.set_entry(s, _APP, b"", b"v", lambda _a, _i: b"x"), id="set"
+            lambda s: ward.delete_entry(s, _APP, b"", lambda _k: b"x"), id="delete"
         ),
         pytest.param(
-            lambda s: ward.delete_entry(s, _APP, b"", lambda _a, _i: b"x"), id="delete"
-        ),
-        pytest.param(
-            lambda s: ward.get_entry(s, "", b"addr1", lambda _a, _i: b"x"),
-            id="get-no-app",
+            lambda s: ward.get_entry(s, "", b"addr1", lambda _k: b"x"), id="get-no-app"
         ),
     ],
 )
 def test_ward_rejects_an_incomplete_key(session: Session, call):
-    """Every request validates (app_id, identifier) before pulling or showing anything.
+    """Every request validates (app_id, identifier) before deriving, pulling or showing.
 
     The wire fields are `optional` on purpose -- a proto2 `required` field a caller
     forgets to set is an encode-time failure in every binding, which has bitten this

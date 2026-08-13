@@ -36,22 +36,31 @@ def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, byt
 
     The wire fields are `optional` on purpose -- a proto2 `required` field a caller
     forgets to set is an encode-time failure in every binding -- so the check lives
-    here instead, and runs before anything is pulled or shown.
+    here instead, and runs before anything is derived, pulled or shown.
+
+    Also refuses an uninitialised device: deriving the keyed path needs a seed.
     """
     from trezor.wire import DataError
+
+    from apps.common.seed import raise_if_not_initialized
+
+    raise_if_not_initialized()
 
     if not app_id or not identifier:
         raise DataError("app_id and identifier are required")
     return app_id, identifier
 
 
-async def pull_entry(app_id: str, identifier: bytes) -> bytes | None:
-    """PULL the host's current value for (app_id, identifier).
+async def pull_entry(entry_key: bytes) -> bytes | None:
+    """PULL the host's current value for an already-derived keyed path.
 
     This is the one mechanism the whole subsystem is built on: the device holds nothing,
     so it asks the host mid-workflow and the host answers while its own call is still in
     flight. Reads show what comes back; writes use it to learn the value they are about
     to replace or remove.
+
+    The request names ONLY the opaque path -- see `keys.entry_key_for`. Callers must
+    derive it themselves and must never pass through a host-supplied value.
 
     Returns None when the host reports no such entry, which stays distinct from b"" --
     an entry that exists and whose value happens to be empty.
@@ -62,7 +71,7 @@ async def pull_entry(app_id: str, identifier: bytes) -> bytes | None:
     # Mirrors apps/webauthn/list_resident_credentials.py, which uses the same primitive
     # to ask the host for data mid-workflow.
     ack = await context.call(
-        WARDEntryRequest(app_id=app_id, identifier=identifier),
+        WARDEntryRequest(entry_key=entry_key),
         expected_type=WARDEntryAck,
     )
     return ack.value

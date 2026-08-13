@@ -21,10 +21,11 @@ async def delete_entry(msg: WARDDeleteEntry) -> Success:
     from trezor.wire import DataError
 
     from .common import WARNING_UNVERIFIED, display_bytes, pull_entry, require_key
+    from .keys import entry_key_for
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
-    current = await pull_entry(app_id, identifier)
+    current = await pull_entry(await entry_key_for(app_id, identifier))
     if current is None:
         # The host asked to delete this entry and, answering the pull, reported that it
         # does not hold it -- a contradiction, so one side is wrong. Refuse rather than
