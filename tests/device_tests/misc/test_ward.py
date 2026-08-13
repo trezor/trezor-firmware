@@ -28,39 +28,38 @@ _APP = "bitcoin"  # capability principal == queried domain for these tests
 
 # The host tree must use the DEVICE's WARD keys (reproduced from the known test
 # seed) so its entry_keys/leaf commits match the device's and its proofs verify.
-_K_INDEX, _K_DATA = device_ward_keys()
+_K_PATH, _K_DATA, _K_IDENT = device_ward_keys()
 
 
 def _tree() -> WARDTree:
     """Host WARDTree keyed by the device's K_index/K_data."""
-    return WARDTree(_K_INDEX, _K_DATA)
+    return WARDTree(_K_PATH, _K_DATA, _K_IDENT)
 
 
 def _apply_device_leaf(tree: WARDTree, perform_result: tuple) -> None:
-    """Keep the host tree in sync with the device after a write: store the exact
-    encrypted leaf blob the device returned in WARDPerformUpdateAck (its nonce is
-    random, so the host must NOT re-encrypt or roots would diverge). Trailing 5
-    fields of perform_result are (entry_key, entry_type, nonce, tag, ct); empty ct
-    means DELETE."""
-    ek, entry_type, nonce, tag, ct = perform_result[5:10]
-    if ct:
-        tree.set_leaf(ek, nonce, tag, ct, entry_type or "address")
-    elif ek is not None:
+    """Keep the host tree in sync with the device after a write: store the exact leaf
+    the device returned in WARDPerformUpdateAck (its nonces are random, so the host
+    must NOT re-encode or roots would diverge). Trailing fields of perform_result are
+    (entry_key, LeafBlob); an empty content part means DELETE."""
+    ek, leaf = perform_result[4:6]
+    if ek is None:
+        return
+    if leaf.is_delete():
         tree.del_leaf(ek)
+    else:
+        tree.set_leaf(ek, leaf)
 
 
 def _lookup_membership(session: Session, tree: WARDTree, address: bytes):
-    """Membership WARDLookup with the new signature (leaf blob + proof)."""
-    blob = tree.leaf_blob(_APP, address)
-    assert blob is not None, f"{address!r} not in tree"
+    """Membership WARDLookup carrying the leaf's two parts + proof."""
+    leaf = tree.leaf_blob(_APP, address)
+    assert leaf is not None, f"{address!r} not in tree"
     return ward.lookup(
         session,
         _APP,
         address,
         tree.get_proof(_APP, address),
-        nonce=blob[0],
-        tag=blob[1],
-        ct=blob[2],
+        leaf=leaf,
     )
 
 ENTRIES = {
@@ -126,9 +125,12 @@ class WardHostHarness:
         return out_counter, out_root, wallet_id, out_root_mac
 
     def lookup(self, session: Session, address: bytes) -> bytes | None:
-        if self.tree.get_counter(_APP, address):
+        # Membership is LEAF PRESENCE, not a non-zero counter: a full delete removes
+        # the leaf, so absence must be established by the leaf being gone (and then
+        # proven on-device by a non-membership proof below).
+        if self.tree.get_leaf(self.tree._ek(_APP, address, "address", 0)) is not None:
             value = self.tree.get_value(_APP, address)
-            valid, membership, _counter, _wallet_id = _lookup_membership(
+            valid, membership, _counter = _lookup_membership(
                 session, self.tree, address
             )
             assert valid and membership
@@ -137,7 +139,7 @@ class WardHostHarness:
         proof, witness_entry_key, witness_commit = (
             self.tree.get_nonmembership_proof(_APP, address)
         )
-        valid, membership, _counter, _wallet_id = ward.lookup(
+        valid, membership, _counter = ward.lookup(
             session, _APP,
             address,
             proof,
@@ -153,16 +155,18 @@ class WardHostHarness:
         # Queue the intent (trusted confirm), then let the device pull the proof
         # for the current tree at perform time and WM-sign the candidate.
         old_value = (
-            self.tree.get_value(_APP, address) if self.tree.get_counter(_APP, address) else b""
+            self.tree.get_value(_APP, address)
+            if self.tree.get_leaf(self.tree._ek(_APP, address, "address", 0)) is not None
+            else b""
         )
         pending_id = _queue_update(session, address, old_value, value or b"")
 
         res = _perform(session, self.tree, pending_id)
-        c_counter, _root_t, mac_t, wallet_id, ward_id = res[:5]
+        c_counter, _root_t, mac_t, ward_id = res[:4]
         mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
         assert ward_id is not None
         sig = self.wm.sign_final(ward_id, c_counter, mac_for_sig)
-        counter, new_root, _wallet_id, root_mac = ward.confirmed_by_wm(
+        counter, new_root, root_mac = ward.confirmed_by_wm(
             session, c_counter, mac_t, sig, pending_id
         )
 
@@ -234,7 +238,7 @@ def _queue_update(
                 lambda s: ward.queue_update(s, _APP, address, old_value, new_value),
             )
             dev.debuglink().press_yes()
-            pending_id, _wallet_id = dev.result()
+            pending_id = dev.result()
     assert pending_id is not None
     return pending_id
 
@@ -243,11 +247,13 @@ def _perform(
     session: Session,
     tree: WARDTree,
     pending_id: int,
-) -> tuple[int, bytes | None, bytes | None, bytes | None, bytes | None]:
+) -> tuple:
     """WARDPerformUpdate: the device derives counter_T (strict model) and pulls the
     proof for `tree` (current, pre-edit state) via ward_proof_callback, then computes
     the candidate. No user interaction. Returns
-    (counter_T, root_T, mac_T, wallet_id, ward_id)."""
+    (counter_T, root_T, mac_T, ward_id, entry_key, LeafBlob) -- the trailing two are the
+    leaf the device encoded, which the host cannot compute itself. A DELETE returns a
+    LeafBlob with BOTH parts empty."""
     session.client.app.ward_proof_callback = ward.tree_proof_callback(tree)
     return ward.perform_update(session, pending_id)
 
@@ -256,12 +262,12 @@ def _perform_and_finalize(
     session: Session,
     tree: WARDTree,
     pending_id: int,
-) -> tuple[int, bytes | None, bytes | None, bytes | None]:
+) -> tuple[int, bytes | None, bytes | None]:
     """perform_update -> WM-sign -> confirmed_by_wm. Returns the confirm result.
     Also stores the device-returned leaf blob into `tree` so the host stays in sync
     with the device's authenticated root (the device is the encryptor)."""
     res = _perform(session, tree, pending_id)
-    c_counter, _root_t, mac_t, _wallet_id, ward_id = res[:5]
+    c_counter, _root_t, mac_t, ward_id = res[:4]
     mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
     assert ward_id is not None
     sig = sign_ward_update(c_counter, mac_for_sig, ward_id)
@@ -276,14 +282,12 @@ def _edit(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
-) -> tuple[int, bytes | None, bytes | None, bytes | None, int]:
+) -> tuple[int, bytes | None, bytes | None, int]:
     """Full pull update round for one edit. Returns
-    (counter, new_root, wallet_id, root_mac, pending_id)."""
+    (counter, new_root, root_mac, pending_id)."""
     pending_id = _queue_update(session, address, old_value, new_value)
-    counter, new_root, wallet_id, root_mac = _perform_and_finalize(
-        session, tree, pending_id
-    )
-    return counter, new_root, wallet_id, root_mac, pending_id
+    counter, new_root, root_mac = _perform_and_finalize(session, tree, pending_id)
+    return counter, new_root, root_mac, pending_id
 
 
 def _pending_addresses(session: Session) -> list[bytes]:
@@ -299,7 +303,7 @@ def test_ward_update(session: Session) -> None:
     counter0 = _seed_device(session, tree)
 
     new_counter = counter0 + 1
-    counter, new_root, wallet_id, root_mac, _pid = _edit(
+    counter, new_root, root_mac, _pid = _edit(
         session, tree, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
 
@@ -307,7 +311,6 @@ def test_ward_update(session: Session) -> None:
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
     assert root_mac is not None
-    assert wallet_id is not None and len(wallet_id) == 20
 
 
 @pytest.mark.models("core")
@@ -316,7 +319,7 @@ def test_ward_insert(session: Session) -> None:
     counter0 = _seed_device(session, tree)
 
     new_counter = counter0 + 1
-    counter, new_root, _wid, _mac, _pid = _edit(
+    counter, new_root, _mac, _pid = _edit(
         session, tree, b"erin", b"", b"data_erin"
     )
 
@@ -326,16 +329,62 @@ def test_ward_insert(session: Session) -> None:
 
 @pytest.mark.models("core")
 def test_ward_delete(session: Session) -> None:
+    """A delete is a FULL delete: the leaf ceases to exist. Not an update to an empty
+    value — so the device must both stop proving membership AND prove absence, and the
+    returned leaf must carry no parts at all (nothing left to describe)."""
     tree = _make_tree()
     counter0 = _seed_device(session, tree)
+    alice_ek = tree._ek(_APP, b"alice", "address", 0)
+    assert tree.get_leaf(alice_ek) is not None
 
     new_counter = counter0 + 1
-    counter, new_root, _wid, _mac, _pid = _edit(
+    counter, new_root, _mac, _pid = _edit(
         session, tree, b"alice", ENTRIES[b"alice"], b""
     )
 
     assert counter == new_counter
     assert new_root == tree.get_root_hash()
+
+    # The leaf is GONE from the host tree — not present with an empty value.
+    assert tree.get_leaf(alice_ek) is None
+    assert tree.get_value(_APP, b"alice") == b""
+    assert tree.get_counter(_APP, b"alice") == 0
+
+    # And the trie no longer contains that path: a membership proof cannot be built,
+    # while a non-membership proof verifies ON-DEVICE against the installed root.
+    proof, w_ek, w_commit = tree.get_nonmembership_proof(_APP, b"alice")
+    valid, membership, _c, _wid2 = ward.lookup(
+        session,
+        _APP,
+        b"alice",
+        proof,
+        witness_entry_key=w_ek,
+        witness_commit=w_commit,
+    )
+    assert valid and not membership, "delete must be provably absent, not empty-valued"
+
+    # The surviving entries are untouched and still prove membership.
+    for addr in (b"bob", b"carol", b"dave"):
+        v, m, _c2 = _lookup_membership(session, tree, addr)
+        assert v and m
+
+
+@pytest.mark.models("core")
+def test_ward_delete_returns_no_leaf_parts(session: Session) -> None:
+    """The device's WARDPerformUpdateAck for a delete carries BOTH leaf parts empty.
+    A populated identity part would be a tombstone — but the leaf is removed from the
+    trie, so there is nothing to describe and the host must drop the record."""
+    tree = _make_tree()
+    _seed_device(session, tree)
+
+    pending_id = _queue_update(session, b"alice", ENTRIES[b"alice"], b"")
+    res = _perform(session, tree, pending_id)
+    ek, leaf = res[4:6]
+
+    assert ek == tree._ek(_APP, b"alice", "address", 0)
+    assert leaf.is_delete()
+    assert leaf.content.is_empty(), "content part must be empty for a delete"
+    assert leaf.identity.is_empty(), "identity part must be empty too — no tombstone"
 
 
 @pytest.mark.models("core")
@@ -362,7 +411,7 @@ def test_ward_update_nonmembership_proof_rejected(session: Session) -> None:
     bob_witness = messages.WARDProofAck(
         proof=tree.get_proof_by_key(bob_ek),
         witness_entry_key=bob_ek,
-        witness_commit=ward_crypto.commit_of(bob_leaf[0], bob_leaf[1], bob_leaf[2]),
+        witness_commit=ward_crypto.commit_of(bob_leaf),
     )
 
     def malicious(msg: messages.WARDProofRequest) -> messages.WARDProofAck:
@@ -397,7 +446,7 @@ def test_ward_counter_advances_only_at_finalize(session: Session) -> None:
     pending_id = _queue_update(
         session, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
-    c_counter, _root_t, mac_t, _wallet_id, ward_id, *_ = _perform(session, tree, pending_id)
+    c_counter, _root_t, mac_t, ward_id, *_ = _perform(session, tree, pending_id)
 
     # After perform, the authenticated root/counter are still the pre-edit ones.
     valid, membership, dev_counter, _wid = _lookup_membership(session, tree, b"alice")
@@ -419,7 +468,7 @@ def test_ward_finalize_bad_signature_rejected(session: Session) -> None:
     pending_id = _queue_update(
         session, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
-    c_counter, _root_t, mac_t, _wallet_id, _ward_id, *_ = _perform(session, tree, pending_id)
+    c_counter, _root_t, mac_t, _ward_id, *_ = _perform(session, tree, pending_id)
 
     bad_sig = bytes(64)  # not a valid WM signature
     with pytest.raises(TrezorFailure):
@@ -628,7 +677,7 @@ def test_ward_e2e_in_memory_store_lookup_modify(session: Session) -> None:
     host = WardHostHarness()
 
     # Fresh wallet: bootstrap empty state, then prove a missing address is absent.
-    counter, root, _wallet_id, root_mac = host.bootstrap_device(session)
+    counter, root, root_mac = host.bootstrap_device(session)
     assert counter == 0
     assert root is None
     assert root_mac is None
@@ -770,7 +819,7 @@ def test_ward_rejected_finalize_keeps_pending_queue(session: Session) -> None:
         session, b"alice", ENTRIES[b"alice"], b"data_alice_v2"
     )
     res = _perform(session, tree, pending_id)
-    c_counter, _root_t, mac_t, _wallet_id, ward_id = res[:5]
+    c_counter, _root_t, mac_t, ward_id = res[:4]
     assert ward_id is not None
     assert _pending_addresses(session) == [b"alice"]
 

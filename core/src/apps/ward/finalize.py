@@ -14,10 +14,10 @@ async def finalize(msg: WARDConfirmedByWM) -> WARDConfirmedByWMAck:
 
     from apps.common import ward as core
 
-    counter, root, wallet_id, root_mac = await core.finalize(
+    counter, root, _wallet_id, root_mac = await core.finalize(
         msg.counter, msg.mac, msg.wm_signature, msg.pending_id
     )
 
     return WARDConfirmedByWMAck(
-        counter=counter, new_root=root, wallet_id=wallet_id, root_mac=root_mac
+        counter=counter, new_root=root, root_mac=root_mac
     )

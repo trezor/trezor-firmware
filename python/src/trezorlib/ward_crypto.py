@@ -1,31 +1,48 @@
-"""WARD keyed path + leaf primitives (host/reference side).
+"""WARD keyed path + two-part leaf primitives (host/reference side).
 
 Implements the key-derivation and hashing layer specified in ward-design.md
-§1/§2.1/§2.2/§3, replacing the earlier unkeyed
-``entry_key = sha256(app_id || 0x00 || type || 0x00 || address)``.
+§1/§2.1/§2.2/§3 and ToDo-leaf_structure.md.
 
 Canonical layout (must match apps/ward/service.py on firmware and
 @trezor/ward on the host):
 
     SLIP-21 (SLIP-0021) symmetric derivation from the seed, under m/"ward":
-        K_index        = SLIP21(seed, [b"ward", b"K_index"]).key()          # HMAC-SHA256 key
-        K_data(type)   = SLIP21(seed, [b"ward", b"K_data", key_type]).key() # per-entry-type AEAD key
+        K_path         = SLIP21(seed, [b"ward", b"K_path"]).key()            # HMAC-SHA256 key
+        K_ident(type)  = SLIP21(seed, [b"ward", b"K_ident", key_type]).key() # seals LeafIdentity
+        K_data(type)   = SLIP21(seed, [b"ward", b"K_data",  key_type]).key() # seals LeafContent
 
-    scope     = app_id || 0x00 || key_type || 0x00 || device_id            # device_id = 0x00 => global
-    entry_key = HMAC-SHA256(K_index, scope || identifier)                  # 32B, IS the trie path (§3.1)
+    scope            = app_id || 0x00 || key_type || 0x00 || device_id       # device_id = 0x00 => global
+    LeafIdentityMAC  = HMAC-SHA256(K_path, scope || identifier)             # 32B, IS the trie path (§3.1)
 
-    commit    = SHA-256(0x02 || nonce || tag || len32(ct) || ct)           # §2.2 (keyless, host-verifiable)
-    leaf      = SHA-256(0x00 || entry_key || commit)                       # §2.2
+A leaf is TWO independently encoded parts, each with its own key, so the identity
+and the value are separately discloseable:
 
-Leaf value codec (§2.1, ChaCha20-Poly1305 RFC-7539, 12-byte nonce):
-    plaintext = C_leaf(4B BE) || len16(identifier) || identifier
-                             || len32(value) || value || zero-padding
-    (nonce, tag, ct) = AEAD(K_data(key_type), nonce, aad = 0x02 || entry_key || entry_type,
-                            plaintext-bucketed-to 64/256/1024/4096 B)
-    A len(value)==0 write is a delete.
+    LeafIdentity   identifier, app_id, device_id            sealed under K_ident(key_type)
+    LeafContent    C_leaf, value                            sealed under K_data(key_type)
 
-`entry_key` is a PRF-derived path, NOT an authenticator (§2.5): it hides the
-identifier from a keyless host and makes the path host-unforgeable.
+`key_type` is ALWAYS CLEAR — it selects both keys, so it cannot itself be sealed.
+
+Each part is encoded either encrypted (RFC-7539 ChaCha20-Poly1305, 12-byte nonce,
+bucket-padded plaintext) or plaintext, independently. The encoding byte is inside
+the commit, so the two are domain-separated by construction:
+
+    part(p)   = encoding(1B) || len8(nonce) || nonce || len8(tag) || tag
+                             || len32(body) || body
+    commit    = SHA-256(0x02 || len8(key_type) || key_type
+                             || len32(id_part) || id_part
+                             || len32(val_part) || val_part)
+    leaf      = SHA-256(0x00 || LeafIdentityMAC || commit)
+
+    identity plaintext = len16(identifier) || identifier || len8(app_id) || app_id
+                                           || device_id(1B)
+    content  plaintext = C_leaf(4B BE) || len32(value) || value
+    AAD: identity 0x03 || mac || key_type,  content 0x02 || mac || key_type
+
+An empty content body is a delete. `LeafIdentityMAC` is a PRF-derived path, NOT an
+authenticator (§2.5): it hides the identifier from a keyless host and makes the path
+host-unforgeable. Note the MAC is *stored* alongside the leaf, so locating a leaf
+never requires a key; K_path is needed only to check that a stored MAC matches its
+stored identity, or to compute a MAC for an identity not in the store.
 """
 
 from __future__ import annotations
@@ -33,11 +50,15 @@ from __future__ import annotations
 import hashlib
 import hmac as _hmac
 import os
-from typing import List, Tuple, Union
+from typing import List, NamedTuple, Optional, Tuple, Union
 
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
 _SLIP21_LABEL_ROOT = b"ward"
+
+# part encodings (the byte that goes into the commit)
+ENC_ENCRYPTED = 0
+ENC_PLAINTEXT = 1
 
 
 def _as_bytes(x: Union[str, bytes]) -> bytes:
@@ -63,19 +84,24 @@ def _slip21_derive(seed: bytes, path: List[bytes]) -> bytes:
     return data[32:64]  # .key()
 
 
-def derive_k_index(seed: bytes) -> bytes:
-    """K_index: the HMAC-SHA256 key used to derive every entry_key path."""
-    return _slip21_derive(seed, [_SLIP21_LABEL_ROOT, b"K_index"])
+def derive_k_path(seed: bytes) -> bytes:
+    """K_path: the HMAC-SHA256 key used to derive every LeafIdentityMAC (trie path)."""
+    return _slip21_derive(seed, [_SLIP21_LABEL_ROOT, b"K_path"])
+
+
+def derive_k_ident(seed: bytes, key_type: Union[str, bytes]) -> bytes:
+    """K_ident(key_type): the AEAD key sealing the LeafIdentity part. Per-type, so an
+    export can hand a host only the types whose identities it may read."""
+    return _slip21_derive(seed, [_SLIP21_LABEL_ROOT, b"K_ident", _as_bytes(key_type)])
 
 
 def derive_k_data(seed: bytes, key_type: Union[str, bytes]) -> bytes:
-    """K_data(key_type): the per-entry-type AEAD key. Separate key per type is
-    what lets the PUSH flow hand a host only the types it may decrypt (and why
-    entry_type travels in the clear — it selects the key)."""
+    """K_data(key_type): the AEAD key sealing the LeafContent part. Separate from
+    K_ident so values and identities are independently discloseable."""
     return _slip21_derive(seed, [_SLIP21_LABEL_ROOT, b"K_data", _as_bytes(key_type)])
 
 
-# --- path + leaf hashing ---
+# --- path derivation ---
 
 def scope_bytes(
     app_id: Union[str, bytes], key_type: Union[str, bytes], device_id: int = 0
@@ -86,159 +112,284 @@ def scope_bytes(
     return _as_bytes(app_id) + b"\x00" + _as_bytes(key_type) + b"\x00" + bytes([device_id])
 
 
-def entry_key(
-    k_index: bytes,
+def leaf_identity_mac(
+    k_path: bytes,
     app_id: Union[str, bytes],
     identifier: bytes,
     key_type: Union[str, bytes] = "address",
     device_id: int = 0,
 ) -> bytes:
-    """entry_key = HMAC-SHA256(K_index, scope || identifier) — the 32B trie path (§3.1)."""
+    """LeafIdentityMAC = HMAC-SHA256(K_path, scope || identifier) — the 32B trie path."""
     msg = scope_bytes(app_id, key_type, device_id) + identifier
-    return _hmac.new(k_index, msg, hashlib.sha256).digest()
+    return _hmac.new(k_path, msg, hashlib.sha256).digest()
 
 
-# Leaf-content mode (must mirror core service.py WARD_PLAINTEXT_LEAVES for the host
-# oracle / proof serving to match the device). False = encrypted leaves; True = plaintext
-# leaves (host-inspectable). The wire is a self-describing oneof either way; this const
-# picks the commit domain tag + codec. Tests flip it to exercise both modes.
-WARD_PLAINTEXT_LEAVES = False
+# Wire/proto and the trie still call this field `entry_key`; the two names are the
+# same 32 bytes.
+entry_key = leaf_identity_mac
 
 
-def commit_of(nonce: bytes, tag: bytes, ct: bytes) -> bytes:
-    """Keyless leaf-value commitment (§2.2); a host with no keys can still recompute it.
-    Domain-separated by leaf mode: encrypted = SHA-256(0x02 || nonce || tag || len32(ct)
-    || ct); plaintext = SHA-256(0x04 || len32(content) || content) (nonce/tag empty,
-    ct == content). A len(ct)==0 leaf is a delete (resolves to the empty sentinel)."""
-    tag_byte = b"\x04" if WARD_PLAINTEXT_LEAVES else b"\x02"
-    return sha256(tag_byte + nonce + tag + len(ct).to_bytes(4, "big") + ct)
+# --- leaf-mode flags (must mirror core service.py) ---
+# Each part's encoding is independent and self-describing on the wire; these consts
+# are the build's *write* preference. Tests flip them to exercise all four
+# combinations. False = encrypted.
+WARD_PLAINTEXT_IDENTITY = False
+WARD_PLAINTEXT_CONTENT = False
 
 
-def leaf_hash_of(entry_key_: bytes, commit: bytes) -> bytes:
-    """leaf = SHA-256(0x00 || entry_key || commit) (§2.2)."""
-    return sha256(b"\x00" + entry_key_ + commit)
+# --- the two parts ---
+
+class Part(NamedTuple):
+    """One encoded leaf part. `body` is the ciphertext when encoding == ENC_ENCRYPTED,
+    the packed plaintext when ENC_PLAINTEXT. nonce/tag are empty for plaintext."""
+
+    encoding: int
+    nonce: bytes
+    tag: bytes
+    body: bytes
+
+    def is_empty(self) -> bool:
+        return len(self.body) == 0
 
 
-# --- leaf value codec (AEAD, RFC-7539 ChaCha20-Poly1305, 12-byte nonce) ---
+EMPTY_PART = Part(ENC_PLAINTEXT, b"", b"", b"")
+
+
+class LeafBlob(NamedTuple):
+    """A whole leaf as stored/transmitted: the clear key_type plus the two parts.
+    Stored alongside its LeafIdentityMAC, which is the record's key."""
+
+    key_type: str
+    identity: Part
+    content: Part
+
+    def is_delete(self) -> bool:
+        return self.content.is_empty()
+
+
+def _part_bytes(p: Part) -> bytes:
+    return (
+        bytes([p.encoding])
+        + bytes([len(p.nonce)])
+        + p.nonce
+        + bytes([len(p.tag)])
+        + p.tag
+        + len(p.body).to_bytes(4, "big")
+        + p.body
+    )
+
+
+def commit_of(leaf: LeafBlob) -> bytes:
+    """Keyless leaf commitment (§2.2) over both parts and the clear key_type. A host
+    holding no keys can still recompute it, whatever each part's encoding is."""
+    kt = _as_bytes(leaf.key_type)
+    id_part = _part_bytes(leaf.identity)
+    val_part = _part_bytes(leaf.content)
+    return sha256(
+        b"\x02"
+        + bytes([len(kt)])
+        + kt
+        + len(id_part).to_bytes(4, "big")
+        + id_part
+        + len(val_part).to_bytes(4, "big")
+        + val_part
+    )
+
+
+def leaf_hash_of(mac: bytes, commit: bytes) -> bytes:
+    """leaf = SHA-256(0x00 || LeafIdentityMAC || commit) (§2.2)."""
+    return sha256(b"\x00" + mac + commit)
+
+
+def leaf_hash(mac: bytes, leaf: LeafBlob) -> bytes:
+    return leaf_hash_of(mac, commit_of(leaf))
+
+
+# --- AEAD plumbing (RFC-7539 ChaCha20-Poly1305, 12-byte nonce) ---
 
 NONCE_LEN = 12
 TAG_LEN = 16
 _BUCKETS = (64, 256, 1024, 4096)
 
+AAD_IDENTITY = b"\x03"
+AAD_CONTENT = b"\x02"
 
-def _aad(entry_key_: bytes, entry_type: Union[str, bytes]) -> bytes:
-    return b"\x02" + entry_key_ + _as_bytes(entry_type)
+
+def _aad(domain: bytes, mac: bytes, key_type: Union[str, bytes]) -> bytes:
+    return domain + mac + _as_bytes(key_type)
 
 
 def _pad_bucket(pt: bytes) -> bytes:
     for b in _BUCKETS:
         if len(pt) <= b:
             return pt + b"\x00" * (b - len(pt))
-    # larger than the largest bucket: pad up to a 4096 multiple
     rem = (-len(pt)) % _BUCKETS[-1]
     return pt + b"\x00" * rem
 
 
-def encrypt_leaf(
-    k_data: bytes,
-    entry_key_: bytes,
-    entry_type: Union[str, bytes],
-    c_leaf: int,
-    identifier: bytes,
-    value: bytes,
-    nonce: bytes = None,
-) -> Tuple[bytes, bytes, bytes]:
-    """Return (nonce, tag, ct). nonce is random per write unless supplied (tests)."""
+def _seal(
+    key: bytes, domain: bytes, mac: bytes, key_type: Union[str, bytes], pt: bytes,
+    nonce: Optional[bytes] = None,
+) -> Part:
     if nonce is None:
         nonce = os.urandom(NONCE_LEN)
     if len(nonce) != NONCE_LEN:
         raise ValueError("nonce must be 12 bytes (RFC-7539)")
-    pt = (
-        c_leaf.to_bytes(4, "big")
-        + len(identifier).to_bytes(2, "big")
-        + identifier
-        + len(value).to_bytes(4, "big")
-        + value
+    ct_and_tag = ChaCha20Poly1305(key).encrypt(
+        nonce, _pad_bucket(pt), _aad(domain, mac, key_type)
     )
-    ct_and_tag = ChaCha20Poly1305(k_data).encrypt(nonce, _pad_bucket(pt), _aad(entry_key_, entry_type))
-    ct, tag = ct_and_tag[:-TAG_LEN], ct_and_tag[-TAG_LEN:]
-    return nonce, tag, ct
+    return Part(ENC_ENCRYPTED, nonce, ct_and_tag[-TAG_LEN:], ct_and_tag[:-TAG_LEN])
 
 
-def decrypt_leaf(
-    k_data: bytes,
-    entry_key_: bytes,
-    entry_type: Union[str, bytes],
-    nonce: bytes,
-    tag: bytes,
-    ct: bytes,
-) -> Tuple[int, bytes, bytes]:
-    """Return (c_leaf, identifier, value). Raises on tag failure (hard abort, §3.1)."""
-    pt = ChaCha20Poly1305(k_data).decrypt(nonce, ct + tag, _aad(entry_key_, entry_type))
-    c_leaf = int.from_bytes(pt[0:4], "big")
-    id_len = int.from_bytes(pt[4:6], "big")
-    off = 6 + id_len
-    identifier = pt[6:off]
-    val_len = int.from_bytes(pt[off:off + 4], "big")
-    off += 4
-    value = pt[off:off + val_len]
-    return c_leaf, identifier, value
+def _open(
+    key: bytes, domain: bytes, mac: bytes, key_type: Union[str, bytes], part: Part
+) -> bytes:
+    if part.encoding == ENC_PLAINTEXT:
+        return part.body
+    return ChaCha20Poly1305(key).decrypt(
+        part.nonce, part.body + part.tag, _aad(domain, mac, key_type)
+    )
 
 
-# --- plaintext leaf codec (no encryption; host-inspectable dev mode) ---
-# content = C_leaf(4B BE) || len16(identifier) || identifier || len32(value) || value
-# (the same packed plaintext, minus the AEAD and the bucket padding). The "ct" slot of
-# the (nonce, tag, ct) blob carries `content`; nonce/tag stay empty.
+# --- LeafIdentity part ---
 
-
-def pack_leaf(c_leaf: int, identifier: bytes, value: bytes) -> bytes:
-    """Plaintext leaf content (no encryption). Mirrors encrypt_leaf's plaintext."""
+def pack_identity(identifier: bytes, app_id: Union[str, bytes], device_id: int = 0) -> bytes:
+    """Canonical identity plaintext: len16(identifier) || identifier || len8(app_id)
+    || app_id || device_id(1B). The single source of canonicalization — both the
+    commit and the AEAD go through it."""
+    aid = _as_bytes(app_id)
+    if len(aid) > 0xFF:
+        raise ValueError("app_id too long")
+    if not 0 <= device_id <= 0xFF:
+        raise ValueError("device_id must be a single byte")
     return (
-        c_leaf.to_bytes(4, "big")
-        + len(identifier).to_bytes(2, "big")
+        len(identifier).to_bytes(2, "big")
         + identifier
-        + len(value).to_bytes(4, "big")
-        + value
+        + bytes([len(aid)])
+        + aid
+        + bytes([device_id])
     )
 
 
-def unpack_leaf(content: bytes) -> Tuple[int, bytes, bytes]:
-    """Return (c_leaf, identifier, value) from a plaintext leaf `content`."""
-    c_leaf = int.from_bytes(content[0:4], "big")
-    id_len = int.from_bytes(content[4:6], "big")
-    off = 6 + id_len
-    identifier = content[6:off]
-    val_len = int.from_bytes(content[off:off + 4], "big")
-    off += 4
-    value = content[off:off + val_len]
-    return c_leaf, identifier, value
+def unpack_identity(pt: bytes) -> Tuple[bytes, bytes, int]:
+    """Return (identifier, app_id, device_id). Tolerates bucket padding past the end."""
+    id_len = int.from_bytes(pt[0:2], "big")
+    off = 2 + id_len
+    identifier = pt[2:off]
+    aid_len = pt[off]
+    off += 1
+    app_id = pt[off : off + aid_len]
+    off += aid_len
+    return identifier, app_id, pt[off]
 
+
+def encode_identity(
+    k_ident: bytes,
+    mac: bytes,
+    key_type: Union[str, bytes],
+    identifier: bytes,
+    app_id: Union[str, bytes],
+    device_id: int = 0,
+    plaintext: Optional[bool] = None,
+    nonce: Optional[bytes] = None,
+) -> Part:
+    """Encode the LeafIdentity part for this build's mode (or an explicit override)."""
+    pt = pack_identity(identifier, app_id, device_id)
+    if WARD_PLAINTEXT_IDENTITY if plaintext is None else plaintext:
+        return Part(ENC_PLAINTEXT, b"", b"", pt)
+    return _seal(k_ident, AAD_IDENTITY, mac, key_type, pt, nonce)
+
+
+def decode_identity(
+    k_ident: bytes, mac: bytes, key_type: Union[str, bytes], part: Part
+) -> Tuple[bytes, bytes, int]:
+    """Return (identifier, app_id, device_id). Raises on tag failure (hard abort, §3.1)."""
+    return unpack_identity(_open(k_ident, AAD_IDENTITY, mac, key_type, part))
+
+
+# --- LeafContent part ---
+
+def pack_content(c_leaf: int, value: bytes) -> bytes:
+    """Canonical content plaintext: C_leaf(4B BE) || len32(value) || value. The
+    identifier used to live here; it is in the identity part now."""
+    return c_leaf.to_bytes(4, "big") + len(value).to_bytes(4, "big") + value
+
+
+def unpack_content(pt: bytes) -> Tuple[int, bytes]:
+    """Return (c_leaf, value). Tolerates bucket padding past the end."""
+    c_leaf = int.from_bytes(pt[0:4], "big")
+    val_len = int.from_bytes(pt[4:8], "big")
+    return c_leaf, pt[8 : 8 + val_len]
+
+
+def encode_content(
+    k_data: bytes,
+    mac: bytes,
+    key_type: Union[str, bytes],
+    c_leaf: int,
+    value: bytes,
+    plaintext: Optional[bool] = None,
+    nonce: Optional[bytes] = None,
+) -> Part:
+    """Encode the LeafContent part for this build's mode (or an explicit override)."""
+    pt = pack_content(c_leaf, value)
+    if WARD_PLAINTEXT_CONTENT if plaintext is None else plaintext:
+        return Part(ENC_PLAINTEXT, b"", b"", pt)
+    return _seal(k_data, AAD_CONTENT, mac, key_type, pt, nonce)
+
+
+def decode_content(
+    k_data: bytes, mac: bytes, key_type: Union[str, bytes], part: Part
+) -> Tuple[int, bytes]:
+    """Return (c_leaf, value). Raises on tag failure (hard abort, §3.1)."""
+    return unpack_content(_open(k_data, AAD_CONTENT, mac, key_type, part))
+
+
+# --- whole-leaf convenience ---
 
 def encode_leaf(
+    k_ident: bytes,
     k_data: bytes,
-    entry_key_: bytes,
-    entry_type: Union[str, bytes],
+    mac: bytes,
+    key_type: str,
     c_leaf: int,
     identifier: bytes,
+    app_id: Union[str, bytes],
     value: bytes,
-    nonce: bytes = None,
-) -> Tuple[bytes, bytes, bytes]:
-    """(nonce, tag, ct) for the current leaf mode — plaintext (b"", b"", content) or
-    the AEAD blob. Mirrors core service.py _encode_leaf."""
-    if WARD_PLAINTEXT_LEAVES:
-        return b"", b"", pack_leaf(c_leaf, identifier, value)
-    return encrypt_leaf(k_data, entry_key_, entry_type, c_leaf, identifier, value, nonce)
+    device_id: int = 0,
+    plaintext_identity: Optional[bool] = None,
+    plaintext_content: Optional[bool] = None,
+    id_nonce: Optional[bytes] = None,
+    val_nonce: Optional[bytes] = None,
+) -> LeafBlob:
+    """Build a whole LeafBlob. An empty `value` produces a FULL DELETE: both parts are
+    empty, because the leaf ceases to exist -- there is no tombstone to describe."""
+    if len(value) == 0:
+        return LeafBlob(key_type, EMPTY_PART, EMPTY_PART)
+    identity = encode_identity(
+        k_ident, mac, key_type, identifier, app_id, device_id,
+        plaintext=plaintext_identity, nonce=id_nonce,
+    )
+    content = encode_content(
+        k_data, mac, key_type, c_leaf, value,
+        plaintext=plaintext_content, nonce=val_nonce,
+    )
+    return LeafBlob(key_type, identity, content)
 
 
 def decode_leaf(
-    k_data: bytes,
-    entry_key_: bytes,
-    entry_type: Union[str, bytes],
-    nonce: bytes,
-    tag: bytes,
-    ct: bytes,
-) -> Tuple[int, bytes, bytes]:
-    """(c_leaf, identifier, value) for the current leaf mode. Mirrors core _decode_leaf."""
-    if WARD_PLAINTEXT_LEAVES:
-        return unpack_leaf(ct)
-    return decrypt_leaf(k_data, entry_key_, entry_type, nonce, tag, ct)
+    k_ident: bytes, k_data: bytes, mac: bytes, leaf: LeafBlob
+) -> Tuple[int, bytes, bytes, int, bytes]:
+    """Return (c_leaf, identifier, app_id, device_id, value)."""
+    identifier, app_id, device_id = decode_identity(k_ident, mac, leaf.key_type, leaf.identity)
+    if leaf.content.is_empty():
+        return 0, identifier, app_id, device_id, b""
+    c_leaf, value = decode_content(k_data, mac, leaf.key_type, leaf.content)
+    return c_leaf, identifier, app_id, device_id, value
+
+
+def verify_mac(k_path: bytes, mac: bytes, leaf: LeafBlob, k_ident: bytes) -> bool:
+    """Check that a *stored* MAC really is the MAC of its stored identity. This is the
+    integrity check the old format made impossible in either direction."""
+    identifier, app_id, device_id = decode_identity(k_ident, mac, leaf.key_type, leaf.identity)
+    return leaf_identity_mac(k_path, app_id, identifier, leaf.key_type, device_id) == mac

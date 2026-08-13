@@ -11,13 +11,13 @@ from trezorlib.debuglink import DebugSession as Session
 from ...ward_mgr_emu import device_ward_keys
 
 _APP = "bitcoin"
-_K_INDEX, _K_DATA = device_ward_keys()
+_K_PATH, _K_DATA, _K_IDENT = device_ward_keys()
 
 pytestmark = [pytest.mark.models("core")]
 
 
 def _tree() -> WARDTree:
-    return WARDTree(_K_INDEX, _K_DATA)
+    return WARDTree(_K_PATH, _K_DATA, _K_IDENT)
 
 
 def _addr_bit(entry_key: bytes, bit: int) -> int:
@@ -83,10 +83,10 @@ def test_ward_lookup_rejects_relabelled_nonmembership_proof(session: Session) ->
         honest_proof[1],
     ]
     witness_commit = ward_crypto.commit_of(
-        witness_leaf[0], witness_leaf[1], witness_leaf[2]
+        witness_leaf
     )
 
-    valid, membership, counter, wallet_id = ward.lookup(
+    valid, membership, counter = ward.lookup(
         session,
         _APP,
         target,
@@ -97,6 +97,5 @@ def test_ward_lookup_rejects_relabelled_nonmembership_proof(session: Session) ->
 
     assert not valid, (
         "forged non-membership proof for a PRESENT key was accepted: "
-        f"valid={valid}, membership={membership}, counter={counter}, "
-        f"wallet_id={'set' if wallet_id is not None else 'none'}"
+        f"valid={valid}, membership={membership}, counter={counter}"
     )

@@ -13,53 +13,53 @@ pytestmark = [pytest.mark.models("core")]
 
 # Host tree keyed by the device's WARD keys (reproduced from the known test seed)
 # so its entry_keys/leaf commits match the device's and its proofs verify.
-_K_INDEX, _K_DATA = device_ward_keys()
+_K_PATH, _K_DATA, _K_IDENT = device_ward_keys()
 
 
 def _tree() -> WARDTree:
-    return WARDTree(_K_INDEX, _K_DATA)
+    return WARDTree(_K_PATH, _K_DATA, _K_IDENT)
 
 
 def _apply_device_leaf(tree: WARDTree, perform_result: tuple) -> None:
-    """Store the device-returned leaf blob (random nonce) so the host tree tracks the
-    device's authenticated root. perform_result[5:10] = (entry_key, entry_type,
-    nonce, tag, ct); empty ct = DELETE."""
-    ek, entry_type, nonce, tag, ct = perform_result[5:10]
-    if ct:
-        tree.set_leaf(ek, nonce, tag, ct, entry_type or "address")
-    elif ek is not None:
+    """Store the device-returned leaf (random nonces) so the host tree tracks the
+    device's authenticated root. perform_result[4:6] = (entry_key, LeafBlob); an empty
+    content part = DELETE."""
+    ek, leaf = perform_result[4:6]
+    if ek is None:
+        return
+    if leaf.is_delete():
         tree.del_leaf(ek)
+    else:
+        tree.set_leaf(ek, leaf)
 
 
 def _with_proof(
     tree: WARDTree, address: str, proof: list
 ) -> "messages.DisplayAddressWithProof":
-    """Build a PUSH DisplayAddressWithProof carrying the membership leaf blob
-    (nonce/tag/ct/entry_type) for `address` and the given `proof` (which may be a
-    deliberately wrong proof in negative tests)."""
-    b = tree.leaf_blob(_APP, address.encode())
-    assert b is not None, f"{address} not in tree"
+    """Build a PUSH DisplayAddressWithProof carrying the membership leaf's two parts
+    for `address` and the given `proof` (which may be a deliberately wrong proof in
+    negative tests)."""
+    leaf = tree.leaf_blob(_APP, address.encode())
+    assert leaf is not None, f"{address} not in tree"
     return messages.DisplayAddressWithProof(
         app_id=_APP,
         address=address,
-        entry_type=b[3],
-        content=ward.make_leaf_content(b[0], b[1], b[2]),
+        content=ward.make_leaf_content(leaf.content),
+        identity=ward.make_leaf_identity(leaf.key_type, leaf.identity),
         proof=proof,
     )
 
 
 def _lookup_membership(session: Session, tree: WARDTree, address: str):
-    """Membership WARDLookup with the new signature (leaf blob + proof)."""
-    b = tree.leaf_blob(_APP, address.encode())
-    assert b is not None, f"{address} not in tree"
+    """Membership WARDLookup carrying the leaf's two parts + proof."""
+    leaf = tree.leaf_blob(_APP, address.encode())
+    assert leaf is not None, f"{address} not in tree"
     return ward.lookup(
         session,
         _APP,
         address.encode(),
         tree.get_proof(_APP, address.encode()),
-        nonce=b[0],
-        tag=b[1],
-        ct=b[2],
+        leaf=leaf,
     )
 
 
@@ -107,16 +107,16 @@ def _add_value_via_device(
                 lambda s: ward.queue_update(s, _APP, address_bytes, old_value, value),
             )
             dev.debuglink().press_yes()
-            pending_id, _wallet_id = dev.result()
+            pending_id = dev.result()
 
         # perform_update: the device derives counter_T and emits WARDProofRequest,
         # answered by the registered callback; no user interaction.
         res = ward.perform_update(session, pending_id)
-        c_counter, _root_t, mac_t, _wallet_id, ward_id = res[:5]
+        c_counter, _root_t, mac_t, ward_id = res[:4]
         assert ward_id is not None
         mac_for_sig = mac_t if mac_t is not None else ward.ZERO_MAC
         sig = sign_ward_update(c_counter, mac_for_sig, ward_id)
-        counter, new_root, _wallet_id, root_mac = ward.confirmed_by_wm(
+        counter, new_root, root_mac = ward.confirmed_by_wm(
             session, c_counter, mac_t, sig, pending_id
         )
 
@@ -264,7 +264,7 @@ def test_add_value_via_device_increments_leaf_counter(session: Session) -> None:
     # of the stored blob verifies at the global counter 2. (C_leaf now lives inside
     # the encrypted ct, so `tree.get_counter` above already decrypted it to 2; there
     # is no separate stale-counter wire field to probe.)
-    valid, membership, current, _wallet_id = _lookup_membership(session, tree, address)
+    valid, membership, current = _lookup_membership(session, tree, address)
     assert valid and membership
     assert current == 2
 

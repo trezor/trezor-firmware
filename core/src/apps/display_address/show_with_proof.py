@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 async def show_with_proof(msg: "DisplayAddressWithProof") -> "Success":
     """PUSH: the host attaches the WARD proof up-front. The firmware verifies the
-    supplied (membership: value/counter; non-membership: witness hashes) proof
+    supplied (membership: the leaf's two parts; non-membership: witness hashes) proof
     against its authenticated WARD root and shows the verified label. The PULL
     variant is apps.display_address.show.
     """
@@ -16,17 +16,17 @@ async def show_with_proof(msg: "DisplayAddressWithProof") -> "Success":
 
     from apps.common import ward as ward_core
 
-    m_nonce, m_tag, m_ct = ward_core.read_leaf_content(msg.content)
+    m_val = ward_core.read_leaf_content(msg.content)
+    m_key_type, m_id = ward_core.read_leaf_identity(msg.identity)
     label_text: str | None = None
     try:
         status, label = await ward_core.verify_label(
             "display_address",
             msg.address.encode(),
-            m_nonce,
-            m_tag,
-            m_ct,
+            m_id,
+            m_val,
             msg.proof,
-            entry_type=msg.entry_type or "address",
+            key_type=m_key_type or "address",
             witness_entry_key=msg.witness_entry_key,
             witness_commit=msg.witness_commit,
             domain=msg.app_id,

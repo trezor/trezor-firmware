@@ -35,18 +35,17 @@ class TestWardQueueStorage(unittest.TestCase):
 
         wallet_id = self._id(1)
         pid = ward_store.queue_alloc_id()
-        ward_store.queue_put(wallet_id, pid, 5, b"alice", b"old_a", b"new_a", b"bitcoin")
+        ward_store.queue_put(wallet_id, pid, 5, b"alice", b"new_a", b"bitcoin")
 
         rec = ward_store.queue_get(wallet_id, pid)
         self.assertIsNotNone(rec)
-        counter, state, address, ov, nv, root, mac, _aid, kt, did = rec
+        counter, state, address, nv, root, mac, _aid, kt, did = rec
         # A default-scope intent frames key_type/device_id ("address"/0).
         self.assertEqual(kt, b"address")
         self.assertEqual(did, 0)
         self.assertEqual(counter, 5)
         self.assertEqual(state, ward_store.QUEUE_PENDING)
         self.assertEqual(address, b"alice")
-        self.assertEqual(ov, b"old_a")
         self.assertEqual(nv, b"new_a")
         self.assertIsNone(root)  # not computed until perform
         self.assertIsNone(mac)
@@ -56,7 +55,7 @@ class TestWardQueueStorage(unittest.TestCase):
         import storage.ward_store as ward_store
 
         pid = ward_store.queue_alloc_id()
-        ward_store.queue_put(self._id(1), pid, 1, b"x", b"o", b"n")
+        ward_store.queue_put(self._id(1), pid, 1, b"x", b"n", b"bitcoin")
         # A different wallet does not see this pending_id's intent.
         self.assertIsNone(ward_store.queue_get(self._id(2), pid))
 
@@ -77,8 +76,8 @@ class TestWardQueueStorage(unittest.TestCase):
         wallet_id = self._id(1)
         p1 = ward_store.queue_alloc_id()
         p2 = ward_store.queue_alloc_id()
-        ward_store.queue_put(wallet_id, p1, 5, b"alice", b"o1", b"n1", b"bitcoin")
-        ward_store.queue_put(wallet_id, p2, 5, b"bob", b"o2", b"n2", b"bitcoin")
+        ward_store.queue_put(wallet_id, p1, 5, b"alice", b"n1", b"bitcoin")
+        ward_store.queue_put(wallet_id, p2, 5, b"bob", b"n2", b"bitcoin")
 
         self.assertEqual(ward_store.queue_count(wallet_id), 2)
         self.assertEqual(
@@ -97,15 +96,15 @@ class TestWardQueueStorage(unittest.TestCase):
 
         wallet_id = self._id(1)
         pid = ward_store.queue_alloc_id()
-        ward_store.queue_put(wallet_id, pid, 5, b"alice", b"o1", b"n1", b"bitcoin")
-        ward_store.queue_put(wallet_id, pid, 6, b"alice2", b"o2", b"n2", b"bitcoin")
+        ward_store.queue_put(wallet_id, pid, 5, b"alice", b"n1", b"bitcoin")
+        ward_store.queue_put(wallet_id, pid, 6, b"alice2", b"n2", b"bitcoin")
         self.assertEqual(ward_store.queue_count(wallet_id), 1)
-        counter, _s, address, ov, nv, _r, _m, _aid, _kt, _did = ward_store.queue_get(
+        counter, _s, address, nv, _r, _m, _aid, _kt, _did = ward_store.queue_get(
             wallet_id, pid
         )
         self.assertEqual(counter, 6)
         self.assertEqual(address, b"alice2")
-        self.assertEqual((ov, nv), (b"o2", b"n2"))
+        self.assertEqual(nv, b"n2")
 
     @mock_storage
     def test_key_type_device_id_roundtrip(self):
@@ -116,9 +115,9 @@ class TestWardQueueStorage(unittest.TestCase):
         wallet_id = self._id(1)
         pid = ward_store.queue_alloc_id()
         ward_store.queue_put(
-            wallet_id, pid, 5, b"alice", b"o", b"n", b"bitcoin", b"eth_addr", 3
+            wallet_id, pid, 5, b"alice", b"n", b"bitcoin", b"eth_addr", 3
         )
-        _c, _s, address, _ov, _nv, _r, _m, app_id, kt, did = ward_store.queue_get(
+        _c, _s, address, _nv, _r, _m, app_id, kt, did = ward_store.queue_get(
             wallet_id, pid
         )
         self.assertEqual(app_id, b"bitcoin")
@@ -134,10 +133,10 @@ class TestWardQueueStorage(unittest.TestCase):
         wallet_id = self._id(1)
         pid = ward_store.queue_alloc_id()
         ward_store.queue_put(
-            wallet_id, pid, 0, b"alice", b"o", b"n", b"bitcoin", b"eth_addr", 3
+            wallet_id, pid, 0, b"alice", b"n", b"bitcoin", b"eth_addr", 3
         )
         ward_store.queue_set_computed(wallet_id, pid, 4, _sha256d(b"r"), _sha256d(b"m"))
-        _c, state, _a, _ov, _nv, _r, _m, app_id, kt, did = ward_store.queue_get(
+        _c, state, _a, _nv, _r, _m, app_id, kt, did = ward_store.queue_get(
             wallet_id, pid
         )
         self.assertEqual(state, ward_store.QUEUE_COMMITTED)
@@ -161,18 +160,16 @@ class TestWardQueueStorage(unittest.TestCase):
             + _sha256d(b"mac")  # mac (32B)
             + len(b"alice").to_bytes(2, "big")
             + b"alice"
-            + len(b"o").to_bytes(2, "big")
-            + b"o"
             + len(b"n").to_bytes(2, "big")
             + b"n"
             + len(b"bitcoin").to_bytes(2, "big")
             + b"bitcoin"
         )
-        counter, _s, address, ov, nv, _r, _m, app_id, kt, did = ward_store._parse_body(
+        counter, _s, address, nv, _r, _m, app_id, kt, did = ward_store._parse_body(
             legacy
         )
         self.assertEqual(counter, 7)
-        self.assertEqual((address, ov, nv), (b"alice", b"o", b"n"))
+        self.assertEqual((address, nv), (b"alice", b"n"))
         self.assertEqual(app_id, b"bitcoin")
         self.assertEqual(kt, b"")  # scope tail read past end -> empty
         self.assertEqual(did, 0)
@@ -264,10 +261,10 @@ class TestWardQueueStorage(unittest.TestCase):
         wallet_id = self._id(1)
         for _ in range(ward_store.MAX_PENDING):
             pid = ward_store.queue_alloc_id()
-            ward_store.queue_put(wallet_id, pid, 1, b"x", b"o", b"n", b"bitcoin")
+            ward_store.queue_put(wallet_id, pid, 1, b"x", b"n", b"bitcoin")
         with self.assertRaises(ValueError):
             pid = ward_store.queue_alloc_id()
-            ward_store.queue_put(wallet_id, pid, 1, b"y", b"o", b"n", b"bitcoin")
+            ward_store.queue_put(wallet_id, pid, 1, b"y", b"n", b"bitcoin")
 
     @mock_storage
     def test_set_computed_and_drop(self):
@@ -279,16 +276,16 @@ class TestWardQueueStorage(unittest.TestCase):
         root = _sha256d(b"root-T")
         mac = _sha256d(b"mac-T")
         pid = ward_store.queue_alloc_id()
-        ward_store.queue_put(wallet_id, pid, 1, b"x", b"o", b"n", b"bitcoin")
+        ward_store.queue_put(wallet_id, pid, 1, b"x", b"n", b"bitcoin")
         ward_store.queue_set_computed(wallet_id, pid, 1, root, mac)
 
-        counter, state, address, ov, nv, got_root, got_mac, _aid, _kt, _did = (
+        counter, state, address, nv, got_root, got_mac, _aid, _kt, _did = (
             ward_store.queue_get(wallet_id, pid)
         )
         self.assertEqual(state, ward_store.QUEUE_COMMITTED)
         self.assertEqual(got_root, root)
         self.assertEqual(got_mac, mac)
-        self.assertEqual((address, ov, nv), (b"x", b"o", b"n"))
+        self.assertEqual((address, nv), (b"x", b"n"))
 
         self.assertTrue(ward_store.queue_drop(wallet_id, pid))
         self.assertIsNone(ward_store.queue_get(wallet_id, pid))
@@ -298,7 +295,7 @@ class TestWardQueueStorage(unittest.TestCase):
         import storage.ward_store as ward_store
 
         pid = ward_store.queue_alloc_id()
-        ward_store.queue_put(self._id(1), pid, 1, b"x", b"o", b"n")
+        ward_store.queue_put(self._id(1), pid, 1, b"x", b"n", b"bitcoin")
         with self.assertRaises(ValueError):
             ward_store.queue_set_computed(
                 self._id(2), pid, 1, _sha256d(b"r"), _sha256d(b"m")
@@ -312,9 +309,9 @@ class TestWardQueueStorage(unittest.TestCase):
 
         wallet_id = self._id(1)
         pid = ward_store.queue_alloc_id()
-        ward_store.queue_put(wallet_id, pid, 9, b"bob", b"old_b", b"", b"bitcoin")
+        ward_store.queue_put(wallet_id, pid, 9, b"bob", b"", b"bitcoin")
         ward_store.queue_set_computed(wallet_id, pid, 9, None, None)
-        counter, state, address, ov, nv, root, mac, _aid, _kt, _did = (
+        counter, state, address, nv, root, mac, _aid, _kt, _did = (
             ward_store.queue_get(wallet_id, pid)
         )
         self.assertEqual(counter, 9)
@@ -325,17 +322,17 @@ class TestWardQueueStorage(unittest.TestCase):
 
     @mock_storage
     def test_service_queue_discard_drops_candidate(self):
-        """service.queue_discard() abandons the queued candidate (the internal
-        primitive behind WARDDiscardPending)."""
+        """ward_store.queue_drop() abandons the queued candidate (the primitive
+        behind WARDDiscardPending). service.queue_discard was a pass-through alias with
+        no production caller and has been removed."""
         import storage.ward_store as ward_store
-        from apps.ward import service
 
         wallet_id = self._id(1)
         pid = ward_store.queue_alloc_id()
-        ward_store.queue_put(wallet_id, pid, 3, b"alice", b"o", b"n", b"bitcoin")
+        ward_store.queue_put(wallet_id, pid, 3, b"alice", b"n", b"bitcoin")
         self.assertIsNotNone(ward_store.queue_get(wallet_id, pid))
 
-        service.queue_discard(wallet_id, pid)
+        ward_store.queue_drop(wallet_id, pid)
         self.assertIsNone(ward_store.queue_get(wallet_id, pid))
 
     @mock_storage
@@ -347,14 +344,14 @@ class TestWardQueueStorage(unittest.TestCase):
 
         wallet_id = self._id(1)
         pid = ward_store.queue_alloc_id()
-        ward_store.queue_put(wallet_id, pid, 1, b"x", b"o", b"n", b"bitcoin")
+        ward_store.queue_put(wallet_id, pid, 1, b"x", b"n", b"bitcoin")
         ward_store.queue_set_computed(wallet_id, pid, 1, _sha256d(b"r"), _sha256d(b"m"))
-        _c, state, _a, _ov, _nv, _r, _m, _aid, _kt, _did = ward_store.queue_get(
+        _c, state, _a, _nv, _r, _m, _aid, _kt, _did = ward_store.queue_get(
             wallet_id, pid
         )
         self.assertEqual(state, ward_store.QUEUE_COMMITTED)
 
-        service.queue_discard(wallet_id, pid)
+        ward_store.queue_drop(wallet_id, pid)
         self.assertIsNone(ward_store.queue_get(wallet_id, pid))
 
 
@@ -367,17 +364,23 @@ class TestWardCoreCapability(unittest.TestCase):
     def test_capability_map(self):
         from apps.common import ward as ward_core
 
-        self.assertIn("lookup", ward_core._CAPABILITIES["bitcoin"])
-        self.assertIn("lookup", ward_core._CAPABILITIES["ethereum"])
+        self.assertIn("lookup", ward_core._CAPABILITIES["display_address"])
+        # bitcoin/ethereum were removed from the allowlist: neither app has any WARD
+        # caller (the label flow lives in DisplayAddress/DisplayAddressWithProof).
+        self.assertTrue("bitcoin" not in ward_core._CAPABILITIES)
+        self.assertTrue("ethereum" not in ward_core._CAPABILITIES)
         # An app with no grant is absent from the map entirely.
         self.assertTrue("wallet" not in ward_core._CAPABILITIES)
 
     def test_unauthorized_app_rejected(self):
+        """The capability gate rejects an app with no grant. Checked through
+        verify_label -- the gated entry point that survives (the lookup_label wrapper
+        was removed: it had no caller, _classify_label calls the service directly)."""
         from apps.common import ward as ward_core
         from trezor.wire import DataError
 
         with self.assertRaises(DataError):
-            await_result(ward_core.lookup_label("wallet", b"addr", b"n", b"t", b"c", []))
+            await_result(ward_core.verify_label("wallet", b"addr", None, None, []))
 
 
 class TestWardSyncStorage(unittest.TestCase):

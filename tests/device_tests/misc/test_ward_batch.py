@@ -72,7 +72,7 @@ def _commit_batch(session: Session, tree: WARDTree, pending_ids: list) -> tuple:
     out_counter, out_root, _wid, _root_mac = ward.confirmed_batch_by_wm(
         session, counter, mac, sig
     )
-    for lf in leaves:  # (entry_key, entry_type, nonce, tag, ct)
+    for lf in leaves:  # (entry_key, LeafBlob)
         _apply_device_leaf(tree, (None,) * 5 + lf)
     return out_counter, out_root, from_root, auth_commit
 
@@ -135,9 +135,9 @@ def test_ward_rollback_one_step(session: Session) -> None:
     # Snapshot the tree at R1 so we can restore it after the rollback.
     tree_at_r1 = _tree()
     for addr in (b"alice", b"bob", b"carol"):
-        blob = tree.get_leaf(tree._ek(_APP, addr, "address", 0))
-        assert blob is not None
-        tree_at_r1.set_leaf(tree._ek(_APP, addr, "address", 0), *blob)
+        leaf = tree.get_leaf(tree._ek(_APP, addr, "address", 0))
+        assert leaf is not None
+        tree_at_r1.set_leaf(tree._ek(_APP, addr, "address", 0), leaf)
     assert tree_at_r1.get_root_hash() == r1
 
     # Commit #2: insert dave  -> R2 at c0+2 ; capture its forward AuthCommit + from_root(=R1)

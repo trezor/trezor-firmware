@@ -167,16 +167,20 @@ def device_ward_keys(
     key_type: str = "address",
     mnemonic: str = DEFAULT_MNEMONIC,
     passphrase: str = "",
-) -> tuple[bytes, bytes]:
-    """Reproduce the device's WARD keys (K_index, K_data(key_type)) from the known
-    test seed, so a host-side WARDTree computes the SAME entry_keys / leaf commits
-    the device does and its proofs verify on-device. Mirrors
-    ``apps.ward.service._derive_k_index`` / ``_derive_k_data`` and
-    ``trezorlib.ward_crypto`` (SLIP-21 under m/"ward")."""
+) -> tuple[bytes, bytes, bytes]:
+    """Reproduce the device's WARD keys (K_path, K_data(key_type), K_ident(key_type))
+    from the known test seed, so a host-side WARDTree computes the SAME entry_keys /
+    leaf commits the device does and its proofs verify on-device. Mirrors
+    ``apps.ward.service._derive_k_path`` / ``_derive_k_data`` / ``_derive_k_ident``
+    and ``trezorlib.ward_crypto`` (SLIP-21 under m/"ward").
+
+    Note a keyless host needs NONE of these to serve a proof -- the MAC is stored with
+    the leaf. The harness derives them only because it also plays the writer."""
     seed = mnemonic_to_seed(mnemonic, passphrase)
-    k_index = _slip21_key(seed, [b"ward", b"K_index"])
+    k_path = _slip21_key(seed, [b"ward", b"K_path"])
     k_data = _slip21_key(seed, [b"ward", b"K_data", key_type.encode()])
-    return k_index, k_data
+    k_ident = _slip21_key(seed, [b"ward", b"K_ident", key_type.encode()])
+    return k_path, k_data, k_ident
 
 
 class WMEmulator:

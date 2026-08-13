@@ -57,7 +57,8 @@ message DisplayAddressWithProof {
     optional bytes  witness_commit     = 10; // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
     reserved 11;                             // was witness_counter
     optional string app_id             = 12; // WARD domain to resolve the label in (entry_key input); default "display_address"
-    optional string entry_type         = 13; // clear entry_type (selects K_data); default "address"
+    reserved 13;                            // was entry_type; key_type now lives on LeafIdentity
     reserved 14, 15, 16;                     // were flat nonce/tag/ct; now inside content
-    optional ward.LeafContent content  = 17; // membership leaf value; absent = non-membership
+    optional ward.LeafContent  content  = 17; // membership leaf value; absent = non-membership
+    optional ward.LeafIdentity identity = 18; // membership leaf identity (MAC preimage)
 }

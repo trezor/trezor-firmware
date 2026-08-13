@@ -12,8 +12,8 @@ async def reconcile(msg: WARDReconcile) -> WARDReconcileAck:
 
     from apps.common import ward as core
 
-    counter, root, wallet_id, root_mac = await core.reconcile(msg.root)
+    counter, root, _wallet_id, root_mac = await core.reconcile(msg.root)
 
     return WARDReconcileAck(
-        counter=counter, new_root=root, wallet_id=wallet_id, root_mac=root_mac
+        counter=counter, new_root=root, root_mac=root_mac
     )

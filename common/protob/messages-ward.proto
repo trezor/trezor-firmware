@@ -49,8 +49,8 @@ option java_outer_classname = "TrezorMessageWard";
 message WARDQueueUpdate {
     required bytes  address   = 1;  // identifier to update (== the AEAD-hidden identifier)
     required bytes  new_value = 2;  // plaintext new value the user confirms; empty means delete
-    optional string app_id    = 3;  // domain; part of scope in entry_key = HMAC(K_index, app_id||0x00||key_type||0x00||device_id||identifier)
-    optional string key_type  = 4;  // scope + entry_type (selects K_data); default "address"
+    optional string app_id    = 3;  // domain; part of scope in entry_key = HMAC(K_path, app_id||0x00||key_type||0x00||device_id||identifier)
+    optional string key_type  = 4;  // scope; also selects K_ident/K_data; default "address"
     optional uint32 device_id = 5;  // scope device slot; 0 = global (§5)
 }
 
@@ -65,7 +65,7 @@ message WARDQueueUpdateAck {
     // WARDPerformUpdate, not at queue time. Field 1 is reserved to preserve numbering.
     reserved 1;
     optional uint32 pending_id = 2;  // handle for this queued intent; addresses it in perform/confirm/discard
-    optional bytes  wallet_id  = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    reserved 3;  // was wallet_id; write-only (no reader) -- removed
 }
 
 /**
@@ -93,15 +93,16 @@ message WARDPerformUpdateAck {
     required uint32 counter    = 1;  // candidate counter_T, derived on-device here (= current attested counter + 1)
     optional bytes  new_root   = 2;  // candidate root_T; absent if the tree becomes empty (DELETE to empty)
     optional bytes  mac        = 3;  // mac_T = HMAC(root_mac_key, wallet_id||counter_T||root_T); absent if empty
-    optional bytes  wallet_id  = 4;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    reserved 4;  // was wallet_id; write-only (no reader) -- removed
     optional bytes  ward_id    = 5;  // SLIP21-derived WM-facing anchor; the host forwards it to the WM for /commit
     // The device is the encryptor; the host cannot compute the encrypted leaf, so
     // the device returns it here for the host to store keyed by entry_key. ct empty
     // = DELETE (remove the leaf at entry_key).
-    optional bytes  entry_key  = 6;  // opaque 32B path the leaf is stored under
-    optional string entry_type = 7;  // clear entry_type (selects K_data on decrypt)
+    optional bytes  entry_key  = 6;  // opaque 32B path (LeafIdentityMAC) the leaf is stored under
+    reserved 7;                      // was entry_type; key_type now lives on LeafIdentity
     reserved 8, 9, 10;               // were flat nonce/tag/ct; now inside content
-    optional LeafContent content = 11;  // encrypted or plaintext new leaf (empty = delete)
+    optional LeafContent  content  = 11;  // encrypted or plaintext new leaf value (empty = delete)
+    optional LeafIdentity identity = 12;  // the MAC preimage; survives a delete
 }
 
 /**
@@ -133,7 +134,7 @@ message WARDConfirmedByWM {
 message WARDConfirmedByWMAck {
     required uint32 counter   = 1;  // counter after install (== counter_T)
     optional bytes  new_root  = 2;  // installed root; absent if the tree is now empty
-    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    reserved 3;  // was wallet_id; write-only (no reader) -- removed
     optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if empty
 }
 
@@ -164,7 +165,7 @@ message WARDSync {
 message WARDSyncAck {
     required bytes  nonce     = 1;  // per-round anti-replay value the WM attestation must echo
     required uint32 version   = 2;  // WARD protocol version
-    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    reserved 3;  // was wallet_id; write-only (no reader) -- removed
     optional bytes  ward_id   = 4;  // SLIP21-derived WM-facing anchor; the host forwards it to the WM for /attest
 }
 
@@ -193,7 +194,7 @@ message WARDIngestAttestation {
  */
 message WARDIngestAttestationAck {
     required uint32 counter   = 1;  // accepted counter_ext
-    optional bytes  wallet_id = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    reserved 2;  // was wallet_id; write-only (no reader) -- removed
 }
 
 /**
@@ -240,7 +241,7 @@ message WARDReconcile {
 message WARDReconcileAck {
     required uint32 counter   = 1;  // installed counter (== attested counter_ext)
     optional bytes  new_root  = 2;  // installed root; absent if the tree is empty
-    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    reserved 3;  // was wallet_id; write-only (no reader) -- removed
     optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if empty
 }
 
@@ -256,7 +257,7 @@ message WARDReconcileAck {
  * @next Failure
  */
 message WARDLookup {
-    required bytes  address            = 1;  // identifier; device forms entry_key = HMAC(K_index, app_id||0x00||key_type||0x00||device_id||identifier)
+    required bytes  address            = 1;  // identifier; device forms entry_key = HMAC(K_path, app_id||0x00||key_type||0x00||device_id||identifier)
     reserved 2;                              // was plaintext value; membership now carries (nonce,tag,ct)
     repeated bytes  proof              = 3;  // sibling hashes, leaf-to-root order (33 bytes each)
     optional bytes  witness_entry_key  = 4;  // non-membership: witness leaf entry_key (32B; reveals no plaintext)
@@ -264,10 +265,11 @@ message WARDLookup {
     reserved 6;                              // was counter; C_leaf now lives inside ct
     reserved 7;                              // was witness_counter
     optional string app_id             = 8;  // domain; part of scope
-    optional string key_type           = 9;  // scope + entry_type (selects K_data); default "address"
+    optional string key_type           = 9;  // scope; also selects K_ident/K_data; default "address"
     optional uint32 device_id          = 10; // scope device slot; 0 = global
     reserved 11, 12, 13;                     // were flat nonce/tag/ct; now inside content
-    optional LeafContent content       = 14; // membership leaf value; absent = non-membership/absent
+    optional LeafContent  content      = 14; // membership leaf value; absent = non-membership/absent
+    optional LeafIdentity identity      = 15; // membership leaf identity (MAC preimage)
 }
 
 /**
@@ -278,7 +280,7 @@ message WARDLookupAck {
     required bool   valid      = 1;  // true if the proof is valid against the stored root
     required uint32 counter    = 2;  // current global counter
     optional bool   membership = 3;  // true = membership proof, false = non-membership
-    optional bytes  wallet_id  = 4;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    reserved 4;  // was wallet_id; write-only (no reader) -- removed
     optional bytes  ward_id    = 5;  // SLIP21-derived WM-facing anchor; scopes host-side WARD storage
 }
 
@@ -339,14 +341,15 @@ message WARDProofAck {
     optional bytes  witness_commit    = 5;   // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
     reserved 6;                              // was witness_counter
     reserved 7;                              // was app_id; the host no longer knows the domain (opaque entry_key)
-    optional string entry_type        = 8;   // clear; selects K_data(entry_type) for decrypt
+    reserved 8;                              // was entry_type; key_type now lives on LeafIdentity
     reserved 9, 10, 11;                      // were flat nonce/tag/ct; now inside content
-    optional LeafContent content      = 12;  // membership leaf value; absent = pull request / empty tree
+    optional LeafContent  content     = 12;  // membership leaf value; absent = pull request / empty tree
+    optional LeafIdentity identity    = 13;  // membership leaf identity (MAC preimage)
 }
 
 /**
  * Request: PUSH key export. The host retrieves the keys it needs to serve the
- * push flow itself: K_index (to compute entry_key = HMAC(K_index, scope||identifier)
+ * push flow itself: K_path (to compute entry_key = HMAC(K_path, scope||identifier)
  * from a plaintext identifier) and K_data(key_type) (to encrypt/decrypt values).
  * This is a deliberate, gated downgrade of the "Suite holds no keys" property for
  * the push-capable entry types only; K_sig is NEVER exported. The host is expected
@@ -356,7 +359,7 @@ message WARDProofAck {
  * @next Failure
  */
 message WARDExportKeys {
-    optional string key_type = 1;  // entry_type whose K_data to export; default "address"
+    optional string key_type = 1;  // key_type whose K_ident/K_data to export; default "address"
 }
 
 /**
@@ -364,9 +367,10 @@ message WARDExportKeys {
  * @end
  */
 message WARDExportKeysAck {
-    optional bytes  k_index  = 1;  // HMAC-SHA256 key deriving every entry_key path
-    optional bytes  k_data   = 2;  // ChaCha20-Poly1305 key for the requested key_type
+    optional bytes  k_path   = 1;  // HMAC-SHA256 key deriving every entry_key (LeafIdentityMAC)
+    optional bytes  k_data   = 2;  // ChaCha20-Poly1305 key for the requested key_type's LeafContent
     optional string key_type = 3;  // echoes the requested key_type
+    optional bytes  k_ident  = 4;  // ChaCha20-Poly1305 key for the requested key_type's LeafIdentity
 }
 
 /**
@@ -397,12 +401,25 @@ message WARDDiscardPendingAck {
 }
 
 /**
- * A leaf's value content on the wire — a self-describing nested "manual oneof"
- * (trezor's protobuf codegen has no `oneof`, so mutual exclusivity is a code
- * invariant): `encoding` selects which submessage is meaningful. The commit is
- * domain-separated by encoding (encrypted 0x02 vs plaintext 0x04) so an encrypted
- * and a plaintext leaf can never collide. An empty content (ct/content empty) is a
- * DELETE. See core apps/ward/service.py WARD_PLAINTEXT_LEAVES + commit_of.
+ * A leaf is TWO independently encoded parts, each a self-describing nested "manual
+ * oneof" (trezor's protobuf codegen has no `oneof`, so mutual exclusivity is a code
+ * invariant): `encoding` selects which submessage is meaningful.
+ *
+ *   LeafIdentity  the MAC preimage: identifier + app_id + device_id, under K_ident
+ *   LeafContent   C_leaf + value, under K_data
+ *
+ * `key_type` is ALWAYS CLEAR (it selects both keys) and lives on LeafIdentity, so
+ * it is not repeated per part. Each part's `encoding` byte is inside the commit, so
+ * an encrypted and a plaintext part can never collide:
+ *
+ *   part(p) = encoding(1B)||len8(nonce)||nonce||len8(tag)||tag||len32(body)||body
+ *   commit  = sha256(0x02 || len8(key_type)||key_type
+ *                         || len32(id_part)||id_part || len32(val_part)||val_part)
+ *   leaf    = sha256(0x00 || entry_key || commit)      // entry_key == LeafIdentityMAC
+ *
+ * An empty LeafContent body is a DELETE. Note the identity part SURVIVES a delete,
+ * so a tombstone is still self-describing. See core apps/ward/service.py
+ * WARD_PLAINTEXT_IDENTITY / WARD_PLAINTEXT_CONTENT + commit_of.
  */
 message EncryptedLeaf {
     optional bytes nonce = 1;  // 12B AEAD nonce
@@ -410,7 +427,7 @@ message EncryptedLeaf {
     optional bytes ct    = 3;  // AEAD ciphertext (empty = delete)
 }
 message PlaintextLeaf {
-    optional bytes content = 1;  // C_leaf(4B)||len16(id)||id||len32(value)||value (empty = delete)
+    optional bytes content = 1;  // C_leaf(4B)||len32(value)||value (empty = delete)
 }
 message LeafContent {
     optional uint32 encoding        = 1;  // 0 = encrypted (default), 1 = plaintext
@@ -419,14 +436,38 @@ message LeafContent {
 }
 
 /**
+ * The identity part: everything the entry_key/LeafIdentityMAC is computed over.
+ * Storing it in the leaf is what makes a leaf self-describing — a holder can recover
+ * the full preimage and check that the stored MAC really is its MAC (impossible in
+ * the old format), and it is what a PUSH host needs to resolve identifier -> MAC.
+ */
+message PlainIdentity {
+    optional bytes  identifier = 1;  // the otherwise-hidden identifier, in the clear
+    optional string app_id     = 2;  // domain that owns the entry
+    optional uint32 device_id  = 3;  // scope device slot; 0 = global (§5)
+}
+message EncryptedIdentity {
+    optional bytes nonce = 1;  // 12B AEAD nonce
+    optional bytes tag   = 2;  // 16B Poly1305 tag
+    optional bytes ct    = 3;  // AEAD over len16(identifier)||identifier||len8(app_id)||app_id||device_id(1B)
+}
+message LeafIdentity {
+    optional uint32 encoding             = 1;  // 0 = encrypted (default), 1 = plaintext
+    optional string key_type             = 2;  // ALWAYS CLEAR — selects K_ident and K_data
+    optional EncryptedIdentity encrypted = 3;  // set when encoding = 0
+    optional PlainIdentity     plain     = 4;  // set when encoding = 1
+}
+
+/**
  * One device leaf produced by a batch commit, for the host to store keyed by
  * entry_key. Empty content = DELETE (remove the leaf at entry_key).
  */
 message WARDBatchLeaf {
-    required bytes  entry_key  = 1;  // opaque 32B trie path the leaf is stored under
-    optional string entry_type = 2;  // clear entry_type (selects K_data on decrypt)
+    required bytes  entry_key  = 1;  // opaque 32B trie path (LeafIdentityMAC) the leaf is stored under
+    reserved 2;                      // was entry_type; key_type now lives on LeafIdentity
     reserved 3, 4, 5;                // were flat nonce/tag/ct; now inside content
-    optional LeafContent content = 6;  // encrypted or plaintext leaf value (empty = delete)
+    optional LeafContent  content  = 6;  // encrypted or plaintext leaf value (empty = delete)
+    optional LeafIdentity identity = 7;  // the MAC preimage; survives a delete
 }
 
 /**

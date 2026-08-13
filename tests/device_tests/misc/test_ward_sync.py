@@ -17,7 +17,7 @@ from ...ward_mgr_emu import WMEmulator, device_ward_keys, wm_initial_sync
 # The host tree must use the DEVICE's WARD keys (reproduced from the known test
 # seed) so its entry_keys/leaf commits match what the device computes and its
 # membership proofs verify on-device.
-_K_INDEX, _K_DATA = device_ward_keys()
+_K_PATH, _K_DATA, _K_IDENT = device_ward_keys()
 
 _APP = "bitcoin"  # capability principal == queried domain for these tests
 
@@ -31,7 +31,7 @@ _OTHER_VALUE = b'TEST:1:{"label":"label2"}'
 
 def _tree() -> WARDTree:
     """A host WARDTree keyed by the device's K_index/K_data (so proofs verify)."""
-    return WARDTree(_K_INDEX, _K_DATA)
+    return WARDTree(_K_PATH, _K_DATA, _K_IDENT)
 
 
 def _foreign_tree() -> WARDTree:
@@ -44,18 +44,16 @@ def _foreign_tree() -> WARDTree:
 
 
 def _lookup(session: Session, tree: WARDTree, address: str):
-    """Membership lookup with the new WARDLookup signature: the leaf blob
-    (nonce, tag, ct) + proof, keyed by the device-formed entry_key."""
-    blob = tree.leaf_blob(_APP, address.encode())
-    assert blob is not None, f"{address} not in tree"
+    """Membership lookup carrying the leaf's two parts + proof, keyed by the
+    device-formed entry_key."""
+    leaf = tree.leaf_blob(_APP, address.encode())
+    assert leaf is not None, f"{address} not in tree"
     return ward.lookup(
         session,
         _APP,
         address.encode(),
         tree.get_proof(_APP, address.encode()),
-        nonce=blob[0],
-        tag=blob[1],
-        ct=blob[2],
+        leaf=leaf,
     )
 
 
@@ -73,11 +71,11 @@ def test_ward_initial_sync_adopts_foreign_tree(session: Session) -> None:
 
     # The adopted root is genuinely authenticated: membership proofs verify
     # on-device against it.
-    valid, membership, current, _wallet_id = _lookup(session, tree, _ADDRESS)
+    valid, membership, current = _lookup(session, tree, _ADDRESS)
     assert valid and membership
     assert current == 2
 
-    valid, membership, _current, _wallet_id = _lookup(session, tree, _OTHER)
+    valid, membership, _current = _lookup(session, tree, _OTHER)
     assert valid and membership
 
 
@@ -141,7 +139,7 @@ def test_ward_sync_refresh_moves_counter_forward(session: Session) -> None:
     assert root2 == tree2.get_root_hash()
 
     # The refreshed root authenticates the newly-added entry at the new counter.
-    valid, membership, current, _wallet_id = _lookup(session, tree2, _OTHER)
+    valid, membership, current = _lookup(session, tree2, _OTHER)
     assert valid and membership
     assert current == 2
 

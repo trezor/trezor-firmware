@@ -13,6 +13,7 @@ def random_bytes(length: int) -> bytes:
 
 class HIDInterface:
     uhid_device = "/dev/uhid"
+    hid_packet_size = 64
 
     def __init__(self) -> None:
         self.file_descriptor = os.open(HIDInterface.uhid_device, os.O_RDWR)
@@ -32,7 +33,10 @@ class HIDInterface:
         name = b"Virtual Trezor"
         phys = b""
         uniq = random_bytes(64)
-        bus = 0
+        # Use the USB HID bus type so user-space HID/FIDO stacks classify the
+        # virtual device like a normal USB authenticator instead of a generic
+        # unknown bus device.
+        bus = 0x03
         vendor = 0x1209
         product = 0x53C1
         version = 0x0200
@@ -79,8 +83,14 @@ class HIDInterface:
     def write_data(self, data: bytes) -> None:
         buf = uhid.create_input2_event(data)
         self.__uhid_write(buf)
-        logger.log_uhid_event("UHID_INPUT2", f"data=0x{data.hex()} size={len(data)}")
-        logger.log_hid_packet("DEVICE_OUTPUT", f"0x{data.hex()}")
+        logger.log_uhid_event(
+            "UHID_INPUT2",
+            f"data=0x{data.hex()} size={len(data)}",
+        )
+        logger.log_hid_packet(
+            "DEVICE_OUTPUT",
+            f"0x{data.hex()}",
+        )
 
     def process_event(self) -> bytes | None:
         ev_type, request = uhid.parse_event(self.__uhid_read(uhid.EVENT_LENGTH))
@@ -99,8 +109,31 @@ class HIDInterface:
                 "UHID_OUTPUT",
                 f"data=0x{data.hex()} size={size} rtype={rtype}",
             )
-            logger.log_hid_packet("DEVICE_INPUT", f"0x{data[1:].hex()}")
-            return data[1:]
+            if not data:
+                logger.log_hid_packet("DEVICE_INPUT", "empty output report")
+                return None
+
+            if size == HIDInterface.hid_packet_size + 1:
+                report_id = data[0]
+                payload = data[1:]
+                logger.log_hid_packet(
+                    "DEVICE_INPUT",
+                    f"report_id=0x{report_id:02x} payload=0x{payload.hex()}",
+                )
+                return payload
+
+            if size == HIDInterface.hid_packet_size:
+                logger.log_hid_packet(
+                    "DEVICE_INPUT",
+                    f"no-report-id payload=0x{data.hex()}",
+                )
+                return data
+
+            logger.log_hid_packet(
+                "DEVICE_INPUT",
+                f"unexpected-size={size} data=0x{data.hex()}",
+            )
+            return data
         else:
             logger.log_uhid_event(
                 "UNKNOWN_EVENT",

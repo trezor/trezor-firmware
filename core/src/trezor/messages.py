@@ -3458,13 +3458,11 @@ if TYPE_CHECKING:
 
     class WARDQueueUpdateAck(protobuf.MessageType):
         pending_id: "int | None"
-        wallet_id: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             pending_id: "int | None" = None,
-            wallet_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -3490,11 +3488,10 @@ if TYPE_CHECKING:
         counter: "int"
         new_root: "AnyBytes | None"
         mac: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
         ward_id: "AnyBytes | None"
         entry_key: "AnyBytes | None"
-        entry_type: "str | None"
         content: "LeafContent | None"
+        identity: "LeafIdentity | None"
 
         def __init__(
             self,
@@ -3502,11 +3499,10 @@ if TYPE_CHECKING:
             counter: "int",
             new_root: "AnyBytes | None" = None,
             mac: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
             entry_key: "AnyBytes | None" = None,
-            entry_type: "str | None" = None,
             content: "LeafContent | None" = None,
+            identity: "LeafIdentity | None" = None,
         ) -> None:
             pass
 
@@ -3537,7 +3533,6 @@ if TYPE_CHECKING:
     class WARDConfirmedByWMAck(protobuf.MessageType):
         counter: "int"
         new_root: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
         root_mac: "AnyBytes | None"
 
         def __init__(
@@ -3545,7 +3540,6 @@ if TYPE_CHECKING:
             *,
             counter: "int",
             new_root: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
             root_mac: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -3563,7 +3557,6 @@ if TYPE_CHECKING:
     class WARDSyncAck(protobuf.MessageType):
         nonce: "AnyBytes"
         version: "int"
-        wallet_id: "AnyBytes | None"
         ward_id: "AnyBytes | None"
 
         def __init__(
@@ -3571,7 +3564,6 @@ if TYPE_CHECKING:
             *,
             nonce: "AnyBytes",
             version: "int",
-            wallet_id: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -3600,13 +3592,11 @@ if TYPE_CHECKING:
 
     class WARDIngestAttestationAck(protobuf.MessageType):
         counter: "int"
-        wallet_id: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             counter: "int",
-            wallet_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -3657,7 +3647,6 @@ if TYPE_CHECKING:
     class WARDReconcileAck(protobuf.MessageType):
         counter: "int"
         new_root: "AnyBytes | None"
-        wallet_id: "AnyBytes | None"
         root_mac: "AnyBytes | None"
 
         def __init__(
@@ -3665,7 +3654,6 @@ if TYPE_CHECKING:
             *,
             counter: "int",
             new_root: "AnyBytes | None" = None,
-            wallet_id: "AnyBytes | None" = None,
             root_mac: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -3683,6 +3671,7 @@ if TYPE_CHECKING:
         key_type: "str | None"
         device_id: "int | None"
         content: "LeafContent | None"
+        identity: "LeafIdentity | None"
 
         def __init__(
             self,
@@ -3695,6 +3684,7 @@ if TYPE_CHECKING:
             key_type: "str | None" = None,
             device_id: "int | None" = None,
             content: "LeafContent | None" = None,
+            identity: "LeafIdentity | None" = None,
         ) -> None:
             pass
 
@@ -3706,7 +3696,6 @@ if TYPE_CHECKING:
         valid: "bool"
         counter: "int"
         membership: "bool | None"
-        wallet_id: "AnyBytes | None"
         ward_id: "AnyBytes | None"
 
         def __init__(
@@ -3715,7 +3704,6 @@ if TYPE_CHECKING:
             valid: "bool",
             counter: "int",
             membership: "bool | None" = None,
-            wallet_id: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -3778,8 +3766,8 @@ if TYPE_CHECKING:
         proof: "list[AnyBytes]"
         witness_entry_key: "AnyBytes | None"
         witness_commit: "AnyBytes | None"
-        entry_type: "str | None"
         content: "LeafContent | None"
+        identity: "LeafIdentity | None"
 
         def __init__(
             self,
@@ -3787,8 +3775,8 @@ if TYPE_CHECKING:
             proof: "list[AnyBytes] | None" = None,
             witness_entry_key: "AnyBytes | None" = None,
             witness_commit: "AnyBytes | None" = None,
-            entry_type: "str | None" = None,
             content: "LeafContent | None" = None,
+            identity: "LeafIdentity | None" = None,
         ) -> None:
             pass
 
@@ -3811,16 +3799,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WARDExportKeysAck(protobuf.MessageType):
-        k_index: "AnyBytes | None"
+        k_path: "AnyBytes | None"
         k_data: "AnyBytes | None"
         key_type: "str | None"
+        k_ident: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            k_index: "AnyBytes | None" = None,
+            k_path: "AnyBytes | None" = None,
             k_data: "AnyBytes | None" = None,
             key_type: "str | None" = None,
+            k_ident: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -3910,17 +3900,73 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["LeafContent"]:
             return isinstance(msg, cls)
 
+    class PlainIdentity(protobuf.MessageType):
+        identifier: "AnyBytes | None"
+        app_id: "str | None"
+        device_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            identifier: "AnyBytes | None" = None,
+            app_id: "str | None" = None,
+            device_id: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["PlainIdentity"]:
+            return isinstance(msg, cls)
+
+    class EncryptedIdentity(protobuf.MessageType):
+        nonce: "AnyBytes | None"
+        tag: "AnyBytes | None"
+        ct: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            nonce: "AnyBytes | None" = None,
+            tag: "AnyBytes | None" = None,
+            ct: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EncryptedIdentity"]:
+            return isinstance(msg, cls)
+
+    class LeafIdentity(protobuf.MessageType):
+        encoding: "int | None"
+        key_type: "str | None"
+        encrypted: "EncryptedIdentity | None"
+        plain: "PlainIdentity | None"
+
+        def __init__(
+            self,
+            *,
+            encoding: "int | None" = None,
+            key_type: "str | None" = None,
+            encrypted: "EncryptedIdentity | None" = None,
+            plain: "PlainIdentity | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["LeafIdentity"]:
+            return isinstance(msg, cls)
+
     class WARDBatchLeaf(protobuf.MessageType):
         entry_key: "AnyBytes"
-        entry_type: "str | None"
         content: "LeafContent | None"
+        identity: "LeafIdentity | None"
 
         def __init__(
             self,
             *,
             entry_key: "AnyBytes",
-            entry_type: "str | None" = None,
             content: "LeafContent | None" = None,
+            identity: "LeafIdentity | None" = None,
         ) -> None:
             pass
 
@@ -4188,8 +4234,8 @@ if TYPE_CHECKING:
         witness_entry_key: "AnyBytes | None"
         witness_commit: "AnyBytes | None"
         app_id: "str | None"
-        entry_type: "str | None"
         content: "LeafContent | None"
+        identity: "LeafIdentity | None"
 
         def __init__(
             self,
@@ -4203,8 +4249,8 @@ if TYPE_CHECKING:
             witness_entry_key: "AnyBytes | None" = None,
             witness_commit: "AnyBytes | None" = None,
             app_id: "str | None" = None,
-            entry_type: "str | None" = None,
             content: "LeafContent | None" = None,
+            identity: "LeafIdentity | None" = None,
         ) -> None:
             pass
 

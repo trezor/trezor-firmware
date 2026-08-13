@@ -38,7 +38,7 @@ def queue_update(
     old -> new change on a trusted screen and, only on user approval, returns a
     pending_id. Under the strict model NO candidate counter is derived here; the
     counter and candidate root are computed later, at perform_update, from a proof
-    the device pulls itself. Returns (pending_id, wallet_id).
+    the device pulls itself. Returns pending_id.
     """
     # old_value is a display hint only and is not carried on the wire (the diagram's
     # WARDQueueUpdate is address + new_value); the device pulls the current state at
@@ -54,7 +54,7 @@ def queue_update(
         ),
         expect=messages.WARDQueueUpdateAck,
     )
-    return resp.pending_id, resp.wallet_id
+    return resp.pending_id
 
 
 def perform_update(
@@ -68,28 +68,30 @@ def perform_update(
     counter_T (strict model). pending_id selects the intent; if omitted, the device
     targets the single queued one.
 
-    The device is the encryptor, so it also returns the new leaf blob
-    (entry_key, entry_type, nonce, tag, ct) it produced — the host cannot compute it
-    and must store it keyed by entry_key (ct empty => DELETE). Returns
-    (counter_T, root_T, mac_T, wallet_id, ward_id, entry_key, entry_type, nonce, tag, ct);
-    root_T/mac_T are None if the candidate empties the tree.
+    The device is the encoder, so it also returns the new leaf it produced — the host
+    cannot compute a sealed leaf and must store it keyed by entry_key (an empty content
+    part => DELETE; the identity part survives it). Returns
+    (counter_T, root_T, mac_T, ward_id, entry_key, LeafBlob); root_T/mac_T
+    are None if the candidate empties the tree.
     """
+    from .ward_crypto import EMPTY_PART, LeafBlob
+
     resp = session.call(
         messages.WARDPerformUpdate(pending_id=pending_id),
         expect=messages.WARDPerformUpdateAck,
     )
-    p_nonce, p_tag, p_ct = read_leaf_content(resp.content)
+    key_type, id_part = read_leaf_identity(resp.identity)
+    val_part = read_leaf_content(resp.content)
+    leaf = LeafBlob(
+        key_type or "address", id_part or EMPTY_PART, val_part or EMPTY_PART
+    )
     return (
         resp.counter,
         resp.new_root,
         resp.mac,
-        resp.wallet_id,
         resp.ward_id,
         resp.entry_key,
-        resp.entry_type,
-        p_nonce,
-        p_tag,
-        p_ct,
+        leaf,
     )
 
 
@@ -105,7 +107,7 @@ def confirmed_by_wm(
     device targets the single queued candidate.
 
     Advances the device counter and drops that candidate. Returns
-    (counter, new_root, wallet_id, root_mac).
+    (counter, new_root, root_mac).
     """
     resp = session.call(
         messages.WARDConfirmedByWM(
@@ -113,7 +115,7 @@ def confirmed_by_wm(
         ),
         expect=messages.WARDConfirmedByWMAck,
     )
-    return resp.counter, resp.new_root, resp.wallet_id, resp.root_mac
+    return resp.counter, resp.new_root, resp.root_mac
 
 
 def perform_batch(session: "Session", pending_ids: list) -> tuple:
@@ -122,16 +124,24 @@ def perform_batch(session: "Session", pending_ids: list) -> tuple:
     registered ``ward_proof_callback`` — so a callback MUST be registered first. The
     whole batch advances the counter by 1. Returns (counter, from_root, new_root, mac,
     ward_id, head_mac, auth_commit, sig_commit, leaves) where `leaves` is a list of
-    (entry_key, entry_type, nonce, tag, ct) the host stores keyed by entry_key
-    (ct empty => DELETE)."""
+    (entry_key, LeafBlob) the host stores keyed by entry_key (an empty content part
+    => DELETE)."""
+    from .ward_crypto import EMPTY_PART, LeafBlob
+
     resp = session.call(
         messages.WARDPerformBatch(pending_ids=pending_ids),
         expect=messages.WARDPerformBatchAck,
     )
-    leaves = [
-        (lf.entry_key, lf.entry_type, *read_leaf_content(lf.content))
-        for lf in resp.leaves
-    ]
+    leaves = []
+    for lf in resp.leaves:
+        kt, id_part = read_leaf_identity(lf.identity)
+        val_part = read_leaf_content(lf.content)
+        leaves.append(
+            (
+                lf.entry_key,
+                LeafBlob(kt or "address", id_part or EMPTY_PART, val_part or EMPTY_PART),
+            )
+        )
     return (
         resp.counter,
         resp.from_root,
@@ -324,25 +334,28 @@ def lookup(
     app_id: str,
     address: bytes,
     proof: list[bytes],
-    nonce: Optional[bytes] = None,
-    tag: Optional[bytes] = None,
-    ct: Optional[bytes] = None,
+    leaf=None,
     key_type: str = "address",
     device_id: int = 0,
     witness_entry_key: Optional[bytes] = None,
     witness_commit: Optional[bytes] = None,
 ) -> tuple[bool, bool, int, Optional[bytes]]:
     """PUSH-verify a proof against the device's authenticated root. Returns
-    (valid, membership, counter, wallet_id). The device forms
-    entry_key = HMAC(K_index, app_id||0x00||key_type||0x00||device_id||address) and,
-    for membership, rebuilds the leaf from (nonce, tag, ct); a non-membership witness
-    is two hashes only (witness_entry_key, witness_commit)."""
+    (valid, membership, counter). The device forms
+    entry_key = HMAC(K_path, app_id||0x00||key_type||0x00||device_id||address) and,
+    for membership, rebuilds the leaf from the ward_crypto.LeafBlob in `leaf`; a
+    non-membership witness is two hashes only (witness_entry_key, witness_commit)."""
     resp = session.call(
         messages.WARDLookup(
             app_id=app_id,
             address=address,
             proof=proof,
-            content=make_leaf_content(nonce, tag, ct),
+            content=make_leaf_content(leaf.content if leaf is not None else None),
+            identity=(
+                make_leaf_identity(leaf.key_type, leaf.identity)
+                if leaf is not None
+                else None
+            ),
             key_type=key_type,
             device_id=device_id,
             witness_entry_key=witness_entry_key,
@@ -351,28 +364,31 @@ def lookup(
         expect=messages.WARDLookupAck,
     )
     membership = resp.membership if resp.membership is not None else True
-    return resp.valid, membership, resp.counter, resp.wallet_id
+    return resp.valid, membership, resp.counter
 
 
 def export_keys(
     session: "Session", key_type: str = "address"
 ) -> tuple[Optional[bytes], Optional[bytes], Optional[str]]:
-    """PUSH: retrieve the keys the host needs to serve the push flow itself —
-    K_index (to compute entry_key from a plaintext identifier) and K_data(key_type)
-    (to encrypt/decrypt values). K_sig is never exported. The host should keep the
-    returned keys in memory only. Returns (k_index, k_data, key_type)."""
+    """PUSH: retrieve the keys the host needs to drive the push flow itself — K_path
+    (resolve identifier -> entry_key), K_ident(key_type) (read identities) and
+    K_data(key_type) (read values). Three independent capabilities; K_sig is never
+    exported. None of them is needed to *locate* a leaf or serve a proof — the MAC is
+    stored with the leaf. The host should keep the returned keys in memory only.
+    Returns (k_path, k_data, key_type, k_ident)."""
     resp = session.call(
         messages.WARDExportKeys(key_type=key_type),
         expect=messages.WARDExportKeysAck,
     )
-    return resp.k_index, resp.k_data, resp.key_type
+    return resp.k_path, resp.k_data, resp.key_type, resp.k_ident
 
 
 def debug_set_root(
     session: "Session", root: bytes
 ) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
     """DEBUG-only unauthenticated root injection (seeds a root in one call).
-    Returns (counter, new_root, wallet_id, root_mac)."""
+    Returns (counter, new_root, wallet_id, root_mac). WARDDebugSetRootAck RETAINS
+    wallet_id -- connect-cli and the device tests read it."""
     resp = session.call(
         messages.WARDDebugSetRoot(root=root), expect=messages.WARDDebugSetRootAck
     )
@@ -384,56 +400,105 @@ def debug_set_root(
 # ---------------------------------------------------------------------------
 
 
-def make_leaf_content(
-    nonce: Optional[bytes], tag: Optional[bytes], ct: Optional[bytes]
-) -> Optional["messages.LeafContent"]:
-    """Wrap a (nonce, tag, ct) leaf triple in a self-describing LeafContent for the
-    current leaf mode (ward_crypto.WARD_PLAINTEXT_LEAVES). Returns None when there is
-    no leaf material (nonce and ct both None: a non-membership / pull answer)."""
+def make_leaf_content(part) -> Optional["messages.LeafContent"]:
+    """Wrap a ward_crypto.Part in a self-describing LeafContent. Returns None when
+    there is no content part at all (a non-membership / pull answer)."""
     from . import ward_crypto
 
-    if nonce is None and ct is None:
+    if part is None:
         return None
-    if ward_crypto.WARD_PLAINTEXT_LEAVES:
+    if part.encoding == ward_crypto.ENC_PLAINTEXT:
         return messages.LeafContent(
-            encoding=1, plaintext=messages.PlaintextLeaf(content=ct or b"")
+            encoding=1, plaintext=messages.PlaintextLeaf(content=part.body)
         )
     return messages.LeafContent(
-        encoding=0, encrypted=messages.EncryptedLeaf(nonce=nonce, tag=tag, ct=ct)
+        encoding=0,
+        encrypted=messages.EncryptedLeaf(nonce=part.nonce, tag=part.tag, ct=part.body),
     )
 
 
-def read_leaf_content(
-    content: Optional["messages.LeafContent"],
-) -> tuple[Optional[bytes], Optional[bytes], Optional[bytes]]:
-    """Read a LeafContent into a (nonce, tag, ct) triple (None,None,None if absent).
-    The host is keyless and carries whatever encoding the device produced."""
+def read_leaf_content(content: Optional["messages.LeafContent"]):
+    """Read a LeafContent into a ward_crypto.Part (None if absent). The host is
+    keyless and carries whatever encoding the device produced."""
+    from . import ward_crypto
+
     if content is None:
-        return None, None, None
+        return None
     if (content.encoding or 0) == 1:
         p = content.plaintext
-        return b"", b"", (p.content if (p is not None and p.content is not None) else b"")
+        body = p.content if (p is not None and p.content is not None) else b""
+        return ward_crypto.Part(ward_crypto.ENC_PLAINTEXT, b"", b"", body)
     e = content.encrypted
     if e is None:
-        return None, None, None
-    return e.nonce, e.tag, e.ct
+        return None
+    return ward_crypto.Part(
+        ward_crypto.ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b""
+    )
+
+
+def make_leaf_identity(key_type: str, part) -> Optional["messages.LeafIdentity"]:
+    """Wrap a ward_crypto.Part in a LeafIdentity. `key_type` is always clear -- it
+    selects both K_ident and K_data. An empty part yields None: a deleted leaf no
+    longer exists, so there is no identity to describe."""
+    from . import ward_crypto
+
+    if part is None or part.is_empty():
+        return None
+    if part.encoding == ward_crypto.ENC_PLAINTEXT:
+        identifier, app_id, device_id = ward_crypto.unpack_identity(part.body)
+        return messages.LeafIdentity(
+            encoding=1,
+            key_type=key_type,
+            plain=messages.PlainIdentity(
+                identifier=identifier, app_id=app_id.decode(), device_id=device_id
+            ),
+        )
+    return messages.LeafIdentity(
+        encoding=0,
+        key_type=key_type,
+        encrypted=messages.EncryptedIdentity(
+            nonce=part.nonce, tag=part.tag, ct=part.body
+        ),
+    )
+
+
+def read_leaf_identity(identity: Optional["messages.LeafIdentity"]):
+    """Read a LeafIdentity into (key_type, Part). (None, None) if absent."""
+    from . import ward_crypto
+
+    if identity is None:
+        return None, None
+    key_type = identity.key_type or "address"
+    if (identity.encoding or 0) == 1:
+        p = identity.plain
+        if p is None:
+            return key_type, None
+        body = ward_crypto.pack_identity(
+            p.identifier or b"", p.app_id or b"", p.device_id or 0
+        )
+        return key_type, ward_crypto.Part(ward_crypto.ENC_PLAINTEXT, b"", b"", body)
+    e = identity.encrypted
+    if e is None:
+        return key_type, None
+    return key_type, ward_crypto.Part(
+        ward_crypto.ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b""
+    )
 
 
 def build_proof_ack(tree: "WARDTree", entry_key: bytes) -> messages.WARDProofAck:
     """Answer a WARDProofRequest by the opaque `entry_key` path (pull model): a
-    membership proof (entry_type + nonce/tag/ct + proof) if the leaf is present,
-    otherwise a non-membership witness (witness_entry_key, witness_commit), or an
-    empty ack for an empty tree. The host serves purely by entry_key and never
-    learns the identifier or the plaintext value (§3)."""
+    membership proof (both leaf parts + proof) if the leaf is present, otherwise a
+    non-membership witness (witness_entry_key, witness_commit), or an empty ack for an
+    empty tree. Serving needs NO key -- the MAC is the stored key and the commit is
+    over ciphertext -- so the host never learns the identifier or the value (§3)."""
     if tree.is_empty():
         return messages.WARDProofAck()
     leaf = tree.get_leaf(entry_key)
     if leaf is not None:
-        nonce, tag, ct, entry_type = leaf
         return messages.WARDProofAck(
             proof=tree.get_proof_by_key(entry_key),
-            entry_type=entry_type,
-            content=make_leaf_content(nonce, tag, ct),
+            content=make_leaf_content(leaf.content),
+            identity=make_leaf_identity(leaf.key_type, leaf.identity),
         )
     proof, witness_entry_key, witness_commit = tree.get_nonmembership_proof_by_key(
         entry_key

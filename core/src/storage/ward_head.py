@@ -83,6 +83,3 @@ def root_get(wallet_id: bytes) -> tuple[bool, bytes | None]:
     return True, (None if root == EMPTY_ROOT else root)
 
 
-def root_clear() -> None:
-    """Clear the volatile authenticated root."""
-    cache.get_sessionless_cache().delete(APP_WARD_ROOT_RECORD)

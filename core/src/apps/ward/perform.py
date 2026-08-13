@@ -18,22 +18,20 @@ async def perform(msg: WARDPerformUpdate) -> WARDPerformUpdateAck:
         counter,
         root,
         mac,
-        wallet_id,
+        _wallet_id,
         ward_id,
         entry_key,
-        entry_type,
-        nonce,
-        tag,
-        ct,
+        key_type,
+        id_part,
+        val_part,
     ) = await core.perform(msg.pending_id)
 
     return WARDPerformUpdateAck(
         counter=counter,
         new_root=root,
         mac=mac,
-        wallet_id=wallet_id,
         ward_id=ward_id,
         entry_key=entry_key,
-        entry_type=entry_type,
-        content=core.make_leaf_content(nonce, tag, ct),
+        content=core.make_leaf_content(val_part),
+        identity=core.make_leaf_identity(key_type, id_part),
     )

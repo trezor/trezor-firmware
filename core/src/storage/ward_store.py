@@ -119,7 +119,7 @@ def bump_counter(wallet_id: bytes) -> int:
 #   [body_len:2][ body ]  repeated
 # where each body is:
 #   [pending_id:4][wallet_id:20][counter_T:4][state:1][root_T:32][mac_T:32]
-#   [addr_len:2][address][ov_len:2][old_value][nv_len:2][new_value][aid_len:2][app_id]
+#   [addr_len:2][address][nv_len:2][new_value][aid_len:2][app_id]
 #   [kt_len:2][key_type][device_id:1]
 # app_id (the write's target domain) is length-framed at the tail so the whole
 # round stays bound to dk(app_id, address); records written before app_id existed
@@ -210,9 +210,13 @@ def _rec_address(body: bytes) -> bytes:
 
 def _parse_body(
     body: bytes,
-) -> tuple[int, int, bytes, bytes, bytes, bytes | None, bytes | None, bytes, bytes, int]:
-    """Return (counter, state, address, old_value, new_value, root, mac, app_id,
-    key_type, device_id). root/mac are None until the intent is COMMITTED, and also
+) -> tuple[int, int, bytes, bytes, bytes | None, bytes | None, bytes, bytes, int]:
+    """Return (counter, state, address, new_value, root, mac, app_id,
+    key_type, device_id).
+
+    `old_value` used to be framed here. It was always written b"" and discarded by every
+    reader -- a leftover from the model where the host supplied the pre-state -- so it is
+    gone. root/mac are None until the intent is COMMITTED, and also
     None (empty tree) when a COMMITTED candidate stored EMPTY_ROOT. app_id is the
     write's target domain (empty bytes for records written before app_id existed).
     key_type/device_id are the SLIP-21 K_data selector and per-device scope slot;
@@ -222,7 +226,6 @@ def _parse_body(
     root = bytes(body[_OFF_ROOT : _OFF_ROOT + ROOT_LENGTH])
     mac = bytes(body[_OFF_MAC : _OFF_MAC + 32])
     address, off = _read_lv(body, _OFF_TAIL)
-    old_value, off = _read_lv(body, off)
     new_value, off = _read_lv(body, off)
     app_id, off = _read_lv(body, off)
     # key_type/device_id are appended after app_id. A pre-scoping record ends at
@@ -235,7 +238,6 @@ def _parse_body(
             counter,
             state,
             address,
-            old_value,
             new_value,
             None,
             None,
@@ -247,7 +249,6 @@ def _parse_body(
         counter,
         state,
         address,
-        old_value,
         new_value,
         root,
         mac,
@@ -265,7 +266,6 @@ def _build_body(
     root: bytes,
     mac: bytes,
     address: bytes,
-    old_value: bytes,
     new_value: bytes,
     app_id: bytes,
     key_type: bytes,
@@ -280,8 +280,6 @@ def _build_body(
         + mac
         + len(address).to_bytes(2, "big")
         + address
-        + len(old_value).to_bytes(2, "big")
-        + old_value
         + len(new_value).to_bytes(2, "big")
         + new_value
         + len(app_id).to_bytes(2, "big")
@@ -297,7 +295,6 @@ def queue_put(
     pending_id: int,
     counter: int,
     address: bytes,
-    old_value: bytes,
     new_value: bytes,
     app_id: bytes,
     key_type: bytes = b"",
@@ -328,7 +325,6 @@ def queue_put(
         EMPTY_ROOT,
         _ZERO_MAC,
         address,
-        old_value,
         new_value,
         app_id,
         key_type,
@@ -368,7 +364,6 @@ def queue_set_computed(
                 _c,
                 _state,
                 address,
-                old_value,
                 new_value,
                 _r,
                 _m,
@@ -384,7 +379,6 @@ def queue_set_computed(
                 stored_root,
                 stored_mac,
                 address,
-                old_value,
                 new_value,
                 app_id,
                 key_type,
@@ -399,10 +393,10 @@ def queue_get(
     wallet_id: bytes,
     pending_id: int,
 ) -> (
-    tuple[int, int, bytes, bytes, bytes, bytes | None, bytes | None, bytes, bytes, int]
+    tuple[int, int, bytes, bytes, bytes | None, bytes | None, bytes, bytes, int]
     | None
 ):
-    """Return (counter, state, address, old_value, new_value, root, mac, app_id,
+    """Return (counter, state, address, new_value, root, mac, app_id,
     key_type, device_id) for (wallet_id, pending_id), or None. root/mac are None until
     COMMITTED (and for a COMMITTED candidate that empties the tree). app_id is the
     write's target domain; key_type/device_id scope the entry_key."""
@@ -459,17 +453,25 @@ def queue_drop_all(wallet_id: bytes) -> int:
 
 # ---------------------------------------------------------------------------
 # In-flight COMMITTED batch envelope (key _BATCH, PERSISTENT). A batch commits N
-# queued intents as ONE root transition, authenticated by head_mac + AuthCommit
+# queued intents as ONE root transition, authenticated by AuthCommit + the root MAC
 # (batch-update). At most one committed batch per wallet is in flight -- commits
 # serialize by counter -- so a new perform_batch REPLACES the wallet's envelope
 # (any prior candidate becomes stale, like a same-counter sibling in the single-
 # leaf model). Stored as length-framed records `[body_len:2][body]`, one body per
 # wallet, body:
-#   [wallet_id:20][from_counter:4][to_counter:4][from_root:32][to_root:32]
-#   [mac:32][head_mac:32][auth_commit:32][sig_len:2][sig][n:2][pending_id:4]*n
+#   [wallet_id:20][kind:1][from_counter:4][to_counter:4][from_root:32][to_root:32]
+#   [mac:32][auth_commit:32][sig_len:2][sig][n:2][pending_id:4]*n
 # from_root/to_root == EMPTY_ROOT means the tree was/became empty. `sig` is the
 # optional Ed25519 SigCommit (empty when WARD_KSIG is off). `mac` is the root MAC
 # the WM co-signs at finalize (all-zero => the batch empties the tree).
+#
+# head_mac is deliberately NOT stored. It is the HEAD attestation for an external
+# consumer (the WM, or another device fast-forwarding per design 3.1) and leaves the
+# device on the perform ack; finalize authenticates the transition with auth_commit +
+# the root MAC instead. Persisting head_mac only to never read it back was write-only
+# storage -- and re-verifying the device's own MAC over its own values would prove
+# nothing. FIXME(ward): no consumer verifies head_mac yet; the WM emulator stores
+# auth_commit and replays it as WARDChainLink.auth_commit, but ignores head_mac.
 # ---------------------------------------------------------------------------
 
 
@@ -512,7 +514,6 @@ def batch_put(
     from_root: bytes,
     to_root: bytes,
     mac: bytes,
-    head_mac: bytes,
     auth_commit: bytes,
     sig: bytes,
     pending_ids: list,
@@ -522,13 +523,12 @@ def batch_put(
     envelope. `kind` = BATCH_COMMIT for a batch commit (auth_commit = AuthCommit,
     pending_ids = the committed set) or BATCH_REVERT for a one-step rollback
     (auth_commit slot carries AuthRevert, pending_ids empty). from_root/to_root must be
-    32 bytes (EMPTY_ROOT for empty); mac/head_mac/auth_commit 32 bytes each; sig may be
+    32 bytes (EMPTY_ROOT for empty); mac/auth_commit 32 bytes each; sig may be
     empty."""
     if (
         len(from_root) != ROOT_LENGTH
         or len(to_root) != ROOT_LENGTH
         or len(mac) != 32
-        or len(head_mac) != 32
         or len(auth_commit) != 32
     ):
         raise ValueError("batch envelope field has wrong length")
@@ -540,7 +540,6 @@ def batch_put(
         + from_root
         + to_root
         + mac
-        + head_mac
         + auth_commit
         + len(sig).to_bytes(2, "big")
         + sig
@@ -554,8 +553,9 @@ def batch_put(
 
 def batch_get(wallet_id: bytes):
     """Return the wallet's in-flight batch envelope as a dict, or None. Keys:
-    from_counter, to_counter, from_root, to_root, mac, head_mac, auth_commit, sig,
-    pending_ids. Roots/mac are returned verbatim (EMPTY_ROOT / all-zero as stored)."""
+    kind, from_counter, to_counter, from_root, to_root, mac, auth_commit, sig,
+    pending_ids. Roots/mac are returned verbatim (EMPTY_ROOT / all-zero as stored).
+    head_mac is not stored -- see the module comment above."""
     for body in _load_batches():
         if _batch_wid(body) != wallet_id:
             continue
@@ -571,8 +571,6 @@ def batch_get(wallet_id: bytes):
         to_root = bytes(body[off : off + ROOT_LENGTH])
         off += ROOT_LENGTH
         mac = bytes(body[off : off + 32])
-        off += 32
-        head_mac = bytes(body[off : off + 32])
         off += 32
         auth_commit = bytes(body[off : off + 32])
         off += 32
@@ -590,7 +588,6 @@ def batch_get(wallet_id: bytes):
             "from_root": from_root,
             "to_root": to_root,
             "mac": mac,
-            "head_mac": head_mac,
             "auth_commit": auth_commit,
             "sig": sig,
             "pending_ids": pending_ids,

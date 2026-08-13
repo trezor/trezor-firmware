@@ -1,18 +1,21 @@
 """Merkle Patricia Trie (MPT) for WARD/AuthDB — commit-based, key-first.
 
-Path-compressed positional trie keyed by the 32-byte ``entry_key``
-(``HMAC(K_index, scope ‖ identifier)`` — see ``ward_crypto``). Leaves store the
-opaque AEAD blob ``(nonce, tag, ct)``; the trie hashes only the keyless
-commitment, so a host holding no keys can still reconstruct and prove
-(ward-design.md §2.2):
+Path-compressed positional trie keyed by the 32-byte ``LeafIdentityMAC``
+(``HMAC(K_path, scope ‖ identifier)`` — see ``ward_crypto``). Leaves store the
+two-part ``LeafBlob`` (clear ``key_type`` plus the LeafIdentity and LeafContent
+parts); the trie hashes only the keyless commitment, so a host holding no keys
+can still reconstruct and prove (ward-design.md §2.2):
 
-  commit   = SHA-256(0x02 || nonce || tag || len32(ct) || ct)
-  leaf     = SHA-256(0x00 || entry_key || commit)
+  commit   = SHA-256(0x02 || len8(key_type) || key_type
+                          || len32(id_part) || id_part || len32(val_part) || val_part)
+  leaf     = SHA-256(0x00 || LeafIdentityMAC || commit)
   internal = SHA-256(0x01 || split_bit_u16 || skiplen_u16 || left || right)
                                                     — positional, no sorting
 
-The trie is **key-first**: every operation takes a precomputed ``entry_key``
-(the device computes it; a keyless host never can). Non-membership witnesses
+The trie is **key-first**: every operation takes a precomputed
+``LeafIdentityMAC``. A keyless host cannot *derive* one, but it does not need to
+— the MAC is stored alongside the leaf, so serving proofs never needs a key.
+Non-membership witnesses
 travel as two hashes ``(witness_entry_key, witness_commit)`` and reveal neither
 the neighbour's identifier nor its plaintext value.
 
@@ -31,13 +34,12 @@ from . import ward_crypto
 
 EMPTY_ROOT: bytes = b"\x00" * 32
 
-# stored leaf: (nonce, tag, ct, entry_type). entry_type is clear metadata (selects
-# K_data on decrypt); only (nonce, tag, ct) feed the commit.
-LeafBlob = Tuple[bytes, bytes, bytes, str]
+# stored leaf: ward_crypto.LeafBlob(key_type, identity: Part, content: Part).
+LeafBlob = ward_crypto.LeafBlob
 
 
 def _commit(blob: LeafBlob) -> bytes:
-    return ward_crypto.commit_of(blob[0], blob[1], blob[2])
+    return ward_crypto.commit_of(blob)
 
 
 def _leaf_hash(entry_key: bytes, blob: LeafBlob) -> bytes:
@@ -160,10 +162,10 @@ class WARDTree:
     Usage::
 
         tree = WARDTree()
-        tree.set_leaf(entry_key, nonce, tag, ct)      # entry_key from ward_crypto.entry_key(...)
+        tree.set_leaf(mac, leaf)      # mac from ward_crypto.leaf_identity_mac(...)
         root = tree.get_root_hash()
-        proof = tree.get_proof_by_key(entry_key)
-        assert WARDTree.verify_proof_by_key(entry_key, nonce, tag, ct, proof, root)
+        proof = tree.get_proof_by_key(mac)
+        assert WARDTree.verify_proof_by_key(mac, leaf, proof, root)
 
         # Non-membership (witness travels as two hashes):
         proof, w_key, w_commit = tree.get_nonmembership_proof_by_key(other_key)
@@ -172,20 +174,25 @@ class WARDTree:
 
     # Default keys for the plaintext-convenience API when the caller does not supply
     # the device's exported keys. Fine for sync tests (the device ADOPTS the root and
-    # never recomputes entry_keys); for pull/verify tests the harness MUST pass the
-    # device's exported (k_index, k_data) so entry_keys match.
+    # never recomputes MACs); for pull/verify tests the harness MUST pass the
+    # device's (k_path, k_ident, k_data) so the MACs match.
     _DEFAULT_SEED = b"\x2a" * 64
 
     def __init__(
-        self, k_index: Optional[bytes] = None, k_data: Optional[bytes] = None
+        self,
+        k_path: Optional[bytes] = None,
+        k_data: Optional[bytes] = None,
+        k_ident: Optional[bytes] = None,
     ) -> None:
         self._leaves: Dict[bytes, LeafBlob] = {}
-        self._k_index = k_index if k_index is not None else ward_crypto.derive_k_index(
-            self._DEFAULT_SEED
+        seed = self._DEFAULT_SEED
+        self._k_path = k_path if k_path is not None else ward_crypto.derive_k_path(seed)
+        # convenience keys are for the default key_type "address"
+        self._k_data = (
+            k_data if k_data is not None else ward_crypto.derive_k_data(seed, "address")
         )
-        # convenience k_data is per default entry_type "address"
-        self._k_data = k_data if k_data is not None else ward_crypto.derive_k_data(
-            self._DEFAULT_SEED, "address"
+        self._k_ident = (
+            k_ident if k_ident is not None else ward_crypto.derive_k_ident(seed, "address")
         )
 
     def is_empty(self) -> bool:
@@ -194,7 +201,9 @@ class WARDTree:
     # --- plaintext-convenience API (host/test side; keyed by the tree's k_index/k_data) ---
 
     def _ek(self, app_id, identifier: bytes, key_type: str, device_id: int) -> bytes:
-        return ward_crypto.entry_key(self._k_index, app_id, identifier, key_type, device_id)
+        return ward_crypto.leaf_identity_mac(
+            self._k_path, app_id, identifier, key_type, device_id
+        )
 
     def insert(
         self,
@@ -214,10 +223,11 @@ class WARDTree:
         if counter is None:
             counter = self.get_counter(app_id, identifier, key_type, device_id) + 1
         ek = self._ek(app_id, identifier, key_type, device_id)
-        nonce, tag, ct = ward_crypto.encode_leaf(
-            self._k_data, ek, key_type, counter, identifier, value
+        leaf = ward_crypto.encode_leaf(
+            self._k_ident, self._k_data, ek, key_type, counter, identifier, app_id,
+            value, device_id,
         )
-        self.set_leaf(ek, nonce, tag, ct, key_type)
+        self.set_leaf(ek, leaf)
         return counter
 
     def delete(
@@ -228,21 +238,21 @@ class WARDTree:
     def get_counter(
         self, app_id, identifier: bytes, key_type: str = "address", device_id: int = 0
     ) -> int:
-        leaf = self.get_leaf(self._ek(app_id, identifier, key_type, device_id))
-        if leaf is None:
-            return 0
         ek = self._ek(app_id, identifier, key_type, device_id)
-        c, _id, _v = ward_crypto.decode_leaf(self._k_data, ek, key_type, leaf[0], leaf[1], leaf[2])
+        leaf = self.get_leaf(ek)
+        if leaf is None or leaf.content.is_empty():
+            return 0
+        c, _v = ward_crypto.decode_content(self._k_data, ek, key_type, leaf.content)
         return c
 
     def get_value(
         self, app_id, identifier: bytes, key_type: str = "address", device_id: int = 0
     ) -> bytes:
-        leaf = self.get_leaf(self._ek(app_id, identifier, key_type, device_id))
-        if leaf is None:
-            return b""
         ek = self._ek(app_id, identifier, key_type, device_id)
-        _c, _id, v = ward_crypto.decode_leaf(self._k_data, ek, key_type, leaf[0], leaf[1], leaf[2])
+        leaf = self.get_leaf(ek)
+        if leaf is None or leaf.content.is_empty():
+            return b""
+        _c, v = ward_crypto.decode_content(self._k_data, ek, key_type, leaf.content)
         return v
 
     def get_proof(
@@ -261,26 +271,19 @@ class WARDTree:
     def leaf_blob(
         self, app_id, identifier: bytes, key_type: str = "address", device_id: int = 0
     ) -> Optional[LeafBlob]:
-        """The stored (nonce, tag, ct, entry_type) for a membership WARDProofAck/Lookup."""
+        """The stored LeafBlob for a membership WARDProofAck/Lookup."""
         return self.get_leaf(self._ek(app_id, identifier, key_type, device_id))
 
-    def get_leaf(self, entry_key: bytes) -> Optional[LeafBlob]:
-        """Return the stored (nonce, tag, ct, entry_type), or None if absent."""
-        return self._leaves.get(entry_key)
+    def get_leaf(self, mac: bytes) -> Optional[LeafBlob]:
+        """Return the stored LeafBlob, or None if absent."""
+        return self._leaves.get(mac)
 
-    def set_leaf(
-        self,
-        entry_key: bytes,
-        nonce: bytes,
-        tag: bytes,
-        ct: bytes,
-        entry_type: str = "address",
-    ) -> None:
-        """Insert/update the leaf at *entry_key*. len(ct)==0 deletes it."""
-        if len(ct) == 0:
-            self._leaves.pop(entry_key, None)
+    def set_leaf(self, mac: bytes, leaf: LeafBlob) -> None:
+        """Insert/update the leaf at *mac*. An empty content body deletes it."""
+        if leaf.is_delete():
+            self._leaves.pop(mac, None)
         else:
-            self._leaves[entry_key] = (nonce, tag, ct, entry_type)
+            self._leaves[mac] = leaf
 
     def del_leaf(self, entry_key: bytes) -> None:
         self._leaves.pop(entry_key, None)
@@ -331,16 +334,14 @@ class WARDTree:
     @staticmethod
     def verify_proof_by_key(
         entry_key: bytes,
-        nonce: bytes,
-        tag: bytes,
-        ct: bytes,
+        leaf: LeafBlob,
         proof: List[bytes],
         root: bytes,
     ) -> bool:
-        """Verify a membership proof for the leaf blob at *entry_key*."""
+        """Verify a membership proof for the LeafBlob at *entry_key* (the MAC)."""
         if _proof_steps_root_to_leaf(proof) is None:
             return False
-        node = ward_crypto.leaf_hash_of(entry_key, ward_crypto.commit_of(nonce, tag, ct))
+        node = ward_crypto.leaf_hash_of(entry_key, ward_crypto.commit_of(leaf))
         for elem in proof:
             split_bit, skiplen, sibling = _parse_proof_elem(elem)
             node = (

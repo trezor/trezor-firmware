@@ -41,15 +41,17 @@ def show_address_with_proof(
     subtitle: str | None = None,
     case_sensitive: bool = True,
     chunkify: bool = False,
-    value: bytes | None = None,
     proof: list[bytes] | None = None,
-    counter: int | None = None,
-    witness_address: bytes | None = None,
-    witness_value: bytes | None = None,
-    witness_counter: int | None = None,
+    leaf=None,
+    app_id: str | None = None,
+    witness_entry_key: bytes | None = None,
+    witness_commit: bytes | None = None,
 ) -> str:
     """Display an address with a PUSH-authenticated WARD label: the host attaches the
-    proof up-front (membership: value/counter; non-membership: witness_*)."""
+    proof up-front (membership: the leaf's two parts via `leaf`, a
+    ward_crypto.LeafBlob; non-membership: witness_entry_key + witness_commit)."""
+    from .ward import make_leaf_content, make_leaf_identity
+
     session.call(
         messages.DisplayAddressWithProof(
             address=address,
@@ -57,12 +59,16 @@ def show_address_with_proof(
             subtitle=subtitle,
             case_sensitive=case_sensitive,
             chunkify=chunkify,
-            value=value,
             proof=proof or [],
-            counter=counter,
-            witness_address=witness_address,
-            witness_value=witness_value,
-            witness_counter=witness_counter,
+            app_id=app_id,
+            witness_entry_key=witness_entry_key,
+            witness_commit=witness_commit,
+            content=make_leaf_content(leaf.content if leaf is not None else None),
+            identity=(
+                make_leaf_identity(leaf.key_type, leaf.identity)
+                if leaf is not None
+                else None
+            ),
         ),
         expect=messages.Success,
     )

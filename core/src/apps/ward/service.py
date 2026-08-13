@@ -62,14 +62,24 @@ _ZERO_MAC = b"\x00" * 32
 # ---------------------------------------------------------------------------
 # MPT hash / proof primitives (formerly apps.authdb._mpt).
 #
-#   entry_key  = sha256(app_id || 0x00 || type || 0x00 || identifier)   (== trie path)
-#   value_hash = sha256(counter(4B BE) || value)
-#   leaf_hash  = sha256(0x00 || entry_key || value_hash)
+# A leaf is TWO independently encoded parts, each with its own key, plus the clear
+# key_type that selects both (ToDo-leaf_structure.md):
 #
-# The counter is the GLOBAL root counter stamped onto the leaf on change; it lives
-# inside value_hash (never in entry_key, so an entry keeps one stable path across
-# versions). compute_new_root() is the single INIT/INSERT/UPDATE/DELETE state
-# machine; it does not enforce the per-generation +1 rule -- update_entry() does.
+#   LeafIdentity   identifier, app_id, device_id       sealed under K_ident(key_type)
+#   LeafContent    C_leaf, value                       sealed under K_data(key_type)
+#
+#   entry_key = HMAC-SHA256(K_path, scope || identifier)      (== LeafIdentityMAC)
+#   part(p)   = encoding(1B)||len8(nonce)||nonce||len8(tag)||tag||len32(body)||body
+#   commit    = sha256(0x02 || len8(key_type)||key_type
+#                           || len32(id_part)||id_part || len32(val_part)||val_part)
+#   leaf      = sha256(0x00 || entry_key || commit)
+#
+# C_leaf is the GLOBAL root counter stamped onto the leaf on change; it lives inside
+# the content part (never in entry_key, so an entry keeps one stable path across
+# versions). Storing the identity in the leaf is what lets any holder recover the MAC
+# preimage and check that a stored MAC really is its MAC. compute_new_root() is the
+# single INIT/INSERT/UPDATE/DELETE state machine; it does not enforce the
+# per-generation +1 rule -- update_entry() does.
 # ---------------------------------------------------------------------------
 
 
@@ -79,28 +89,30 @@ def sha256d(data: bytes) -> bytes:
     return sha256(data).digest()
 
 
-# MVP entry type: the only kind of identifier keyed today is an address. It is
-# baked into entry_key so the key layout reserves a type slot, but it is a constant
-# (no wire/storage field). Later kinds add real types by varying this argument.
+# Default entry type. key_type is a real wire/storage field now (it selects both
+# K_ident and K_data); this is only the default when a caller omits it.
 _ENTRY_TYPE_ADDRESS = "address"
 
 
 def entry_key(
-    k_index: bytes,
+    k_path: bytes,
     app_id,
     identifier: bytes,
     key_type: str = _ENTRY_TYPE_ADDRESS,
     device_id: int = 0,
 ) -> bytes:
-    """Keyed 32-byte trie path (ward-design.md §1/§3):
+    """Keyed 32-byte trie path, a.k.a. LeafIdentityMAC (ward-design.md §1/§3):
 
         scope     = app_id || 0x00 || key_type || 0x00 || device_id(1B)
-        entry_key = HMAC-SHA256(K_index, scope || identifier)
+        entry_key = HMAC-SHA256(K_path, scope || identifier)
 
-    A PRF-derived path, NOT an authenticator (§2.5): only a holder of K_index can
+    A PRF-derived path, NOT an authenticator (§2.5): only a holder of K_path can
     compute it, so the host cannot forge a path or brute-force a low-entropy
     identifier. `device_id`=0 is a global entry; >0 is a device slot (§5). Must stay
-    byte-for-byte identical to trezorlib `ward_crypto.entry_key` and the host."""
+    byte-for-byte identical to trezorlib `ward_crypto.leaf_identity_mac` and the
+    host. Note the host does not need to derive this to *serve* a proof -- the MAC is
+    stored alongside the leaf; K_path is for checking a stored MAC against its stored
+    identity, or computing a MAC for an identity not in the store."""
     from trezor.crypto import hmac as crypto_hmac
 
     if app_id is None:
@@ -108,30 +120,68 @@ def entry_key(
     elif isinstance(app_id, str):
         app_id = app_id.encode()
     scope = app_id + b"\x00" + key_type.encode() + b"\x00" + bytes([device_id & 0xFF])
-    return crypto_hmac(crypto_hmac.SHA256, k_index, scope + identifier).digest()
+    return crypto_hmac(crypto_hmac.SHA256, k_path, scope + identifier).digest()
 
 
-# Leaf-content mode (dev switch). False = encrypted leaves (production); True =
-# plaintext leaves (host-inspectable; debug/emulator/benchmark builds only). The wire
-# is a self-describing oneof either way (EncryptedLeaf|PlaintextLeaf); this const is the
-# build's mode and picks the commit domain tag + the encode/decode codec. The plaintext
-# codec (pack_leaf/unpack_leaf) is compiled in only under __debug__, so a release build
-# cannot produce or read a plaintext leaf. See ward-design.md / plan Phase 5.
-WARD_PLAINTEXT_LEAVES = False
+# Per-part leaf mode (dev switch). False = encrypted (production); True = plaintext
+# (host-inspectable; debug/emulator builds only). The two parts are INDEPENDENT: a
+# build may seal the identity and leave the content readable, or vice versa. The wire
+# is a self-describing oneof either way (LeafIdentity / LeafContent), and each part's
+# encoding byte is inside the commit, so the modes can never collide.
+# FIXME(ward, INACTIVE): both flags are False in every shipped build, so the plaintext
+# branches below are unreachable. They are a deliberate dev/emulator switch, not dead
+# code -- the wire is self-describing per part either way.
+WARD_PLAINTEXT_IDENTITY = False
+WARD_PLAINTEXT_CONTENT = False
 
-# Enabling plaintext leaves in a non-debug (release) build is a misconfiguration: the
-# codec is compiled out, so fail loudly at import rather than at first write.
-if WARD_PLAINTEXT_LEAVES and not __debug__:
-    raise RuntimeError("WARD_PLAINTEXT_LEAVES requires a __debug__ build")
+# The plaintext codecs are compiled in only under __debug__, so a release build
+# cannot produce or read a plaintext part -- fail loudly at import, not at first write.
+if (WARD_PLAINTEXT_IDENTITY or WARD_PLAINTEXT_CONTENT) and not __debug__:
+    raise RuntimeError("WARD plaintext leaf parts require a __debug__ build")
+
+# part encodings (the byte that goes into the commit)
+ENC_ENCRYPTED = const(0)
+ENC_PLAINTEXT = const(1)
+
+# An absent/empty part: (encoding, nonce, tag, body). An empty CONTENT body is a
+# delete; the identity part survives it, so a tombstone stays self-describing.
+EMPTY_PART = (ENC_PLAINTEXT, b"", b"", b"")
 
 
-def commit_of(nonce: bytes, tag: bytes, ct: bytes) -> bytes:
-    """Keyless leaf-value commitment (§2.2). A host with no keys can still recompute it;
-    len(ct)==0 is a delete. Domain-separated by leaf mode so an encrypted and a plaintext
-    leaf can never collide: encrypted = sha256(0x02 || nonce || tag || len32(ct) || ct);
-    plaintext = sha256(0x04 || len32(content) || content) (nonce/tag empty, ct==content)."""
-    tag_byte = b"\x04" if WARD_PLAINTEXT_LEAVES else b"\x02"
-    return sha256d(tag_byte + nonce + tag + len(ct).to_bytes(4, "big") + ct)
+def part_is_empty(part) -> bool:
+    return part is None or len(part[3]) == 0
+
+
+def _part_bytes(part) -> bytes:
+    """encoding(1B) || len8(nonce) || nonce || len8(tag) || tag || len32(body) || body"""
+    encoding, nonce, tag, body = part if part is not None else EMPTY_PART
+    return (
+        bytes([encoding])
+        + bytes([len(nonce)])
+        + nonce
+        + bytes([len(tag)])
+        + tag
+        + len(body).to_bytes(4, "big")
+        + body
+    )
+
+
+def commit_of(key_type: str, id_part, val_part) -> bytes:
+    """Keyless leaf commitment (§2.2) over both parts and the clear key_type. A host
+    with no keys can still recompute it whatever each part's encoding is; an empty
+    val_part body is a delete."""
+    kt = key_type.encode()
+    id_bytes = _part_bytes(id_part)
+    val_bytes = _part_bytes(val_part)
+    return sha256d(
+        b"\x02"
+        + bytes([len(kt)])
+        + kt
+        + len(id_bytes).to_bytes(4, "big")
+        + id_bytes
+        + len(val_bytes).to_bytes(4, "big")
+        + val_bytes
+    )
 
 
 def leaf_hash_of(entry_key_: bytes, commit: bytes) -> bytes:
@@ -140,18 +190,23 @@ def leaf_hash_of(entry_key_: bytes, commit: bytes) -> bytes:
     return sha256d(b"\x00" + entry_key_ + commit)
 
 
-def leaf_hash(entry_key_: bytes, nonce: bytes, tag: bytes, ct: bytes) -> bytes:
-    """Leaf hash from the encrypted blob: leaf_hash_of(entry_key, commit_of(...))."""
-    return leaf_hash_of(entry_key_, commit_of(nonce, tag, ct))
+def leaf_hash(entry_key_: bytes, key_type: str, id_part, val_part) -> bytes:
+    """Leaf hash from the two parts: leaf_hash_of(entry_key, commit_of(...))."""
+    return leaf_hash_of(entry_key_, commit_of(key_type, id_part, val_part))
 
 
-# --- leaf value codec (ChaCha20-Poly1305 RFC-7539, 12-byte nonce, §2.1) ---
+# --- AEAD plumbing (ChaCha20-Poly1305 RFC-7539, 12-byte nonce, §2.1) ---
 
 _AEAD_BUCKETS = (64, 256, 1024, 4096)
 
+_AAD_IDENTITY = b"\x03"
+_AAD_CONTENT = b"\x02"
 
-def _aead_aad(entry_key_: bytes, entry_type: str) -> bytes:
-    return b"\x02" + entry_key_ + entry_type.encode()
+
+def _aead_aad(domain: bytes, entry_key_: bytes, key_type: str) -> bytes:
+    """Binds a part to its leaf, its key_type and its part domain, so a part can
+    never be consumed as the other part or moved to another path."""
+    return domain + entry_key_ + key_type.encode()
 
 
 def _pad_bucket(pt: bytes) -> bytes:
@@ -162,117 +217,119 @@ def _pad_bucket(pt: bytes) -> bytes:
     return pt + b"\x00" * rem
 
 
-def encrypt_leaf(
-    k_data: bytes,
-    entry_key_: bytes,
-    entry_type: str,
-    c_leaf: int,
-    identifier: bytes,
-    value: bytes,
-) -> tuple:
-    """Return (nonce, tag, ct). nonce is fresh-random per write (§4.5)."""
+def _seal(key: bytes, domain: bytes, entry_key_: bytes, key_type: str, pt: bytes):
+    """Return an encrypted part (ENC_ENCRYPTED, nonce, tag, ct). The nonce is
+    fresh-random per part per write -- never derived (§4.5: rollback can recur
+    (entry_key, C_leaf) pairs)."""
     from trezor.crypto import chacha20poly1305_encrypt, random
 
     nonce = random.bytes(12)
-    pt = _pad_bucket(
-        c_leaf.to_bytes(4, "big")
-        + len(identifier).to_bytes(2, "big")
-        + identifier
-        + len(value).to_bytes(4, "big")
-        + value
-    )
-    cipher = chacha20poly1305_encrypt(k_data, nonce)
-    cipher.auth(_aead_aad(entry_key_, entry_type))
-    ct = cipher.encrypt(pt)
-    tag = cipher.finish()
-    return nonce, tag, ct
+    cipher = chacha20poly1305_encrypt(key, nonce)
+    cipher.auth(_aead_aad(domain, entry_key_, key_type))
+    ct = cipher.encrypt(_pad_bucket(pt))
+    return (ENC_ENCRYPTED, nonce, cipher.finish(), ct)
 
 
-def decrypt_leaf(
-    k_data: bytes,
-    entry_key_: bytes,
-    entry_type: str,
-    nonce: bytes,
-    tag: bytes,
-    ct: bytes,
-) -> tuple:
-    """Return (c_leaf, identifier, value). Raises on tag mismatch (hard abort, §3.1)."""
+def _open(key: bytes, domain: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
+    """Return a part's plaintext. Raises on tag mismatch (hard abort, §3.1)."""
     from trezor.crypto import AuthenticationError, chacha20poly1305_decrypt
 
-    cipher = chacha20poly1305_decrypt(k_data, nonce)
-    cipher.auth(_aead_aad(entry_key_, entry_type))
-    pt = cipher.decrypt(ct)
+    encoding, nonce, tag, body = part
+    if encoding == ENC_PLAINTEXT:
+        return body
+    cipher = chacha20poly1305_decrypt(key, nonce)
+    cipher.auth(_aead_aad(domain, entry_key_, key_type))
+    pt = cipher.decrypt(body)
     try:
         cipher.finish(tag)
     except AuthenticationError:
         raise ValueError("WARD leaf AEAD tag mismatch")
+    return pt
+
+
+# --- LeafIdentity part: the whole entry_key preimage ---
+
+
+def pack_identity(identifier: bytes, app_id, device_id: int = 0) -> bytes:
+    """len16(identifier) || identifier || len8(app_id) || app_id || device_id(1B).
+    The single source of canonicalization -- both the commit and the AEAD go
+    through it."""
+    if app_id is None:
+        app_id = b""
+    elif isinstance(app_id, str):
+        app_id = app_id.encode()
+    return (
+        len(identifier).to_bytes(2, "big")
+        + identifier
+        + bytes([len(app_id)])
+        + app_id
+        + bytes([device_id & 0xFF])
+    )
+
+
+def unpack_identity(pt: bytes) -> tuple:
+    """Return (identifier, app_id, device_id). Tolerates bucket padding past the end."""
+    id_len = int.from_bytes(pt[0:2], "big")
+    off = 2 + id_len
+    identifier = pt[2:off]
+    aid_len = pt[off]
+    off += 1
+    app_id = pt[off : off + aid_len]
+    off += aid_len
+    return identifier, app_id, pt[off]
+
+
+def encode_identity(
+    k_ident: bytes, entry_key_: bytes, key_type: str, identifier: bytes, app_id,
+    device_id: int = 0,
+):
+    """Build the LeafIdentity part for this build's mode."""
+    pt = pack_identity(identifier, app_id, device_id)
+    if WARD_PLAINTEXT_IDENTITY:
+        return (ENC_PLAINTEXT, b"", b"", pt)
+    return _seal(k_ident, _AAD_IDENTITY, entry_key_, key_type, pt)
+
+
+# FIXME(ward, PUSH-ONLY): no on-device caller. The identity part is written on every
+# write but never read back here, so firmware does NOT verify that a leaf's
+# (identifier, app_id, device_id) matches the entry_key it derived -- the identity
+# contributes only its bytes to commit_of. It is host-consumed via exported K_ident.
+def decode_identity(k_ident: bytes, entry_key_: bytes, key_type: str, part) -> tuple:
+    """Return (identifier, app_id, device_id) from a LeafIdentity part."""
+    return unpack_identity(_open(k_ident, _AAD_IDENTITY, entry_key_, key_type, part))
+
+
+# --- LeafContent part: C_leaf + value ---
+
+
+def pack_content(c_leaf: int, value: bytes) -> bytes:
+    """C_leaf(4B BE) || len32(value) || value. The identifier used to live here; it
+    is in the identity part now."""
+    return c_leaf.to_bytes(4, "big") + len(value).to_bytes(4, "big") + value
+
+
+def unpack_content(pt: bytes) -> tuple:
+    """Return (c_leaf, value). Tolerates bucket padding past the end."""
     c_leaf = int.from_bytes(pt[0:4], "big")
-    id_len = int.from_bytes(pt[4:6], "big")
-    off = 6 + id_len
-    identifier = pt[6:off]
-    val_len = int.from_bytes(pt[off : off + 4], "big")
-    off += 4
-    value = pt[off : off + val_len]
-    return c_leaf, identifier, value
+    val_len = int.from_bytes(pt[4:8], "big")
+    return c_leaf, pt[8 : 8 + val_len]
 
 
-# --- plaintext leaf codec (dev-only; compiled out of release builds) ---
-# Same packed layout as the encrypted plaintext, minus the AEAD and the bucket padding:
-#   content = C_leaf(4B BE) || len16(identifier) || identifier || len32(value) || value
-# The "ct" slot of the (nonce, tag, ct) triple carries `content`; nonce/tag stay empty.
-
-if __debug__:
-
-    def pack_leaf(c_leaf: int, identifier: bytes, value: bytes) -> bytes:
-        """Plaintext leaf content (no encryption). Mirrors encrypt_leaf's plaintext."""
-        return (
-            c_leaf.to_bytes(4, "big")
-            + len(identifier).to_bytes(2, "big")
-            + identifier
-            + len(value).to_bytes(4, "big")
-            + value
-        )
-
-    def unpack_leaf(content: bytes) -> tuple:
-        """Return (c_leaf, identifier, value) from a plaintext leaf `content`."""
-        c_leaf = int.from_bytes(content[0:4], "big")
-        id_len = int.from_bytes(content[4:6], "big")
-        off = 6 + id_len
-        identifier = content[6:off]
-        val_len = int.from_bytes(content[off : off + 4], "big")
-        off += 4
-        value = content[off : off + val_len]
-        return c_leaf, identifier, value
+def encode_content(k_data: bytes, entry_key_: bytes, key_type: str, c_leaf: int, value: bytes):
+    """Build the LeafContent part for this build's mode. An empty value is a delete."""
+    if len(value) == 0:
+        return EMPTY_PART
+    pt = pack_content(c_leaf, value)
+    if WARD_PLAINTEXT_CONTENT:
+        return (ENC_PLAINTEXT, b"", b"", pt)
+    return _seal(k_data, _AAD_CONTENT, entry_key_, key_type, pt)
 
 
-def _encode_leaf(
-    k_data: bytes,
-    entry_key_: bytes,
-    entry_type: str,
-    c_leaf: int,
-    identifier: bytes,
-    value: bytes,
-) -> tuple:
-    """Produce the (nonce, tag, ct) triple for the current leaf mode. Plaintext mode
-    returns (b"", b"", content); encrypted mode returns the AEAD blob (§2.1)."""
-    if WARD_PLAINTEXT_LEAVES:
-        return b"", b"", pack_leaf(c_leaf, identifier, value)
-    return encrypt_leaf(k_data, entry_key_, entry_type, c_leaf, identifier, value)
-
-
-def _decode_leaf(
-    k_data: bytes,
-    entry_key_: bytes,
-    entry_type: str,
-    nonce: bytes,
-    tag: bytes,
-    ct: bytes,
-) -> tuple:
-    """Return (c_leaf, identifier, value) for the current leaf mode. Plaintext mode
-    parses `ct` as the packed content; encrypted mode AEAD-decrypts (§3.1)."""
-    if WARD_PLAINTEXT_LEAVES:
-        return unpack_leaf(ct)
-    return decrypt_leaf(k_data, entry_key_, entry_type, nonce, tag, ct)
+def decode_content(k_data: bytes, entry_key_: bytes, key_type: str, part) -> tuple:
+    """Return (c_leaf, value) from a LeafContent part; (0, b"") for a delete."""
+    if part_is_empty(part):
+        return 0, b""
+    return unpack_content(_open(k_data, _AAD_CONTENT, entry_key_, key_type, part))
 
 
 def addr_bit(entry_key_: bytes, bit: int) -> int:
@@ -323,16 +380,16 @@ def reconstruct(start_hash: bytes, proof: list, entry_key_: bytes) -> bytes:
 
 def verify_proof(
     entry_key_: bytes,
-    nonce: bytes,
-    tag: bytes,
-    ct: bytes,
+    key_type: str,
+    id_part,
+    val_part,
     proof: list,
     expected_root: bytes,
 ) -> bool:
-    """Verify an MPT membership proof for the leaf blob (nonce, tag, ct) at
-    entry_key against expected_root. The device forms the leaf from the encrypted
-    blob (commit -> leaf) it holds."""
-    node = leaf_hash(entry_key_, nonce, tag, ct)
+    """Verify an MPT membership proof for the leaf (key_type, id_part, val_part) at
+    entry_key against expected_root. The device forms the leaf from the two encoded
+    parts it holds (commit -> leaf); no key is needed for this."""
+    node = leaf_hash(entry_key_, key_type, id_part, val_part)
     node = reconstruct(node, proof, entry_key_)
     return node == expected_root
 
@@ -377,8 +434,8 @@ def compute_new_root(
     witness_commit=None,
 ):
     """Verify the old state (old_leaf, proof) against stored_root, then compute the
-    new root. `old_leaf`/`new_leaf` are (nonce, tag, ct) tuples the device produced,
-    or None: old_leaf=None => INSERT, new_leaf=None => DELETE. Returns the new root
+    new root. `old_leaf`/`new_leaf` are (key_type, id_part, val_part) tuples the
+    device produced, or None: old_leaf=None => INSERT, new_leaf=None => DELETE. Returns the new root
     (None if the tree becomes/stays empty), or raises ValueError if the old-state
     proof does not verify. INSERT's witness neighbour may belong to another app, so
     it is supplied privacy-preservingly as (witness_entry_key, witness_commit)."""
@@ -703,47 +760,53 @@ async def _derive_mac_key(domain: bytes) -> bytes:
     return crypto_hmac(crypto_hmac.SHA256, base_key, wallet_id).digest()
 
 
-async def _derive_k_index() -> bytes:
-    """K_index = SLIP21(seed, [b"ward", b"K_index"]).key() -- the HMAC key that
-    derives every entry_key path (§1). Seed-scoped and shared across the wallet's
-    devices; the per-device axis lives in the entry_key scope, not the key."""
+async def _derive_slip21(path: list) -> bytes:
     from apps.common import seed as seed_module
     from apps.common.seed import Slip21Node
 
     s = await seed_module.get_seed()
     node = Slip21Node(s)
-    node.derive_path([b"ward", b"K_index"])
+    node.derive_path(path)
     return node.key()
+
+
+async def _derive_k_path() -> bytes:
+    """K_path = SLIP21(seed, [b"ward", b"K_path"]).key() -- the HMAC key that derives
+    every entry_key (LeafIdentityMAC) path (§1). Seed-scoped and shared across the
+    wallet's devices; the per-device axis lives in the entry_key scope, not the key."""
+    return await _derive_slip21([b"ward", b"K_path"])
+
+
+async def _derive_k_ident(key_type: str) -> bytes:
+    """K_ident(key_type) = SLIP21(seed, [b"ward", b"K_ident", key_type]).key() -- the
+    AEAD key sealing the LeafIdentity part. Separate from K_data so identities and
+    values are independently discloseable. Must match ward_crypto.derive_k_ident."""
+    return await _derive_slip21([b"ward", b"K_ident", key_type.encode()])
 
 
 async def _derive_k_data(key_type: str) -> bytes:
-    """K_data(key_type) = SLIP21(seed, [b"ward", b"K_data", key_type]).key() -- a
-    separate AEAD key per entry type (§1), so a PUSH export can hand a host only the
-    types it may decrypt. Must match trezorlib ward_crypto.derive_k_data."""
-    from apps.common import seed as seed_module
-    from apps.common.seed import Slip21Node
-
-    s = await seed_module.get_seed()
-    node = Slip21Node(s)
-    node.derive_path([b"ward", b"K_data", key_type.encode()])
-    return node.key()
+    """K_data(key_type) = SLIP21(seed, [b"ward", b"K_data", key_type]).key() -- the
+    AEAD key sealing the LeafContent part, per entry type (§1), so a PUSH export can
+    hand a host only the types it may decrypt. Must match ward_crypto.derive_k_data."""
+    return await _derive_slip21([b"ward", b"K_data", key_type.encode()])
 
 
 async def entry_key_for(
     app_id, identifier: bytes, key_type: str = _ENTRY_TYPE_ADDRESS, device_id: int = 0
 ) -> bytes:
     """Compute the opaque entry_key path for (app_id, identifier) under the active
-    wallet's K_index. Used by the Core gateway to build a WARDProofRequest without
+    wallet's K_path. Used by the Core gateway to build a WARDProofRequest without
     leaking the identifier to the host."""
-    k_index = await _derive_k_index()
-    return entry_key(k_index, app_id, identifier, key_type, device_id)
+    k_path = await _derive_k_path()
+    return entry_key(k_path, app_id, identifier, key_type, device_id)
 
 
 async def _confirm_export_keys(key_type: str) -> None:
     """Trusted confirmation before handing WARD keys to the host (PUSH). Exporting
-    K_index + K_data(key_type) lets the host compute paths and decrypt values for
-    this entry type -- a deliberate, user-approved downgrade of the "host holds no
-    keys" property. Raises ActionCancelled if the user rejects."""
+    K_path + K_ident/K_data(key_type) lets the host resolve identifiers to paths and
+    read identities and values for this entry type -- a deliberate, user-approved
+    downgrade of the "host holds no keys" property. Raises ActionCancelled if the user
+    rejects."""
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_properties
 
@@ -760,13 +823,16 @@ async def _confirm_export_keys(key_type: str) -> None:
 
 
 async def export_keys(key_type: str = _ENTRY_TYPE_ADDRESS) -> tuple:
-    """PUSH key export: after user confirmation, return (K_index, K_data(key_type)).
-    K_sig is never exported. Per-type K_data means the host only gains the ability to
-    read the requested entry type. Returns (k_index, k_data)."""
+    """PUSH key export: after user confirmation, return
+    (K_path, K_data(key_type), K_ident(key_type)). K_sig is never exported. The three
+    are independent capabilities: K_path resolves identifier -> path, K_ident reads
+    identities, K_data reads values -- so an export can grant indexing without
+    granting value reads."""
     await _confirm_export_keys(key_type)
-    k_index = await _derive_k_index()
+    k_path = await _derive_k_path()
     k_data = await _derive_k_data(key_type)
-    return k_index, k_data
+    k_ident = await _derive_k_ident(key_type)
+    return k_path, k_data, k_ident
 
 
 def _compute_mac(key: bytes, *parts: bytes) -> bytes:
@@ -795,7 +861,7 @@ def _compute_mac(key: bytes, *parts: bytes) -> bytes:
 #   SigCommit  = Ed25519(K_sig, <same preimage as AuthCommit>)
 #
 # K_head/K_auth/K_sig are SLIP-21 under m/"ward" (seed-scoped, shared across the
-# wallet's devices, like K_index/K_data); the wallet binding is `ward_id` inside
+# wallet's devices, like K_path/K_ident/K_data); the wallet binding is `ward_id` inside
 # every preimage. Domains are disjoint from the WM ATTEST/FINAL preimages and the
 # trie's 0x00-0x03 node prefixes. There is deliberately NO batch_digest: under
 # content-addressed roots the (from_root,to_root) pair the device computes locally
@@ -807,6 +873,9 @@ def _compute_mac(key: bytes, *parts: bytes) -> bytes:
 # Benchmark toggle. When True, perform_batch ALSO produces the Ed25519 SigCommit
 # over the AuthCommit preimage. The symmetric K_head/K_auth MACs are produced
 # regardless. Flip for the MAC-only vs MAC+signature benchmark (D1).
+# FIXME(ward, INACTIVE): benchmark toggle, False in every shipped build -- so every
+# `if WARD_KSIG` branch below (perform_batch, perform_revert, verify_chain) and
+# k_sig_pubkey() are unreachable, and sig_commit is always b"".
 WARD_KSIG = False
 
 _TAG_HEAD = b"WARD HEAD v1"
@@ -827,7 +896,7 @@ def _root_or_empty(root) -> bytes:
 async def _derive_ward_key(leaf: bytes) -> bytes:
     """SLIP21(seed, [b"ward", leaf]).key() -- the shared m/"ward" key family
     (K_head/K_auth/K_sig). Seed-scoped; the wallet binding is ward_id inside each
-    preimage. Mirrors `_derive_k_index`/`_derive_k_data`."""
+    preimage. Mirrors `_derive_k_path`/`_derive_k_data`."""
     from apps.common import seed as seed_module
     from apps.common.seed import Slip21Node
 
@@ -977,83 +1046,6 @@ def k_sig_pubkey(k_sig_secret: bytes) -> bytes:
     return ed25519.publickey(k_sig_secret)
 
 
-# ---------------------------------------------------------------------------
-# Root/MAC + pending-queue helpers (formerly apps.ward.__init__).
-# ---------------------------------------------------------------------------
-
-
-def compute_root(
-    entry_key_: bytes,
-    old_leaf,
-    new_leaf,
-    proof: list[bytes],
-    stored_root: bytes | None,
-    witness_entry_key: bytes | None = None,
-    witness_commit: bytes | None = None,
-) -> bytes | None:
-    """Verify the old-state proof against stored_root and return the candidate new
-    root (None if the tree becomes/stays empty). `old_leaf`/`new_leaf` are
-    (nonce, tag, ct) tuples or None (INSERT/DELETE)."""
-    return compute_new_root(
-        entry_key_,
-        old_leaf,
-        new_leaf,
-        proof,
-        stored_root,
-        witness_entry_key=witness_entry_key,
-        witness_commit=witness_commit,
-    )
-
-
-def verify_mac(
-    mac_key: bytes, wallet_id: bytes, counter: int, root: bytes, mac: bytes
-) -> bool:
-    """Return True iff `mac` == HMAC(mac_key, wallet_id || counter(4B BE) || root)."""
-    expected = _compute_mac(mac_key, wallet_id, counter.to_bytes(4, "big"), root)
-    return expected == mac
-
-
-def queue_put(
-    wallet_id: bytes,
-    pending_id: int,
-    counter: int,
-    address: bytes,
-    old_value: bytes,
-    new_value: bytes,
-    app_id: bytes = b"",
-    key_type: bytes = b"",
-    device_id: int = 0,
-) -> None:
-    """Store an approved edit intent as PENDING under pending_id (pull model)."""
-    import storage.ward_store as ward_store
-
-    ward_store.queue_put(
-        wallet_id,
-        pending_id,
-        counter,
-        address,
-        old_value,
-        new_value,
-        app_id,
-        key_type,
-        device_id,
-    )
-
-
-def queue_drop(wallet_id: bytes, pending_id: int) -> None:
-    """Clear a pending edit after a successful WARDConfirmedByWM."""
-    import storage.ward_store as ward_store
-
-    ward_store.queue_drop(wallet_id, pending_id)
-
-
-def queue_discard(wallet_id: bytes, pending_id: int) -> None:
-    """Discard a pending edit without finalizing (spec-parity alias of queue_drop)."""
-    import storage.ward_store as ward_store
-
-    ward_store.queue_drop(wallet_id, pending_id)
-
-
 async def _resolve_pending_id(wallet_id: bytes, pending_id: int | None) -> int:
     """Resolve which queued candidate an operation targets.
 
@@ -1109,7 +1101,7 @@ async def discard(
     rec = ward_store.queue_get(wallet_id, pending_id)
     if rec is None:
         return None, wallet_id
-    _counter, _state, address, _ov, _nv, _root, _mac, _app_id, _kt, _did = rec
+    _counter, _state, address, _nv, _root, _mac, _app_id, _kt, _did = rec
     ward_store.queue_drop(wallet_id, pending_id)
 
     if __debug__:
@@ -1128,17 +1120,16 @@ async def discard(
 async def lookup_label(
     app_id,
     address: bytes,
-    nonce: bytes,
-    tag: bytes,
-    ct: bytes,
+    id_part,
+    val_part,
     proof: list[bytes],
     key_type: str = _ENTRY_TYPE_ADDRESS,
     device_id: int = 0,
 ) -> bytes | None:
-    """On-device membership label lookup: authenticate the leaf blob (nonce, tag,
-    ct) at entry_key against the active wallet's stored root and, if it verifies,
-    decrypt and return the value; else None (or empty tree). The proof is verified
-    over entry_key = HMAC(K_index, app_id||0x00||key_type||0x00||device_id||address).
+    """On-device membership label lookup: authenticate the leaf (key_type, id_part,
+    val_part) at entry_key against the active wallet's stored root and, if it verifies,
+    decrypt and return the value; else None (or empty tree). The proof is verified over
+    entry_key = HMAC(K_path, app_id||0x00||key_type||0x00||device_id||address).
     """
     import storage.ward_head as ward_head
 
@@ -1146,17 +1137,17 @@ async def lookup_label(
     present, stored_root = ward_head.root_get(wallet_id)
     if not present or stored_root is None:
         return None
-    k_index = await _derive_k_index()
-    ek = entry_key(k_index, app_id, address, key_type, device_id)
-    if not verify_proof(ek, nonce, tag, ct, proof, stored_root):
+    k_path = await _derive_k_path()
+    ek = entry_key(k_path, app_id, address, key_type, device_id)
+    if not verify_proof(ek, key_type, id_part, val_part, proof, stored_root):
         return None
     k_data = await _derive_k_data(key_type)
-    _c, _id, value = _decode_leaf(k_data, ek, key_type, nonce, tag, ct)
+    _c, value = decode_content(k_data, ek, key_type, val_part)
     return value
 
 
 # ---------------------------------------------------------------------------
-# Write / lookup orchestration (formerly inline in the message handlers).
+# Root/MAC + pending-queue helpers (formerly apps.ward.__init__).
 # ---------------------------------------------------------------------------
 
 
@@ -1266,7 +1257,6 @@ async def queue(
         pending_id,
         0,
         address,
-        b"",
         new_value,
         app_id_b,
         key_type.encode(),
@@ -1289,9 +1279,8 @@ async def queue(
 async def lookup(
     app_id,
     address: bytes,
-    nonce: bytes | None,
-    tag: bytes | None,
-    ct: bytes | None,
+    id_part,
+    val_part,
     proof: list[bytes],
     key_type: str = _ENTRY_TYPE_ADDRESS,
     device_id: int = 0,
@@ -1301,16 +1290,16 @@ async def lookup(
     """Verify a membership / non-membership proof against the device's
     authenticated root. Returns (valid, counter, membership, wallet_id, ward_id).
 
-    The target path is formed on-device: entry_key = HMAC(K_index,
-    app_id||0x00||key_type||0x00||device_id||address). Membership carries the leaf
-    blob (nonce, tag, ct); a non-membership witness is two hashes only
+    The target path is formed on-device: entry_key = HMAC(K_path,
+    app_id||0x00||key_type||0x00||device_id||address). Membership carries the leaf's
+    two parts (id_part, val_part); a non-membership witness is two hashes only
     (witness_entry_key, witness_commit), used opaquely.
     """
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
-    membership_query = witness_entry_key is None and ct is not None
+    membership_query = witness_entry_key is None and val_part is not None
 
     wallet_id = await _get_wallet_id()
     ward_id = await _get_ward_id()
@@ -1328,8 +1317,8 @@ async def lookup(
             ward_id,
         )
 
-    k_index = await _derive_k_index()
-    ek = entry_key(k_index, app_id, address, key_type, device_id)
+    k_path = await _derive_k_path()
+    ek = entry_key(k_path, app_id, address, key_type, device_id)
     if not membership_query:
         if witness_commit is None:
             raise DataError("witness_commit required for non-membership proof")
@@ -1338,7 +1327,7 @@ async def lookup(
         )
         membership = False
     else:
-        valid = verify_proof(ek, nonce, tag, ct, proof, stored_root)
+        valid = verify_proof(ek, key_type, id_part, val_part, proof, stored_root)
         membership = True
 
     if __debug__:
@@ -1374,11 +1363,11 @@ async def intent(pending_id: int | None) -> tuple[int, bytes]:
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no queued intent to perform")
-    _counter, _state, address, _ov, _nv, _root, _mac, app_id, kt, device_id = rec
+    _counter, _state, address, _nv, _root, _mac, app_id, kt, device_id = rec
     key_type = kt.decode() if kt else _ENTRY_TYPE_ADDRESS
 
-    k_index = await _derive_k_index()
-    ek = entry_key(k_index, app_id, address, key_type, device_id)
+    k_path = await _derive_k_path()
+    ek = entry_key(k_path, app_id, address, key_type, device_id)
 
     if __debug__:
         from trezor import log
@@ -1390,28 +1379,29 @@ async def intent(pending_id: int | None) -> tuple[int, bytes]:
 
 async def perform(
     pending_id: int | None,
-    ack_nonce: bytes | None,
-    ack_tag: bytes | None,
-    ack_ct: bytes | None,
+    ack_id_part,
+    ack_val_part,
     proof: list[bytes],
     witness_entry_key: bytes | None = None,
     witness_commit: bytes | None = None,
 ) -> tuple:
     """Authorize a queued intent using a proof the device PULLED on demand.
 
-    The pulled ack is the authoritative current state: (nonce, tag, ct) for a
-    membership leaf (UPDATE/DELETE), witness_* for non-membership (INSERT), or empty
-    for an empty tree (INIT). The device derives counter_T = current authenticated
-    counter + 1, encrypts the queued new_value into a fresh leaf blob (the device is
-    the encryptor, §4), computes (root_T, mac_T), persists counter_T, and marks the
-    intent COMMITTED. Since the host cannot compute the encrypted leaf itself, the
-    new blob (entry_key, entry_type, nonce, tag, ct) is returned so the host can
-    store it (ct empty => DELETE). Returns
-    (counter_T, root_T, mac_T, wallet_id, ward_id, entry_key, entry_type, nonce, tag, ct).
+    The pulled ack is the authoritative current state: the leaf's two parts
+    (ack_id_part, ack_val_part) for a membership leaf (UPDATE/DELETE), witness_* for
+    non-membership (INSERT), or empty for an empty tree (INIT). The device derives
+    counter_T = current authenticated counter + 1, encodes the queued new_value into a
+    fresh leaf -- BOTH parts, so the leaf is self-describing (the device is the
+    encryptor, §4) -- computes (root_T, mac_T), persists counter_T, and marks the
+    intent COMMITTED. Since the host cannot compute a sealed leaf itself, the new leaf
+    (entry_key, key_type, id_part, val_part) is returned so the host can store it. A
+    DELETE returns BOTH parts empty: the leaf no longer exists, so the host must
+    REMOVE the record at entry_key rather than keep an empty-valued one. Returns
+    (counter_T, root_T, mac_T, wallet_id, ward_id, entry_key, key_type, id_part, val_part).
 
     key_type/device_id are read from the pending record (framed at queue time), so the
     candidate lands on the scoped entry_key the user approved (empty key_type =>
-    "address"). entry_type in the returned blob echoes the resolved key_type.
+    "address").
     """
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
@@ -1423,14 +1413,12 @@ async def perform(
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no queued intent to perform")
-    _counter, _state, address, _old_value, new_value, _root, _mac, app_id, kt, device_id = (
-        rec
-    )
+    _counter, _state, address, new_value, _root, _mac, app_id, kt, device_id = rec
     key_type = kt.decode() if kt else _ENTRY_TYPE_ADDRESS
-    k_index = await _derive_k_index()
-    # Bind the candidate to its domain/scope: entry_key = HMAC(K_index, scope||id),
+    k_path = await _derive_k_path()
+    # Bind the candidate to its domain/scope: entry_key = HMAC(K_path, scope||id),
     # so this write can only ever produce a leaf under the scope the user approved.
-    ek = entry_key(k_index, app_id, address, key_type, device_id)
+    ek = entry_key(k_path, app_id, address, key_type, device_id)
 
     # Strict model: derive the candidate counter now, from the device's floor.
     counter_t = ward_store.get_counter(wallet_id) + 1
@@ -1443,22 +1431,26 @@ async def perform(
         else:
             raise DataError("no authenticated root in session")
 
-    # membership ack (UPDATE/DELETE) carries the old leaf blob; witness => INSERT.
+    # membership ack (UPDATE/DELETE) carries the old leaf's parts; witness => INSERT.
     old_leaf = None
-    if ack_ct is not None and witness_entry_key is None:
-        old_leaf = (ack_nonce, ack_tag, ack_ct)
+    if ack_val_part is not None and witness_entry_key is None:
+        old_leaf = (key_type, ack_id_part, ack_val_part)
 
-    # The device encrypts the queued new_value into a fresh leaf (empty => DELETE).
+    # The device encodes the queued write into a fresh leaf. A DELETE is a FULL
+    # removal: the leaf ceases to exist in the trie (compute_new_root collapses its
+    # parent), so there is no leaf left to describe -- BOTH parts are empty and the
+    # host must drop the record, not keep an empty-valued one.
     deleting = len(new_value) == 0
     if deleting:
         new_leaf = None
-        out_nonce, out_tag, out_ct = b"", b"", b""
+        out_id_part = EMPTY_PART
+        out_val_part = EMPTY_PART
     else:
+        k_ident = await _derive_k_ident(key_type)
         k_data = await _derive_k_data(key_type)
-        out_nonce, out_tag, out_ct = _encode_leaf(
-            k_data, ek, key_type, counter_t, address, new_value
-        )
-        new_leaf = (out_nonce, out_tag, out_ct)
+        out_id_part = encode_identity(k_ident, ek, key_type, address, app_id, device_id)
+        out_val_part = encode_content(k_data, ek, key_type, counter_t, new_value)
+        new_leaf = (key_type, out_id_part, out_val_part)
 
     try:
         root_t = compute_new_root(
@@ -1502,9 +1494,8 @@ async def perform(
         ward_id,
         ek,
         key_type,
-        out_nonce,
-        out_tag,
-        out_ct,
+        out_id_part,
+        out_val_part,
     )
 
 
@@ -1538,7 +1529,7 @@ async def finalize(
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no candidate to finalize")
-    counter, state, _address, _old_value, _new_value, root, mac, _app_id, _kt, _did = rec
+    counter, state, _address, _new_value, root, mac, _app_id, _kt, _did = rec
 
     if state != ward_store.QUEUE_COMMITTED:
         raise DataError("candidate has not been performed")
@@ -1609,7 +1600,7 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
     returns `(to_counter, from_root, to_root, mac_t, head_mac, auth_commit, sig,
     ward_id, leaves)` (from_root in its 32-byte MAC-preimage form,
     EMPTY_ROOT_HASH if empty; to_root is None if the tree becomes empty) where
-    `leaves` is a list of `(entry_key, entry_type, nonce, tag, ct)` for the host to
+    `leaves` is a list of `(entry_key, key_type, id_part, val_part)` for the host to
     store (ct empty => DELETE)."""
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
@@ -1630,56 +1621,56 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
         else:
             raise DataError("no authenticated root in session")
 
-    k_index = await _derive_k_index()
+    k_path = await _derive_k_path()
 
     ops = []  # (entry_key, old_leaf, new_leaf, proof, witness_ek, witness_commit)
-    leaves = []  # (entry_key, entry_type, nonce, tag, ct) to return to the host
+    leaves = []  # (entry_key, key_type, id_part, val_part) to return to the host
     for i in range(len(pending_ids)):
         pid = pending_ids[i]
         ack = acks[i]
-        ack_nonce, ack_tag, ack_ct, proof, w_ek, w_commit = (
+        ack_id_part, ack_val_part, proof, w_ek, w_commit = (
             ack[0],
             ack[1],
             ack[2],
             ack[3],
             ack[4],
-            ack[5],
         )
 
         rec = ward_store.queue_get(wallet_id, pid)
         if rec is None:
             raise DataError("no queued intent to perform in batch")
-        _c, _s, address, _ov, new_value, _r, _m, app_id, kt, device_id = rec
+        _c, _s, address, new_value, _r, _m, app_id, kt, device_id = rec
         key_type = kt.decode() if kt else _ENTRY_TYPE_ADDRESS
-        ek = entry_key(k_index, app_id, address, key_type, device_id)
+        ek = entry_key(k_path, app_id, address, key_type, device_id)
 
-        # membership ack (UPDATE/DELETE) carries the old blob; witness => INSERT.
+        # membership ack (UPDATE/DELETE) carries the old leaf's parts; witness => INSERT.
         old_leaf = None
-        if ack_ct is not None and w_ek is None:
-            old_leaf = (ack_nonce, ack_tag, ack_ct)
+        if ack_val_part is not None and w_ek is None:
+            old_leaf = (key_type, ack_id_part, ack_val_part)
             # Leaf-splicing / counter-monotonicity (§4.5, F12): decrypt the current
-            # leaf and require the new stamp to strictly exceed the old one. With the
-            # whole batch at to_counter, this holds iff the old leaf predates the head.
+            # leaf's content part and require the new stamp to strictly exceed the old
+            # one. With the whole batch at to_counter, this holds iff the old leaf
+            # predates the head.
             k_data_old = await _derive_k_data(key_type)
-            c_old, _id_old, _v_old = _decode_leaf(
-                k_data_old, ek, key_type, ack_nonce, ack_tag, ack_ct
-            )
+            c_old, _v_old = decode_content(k_data_old, ek, key_type, ack_val_part)
             if to_counter <= c_old:
                 raise DataError("C_new is not ahead of C_old (stale leaf)")
 
-        # Encrypt the new leaf (empty new_value => DELETE).
+        # Encode the new leaf. A DELETE is a FULL removal: the leaf ceases to exist, so
+        # both parts are empty and the host drops the record.
         if len(new_value) == 0:
             new_leaf = None
-            out_nonce, out_tag, out_ct = b"", b"", b""
+            out_id_part = EMPTY_PART
+            out_val_part = EMPTY_PART
         else:
+            k_ident = await _derive_k_ident(key_type)
             k_data = await _derive_k_data(key_type)
-            out_nonce, out_tag, out_ct = _encode_leaf(
-                k_data, ek, key_type, to_counter, address, new_value
-            )
-            new_leaf = (out_nonce, out_tag, out_ct)
+            out_id_part = encode_identity(k_ident, ek, key_type, address, app_id, device_id)
+            out_val_part = encode_content(k_data, ek, key_type, to_counter, new_value)
+            new_leaf = (key_type, out_id_part, out_val_part)
 
         ops.append((ek, old_leaf, new_leaf, proof, w_ek, w_commit))
-        leaves.append((ek, key_type, out_nonce, out_tag, out_ct))
+        leaves.append((ek, key_type, out_id_part, out_val_part))
 
     # Fold all leaves into one successor root (order-independent, no sort; rejects a
     # duplicate entry_key within the batch). Each proof is against the running root.
@@ -1703,6 +1694,11 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
     to_root_b = _root_or_empty(to_root)
     k_head = await _derive_ward_key(b"K_head")
     k_auth = await _derive_ward_key(b"K_auth")
+    # FIXME(ward): head_mac is emitted on the ack for an external consumer (the WM, or
+    # another device fast-forwarding per design 3.1) but NOTHING verifies it today --
+    # the WM emulator keeps auth_commit and ignores this. It is deliberately not
+    # persisted (see storage/ward_store.py): re-checking the device's own MAC over its
+    # own values would prove nothing. Wire a verifier or drop the field.
     head_mac_v = head_mac(k_head, ward_id, to_counter, to_root)
     auth_commit_v = auth_commit(
         k_auth, ward_id, from_counter, from_root_b, to_counter, to_root_b
@@ -1722,7 +1718,6 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
         from_root_b,
         to_root_b,
         mac_t if mac_t is not None else _ZERO_MAC,
-        head_mac_v,
         auth_commit_v,
         sig,
         pending_ids,
@@ -1895,6 +1890,11 @@ async def perform_revert(
 
     auth_revert_v = auth_revert(k_auth, ward_id, stuck_counter, stuck_root, to_counter, prev_root)
     k_head = await _derive_ward_key(b"K_head")
+    # FIXME(ward): head_mac is emitted on the ack for an external consumer (the WM, or
+    # another device fast-forwarding per design 3.1) but NOTHING verifies it today --
+    # the WM emulator keeps auth_commit and ignores this. It is deliberately not
+    # persisted (see storage/ward_store.py): re-checking the device's own MAC over its
+    # own values would prove nothing. Wire a verifier or drop the field.
     head_mac_v = head_mac(k_head, ward_id, to_counter, to_root)
     sig = b""
     if WARD_KSIG:
@@ -1913,7 +1913,6 @@ async def perform_revert(
         stuck_root,
         prev_root,
         mac_t if mac_t is not None else _ZERO_MAC,
-        head_mac_v,
         auth_revert_v,
         sig,
         [],

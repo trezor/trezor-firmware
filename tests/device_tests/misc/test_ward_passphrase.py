@@ -58,17 +58,17 @@ def test_ward_passphrase_wallets_are_isolated(client: Client) -> None:
     wm_initial_sync(session_b, wm_b, tree_b, counter=1, wallet_id=wallet_id_b)
 
     # Each wallet authenticates its own entry ...
-    valid_a, membership_a, _c, _w = ward.lookup(
+    valid_a, membership_a, _c = ward.lookup(
         session_a, _APP, _ADDR_A.encode(), _VAL_A, tree_a.get_proof(_APP, _ADDR_A.encode()), counter=1
     )
     assert valid_a and membership_a
-    valid_b, membership_b, _c, _w = ward.lookup(
+    valid_b, membership_b, _c = ward.lookup(
         session_b, _APP, _ADDR_B.encode(), _VAL_B, tree_b.get_proof(_APP, _ADDR_B.encode()), counter=1
     )
     assert valid_b and membership_b
 
     # ... and does NOT recognize the other wallet's entry (different root).
-    other_valid, _m, _c, _w = ward.lookup(
+    other_valid, _m, _c = ward.lookup(
         session_a, _APP, _ADDR_B.encode(), _VAL_B, tree_b.get_proof(_APP, _ADDR_B.encode()), counter=1
     )
     assert not other_valid
