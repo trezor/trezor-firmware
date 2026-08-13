@@ -4,8 +4,8 @@ pub mod macros;
 
 pub mod buffer;
 pub mod dict;
-pub mod exception;
 pub mod error;
+pub mod exception;
 pub mod ffi;
 pub mod func;
 pub mod gc;
@@ -21,9 +21,6 @@ pub mod simple_type;
 pub mod tuple;
 pub mod typ;
 pub mod util;
-
-pub use error::Error;
-pub use obj::Obj;
 
 pub use error::Error;
 pub use obj::Obj;

@@ -8,15 +8,13 @@ use super::iter::IterBuf;
 use super::map::{Map, MapElem};
 use super::obj::Obj;
 use super::qstr::Qstr;
-use super::runtime::{catch_exception, raise_exception};
+use super::runtime::catch_exception;
 
 /// Perform a call and convert errors into a raised MicroPython exception.
 /// Should only called when returning from Rust to C. See `raise_exception` for
 /// details.
 pub unsafe fn try_or_raise<T>(func: impl FnOnce() -> Result<T, Error>) -> T {
-    func().unwrap_or_else(|err| unsafe {
-        raise_exception(err);
-    })
+    func().unwrap_or_else(|err| unsafe { err.into_exception().raise() })
 }
 
 /// Extract kwargs from a C call and pass them into Rust. Raise exception if an

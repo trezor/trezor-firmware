@@ -120,7 +120,7 @@ macro_rules! obj_type {
      $(attr_fn: $attr_fn:path,)?
      $(call_fn: $call_fn:path,)?
      $(print_fn: $print_fn:path,)?
-     $(parent: $parent:path,)?
+     $(parent: $parent:expr,)?
     ) => {{
         use $crate::micropython::ffi;
 
@@ -129,7 +129,7 @@ macro_rules! obj_type {
         #[allow(unused_mut)]
         #[allow(unused_assignments)]
         // SAFETY: micropython ffi
-        let mut base_type: &'static ffi::mp_obj_type_t = unsafe { &ffi::mp_type_type };
+        let mut base_type: &'static $crate::micropython::typ::Type = $crate::micropython::typ::TYPE_BASE;
         $(base_type = &$base;)?
 
         #[allow(unused_mut)]
