@@ -37,6 +37,24 @@ async def derive_k_path() -> bytes:
     return await _derive_slip21([b"ward", b"K_path"])
 
 
+async def derive_k_ident(key_type: str) -> bytes:
+    """K_ident(key_type) = SLIP21(seed, [b"ward", b"K_ident", key_type]).key().
+
+    Seals the identity part. Keyed per key_type, which is why key_type must travel in the
+    clear -- it selects the key needed to open the part that would otherwise name it.
+    """
+    return await _derive_slip21([b"ward", b"K_ident", key_type.encode()])
+
+
+async def derive_k_data(key_type: str) -> bytes:
+    """K_data(key_type) = SLIP21(seed, [b"ward", b"K_data", key_type]).key().
+
+    Seals the content part. Separate from K_ident so a future export of one part's key
+    cannot expose the other.
+    """
+    return await _derive_slip21([b"ward", b"K_data", key_type.encode()])
+
+
 def _scope(app_id: str | bytes | None, key_type: str, device_id: int) -> bytes:
     """scope = app_id || 0x00 || key_type || 0x00 || device_id(1B).
 

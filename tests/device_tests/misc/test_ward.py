@@ -14,23 +14,26 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""WARD: plaintext two-part leaf, PULL-only, keyed path.
+"""WARD: sealed two-part leaf, PULL-only, keyed path.
 
 The device holds nothing. It derives an opaque 32-byte `entry_key` from a seed the host
-does not have, asks the host for the leaf at THAT path, and displays what comes back.
-The host's store is keyed by the opaque key and contains no identifiers of its own.
+does not have, asks the host for the leaf at THAT path, and displays what comes back. The
+host's store is keyed by the opaque key and holds two sealed blobs -- no identifier and no
+value anywhere in it.
 
-These tests assert four separable things:
+These tests assert five separable things:
   - the pull happens, and names only the opaque key (protocol);
   - the key is the RIGHT one, i.e. the actual HMAC of the scope (crypto, via the
     test-only oracle in `tests/ward_keys.py`);
   - a leaf the device built survives a round trip through the host and decodes back to
     the same value (framing);
-  - the screen shows the value and labels it unverified, which it is -- nothing in this
-    phase authenticates it (UI).
+  - what the host holds reveals nothing, and a leaf that was tampered with or served from
+    another path is REJECTED (confidentiality and authenticity);
+  - the screen still warns, because sealing proves a value authentic without proving it
+    current (UI).
 
-Note the host never builds a leaf: entries are created by asking the device, exactly as a
-real host must once the parts are sealed and it has none of the keys.
+The host never builds a leaf -- it cannot, having none of the keys -- so entries are
+created by asking the device, which is also how a real host must work.
 """
 
 import pytest
@@ -41,14 +44,26 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutContent
 
 from ...input_flows import InputFlowConfirmAllWarnings
-from ...ward_keys import bip39_seed, derive_k_path
+from ...ward_keys import (
+    bip39_seed,
+    derive_k_data,
+    derive_k_ident,
+    derive_k_path,
+    open_content,
+    open_identity,
+    unpack_content,
+    unpack_identity,
+)
 from ...ward_keys import entry_key as expected_entry_key
 
 _APP = "TEST"
 
 # The device under test is set up with the default mnemonic and no passphrase
-# (`SetupParams` in tests/conftest.py), so the oracle can reproduce its K_path.
-_K_PATH = derive_k_path(bip39_seed(" ".join(["all"] * 12)))
+# (`SetupParams` in tests/conftest.py), so the oracle can reproduce its keys.
+_SEED = bip39_seed(" ".join(["all"] * 12))
+_K_PATH = derive_k_path(_SEED)
+_K_IDENT = derive_k_ident(_SEED)
+_K_DATA = derive_k_data(_SEED)
 
 
 class _Recorded:
@@ -221,28 +236,68 @@ def test_ward_leaf_round_trips_through_the_host(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_leaf_identity_carries_the_preimage(session: Session):
-    """The identity part is populated with the keyed path's preimage.
+def test_ward_leaf_is_sealed_and_hides_what_it_holds(session: Session):
+    """What the host ends up holding must reveal neither the identifier nor the value.
 
-    Nothing reads it yet -- the device already knows these values, having derived the
-    path from them -- so it is write-only until there is a consumer that does not, such
-    as reconstructing entries without knowing their identifiers. It is filled now so the
-    leaf reaches its final shape before anything hashes it.
-
-    It is PLAINTEXT at this step, which is exactly why the store is not yet confidential:
-    this assertion inverts once the parts are sealed.
+    This is the confidentiality property, asserted on the actual stored bytes rather than
+    inferred from the encoding byte -- a build that set encoding=0 while forgetting to
+    seal would pass a weaker check.
     """
     store: dict[bytes, ward.Leaf] = {}
     key = _seed(session, store, b"addr1", b"Petr_label")
+    leaf = store[key]
 
-    identity = store[key].identity
-    assert identity is not None
-    assert identity.encoding == 1  # plaintext
-    assert identity.key_type == "address"
-    assert identity.plain is not None
-    assert identity.plain.identifier == b"addr1"
-    assert identity.plain.app_id == _APP
-    assert identity.plain.device_id == 0
+    # both parts sealed: the encrypted arm is set, the readable arm is not
+    for part in (leaf.identity, leaf.content):
+        assert (part.encoding or 0) == 0
+    assert leaf.identity.encrypted is not None and leaf.identity.plain is None
+    assert leaf.content.encrypted is not None and leaf.content.plaintext is None
+    assert len(leaf.identity.encrypted.nonce) == 12
+    assert len(leaf.identity.encrypted.tag) == 16
+
+    # key_type stays clear -- it has to, since it selects the keys that open the parts
+    assert leaf.identity.key_type == "address"
+
+    blob = leaf.identity.encrypted.ct + leaf.content.encrypted.ct
+    assert b"addr1" not in blob
+    assert b"Petr_label" not in blob
+    assert _APP.encode() not in blob
+
+
+@pytest.mark.models("core")
+def test_ward_sealed_leaf_really_contains_the_preimage(session: Session):
+    """...and it is genuinely the right plaintext under there, not just opaque bytes.
+
+    Opened with the test-only oracle; a real host holds neither key. The identity part
+    has no reader on the device either -- it already knows the identifier, having derived
+    the path from it -- so this is currently the only thing that looks inside it. It is
+    populated now so the leaf reaches its final shape before anything hashes it.
+    """
+    store: dict[bytes, ward.Leaf] = {}
+    key = _seed(session, store, b"addr1", b"Petr_label")
+    leaf = store[key]
+
+    identity = open_identity(_K_IDENT, key, "address", leaf.identity.encrypted)
+    assert unpack_identity(identity) == (b"addr1", _APP.encode(), 0)
+
+    content = open_content(_K_DATA, key, "address", leaf.content.encrypted)
+    assert unpack_content(content) == (0, b"Petr_label")  # C_leaf unused for now
+
+
+@pytest.mark.models("core")
+def test_ward_sealed_part_is_bound_to_its_path(session: Session):
+    """A leaf sealed for one path cannot be opened as another's.
+
+    That binding is what stops a host from answering a request for one entry with a
+    different entry's leaf -- a swap the keyed path alone would not catch, since the host
+    chooses which stored bytes to hand back.
+    """
+    store: dict[bytes, ward.Leaf] = {}
+    key = _seed(session, store, b"addr1", b"Petr_label")
+    other_key = expected_entry_key(_K_PATH, _APP, b"addr2")
+
+    with pytest.raises(Exception):
+        open_content(_K_DATA, other_key, "address", store[key].content.encrypted)
 
 
 @pytest.mark.models("core")
@@ -263,11 +318,55 @@ def test_ward_delete_returns_a_leaf_with_both_parts_empty(session: Session):
     )
     assert res.entry_key == key
     assert res.leaf is not None
+    # An empty part carries nothing, so there is nothing to seal and its encoding byte is
+    # immaterial -- it is plaintext-encoded even in a sealed build. The codec has to accept
+    # that, or a build would reject its own delete leaf.
     assert res.leaf.content.plaintext.content == b""
     assert res.leaf.identity.plain.identifier is None
 
     ward.apply(store, res)
     assert store == {}
+
+
+@pytest.mark.models("core")
+def test_ward_rejects_a_tampered_leaf(session: Session):
+    """A leaf the host edited fails the tag check ON THE DEVICE.
+
+    This is the first thing in the whole subsystem the device can actually REJECT. Before
+    sealing, any bytes the host returned were accepted and displayed.
+    """
+    store: dict[bytes, ward.Leaf] = {}
+    key = _seed(session, store, b"addr1", b"Petr_label")
+
+    sealed = store[key].content.encrypted
+    flipped = bytes([sealed.ct[0] ^ 1]) + sealed.ct[1:]
+    store[key] = ward.Leaf(
+        store[key].identity,
+        m.LeafContent(
+            encoding=0,
+            encrypted=m.EncryptedLeaf(nonce=sealed.nonce, tag=sealed.tag, ct=flipped),
+        ),
+    )
+
+    with pytest.raises(exceptions.TrezorFailure, match="tag mismatch"):
+        ward.get_entry(session, _APP, b"addr1", ward.dict_provider(store))
+
+
+@pytest.mark.models("core")
+def test_ward_rejects_a_leaf_served_from_another_path(session: Session):
+    """The host answers a request for one entry with a different entry's real leaf.
+
+    Every byte is authentic -- it is a leaf this device sealed -- so only the AAD's
+    binding to entry_key catches it. The keyed path alone could not: the host chooses
+    which stored bytes to hand back.
+    """
+    store: dict[bytes, ward.Leaf] = {}
+    key1 = _seed(session, store, b"addr1", b"one")
+    key2 = _seed(session, store, b"addr2", b"two")
+
+    swapped = {key1: store[key2]}
+    with pytest.raises(exceptions.TrezorFailure, match="tag mismatch"):
+        ward.get_entry(session, _APP, b"addr1", ward.dict_provider(swapped))
 
 
 # --- read -------------------------------------------------------------------------
@@ -287,7 +386,9 @@ def test_ward_get_entry_pulls_and_shows(session: Session):
 
     assert "unverified entry" in rec.title
     assert "Petr_label" in rec.text
-    assert "not verified" in rec.text.lower()
+    # the warning narrowed when the leaf was sealed -- the value is now authentic, but its
+    # freshness is still unproven, and the screen has to say which of the two it means
+    assert "not proven current" in rec.text.lower()
 
 
 @pytest.mark.models("core")

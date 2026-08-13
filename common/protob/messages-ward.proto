@@ -6,7 +6,7 @@ option java_outer_classname = "TrezorMessageWard";
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
 /**
- * WARD phase 1: PLAINTEXT, PULL-ONLY, KEYED PATH.
+ * WARD: SEALED LEAF, PULL-ONLY, KEYED PATH.
  *
  * The device stores no entries. When it needs one it PULLS it from the host
  * mid-workflow: it emits WARDEntryRequest naming what it wants, the host answers
@@ -30,12 +30,13 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
  * builds and returns (WARDLeafAck); the host stores it verbatim and applies the change
  * to its own store. The device still keeps nothing of its own.
  *
- * Nothing here is authenticated. There is no proof and no root in this phase, so the
- * host may return any leaf for any path -- including a stale one, or none at all -- and
- * the device cannot tell. It therefore labels what it shows as UNVERIFIED. Sealing the
- * leaf (next) makes a leaf unforgeable and unmovable between paths, but it does NOT fix
- * staleness or suppression; only the proof and an attested root do, so the warning
- * outlives the encryption.
+ * Both leaf parts are SEALED under device-only keys, with the AAD binding each part to
+ * its path, so the host cannot forge a leaf, read one, or move one between paths.
+ *
+ * It can still return an OLDER sealed leaf for a path, or claim it holds none at all.
+ * Neither is detectable without a proof against an attested root, so what reaches a
+ * screen is authentic but not proven current, and the screens say exactly that. The
+ * warning is narrower than it was before sealing, not gone.
  *
  * All fields are `optional` deliberately. A proto2 `required` field that a caller
  * forgets to set is an encode-time failure in every binding, which has bitten this
@@ -118,18 +119,17 @@ message WARDEntryRequest {
  *   LeafIdentity  the keyed-path preimage: identifier + app_id + device_id
  *   LeafContent   C_leaf + value
  *
- * `key_type` is ALWAYS CLEAR -- it selects both of the keys that will seal the parts --
- * and lives on LeafIdentity so it is not repeated per part.
+ * `key_type` is ALWAYS CLEAR -- it selects both of the keys that seal the parts, so it
+ * cannot itself be sealed -- and lives on LeafIdentity so it is not repeated per part.
  *
  *   part(p) = encoding(1B)||len8(nonce)||nonce||len8(tag)||tag||len32(body)||body
  *
  * Each part's encoding byte sits inside that framing, so a sealed and an unsealed part
- * can never collide once both modes exist.
+ * can never collide.
  *
- * THE DEVICE PRODUCES THE LEAF; the host stores it verbatim and must not synthesise
- * one. That is not enforceable while the parts are plaintext, but it becomes a hard
- * fact the moment they are sealed under device-only keys, so the protocol is shaped for
- * it now rather than being changed later.
+ * THE DEVICE PRODUCES THE LEAF and the host stores it verbatim. This is not a convention
+ * the host is asked to respect -- it holds neither K_ident nor K_data, so it cannot
+ * produce a part at all.
  *
  * An EMPTY part (empty body) means DELETED. Note this differs from an entry whose value
  * merely happens to be empty, which is a PRESENT part whose body carries a zero-length
