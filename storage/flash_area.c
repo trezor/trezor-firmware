@@ -70,8 +70,10 @@ const void *flash_area_get_address(const flash_area_t *area, uint32_t offset,
     uint32_t subarea_size = flash_sector_size(first_sector, num_sectors);
     // Does the requested block start in the sub-area?
     if (offset < subarea_size) {
-      // Does the requested block fit in the sub-area?
-      if (offset + size <= subarea_size) {
+      // Does the requested block fit in the sub-area? Written as a subtraction
+      // so that a large `size` cannot wrap the sum past the limit. The
+      // subtraction cannot underflow, `offset` is below `subarea_size` here.
+      if (size <= subarea_size - offset) {
         const uint8_t *ptr =
             (const uint8_t *)flash_get_address(first_sector, 0, 0);
         // We expect that all sectors/pages in the sub-area make
@@ -155,7 +157,9 @@ secbool __wur flash_area_write_data_padded(const flash_area_t *area,
   if (data_size > total_size) {
     return secfalse;
   }
-  if (offset + total_size > flash_area_get_size(area)) {
+  // Written as a subtraction so that the sum cannot wrap past the area size
+  const uint32_t area_size = flash_area_get_size(area);
+  if (offset > area_size || total_size > area_size - offset) {
     return secfalse;
   }
 
