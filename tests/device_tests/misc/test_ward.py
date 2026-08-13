@@ -706,3 +706,52 @@ def test_ward_verifies_a_present_entry_against_the_root(session: Session):
         session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p)
     )
     assert "Petr_label" in rec.text
+
+
+# --- the root outlives the session -------------------------------------------------
+
+
+@pytest.mark.models("core")
+def test_ward_root_survives_a_new_session(session: Session):
+    """A root written in one session is still there in the next.
+
+    This is what persistence buys. Before it, a device that lost its session verified
+    nothing until the next write -- and "nothing is checked" reads exactly like ordinary
+    operation, so it is the failure that hides. The second session performs NO write, so
+    the only root it can be verifying against is the stored one.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"Petr_label")
+
+    # via the test context, not session.client: that returns a bare ThpSession with no
+    # debug plumbing, so the input flows and expected-response checks would not attach
+    fresh = session.test_ctx.get_session()
+    _res, rec = _read(
+        fresh, store, lambda p: ward.get_entry(fresh, _APP, b"addr1", p)
+    )
+    assert "Petr_label" in rec.text
+
+    # and it is really verifying: a rolled-back leaf is refused in the new session too
+    stale = WardTrie()
+    stale.set(
+        expected_entry_key(_K_PATH, _APP, b"addr1"),
+        store.blobs[expected_entry_key(_K_PATH, _APP, b"addr1")],
+    )
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"moved_on", p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+
+    another = session.test_ctx.get_session()
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
+        ward.get_entry(another, _APP, b"addr1", ward.store_provider(stale))
+
+
+# NOTE: roots are stored PER HIDDEN WALLET, keyed by a passphrase-dependent wallet_id, and
+# that isolation is covered at the storage level rather than here -- a device-level test
+# would need `setup_client(passphrase=True)` and two explicit passphrases, and the keys the
+# oracle in this file derives assume the default empty one. Worth adding, but it needs that
+# fixture work first rather than a guess at it.

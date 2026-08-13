@@ -106,7 +106,10 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     # Check the answer against the root the device trusts, BEFORE opening anything. A host
     # that says "no such entry" has to prove it, or it could hide any entry it dislikes
     # simply by denying it exists.
+    from .root import get_root
+
     _verify_against_root(
+        await get_root(),
         entry_key,
         leaf_key_type,
         id_part,
@@ -148,6 +151,7 @@ async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
 
 
 def _verify_against_root(
+    root: bytes | None,
     entry_key: bytes,
     key_type: str,
     id_part,
@@ -166,10 +170,8 @@ def _verify_against_root(
     """
     from trezor.wire import DataError
 
-    from .root import get_root
     from .trie import verify_membership, verify_nonmembership
 
-    root = get_root()
     if root is None:
         return
 

@@ -37,6 +37,17 @@ async def derive_k_path() -> bytes:
     return await _derive_slip21([b"ward", b"K_path"])
 
 
+async def derive_wallet_id() -> bytes:
+    """A 16-byte handle for the active hidden wallet, from the same seed as K_path.
+
+    Passphrase-dependent, so it distinguishes wallets, and it is a SLIP-21 leaf rather
+    than anything derived from a root or an identifier -- so it names the wallet without
+    revealing what the wallet contains. Used only to key this device's own storage; it is
+    never sent anywhere.
+    """
+    return (await _derive_slip21([b"ward", b"wallet_id"]))[:16]
+
+
 async def derive_k_ident(key_type: str) -> bytes:
     """K_ident(key_type) = SLIP21(seed, [b"ward", b"K_ident", key_type]).key().
 

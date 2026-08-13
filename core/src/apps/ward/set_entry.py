@@ -70,11 +70,11 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
         old_leaf,
         (key_type, id_part, val_part),
         proof,
-        get_root(),
+        await get_root(),
         witness_entry_key=witness_entry_key,
         witness_commit=witness_commit,
     )
-    set_root(new_root)
+    await set_root(new_root)
 
     return WARDLeafAck(
         entry_key=entry_key,
