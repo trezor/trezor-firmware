@@ -41,7 +41,7 @@ async def _handle_state_ENCRYPTED_TRANSPORT(channel: Channel) -> bool:
 
         channel.sessions[session_id] = s
 
-    elif channel.sessions[session_id].get_session_state() is SessionState.UNALLOCATED:
+    elif channel.sessions[session_id].get_session_state() == SessionState.UNALLOCATED:
         raise ThpUnallocatedSessionError(session_id)
 
     s = channel.sessions[session_id]
