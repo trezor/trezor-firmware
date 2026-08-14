@@ -50,6 +50,12 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     # only way one reaches an attested round is through WardRecoverCounter, which refuses
     # anything that is not going backwards and holds for confirmation first. Re-asking here
     # would be asking about a decision already made.
+    # This is also what makes BATCHING WM confirmations free today, which is worth stating
+    # because it looks like missing work: a write commits its root with no WM involvement at
+    # all, and any counter above the stored one is adopted here, so ten writes followed by one
+    # sync round is already the supported shape. Batching only becomes real work if writes ever
+    # commit solely on WM confirmation -- then each needs its own round, and amortising them is
+    # part of that change rather than a prerequisite for it. See `storage/ward.py`.
     stored_counter = await get_counter()
     if counter == stored_counter:
         current = await get_root()
