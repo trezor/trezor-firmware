@@ -843,6 +843,8 @@ class MessageType(IntEnum):
     WARDIngestAttestationAck = 2310
     WARDReconcile = 2311
     WARDReconcileAck = 2312
+    WARDVerifyChain = 2313
+    WARDVerifyChainAck = 2314
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -10254,6 +10256,7 @@ class WARDLeafAck(protobuf.MessageType):
         3: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
         4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         5: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10264,12 +10267,71 @@ class WARDLeafAck(protobuf.MessageType):
         content: Optional["LeafContent"] = None,
         counter: Optional["int"] = None,
         mac: Optional["bytes"] = None,
+        auth_commit: Optional["bytes"] = None,
     ) -> None:
         self.entry_key = entry_key
         self.identity = identity
         self.content = content
         self.counter = counter
         self.mac = mac
+        self.auth_commit = auth_commit
+
+
+class WARDChainLink(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("to_counter", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        from_counter: Optional["int"] = None,
+        from_root: Optional["bytes"] = None,
+        to_counter: Optional["int"] = None,
+        to_root: Optional["bytes"] = None,
+        auth_commit: Optional["bytes"] = None,
+    ) -> None:
+        self.from_counter = from_counter
+        self.from_root = from_root
+        self.to_counter = to_counter
+        self.to_root = to_root
+        self.auth_commit = auth_commit
+
+
+class WARDVerifyChain(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2313
+    FIELDS = {
+        1: protobuf.Field("links", "WARDChainLink", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        links: Optional[Sequence["WARDChainLink"]] = None,
+    ) -> None:
+        self.links: Sequence["WARDChainLink"] = links if links is not None else []
+
+
+class WARDVerifyChainAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2314
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: Optional["int"] = None,
+        new_root: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
 
 
 class WARDSync(protobuf.MessageType):

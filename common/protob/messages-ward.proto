@@ -236,6 +236,64 @@ message WARDLeafAck {
     // publishing, which is the right way round compared with silently losing the write.
     optional uint32 counter = 4;
     optional bytes  mac     = 5;  // mac over (new root, counter); the WM signs it blind
+
+    // Authorises THIS transition: HMAC(K_auth, tag || ward_id || from_counter ||
+    // from_root || to_counter || to_root). The host stores it with the link -- it knows
+    // both endpoints, having held the tree before and after -- so that another device of
+    // this wallet can later verify the step without having witnessed it.
+    optional bytes auth_commit = 6;
+}
+
+/**
+ * One authorised step from one root to the next.
+ *
+ * `auth_commit` is a MAC under a seed-derived key, so only a device of this wallet could
+ * have produced it -- and only such a device can check it. The host holds these without
+ * being able to forge or read them.
+ *
+ * Absent roots mean the empty tree.
+ */
+message WARDChainLink {
+    optional uint32 from_counter = 1;
+    optional bytes  from_root    = 2;
+    optional uint32 to_counter   = 3;
+    optional bytes  to_root      = 4;
+    optional bytes  auth_commit  = 5;
+}
+
+/**
+ * Request: adopt the attested head by proving it DESCENDS from the head this device
+ * already holds, rather than by being handed a root and told to trust it.
+ *
+ * Runs after WARDIngestAttestation, in place of WARDReconcile. The device folds the links
+ * from its own head forward, checking at each step that the counter and root are
+ * contiguous, that the counter advances by exactly one, and that the step was authorised.
+ * The chain must terminate at the attested counter, and its final root must reproduce the
+ * attested mac.
+ *
+ * This is what a device needs when it has fallen more than one step behind -- another
+ * device of the wallet wrote while it was away. Reconcile alone would accept the new head
+ * on the WM's word; this additionally establishes that every intervening step was made by
+ * a device holding the seed, and that no step was skipped, which is how a fork would
+ * otherwise stay invisible.
+ *
+ * Descent is not currency: the WM attestation supplies that, and the two are joined by
+ * requiring the chain to end exactly where the attestation says.
+ * @start
+ * @next WARDVerifyChainAck
+ * @next Failure
+ */
+message WARDVerifyChain {
+    repeated WARDChainLink links = 1;  // ordered, starting at the device's current head
+}
+
+/**
+ * Response: the head the device adopted.
+ * @end
+ */
+message WARDVerifyChainAck {
+    optional uint32 counter  = 1;
+    optional bytes  new_root = 2;  // absent if the adopted tree is empty
 }
 
 /**

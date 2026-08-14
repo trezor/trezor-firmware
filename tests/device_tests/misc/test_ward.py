@@ -53,7 +53,9 @@ from ...input_flows import InputFlowConfirmAllWarnings
 from ...ward_trie import WardTrie
 from ...ward_wm import MockWM
 from ...ward_keys import (
+    auth_commit,
     bip39_seed,
+    derive_k_auth,
     derive_k_mac,
     derive_ward_id,
     root_mac,
@@ -76,6 +78,7 @@ _K_PATH = derive_k_path(_SEED)
 _K_IDENT = derive_k_ident(_SEED)
 _K_DATA = derive_k_data(_SEED)
 _K_MAC = derive_k_mac(_SEED)
+_K_AUTH = derive_k_auth(_SEED)
 _WARD_ID = derive_ward_id(_SEED)
 
 
@@ -805,6 +808,9 @@ def _subset(store: WardTrie, keys) -> WardTrie:
     for k in keys:
         out.set(k, store.blobs[k])
     out.counter = store.counter
+    # NOTE: a subset holding every leaf of its source has the SAME root. Where a test
+    # needs a genuinely different tree, assert that -- otherwise it can silently become a
+    # test of the identical tree, which passes for the wrong reason.
     return out
 
 
@@ -1091,3 +1097,174 @@ def test_ward_an_unpublished_write_blocks_sync_rather_than_losing_it(session: Se
     # ...and the write is still readable afterwards
     _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
     assert "unpublished" in rec.text
+
+
+# --- catching up on transitions this device missed -----------------------------------
+
+
+def _link(from_counter, from_root, to_counter, to_root):
+    """A transition minted by "another device of this wallet".
+
+    The oracle holds K_auth because it holds the seed, which is exactly what a second
+    device would. That is what lets a single-emulator test exercise catch-up at all: this
+    device is always at its own latest counter, so it can never fall behind itself.
+    """
+    return (
+        from_counter,
+        from_root,
+        to_counter,
+        to_root,
+        auth_commit(_K_AUTH, _WARD_ID, from_counter, from_root, to_counter, to_root),
+    )
+
+
+@pytest.mark.models("core")
+def test_ward_catches_up_across_transitions_it_never_saw(session: Session):
+    """The device adopts a head two steps ahead, by verifying each step.
+
+    Reconcile would take this head on the WM's word alone. The chain additionally shows
+    every intervening step was authorised by a device of this wallet and that none was
+    skipped -- so the head is on this wallet's history, not a fork of it.
+    """
+    store = WardTrie()
+    k1 = _seed(session, store, b"a", b"one")
+    k2 = _seed(session, store, b"b", b"two")
+    base_counter, base_root = store.counter, store.root()
+
+    # two transitions made elsewhere while this device was away
+    mid = _subset(store, [k1])
+    head = _subset(store, [k2])
+    links = [
+        _link(base_counter, base_root, base_counter + 1, mid.root()),
+        _link(base_counter + 1, mid.root(), base_counter + 2, head.root()),
+    ]
+    target = base_counter + 2
+
+    wm = MockWM()
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac)
+    ward.ingest_attestation(session, target, mac, sig)
+    res = ward.verify_chain(session, links)
+
+    assert res.counter == target
+    assert res.new_root == head.root()
+
+    # the adopted tree is the one it now verifies against
+    head.counter = target
+    _res, rec = _read(session, head, lambda p: ward.get_entry(session, _APP, b"b", p))
+    assert "two" in rec.text
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_a_chain_with_a_gap(session: Session):
+    """A skipped step is how a fork stays invisible: every link is authentic, but the
+    device never sees the transition that diverged."""
+    store = WardTrie()
+    k1 = _seed(session, store, b"a", b"one")
+    base_counter, base_root = store.counter, store.root()
+    head = _subset(store, [k1])
+
+    # jumps two counters in one link
+    links = [_link(base_counter, base_root, base_counter + 2, head.root())]
+
+    wm = MockWM()
+    ack = ward.sync(session)
+    target = base_counter + 2
+    mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac)
+    ward.ingest_attestation(session, target, mac, sig)
+
+    with pytest.raises(exceptions.TrezorFailure, match="exactly one"):
+        ward.verify_chain(session, links)
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_a_chain_that_does_not_start_at_its_own_head(session: Session):
+    """The baseline is the device's own head, never one the host names."""
+    store = WardTrie()
+    k1 = _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+    head = _subset(store, [k1])
+    # ...and it must genuinely differ, or the "wrong" baseline is the device's own head
+    # and the chain verifies correctly -- a test that cannot fail for its stated reason
+    assert head.root() != store.root()
+
+    target = store.counter + 1
+    # a link starting from a root this device is not at
+    links = [_link(store.counter, head.root(), target, head.root())]
+
+    wm = MockWM()
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac)
+    ward.ingest_attestation(session, target, mac, sig)
+
+    with pytest.raises(exceptions.TrezorFailure, match="does not follow the running root"):
+        ward.verify_chain(session, links)
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_an_unauthorised_link(session: Session):
+    """Without K_auth a link cannot be minted, so the host cannot invent a step."""
+    store = WardTrie()
+    k1 = _seed(session, store, b"a", b"one")
+    base_counter, base_root = store.counter, store.root()
+    head = _subset(store, [k1])
+    target = base_counter + 1
+
+    forged = [(base_counter, base_root, target, head.root(), bytes(32))]
+
+    wm = MockWM()
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac)
+    ward.ingest_attestation(session, target, mac, sig)
+
+    with pytest.raises(exceptions.TrezorFailure, match="not authorised"):
+        ward.verify_chain(session, forged)
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_a_chain_that_ends_somewhere_else(session: Session):
+    """Descent is not currency. A perfectly authorised chain to a DIFFERENT head than the
+    one attested must still be refused, or the two guarantees would not compose."""
+    store = WardTrie()
+    k1 = _seed(session, store, b"a", b"one")
+    base_counter, base_root = store.counter, store.root()
+    elsewhere = _subset(store, [k1])
+    attested = _subset(store, [])
+    # the whole point is that the chain ends somewhere the attestation did not name
+    assert elsewhere.root() != attested.root()
+
+    links = [_link(base_counter, base_root, base_counter + 1, elsewhere.root())]
+    target = base_counter + 1
+
+    wm = MockWM()
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, target, attested.root())  # attests a different root
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac)
+    ward.ingest_attestation(session, target, mac, sig)
+
+    with pytest.raises(exceptions.TrezorFailure, match="does not match the attested mac"):
+        ward.verify_chain(session, links)
+
+
+@pytest.mark.models("core")
+def test_ward_a_write_emits_its_own_authorisation(session: Session):
+    """Each write hands back the link that authorises it, and the host records it.
+
+    Those links are what a device catching up later consumes; a host that dropped them
+    could not prove its own history.
+    """
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+
+    assert len(store.links) == 2
+    for from_counter, _fr, to_counter, _tr, ac in store.links:
+        assert to_counter == from_counter + 1
+        assert ac is not None and len(ac) == 32
+    # ...and they chain: each link starts where the previous ended
+    assert store.links[0][2] == store.links[1][0]
+    assert store.links[0][3] == store.links[1][1]
