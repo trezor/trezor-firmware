@@ -45,6 +45,9 @@ __all__ = [
     "derive_ward_id",
     "derive_k_mac",
     "root_mac",
+    "derive_k_auth",
+    "auth_commit",
+    "EMPTY_ROOT",
     "entry_key",
     "open_content",
     "open_identity",
@@ -86,18 +89,47 @@ def derive_k_mac(seed: bytes) -> bytes:
     return slip21_key(seed, [b"ward", b"K_mac"])
 
 
-def root_mac(k_mac: bytes, ward_id: bytes, counter: int, root) -> bytes:
-    """HMAC(K_mac, b"WARD ROOT v1" || ward_id || counter(4B BE) || root).
+# The empty-tree stand-in used wherever a root appears in a preimage: sha256(0x03),
+# domain-separated from the leaf/internal/commit tags. Mirrors apps.ward.attest.EMPTY_ROOT.
+EMPTY_ROOT = hashlib.sha256(b"\x03").digest()
 
-    An absent root -- the empty tree -- macs the all-zero root, so "empty" is still bound
-    to a counter rather than being unbound.
-    """
+
+def _root_or_empty(root):
+    return root if root is not None else EMPTY_ROOT
+
+
+def root_mac(k_mac: bytes, ward_id: bytes, counter: int, root) -> bytes:
+    """HMAC(K_mac, b"WARD ROOT v1" || ward_id || counter(4B BE) || root)."""
     return hmac.new(
         k_mac,
-        b"WARD ROOT v1"
+        b"WARD ROOT v1" + ward_id + counter.to_bytes(4, "big") + _root_or_empty(root),
+        hashlib.sha256,
+    ).digest()
+
+
+def derive_k_auth(seed: bytes) -> bytes:
+    """K_auth, which authorises a transition. Every device of the wallet holds it."""
+    return slip21_key(seed, [b"ward", b"K_auth"])
+
+
+def auth_commit(
+    k_auth: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_root,
+    to_counter: int,
+    to_root,
+    tag: bytes = b"WARD COMMIT v1",
+) -> bytes:
+    """HMAC(K_auth, tag || ward_id || from_counter || from_root || to_counter || to_root)."""
+    return hmac.new(
+        k_auth,
+        tag
         + ward_id
-        + counter.to_bytes(4, "big")
-        + (root if root is not None else bytes(32)),
+        + from_counter.to_bytes(4, "big")
+        + _root_or_empty(from_root)
+        + to_counter.to_bytes(4, "big")
+        + _root_or_empty(to_root),
         hashlib.sha256,
     ).digest()
 

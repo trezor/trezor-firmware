@@ -5,6 +5,7 @@ from trezor.wire import DataError
 
 from apps.ward.keys import _scope, entry_key
 from apps.ward import attest as A
+from apps.ward import cas as CAS
 from apps.ward import leaf as L
 from apps.ward.trie import (
     addr_bit,
@@ -804,6 +805,112 @@ class TestWardAttestation(unittest.TestCase):
         sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac))
         self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, sig[:63]))
         self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, sig + b"\x00"))
+
+
+class TestWardCas(unittest.TestCase):
+    """Authorising a transition from one root to the next.
+
+    A MAC rather than a signature: K_auth is seed-derived, so exactly the parties that
+    need to verify a transition -- the other devices of this wallet -- can, and nobody
+    else. See cas.py for when that would need to become a signature.
+    """
+
+    K_AUTH = bytes(range(32))
+    WARD_ID = bytes(range(32, 64))
+    R1 = bytes([1]) * 32
+    R2 = bytes([2]) * 32
+
+    def _link(self, f, fr, t, tr):
+        return (f, fr, t, tr, CAS.auth_commit(self.K_AUTH, self.WARD_ID, f, fr, t, tr))
+
+    def test_empty_root_sentinel(self):
+        """A root inside a preimage is fixed-width, so the empty tree needs an encoding no
+        real root can take. sha256(0x03), domain-separated from the leaf/internal/commit
+        tags -- and spelled as a literal, so this asserts it really is that hash."""
+        from trezor.crypto.hashlib import sha256
+
+        self.assertEqual(A.EMPTY_ROOT, sha256(b"\x03").digest())
+
+    def test_preimage_names_both_endpoints(self):
+        """Binding only the destination would let a link be lifted out of its place in the
+        history and replayed after a different predecessor -- which is what a chain exists
+        to prevent."""
+        pre = CAS.transition_preimage(CAS.TAG_COMMIT, self.WARD_ID, 4, self.R1, 5, self.R2)
+        self.assertEqual(
+            pre,
+            CAS.TAG_COMMIT
+            + self.WARD_ID
+            + (4).to_bytes(4, "big")
+            + self.R1
+            + (5).to_bytes(4, "big")
+            + self.R2,
+        )
+        # the empty tree appears as the sentinel, not as an absent field
+        self.assertTrue(
+            A.EMPTY_ROOT
+            in CAS.transition_preimage(CAS.TAG_COMMIT, self.WARD_ID, 0, None, 1, self.R1)
+        )
+
+    def test_every_field_is_bound(self):
+        mac = CAS.auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2)
+        self.assertTrue(
+            CAS.verify_auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, mac)
+        )
+        for args in (
+            (self.K_AUTH, self.WARD_ID, 3, self.R1, 5, self.R2),
+            (self.K_AUTH, self.WARD_ID, 4, self.R2, 5, self.R2),
+            (self.K_AUTH, self.WARD_ID, 4, self.R1, 6, self.R2),
+            (self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R1),
+            (self.K_AUTH, bytes(32), 4, self.R1, 5, self.R2),
+            (bytes(32), self.WARD_ID, 4, self.R1, 5, self.R2),
+        ):
+            self.assertFalse(CAS.verify_auth_commit(*args, mac))
+
+    def test_a_revert_is_not_a_commit(self):
+        """Same endpoints, different meaning. Sharing a tag would let a rollback be
+        replayed as an ordinary write, or the reverse."""
+        commit = CAS.auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2)
+        revert = CAS.auth_commit(
+            self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, CAS.TAG_REVERT
+        )
+        self.assertNotEqual(commit, revert)
+        self.assertFalse(
+            CAS.verify_auth_commit(
+                self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, revert
+            )
+        )
+
+    def test_a_genuine_chain_folds_to_its_head(self):
+        counter, root = 0, None
+        for link in (self._link(0, None, 1, self.R1), self._link(1, self.R1, 2, self.R2)):
+            counter, root = CAS.verify_chain_step(
+                self.K_AUTH, self.WARD_ID, counter, root, link
+            )
+        self.assertEqual((counter, root), (2, self.R2))
+
+    def test_the_chain_refuses_every_way_of_lying_with_real_links(self):
+        """Each link here is individually authentic; only its placement is wrong. That is
+        the interesting case -- forged links are the easy half."""
+        # a gap, which is how a fork stays invisible
+        with self.assertRaises(DataError):
+            CAS.verify_chain_step(
+                self.K_AUTH, self.WARD_ID, 0, None, self._link(0, None, 2, self.R2)
+            )
+        # a link from another branch
+        with self.assertRaises(DataError):
+            CAS.verify_chain_step(
+                self.K_AUTH, self.WARD_ID, 1, self.R1, self._link(1, self.R2, 2, self.R2)
+            )
+        # a link that starts somewhere the running head is not
+        with self.assertRaises(DataError):
+            CAS.verify_chain_step(
+                self.K_AUTH, self.WARD_ID, 5, self.R1, self._link(1, self.R1, 2, self.R2)
+            )
+        # and one that was never authorised at all
+        with self.assertRaises(DataError):
+            CAS.verify_chain_step(
+                self.K_AUTH, self.WARD_ID, 0, None, (0, None, 1, self.R1, bytes(32))
+            )
 
 
 if __name__ == "__main__":
