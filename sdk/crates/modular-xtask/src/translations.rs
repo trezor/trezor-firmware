@@ -1,3 +1,7 @@
+//! Formatting for an app's `translations/*.json` files: recursively sorts
+//! object keys and pretty-prints with a trailing newline, matching the
+//! style produced by `xtask modular translation-style`.
+
 use std::{collections::BTreeMap, fs};
 
 use anyhow::{Result, bail, ensure};
@@ -11,6 +15,8 @@ enum FileStatus {
     FatalError,
 }
 
+/// Formats (or, with `check_only`, just checks the formatting of) every
+/// `*.json` file directly under the app's `translations/` directory.
 pub fn run(args: &ProjectArgs, check_only: bool) -> Result<()> {
     let mut project_dir = helpers::root_dir()?;
     if helpers::is_workspace()? {
@@ -84,5 +90,48 @@ fn sort_keys_recursive(value: Value) -> Value {
         }
         Value::Array(arr) => Value::Array(arr.into_iter().map(sort_keys_recursive).collect()),
         other => other,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn sorts_top_level_keys() {
+        let input = json!({"words__send": "Send", "address__confirmed": "Confirmed"});
+        let sorted = sort_keys_recursive(input);
+        let keys: Vec<&String> = sorted.as_object().unwrap().keys().collect();
+        assert_eq!(keys, ["address__confirmed", "words__send"]);
+    }
+
+    #[test]
+    fn sorts_nested_object_keys() {
+        // Per-layout translations are themselves objects (e.g. {"Eckhart":
+        // "...", "Delizia": "..."}), and must be sorted too.
+        let input = json!({"key": {"Eckhart": "e", "Delizia": "d", "Bolt": "b"}});
+        let sorted = sort_keys_recursive(input);
+        let inner_keys: Vec<&String> = sorted["key"].as_object().unwrap().keys().collect();
+        assert_eq!(inner_keys, ["Bolt", "Delizia", "Eckhart"]);
+    }
+
+    #[test]
+    fn leaves_arrays_and_scalars_unchanged() {
+        let input = json!({"b": [3, 1, 2], "a": "unchanged", "c": null});
+        let sorted = sort_keys_recursive(input.clone());
+        // Only object *keys* are sorted -- array element order and scalar
+        // values are left exactly as they were.
+        assert_eq!(sorted["b"], input["b"]);
+        assert_eq!(sorted["a"], input["a"]);
+        assert_eq!(sorted["c"], input["c"]);
+    }
+
+    #[test]
+    fn is_idempotent() {
+        let input = json!({"z": 1, "a": {"y": 2, "b": 3}});
+        let once = sort_keys_recursive(input);
+        let twice = sort_keys_recursive(once.clone());
+        assert_eq!(once, twice);
     }
 }

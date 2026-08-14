@@ -2,6 +2,7 @@
 name = "modular-xtask"
 version = "0.1.0"
 edition = "2024"
+description = "Build/test driver for Trezor modular apps (extapps)"
 license = "GPL-3.0-only"
 exclude = ["supply-chain/"]
 
@@ -10,10 +11,8 @@ clap = { version = "4.6.0", features = ["derive"] }
 cargo_metadata = "0.18"
 serde_json = "1"
 anyhow = "1.0.71"
-serde = { version = "1", features = ["derive"] }
 regex = "1"
 hex = "0.4"
-tempfile = "3"
 object = "0.39.1"
 sha2 = "0.11.0"
 zerocopy = "0.8.50"

@@ -1,10 +1,19 @@
+//! Reads and validates an app's `[package.metadata.trezor]` fields from its
+//! `Cargo.toml`, converting them into the fixed-size, packed byte layout the
+//! app binary header ([`crate::binary`] / [`crate::armv8m`]) embeds.
+
 use anyhow::{Context, Result, ensure};
 use cargo_metadata::Package;
 
+/// Maximum length, in bytes, of the packed app identifier (see [`app_identifier`]).
 pub const APP_ID_MAX_LEN: usize = 32;
+/// Maximum length, in bytes, of the packed app name (see [`app_name`]).
 pub const APP_NAME_MAX_LEN: usize = 32;
+/// Maximum length, in bytes, of the packed vendor name (see [`vendor_name`]).
 pub const APP_VENDOR_MAX_LEN: usize = 32;
+/// Maximum total length, in bytes, of the packed, null-terminated curve list (see [`curves`]).
 pub const APP_CURVES_MAX_LEN: usize = 64;
+/// Maximum total length, in bytes, of the packed, null-terminated path list (see [`paths`]).
 pub const APP_PATHS_MAX_LEN: usize = 256;
 
 /// Retrieves the app version from the package metadata and converts it into a 4-byte array.
@@ -142,6 +151,7 @@ pub fn paths(package: &Package) -> Result<[u8; APP_PATHS_MAX_LEN]> {
     pack_null_terminated_strings(paths, "paths")
 }
 
+/// Retrieves the SLIP-44 coin type from the package metadata.
 pub fn slip44_id(package: &Package) -> Result<u32> {
     let slip44_id = get_metadata_number(package, "slip44-id")?;
 
@@ -169,7 +179,7 @@ fn pack_null_terminated_strings<const MAX_LEN: usize>(
         let string_bytes = string.as_bytes();
 
         ensure!(
-            offset + string_bytes.len() + 1 <= MAX_LEN,
+            offset + string_bytes.len() < MAX_LEN,
             "{collection_name} are too long (max {} bytes)",
             MAX_LEN
         );
@@ -210,4 +220,52 @@ fn get_metadata_number(package: &Package, key: &str) -> Result<u64> {
         .ok_or_else(|| anyhow::anyhow!("{} must be a number in Cargo.toml", key))?
         .parse::<u64>()
         .with_context(|| format!("Failed to parse {key}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn packs_strings_null_terminated_in_order() {
+        let strings = vec![json!("secp256k1"), json!("ed25519")];
+        let packed: [u8; 32] = pack_null_terminated_strings(&strings, "curve").unwrap();
+
+        assert_eq!(&packed[..10], b"secp256k1\0");
+        assert_eq!(&packed[10..17], b"ed25519");
+        assert_eq!(packed[17], 0);
+        // Everything past the last terminator stays zero-padded.
+        assert!(packed[18..].iter().all(|&b| b == 0));
+    }
+
+    #[test]
+    fn empty_list_packs_to_all_zeros() {
+        let packed: [u8; 8] = pack_null_terminated_strings(&[], "curve").unwrap();
+        assert_eq!(packed, [0u8; 8]);
+    }
+
+    #[test]
+    fn rejects_non_string_elements() {
+        let strings = vec![json!("secp256k1"), json!(42)];
+        let err = pack_null_terminated_strings::<32>(&strings, "curve").unwrap_err();
+        assert!(err.to_string().contains("must be an array of strings"));
+    }
+
+    #[test]
+    fn rejects_when_total_length_exceeds_max_len() {
+        // "secp256k1\0" is 10 bytes; MAX_LEN=9 can't fit it plus the terminator.
+        let strings = vec![json!("secp256k1")];
+        let err = pack_null_terminated_strings::<9>(&strings, "curve").unwrap_err();
+        assert!(err.to_string().contains("too long"));
+    }
+
+    #[test]
+    fn exact_fit_is_allowed() {
+        // "ab\0" is exactly 3 bytes for MAX_LEN=3 -- the boundary must not
+        // be off by one in either direction.
+        let strings = vec![json!("ab")];
+        let packed: [u8; 3] = pack_null_terminated_strings(&strings, "curve").unwrap();
+        assert_eq!(packed, *b"ab\0");
+    }
 }

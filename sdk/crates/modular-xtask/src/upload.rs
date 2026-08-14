@@ -1,8 +1,14 @@
+//! Uploads an already-built app image to a physical device or emulator via
+//! `trezorctl trezorapp load`.
+
 use anyhow::{Context, Result, ensure};
 use std::process;
 
 use crate::{args::UploadArgs, helpers};
 
+/// Uploads the app image already published for `args.model`/`args.emulator`
+/// (see [`crate::postbuild::publish_artifact`]) using `trezorctl`, returning
+/// the loaded app's hash as reported by `trezorctl`.
 pub fn upload(args: &UploadArgs) -> Result<u64> {
     let binary =
         helpers::artifacts_dir(args.model, args.emulator)?.join(format!("{}.elf", &args.project));

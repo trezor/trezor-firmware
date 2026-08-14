@@ -1,3 +1,7 @@
+//! Steps that run after a successful `cargo build`: publishing the built
+//! ELF/bin as artifacts (see [`crate::helpers::artifacts_dir`]) and
+//! generating the Merkle proofs and RootPacket needed to load them.
+
 use crate::{args::Model, helpers};
 use anyhow::{Context, Ok, Result, ensure};
 use std::{
@@ -5,12 +9,18 @@ use std::{
     process::Command,
 };
 
+/// Strips app-internal symbol names from a built ELF that shouldn't leak
+/// into a published binary; see [`crate::tools::zero_symnames`].
 pub use crate::tools::zero_symnames;
 
 /// Python tool building the app Merkle proofs and the RootPacket(s), relative to the repo root.
 const TREZORAPP_TOOL: &str = "core/tools/trezor_core_tools/trezorapp_tool.py";
 
-/// Publishes a built binary by copying it to the `published` directory with a name that includes
+/// Publishes `binary` by copying it into the artifacts directory for
+/// `model`/`emulator` as `<app>.elf`, and updates the `latest` symlink to
+/// point at that directory. Called once with the freshly built ELF and
+/// again with the converted app image from [`crate::binary::convert_elf_to_bin`]
+/// (which overwrites the first copy under the same name).
 pub fn publish_artifact(binary: &Path, app: &str, model: Model, emulator: bool) -> Result<()> {
     let dir = helpers::artifacts_dir(model, emulator)?;
     helpers::ensure_directory(&dir)?;

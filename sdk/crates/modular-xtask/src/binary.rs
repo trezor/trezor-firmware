@@ -94,6 +94,13 @@ impl AppHeader {
     }
 }
 
+/// Converts the ELF at `elf_path` into the app binary format Core loads:
+/// prepends a fixed-size `AppHeader` (built from `package`'s
+/// `[package.metadata.trezor]`, see [`crate::metadata`]) to the
+/// architecture-specific payload -- the relocated ARMv8-M image from
+/// [`crate::armv8m`] for a hardware build, or the raw ELF bytes as-is for an
+/// x86-64 emulator build. Writes the result next to `elf_path` and returns
+/// its path.
 pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf> {
     let raw_elf = fs::read(elf_path)
         .with_context(|| format!("Failed to read the elf file {:?}", elf_path))?;
@@ -175,4 +182,59 @@ fn hash_payload(payload: &[u8], chunk_size: usize) -> [u8; 32] {
             hasher.update(prev_hash);
             hasher.finalize().into()
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sha256_of(chunk: &[u8], prev_hash: [u8; 32]) -> [u8; 32] {
+        let mut hasher = sha2::Sha256::new();
+        hasher.update(chunk);
+        hasher.update(prev_hash);
+        hasher.finalize().into()
+    }
+
+    #[test]
+    fn empty_payload_hashes_to_zero() {
+        // No chunks to fold over, so the fold's initial value comes through
+        // unchanged -- this is the "chunk_hash" a zero-length app would get.
+        assert_eq!(hash_payload(&[], 16), [0u8; 32]);
+    }
+
+    #[test]
+    fn single_chunk_matches_sha256_of_chunk_plus_zero_hash() {
+        let payload = b"hello world";
+        let expected = sha256_of(payload, [0u8; 32]);
+        assert_eq!(hash_payload(payload, payload.len()), expected);
+    }
+
+    #[test]
+    fn chains_chunks_in_reverse_order() {
+        // Two 4-byte chunks: the *last* chunk is hashed first (against the
+        // zero hash), then the *first* chunk is hashed against that result
+        // -- so the final hash commits to the whole payload, but each chunk
+        // can be verified against the previous chunk's hash while loading,
+        // in first-to-last order.
+        let payload = b"abcdwxyz";
+        let h_last = sha256_of(b"wxyz", [0u8; 32]);
+        let h_first = sha256_of(b"abcd", h_last);
+        assert_eq!(hash_payload(payload, 4), h_first);
+    }
+
+    #[test]
+    fn uneven_final_chunk_is_hashed_as_is() {
+        // 5 bytes with chunk_size=4 means chunks are [0..4] and [4..5]; the
+        // trailing short chunk is still hashed on its own, not padded.
+        let payload = b"abcde";
+        let h_last = sha256_of(b"e", [0u8; 32]);
+        let h_first = sha256_of(b"abcd", h_last);
+        assert_eq!(hash_payload(payload, 4), h_first);
+    }
+
+    #[test]
+    fn different_chunk_size_changes_the_hash() {
+        let payload = b"abcdefgh";
+        assert_ne!(hash_payload(payload, 4), hash_payload(payload, 8));
+    }
 }

@@ -1,3 +1,8 @@
+//! Path/directory helpers shared across the other modules: locating the
+//! calling project's cargo workspace, telling a workspace app apart from a
+//! standalone one, and resolving the build/profile/artifact directories a
+//! given [`BuildArgs`] invocation reads from or writes to.
+
 use anyhow::{Context, Result, anyhow, ensure};
 use cargo_metadata::{MetadataCommand, Package};
 use std::path::{Path, PathBuf};
@@ -37,7 +42,7 @@ pub fn build_dir() -> Result<PathBuf> {
     Ok(metadata.target_directory.into_std_path_buf())
 }
 
-// Returns the cargo workspace root directory or the project root if it's not in a workspace.
+/// Returns the cargo workspace root directory, or the project root if it's not in a workspace.
 pub fn root_dir() -> Result<PathBuf> {
     let metadata = MetadataCommand::new()
         .no_deps()
@@ -47,6 +52,10 @@ pub fn root_dir() -> Result<PathBuf> {
     Ok(metadata.workspace_root.into_std_path_buf())
 }
 
+/// Returns whether the calling project is a cargo workspace with multiple
+/// app packages (like this repository's `sdk/apps`), as opposed to a
+/// standalone single-package app repository consuming modular-xtask as a
+/// path dependency.
 pub fn is_workspace() -> Result<bool> {
     let metadata = MetadataCommand::new()
         .no_deps()
@@ -66,6 +75,7 @@ pub fn is_workspace() -> Result<bool> {
     }
 }
 
+/// Returns the metadata of the workspace package named `package_name`.
 pub fn app_package(package_name: &str) -> Result<Package> {
     let metadata = MetadataCommand::new()
         .no_deps()
@@ -80,20 +90,22 @@ pub fn app_package(package_name: &str) -> Result<Package> {
         .ok_or_else(|| anyhow!("Package '{}' not found in the workspace", package_name))
 }
 
+/// Returns the package name of a standalone (non-workspace) app. Fails if
+/// the calling project is actually a workspace; see [`is_workspace`].
 pub fn standalone_project_name() -> Result<String> {
     ensure!(
         !is_workspace()?,
         "Not a standalone project (multiple packages found in workspace)"
     );
 
-    Ok(MetadataCommand::new()
+    MetadataCommand::new()
         .no_deps()
         .exec()
         .context("Failed to read cargo metadata")?
         .packages
-        .get(0)
+        .first()
         .map(|p| p.name.clone())
-        .ok_or_else(|| anyhow!("Failed to determine standalone project name"))?)
+        .ok_or_else(|| anyhow!("Failed to determine standalone project name"))
 }
 
 /// Returns the directory where built artifacts for a specific model
@@ -179,10 +191,27 @@ pub fn git_modified() -> Result<bool> {
     Ok(modified)
 }
 
+/// Formats a [`std::process::Command`] as a shell-quoted string (program,
+/// arguments, and any environment variables set on it) suitable for
+/// printing to show the user the exact command being run.
+///
+/// ```
+/// use modular_xtask::helpers::command_args_to_string;
+/// use std::process::Command;
+///
+/// let mut cmd = Command::new("cargo");
+/// cmd.env("RUSTFLAGS", "-C target-cpu=cortex-m33");
+/// cmd.args(["build", "--release"]);
+///
+/// assert_eq!(
+///     command_args_to_string(&cmd),
+///     "RUSTFLAGS='-C target-cpu=cortex-m33' cargo build --release"
+/// );
+/// ```
 pub fn command_args_to_string(cmd: &std::process::Command) -> String {
     let envs: Vec<_> = cmd
         .get_envs()
-        .filter_map(|(k, v)| {
+        .map(|(k, v)| {
             let key = k.to_string_lossy();
             let val = v
                 .map(|v| {
@@ -191,7 +220,7 @@ pub fn command_args_to_string(cmd: &std::process::Command) -> String {
                     format!("'{}'", s.replace('\'', "'\\''"))
                 })
                 .unwrap_or_else(|| "''".to_string());
-            Some(format!("{}={}", key, val))
+            format!("{}={}", key, val)
         })
         .collect();
 
@@ -202,5 +231,42 @@ pub fn command_args_to_string(cmd: &std::process::Command) -> String {
         format!("{} {}", envs.join(" "), parts.join(" "))
     } else {
         parts.join(" ")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::process::Command;
+
+    #[test]
+    fn formats_program_and_args() {
+        let mut cmd = Command::new("cargo");
+        cmd.args(["build", "--release"]);
+        assert_eq!(command_args_to_string(&cmd), "cargo build --release");
+    }
+
+    #[test]
+    fn quotes_env_vars_and_places_them_before_the_command() {
+        let mut cmd = Command::new("cargo");
+        cmd.env("RUSTFLAGS", "-C target-cpu=cortex-m33");
+        cmd.arg("build");
+        assert_eq!(
+            command_args_to_string(&cmd),
+            "RUSTFLAGS='-C target-cpu=cortex-m33' cargo build"
+        );
+    }
+
+    #[test]
+    fn escapes_single_quotes_in_env_values() {
+        let mut cmd = Command::new("sh");
+        cmd.env("MSG", "it's here");
+        assert_eq!(command_args_to_string(&cmd), r#"MSG='it'\''s here' sh"#);
+    }
+
+    #[test]
+    fn no_env_vars_omits_the_leading_space() {
+        let cmd = Command::new("ls");
+        assert_eq!(command_args_to_string(&cmd), "ls");
     }
 }

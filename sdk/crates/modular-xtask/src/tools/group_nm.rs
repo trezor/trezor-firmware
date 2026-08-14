@@ -171,25 +171,23 @@ fn decompose_leaves(
                 let mut child_path = path.clone();
                 child_path.push(key.clone());
                 stack.push(child_path);
-            } else if child.bytes >= decompose_min {
-                if let Some((addr, size, full_name)) = child.sym.clone() {
-                    if let Some(groups) = decompose_symbol(
-                        binary,
-                        addr,
-                        size,
-                        &full_name,
-                        decompose_depth,
-                        addr2line,
-                        2,
-                    ) {
-                        if groups.len() > 1 {
-                            for (inline_name, inline_bytes) in groups {
-                                let mut inline_node = Node::new();
-                                inline_node.bytes = inline_bytes;
-                                child.children.insert(inline_name, inline_node);
-                            }
-                        }
-                    }
+            } else if child.bytes >= decompose_min
+                && let Some((addr, size, full_name)) = child.sym.clone()
+                && let Some(groups) = decompose_symbol(
+                    binary,
+                    addr,
+                    size,
+                    &full_name,
+                    decompose_depth,
+                    addr2line,
+                    2,
+                )
+                && groups.len() > 1
+            {
+                for (inline_name, inline_bytes) in groups {
+                    let mut inline_node = Node::new();
+                    inline_node.bytes = inline_bytes;
+                    child.children.insert(inline_name, inline_node);
                 }
             }
         }
@@ -212,7 +210,7 @@ fn print_tree(node: &Node, indent: usize, total: usize, min_print_size: usize) {
         .iter()
         .filter(|(_, c)| c.bytes >= min_print_size)
         .collect();
-    children.sort_by(|a, b| b.1.bytes.cmp(&a.1.bytes));
+    children.sort_by_key(|b| std::cmp::Reverse(b.1.bytes));
 
     let modules: Vec<_> = children
         .iter()
@@ -234,7 +232,7 @@ fn print_tree(node: &Node, indent: usize, total: usize, min_print_size: usize) {
             .map(|(n, c)| (n.to_string(), c.bytes))
             .collect();
         all_entries.push(("(self)".into(), self_bytes));
-        all_entries.sort_by(|a, b| b.1.cmp(&a.1));
+        all_entries.sort_by_key(|b| std::cmp::Reverse(b.1));
 
         for (name, bytes) in &all_entries {
             if name == "(self)" {
@@ -310,20 +308,90 @@ pub fn group_nm(
 
     let total = root.bytes.max(1);
 
-    if let Some(binary) = binary {
-        if binary.is_file() {
-            decompose_leaves(
-                binary.to_str().unwrap(),
-                &mut root,
-                decompose_min,
-                decompose_depth,
-                addr2line,
-            );
-        }
+    if let Some(binary) = binary
+        && binary.is_file()
+    {
+        decompose_leaves(
+            binary.to_str().unwrap(),
+            &mut root,
+            decompose_min,
+            decompose_depth,
+            addr2line,
+        );
     }
 
     println!("# Total: {total} bytes, min display: {min_print_size} bytes");
     print_tree(&root, 0, total, min_print_size);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unwrap_impl_strips_impl_block_and_trait() {
+        assert_eq!(unwrap_impl("<Foo as Bar>::baz"), "Foo::baz");
+    }
+
+    #[test]
+    fn unwrap_impl_strips_impl_block_without_trait() {
+        assert_eq!(unwrap_impl("<Foo>::baz"), "Foo::baz");
+    }
+
+    #[test]
+    fn unwrap_impl_leaves_plain_symbols_unchanged() {
+        assert_eq!(unwrap_impl("Foo::bar"), "Foo::bar");
+    }
+
+    #[test]
+    fn unwrap_impl_handles_nested_angle_brackets() {
+        // The closing '>' of the outer <..> block is the *matching* one, not
+        // the first one seen -- `Vec<Foo>` inside the impl block must not
+        // confuse the depth tracking.
+        assert_eq!(unwrap_impl("<Vec<Foo> as Bar>::baz"), "Vec<Foo>::baz");
+    }
+
+    fn hash_re() -> Regex {
+        // Mirrors the hash-suffix pattern group_nm strips before splitting
+        // (a `::h`-prefixed hex suffix rustc appends to mangled names).
+        Regex::new(r"::h[0-9a-f]{16}$").unwrap()
+    }
+
+    #[test]
+    fn split_path_splits_on_double_colon() {
+        assert_eq!(
+            split_path("std::vec::Vec::new", &hash_re()),
+            vec!["std", "vec", "Vec", "new"]
+        );
+    }
+
+    #[test]
+    fn split_path_does_not_split_inside_generics() {
+        assert_eq!(
+            split_path("std::collections::HashMap<K, V>::get", &hash_re()),
+            vec!["std", "collections", "HashMap<K, V>", "get"]
+        );
+    }
+
+    #[test]
+    fn split_path_strips_hash_suffix() {
+        assert_eq!(
+            split_path("std::vec::Vec::new::h0123456789abcdef", &hash_re()),
+            vec!["std", "vec", "Vec", "new"]
+        );
+    }
+
+    #[test]
+    fn yaml_key_quotes_special_characters() {
+        assert_eq!(yaml_key("plain_key"), "plain_key");
+        assert_eq!(yaml_key("has: colon"), "\"has: colon\"");
+        assert_eq!(yaml_key("-leading-dash"), "\"-leading-dash\"");
+    }
+
+    #[test]
+    fn yaml_key_escapes_backslashes_and_quotes() {
+        assert_eq!(yaml_key(r#"a"b\c"#), r#""a\"b\\c""#);
+    }
 }

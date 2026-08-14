@@ -1,7 +1,15 @@
+//! Runs an app's Python device-test suite (pytest) against an already-built
+//! artifact and an already-running Trezor emulator or physical device.
+
 use crate::{args::DeviceTestsArgs, helpers};
 use anyhow::{Context, Result, ensure};
 use std::process;
 
+/// Runs `pytest` against the app image already published for
+/// `args.model`/`args.emulator` (see [`crate::postbuild::publish_artifact`]),
+/// restricted to `args.test` if given. Requires a Trezor emulator or
+/// physical device to already be running and reachable; this does not start
+/// one itself.
 pub fn device_tests(args: &DeviceTestsArgs) -> Result<()> {
     let mut project_dir = helpers::root_dir()?;
     if helpers::is_workspace()? {
@@ -59,52 +67,5 @@ pub fn device_tests(args: &DeviceTestsArgs) -> Result<()> {
         }
     }
 
-    // if args.emulator {
-    //     let mut port = 8000;
-    //     let max_tries = 10;
-    //     let mut spawned = false;
-
-    //     for _ in 0..max_tries {
-    //         let mut cmd = process::Command::new("uv");
-    //         cmd.args([
-    //             "run",
-    //             "--",
-    //             project_dir
-    //                 .join("tests")
-    //                 .join("show_results.py")
-    //                 .to_str()
-    //                 .unwrap(),
-    //             "--port",
-    //             &port.to_string(),
-    //         ])
-    //         .current_dir(&project_dir);
-
-    //         println!("xtask: Showing device test results (port {port})");
-    //         println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
-
-    //         match cmd.spawn() {
-    //             Ok(_) => {
-    //                 spawned = true;
-    //                 break;
-    //             }
-    //             Err(e) => {
-    //                 if let Some(os_err) = e.raw_os_error() {
-    //                     if os_err == 98 {
-    //                         port += 1;
-    //                         continue;
-    //                     }
-    //                 }
-    //                 return Err(e).context("Failed to spawn `show_results.py`");
-    //             }
-    //         }
-    //     }
-
-    //     if !spawned {
-    //         anyhow::bail!(
-    //             "Could not start show_results.py on any port in range 8000-{}",
-    //             8000 + max_tries - 1
-    //         );
-    //     }
-    // }
     Ok(())
 }
