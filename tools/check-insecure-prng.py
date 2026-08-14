@@ -20,24 +20,10 @@ MODEL_MARKERS = {
     "T3W1": (MCU_MARKER, OPTIGA_MARKER, TROPIC_MARKER),
 }
 
-CHUNK_SIZE = 1024 * 1024
-
 
 def find_markers(path: Path, markers: Iterable[bytes]) -> set[bytes]:
-    markers = tuple(markers)
-    found: set[bytes] = set()
-    overlap_size = max(len(marker) for marker in markers) - 1
-    previous = b""
-
-    with path.open("rb") as binary:
-        while chunk := binary.read(CHUNK_SIZE):
-            data = previous + chunk
-            found.update(marker for marker in markers if marker in data)
-            if len(found) == len(markers):
-                break
-            previous = data[-overlap_size:]
-
-    return found
+    data = path.read_bytes()
+    return {marker for marker in markers if marker in data}
 
 
 def format_markers(markers: Iterable[bytes]) -> str:
@@ -74,6 +60,7 @@ def main(present: bool, absent: bool, model: str | None, filename: Path) -> None
         markers = MODEL_MARKERS[model]
     else:
         markers = (b"<PRNG-",)
+        
     found = find_markers(filename, markers)
 
     if present:
@@ -87,7 +74,9 @@ def main(present: bool, absent: bool, model: str | None, filename: Path) -> None
             raise click.exceptions.Exit(1)
     elif found:
         formatted = format_markers(found)
-        click.echo(f"{filename}: contains insecure PRNG marker(s): {formatted}", err=True)
+        click.echo(
+            f"{filename}: contains insecure PRNG marker(s): {formatted}", err=True
+        )
         raise click.exceptions.Exit(1)
 
 
