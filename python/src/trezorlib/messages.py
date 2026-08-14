@@ -845,6 +845,8 @@ class MessageType(IntEnum):
     WARDReconcileAck = 2312
     WARDVerifyChain = 2313
     WARDVerifyChainAck = 2314
+    WARDRollback = 2315
+    WARDRollbackAck = 2316
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -10418,6 +10420,43 @@ class WARDReconcileAck(protobuf.MessageType):
     ) -> None:
         self.counter = counter
         self.new_root = new_root
+
+
+class WARDRollback(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2315
+    FIELDS = {
+        1: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        to_root: Optional["bytes"] = None,
+        auth_commit: Optional["bytes"] = None,
+    ) -> None:
+        self.to_root = to_root
+        self.auth_commit = auth_commit
+
+
+class WARDRollbackAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2316
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: Optional["int"] = None,
+        new_root: Optional["bytes"] = None,
+        auth_commit: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.auth_commit = auth_commit
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):
