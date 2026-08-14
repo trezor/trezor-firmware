@@ -26,8 +26,8 @@
 #include <sys/rtc_scheduler.h>
 #include <sys/systimer.h>
 
-#include "../../pmic/pmic_charger.h"
-#include "../../wireless/stwlc38/stwlc38.h"
+#include "../pmic/pmic_charger.h"
+#include "../wireless/stwlc38/stwlc38.h"
 
 // Power manager thresholds & timings
 #define PM_TIMER_PERIOD_MS 100

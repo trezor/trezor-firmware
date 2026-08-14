@@ -29,9 +29,9 @@
 #include <sec/telemetry.h>
 #endif
 
-#include "../../fuel_gauge/battery.h"
-#include "../../pmic/pmic_charger.h"
-#include "../../wireless/stwlc38/stwlc38.h"
+#include "../fuel_gauge/battery.h"
+#include "../pmic/pmic_charger.h"
+#include "../wireless/stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 #ifdef PM_ENABLE_TEMP_CONTROL

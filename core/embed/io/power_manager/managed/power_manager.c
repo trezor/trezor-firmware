@@ -36,9 +36,9 @@
 #include <sec/telemetry.h>
 #endif
 
-#include "../../fuel_gauge/battery.h"
-#include "../../power_manager_poll.h"
-#include "../../wireless/stwlc38/stwlc38.h"
+#include "../fuel_gauge/battery.h"
+#include "../power_manager_poll.h"
+#include "../wireless/stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 // Global driver instance

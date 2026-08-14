@@ -100,9 +100,9 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
              (set `pmic = \"io/pmic_...\"` in the board's [power_manager] section)"
         );
         lib.add_sources([
-            "power_manager/policy/managed/power_manager.c",
-            "power_manager/policy/managed/power_monitoring.c",
-            "power_manager/policy/managed/power_states.c",
+            "power_manager/managed/power_manager.c",
+            "power_manager/managed/power_monitoring.c",
+            "power_manager/managed/power_states.c",
         ]);
 
         // Fuel gauge (SoC estimator). The `managed` policy speaks only to the
