@@ -53,7 +53,6 @@ fn main() -> Result<()> {
             "-Wno-implicit-fallthrough",
             "-Wno-enum-conversion",
             "-Wno-type-limits",
-            "-Wno-shift-negative-value",
             "-Wfloat-conversion",
             "-Wdouble-promotion",
             "-fno-common",
