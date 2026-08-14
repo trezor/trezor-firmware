@@ -1,3 +1,7 @@
+//! `cargo build`/`test`/`clippy`/... wrappers driven by [`BuildArgs`]/
+//! [`UnitTestArgs`], plus the post-build steps a `build` also runs: binary
+//! conversion, artifact publishing, and app proof/RootPacket generation.
+
 use anyhow::{Context, Result, ensure};
 use std::{ffi::OsStr, process};
 
@@ -6,6 +10,10 @@ use crate::{
     binary, helpers, postbuild, tools,
 };
 
+/// Builds the app for the model/language/profile in `args`, then converts
+/// the resulting ELF to the app binary format, publishes both as artifacts,
+/// and (unless `args.production`) generates the dev-signed app proofs and
+/// RootPacket needed to load it.
 pub fn build(args: &BuildArgs) -> Result<()> {
     // Build the component
     run_cargo_subcommand("build", args, None::<&[&str]>)?;
@@ -35,18 +43,23 @@ pub fn build(args: &BuildArgs) -> Result<()> {
     Ok(())
 }
 
+/// Runs `cargo clippy` with the feature/profile/target configuration for `args`.
 pub fn clippy(args: &BuildArgs) -> Result<()> {
     run_cargo_subcommand("clippy", args, None::<&[&str]>)
 }
 
+/// Runs `cargo check` with the feature/profile/target configuration for `args`.
 pub fn check(args: &BuildArgs) -> Result<()> {
     run_cargo_subcommand("check", args, None::<&[&str]>)
 }
 
+/// Runs `cargo size -A` with the feature/profile/target configuration for `args`.
 pub fn size(args: &BuildArgs) -> Result<()> {
     run_cargo_subcommand("size", args, Some(&["-A"]))
 }
 
+/// Runs `cargo nm` with the feature/profile/target configuration for `args`
+/// and prints a size-sorted, symbol-grouped breakdown of the resulting ELF.
 pub fn nm(args: &BuildArgs) -> Result<()> {
     let output = run_cargo_subcommand_output(
         "nm",
@@ -59,8 +72,10 @@ pub fn nm(args: &BuildArgs) -> Result<()> {
     Ok(())
 }
 
+/// Runs `cargo test` (host-target unit tests, not the app's own `no_std`
+/// build) with the `test` feature enabled, restricted to `args.test` if given.
 pub fn test(args: &UnitTestArgs) -> Result<()> {
-    let features = vec![
+    let features = [
         args.model.feature_name(),
         args.lang.feature_name(),
         "test",
@@ -77,7 +92,7 @@ pub fn test(args: &UnitTestArgs) -> Result<()> {
         cmd.arg("-p").arg(&args.project);
     }
     cmd.args(["--features", &features.join(",")])
-        .arg(args.test.to_string());
+        .arg(&args.test);
 
     println!("xtask: Running cargo test");
     println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
@@ -93,6 +108,7 @@ pub fn test(args: &UnitTestArgs) -> Result<()> {
     Ok(())
 }
 
+/// Runs `cargo clean` in the calling project's root.
 pub fn clean() -> Result<()> {
     let mut cmd = process::Command::new("cargo");
     cmd.arg("clean");
@@ -110,6 +126,8 @@ pub fn clean() -> Result<()> {
     Ok(())
 }
 
+/// Runs `cargo fmt` in the calling project's root, or `cargo fmt -- --check`
+/// if `check_only` is set.
 pub fn fmt(check_only: bool) -> Result<()> {
     let mut cmd = process::Command::new("cargo");
     cmd.arg("fmt");
@@ -189,5 +207,5 @@ where
         "`cargo {subcommand}` failed with status: {status}"
     );
 
-    return Ok(());
+    Ok(())
 }

@@ -4,6 +4,10 @@ use std::{
     path::PathBuf,
 };
 
+/// Zeroes out every symbol name in the ELF's symbol table (in place) except
+/// those in `keep_names`, without otherwise touching the file -- useful for
+/// scrubbing symbol names from a binary before it's published while keeping
+/// a chosen few (e.g. for later `addr2line` lookups) resolvable.
 pub fn zero_symnames<I, S>(elf_path: &PathBuf, keep_names: I, verbose: bool) -> Result<()>
 where
     I: IntoIterator<Item = S>,
