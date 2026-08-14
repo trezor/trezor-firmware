@@ -76,7 +76,7 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     if root_mac(await derive_k_mac(), ward_id, counter, running_root) != mac:
         raise DataError("chain end does not match the attested mac")
 
-    await set_root(running_root, counter, timestamp)
+    await set_root(running_root, counter, timestamp, attested=True)
     sync_round.clear()
 
     return WardVerifyChainAck(counter=counter, new_root=running_root)
