@@ -37,6 +37,31 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
     whichever way we encode it, so "no tombstone" only ever hid past entries from a party
     seeing current state alone. Reclaiming it would have to happen at the store layer.
 
+    DECIDED, NOT YET BUILT: a delete's payload becomes a SEALED TOMBSTONE, and a queued
+    intent additionally carries a MAC over (entry_key, op, counter) under K_auth. Both,
+    because each closes an attack the other cannot -- and the pair only matters once queued
+    intents are uploaded for another device to integrate.
+
+      The tombstone stops a FORGED delete. Today `EMPTY_PART` is plaintext with an empty
+      body in both parts, so any host can construct a delete leaf for any entry_key. A
+      sealed payload can only come from a holder of K_data.
+
+      The intent MAC stops a REPLAYED GENUINE WRITE presented as a queued intent at a path
+      that has since been deleted -- re-adding data the user deleted. The tombstone cannot
+      stop that: the leaf is authentic, and a deleted path has NO current leaf, so C_leaf
+      has nothing to be compared against. Only a counter inside an authenticated intent
+      bounds it.
+
+    Both are the same lesson as the sibling-kind fix, a third time: anything inferred from
+    an absent or empty field is host-controlled. A cleartext op discriminator would be too,
+    which is why the op goes inside the MAC.
+
+    Note what this changes and does not. The empty-parts leaf is never hashed into the trie
+    -- a delete removes the leaf, and the ack's empty parts are only the host's instruction
+    to drop the row -- so this is a wire and intent-record change, not a canonicalisation
+    one. It does mean the host can no longer tell a delete from a write by inspecting the
+    payload, so the op it acts on must come from the authenticated intent record.
+
     IDEMPOTENT ON A PROVED ABSENCE. Deleting a path that already holds nothing succeeds,
     changing nothing: same empty leaf, same counter, no authorised transition, and no
     screen. It is not a favour to sloppy hosts -- the absence has already been PROVED by

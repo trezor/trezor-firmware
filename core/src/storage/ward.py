@@ -56,13 +56,46 @@ TWO THINGS PERSISTENCE BUYS TODAY, both needing an answer first:
 The timestamp's place in the ATTESTATION PREIMAGE is a separate question from its place here:
 dropping it from storage needs no wire change.
 
-GAP(ward): the OFFLINE QUEUE has no home yet, and the choice lands here. In RAM it loses
-changes the user held to confirm; in flash it is new per-wallet persistent state, pulling
-against the shrink below; in Evolu it costs nothing here but needs an authenticator over the
-queued intent, since entry_key MACs the path and says nothing about the value -- without one
-the host can inject queue entries. Note also that a device with no host connection cannot
-pull, so it cannot prove current state and cannot derive a root: the queue holds INTENTS, not
-transitions, and must re-derive on reconnect.
+THE OFFLINE QUEUE: DECIDED FOR NOW, WITH ITS BLOCKERS LISTED. MVP is online-only, so the
+queue lives in EVOLU rather than on the device -- which duplicates the leaf data there, and is
+accepted for that reason alone. Flash is the intended destination later. Each candidate home
+and what stands in its way:
+
+  RAM is not actually available at the needed size. RAM that survives between requests is the
+  session cache, and its slots are FIXED-SIZE, statically declared as a literal tuple in
+  `cache_codec.py` / `cache_thp.py` and enforced by `utils.ensure(len(value) <= fields[key])`.
+  The largest existing slot is 128 bytes; WARD's round is 77. An intent is an entry_key plus a
+  value up to the 4096-byte AEAD bucket, so a queue of them fits nothing, and a module global
+  is not an option -- `trezor.wire` runs `unimport_end()` between workflows, which is what put
+  the sync round in the cache to begin with. A RAM queue therefore means a declared maximum of
+  two or three small intents, not a queue.
+
+  A RAM queue also makes the confirmation LIE: the user holds to confirm, the session drops,
+  the change is gone and nothing said so. It needs its own screen wording, not the write's.
+
+  FLASH, when it comes, must be keyed by wallet_id exactly as the root is -- otherwise a
+  passphrase switch applies one wallet's queue to another. It also spends the same budget as
+  the shrink discussed below: MAX_WALLETS is 8 because a record is 60 bytes, and a queue is
+  orders of magnitude larger, so the two trade against each other directly.
+
+  EVOLU works because the sealed leaf is itself an AUTHENTICATOR: the AEAD's AAD is
+  domain || entry_key || key_type, so only a holder of K_data -- every device of the wallet,
+  nobody else -- can produce a valid tag. A host cannot inject a fabricated write intent.
+  Deletes are the exception and need the sealed tombstone plus intent MAC described in
+  `delete_entry.py`; without those, uploading queued deletes lets a host delete anything.
+
+WHATEVER THE HOME, TWO THINGS HOLD. A queued intent is an INTENT, not a transition: a device
+with no host cannot pull, so it cannot prove current state and cannot derive a root. And an
+intent formed against root R is not applicable to R' -- its proof material and derived root are
+relative to R -- so reconnecting means RE-DERIVING each one against current state, which is
+mandatory machinery rather than an optimisation.
+
+KNOWN AND ACCEPTED: ATOMICITY AND CONSENT TRANSFER. A queued batch has no transaction to
+apply under -- Evolu's CRDT offers none -- so partial application can leave a state the user
+never approved. And when another device integrates intents, either it applies them silently,
+so the user never learns, or it re-confirms what was already approved once. Both are to be
+resolved by `rollback` when they go wrong, which is one more reason that path is load-bearing
+rather than an escape hatch (see `apps/ward/rollback.py`).
 
 THE PROPOSED ENABLER, AND WHY IT IS NOT YET ESTABLISHED. The argument for dropping the root
 is that if writes commit only on WM CONFIRMATION -- change held pending until the WM

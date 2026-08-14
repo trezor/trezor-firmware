@@ -144,6 +144,16 @@ def _fresh_nonce() -> bytes:
 # versions. Nothing reads it yet: no root exists to count, and the trie hashes the
 # encoded part without inspecting it. Fixed at 0 until the root lands, at which point a
 # real counter drops in without changing this layout or any hash over it.
+# C_leaf is THE COUNTER THIS LEAF WAS COMMITTED AT -- settled, and not the counter at which
+# the change was created. `set_entry` stamps the counter it is about to commit, so the two
+# coincide today; they diverge the moment an offline intent is queued, because the device
+# forms it before it knows the head counter and another device may commit it at a different
+# one. The committing device therefore stamps this, not the originating one, and a conflict
+# check compares against the CURRENT leaf's value.
+#
+# Nothing reads it yet. Its consumers are batch monotonicity and offline-queue conflict
+# detection, neither of which exists -- which is why reading it earlier would have meant
+# inventing semantics the design had not fixed.
 C_LEAF_UNUSED = 0
 
 
