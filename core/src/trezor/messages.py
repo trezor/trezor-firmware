@@ -8239,6 +8239,7 @@ if TYPE_CHECKING:
         counter: "int | None"
         mac: "AnyBytes | None"
         wm_signature: "AnyBytes | None"
+        timestamp: "int | None"
 
         def __init__(
             self,
@@ -8246,6 +8247,7 @@ if TYPE_CHECKING:
             counter: "int | None" = None,
             mac: "AnyBytes | None" = None,
             wm_signature: "AnyBytes | None" = None,
+            timestamp: "int | None" = None,
         ) -> None:
             pass
 
@@ -8329,6 +8331,40 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDRollbackAck"]:
+            return isinstance(msg, cls)
+
+    class WARDRecoverCounter(protobuf.MessageType):
+        counter: "int | None"
+        mac: "AnyBytes | None"
+        wm_signature: "AnyBytes | None"
+        timestamp: "int | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int | None" = None,
+            mac: "AnyBytes | None" = None,
+            wm_signature: "AnyBytes | None" = None,
+            timestamp: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDRecoverCounter"]:
+            return isinstance(msg, cls)
+
+    class WARDRecoverCounterAck(protobuf.MessageType):
+        counter: "int | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDRecoverCounterAck"]:
             return isinstance(msg, cls)
 
     class WebAuthnListResidentCredentials(protobuf.MessageType):

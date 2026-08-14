@@ -845,6 +845,8 @@ class MessageType(IntEnum):
     WARDVerifyChainAck = 2314
     WARDRollback = 2315
     WARDRollbackAck = 2316
+    WARDRecoverCounter = 2317
+    WARDRecoverCounterAck = 2318
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -10315,6 +10317,7 @@ class WARDIngestAttestation(protobuf.MessageType):
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10323,10 +10326,12 @@ class WARDIngestAttestation(protobuf.MessageType):
         counter: Optional["int"] = None,
         mac: Optional["bytes"] = None,
         wm_signature: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
     ) -> None:
         self.counter = counter
         self.mac = mac
         self.wm_signature = wm_signature
+        self.timestamp = timestamp
 
 
 class WARDIngestAttestationAck(protobuf.MessageType):
@@ -10409,6 +10414,43 @@ class WARDRollbackAck(protobuf.MessageType):
         self.counter = counter
         self.new_root = new_root
         self.auth_commit = auth_commit
+
+
+class WARDRecoverCounter(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2317
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: Optional["int"] = None,
+        mac: Optional["bytes"] = None,
+        wm_signature: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
+    ) -> None:
+        self.counter = counter
+        self.mac = mac
+        self.wm_signature = wm_signature
+        self.timestamp = timestamp
+
+
+class WARDRecoverCounterAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2318
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: Optional["int"] = None,
+    ) -> None:
+        self.counter = counter
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

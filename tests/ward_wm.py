@@ -42,7 +42,7 @@ __all__ = ["MockWM", "DEBUG_WM_SEED"]
 DEBUG_WM_SEED = b"AUTHDB QM DEBUG KEY SEED v1 ...."
 
 _ATTEST_DOMAIN = b"WARD ATTEST v1"
-_ATTEST_VERSION = 1
+_ATTEST_VERSION = 2
 
 
 class MockWM:
@@ -51,36 +51,43 @@ class MockWM:
     def __init__(self, seed: bytes = DEBUG_WM_SEED) -> None:
         self._seed = seed
         self._pub = _ed25519.publickey_unsafe(seed)
-        # ward_id -> (counter, mac). Deliberately not a root: a real WM never sees one.
-        self._heads: dict[bytes, tuple[int, bytes]] = {}
+        # ward_id -> (counter, mac, timestamp). Deliberately not a root: a real WM never
+        # sees one, and could not compute a mac if it did.
+        self._heads: dict[bytes, tuple[int, bytes, int]] = {}
 
     @property
     def pubkey(self) -> bytes:
         return self._pub
 
-    def publish(self, ward_id: bytes, counter: int, mac: bytes) -> None:
+    def publish(self, ward_id: bytes, counter: int, mac: bytes, timestamp: int) -> None:
+        # timestamp is REQUIRED, not defaulted. A default lets a caller publish at one time
+        # and ingest at another; the signature then covers a different timestamp than the
+        # message carries, and the test fails as "verification failed" -- which reads like a
+        # firmware bug rather than a test bug. Make the omission impossible instead.
         """Record what the wallet says is current.
 
         A real WM would take this from a device-authenticated write. It cannot check the
         mac -- that is the point -- so it records what it is told and its signature means
         only "this is what I was told, and it is the latest I hold".
         """
-        self._heads[ward_id] = (counter, mac)
+        self._heads[ward_id] = (counter, mac, timestamp)
 
-    def head(self, ward_id: bytes) -> Optional[tuple[int, bytes]]:
+    def head(self, ward_id: bytes) -> Optional[tuple[int, bytes, int]]:
         return self._heads.get(ward_id)
 
-    def attest(self, ward_id: bytes, nonce: bytes) -> tuple[int, bytes, bytes]:
-        """Sign the current (counter, mac) against this round's nonce.
+    def attest(self, ward_id: bytes, nonce: bytes) -> tuple[int, bytes, int, bytes]:
+        """Sign the current (counter, mac, timestamp) against this round's nonce.
 
-        Returns (counter, mac, signature). The nonce binding is what makes the answer
-        fresh rather than merely authentic.
+        Returns (counter, mac, timestamp, signature). The nonce binding is what makes the
+        answer fresh rather than merely authentic.
         """
-        counter, mac = self._heads[ward_id]
-        return counter, mac, self.sign(ward_id, nonce, counter, mac)
+        counter, mac, timestamp = self._heads[ward_id]
+        return counter, mac, timestamp, self.sign(ward_id, nonce, counter, mac, timestamp)
 
-    def sign(self, ward_id: bytes, nonce: bytes, counter: int, mac: bytes) -> bytes:
-        """Sign an arbitrary (counter, mac) -- used by tests that model a hostile WM."""
+    def sign(
+        self, ward_id: bytes, nonce: bytes, counter: int, mac: bytes, timestamp: int
+    ) -> bytes:
+        """Sign arbitrary values -- used by tests that model a hostile or broken WM."""
         message = (
             _ATTEST_DOMAIN
             + bytes([_ATTEST_VERSION])
@@ -88,5 +95,6 @@ class MockWM:
             + ward_id
             + counter.to_bytes(4, "big")
             + mac
+            + timestamp.to_bytes(8, "big")
         )
         return _ed25519.signature_unsafe(message, self._seed, self._pub)

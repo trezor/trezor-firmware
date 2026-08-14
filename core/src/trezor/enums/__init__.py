@@ -780,6 +780,8 @@ if TYPE_CHECKING:
         WARDVerifyChainAck = 2314
         WARDRollback = 2315
         WARDRollbackAck = 2316
+        WARDRecoverCounter = 2317
+        WARDRecoverCounterAck = 2318
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

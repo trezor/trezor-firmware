@@ -79,6 +79,10 @@ _K_IDENT = derive_k_ident(_SEED)
 _K_DATA = derive_k_data(_SEED)
 _K_MAC = derive_k_mac(_SEED)
 _K_AUTH = derive_k_auth(_SEED)
+
+# A fixed wall-clock base for attestations. The device has no clock; it only ever compares
+# what it was told last with what it is being told now.
+_T0 = 1_700_000_000
 _WARD_ID = derive_ward_id(_SEED)
 
 
@@ -166,7 +170,7 @@ def _publish(wm: MockWM, res) -> None:
     what it is told. Skipping it leaves the device ahead of the WM, which is a refused
     sync rather than a lost write.
     """
-    wm.publish(_WARD_ID, res.counter, res.mac)
+    wm.publish(_WARD_ID, res.counter, res.mac, _T0 + res.counter)
 
 
 def _seed(session: Session, store: WardTrie, identifier: bytes, value: bytes) -> bytes:
@@ -815,7 +819,11 @@ def _subset(store: WardTrie, keys) -> WardTrie:
 
 
 def _attest(
-    session: Session, wm: MockWM, store: WardTrie, counter: int | None = None
+    session: Session,
+    wm: MockWM,
+    store: WardTrie,
+    counter: int | None = None,
+    timestamp: int | None = None,
 ) -> None:
     """Run a full sync round: nonce, WM attestation, root.
 
@@ -825,13 +833,16 @@ def _attest(
     """
     if counter is None:
         counter = store.counter
+    if timestamp is None:
+        timestamp = _T0 + counter  # time moves with the counter, as it would in practice
     ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
-    wm.publish(ack.ward_id, counter, mac)
-    _c, _m, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(session, counter, mac, sig)
+    wm.publish(ack.ward_id, counter, mac, timestamp)
+    _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, counter, mac, sig, timestamp)
     ward.reconcile(session, store.root())
     store.counter = counter  # device and store now agree
+    store.timestamp = timestamp
 
 
 @pytest.mark.models("core")
@@ -884,10 +895,10 @@ def test_ward_refuses_an_attestation_from_the_wrong_signer(session: Session):
     counter = store.counter
     ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
-    sig = impostor.sign(ack.ward_id, ack.nonce, counter, mac)
+    sig = impostor.sign(ack.ward_id, ack.nonce, counter, mac, _T0 + counter)
 
     with pytest.raises(exceptions.TrezorFailure, match="attestation verification failed"):
-        ward.ingest_attestation(session, counter, mac, sig)
+        ward.ingest_attestation(session, counter, mac, sig, _T0 + counter)
 
 
 @pytest.mark.models("core")
@@ -906,11 +917,11 @@ def test_ward_refuses_an_attestation_bound_to_another_nonce(session: Session):
     counter = store.counter
     stale_ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
-    stale_sig = wm.sign(stale_ack.ward_id, stale_ack.nonce, counter, mac)
+    stale_sig = wm.sign(stale_ack.ward_id, stale_ack.nonce, counter, mac, _T0 + counter)
 
     ward.sync(session)  # a new round, a new nonce
     with pytest.raises(exceptions.TrezorFailure, match="attestation verification failed"):
-        ward.ingest_attestation(session, counter, mac, stale_sig)
+        ward.ingest_attestation(session, counter, mac, stale_sig, _T0 + counter)
 
 
 @pytest.mark.models("core")
@@ -930,9 +941,9 @@ def test_ward_refuses_a_root_that_does_not_match_the_attested_mac(session: Sessi
     counter = store.counter
     ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
-    wm.publish(ack.ward_id, counter, mac)
-    _c, _m, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(session, counter, mac, sig)
+    wm.publish(ack.ward_id, counter, mac, _T0 + counter)
+    _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, counter, mac, sig, _T0 + counter)
 
     with pytest.raises(exceptions.TrezorFailure, match="does not match the attested mac"):
         ward.reconcile(session, other.root())
@@ -951,9 +962,9 @@ def test_ward_refuses_an_attested_counter_below_the_floor(session: Session):
     behind = store.counter - 1
     ack = ward.sync(session)
     old_mac = root_mac(_K_MAC, _WARD_ID, behind, store.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, behind, old_mac)
+    sig = wm.sign(ack.ward_id, ack.nonce, behind, old_mac, _T0 + behind)
     with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
-        ward.ingest_attestation(session, behind, old_mac, sig)
+        ward.ingest_attestation(session, behind, old_mac, sig, _T0 + behind)
 
 
 @pytest.mark.models("core")
@@ -977,8 +988,8 @@ def test_ward_refuses_a_different_state_at_the_same_counter(session: Session):
 
     ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, counter, divergent.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, counter, mac)
-    ward.ingest_attestation(session, counter, mac, sig)
+    sig = wm.sign(ack.ward_id, ack.nonce, counter, mac, _T0 + counter)
+    ward.ingest_attestation(session, counter, mac, sig, _T0 + counter)
     with pytest.raises(exceptions.TrezorFailure, match="counter matches but the root differs"):
         ward.reconcile(session, divergent.root())
 
@@ -1058,8 +1069,8 @@ def test_ward_a_published_write_syncs_cleanly(session: Session):
     _publish(wm, res)
 
     ack = ward.sync(session)
-    counter, mac, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(session, counter, mac, sig)
+    counter, mac, ts, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, counter, mac, sig, ts)
     ward.reconcile(session, store.root())
     store.counter = counter  # device and store now agree
 
@@ -1089,10 +1100,10 @@ def test_ward_an_unpublished_write_blocks_sync_rather_than_losing_it(session: Se
     ack = ward.sync(session)
     behind = res.counter - 1
     mac = root_mac(_K_MAC, _WARD_ID, behind, stale.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, behind, mac)
+    sig = wm.sign(ack.ward_id, ack.nonce, behind, mac, _T0 + behind)
 
     with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
-        ward.ingest_attestation(session, behind, mac, sig)
+        ward.ingest_attestation(session, behind, mac, sig, _T0 + behind)
 
     # ...and the write is still readable afterwards
     _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
@@ -1143,8 +1154,8 @@ def test_ward_catches_up_across_transitions_it_never_saw(session: Session):
     wm = MockWM()
     ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac)
-    ward.ingest_attestation(session, target, mac, sig)
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
+    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
     res = ward.verify_chain(session, links)
 
     assert res.counter == target
@@ -1172,8 +1183,8 @@ def test_ward_refuses_a_chain_with_a_gap(session: Session):
     ack = ward.sync(session)
     target = base_counter + 2
     mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac)
-    ward.ingest_attestation(session, target, mac, sig)
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
+    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
 
     with pytest.raises(exceptions.TrezorFailure, match="exactly one"):
         ward.verify_chain(session, links)
@@ -1197,8 +1208,8 @@ def test_ward_refuses_a_chain_that_does_not_start_at_its_own_head(session: Sessi
     wm = MockWM()
     ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac)
-    ward.ingest_attestation(session, target, mac, sig)
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
+    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
 
     with pytest.raises(exceptions.TrezorFailure, match="does not follow the running root"):
         ward.verify_chain(session, links)
@@ -1218,8 +1229,8 @@ def test_ward_refuses_an_unauthorised_link(session: Session):
     wm = MockWM()
     ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac)
-    ward.ingest_attestation(session, target, mac, sig)
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
+    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
 
     with pytest.raises(exceptions.TrezorFailure, match="not authorised"):
         ward.verify_chain(session, forged)
@@ -1243,8 +1254,8 @@ def test_ward_refuses_a_chain_that_ends_somewhere_else(session: Session):
     wm = MockWM()
     ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, target, attested.root())  # attests a different root
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac)
-    ward.ingest_attestation(session, target, mac, sig)
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
+    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
 
     with pytest.raises(exceptions.TrezorFailure, match="does not match the attested mac"):
         ward.verify_chain(session, links)
@@ -1377,9 +1388,9 @@ def test_ward_rollback_unsticks_a_wallet_the_wm_never_saw(session: Session):
 
     ack_sync = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, published_counter, published_root)
-    sig = wm.sign(ack_sync.ward_id, ack_sync.nonce, published_counter, mac)
+    sig = wm.sign(ack_sync.ward_id, ack_sync.nonce, published_counter, mac, _T0 + published_counter)
     with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
-        ward.ingest_attestation(session, published_counter, mac, sig)
+        ward.ingest_attestation(session, published_counter, mac, sig, _T0 + published_counter)
 
     ack, _rec = _rollback(session, store)
     ward.apply_rollback(store, ack)
@@ -1387,3 +1398,163 @@ def test_ward_rollback_unsticks_a_wallet_the_wm_never_saw(session: Session):
     # the wallet is back on the published contents, at a counter beyond the stuck one
     assert ack.new_root == published_root
     assert ack.counter > published_counter
+
+
+# --- the clock, and the way back from it -------------------------------------------
+
+
+def _recover(session: Session, wm: MockWM, counter: int, mac: bytes, timestamp: int):
+    """Walk the recovery confirmation and return (ack, recorder)."""
+    ack_sync = ward.sync(session)
+    sig = wm.sign(ack_sync.ward_id, ack_sync.nonce, counter, mac, timestamp)
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_recover_counter"), m.WARDRecoverCounterAck]
+        )
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        ack = ward.recover_counter(session, counter, mac, sig, timestamp)
+    return ack, rec
+
+
+@pytest.mark.models("core")
+def test_ward_ingest_refuses_an_attestation_from_before_the_stored_time(session: Session):
+    """A WM whose clock ran backwards is refused even when its counter did not.
+
+    That combination is what a restore-from-backup looks like from the device's side when
+    the operator's counter register survived but the clock did not, and it is the only
+    thing the timestamp catches that the counter does not. Attested at the SAME counter,
+    so the anti-rollback check cannot be what fires -- otherwise this test would pass on a
+    build with no timestamp handling at all.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = MockWM()
+    _attest(session, wm, store)
+
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, store.counter, store.root())
+    long_ago = store.timestamp - 86400
+    sig = wm.sign(ack.ward_id, ack.nonce, store.counter, mac, long_ago)
+    with pytest.raises(exceptions.TrezorFailure, match="older than the stored time"):
+        ward.ingest_attestation(session, store.counter, mac, sig, long_ago)
+
+
+@pytest.mark.models("core")
+def test_ward_ingest_tolerates_clock_jitter(session: Session):
+    """...but a small backward step is ordinary NTP correction, not an incident.
+
+    The allowance is EPSILON_SECONDS. Without it every clock nudge on the WM would turn
+    into a support ticket, and the check would be tuned into uselessness by whoever had to
+    field them.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = MockWM()
+    _attest(session, wm, store)
+
+    # inside the allowance, and deliberately not equal to it -- an off-by-one on the
+    # boundary is not what this test is about
+    _attest(session, wm, store, timestamp=store.timestamp - 60)
+
+
+@pytest.mark.models("core")
+def test_ward_recover_counter_accepts_a_backward_attestation(session: Session):
+    """The way back from a WM that lost its register: an older head, with consent.
+
+    Monotonicity is what stops a replay, and when the operator's state is genuinely lost
+    it becomes a lock-out instead -- every device refuses every sync forever. This is the
+    only path that accepts a lower counter, and afterwards the wallet syncs again.
+    """
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    wm = MockWM()
+    _attest(session, wm, store)
+    old_counter, old_root, old_time = store.counter, store.root(), store.timestamp
+    old_mac = root_mac(_K_MAC, _WARD_ID, old_counter, old_root)
+
+    res, _rec = _write(
+        session, store, lambda p: ward.set_entry(session, _APP, b"b", b"two", p), "ward_set_entry"
+    )
+    ward.apply(store, res)
+    _attest(session, wm, store)
+    assert store.counter > old_counter
+
+    # the WM comes back from a backup: it now says the old head is current
+    ack, _rec = _recover(session, wm, old_counter, old_mac, old_time - 3600)
+    assert ack.counter == old_counter
+
+    # ...and the device adopts it, so the wallet is usable again
+    ward.reconcile(session, old_root)
+    rewound = _subset(store, [expected_entry_key(_K_PATH, _APP, b"a")])
+    assert rewound.root() == old_root
+    _res, rec = _read(session, rewound, lambda p: ward.get_entry(session, _APP, b"a", p))
+    assert "one" in rec.text
+
+
+@pytest.mark.models("core")
+def test_ward_recover_counter_refuses_an_attestation_that_is_not_older(session: Session):
+    """Recovery is for going backwards, and nothing else.
+
+    An ordinary attestation routed through here would work perfectly well and cost the
+    user a hold-to-confirm every sync, which is how a screen stops being read. The refusal
+    keeps this prompt rare enough to still mean something when it appears.
+    """
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    wm = MockWM()
+    _attest(session, wm, store)
+
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, store.counter, store.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, store.counter, mac, store.timestamp)
+    with pytest.raises(exceptions.TrezorFailure, match="not older"):
+        ward.recover_counter(session, store.counter, mac, sig, store.timestamp)
+
+
+@pytest.mark.models("core")
+def test_ward_recover_counter_still_requires_a_genuine_attestation(session: Session):
+    """Consent does not replace verification.
+
+    The user's approval covers "go back to this state", not "trust whoever said so": the
+    signature is checked against this round's nonce exactly as on the ordinary path, and
+    it fails before any screen -- so no input flow here.
+    """
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    wm = MockWM()
+    _attest(session, wm, store)
+    behind = store.counter - 1
+    mac = root_mac(_K_MAC, _WARD_ID, behind, store.root())
+
+    impostor = MockWM(seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
+    ack = ward.sync(session)
+    sig = impostor.sign(ack.ward_id, ack.nonce, behind, mac, store.timestamp - 3600)
+    with pytest.raises(exceptions.TrezorFailure, match="attestation verification failed"):
+        ward.recover_counter(session, behind, mac, sig, store.timestamp - 3600)
+
+
+@pytest.mark.models("core")
+def test_ward_recover_counter_screen_names_both_counters_and_the_distance(session: Session):
+    """The screen has to carry the decision, because the crypto cannot.
+
+    Everything presented here is authentic whether the operator is recovering or an
+    attacker is rewinding -- a replayed (counter, mac) pair is proof this wallet really did
+    reach that state, and says nothing about who is replaying it. The only thing that
+    separates the two cases is whether the user means it, so the prompt names where the
+    wallet is, where it is going, and how far back that is.
+    """
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    wm = MockWM()
+    _attest(session, wm, store)
+    behind = store.counter - 1
+    mac = root_mac(_K_MAC, _WARD_ID, behind, store.root())
+
+    _ack, rec = _recover(session, wm, behind, mac, store.timestamp - 7200)
+
+    assert "reset sync counter" in rec.title
+    assert "#%d" % store.counter in rec.squashed  # where it is
+    assert "#%d" % behind in rec.squashed  # where it is going
+    assert "hours" in rec.text  # and how far back
+    assert "may be lost" in rec.text

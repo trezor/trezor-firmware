@@ -416,6 +416,8 @@ enum MessageType {
     MessageType_WARDVerifyChainAck = 2314 [(wire_out) = true];
     MessageType_WARDRollback = 2315 [(wire_in) = true];
     MessageType_WARDRollbackAck = 2316 [(wire_out) = true];
+    MessageType_WARDRecoverCounter = 2317 [(wire_in) = true];
+    MessageType_WARDRecoverCounterAck = 2318 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

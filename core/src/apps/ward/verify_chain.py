@@ -33,7 +33,7 @@ async def verify_chain(msg: WARDVerifyChain) -> WARDVerifyChainAck:
     ctx = sync_round.get()
     if ctx is None or ctx[0] != sync_round._ATTESTED:
         raise DataError("no attested sync round to verify against")
-    _state, _nonce, counter, mac = ctx
+    _state, _nonce, counter, mac, timestamp = ctx
 
     ward_id = await derive_ward_id()
     k_auth = await derive_k_auth()
@@ -66,7 +66,7 @@ async def verify_chain(msg: WARDVerifyChain) -> WARDVerifyChainAck:
     if root_mac(await derive_k_mac(), ward_id, counter, running_root) != mac:
         raise DataError("chain end does not match the attested mac")
 
-    await set_root(running_root, counter)
+    await set_root(running_root, counter, timestamp)
     sync_round.clear()
 
     return WARDVerifyChainAck(counter=counter, new_root=running_root)
