@@ -553,6 +553,68 @@ class TestWardTrie(unittest.TestCase):
             )
         )
 
+    def test_false_absence_by_boundary_shift_is_rejected(self):
+        """A PRESENT key proved absent, using its own membership proof. Length checks stop it.
+
+        The leaf preimage concatenates entry_key and commit with nothing marking the
+        boundary, so (K, C) and (K || C[0], C[1:]) hash identically -- no attack on SHA-256
+        involved. A non-membership witness is host-supplied, and the other two checks do not
+        help: the shifted key DIFFERS from the target, and routing reads bits 0..255, i.e.
+        the first 32 bytes, so it agrees at every branch bit.
+
+        The consequence was a soundness break, not an inconvenience: a host could hide any
+        present entry on every read, and a delete of it would report the idempotent success
+        reserved for a proved absence.
+        """
+        shifted_key = self.MEMBER + self.WITNESS_COMMIT[:1]
+        shifted_commit = self.WITNESS_COMMIT[1:]
+        self.assertTrue(shifted_key != self.MEMBER)
+        self.assertEqual(
+            shifted_key + shifted_commit, self.MEMBER + self.WITNESS_COMMIT
+        )
+
+        # the primitive refuses to hash operands of the wrong width at all
+        with self.assertRaises(DataError):
+            leaf_hash_of(shifted_key, shifted_commit)
+
+        # ...and the witness is refused before the comparisons that would have passed
+        self.assertFalse(
+            verify_nonmembership(
+                self.MEMBER, shifted_key, shifted_commit, self.PROOF, self.ROOT
+            )
+        )
+
+    def test_preimage_operands_are_fixed_width(self):
+        """The same ambiguity, in every other preimage that concatenates opaque bytes.
+
+        Only the leaf one was exploitable -- the others are reachable but blocked by range
+        checks further on, or by a signature the host cannot forge. Pinning the widths at the
+        primitive means none of them depends on that accident holding.
+        """
+        short, long = bytes(31), bytes(33)
+        for bad in (short, long):
+            with self.assertRaises(DataError):
+                CAS.transition_preimage(b"WARD COMMIT v1", bad, 1, None, 2, None)
+            with self.assertRaises(DataError):
+                A.root_mac(bytes(32), bad, 1, None)
+            with self.assertRaises(DataError):
+                A.attestation_preimage(bytes(32), bytes(32), 1, bad, 0)
+
+        # and a shifted (from_root, to_counter, to_root) can no longer reproduce a genuine
+        # authorisation, which it could byte-for-byte before
+        wid, fr, tr = bytes(range(32)), bytes([7]) * 32, bytes([9]) * 32
+        genuine = CAS.transition_preimage(b"WARD COMMIT v1", wid, 2, fr, 3, tr)
+        with self.assertRaises(DataError):
+            CAS.transition_preimage(
+                b"WARD COMMIT v1",
+                wid,
+                2,
+                fr + (3).to_bytes(4, "big")[:1],
+                int.from_bytes((3).to_bytes(4, "big")[1:] + tr[:1], "big"),
+                tr[1:],
+            )
+        self.assertEqual(len(genuine), 14 + 32 + 4 + 32 + 4 + 32)
+
     def test_relabelled_split_bit_is_rejected(self):
         """THE malleability attack, and the reason split_bit is inside the node hash.
 
@@ -581,19 +643,30 @@ class TestWardTrie(unittest.TestCase):
             with self.assertRaises(DataError):
                 validate_proof_shape([bad])
 
-        # split bits must strictly increase from the root down. That is the whole of the
-        # shape check now: the skiplen it also used to reconcile is no longer carried,
-        # being derivable from exactly these values.
+        # Split bits must strictly increase from the root DOWN, and a proof is ordered
+        # leaf-to-root -- so a well-formed one has them DECREASING in list order. Getting
+        # that backwards writes a test that asserts nothing, which is what happened here
+        # while the skiplen arithmetic was doing the rejecting instead.
         with self.assertRaises(DataError):
-            validate_proof_shape([bytes([0, 5]) + good[2:], bytes([0, 2]) + good[2:]])
+            validate_proof_shape([bytes([0, 2]) + good[2:], bytes([0, 5]) + good[2:]])
+
+        # ...and the same two, the right way round, are accepted
+        self.assertEqual(
+            len(
+                validate_proof_shape(
+                    [bytes([0, 5]) + good[2:], bytes([0, 2]) + good[2:]]
+                )
+            ),
+            2,
+        )
 
     def test_proof_length_is_bounded_by_the_key_space(self):
         """No cap is needed: split_bit strictly increases and stays under 256, so a valid
         proof cannot exceed 256 elements however many the host sends."""
-        full = [bytes([0, b]) + bytes([0, 0]) + bytes(32) for b in range(255, -1, -1)]
+        full = [bytes([0, b]) + bytes(32) for b in range(255, -1, -1)]
         self.assertEqual(len(validate_proof_shape(full)), 256)
         with self.assertRaises(DataError):
-            validate_proof_shape(full + [bytes([1, 0]) + bytes([0, 0]) + bytes(32)])
+            validate_proof_shape(full + [bytes([1, 0]) + bytes(32)])
 
 
 class TestWardComputeNewRoot(unittest.TestCase):

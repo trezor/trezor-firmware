@@ -167,6 +167,7 @@ def verify_nonmembership(
     leaf that already occupies the path the target would take. Three things must hold,
     and dropping any one of them makes the proof forgeable:
 
+      0. every operand is exactly 32 bytes -- see the comment below, this one is load-bearing;
       1. the witness is a different key -- otherwise it proves presence, not absence;
       2. the witness is really in the tree, i.e. its leaf folds up to `expected_root`;
       3. the witness shares the target's path: the two agree at EVERY bit the proof
@@ -180,6 +181,20 @@ def verify_nonmembership(
     The witness travels as two hashes -- its path and its commitment -- so serving an
     absence proof reveals nothing about the witness's identifier or value.
     """
+    # Lengths FIRST. "differs from the target" and "agrees at every branch bit" are both
+    # satisfied by a witness key that is the target with extra bytes glued on -- and since
+    # the leaf preimage concatenates key and commit with no boundary marker, K || C[0] with
+    # commit C[1:] hashes to the target's own leaf. A host could then pass the target's
+    # MEMBERSHIP proof off as proof of absence. `leaf.leaf_hash_of` refuses that too; this
+    # rejects it before the comparisons below, which would otherwise pass and read as though
+    # the witness relationship were real.
+    if (
+        len(entry_key) != 32
+        or len(witness_entry_key) != 32
+        or len(witness_commit) != 32
+    ):
+        return False
+
     if witness_entry_key == entry_key:
         return False
 

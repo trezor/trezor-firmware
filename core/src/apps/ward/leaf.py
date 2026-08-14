@@ -334,13 +334,33 @@ def commit_of(key_type: str, id_part: "Part | None", val_part: "Part | None") ->
 
 
 def leaf_hash_of(entry_key: bytes, commit: bytes) -> bytes:
-    """leaf = sha256(0x00 || entry_key || commit).
+    """leaf = sha256(0x00 || entry_key || commit), both operands exactly 32 bytes.
 
     Takes the commitment rather than the parts, so a verifier can rebuild a witness leaf
     from (entry_key, commit) without ever holding the parts themselves.
+
+    THE LENGTHS ARE THE SECURITY, and this is not defensive tidiness. The preimage
+    concatenates two variable-length byte strings with nothing to mark the boundary, so
+    without a fixed width the split is ambiguous: (K, C) and (K || C[0], C[1:]) produce
+    IDENTICAL hashes, with no attack on SHA-256 involved.
+
+    That was a proof-soundness break, not a theoretical one. A non-membership witness is
+    supplied by the host, and the only checks on it were "differs from the target" and
+    "agrees with the target at every branch bit". A 33-byte witness key K || C[0] differs
+    from K, routes identically (routing reads bits 0..255, i.e. the first 32 bytes), and
+    hashes to the target's own leaf -- so a host could take the target's genuine MEMBERSHIP
+    proof and have it accepted as proof of ABSENCE. A present entry could be hidden on
+    every read, and a delete of it would report the idempotent success it reserves for a
+    proved absence.
+
+    Enforcing it here rather than at each call site is deliberate: the primitive is typed,
+    so no future caller can reintroduce it by forgetting.
     """
     from trezor.crypto.hashlib import sha256
+    from trezor.wire import DataError
 
+    if len(entry_key) != 32 or len(commit) != 32:
+        raise DataError("WARD: leaf operands must be 32 bytes")
     return sha256(b"\x00" + entry_key + commit).digest()
 
 

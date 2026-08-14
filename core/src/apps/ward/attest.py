@@ -117,7 +117,17 @@ def _verify(message: bytes, signature: bytes) -> bool:
 def attestation_preimage(
     ward_id: bytes, nonce: bytes, counter: int, mac: bytes, timestamp: int
 ) -> bytes:
-    """domain || version(1B) || nonce || ward_id || counter(4B BE) || mac || ts(8B BE)."""
+    """domain || version(1B) || nonce || ward_id || counter(4B BE) || mac || ts(8B BE).
+
+    Fixed widths, per `leaf.leaf_hash_of`: `mac` arrives from the host, and mac || timestamp
+    is re-splittable if its length is not pinned. The WM signature over the whole preimage
+    makes that unexploitable by a host, but the check belongs here rather than in that
+    argument.
+    """
+    from trezor.wire import DataError
+
+    if len(nonce) != NONCE_LENGTH or len(ward_id) != 32 or len(mac) != 32:
+        raise DataError("WARD: attestation operands have the wrong length")
     return (
         _ATTEST_DOMAIN
         + bytes([_ATTEST_VERSION])
@@ -158,9 +168,13 @@ def root_mac(k_mac: bytes, ward_id: bytes, counter: int, root: bytes | None) -> 
     other comparison in this subsystem that starts from a root.
     """
     from trezor.crypto import hmac
+    from trezor.wire import DataError
 
+    root = root_or_empty(root)
+    if len(ward_id) != 32 or len(root) != 32:
+        raise DataError("WARD: root mac operands must be 32 bytes")
     return hmac(
         hmac.SHA256,
         k_mac,
-        _ROOT_MAC_DOMAIN + ward_id + counter.to_bytes(4, "big") + root_or_empty(root),
+        _ROOT_MAC_DOMAIN + ward_id + counter.to_bytes(4, "big") + root,
     ).digest()
