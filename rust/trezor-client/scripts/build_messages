@@ -30,6 +30,7 @@ FEATURES = {
     "Stellar": "stellar",
     "Tezos": "tezos",
     "Tron": "tron",
+    "Ward": "ward",
     "WebAuthn": "webauthn",
 }
 MACRO = "trezor_message_impl"
