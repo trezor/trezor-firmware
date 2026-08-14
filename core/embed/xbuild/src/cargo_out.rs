@@ -6,8 +6,9 @@
 //! next time no matter what it printed - so they are collected while a build
 //! is in progress and written out only once it succeeds.
 //!
-//! [`warning`] is the exception: Cargo hides build script warnings when the
-//! build fails, so buffering one would lose it exactly when it is needed.
+//! [`warning`] is the exception: buffering one would drop it on failure, and
+//! Cargo does surface build script warnings then - so it is written as soon as
+//! it is produced.
 
 use std::fmt::Display;
 use std::io::{self, Write};
