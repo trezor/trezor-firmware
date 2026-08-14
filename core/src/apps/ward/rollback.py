@@ -33,8 +33,12 @@ async def rollback(msg: WARDRollback) -> WARDRollbackAck:
     FIXME(ward): the design puts the AGE of the discarded change on this screen and calls
     it the actionable signal -- a legitimate rollback discards something minutes old, while
     "created 3 months ago" means a host is rewinding under cover of a fabricated deadlock.
-    We have no timestamps, so the screen names the change but cannot date it. Add the age
-    with the timestamp work; until then this prompt is weaker than the design intends.
+    The attestation timestamps did NOT supply this, contrary to what this note used to
+    predict: the device stores when its head was last ATTESTED, and an age needs the
+    interval between then and now. The device has no clock, so it cannot compute one. The
+    honest options are a host-supplied "now" the user sanity-checks on screen, or the WM's
+    time obtained through a sync round before rolling back -- neither of which belongs in
+    this change. Until then the screen names the change but cannot date it.
     """
     from trezor.messages import WARDRollbackAck
     from trezor.ui.layouts import confirm_properties

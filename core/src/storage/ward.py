@@ -31,8 +31,9 @@ from storage import common
 _WALLET_ID_LEN = const(16)
 _ROOT_LEN = const(32)
 _COUNTER_LEN = const(4)
+_TIMESTAMP_LEN = const(8)
 
-# 8 wallets at 52 bytes each. Raising this costs flash and nothing else.
+# 8 wallets at 60 bytes each. Raising this costs flash and nothing else.
 MAX_WALLETS = const(8)
 _FIRST_KEY = const(1)
 
@@ -81,8 +82,25 @@ def get_counter(wallet_id: bytes) -> int:
     return int.from_bytes(rec[off : off + _COUNTER_LEN], "big")
 
 
-def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> None:
-    """Record this wallet's root and counter. A None root means the tree is now empty."""
+def get_timestamp(wallet_id: bytes) -> int:
+    """The last attested time this wallet accepted, in seconds. Zero if never synced.
+
+    Zero means "nothing to be monotone with respect to", which is the honest state for a
+    wallet that has never seen an attestation -- and the one no automated check can help.
+    """
+    index = _find(wallet_id)
+    if index is None:
+        return 0
+    rec = _slot(index)
+    assert rec is not None
+    off = _WALLET_ID_LEN + _ROOT_LEN + _COUNTER_LEN
+    return int.from_bytes(rec[off : off + _TIMESTAMP_LEN], "big")
+
+
+def set_root(
+    wallet_id: bytes, root: bytes | None, counter: int = 0, timestamp: int = 0
+) -> None:
+    """Record this wallet's root, counter and last attested time."""
     if len(wallet_id) != _WALLET_ID_LEN:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
 
@@ -102,5 +120,6 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> None:
         index + _FIRST_KEY,
         wallet_id
         + (root if root is not None else bytes(_ROOT_LEN))
-        + counter.to_bytes(_COUNTER_LEN, "big"),
+        + counter.to_bytes(_COUNTER_LEN, "big")
+        + timestamp.to_bytes(_TIMESTAMP_LEN, "big"),
     )

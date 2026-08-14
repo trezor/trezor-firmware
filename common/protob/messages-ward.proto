@@ -337,10 +337,18 @@ message WARDSyncAck {
  * The device verifies an Ed25519 signature over
  *
  *   b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac
+ *                   || timestamp(8B BE)
  *
- * under the provisioned WM key, requires the nonce to be this round's, and requires
- * counter >= the device's stored counter (anti-rollback). It then records the attested
- * pair for the round -- adopting nothing yet, because the root has not been seen.
+ * under the provisioned WM key, requires the nonce to be this round's, and requires BOTH
+ * counter >= the device's stored counter AND timestamp >= t_last - epsilon. It then
+ * records the attested pair for the round -- adopting nothing yet, because the root has
+ * not been seen.
+ *
+ * The timestamp catches what the counter alone cannot: an operator who restored the WM
+ * from a backup, or whose clock jumped, typically regresses both together, and a forking
+ * WM would have to keep time monotone per device on every branch. It does NOT constrain a
+ * hostile WM, which simply lies about the time. The device has no clock and needs none --
+ * this is a stored-value comparison, the same cost as the counter check.
  *
  * `mac` is HMAC(K_mac, ...) over the root; K_mac never leaves the device, so the WM signs
  * this without being able to produce it.
@@ -352,6 +360,7 @@ message WARDIngestAttestation {
     optional uint32 counter      = 1;  // the counter the WM claims is current
     optional bytes  mac          = 2;  // 32B mac over the root at that counter
     optional bytes  wm_signature = 3;  // 64B Ed25519 over the preimage above
+    optional uint64 timestamp    = 4;  // WM's clock, seconds; signed, and compared to t_last
 }
 
 /**
@@ -425,4 +434,42 @@ message WARDRollbackAck {
     optional uint32 counter     = 1;  // the OLD counter plus one -- never reused
     optional bytes  new_root    = 2;  // absent if the wallet is now empty
     optional bytes  auth_commit = 3;  // a REVERT link, for the host to record
+}
+
+
+/**
+ * Request: accept an attestation that goes BACKWARDS, with the user's consent.
+ *
+ * If the WM's register is lost or its clock jumps back, every device with a stored
+ * counter locks out: the monotonicity that protects against replay becomes a denial of
+ * service against the owner. This is the way back.
+ *
+ * The device still requires a valid WM signature over this round's nonce, and still
+ * requires the mac to match the root supplied afterwards -- so the state being adopted is
+ * one this wallet genuinely reached. Only a device holding K_mac can produce a mac, so a
+ * replayed (counter, mac) pair is proof of past presence, which is exactly the "root the
+ * Trezor holds its own prior signature for" that recovery is supposed to demand.
+ *
+ * What it cannot check is INTENT. Everything here is cryptographically genuine; the
+ * question is whether the user means to give up the state in between. That makes this the
+ * strongest social-engineering target in the protocol -- anyone who can talk a user
+ * through it can replay old state wholesale -- so the confirmation names both counters and
+ * the age of what is being reverted to, and holds.
+ * @start
+ * @next WARDRecoverCounterAck
+ * @next Failure
+ */
+message WARDRecoverCounter {
+    optional uint32 counter      = 1;
+    optional bytes  mac          = 2;
+    optional bytes  wm_signature = 3;
+    optional uint64 timestamp    = 4;
+}
+
+/**
+ * Response: the round is now attested at the lower counter; reconcile follows as usual.
+ * @end
+ */
+message WARDRecoverCounterAck {
+    optional uint32 counter = 1;
 }
