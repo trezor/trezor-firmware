@@ -17,6 +17,8 @@ pub struct FormattedText {
     char_offset: usize,
     y_offset: i16,
     pager: Pager,
+    /// Draw a rule under every line, as transient emphasis. Toggled at runtime.
+    underline: bool,
 }
 
 impl FormattedText {
@@ -27,12 +29,18 @@ impl FormattedText {
             char_offset: 0,
             y_offset: 0,
             pager: Pager::single_page(),
+            underline: false,
         }
     }
 
     pub fn vertically_centered(mut self) -> Self {
         self.vertical = Alignment::Center;
         self
+    }
+
+    /// Underline every line of text (see `TextRenderer::with_underline`).
+    pub fn set_underline(&mut self, underline: bool) {
+        self.underline = underline;
     }
 
     fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
@@ -153,7 +161,7 @@ impl Component for FormattedText {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.layout_content(&mut TextRenderer::new(target));
+        self.layout_content(&mut TextRenderer::new(target).with_underline(self.underline));
     }
 }
 

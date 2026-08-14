@@ -1,4 +1,4 @@
-use core::cmp::Ordering;
+use core::{cmp::Ordering, convert::Infallible};
 
 use crate::{
     error::Error,
@@ -96,6 +96,7 @@ impl FirmwareUI for UICaesar {
         info_button: bool,
         chunkify: bool,
         external_menu: bool,
+        allow_back: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
         let address: TString = address.try_into()?;
@@ -125,9 +126,14 @@ impl FirmwareUI for UICaesar {
             // New action-bar navigation: menu on left, confirm/scroll on right,
             // numeric page counter in the header.
             let formatted = FormattedText::new(build_ops()).vertically_centered();
-            let content = ButtonPage::new(formatted, theme::BG)
+            let mut content = ButtonPage::new(formatted, theme::BG)
                 .with_external_menu_nav(ExternalMenuLeft::Menu)
                 .with_confirm_btn(Some(ButtonDetails::text(verb)));
+            if allow_back {
+                // The caller has a previous step, so "back" at the top of the
+                // address leaves this screen instead of doing nothing.
+                content = content.with_back_on_first_page();
+            }
             let mut frame = ScrollableFrame::new(content).with_numeric_indicator();
             if !title.is_empty() {
                 frame = frame.with_title(title);
@@ -1265,7 +1271,9 @@ impl FirmwareUI for UICaesar {
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
-            let btn_layout = ButtonLayout::arrow_none_text(TR::buttons__quit.into());
+            // Reached from a context menu, so the left button is the ✕ that
+            // returns to it, matching the other menu detail screens.
+            let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__quit.into());
             let btn_actions = ButtonActions::cancel_none_confirm();
             let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
             ops.add_text_with_font(title, fonts::FONT_BOLD_UPPER)
@@ -1326,17 +1334,44 @@ impl FirmwareUI for UICaesar {
         pages: Obj,
         start_page: usize,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        const PAGE_COUNT: usize = 7;
+        const PAGE_COUNT: usize = 8;
 
-        // Extract exactly seven (title, body) string pairs from Python. The
-        // buttons for each screen are fixed here (debug-only vocabulary), so
-        // only the prose is data-driven and can be tweaked without a rebuild.
+        // Extract eight screens from Python. Each is a `(title, body)` pair,
+        // optionally extended with a `scrolled_title` and a `scrolled_body`:
+        // those two describe the *second* sub-page of a scrollable screen, so a
+        // screen can say something entirely different once scrolled instead of
+        // just continuing its own prose. The buttons for each screen are fixed
+        // here (debug-only vocabulary), so only the text is data-driven.
         let raw: [Obj; PAGE_COUNT] = util::iter_into_array(pages)?;
-        let mut screens: [(TString<'static>, TString<'static>); PAGE_COUNT] =
-            [(TString::empty(), TString::empty()); PAGE_COUNT];
+        let mut screens: [Screen; PAGE_COUNT] = [Screen::empty(); PAGE_COUNT];
         for (i, page) in raw.iter().enumerate() {
-            let [title, body]: [Obj; 2] = util::iter_into_array(*page)?;
-            screens[i] = (title.try_into()?, body.try_into()?);
+            if let Ok([title, body, scrolled_title, scrolled_body]) =
+                util::iter_into_array::<Obj, Infallible, 4>(*page)
+            {
+                screens[i] = Screen {
+                    title: title.try_into()?,
+                    body: body.try_into()?,
+                    scrolled_title: scrolled_title.try_into()?,
+                    scrolled_body: scrolled_body.try_into()?,
+                };
+            } else if let Ok([title, body, scrolled_title]) =
+                util::iter_into_array::<Obj, Infallible, 3>(*page)
+            {
+                screens[i] = Screen {
+                    title: title.try_into()?,
+                    body: body.try_into()?,
+                    scrolled_title: scrolled_title.try_into()?,
+                    scrolled_body: TString::empty(),
+                };
+            } else {
+                let [title, body]: [Obj; 2] = util::iter_into_array(*page)?;
+                screens[i] = Screen {
+                    title: title.try_into()?,
+                    body: body.try_into()?,
+                    scrolled_title: TString::empty(),
+                    scrolled_body: TString::empty(),
+                };
+            }
         }
 
         // Left = open the context menu (INFO); right = advance to the next step.
@@ -1347,63 +1382,90 @@ impl FirmwareUI for UICaesar {
         );
 
         let get_page = move |page_index| {
-            let (title, text) = screens[page_index];
-            match page_index {
+            let s = screens[page_index];
+            let page = match page_index {
                 // Welcome: X exits the tutorial, CONTINUE advances.
                 0 => nav_tutorial_screen(
-                    title,
-                    text,
+                    s.title,
+                    s.body,
+                    TString::empty(),
                     ButtonLayout::cancel_none_text("CONTINUE".into()),
                     ButtonActions::cancel_none_next(),
                 ),
                 // Left/right button navigation: left = menu, right = CONTINUE.
                 1 => nav_tutorial_screen(
-                    title,
-                    text,
+                    s.title,
+                    s.body,
+                    TString::empty(),
                     ButtonLayout::menu_none_text("CONTINUE".into()),
                     menu_next,
                 ),
                 // Hold-to-confirm demonstration: left = menu, right = HTC.
                 2 => nav_tutorial_screen(
-                    title,
-                    text,
+                    s.title,
+                    s.body,
+                    TString::empty(),
                     ButtonLayout::menu_none_htc("HOLD TO CONFIRM".into()),
                     menu_next,
                 ),
                 // Both-buttons (middle) confirm demonstration.
                 3 => nav_tutorial_screen(
-                    title,
-                    text,
+                    s.title,
+                    s.body,
+                    TString::empty(),
                     ButtonLayout::none_armed_none("VIEW".into()),
                     ButtonActions::none_next_none(),
                 ),
-                // Scrollable content on the action-bar navigation: left = menu
-                // (short press) / Shift (hold -> right scrolls up), right = the
-                // CONTINUE button, which scrolls down and advances on the last
-                // sub-page.
+                // The Shift exercise (figma 426:1693 / 426:1720). Two sub-pages:
+                // "TRY SCROLLING" scrolls down with the wide arrow, then
+                // "GO BACK" offers only a dead-end dotted button on the right -
+                // pressing it inverts the header instead of navigating. The only
+                // way on is Shift + right, which advances to the next screen.
                 4 => nav_tutorial_screen(
-                    title,
-                    text,
-                    ButtonLayout::menu_none_text("CONTINUE".into()),
+                    s.title,
+                    s.body,
+                    s.scrolled_body,
+                    ButtonLayout::menu_none_dead_end(),
                     menu_next,
                 )
-                .with_nav(),
+                .with_nav()
+                .with_advance_on_shift_back(),
+                // Reward for performing the gesture (figma 456:2899): restates
+                // it and lets them continue. It shows the "Shift available"
+                // icon, so Shift really works here - it takes them back to the
+                // screen they came from, letting the gesture be practised.
+                5 => nav_tutorial_screen(
+                    s.title,
+                    s.body,
+                    TString::empty(),
+                    ButtonLayout::menu_shift_none_text("CONTINUE".into()),
+                    menu_next,
+                )
+                .with_nav()
+                .with_shift_to_prev_page(),
                 // Menu step: the left menu button opens the context menu
                 // (handled in Python via the returned INFO message).
-                5 => nav_tutorial_screen(
-                    title,
-                    text,
+                6 => nav_tutorial_screen(
+                    s.title,
+                    s.body,
+                    TString::empty(),
                     ButtonLayout::menu_none_none(),
                     ButtonActions::new(Some(ButtonAction::Info), None, None),
                 ),
                 // Done: AGAIN restarts from the beginning, CONTINUE finishes.
-                6 => nav_tutorial_screen(
-                    title,
-                    text,
+                7 => nav_tutorial_screen(
+                    s.title,
+                    s.body,
+                    TString::empty(),
                     ButtonLayout::text_none_text("AGAIN".into(), "CONTINUE".into()),
                     ButtonActions::beginning_none_confirm(),
                 ),
                 _ => unreachable!(),
+            };
+            if s.scrolled_title.is_empty() {
+                page
+            } else {
+                page.with_scrolled_title(s.scrolled_title)
             }
         };
 
@@ -1485,16 +1547,21 @@ impl FirmwareUI for UICaesar {
             }
         }
 
-        // Classic paging scheme for both the internal and the external-menu
-        // callers: ✕ on page 1 (closes the screen), `<`/`>` arrows otherwise and
-        // no right button on the last page (no confirm, no middle button). The
-        // only difference for the external menu is the numeric page counter in
-        // the header (see below).
-        let page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
-            .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
-            .with_next_btn(Some(ButtonDetails::right_arrow_icon()))
-            .with_cancel_btn(Some(ButtonDetails::cancel_icon()))
-            .with_confirm_btn(None);
+        // Opened from a context menu, this uses the action-bar navigation: the
+        // left button closes the screen on a short press and engages Shift when
+        // held, so the right button scrolls back up. Callers that are not part
+        // of the new navigation keep the classic ✕ / `<` / `>` paging.
+        let page = if external_menu {
+            ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
+                .with_external_menu_nav(ExternalMenuLeft::Close)
+                .with_confirm_btn(None)
+        } else {
+            ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
+                .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
+                .with_next_btn(Some(ButtonDetails::right_arrow_icon()))
+                .with_cancel_btn(Some(ButtonDetails::cancel_icon()))
+                .with_confirm_btn(None)
+        };
 
         let mut frame = ScrollableFrame::new(page);
         if external_menu {
@@ -1743,18 +1810,46 @@ fn tutorial_screen(
 fn nav_tutorial_screen(
     title: TString<'static>,
     text: TString<'static>,
+    scrolled_text: TString<'static>,
     btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
 ) -> Page {
     // Classic textual "..." for multi-page continuation, no next/prev arrows.
     let mut ops = OpTextLayout::new(theme::TEXT_NORMAL_CLASSIC_ELLIPSIS);
     ops.add_text_with_font(text, fonts::FONT_NORMAL);
+    if !scrolled_text.is_empty() {
+        // An explicit break, so the second sub-page holds its own sentence
+        // rather than the overflow of the first one.
+        ops.add_next_page();
+        ops.add_text_with_font(scrolled_text, fonts::FONT_NORMAL);
+    }
     let formatted = FormattedText::new(ops).vertically_centered();
     let page = Page::new(btn_layout, btn_actions, formatted);
     if title.is_empty() {
         page
     } else {
         page.with_title(title)
+    }
+}
+
+/// One tutorial screen as handed over from Python. `scrolled_*` describe the
+/// second sub-page of a scrollable screen; empty means the screen has only one.
+#[derive(Clone, Copy)]
+struct Screen {
+    title: TString<'static>,
+    body: TString<'static>,
+    scrolled_title: TString<'static>,
+    scrolled_body: TString<'static>,
+}
+
+impl Screen {
+    const fn empty() -> Self {
+        Self {
+            title: TString::empty(),
+            body: TString::empty(),
+            scrolled_title: TString::empty(),
+            scrolled_body: TString::empty(),
+        }
     }
 }
 

@@ -130,19 +130,114 @@ def nav_demo(session: "Session") -> None:
 
 
 @cli.command()
+# fmt: off
+@click.option("-o", "--output", type=click.File("w"), help="Write the raw interaction log to a file")
+@click.option("-e", "--events", is_flag=True, help="Also print the raw event timeline")
+@click.option("--raw", is_flag=True, help="Print only the encoded log, no report")
 @with_session(seedless=True)
-def nav_tutorial(session: "Session") -> None:
+# fmt: on
+def nav_tutorial(
+    session: "Session",
+    output: t.TextIO | None,
+    events: bool,
+    raw: bool,
+) -> None:
     """Show the updated Trezor Safe 3 device tutorial on the device.
 
     Debug-firmware only. Runs the "Tutorial update" flow on the new caesar
     action-bar navigation: welcome, left/right navigation, hold-to-confirm,
     both-buttons confirm, screen scroll, a context menu (Restart / Complete
     tutorial), and a final screen (AGAIN / CONTINUE).
+
+    Every interaction is recorded on the device and reported here afterwards:
+    time spent per screen, which buttons were used, and how many attempts each
+    action took - including the Shift hold and the scroll-back it unlocks. Use
+    --output to keep the raw log for aggregating several test participants, or
+    `trezorctl -j debug nav-tutorial` for JSON.
     """
+    from .. import nav_telemetry
     from ..nav_tutorial import show_nav_tutorial
 
     result = show_nav_tutorial(session)
-    click.echo(result.message)
+
+    if output is not None:
+        output.write(result.log or "")
+        output.close()
+        click.echo(f"Interaction log saved to {output.name}.")
+
+    if raw:
+        click.echo(result.log or "")
+        return
+
+    if not result.log:
+        click.echo(f"Tutorial {result.status}, no interaction log returned.")
+        return
+
+    try:
+        decoded = nav_telemetry.decode(result.log, status=result.status)
+    except ValueError as e:
+        click.echo(f"Could not decode the interaction log ({e}):")
+        click.echo(result.log)
+        return
+
+    click.echo(nav_telemetry.format_report(decoded))
+    if events:
+        click.echo("")
+        click.echo("Event timeline:")
+        click.echo(nav_telemetry.format_events(decoded))
+
+
+@cli.command()
+# fmt: off
+@click.option("-o", "--output", type=click.File("w"), help="Write the raw interaction log to a file")
+@click.option("-e", "--events", is_flag=True, help="Also print the raw event timeline")
+@click.option("--raw", is_flag=True, help="Print only the encoded log, no report")
+@with_session(seedless=True)
+# fmt: on
+def nav_address(
+    session: "Session",
+    output: t.TextIO | None,
+    events: bool,
+    raw: bool,
+) -> None:
+    """Show a sample Cardano receive address on the new navigation.
+
+    Debug-firmware only. Starts with a short introduction screen, then runs the
+    genuine receive-address flow - same layout, context menu (QR code / Account
+    info / Cancel) and action-bar navigation a real Cardano receive request
+    produces. Interactions are recorded and reported here, exactly like
+    `debug nav-tutorial`.
+    """
+    from .. import nav_telemetry
+    from ..nav_address import show_nav_address
+
+    result = show_nav_address(session)
+
+    if output is not None:
+        output.write(result.log or "")
+        output.close()
+        click.echo(f"Interaction log saved to {output.name}.")
+
+    if raw:
+        click.echo(result.log or "")
+        return
+
+    if not result.log:
+        click.echo(f"Flow {result.status}, no interaction log returned.")
+        return
+
+    try:
+        decoded = nav_telemetry.decode(result.log, status=result.status)
+    except ValueError as e:
+        click.echo(f"Could not decode the interaction log ({e}):")
+        click.echo(result.log)
+        return
+
+    click.echo(nav_telemetry.format_report(decoded))
+    if events:
+        click.echo("")
+        click.echo("Event timeline:")
+        click.echo(nav_telemetry.format_events(decoded))
 
 
 @cli.command()

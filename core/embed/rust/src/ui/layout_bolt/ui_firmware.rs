@@ -97,6 +97,7 @@ impl FirmwareUI for UIBolt {
         info_button: bool,
         chunkify: bool,
         _external_menu: bool,
+        _allow_back: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
         ConfirmValue::new(title, address, None, Some(verb), None, false)

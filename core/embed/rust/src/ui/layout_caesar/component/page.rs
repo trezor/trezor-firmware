@@ -4,13 +4,15 @@ use crate::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
         display::Color,
         geometry::{Insets, Rect},
+        nav_telemetry,
         shape::Renderer,
         util::Pager,
     },
 };
 
 use super::{
-    constant, theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos,
+    constant, record_button_msg, theme, ButtonController, ButtonControllerMsg, ButtonDetails,
+    ButtonLayout, ButtonPos,
 };
 
 /// Which action the left slot performs in the external-menu ("action bar")
@@ -19,6 +21,9 @@ use super::{
 pub enum ExternalMenuLeft {
     /// Left slot is a hamburger icon; short press returns `PageMsg::Info`.
     Menu,
+    /// Left slot is a cross; short press returns `PageMsg::Cancelled`. Used by
+    /// screens opened *from* a menu, which close rather than open another one.
+    Close,
 }
 
 pub struct ButtonPage<T>
@@ -38,6 +43,14 @@ where
     external_nav: Option<ExternalMenuLeft>,
     /// Whether the left "Shift" is currently being held (action-bar mode only).
     shift_active: bool,
+    /// When set, the "back" (Shift + right) action on the first sub-page leaves
+    /// the screen entirely instead of doing nothing, so the caller can go back a
+    /// step. Opt-in: on a screen with nothing behind it this would cancel.
+    back_on_first_page: bool,
+    /// Last sub-page / Shift availability reported to the telemetry recorder,
+    /// so only changes are logged.
+    logged_subpage: Option<u16>,
+    logged_shift_avail: Option<bool>,
     buttons: Child<ButtonController>,
 }
 
@@ -56,6 +69,9 @@ where
             has_menu: false,
             external_nav: None,
             shift_active: false,
+            back_on_first_page: false,
+            logged_subpage: None,
+            logged_shift_avail: None,
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call
             // `content.page_count()`.
@@ -66,6 +82,15 @@ where
     /// Enable the action-bar navigation with the given left-slot behavior.
     pub fn with_external_menu_nav(mut self, left: ExternalMenuLeft) -> Self {
         self.external_nav = Some(left);
+        self
+    }
+
+    /// Let "back" (Shift + right) on the first sub-page leave the screen, for
+    /// flows that have a previous step to return to. Without this the action
+    /// simply does nothing at the top, which is the right default for a screen
+    /// that nothing precedes.
+    pub fn with_back_on_first_page(mut self) -> Self {
+        self.back_on_first_page = true;
         self
     }
 
@@ -117,6 +142,7 @@ where
             content.request_complete_repaint(ctx);
         });
         self.update_buttons(ctx);
+        self.record_position();
         self.pad.clear();
     }
 
@@ -154,22 +180,23 @@ where
     }
 
     /// Button layout for the action-bar navigation mode.
-    fn get_nav_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout {
+    fn get_nav_button_layout(&self, _has_prev: bool, has_next: bool) -> ButtonLayout {
         if self.shift_active {
             // While "Shift" is held: left = filled "Shift" label, right = the
-            // secondary "back" (scroll up) button if there is a previous page.
-            let btn_right = has_prev.then(ButtonDetails::back_secondary_icon);
+            // secondary "back" button - scrolling up, or leaving the screen
+            // when there is nothing above and the caller allows going back.
+            let btn_right = self.back_available().then(ButtonDetails::back_secondary_icon);
             return ButtonLayout::new(Some(ButtonDetails::shift_text()), None, btn_right);
         }
 
-        // Show the menu icon wrapped in parentheses only when a secondary
-        // ("Shift") action is available, i.e. there is a previous page to
-        // scroll back to. On the first page there is no secondary action, so
-        // the plain menu icon is used and the long press does nothing.
-        let btn_left = Some(if has_prev {
-            ButtonDetails::menu_shift_icon()
-        } else {
-            ButtonDetails::menu_icon()
+        // The left glyph shows the shift brackets only when the secondary
+        // ("Shift") action would do something; otherwise the plain glyph is used
+        // and the long press does nothing.
+        let btn_left = Some(match (self.external_nav, self.back_available()) {
+            (Some(ExternalMenuLeft::Close), true) => ButtonDetails::cancel_shift_icon(),
+            (Some(ExternalMenuLeft::Close), false) => ButtonDetails::cancel_icon(),
+            (_, true) => ButtonDetails::menu_shift_icon(),
+            (_, false) => ButtonDetails::menu_icon(),
         });
         let btn_right = if has_next {
             // Wide down arrow to scroll to the next page.
@@ -184,6 +211,31 @@ where
         ButtonLayout::new(btn_left, None, btn_right)
     }
 
+    /// Whether the "back" (Shift + right) action would do anything here: either
+    /// scroll up a sub-page, or leave the screen for the caller's previous step.
+    fn back_available(&self) -> bool {
+        self.pager().has_prev() || self.back_on_first_page
+    }
+
+    /// Log the sub-page and whether Shift is on offer, but only on change.
+    /// Recording availability explicitly means the decoder never has to infer
+    /// whether a hold could have done anything on this screen.
+    fn record_position(&mut self) {
+        let pager = self.pager();
+        let subpage = pager.current();
+        if self.logged_subpage != Some(subpage) {
+            nav_telemetry::record(nav_telemetry::EV_SUBPAGE, subpage as u8);
+            self.logged_subpage = Some(subpage);
+        }
+        // Shift is offered only in action-bar mode, once there is a previous
+        // sub-page to scroll back to.
+        let shift_avail = self.external_nav.is_some() && self.back_available();
+        if self.logged_shift_avail != Some(shift_avail) {
+            nav_telemetry::record(nav_telemetry::EV_SHIFT_AVAIL, shift_avail as u8);
+            self.logged_shift_avail = Some(shift_avail);
+        }
+    }
+
     /// Event handling for the action-bar navigation mode.
     fn event_nav(
         &mut self,
@@ -191,7 +243,9 @@ where
         event: Event,
         external_nav: ExternalMenuLeft,
     ) -> Option<PageMsg<T::Msg>> {
+        self.record_position();
         if let Some(msg) = self.buttons.event(ctx, event) {
+            record_button_msg(&msg);
             match msg {
                 // Long press of the left button (~1s) engages "Shift" mode:
                 // swap to the shift layout and highlight the right (secondary)
@@ -220,6 +274,7 @@ where
                         // Short press: open the menu / close the screen.
                         return Some(match external_nav {
                             ExternalMenuLeft::Menu => PageMsg::Info,
+                            ExternalMenuLeft::Close => PageMsg::Cancelled,
                         });
                     }
                 }
@@ -228,6 +283,10 @@ where
                     if self.pager().has_prev() {
                         self.prev_page();
                         self.change_page(ctx);
+                    } else if self.back_on_first_page {
+                        // Already at the top: "back" leaves the screen, so the
+                        // caller can return to whatever came before it.
+                        return Some(PageMsg::Cancelled);
                     }
                     // Shift is still held; keep the "Shift" label filled.
                     self.buttons.mutate(ctx, |ctx, buttons| {

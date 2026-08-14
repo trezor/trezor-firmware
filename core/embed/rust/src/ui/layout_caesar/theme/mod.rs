@@ -82,9 +82,15 @@ include_icon!(
 ); // 4*8
 include_icon!(ICON_ARROW_UP, "layout_caesar/res/arrow_up.toif"); // 8*4
 include_icon!(ICON_ARROW_DOWN, "layout_caesar/res/arrow_down.toif"); // 7*4
+// Solid triangle for the armed (both-buttons) middle button - figma 472:1810.
+include_icon!(
+    ICON_ARROW_DOWN_SOLID,
+    "layout_caesar/res/arrow_down_solid.toif"
+); // 8*4
 include_icon!(ICON_ARROW_BACK_UP, "layout_caesar/res/arrow_back_up.toif"); // 8*8
 include_icon!(ICON_BIN, "layout_caesar/res/bin.toif"); // 10*10
 include_icon!(ICON_CANCEL, "layout_caesar/res/cancel.toif"); // 7*7
+include_icon!(ICON_CANCEL_SHIFT, "layout_caesar/res/cancel_shift.toif"); // 14*7
 include_icon!(ICON_COINJOIN, "layout_caesar/res/coinjoin.toif"); // 12*12
 include_icon!(ICON_DELETE, "layout_caesar/res/delete.toif"); // 9*7
 include_icon!(ICON_DEVICE_NAME, "layout_caesar/res/device_name.toif"); // 116*18
@@ -94,7 +100,7 @@ include_icon!(ICON_LOCK_SMALL, "layout_caesar/res/lock_small.toif"); // 6*7
 include_icon!(ICON_LOGO, "layout_caesar/res/logo_22_33.toif"); // 22*33
 include_icon!(ICON_LOGO_EMPTY, "layout_caesar/res/logo_22_33_empty.toif");
 include_icon!(ICON_MENU, "layout_caesar/res/menu.toif"); // 6*7
-include_icon!(ICON_MENU_SHIFT, "layout_caesar/res/menu_shift.toif"); // 14*7
+include_icon!(ICON_MENU_SHIFT, "layout_caesar/res/menu_shift.toif"); // 18*7
 include_icon!(ICON_BACK, "layout_caesar/res/back.toif"); // 12*11
 include_icon!(ICON_MENU_PRESSED, "layout_caesar/res/menu_pressed.toif"); // 14*7
 include_icon!(ICON_NEXT_PAGE, "layout_caesar/res/next_page.toif"); // 9*8
@@ -127,6 +133,10 @@ pub const BUTTON_HEIGHT: i16 = BUTTON_CONTENT_HEIGHT + 2 * BUTTON_OUTLINE;
 pub const BUTTON_ICON_WIDTH: i16 = BUTTON_HEIGHT;
 pub const TITLE_AREA_HEIGHT: i16 = 12;
 pub const ARMS_MARGIN: i16 = 2;
+/// Width of the middle button's icon slot, i.e. the gap the arms leave for the
+/// glyph between them. 24 gives the 8px arrow 8px of air on each side, making
+/// the whole button 10 + 24 + 10 = 44 wide (figma 472:1803).
+pub const ARMED_ICON_WIDTH: i16 = 24;
 
 // How many pixels should be between text and icons.
 pub const ELLIPSIS_ICON_MARGIN: i16 = 4;

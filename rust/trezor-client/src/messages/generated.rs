@@ -107,6 +107,8 @@ trezor_message_impl! {
     BenchmarkResult => MessageType_BenchmarkResult,
     ShowNavDemo => MessageType_ShowNavDemo,
     ShowNavTutorial => MessageType_ShowNavTutorial,
+    NavTutorialResult => MessageType_NavTutorialResult,
+    ShowNavAddress => MessageType_ShowNavAddress,
     TelemetryGet => MessageType_TelemetryGet,
     Telemetry => MessageType_Telemetry,
 }

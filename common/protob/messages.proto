@@ -390,6 +390,8 @@ enum MessageType {
     // Nav demo (debug/demo only)
     MessageType_ShowNavDemo = 9104 [(bitcoin_only) = true];
     MessageType_ShowNavTutorial = 9105 [(bitcoin_only) = true];
+    MessageType_NavTutorialResult = 9106 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_ShowNavAddress = 9107 [(bitcoin_only) = true];
 
     // Telemetry
     MessageType_TelemetryGet = 1100 [(bitcoin_only) = true, (wire_in) = true];

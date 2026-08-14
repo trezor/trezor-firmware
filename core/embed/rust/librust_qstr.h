@@ -131,6 +131,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address_details__title_receive_address;
   MP_QSTR_address_label;
   MP_QSTR_address_qr;
+  MP_QSTR_allow_back;
   MP_QSTR_allow_cancel;
   MP_QSTR_allow_empty;
   MP_QSTR_allow_pairing;
@@ -519,6 +520,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_n4w1__hold_next;
   MP_QSTR_n4w1__reading;
   MP_QSTR_n4w1__writing;
+  MP_QSTR_nav_telemetry_dump;
+  MP_QSTR_nav_telemetry_mark;
+  MP_QSTR_nav_telemetry_start;
   MP_QSTR_next_timeout;
   MP_QSTR_notification;
   MP_QSTR_packet_in;

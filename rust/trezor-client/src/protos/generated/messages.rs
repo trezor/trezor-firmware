@@ -609,6 +609,10 @@ pub enum MessageType {
     MessageType_ShowNavDemo = 9104,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ShowNavTutorial)
     MessageType_ShowNavTutorial = 9105,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NavTutorialResult)
+    MessageType_NavTutorialResult = 9106,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ShowNavAddress)
+    MessageType_ShowNavAddress = 9107,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TelemetryGet)
     MessageType_TelemetryGet = 1100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_Telemetry)
@@ -915,6 +919,8 @@ impl ::protobuf::Enum for MessageType {
             9103 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkResult),
             9104 => ::std::option::Option::Some(MessageType::MessageType_ShowNavDemo),
             9105 => ::std::option::Option::Some(MessageType::MessageType_ShowNavTutorial),
+            9106 => ::std::option::Option::Some(MessageType::MessageType_NavTutorialResult),
+            9107 => ::std::option::Option::Some(MessageType::MessageType_ShowNavAddress),
             1100 => ::std::option::Option::Some(MessageType::MessageType_TelemetryGet),
             1101 => ::std::option::Option::Some(MessageType::MessageType_Telemetry),
             _ => ::std::option::Option::None
@@ -1214,6 +1220,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_BenchmarkResult" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkResult),
             "MessageType_ShowNavDemo" => ::std::option::Option::Some(MessageType::MessageType_ShowNavDemo),
             "MessageType_ShowNavTutorial" => ::std::option::Option::Some(MessageType::MessageType_ShowNavTutorial),
+            "MessageType_NavTutorialResult" => ::std::option::Option::Some(MessageType::MessageType_NavTutorialResult),
+            "MessageType_ShowNavAddress" => ::std::option::Option::Some(MessageType::MessageType_ShowNavAddress),
             "MessageType_TelemetryGet" => ::std::option::Option::Some(MessageType::MessageType_TelemetryGet),
             "MessageType_Telemetry" => ::std::option::Option::Some(MessageType::MessageType_Telemetry),
             _ => ::std::option::Option::None
@@ -1512,6 +1520,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_BenchmarkResult,
         MessageType::MessageType_ShowNavDemo,
         MessageType::MessageType_ShowNavTutorial,
+        MessageType::MessageType_NavTutorialResult,
+        MessageType::MessageType_ShowNavAddress,
         MessageType::MessageType_TelemetryGet,
         MessageType::MessageType_Telemetry,
     ];
@@ -1816,8 +1826,10 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_BenchmarkResult => 288,
             MessageType::MessageType_ShowNavDemo => 289,
             MessageType::MessageType_ShowNavTutorial => 290,
-            MessageType::MessageType_TelemetryGet => 291,
-            MessageType::MessageType_Telemetry => 292,
+            MessageType::MessageType_NavTutorialResult => 291,
+            MessageType::MessageType_ShowNavAddress => 292,
+            MessageType::MessageType_TelemetryGet => 293,
+            MessageType::MessageType_Telemetry => 294,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1836,7 +1848,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xf2f\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xc7g\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2170,15 +2182,17 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\
     \x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x12\"\n\x17MessageType_ShowNavDemo\x10\
     \x90G\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_ShowNavTutorial\x10\
-    \x91G\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\x10\xcc\
-    \x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_Telem\
-    etry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\xf3\
-    \x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10\
-    J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\
-    \x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\
-    \x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\
-    \x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protob\
-    ufB\rTrezorMessage\x80\xa6\x1d\x01\
+    \x91G\x1a\x04\x80\xa6\x1d\x01\x12,\n\x1dMessageType_NavTutorialResult\
+    \x10\x92G\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12%\n\x1aMessageType_\
+    ShowNavAddress\x10\x93G\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_Te\
+    lemetryGet\x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\
+    \x15MessageType_Telemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\
+    \x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\
+    \x08M\x10N\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\
+    \x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\
+    \x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\
+    \"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.sat\
+    oshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

@@ -24,7 +24,5 @@ if TYPE_CHECKING:
 
 
 @workflow()
-def show_nav_tutorial(session: "Session") -> messages.NavTutorialResult:
-    return session.call(
-        messages.ShowNavTutorial(), expect=messages.NavTutorialResult
-    )
+def show_nav_address(session: "Session") -> messages.NavTutorialResult:
+    return session.call(messages.ShowNavAddress(), expect=messages.NavTutorialResult)

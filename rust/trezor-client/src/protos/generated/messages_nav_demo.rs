@@ -230,10 +230,327 @@ impl ::protobuf::reflect::ProtobufValue for ShowNavTutorial {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.nav_demo.ShowNavAddress)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct ShowNavAddress {
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.nav_demo.ShowNavAddress.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a ShowNavAddress {
+    fn default() -> &'a ShowNavAddress {
+        <ShowNavAddress as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl ShowNavAddress {
+    pub fn new() -> ShowNavAddress {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ShowNavAddress>(
+            "ShowNavAddress",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for ShowNavAddress {
+    const NAME: &'static str = "ShowNavAddress";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> ShowNavAddress {
+        ShowNavAddress::new()
+    }
+
+    fn clear(&mut self) {
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static ShowNavAddress {
+        static instance: ShowNavAddress = ShowNavAddress {
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for ShowNavAddress {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ShowNavAddress").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for ShowNavAddress {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ShowNavAddress {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.nav_demo.NavTutorialResult)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct NavTutorialResult {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.nav_demo.NavTutorialResult.status)
+    pub status: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.nav_demo.NavTutorialResult.log)
+    pub log: ::std::option::Option<::std::string::String>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.nav_demo.NavTutorialResult.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a NavTutorialResult {
+    fn default() -> &'a NavTutorialResult {
+        <NavTutorialResult as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl NavTutorialResult {
+    pub fn new() -> NavTutorialResult {
+        ::std::default::Default::default()
+    }
+
+    // optional string status = 1;
+
+    pub fn status(&self) -> &str {
+        match self.status.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_status(&mut self) {
+        self.status = ::std::option::Option::None;
+    }
+
+    pub fn has_status(&self) -> bool {
+        self.status.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_status(&mut self, v: ::std::string::String) {
+        self.status = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_status(&mut self) -> &mut ::std::string::String {
+        if self.status.is_none() {
+            self.status = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.status.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_status(&mut self) -> ::std::string::String {
+        self.status.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional string log = 2;
+
+    pub fn log(&self) -> &str {
+        match self.log.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_log(&mut self) {
+        self.log = ::std::option::Option::None;
+    }
+
+    pub fn has_log(&self) -> bool {
+        self.log.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_log(&mut self, v: ::std::string::String) {
+        self.log = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_log(&mut self) -> &mut ::std::string::String {
+        if self.log.is_none() {
+            self.log = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.log.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_log(&mut self) -> ::std::string::String {
+        self.log.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "status",
+            |m: &NavTutorialResult| { &m.status },
+            |m: &mut NavTutorialResult| { &mut m.status },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "log",
+            |m: &NavTutorialResult| { &m.log },
+            |m: &mut NavTutorialResult| { &mut m.log },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<NavTutorialResult>(
+            "NavTutorialResult",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for NavTutorialResult {
+    const NAME: &'static str = "NavTutorialResult";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.status = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.log = ::std::option::Option::Some(is.read_string()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.status.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.log.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.status.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.log.as_ref() {
+            os.write_string(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> NavTutorialResult {
+        NavTutorialResult::new()
+    }
+
+    fn clear(&mut self) {
+        self.status = ::std::option::Option::None;
+        self.log = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static NavTutorialResult {
+        static instance: NavTutorialResult = NavTutorialResult {
+            status: ::std::option::Option::None,
+            log: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for NavTutorialResult {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("NavTutorialResult").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for NavTutorialResult {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for NavTutorialResult {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x17messages-nav-demo.proto\x12\x1bhw.trezor.messages.nav_demo\x1a\rop\
-    tions.proto\"\r\n\x0bShowNavDemo\"\x11\n\x0fShowNavTutorialB?\n#com.sato\
-    shilabs.trezor.lib.protobufB\x14TrezorMessageNavDemo\x80\xa6\x1d\x01\
+    tions.proto\"\r\n\x0bShowNavDemo\"\x11\n\x0fShowNavTutorial\"\x10\n\x0eS\
+    howNavAddress\"=\n\x11NavTutorialResult\x12\x16\n\x06status\x18\x01\x20\
+    \x01(\tR\x06status\x12\x10\n\x03log\x18\x02\x20\x01(\tR\x03logB?\n#com.s\
+    atoshilabs.trezor.lib.protobufB\x14TrezorMessageNavDemo\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -252,9 +569,11 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(2);
+            let mut messages = ::std::vec::Vec::with_capacity(4);
             messages.push(ShowNavDemo::generated_message_descriptor_data());
             messages.push(ShowNavTutorial::generated_message_descriptor_data());
+            messages.push(ShowNavAddress::generated_message_descriptor_data());
+            messages.push(NavTutorialResult::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),

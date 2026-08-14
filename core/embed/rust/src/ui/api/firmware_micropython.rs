@@ -6,7 +6,7 @@ use crate::{
         gc::Gc,
         iter::IterBuf,
         list::List,
-        macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
+        macros::{obj_fn_0, obj_fn_1, obj_fn_2, obj_fn_kw, obj_module},
         map::Map,
         module::Module,
         obj::Obj,
@@ -25,6 +25,7 @@ use crate::{
             result::{BACK, CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, RecoveryType},
         },
+        nav_telemetry,
         notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ},
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_PAIRED_DEVICES,
@@ -114,6 +115,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
+        let allow_back: bool = kwargs.get_or(Qstr::MP_QSTR_allow_back, false)?;
 
         let layout_obj = ModelUI::confirm_address(
             title,
@@ -123,6 +125,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             info_button,
             chunkify,
             external_menu,
+            allow_back,
         )?;
         Ok(layout_obj.into())
     };
@@ -1389,6 +1392,52 @@ pub extern "C" fn upy_backlight_fade(_level: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+pub extern "C" fn upy_nav_telemetry_start() -> Obj {
+    let block = || {
+        nav_telemetry::start();
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+pub extern "C" fn upy_nav_telemetry_mark(code: Obj) -> Obj {
+    let block = || {
+        let code: u8 = code.try_into()?;
+        // The milestone is the *argument* of a mark event - passing it as the
+        // event code would produce an event type the decoder does not know.
+        nav_telemetry::record(nav_telemetry::EV_MARK, code);
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+pub extern "C" fn upy_nav_telemetry_dump() -> Obj {
+    let block = || {
+        nav_telemetry::stop();
+        #[cfg(feature = "ui_debug")]
+        {
+            let events = nav_telemetry::events();
+            let mut list = List::with_capacity(events.len())?;
+            for ev in events {
+                let item: Obj = (
+                    Obj::try_from(ev.t_ms)?,
+                    Obj::from(ev.code),
+                    Obj::from(ev.arg),
+                )
+                    .try_into()?;
+                list.append(item)?;
+            }
+            let dropped = Obj::from(nav_telemetry::dropped());
+            (list.leak().into(), dropped).try_into()
+        }
+        #[cfg(not(feature = "ui_debug"))]
+        {
+            (List::alloc(&[])?.into(), Obj::from(0u8)).try_into()
+        }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 #[no_mangle]
 pub static mp_module_trezorui_api: Module = obj_module! {
     /// from trezor import utils
@@ -1539,6 +1588,20 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
 
+    /// def nav_telemetry_start() -> None:
+    ///     """Discard any recorded navigation telemetry and start recording.
+    ///     Records nothing in non-debug builds."""
+    Qstr::MP_QSTR_nav_telemetry_start => obj_fn_0!(upy_nav_telemetry_start).as_obj(),
+
+    /// def nav_telemetry_mark(code: int) -> None:
+    ///     """Append a caller-defined milestone to the navigation telemetry log."""
+    Qstr::MP_QSTR_nav_telemetry_mark => obj_fn_1!(upy_nav_telemetry_mark).as_obj(),
+
+    /// def nav_telemetry_dump() -> tuple[list[tuple[int, int, int]], int]:
+    ///     """Stop recording and return the navigation telemetry log as
+    ///     `([(t_ms, code, arg), ...], dropped_event_count)`."""
+    Qstr::MP_QSTR_nav_telemetry_dump => obj_fn_0!(upy_nav_telemetry_dump).as_obj(),
+
     /// def backlight_get() -> int:
     ///     """Get currently set backlight level. Returns None if backlight is not supported."""
     Qstr::MP_QSTR_backlight_get => obj_fn_0!(upy_backlight_get).as_obj(),
@@ -1579,8 +1642,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     info_button: bool = False,
     ///     chunkify: bool = False,
     ///     external_menu: bool = False,
+    ///     allow_back: bool = False,
     /// ) -> LayoutContext[UiResult]:
-    ///     """Confirm address."""
+    ///     """Confirm address. With `allow_back`, the "back" action at the top of
+    ///     the screen returns CANCELLED so the caller can go back a step."""
     Qstr::MP_QSTR_confirm_address => obj_fn_kw!(0, new_confirm_address).as_obj(),
 
     /// def confirm_trade(

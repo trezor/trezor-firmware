@@ -118,6 +118,23 @@ def disable_animation(disable: bool) -> None:
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def nav_telemetry_start() -> None:
+    """Discard any recorded navigation telemetry and start recording.
+    Records nothing in non-debug builds."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def nav_telemetry_mark(code: int) -> None:
+    """Append a caller-defined milestone to the navigation telemetry log."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def nav_telemetry_dump() -> tuple[list[tuple[int, int, int]], int]:
+    """Stop recording and return the navigation telemetry log as
+    `([(t_ms, code, arg), ...], dropped_event_count)`."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def backlight_get() -> int:
     """Get currently set backlight level. Returns None if backlight is not supported."""
 
@@ -162,8 +179,10 @@ def confirm_address(
     info_button: bool = False,
     chunkify: bool = False,
     external_menu: bool = False,
+    allow_back: bool = False,
 ) -> LayoutContext[UiResult]:
-    """Confirm address."""
+    """Confirm address. With `allow_back`, the "back" action at the top of
+    the screen returns CANCELLED so the caller can go back a step."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

@@ -90,6 +90,7 @@ impl FirmwareUI for UIDelizia {
         _info_button: bool,
         _chunkify: bool,
         _external_menu: bool,
+        _allow_back: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         // confirm_value is used instead
         Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)

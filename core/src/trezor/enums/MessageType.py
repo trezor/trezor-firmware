@@ -103,6 +103,8 @@ BenchmarkRun = 9102
 BenchmarkResult = 9103
 ShowNavDemo = 9104
 ShowNavTutorial = 9105
+NavTutorialResult = 9106
+ShowNavAddress = 9107
 TelemetryGet = 1100
 Telemetry = 1101
 if __debug__:

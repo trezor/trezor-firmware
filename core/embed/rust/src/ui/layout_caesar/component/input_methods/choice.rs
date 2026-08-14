@@ -1,6 +1,7 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
     geometry::{Offset, Rect},
+    nav_telemetry,
     shape::Renderer,
     util::animation_disabled,
 };
@@ -380,21 +381,31 @@ where
     /// Decrease the page counter to the previous page.
     fn decrease_page_counter(&mut self) {
         self.page_counter -= 1;
+        self.record_item();
     }
 
     /// Advance page counter to the next page.
     fn increase_page_counter(&mut self) {
         self.page_counter += 1;
+        self.record_item();
     }
 
     /// Set page to the first one.
     fn page_counter_to_zero(&mut self) {
         self.page_counter = 0;
+        self.record_item();
     }
 
     /// Set page to the last one.
     fn page_counter_to_max(&mut self) {
         self.page_counter = self.last_page_index();
+        self.record_item();
+    }
+
+    /// Log which carousel item is now selected, for the navigation study. Only
+    /// records while the debug tutorial is running.
+    fn record_item(&self) {
+        nav_telemetry::record(nav_telemetry::EV_MENU_ITEM, self.page_counter as u8);
     }
 
     /// Get current page counter.

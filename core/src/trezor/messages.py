@@ -5412,6 +5412,28 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ShowNavTutorial"]:
             return isinstance(msg, cls)
 
+    class ShowNavAddress(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ShowNavAddress"]:
+            return isinstance(msg, cls)
+
+    class NavTutorialResult(protobuf.MessageType):
+        status: "str | None"
+        log: "str | None"
+
+        def __init__(
+            self,
+            *,
+            status: "str | None" = None,
+            log: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["NavTutorialResult"]:
+            return isinstance(msg, cls)
+
     class NEMGetAddress(protobuf.MessageType):
         address_n: "list[int]"
         network: "int"

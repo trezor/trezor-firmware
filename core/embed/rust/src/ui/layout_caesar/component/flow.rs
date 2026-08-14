@@ -4,19 +4,22 @@ use crate::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
         constant::SCREEN,
         geometry::Rect,
+        nav_telemetry,
         shape::Renderer,
     },
 };
 
 use super::{
     scrollbar::SCROLLBAR_SPACE, theme, title::Title, ButtonAction, ButtonController,
-    ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos, CancelInfoConfirmMsg, FlowPages,
+    record_button_msg, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos,
+    CancelInfoConfirmMsg, FlowPages,
     Page, ScrollBar,
 };
 
 /// Encoding stride for the `Info` resume token: `page * STRIDE + sub_page`.
 /// Must match the decode sites (`show_nav_tutorial` and the Python wrapper).
 pub const NAV_SUBPAGE_STRIDE: usize = 100;
+
 
 pub struct Flow<F>
 where
@@ -53,6 +56,10 @@ where
     /// Sub-page to jump to within the starting page on first `place()`
     /// (used to resume a scrolled nav page after a menu). Consumed once.
     start_subpage: u16,
+    /// Last position reported to the telemetry recorder, so only changes are
+    /// logged. Per-instance, so re-entering a page after the context menu is
+    /// logged as a fresh visit.
+    logged_position: Option<(usize, u16)>,
     #[cfg(feature = "ui_debug")]
     has_menu: bool,
 }
@@ -85,6 +92,7 @@ where
             ignore_second_button_ms: None,
             shift_active: false,
             start_subpage: 0,
+            logged_position: None,
             #[cfg(feature = "ui_debug")]
             has_menu: false,
         }
@@ -136,7 +144,11 @@ where
 
     /// Whether the current page should use the numeric sub-page counter.
     fn use_numeric_indicator(&self) -> bool {
-        self.numeric_nav_indicator && self.current_page.is_nav()
+        // A single-sub-page action-bar screen has nothing to count, and "1/1"
+        // only adds noise, so the indicator is left off there.
+        self.numeric_nav_indicator
+            && self.current_page.is_nav()
+            && self.current_page.pager().total() > 1
     }
 
     /// Start the flow on a page other than the first one. The button layout is
@@ -232,6 +244,19 @@ where
         self.update(ctx, true);
     }
 
+    /// Going to the previous page, landing on its *last* sub-page - what
+    /// scrolling back means when the step boundary is crossed.
+    fn go_to_prev_page_end(&mut self, ctx: &mut EventCtx) {
+        self.go_to_prev_page(ctx);
+        // The sub-page count is only known once the page has been placed, which
+        // `update` above has done.
+        let last = self.current_page.pager().total().saturating_sub(1);
+        if last > 0 {
+            self.current_page.change_page(last);
+            self.update_after_current_choice_inner_change(ctx);
+        }
+    }
+
     /// Going to the next page.
     fn go_to_next_page(&mut self, ctx: &mut EventCtx) {
         self.page_counter += 1;
@@ -295,7 +320,7 @@ where
         let raw = self.current_page.raw_btn_layout();
 
         if self.shift_active {
-            let btn_right = has_prev.then(ButtonDetails::back_secondary_icon);
+            let btn_right = self.shift_available().then(ButtonDetails::back_secondary_icon);
             return ButtonLayout::new(Some(ButtonDetails::shift_text()), None, btn_right);
         }
 
@@ -315,6 +340,8 @@ where
     /// Current choice is still the same, only its inner state has changed
     /// (its sub-page changed).
     fn update_after_current_choice_inner_change(&mut self, ctx: &mut EventCtx) {
+        // A page can carry a different title once scrolled, so re-read it.
+        self.refresh_title();
         let inner_page = self.current_page.pager().current();
         let use_numeric = self.use_numeric_indicator();
         let nav_pager = self.current_page.pager();
@@ -353,7 +380,22 @@ where
         ctx: &mut EventCtx,
         pos: ButtonPos,
     ) -> Option<CancelInfoConfirmMsg> {
-        match self.current_page.btn_actions().get_action(pos) {
+        let action = self.current_page.btn_actions().get_action(pos);
+        if let Some(action) = action {
+            nav_telemetry::record(
+                nav_telemetry::EV_ACTION,
+                match action {
+                    ButtonAction::NextPage => nav_telemetry::ACT_NEXT_PAGE,
+                    ButtonAction::PrevPage => nav_telemetry::ACT_PREV_PAGE,
+                    ButtonAction::FirstPage => nav_telemetry::ACT_FIRST_PAGE,
+                    ButtonAction::LastPage => nav_telemetry::ACT_LAST_PAGE,
+                    ButtonAction::Confirm => nav_telemetry::ACT_CONFIRM,
+                    ButtonAction::Cancel => nav_telemetry::ACT_CANCEL,
+                    ButtonAction::Info => nav_telemetry::ACT_INFO,
+                },
+            );
+        }
+        match action {
             Some(ButtonAction::PrevPage) => {
                 self.go_to_prev_page(ctx);
                 None
@@ -377,10 +419,64 @@ where
         }
     }
 
+    /// Re-read the current page's title and re-place it, without disturbing the
+    /// buttons. Used when only the sub-page changed, where a full `place()`
+    /// would rebuild the button controller and break an in-progress Shift hold.
+    fn refresh_title(&mut self) {
+        if self.has_common_title {
+            return;
+        }
+        self.title = self.current_page.title().map(Title::new);
+        self.title.place(self.title_area);
+    }
+
+    /// Underline the body text while a dead-end button is held, so the press
+    /// lands on the instruction that says what to do instead.
+    fn set_body_underline(&mut self, ctx: &mut EventCtx, on: bool) {
+        self.current_page.set_underline(on);
+        ctx.request_paint();
+    }
+
+    /// Log the current page / sub-page to the telemetry recorder, but only when
+    /// it changed since the last call.
+    fn record_position(&mut self) {
+        let position = (self.page_counter, self.current_page.pager().current());
+        if self.logged_position == Some(position) {
+            return;
+        }
+        let (page, subpage) = position;
+        if self.logged_position.map(|(p, _)| p) != Some(page) {
+            nav_telemetry::record(nav_telemetry::EV_PAGE, page as u8);
+        }
+        nav_telemetry::record(nav_telemetry::EV_SUBPAGE, subpage as u8);
+        // Report exactly what the screen offers, so a hold here is scored as a
+        // Shift attempt rather than as one made where Shift was unavailable.
+        let shift_avail = self.current_page.is_nav() && self.shift_available();
+        nav_telemetry::record(nav_telemetry::EV_SHIFT_AVAIL, shift_avail as u8);
+        self.logged_position = Some(position);
+    }
+
     /// Scroll one sub-page back within the current (action-bar) page.
     fn scroll_to_prev_subpage(&mut self, ctx: &mut EventCtx) {
         self.current_page.prev_page();
         self.update_after_current_choice_inner_change(ctx);
+    }
+
+    /// Whether "Shift" has anywhere to go from here: either a previous
+    /// sub-page to scroll to, or - on a page that asks for it - a previous
+    /// page. The `( = )` icon must only ever appear where this holds.
+    fn shift_available(&self) -> bool {
+        self.current_page.pager().has_prev()
+            || (self.current_page.shifts_to_prev_page() && self.page_counter > 0)
+    }
+
+    /// Whether the right button currently on screen is the inert (dead-end)
+    /// one, which must not perform the page's configured action.
+    fn right_btn_disabled(&self) -> bool {
+        self.current_btn_layout()
+            .btn_right
+            .as_ref()
+            .is_some_and(|btn| btn.disabled)
     }
 
     /// Scroll one sub-page forward within the current (action-bar) page.
@@ -400,8 +496,15 @@ where
     ) -> Option<CancelInfoConfirmMsg> {
         let msg = button_event?;
         let has_prev = self.current_page.pager().has_prev();
+
+        // The dead-end button underlines the instruction for exactly as long as
+        // it is held on its own; any other button activity takes it away again.
+        let holding_dead_end = matches!(msg, ButtonControllerMsg::Pressed(ButtonPos::Right))
+            && self.right_btn_disabled();
+        self.set_body_underline(ctx, holding_dead_end);
+
         match msg {
-            ButtonControllerMsg::LongPressed(ButtonPos::Left) if has_prev => {
+            ButtonControllerMsg::LongPressed(ButtonPos::Left) if self.shift_available() => {
                 self.shift_active = true;
                 self.set_buttons(ctx);
                 self.buttons.mutate(ctx, |ctx, buttons| {
@@ -428,7 +531,21 @@ where
             }
             ButtonControllerMsg::ShiftedTriggered(ButtonPos::Right) => {
                 if self.current_page.pager().has_prev() {
+                    if self.current_page.advances_on_shift_back() {
+                        // Performing the gesture is what leaves this page: the
+                        // next screen acknowledges it (figma 456:2899).
+                        self.shift_active = false;
+                        self.go_to_next_page(ctx);
+                        return None;
+                    }
                     self.scroll_to_prev_subpage(ctx);
+                } else if self.shift_available() {
+                    // Nothing to scroll to on this screen, so the gesture takes
+                    // the user back a whole page - landing at its end, which is
+                    // where they came from.
+                    self.shift_active = false;
+                    self.go_to_prev_page_end(ctx);
+                    return None;
                 }
                 // Shift is still held; keep the "Shift" label filled.
                 self.buttons.mutate(ctx, |ctx, buttons| {
@@ -438,6 +555,9 @@ where
             ButtonControllerMsg::Triggered(ButtonPos::Right, _) => {
                 if self.current_page.pager().has_next() {
                     self.scroll_to_next_subpage(ctx);
+                } else if self.right_btn_disabled() {
+                    // A dead-end button: it goes nowhere on purpose. The only
+                    // feedback is the underline shown while it was held.
                 } else {
                     return self.dispatch_action(ctx, ButtonPos::Right);
                 }
@@ -473,6 +593,10 @@ where
         if self.start_subpage > 0 {
             self.current_page.change_page(self.start_subpage);
             self.start_subpage = 0;
+            // Resuming mid-page may call for the scrolled title.
+            if !self.has_common_title {
+                self.title = self.current_page.title().map(Title::new);
+            }
         }
 
         let use_numeric = self.use_numeric_indicator();
@@ -521,24 +645,28 @@ where
         ctx.set_page_count(self.pages.scrollbar_page_count(self.content_area));
         self.title.event(ctx, event);
         let button_event = self.buttons.event(ctx, event);
-
-        // Action-bar (menu + "Shift") pages are handled separately.
-        if self.current_page.is_nav() {
-            return self.event_nav(ctx, button_event);
+        if let Some(msg) = button_event.as_ref() {
+            record_button_msg(msg);
         }
 
-        // Do something when a button was triggered
-        // and we have some action connected with it
-        if let Some(ButtonControllerMsg::Triggered(pos, _)) = button_event {
+        let result = if self.current_page.is_nav() {
+            // Action-bar (menu + "Shift") pages are handled separately.
+            self.event_nav(ctx, button_event)
+        } else if let Some(ButtonControllerMsg::Triggered(pos, _)) = button_event {
             // When there is a previous or next screen in the current flow,
             // handle that first and in case it triggers, then do not continue
             if self.event_consumed_by_current_choice(ctx, pos) {
-                return None;
+                None
+            } else {
+                self.dispatch_action(ctx, pos)
             }
-
-            return self.dispatch_action(ctx, pos);
+        } else {
+            None
         };
-        None
+
+        // Log where the user ended up, after any page/sub-page movement above.
+        self.record_position();
+        result
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

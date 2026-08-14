@@ -45,6 +45,7 @@ pub trait FirmwareUI {
         info_button: bool,
         chunkify: bool,
         external_menu: bool,
+        allow_back: bool, // "back" at the top of the screen leaves it
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_trade(

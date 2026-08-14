@@ -32,6 +32,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.debug.nav_demo"
     if __debug__ and msg_type == MessageType.ShowNavTutorial:
         return "apps.debug.nav_tutorial"
+    if __debug__ and msg_type == MessageType.ShowNavAddress:
+        return "apps.debug.nav_address"
 
     # benchmark
     if __debug__ and msg_type == MessageType.BenchmarkListNames:

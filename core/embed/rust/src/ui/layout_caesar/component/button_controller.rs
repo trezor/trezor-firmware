@@ -7,9 +7,49 @@ use crate::{
         component::{base::Event, Component, EventCtx, Pad, Timer},
         event::{ButtonEvent, PhysicalButton},
         geometry::Rect,
+        nav_telemetry,
         shape::Renderer,
     },
 };
+
+/// Telemetry `arg` for a physical button.
+fn physical_pos_code(btn: PhysicalButton) -> u8 {
+    match btn {
+        PhysicalButton::Left => nav_telemetry::POS_LEFT,
+        PhysicalButton::Right => nav_telemetry::POS_RIGHT,
+        _ => nav_telemetry::POS_OTHER,
+    }
+}
+
+/// Telemetry `arg` for a button position.
+fn pos_code(pos: ButtonPos) -> u8 {
+    match pos {
+        ButtonPos::Left => nav_telemetry::POS_LEFT,
+        ButtonPos::Middle => nav_telemetry::POS_MIDDLE,
+        ButtonPos::Right => nav_telemetry::POS_RIGHT,
+    }
+}
+
+/// Log what the controller made of the user's press. Physical presses and
+/// releases are recorded by the controller itself; these are the meanings it
+/// derived from them (which action fired, whether Shift engaged, and so on).
+/// Called by every layout that drives an action bar.
+pub fn record_button_msg(msg: &ButtonControllerMsg) {
+    let (code, arg) = match msg {
+        // Press/release are already recorded at the physical level.
+        ButtonControllerMsg::Pressed(_) => return,
+        ButtonControllerMsg::Triggered(pos, _) => (nav_telemetry::EV_TRIGGER, pos_code(*pos)),
+        ButtonControllerMsg::LongPressed(pos) => (nav_telemetry::EV_LONG_PRESS, pos_code(*pos)),
+        ButtonControllerMsg::ReleasedWithoutLongPress(pos) => {
+            (nav_telemetry::EV_HTC_ABORT, pos_code(*pos))
+        }
+        ButtonControllerMsg::ShiftedTriggered(pos) => {
+            (nav_telemetry::EV_SHIFT_BACK, pos_code(*pos))
+        }
+        ButtonControllerMsg::ShiftReleased => (nav_telemetry::EV_SHIFT_END, 0),
+    };
+    nav_telemetry::record(code, arg);
+}
 
 /// All possible states buttons (left and right) can be at.
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -422,6 +462,21 @@ impl Component for ButtonController {
     type Msg = ButtonControllerMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Record raw button transitions for the debug navigation study. This has
+        // to happen here rather than at the layout level, because some presses
+        // never surface as a message (e.g. the right press that arms Shift, or a
+        // press suppressed by the ignore-second-button delay).
+        if let Event::Button(button_event) = event {
+            match button_event {
+                ButtonEvent::ButtonPressed(which) => {
+                    nav_telemetry::record(nav_telemetry::EV_PRESS, physical_pos_code(which));
+                }
+                ButtonEvent::ButtonReleased(which) => {
+                    nav_telemetry::record(nav_telemetry::EV_RELEASE, physical_pos_code(which));
+                }
+                _ => {}
+            }
+        }
         // State machine for the ButtonController
         // We are matching event with `Event::Button` for a button action
         // and `Event::Timer` for getting the expiration of HTC.
@@ -490,7 +545,7 @@ impl Component for ButtonController {
                             // Shift mode: left is held (and already long-pressed)
                             // and right is pressed -> engage the secondary action.
                             // This is checked BEFORE the ignore-second-button
-                            // delay, because after the ~0.5 s hold that delay
+                            // delay, because after the ~0.25 s hold that delay
                             // would otherwise suppress the right press. The
                             // secondary action itself fires on RELEASE of the
                             // right button (see `ShiftRightDown`), not here; here

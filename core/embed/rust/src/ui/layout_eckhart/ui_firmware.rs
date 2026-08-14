@@ -138,6 +138,7 @@ impl FirmwareUI for UIEckhart {
         _info_button: bool,
         _chunkify: bool,
         _external_menu: bool,
+        _allow_back: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
     }

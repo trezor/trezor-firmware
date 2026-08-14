@@ -330,7 +330,15 @@ async def show_address(
     br_name: str = "show_address",
     br_code: ButtonRequestType = ButtonRequestType.Address,
     chunkify: bool = False,
+    allow_back: bool = False,
 ) -> None:
+    """Show a receive address on the action-bar navigation.
+
+    With `allow_back`, the "back" action (hold left, press right) at the top of
+    the address leaves the screen and raises `ActionCancelled`, so a caller with
+    a previous step can return to it. Off by default: on a screen with nothing
+    behind it that gesture would cancel the confirmation outright.
+    """
     from trezor.ui.layouts.menu import Cancel, Details, Menu, interact_with_menu
 
     mismatch_title = mismatch_title or TR.addr_mismatch__mismatch  # def_arg
@@ -399,6 +407,7 @@ async def show_address(
         info_button=False,
         chunkify=chunkify,
         external_menu=True,
+        allow_back=allow_back,
     ) as layout:
         await interact_with_menu(
             layout,
@@ -436,24 +445,38 @@ async def show_nav_demo(
         await interact_with_menu(layout, menu, br_name, br_code)
 
 
+# Milestones appended to the navigation telemetry log (the `arg` of an EV_MARK
+# event). The decoder in `trezorlib.nav_telemetry` maps these back to names;
+# `nav_tutorial.py` owns the begin/end codes.
+_NAV_MARK_INFO_OPEN = 2
+_NAV_MARK_INFO_CLOSE = 3
+_NAV_MARK_MENU_OPEN = 4
+_NAV_MARK_MENU_RESTART = 5
+_NAV_MARK_MENU_COMPLETE = 6
+_NAV_MARK_MENU_BACK = 7
+
+
 async def show_nav_tutorial(
-    pages: Sequence[tuple[str, str]],
+    pages: Sequence[tuple[str, ...]],
     *,
     menu_restart: str = "Restart\ntutorial",
     menu_complete: str = "Complete\ntutorial",
     menu_back: str = "Back",
-    menu_confirm: str = "YES",
+    # "V" puts the down-arrow glyph on the middle button instead of a word
+    # (figma 426:1958); resolved in `ButtonLayout::arrow_armed_arrow`.
+    menu_confirm: str = "V",
     menu_info_title: str = "MENU",
     menu_info_text: str = (
         "The menu provides context information. We will cover this later."
     ),
-    menu_screen: int = 5,
+    menu_screen: int = 6,
     br_name: str = "nav_tutorial",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> None:
     """Updated caesar device tutorial on the new action-bar navigation.
 
-    `pages` is exactly seven `(title, body)` screens. The tutorial is a small
+    `pages` is exactly eight screens, each `(title, body)` and optionally also
+    `(scrolled_title, scrolled_body)` for a second sub-page. The tutorial is a small
     state machine: the flow runs in Rust, and whenever the menu button is
     pressed the layout returns the index of the screen it was opened from. We
     then open a context menu with "Restart tutorial" / "Complete tutorial" /
@@ -486,6 +509,7 @@ async def show_nav_tutorial(
         if origin_page < menu_screen:
             # Before the tutorial explains the menu (the MENU step), opening it
             # just shows an informative screen with a single "X" to close.
+            trezorui_api.nav_telemetry_mark(_NAV_MARK_INFO_OPEN)
             with trezorui_api.confirm_action(
                 title=menu_info_title,
                 action=None,
@@ -493,10 +517,12 @@ async def show_nav_tutorial(
                 verb_cancel="",
             ) as info:
                 await interact(info, None, br_code, raise_on_cancel=None)
+            trezorui_api.nav_telemetry_mark(_NAV_MARK_INFO_CLOSE)
             start_page = menu_token  # resume on the exact page/sub-page
             continue
 
         # From the MENU step onward the menu offers the real actions.
+        trezorui_api.nav_telemetry_mark(_NAV_MARK_MENU_OPEN)
         with trezorui_api.select_menu(
             items=[menu_restart, menu_complete],
             current=0,
@@ -506,10 +532,13 @@ async def show_nav_tutorial(
             choice = await interact(menu_layout, None, br_code, raise_on_cancel=None)
 
         if choice == 0:
+            trezorui_api.nav_telemetry_mark(_NAV_MARK_MENU_RESTART)
             start_page = 0  # restart from the beginning
         elif choice == 1:
+            trezorui_api.nav_telemetry_mark(_NAV_MARK_MENU_COMPLETE)
             return  # complete the tutorial
         else:
+            trezorui_api.nav_telemetry_mark(_NAV_MARK_MENU_BACK)
             start_page = menu_token  # back - resume on the exact page/sub-page
 
 

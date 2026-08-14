@@ -786,6 +786,8 @@ class MessageType(IntEnum):
     BenchmarkResult = 9103
     ShowNavDemo = 9104
     ShowNavTutorial = 9105
+    NavTutorialResult = 9106
+    ShowNavAddress = 9107
     TelemetryGet = 1100
     Telemetry = 1101
 
@@ -7081,6 +7083,27 @@ class ShowNavDemo(protobuf.MessageType):
 
 class ShowNavTutorial(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9105
+
+
+class ShowNavAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9107
+
+
+class NavTutorialResult(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9106
+    FIELDS = {
+        1: protobuf.Field("status", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("log", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        status: Optional["str"] = None,
+        log: Optional["str"] = None,
+    ) -> None:
+        self.status = status
+        self.log = log
 
 
 class NEMGetAddress(protobuf.MessageType):

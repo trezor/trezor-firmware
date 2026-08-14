@@ -510,6 +510,7 @@ where
     pub renderer: &'a mut R,
     pd: core::marker::PhantomData<&'s ()>,
     alpha: u8,
+    underline: bool,
 }
 
 impl<'a, 's, R> TextRenderer<'a, 's, R>
@@ -521,11 +522,18 @@ where
             renderer: target,
             pd: core::marker::PhantomData,
             alpha: 255,
+            underline: false,
         }
     }
 
     pub fn with_alpha(self, alpha: u8) -> Self {
         Self { alpha, ..self }
+    }
+
+    /// Draw a rule under every line of text. The fonts carry no underline of
+    /// their own, so it is painted here, where the run's width is known.
+    pub fn with_underline(self, underline: bool) -> Self {
+        Self { underline, ..self }
     }
 }
 
@@ -538,6 +546,17 @@ where
             .with_fg(layout.style.text_color)
             .with_alpha(self.alpha)
             .render(self.renderer);
+        if self.underline {
+            // Two pixels below the baseline, so descenders keep their shape.
+            let width = layout.style.text_font.visible_text_width(text);
+            shape::Bar::new(Rect::from_top_left_and_size(
+                cursor + Offset::y(2),
+                Offset::new(width, 1),
+            ))
+            .with_bg(layout.style.text_color)
+            .with_alpha(self.alpha)
+            .render(self.renderer);
+        }
     }
 
     fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {

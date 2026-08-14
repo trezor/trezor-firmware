@@ -5,7 +5,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never},
         constant,
-        display::{Font, Icon},
+        display::{Color, Font, Icon},
         event::PhysicalButton,
         geometry::{Alignment2D, Offset, Point, Rect},
         shape,
@@ -44,6 +44,9 @@ pub struct Button {
     fixed_width: Option<i16>,
     offset: Offset,
     state: State,
+    /// An inert button. It never takes on the pressed look, because there is
+    /// nothing behind it to acknowledge - the feedback belongs elsewhere.
+    disabled: bool,
 }
 
 impl Button {
@@ -58,6 +61,7 @@ impl Button {
             offset: btn_details.offset,
             bounds: Rect::zero(),
             state: State::Released,
+            disabled: btn_details.disabled,
         }
     }
 
@@ -85,6 +89,11 @@ impl Button {
 
     // Setting the visual state of the button.
     pub fn set_pressed(&mut self, ctx: &mut EventCtx, is_pressed: bool) {
+        if self.disabled {
+            // Stays as drawn: filling an inert button would read as if the
+            // press had done something.
+            return;
+        }
         let new_state = if is_pressed {
             State::Pressed
         } else {
@@ -104,14 +113,19 @@ impl Button {
                 ButtonContent::Text(text) => {
                     let text_width = text.map(|t| self.font.visible_text_width(t));
                     match self.decoration {
-                        Some(Decoration::Outline) => text_width + 2 * theme::BUTTON_OUTLINE,
+                        Some(Decoration::Outline) | Some(Decoration::DottedOutline) => {
+                            text_width + 2 * theme::BUTTON_OUTLINE
+                        }
                         Some(Decoration::Arms) => text_width + 2 * theme::ARMS_MARGIN,
                         None => text_width,
                     }
                 }
                 ButtonContent::Icon(icon) => {
                     // When Icon does not have outline, hardcode its width
-                    if matches!(self.decoration, Some(Decoration::Outline)) {
+                    if matches!(
+                        self.decoration,
+                        Some(Decoration::Outline) | Some(Decoration::DottedOutline)
+                    ) {
                         icon.toif.width() + 2 * theme::BUTTON_OUTLINE
                     } else {
                         theme::BUTTON_ICON_WIDTH
@@ -134,12 +148,45 @@ impl Button {
         }
     }
 
+    /// Draw the button border as 2-on/2-off dashes, leaving the four corner
+    /// pixels empty so it reads as rounded like the solid outline does.
+    fn render_dashed_outline<'s>(target: &mut impl Renderer<'s>, area: Rect, fg: Color) {
+        const DASH: i16 = 2;
+        const PERIOD: i16 = 4;
+
+        let mut dash = |x: i16, y: i16, w: i16, h: i16| {
+            shape::Bar::new(Rect::from_top_left_and_size(
+                Point::new(x, y),
+                Offset::new(w, h),
+            ))
+            .with_bg(fg)
+            .render(target);
+        };
+
+        let mut x = area.x0 + 1;
+        while x < area.x1 - 1 {
+            let w = DASH.min(area.x1 - 1 - x);
+            dash(x, area.y0, w, 1);
+            dash(x, area.y1 - 1, w, 1);
+            x += PERIOD;
+        }
+        let mut y = area.y0 + 1;
+        while y < area.y1 - 1 {
+            let h = DASH.min(area.y1 - 1 - y);
+            dash(area.x0, y, 1, h);
+            dash(area.x1 - 1, y, 1, h);
+            y += PERIOD;
+        }
+    }
+
     /// Determine baseline point for the text.
     fn get_text_baseline(&self) -> Point {
         // Arms and outline require the text to be elevated.
         // Moving text to the right and elevating it for arms and outline.
         let (mut offset_x, offset_y) = match self.decoration {
-            Some(Decoration::Outline) => (theme::BUTTON_OUTLINE, theme::BUTTON_OUTLINE),
+            Some(Decoration::Outline) | Some(Decoration::DottedOutline) => {
+                (theme::BUTTON_OUTLINE, theme::BUTTON_OUTLINE)
+            }
             Some(Decoration::Arms) => (theme::ARMS_MARGIN, theme::ARMS_MARGIN),
             None => (0, 0),
         };
@@ -189,6 +236,8 @@ impl Component for Button {
                 .with_radius(3)
                 .with_fg(fg_color)
                 .render(target);
+        } else if matches!(self.decoration, Some(Decoration::DottedOutline)) {
+            Self::render_dashed_outline(target, area, fg_color);
         } else {
             shape::Bar::new(area).with_bg(bg_color).render(target);
         }
@@ -267,6 +316,10 @@ enum State {
 #[derive(Copy, Clone)]
 pub enum Decoration {
     Outline,
+    /// Like `Outline`, but drawn as a 2-on/2-off dashed border. Marks a button
+    /// that is deliberately inert - it occupies the slot so the user can see
+    /// there is something there, but pressing it does not navigate.
+    DottedOutline,
     Arms,
 }
 
@@ -293,6 +346,10 @@ pub struct ButtonDetails {
     /// Optional override (ms) for how long the button must be held before
     /// `LongPressed` fires. `None` uses the controller's default.
     pub long_press_ms: Option<u32>,
+    /// The button is inert: it renders and reacts to being pressed, but the
+    /// owning component is expected to skip its action. Used for the tutorial's
+    /// dead-end button, which exists only to be pressed in vain.
+    pub disabled: bool,
 }
 
 impl ButtonDetails {
@@ -308,6 +365,7 @@ impl ButtonDetails {
             offset: Offset::zero(),
             send_long_press: false,
             long_press_ms: None,
+            disabled: false,
         }
     }
 
@@ -323,6 +381,7 @@ impl ButtonDetails {
             offset: Offset::zero(),
             send_long_press: false,
             long_press_ms: None,
+            disabled: false,
         }
     }
 
@@ -354,6 +413,15 @@ impl ButtonDetails {
         Self::icon(theme::ICON_MENU).with_offset(Offset::new(3, -3))
     }
 
+    /// Cross flanked by the "Shift available" bars, for a screen that closes on
+    /// a short press but offers scroll-back when the left button is held.
+    pub fn cancel_shift_icon() -> Self {
+        Self::icon(theme::ICON_CANCEL_SHIFT)
+            .with_offset(Offset::new(0, -3))
+            .with_send_long_press()
+            .with_long_press_ms(250)
+    }
+
     /// Hamburger menu icon wrapped in parentheses `( ≡ )`, indicating that a
     /// secondary ("Shift") action is available via a long press of the left
     /// button. Enables `send_long_press` so the controller fires `LongPressed`.
@@ -367,9 +435,9 @@ impl ButtonDetails {
             .with_offset(Offset::new(0, -3))
             .with_pressed_icon(theme::ICON_MENU_PRESSED)
             .with_send_long_press()
-            // Half of the 1000 ms default: the "Shift" secondary action
-            // becomes available after a ~0.5 s hold.
-            .with_long_press_ms(500)
+            // A quarter of the 1000 ms default: the "Shift" secondary action
+            // becomes available after a ~0.25 s hold.
+            .with_long_press_ms(250)
     }
 
     /// Boxed "Shift" text button (used by the action-bar navigation).
@@ -433,6 +501,29 @@ impl ButtonDetails {
             .with_outline()
             .with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
             .with_pressed_icon(theme::ICON_ARROW_UP)
+    }
+
+    /// A wide but deliberately inert button, drawn as an empty dashed outline
+    /// (figma 456:2702). It occupies the slot where CONTINUE would be, so the
+    /// user can see there is something to press, but pressing it navigates
+    /// nowhere - the tutorial uses it to force the "Shift" gesture to be found.
+    pub fn dead_end_dotted() -> Self {
+        Self::text(TString::empty())
+            .with_dotted_outline()
+            .with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
+            .with_disabled()
+    }
+
+    /// Dashed outline around the button, marking it as inert.
+    pub fn with_dotted_outline(mut self) -> Self {
+        self.decoration = Some(Decoration::DottedOutline);
+        self
+    }
+
+    /// Mark the button as inert; the owning component skips its action.
+    pub fn with_disabled(mut self) -> Self {
+        self.disabled = true;
+        self
     }
 
     /// Outline around the button.
@@ -532,7 +623,19 @@ impl ButtonLayout {
     pub fn arrow_armed_arrow(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
-            Some(ButtonDetails::armed_text(text)),
+            // "V" puts the down-arrow glyph on the middle button instead of a
+            // word (figma 472:1803). Built directly rather than via
+            // `from_text_possible_icon`, whose arrow carries an offset meant
+            // for an edge-aligned button, not a centered one. The fixed width
+            // is what holds the arms apart, giving the glyph room to breathe.
+            Some(
+                text.map(|t| match t {
+                    "V" => ButtonDetails::icon(theme::ICON_ARROW_DOWN_SOLID)
+                        .with_fixed_width(theme::ARMED_ICON_WIDTH),
+                    _ => ButtonDetails::text(text),
+                })
+                .with_arms(),
+            ),
             Some(ButtonDetails::right_arrow_icon()),
         )
     }
@@ -835,6 +938,25 @@ impl ButtonLayout {
     /// Menu icon on left, nothing else (used to open a context menu).
     pub fn menu_none_none() -> Self {
         Self::new(Some(ButtonDetails::menu_icon()), None, None)
+    }
+
+    /// Menu icon on left and an inert dashed button on right (figma 426:1720):
+    /// there is visibly something to press, but it leads nowhere.
+    pub fn menu_none_dead_end() -> Self {
+        Self::new(
+            Some(ButtonDetails::menu_icon()),
+            None,
+            Some(ButtonDetails::dead_end_dotted()),
+        )
+    }
+
+    /// "Shift available" menu icon on left and text on right (figma 456:2899).
+    pub fn menu_shift_none_text(text: TString<'static>) -> Self {
+        Self::new(
+            Some(ButtonDetails::menu_shift_icon()),
+            None,
+            Some(ButtonDetails::from_text_possible_icon(text)),
+        )
     }
 
     /// Left back arrow and WIDE down arrow on right (scrollable content).

@@ -22,7 +22,27 @@ message ShowNavDemo {}
  * Request: Show the updated Safe 3 (caesar) device tutorial on the new
  * action-bar navigation. Debug/demo only.
  * @start
- * @next Success
+ * @next NavTutorialResult
  * @next Failure
  */
 message ShowNavTutorial {}
+
+/**
+ * Request: Show a sample Cardano receive address on the new action-bar
+ * navigation, so the real receive flow can be user-tested without a host
+ * wallet. Debug/demo only.
+ * @start
+ * @next NavTutorialResult
+ * @next Failure
+ */
+message ShowNavAddress {}
+
+/**
+ * Response: Outcome of a navigation demo flow, with an interaction log for user
+ * testing.
+ * @end
+ */
+message NavTutorialResult {
+    optional string status = 1;  // "shown" or "cancelled"
+    optional string log = 2;     // encoded interaction log, decoded by trezorlib.nav_telemetry
+}

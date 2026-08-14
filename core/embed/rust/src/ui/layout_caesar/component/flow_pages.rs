@@ -79,8 +79,19 @@ pub struct Page {
     btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
     title: Option<TString<'static>>,
+    /// Replaces `title` once the page is scrolled past its first sub-page.
+    title_scrolled: Option<TString<'static>>,
     slim_arrows: bool,
     nav: bool,
+    /// On an action-bar page, a successful "Shift + right" scroll-back leaves
+    /// this page for the next one instead of moving to the previous sub-page.
+    /// The tutorial uses it so that performing the gesture is what advances the
+    /// walkthrough (figma 456:2899).
+    advance_on_shift_back: bool,
+    /// Offer "Shift" even with no previous sub-page to scroll to, taking the
+    /// user back a whole page instead. Without this the icon on a single-page
+    /// screen would advertise a gesture that does nothing.
+    shift_to_prev_page: bool,
 }
 
 // For `layout.rs`
@@ -95,14 +106,24 @@ impl Page {
             btn_layout,
             btn_actions,
             title: None,
+            title_scrolled: None,
             slim_arrows: false,
             nav: false,
+            advance_on_shift_back: false,
+            shift_to_prev_page: false,
         }
     }
 }
 
 // For `flow.rs`
 impl Page {
+    /// A different title for once the page has been scrolled past its first
+    /// sub-page, e.g. "SCROLL UP" instead of "SCREEN SCROLL".
+    pub fn with_scrolled_title(mut self, title: TString<'static>) -> Self {
+        self.title_scrolled = Some(title);
+        self
+    }
+
     /// Adding title.
     pub fn with_title(mut self, title: TString<'static>) -> Self {
         self.title = Some(title);
@@ -126,6 +147,36 @@ impl Page {
     /// Whether this page uses the action-bar navigation.
     pub fn is_nav(&self) -> bool {
         self.nav
+    }
+
+    /// Leave this page for the next one when "Shift + right" scrolls back,
+    /// instead of moving to the previous sub-page. Makes performing the gesture
+    /// the way out of the page.
+    pub fn with_advance_on_shift_back(mut self) -> Self {
+        self.advance_on_shift_back = true;
+        self
+    }
+
+    /// See `with_advance_on_shift_back`.
+    pub fn advances_on_shift_back(&self) -> bool {
+        self.advance_on_shift_back
+    }
+
+    /// Offer "Shift" here even though there is no previous sub-page: the
+    /// gesture goes back a whole page instead.
+    pub fn with_shift_to_prev_page(mut self) -> Self {
+        self.shift_to_prev_page = true;
+        self
+    }
+
+    /// See `with_shift_to_prev_page`.
+    pub fn shifts_to_prev_page(&self) -> bool {
+        self.shift_to_prev_page
+    }
+
+    /// Underline the body text, as transient emphasis while a key is held.
+    pub fn set_underline(&mut self, underline: bool) {
+        self.formatted.set_underline(underline);
     }
 
     /// The raw, un-paginated button layout as configured in `layout.rs`. Used
@@ -187,6 +238,10 @@ impl Page {
     }
 
     pub fn title(&self) -> Option<TString<'static>> {
+        // Once scrolled, a page may name what the screen now does.
+        if self.pager().current() > 0 && self.title_scrolled.is_some() {
+            return self.title_scrolled;
+        }
         self.title
     }
 }
