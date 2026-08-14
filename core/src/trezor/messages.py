@@ -8118,6 +8118,8 @@ if TYPE_CHECKING:
         sibling_split_bit: "int | None"
         sibling_left: "AnyBytes | None"
         sibling_right: "AnyBytes | None"
+        sibling_entry_key: "AnyBytes | None"
+        sibling_commit: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8130,6 +8132,8 @@ if TYPE_CHECKING:
             sibling_split_bit: "int | None" = None,
             sibling_left: "AnyBytes | None" = None,
             sibling_right: "AnyBytes | None" = None,
+            sibling_entry_key: "AnyBytes | None" = None,
+            sibling_commit: "AnyBytes | None" = None,
         ) -> None:
             pass
 

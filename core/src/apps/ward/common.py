@@ -79,8 +79,8 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
                       a tombstone). Distinct from b"", an entry whose value IS empty.
       old_leaf        (key_type, id_part, val_part) as received, or None -- what a write
                       must prove it is replacing.
-      write_material  (proof, witness_entry_key, witness_commit, sibling_node), which a
-                      write feeds to `trie.compute_new_root`.
+      write_material  (proof, witness_entry_key, witness_commit, sibling_node,
+                      sibling_leaf), which a write feeds to `trie.compute_new_root`.
 
     The identity part is returned but nothing reads it yet: the device already knows the
     identifier and app_id, having derived the path from them, so it is carried only
@@ -133,11 +133,15 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
             ack.sibling_left or b"",
             ack.sibling_right or b"",
         )
+    sibling_leaf = None
+    if ack.sibling_entry_key is not None and ack.sibling_commit is not None:
+        sibling_leaf = (ack.sibling_entry_key, ack.sibling_commit)
     material = (
         ack.proof,
         ack.witness_entry_key,
         ack.witness_commit,
         sibling_node,
+        sibling_leaf,
     )
 
     if not present:
@@ -169,16 +173,29 @@ def _verify_against_root(
 ) -> None:
     """Check the host's answer against the device's trusted root, or raise.
 
-    Does nothing when the device holds no root: there is then nothing to check against,
+    Does nothing when the device holds NO root: there is then nothing to check against,
     and checking a proof against a root the host supplied would be theatre. That is the
     state every release build is in today -- see `root.py` -- and it is why the screens
     still warn.
+
+    An EMPTY TREE is a different thing entirely and is checked here rather than waved
+    through. It used to be recorded as "no root", so deleting a wallet's last entry
+    silently turned verification off -- reachable by ordinary use, and from a state the
+    user has every reason to think is protected. The tree now says it is empty, and an
+    empty tree has exactly one honest answer: nothing is present, and no witness is needed
+    to say so, since there is no leaf to exhibit.
     """
     from trezor.wire import DataError
 
+    from .attest import EMPTY_ROOT
     from .trie import verify_membership, verify_nonmembership
 
     if root is None:
+        return
+
+    if root == EMPTY_ROOT:
+        if present:
+            raise DataError("WARD: the tree is empty; no entry can be in it")
         return
 
     if present:

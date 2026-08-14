@@ -5,6 +5,7 @@ from trezor.wire import DataError
 
 from apps.ward.keys import _scope, entry_key
 from apps.ward import attest as A
+from apps.ward.attest import EMPTY_ROOT
 from apps.ward import cas as CAS
 from apps.ward import leaf as L
 from apps.ward.trie import (
@@ -627,13 +628,97 @@ class TestWardComputeNewRoot(unittest.TestCase):
             compute_new_root(a, self._leaf(b"WRONG"), self._leaf(b"a2"), proof, root)
 
     def test_delete_promotes_a_leaf_sibling_exactly(self):
-        """A leaf has no skiplen, so promoting it needs no correction."""
+        """A leaf has no skiplen, so promoting it needs no correction.
+
+        The witness is still REQUIRED, and still checked: the device recomputes the leaf
+        hash and matches it against the one the proof committed to. That is what makes
+        "the sibling is a leaf" a fact rather than the host's word for it.
+        """
         a, b = self._key([0]), self._key([1])
         la, lb = self._lh(a, b"a"), self._lh(b, b"b")
         root = internal_hash(0, 0, la, lb)
         proof = [self._elem(0, 0, lb)]
         # one leaf left, and a single-leaf tree's root IS that leaf hash
-        self.assertEqual(compute_new_root(a, self._leaf(b"a"), None, proof, root), lb)
+        self.assertEqual(
+            compute_new_root(
+                a, self._leaf(b"a"), None, proof, root,
+                sibling_leaf=(b, self._commit(b"b")),
+            ),
+            lb,
+        )
+        # a leaf witness that does not reproduce the committed hash is refused
+        with self.assertRaises(DataError):
+            compute_new_root(
+                a, self._leaf(b"a"), None, proof, root,
+                sibling_leaf=(b, self._commit(b"WRONG")),
+            )
+
+    def test_delete_must_identify_the_sibling(self):
+        """Neither form supplied is REFUSED, and that refusal is the whole point.
+
+        A proof element carries the sibling's hash and nothing that says whether it is a
+        leaf or a branch. An earlier revision let a leaf be signalled by OMISSION -- which
+        cannot be verified: a host that withheld the decomposition for a BRANCH got the
+        stale hash promoted, giving a valid hash of a non-canonical tree over the same
+        leaves. Nothing is forged by that, but every later proof from an honest host
+        reconstructs elsewhere and is refused, so the wallet is stuck.
+
+        Deliberately set up with a BRANCH sibling, so the omission would have been wrong
+        rather than harmless -- against a leaf sibling this test would pass on the old
+        code too, and prove nothing.
+        """
+        a = self._key([0])
+        b = self._key([1, 0, 0, 0, 0, 0])
+        c = self._key([1, 0, 0, 0, 0, 1])
+        lb, lc = self._lh(b, b"b"), self._lh(c, b"c")
+        bc_old = internal_hash(5, 4, lb, lc)
+        root = internal_hash(0, 0, self._lh(a, b"a"), bc_old)
+        proof = [self._elem(0, 0, bc_old)]
+
+        with self.assertRaises(DataError):
+            compute_new_root(a, self._leaf(b"a"), None, proof, root)
+
+        # nor may both forms be sent: the device would have to choose which to believe
+        with self.assertRaises(DataError):
+            compute_new_root(
+                a, self._leaf(b"a"), None, proof, root,
+                sibling_node=(5, lb, lc), sibling_leaf=(b, self._commit(b"b")),
+            )
+
+    def test_emptying_the_tree_yields_a_root_that_says_so(self):
+        """Deleting the last entry gives EMPTY_ROOT, never None.
+
+        "The tree is empty" and "this device has no root and therefore checks nothing" used
+        to be the same value, so deleting a one-entry wallet's only entry silently turned
+        verification off -- reachable by ordinary use, from a state the user has every
+        reason to believe is protected.
+        """
+        a = self._key([0])
+        root = self._lh(a, b"a")
+        got = compute_new_root(a, self._leaf(b"a"), None, [], root)
+        self.assertEqual(got, EMPTY_ROOT)
+        self.assertTrue(got is not None)
+
+    def test_an_emptied_tree_accepts_a_first_insert_again(self):
+        """...and EMPTY_ROOT still counts as empty where that matters.
+
+        Otherwise the fix above would trade a security hole for a dead wallet: there is no
+        leaf to witness, so an insert here has to take the no-proof path exactly as it does
+        on a device that has never written.
+        """
+        k = self._key([0, 1])
+        self.assertEqual(
+            compute_new_root(k, None, self._leaf(b"fresh"), [], EMPTY_ROOT),
+            self._lh(k, b"fresh"),
+        )
+
+    def test_an_empty_tree_holds_nothing_to_replace(self):
+        """An update or a delete against an empty tree is refused, not silently derived."""
+        k = self._key([0])
+        with self.assertRaises(DataError):
+            compute_new_root(k, self._leaf(b"a"), self._leaf(b"b"), [], EMPTY_ROOT)
+        with self.assertRaises(DataError):
+            compute_new_root(k, self._leaf(b"a"), None, [], EMPTY_ROOT)
 
     def test_delete_reparents_a_branch_sibling(self):
         """THE bug this test exists for.

@@ -77,11 +77,16 @@ class Answer(NamedTuple):
     proof: Optional[list] = None
     witness_entry_key: Optional[bytes] = None
     witness_commit: Optional[bytes] = None
-    # Delete only, and only for a branch sibling -- the device re-derives it at the
-    # shallower depth it moves to. See messages-ward.proto.
+    # Delete only. The device must be told which KIND of node the collapsing sibling is,
+    # in exactly one of these two forms -- it cannot tell from the proof, which carries
+    # only a hash, and it will not infer a leaf from a missing decomposition. A branch is
+    # re-derived at the shallower depth it moves to; a leaf promotes unchanged, once its
+    # hash has been recomputed and matched. See messages-ward.proto.
     sibling_split_bit: Optional[int] = None
     sibling_left: Optional[bytes] = None
     sibling_right: Optional[bytes] = None
+    sibling_entry_key: Optional[bytes] = None
+    sibling_commit: Optional[bytes] = None
 
 
 # Answers a device pull, keyed by the opaque path.
@@ -146,6 +151,8 @@ def _call_answering_pulls(
                 sibling_split_bit=answer.sibling_split_bit,
                 sibling_left=answer.sibling_left,
                 sibling_right=answer.sibling_right,
+                sibling_entry_key=answer.sibling_entry_key,
+                sibling_commit=answer.sibling_commit,
             )
         )
 
@@ -360,12 +367,15 @@ def store_provider(store) -> EntryProvider:
     def provider(entry_key: bytes) -> Answer:
         if entry_key in store:
             sib = store.sibling_decomposition(entry_key)
+            leaf_sib = store.sibling_leaf(entry_key) if sib is None else None
             return Answer(
                 leaf=store.blobs[entry_key],
                 proof=store.membership_proof(entry_key),
                 sibling_split_bit=None if sib is None else sib[0],
                 sibling_left=None if sib is None else sib[1],
                 sibling_right=None if sib is None else sib[2],
+                sibling_entry_key=None if leaf_sib is None else leaf_sib[0],
+                sibling_commit=None if leaf_sib is None else leaf_sib[1],
             )
         proof, witness_key, witness_commit = store.nonmembership_proof(entry_key)
         return Answer(
