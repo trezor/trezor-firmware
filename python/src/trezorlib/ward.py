@@ -258,7 +258,13 @@ def delete_entry(
 
 
 def sync(session: "Session") -> messages.WardSyncAck:
-    """Open a sync round: the device mints the nonce the WM must sign against."""
+    """Open a sync round: the device mints the nonce the WM must sign against.
+
+    The ack also carries the device's current `counter`, which doubles as a "where are you"
+    query. A caller that lost a write's response can compare it against its own and learn
+    whether the write landed -- without it, the retry fails against a root the device has
+    moved past and there is nothing to distinguish that from an entry that never existed.
+    """
     return session.call(messages.WardSync(), expect=messages.WardSyncAck)
 
 

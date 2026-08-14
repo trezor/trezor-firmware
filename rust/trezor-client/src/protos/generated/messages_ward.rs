@@ -3854,6 +3854,8 @@ pub struct WardSyncAck {
     pub nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncAck.ward_id)
     pub ward_id: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncAck.counter)
+    pub counter: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardSyncAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -3942,8 +3944,27 @@ impl WardSyncAck {
         self.ward_id.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional uint32 counter = 3;
+
+    pub fn counter(&self) -> u32 {
+        self.counter.unwrap_or(0)
+    }
+
+    pub fn clear_counter(&mut self) {
+        self.counter = ::std::option::Option::None;
+    }
+
+    pub fn has_counter(&self) -> bool {
+        self.counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_counter(&mut self, v: u32) {
+        self.counter = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "nonce",
@@ -3954,6 +3975,11 @@ impl WardSyncAck {
             "ward_id",
             |m: &WardSyncAck| { &m.ward_id },
             |m: &mut WardSyncAck| { &mut m.ward_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "counter",
+            |m: &WardSyncAck| { &m.counter },
+            |m: &mut WardSyncAck| { &mut m.counter },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardSyncAck>(
             "WardSyncAck",
@@ -3979,6 +4005,9 @@ impl ::protobuf::Message for WardSyncAck {
                 18 => {
                     self.ward_id = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                24 => {
+                    self.counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -3997,6 +4026,9 @@ impl ::protobuf::Message for WardSyncAck {
         if let Some(v) = self.ward_id.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.counter {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -4008,6 +4040,9 @@ impl ::protobuf::Message for WardSyncAck {
         }
         if let Some(v) = self.ward_id.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.counter {
+            os.write_uint32(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -4028,6 +4063,7 @@ impl ::protobuf::Message for WardSyncAck {
     fn clear(&mut self) {
         self.nonce = ::std::option::Option::None;
         self.ward_id = ::std::option::Option::None;
+        self.counter = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -4035,6 +4071,7 @@ impl ::protobuf::Message for WardSyncAck {
         static instance: WardSyncAck = WardSyncAck {
             nonce: ::std::option::Option::None,
             ward_id: ::std::option::Option::None,
+            counter: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -5776,27 +5813,27 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     hCommit\"O\n\x0fWardVerifyChain\x12<\n\x05links\x18\x01\x20\x03(\x0b2&.h\
     w.trezor.messages.ward.WardChainLinkR\x05links\"I\n\x12WardVerifyChainAc\
     k\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_r\
-    oot\x18\x02\x20\x01(\x0cR\x07newRoot\"\n\n\x08WardSync\"<\n\x0bWardSyncA\
+    oot\x18\x02\x20\x01(\x0cR\x07newRoot\"\n\n\x08WardSync\"V\n\x0bWardSyncA\
     ck\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x17\n\x07ward_i\
-    d\x18\x02\x20\x01(\x0cR\x06wardId\"\x84\x01\n\x15WardIngestAttestation\
-    \x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x10\n\x03mac\
-    \x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x01(\
-    \x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimesta\
-    mp\"4\n\x18WardIngestAttestationAck\x12\x18\n\x07counter\x18\x01\x20\x01\
-    (\rR\x07counter\"#\n\rWardReconcile\x12\x12\n\x04root\x18\x01\x20\x01(\
-    \x0cR\x04root\"G\n\x10WardReconcileAck\x12\x18\n\x07counter\x18\x01\x20\
-    \x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRo\
-    ot\"H\n\x0cWardRollback\x12\x17\n\x07to_root\x18\x01\x20\x01(\x0cR\x06to\
-    Root\x12\x1f\n\x0bauth_commit\x18\x02\x20\x01(\x0cR\nauthCommit\"g\n\x0f\
-    WardRollbackAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\
-    \x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1f\n\x0bauth_co\
-    mmit\x18\x03\x20\x01(\x0cR\nauthCommit\"\x81\x01\n\x12WardRecoverCounter\
-    \x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x10\n\x03mac\
-    \x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x01(\
-    \x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimesta\
-    mp\"1\n\x15WardRecoverCounterAck\x12\x18\n\x07counter\x18\x01\x20\x01(\r\
-    R\x07counterB8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessageWa\
-    rd\
+    d\x18\x02\x20\x01(\x0cR\x06wardId\x12\x18\n\x07counter\x18\x03\x20\x01(\
+    \rR\x07counter\"\x84\x01\n\x15WardIngestAttestation\x12\x18\n\x07counter\
+    \x18\x01\x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\
+    \x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\
+    \x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimestamp\"4\n\x18WardIngestAtt\
+    estationAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\"#\n\rWa\
+    rdReconcile\x12\x12\n\x04root\x18\x01\x20\x01(\x0cR\x04root\"G\n\x10Ward\
+    ReconcileAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\
+    \n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"H\n\x0cWardRollback\x12\
+    \x17\n\x07to_root\x18\x01\x20\x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_comm\
+    it\x18\x02\x20\x01(\x0cR\nauthCommit\"g\n\x0fWardRollbackAck\x12\x18\n\
+    \x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\
+    \x20\x01(\x0cR\x07newRoot\x12\x1f\n\x0bauth_commit\x18\x03\x20\x01(\x0cR\
+    \nauthCommit\"\x81\x01\n\x12WardRecoverCounter\x12\x18\n\x07counter\x18\
+    \x01\x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03ma\
+    c\x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\x1c\n\
+    \ttimestamp\x18\x04\x20\x01(\x04R\ttimestamp\"1\n\x15WardRecoverCounterA\
+    ck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counterB8\n#com.satoshila\
+    bs.trezor.lib.protobufB\x11TrezorMessageWard\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

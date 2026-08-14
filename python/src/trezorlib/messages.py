@@ -10305,6 +10305,7 @@ class WardSyncAck(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10312,9 +10313,11 @@ class WardSyncAck(protobuf.MessageType):
         *,
         nonce: Optional["bytes"] = None,
         ward_id: Optional["bytes"] = None,
+        counter: Optional["int"] = None,
     ) -> None:
         self.nonce = nonce
         self.ward_id = ward_id
+        self.counter = counter
 
 
 class WardIngestAttestation(protobuf.MessageType):

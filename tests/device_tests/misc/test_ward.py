@@ -1901,3 +1901,65 @@ def test_ward_an_emptied_tree_can_be_written_to_again(session: Session):
         session, store, lambda p: ward.get_entry(session, _APP, b"addr2", p)
     )
     assert "after_the_purge" in rec.squashed
+
+
+# --- asking the device where its head is --------------------------------------------
+
+
+@pytest.mark.models("core")
+def test_ward_sync_reports_the_device_counter(session: Session):
+    """The round opener also answers "where are you".
+
+    Weak on its own -- it would pass on a field nothing consumes -- which is why the test
+    below is the one that matters. This one pins the value.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    _seed(session, store, b"addr2", b"w")
+
+    ack = ward.sync(session)
+    assert ack.counter == store.counter
+    assert ack.counter > 0  # two writes happened; a zero here would pass vacuously
+
+
+@pytest.mark.models("core")
+def test_ward_sync_counter_reveals_a_write_whose_response_was_lost(session: Session):
+    """The case the field exists for, and the one idempotent delete deliberately misses.
+
+    A delete succeeds, its response never reaches the host, so the host still holds the row
+    and the pre-delete root. Retrying serves a proof against a root the device has already
+    moved past: refused, correctly, and indistinguishable from an entry that never existed.
+    The counter is what breaks the tie -- the host sees the device is one ahead of it, knows
+    the delete landed, applies it locally, and carries on.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"doomed")
+    _seed(session, store, b"addr2", b"keep_me")
+    before = store.counter
+
+    # the delete is confirmed and the device commits it -- then the ack is "lost": the host
+    # never calls ward.apply, so its store still holds the row
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        "ward_delete_entry",
+    )
+    assert store.counter == before  # host is unaware; the device has moved on
+
+    # retrying against the stale store is refused, and the error does not say why
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
+        ward.delete_entry(session, _APP, b"addr1", ward.store_provider(store))
+
+    # ...but the counter does
+    ack = ward.sync(session)
+    assert ack.counter > store.counter
+    assert ack.counter == res.counter
+
+    # so the host applies what it now knows landed, and the wallet is usable again
+    ward.apply(store, res)
+    assert ack.counter == store.counter
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"addr2", p)
+    )
+    assert "keep_me" in rec.squashed

@@ -339,6 +339,15 @@ message WardSync {
 message WardSyncAck {
     optional bytes nonce   = 1;  // 32B, minted now; the WM attestation must echo it
     optional bytes ward_id = 2;  // 32B opaque wallet handle; the host forwards it to the WM
+
+    // The device's current head counter -- how a host discovers that a write it never saw
+    // acknowledged actually landed. A delete whose response was lost leaves the host holding
+    // the row and a root the device has moved past, so the retry is refused with nothing to
+    // say why; comparing counters says which side is behind.
+    //
+    // Not secret. The WM holds it already, and it reveals only how many changes this wallet
+    // has made -- never what any of them were.
+    optional uint32 counter = 3;
 }
 
 /**
