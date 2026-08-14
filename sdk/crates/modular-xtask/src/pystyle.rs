@@ -1,7 +1,13 @@
+//! Python style tooling (`black`, `isort`, `autoflake`, `flake8`, `pyright`)
+//! for an app's own `tests/` directory.
+
 use crate::{args::ProjectArgs, helpers};
 use anyhow::{Result, ensure};
 use std::process::Command;
 
+/// Runs `black`, `isort`, `flake8`, and `pyright` (plus `autoflake` when not
+/// `check_only`) against the app's `tests/` directory. With `check_only`,
+/// `black`/`isort` run in check mode instead of rewriting files in place.
 pub fn run(args: &ProjectArgs, check_only: bool) -> Result<()> {
     let mut project_dir = helpers::root_dir()?;
     if helpers::is_workspace()? {
