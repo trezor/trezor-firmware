@@ -319,3 +319,5 @@ if not utils.BITCOIN_ONLY:
     WARDReconcileAck = 2312
     WARDVerifyChain = 2313
     WARDVerifyChainAck = 2314
+    WARDRollback = 2315
+    WARDRollbackAck = 2316

@@ -387,3 +387,42 @@ message WARDReconcileAck {
     optional uint32 counter  = 1;
     optional bytes  new_root = 2;  // absent if the adopted tree is empty
 }
+
+/**
+ * Request: demote the head by exactly one step.
+ *
+ * The escape from a stuck state. A device whose write never reached the WM is AHEAD of
+ * it, so every sync is refused as a rollback and the wallet cannot move -- this undoes
+ * that write so it can.
+ *
+ * The host presents the predecessor and the COMMIT authorisation that created the current
+ * head from it. The device requires that authorisation to name its OWN current counter
+ * and root, which does three things at once: it proves `to_root` really was the immediate
+ * predecessor, it pins the demotion to one step, and it binds the counter.
+ *
+ * Binding the counter is not redundant with binding the root. Roots repeat whenever
+ * contents repeat -- change a label and change it back -- so an OLD authorisation whose
+ * `to_root` happens to equal today's head would otherwise be accepted, demoting the wallet
+ * to a state from arbitrarily long ago in a single hop while satisfying the one-step rule
+ * perfectly.
+ *
+ * The counter still moves FORWARD. The head points backward but the counter increments,
+ * so no counter is ever reused and a stale authorisation cannot replay after a rollback.
+ * @start
+ * @next WARDRollbackAck
+ * @next Failure
+ */
+message WARDRollback {
+    optional bytes to_root     = 1;  // the predecessor; absent means the empty tree
+    optional bytes auth_commit = 2;  // authorises (counter-1, to_root) -> (counter, head)
+}
+
+/**
+ * Response: the demoted head, and the authorisation for the demotion itself.
+ * @end
+ */
+message WARDRollbackAck {
+    optional uint32 counter     = 1;  // the OLD counter plus one -- never reused
+    optional bytes  new_root    = 2;  // absent if the wallet is now empty
+    optional bytes  auth_commit = 3;  // a REVERT link, for the host to record
+}

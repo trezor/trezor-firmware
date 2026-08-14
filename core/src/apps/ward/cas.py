@@ -138,8 +138,16 @@ def verify_chain_step(
         raise DataError("WARD: chain link does not follow the running root")
     if to_counter != running_counter + 1:
         raise DataError("WARD: chain link must advance the counter by exactly one")
+
+    # Either kind of authorisation is a legitimate step for the purpose of DESCENT: a
+    # rollback is as much a real transition as a write, and a history containing one must
+    # still be walkable. Accepting both here costs nothing -- minting either needs K_auth
+    # -- and the distinction is enforced where it decides something: a demotion must
+    # present a COMMIT, so a revert cannot be used to demote again.
     if not verify_auth_commit(
         k_auth, ward_id, from_counter, from_root, to_counter, to_root, mac
+    ) and not verify_auth_commit(
+        k_auth, ward_id, from_counter, from_root, to_counter, to_root, mac, TAG_REVERT
     ):
         raise DataError("WARD: chain link is not authorised")
 

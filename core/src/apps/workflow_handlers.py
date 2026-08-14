@@ -159,6 +159,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ward.reconcile"
         if msg_type == MessageType.WARDVerifyChain:
             return "apps.ward.verify_chain"
+        if msg_type == MessageType.WARDRollback:
+            return "apps.ward.rollback"
 
         # webauthn
         if msg_type == MessageType.WebAuthnListResidentCredentials:
