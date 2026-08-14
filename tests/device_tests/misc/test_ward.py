@@ -48,7 +48,7 @@ from trezorlib import exceptions
 from trezorlib import messages as m
 from trezorlib import ward
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.debuglink import LayoutContent
+from trezorlib.debuglink import LayoutContent, TrezorTestContext
 
 from ...input_flows import InputFlowConfirmAllWarnings
 from ...ward_keys import (
@@ -76,7 +76,8 @@ _APP = "TEST"
 
 # The device under test is set up with the default mnemonic and no passphrase
 # (`SetupParams` in tests/conftest.py), so the oracle can reproduce its keys.
-_SEED = bip39_seed(" ".join(["all"] * 12))
+_MNEMONIC = " ".join(["all"] * 12)
+_SEED = bip39_seed(_MNEMONIC)
 _K_PATH = derive_k_path(_SEED)
 _K_IDENT = derive_k_ident(_SEED)
 _K_DATA = derive_k_data(_SEED)
@@ -916,11 +917,52 @@ def test_ward_root_survives_a_new_session(session: Session):
         ward.get_entry(another, _APP, b"addr1", ward.store_provider(stale))
 
 
-# NOTE: roots are stored PER HIDDEN WALLET, keyed by a passphrase-dependent wallet_id, and
-# that isolation is covered at the storage level rather than here -- a device-level test
-# would need `setup_client(passphrase=True)` and two explicit passphrases, and the keys the
-# oracle in this file derives assume the default empty one. Worth adding, but it needs that
-# fixture work first rather than a guess at it.
+@pytest.mark.models("core")
+@pytest.mark.setup_client(passphrase=True)
+def test_ward_is_isolated_per_hidden_wallet(test_ctx: TrezorTestContext):
+    """Two hidden wallets share a device and share nothing else.
+
+    Everything WARD holds hangs off the passphrase-dependent seed: K_path, so the same
+    (app_id, identifier) lands on a DIFFERENT path; and the stored root and counter, which
+    `storage.ward` keys by a wallet_id derived from that seed. Until now that isolation was
+    asserted only at the storage level, where a slot-keying bug is visible but a derivation
+    one is not -- a device that derived every wallet's K_path from a passphrase-free seed
+    would pass those tests and silently put two wallets' entries at one path.
+
+    Asserted three ways, because each catches a different failure:
+      the paths differ, and each matches what the oracle derives for THAT passphrase --
+        so the device really is deriving per wallet, not merely inconsistently;
+      one wallet's leaf is refused by the other, since their roots are independent;
+      the counters advance independently.
+    """
+    alpha = test_ctx.get_session(passphrase="alpha")
+    beta = test_ctx.get_session(passphrase="beta")
+
+    k_alpha = derive_k_path(bip39_seed(_MNEMONIC, "alpha"))
+    k_beta = derive_k_path(bip39_seed(_MNEMONIC, "beta"))
+    assert k_alpha != k_beta  # the oracle's own premise, cheap to state
+
+    store_a, store_b = WardTrie(), WardTrie()
+    key_a = _seed(alpha, store_a, b"addr1", b"alpha_value")
+    key_b = _seed(beta, store_b, b"addr1", b"beta_value")
+
+    # SAME app_id and identifier, different paths -- and each is the right one
+    assert key_a == expected_entry_key(k_alpha, _APP, b"addr1")
+    assert key_b == expected_entry_key(k_beta, _APP, b"addr1")
+    assert key_a != key_b
+
+    # ...so neither wallet can be served the other's leaf. Both have written by now, so both
+    # hold a root: without that, "no root" would mean "verify nothing" and this would pass
+    # for the wrong reason.
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
+        ward.get_entry(alpha, _APP, b"addr1", ward.store_provider(store_b))
+
+    # and the counters are each wallet's own
+    _seed(alpha, store_a, b"addr2", b"more")
+    _seed(alpha, store_a, b"addr3", b"more")
+    assert ward.sync(alpha).counter == store_a.counter
+    assert ward.sync(beta).counter == store_b.counter
+    assert store_a.counter > store_b.counter  # 3 writes vs 1
 
 
 # --- the sync round: adopting a tree the device did not build ----------------------
