@@ -15,6 +15,9 @@ async def get_public_key(msg: EthereumGetPublicKey) -> EthereumPublicKey:
     resp = await bitcoin_get_public_key.get_public_key(btc_pubkey_msg)
 
     if msg.show_display:
-        await show_pubkey(resp.node.public_key.hex())
+        from apps.common.paths import address_n_to_str
+
+        path = address_n_to_str(msg.address_n)
+        await show_pubkey(resp.node.public_key.hex(), path=path)
 
     return EthereumPublicKey(node=resp.node, xpub=resp.xpub)
