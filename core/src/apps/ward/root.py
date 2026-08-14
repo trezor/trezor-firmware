@@ -48,46 +48,16 @@ async def get_counter() -> int:
     return ward_store.get_counter(await derive_wallet_id())
 
 
-async def get_timestamp() -> int:
-    """The last attested time for the active wallet, or 0 if it has never synced."""
-    import storage.ward as ward_store
+async def set_root(root: bytes | None, counter: int | None = None) -> None:
+    """Record the root the device just adopted.
 
-    from .keys import derive_wallet_id
-
-    return ward_store.get_timestamp(await derive_wallet_id())
-
-
-async def get_attested_counter() -> int:
-    """The highest counter a WM attestation has confirmed. Zero if this wallet never synced."""
-    import storage.ward as ward_store
-
-    from .keys import derive_wallet_id
-
-    return ward_store.get_attested_counter(await derive_wallet_id())
-
-
-async def set_root(
-    root: bytes | None,
-    counter: int | None = None,
-    timestamp: int | None = None,
-    attested: bool = False,
-) -> None:
-    """Record the root the device just derived, and optionally a new counter.
-
-    `counter=None` keeps the stored counter, which is what an ordinary write does: the
-    device advances the tree without an attestation, so nothing has told it a new counter
-    is current. Only the sync round moves the counter, and only ever forward.
-
-    `attested=True` additionally records this counter as CONFIRMED, and only the paths that
-    verified a WM attestation may pass it. A write must not: the whole value of the attested
-    counter is that it means something the device did not decide for itself.
+    `counter=None` keeps the stored one. Only `reconcile` and `verify_chain` reach here now,
+    so every stored head is one a WM attestation named -- which is what made the separately
+    stored attested counter redundant.
 
     An ABSENT root means the empty tree, and is stored as EMPTY_ROOT. No caller ever means
-    "forget the root I had": a delete that empties the tree, a rollback to an empty
-    predecessor and a reconcile onto an empty head all describe a state, not the loss of
-    one. Normalising here rather than at each of them is deliberate -- this is the only
-    function that can write the "verifies nothing" state, so it is the only place that has
-    to be got right, and a future caller cannot reintroduce it by omission.
+    "forget the root I had", so normalising here rather than at each call site keeps the
+    "verifies nothing" state unreachable by omission.
     """
     import storage.ward as ward_store
 
@@ -99,13 +69,4 @@ async def set_root(
     wallet_id = await derive_wallet_id()
     if counter is None:
         counter = ward_store.get_counter(wallet_id)
-    if attested:
-        assert counter is not None  # nothing can be attested without naming a counter
-        attested_counter = counter
-    else:
-        attested_counter = ward_store.get_attested_counter(wallet_id)
-    if timestamp is None:
-        # An ordinary write does not learn the time -- only an attestation carries one --
-        # so it must not clear what the last sync established.
-        timestamp = ward_store.get_timestamp(wallet_id)
-    ward_store.set_root(wallet_id, root, counter, timestamp, attested_counter)
+    ward_store.set_root(wallet_id, root, counter)

@@ -131,13 +131,8 @@ from storage import common
 _WALLET_ID_LEN = const(16)
 _ROOT_LEN = const(32)
 _COUNTER_LEN = const(4)
-_TIMESTAMP_LEN = const(8)
-# The head counter alone cannot say whether a state was ever CONFIRMED: writes and
-# attestations both advance it. Kept separately so `rollback` can refuse to discard a change
-# the WM has already vouched for -- see `apps.ward.rollback`.
-_ATTESTED_LEN = const(4)
 
-# 8 wallets at 64 bytes each. Raising this costs flash and nothing else.
+# 8 wallets at 52 bytes each. Raising this costs flash and nothing else.
 MAX_WALLETS = const(8)
 _FIRST_KEY = const(1)
 
@@ -173,24 +168,6 @@ def get_root(wallet_id: bytes) -> bytes | None:
     return root
 
 
-def get_attested_counter(wallet_id: bytes) -> int:
-    """The highest counter a WM attestation has confirmed for this wallet. Zero if never.
-
-    Zero is also the honest answer for a record written before this field existed: nothing
-    is known to be confirmed, so nothing is protected by it, which fails safe for
-    availability rather than for integrity.
-    """
-    index = _find(wallet_id)
-    if index is None:
-        return 0
-    rec = _slot(index)
-    assert rec is not None
-    off = _WALLET_ID_LEN + _ROOT_LEN + _COUNTER_LEN + _TIMESTAMP_LEN
-    if len(rec) < off + _ATTESTED_LEN:
-        return 0
-    return int.from_bytes(rec[off : off + _ATTESTED_LEN], "big")
-
-
 def get_counter(wallet_id: bytes) -> int:
     """The anti-rollback floor: the highest counter this wallet has accepted.
 
@@ -206,29 +183,13 @@ def get_counter(wallet_id: bytes) -> int:
     return int.from_bytes(rec[off : off + _COUNTER_LEN], "big")
 
 
-def get_timestamp(wallet_id: bytes) -> int:
-    """The last attested time this wallet accepted, in seconds. Zero if never synced.
+def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> None:
+    """Record this wallet's root and counter.
 
-    Zero means "nothing to be monotone with respect to", which is the honest state for a
-    wallet that has never seen an attestation -- and the one no automated check can help.
-    """
-    index = _find(wallet_id)
-    if index is None:
-        return 0
-    rec = _slot(index)
-    assert rec is not None
-    off = _WALLET_ID_LEN + _ROOT_LEN + _COUNTER_LEN
-    return int.from_bytes(rec[off : off + _TIMESTAMP_LEN], "big")
-
-
-def set_root(
-    wallet_id: bytes,
-    root: bytes | None,
-    counter: int = 0,
-    timestamp: int = 0,
-    attested_counter: int = 0,
-) -> None:
-    """Record this wallet's root, counter, last attested time and last attested counter."""
+    Nothing else is kept. The last attested TIME was not an independent signal -- anti-replay
+    is the counter's job, and a malicious WM simply lies about the clock -- and the last
+    attested COUNTER became redundant once writes stopped committing: every stored counter now
+    arrives from an attestation, so it and the head counter are the same number."""
     if len(wallet_id) != _WALLET_ID_LEN:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
 
@@ -248,7 +209,5 @@ def set_root(
         index + _FIRST_KEY,
         wallet_id
         + (root if root is not None else bytes(_ROOT_LEN))
-        + counter.to_bytes(_COUNTER_LEN, "big")
-        + timestamp.to_bytes(_TIMESTAMP_LEN, "big")
-        + attested_counter.to_bytes(_ATTESTED_LEN, "big"),
+        + counter.to_bytes(_COUNTER_LEN, "big"),
     )
