@@ -28,7 +28,7 @@ shared conformance vectors are pinned in `core/tests/test_apps.ward.py`.
     leaf     = sha256(0x00 || entry_key || commit)
     commit   = sha256(0x02 || len8(key_type) || key_type
                            || len32(id_part) || id_part || len32(val_part) || val_part)
-    internal = sha256(0x01 || u16be(split_bit) || u16be(skiplen) || left || right)
+    internal = sha256(0x01 || u16be(split_bit) || left || right)
     part     = encoding(1B) || len8(nonce) || nonce || len8(tag) || tag
                             || len32(body) || body
 """
@@ -88,8 +88,8 @@ def leaf_hash(entry_key: bytes, commit: bytes) -> bytes:
     return _sha256(b"\x00" + entry_key + commit)
 
 
-def _internal(split_bit: int, skiplen: int, left: bytes, right: bytes) -> bytes:
-    return _sha256(b"\x01" + _u16(split_bit) + _u16(skiplen) + left + right)
+def _internal(split_bit: int, left: bytes, right: bytes) -> bytes:
+    return _sha256(b"\x01" + _u16(split_bit) + left + right)
 
 
 class WardTrie:
@@ -146,7 +146,6 @@ class WardTrie:
         return (
             "branch",
             bit,
-            bit - start,
             self._build([k for k in keys if addr_bit(k, bit) == 0], bit + 1),
             self._build([k for k in keys if addr_bit(k, bit) == 1], bit + 1),
         )
@@ -162,7 +161,7 @@ class WardTrie:
     def _hash(self, node) -> bytes:
         if node[0] == "leaf":
             return self._leaves[node[1]]
-        return _internal(node[1], node[2], self._hash(node[3]), self._hash(node[4]))
+        return _internal(node[1], self._hash(node[2]), self._hash(node[3]))
 
     def root(self) -> Optional[bytes]:
         """None when the tree is empty -- there is no root to speak of."""
@@ -175,58 +174,21 @@ class WardTrie:
     def _proof(self, node, target: bytes, out: list) -> bytes:
         if node[0] == "leaf":
             return self._leaves[node[1]]
-        _, bit, skip, left, right = node
+        _, bit, left, right = node
         if addr_bit(target, bit) == 0:
             lh = self._proof(left, target, out)
             rh = self._hash(right)
-            out.append(_u16(bit) + _u16(skip) + rh)
+            out.append(_u16(bit) + rh)
         else:
             lh = self._hash(left)
             rh = self._proof(right, target, out)
-            out.append(_u16(bit) + _u16(skip) + lh)
-        return _internal(bit, skip, lh, rh)
+            out.append(_u16(bit) + lh)
+        return _internal(bit, lh, rh)
 
     def membership_proof(self, entry_key: bytes) -> list[bytes]:
         out: list[bytes] = []
         self._proof(self._build(sorted(self._leaves), 0), entry_key, out)
         return out
-
-    def _sibling(self, entry_key: bytes):
-        """The node that a delete of `entry_key` would promote, or None if it is the last."""
-        proof = self.membership_proof(entry_key)
-        if not proof:
-            return None
-        node = self._build(sorted(self._leaves), 0)
-        split0 = int.from_bytes(proof[0][0:2], "big")
-        while node[0] == "branch" and node[1] != split0:
-            node = node[3] if addr_bit(entry_key, node[1]) == 0 else node[4]
-        return node[4] if addr_bit(entry_key, split0) == 0 else node[3]
-
-    def sibling_decomposition(self, entry_key: bytes):
-        """(split_bit, left, right) when the promoted sibling is a BRANCH, else None.
-
-        A re-parented branch's hash is stale the moment it moves -- it commits to a skiplen
-        measured from its old parent -- so the device must re-derive it at the shallower
-        depth, and can only do that from its pieces. See `trie.compute_new_root`.
-        """
-        sibling = self._sibling(entry_key)
-        if sibling is None or sibling[0] == "leaf":
-            return None
-        return sibling[1], self._hash(sibling[3]), self._hash(sibling[4])
-
-    def sibling_leaf(self, entry_key: bytes):
-        """(entry_key, commit) when the promoted sibling is a LEAF, else None.
-
-        A leaf promotes exactly, having no skiplen to restate -- but the device is not
-        allowed to ASSUME that from a missing decomposition, since it cannot verify an
-        omission. It recomputes the leaf hash from these two values and checks it against
-        the hash the proof committed to, which is what makes "it is a leaf" a fact.
-        """
-        sibling = self._sibling(entry_key)
-        if sibling is None or sibling[0] != "leaf":
-            return None
-        key = sibling[1]
-        return key, self._commits[key]
 
     def nonmembership_proof(self, entry_key: bytes):
         """(proof, witness_entry_key, witness_commit) for a key that is absent.
@@ -238,6 +200,6 @@ class WardTrie:
             return [], None, None
         node = self._build(sorted(self._leaves), 0)
         while node[0] == "branch":
-            node = node[3] if addr_bit(entry_key, node[1]) == 0 else node[4]
+            node = node[2] if addr_bit(entry_key, node[1]) == 0 else node[3]
         witness = node[1]
         return self.membership_proof(witness), witness, self._commits[witness]

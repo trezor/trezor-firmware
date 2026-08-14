@@ -3,15 +3,14 @@
 A path-compressed binary trie keyed by the 32-byte entry_key, so 256 levels at most:
 
     leaf     = sha256(0x00 || entry_key || commit)          -- see leaf.py
-    internal = sha256(0x01 || u16be(split_bit) || u16be(skiplen) || left || right)
+    internal = sha256(0x01 || u16be(split_bit) || left || right)
 
 Children are POSITIONAL -- left is the 0 branch, right is the 1 branch, never sorted.
-`split_bit` is the bit this node branches on; `skiplen` is how many bits were compressed
-away between this node and its parent.
+`split_bit` is the bit this node branches on.
 
-A proof is a list of 36-byte elements in LEAF-TO-ROOT order:
+A proof is a list of 34-byte elements in LEAF-TO-ROOT order:
 
-    u16be(split_bit) || u16be(skiplen) || sibling(32B)
+    u16be(split_bit) || sibling(32B)
 
 This module VERIFIES; it never builds a trie. The host builds and serves proofs, and the
 device only ever checks them against a root it already trusts. A proof verified against a
@@ -20,22 +19,37 @@ root the host also supplied proves nothing, so callers must pass a root of their
 Byte-for-byte identical to the reference implementation and to @trezor/ward; the shared
 conformance vectors are pinned in `core/tests/test_apps.ward.py`.
 
-WHY split_bit AND skiplen ARE IN THE HASH -- this is the whole security of the thing.
-An earlier version hashed only `0x01 || left || right` and put a 1-byte bit index in the
-proof element. The bit position was therefore NOT committed to by the node hash, so a
-host could relabel which bit each hop claimed to test while the hash chain still folded
-to the same root. That defeats non-membership: absence is proved by exhibiting a witness
-leaf that occupies the target's path, and "occupies the path" is judged by comparing bits
-at the positions the proof claims. Free choice of those labels lets a host manufacture a
-witness relationship and prove a key absent that is actually present. Binding split_bit
-and skiplen into the preimage, plus the structural check below, closes it.
+WHY split_bit IS IN THE HASH -- this is the whole security of the thing. An earlier
+version hashed only `0x01 || left || right` and put a bit index in the proof element. The
+bit position was therefore NOT committed to by the node hash, so a host could relabel
+which bit each hop claimed to test while the hash chain still folded to the same root.
+That defeats non-membership: absence is proved by exhibiting a witness leaf that occupies
+the target's path, and "occupies the path" is judged by comparing bits at the positions
+the proof claims. Free choice of those labels lets a host manufacture a witness
+relationship and prove a key absent that is actually present. Binding split_bit into the
+preimage, plus the structural check below, closes it.
 
-WHAT THIS STILL CANNOT CHECK. A canonical trie also requires that every internal node
-has two non-empty children and that every skiplen is maximal for its subtree; otherwise
-one key set admits several valid roots, because a host could pad depth or leave
-single-child chains. Neither is decidable from a single proof -- the verifier sees only
-one root-to-leaf path and cannot know what the sibling subtrees contain -- so what is
-enforced here is the arithmetic consistency of the path, not canonicity of the tree.
+AND WHY skiplen IS NOT. It used to be, alongside split_bit -- the two were introduced in
+one change, so the fix was credited to both. Only split_bit was load-bearing. skiplen is a
+FUNCTION of already-committed data: walking a proof root-to-leaf it is exactly
+split_bit - (previous split_bit + 1), which `validate_proof_shape` recomputed and compared
+rather than verifying against anything independent. Committing to a value the verifier
+derives binds nothing.
+
+Removing it is not merely tidier: it makes a node's hash INDEPENDENT OF ITS DEPTH, so a
+subtree that re-parents keeps its hash. That is what makes delete trivial -- the collapsing
+sibling promotes unchanged whether it is a leaf or a branch -- and it is what removed the
+sibling-kind witness the wire used to carry. All three trie bugs this subsystem has had
+were artifacts of the depth binding: a branch sibling promoted unchanged (non-canonical
+then, correct now), an insert refusing to splice above an existing branch, and a sibling
+whose kind had to be proved because the two kinds re-parented differently.
+
+WHAT THIS STILL CANNOT CHECK. A canonical trie also requires that every internal node has
+two non-empty children and that each branches at the FIRST bit on which its keys diverge;
+otherwise one key set admits several valid roots. Neither is decidable from a single proof
+-- the verifier sees only one root-to-leaf path and cannot know what the sibling subtrees
+contain -- so what is enforced here is the consistency of the path, not canonicity of the
+tree.
 
 That gap is a liveness problem, not an integrity one: proofs against a non-canonical root
 still verify soundly, but a party that later rebuilds the tree canonically computes a
@@ -49,7 +63,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .leaf import Part
 
-PROOF_ELEM_LEN = 36
+PROOF_ELEM_LEN = 34
 _MAX_BITS = 256
 
 
@@ -58,37 +72,28 @@ def addr_bit(entry_key: bytes, bit: int) -> int:
     return (entry_key[bit // 8] >> (7 - (bit % 8))) & 1
 
 
-def internal_hash(split_bit: int, skiplen: int, left: bytes, right: bytes) -> bytes:
+def internal_hash(split_bit: int, left: bytes, right: bytes) -> bytes:
     from trezor.crypto.hashlib import sha256
 
-    return sha256(
-        b"\x01"
-        + split_bit.to_bytes(2, "big")
-        + skiplen.to_bytes(2, "big")
-        + left
-        + right
-    ).digest()
+    return sha256(b"\x01" + split_bit.to_bytes(2, "big") + left + right).digest()
 
 
-def _parse_proof_elem(elem: bytes) -> "tuple[int, int, bytes]":
+def _parse_proof_elem(elem: bytes) -> "tuple[int, bytes]":
     from trezor.wire import DataError
 
     if len(elem) != PROOF_ELEM_LEN:
         raise DataError("WARD: invalid proof element length")
-    return (
-        int.from_bytes(elem[0:2], "big"),
-        int.from_bytes(elem[2:4], "big"),
-        bytes(elem[4:]),
-    )
+    return int.from_bytes(elem[0:2], "big"), bytes(elem[2:])
 
 
-def validate_proof_shape(proof: "list[bytes]") -> "list[tuple[int, int, bytes]]":
+def validate_proof_shape(proof: "list[bytes]") -> "list[tuple[int, bytes]]":
     """Check the proof describes a well-formed root-to-leaf path, and return its steps.
 
-    Walking ROOT to leaf (i.e. the proof reversed), the split bits must strictly increase
-    and each skiplen must exactly account for the bits jumped over since the parent. A
-    proof that is reordered, truncated and relabelled, or has its bit claims shifted
-    fails here before a single hash is computed.
+    Walking ROOT to leaf (i.e. the proof reversed), the split bits must strictly increase.
+    A proof that is reordered or has its bit claims shifted fails here before a single hash
+    is computed. This used to also check that each skiplen accounted for the bits jumped
+    over since the parent; that value is no longer carried, being derivable from exactly
+    these split bits.
 
     This also bounds the work: split_bit strictly increases and stays below 256, so no
     valid proof exceeds 256 elements however many the host sends.
@@ -98,12 +103,12 @@ def validate_proof_shape(proof: "list[bytes]") -> "list[tuple[int, int, bytes]]"
     steps = []
     start_bit = 0
     for elem in reversed(proof):
-        split_bit, skiplen, sibling = _parse_proof_elem(elem)
+        split_bit, sibling = _parse_proof_elem(elem)
         if split_bit >= _MAX_BITS:
             raise DataError("WARD: proof split_bit out of range")
-        if split_bit < start_bit or skiplen != split_bit - start_bit:
-            raise DataError("WARD: proof skiplen inconsistent with branch position")
-        steps.append((split_bit, skiplen, sibling))
+        if split_bit < start_bit:
+            raise DataError("WARD: proof split bits are not strictly increasing")
+        steps.append((split_bit, sibling))
         start_bit = split_bit + 1
     return steps
 
@@ -118,11 +123,11 @@ def reconstruct(start_hash: bytes, proof: "list[bytes]", entry_key: bytes) -> by
 
     node = start_hash
     for elem in proof:
-        split_bit, skiplen, sibling = _parse_proof_elem(elem)
+        split_bit, sibling = _parse_proof_elem(elem)
         if addr_bit(entry_key, split_bit) == 0:
-            node = internal_hash(split_bit, skiplen, node, sibling)
+            node = internal_hash(split_bit, node, sibling)
         else:
-            node = internal_hash(split_bit, skiplen, sibling, node)
+            node = internal_hash(split_bit, sibling, node)
     return node
 
 
@@ -179,7 +184,7 @@ def verify_nonmembership(
         return False
 
     steps = validate_proof_shape(proof)
-    for split_bit, _skiplen, _sibling in steps:
+    for split_bit, _sibling in steps:
         if addr_bit(entry_key, split_bit) != addr_bit(witness_entry_key, split_bit):
             return False
 
@@ -203,8 +208,6 @@ def compute_new_root(
     stored_root: bytes | None,
     witness_entry_key: bytes | None = None,
     witness_commit: bytes | None = None,
-    sibling_node: "tuple[int, bytes, bytes] | None" = None,
-    sibling_leaf: "tuple[bytes, bytes] | None" = None,
 ) -> bytes:
     """Verify the CURRENT state, then derive the root that replaces it.
 
@@ -220,9 +223,7 @@ def compute_new_root(
     before the device will compute anything from it. A host cannot walk the device through
     a fabricated present to land it on a chosen future.
 
-    A DELETE must identify the collapsing sibling, as exactly one of `sibling_node`
-    (split_bit, left, right) for a branch or `sibling_leaf` (entry_key, commit) for a leaf
-    -- see below for why, and why neither may be inferred from the other's absence.
+    A DELETE needs nothing beyond the proof: the collapsing sibling promotes unchanged.
     """
     from trezor.wire import DataError
 
@@ -254,7 +255,7 @@ def compute_new_root(
         if witness_entry_key == entry_key:
             raise DataError("WARD: witness must differ from entry_key")
 
-        for split_bit, _skiplen, _sibling in validate_proof_shape(proof):
+        for split_bit, _sibling in validate_proof_shape(proof):
             if addr_bit(entry_key, split_bit) != addr_bit(witness_entry_key, split_bit):
                 raise DataError("WARD: witness does not occupy the target's path")
 
@@ -279,37 +280,31 @@ def compute_new_root(
         # still part inside a compressed run -- i.e. ABOVE an existing branch. That is the
         # ordinary case for a random key, not a corner one.
         #
-        # Splicing there re-parents the branch immediately below, whose hash commits to a
-        # skiplen measured from its old parent. Unlike the delete case the device can fix
-        # this itself: that node is ON the path it is folding, so it holds both children
-        # and simply re-folds it at the new depth.
+        # Splicing there re-parents the branch immediately below, and that used to need
+        # fixing up: the node's hash committed to a depth that had just changed. It no
+        # longer does, so the spliced-off subtree folds unchanged.
         below = []
         idx = 0
         while idx < len(proof):
-            sb, _sk, _sib = _parse_proof_elem(proof[idx])
+            sb, _sib = _parse_proof_elem(proof[idx])
             if sb <= split_bit:
                 break
             below.append(proof[idx])
             idx += 1
 
         node = witness_leaf
-        for i, elem in enumerate(below):
-            sb, sk, sib = _parse_proof_elem(elem)
-            if i == len(below) - 1:
-                # the top of the spliced-off subtree: re-parented under the new branch
-                sk = sb - (split_bit + 1)
+        for elem in below:
+            sb, sib = _parse_proof_elem(elem)
             if addr_bit(witness_entry_key, sb) == 0:
-                node = internal_hash(sb, sk, node, sib)
+                node = internal_hash(sb, node, sib)
             else:
-                node = internal_hash(sb, sk, sib, node)
+                node = internal_hash(sb, sib, node)
 
-        parent_split = _parse_proof_elem(proof[idx])[0] if idx < len(proof) else -1
         new_leaf_h = _leaf_of(entry_key, new_leaf)
-        skiplen = split_bit - (parent_split + 1)
         if addr_bit(entry_key, split_bit) == 0:
-            branch = internal_hash(split_bit, skiplen, new_leaf_h, node)
+            branch = internal_hash(split_bit, new_leaf_h, node)
         else:
-            branch = internal_hash(split_bit, skiplen, node, new_leaf_h)
+            branch = internal_hash(split_bit, node, new_leaf_h)
 
         # above the splice the two keys agree, so folding by either path is the same
         return reconstruct(branch, proof[idx:], witness_entry_key)
@@ -328,51 +323,15 @@ def compute_new_root(
     if not proof:
         return EMPTY_ROOT  # the last leaf is gone; the tree is empty, and says so
 
-    # Deleting collapses the branch above, and the sibling takes its place. That REPARENTS
-    # the sibling, and a node's hash commits to its own skiplen, which is measured from
-    # its parent -- so a BRANCH sibling's hash is stale the moment it moves, while a LEAF
-    # has no skiplen and promotes exactly.
+    # Deleting collapses the branch above, and the sibling takes its place -- unchanged,
+    # whatever it is. A node's hash no longer depends on its depth, so a re-parented subtree
+    # keeps the hash the proof already committed to, and a leaf and a branch behave
+    # identically here.
     #
-    # The proof carries only the sibling's HASH, which does not say which of the two it is.
-    # So the host must say, and PROVE it. Both forms are checked against that committed
-    # hash, so neither can name a node the tree does not hold.
-    #
-    # Supplying neither is refused, and that refusal is the whole point of this shape. An
-    # earlier revision let a leaf sibling be signalled by OMISSION -- and the device cannot
-    # verify an omission. A host that withheld the decomposition for a branch got its root
-    # promoted with a stale skiplen: a valid hash of a NON-CANONICAL tree over the same
-    # leaves. No entry is forged or altered by that (the seal and the keyed path are
-    # untouched), but every later proof from an honest, canonically-computing host
-    # reconstructs to a different root and is refused, so the wallet is stuck.
-    split_bit, skiplen, sibling = _parse_proof_elem(proof[0])
-    if sibling_node is not None and sibling_leaf is not None:
-        raise DataError("WARD: sibling is either a branch or a leaf, not both")
-
-    if sibling_node is not None:
-        sib_split, left, right = sibling_node
-        if sib_split <= split_bit or sib_split >= _MAX_BITS:
-            raise DataError(
-                "WARD: sibling split_bit is not below the collapsing branch"
-            )
-        if (
-            internal_hash(sib_split, sib_split - (split_bit + 1), left, right)
-            != sibling
-        ):
-            raise DataError("WARD: sibling decomposition does not match the proof")
-        # its parent moves up by the collapsed branch, so it absorbs that branch's own
-        # skiplen plus the level itself
-        sibling = internal_hash(
-            sib_split, sib_split - (split_bit + 1) + skiplen + 1, left, right
-        )
-    elif sibling_leaf is not None:
-        sib_key, sib_commit = sibling_leaf
-        # Recomputing the leaf hash is what turns "it is a leaf" from a claim into a fact:
-        # leaf and internal nodes are domain-separated (0x00 / 0x01), so a preimage that
-        # reproduces the committed hash under the LEAF tag could not have been a branch.
-        # The hash then promotes unchanged, which is correct precisely because it is one.
-        if leaf_hash_of(sib_key, sib_commit) != sibling:
-            raise DataError("WARD: sibling leaf does not match the proof")
-    else:
-        raise DataError("WARD: delete must identify the sibling")
-
+    # This used to be the hardest corner in the module. The hash bound a skiplen measured
+    # from the old parent, so a branch sibling's hash went stale the instant it moved while a
+    # leaf's did not -- which meant the device had to be TOLD which kind it was, and could
+    # not verify the answer. Two wire fields, a decomposition check and a refusal existed for
+    # that, and all of it was an artifact of committing to depth.
+    split_bit, sibling = _parse_proof_elem(proof[0])
     return reconstruct(sibling, proof[1:], entry_key)

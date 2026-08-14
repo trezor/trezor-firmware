@@ -46,7 +46,7 @@ commit    = sha256( 0x02 ‖ len8(key_type) ‖ key_type
 
 leaf      = sha256( 0x00 ‖ entry_key ‖ commit )
 
-internal  = sha256( 0x01 ‖ u16be(split_bit) ‖ u16be(skiplen) ‖ left ‖ right )
+internal  = sha256( 0x01 ‖ u16be(split_bit) ‖ left ‖ right )
 
 EMPTY_ROOT = sha256( 0x03 )
            = 084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5
@@ -77,7 +77,7 @@ For a key set `S`:
 | `|S|` | root |
 |---|---|
 | 0 | `EMPTY_ROOT` — **never** an absent value; see below |
-| 1 | that key's `leaf` hash. A leaf has no `skiplen` |
+| 1 | that key's `leaf` hash |
 | ≥ 2 | a branch, per the rules below |
 
 A subtree built over keys `K` whose parent branched at bit `p` (with `p = -1` for the root):
@@ -86,15 +86,21 @@ A subtree built over keys `K` whose parent branched at bit `p` (with `p = -1` fo
    agree at `b`.
 2. `left` is the subtree over `{k ∈ K : addr_bit(k, split_bit) = 0}`, `right` over the keys
    whose bit is 1. Both are non-empty by construction, since `split_bit` is a splitting bit.
-3. `skiplen = split_bit - (p + 1)` — the number of bits jumped over since the parent
-   branched.
+**A node's hash does not depend on its depth.** Only `split_bit`, and the two child hashes,
+go into the preimage — so a subtree that is re-parented keeps its hash, and a delete may
+promote the collapsing sibling unchanged whether it is a leaf or a branch.
 
-Rule 3 is where the bugs live. **A node's `skiplen` is relative to its parent, so it is stale
-the instant the node is re-parented.** A delete collapses the branch above the removed leaf
-and moves the sibling up a level; a branch sibling's hash therefore cannot be reused, and
-must be recomputed at the shallower depth. A leaf sibling has no `skiplen` and does move
-unchanged — but that is a fact the verifier must *establish*, not assume (see "Deletes"
-below).
+An earlier version also committed to `skiplen`, the number of bits jumped over since the
+parent branched. That value is a *function of the split bits* a proof already carries
+(`skiplen = split_bit − (previous split_bit + 1)`), so the verifier derived it rather than
+checking it against anything independent, and committing to it bound nothing. It was
+introduced in the same change as `split_bit`, which is why the fix below was originally
+credited to both; only `split_bit` was load-bearing.
+
+Removing it deleted a whole class of problem. All three trie bugs this subsystem has had were
+artifacts of the depth binding: a delete promoting a re-parented branch unchanged (wrong
+then, correct now), an insert refusing to splice above an existing branch, and a sibling
+whose *kind* had to be proved because the two kinds re-parented differently.
 
 ### The empty tree is a state, not the absence of one
 
@@ -108,22 +114,16 @@ is needed to say so, because there is no leaf to exhibit.
 
 ## Proofs
 
-A proof is a list of 36-byte elements, ordered **leaf-to-root**:
+A proof is a list of 34-byte elements, ordered **leaf-to-root**:
 
 ```
-element = u16be(split_bit) ‖ u16be(skiplen) ‖ sibling(32B)
+element = u16be(split_bit) ‖ sibling(32B)
 ```
 
-Walking the list in reverse (root-to-leaf), a well-formed proof satisfies:
-
-- `split_bit` strictly increases, and stays below 256;
-- `skiplen` exactly accounts for the bits jumped since the previous element:
-  `skiplen == split_bit - start_bit`, where `start_bit` is the previous `split_bit + 1` and 0
-  at the root.
-
-These two constraints make a proof's internal geometry self-consistent, so a reordered,
-truncated or relabelled proof is rejected before a hash is computed. They also bound the
-work: no valid proof exceeds 256 elements however many the sender supplies.
+Walking the list in reverse (root-to-leaf), a well-formed proof has `split_bit` strictly
+increasing and below 256. That rejects a reordered or relabelled proof before a hash is
+computed, and bounds the work: no valid proof exceeds 256 elements however many the sender
+supplies.
 
 **Membership** is checked by folding the leaf hash up the proof, placing the running node
 left or right according to `addr_bit(entry_key, split_bit)`, and comparing to the trusted
@@ -145,21 +145,17 @@ reveals nothing about the witness's own identifier or value.
 
 ## Deletes
 
-Removing a leaf collapses the branch above it; the sibling takes that branch's place. The
-proof carries only the sibling's **hash**, which does not say whether it is a leaf or a
-branch, so the party requesting the delete must say **and prove** which it is. Exactly one of:
+Removing a leaf collapses the branch above it; the sibling takes that branch's place, with
+the hash the proof already committed to. Nothing else is needed.
 
-- **branch**: `(split_bit, left, right)`. The verifier checks
-  `internal(split_bit, split_bit - (collapsing_split + 1), left, right)` equals the committed
-  sibling hash, then re-hashes at the shallower depth, absorbing the collapsed branch's own
-  `skiplen` plus the collapsed level:
-  `skiplen' = split_bit - (collapsing_split + 1) + collapsing_skiplen + 1`.
-- **leaf**: `(entry_key, commit)`. The verifier recomputes `leaf(entry_key, commit)` and
-  requires it to equal the committed sibling hash. It then promotes unchanged — correct
-  precisely *because* it has been established to be a leaf.
+That is worth dwelling on, because it used to be the hardest corner here. While a node's hash
+committed to its depth, a *branch* sibling's hash went stale the instant it moved up a level
+while a *leaf* sibling's did not — so the requester had to declare which kind it was and
+prove it, via a decomposition or an `(entry_key, commit)` pair, and refusing to guess from an
+omission was itself a fix. All of it was an artifact of the depth binding.
 
-Supplying neither, or both, is refused. Signalling a leaf by omission is not a verifiable
-statement, and it was a bug.
+The lesson generalises even though the mechanism is gone: signalling something by *omission*
+is not a verifiable statement, and treating it as one was the bug.
 
 If the removed leaf was the only one, the proof is empty and the new root is `EMPTY_ROOT`.
 
@@ -177,8 +173,8 @@ That split point is **not** necessarily below every branch on the witness's path
 compression means the two keys are only compared at the bits the tree actually branches on,
 so they can agree at all of those and still part *inside* a compressed run — i.e. above an
 existing branch. For a random key that is the ordinary case, not a corner one. Splicing there
-re-parents the branch immediately below, whose `skiplen` must be restated:
-`skiplen' = its_split_bit - (new_split_bit + 1)`.
+re-parents the branch immediately below, which needs no fixing up — its hash does not depend
+on the depth it now hangs at.
 
 ## Host storage: the store's own history
 
@@ -252,16 +248,16 @@ after **every** operation that the result equals a from-scratch rebuild
 code).
 
 Geometry matters far more than operation count, which was measured rather than assumed: a
-sweep of 2880 operations over random keys never reached a `split_bit` above 8 or a `skiplen`
-above 2, with 86% of proof elements at `skiplen` 0 — and `skiplen` is the quantity behind
-every known bug. So the test runs four key geometries, and **fails** if the sweep stops
-reaching the hard shapes rather than merely reporting that it did not:
+sweep of 2880 operations over random keys never reached a `split_bit` above 8 — and depth is
+what every known bug turned on, since all of them were about a node moving between levels. So
+the test runs four key geometries, and **fails** if the sweep stops reaching the deep shapes
+rather than merely reporting that it did not:
 
 | geometry | what it forces |
 |---|---|
-| `random` | what real `entry_key`s are — HMAC outputs. Shallow, `skiplen` ≈ 0 |
-| `shared_prefix` | keys agreeing on 160 bits: deep branches, `skiplen` up to ~164 |
-| `ladder` | key *i* is *i* leading 1-bits: a compressed run at every level, and mostly branch siblings |
+| `random` | what real `entry_key`s are — HMAC outputs. Shallow, `split_bit` ≤ 8 |
+| `shared_prefix` | keys agreeing on 160 bits: deep branches, `split_bit` up to ~168 |
+| `ladder` | key *i* is *i* leading 1-bits: a compressed run at every level, and branch siblings throughout |
 | `mixed` | both at once |
 
 Each trial also **drains** the tree to empty one leaf at a time and then writes again, since

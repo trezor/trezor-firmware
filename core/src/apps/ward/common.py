@@ -110,8 +110,8 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
                       a tombstone). Distinct from b"", an entry whose value IS empty.
       old_leaf        (key_type, id_part, val_part) as received, or None -- what a write
                       must prove it is replacing.
-      write_material  (proof, witness_entry_key, witness_commit, sibling_node,
-                      sibling_leaf), which a write feeds to `trie.compute_new_root`.
+      write_material  (proof, witness_entry_key, witness_commit), which a write feeds to
+                      `trie.compute_new_root`.
 
     The identity part is returned but nothing reads it yet: the device already knows the
     identifier and app_id, having derived the path from them, so it is carried only
@@ -153,23 +153,7 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
         ack.witness_commit,
     )
 
-    sibling_node = None
-    if ack.sibling_split_bit is not None:
-        sibling_node = (
-            ack.sibling_split_bit,
-            ack.sibling_left or b"",
-            ack.sibling_right or b"",
-        )
-    sibling_leaf = None
-    if ack.sibling_entry_key is not None and ack.sibling_commit is not None:
-        sibling_leaf = (ack.sibling_entry_key, ack.sibling_commit)
-    material = (
-        ack.proof,
-        ack.witness_entry_key,
-        ack.witness_commit,
-        sibling_node,
-        sibling_leaf,
-    )
+    material = (ack.proof, ack.witness_entry_key, ack.witness_commit)
 
     if not present:
         return None, None, material

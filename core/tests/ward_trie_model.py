@@ -39,18 +39,12 @@ def leaf_hash(entry_key: bytes, commit: bytes) -> bytes:
     return sha256(b"\x00" + entry_key + commit).digest()
 
 
-def internal_hash(split_bit: int, skiplen: int, left: bytes, right: bytes) -> bytes:
-    return sha256(
-        b"\x01"
-        + split_bit.to_bytes(2, "big")
-        + skiplen.to_bytes(2, "big")
-        + left
-        + right
-    ).digest()
+def internal_hash(split_bit: int, left: bytes, right: bytes) -> bytes:
+    return sha256(b"\x01" + split_bit.to_bytes(2, "big") + left + right).digest()
 
 
-def proof_elem(split_bit: int, skiplen: int, sibling: bytes) -> bytes:
-    return split_bit.to_bytes(2, "big") + skiplen.to_bytes(2, "big") + sibling
+def proof_elem(split_bit: int, sibling: bytes) -> bytes:
+    return split_bit.to_bytes(2, "big") + sibling
 
 
 class CanonicalTrie:
@@ -58,7 +52,7 @@ class CanonicalTrie:
 
     Nodes are tuples, built fresh each time:
         ("leaf", entry_key)
-        ("branch", split_bit, skiplen, left, right)
+        ("branch", split_bit, left, right)
     """
 
     def __init__(self) -> None:
@@ -97,13 +91,11 @@ class CanonicalTrie:
 
         left = [k for k in keys if addr_bit(k, split) == 0]
         right = [k for k in keys if addr_bit(k, split) == 1]
-        # skiplen counts the bits jumped over since the parent branched: this is the
-        # quantity that goes stale whenever a node is re-parented, and the reason a delete
-        # cannot simply promote a branch sibling's hash.
+        # No skiplen: a node's hash does not depend on its depth, which is what lets a
+        # re-parented subtree keep its hash and a delete promote its sibling unchanged.
         return (
             "branch",
             split,
-            split - start_bit,
             self._build(left, split + 1),
             self._build(right, split + 1),
         )
@@ -114,7 +106,7 @@ class CanonicalTrie:
     def _hash(self, node) -> bytes:
         if node[0] == "leaf":
             return leaf_hash(node[1], self.commits[node[1]])
-        return internal_hash(node[1], node[2], self._hash(node[3]), self._hash(node[4]))
+        return internal_hash(node[1], self._hash(node[2]), self._hash(node[3]))
 
     def root(self) -> bytes:
         """The canonical root. An empty tree is EMPTY_ROOT, never None."""
@@ -128,27 +120,24 @@ class CanonicalTrie:
         """Follow `entry_key`'s bits to whatever leaf they reach.
 
         Returns (leaf_node, path), where `path` is root-to-leaf and each entry is
-        (split_bit, skiplen, sibling_node). Used for both membership (the leaf found IS the
+        (split_bit, sibling_node). Used for both membership (the leaf found IS the
         key) and non-membership (it is the witness occupying that path).
         """
         node = self._tree()
         path = []
         while node[0] == "branch":
-            _t, split, skiplen, left, right = node
+            _t, split, left, right = node
             if addr_bit(entry_key, split) == 0:
-                path.append((split, skiplen, right))
+                path.append((split, right))
                 node = left
             else:
-                path.append((split, skiplen, left))
+                path.append((split, left))
                 node = right
         return node, path
 
     def _proof_from_path(self, path):
         """Path elements, leaf-to-root, in wire form."""
-        return [
-            proof_elem(split, skiplen, self._hash(sib))
-            for split, skiplen, sib in reversed(path)
-        ]
+        return [proof_elem(split, self._hash(sib)) for split, sib in reversed(path)]
 
     def membership_proof(self, entry_key: bytes):
         assert entry_key in self.commits
@@ -169,23 +158,3 @@ class CanonicalTrie:
         leaf, path = self._descend(entry_key)
         wkey = leaf[1]
         return self._proof_from_path(path), wkey, self.commits[wkey]
-
-    def sibling_witness(self, entry_key: bytes):
-        """What a DELETE of `entry_key` must present, or None if it is the last leaf.
-
-        ("branch", split_bit, left_hash, right_hash) when the promoted sibling is a branch:
-        it moves up a level, and its hash commits to a skiplen measured from its old parent,
-        so the device has to re-derive it and can only do that from the pieces.
-
-        ("leaf", entry_key, commit) when the sibling is a leaf: it promotes unchanged. The
-        device is still not allowed to ASSUME that from a missing decomposition -- it cannot
-        verify an omission -- so it recomputes the leaf hash and matches it.
-        """
-        assert entry_key in self.commits
-        if len(self.commits) == 1:
-            return None
-        _leaf, path = self._descend(entry_key)
-        sib = path[-1][2]  # the sibling under the branch directly above the leaf
-        if sib[0] == "leaf":
-            return ("leaf", sib[1], self.commits[sib[1]])
-        return ("branch", sib[1], self._hash(sib[3]), self._hash(sib[4]))
