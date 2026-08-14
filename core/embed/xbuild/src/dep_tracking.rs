@@ -6,6 +6,7 @@ use std::time::SystemTime;
 use color_eyre::Result;
 use color_eyre::eyre::{WrapErr, ensure};
 
+use crate::cargo_out;
 use crate::helpers::{
     delete_file_if_exists, emit_rerun_if_changed, ensure_parent_directory, trace,
 };
@@ -86,9 +87,9 @@ where
             .output()
             .with_context(|| format!("Failed to execute {:?}", cmd))?;
 
-        // Print the command's own diagnostics (warnings on success, errors on
-        // failure) before turning the exit status into an error.
-        emit_command_output(&cmd_output, true);
+        // Report the command's own diagnostics - warnings on success, errors on
+        // failure - before turning the exit status into an error.
+        report_command_output(&cmd_output, true);
 
         // Check if the command executed successfully
         ensure!(
@@ -143,8 +144,8 @@ where
             .output()
             .with_context(|| format!("Failed to execute {:?}", cmd))?;
 
-        // Only stderr is forwarded here - stdout is the payload written below
-        emit_command_output(&cmd_output, false);
+        // Only stderr is reported here - stdout is the payload written below
+        report_command_output(&cmd_output, false);
 
         // Check if the command executed successfully
         ensure!(
@@ -209,6 +210,16 @@ where
         Some(oldest) => newest_input > oldest,
         None => true,
     }
+}
+
+/// Collects the streams of `cmd_output` that carry diagnostics rather than
+/// payload.
+fn diagnostics_text(cmd_output: &std::process::Output, with_stdout: bool) -> String {
+    let stdout: &[u8] = if with_stdout { &cmd_output.stdout } else { &[] };
+
+    let mut text = String::from_utf8_lossy(stdout).into_owned();
+    text.push_str(&String::from_utf8_lossy(&cmd_output.stderr));
+    text
 }
 
 /// Constructs a dependency file path for the given output file.
@@ -377,13 +388,32 @@ where
     Ok(())
 }
 
-/// Forwards a command's captured output to this process's stderr.
+/// Reports a command's captured output to the user.
 ///
-/// Diagnostics are written as-is instead of being folded into an error message,
-/// so the compiler's own formatting (carets, colors) survives and multi-line
-/// output is not swallowed by the error reporter.
-pub fn emit_command_output(cmd_output: &std::process::Output, with_stdout: bool) {
+/// Which channel carries it depends on the outcome, because Cargo treats a build
+/// script's streams differently depending on whether the script fails:
+///
+/// * A **failed** command's output goes straight to stderr, which Cargo shows
+///   verbatim. Writing it as-is rather than folding it into an error message
+///   keeps the compiler's own formatting - carets, colors, multi-line context -
+///   and keeps the error reporter from swallowing all but the first line.
+///
+/// * A **successful** command's output goes through `cargo::warning=`. Cargo
+///   hides a successful build script's stderr outright, so a warning written
+///   there would be lost precisely when nothing else reports it - the build went
+///   green and no one is looking. One directive per line reads chunkier than the
+///   raw form, but visible beats well-formatted and unread.
+///
+/// `with_stdout` says whether stdout carries diagnostics too. It does for most
+/// tools, but not for a command whose stdout *is* the artifact being captured.
+pub fn report_command_output(cmd_output: &std::process::Output, with_stdout: bool) {
     let stdout: &[u8] = if with_stdout { &cmd_output.stdout } else { &[] };
+
+    if cmd_output.status.success() {
+        // An empty message emits nothing, so a quiet command stays quiet.
+        cargo_out::warning(diagnostics_text(cmd_output, with_stdout));
+        return;
+    }
 
     let stderr = io::stderr();
     let mut lock = stderr.lock();

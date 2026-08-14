@@ -14,7 +14,7 @@ pub use clibrary::compile::OutputType;
 pub use color_eyre::Result;
 pub use color_eyre::eyre::{WrapErr, bail, ensure};
 pub use dep_tracking::{
-    emit_command_output, needs_rebuild, run_command, run_command_to_file, run_if_changed,
+    needs_rebuild, report_command_output, run_command, run_command_to_file, run_if_changed,
 };
 pub use helpers::{
     cargo_target_dir, derive_output_path, diagnostics_color_flag, emit_rerun_if_changed,

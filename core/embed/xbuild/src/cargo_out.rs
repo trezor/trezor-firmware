@@ -22,8 +22,22 @@ static PENDING: Mutex<Option<Vec<String>>> = Mutex::new(None);
 ///
 /// Written immediately so it survives a later build failure; see the module
 /// documentation.
+///
+/// A multi-line message becomes one directive per line: Cargo parses its stdout
+/// line by line, so an embedded newline would leave everything after it read as
+/// junk. Blank lines are dropped rather than rendered as a bare `warning:`.
+///
+/// All the lines are written under a single lock, so that concurrently
+/// compiling sources cannot interleave their diagnostics.
 pub fn warning(message: impl Display) {
-    println!("cargo::warning={message}");
+    let message = message.to_string();
+
+    let stdout = io::stdout();
+    let mut lock = stdout.lock();
+    for line in message.lines().filter(|line| !line.trim().is_empty()) {
+        let _ = writeln!(lock, "cargo::warning={line}");
+    }
+    let _ = lock.flush();
 }
 
 /// Emits `cargo::metadata=` - a `key=value` pair passed to the build scripts
