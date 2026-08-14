@@ -1,3 +1,4 @@
+use std::cell::Cell;
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -81,7 +82,18 @@ where
     // Collect command arguments for dependency tracking
     let args = command_to_dep_string(cmd);
 
-    run_if_changed(inputs, outputs, Some(args.as_str()), cc_dep, || {
+    let outputs: Vec<O> = outputs.into_iter().collect();
+    ensure!(
+        !outputs.is_empty(),
+        "run_command requires at least one output file"
+    );
+    let diag_path = diag_file_path(&outputs[0]);
+
+    let executed = Cell::new(false);
+
+    run_if_changed(inputs, &outputs, Some(args.as_str()), cc_dep, || {
+        executed.set(true);
+
         // Run the command
         let cmd_output = cmd
             .output()
@@ -97,10 +109,18 @@ where
             command_failed_error(cmd, cmd_output.status)
         );
 
+        remember_diagnostics(&diag_path, &diagnostics_text(&cmd_output, true))?;
+
         trace!("@@ command executed: {:?}", cmd);
 
         Ok(())
-    })
+    })?;
+
+    if !executed.get() {
+        replay_diagnostics(&diag_path);
+    }
+
+    Ok(())
 }
 
 /// Runs a command with dependency tracking and captures its stdout to an
@@ -134,7 +154,12 @@ where
     // Collect command arguments for dependency tracking
     let args = command_to_dep_string(cmd);
 
+    let diag_path = diag_file_path(&output);
+    let executed = Cell::new(false);
+
     run_if_changed(inputs, [&output], Some(&args), None, || {
+        executed.set(true);
+
         // Remove existing output file to ensure we don't accidentally read
         // stale data if the command fails
         delete_file_if_exists(&output)?;
@@ -153,6 +178,8 @@ where
             command_failed_error(cmd, cmd_output.status)
         );
 
+        remember_diagnostics(&diag_path, &diagnostics_text(&cmd_output, false))?;
+
         // Ensure the output directory exists before writing the output
         ensure_parent_directory(output.as_ref())?;
 
@@ -163,7 +190,13 @@ where
         trace!("@@ command executed: {:?}", cmd);
 
         Ok(())
-    })
+    })?;
+
+    if !executed.get() {
+        replay_diagnostics(&diag_path);
+    }
+
+    Ok(())
 }
 
 /// Checks if any of the input files are newer than any of the output files.
@@ -212,6 +245,13 @@ where
     }
 }
 
+/// Constructs the path of the file remembering an output's diagnostics.
+fn diag_file_path(output: impl AsRef<Path>) -> PathBuf {
+    let mut diag_path = output.as_ref().as_os_str().to_os_string();
+    diag_path.push(".diag");
+    PathBuf::from(diag_path)
+}
+
 /// Collects the streams of `cmd_output` that carry diagnostics rather than
 /// payload.
 fn diagnostics_text(cmd_output: &std::process::Output, with_stdout: bool) -> String {
@@ -220,6 +260,35 @@ fn diagnostics_text(cmd_output: &std::process::Output, with_stdout: bool) -> Str
     let mut text = String::from_utf8_lossy(stdout).into_owned();
     text.push_str(&String::from_utf8_lossy(&cmd_output.stderr));
     text
+}
+
+/// Remembers a command's diagnostics beside its output, or clears the previous
+/// ones when this run had nothing to say.
+///
+/// Cargo does this for `rustc`: a warning is shown on every build until the
+/// source is fixed, not only on the build that happened to compile it. Build
+/// scripts get no such service - a warning is reported once and then vanishes as
+/// soon as the object file is up to date - so it is stored here and replayed by
+/// [`replay_diagnostics`].
+///
+/// Only reached once the command has succeeded. A failed command leaves whatever
+/// was here before, which is harmless: its outputs have been deleted, so the
+/// next build recompiles it and overwrites this file rather than replaying it.
+fn remember_diagnostics(diag_path: &Path, text: &str) -> Result<()> {
+    if text.trim().is_empty() {
+        return delete_file_if_exists(diag_path);
+    }
+
+    ensure_parent_directory(diag_path)?;
+    fs::write(diag_path, text).with_context(|| format!("Failed to write {}", diag_path.display()))
+}
+
+/// Re-emits the diagnostics remembered for an output that did not need
+/// rebuilding, so an unfixed warning survives a cached build.
+fn replay_diagnostics(diag_path: &Path) {
+    if let Ok(text) = fs::read_to_string(diag_path) {
+        cargo_out::warning(text);
+    }
 }
 
 /// Constructs a dependency file path for the given output file.
@@ -399,10 +468,11 @@ where
 ///   and keeps the error reporter from swallowing all but the first line.
 ///
 /// * A **successful** command's output goes through `cargo::warning=`. Cargo
-///   hides a successful build script's stderr outright, so a warning written
-///   there would be lost precisely when nothing else reports it - the build went
-///   green and no one is looking. One directive per line reads chunkier than the
-///   raw form, but visible beats well-formatted and unread.
+///   hides a successful build script's stderr outright and never replays it from
+///   a cached run, so a warning written there would be lost precisely when
+///   nothing else reports it - the build went green and no one is looking. One
+///   directive per line reads chunkier than the raw form, but visible beats
+///   well-formatted and unread.
 ///
 /// `with_stdout` says whether stdout carries diagnostics too. It does for most
 /// tools, but not for a command whose stdout *is* the artifact being captured.
