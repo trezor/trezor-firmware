@@ -43,6 +43,24 @@ _ROOT_MAC_DOMAIN = b"WARD ROOT v1"
 
 NONCE_LENGTH = 32
 
+# The 32-byte stand-in for "the tree is empty", used wherever a root appears inside a
+# preimage. Preimages are fixed-width, so an absent root needs SOME encoding, and it must
+# be one no real root can take: this is sha256(0x03), domain-separated from the leaf
+# (0x00), internal (0x01) and commit (0x02) tags.
+#
+# An all-zero value would also work in practice but reads as "unset field", which is the
+# kind of ambiguity that eventually gets treated as one. Spelled as bytes so the module
+# needs no hashing at import time; a unit test asserts it really is sha256(0x03).
+EMPTY_ROOT = (
+    b"\x08\x4f\xed\x08\xb9\x78\xaf\x4d\x7d\x19\x6a\x74\x46\xa8\x6b\x58"
+    b"\x00\x9e\x63\x6b\x61\x1d\xb1\x62\x11\xb6\x5a\x9a\xad\xff\x29\xc5"
+)
+
+
+def root_or_empty(root: bytes | None) -> bytes:
+    """A root in its preimage form: itself, or the empty-tree stand-in."""
+    return root if root is not None else EMPTY_ROOT
+
 # PLACEHOLDER. Production firmware rejects every WM signature until a real key is
 # provisioned here, which is the correct default: a device that accepted a WM key from
 # whoever offered one would be verifying freshness against an adversary's clock.
@@ -130,8 +148,5 @@ def root_mac(k_mac: bytes, ward_id: bytes, counter: int, root: bytes | None) -> 
     return hmac(
         hmac.SHA256,
         k_mac,
-        _ROOT_MAC_DOMAIN
-        + ward_id
-        + counter.to_bytes(4, "big")
-        + (root if root is not None else bytes(32)),
+        _ROOT_MAC_DOMAIN + ward_id + counter.to_bytes(4, "big") + root_or_empty(root),
     ).digest()

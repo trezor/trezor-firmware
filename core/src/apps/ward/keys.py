@@ -69,6 +69,16 @@ async def derive_k_mac() -> bytes:
     return await _derive_slip21([b"ward", b"K_mac"])
 
 
+async def derive_k_auth() -> bytes:
+    """K_auth, which authorises a transition from one root to the next.
+
+    Seed-derived, so every device of the wallet holds it -- which is the point: a
+    transition needs to be verifiable by the other devices that share this tree, and by
+    nobody else. See `cas.py` for why a MAC rather than a signature.
+    """
+    return await _derive_slip21([b"ward", b"K_auth"])
+
+
 async def derive_k_ident(key_type: str) -> bytes:
     """K_ident(key_type) = SLIP21(seed, [b"ward", b"K_ident", key_type]).key().
 
