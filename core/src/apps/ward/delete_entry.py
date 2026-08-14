@@ -97,7 +97,7 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
         entry_key_for,
     )
     from .leaf import EMPTY_PART, make_leaf_content, make_leaf_identity
-    from .root import get_counter, get_root, set_root
+    from .root import get_counter, get_root
     from .trie import compute_new_root
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
@@ -150,7 +150,13 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
         sibling_node=sibling_node,
         sibling_leaf=sibling_leaf,
     )
-    await set_root(new_root, counter)
+    # NOT COMMITTED HERE. The device hands back the root it derived, its counter and the
+    # authenticators; the head only moves when a WM attestation names that counter and a mac
+    # the device can reproduce -- see `reconcile`. That is what makes "the head is always a
+    # state the WM confirmed" an invariant, and it is what the fork check exists in spite of:
+    # two devices can no longer both hold an unconfirmed counter N+1, because neither holds
+    # one at all. Nothing needs storing in the meantime -- the mac is self-validating, so the
+    # device can accept the root later purely because it reproduces the attested mac.
 
     return WardLeafAck(
         entry_key=entry_key,

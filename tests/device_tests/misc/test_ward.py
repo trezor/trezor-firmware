@@ -178,20 +178,28 @@ def _publish(wm: MockWM, res) -> None:
     """Hand the WM what the write produced.
 
     A real host does exactly this: the device is the counter authority and the WM records
-    what it is told. Skipping it leaves the device ahead of the WM, which is a refused
-    sync rather than a lost write.
+    what it is told. Since writes commit only on WM confirmation, skipping this means the
+    write never takes effect at all -- the device's head simply does not move.
     """
     wm.publish(_WARD_ID, res.counter, res.mac, _T0 + res.counter)
 
 
-def _seed(session: Session, store: WardTrie, identifier: bytes, value: bytes) -> bytes:
+def _seed(
+    session: Session,
+    store: WardTrie,
+    identifier: bytes,
+    value: bytes,
+    k_mac: bytes | None = None,
+) -> bytes:
     """Create an entry the only way a host can: ask the device to build the leaf.
 
     The host cannot synthesise one -- that is the point of the device being the encoder --
     so every fixture below goes through a real confirmed write.
 
-    The device derives and records its own root as part of that write, so there is nothing
-    to tell it afterwards.
+    The write alone does not move the device's head: since commit-on-WM-confirmation, only
+    an attestation does. So seeding an entry means write, apply, and then run the round --
+    which is what a real host does too, and why the round is folded in here rather than
+    repeated at eighty call sites.
     """
     res, _rec = _write(
         session,
@@ -200,7 +208,23 @@ def _seed(session: Session, store: WardTrie, identifier: bytes, value: bytes) ->
         "ward_set_entry",
     )
     ward.apply(store, res)
+    _confirm(session, store, k_mac=k_mac)
     return res.entry_key
+
+
+def _confirm(
+    session: Session,
+    store: WardTrie,
+    wm: "MockWM | None" = None,
+    k_mac: bytes | None = None,
+) -> None:
+    """Run the WM round that makes the device adopt the head the host now holds.
+
+    A throwaway MockWM is fine when the test has no opinion about the WM: it only has to
+    hold the (counter, mac) for the length of one round. Tests that assert on the WM's own
+    state pass theirs.
+    """
+    _attest(session, wm or MockWM(), store, k_mac=k_mac)
 
 
 # --- the keyed path --------------------------------------------------------------
@@ -394,6 +418,7 @@ def test_ward_delete_returns_a_leaf_with_both_parts_empty(session: Session):
     assert res.leaf.identity.plain.identifier is None
 
     ward.apply(store, res)
+    _confirm(session, store)
     assert len(store) == 0
 
 
@@ -543,6 +568,7 @@ def test_ward_set_entry_add_shows_the_new_value(session: Session):
     # the device built the leaf; storing it is the host's job, under the key it was given
     # -- which the host could not have computed for itself
     ward.apply(store, res)
+    _confirm(session, store)
     assert list(store.blobs) == [expected_entry_key(_K_PATH, _APP, b"addr1")]
 
 
@@ -574,6 +600,7 @@ def test_ward_set_entry_update_names_the_value_it_replaces(session: Session):
     # the write lands on the SAME key it read from -- an update, not a second entry
     assert res.entry_key == key
     ward.apply(store, res)
+    _confirm(session, store)
     assert list(store.blobs) == [key]
 
 
@@ -613,6 +640,7 @@ def test_ward_delete_entry_names_the_value_being_removed(session: Session):
 
     # the device confirmed; the host performs the removal -- and only of that one entry
     ward.apply(store, res)
+    _confirm(session, store)
     assert list(store.blobs) == [keep]
 
 
@@ -645,43 +673,43 @@ def test_ward_delete_entry_is_idempotent_on_a_proved_absence(session: Session):
     assert res.mac is not None  # the device still states where it is
 
     ward.apply(store, res)
+    _confirm(session, store)
     assert list(store.blobs) == [expected_entry_key(_K_PATH, _APP, b"addr1")]
     assert store.counter == before
 
 
 @pytest.mark.models("core")
 def test_ward_delete_entry_retry_after_a_lost_response_succeeds(session: Session):
-    """The case idempotence exists for: the ack was lost, so the host asks again.
+    """A lost response is now a no-op rather than a stuck state.
 
-    The host applied the delete (it can derive the post-delete root itself, holding the
-    whole tree) but never learned whether the device did. Under the old refusal this second
-    attempt failed with "no such entry" and the host had no way to tell a completed delete
-    from an entry that never existed. Now it succeeds, and the returned counter confirms
-    the device is where the host thinks it is.
+    The device did not commit, so the delete never happened and the retry is an ordinary
+    fresh attempt against unchanged state. Under commit-on-write the device HAD advanced
+    while the host had not, so the retry served a proof against a root the device had moved
+    past and was refused with nothing to say why -- which is what idempotent delete and the
+    sync counter were both introduced to soften.
     """
     store = WardTrie()
     _seed(session, store, b"addr1", b"doomed")
-    _seed(session, store, b"addr2", b"keep_me")
+    keep = _seed(session, store, b"addr2", b"keep_me")
+    before = ward.sync(session).counter
 
-    res, _rec = _write(
+    _res, _rec = _write(
         session,
         store,
         lambda p: ward.delete_entry(session, _APP, b"addr1", p),
         "ward_delete_entry",
     )
-    ward.apply(store, res)
-    after = res.counter
+    assert ward.sync(session).counter == before  # the ack was lost; nothing landed
 
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.WardEntryRequest, m.WardLeafAck])
-        again = ward.delete_entry(session, _APP, b"addr1", ward.store_provider(store))
-
-    assert again.auth_commit is None
-    assert (
-        again.counter == after
-    )  # the device is exactly where the first delete left it
-    ward.apply(store, again)
-    assert list(store.blobs) == [expected_entry_key(_K_PATH, _APP, b"addr2")]
+    res2, _rec = _write(
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        "ward_delete_entry",
+    )
+    ward.apply(store, res2)
+    _confirm(session, store)
+    assert list(store.blobs) == [keep]
 
 
 @pytest.mark.models("core")
@@ -743,6 +771,7 @@ def test_ward_delete_entry_deletes_an_empty_valued_entry(session: Session):
 
     assert "delete entry" in rec.title
     ward.apply(store, res)
+    _confirm(session, store)
     assert len(store) == 0
 
 
@@ -808,6 +837,7 @@ def test_ward_rejects_a_rolled_back_leaf(session: Session):
         "ward_set_entry",
     )
     ward.apply(store, res)
+    _confirm(session, store)
 
     rolled_back = WardTrie()
     rolled_back.set(key, stale_leaf)
@@ -914,6 +944,7 @@ def test_ward_root_survives_a_new_session(session: Session):
         "ward_set_entry",
     )
     ward.apply(store, res)
+    _confirm(session, store)
 
     another = session.test_ctx.get_session()
     with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
@@ -938,16 +969,22 @@ def test_ward_is_isolated_per_hidden_wallet(test_ctx: TrezorTestContext):
       one wallet's leaf is refused by the other, since their roots are independent;
       the counters advance independently.
     """
+    _SEED_ALPHA = bip39_seed(_MNEMONIC, "alpha")
+    _SEED_BETA = bip39_seed(_MNEMONIC, "beta")
     alpha = test_ctx.get_session(passphrase="alpha")
     beta = test_ctx.get_session(passphrase="beta")
 
-    k_alpha = derive_k_path(bip39_seed(_MNEMONIC, "alpha"))
-    k_beta = derive_k_path(bip39_seed(_MNEMONIC, "beta"))
+    k_alpha = derive_k_path(_SEED_ALPHA)
+    k_beta = derive_k_path(_SEED_BETA)
     assert k_alpha != k_beta  # the oracle's own premise, cheap to state
 
     store_a, store_b = WardTrie(), WardTrie()
-    key_a = _seed(alpha, store_a, b"addr1", b"alpha_value")
-    key_b = _seed(beta, store_b, b"addr1", b"beta_value")
+    key_a = _seed(
+        alpha, store_a, b"addr1", b"alpha_value", k_mac=derive_k_mac(_SEED_ALPHA)
+    )
+    key_b = _seed(
+        beta, store_b, b"addr1", b"beta_value", k_mac=derive_k_mac(_SEED_BETA)
+    )
 
     # SAME app_id and identifier, different paths -- and each is the right one
     assert key_a == expected_entry_key(k_alpha, _APP, b"addr1")
@@ -961,8 +998,8 @@ def test_ward_is_isolated_per_hidden_wallet(test_ctx: TrezorTestContext):
         ward.get_entry(alpha, _APP, b"addr1", ward.store_provider(store_b))
 
     # and the counters are each wallet's own
-    _seed(alpha, store_a, b"addr2", b"more")
-    _seed(alpha, store_a, b"addr3", b"more")
+    _seed(alpha, store_a, b"addr2", b"more", k_mac=derive_k_mac(_SEED_ALPHA))
+    _seed(alpha, store_a, b"addr3", b"more", k_mac=derive_k_mac(_SEED_ALPHA))
     assert ward.sync(alpha).counter == store_a.counter
     assert ward.sync(beta).counter == store_b.counter
     assert store_a.counter > store_b.counter  # 3 writes vs 1
@@ -995,6 +1032,7 @@ def _attest(
     store: WardTrie,
     counter: int | None = None,
     timestamp: int | None = None,
+    k_mac: bytes | None = None,
 ) -> None:
     """Run a full sync round: nonce, WM attestation, root.
 
@@ -1009,7 +1047,10 @@ def _attest(
             _T0 + counter
         )  # time moves with the counter, as it would in practice
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
+    # ward_id comes from the DEVICE, and k_mac from whichever wallet this session opened --
+    # both are passphrase-dependent, so hardcoding the default wallet's values here works
+    # only for as long as nothing else attests.
+    mac = root_mac(k_mac or _K_MAC, ack.ward_id, counter, store.root())
     wm.publish(ack.ward_id, counter, mac, timestamp)
     _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
     ward.ingest_attestation(session, counter, mac, sig, timestamp)
@@ -1067,7 +1108,7 @@ def test_ward_refuses_an_attestation_from_the_wrong_signer(session: Session):
     impostor = MockWM(seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
     counter = store.counter
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
+    mac = root_mac(_K_MAC, ack.ward_id, counter, store.root())
     sig = impostor.sign(ack.ward_id, ack.nonce, counter, mac, _T0 + counter)
 
     with pytest.raises(
@@ -1117,7 +1158,10 @@ def test_ward_refuses_a_root_that_does_not_match_the_attested_mac(session: Sessi
     wm = MockWM()
     counter = store.counter
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
+    # ward_id comes from the DEVICE, and k_mac from whichever wallet this session opened --
+    # both are passphrase-dependent, so hardcoding the default wallet's values here works
+    # only for as long as nothing else attests.
+    mac = root_mac(_K_MAC, ack.ward_id, counter, store.root())
     wm.publish(ack.ward_id, counter, mac, _T0 + counter)
     _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
     ward.ingest_attestation(session, counter, mac, sig, _T0 + counter)
@@ -1202,32 +1246,31 @@ def test_ward_an_attestation_cannot_be_adopted_twice(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_a_write_advances_the_counter(session: Session):
-    """Each confirmed write moves the counter on and hands back the pair to publish.
+def test_ward_a_write_does_not_move_the_head_until_confirmed(session: Session):
+    """THE invariant of commit-on-WM-confirmation, asserted directly.
 
-    Before this the counter only moved on a sync, so local writes were invisible to the
-    WM and a later attestation at a higher counter silently replaced them.
+    A write hands back the counter and mac the host must publish, but the device itself does
+    not take them. Its head moves only when a WM attestation names that counter and a mac it
+    can reproduce. That is what makes two devices unable to hold the same unconfirmed
+    counter -- neither holds one at all -- and it is what lets the stored head be treated as
+    always-confirmed.
     """
     store = WardTrie()
+    before = ward.sync(session).counter
+
     res, _rec = _write(
         session,
         store,
         lambda p: ward.set_entry(session, _APP, b"addr1", b"one", p),
         "ward_set_entry",
     )
-    ward.apply(store, res)
-    first = res.counter
-    assert first is not None and first >= 1
+    assert res.counter == before + 1  # the ack names the next counter...
     assert res.mac is not None
+    assert ward.sync(session).counter == before  # ...and the device has NOT taken it
 
-    res2, _rec = _write(
-        session,
-        store,
-        lambda p: ward.set_entry(session, _APP, b"addr2", b"two", p),
-        "ward_set_entry",
-    )
-    ward.apply(store, res2)
-    assert res2.counter == first + 1
+    ward.apply(store, res)
+    _confirm(session, store)
+    assert ward.sync(session).counter == res.counter  # only now
 
 
 @pytest.mark.models("core")
@@ -1245,6 +1288,7 @@ def test_ward_a_published_write_syncs_cleanly(session: Session):
         "ward_set_entry",
     )
     ward.apply(store, res)
+    _confirm(session, store)
 
     wm = MockWM()
     _publish(wm, res)
@@ -1263,39 +1307,32 @@ def test_ward_a_published_write_syncs_cleanly(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_an_unpublished_write_blocks_sync_rather_than_losing_it(session: Session):
-    """A device ahead of the WM refuses to sync. It does NOT quietly adopt the older tree.
+def test_ward_an_unpublished_write_simply_does_not_happen(session: Session):
+    """A write the host never publishes leaves no trace, instead of wedging the wallet.
 
-    This is the failure mode the counter advance buys: the write is still there, the sync
-    fails closed, and publishing the pair the device handed back resolves it.
+    This replaces a test of the opposite behaviour. Under commit-on-write the device advanced
+    locally, so an unpublished write put it AHEAD of the WM, every sync was refused as a
+    rollback, and the only ways out were publishing the pair or reverting. There is now
+    nothing to be ahead of, so the failure mode is gone rather than handled.
     """
     store = WardTrie()
-    res, _rec = _write(
+    _seed(session, store, b"addr1", b"kept")
+    before = ward.sync(session).counter
+
+    _res, _rec = _write(
         session,
         store,
-        lambda p: ward.set_entry(session, _APP, b"addr1", b"unpublished", p),
+        lambda p: ward.set_entry(session, _APP, b"addr2", b"unpublished", p),
         "ward_set_entry",
     )
-    ward.apply(store, res)
+    # neither applied nor confirmed: the host drops it on the floor
+    assert ward.sync(session).counter == before
 
-    wm = MockWM()
-    stale = _subset(store, [])  # the WM's view: the tree as it was before the write
-    ack = ward.sync(session)
-    behind = res.counter - 1
-    mac = root_mac(_K_MAC, _WARD_ID, behind, stale.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, behind, mac, _T0 + behind)
-
-    with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
-        ward.ingest_attestation(session, behind, mac, sig, _T0 + behind)
-
-    # ...and the write is still readable afterwards
+    # and the wallet still works -- no stuck state to escape from
     _res, rec = _read(
         session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p)
     )
-    assert "unpublished" in rec.text
-
-
-# --- catching up on transitions this device missed -----------------------------------
+    assert "kept" in rec.squashed
 
 
 def _link(from_counter, from_root, to_counter, to_root):
@@ -1528,6 +1565,9 @@ def test_ward_rollback_undoes_the_last_write(session: Session):
     rewound = _subset(store, [k for k in store.blobs if k != key])
     ward.apply_rollback(store, ack)
     rewound.counter = ack.counter
+    _confirm(
+        session, rewound
+    )  # a revert takes effect at the round, like any transition
     assert rewound.root() == before_root
     _res, rec = _read(
         session, rewound, lambda p: ward.get_entry(session, _APP, b"b", p)
@@ -1613,6 +1653,9 @@ def test_ward_rollback_may_discard_changes_the_wm_confirmed(session: Session):
     rewound = _subset(store, [key_a])
     ward.apply_rollback(store, ack)
     rewound.counter = ack.counter
+    _confirm(
+        session, rewound
+    )  # a revert takes effect at the round, like any transition
     assert ack.new_root == rewound.root()
     _res, rec = _read(
         session, rewound, lambda p: ward.get_entry(session, _APP, b"b", p)
@@ -1644,6 +1687,9 @@ def test_ward_rollback_reverts_several_steps_at_once(session: Session):
     rewound = _subset(store, [key_a])
     ward.apply_rollback(store, ack)
     rewound.counter = ack.counter
+    _confirm(
+        session, rewound
+    )  # a revert takes effect at the round, like any transition
     assert ack.new_root == rewound.root()
 
     # the entry from the target state survives; everything after it is gone
@@ -1657,40 +1703,12 @@ def test_ward_rollback_reverts_several_steps_at_once(session: Session):
     assert "entry not found" in rec.title
 
 
-@pytest.mark.models("core")
-def test_ward_rollback_unsticks_a_wallet_the_wm_never_saw(session: Session):
-    """End to end: a write that never reached the WM blocks sync; undoing it unblocks."""
-    store = WardTrie()
-    _seed(session, store, b"a", b"one")
-    wm = MockWM()
-    _attest(session, wm, store)  # WM and device agree here
-
-    published_root, published_counter = store.root(), store.counter
-    _seed(session, store, b"b", b"two")  # ...and this never reaches the WM
-
-    ack_sync = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, published_counter, published_root)
-    sig = wm.sign(
-        ack_sync.ward_id,
-        ack_sync.nonce,
-        published_counter,
-        mac,
-        _T0 + published_counter,
-    )
-    with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
-        ward.ingest_attestation(
-            session, published_counter, mac, sig, _T0 + published_counter
-        )
-
-    ack, _rec = _rollback(session, store)
-    ward.apply_rollback(store, ack)
-
-    # the wallet is back on the published contents, at a counter beyond the stuck one
-    assert ack.new_root == published_root
-    assert ack.counter > published_counter
-
-
-# --- the clock, and the way back from it -------------------------------------------
+# REMOVED: test_ward_rollback_unsticks_a_wallet_the_wm_never_saw. It exercised a device that
+# had written without the WM hearing, which every sync then refused as a rollback. Since
+# writes commit only on WM confirmation that state is unreachable -- an unconfirmed write
+# never moved the head, so there is nothing to be ahead of and nothing to unstick. Rollback
+# itself remains, for the reason in `apps/ward/rollback.py`: a host that cannot RECONSTRUCT
+# the confirmed head, which is a different failure and is covered by the tests above.
 
 
 def _recover(session: Session, wm: MockWM, counter: int, mac: bytes, timestamp: int):
@@ -1774,6 +1792,7 @@ def test_ward_recover_counter_accepts_a_backward_attestation(session: Session):
         "ward_set_entry",
     )
     ward.apply(store, res)
+    _confirm(session, store)
     _attest(session, wm, store)
     assert store.counter > old_counter
 
@@ -1952,6 +1971,7 @@ def test_ward_delete_keeps_the_root_canonical_when_a_branch_is_promoted(
         "ward_delete_entry",
     )
     ward.apply(store, res)
+    _confirm(session, store)
     assert key not in store.blobs
     assert len(store) > 1  # a branch sibling survived, which is the case under test
 
@@ -1970,6 +1990,7 @@ def test_ward_delete_keeps_the_root_canonical_when_a_branch_is_promoted(
         "ward_set_entry",
     )
     ward.apply(store, res)
+    _confirm(session, store)
 
 
 @pytest.mark.models("core")
@@ -1998,6 +2019,7 @@ def test_ward_deleting_the_last_entry_keeps_verifying(session: Session):
         "ward_delete_entry",
     )
     ward.apply(store, res)
+    _confirm(session, store)
     assert len(store) == 0
 
     with pytest.raises(exceptions.TrezorFailure, match="tree is empty"):
@@ -2021,6 +2043,7 @@ def test_ward_an_emptied_tree_can_be_written_to_again(session: Session):
         "ward_delete_entry",
     )
     ward.apply(store, res)
+    _confirm(session, store)
     assert len(store) == 0
 
     _seed(session, store, b"addr2", b"after_the_purge")
@@ -2051,49 +2074,28 @@ def test_ward_sync_reports_the_device_counter(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_sync_counter_reveals_a_write_whose_response_was_lost(session: Session):
-    """The case the field exists for, and the one idempotent delete deliberately misses.
+def test_ward_sync_counter_reports_the_confirmed_head(session: Session):
+    """WardSyncAck.counter reports the confirmed head, which is now the only head there is.
 
-    A delete succeeds, its response never reaches the host, so the host still holds the row
-    and the pre-delete root. Retrying serves a proof against a root the device has already
-    moved past: refused, correctly, and indistinguishable from an entry that never existed.
-    The counter is what breaks the tie -- the host sees the device is one ahead of it, knows
-    the delete landed, applies it locally, and carries on.
+    The field was added so a host could discover that a write it never saw acknowledged had
+    nonetheless landed. Commit-on-confirmation removes that possibility outright: an
+    unacknowledged write cannot have landed, because landing IS the round the host drives. So
+    the field keeps a smaller job -- telling a host where the device is, after a restart or
+    before it starts publishing -- and this test pins that, including that an unconfirmed
+    write does not move it.
     """
     store = WardTrie()
-    _seed(session, store, b"addr1", b"doomed")
-    _seed(session, store, b"addr2", b"keep_me")
-    before = store.counter
+    _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+    assert ward.sync(session).counter == store.counter
 
-    # the delete is confirmed and the device commits it -- then the ack is "lost": the host
-    # never calls ward.apply, so its store still holds the row
-    res, _rec = _write(
+    _res, _rec = _write(
         session,
         store,
-        lambda p: ward.delete_entry(session, _APP, b"addr1", p),
-        "ward_delete_entry",
+        lambda p: ward.set_entry(session, _APP, b"c", b"three", p),
+        "ward_set_entry",
     )
-    assert store.counter == before  # host is unaware; the device has moved on
-
-    # retrying against the stale store is refused, and the error does not say why
-    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
-        ward.delete_entry(session, _APP, b"addr1", ward.store_provider(store))
-
-    # ...but the counter does
-    ack = ward.sync(session)
-    assert ack.counter > store.counter
-    assert ack.counter == res.counter
-
-    # so the host applies what it now knows landed, and the wallet is usable again
-    ward.apply(store, res)
-    assert ack.counter == store.counter
-    _res, rec = _read(
-        session, store, lambda p: ward.get_entry(session, _APP, b"addr2", p)
-    )
-    assert "keep_me" in rec.squashed
-
-
-# --- the WM-facing signature --------------------------------------------------------
+    assert ward.sync(session).counter == store.counter
 
 
 @pytest.mark.models("core")
