@@ -12,6 +12,16 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     between here and there was authorised by a device of this wallet and that none was
     skipped -- which is what a device needs after another device wrote while it was away.
 
+    GAP(ward): multi-device is exercised only through the host ORACLE -- `tests/ward_trie.py`
+    serves both the links and the proofs, and no test runs two real devices against one trie.
+    Evolu's own history makes a real one possible, because replaying it is exactly how a
+    second device catches up: rebuild live state from `evolu_history` to serve proofs, then
+    feed the transitions here as WardChainLink to prove descent. Both halves come from one
+    source rather than two that can disagree -- a history row carries the leaf and the counter,
+    a link carries the roots and the auth_commit the device issued alongside it. The test wants
+    two emulators on one seed: A writes, B replays and verifies, and B's derived head must
+    equal A's.
+
     The two guarantees are complementary and both are required: the chain gives DESCENT,
     the attestation gives CURRENCY, and they are joined by demanding the chain end exactly
     at the attested counter with a root that reproduces the attested mac. Either alone is
