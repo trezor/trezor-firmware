@@ -242,14 +242,38 @@ def sync(session: "Session") -> messages.WARDSyncAck:
 
 
 def ingest_attestation(
-    session: "Session", counter: int, mac: bytes, wm_signature: bytes
+    session: "Session",
+    counter: int,
+    mac: bytes,
+    wm_signature: bytes,
+    timestamp: int = 0,
 ) -> messages.WARDIngestAttestationAck:
-    """Deliver the WM's signed (counter, mac) for the open round."""
+    """Deliver the WM's signed (counter, mac, timestamp) for the open round."""
     return session.call(
         messages.WARDIngestAttestation(
-            counter=counter, mac=mac, wm_signature=wm_signature
+            counter=counter, mac=mac, wm_signature=wm_signature, timestamp=timestamp
         ),
         expect=messages.WARDIngestAttestationAck,
+    )
+
+
+def recover_counter(
+    session: "Session",
+    counter: int,
+    mac: bytes,
+    wm_signature: bytes,
+    timestamp: int = 0,
+) -> messages.WARDRecoverCounterAck:
+    """Accept an attestation that goes backwards, after the user confirms.
+
+    Only for recovering a WM whose register or clock regressed. It is the sole path that
+    accepts a lower counter, and it holds for confirmation.
+    """
+    return session.call(
+        messages.WARDRecoverCounter(
+            counter=counter, mac=mac, wm_signature=wm_signature, timestamp=timestamp
+        ),
+        expect=messages.WARDRecoverCounterAck,
     )
 
 

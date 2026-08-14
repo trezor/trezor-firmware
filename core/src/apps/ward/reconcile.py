@@ -26,7 +26,7 @@ async def reconcile(msg: WARDReconcile) -> WARDReconcileAck:
     ctx = sync_round.get()
     if ctx is None or ctx[0] != sync_round._ATTESTED:
         raise DataError("no attested sync round to reconcile")
-    _state, _nonce, counter, mac = ctx
+    _state, _nonce, counter, mac, timestamp = ctx
 
     root = msg.root or None
     if root is not None and len(root) != 32:
@@ -45,13 +45,18 @@ async def reconcile(msg: WARDReconcile) -> WARDReconcileAck:
     # attestation is refused by the floor check rather than superseding them. The device
     # is then unable to sync until the host publishes the (counter, mac) it was handed --
     # fail-closed and recoverable, rather than a silent loss.
+    #
+    # A LOWER counter is adopted here without further ceremony, and that is not a hole: the
+    # only way one reaches an attested round is through WARDRecoverCounter, which refuses
+    # anything that is not going backwards and holds for confirmation first. Re-asking here
+    # would be asking about a decision already made.
     stored_counter = await get_counter()
     if counter == stored_counter:
         current = await get_root()
         if current is not None and current != root:
             raise DataError("attested counter matches but the root differs")
 
-    await set_root(root, counter)
+    await set_root(root, counter, timestamp)
     sync_round.clear()
 
     return WARDReconcileAck(counter=counter, new_root=root)

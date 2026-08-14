@@ -13,23 +13,22 @@ whole freshness story, and it is why the mac exists rather than the WM signing t
 directly: a WM that signed roots would learn the entire history of every wallet it serves.
 
     attestation = b"WARD ATTEST v1" || version(1B) || nonce || ward_id(32B)
-                                    || counter(4B BE) || mac(32B)
+                                    || counter(4B BE) || mac(32B) || timestamp(8B BE)
 
 signed Ed25519 under the WM key. The nonce is minted by the device per round and must
 come back inside the signature, so the host cannot stockpile signed anchors and replay
 one later -- against a host-only adversary that closes eclipse entirely.
 
-NO TIMESTAMP, deliberately. The design calls for `t_anchor >= t_last - epsilon` as a
-second monotonicity check, and it is omitted here because its failure mode is a
-PERMANENTLY LOCKED OUT wallet: a backward clock jump past epsilon bricks the device until
-a recovery path exists that can accept a lower timestamp, and that path is by
-construction a user-confirmable rollback to arbitrary past state -- the strongest
-social-engineering target in the protocol. Shipping the check before its recovery is
-shipping a brick with no key. It also buys less than it looks: a malicious WM simply lies
-about the time, so it constrains honest-but-broken and partitioned operators only.
+THE TIMESTAMP constrains honest-but-broken operators, not hostile ones -- a malicious WM
+simply lies about the time. What it catches is an operator who restored from a backup or
+whose clock jumped, which typically regresses the counter and the clock together, and it
+forces a forking WM to keep time monotone per device on every branch. The device has no
+clock and needs none: this is a stored-value comparison, the same cost as the counter.
 
-FIXME(ward): add the timestamp check together with the counter-reset recovery path, not
-before it.
+It ships WITH its recovery path, never before. A backward jump past EPSILON locks the
+wallet out, and monotonicity that protects against replay becomes a denial of service
+against the owner; WARDRecoverCounter is the way back. Shipping the check alone would have
+been shipping a brick with no key.
 """
 
 from typing import TYPE_CHECKING
@@ -38,7 +37,10 @@ if TYPE_CHECKING:
     pass
 
 _ATTEST_DOMAIN = b"WARD ATTEST v1"
-_ATTEST_VERSION = 1
+# Bumped when the preimage layout changed to carry a timestamp. The version byte exists
+# for exactly this: changing the layout while leaving the version at 1 would let a v1
+# signer and a v2 verifier disagree about what was signed, silently.
+_ATTEST_VERSION = 2
 _ROOT_MAC_DOMAIN = b"WARD ROOT v1"
 
 NONCE_LENGTH = 32
@@ -108,10 +110,16 @@ def _verify(message: bytes, signature: bytes) -> bool:
     return False
 
 
+# Allowance for clock jitter and NTP correction, in seconds. Too generous weakens the
+# check; too tight turns ordinary time-sync hiccups into support tickets. A real tuning
+# decision rather than a free win.
+EPSILON_SECONDS = 300
+
+
 def attestation_preimage(
-    ward_id: bytes, nonce: bytes, counter: int, mac: bytes
+    ward_id: bytes, nonce: bytes, counter: int, mac: bytes, timestamp: int
 ) -> bytes:
-    """b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac."""
+    """domain || version(1B) || nonce || ward_id || counter(4B BE) || mac || ts(8B BE)."""
     return (
         _ATTEST_DOMAIN
         + bytes([_ATTEST_VERSION])
@@ -119,22 +127,30 @@ def attestation_preimage(
         + ward_id
         + counter.to_bytes(4, "big")
         + mac
+        + timestamp.to_bytes(8, "big")
     )
 
 
 def verify_attestation(
-    ward_id: bytes, nonce: bytes, counter: int, mac: bytes, signature: bytes
+    ward_id: bytes,
+    nonce: bytes,
+    counter: int,
+    mac: bytes,
+    timestamp: int,
+    signature: bytes,
 ) -> bool:
-    """Is this a WM attestation of (counter, mac) for this wallet, this round?"""
-    return _verify(attestation_preimage(ward_id, nonce, counter, mac), signature)
+    """Is this a WM attestation of (counter, mac, timestamp) for this wallet, this round?"""
+    return _verify(
+        attestation_preimage(ward_id, nonce, counter, mac, timestamp), signature
+    )
 
 
 def root_mac(k_mac: bytes, ward_id: bytes, counter: int, root: bytes | None) -> bytes:
     """mac = HMAC-SHA256(K_mac, domain || ward_id || counter(4B BE) || root).
 
-    An ABSENT root -- the empty tree -- macs the all-zero root rather than being skipped,
-    so the empty tree still has a distinct, attestable mac at every counter. Leaving it
-    unbound would let a WM attest "empty" for any counter it liked.
+    An ABSENT root -- the empty tree -- macs the EMPTY_ROOT stand-in rather than being
+    skipped, so the empty tree still has a distinct, attestable mac at every counter.
+    Leaving it unbound would let a WM attest "empty" for any counter it liked.
 
     The counter is inside the mac, and that is load-bearing rather than tidy: roots are
     content-addressed and therefore REPEAT whenever contents repeat -- change a label and

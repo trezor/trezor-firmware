@@ -110,6 +110,7 @@ class WardTrie:
         # a moment -- roots repeat whenever contents repeat -- so a host store that keeps
         # one without the other cannot say which state it holds.
         self.counter = 0
+        self.timestamp = 0
         # Ordered transitions: (from_counter, from_root, to_counter, to_root, auth_commit).
         # Opaque to the host, which is the point -- it cannot forge a step, and cannot
         # check one either; only a device of this wallet can.

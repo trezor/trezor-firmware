@@ -722,6 +722,9 @@ class TestWardAttestation(unittest.TestCase):
     NONCE = bytes(range(32, 64))
     K_MAC = bytes(range(64, 96))
     ROOT = bytes([7]) * 32
+    # A wall-clock second that is not a round number and not zero: a layout bug that
+    # dropped the field or wrote it at the wrong width would still pass against 0.
+    TIME = 0x0102030405060708
 
     def _sign(self, message, seed=None):
         from trezor.crypto.curve import ed25519
@@ -759,36 +762,40 @@ class TestWardAttestation(unittest.TestCase):
     def test_attestation_preimage_layout(self):
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
         self.assertEqual(
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac),
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME),
             b"WARD ATTEST v1"
-            + bytes([1])
+            + bytes([2])
             + self.NONCE
             + self.WARD_ID
             + (5).to_bytes(4, "big")
-            + mac,
+            + mac
+            + self.TIME.to_bytes(8, "big"),
         )
 
     def test_a_genuine_attestation_verifies(self):
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac))
-        self.assertTrue(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, sig))
+        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME))
+        self.assertTrue(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig))
 
     def test_every_signed_field_is_bound(self):
         """Changing anything the signature covers must break it -- notably the nonce, which
         is what stops a host stockpiling anchors and replaying one later."""
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac))
+        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME))
 
-        self.assertFalse(A.verify_attestation(self.WARD_ID, bytes(32), 5, mac, sig))
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 6, mac, sig))
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, bytes(32), sig))
-        self.assertFalse(A.verify_attestation(bytes(32), self.NONCE, 5, mac, sig))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, bytes(32), 5, mac, self.TIME, sig))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 6, mac, self.TIME, sig))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, bytes(32), self.TIME, sig))
+        self.assertFalse(A.verify_attestation(bytes(32), self.NONCE, 5, mac, self.TIME, sig))
+        self.assertFalse(
+            A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME + 1, sig)
+        )
 
     def test_another_signer_is_refused(self):
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        pre = A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac)
+        pre = A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME)
         sig = self._sign(pre, seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, sig))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig))
 
     def test_a_zero_signature_never_verifies(self):
         """Not paranoia. Against the all-zero placeholder key an all-zero signature is a
@@ -798,13 +805,13 @@ class TestWardAttestation(unittest.TestCase):
         placeholder key.
         """
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, bytes(64)))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, bytes(64)))
 
     def test_a_malformed_signature_is_refused(self):
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac))
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, sig[:63]))
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, sig + b"\x00"))
+        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig[:63]))
+        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig + b"\x00"))
 
 
 class TestWardCas(unittest.TestCase):

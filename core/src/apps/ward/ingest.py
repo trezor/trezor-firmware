@@ -15,25 +15,28 @@ async def ingest(msg: WARDIngestAttestation) -> WARDIngestAttestationAck:
     from trezor.wire import DataError
 
     from . import round as sync_round
-    from .attest import verify_attestation
+    from .attest import EPSILON_SECONDS, verify_attestation
     from .common import require_initialized
     from .keys import derive_ward_id
-    from .root import get_counter
+    from .root import get_counter, get_timestamp
 
     require_initialized()
 
     ctx = sync_round.get()
     if ctx is None:
         raise DataError("no sync round in progress")
-    _state, nonce, _c, _m = ctx
+    _state, nonce, _c, _m, _t = ctx
 
     counter = msg.counter
     mac = msg.mac
     signature = msg.wm_signature
+    timestamp = msg.timestamp or 0
     if counter is None or mac is None or signature is None:
         raise DataError("counter, mac and wm_signature are required")
 
-    if not verify_attestation(await derive_ward_id(), nonce, counter, mac, signature):
+    if not verify_attestation(
+        await derive_ward_id(), nonce, counter, mac, timestamp, signature
+    ):
         raise DataError("WM attestation verification failed")
 
     # Anti-rollback. The attested counter may not precede the floor this wallet has
@@ -43,5 +46,12 @@ async def ingest(msg: WARDIngestAttestation) -> WARDIngestAttestationAck:
     if counter < await get_counter():
         raise DataError("attested counter is older than the stored counter")
 
-    sync_round.set_attested(counter, mac)
+    # ...and time must not run backwards either, beyond an allowance for clock jitter.
+    # This catches an operator restored from a backup, which regresses the clock and the
+    # counter together, and forces a forking WM to keep time monotone on every branch. It
+    # does not constrain a hostile WM, which simply lies about the time.
+    if timestamp < await get_timestamp() - EPSILON_SECONDS:
+        raise DataError("attested time is older than the stored time")
+
+    sync_round.set_attested(counter, mac, timestamp)
     return WARDIngestAttestationAck(counter=counter)

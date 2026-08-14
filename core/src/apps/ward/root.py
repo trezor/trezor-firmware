@@ -48,7 +48,18 @@ async def get_counter() -> int:
     return ward_store.get_counter(await derive_wallet_id())
 
 
-async def set_root(root: bytes | None, counter: int | None = None) -> None:
+async def get_timestamp() -> int:
+    """The last attested time for the active wallet, or 0 if it has never synced."""
+    import storage.ward as ward_store
+
+    from .keys import derive_wallet_id
+
+    return ward_store.get_timestamp(await derive_wallet_id())
+
+
+async def set_root(
+    root: bytes | None, counter: int | None = None, timestamp: int | None = None
+) -> None:
     """Record the root the device just derived, and optionally a new counter.
 
     `counter=None` keeps the stored counter, which is what an ordinary write does: the
@@ -62,4 +73,8 @@ async def set_root(root: bytes | None, counter: int | None = None) -> None:
     wallet_id = await derive_wallet_id()
     if counter is None:
         counter = ward_store.get_counter(wallet_id)
-    ward_store.set_root(wallet_id, root, counter)
+    if timestamp is None:
+        # An ordinary write does not learn the time -- only an attestation carries one --
+        # so it must not clear what the last sync established.
+        timestamp = ward_store.get_timestamp(wallet_id)
+    ward_store.set_root(wallet_id, root, counter, timestamp)
