@@ -24,6 +24,7 @@
 #include <io/display.h>
 #include <io/rsod.h>
 #include <io/usb_config.h>
+#include <sec/monoctr.h>
 #include <sec/rsod_special.h>
 #include <sec/unit_properties.h>
 #include <sys/applet.h>

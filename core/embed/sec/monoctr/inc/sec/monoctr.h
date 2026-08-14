@@ -51,9 +51,9 @@ void monoctr_init(void);
  * @param value The new value to write to the monotonic counter.
  *              Maximum value is defined by MONOCTR_MAX_VALUE.
  *
- * @return  Returns sectrue on success, when value is lower than the current
- * value. If the write fails, returns secfalse.
- */
+ * @return Returns sectrue on success when value is not lower than the current
+ *         value. If the write fails, returns secfalse.
+ * */
 secbool monoctr_write(monoctr_type_t type, uint8_t value);
 
 /**
