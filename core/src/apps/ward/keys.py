@@ -144,7 +144,9 @@ def entry_key(
     """The keyed 32-byte path for one entry: HMAC-SHA256(K_path, scope || identifier)."""
     from trezor.crypto import hmac
 
-    return hmac(hmac.SHA256, k_path, _scope(app_id, key_type, device_id) + identifier).digest()
+    return hmac(
+        hmac.SHA256, k_path, _scope(app_id, key_type, device_id) + identifier
+    ).digest()
 
 
 async def entry_key_for(
