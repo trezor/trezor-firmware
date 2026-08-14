@@ -72,7 +72,7 @@ from ...ward_keys import (
     unpack_identity,
     verify_sig_commit,
 )
-from ...ward_trie import WardTrie
+from ...ward_trie import WardTrie, addr_bit
 from ...ward_wm import MockWM
 
 _APP = "TEST"
@@ -1854,66 +1854,46 @@ def test_ward_recover_counter_screen_names_both_counters_and_the_distance(
 def _branch_sibling_case(session: Session):
     """A store where deleting one entry collapses a branch whose sibling is a BRANCH.
 
-    Built by real writes, so the keys are whatever the device's HMAC produces -- the shape
-    is discovered rather than constructed, and the helper says so if this seed stops
-    producing one, instead of quietly testing the easy case.
+    That was the hard case: a branch sibling's hash used to go stale the instant it moved
+    up a level. It promotes unchanged now, so this is only interesting as a regression
+    shape -- but it is the shape two implementations got wrong, so it stays covered.
+
+    Found by writing real entries until one appears, so the keys are whatever the device's
+    HMAC produces. Skips rather than passing vacuously if this seed yields none.
     """
     store = WardTrie()
     for i in range(6):
         _seed(session, store, b"addr%d" % i, b"v%d" % i)
         for key in list(store.blobs):
-            if store.sibling_decomposition(key) is not None:
+            proof = store.membership_proof(key)
+            if not proof:
+                continue
+            # the collapsing sibling is a branch exactly when removing this leaf leaves
+            # more than one key on the other side of the deepest branch
+            split0 = int.from_bytes(proof[0][0:2], "big")
+            others = [
+                k
+                for k in store.blobs
+                if k != key and addr_bit(k, split0) != addr_bit(key, split0)
+            ]
+            if len(others) > 1:
                 return store, key
     pytest.skip("no branch-sibling delete arises for this seed")
 
 
-@pytest.mark.models("core")
-def test_ward_delete_refuses_a_sibling_it_cannot_classify(session: Session):
-    """A delete whose answer identifies the sibling in NEITHER form is refused.
-
-    The proof carries only the sibling's hash, which does not say whether it is a leaf or a
-    branch. Signalling "leaf" by omission cannot be verified: a host that withheld the
-    decomposition for a branch had the stale hash promoted, and the device stored a valid
-    hash of a NON-CANONICAL tree over the same leaves. No entry is forged that way -- the
-    seal and the keyed path are untouched -- but every later proof from an honest,
-    canonically-computing host reconstructs to a different root and is refused, so the
-    wallet is stuck. This asserts the device now refuses instead.
-
-    Set up with a real BRANCH sibling, so the omission would genuinely have been wrong.
-    """
-    store, key = _branch_sibling_case(session)
-    honest = ward.store_provider(store)
-
-    def withholds(entry_key: bytes) -> ward.Answer:
-        answer = honest(entry_key)
-        return answer._replace(
-            sibling_split_bit=None,
-            sibling_left=None,
-            sibling_right=None,
-            sibling_entry_key=None,
-            sibling_commit=None,
-        )
-
-    identifier = next(
-        i
-        for i in (b"addr%d" % n for n in range(6))
-        if expected_entry_key(_K_PATH, _APP, i) == key
-    )
-    with pytest.raises(exceptions.TrezorFailure, match="identify the sibling"):
-        ward.delete_entry(session, _APP, identifier, withholds)
-
-    # and the entry is still there afterwards -- a refused delete deletes nothing
-    _res, rec = _read(
-        session, store, lambda p: ward.get_entry(session, _APP, identifier, p)
-    )
-    assert "entry not found" not in rec.title
+# REMOVED: test_ward_delete_refuses_a_sibling_it_cannot_classify. It asserted that a delete
+# withholding the sibling's KIND was refused, which was necessary while a node's hash
+# committed to its depth: a branch sibling had to arrive decomposed so the device could
+# re-derive it, a leaf did not, and the proof could not say which it was. With depth out of
+# the preimage both promote unchanged, so there is nothing to withhold and nothing to refuse.
+# The canonical outcome is still asserted by the test below and by the differential harness.
 
 
 @pytest.mark.models("core")
 def test_ward_delete_keeps_the_root_canonical_when_a_branch_is_promoted(
     session: Session,
 ):
-    """The honest form still works, and leaves the device on the CANONICAL root.
+    """A branch sibling promotes unchanged, and the device stays on the CANONICAL root.
 
     There is no way to read the device's root, and no need to: the host store rebuilds its
     tree canonically on every query, so a subsequent read succeeding is exactly the

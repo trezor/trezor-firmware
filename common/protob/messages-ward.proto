@@ -183,7 +183,7 @@ message WardEntryAck {
     optional WardLeafContent  content  = 3;
 
     // Proof that this answer matches the tree the device already trusts. Elements are
-    // 36 bytes each -- u16be(split_bit) || u16be(skiplen) || sibling(32B) -- in
+    // 34 bytes each -- u16be(split_bit) || sibling(32B) -- in
     // LEAF-TO-ROOT order.
     //
     //   membership     : identity + content + proof
@@ -198,29 +198,12 @@ message WardEntryAck {
     optional bytes witness_entry_key = 5;
     optional bytes witness_commit    = 6;
 
-    // DELETE only. A delete MUST identify the sibling of the leaf being removed, in
-    // exactly one of the two forms below -- see `trie.compute_new_root`.
-    //
-    // Removing a leaf collapses the branch above it, so the sibling moves up a level. A
-    // node's hash commits to its own skiplen, which is measured from its parent, so a
-    // re-parented BRANCH's hash is stale the instant it moves; a LEAF has no skiplen and
-    // promotes exactly. The proof carries only the sibling's hash, which does not say
-    // which of the two it is -- so the host must say, and prove it.
-    //
-    // Nothing is trusted in either form: both are checked against the sibling hash the
-    // proof already committed to. Sending neither is refused. An earlier revision let a
-    // leaf sibling be signalled by OMISSION, which the device could not verify: a host
-    // that withheld the decomposition for a branch steered it to a non-canonical root and
-    // stuck the wallet.
-
-    // branch sibling: its pieces, re-hashed by the device at the shallower depth
-    optional uint32 sibling_split_bit = 7;
-    optional bytes  sibling_left      = 8;
-    optional bytes  sibling_right     = 9;
-
-    // leaf sibling: its path and commit, from which the device recomputes the leaf hash
-    optional bytes  sibling_entry_key = 10;
-    optional bytes  sibling_commit    = 11;
+    // 7-11 were the sibling witness a DELETE had to present: a branch decomposition or a
+    // leaf's (entry_key, commit), so the device could re-derive a re-parented sibling at its
+    // new depth. None of it is needed now that a node's hash does not commit to its depth --
+    // the collapsing sibling promotes unchanged, whatever it is. Reserved rather than reused,
+    // so a stale host cannot have an old field silently reinterpreted.
+    reserved 7, 8, 9, 10, 11;
 }
 
 

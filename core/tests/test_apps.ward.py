@@ -448,7 +448,7 @@ class TestWardTrie(unittest.TestCase):
     """
 
     ROOT = bytes.fromhex(
-        "acfe9d9b2c3069070aeb21d72dd53cd7dd3245016ba461c09451d715cb2a6a2d"
+        "2b4e46b341ecf5ebbb506bb6878e1523dff181e103ede3c683c955d34302fa1e"
     )
     MEMBER = bytes.fromhex(
         "358b7591f24d313e523c7b34b8bd513e4310e08d058aee11d679ba41958853fe"
@@ -461,7 +461,7 @@ class TestWardTrie(unittest.TestCase):
     )
     PROOF = [
         bytes.fromhex(
-            "00000000e96a5c3627be9ad15ae404da1ac72b42f1a602039dbc46fa22eb52e6071949d3"
+            "0000e96a5c3627be9ad15ae404da1ac72b42f1a602039dbc46fa22eb52e6071949d3"
         )
     ]
     ID_PART = (
@@ -493,7 +493,7 @@ class TestWardTrie(unittest.TestCase):
         self.assertEqual(
             commit_of("address", self.ID_PART, self.VAL_PART), self.WITNESS_COMMIT
         )
-        self.assertEqual(len(self.PROOF[0]), 36)
+        self.assertEqual(len(self.PROOF[0]), 34)
         self.assertTrue(
             verify_membership(
                 self.MEMBER,
@@ -575,23 +575,17 @@ class TestWardTrie(unittest.TestCase):
         """A proof must describe a real root-to-leaf path before anything is hashed."""
         good = self.PROOF[0]
         for bad in (
-            good[:35],  # wrong element length
-            bytes([1, 0]) + bytes([0, 0]) + good[4:],  # split_bit >= 256
-            bytes([0, 5])
-            + bytes([0, 0])
-            + good[4:],  # skiplen != split_bit - start_bit
+            good[:33],  # wrong element length
+            bytes([1, 0]) + good[2:],  # split_bit >= 256
         ):
             with self.assertRaises(DataError):
                 validate_proof_shape([bad])
 
-        # split bits must strictly increase from the root down
+        # split bits must strictly increase from the root down. That is the whole of the
+        # shape check now: the skiplen it also used to reconcile is no longer carried,
+        # being derivable from exactly these values.
         with self.assertRaises(DataError):
-            validate_proof_shape(
-                [
-                    bytes([0, 5]) + bytes([0, 5]) + good[4:],
-                    bytes([0, 2]) + bytes([0, 2]) + good[4:],
-                ]
-            )
+            validate_proof_shape([bytes([0, 5]) + good[2:], bytes([0, 2]) + good[2:]])
 
     def test_proof_length_is_bounded_by_the_key_space(self):
         """No cap is needed: split_bit strictly increases and stays under 256, so a valid
@@ -633,8 +627,8 @@ class TestWardComputeNewRoot(unittest.TestCase):
         return leaf_hash_of(key, self._commit(tag))
 
     @staticmethod
-    def _elem(split_bit, skiplen, sibling):
-        return split_bit.to_bytes(2, "big") + skiplen.to_bytes(2, "big") + sibling
+    def _elem(split_bit, sibling):
+        return split_bit.to_bytes(2, "big") + sibling
 
     def test_first_insert_needs_an_empty_device(self):
         """With no proof and no witness the device's own record is the only authority."""
@@ -650,86 +644,29 @@ class TestWardComputeNewRoot(unittest.TestCase):
         """A host cannot swap a value without first proving what is there now."""
         a, b = self._key([0]), self._key([1])
         la, lb = self._lh(a, b"a"), self._lh(b, b"b")
-        root = internal_hash(0, 0, la, lb)
-        proof = [self._elem(0, 0, lb)]
+        root = internal_hash(0, la, lb)
+        proof = [self._elem(0, lb)]
 
         self.assertEqual(
             compute_new_root(a, self._leaf(b"a"), self._leaf(b"a2"), proof, root),
-            internal_hash(0, 0, self._lh(a, b"a2"), lb),
+            internal_hash(0, self._lh(a, b"a2"), lb),
         )
         with self.assertRaises(DataError):
             compute_new_root(a, self._leaf(b"WRONG"), self._leaf(b"a2"), proof, root)
 
-    def test_delete_promotes_a_leaf_sibling_exactly(self):
-        """A leaf has no skiplen, so promoting it needs no correction.
+    def test_delete_promotes_the_sibling_unchanged(self):
+        """The collapsing sibling takes the branch's place with its hash untouched.
 
-        The witness is still REQUIRED, and still checked: the device recomputes the leaf
-        hash and matches it against the one the proof committed to. That is what makes
-        "the sibling is a leaf" a fact rather than the host's word for it.
+        This needed a witness for the sibling's KIND until a node's hash stopped committing
+        to its depth: a branch's hash went stale the instant it moved, a leaf's did not, and
+        the device could not tell them apart from the proof alone. Now neither moves.
         """
         a, b = self._key([0]), self._key([1])
         la, lb = self._lh(a, b"a"), self._lh(b, b"b")
-        root = internal_hash(0, 0, la, lb)
-        proof = [self._elem(0, 0, lb)]
+        root = internal_hash(0, la, lb)
+        proof = [self._elem(0, lb)]
         # one leaf left, and a single-leaf tree's root IS that leaf hash
-        self.assertEqual(
-            compute_new_root(
-                a,
-                self._leaf(b"a"),
-                None,
-                proof,
-                root,
-                sibling_leaf=(b, self._commit(b"b")),
-            ),
-            lb,
-        )
-        # a leaf witness that does not reproduce the committed hash is refused
-        with self.assertRaises(DataError):
-            compute_new_root(
-                a,
-                self._leaf(b"a"),
-                None,
-                proof,
-                root,
-                sibling_leaf=(b, self._commit(b"WRONG")),
-            )
-
-    def test_delete_must_identify_the_sibling(self):
-        """Neither form supplied is REFUSED, and that refusal is the whole point.
-
-        A proof element carries the sibling's hash and nothing that says whether it is a
-        leaf or a branch. An earlier revision let a leaf be signalled by OMISSION -- which
-        cannot be verified: a host that withheld the decomposition for a BRANCH got the
-        stale hash promoted, giving a valid hash of a non-canonical tree over the same
-        leaves. Nothing is forged by that, but every later proof from an honest host
-        reconstructs elsewhere and is refused, so the wallet is stuck.
-
-        Deliberately set up with a BRANCH sibling, so the omission would have been wrong
-        rather than harmless -- against a leaf sibling this test would pass on the old
-        code too, and prove nothing.
-        """
-        a = self._key([0])
-        b = self._key([1, 0, 0, 0, 0, 0])
-        c = self._key([1, 0, 0, 0, 0, 1])
-        lb, lc = self._lh(b, b"b"), self._lh(c, b"c")
-        bc_old = internal_hash(5, 4, lb, lc)
-        root = internal_hash(0, 0, self._lh(a, b"a"), bc_old)
-        proof = [self._elem(0, 0, bc_old)]
-
-        with self.assertRaises(DataError):
-            compute_new_root(a, self._leaf(b"a"), None, proof, root)
-
-        # nor may both forms be sent: the device would have to choose which to believe
-        with self.assertRaises(DataError):
-            compute_new_root(
-                a,
-                self._leaf(b"a"),
-                None,
-                proof,
-                root,
-                sibling_node=(5, lb, lc),
-                sibling_leaf=(b, self._commit(b"b")),
-            )
+        self.assertEqual(compute_new_root(a, self._leaf(b"a"), None, proof, root), lb)
 
     def test_emptying_the_tree_yields_a_root_that_says_so(self):
         """Deleting the last entry gives EMPTY_ROOT, never None.
@@ -766,38 +703,27 @@ class TestWardComputeNewRoot(unittest.TestCase):
         with self.assertRaises(DataError):
             compute_new_root(k, self._leaf(b"a"), None, [], EMPTY_ROOT)
 
-    def test_delete_reparents_a_branch_sibling(self):
-        """THE bug this test exists for.
+    def test_delete_promotes_a_branch_sibling_unchanged(self):
+        """THE case this module used to get wrong, twice.
 
-        Deleting `a` collapses the root branch, so the b/c branch moves up a level and
-        must absorb the collapsed depth into its own skiplen. Its hash commits to the old
-        skiplen and the device holds only that hash -- so the sibling arrives decomposed
-        and the device re-derives it. Promoting the hash unchanged, which is the obvious
-        way to write this, yields a root no rebuild agrees with.
+        Deleting `a` collapses the root branch, so the b/c branch moves up a level. Its hash
+        used to commit to a depth measured from its old parent, so promoting it unchanged
+        -- the obvious way to write this -- produced a root no rebuild agreed with, and the
+        fix was to have it arrive decomposed so the device could re-derive it. With depth out
+        of the preimage the obvious way is the correct one.
         """
         a = self._key([0])
         b = self._key([1, 0, 0, 0, 0, 0])
         c = self._key([1, 0, 0, 0, 0, 1])
         la, lb, lc = self._lh(a, b"a"), self._lh(b, b"b"), self._lh(c, b"c")
 
-        # b and c first differ at bit 5; under the root branch at bit 0 that is skiplen 4
-        bc_old = internal_hash(5, 4, lb, lc)
-        root = internal_hash(0, 0, la, bc_old)
-        proof = [self._elem(0, 0, bc_old)]
+        bc = internal_hash(5, lb, lc)  # b and c first differ at bit 5
+        root = internal_hash(0, la, bc)
+        proof = [self._elem(0, bc)]
 
-        # afterwards b/c IS the root, so its skiplen counts from bit 0 instead: 5
-        canonical = internal_hash(5, 5, lb, lc)
-        got = compute_new_root(
-            a, self._leaf(b"a"), None, proof, root, sibling_node=(5, lb, lc)
-        )
-        self.assertEqual(got, canonical)
-        self.assertTrue(got != bc_old)  # what the naive promotion would have returned
-
-        # the decomposition is checked against the proof, not trusted
-        with self.assertRaises(DataError):
-            compute_new_root(
-                a, self._leaf(b"a"), None, proof, root, sibling_node=(5, lb, la)
-            )
+        # afterwards b/c IS the root, with the same hash it had one level down
+        got = compute_new_root(a, self._leaf(b"a"), None, proof, root)
+        self.assertEqual(got, bc)
 
     def test_insert_above_an_existing_branch(self):
         """The second bug: the new key parts from its witness inside a COMPRESSED run.
@@ -813,8 +739,8 @@ class TestWardComputeNewRoot(unittest.TestCase):
         a = self._key([0, 0, 1])  # agrees with b at bit 0, parts at bit 2
         lb, lc, la = self._lh(b, b"b"), self._lh(c, b"c"), self._lh(a, b"a")
 
-        root = internal_hash(5, 5, lb, lc)  # two leaves: the b/c branch is the root
-        proof = [self._elem(5, 5, lc)]  # witness is b
+        root = internal_hash(5, lb, lc)  # two leaves: the b/c branch is the root
+        proof = [self._elem(5, lc)]  # witness is b
 
         got = compute_new_root(
             a,
@@ -825,8 +751,9 @@ class TestWardComputeNewRoot(unittest.TestCase):
             witness_entry_key=b,
             witness_commit=self._commit(b"b"),
         )
-        # canonical: root branches at bit 2, b/c hangs below with skiplen 5-(2+1) = 2
-        self.assertEqual(got, internal_hash(2, 2, internal_hash(5, 2, lb, lc), la))
+        # canonical: root branches at bit 2, and the b/c branch hangs below UNCHANGED --
+        # it used to need its skiplen restated for the depth it had just moved to
+        self.assertEqual(got, internal_hash(2, internal_hash(5, lb, lc), la))
 
     def test_insert_below_the_witness_path(self):
         """The simpler case: the keys part deeper than every existing branch."""
@@ -835,8 +762,8 @@ class TestWardComputeNewRoot(unittest.TestCase):
         a = self._key([0, 1])  # agrees with b at bit 0, parts at bit 1
         lb, lc, la = self._lh(b, b"b"), self._lh(c, b"c"), self._lh(a, b"a")
 
-        root = internal_hash(0, 0, lb, lc)
-        proof = [self._elem(0, 0, lc)]
+        root = internal_hash(0, lb, lc)
+        proof = [self._elem(0, lc)]
         got = compute_new_root(
             a,
             None,
@@ -846,7 +773,7 @@ class TestWardComputeNewRoot(unittest.TestCase):
             witness_entry_key=b,
             witness_commit=self._commit(b"b"),
         )
-        self.assertEqual(got, internal_hash(0, 0, internal_hash(1, 0, lb, la), lc))
+        self.assertEqual(got, internal_hash(0, internal_hash(1, lb, la), lc))
 
 
 class TestWardAttestation(unittest.TestCase):
