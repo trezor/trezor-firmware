@@ -10252,6 +10252,8 @@ class WARDLeafAck(protobuf.MessageType):
         1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
         3: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+        4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10260,10 +10262,14 @@ class WARDLeafAck(protobuf.MessageType):
         entry_key: Optional["bytes"] = None,
         identity: Optional["LeafIdentity"] = None,
         content: Optional["LeafContent"] = None,
+        counter: Optional["int"] = None,
+        mac: Optional["bytes"] = None,
     ) -> None:
         self.entry_key = entry_key
         self.identity = identity
         self.content = content
+        self.counter = counter
+        self.mac = mac
 
 
 class WARDSync(protobuf.MessageType):

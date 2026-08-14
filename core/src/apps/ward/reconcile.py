@@ -40,10 +40,11 @@ async def reconcile(msg: WARDReconcile) -> WARDReconcileAck:
     # holds, the state it names must be the state this device already has -- otherwise one
     # of the two is wrong and adopting either silently discards the other.
     #
-    # FIXME(ward): a STRICTLY GREATER counter is adopted, which discards local writes that
-    # have not reached the WM. That window exists because writes do not yet advance the
-    # counter -- they are purely local, invisible to the WM. It closes when writes go
-    # through the WM and get their own attestation.
+    # A strictly greater counter is adopted, and that is now safe: writes advance the
+    # counter too, so a device with unpublished writes is AHEAD of the WM and its
+    # attestation is refused by the floor check rather than superseding them. The device
+    # is then unable to sync until the host publishes the (counter, mac) it was handed --
+    # fail-closed and recoverable, rather than a silent loss.
     stored_counter = await get_counter()
     if counter == stored_counter:
         current = await get_root()

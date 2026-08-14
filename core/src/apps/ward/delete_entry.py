@@ -23,10 +23,11 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
+    from .attest import root_mac
     from .common import WARNING_UNVERIFIED, display_bytes, pull_leaf, require_key
-    from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
+    from .keys import ENTRY_TYPE_ADDRESS, derive_k_mac, derive_ward_id, entry_key_for
     from .leaf import EMPTY_PART, make_leaf_content, make_leaf_identity
-    from .root import get_root, set_root
+    from .root import get_counter, get_root, set_root
     from .trie import compute_new_root
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
@@ -55,19 +56,21 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
     # removing a leaf re-parents its sibling, whose hash commits to a skiplen measured
     # from its old parent -- see `trie.compute_new_root`.
     proof, _witness_key, _witness_commit, sibling_node = material
-    await set_root(
-        compute_new_root(
-            entry_key,
-            old_leaf,
-            None,
-            proof,
-            await get_root(),
-            sibling_node=sibling_node,
-        )
+    counter = await get_counter() + 1
+    new_root = compute_new_root(
+        entry_key,
+        old_leaf,
+        None,
+        proof,
+        await get_root(),
+        sibling_node=sibling_node,
     )
+    await set_root(new_root, counter)
 
     return WARDLeafAck(
         entry_key=entry_key,
         identity=make_leaf_identity(key_type, EMPTY_PART),
         content=make_leaf_content(EMPTY_PART),
+        counter=counter,
+        mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
     )
