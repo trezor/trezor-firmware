@@ -14,6 +14,7 @@ pub mod hmac;
 pub mod merkle;
 pub mod secret;
 pub mod sha256;
+pub mod sha3;
 pub mod sha512;
 
 /// Error returned by cryptographic operations in this crate.
