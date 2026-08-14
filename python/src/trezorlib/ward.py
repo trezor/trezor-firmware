@@ -120,6 +120,10 @@ class WardResult(NamedTuple):
     # Authorises this write's transition. The caller stores it with the link so another
     # device of the wallet can later verify the step without having witnessed it.
     auth_commit: Optional[bytes] = None
+    # Ed25519 over the same preimage, verifiable against ward_id with no secret. The host
+    # forwards it to the WM, which needs it to tell a real device's transition from anyone
+    # else's; the host itself can verify it but has no reason to.
+    auth_sig: Optional[bytes] = None
 
 
 def _call_answering_pulls(
@@ -170,6 +174,7 @@ def _call_answering_pulls(
             res.counter,
             res.mac,
             res.auth_commit,
+            res.auth_sig,
         )
 
     if not isinstance(res, messages.Success):

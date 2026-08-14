@@ -252,6 +252,14 @@ message WardLeafAck {
     // both endpoints, having held the tree before and after -- so that another device of
     // this wallet can later verify the step without having witnessed it.
     optional bytes auth_commit = 6;
+
+    // Ed25519 over exactly the bytes auth_commit MACs, under K_sig, verifiable against
+    // ward_id (which IS that key's public half). Complementary, not a replacement: the MAC
+    // is what another device of this wallet checks and remains the authority on
+    // authenticity; this exists so the WM -- holding no secret of ours, and trusted for
+    // freshness only -- can still tell a real device's transition from anyone else's.
+    // Without it a WM that arbitrates ordering is a denial-of-service oracle.
+    optional bytes auth_sig = 7;
 }
 
 /**
@@ -453,6 +461,7 @@ message WardRollbackAck {
     optional uint32 counter     = 1;  // the OLD counter plus one -- never reused
     optional bytes  new_root    = 2;  // absent if the wallet is now empty
     optional bytes  auth_commit = 3;  // a REVERT link, for the host to record
+    optional bytes  auth_sig    = 4;  // as WardLeafAck.auth_sig, over the REVERT preimage
 }
 
 
