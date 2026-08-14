@@ -138,16 +138,16 @@ def _expected(br_name: str, final=m.Success) -> list:
 
     Pinning the sequence is what proves the pull happened at the protocol level; the
     screen assertions only prove what was rendered. A read ends in Success; a write or
-    delete ends in WARDLeafAck, because the host needs the leaf the device built.
+    delete ends in WardLeafAck, because the host needs the leaf the device built.
     """
-    return [m.WARDEntryRequest, m.ButtonRequest(name=br_name), final]
+    return [m.WardEntryRequest, m.ButtonRequest(name=br_name), final]
 
 
 def _write(session: Session, store: WardTrie, call, br_name: str) -> tuple:
     """Run a write/delete, walking its screen, and return (result, recorder)."""
     rec = _Recorded()
     with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected(br_name, m.WARDLeafAck))
+        ctx.set_expected_responses(_expected(br_name, m.WardLeafAck))
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
         res = call(ward.store_provider(store))
     return res, rec
@@ -394,9 +394,9 @@ def test_ward_rejects_a_tampered_leaf(session: Session):
     flipped = bytes([sealed.ct[0] ^ 1]) + sealed.ct[1:]
     store.set(key, ward.Leaf(
         store.blobs[key].identity,
-        m.LeafContent(
+        m.WardLeafContent(
             encoding=0,
-            encrypted=m.EncryptedLeaf(nonce=sealed.nonce, tag=sealed.tag, ct=flipped),
+            encrypted=m.WardEncryptedLeaf(nonce=sealed.nonce, tag=sealed.tag, ct=flipped),
         ),
     ))
 
@@ -593,7 +593,7 @@ def test_ward_delete_entry_is_idempotent_on_a_proved_absence(session: Session):
     host's word for it. That is what makes idempotence safe here rather than lax.
 
     No screen: a hold-to-confirm that always means "nothing happened" is one that gets
-    approved without being read. Hence no input flow, and WARDLeafAck arrives with no
+    approved without being read. Hence no input flow, and WardLeafAck arrives with no
     ButtonRequest before it.
     """
     store = WardTrie()
@@ -601,7 +601,7 @@ def test_ward_delete_entry_is_idempotent_on_a_proved_absence(session: Session):
     before = store.counter
 
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.WARDEntryRequest, m.WARDLeafAck])
+        ctx.set_expected_responses([m.WardEntryRequest, m.WardLeafAck])
         res = ward.delete_entry(session, _APP, b"ghost", ward.store_provider(store))
 
     # the same empty leaf a real delete returns, so a host applies both the same way
@@ -639,7 +639,7 @@ def test_ward_delete_entry_retry_after_a_lost_response_succeeds(session: Session
     after = res.counter
 
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.WARDEntryRequest, m.WARDLeafAck])
+        ctx.set_expected_responses([m.WardEntryRequest, m.WardLeafAck])
         again = ward.delete_entry(session, _APP, b"addr1", ward.store_provider(store))
 
     assert again.auth_commit is None
@@ -677,7 +677,7 @@ def test_ward_apply_refuses_to_drop_a_no_change_result_on_a_live_entry(session: 
     key = _seed(session, store, b"addr1", b"present")
 
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.WARDEntryRequest, m.WARDLeafAck])
+        ctx.set_expected_responses([m.WardEntryRequest, m.WardLeafAck])
         res = ward.delete_entry(session, _APP, b"ghost", ward.store_provider(store))
 
     # pretend the no-change result was for the live entry -- the shape a confused host
@@ -1380,7 +1380,7 @@ def _rollback(session: Session, store: WardTrie):
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_rollback"), m.WARDRollbackAck]
+            [m.ButtonRequest(name="ward_rollback"), m.WardRollbackAck]
         )
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
         ack = ward.rollback(session, from_root, ac)
@@ -1499,7 +1499,7 @@ def _recover(session: Session, wm: MockWM, counter: int, mac: bytes, timestamp: 
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_recover_counter"), m.WARDRecoverCounterAck]
+            [m.ButtonRequest(name="ward_recover_counter"), m.WardRecoverCounterAck]
         )
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
         ack = ward.recover_counter(session, counter, mac, sig, timestamp)

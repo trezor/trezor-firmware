@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WARDVerifyChain, WARDVerifyChainAck
+    from trezor.messages import WardVerifyChain, WardVerifyChainAck
 
 
-async def verify_chain(msg: WARDVerifyChain) -> WARDVerifyChainAck:
+async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     """Adopt the attested head by proving it DESCENDS from the head this device holds.
 
-    Runs after WARDIngestAttestation, in place of WARDReconcile. Where reconcile takes the
+    Runs after WardIngestAttestation, in place of WardReconcile. Where reconcile takes the
     new head on the WM's word plus a mac, this additionally establishes that every step
     between here and there was authorised by a device of this wallet and that none was
     skipped -- which is what a device needs after another device wrote while it was away.
@@ -18,7 +18,7 @@ async def verify_chain(msg: WARDVerifyChain) -> WARDVerifyChainAck:
     forgeable in a way the pair is not -- a chain to some genuine older head, or an
     attestation of a head reached by a fork.
     """
-    from trezor.messages import WARDVerifyChainAck
+    from trezor.messages import WardVerifyChainAck
     from trezor.wire import DataError
 
     from . import round as sync_round
@@ -69,4 +69,4 @@ async def verify_chain(msg: WARDVerifyChain) -> WARDVerifyChainAck:
     await set_root(running_root, counter, timestamp)
     sync_round.clear()
 
-    return WARDVerifyChainAck(counter=counter, new_root=running_root)
+    return WardVerifyChainAck(counter=counter, new_root=running_root)

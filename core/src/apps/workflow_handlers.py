@@ -145,23 +145,23 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.management.get_next_u2f_counter"
 
         # ward
-        if msg_type == MessageType.WARDGetEntry:
+        if msg_type == MessageType.WardGetEntry:
             return "apps.ward.get_entry"
-        if msg_type == MessageType.WARDSetEntry:
+        if msg_type == MessageType.WardSetEntry:
             return "apps.ward.set_entry"
-        if msg_type == MessageType.WARDDeleteEntry:
+        if msg_type == MessageType.WardDeleteEntry:
             return "apps.ward.delete_entry"
-        if msg_type == MessageType.WARDSync:
+        if msg_type == MessageType.WardSync:
             return "apps.ward.sync"
-        if msg_type == MessageType.WARDIngestAttestation:
+        if msg_type == MessageType.WardIngestAttestation:
             return "apps.ward.ingest"
-        if msg_type == MessageType.WARDReconcile:
+        if msg_type == MessageType.WardReconcile:
             return "apps.ward.reconcile"
-        if msg_type == MessageType.WARDVerifyChain:
+        if msg_type == MessageType.WardVerifyChain:
             return "apps.ward.verify_chain"
-        if msg_type == MessageType.WARDRollback:
+        if msg_type == MessageType.WardRollback:
             return "apps.ward.rollback"
-        if msg_type == MessageType.WARDRecoverCounter:
+        if msg_type == MessageType.WardRecoverCounter:
             return "apps.ward.recover"
 
         # webauthn

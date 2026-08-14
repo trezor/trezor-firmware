@@ -829,24 +829,24 @@ class MessageType(IntEnum):
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
     TronWithdrawBalance = 2213
-    WARDGetEntry = 2300
-    WARDEntryRequest = 2301
-    WARDEntryAck = 2302
-    WARDSetEntry = 2303
-    WARDDeleteEntry = 2304
-    WARDLeafAck = 2305
-    WARDSync = 2307
-    WARDSyncAck = 2308
-    WARDIngestAttestation = 2309
-    WARDIngestAttestationAck = 2310
-    WARDReconcile = 2311
-    WARDReconcileAck = 2312
-    WARDVerifyChain = 2313
-    WARDVerifyChainAck = 2314
-    WARDRollback = 2315
-    WARDRollbackAck = 2316
-    WARDRecoverCounter = 2317
-    WARDRecoverCounterAck = 2318
+    WardGetEntry = 2300
+    WardEntryRequest = 2301
+    WardEntryAck = 2302
+    WardSetEntry = 2303
+    WardDeleteEntry = 2304
+    WardLeafAck = 2305
+    WardSync = 2307
+    WardSyncAck = 2308
+    WardIngestAttestation = 2309
+    WardIngestAttestationAck = 2310
+    WardReconcile = 2311
+    WardReconcileAck = 2312
+    WardVerifyChain = 2313
+    WardVerifyChainAck = 2314
+    WardRollback = 2315
+    WardRollbackAck = 2316
+    WardRecoverCounter = 2317
+    WardRecoverCounterAck = 2318
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -9984,7 +9984,7 @@ class TronRawParameter(protobuf.MessageType):
         self.value = value
 
 
-class WARDGetEntry(protobuf.MessageType):
+class WardGetEntry(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2300
     FIELDS = {
         1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
@@ -10001,7 +10001,7 @@ class WARDGetEntry(protobuf.MessageType):
         self.identifier = identifier
 
 
-class WARDSetEntry(protobuf.MessageType):
+class WardSetEntry(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2303
     FIELDS = {
         1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
@@ -10021,7 +10021,7 @@ class WARDSetEntry(protobuf.MessageType):
         self.value = value
 
 
-class WARDDeleteEntry(protobuf.MessageType):
+class WardDeleteEntry(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2304
     FIELDS = {
         1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
@@ -10038,7 +10038,7 @@ class WARDDeleteEntry(protobuf.MessageType):
         self.identifier = identifier
 
 
-class WARDEntryRequest(protobuf.MessageType):
+class WardEntryRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2301
     FIELDS = {
         3: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
@@ -10052,7 +10052,7 @@ class WARDEntryRequest(protobuf.MessageType):
         self.entry_key = entry_key
 
 
-class EncryptedLeaf(protobuf.MessageType):
+class WardEncryptedLeaf(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
@@ -10072,7 +10072,7 @@ class EncryptedLeaf(protobuf.MessageType):
         self.ct = ct
 
 
-class PlaintextLeaf(protobuf.MessageType):
+class WardPlaintextLeaf(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("content", "bytes", repeated=False, required=False, default=None),
@@ -10086,27 +10086,27 @@ class PlaintextLeaf(protobuf.MessageType):
         self.content = content
 
 
-class LeafContent(protobuf.MessageType):
+class WardLeafContent(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("encoding", "uint32", repeated=False, required=False, default=None),
-        2: protobuf.Field("encrypted", "EncryptedLeaf", repeated=False, required=False, default=None),
-        3: protobuf.Field("plaintext", "PlaintextLeaf", repeated=False, required=False, default=None),
+        2: protobuf.Field("encrypted", "WardEncryptedLeaf", repeated=False, required=False, default=None),
+        3: protobuf.Field("plaintext", "WardPlaintextLeaf", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         encoding: Optional["int"] = None,
-        encrypted: Optional["EncryptedLeaf"] = None,
-        plaintext: Optional["PlaintextLeaf"] = None,
+        encrypted: Optional["WardEncryptedLeaf"] = None,
+        plaintext: Optional["WardPlaintextLeaf"] = None,
     ) -> None:
         self.encoding = encoding
         self.encrypted = encrypted
         self.plaintext = plaintext
 
 
-class PlainIdentity(protobuf.MessageType):
+class WardPlainIdentity(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
@@ -10126,7 +10126,7 @@ class PlainIdentity(protobuf.MessageType):
         self.device_id = device_id
 
 
-class EncryptedIdentity(protobuf.MessageType):
+class WardEncryptedIdentity(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
@@ -10146,13 +10146,13 @@ class EncryptedIdentity(protobuf.MessageType):
         self.ct = ct
 
 
-class LeafIdentity(protobuf.MessageType):
+class WardLeafIdentity(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("encoding", "uint32", repeated=False, required=False, default=None),
         2: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
-        3: protobuf.Field("encrypted", "EncryptedIdentity", repeated=False, required=False, default=None),
-        4: protobuf.Field("plain", "PlainIdentity", repeated=False, required=False, default=None),
+        3: protobuf.Field("encrypted", "WardEncryptedIdentity", repeated=False, required=False, default=None),
+        4: protobuf.Field("plain", "WardPlainIdentity", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10160,8 +10160,8 @@ class LeafIdentity(protobuf.MessageType):
         *,
         encoding: Optional["int"] = None,
         key_type: Optional["str"] = None,
-        encrypted: Optional["EncryptedIdentity"] = None,
-        plain: Optional["PlainIdentity"] = None,
+        encrypted: Optional["WardEncryptedIdentity"] = None,
+        plain: Optional["WardPlainIdentity"] = None,
     ) -> None:
         self.encoding = encoding
         self.key_type = key_type
@@ -10169,11 +10169,11 @@ class LeafIdentity(protobuf.MessageType):
         self.plain = plain
 
 
-class WARDEntryAck(protobuf.MessageType):
+class WardEntryAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2302
     FIELDS = {
-        2: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
-        3: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+        2: protobuf.Field("identity", "WardLeafIdentity", repeated=False, required=False, default=None),
+        3: protobuf.Field("content", "WardLeafContent", repeated=False, required=False, default=None),
         4: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
         5: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
@@ -10188,8 +10188,8 @@ class WARDEntryAck(protobuf.MessageType):
         self,
         *,
         proof: Optional[Sequence["bytes"]] = None,
-        identity: Optional["LeafIdentity"] = None,
-        content: Optional["LeafContent"] = None,
+        identity: Optional["WardLeafIdentity"] = None,
+        content: Optional["WardLeafContent"] = None,
         witness_entry_key: Optional["bytes"] = None,
         witness_commit: Optional["bytes"] = None,
         sibling_split_bit: Optional["int"] = None,
@@ -10210,12 +10210,12 @@ class WARDEntryAck(protobuf.MessageType):
         self.sibling_commit = sibling_commit
 
 
-class WARDLeafAck(protobuf.MessageType):
+class WardLeafAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2305
     FIELDS = {
         1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
-        3: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+        2: protobuf.Field("identity", "WardLeafIdentity", repeated=False, required=False, default=None),
+        3: protobuf.Field("content", "WardLeafContent", repeated=False, required=False, default=None),
         4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         5: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
@@ -10225,8 +10225,8 @@ class WARDLeafAck(protobuf.MessageType):
         self,
         *,
         entry_key: Optional["bytes"] = None,
-        identity: Optional["LeafIdentity"] = None,
-        content: Optional["LeafContent"] = None,
+        identity: Optional["WardLeafIdentity"] = None,
+        content: Optional["WardLeafContent"] = None,
         counter: Optional["int"] = None,
         mac: Optional["bytes"] = None,
         auth_commit: Optional["bytes"] = None,
@@ -10239,7 +10239,7 @@ class WARDLeafAck(protobuf.MessageType):
         self.auth_commit = auth_commit
 
 
-class WARDChainLink(protobuf.MessageType):
+class WardChainLink(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
@@ -10265,21 +10265,21 @@ class WARDChainLink(protobuf.MessageType):
         self.auth_commit = auth_commit
 
 
-class WARDVerifyChain(protobuf.MessageType):
+class WardVerifyChain(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2313
     FIELDS = {
-        1: protobuf.Field("links", "WARDChainLink", repeated=True, required=False, default=None),
+        1: protobuf.Field("links", "WardChainLink", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        links: Optional[Sequence["WARDChainLink"]] = None,
+        links: Optional[Sequence["WardChainLink"]] = None,
     ) -> None:
-        self.links: Sequence["WARDChainLink"] = links if links is not None else []
+        self.links: Sequence["WardChainLink"] = links if links is not None else []
 
 
-class WARDVerifyChainAck(protobuf.MessageType):
+class WardVerifyChainAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2314
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
@@ -10296,11 +10296,11 @@ class WARDVerifyChainAck(protobuf.MessageType):
         self.new_root = new_root
 
 
-class WARDSync(protobuf.MessageType):
+class WardSync(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2307
 
 
-class WARDSyncAck(protobuf.MessageType):
+class WardSyncAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2308
     FIELDS = {
         1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
@@ -10317,7 +10317,7 @@ class WARDSyncAck(protobuf.MessageType):
         self.ward_id = ward_id
 
 
-class WARDIngestAttestation(protobuf.MessageType):
+class WardIngestAttestation(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2309
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
@@ -10340,7 +10340,7 @@ class WARDIngestAttestation(protobuf.MessageType):
         self.timestamp = timestamp
 
 
-class WARDIngestAttestationAck(protobuf.MessageType):
+class WardIngestAttestationAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2310
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
@@ -10354,7 +10354,7 @@ class WARDIngestAttestationAck(protobuf.MessageType):
         self.counter = counter
 
 
-class WARDReconcile(protobuf.MessageType):
+class WardReconcile(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2311
     FIELDS = {
         1: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
@@ -10368,7 +10368,7 @@ class WARDReconcile(protobuf.MessageType):
         self.root = root
 
 
-class WARDReconcileAck(protobuf.MessageType):
+class WardReconcileAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2312
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
@@ -10385,7 +10385,7 @@ class WARDReconcileAck(protobuf.MessageType):
         self.new_root = new_root
 
 
-class WARDRollback(protobuf.MessageType):
+class WardRollback(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2315
     FIELDS = {
         1: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
@@ -10402,7 +10402,7 @@ class WARDRollback(protobuf.MessageType):
         self.auth_commit = auth_commit
 
 
-class WARDRollbackAck(protobuf.MessageType):
+class WardRollbackAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2316
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
@@ -10422,7 +10422,7 @@ class WARDRollbackAck(protobuf.MessageType):
         self.auth_commit = auth_commit
 
 
-class WARDRecoverCounter(protobuf.MessageType):
+class WardRecoverCounter(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2317
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
@@ -10445,7 +10445,7 @@ class WARDRecoverCounter(protobuf.MessageType):
         self.timestamp = timestamp
 
 
-class WARDRecoverCounterAck(protobuf.MessageType):
+class WardRecoverCounterAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2318
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),

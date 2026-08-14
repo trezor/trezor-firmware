@@ -341,13 +341,13 @@ def leaf_hash(
 
 
 def make_leaf_content(part: "Part | None") -> "Any":
-    from trezor.messages import EncryptedLeaf, LeafContent, PlaintextLeaf
+    from trezor.messages import WardEncryptedLeaf, WardLeafContent, WardPlaintextLeaf
 
     encoding, nonce, tag, body = part if part is not None else EMPTY_PART
     if encoding == ENC_PLAINTEXT:
-        return LeafContent(encoding=ENC_PLAINTEXT, plaintext=PlaintextLeaf(content=body))
-    return LeafContent(
-        encoding=ENC_ENCRYPTED, encrypted=EncryptedLeaf(nonce=nonce, tag=tag, ct=body)
+        return WardLeafContent(encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=body))
+    return WardLeafContent(
+        encoding=ENC_ENCRYPTED, encrypted=WardEncryptedLeaf(nonce=nonce, tag=tag, ct=body)
     )
 
 
@@ -374,23 +374,23 @@ def read_leaf_content(content: "Any") -> "Part | None":
 
 
 def make_leaf_identity(key_type: str, part: "Part | None") -> "Any":
-    from trezor.messages import EncryptedIdentity, LeafIdentity, PlainIdentity
+    from trezor.messages import WardEncryptedIdentity, WardLeafIdentity, WardPlainIdentity
 
     encoding, nonce, tag, body = part if part is not None else EMPTY_PART
     if encoding == ENC_PLAINTEXT:
-        plain = PlainIdentity()
+        plain = WardPlainIdentity()
         if len(body) > 0:
             identifier, app_id, device_id = unpack_identity(body)
-            plain = PlainIdentity(
+            plain = WardPlainIdentity(
                 identifier=identifier, app_id=app_id.decode(), device_id=device_id
             )
-        return LeafIdentity(
+        return WardLeafIdentity(
             encoding=ENC_PLAINTEXT, key_type=key_type, plain=plain
         )
-    return LeafIdentity(
+    return WardLeafIdentity(
         encoding=ENC_ENCRYPTED,
         key_type=key_type,
-        encrypted=EncryptedIdentity(nonce=nonce, tag=tag, ct=body),
+        encrypted=WardEncryptedIdentity(nonce=nonce, tag=tag, ct=body),
     )
 
 

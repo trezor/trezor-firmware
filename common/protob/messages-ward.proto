@@ -9,10 +9,10 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
  * WARD: SEALED LEAF, PULL-ONLY, KEYED PATH.
  *
  * The device stores no entries. When it needs one it PULLS it from the host
- * mid-workflow: it emits WARDEntryRequest naming what it wants, the host answers
- * WARDEntryAck, and the device displays the value.
+ * mid-workflow: it emits WardEntryRequest naming what it wants, the host answers
+ * WardEntryAck, and the device displays the value.
  *
- * What it names is an opaque 32-byte keyed path (see WARDEntryRequest), never the
+ * What it names is an opaque 32-byte keyed path (see WardEntryRequest), never the
  * identifier. The host's store is therefore keyed by HMAC output, so persisted host
  * state -- and any backup or sync derived from it -- contains no identifiers.
  *
@@ -22,12 +22,12 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
  * over the host's STORAGE. Hiding the request too arrives when the caller is an
  * on-device app rather than the host.
  *
- * Reads (WARDGetEntry) and writes (WARDSetEntry, WARDDeleteEntry) both hang off that
+ * Reads (WardGetEntry) and writes (WardSetEntry, WardDeleteEntry) both hang off that
  * one pull. On a write the device pulls the CURRENT value first, so it can show the
  * user what is about to be replaced or removed rather than only what is arriving.
  *
- * The stored unit is a two-part LEAF (see LeafIdentity / LeafContent), which the DEVICE
- * builds and returns (WARDLeafAck); the host stores it verbatim and applies the change
+ * The stored unit is a two-part LEAF (see WardLeafIdentity / WardLeafContent), which the DEVICE
+ * builds and returns (WardLeafAck); the host stores it verbatim and applies the change
  * to its own store. The device still keeps nothing of its own.
  *
  * Both leaf parts are SEALED under device-only keys, with the AAD binding each part to
@@ -50,7 +50,7 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
  * @next Success
  * @next Failure
  */
-message WARDGetEntry {
+message WardGetEntry {
     optional string app_id     = 1;  // domain that owns the entry; namespaces the lookup
     optional bytes  identifier = 2;  // key within that domain (e.g. an address)
 }
@@ -60,12 +60,12 @@ message WARDGetEntry {
  *
  * The device pulls the current value first, so an ADD and an OVERWRITE are different
  * screens and the user sees the value being replaced. The device returns the leaf it
- * built (WARDLeafAck) and the host stores it.
+ * built (WardLeafAck) and the host stores it.
  * @start
- * @next WARDLeafAck
+ * @next WardLeafAck
  * @next Failure
  */
-message WARDSetEntry {
+message WardSetEntry {
     optional string app_id     = 1;  // domain that owns the entry
     optional bytes  identifier = 2;  // key within that domain
     optional bytes  value      = 3;  // the new value; empty is allowed, absent is not
@@ -74,7 +74,7 @@ message WARDSetEntry {
 /**
  * Request: delete the WARD entry the HOST holds for (app_id, identifier).
  *
- * Deliberately a SEPARATE message rather than a `delete` flag on WARDSetEntry. A flag
+ * Deliberately a SEPARATE message rather than a `delete` flag on WardSetEntry. A flag
  * is silently droppable -- a host that rebuilds its params field-by-field and forgets
  * to forward it turns every delete into a write of the wrong value, which is exactly
  * the bug this protocol hit before. A distinct message cannot degrade that way.
@@ -82,10 +82,10 @@ message WARDSetEntry {
  * The device pulls the entry first so it can show what is being removed, and refuses
  * if the host reports no such entry -- there is then nothing to confirm.
  * @start
- * @next WARDLeafAck
+ * @next WardLeafAck
  * @next Failure
  */
-message WARDDeleteEntry {
+message WardDeleteEntry {
     optional string app_id     = 1;  // domain that owns the entry
     optional bytes  identifier = 2;  // key within that domain
 }
@@ -93,7 +93,7 @@ message WARDDeleteEntry {
 /**
  * Response: device -> host, sent mid-workflow. Names the entry the device wants, as an
  * OPAQUE KEYED PATH. Emitted by all three requests above; the host must reply with
- * WARDEntryAck.
+ * WardEntryAck.
  *
  * The device derives entry_key itself and NEVER accepts one from the host, so the host
  * cannot steer a read or a write at a slot of its choosing:
@@ -105,7 +105,7 @@ message WARDDeleteEntry {
  * K_path is passphrase-dependent, so every hidden wallet has its own key space and the
  * same identifier maps to different paths under different passphrases.
  */
-message WARDEntryRequest {
+message WardEntryRequest {
     reserved 1, 2;                  // were app_id, identifier -- now folded into entry_key
     optional bytes entry_key = 3;   // 32B keyed path; the host serves by this alone
 }
@@ -116,11 +116,11 @@ message WARDEntryRequest {
  * and `encoding` selects which submessage is meaningful. (Same pattern as
  * PaymentRequestMemo in messages-common.proto.)
  *
- *   LeafIdentity  the keyed-path preimage: identifier + app_id + device_id
- *   LeafContent   C_leaf + value
+ *   WardLeafIdentity  the keyed-path preimage: identifier + app_id + device_id
+ *   WardLeafContent   C_leaf + value
  *
  * `key_type` is ALWAYS CLEAR -- it selects both of the keys that seal the parts, so it
- * cannot itself be sealed -- and lives on LeafIdentity so it is not repeated per part.
+ * cannot itself be sealed -- and lives on WardLeafIdentity so it is not repeated per part.
  *
  *   part(p) = encoding(1B)||len8(nonce)||nonce||len8(tag)||tag||len32(body)||body
  *
@@ -133,38 +133,38 @@ message WARDEntryRequest {
  *
  * An EMPTY part (empty body) means DELETED. Note this differs from an entry whose value
  * merely happens to be empty, which is a PRESENT part whose body carries a zero-length
- * value -- see WARDEntryAck. Conflating the two would make empty-valued entries
+ * value -- see WardEntryAck. Conflating the two would make empty-valued entries
  * indistinguishable from deleted ones, and so impossible to represent or to delete.
  */
-message EncryptedLeaf {
+message WardEncryptedLeaf {
     optional bytes nonce = 1;  // 12B AEAD nonce
     optional bytes tag   = 2;  // 16B Poly1305 tag
     optional bytes ct    = 3;  // AEAD ciphertext (empty = delete)
 }
-message PlaintextLeaf {
+message WardPlaintextLeaf {
     optional bytes content = 1;  // C_leaf(4B)||len32(value)||value (empty = delete)
 }
-message LeafContent {
+message WardLeafContent {
     optional uint32 encoding         = 1;  // 0 = encrypted (default), 1 = plaintext
-    optional EncryptedLeaf encrypted = 2;  // set when encoding = 0
-    optional PlaintextLeaf plaintext = 3;  // set when encoding = 1
+    optional WardEncryptedLeaf encrypted = 2;  // set when encoding = 0
+    optional WardPlaintextLeaf plaintext = 3;  // set when encoding = 1
 }
 
-message PlainIdentity {
+message WardPlainIdentity {
     optional bytes  identifier = 1;  // the otherwise-hidden identifier, in the clear
     optional string app_id     = 2;  // domain that owns the entry
     optional uint32 device_id  = 3;  // scope device slot; 0 = global
 }
-message EncryptedIdentity {
+message WardEncryptedIdentity {
     optional bytes nonce = 1;  // 12B AEAD nonce
     optional bytes tag   = 2;  // 16B Poly1305 tag
     optional bytes ct    = 3;  // AEAD over len16(identifier)||identifier||len8(app_id)||app_id||device_id(1B)
 }
-message LeafIdentity {
+message WardLeafIdentity {
     optional uint32 encoding             = 1;  // 0 = encrypted (default), 1 = plaintext
     optional string key_type             = 2;  // ALWAYS CLEAR -- selects both leaf keys
-    optional EncryptedIdentity encrypted = 3;  // set when encoding = 0
-    optional PlainIdentity     plain     = 4;  // set when encoding = 1
+    optional WardEncryptedIdentity encrypted = 3;  // set when encoding = 0
+    optional WardPlainIdentity     plain     = 4;  // set when encoding = 1
 }
 
 /**
@@ -177,10 +177,10 @@ message LeafIdentity {
  *
  * UNAUTHENTICATED: nothing here binds the leaf to the device or proves it is current.
  */
-message WARDEntryAck {
+message WardEntryAck {
     reserved 1;                            // was a bare `value`; the unit is a leaf now
-    optional LeafIdentity identity = 2;    // absent together with content = no such entry
-    optional LeafContent  content  = 3;
+    optional WardLeafIdentity identity = 2;    // absent together with content = no such entry
+    optional WardLeafContent  content  = 3;
 
     // Proof that this answer matches the tree the device already trusts. Elements are
     // 36 bytes each -- u16be(split_bit) || u16be(skiplen) || sibling(32B) -- in
@@ -225,7 +225,7 @@ message WARDEntryAck {
 
 
 /**
- * Response: device -> host, ending a WARDSetEntry or WARDDeleteEntry.
+ * Response: device -> host, ending a WardSetEntry or WardDeleteEntry.
  *
  * Carries the leaf the DEVICE built, because the host cannot build one itself once the
  * parts are sealed -- it has none of the keys. The host stores this verbatim under
@@ -234,10 +234,10 @@ message WARDEntryAck {
  * The host has no other way to learn entry_key, so this is also how a newly created
  * entry acquires its key.
  */
-message WARDLeafAck {
+message WardLeafAck {
     optional bytes        entry_key = 1;  // 32B keyed path this leaf belongs at
-    optional LeafIdentity identity  = 2;
-    optional LeafContent  content   = 3;  // empty part = the entry was deleted
+    optional WardLeafIdentity identity  = 2;
+    optional WardLeafContent  content   = 3;  // empty part = the entry was deleted
 
     // The state this write produced. The DEVICE is the counter authority -- it derived
     // the new root and stamped the next counter on it -- and the host must publish this
@@ -263,7 +263,7 @@ message WARDLeafAck {
  *
  * Absent roots mean the empty tree.
  */
-message WARDChainLink {
+message WardChainLink {
     optional uint32 from_counter = 1;
     optional bytes  from_root    = 2;
     optional uint32 to_counter   = 3;
@@ -275,7 +275,7 @@ message WARDChainLink {
  * Request: adopt the attested head by proving it DESCENDS from the head this device
  * already holds, rather than by being handed a root and told to trust it.
  *
- * Runs after WARDIngestAttestation, in place of WARDReconcile. The device folds the links
+ * Runs after WardIngestAttestation, in place of WardReconcile. The device folds the links
  * from its own head forward, checking at each step that the counter and root are
  * contiguous, that the counter advances by exactly one, and that the step was authorised.
  * The chain must terminate at the attested counter, and its final root must reproduce the
@@ -290,18 +290,18 @@ message WARDChainLink {
  * Descent is not currency: the WM attestation supplies that, and the two are joined by
  * requiring the chain to end exactly where the attestation says.
  * @start
- * @next WARDVerifyChainAck
+ * @next WardVerifyChainAck
  * @next Failure
  */
-message WARDVerifyChain {
-    repeated WARDChainLink links = 1;  // ordered, starting at the device's current head
+message WardVerifyChain {
+    repeated WardChainLink links = 1;  // ordered, starting at the device's current head
 }
 
 /**
  * Response: the head the device adopted.
  * @end
  */
-message WARDVerifyChainAck {
+message WardVerifyChainAck {
     optional uint32 counter  = 1;
     optional bytes  new_root = 2;  // absent if the adopted tree is empty
 }
@@ -309,9 +309,9 @@ message WARDVerifyChainAck {
 /**
  * The SYNC ROUND: how a device learns which tree is current.
  *
- *   WARDSync              device mints a nonce for this round
- *   WARDIngestAttestation host delivers the WM's signed (counter, mac); device checks it
- *   WARDReconcile         host supplies the root; device binds it to the attested mac
+ *   WardSync              device mints a nonce for this round
+ *   WardIngestAttestation host delivers the WM's signed (counter, mac); device checks it
+ *   WardReconcile         host supplies the root; device binds it to the attested mac
  *                         and adopts it
  *
  * Three messages rather than one because the nonce must be minted BEFORE the host talks
@@ -319,24 +319,24 @@ message WARDVerifyChainAck {
  * one. The WM must sign a value it could not have known in advance.
  *
  * The WM is not trusted with contents. It signs a `mac` it cannot compute (see
- * WARDIngestAttestation), so a malicious WM can only replay a state this wallet genuinely
+ * WardIngestAttestation), so a malicious WM can only replay a state this wallet genuinely
  * reached, never invent one; the counter floor bounds which replays are accepted.
  */
 
 /**
  * Request: begin a sync round.
  * @start
- * @next WARDSyncAck
+ * @next WardSyncAck
  * @next Failure
  */
-message WARDSync {
+message WardSync {
 }
 
 /**
  * Response: the nonce this round is bound to, and the handle the WM knows the wallet by.
  * @end
  */
-message WARDSyncAck {
+message WardSyncAck {
     optional bytes nonce   = 1;  // 32B, minted now; the WM attestation must echo it
     optional bytes ward_id = 2;  // 32B opaque wallet handle; the host forwards it to the WM
 }
@@ -363,10 +363,10 @@ message WARDSyncAck {
  * `mac` is HMAC(K_mac, ...) over the root; K_mac never leaves the device, so the WM signs
  * this without being able to produce it.
  * @start
- * @next WARDIngestAttestationAck
+ * @next WardIngestAttestationAck
  * @next Failure
  */
-message WARDIngestAttestation {
+message WardIngestAttestation {
     optional uint32 counter      = 1;  // the counter the WM claims is current
     optional bytes  mac          = 2;  // 32B mac over the root at that counter
     optional bytes  wm_signature = 3;  // 64B Ed25519 over the preimage above
@@ -377,7 +377,7 @@ message WARDIngestAttestation {
  * Response: the accepted counter.
  * @end
  */
-message WARDIngestAttestationAck {
+message WardIngestAttestationAck {
     optional uint32 counter = 1;
 }
 
@@ -391,10 +391,10 @@ message WARDIngestAttestationAck {
  * An absent root means the empty tree, which has its own mac at each counter rather than
  * being unbound -- otherwise a WM could attest "empty" for any counter it liked.
  * @start
- * @next WARDReconcileAck
+ * @next WardReconcileAck
  * @next Failure
  */
-message WARDReconcile {
+message WardReconcile {
     optional bytes root = 1;  // 32B, or absent for the empty tree
 }
 
@@ -402,7 +402,7 @@ message WARDReconcile {
  * Response: the state the device adopted.
  * @end
  */
-message WARDReconcileAck {
+message WardReconcileAck {
     optional uint32 counter  = 1;
     optional bytes  new_root = 2;  // absent if the adopted tree is empty
 }
@@ -428,10 +428,10 @@ message WARDReconcileAck {
  * The counter still moves FORWARD. The head points backward but the counter increments,
  * so no counter is ever reused and a stale authorisation cannot replay after a rollback.
  * @start
- * @next WARDRollbackAck
+ * @next WardRollbackAck
  * @next Failure
  */
-message WARDRollback {
+message WardRollback {
     optional bytes to_root     = 1;  // the predecessor; absent means the empty tree
     optional bytes auth_commit = 2;  // authorises (counter-1, to_root) -> (counter, head)
 }
@@ -440,7 +440,7 @@ message WARDRollback {
  * Response: the demoted head, and the authorisation for the demotion itself.
  * @end
  */
-message WARDRollbackAck {
+message WardRollbackAck {
     optional uint32 counter     = 1;  // the OLD counter plus one -- never reused
     optional bytes  new_root    = 2;  // absent if the wallet is now empty
     optional bytes  auth_commit = 3;  // a REVERT link, for the host to record
@@ -466,10 +466,10 @@ message WARDRollbackAck {
  * through it can replay old state wholesale -- so the confirmation names both counters and
  * the age of what is being reverted to, and holds.
  * @start
- * @next WARDRecoverCounterAck
+ * @next WardRecoverCounterAck
  * @next Failure
  */
-message WARDRecoverCounter {
+message WardRecoverCounter {
     optional uint32 counter      = 1;
     optional bytes  mac          = 2;
     optional bytes  wm_signature = 3;
@@ -480,6 +480,6 @@ message WARDRecoverCounter {
  * Response: the round is now attested at the lower counter; reconcile follows as usual.
  * @end
  */
-message WARDRecoverCounterAck {
+message WardRecoverCounterAck {
     optional uint32 counter = 1;
 }
