@@ -405,13 +405,13 @@ class TestWardSealedLeaf(unittest.TestCase):
     def test_an_empty_part_survives_a_sealed_build(self):
         """A delete's empty part is plaintext-encoded by construction, so the codec must
         accept it even in a sealed build -- otherwise a build rejects its own delete."""
-        from trezor.messages import LeafContent, PlaintextLeaf
+        from trezor.messages import WardLeafContent, WardPlaintextLeaf
 
-        wire = LeafContent(encoding=ENC_PLAINTEXT, plaintext=PlaintextLeaf(content=b""))
+        wire = WardLeafContent(encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=b""))
         self.assertTrue(is_delete(L.read_leaf_content(wire)))
 
         # a NON-empty plaintext part, by contrast, must be refused
-        wire = LeafContent(encoding=ENC_PLAINTEXT, plaintext=PlaintextLeaf(content=b"x"))
+        wire = WardLeafContent(encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=b"x"))
         with self.assertRaises(DataError):
             L.read_leaf_content(wire)
 

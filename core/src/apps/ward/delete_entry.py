@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WARDDeleteEntry, WARDLeafAck
+    from trezor.messages import WardDeleteEntry, WardLeafAck
 
 
-async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
-    """WARDDeleteEntry handler: confirm removing a host-held entry.
+async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
+    """WardDeleteEntry handler: confirm removing a host-held entry.
 
     The device pulls the entry first so the screen can name what is being removed --
     confirming a deletion by key alone tells the user nothing about what they are
@@ -39,7 +39,7 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
     whole tree). Closing the un-applied case needs the host to be able to ASK for the
     device's head, which no message currently offers.
     """
-    from trezor.messages import WARDLeafAck
+    from trezor.messages import WardLeafAck
     from trezor.ui.layouts import confirm_properties
 
     from .attest import root_mac
@@ -72,7 +72,7 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
         # delete did land. The mac grants nothing new -- any write hands one out, and the
         # counter floor bounds what a replayed one can do.
         counter = await get_counter()
-        return WARDLeafAck(
+        return WardLeafAck(
             entry_key=entry_key,
             identity=make_leaf_identity(key_type, EMPTY_PART),
             content=make_leaf_content(EMPTY_PART),
@@ -108,7 +108,7 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
     )
     await set_root(new_root, counter)
 
-    return WARDLeafAck(
+    return WardLeafAck(
         entry_key=entry_key,
         identity=make_leaf_identity(key_type, EMPTY_PART),
         content=make_leaf_content(EMPTY_PART),

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WARDRecoverCounter, WARDRecoverCounterAck
+    from trezor.messages import WardRecoverCounter, WardRecoverCounterAck
 
 
 def _age(seconds: int) -> str:
@@ -20,7 +20,7 @@ def _age(seconds: int) -> str:
     return "about %d days" % (seconds // 86400)
 
 
-async def recover(msg: WARDRecoverCounter) -> WARDRecoverCounterAck:
+async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
     """Accept an attestation that goes backwards, with the user's explicit consent.
 
     NAMED FOR ITS MODULE, not for what it does: `find_registered_handler` derives the
@@ -46,7 +46,7 @@ async def recover(msg: WARDRecoverCounter) -> WARDRecoverCounterAck:
     the strongest social-engineering target in the protocol, so the prompt names both
     counters, says how far back the state is, and holds -- and says plainly what is lost.
     """
-    from trezor.messages import WARDRecoverCounterAck
+    from trezor.messages import WardRecoverCounterAck
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
@@ -102,4 +102,4 @@ async def recover(msg: WARDRecoverCounter) -> WARDRecoverCounterAck:
     )
 
     sync_round.set_attested(counter, mac, timestamp)
-    return WARDRecoverCounterAck(counter=counter)
+    return WardRecoverCounterAck(counter=counter)

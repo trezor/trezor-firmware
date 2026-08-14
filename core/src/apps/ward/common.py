@@ -86,7 +86,7 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     identifier and app_id, having derived the path from them, so it is carried only
     because the leaf hash commits to it.
     """
-    from trezor.messages import WARDEntryAck, WARDEntryRequest
+    from trezor.messages import WardEntryAck, WardEntryRequest
     from trezor.wire import context
 
     from .keys import derive_k_data
@@ -100,8 +100,8 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     # Mirrors apps/webauthn/list_resident_credentials.py, which uses the same primitive
     # to ask the host for data mid-workflow.
     ack = await context.call(
-        WARDEntryRequest(entry_key=entry_key),
-        expected_type=WARDEntryAck,
+        WardEntryRequest(entry_key=entry_key),
+        expected_type=WardEntryAck,
     )
 
     val_part = read_leaf_content(ack.content)

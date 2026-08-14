@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WARDLeafAck, WARDSetEntry
+    from trezor.messages import WardLeafAck, WardSetEntry
 
 
-async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
-    """WARDSetEntry handler: confirm creating or replacing a host-held entry.
+async def set_entry(msg: WardSetEntry) -> WardLeafAck:
+    """WardSetEntry handler: confirm creating or replacing a host-held entry.
 
     The device pulls the CURRENT value before showing anything, which is what makes an
     add and an overwrite different screens: silently replacing a value the user cannot
@@ -18,7 +18,7 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
     are sealed -- so the host is never given a leaf-shaped thing it is expected to
     assemble itself.
     """
-    from trezor.messages import WARDLeafAck
+    from trezor.messages import WardLeafAck
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
@@ -95,7 +95,7 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
     )
     await set_root(new_root, counter)
 
-    return WARDLeafAck(
+    return WardLeafAck(
         entry_key=entry_key,
         identity=make_leaf_identity(key_type, id_part),
         content=make_leaf_content(val_part),

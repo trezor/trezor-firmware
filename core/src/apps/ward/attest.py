@@ -27,7 +27,7 @@ clock and needs none: this is a stored-value comparison, the same cost as the co
 
 It ships WITH its recovery path, never before. A backward jump past EPSILON locks the
 wallet out, and monotonicity that protects against replay becomes a denial of service
-against the owner; WARDRecoverCounter is the way back. Shipping the check alone would have
+against the owner; WardRecoverCounter is the way back. Shipping the check alone would have
 been shipping a brick with no key.
 """
 

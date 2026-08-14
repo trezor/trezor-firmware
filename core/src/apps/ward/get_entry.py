@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import Success, WARDGetEntry
+    from trezor.messages import Success, WardGetEntry
 
 
-async def get_entry(msg: WARDGetEntry) -> Success:
-    """WARDGetEntry handler: PULL a plaintext entry from the host and show it.
+async def get_entry(msg: WardGetEntry) -> Success:
+    """WardGetEntry handler: PULL a plaintext entry from the host and show it.
 
     The device holds no entries, so it asks the host for this one and renders what it
     gets. See `common.pull_entry`; the value is UNAUTHENTICATED in this phase, hence
