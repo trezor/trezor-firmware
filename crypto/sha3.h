@@ -21,6 +21,7 @@
 #define __SHA3_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "options.h"
 
 #ifdef __cplusplus
@@ -58,6 +59,8 @@ typedef struct SHA3_CTX
 	/* size of a message block processed at once */
 	unsigned block_size;
 } SHA3_CTX;
+
+bool keccak_Init(SHA3_CTX *ctx, unsigned bits);
 
 /* methods for calculating the hash function */
 
