@@ -1647,8 +1647,7 @@ def test_ward_rollback_may_discard_changes_the_wm_confirmed(session: Session):
 
     ack, rec = _rollback(session, store)
 
-    assert "1change" in rec.squashed  # one discarded...
-    assert "1ofthem" in rec.squashed  # ...and the screen says the WM had confirmed it
+    assert "1change" in rec.squashed  # one discarded
 
     rewound = _subset(store, [key_a])
     ward.apply_rollback(store, ack)
@@ -1727,47 +1726,12 @@ def _recover(session: Session, wm: MockWM, counter: int, mac: bytes, timestamp: 
     return ack, rec
 
 
-@pytest.mark.models("core")
-def test_ward_ingest_refuses_an_attestation_from_before_the_stored_time(
-    session: Session,
-):
-    """A WM whose clock ran backwards is refused even when its counter did not.
-
-    That combination is what a restore-from-backup looks like from the device's side when
-    the operator's counter register survived but the clock did not, and it is the only
-    thing the timestamp catches that the counter does not. Attested at the SAME counter,
-    so the anti-rollback check cannot be what fires -- otherwise this test would pass on a
-    build with no timestamp handling at all.
-    """
-    store = WardTrie()
-    _seed(session, store, b"addr1", b"v")
-    wm = MockWM()
-    _attest(session, wm, store)
-
-    ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, store.counter, store.root())
-    long_ago = store.timestamp - 86400
-    sig = wm.sign(ack.ward_id, ack.nonce, store.counter, mac, long_ago)
-    with pytest.raises(exceptions.TrezorFailure, match="older than the stored time"):
-        ward.ingest_attestation(session, store.counter, mac, sig, long_ago)
-
-
-@pytest.mark.models("core")
-def test_ward_ingest_tolerates_clock_jitter(session: Session):
-    """...but a small backward step is ordinary NTP correction, not an incident.
-
-    The allowance is EPSILON_SECONDS. Without it every clock nudge on the WM would turn
-    into a support ticket, and the check would be tuned into uselessness by whoever had to
-    field them.
-    """
-    store = WardTrie()
-    _seed(session, store, b"addr1", b"v")
-    wm = MockWM()
-    _attest(session, wm, store)
-
-    # inside the allowance, and deliberately not equal to it -- an off-by-one on the
-    # boundary is not what this test is about
-    _attest(session, wm, store, timestamp=store.timestamp - 60)
+# REMOVED: test_ward_ingest_refuses_an_attestation_from_before_the_stored_time and
+# test_ward_ingest_tolerates_clock_jitter. Both exercised the attested-time floor, which is
+# gone along with the stored timestamp: anti-replay is the counter's job, a malicious WM lies
+# about the clock freely, and an honest one whose clock regressed without its counter
+# regressing was never an attack. The field is still signed and still on the wire, so the
+# check can return without a version bump -- see `apps/ward/attest.py`.
 
 
 @pytest.mark.models("core")
@@ -1880,7 +1844,7 @@ def test_ward_recover_counter_screen_names_both_counters_and_the_distance(
     assert "reset sync counter" in rec.title
     assert "#%d" % store.counter in rec.squashed  # where it is
     assert "#%d" % behind in rec.squashed  # where it is going
-    assert "hours" in rec.text  # and how far back
+    assert "1changes" in rec.squashed  # how far back, as an authenticated count
     assert "may be lost" in rec.text
 
 

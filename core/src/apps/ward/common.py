@@ -138,10 +138,11 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     # Check the answer against the root the device trusts, BEFORE opening anything. A host
     # that says "no such entry" has to prove it, or it could hide any entry it dislikes
     # simply by denying it exists.
-    from .root import get_root
+    from .root import get_counter, get_root
 
     _verify_against_root(
         await get_root(),
+        await get_counter(),
         entry_key,
         leaf_key_type,
         id_part,
@@ -190,6 +191,7 @@ async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
 
 def _verify_against_root(
     root: bytes | None,
+    counter: int,
     entry_key: bytes,
     key_type: str,
     id_part,
@@ -219,6 +221,15 @@ def _verify_against_root(
     from .trie import verify_membership, verify_nonmembership
 
     if root is None:
+        # No root and nothing ever written: the wallet is genuinely empty, so an absence
+        # claim is trivially true and there is nothing to check it against.
+        #
+        # No root but a NON-ZERO counter is a different thing entirely -- the device has
+        # written before and simply cannot verify right now -- and it must FAIL rather than
+        # wave the answer through. "Cannot verify" reading as "verified" is the failure
+        # direction that hides, and it is the one this subsystem has had to close twice.
+        if counter > 0:
+            raise DataError("no trusted root; sync before reading")
         return
 
     if root == EMPTY_ROOT:

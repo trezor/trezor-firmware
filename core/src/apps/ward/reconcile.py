@@ -26,7 +26,7 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     ctx = sync_round.get()
     if ctx is None or ctx[0] != sync_round._ATTESTED:
         raise DataError("no attested sync round to reconcile")
-    _state, _nonce, counter, mac, timestamp = ctx
+    _state, _nonce, counter, mac = ctx
 
     root = msg.root or None
     if root is not None and len(root) != 32:
@@ -64,7 +64,7 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
         if current is not None and current != root_or_empty(root):
             raise DataError("attested counter matches but the root differs")
 
-    await set_root(root, counter, timestamp, attested=True)
+    await set_root(root, counter)
     sync_round.clear()
 
     return WardReconcileAck(counter=counter, new_root=root)

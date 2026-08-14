@@ -15,17 +15,17 @@ async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
     from trezor.wire import DataError
 
     from . import round as sync_round
-    from .attest import EPSILON_SECONDS, verify_attestation
+    from .attest import verify_attestation
     from .common import require_initialized
     from .keys import derive_ward_id
-    from .root import get_counter, get_timestamp
+    from .root import get_counter
 
     require_initialized()
 
     ctx = sync_round.get()
     if ctx is None:
         raise DataError("no sync round in progress")
-    _state, nonce, _c, _m, _t = ctx
+    _state, nonce, _c, _m = ctx
 
     counter = msg.counter
     mac = msg.mac
@@ -46,12 +46,11 @@ async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
     if counter < await get_counter():
         raise DataError("attested counter is older than the stored counter")
 
-    # ...and time must not run backwards either, beyond an allowance for clock jitter.
-    # This catches an operator restored from a backup, which regresses the clock and the
-    # counter together, and forces a forking WM to keep time monotone on every branch. It
-    # does not constrain a hostile WM, which simply lies about the time.
-    if timestamp < await get_timestamp() - EPSILON_SECONDS:
-        raise DataError("attested time is older than the stored time")
-
-    sync_round.set_attested(counter, mac, timestamp)
+    # NO TIME CHECK. The attestation still carries a timestamp and it is still covered by the
+    # signature, but nothing compares it: anti-replay is the counter's job, a malicious WM
+    # simply lies about the clock, and an honest one whose clock regressed without its counter
+    # regressing was never an attack. Storing a time to compare against bought nothing, so the
+    # device stops storing one -- see `storage.ward`. The field stays on the wire because
+    # removing it from the preimage would be a version bump for no gain today.
+    sync_round.set_attested(counter, mac)
     return WardIngestAttestationAck(counter=counter)

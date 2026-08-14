@@ -6,7 +6,7 @@ module a workflow imported once that workflow ends. It lives in the session cach
 is also the right lifetime: an unfinished round should not outlive the connection that
 started it.
 
-Layout: state(1B) || nonce(32B) || counter(4B BE) || mac(32B) || timestamp(8B BE).
+Layout: state(1B) || nonce(32B) || counter(4B BE) || mac(32B).
 """
 
 from micropython import const
@@ -26,12 +26,12 @@ def begin(nonce: bytes) -> None:
     from trezor.wire import context
 
     context.cache_set(
-        APP_WARD_SYNC, bytes([_OPEN]) + nonce + bytes(4) + bytes(_MAC_LEN) + bytes(8)
+        APP_WARD_SYNC, bytes([_OPEN]) + nonce + bytes(4) + bytes(_MAC_LEN)
     )
 
 
-def get() -> "tuple[int, bytes, int, bytes, int] | None":
-    """(state, nonce, counter, mac, timestamp), or None if no round is open."""
+def get() -> "tuple[int, bytes, int, bytes] | None":
+    """(state, nonce, counter, mac), or None if no round is open."""
     from storage.cache_common import APP_WARD_SYNC
     from trezor.wire import context
 
@@ -42,25 +42,20 @@ def get() -> "tuple[int, bytes, int, bytes, int] | None":
     off = 1 + _NONCE_LEN
     counter = int.from_bytes(raw[off : off + 4], "big")
     mac = raw[off + 4 : off + 4 + _MAC_LEN]
-    ts_off = off + 4 + _MAC_LEN
-    return raw[0], nonce, counter, mac, int.from_bytes(raw[ts_off : ts_off + 8], "big")
+    return raw[0], nonce, counter, mac
 
 
-def set_attested(counter: int, mac: bytes, timestamp: int) -> None:
+def set_attested(counter: int, mac: bytes) -> None:
     """Record what the WM attested, keeping the round's nonce."""
     from storage.cache_common import APP_WARD_SYNC
     from trezor.wire import context
 
     ctx = get()
     assert ctx is not None
-    _state, nonce, _c, _m, _t = ctx
+    _state, nonce, _c, _m = ctx
     context.cache_set(
         APP_WARD_SYNC,
-        bytes([_ATTESTED])
-        + nonce
-        + counter.to_bytes(4, "big")
-        + mac
-        + timestamp.to_bytes(8, "big"),
+        bytes([_ATTESTED]) + nonce + counter.to_bytes(4, "big") + mac,
     )
 
 
@@ -70,4 +65,4 @@ def clear() -> None:
     from storage.cache_common import APP_WARD_SYNC
     from trezor.wire import context
 
-    context.cache_set(APP_WARD_SYNC, bytes(77))
+    context.cache_set(APP_WARD_SYNC, bytes(69))
