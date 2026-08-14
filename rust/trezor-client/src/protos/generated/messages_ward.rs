@@ -4937,6 +4937,12 @@ pub struct WardRollback {
     pub to_root: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.auth_commit)
     pub auth_commit: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.from_counter)
+    pub from_counter: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.from_root)
+    pub from_root: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.to_counter)
+    pub to_counter: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardRollback.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -5025,8 +5031,82 @@ impl WardRollback {
         self.auth_commit.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional uint32 from_counter = 3;
+
+    pub fn from_counter(&self) -> u32 {
+        self.from_counter.unwrap_or(0)
+    }
+
+    pub fn clear_from_counter(&mut self) {
+        self.from_counter = ::std::option::Option::None;
+    }
+
+    pub fn has_from_counter(&self) -> bool {
+        self.from_counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_from_counter(&mut self, v: u32) {
+        self.from_counter = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes from_root = 4;
+
+    pub fn from_root(&self) -> &[u8] {
+        match self.from_root.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_from_root(&mut self) {
+        self.from_root = ::std::option::Option::None;
+    }
+
+    pub fn has_from_root(&self) -> bool {
+        self.from_root.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_from_root(&mut self, v: ::std::vec::Vec<u8>) {
+        self.from_root = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_from_root(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.from_root.is_none() {
+            self.from_root = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.from_root.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_from_root(&mut self) -> ::std::vec::Vec<u8> {
+        self.from_root.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional uint32 to_counter = 5;
+
+    pub fn to_counter(&self) -> u32 {
+        self.to_counter.unwrap_or(0)
+    }
+
+    pub fn clear_to_counter(&mut self) {
+        self.to_counter = ::std::option::Option::None;
+    }
+
+    pub fn has_to_counter(&self) -> bool {
+        self.to_counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_to_counter(&mut self, v: u32) {
+        self.to_counter = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(5);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "to_root",
@@ -5037,6 +5117,21 @@ impl WardRollback {
             "auth_commit",
             |m: &WardRollback| { &m.auth_commit },
             |m: &mut WardRollback| { &mut m.auth_commit },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "from_counter",
+            |m: &WardRollback| { &m.from_counter },
+            |m: &mut WardRollback| { &mut m.from_counter },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "from_root",
+            |m: &WardRollback| { &m.from_root },
+            |m: &mut WardRollback| { &mut m.from_root },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "to_counter",
+            |m: &WardRollback| { &m.to_counter },
+            |m: &mut WardRollback| { &mut m.to_counter },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardRollback>(
             "WardRollback",
@@ -5062,6 +5157,15 @@ impl ::protobuf::Message for WardRollback {
                 18 => {
                     self.auth_commit = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                24 => {
+                    self.from_counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                34 => {
+                    self.from_root = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                40 => {
+                    self.to_counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -5080,6 +5184,15 @@ impl ::protobuf::Message for WardRollback {
         if let Some(v) = self.auth_commit.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.from_counter {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        if let Some(v) = self.from_root.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
+        if let Some(v) = self.to_counter {
+            my_size += ::protobuf::rt::uint32_size(5, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -5091,6 +5204,15 @@ impl ::protobuf::Message for WardRollback {
         }
         if let Some(v) = self.auth_commit.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.from_counter {
+            os.write_uint32(3, v)?;
+        }
+        if let Some(v) = self.from_root.as_ref() {
+            os.write_bytes(4, v)?;
+        }
+        if let Some(v) = self.to_counter {
+            os.write_uint32(5, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -5111,6 +5233,9 @@ impl ::protobuf::Message for WardRollback {
     fn clear(&mut self) {
         self.to_root = ::std::option::Option::None;
         self.auth_commit = ::std::option::Option::None;
+        self.from_counter = ::std::option::Option::None;
+        self.from_root = ::std::option::Option::None;
+        self.to_counter = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -5118,6 +5243,9 @@ impl ::protobuf::Message for WardRollback {
         static instance: WardRollback = WardRollback {
             to_root: ::std::option::Option::None,
             auth_commit: ::std::option::Option::None,
+            from_counter: ::std::option::Option::None,
+            from_root: ::std::option::Option::None,
+            to_counter: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -5932,18 +6060,20 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     Ack\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\"#\n\rWardReconc\
     ile\x12\x12\n\x04root\x18\x01\x20\x01(\x0cR\x04root\"G\n\x10WardReconcil\
     eAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08ne\
-    w_root\x18\x02\x20\x01(\x0cR\x07newRoot\"H\n\x0cWardRollback\x12\x17\n\
-    \x07to_root\x18\x01\x20\x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\
-    \x02\x20\x01(\x0cR\nauthCommit\"\x82\x01\n\x0fWardRollbackAck\x12\x18\n\
-    \x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\
-    \x20\x01(\x0cR\x07newRoot\x12\x1f\n\x0bauth_commit\x18\x03\x20\x01(\x0cR\
-    \nauthCommit\x12\x19\n\x08auth_sig\x18\x04\x20\x01(\x0cR\x07authSig\"\
-    \x81\x01\n\x12WardRecoverCounter\x12\x18\n\x07counter\x18\x01\x20\x01(\r\
-    R\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_\
-    signature\x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\
-    \x04\x20\x01(\x04R\ttimestamp\"1\n\x15WardRecoverCounterAck\x12\x18\n\
-    \x07counter\x18\x01\x20\x01(\rR\x07counterB8\n#com.satoshilabs.trezor.li\
-    b.protobufB\x11TrezorMessageWard\
+    w_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\xa7\x01\n\x0cWardRollback\x12\
+    \x17\n\x07to_root\x18\x01\x20\x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_comm\
+    it\x18\x02\x20\x01(\x0cR\nauthCommit\x12!\n\x0cfrom_counter\x18\x03\x20\
+    \x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\x04\x20\x01(\x0cR\x08fr\
+    omRoot\x12\x1d\n\nto_counter\x18\x05\x20\x01(\rR\ttoCounter\"\x82\x01\n\
+    \x0fWardRollbackAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\
+    \x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1f\n\x0baut\
+    h_commit\x18\x03\x20\x01(\x0cR\nauthCommit\x12\x19\n\x08auth_sig\x18\x04\
+    \x20\x01(\x0cR\x07authSig\"\x81\x01\n\x12WardRecoverCounter\x12\x18\n\
+    \x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\
+    \x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwmSign\
+    ature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimestamp\"1\n\x15Ward\
+    RecoverCounterAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counterB8\
+    \n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessageWard\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
