@@ -611,6 +611,42 @@ pub enum MessageType {
     MessageType_TronVoteWitnessContract = 2210,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronWithdrawBalance)
     MessageType_TronWithdrawBalance = 2213,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardGetEntry)
+    MessageType_WardGetEntry = 2300,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardEntryRequest)
+    MessageType_WardEntryRequest = 2301,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardEntryAck)
+    MessageType_WardEntryAck = 2302,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardSetEntry)
+    MessageType_WardSetEntry = 2303,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardDeleteEntry)
+    MessageType_WardDeleteEntry = 2304,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardLeafAck)
+    MessageType_WardLeafAck = 2305,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardSync)
+    MessageType_WardSync = 2307,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardSyncAck)
+    MessageType_WardSyncAck = 2308,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardIngestAttestation)
+    MessageType_WardIngestAttestation = 2309,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardIngestAttestationAck)
+    MessageType_WardIngestAttestationAck = 2310,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardReconcile)
+    MessageType_WardReconcile = 2311,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardReconcileAck)
+    MessageType_WardReconcileAck = 2312,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardVerifyChain)
+    MessageType_WardVerifyChain = 2313,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardVerifyChainAck)
+    MessageType_WardVerifyChainAck = 2314,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardRollback)
+    MessageType_WardRollback = 2315,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardRollbackAck)
+    MessageType_WardRollbackAck = 2316,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardRecoverCounter)
+    MessageType_WardRecoverCounter = 2317,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardRecoverCounterAck)
+    MessageType_WardRecoverCounterAck = 2318,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -926,6 +962,24 @@ impl ::protobuf::Enum for MessageType {
             2209 => ::std::option::Option::Some(MessageType::MessageType_TronWithdrawUnfreeze),
             2210 => ::std::option::Option::Some(MessageType::MessageType_TronVoteWitnessContract),
             2213 => ::std::option::Option::Some(MessageType::MessageType_TronWithdrawBalance),
+            2300 => ::std::option::Option::Some(MessageType::MessageType_WardGetEntry),
+            2301 => ::std::option::Option::Some(MessageType::MessageType_WardEntryRequest),
+            2302 => ::std::option::Option::Some(MessageType::MessageType_WardEntryAck),
+            2303 => ::std::option::Option::Some(MessageType::MessageType_WardSetEntry),
+            2304 => ::std::option::Option::Some(MessageType::MessageType_WardDeleteEntry),
+            2305 => ::std::option::Option::Some(MessageType::MessageType_WardLeafAck),
+            2307 => ::std::option::Option::Some(MessageType::MessageType_WardSync),
+            2308 => ::std::option::Option::Some(MessageType::MessageType_WardSyncAck),
+            2309 => ::std::option::Option::Some(MessageType::MessageType_WardIngestAttestation),
+            2310 => ::std::option::Option::Some(MessageType::MessageType_WardIngestAttestationAck),
+            2311 => ::std::option::Option::Some(MessageType::MessageType_WardReconcile),
+            2312 => ::std::option::Option::Some(MessageType::MessageType_WardReconcileAck),
+            2313 => ::std::option::Option::Some(MessageType::MessageType_WardVerifyChain),
+            2314 => ::std::option::Option::Some(MessageType::MessageType_WardVerifyChainAck),
+            2315 => ::std::option::Option::Some(MessageType::MessageType_WardRollback),
+            2316 => ::std::option::Option::Some(MessageType::MessageType_WardRollbackAck),
+            2317 => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounter),
+            2318 => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounterAck),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1230,6 +1284,24 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_TronWithdrawUnfreeze" => ::std::option::Option::Some(MessageType::MessageType_TronWithdrawUnfreeze),
             "MessageType_TronVoteWitnessContract" => ::std::option::Option::Some(MessageType::MessageType_TronVoteWitnessContract),
             "MessageType_TronWithdrawBalance" => ::std::option::Option::Some(MessageType::MessageType_TronWithdrawBalance),
+            "MessageType_WardGetEntry" => ::std::option::Option::Some(MessageType::MessageType_WardGetEntry),
+            "MessageType_WardEntryRequest" => ::std::option::Option::Some(MessageType::MessageType_WardEntryRequest),
+            "MessageType_WardEntryAck" => ::std::option::Option::Some(MessageType::MessageType_WardEntryAck),
+            "MessageType_WardSetEntry" => ::std::option::Option::Some(MessageType::MessageType_WardSetEntry),
+            "MessageType_WardDeleteEntry" => ::std::option::Option::Some(MessageType::MessageType_WardDeleteEntry),
+            "MessageType_WardLeafAck" => ::std::option::Option::Some(MessageType::MessageType_WardLeafAck),
+            "MessageType_WardSync" => ::std::option::Option::Some(MessageType::MessageType_WardSync),
+            "MessageType_WardSyncAck" => ::std::option::Option::Some(MessageType::MessageType_WardSyncAck),
+            "MessageType_WardIngestAttestation" => ::std::option::Option::Some(MessageType::MessageType_WardIngestAttestation),
+            "MessageType_WardIngestAttestationAck" => ::std::option::Option::Some(MessageType::MessageType_WardIngestAttestationAck),
+            "MessageType_WardReconcile" => ::std::option::Option::Some(MessageType::MessageType_WardReconcile),
+            "MessageType_WardReconcileAck" => ::std::option::Option::Some(MessageType::MessageType_WardReconcileAck),
+            "MessageType_WardVerifyChain" => ::std::option::Option::Some(MessageType::MessageType_WardVerifyChain),
+            "MessageType_WardVerifyChainAck" => ::std::option::Option::Some(MessageType::MessageType_WardVerifyChainAck),
+            "MessageType_WardRollback" => ::std::option::Option::Some(MessageType::MessageType_WardRollback),
+            "MessageType_WardRollbackAck" => ::std::option::Option::Some(MessageType::MessageType_WardRollbackAck),
+            "MessageType_WardRecoverCounter" => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounter),
+            "MessageType_WardRecoverCounterAck" => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounterAck),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1533,6 +1605,24 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_TronWithdrawUnfreeze,
         MessageType::MessageType_TronVoteWitnessContract,
         MessageType::MessageType_TronWithdrawBalance,
+        MessageType::MessageType_WardGetEntry,
+        MessageType::MessageType_WardEntryRequest,
+        MessageType::MessageType_WardEntryAck,
+        MessageType::MessageType_WardSetEntry,
+        MessageType::MessageType_WardDeleteEntry,
+        MessageType::MessageType_WardLeafAck,
+        MessageType::MessageType_WardSync,
+        MessageType::MessageType_WardSyncAck,
+        MessageType::MessageType_WardIngestAttestation,
+        MessageType::MessageType_WardIngestAttestationAck,
+        MessageType::MessageType_WardReconcile,
+        MessageType::MessageType_WardReconcileAck,
+        MessageType::MessageType_WardVerifyChain,
+        MessageType::MessageType_WardVerifyChainAck,
+        MessageType::MessageType_WardRollback,
+        MessageType::MessageType_WardRollbackAck,
+        MessageType::MessageType_WardRecoverCounter,
+        MessageType::MessageType_WardRecoverCounterAck,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
@@ -1842,12 +1932,30 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_TronWithdrawUnfreeze => 289,
             MessageType::MessageType_TronVoteWitnessContract => 290,
             MessageType::MessageType_TronWithdrawBalance => 291,
-            MessageType::MessageType_BenchmarkListNames => 292,
-            MessageType::MessageType_BenchmarkNames => 293,
-            MessageType::MessageType_BenchmarkRun => 294,
-            MessageType::MessageType_BenchmarkResult => 295,
-            MessageType::MessageType_TelemetryGet => 296,
-            MessageType::MessageType_Telemetry => 297,
+            MessageType::MessageType_WardGetEntry => 292,
+            MessageType::MessageType_WardEntryRequest => 293,
+            MessageType::MessageType_WardEntryAck => 294,
+            MessageType::MessageType_WardSetEntry => 295,
+            MessageType::MessageType_WardDeleteEntry => 296,
+            MessageType::MessageType_WardLeafAck => 297,
+            MessageType::MessageType_WardSync => 298,
+            MessageType::MessageType_WardSyncAck => 299,
+            MessageType::MessageType_WardIngestAttestation => 300,
+            MessageType::MessageType_WardIngestAttestationAck => 301,
+            MessageType::MessageType_WardReconcile => 302,
+            MessageType::MessageType_WardReconcileAck => 303,
+            MessageType::MessageType_WardVerifyChain => 304,
+            MessageType::MessageType_WardVerifyChainAck => 305,
+            MessageType::MessageType_WardRollback => 306,
+            MessageType::MessageType_WardRollbackAck => 307,
+            MessageType::MessageType_WardRecoverCounter => 308,
+            MessageType::MessageType_WardRecoverCounterAck => 309,
+            MessageType::MessageType_BenchmarkListNames => 310,
+            MessageType::MessageType_BenchmarkNames => 311,
+            MessageType::MessageType_BenchmarkRun => 312,
+            MessageType::MessageType_BenchmarkResult => 313,
+            MessageType::MessageType_TelemetryGet => 314,
+            MessageType::MessageType_Telemetry => 315,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1866,7 +1974,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xcfi\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xa7o\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2202,23 +2310,42 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \xb5\x18\x01\x12+\n\x20MessageType_TronWithdrawUnfreeze\x10\xa1\x11\x1a\
     \x04\x90\xb5\x18\x01\x12.\n#MessageType_TronVoteWitnessContract\x10\xa2\
     \x11\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_TronWithdrawBalance\
-    \x10\xa5\x11\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkList\
-    Names\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNa\
-    mes\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\
-    \x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\
-    \x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\x10\
-    \xcc\x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_T\
-    elemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\
-    \xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\
-    \x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\
-    \x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\x06\
-    \x08\xe3\x01\x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\x01\
-    \x10\xe5\x01\"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\x01\
-    \"\x06\x08\xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\x08\
-    \xec\x01\x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\x10\
-    \xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\
-    \x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satos\
-    hilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
+    \x10\xa5\x11\x1a\x04\x90\xb5\x18\x01\x12#\n\x18MessageType_WardGetEntry\
+    \x10\xfc\x11\x1a\x04\x90\xb5\x18\x01\x12'\n\x1cMessageType_WardEntryRequ\
+    est\x10\xfd\x11\x1a\x04\x98\xb5\x18\x01\x12#\n\x18MessageType_WardEntryA\
+    ck\x10\xfe\x11\x1a\x04\x90\xb5\x18\x01\x12#\n\x18MessageType_WardSetEntr\
+    y\x10\xff\x11\x1a\x04\x90\xb5\x18\x01\x12&\n\x1bMessageType_WardDeleteEn\
+    try\x10\x80\x12\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_WardLeafA\
+    ck\x10\x81\x12\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x14MessageType_WardSync\
+    \x10\x83\x12\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_WardSyncAck\
+    \x10\x84\x12\x1a\x04\x98\xb5\x18\x01\x12,\n!MessageType_WardIngestAttest\
+    ation\x10\x85\x12\x1a\x04\x90\xb5\x18\x01\x12/\n$MessageType_WardIngestA\
+    ttestationAck\x10\x86\x12\x1a\x04\x98\xb5\x18\x01\x12$\n\x19MessageType_\
+    WardReconcile\x10\x87\x12\x1a\x04\x90\xb5\x18\x01\x12'\n\x1cMessageType_\
+    WardReconcileAck\x10\x88\x12\x1a\x04\x98\xb5\x18\x01\x12&\n\x1bMessageTy\
+    pe_WardVerifyChain\x10\x89\x12\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessage\
+    Type_WardVerifyChainAck\x10\x8a\x12\x1a\x04\x98\xb5\x18\x01\x12#\n\x18Me\
+    ssageType_WardRollback\x10\x8b\x12\x1a\x04\x90\xb5\x18\x01\x12&\n\x1bMes\
+    sageType_WardRollbackAck\x10\x8c\x12\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eM\
+    essageType_WardRecoverCounter\x10\x8d\x12\x1a\x04\x90\xb5\x18\x01\x12,\n\
+    !MessageType_WardRecoverCounterAck\x10\x8e\x12\x1a\x04\x98\xb5\x18\x01\
+    \x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\
+    \x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\
+    \x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\
+    \x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\
+    \x12'\n\x18MessageType_TelemetryGet\x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\
+    \x90\xb5\x18\x01\x12$\n\x15MessageType_Telemetry\x10\xcd\x08\x1a\x08\x80\
+    \xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\
+    \x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x05\
+    \x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\
+    \xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\x06\x08\xe3\x01\x10\xe3\x01\"\
+    \x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\x01\x10\xe5\x01\"\x06\x08\xe7\
+    \x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\x01\"\x06\x08\xe9\x01\x10\xe9\
+    \x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\x08\xec\x01\x10\xec\x01\"\x06\
+    \x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\
+    \x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\x07\
+    \"\x06\x08\xfa\x07\x10\xcb\x08\"\x06\x08\x82\x12\x10\x82\x12B8\n#com.sat\
+    oshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

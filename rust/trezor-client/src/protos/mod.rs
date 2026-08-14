@@ -42,6 +42,7 @@ mod generated {
         "stellar" => messages_stellar
         "tezos" => messages_tezos
         "tron" => messages_tron
+        "ward" => messages_ward
         "webauthn" => messages_webauthn
     }
 }
