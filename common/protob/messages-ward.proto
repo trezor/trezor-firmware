@@ -228,6 +228,14 @@ message WARDLeafAck {
     optional bytes        entry_key = 1;  // 32B keyed path this leaf belongs at
     optional LeafIdentity identity  = 2;
     optional LeafContent  content   = 3;  // empty part = the entry was deleted
+
+    // The state this write produced. The DEVICE is the counter authority -- it derived
+    // the new root and stamped the next counter on it -- and the host must publish this
+    // pair to the WM so the WM's view matches. Until it does, the device is ahead of the
+    // WM and its next sync will be REFUSED as a rollback: fail-closed, and recoverable by
+    // publishing, which is the right way round compared with silently losing the write.
+    optional uint32 counter = 4;
+    optional bytes  mac     = 5;  // mac over (new root, counter); the WM signs it blind
 }
 
 /**

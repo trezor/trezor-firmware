@@ -156,6 +156,16 @@ def _read(session: Session, store: WardTrie, call) -> tuple:
     return res, rec
 
 
+def _publish(wm: MockWM, res) -> None:
+    """Hand the WM what the write produced.
+
+    A real host does exactly this: the device is the counter authority and the WM records
+    what it is told. Skipping it leaves the device ahead of the WM, which is a refused
+    sync rather than a lost write.
+    """
+    wm.publish(_WARD_ID, res.counter, res.mac)
+
+
 def _seed(session: Session, store: WardTrie, identifier: bytes, value: bytes) -> bytes:
     """Create an entry the only way a host can: ask the device to build the leaf.
 
@@ -310,7 +320,11 @@ def test_ward_sealed_leaf_really_contains_the_preimage(session: Session):
     assert unpack_identity(identity) == (b"addr1", _APP.encode(), 0)
 
     content = open_content(_K_DATA, key, "address", leaf.content.encrypted)
-    assert unpack_content(content) == (0, b"Petr_label")  # C_leaf unused for now
+    c_leaf, value = unpack_content(content)
+    assert value == b"Petr_label"
+    # the leaf is stamped with the counter it was written at, so a later per-leaf
+    # staleness check has something to compare; nothing reads it yet
+    assert c_leaf >= 1
 
 
 @pytest.mark.models("core")
@@ -790,22 +804,28 @@ def _subset(store: WardTrie, keys) -> WardTrie:
     out = WardTrie()
     for k in keys:
         out.set(k, store.blobs[k])
+    out.counter = store.counter
     return out
 
 
-def _attest(session: Session, wm: MockWM, store: WardTrie, counter: int) -> None:
+def _attest(
+    session: Session, wm: MockWM, store: WardTrie, counter: int | None = None
+) -> None:
     """Run a full sync round: nonce, WM attestation, root.
 
     The WM is told the mac rather than computing it -- it holds no key and could not. That
     asymmetry is the whole point, so the helper preserves it rather than reaching into the
     store on the WM's behalf.
     """
+    if counter is None:
+        counter = store.counter
     ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
     wm.publish(ack.ward_id, counter, mac)
     _c, _m, sig = wm.attest(ack.ward_id, ack.nonce)
     ward.ingest_attestation(session, counter, mac, sig)
     ward.reconcile(session, store.root())
+    store.counter = counter  # device and store now agree
 
 
 @pytest.mark.models("core")
@@ -825,11 +845,13 @@ def test_ward_adopts_an_attested_tree_it_never_built(session: Session):
     _seed(session, store, b"addr1", b"local_only")
     foreign_key = _seed(session, store, b"elsewhere", b"from_another_device")
 
-    # a tree the device never built: the same leaves, minus one
+    # a tree the device never built: the same leaves, minus one. It has to be attested
+    # ABOVE the counter the device's own writes reached -- an older one is a rollback and
+    # is refused, which is the whole point of the floor.
     foreign = _subset(store, [foreign_key])
 
     wm = MockWM()
-    _attest(session, wm, foreign, counter=1)
+    _attest(session, wm, foreign, counter=store.counter + 1)
 
     _res, rec = _read(
         session, foreign, lambda p: ward.get_entry(session, _APP, b"elsewhere", p)
@@ -853,12 +875,13 @@ def test_ward_refuses_an_attestation_from_the_wrong_signer(session: Session):
     _seed(session, store, b"addr1", b"v")
 
     impostor = MockWM(seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
+    counter = store.counter
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, 1, store.root())
-    sig = impostor.sign(ack.ward_id, ack.nonce, 1, mac)
+    mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
+    sig = impostor.sign(ack.ward_id, ack.nonce, counter, mac)
 
     with pytest.raises(exceptions.TrezorFailure, match="attestation verification failed"):
-        ward.ingest_attestation(session, 1, mac, sig)
+        ward.ingest_attestation(session, counter, mac, sig)
 
 
 @pytest.mark.models("core")
@@ -874,13 +897,14 @@ def test_ward_refuses_an_attestation_bound_to_another_nonce(session: Session):
     wm = MockWM()
 
     # an anchor signed against an earlier round's nonce
+    counter = store.counter
     stale_ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, 1, store.root())
-    stale_sig = wm.sign(stale_ack.ward_id, stale_ack.nonce, 1, mac)
+    mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
+    stale_sig = wm.sign(stale_ack.ward_id, stale_ack.nonce, counter, mac)
 
     ward.sync(session)  # a new round, a new nonce
     with pytest.raises(exceptions.TrezorFailure, match="attestation verification failed"):
-        ward.ingest_attestation(session, 1, mac, stale_sig)
+        ward.ingest_attestation(session, counter, mac, stale_sig)
 
 
 @pytest.mark.models("core")
@@ -897,11 +921,12 @@ def test_ward_refuses_a_root_that_does_not_match_the_attested_mac(session: Sessi
     other = _subset(store, [other_key])  # a different root; reconcile fails on the mac
 
     wm = MockWM()
+    counter = store.counter
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, 5, store.root())
-    wm.publish(ack.ward_id, 5, mac)
+    mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
+    wm.publish(ack.ward_id, counter, mac)
     _c, _m, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(session, 5, mac, sig)
+    ward.ingest_attestation(session, counter, mac, sig)
 
     with pytest.raises(exceptions.TrezorFailure, match="does not match the attested mac"):
         ward.reconcile(session, other.root())
@@ -915,13 +940,14 @@ def test_ward_refuses_an_attested_counter_below_the_floor(session: Session):
     _seed(session, store, b"addr1", b"v")
     wm = MockWM()
 
-    _attest(session, wm, store, counter=7)
+    _attest(session, wm, store, counter=store.counter + 5)  # raise the floor
 
+    behind = store.counter - 1
     ack = ward.sync(session)
-    old_mac = root_mac(_K_MAC, _WARD_ID, 3, store.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, 3, old_mac)
+    old_mac = root_mac(_K_MAC, _WARD_ID, behind, store.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, behind, old_mac)
     with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
-        ward.ingest_attestation(session, 3, old_mac, sig)
+        ward.ingest_attestation(session, behind, old_mac, sig)
 
 
 @pytest.mark.models("core")
@@ -935,16 +961,18 @@ def test_ward_refuses_a_different_state_at_the_same_counter(session: Session):
     """
     store = WardTrie()
     _seed(session, store, b"addr1", b"v")
-    wm = MockWM()
-    _attest(session, wm, store, counter=4)
-
     other_key = _seed(session, store, b"addr9", b"other")
+    wm = MockWM()
+    _attest(session, wm, store)  # the device's real state, at its own counter
+
+    # a DIFFERENT state offered at that same counter
     divergent = _subset(store, [other_key])
+    counter = store.counter
 
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, 4, divergent.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, 4, mac)
-    ward.ingest_attestation(session, 4, mac, sig)
+    mac = root_mac(_K_MAC, _WARD_ID, counter, divergent.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, counter, mac)
+    ward.ingest_attestation(session, counter, mac, sig)
     with pytest.raises(exceptions.TrezorFailure, match="counter matches but the root differs"):
         ward.reconcile(session, divergent.root())
 
@@ -966,7 +994,100 @@ def test_ward_an_attestation_cannot_be_adopted_twice(session: Session):
     store = WardTrie()
     _seed(session, store, b"addr1", b"v")
     wm = MockWM()
-    _attest(session, wm, store, counter=2)
+    _attest(session, wm, store)
 
     with pytest.raises(exceptions.TrezorFailure, match="no attested sync round"):
         ward.reconcile(session, store.root())
+
+
+# --- writes advance the counter -----------------------------------------------------
+
+
+@pytest.mark.models("core")
+def test_ward_a_write_advances_the_counter(session: Session):
+    """Each confirmed write moves the counter on and hands back the pair to publish.
+
+    Before this the counter only moved on a sync, so local writes were invisible to the
+    WM and a later attestation at a higher counter silently replaced them.
+    """
+    store = WardTrie()
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"one", p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+    first = res.counter
+    assert first is not None and first >= 1
+    assert res.mac is not None
+
+    res2, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr2", b"two", p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res2)
+    assert res2.counter == first + 1
+
+
+@pytest.mark.models("core")
+def test_ward_a_published_write_syncs_cleanly(session: Session):
+    """Publish what the write produced and the next sync is a no-op, not a conflict.
+
+    Same counter, same root -- so the device accepts, and nothing is discarded. This is
+    the round trip that closes the window the previous step had to document.
+    """
+    store = WardTrie()
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"kept", p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+
+    wm = MockWM()
+    _publish(wm, res)
+
+    ack = ward.sync(session)
+    counter, mac, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, counter, mac, sig)
+    ward.reconcile(session, store.root())
+    store.counter = counter  # device and store now agree
+
+    # the entry survived the round trip
+    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    assert "kept" in rec.text
+
+
+@pytest.mark.models("core")
+def test_ward_an_unpublished_write_blocks_sync_rather_than_losing_it(session: Session):
+    """A device ahead of the WM refuses to sync. It does NOT quietly adopt the older tree.
+
+    This is the failure mode the counter advance buys: the write is still there, the sync
+    fails closed, and publishing the pair the device handed back resolves it.
+    """
+    store = WardTrie()
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"unpublished", p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+
+    wm = MockWM()
+    stale = _subset(store, [])  # the WM's view: the tree as it was before the write
+    ack = ward.sync(session)
+    behind = res.counter - 1
+    mac = root_mac(_K_MAC, _WARD_ID, behind, stale.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, behind, mac)
+
+    with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
+        ward.ingest_attestation(session, behind, mac, sig)
+
+    # ...and the write is still readable afterwards
+    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    assert "unpublished" in rec.text

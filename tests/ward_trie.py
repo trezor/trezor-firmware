@@ -106,6 +106,10 @@ class WardTrie:
         self._leaves: dict[bytes, bytes] = {}  # entry_key -> leaf hash
         self._commits: dict[bytes, bytes] = {}  # entry_key -> commit
         self.blobs: dict[bytes, object] = {}  # entry_key -> the Leaf the device built
+        # The counter the device reported for this state. A root alone does not identify
+        # a moment -- roots repeat whenever contents repeat -- so a host store that keeps
+        # one without the other cannot say which state it holds.
+        self.counter = 0
 
     # --- store ---
 

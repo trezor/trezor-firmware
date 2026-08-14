@@ -102,6 +102,10 @@ class WardResult(NamedTuple):
     response: protobuf.MessageType
     entry_key: bytes
     leaf: Optional[Leaf] = None
+    # What a write produced. The caller must publish these to the WM, or the device is
+    # ahead of it and its next sync is refused as a rollback.
+    counter: Optional[int] = None
+    mac: Optional[bytes] = None
 
 
 def _call_answering_pulls(
@@ -144,7 +148,11 @@ def _call_answering_pulls(
 
     if isinstance(res, messages.WARDLeafAck):
         return WardResult(
-            res, res.entry_key or entry_key, Leaf(res.identity, res.content)
+            res,
+            res.entry_key or entry_key,
+            Leaf(res.identity, res.content),
+            res.counter,
+            res.mac,
         )
 
     if not isinstance(res, messages.Success):
@@ -303,3 +311,8 @@ def apply(store, result: WardResult) -> None:
         store.remove(result.entry_key)
     else:
         store.set(result.entry_key, result.leaf)
+
+    # Keep the counter with the root. The device is the counter authority, and a store
+    # that tracked only the root could not tell the WM which state it is publishing.
+    if result.counter is not None:
+        store.counter = result.counter

@@ -22,10 +22,18 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
+    from .attest import root_mac
     from .common import WARNING_UNVERIFIED, display_bytes, pull_leaf, require_key
-    from .keys import ENTRY_TYPE_ADDRESS, derive_k_data, derive_k_ident, entry_key_for
+    from .keys import (
+        ENTRY_TYPE_ADDRESS,
+        derive_k_data,
+        derive_k_ident,
+        derive_k_mac,
+        derive_ward_id,
+        entry_key_for,
+    )
     from .leaf import encode_content, encode_identity, make_leaf_content, make_leaf_identity
-    from .root import get_root, set_root
+    from .root import get_counter, get_root, set_root
     from .trie import compute_new_root
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
@@ -56,10 +64,18 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
 
     # Sealed only after confirmation, so a rejected write produces no leaf at all -- and
     # burns no nonce.
+    #
+    # The counter advances here, and the leaf is stamped with the counter it was written
+    # at (C_leaf). Nothing reads that stamp yet; it exists so a later per-leaf staleness
+    # check has something to compare, and writing it now costs nothing while leaving it
+    # zero would mean rewriting every leaf to add it.
+    counter = await get_counter() + 1
     id_part = encode_identity(
         await derive_k_ident(key_type), entry_key, key_type, identifier, app_id
     )
-    val_part = encode_content(await derive_k_data(key_type), entry_key, key_type, value)
+    val_part = encode_content(
+        await derive_k_data(key_type), entry_key, key_type, value, c_leaf=counter
+    )
 
     # The device DERIVES its own new root rather than being told one. That is what makes
     # the root worth anything: it is a value the device computed from a state the host had
@@ -74,10 +90,12 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
         witness_entry_key=witness_entry_key,
         witness_commit=witness_commit,
     )
-    await set_root(new_root)
+    await set_root(new_root, counter)
 
     return WARDLeafAck(
         entry_key=entry_key,
         identity=make_leaf_identity(key_type, id_part),
         content=make_leaf_content(val_part),
+        counter=counter,
+        mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
     )
