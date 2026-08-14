@@ -8141,6 +8141,8 @@ if TYPE_CHECKING:
         entry_key: "AnyBytes | None"
         identity: "LeafIdentity | None"
         content: "LeafContent | None"
+        counter: "int | None"
+        mac: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8148,6 +8150,8 @@ if TYPE_CHECKING:
             entry_key: "AnyBytes | None" = None,
             identity: "LeafIdentity | None" = None,
             content: "LeafContent | None" = None,
+            counter: "int | None" = None,
+            mac: "AnyBytes | None" = None,
         ) -> None:
             pass
 
