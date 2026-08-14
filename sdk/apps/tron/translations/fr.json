@@ -1,0 +1,151 @@
+{
+  "header": {
+    "language": "fr-FR",
+    "version": "2.11.2"
+  },
+  "translations": {
+    "address__check_with_source": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Vérifiez l'adresse avec la source."
+    },
+    "address__confirmed": {
+      "Bolt": "Adresse de réception confirmée",
+      "Caesar": "Adresse de réception confirmée",
+      "Delizia": "Adresse de réception confirmée.",
+      "Eckhart": "Adresse de réception confirmée."
+    },
+    "address__warning_not_yours": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ce n'est PAS votre adresse"
+    },
+    "address_details__account_info": {
+      "Bolt": "Infos compte",
+      "Caesar": "Infos du compte",
+      "Delizia": "Infos du compte",
+      "Eckhart": "Infos du compte"
+    },
+    "address_details__derivation_path": "Chemin de dérivation",
+    "buttons__cancel": "Annuler",
+    "buttons__confirm": {
+      "Bolt": "Conf.",
+      "Caesar": "Confirmer",
+      "Delizia": "Confirmer",
+      "Eckhart": "Confirmer"
+    },
+    "buttons__continue": "Continuer",
+    "buttons__hold_to_confirm": {
+      "Bolt": "Maintenir",
+      "Caesar": "Maintenez pr conf.",
+      "Delizia": "Maintenez pour confirmer",
+      "Eckhart": "Maintenez pour confirmer"
+    },
+    "ethereum__approve_amount_allowance": {
+      "Bolt": "Montant autorisé",
+      "Caesar": "Allocation du montant",
+      "Delizia": "Allocation du montant",
+      "Eckhart": "Allocation du montant"
+    },
+    "ethereum__approve_intro": {
+      "Bolt": "Vérifiez les informations pour autoriser l'utilisation des jetons.",
+      "Caesar": "Vérifiez les détails pour autoriser la dépense des jetons.",
+      "Delizia": "Vérifiez les détails pour autoriser la dépense des jetons.",
+      "Eckhart": "Vérifiez les détails pour autoriser la dépense des jetons."
+    },
+    "ethereum__approve_intro_revoke": {
+      "Bolt": "Vérifiez les informations pour révoquer l'autorisation des jetons.",
+      "Caesar": "Vérifiez les détails pour autoriser la dépense des jetons.",
+      "Delizia": "Vérifiez les détails pour autoriser la dépense des jetons.",
+      "Eckhart": "Vérifiez les détails pour autoriser la dépense des jetons."
+    },
+    "ethereum__approve_intro_title": {
+      "Bolt": "Autorisation de jetons",
+      "Caesar": "Approbation du jeton",
+      "Delizia": "Approbation du jeton",
+      "Eckhart": "Approbation du jeton"
+    },
+    "ethereum__approve_intro_title_revoke": "Révocation de jetons",
+    "ethereum__approve_revoke_from": "Révoquer de",
+    "ethereum__approve_to": "Approuver à",
+    "ethereum__no_message_field": "Aucun champ de message",
+    "ethereum__sign_eip712": "Signer ces données structurées EIP-712 ?",
+    "ethereum__staking_claim": "Réclamer",
+    "ethereum__staking_stake": "Mettre en staking",
+    "ethereum__staking_unstake": {
+      "Bolt": "Unstake",
+      "Caesar": "Retirer du staking",
+      "Delizia": "Retirer du staking",
+      "Eckhart": "Retirer du staking"
+    },
+    "ethereum__title_confirm_message": "Confirmer le message",
+    "ethereum__title_confirm_message_hash": "Confirmer le hash du message",
+    "ethereum__title_confirm_typed_data": {
+      "Bolt": "Confirmer les données structurées",
+      "Caesar": "Confirmer les données structurées",
+      "Delizia": "Confirmer les données structurées",
+      "Eckhart": "Conf. données"
+    },
+    "ethereum__title_input_data": "Données",
+    "ethereum__title_token_contract": {
+      "Bolt": "Adresse de token",
+      "Caesar": "Adresse de contrat du jeton",
+      "Delizia": "Adresse de token",
+      "Eckhart": "Adresse de contrat du jeton"
+    },
+    "ethereum__token_contract": {
+      "Bolt": "Adresse de contrat du jeton",
+      "Caesar": "Contrat du jeton",
+      "Delizia": "Adresse de contrat du jeton",
+      "Eckhart": "Adresse de contrat du jeton"
+    },
+    "ethereum__unknown_contract_address": {
+      "Bolt": "Adresse de contrat inconnue",
+      "Caesar": "Adresse de contrat inconnue",
+      "Delizia": "Adresse de contrat inconnue.",
+      "Eckhart": "Adresse de contrat du jeton inconnue."
+    },
+    "instructions__continue_in_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Continuer dans l'app",
+      "Eckhart": "Continuer dans l'app"
+    },
+    "send__cancel_sign": "Annuler la signature",
+    "send__cancel_transaction": "Annuler la transaction",
+    "send__send_from": "Envoyer depuis",
+    "send__transaction_signed": {
+      "Bolt": "Transaction signée",
+      "Caesar": "Transaction signée",
+      "Delizia": "Transaction signée.",
+      "Eckhart": "Transaction signée."
+    },
+    "tron__claim_unfrozen_balance": "Réclamer les fonds disponibles ?",
+    "tron__claim_voting_rewards": "Réclamer les récompenses de vote ?",
+    "tron__owner_address": "Adresse du propriétaire",
+    "words__account": "Compte",
+    "words__address": "Adresse",
+    "words__amount": "Montant",
+    "words__cancel_and_exit": "Annuler et quitter",
+    "words__chain": "Chaîne",
+    "words__confirm_all": "Tout confirmer",
+    "words__fee_limit": "Limite de frais",
+    "words__important": "Important",
+    "words__know_what_your_doing": "Continuez uniquement si vous savez ce que vous faites !",
+    "words__note": "Remarque",
+    "words__recipient": "Destinataire",
+    "words__resource": "Ressource",
+    "words__review": "Vérifier",
+    "words__send": "Envoyer",
+    "words__show_next": "Afficher la suite",
+    "words__title_done": "Terminé",
+    "words__title_information": "Information",
+    "words__title_summary": "Résumé",
+    "words__token": "Jeton",
+    "words__unlimited": "Illimité(e)(s)",
+    "words__votes": "Votes ",
+    "words__voting": "Vote"
+  }
+}

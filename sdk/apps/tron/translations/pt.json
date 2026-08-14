@@ -1,0 +1,116 @@
+{
+  "header": {
+    "language": "pt-BR",
+    "version": "2.11.2"
+  },
+  "translations": {
+    "address__check_with_source": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Verifique o endereço com a origem."
+    },
+    "address__confirmed": {
+      "Bolt": "Endereço de destino confirmado",
+      "Caesar": "Endereço de destino confirmado",
+      "Delizia": "Endereço de destino confirmado.",
+      "Eckhart": "Endereço de destino confirmado."
+    },
+    "address__warning_not_yours": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Este NÃO é seu endereço"
+    },
+    "address_details__account_info": "Info. da conta",
+    "address_details__derivation_path": "Caminho de derivação",
+    "buttons__cancel": "Cancelar",
+    "buttons__confirm": "Confirmar",
+    "buttons__continue": "Continuar",
+    "buttons__hold_to_confirm": {
+      "Bolt": "Segure p/ conf.",
+      "Caesar": "Segure p/ conf.",
+      "Delizia": "Segure para confirmar",
+      "Eckhart": "Segure para confirmar"
+    },
+    "ethereum__approve_amount_allowance": "Quantia permitida",
+    "ethereum__approve_intro": "Revise os detalhes para aprovar gasto das tokens.",
+    "ethereum__approve_intro_revoke": "Revise os detalhes para revogar aprovação das tokens.",
+    "ethereum__approve_intro_title": "Aprovação de tokens",
+    "ethereum__approve_intro_title_revoke": "Revogação de tokens",
+    "ethereum__approve_revoke_from": "Revogar de",
+    "ethereum__approve_to": "Aprovar a",
+    "ethereum__no_message_field": "Sem campo de mensagem",
+    "ethereum__sign_eip712": "Confirmar assinatura de dados tipados EIP-712?",
+    "ethereum__staking_claim": "Resgatar",
+    "ethereum__staking_stake": "Fazer stake",
+    "ethereum__staking_unstake": "Tirar do stake",
+    "ethereum__title_confirm_message": "Confirmar mensagem",
+    "ethereum__title_confirm_message_hash": "Confirmar hash da mensagem",
+    "ethereum__title_confirm_typed_data": {
+      "Bolt": "Conf. dados tipados",
+      "Caesar": "Conf. dados tipados",
+      "Delizia": "Conf. dados tipados",
+      "Eckhart": "Conf. dados inseridos"
+    },
+    "ethereum__title_input_data": "Dados",
+    "ethereum__title_token_contract": {
+      "Bolt": "Contrato de token",
+      "Caesar": "Endereço do contrato de token",
+      "Delizia": "Contrato de token",
+      "Eckhart": "Endereço do contrato de token"
+    },
+    "ethereum__token_contract": {
+      "Bolt": "Endereço do contrato de token",
+      "Caesar": "Contrato de token",
+      "Delizia": "Endereço do contrato de token",
+      "Eckhart": "Endereço do contrato de token"
+    },
+    "ethereum__unknown_contract_address": {
+      "Bolt": "Endereço de contrato desconhecido",
+      "Caesar": "Endereço de contrato desconhecido",
+      "Delizia": "Endereço de contrato desconhecido.",
+      "Eckhart": "Endereço de contrato desconhecido."
+    },
+    "instructions__continue_in_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Continue no app",
+      "Eckhart": "Continue no app"
+    },
+    "send__cancel_sign": "Cancelar assinatura",
+    "send__cancel_transaction": "Cancelar transação",
+    "send__send_from": "Enviar de",
+    "send__transaction_signed": {
+      "Bolt": "Transação assinada",
+      "Caesar": "Transação assinada",
+      "Delizia": "Transação assinada.",
+      "Eckhart": "Transação assinada."
+    },
+    "tron__claim_unfrozen_balance": "Resgatar saldo descongelado?",
+    "tron__claim_voting_rewards": "Resgatar recompensas de votação?",
+    "tron__owner_address": "Endereço do proprietário",
+    "words__account": "Conta",
+    "words__address": "Endereço",
+    "words__amount": "Quantia",
+    "words__cancel_and_exit": "Cancelar e sair",
+    "words__chain": "Chain",
+    "words__confirm_all": "Confirmar tudo",
+    "words__fee_limit": "Limite de taxa",
+    "words__important": "Importante",
+    "words__know_what_your_doing": "Prossiga somente se souber o que está fazendo!",
+    "words__note": "Anotação",
+    "words__recipient": "Destinatário",
+    "words__resource": "Recurso",
+    "words__review": "Revisar",
+    "words__send": "Enviar",
+    "words__show_next": "Mostrar próx.",
+    "words__title_done": "Concluído",
+    "words__title_information": "Informações",
+    "words__title_summary": "Resumo",
+    "words__token": "Token",
+    "words__unlimited": "Ilimitado",
+    "words__votes": "Votos",
+    "words__voting": "Votação"
+  }
+}
