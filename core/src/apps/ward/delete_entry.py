@@ -19,15 +19,23 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
     identity part alive on delete, leaving a self-describing tombstone; we do not, since
     a tombstone that survives is a record of which entries once existed.
 
-    GAP(ward): FULL DELETE vs A SWEEPABLE LOG -- decision pending. Rebuilding the trie on the
-    host by sweeping prev_root -> genesis needs every historical change, deletions included,
-    so a delete has to be visible in whatever the sweep reads. Note the privacy this was
-    protecting is weaker than the paragraph below implies: a CRDT relay keeps the message
-    log regardless, so "no tombstone" hides past entries only from a party that sees current
-    state alone, never from the relay. What must NOT happen is a filtering rule creeping into
-    the trie -- "rows with an empty content part are not leaves" is a canonicalisation rule,
-    and canonicalisation disagreements are the one bug class that has bitten this subsystem
-    three times. Keeping live leaves and the transition log in separate places avoids that.
+    THE HOST'S DELETE IS EVOLU'S, NOT OURS. Rebuilding the trie on the host by sweeping to
+    genesis needs every historical change, deletions included -- and Evolu already keeps them.
+    `evolu_history` is an append-only (table, id, column, timestamp, value) log, written on
+    every message application, so a freshly synced replica reconstructs the whole history; and
+    Evolu has NO hard delete at all, since `isDeleted` is a system column and removing a row
+    means setting it. See docs/core/misc/ward-trie.md.
+
+    So there is nothing for WARD to decide here and nothing to add: the trie is built over
+    rows with isDeleted = false, which is the same filter every other Evolu consumer applies,
+    and the sweep reads the history that exists regardless. The leaf below, with both parts
+    empty, is the SIGNAL to set that flag -- not a second source of truth for tree membership.
+    Keying membership off "empty content part" as well would be two rules that can disagree,
+    and one of them would be WARD-specific.
+
+    The privacy of a full delete was never ours to trade: the store retains the history
+    whichever way we encode it, so "no tombstone" only ever hid past entries from a party
+    seeing current state alone. Reclaiming it would have to happen at the store layer.
 
     IDEMPOTENT ON A PROVED ABSENCE. Deleting a path that already holds nothing succeeds,
     changing nothing: same empty leaf, same counter, no authorised transition, and no

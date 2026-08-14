@@ -38,10 +38,15 @@ WARNING_UNVERIFIED: "StrPropertyType" = (
 # declines to distinguish. The host cannot check itself against the WM's head, because it
 # cannot verify a mac.
 #
-# So the DEVICE is the only completeness oracle in the system, and `WardReconcile` is the
-# only way to consult it: an accepted reconcile means the host's root matched the attested
-# mac, i.e. its replica was complete at that counter. That belongs in the host-side design
-# before `@trezor/ward` is written.
+# So the DEVICE is the completeness oracle, and `WardReconcile` is how it is consulted: an
+# accepted reconcile means the host's root matched the attested mac, i.e. its replica really
+# was complete at that counter.
+#
+# Replaying the store's own history (docs/core/misc/ward-trie.md) NARROWS this rather than
+# removing it: contiguous counters up to the attested one let the host notice it is MISSING
+# something. It still cannot tell whether the head it knows about is current, nor whether the
+# history is genuine -- it is the host's own record either way. Currency and authenticity stay
+# with the device.
 #
 # The cost is that ONE refusal below covers three different situations -- a replica that is
 # behind, a replica that is partial, and data that is permanently lost -- and the device
