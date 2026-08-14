@@ -339,17 +339,31 @@ def verify_chain(session: "Session", links) -> messages.WardVerifyChainAck:
     )
 
 
-def rollback(
-    session: "Session", to_root: Optional[bytes], auth_commit: bytes
-) -> messages.WardRollbackAck:
-    """Undo the device's most recent transition, one step.
+def rollback(session: "Session", link: tuple) -> messages.WardRollbackAck:
+    """Revert the device to an earlier state of this wallet, possibly several steps back.
 
-    `auth_commit` is the authorisation that CREATED the current head, which the caller
-    holds as the last entry of its transition log. The device checks it names its own
-    counter and root, so the demotion target cannot be chosen by the caller.
+    `link` is `(from_counter, from_root, to_counter, to_root, auth_commit)` -- the entry of
+    the caller's transition log that PRODUCED the target state, which is the same 5-tuple
+    `apply` records. The device verifies that authorisation, so the target cannot be
+    invented; it then demotes to `to_root` at `counter + 1`.
+
+    Note it is the link INTO the target, not the one out of it. Reverting several steps is
+    the normal case rather than the exception: a caller missing rows cannot present the
+    links for the range it is discarding -- those are exactly what it is missing -- so it
+    jumps to the last state whose link it does hold.
+
+    The earliest reachable target is counter 1: every target is authorised by the link that
+    produced it, and genesis has none.
     """
+    from_counter, from_root, to_counter, to_root, auth_commit = link
     return session.call(
-        messages.WardRollback(to_root=to_root, auth_commit=auth_commit),
+        messages.WardRollback(
+            to_root=to_root,
+            auth_commit=auth_commit,
+            from_counter=from_counter,
+            from_root=from_root,
+            to_counter=to_counter,
+        ),
         expect=messages.WardRollbackAck,
     )
 

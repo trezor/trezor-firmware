@@ -449,8 +449,19 @@ message WardReconcileAck {
  * @next Failure
  */
 message WardRollback {
-    optional bytes to_root     = 1;  // the predecessor; absent means the empty tree
-    optional bytes auth_commit = 2;  // authorises (counter-1, to_root) -> (counter, head)
+    // The link INTO the target state: the transition that produced it, with the COMMIT
+    // authorisation only a device of this wallet could have minted. The device demotes to
+    // to_root, which may be several steps back -- the missing links of the range being
+    // discarded are exactly what a host in this situation does not have, so it cannot walk
+    // back one step at a time and must jump to the last state whose link it does hold.
+    //
+    // to_counter is inside the MAC preimage, so the number of changes being discarded is
+    // authenticated rather than asserted, which is what lets the screen state it.
+    optional bytes  to_root      = 1;  // the target; absent means the empty tree
+    optional bytes  auth_commit  = 2;  // over (from_counter, from_root) -> (to_counter, to_root)
+    optional uint32 from_counter = 3;
+    optional bytes  from_root    = 4;  // absent means the empty tree
+    optional uint32 to_counter   = 5;
 }
 
 /**

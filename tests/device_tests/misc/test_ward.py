@@ -1475,10 +1475,24 @@ def test_ward_a_write_emits_its_own_authorisation(session: Session):
 # --- rollback: the escape from a stuck wallet ----------------------------------------
 
 
-def _rollback(session: Session, store: WardTrie):
-    """Undo the last transition, walking the confirmation screen."""
-    from_counter, from_root, _tc, _tr, ac = store.links[-1]
-    assert from_counter == store.counter - 1  # the link that made the current head
+def _link_into(store: WardTrie, to_counter: int):
+    """The transition log entry that PRODUCED the state at `to_counter`.
+
+    Note it is the link INTO the target, not the one out of it: the device authorises the
+    target by the transition that created it, which is what lets a caller jump back past
+    steps whose own links it never received.
+    """
+    for link in store.links:
+        if link[2] == to_counter:
+            return link
+    raise AssertionError("no link produces counter %d" % to_counter)
+
+
+def _rollback(session: Session, store: WardTrie, to_counter: int | None = None):
+    """Revert to `to_counter` (default one step back), walking the confirmation screen."""
+    if to_counter is None:
+        to_counter = store.counter - 1
+    link = _link_into(store, to_counter)
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
@@ -1487,7 +1501,7 @@ def _rollback(session: Session, store: WardTrie):
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
-        ack = ward.rollback(session, from_root, ac)
+        ack = ward.rollback(session, link)
     return ack, rec
 
 
@@ -1529,84 +1543,118 @@ def test_ward_rollback_refuses_a_target_the_host_invents(session: Session):
     store = WardTrie()
     _seed(session, store, b"a", b"one")
     _seed(session, store, b"b", b"two")
-    _from_counter, _from_root, _tc, _tr, ac = store.links[-1]
+    fc, fr, tc, _tr, ac = _link_into(store, store.counter - 1)
 
     invented = _subset(store, [])  # some other tree the host would prefer
     with pytest.raises(
-        exceptions.TrezorFailure, match="does not describe the current head"
+        exceptions.TrezorFailure, match="does not describe the target state"
     ):
-        ward.rollback(session, invented.root(), ac)
+        ward.rollback(session, (fc, fr, tc, invented.root(), ac))
 
 
 @pytest.mark.models("core")
-def test_ward_rollback_refuses_an_authorisation_for_an_older_step(session: Session):
-    """THE counter-binding attack, from the design's own worked example.
+def test_ward_rollback_count_cannot_be_understated(session: Session):
+    """The number on the screen is authenticated, which is what makes it worth showing.
 
-    Roots repeat whenever contents repeat. An old authorisation whose `to_root` equals
-    today's head would, if matched on the root alone, demote the wallet to a state from
-    arbitrarily long ago -- in one hop, with the one-step rule perfectly satisfied. Naming
-    the counter is what rejects it before the roots are even compared.
-    """
-    store = WardTrie()
-    k1 = _seed(session, store, b"a", b"one")
-    # take the wallet away and back again, so an EARLIER counter has today's root
-    _seed(session, store, b"b", b"two")
-    repeated_root = store.root()
-    old_link = store.links[-1]
+    Reverting several steps is now legal, so "this authorisation is for an older step" is no
+    longer the attack -- understating HOW MANY steps is. A host that wants a deep revert
+    approved would like the screen to read "1 change" rather than "3 changes", since the
+    count is the only thing separating an honest recovery from a rewind.
 
-    _write_and_apply = _seed(session, store, b"c", b"three")
-    res, _rec = _write(
-        session,
-        store,
-        lambda p: ward.delete_entry(session, _APP, b"c", p),
-        "ward_delete_entry",
-    )
-    ward.apply(store, res)
-    assert store.root() == repeated_root  # same contents, so the same root as before
-
-    # the old authorisation names that root, but at its own, older counter
-    _fc, from_root, _tc, to_root, ac = old_link
-    assert to_root == store.root()
-    with pytest.raises(
-        exceptions.TrezorFailure, match="does not describe the current head"
-    ):
-        ward.rollback(session, from_root, ac)
-    assert k1 in store.blobs
-
-
-@pytest.mark.models("core")
-def test_ward_rollback_refuses_to_discard_a_confirmed_change(session: Session):
-    """A change the WM has confirmed can no longer be rolled back at all.
-
-    Rollback exists for one situation: a write that never reached the WM, so every sync is
-    refused and nothing can move. That justification cannot apply to a change the WM has
-    demonstrably seen -- so demoting below the attested counter has no legitimate use, and it
-    is now refused mechanically rather than argued about on a screen.
-
-    What that closes: until now a host could undo the most recent write even after the WM had
-    confirmed it, with only a hold-to-confirm in the way. The complementary case -- an
-    UNCONFIRMED write still being undoable, which is the whole point of the feature -- is
-    covered by the test below.
-
-    Needs the attested counter to be stored SEPARATELY from the head counter, since writes
-    advance the head too. Fails before any screen, hence no input flow.
+    It cannot: to_counter sits inside the MAC preimage (`cas.transition_preimage`), so a link
+    presented with a different counter than the one it was minted for fails verification
+    before any screen is drawn. That is why the count can be stated as fact.
     """
     store = WardTrie()
     _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+    _seed(session, store, b"c", b"three")
+    _seed(session, store, b"d", b"four")
+
+    _fc, from_root, _tc, to_root, ac = _link_into(store, 1)  # a revert here discards 3
+
+    # claim it is the immediately preceding step, so the screen would say "1 change"
+    with pytest.raises(
+        exceptions.TrezorFailure, match="does not describe the target state"
+    ):
+        ward.rollback(
+            session,
+            (store.counter - 2, from_root, store.counter - 1, to_root, ac),
+        )
+
+
+@pytest.mark.models("core")
+def test_ward_rollback_may_discard_changes_the_wm_confirmed(session: Session):
+    """Reverting a WM-confirmed change is allowed, and saying so is the point of the screen.
+
+    An earlier version refused this, on the reasoning that a change the WM has seen cannot be
+    one whose write failed to reach it. That reasoning missed the case rollback actually
+    exists for: the WM confirms, and the row still never reaches the relay, so a second host
+    cannot reconstruct the tree and only a revert makes the wallet usable there. Device and WM
+    agree throughout -- refusing broke exactly the legitimate case.
+
+    What replaces the refusal is information. The device knows which part of the discarded
+    span the WM had confirmed, because the attested counter is stored separately from the head
+    counter, and it says so: that is the part another device may already hold, and therefore
+    the destructive part.
+    """
+    store = WardTrie()
+    key_a = _seed(session, store, b"a", b"one")
     _seed(session, store, b"b", b"two")
 
     wm = MockWM()
     _attest(session, wm, store)  # the WM confirms the state INCLUDING "b"
 
-    from_counter, from_root, _tc, _tr, ac = store.links[-1]
-    assert from_counter == store.counter - 1  # the link that produced the current head
+    ack, rec = _rollback(session, store)
 
-    with pytest.raises(exceptions.TrezorFailure, match="already confirmed"):
-        ward.rollback(session, from_root, ac)
+    assert "1change" in rec.squashed  # one discarded...
+    assert "1ofthem" in rec.squashed  # ...and the screen says the WM had confirmed it
 
-    # nothing was discarded
-    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"b", p))
-    assert "two" in rec.squashed
+    rewound = _subset(store, [key_a])
+    ward.apply_rollback(store, ack)
+    rewound.counter = ack.counter
+    assert ack.new_root == rewound.root()
+    _res, rec = _read(
+        session, rewound, lambda p: ward.get_entry(session, _APP, b"b", p)
+    )
+    assert "entry not found" in rec.title
+
+
+@pytest.mark.models("core")
+def test_ward_rollback_reverts_several_steps_at_once(session: Session):
+    """The case the one-step design could not express at all.
+
+    A host missing rows cannot walk back a step at a time: undoing step N needs the link for
+    (N-1 -> N), and those links are exactly what it never received. Its only reachable move is
+    a single jump to the last state whose link it does hold. So multi-step is not a
+    convenience here -- without it the wallet stays unusable on that host.
+    """
+    store = WardTrie()
+    key_a = _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+    _seed(session, store, b"c", b"three")
+    _seed(session, store, b"d", b"four")
+    assert store.counter == 4
+
+    ack, rec = _rollback(session, store, to_counter=1)
+
+    assert "3changes" in rec.squashed
+    assert ack.counter == store.counter + 1  # forward, though the head moves back
+
+    rewound = _subset(store, [key_a])
+    ward.apply_rollback(store, ack)
+    rewound.counter = ack.counter
+    assert ack.new_root == rewound.root()
+
+    # the entry from the target state survives; everything after it is gone
+    _res, rec = _read(
+        session, rewound, lambda p: ward.get_entry(session, _APP, b"a", p)
+    )
+    assert "one" in rec.squashed
+    _res, rec = _read(
+        session, rewound, lambda p: ward.get_entry(session, _APP, b"d", p)
+    )
+    assert "entry not found" in rec.title
 
 
 @pytest.mark.models("core")
