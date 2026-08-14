@@ -25,6 +25,8 @@ pub fn publish_artifact(binary: &Path, app: &str, model: Model, emulator: bool) 
         )
     })?;
 
+    helpers::update_latest_symlink(&dir)?;
+
     Ok(())
 }
 
@@ -33,7 +35,23 @@ pub fn publish_artifact(binary: &Path, app: &str, model: Model, emulator: bool) 
 ///
 /// All published apps are passed to the tool at once: the proofs of a ring are only valid for
 /// the RootPacket built from the whole ring, so rebuilding a single app has to rebuild the set.
+///
+/// TODO: temporary, only works for the in-tree sdk/apps workspace of a
+/// trezor-firmware checkout -- it hardcodes that workspace's fixed depth
+/// below the repo root to locate trezorapp_tool.py. A standalone app repo
+/// (modular-xtask consumed as a path dependency from elsewhere) has no
+/// trezor-firmware checkout at a known position relative to it, so proof/
+/// RootPacket generation is skipped there (with a warning) instead of
+/// attempted incorrectly. This whole shell-out to trezorapp_tool.py is
+/// itself expected to be replaced by trezorctl functionality eventually.
 pub fn generate_app_proofs(model: Model, emulator: bool) -> Result<()> {
+    if !helpers::is_workspace()? {
+        println!(
+            "xtask: warning: not running in the sdk/apps workspace, skipping app proof/RootPacket generation"
+        );
+        return Ok(());
+    }
+
     let dir = helpers::artifacts_dir(model, emulator)?;
     let apps = published_apps(&dir)?;
     ensure!(
@@ -42,7 +60,13 @@ pub fn generate_app_proofs(model: Model, emulator: bool) -> Result<()> {
         dir.display()
     );
 
-    let repo_root = helpers::repo_root()?;
+    // Hardcoded: the sdk/apps workspace root is always two levels below the
+    // trezor-firmware repo root (<repo>/sdk/apps).
+    let repo_root = helpers::root_dir()?
+        .parent()
+        .and_then(Path::parent)
+        .context("Failed to resolve repo root from the sdk/apps workspace root")?
+        .to_path_buf();
 
     let mut cmd = Command::new("uv");
     cmd.arg("run")
