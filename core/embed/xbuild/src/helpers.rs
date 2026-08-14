@@ -236,8 +236,15 @@ pub fn diagnostics_color_flag(tool: &cc::Tool) -> Option<&'static str> {
 /// Decides whether compiler diagnostics should be colored.
 ///
 /// Explicit settings win, in the usual precedence: `NO_COLOR`, then
-/// `CLICOLOR_FORCE`, then Cargo's own `CARGO_TERM_COLOR`. Otherwise the
-/// destination is auto-detected.
+/// `CLICOLOR_FORCE`, then `CARGO_TERM_COLOR`.
+///
+/// `CARGO_TERM_COLOR` is normally the deciding vote, because `xtask` resolves
+/// `auto` on this build's behalf and passes the answer down (see
+/// `forward_color_choice`). Cargo itself does not: it captures a build script's
+/// stdout and stderr, so the fallback below sees a pipe no matter where the
+/// output ends up, and a bare `cargo build` therefore gets no color. That is the
+/// safe way to be wrong - unwanted escape codes in a log are worse than plain
+/// diagnostics in a terminal.
 ///
 /// The result is cached: sources compile in parallel and the answer cannot
 /// change during a build.

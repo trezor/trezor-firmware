@@ -1,4 +1,5 @@
-use std::process;
+use std::io::IsTerminal;
+use std::{env, io, process};
 
 use anyhow::{Result, bail};
 
@@ -98,6 +99,41 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
     })
 }
 
+/// Tells the build scripts whether their output is headed for a terminal.
+///
+/// A build script cannot work this out on its own: Cargo captures its stdout
+/// and stderr, so both always look like pipes, and Cargo does not pass its own
+/// color choice down. `xtask` is the only process in the chain still attached
+/// to the real terminal, so it resolves the question here and hands the answer
+/// over in `CARGO_TERM_COLOR`, which `xbuild` reads when deciding whether to
+/// ask the C compiler for colored diagnostics.
+///
+/// An explicit choice already present in the environment is left alone; it is
+/// inherited by the child anyway and outranks auto-detection.
+fn forward_color_choice(cmd: &mut process::Command) {
+    let already_chosen = env::var_os("CARGO_TERM_COLOR").is_some()
+        // https://no-color.org — Cargo honors this, and forcing color on would
+        // override it.
+        || env::var_os("NO_COLOR").is_some_and(|v| !v.is_empty())
+        // https://bixense.com/clicolors — `xbuild` gives this precedence over
+        // `CARGO_TERM_COLOR`, so there is nothing left to decide.
+        || env::var_os("CLICOLOR_FORCE").is_some_and(|v| !v.is_empty() && v != "0");
+
+    if already_chosen {
+        return;
+    }
+
+    // Compiler diagnostics reach the user through Cargo's stderr, which is
+    // inherited from this process - so that is the stream to test.
+    let color = if io::stderr().is_terminal() {
+        "always"
+    } else {
+        "never"
+    };
+
+    cmd.env("CARGO_TERM_COLOR", color);
+}
+
 /// Configures a cargo command with the appropriate arguments and features.
 pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> Result<()> {
     let resolved = resolve_features(args)?;
@@ -155,6 +191,8 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
     if args.timings {
         cmd.arg("--timings");
     }
+
+    forward_color_choice(cmd);
 
     if args.xbuild_trace {
         // Cargo does not pass its own verbosity on to build scripts, so
