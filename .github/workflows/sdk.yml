@@ -11,6 +11,11 @@ name: SDK
 
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize  # branch head update
+      - labeled
     paths:
       - 'sdk/**'
       - '.github/workflows/sdk.yml'
@@ -30,9 +35,27 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  id-token: write       # for fetching the OIDC token (extapp UI report upload)
+  contents: read        # for actions/checkout
+  pull-requests: write  # for dflook comments on PR (extapp UI report comment)
+
+env:
+  # Read by the ./.github/actions/ui-comment composite action.
+  PULL_COMMENT_PATH: ${{ github.workspace }}/tests/extapp-pull-comment.md
 
 jobs:
+  param:
+    name: Determine pipeline parameters
+    runs-on: ubuntu-latest
+    outputs:
+      extapp_test_lang: ${{ steps.set_vars.outputs.extapp_test_lang }}
+    steps:
+      - id: set_vars
+        name: Set variables
+        run: |
+          echo extapp_test_lang=${{ (github.event_name == 'schedule' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'translations'))) && '[\"en\", \"cs\"]' || '[\"en\"]' }} >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
+
   sdk_fmt_check:
     name: trezor-app-sdk / Format check
     runs-on: ubuntu-latest
@@ -203,12 +226,13 @@ jobs:
   extapp_emu:
     name: extapp / Build emu (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
     runs-on: ubuntu-latest
+    needs: param
     strategy:
       fail-fast: false
       matrix:
         app: [tron]
         model: [t3w1]
-        lang: [en]
+        lang: ${{ fromJSON(needs.param.outputs.extapp_test_lang) }}
     env:
       EXTAPP: ${{ matrix.app }}
       EXTAPP_MODEL: ${{ matrix.model }}
@@ -248,17 +272,22 @@ jobs:
   extapp_device_test:
     name: extapp / Device tests (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
     runs-on: ubuntu-latest
-    needs: extapp_emu
+    needs:
+      - param
+      - extapp_emu
     strategy:
       fail-fast: false
       matrix:
         app: [tron]
         model: [t3w1]
-        lang: [en]
+        lang: ${{ fromJSON(needs.param.outputs.extapp_test_lang) }}
     env:
       EXTAPP: ${{ matrix.app }}
       EXTAPP_MODEL: ${{ matrix.model }}
       EXTAPP_LANG: ${{ matrix.lang }}
+      # Core's own UI language for the device it drives -- independent of
+      # EXTAPP_LANG, which is baked into the extapp binary at build time.
+      TEST_LANG: ${{ matrix.lang }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -273,6 +302,15 @@ jobs:
       # the device tests can drive it. See core/Makefile's XTASK_BUILD_OPTS.
       - run: nix-shell --run "export TREZOR_MODEL=$(echo ${{ matrix.model }} | tr a-z A-Z); export BITCOIN_ONLY=0; export PYOPT=0; uv run make -C core build_unix"
       - run: nix-shell --run "uv run make extapp_device_tests"
+      - uses: ./.github/actions/ui-report
+        with:
+          model: ${{ matrix.model }}
+          lang: ${{ matrix.lang }}
+          status: ${{ job.status }}
+          app-root: sdk/apps/${{ matrix.app }}
+          job-name: extapp_device_test_${{ matrix.app }}
+        if: always()
+        continue-on-error: true
 
   extapp_fmt_check:
     name: extapp / Format check
@@ -329,3 +367,24 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "make extapp_vet"
+
+  # Post a comment with UI diff URLs, same idea as core_ui_comment in core.yml,
+  # except the report columns are individual extapps rather than test types
+  # (device_test, click_test, persistence_test) -- extapps only have device
+  # tests today.
+  extapp_ui_comment:
+    name: extapp / Post comment with UI diff URLs
+    # run UI comment job only for 'trezor/trezor-firmware' scheduled workflows and internal PRs (see #5381)
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.repository == 'trezor/trezor-firmware'
+    runs-on: ubuntu-latest
+    needs:
+      - param
+      - extapp_device_test
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - run: sleep 1m  # try avoiding github api rate limit
+      - run: |
+          python ci/make_extapp_pull_comment.py "${{ github.run_id }}" '${{ needs.param.outputs.extapp_test_lang }}' > ${{ env.PULL_COMMENT_PATH }}
+          cat ${{ env.PULL_COMMENT_PATH }} >> $GITHUB_STEP_SUMMARY
+      - uses: ./.github/actions/ui-comment
+        if: github.event_name == 'pull_request'
