@@ -1,0 +1,461 @@
+{
+  "_comment": "WARD trie canonicity conformance vectors. Replay `steps` in order against your own implementation and compare `root` after each one. See docs/core/misc/ward-trie.md for the hashing and structure rules, and core/tools/ward_trie_fixture.py to regenerate.",
+  "key_type": "address",
+  "empty_root": "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5",
+  "leaf_encoding": {
+    "note": "Each value below is the body of a PLAINTEXT content part; the identity part is empty. commit = sha256(0x02 || len8(key_type) || key_type || len32(id_part) || id_part || len32(val_part) || val_part), where a part is encoding(1B) || len8(nonce) || nonce || len8(tag) || tag || len32(body) || body. Values are ASCII so an implementer can encode them directly.",
+    "encoding_plaintext": 1
+  },
+  "geometries": {
+    "random": {
+      "keys": [
+        "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+        "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+        "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986",
+        "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5",
+        "e52d9c508c502347344d8c07ad91cbd6068afc75ff6292f062a09ca381c89e71",
+        "e77b9a9ae9e30b0dbdb6f510a264ef9de781501d7b6b92ae89eb059c5ab743db",
+        "67586e98fad27da0b9968bc039a1ef34c939b9b8e523a8bef89d478608c5ecf6",
+        "ca358758f6d27e6cf45272937977a748fd88391db679ceda7dc7bf1f005ee879"
+      ],
+      "steps": [
+        {
+          "op": "insert",
+          "key_index": 0,
+          "value": "a0",
+          "witness_key_index": null,
+          "root": "9ce13c87eb7ec937d94e556191edc6bb94e159f44a7c8e4f4ef00e8ea8b564fb"
+        },
+        {
+          "op": "insert",
+          "key_index": 5,
+          "value": "a5",
+          "witness_key_index": 0,
+          "root": "166b2e102cc8b30f3ccbcde9644f75bf279dd8c9c98588fa8b33bbcf65aab513"
+        },
+        {
+          "op": "insert",
+          "key_index": 2,
+          "value": "a2",
+          "witness_key_index": 5,
+          "root": "accae3975249ac43e66ac79a4ae5eb4e29e5b66f0bc78e6684be82c8fc603404"
+        },
+        {
+          "op": "insert",
+          "key_index": 7,
+          "value": "a7",
+          "witness_key_index": 2,
+          "root": "c694900edfaf6312b6b23dbe7ed1333cb1fbeedd4acf0806fa25382b2fb30072"
+        },
+        {
+          "op": "insert",
+          "key_index": 1,
+          "value": "a1",
+          "witness_key_index": 0,
+          "root": "86b0f875cb404c1b6cf4906c76f44c8de0bb90591bc69567a72cccd8a08e0724"
+        },
+        {
+          "op": "insert",
+          "key_index": 3,
+          "value": "a3",
+          "witness_key_index": 1,
+          "root": "295472aae17021f3e81f825342351894660c3bf8a1cfbef724b9220b755a5ca9"
+        },
+        {
+          "op": "insert",
+          "key_index": 6,
+          "value": "a6",
+          "witness_key_index": 0,
+          "root": "02a4023699dd7023e41bd4961753ecb6f706ee3d0f9683b24396f286f8f1666e"
+        },
+        {
+          "op": "insert",
+          "key_index": 4,
+          "value": "a4",
+          "witness_key_index": 5,
+          "root": "248f1126a57e0593311c0917060332ecd68ea79978c2b7a79fdc6bde3f0c2b5b"
+        },
+        {
+          "op": "update",
+          "key_index": 5,
+          "value": "b5",
+          "root": "5d01ace193963e6dd7631ac6cb4f631a67de9b538f2bf38034ce228b51265c15"
+        },
+        {
+          "op": "delete",
+          "key_index": 2,
+          "sibling": "leaf",
+          "root": "585c1bea94f6123b71371df149989e97e1542c1a98bab08a1fa6873829d75fc2"
+        },
+        {
+          "op": "update",
+          "key_index": 0,
+          "value": "c0",
+          "root": "e9ad613e9124d6eddb08871c28b5687c5d673643c27305da6c25188c0ed56099"
+        },
+        {
+          "op": "delete",
+          "key_index": 6,
+          "sibling": "leaf",
+          "root": "29b8c58683176d77aa573113aadcbd59a0df5ef4a997752d47f0dec7f3fe3d34"
+        },
+        {
+          "op": "insert",
+          "key_index": 2,
+          "value": "a2_again",
+          "witness_key_index": 7,
+          "root": "60b298849557959b6c9fc8c899843f4ce31c3458024614cbd2b544b2751ccbfc"
+        },
+        {
+          "op": "delete",
+          "key_index": 7,
+          "sibling": "leaf",
+          "root": "a9775e030985e6ca69a168e65eef6fc170c2b5495e17119744a621168b9b5c28"
+        },
+        {
+          "op": "delete",
+          "key_index": 0,
+          "sibling": "leaf",
+          "root": "fffa35b704f97829eb6f2c515f148e809bcfb09f83c4d72c16e81eda92f22478"
+        },
+        {
+          "op": "delete",
+          "key_index": 1,
+          "sibling": "leaf",
+          "root": "dbb0f5e8fe92a55a75391d3d1858c41df6a9c679a0b77401092915faad46836b"
+        },
+        {
+          "op": "delete",
+          "key_index": 2,
+          "sibling": "branch",
+          "root": "7bbda91b919e5722cbd804f8671183ff6aac42db60f48136cec07336bc3d9574"
+        },
+        {
+          "op": "delete",
+          "key_index": 3,
+          "sibling": "branch",
+          "root": "356c2985428280054a5e956003516da0e88c61d8e410f3e4b89d8448b9f966e5"
+        },
+        {
+          "op": "delete",
+          "key_index": 4,
+          "sibling": "leaf",
+          "root": "2712e54414e7f9d7a22d6d1f3815f6c3366922cce9767dff0622f4b9a81ecc04"
+        },
+        {
+          "op": "delete",
+          "key_index": 5,
+          "sibling": "none",
+          "root": "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5"
+        },
+        {
+          "op": "insert",
+          "key_index": 2,
+          "value": "after_empty",
+          "witness_key_index": null,
+          "root": "93d9d258c3c0ebba710c46f03bbe37ae35ad6d764af30f434ec647263ab8d7f3"
+        }
+      ]
+    },
+    "shared_prefix": {
+      "keys": [
+        "abababababababababababababababababababab6e340b9cffb37a989ca544e6",
+        "abababababababababababababababababababab4bf5122f344554c53bde2ebb",
+        "ababababababababababababababababababababdbc1b4c900ffe48d575b5da5",
+        "abababababababababababababababababababab084fed08b978af4d7d196a74",
+        "ababababababababababababababababababababe52d9c508c502347344d8c07",
+        "ababababababababababababababababababababe77b9a9ae9e30b0dbdb6f510",
+        "abababababababababababababababababababab67586e98fad27da0b9968bc0",
+        "ababababababababababababababababababababca358758f6d27e6cf4527293"
+      ],
+      "steps": [
+        {
+          "op": "insert",
+          "key_index": 0,
+          "value": "a0",
+          "witness_key_index": null,
+          "root": "fb817db0cf51c6adc03f4440aa5762c0ebc8a76ecf8155729d1046f194a92fcd"
+        },
+        {
+          "op": "insert",
+          "key_index": 5,
+          "value": "a5",
+          "witness_key_index": 0,
+          "root": "57be283572af4df024016c158822323e0f51b3b0b1de19d9172a86a574de1a11"
+        },
+        {
+          "op": "insert",
+          "key_index": 2,
+          "value": "a2",
+          "witness_key_index": 5,
+          "root": "390422b00e8d920540cbb311e298df8b48f6ab37844593a332c79dbf296bf6bd"
+        },
+        {
+          "op": "insert",
+          "key_index": 7,
+          "value": "a7",
+          "witness_key_index": 2,
+          "root": "56387f8462fc6595444b4faaec25518ee7daaeb40b7f39be5236b766bdcdd795"
+        },
+        {
+          "op": "insert",
+          "key_index": 1,
+          "value": "a1",
+          "witness_key_index": 0,
+          "root": "e13fca6fc36007259adf680c64d3c2ec5d0c3b04b01a4da63620240c710e1514"
+        },
+        {
+          "op": "insert",
+          "key_index": 3,
+          "value": "a3",
+          "witness_key_index": 1,
+          "root": "0b49ea04167de312d8c68fa070559c346b21b915aca5d0c323842df00b37954a"
+        },
+        {
+          "op": "insert",
+          "key_index": 6,
+          "value": "a6",
+          "witness_key_index": 0,
+          "root": "94986707adf6384ca74fa100f724c2f05f4986a5517063671fdb5fd423ea110f"
+        },
+        {
+          "op": "insert",
+          "key_index": 4,
+          "value": "a4",
+          "witness_key_index": 5,
+          "root": "2e5f27e688c1fe610de75d18405e0d36abe38f1b27cd53f6da3f2ce81eecef81"
+        },
+        {
+          "op": "update",
+          "key_index": 5,
+          "value": "b5",
+          "root": "738fbad2aa81d3c0ff51ed64636ad775412d47bcfc3c0472885dc6afb86a5be2"
+        },
+        {
+          "op": "delete",
+          "key_index": 2,
+          "sibling": "leaf",
+          "root": "ffedf7eb65eb0b98ef797184d11b20ef745e96437002353496e09d05990b8972"
+        },
+        {
+          "op": "update",
+          "key_index": 0,
+          "value": "c0",
+          "root": "ec2ea37f383789aefd9a8ae7fc8bbcb173be6185961f7e4117f4e045b82d8786"
+        },
+        {
+          "op": "delete",
+          "key_index": 6,
+          "sibling": "leaf",
+          "root": "2deda6a773145bddb5131a1343cbf5690cb55d35b268db306c48b323d16cfece"
+        },
+        {
+          "op": "insert",
+          "key_index": 2,
+          "value": "a2_again",
+          "witness_key_index": 7,
+          "root": "c019c27ac04e61e2abacc574e8d3f6b9580571a478b4193bf4c5be89ab58da67"
+        },
+        {
+          "op": "delete",
+          "key_index": 7,
+          "sibling": "leaf",
+          "root": "5e5314bcc3e1afeb292fbd8291acbe61df87922ba4a2ee6f7911f00c8300d928"
+        },
+        {
+          "op": "delete",
+          "key_index": 0,
+          "sibling": "leaf",
+          "root": "e6c55dfec98d7109907e4a26818652057b674de4c379dd23917b3f540321ec4f"
+        },
+        {
+          "op": "delete",
+          "key_index": 1,
+          "sibling": "leaf",
+          "root": "25d0eebe6857150142c1e535b8c3806ab0299c40e17a62a6df30d7ad41e8ed47"
+        },
+        {
+          "op": "delete",
+          "key_index": 2,
+          "sibling": "branch",
+          "root": "48e10e8f85d23ea4f54a47780232a50423fb93ab61cc6d153aeccca6d87c122b"
+        },
+        {
+          "op": "delete",
+          "key_index": 3,
+          "sibling": "branch",
+          "root": "fc8cdbdf7d3ddd2fa09cf2469838e9ab606182d69793f1940e1c27079dae1e7b"
+        },
+        {
+          "op": "delete",
+          "key_index": 4,
+          "sibling": "leaf",
+          "root": "4148c7f613be280d5366a60f15c8dc450c23c7265a143d4954dfd5bb1cf25e17"
+        },
+        {
+          "op": "delete",
+          "key_index": 5,
+          "sibling": "none",
+          "root": "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5"
+        },
+        {
+          "op": "insert",
+          "key_index": 2,
+          "value": "after_empty",
+          "witness_key_index": null,
+          "root": "a8c6588376b38705c1891995008a346e394078ab6545151e55239b52524e394e"
+        }
+      ]
+    },
+    "ladder": {
+      "keys": [
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "8000000000000000000000000000000000000000000000000000000000000000",
+        "c000000000000000000000000000000000000000000000000000000000000000",
+        "e000000000000000000000000000000000000000000000000000000000000000",
+        "f000000000000000000000000000000000000000000000000000000000000000",
+        "f800000000000000000000000000000000000000000000000000000000000000",
+        "fc00000000000000000000000000000000000000000000000000000000000000",
+        "fe00000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "steps": [
+        {
+          "op": "insert",
+          "key_index": 0,
+          "value": "a0",
+          "witness_key_index": null,
+          "root": "1373e33bfa59f392cc4d1b2ba81c2abceadb41700266101a4d4a006c2de31229"
+        },
+        {
+          "op": "insert",
+          "key_index": 5,
+          "value": "a5",
+          "witness_key_index": 0,
+          "root": "91b0743c2b0e0943f68825779f838fb7c2ca44e2740424dc98d26b160965b221"
+        },
+        {
+          "op": "insert",
+          "key_index": 2,
+          "value": "a2",
+          "witness_key_index": 5,
+          "root": "bcd88640c382ed6b181ae0455f921b6f1097b936adf9bbeb0623fad0276682cc"
+        },
+        {
+          "op": "insert",
+          "key_index": 7,
+          "value": "a7",
+          "witness_key_index": 5,
+          "root": "bb3fc6062f4a5cdc1efd81fa83b7596d2a3b4a8ef308ea9a4fec53f27394664d"
+        },
+        {
+          "op": "insert",
+          "key_index": 1,
+          "value": "a1",
+          "witness_key_index": 2,
+          "root": "144c55d5bd9d2136e7fc263f7c800b70f5df5115636705006c39f716df306ebd"
+        },
+        {
+          "op": "insert",
+          "key_index": 3,
+          "value": "a3",
+          "witness_key_index": 5,
+          "root": "56b8cc229117741617913a7ede4c253470bf89634fc022a076012f52134ac101"
+        },
+        {
+          "op": "insert",
+          "key_index": 6,
+          "value": "a6",
+          "witness_key_index": 7,
+          "root": "2b4c8b42eec1c6e39d21b3be6c66c8c0d9ad96371556134e4844c9fce925063a"
+        },
+        {
+          "op": "insert",
+          "key_index": 4,
+          "value": "a4",
+          "witness_key_index": 5,
+          "root": "b850521120c9289035652c665759e7200a2780c3602527d031f8c88a59753cc8"
+        },
+        {
+          "op": "update",
+          "key_index": 5,
+          "value": "b5",
+          "root": "ca867f4f79ca8aee5b325563fa7cd8da64fb56ecbf190408880bfced5b2d9eab"
+        },
+        {
+          "op": "delete",
+          "key_index": 2,
+          "sibling": "branch",
+          "root": "4b9fc08ab71c0f010fcef2efc5d9375d9de2f7236e16775e941621bf92c687e0"
+        },
+        {
+          "op": "update",
+          "key_index": 0,
+          "value": "c0",
+          "root": "9c6aa75588ca11b301e2a78f21dac5722317d332dc85cd231c2e0bfffa4d543d"
+        },
+        {
+          "op": "delete",
+          "key_index": 6,
+          "sibling": "leaf",
+          "root": "19051d64d8e7a97ff414516505bf120cf0fffc9f981aa6922603d5c24260a71d"
+        },
+        {
+          "op": "insert",
+          "key_index": 2,
+          "value": "a2_again",
+          "witness_key_index": 3,
+          "root": "90172a4b701492738a659cb6bdc6d450732c73ce797f877d82ec5e8d35098ff4"
+        },
+        {
+          "op": "delete",
+          "key_index": 7,
+          "sibling": "leaf",
+          "root": "d4a16bdaedf5958d7d733ed82951aa648457606e6f87b9cfc9bffe5929173332"
+        },
+        {
+          "op": "delete",
+          "key_index": 0,
+          "sibling": "branch",
+          "root": "050f2c6c86f31d4cab424dffc97fc0a9655126c7b0a7f4fa0a39fe29190133f2"
+        },
+        {
+          "op": "delete",
+          "key_index": 1,
+          "sibling": "branch",
+          "root": "6cdadf9301e8854b7e8256229391a48b12b24eb992f206f668af5ad5020ce1cc"
+        },
+        {
+          "op": "delete",
+          "key_index": 2,
+          "sibling": "branch",
+          "root": "1ccb9e5d19e3dfa024b7485e792816e24428d21df1fed134008e06794def5374"
+        },
+        {
+          "op": "delete",
+          "key_index": 3,
+          "sibling": "branch",
+          "root": "9ccb237066ab7c30eda3ed7b9759e9c4ed0a5cb89d37afddabfca12e1b5802a4"
+        },
+        {
+          "op": "delete",
+          "key_index": 4,
+          "sibling": "leaf",
+          "root": "49e60378603fda8879bf67e36f5e60ba1596871574c035264f82f334c48025d1"
+        },
+        {
+          "op": "delete",
+          "key_index": 5,
+          "sibling": "none",
+          "root": "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5"
+        },
+        {
+          "op": "insert",
+          "key_index": 2,
+          "value": "after_empty",
+          "witness_key_index": null,
+          "root": "1a42c077dd0e40906c310b989b27e616f16aae227835c5163abaeaaa8fae2f51"
+        }
+      ]
+    }
+  }
+}
