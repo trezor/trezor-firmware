@@ -590,7 +590,6 @@
     "cardano__vote_public_key": "Veřejný hlasovací klíč",
     "cardano__voting_purpose": "Účel hlasování",
     "cardano__warning": "Varování",
-    "cardano__weight": "Váha",
     "cardano__withdrawal_for_address_template": "Potvrďte výběr pro adresu typu {0}",
     "cardano__x_of_y_signatures_template": "Vyžaduje {0} podpis ze {1}.",
     "coinjoin__access_account": "Použít váš coinjoin účet?",
@@ -3581,6 +3580,7 @@
     "words__voting": "Hlasování",
     "words__wallet": "Peněženka",
     "words__warning": "Varování",
+    "words__weight": "Váha",
     "words__writable": "Zapisovatelný",
     "words__yes": "Ano"
   }

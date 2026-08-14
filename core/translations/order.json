@@ -208,7 +208,7 @@
   "206": "cardano__vote_public_key",
   "207": "cardano__voting_purpose",
   "208": "cardano__warning",
-  "209": "cardano__weight",
+  "209": "words__weight",
   "210": "cardano__withdrawal_for_address_template",
   "211": "cardano__x_of_y_signatures_template",
   "212": "coinjoin__access_account",

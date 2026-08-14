@@ -1101,6 +1101,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__voting;
   MP_QSTR_words__wallet;
   MP_QSTR_words__warning;
+  MP_QSTR_words__weight;
   MP_QSTR_words__writable;
   MP_QSTR_words__yes;
   MP_QSTR_write;
@@ -1223,7 +1224,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__vote_public_key;
   MP_QSTR_cardano__voting_purpose;
   MP_QSTR_cardano__warning;
-  MP_QSTR_cardano__weight;
   MP_QSTR_cardano__withdrawal_for_address_template;
   MP_QSTR_cardano__x_of_y_signatures_template;
   MP_QSTR_eos__about_to_sign_template;

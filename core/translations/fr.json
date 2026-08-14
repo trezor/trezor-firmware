@@ -705,7 +705,6 @@
     "cardano__vote_public_key": "Clé publique de vote",
     "cardano__voting_purpose": "Objectif du vote",
     "cardano__warning": "Avertissement",
-    "cardano__weight": "Poids",
     "cardano__withdrawal_for_address_template": "Confirmer le retrait pour l'adresse de {0}",
     "cardano__x_of_y_signatures_template": "Nécessite {0} signatures sur {1}.",
     "coinjoin__access_account": "Accéder à votre compte Coinjoin ?",
@@ -3826,6 +3825,7 @@
     "words__voting": "Vote",
     "words__wallet": "Portefeuille",
     "words__warning": "Avertissement",
+    "words__weight": "Poids",
     "words__writable": "Inscriptible",
     "words__yes": "Oui"
   }

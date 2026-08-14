@@ -271,7 +271,6 @@ class TR:
     cardano__vote_public_key: str = "Vote public key"
     cardano__voting_purpose: str = "Voting purpose"
     cardano__warning: str = "Warning"
-    cardano__weight: str = "Weight"
     cardano__withdrawal_for_address_template: str = "Confirm withdrawal for {0} address"
     cardano__x_of_y_signatures_template: str = "Requires {0} out of {1} signatures."
     coinjoin__access_account: str = "Access your coinjoin account?"
@@ -1194,6 +1193,7 @@ class TR:
     words__voting: str = "Voting"
     words__wallet: str = "Wallet"
     words__warning: str = "Warning"
+    words__weight: str = "Weight"
     words__writable: str = "Writable"
     words__yes: str = "Yes"
 

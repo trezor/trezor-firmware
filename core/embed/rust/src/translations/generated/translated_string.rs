@@ -309,8 +309,7 @@ pub enum TranslatedString {
     cardano__voting_purpose = 207,  // "Voting purpose"
     #[cfg(feature = "universal_fw")]
     cardano__warning = 208,  // "Warning"
-    #[cfg(feature = "universal_fw")]
-    cardano__weight = 209,  // "Weight"
+    words__weight = 209,  // "Weight"
     #[cfg(feature = "universal_fw")]
     cardano__withdrawal_for_address_template = 210,  // "Confirm withdrawal for {0} address"
     #[cfg(feature = "universal_fw")]
@@ -43311,8 +43310,6 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__warning, Self::cardano__warning),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_cardano__weight, Self::cardano__weight),
-        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__withdrawal_for_address_template, Self::cardano__withdrawal_for_address_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__x_of_y_signatures_template, Self::cardano__x_of_y_signatures_template),
@@ -44589,6 +44586,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__voting, Self::words__voting),
         (Qstr::MP_QSTR_words__wallet, Self::words__wallet),
         (Qstr::MP_QSTR_words__warning, Self::words__warning),
+        (Qstr::MP_QSTR_words__weight, Self::words__weight),
         (Qstr::MP_QSTR_words__writable, Self::words__writable),
         (Qstr::MP_QSTR_words__yes, Self::words__yes),
     ];
