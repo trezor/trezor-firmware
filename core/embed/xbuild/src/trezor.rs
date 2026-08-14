@@ -14,6 +14,22 @@ use color_eyre::eyre::{WrapErr, bail};
 use crate::helpers::{is_rust_analyzer, links_name};
 use crate::{CLibrary, cargo_out};
 
+/// Installs the error reporting handler used by the build-script entry points.
+///
+/// The default report tacks a source location and two backtrace hints onto
+/// every error. For the common failure - a compiler rejecting a source file -
+/// that location points into `xbuild`'s own plumbing, competing for attention
+/// with the diagnostic the compiler already printed above it. The numbered
+/// error chain names the file that failed, so the location adds nothing a
+/// reader of this output wants; `RUST_BACKTRACE=1` still brings it back when
+/// the bug is in `xbuild` itself rather than in the sources it compiles.
+fn install_error_reporting() -> Result<()> {
+    color_eyre::config::HookBuilder::default()
+        .display_location_section(false)
+        .display_env_section(false)
+        .install()
+}
+
 fn package_name() -> Result<String> {
     Ok(env::var("CARGO_PKG_NAME")?)
 }
@@ -116,7 +132,7 @@ fn get_prodtest_vendor() -> Result<&'static str> {
 /// Creates a [`CLibrary`], passes it to the provided closure,
 /// then compiles the library. Also installs the error reporting handler.
 pub fn build(f: impl FnOnce(&mut CLibrary) -> Result<()>) -> Result<()> {
-    color_eyre::install()?;
+    install_error_reporting()?;
 
     let mut lib = CLibrary::new();
     configure_compiler_defaults(&mut lib);
@@ -147,7 +163,7 @@ pub fn build(f: impl FnOnce(&mut CLibrary) -> Result<()>) -> Result<()> {
 /// Creates a [`CLibrary`], passes it to the provided closure,
 /// compiles the library, and links it as the specified binary type.
 pub fn build_and_link(target: &str, f: impl FnOnce(&mut CLibrary) -> Result<()>) -> Result<()> {
-    color_eyre::install()?;
+    install_error_reporting()?;
 
     let mut lib = CLibrary::new();
     configure_compiler_defaults(&mut lib);
