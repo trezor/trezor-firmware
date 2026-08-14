@@ -8310,12 +8310,18 @@ if TYPE_CHECKING:
     class WardRollback(protobuf.MessageType):
         to_root: "AnyBytes | None"
         auth_commit: "AnyBytes | None"
+        from_counter: "int | None"
+        from_root: "AnyBytes | None"
+        to_counter: "int | None"
 
         def __init__(
             self,
             *,
             to_root: "AnyBytes | None" = None,
             auth_commit: "AnyBytes | None" = None,
+            from_counter: "int | None" = None,
+            from_root: "AnyBytes | None" = None,
+            to_counter: "int | None" = None,
         ) -> None:
             pass
 
