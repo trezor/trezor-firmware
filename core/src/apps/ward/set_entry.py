@@ -27,14 +27,19 @@ async def set_entry(msg: WardSetEntry) -> WardLeafAck:
     from .common import WARNING_UNVERIFIED, display_bytes, pull_leaf, require_key
     from .keys import (
         ENTRY_TYPE_ADDRESS,
+        derive_k_auth,
         derive_k_data,
         derive_k_ident,
-        derive_k_auth,
         derive_k_mac,
         derive_ward_id,
         entry_key_for,
     )
-    from .leaf import encode_content, encode_identity, make_leaf_content, make_leaf_identity
+    from .leaf import (
+        encode_content,
+        encode_identity,
+        make_leaf_content,
+        make_leaf_identity,
+    )
     from .root import get_counter, get_root, set_root
     from .trie import compute_new_root
 

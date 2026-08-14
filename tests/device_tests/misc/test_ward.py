@@ -44,30 +44,33 @@ created by asking the device, which is also how a real host must work.
 
 import pytest
 
-from trezorlib import exceptions, ward
+from trezorlib import exceptions
 from trezorlib import messages as m
+from trezorlib import ward
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutContent
 
 from ...input_flows import InputFlowConfirmAllWarnings
-from ...ward_trie import WardTrie
-from ...ward_wm import MockWM
 from ...ward_keys import (
     auth_commit,
     bip39_seed,
     derive_k_auth,
-    derive_k_mac,
-    derive_ward_id,
-    root_mac,
     derive_k_data,
     derive_k_ident,
+    derive_k_mac,
     derive_k_path,
+    derive_ward_id,
+)
+from ...ward_keys import entry_key as expected_entry_key
+from ...ward_keys import (
     open_content,
     open_identity,
+    root_mac,
     unpack_content,
     unpack_identity,
 )
-from ...ward_keys import entry_key as expected_entry_key
+from ...ward_trie import WardTrie
+from ...ward_wm import MockWM
 
 _APP = "TEST"
 
@@ -148,7 +151,9 @@ def _write(session: Session, store: WardTrie, call, br_name: str) -> tuple:
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected(br_name, m.WardLeafAck))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
         res = call(ward.store_provider(store))
     return res, rec
 
@@ -158,7 +163,9 @@ def _read(session: Session, store: WardTrie, call) -> tuple:
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected("ward_get_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
         res = call(ward.store_provider(store))
     return res, rec
 
@@ -208,7 +215,9 @@ def test_ward_pull_names_only_the_opaque_key(session: Session):
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(_expected("ward_get_entry"))
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
         ward.get_entry(session, _APP, identifier, provider)
 
     assert len(asked) == 1
@@ -227,7 +236,9 @@ def test_ward_pull_key_is_the_expected_hmac(session: Session):
     wrong SLIP-21 label, or built the scope differently, would still pass every other
     test in this file while putting every entry at the wrong path.
     """
-    res, _rec = _read(session, WardTrie(), lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    res, _rec = _read(
+        session, WardTrie(), lambda p: ward.get_entry(session, _APP, b"addr1", p)
+    )
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
 
 
@@ -240,9 +251,11 @@ def test_ward_pull_key_is_deterministic_and_domain_separated(session: Session):
     without any knowledge of the seed.
     """
     keys = [
-        _read(session, WardTrie(), lambda p, a=app: ward.get_entry(session, a, b"addr1", p))[
-            0
-        ].entry_key
+        _read(
+            session,
+            WardTrie(),
+            lambda p, a=app: ward.get_entry(session, a, b"addr1", p),
+        )[0].entry_key
         for app in (_APP, _APP, "OTHER")
     ]
     first, again, other = keys
@@ -277,7 +290,9 @@ def test_ward_leaf_round_trips_through_the_host(session: Session):
     key = _seed(session, store, b"addr1", b"Petr_label")
 
     assert list(store.blobs) == [key]
-    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p)
+    )
     assert "Petr_label" in rec.text
 
 
@@ -392,13 +407,18 @@ def test_ward_rejects_a_tampered_leaf(session: Session):
 
     sealed = store.blobs[key].content.encrypted
     flipped = bytes([sealed.ct[0] ^ 1]) + sealed.ct[1:]
-    store.set(key, ward.Leaf(
-        store.blobs[key].identity,
-        m.WardLeafContent(
-            encoding=0,
-            encrypted=m.WardEncryptedLeaf(nonce=sealed.nonce, tag=sealed.tag, ct=flipped),
+    store.set(
+        key,
+        ward.Leaf(
+            store.blobs[key].identity,
+            m.WardLeafContent(
+                encoding=0,
+                encrypted=m.WardEncryptedLeaf(
+                    nonce=sealed.nonce, tag=sealed.tag, ct=flipped
+                ),
+            ),
         ),
-    ))
+    )
 
     with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
         ward.get_entry(session, _APP, b"addr1", ward.store_provider(store))
@@ -432,7 +452,9 @@ def test_ward_get_entry_pulls_and_shows(session: Session):
     store = WardTrie()
     key = _seed(session, store, b"addr1", b"Petr_label")
 
-    res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p)
+    )
 
     assert res.entry_key == key
     assert res.response.message == "WARD entry shown"
@@ -449,7 +471,9 @@ def test_ward_get_entry_pulls_and_shows(session: Session):
 def test_ward_get_entry_absent_is_distinct_from_empty(session: Session):
     """A missing entry (provider returns None) must not look like an entry whose value
     happens to be empty: the device says it was not found."""
-    _res, rec = _read(session, WardTrie(), lambda p: ward.get_entry(session, _APP, b"nope", p))
+    _res, rec = _read(
+        session, WardTrie(), lambda p: ward.get_entry(session, _APP, b"nope", p)
+    )
 
     assert "entry not found" in rec.title
     assert "no entry" in rec.text.lower()
@@ -467,7 +491,9 @@ def test_ward_get_entry_empty_value_is_shown_as_an_entry(session: Session):
     _seed(session, store, b"addr1", b"")
     assert len(store) == 1  # an empty value is a STORED entry, not a deletion
 
-    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p)
+    )
 
     assert "unverified entry" in rec.title
     assert "not found" not in rec.title
@@ -482,7 +508,9 @@ def test_ward_get_entry_serves_the_right_one_of_several(session: Session):
     _seed(session, store, b"addr2", b"two")
     assert len(store) == 2
 
-    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr2", p))
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"addr2", p)
+    )
 
     assert "two" in rec.text
     assert "one" not in rec.text
@@ -632,7 +660,9 @@ def test_ward_delete_entry_retry_after_a_lost_response_succeeds(session: Session
     _seed(session, store, b"addr2", b"keep_me")
 
     res, _rec = _write(
-        session, store, lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, b"addr1", p),
         "ward_delete_entry",
     )
     ward.apply(store, res)
@@ -643,7 +673,9 @@ def test_ward_delete_entry_retry_after_a_lost_response_succeeds(session: Session
         again = ward.delete_entry(session, _APP, b"addr1", ward.store_provider(store))
 
     assert again.auth_commit is None
-    assert again.counter == after  # the device is exactly where the first delete left it
+    assert (
+        again.counter == after
+    )  # the device is exactly where the first delete left it
     ward.apply(store, again)
     assert list(store.blobs) == [expected_entry_key(_K_PATH, _APP, b"addr2")]
 
@@ -666,7 +698,9 @@ def test_ward_delete_entry_still_refuses_an_unproved_absence(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_apply_refuses_to_drop_a_no_change_result_on_a_live_entry(session: Session):
+def test_ward_apply_refuses_to_drop_a_no_change_result_on_a_live_entry(
+    session: Session,
+):
     """Host-side guard: "nothing changed" must not be applied over an entry that exists.
 
     If the device reports no transition while the store still holds the entry, the two
@@ -715,15 +749,20 @@ def test_ward_delete_entry_deletes_an_empty_valued_entry(session: Session):
 @pytest.mark.parametrize(
     "call",
     [
-        pytest.param(lambda s: ward.get_entry(s, _APP, b"", lambda _k: ward.Answer()), id="get"),
         pytest.param(
-            lambda s: ward.set_entry(s, _APP, b"", b"v", lambda _k: ward.Answer()), id="set"
+            lambda s: ward.get_entry(s, _APP, b"", lambda _k: ward.Answer()), id="get"
         ),
         pytest.param(
-            lambda s: ward.delete_entry(s, _APP, b"", lambda _k: ward.Answer()), id="delete"
+            lambda s: ward.set_entry(s, _APP, b"", b"v", lambda _k: ward.Answer()),
+            id="set",
         ),
         pytest.param(
-            lambda s: ward.get_entry(s, "", b"addr1", lambda _k: ward.Answer()), id="get-no-app"
+            lambda s: ward.delete_entry(s, _APP, b"", lambda _k: ward.Answer()),
+            id="delete",
+        ),
+        pytest.param(
+            lambda s: ward.get_entry(s, "", b"addr1", lambda _k: ward.Answer()),
+            id="get-no-app",
         ),
     ],
 )
@@ -855,9 +894,7 @@ def test_ward_root_survives_a_new_session(session: Session):
     # via the test context, not session.client: that returns a bare ThpSession with no
     # debug plumbing, so the input flows and expected-response checks would not attach
     fresh = session.test_ctx.get_session()
-    _res, rec = _read(
-        fresh, store, lambda p: ward.get_entry(fresh, _APP, b"addr1", p)
-    )
+    _res, rec = _read(fresh, store, lambda p: ward.get_entry(fresh, _APP, b"addr1", p))
     assert "Petr_label" in rec.text
 
     # and it is really verifying: a rolled-back leaf is refused in the new session too
@@ -923,7 +960,9 @@ def _attest(
     if counter is None:
         counter = store.counter
     if timestamp is None:
-        timestamp = _T0 + counter  # time moves with the counter, as it would in practice
+        timestamp = (
+            _T0 + counter
+        )  # time moves with the counter, as it would in practice
     ack = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
     wm.publish(ack.ward_id, counter, mac, timestamp)
@@ -986,7 +1025,9 @@ def test_ward_refuses_an_attestation_from_the_wrong_signer(session: Session):
     mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
     sig = impostor.sign(ack.ward_id, ack.nonce, counter, mac, _T0 + counter)
 
-    with pytest.raises(exceptions.TrezorFailure, match="attestation verification failed"):
+    with pytest.raises(
+        exceptions.TrezorFailure, match="attestation verification failed"
+    ):
         ward.ingest_attestation(session, counter, mac, sig, _T0 + counter)
 
 
@@ -1009,7 +1050,9 @@ def test_ward_refuses_an_attestation_bound_to_another_nonce(session: Session):
     stale_sig = wm.sign(stale_ack.ward_id, stale_ack.nonce, counter, mac, _T0 + counter)
 
     ward.sync(session)  # a new round, a new nonce
-    with pytest.raises(exceptions.TrezorFailure, match="attestation verification failed"):
+    with pytest.raises(
+        exceptions.TrezorFailure, match="attestation verification failed"
+    ):
         ward.ingest_attestation(session, counter, mac, stale_sig, _T0 + counter)
 
 
@@ -1034,7 +1077,9 @@ def test_ward_refuses_a_root_that_does_not_match_the_attested_mac(session: Sessi
     _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
     ward.ingest_attestation(session, counter, mac, sig, _T0 + counter)
 
-    with pytest.raises(exceptions.TrezorFailure, match="does not match the attested mac"):
+    with pytest.raises(
+        exceptions.TrezorFailure, match="does not match the attested mac"
+    ):
         ward.reconcile(session, other.root())
 
 
@@ -1079,7 +1124,9 @@ def test_ward_refuses_a_different_state_at_the_same_counter(session: Session):
     mac = root_mac(_K_MAC, _WARD_ID, counter, divergent.root())
     sig = wm.sign(ack.ward_id, ack.nonce, counter, mac, _T0 + counter)
     ward.ingest_attestation(session, counter, mac, sig, _T0 + counter)
-    with pytest.raises(exceptions.TrezorFailure, match="counter matches but the root differs"):
+    with pytest.raises(
+        exceptions.TrezorFailure, match="counter matches but the root differs"
+    ):
         ward.reconcile(session, divergent.root())
 
 
@@ -1164,7 +1211,9 @@ def test_ward_a_published_write_syncs_cleanly(session: Session):
     store.counter = counter  # device and store now agree
 
     # the entry survived the round trip
-    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p)
+    )
     assert "kept" in rec.text
 
 
@@ -1195,7 +1244,9 @@ def test_ward_an_unpublished_write_blocks_sync_rather_than_losing_it(session: Se
         ward.ingest_attestation(session, behind, mac, sig, _T0 + behind)
 
     # ...and the write is still readable afterwards
-    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p))
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p)
+    )
     assert "unpublished" in rec.text
 
 
@@ -1300,7 +1351,9 @@ def test_ward_refuses_a_chain_that_does_not_start_at_its_own_head(session: Sessi
     sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
     ward.ingest_attestation(session, target, mac, sig, _T0 + target)
 
-    with pytest.raises(exceptions.TrezorFailure, match="does not follow the running root"):
+    with pytest.raises(
+        exceptions.TrezorFailure, match="does not follow the running root"
+    ):
         ward.verify_chain(session, links)
 
 
@@ -1342,11 +1395,15 @@ def test_ward_refuses_a_chain_that_ends_somewhere_else(session: Session):
 
     wm = MockWM()
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, target, attested.root())  # attests a different root
+    mac = root_mac(
+        _K_MAC, _WARD_ID, target, attested.root()
+    )  # attests a different root
     sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
     ward.ingest_attestation(session, target, mac, sig, _T0 + target)
 
-    with pytest.raises(exceptions.TrezorFailure, match="does not match the attested mac"):
+    with pytest.raises(
+        exceptions.TrezorFailure, match="does not match the attested mac"
+    ):
         ward.verify_chain(session, links)
 
 
@@ -1382,7 +1439,9 @@ def _rollback(session: Session, store: WardTrie):
         ctx.set_expected_responses(
             [m.ButtonRequest(name="ward_rollback"), m.WardRollbackAck]
         )
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
         ack = ward.rollback(session, from_root, ac)
     return ack, rec
 
@@ -1411,7 +1470,9 @@ def test_ward_rollback_undoes_the_last_write(session: Session):
     ward.apply_rollback(store, ack)
     rewound.counter = ack.counter
     assert rewound.root() == before_root
-    _res, rec = _read(session, rewound, lambda p: ward.get_entry(session, _APP, b"b", p))
+    _res, rec = _read(
+        session, rewound, lambda p: ward.get_entry(session, _APP, b"b", p)
+    )
     assert "entry not found" in rec.title
 
 
@@ -1426,7 +1487,9 @@ def test_ward_rollback_refuses_a_target_the_host_invents(session: Session):
     _from_counter, _from_root, _tc, _tr, ac = store.links[-1]
 
     invented = _subset(store, [])  # some other tree the host would prefer
-    with pytest.raises(exceptions.TrezorFailure, match="does not describe the current head"):
+    with pytest.raises(
+        exceptions.TrezorFailure, match="does not describe the current head"
+    ):
         ward.rollback(session, invented.root(), ac)
 
 
@@ -1459,7 +1522,9 @@ def test_ward_rollback_refuses_an_authorisation_for_an_older_step(session: Sessi
     # the old authorisation names that root, but at its own, older counter
     _fc, from_root, _tc, to_root, ac = old_link
     assert to_root == store.root()
-    with pytest.raises(exceptions.TrezorFailure, match="does not describe the current head"):
+    with pytest.raises(
+        exceptions.TrezorFailure, match="does not describe the current head"
+    ):
         ward.rollback(session, from_root, ac)
     assert k1 in store.blobs
 
@@ -1477,9 +1542,17 @@ def test_ward_rollback_unsticks_a_wallet_the_wm_never_saw(session: Session):
 
     ack_sync = ward.sync(session)
     mac = root_mac(_K_MAC, _WARD_ID, published_counter, published_root)
-    sig = wm.sign(ack_sync.ward_id, ack_sync.nonce, published_counter, mac, _T0 + published_counter)
+    sig = wm.sign(
+        ack_sync.ward_id,
+        ack_sync.nonce,
+        published_counter,
+        mac,
+        _T0 + published_counter,
+    )
     with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
-        ward.ingest_attestation(session, published_counter, mac, sig, _T0 + published_counter)
+        ward.ingest_attestation(
+            session, published_counter, mac, sig, _T0 + published_counter
+        )
 
     ack, _rec = _rollback(session, store)
     ward.apply_rollback(store, ack)
@@ -1501,13 +1574,17 @@ def _recover(session: Session, wm: MockWM, counter: int, mac: bytes, timestamp: 
         ctx.set_expected_responses(
             [m.ButtonRequest(name="ward_recover_counter"), m.WardRecoverCounterAck]
         )
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
         ack = ward.recover_counter(session, counter, mac, sig, timestamp)
     return ack, rec
 
 
 @pytest.mark.models("core")
-def test_ward_ingest_refuses_an_attestation_from_before_the_stored_time(session: Session):
+def test_ward_ingest_refuses_an_attestation_from_before_the_stored_time(
+    session: Session,
+):
     """A WM whose clock ran backwards is refused even when its counter did not.
 
     That combination is what a restore-from-backup looks like from the device's side when
@@ -1563,7 +1640,10 @@ def test_ward_recover_counter_accepts_a_backward_attestation(session: Session):
     old_mac = root_mac(_K_MAC, _WARD_ID, old_counter, old_root)
 
     res, _rec = _write(
-        session, store, lambda p: ward.set_entry(session, _APP, b"b", b"two", p), "ward_set_entry"
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"b", b"two", p),
+        "ward_set_entry",
     )
     ward.apply(store, res)
     _attest(session, wm, store)
@@ -1577,12 +1657,16 @@ def test_ward_recover_counter_accepts_a_backward_attestation(session: Session):
     ward.reconcile(session, old_root)
     rewound = _subset(store, [expected_entry_key(_K_PATH, _APP, b"a")])
     assert rewound.root() == old_root
-    _res, rec = _read(session, rewound, lambda p: ward.get_entry(session, _APP, b"a", p))
+    _res, rec = _read(
+        session, rewound, lambda p: ward.get_entry(session, _APP, b"a", p)
+    )
     assert "one" in rec.text
 
 
 @pytest.mark.models("core")
-def test_ward_recover_counter_refuses_an_attestation_that_is_not_older(session: Session):
+def test_ward_recover_counter_refuses_an_attestation_that_is_not_older(
+    session: Session,
+):
     """Recovery is for going backwards, and nothing else.
 
     An ordinary attestation routed through here would work perfectly well and cost the
@@ -1619,12 +1703,16 @@ def test_ward_recover_counter_still_requires_a_genuine_attestation(session: Sess
     impostor = MockWM(seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
     ack = ward.sync(session)
     sig = impostor.sign(ack.ward_id, ack.nonce, behind, mac, store.timestamp - 3600)
-    with pytest.raises(exceptions.TrezorFailure, match="attestation verification failed"):
+    with pytest.raises(
+        exceptions.TrezorFailure, match="attestation verification failed"
+    ):
         ward.recover_counter(session, behind, mac, sig, store.timestamp - 3600)
 
 
 @pytest.mark.models("core")
-def test_ward_recover_counter_screen_names_both_counters_and_the_distance(session: Session):
+def test_ward_recover_counter_screen_names_both_counters_and_the_distance(
+    session: Session,
+):
     """The screen has to carry the decision, because the crypto cannot.
 
     Everything presented here is authentic whether the operator is recovering or an
@@ -1688,24 +1776,32 @@ def test_ward_delete_refuses_a_sibling_it_cannot_classify(session: Session):
     def withholds(entry_key: bytes) -> ward.Answer:
         answer = honest(entry_key)
         return answer._replace(
-            sibling_split_bit=None, sibling_left=None, sibling_right=None,
-            sibling_entry_key=None, sibling_commit=None,
+            sibling_split_bit=None,
+            sibling_left=None,
+            sibling_right=None,
+            sibling_entry_key=None,
+            sibling_commit=None,
         )
 
     identifier = next(
-        i for i in (b"addr%d" % n for n in range(6))
+        i
+        for i in (b"addr%d" % n for n in range(6))
         if expected_entry_key(_K_PATH, _APP, i) == key
     )
     with pytest.raises(exceptions.TrezorFailure, match="identify the sibling"):
         ward.delete_entry(session, _APP, identifier, withholds)
 
     # and the entry is still there afterwards -- a refused delete deletes nothing
-    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, identifier, p))
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, identifier, p)
+    )
     assert "entry not found" not in rec.title
 
 
 @pytest.mark.models("core")
-def test_ward_delete_keeps_the_root_canonical_when_a_branch_is_promoted(session: Session):
+def test_ward_delete_keeps_the_root_canonical_when_a_branch_is_promoted(
+    session: Session,
+):
     """The honest form still works, and leaves the device on the CANONICAL root.
 
     There is no way to read the device's root, and no need to: the host store rebuilds its
@@ -1722,19 +1818,26 @@ def test_ward_delete_keeps_the_root_canonical_when_a_branch_is_promoted(session:
     identifier = next(i for i in names if expected_entry_key(_K_PATH, _APP, i) == key)
 
     res, _rec = _write(
-        session, store, lambda p: ward.delete_entry(session, _APP, identifier, p),
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, identifier, p),
         "ward_delete_entry",
     )
     ward.apply(store, res)
     assert key not in store.blobs
     assert len(store) > 1  # a branch sibling survived, which is the case under test
 
-    remaining = next(i for i in names if expected_entry_key(_K_PATH, _APP, i) in store.blobs)
-    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, remaining, p))
+    remaining = next(
+        i for i in names if expected_entry_key(_K_PATH, _APP, i) in store.blobs
+    )
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, remaining, p)
+    )
     assert "entry not found" not in rec.title
 
     res, _rec = _write(
-        session, store,
+        session,
+        store,
         lambda p: ward.set_entry(session, _APP, remaining, b"still_writable", p),
         "ward_set_entry",
     )
@@ -1756,10 +1859,14 @@ def test_ward_deleting_the_last_entry_keeps_verifying(session: Session):
     key = _seed(session, store, b"addr1", b"only_entry")
     stale = WardTrie()
     stale.set(key, store.blobs[key])  # the world as it was one delete ago
-    assert stale.root() is not None  # the replay it will attempt is a real, provable tree
+    assert (
+        stale.root() is not None
+    )  # the replay it will attempt is a real, provable tree
 
     res, _rec = _write(
-        session, store, lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, b"addr1", p),
         "ward_delete_entry",
     )
     ward.apply(store, res)
@@ -1780,7 +1887,9 @@ def test_ward_an_emptied_tree_can_be_written_to_again(session: Session):
     store = WardTrie()
     _seed(session, store, b"addr1", b"only_entry")
     res, _rec = _write(
-        session, store, lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, b"addr1", p),
         "ward_delete_entry",
     )
     ward.apply(store, res)
@@ -1788,5 +1897,7 @@ def test_ward_an_emptied_tree_can_be_written_to_again(session: Session):
 
     _seed(session, store, b"addr2", b"after_the_purge")
     assert len(store) == 1
-    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr2", p))
+    _res, rec = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"addr2", p)
+    )
     assert "after_the_purge" in rec.squashed

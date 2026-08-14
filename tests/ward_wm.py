@@ -82,7 +82,12 @@ class MockWM:
         answer fresh rather than merely authentic.
         """
         counter, mac, timestamp = self._heads[ward_id]
-        return counter, mac, timestamp, self.sign(ward_id, nonce, counter, mac, timestamp)
+        return (
+            counter,
+            mac,
+            timestamp,
+            self.sign(ward_id, nonce, counter, mac, timestamp),
+        )
 
     def sign(
         self, ward_id: bytes, nonce: bytes, counter: int, mac: bytes, timestamp: int

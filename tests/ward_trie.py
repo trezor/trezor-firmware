@@ -73,9 +73,7 @@ def _part_bytes(part) -> bytes:
     if e is None:
         return bytes([1, 0, 0]) + _u32(0)
     nonce, tag, ct = e.nonce or b"", e.tag or b"", e.ct or b""
-    return (
-        bytes([0, len(nonce)]) + nonce + bytes([len(tag)]) + tag + _u32(len(ct)) + ct
-    )
+    return bytes([0, len(nonce)]) + nonce + bytes([len(tag)]) + tag + _u32(len(ct)) + ct
 
 
 def commit_of(key_type: str, identity, content) -> bytes:

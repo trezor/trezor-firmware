@@ -138,6 +138,7 @@ def _fresh_nonce() -> bytes:
 
     return random.bytes(12)
 
+
 # C_leaf is the global root counter stamped onto a leaf when it changes. It lives inside
 # the content body and never in entry_key, so an entry keeps one stable path across
 # versions. Nothing reads it yet: no root exists to count, and the trie hashes the
@@ -345,9 +346,12 @@ def make_leaf_content(part: "Part | None") -> "Any":
 
     encoding, nonce, tag, body = part if part is not None else EMPTY_PART
     if encoding == ENC_PLAINTEXT:
-        return WardLeafContent(encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=body))
+        return WardLeafContent(
+            encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=body)
+        )
     return WardLeafContent(
-        encoding=ENC_ENCRYPTED, encrypted=WardEncryptedLeaf(nonce=nonce, tag=tag, ct=body)
+        encoding=ENC_ENCRYPTED,
+        encrypted=WardEncryptedLeaf(nonce=nonce, tag=tag, ct=body),
     )
 
 
@@ -374,7 +378,11 @@ def read_leaf_content(content: "Any") -> "Part | None":
 
 
 def make_leaf_identity(key_type: str, part: "Part | None") -> "Any":
-    from trezor.messages import WardEncryptedIdentity, WardLeafIdentity, WardPlainIdentity
+    from trezor.messages import (
+        WardEncryptedIdentity,
+        WardLeafIdentity,
+        WardPlainIdentity,
+    )
 
     encoding, nonce, tag, body = part if part is not None else EMPTY_PART
     if encoding == ENC_PLAINTEXT:
@@ -384,9 +392,7 @@ def make_leaf_identity(key_type: str, part: "Part | None") -> "Any":
             plain = WardPlainIdentity(
                 identifier=identifier, app_id=app_id.decode(), device_id=device_id
             )
-        return WardLeafIdentity(
-            encoding=ENC_PLAINTEXT, key_type=key_type, plain=plain
-        )
+        return WardLeafIdentity(encoding=ENC_PLAINTEXT, key_type=key_type, plain=plain)
     return WardLeafIdentity(
         encoding=ENC_ENCRYPTED,
         key_type=key_type,

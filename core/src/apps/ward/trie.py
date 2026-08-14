@@ -351,12 +351,19 @@ def compute_new_root(
     if sibling_node is not None:
         sib_split, left, right = sibling_node
         if sib_split <= split_bit or sib_split >= _MAX_BITS:
-            raise DataError("WARD: sibling split_bit is not below the collapsing branch")
-        if internal_hash(sib_split, sib_split - (split_bit + 1), left, right) != sibling:
+            raise DataError(
+                "WARD: sibling split_bit is not below the collapsing branch"
+            )
+        if (
+            internal_hash(sib_split, sib_split - (split_bit + 1), left, right)
+            != sibling
+        ):
             raise DataError("WARD: sibling decomposition does not match the proof")
         # its parent moves up by the collapsed branch, so it absorbs that branch's own
         # skiplen plus the level itself
-        sibling = internal_hash(sib_split, sib_split - (split_bit + 1) + skiplen + 1, left, right)
+        sibling = internal_hash(
+            sib_split, sib_split - (split_bit + 1) + skiplen + 1, left, right
+        )
     elif sibling_leaf is not None:
         sib_key, sib_commit = sibling_leaf
         # Recomputing the leaf hash is what turns "it is a leaf" from a claim into a fact:

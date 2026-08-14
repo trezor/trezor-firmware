@@ -63,6 +63,7 @@ def root_or_empty(root: bytes | None) -> bytes:
     """A root in its preimage form: itself, or the empty-tree stand-in."""
     return root if root is not None else EMPTY_ROOT
 
+
 # PLACEHOLDER. Production firmware rejects every WM signature until a real key is
 # provisioned here, which is the correct default: a device that accepted a WM key from
 # whoever offered one would be verifying freshness against an adversary's clock.
