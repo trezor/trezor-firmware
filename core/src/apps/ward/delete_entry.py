@@ -62,7 +62,7 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
     # Derive the root the deletion leaves behind. The sibling decomposition matters here:
     # removing a leaf re-parents its sibling, whose hash commits to a skiplen measured
     # from its old parent -- see `trie.compute_new_root`.
-    proof, _witness_key, _witness_commit, sibling_node = material
+    proof, _witness_key, _witness_commit, sibling_node, sibling_leaf = material
     from_root = await get_root()
     counter = await get_counter() + 1
     new_root = compute_new_root(
@@ -72,6 +72,7 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
         proof,
         from_root,
         sibling_node=sibling_node,
+        sibling_leaf=sibling_leaf,
     )
     await set_root(new_root, counter)
 

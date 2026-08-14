@@ -204,13 +204,15 @@ def compute_new_root(
     witness_entry_key: bytes | None = None,
     witness_commit: bytes | None = None,
     sibling_node: "tuple[int, bytes, bytes] | None" = None,
-) -> bytes | None:
+    sibling_leaf: "tuple[bytes, bytes] | None" = None,
+) -> bytes:
     """Verify the CURRENT state, then derive the root that replaces it.
 
     `old_leaf` / `new_leaf` are (key_type, id_part, val_part) triples the device built, or
-    None: old_leaf=None inserts, new_leaf=None deletes. Returns the new root, or None if
-    the tree becomes empty. Raises rather than returning a bool -- a write must abort, not
-    proceed on a false.
+    None: old_leaf=None inserts, new_leaf=None deletes. Always returns a root -- a tree
+    emptied by a delete is EMPTY_ROOT, never None, so that "the tree is empty" can never be
+    confused with "this device has no root and therefore checks nothing". Raises rather
+    than returning a bool: a write must abort, not proceed on a false.
 
     The point of this function is that the device never takes the host's word for the
     state it is replacing. In every branch but the very first insert, the host must PROVE
@@ -218,12 +220,19 @@ def compute_new_root(
     before the device will compute anything from it. A host cannot walk the device through
     a fabricated present to land it on a chosen future.
 
-    `sibling_node` is (split_bit, left, right) for the collapsing sibling on a DELETE --
-    see below for why a delete needs it.
+    A DELETE must identify the collapsing sibling, as exactly one of `sibling_node`
+    (split_bit, left, right) for a branch or `sibling_leaf` (entry_key, commit) for a leaf
+    -- see below for why, and why neither may be inferred from the other's absence.
     """
     from trezor.wire import DataError
 
+    from .attest import EMPTY_ROOT
     from .leaf import leaf_hash_of
+
+    # An empty tree has a root like any other state; what it does not have is anything to
+    # prove a membership against. `stored_root is None` means something entirely different
+    # -- this device has never written -- and the two must not be collapsed.
+    empty = stored_root is None or stored_root == EMPTY_ROOT
 
     inserting = old_leaf is None
     deleting = new_leaf is None
@@ -232,9 +241,11 @@ def compute_new_root(
 
     if inserting:
         if not proof and witness_entry_key is None:
-            # The very first entry: there is no state to prove, so the device's OWN
-            # record that it holds no root is the only authority accepted here.
-            if stored_root is not None:
+            # The first entry of an empty tree: there is no state to prove, so the
+            # device's OWN record that the tree is empty is the only authority accepted
+            # here. That covers both a device that has never written and one whose last
+            # entry was deleted.
+            if not empty:
                 raise DataError("WARD: tree is not empty; a witness is required")
             return _leaf_of(entry_key, new_leaf)
 
@@ -303,8 +314,9 @@ def compute_new_root(
         # above the splice the two keys agree, so folding by either path is the same
         return reconstruct(branch, proof[idx:], witness_entry_key)
 
-    # Both DELETE and UPDATE must first prove the leaf they claim to be replacing.
-    if stored_root is None:
+    # Both DELETE and UPDATE must first prove the leaf they claim to be replacing. An
+    # empty tree holds no leaf to replace, so there is nothing either could be proving.
+    if empty:
         raise DataError("WARD: no trusted root")
     current = _leaf_of(entry_key, old_leaf)
     if reconstruct(current, proof, entry_key) != stored_root:
@@ -314,19 +326,28 @@ def compute_new_root(
         return reconstruct(_leaf_of(entry_key, new_leaf), proof, entry_key)
 
     if not proof:
-        return None  # the last leaf is gone; the tree is empty
+        return EMPTY_ROOT  # the last leaf is gone; the tree is empty, and says so
 
     # Deleting collapses the branch above, and the sibling takes its place. That REPARENTS
     # the sibling, and a node's hash commits to its own skiplen, which is measured from
-    # its parent -- so the sibling's hash is stale the moment it moves, and the device
-    # holds only that hash. Promoting it unchanged (as one might reasonably write this)
-    # yields a root no canonical rebuild agrees with, and only when the sibling is a
-    # BRANCH: a leaf has no skiplen and promotes exactly.
+    # its parent -- so a BRANCH sibling's hash is stale the moment it moves, while a LEAF
+    # has no skiplen and promotes exactly.
     #
-    # So a branch sibling must arrive decomposed, and the device re-derives it. Nothing is
-    # trusted: the pieces are checked against the sibling hash the proof already committed
-    # to, then re-hashed at the shallower depth.
+    # The proof carries only the sibling's HASH, which does not say which of the two it is.
+    # So the host must say, and PROVE it. Both forms are checked against that committed
+    # hash, so neither can name a node the tree does not hold.
+    #
+    # Supplying neither is refused, and that refusal is the whole point of this shape. An
+    # earlier revision let a leaf sibling be signalled by OMISSION -- and the device cannot
+    # verify an omission. A host that withheld the decomposition for a branch got its root
+    # promoted with a stale skiplen: a valid hash of a NON-CANONICAL tree over the same
+    # leaves. No entry is forged or altered by that (the seal and the keyed path are
+    # untouched), but every later proof from an honest, canonically-computing host
+    # reconstructs to a different root and is refused, so the wallet is stuck.
     split_bit, skiplen, sibling = _parse_proof_elem(proof[0])
+    if sibling_node is not None and sibling_leaf is not None:
+        raise DataError("WARD: sibling is either a branch or a leaf, not both")
+
     if sibling_node is not None:
         sib_split, left, right = sibling_node
         if sib_split <= split_bit or sib_split >= _MAX_BITS:
@@ -336,5 +357,15 @@ def compute_new_root(
         # its parent moves up by the collapsed branch, so it absorbs that branch's own
         # skiplen plus the level itself
         sibling = internal_hash(sib_split, sib_split - (split_bit + 1) + skiplen + 1, left, right)
+    elif sibling_leaf is not None:
+        sib_key, sib_commit = sibling_leaf
+        # Recomputing the leaf hash is what turns "it is a leaf" from a claim into a fact:
+        # leaf and internal nodes are domain-separated (0x00 / 0x01), so a preimage that
+        # reproduces the committed hash under the LEAF tag could not have been a branch.
+        # The hash then promotes unchanged, which is correct precisely because it is one.
+        if leaf_hash_of(sib_key, sib_commit) != sibling:
+            raise DataError("WARD: sibling leaf does not match the proof")
+    else:
+        raise DataError("WARD: delete must identify the sibling")
 
     return reconstruct(sibling, proof[1:], entry_key)

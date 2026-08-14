@@ -16,7 +16,7 @@ async def reconcile(msg: WARDReconcile) -> WARDReconcileAck:
     from trezor.wire import DataError
 
     from . import round as sync_round
-    from .attest import root_mac
+    from .attest import root_mac, root_or_empty
     from .common import require_initialized
     from .keys import derive_k_mac, derive_ward_id
     from .root import get_counter, get_root, set_root
@@ -53,7 +53,9 @@ async def reconcile(msg: WARDReconcile) -> WARDReconcileAck:
     stored_counter = await get_counter()
     if counter == stored_counter:
         current = await get_root()
-        if current is not None and current != root:
+        # Compared in preimage form: an empty tree is stored as EMPTY_ROOT but arrives on
+        # the wire as an absent field, and the two must still recognise each other.
+        if current is not None and current != root_or_empty(root):
             raise DataError("attested counter matches but the root differs")
 
     await set_root(root, counter, timestamp)

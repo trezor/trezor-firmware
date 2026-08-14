@@ -198,19 +198,29 @@ message WARDEntryAck {
     optional bytes witness_entry_key = 5;
     optional bytes witness_commit    = 6;
 
-    // DELETE only, and only when the deleted leaf's sibling is a BRANCH.
+    // DELETE only. A delete MUST identify the sibling of the leaf being removed, in
+    // exactly one of the two forms below -- see `trie.compute_new_root`.
     //
-    // Removing a leaf collapses the branch above it, so the sibling moves up a level.
-    // A node's hash commits to its own skiplen, which is measured from its parent, so a
-    // re-parented sibling's hash is stale the instant it moves -- and the proof carries
-    // only that hash. The device therefore needs the sibling decomposed, to re-derive it
-    // at the shallower depth. Nothing is trusted: the device checks these pieces against
-    // the sibling hash the proof already committed to.
+    // Removing a leaf collapses the branch above it, so the sibling moves up a level. A
+    // node's hash commits to its own skiplen, which is measured from its parent, so a
+    // re-parented BRANCH's hash is stale the instant it moves; a LEAF has no skiplen and
+    // promotes exactly. The proof carries only the sibling's hash, which does not say
+    // which of the two it is -- so the host must say, and prove it.
     //
-    // Omit for a leaf sibling: a leaf has no skiplen and promotes exactly.
+    // Nothing is trusted in either form: both are checked against the sibling hash the
+    // proof already committed to. Sending neither is refused. An earlier revision let a
+    // leaf sibling be signalled by OMISSION, which the device could not verify: a host
+    // that withheld the decomposition for a branch steered it to a non-canonical root and
+    // stuck the wallet.
+
+    // branch sibling: its pieces, re-hashed by the device at the shallower depth
     optional uint32 sibling_split_bit = 7;
     optional bytes  sibling_left      = 8;
     optional bytes  sibling_right     = 9;
+
+    // leaf sibling: its path and commit, from which the device recomputes the leaf hash
+    optional bytes  sibling_entry_key = 10;
+    optional bytes  sibling_commit    = 11;
 }
 
 

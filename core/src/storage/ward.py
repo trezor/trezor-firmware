@@ -16,12 +16,10 @@ way to notice; refusing instead degrades only the wallet being introduced right 
 operates session-only and keeps saying so on screen. Fewer wallets protected, none
 silently weakened.
 
-FIXME(ward): no counter is stored yet. One is needed the moment the device can ADOPT a
-root from outside itself -- attestation or catch-up -- because roots repeat whenever
-contents repeat, so an old signature naming today's root would otherwise be replayable
-(ward-design.md 2.4, 8.2: bind on the counter, not the root). While the device only ever
-derives its own root, the root it remembers is authoritative and a counter would compare
-against nothing.
+Each slot carries the root, the anti-rollback counter and the last attested time, because
+a root alone does not identify a moment: roots repeat whenever contents repeat, so an old
+signature naming today's root would otherwise be replayable (ward-design.md 2.4, 8.2 --
+bind on the counter, not the root).
 """
 
 from micropython import const
@@ -61,7 +59,9 @@ def get_root(wallet_id: bytes) -> bytes | None:
     rec = _slot(index)
     assert rec is not None
     root = rec[_WALLET_ID_LEN : _WALLET_ID_LEN + _ROOT_LEN]
-    # an all-zero root is how an empty tree is recorded; there is nothing to verify against
+    # All-zero means the slot was written without a root, which no current caller does --
+    # an EMPTY TREE is stored as EMPTY_ROOT, a real hash, precisely so that it is not this
+    # state. Kept as a defensive floor: an unreadable record must read as "cannot verify".
     if root == bytes(_ROOT_LEN):
         return None
     return root

@@ -1558,3 +1558,146 @@ def test_ward_recover_counter_screen_names_both_counters_and_the_distance(sessio
     assert "#%d" % behind in rec.squashed  # where it is going
     assert "hours" in rec.text  # and how far back
     assert "may be lost" in rec.text
+
+
+# --- the sibling a delete promotes, and the tree a delete can empty ----------------
+
+
+def _branch_sibling_case(session: Session):
+    """A store where deleting one entry collapses a branch whose sibling is a BRANCH.
+
+    Built by real writes, so the keys are whatever the device's HMAC produces -- the shape
+    is discovered rather than constructed, and the helper says so if this seed stops
+    producing one, instead of quietly testing the easy case.
+    """
+    store = WardTrie()
+    for i in range(6):
+        _seed(session, store, b"addr%d" % i, b"v%d" % i)
+        for key in list(store.blobs):
+            if store.sibling_decomposition(key) is not None:
+                return store, key
+    pytest.skip("no branch-sibling delete arises for this seed")
+
+
+@pytest.mark.models("core")
+def test_ward_delete_refuses_a_sibling_it_cannot_classify(session: Session):
+    """A delete whose answer identifies the sibling in NEITHER form is refused.
+
+    The proof carries only the sibling's hash, which does not say whether it is a leaf or a
+    branch. Signalling "leaf" by omission cannot be verified: a host that withheld the
+    decomposition for a branch had the stale hash promoted, and the device stored a valid
+    hash of a NON-CANONICAL tree over the same leaves. No entry is forged that way -- the
+    seal and the keyed path are untouched -- but every later proof from an honest,
+    canonically-computing host reconstructs to a different root and is refused, so the
+    wallet is stuck. This asserts the device now refuses instead.
+
+    Set up with a real BRANCH sibling, so the omission would genuinely have been wrong.
+    """
+    store, key = _branch_sibling_case(session)
+    honest = ward.store_provider(store)
+
+    def withholds(entry_key: bytes) -> ward.Answer:
+        answer = honest(entry_key)
+        return answer._replace(
+            sibling_split_bit=None, sibling_left=None, sibling_right=None,
+            sibling_entry_key=None, sibling_commit=None,
+        )
+
+    identifier = next(
+        i for i in (b"addr%d" % n for n in range(6))
+        if expected_entry_key(_K_PATH, _APP, i) == key
+    )
+    with pytest.raises(exceptions.TrezorFailure, match="identify the sibling"):
+        ward.delete_entry(session, _APP, identifier, withholds)
+
+    # and the entry is still there afterwards -- a refused delete deletes nothing
+    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, identifier, p))
+    assert "entry not found" not in rec.title
+
+
+@pytest.mark.models("core")
+def test_ward_delete_keeps_the_root_canonical_when_a_branch_is_promoted(session: Session):
+    """The honest form still works, and leaves the device on the CANONICAL root.
+
+    There is no way to read the device's root, and no need to: the host store rebuilds its
+    tree canonically on every query, so a subsequent read succeeding is exactly the
+    statement that the root the device derived equals the one a rebuild produces. Promoting
+    the stale sibling hash -- what the old code did when the decomposition was withheld --
+    diverges at three entries, and every read below would fail.
+
+    Both a read and a WRITE are exercised: an update has to prove the current leaf against
+    the device's root, so it fails on a drifted root even if reads somehow did not.
+    """
+    store, key = _branch_sibling_case(session)
+    names = [b"addr%d" % n for n in range(6)]
+    identifier = next(i for i in names if expected_entry_key(_K_PATH, _APP, i) == key)
+
+    res, _rec = _write(
+        session, store, lambda p: ward.delete_entry(session, _APP, identifier, p),
+        "ward_delete_entry",
+    )
+    ward.apply(store, res)
+    assert key not in store.blobs
+    assert len(store) > 1  # a branch sibling survived, which is the case under test
+
+    remaining = next(i for i in names if expected_entry_key(_K_PATH, _APP, i) in store.blobs)
+    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, remaining, p))
+    assert "entry not found" not in rec.title
+
+    res, _rec = _write(
+        session, store,
+        lambda p: ward.set_entry(session, _APP, remaining, b"still_writable", p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+
+
+@pytest.mark.models("core")
+def test_ward_deleting_the_last_entry_keeps_verifying(session: Session):
+    """Emptying the tree must not turn verification off.
+
+    An empty tree used to be recorded the same way as "this device has never written",
+    which is the one state in which nothing is checked -- so a one-entry wallet deleting its
+    only entry silently lost rollback and suppression protection, from a state the user has
+    every reason to think is protected. Here the host serves back the leaf it held before
+    the delete, with a real proof against the pre-delete root, and the device must refuse
+    it.
+    """
+    store = WardTrie()
+    key = _seed(session, store, b"addr1", b"only_entry")
+    stale = WardTrie()
+    stale.set(key, store.blobs[key])  # the world as it was one delete ago
+    assert stale.root() is not None  # the replay it will attempt is a real, provable tree
+
+    res, _rec = _write(
+        session, store, lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        "ward_delete_entry",
+    )
+    ward.apply(store, res)
+    assert len(store) == 0
+
+    with pytest.raises(exceptions.TrezorFailure, match="tree is empty"):
+        ward.get_entry(session, _APP, b"addr1", ward.store_provider(stale))
+
+
+@pytest.mark.models("core")
+def test_ward_an_emptied_tree_can_be_written_to_again(session: Session):
+    """...and the fix must not brick the wallet it protects.
+
+    There is no leaf left to witness, so an insert here takes the no-proof path exactly as
+    on a device that has never written. Without this, refusing everything against an empty
+    tree would be a denial of service dressed as a fix.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"only_entry")
+    res, _rec = _write(
+        session, store, lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        "ward_delete_entry",
+    )
+    ward.apply(store, res)
+    assert len(store) == 0
+
+    _seed(session, store, b"addr2", b"after_the_purge")
+    assert len(store) == 1
+    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"addr2", p))
+    assert "after_the_purge" in rec.squashed
