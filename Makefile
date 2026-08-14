@@ -20,6 +20,7 @@
 	extapp_unit_tests extapp_device_tests \
 	extapp_fmt extapp_fmt_check \
 	extapp_py_style extapp_py_style_check \
+	extapp_translation_style extapp_translation_style_check \
 	extapp_clippy extapp_vet \
 	typecheck pyright \
 	mocks mocks_check \
@@ -84,8 +85,8 @@ pystyle_check: ## run code style check on application sources and tests
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
 	make -C python style_check BLACK_FLAGS=$(BLACK_FLAGS)
-	xtask modular py-style-check -p ethereum
-	xtask modular py-style-check -p tron
+	EXTAPP=ethereum make extapp_py_style_check
+	EXTAPP=tron make extapp_py_style_check
 
 pystyle_quick_check: ## run the basic style checks, suitable for a quick git hook
 	@isort --check-only $(PY_FILES)
@@ -107,8 +108,8 @@ pystyle: ## apply code style on application sources and tests
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
 	make -C python style BLACK_FLAGS=$(BLACK_FLAGS)
-	xtask modular py-style -p ethereum
-	xtask modular py-style -p tron
+	EXTAPP=ethereum make extapp_py_style
+	EXTAPP=tron make extapp_py_style
 
 changelog_check: ## check changelog format
 	@echo [CHANGELOG-CHECK]
@@ -121,14 +122,14 @@ changelog_style: ## fix changelog format
 translations_style: ## Format translation files
 	@echo [TRANSLATIONS-STYLE]
 	@./core/tools/translations/sort_keys.py
-	xtask modular translation-style -p ethereum
-	xtask modular translation-style -p tron
+	EXTAPP=ethereum make extapp_translation_style
+	EXTAPP=tron make extapp_translation_style
 
 translations_style_check: ## Check that translation files are properly formatted
 	@echo [TRANSLATIONS-STYLE-CHECK]
 	@./core/tools/translations/sort_keys.py check
-	xtask modular translation-style-check -p ethereum
-	xtask modular translation-style-check -p tron
+	EXTAPP=ethereum make extapp_translation_style_check
+	EXTAPP=tron make extapp_translation_style_check
 
 yaml_check: ## check yaml formatting
 	@echo [YAML-STYLE-CHECK]
@@ -167,7 +168,7 @@ ruststyle: ## apply code style on rust sources
 	@echo [RUSTFMT]
 	@cd core/embed ; cargo fmt
 	make -C rust style
-	xtask modular fmt
+	make extapp_fmt
 	make modular_xtask_fmt
 	make sdk_fmt
 
@@ -175,7 +176,7 @@ ruststyle_check: ## run code style check on rust sources
 	@echo [RUSTFMT]
 	@cd core/embed ; cargo fmt -- --check
 	make -C rust style_check
-	xtask modular fmt-check
+	make extapp_fmt_check
 	make modular_xtask_fmt_check
 	make sdk_fmt_check
 
@@ -298,6 +299,14 @@ extapp_py_style_check: ## run python style check on an extapp's tests (set EXTAP
 	@echo [EXTAPP-PYSTYLE-CHECK]
 	@xtask modular py-style-check -p $(EXTAPP)
 
+extapp_translation_style: ## apply translation style on an extapp (set EXTAPP)
+	@echo [EXTAPP-TRANSLATION-STYLE]
+	@xtask modular translation-style -p $(EXTAPP)
+
+extapp_translation_style_check: ## check translation style on an extapp (set EXTAPP)
+	@echo [EXTAPP-TRANSLATION-STYLE-CHECK]
+	@xtask modular translation-style-check -p $(EXTAPP)
+
 extapp_clippy: ## run clippy on an extapp (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
 	@echo [EXTAPP-CLIPPY]
 	@xtask modular clippy -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG)
@@ -405,9 +414,11 @@ gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_ha
 gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_config_check hsm_keys_check prodtest_error_codes_check certs_check python_doc_check ## check validity of auto-generated files
 
 api:
+	@echo [API-BINDINGS]
 	xtask api-bindings
 
 api_check:
+	@echo [API-BINDINGS-CHECK]
 	xtask api-bindings --check-only
 
 uvlock_check: ## check that uv.lock is up to date
