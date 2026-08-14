@@ -65,11 +65,21 @@ async def set_root(
     `counter=None` keeps the stored counter, which is what an ordinary write does: the
     device advances the tree without an attestation, so nothing has told it a new counter
     is current. Only the sync round moves the counter, and only ever forward.
+
+    An ABSENT root means the empty tree, and is stored as EMPTY_ROOT. No caller ever means
+    "forget the root I had": a delete that empties the tree, a rollback to an empty
+    predecessor and a reconcile onto an empty head all describe a state, not the loss of
+    one. Normalising here rather than at each of them is deliberate -- this is the only
+    function that can write the "verifies nothing" state, so it is the only place that has
+    to be got right, and a future caller cannot reintroduce it by omission.
     """
     import storage.ward as ward_store
 
+    from .attest import EMPTY_ROOT
     from .keys import derive_wallet_id
 
+    if root is None:
+        root = EMPTY_ROOT
     wallet_id = await derive_wallet_id()
     if counter is None:
         counter = ward_store.get_counter(wallet_id)

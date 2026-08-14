@@ -10228,6 +10228,8 @@ class WARDEntryAck(protobuf.MessageType):
         7: protobuf.Field("sibling_split_bit", "uint32", repeated=False, required=False, default=None),
         8: protobuf.Field("sibling_left", "bytes", repeated=False, required=False, default=None),
         9: protobuf.Field("sibling_right", "bytes", repeated=False, required=False, default=None),
+        10: protobuf.Field("sibling_entry_key", "bytes", repeated=False, required=False, default=None),
+        11: protobuf.Field("sibling_commit", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10241,6 +10243,8 @@ class WARDEntryAck(protobuf.MessageType):
         sibling_split_bit: Optional["int"] = None,
         sibling_left: Optional["bytes"] = None,
         sibling_right: Optional["bytes"] = None,
+        sibling_entry_key: Optional["bytes"] = None,
+        sibling_commit: Optional["bytes"] = None,
     ) -> None:
         self.proof: Sequence["bytes"] = proof if proof is not None else []
         self.identity = identity
@@ -10250,6 +10254,8 @@ class WARDEntryAck(protobuf.MessageType):
         self.sibling_split_bit = sibling_split_bit
         self.sibling_left = sibling_left
         self.sibling_right = sibling_right
+        self.sibling_entry_key = sibling_entry_key
+        self.sibling_commit = sibling_commit
 
 
 class WARDLeafAck(protobuf.MessageType):
