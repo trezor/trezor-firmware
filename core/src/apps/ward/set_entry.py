@@ -23,11 +23,13 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
     from trezor.wire import DataError
 
     from .attest import root_mac
+    from .cas import auth_commit
     from .common import WARNING_UNVERIFIED, display_bytes, pull_leaf, require_key
     from .keys import (
         ENTRY_TYPE_ADDRESS,
         derive_k_data,
         derive_k_ident,
+        derive_k_auth,
         derive_k_mac,
         derive_ward_id,
         entry_key_for,
@@ -69,6 +71,7 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
     # at (C_leaf). Nothing reads that stamp yet; it exists so a later per-leaf staleness
     # check has something to compare, and writing it now costs nothing while leaving it
     # zero would mean rewriting every leaf to add it.
+    from_root = await get_root()
     counter = await get_counter() + 1
     id_part = encode_identity(
         await derive_k_ident(key_type), entry_key, key_type, identifier, app_id
@@ -86,7 +89,7 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
         old_leaf,
         (key_type, id_part, val_part),
         proof,
-        await get_root(),
+        from_root,
         witness_entry_key=witness_entry_key,
         witness_commit=witness_commit,
     )
@@ -98,4 +101,12 @@ async def set_entry(msg: WARDSetEntry) -> WARDLeafAck:
         content=make_leaf_content(val_part),
         counter=counter,
         mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
+        auth_commit=auth_commit(
+            await derive_k_auth(),
+            await derive_ward_id(),
+            counter - 1,
+            from_root,
+            counter,
+            new_root,
+        ),
     )

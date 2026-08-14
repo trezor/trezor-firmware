@@ -317,3 +317,5 @@ if not utils.BITCOIN_ONLY:
     WARDIngestAttestationAck = 2310
     WARDReconcile = 2311
     WARDReconcileAck = 2312
+    WARDVerifyChain = 2313
+    WARDVerifyChainAck = 2314
