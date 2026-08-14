@@ -285,6 +285,34 @@ def verify_chain(session: "Session", links) -> messages.WARDVerifyChainAck:
     )
 
 
+def rollback(
+    session: "Session", to_root: Optional[bytes], auth_commit: bytes
+) -> messages.WARDRollbackAck:
+    """Undo the device's most recent transition, one step.
+
+    `auth_commit` is the authorisation that CREATED the current head, which the caller
+    holds as the last entry of its transition log. The device checks it names its own
+    counter and root, so the demotion target cannot be chosen by the caller.
+    """
+    return session.call(
+        messages.WARDRollback(to_root=to_root, auth_commit=auth_commit),
+        expect=messages.WARDRollbackAck,
+    )
+
+
+def apply_rollback(store, ack: messages.WARDRollbackAck) -> None:
+    """Roll the caller's store back to match, and record the demotion as a transition.
+
+    The store must be able to reproduce the demoted tree, so this only rewinds the
+    bookkeeping -- restoring the leaves themselves is the caller's business, since only it
+    knows what the earlier tree held.
+    """
+    store.links.append(
+        (store.counter, store.root(), ack.counter, ack.new_root or None, ack.auth_commit)
+    )
+    store.counter = ack.counter
+
+
 def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
     """A leaf whose content body is empty is a deletion, not an empty-valued entry."""
     if leaf is None or leaf.content is None:

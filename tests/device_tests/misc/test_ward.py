@@ -1268,3 +1268,122 @@ def test_ward_a_write_emits_its_own_authorisation(session: Session):
     # ...and they chain: each link starts where the previous ended
     assert store.links[0][2] == store.links[1][0]
     assert store.links[0][3] == store.links[1][1]
+
+
+# --- rollback: the escape from a stuck wallet ----------------------------------------
+
+
+def _rollback(session: Session, store: WardTrie):
+    """Undo the last transition, walking the confirmation screen."""
+    from_counter, from_root, _tc, _tr, ac = store.links[-1]
+    assert from_counter == store.counter - 1  # the link that made the current head
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_rollback"), m.WARDRollbackAck]
+        )
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        ack = ward.rollback(session, from_root, ac)
+    return ack, rec
+
+
+@pytest.mark.models("core")
+def test_ward_rollback_undoes_the_last_write(session: Session):
+    """The wallet returns to the state before its most recent change.
+
+    The counter still goes FORWARD. Reusing it would let the undone write replay, since
+    its own authorisation names that counter.
+    """
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    before_root, before_counter = store.root(), store.counter
+    key = _seed(session, store, b"b", b"two")
+
+    ack, rec = _rollback(session, store)
+
+    assert ack.counter == store.counter + 1  # forward, though the head moves back
+    assert ack.new_root == before_root
+    assert "revert" in rec.title.lower()
+    assert "cannot be recovered" in rec.text.lower()
+
+    # the device now verifies against the earlier tree, and the undone entry is gone
+    rewound = _subset(store, [k for k in store.blobs if k != key])
+    ward.apply_rollback(store, ack)
+    rewound.counter = ack.counter
+    assert rewound.root() == before_root
+    _res, rec = _read(session, rewound, lambda p: ward.get_entry(session, _APP, b"b", p))
+    assert "entry not found" in rec.title
+
+
+@pytest.mark.models("core")
+def test_ward_rollback_refuses_a_target_the_host_invents(session: Session):
+    """The demotion target is whatever the authorisation names, never a root the host
+    picks. This is the attack the whole construction exists to stop: a host that fakes a
+    stuck state would otherwise rewind the wallet anywhere in its history."""
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+    _from_counter, _from_root, _tc, _tr, ac = store.links[-1]
+
+    invented = _subset(store, [])  # some other tree the host would prefer
+    with pytest.raises(exceptions.TrezorFailure, match="does not describe the current head"):
+        ward.rollback(session, invented.root(), ac)
+
+
+@pytest.mark.models("core")
+def test_ward_rollback_refuses_an_authorisation_for_an_older_step(session: Session):
+    """THE counter-binding attack, from the design's own worked example.
+
+    Roots repeat whenever contents repeat. An old authorisation whose `to_root` equals
+    today's head would, if matched on the root alone, demote the wallet to a state from
+    arbitrarily long ago -- in one hop, with the one-step rule perfectly satisfied. Naming
+    the counter is what rejects it before the roots are even compared.
+    """
+    store = WardTrie()
+    k1 = _seed(session, store, b"a", b"one")
+    # take the wallet away and back again, so an EARLIER counter has today's root
+    _seed(session, store, b"b", b"two")
+    repeated_root = store.root()
+    old_link = store.links[-1]
+
+    _write_and_apply = _seed(session, store, b"c", b"three")
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, b"c", p),
+        "ward_delete_entry",
+    )
+    ward.apply(store, res)
+    assert store.root() == repeated_root  # same contents, so the same root as before
+
+    # the old authorisation names that root, but at its own, older counter
+    _fc, from_root, _tc, to_root, ac = old_link
+    assert to_root == store.root()
+    with pytest.raises(exceptions.TrezorFailure, match="does not describe the current head"):
+        ward.rollback(session, from_root, ac)
+    assert k1 in store.blobs
+
+
+@pytest.mark.models("core")
+def test_ward_rollback_unsticks_a_wallet_the_wm_never_saw(session: Session):
+    """End to end: a write that never reached the WM blocks sync; undoing it unblocks."""
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    wm = MockWM()
+    _attest(session, wm, store)  # WM and device agree here
+
+    published_root, published_counter = store.root(), store.counter
+    _seed(session, store, b"b", b"two")  # ...and this never reaches the WM
+
+    ack_sync = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, published_counter, published_root)
+    sig = wm.sign(ack_sync.ward_id, ack_sync.nonce, published_counter, mac)
+    with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
+        ward.ingest_attestation(session, published_counter, mac, sig)
+
+    ack, _rec = _rollback(session, store)
+    ward.apply_rollback(store, ack)
+
+    # the wallet is back on the published contents, at a counter beyond the stuck one
+    assert ack.new_root == published_root
+    assert ack.counter > published_counter

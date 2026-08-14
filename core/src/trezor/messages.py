@@ -8297,6 +8297,40 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDReconcileAck"]:
             return isinstance(msg, cls)
 
+    class WARDRollback(protobuf.MessageType):
+        to_root: "AnyBytes | None"
+        auth_commit: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            to_root: "AnyBytes | None" = None,
+            auth_commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDRollback"]:
+            return isinstance(msg, cls)
+
+    class WARDRollbackAck(protobuf.MessageType):
+        counter: "int | None"
+        new_root: "AnyBytes | None"
+        auth_commit: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int | None" = None,
+            new_root: "AnyBytes | None" = None,
+            auth_commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDRollbackAck"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
         batch_size: "int | None"
 
