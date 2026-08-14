@@ -308,6 +308,7 @@ jpegdec_state_t jpegdec_process(jpegdec_input_t *inp) {
         return dec->state;
       }
       // pass through
+      [[fallthrough]];
     case JPEGDEC_STATE_INFO_READY:
       if (!jpegdec_start_dma_transfer(dec)) {
         dec->state = JPEGDEC_STATE_ERROR;

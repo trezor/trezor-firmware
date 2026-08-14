@@ -471,7 +471,7 @@ static int cli_process_char(cli_t* cli, int ch) {
       }
       --cli->line_cursor;
       // do not break, fall through
-
+      [[fallthrough]];
     case ESC_SEQ(3):  // ESC[3~
       // Delete
       if (cli->line_cursor < cli->line_len) {
