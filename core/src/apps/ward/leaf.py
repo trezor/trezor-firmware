@@ -167,6 +167,13 @@ def is_delete(part: "Part | None") -> bool:
 
 
 # --- identity part ---------------------------------------------------------------
+#
+# The identity part IS the entry_key preimage, kept so nothing has to recompute it -- the
+# scope's three fields plus the identifier, which is exactly what `keys.entry_key` HMACs.
+# That it is SEALED is the whole point: the host stores the preimage without holding it, so
+# it can serve an entry it cannot name. Storing this part in the clear for indexing would
+# undo the keyed path entirely -- the host would hold identifier -> entry_key for every row,
+# which is the mapping the HMAC exists to withhold.
 
 
 def pack_identity(identifier: bytes, app_id: str | bytes, device_id: int = 0) -> bytes:

@@ -19,6 +19,16 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
     identity part alive on delete, leaving a self-describing tombstone; we do not, since
     a tombstone that survives is a record of which entries once existed.
 
+    GAP(ward): FULL DELETE vs A SWEEPABLE LOG -- decision pending. Rebuilding the trie on the
+    host by sweeping prev_root -> genesis needs every historical change, deletions included,
+    so a delete has to be visible in whatever the sweep reads. Note the privacy this was
+    protecting is weaker than the paragraph below implies: a CRDT relay keeps the message
+    log regardless, so "no tombstone" hides past entries only from a party that sees current
+    state alone, never from the relay. What must NOT happen is a filtering rule creeping into
+    the trie -- "rows with an empty content part are not leaves" is a canonicalisation rule,
+    and canonicalisation disagreements are the one bug class that has bitten this subsystem
+    three times. Keeping live leaves and the transition log in separate places avoids that.
+
     IDEMPOTENT ON A PROVED ABSENCE. Deleting a path that already holds nothing succeeds,
     changing nothing: same empty leaf, same counter, no authorised transition, and no
     screen. It is not a favour to sloppy hosts -- the absence has already been PROVED by

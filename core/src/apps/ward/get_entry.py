@@ -10,6 +10,12 @@ async def get_entry(msg: WardGetEntry) -> Success:
     The device holds no entries, so it asks the host for this one and renders what it
     gets. See `common.pull_entry`; the value is UNAUTHENTICATED in this phase, hence
     `WARNING_UNVERIFIED` on the screen.
+
+    GAP(ward): this SHOWS the value and returns only Success -- the plaintext never leaves
+    the device. Handing it back to the calling application is a different security model, and
+    it collides with unattended use: every read costs a confirmation today, which no
+    per-app-settings use-case can pay. Deferred, and coupled to the app_id ACL above: an
+    unattended read without a trustworthy app_id is an oracle for any host.
     """
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_properties
