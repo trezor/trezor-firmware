@@ -27,18 +27,43 @@
 
 #define MONOCTR_MAX_VALUE 63
 
+/**
+ * @brief Enum representing the types of available monotonic counters.
+ */
 typedef enum {
   MONOCTR_BOOTLOADER_VERSION = 0,
   MONOCTR_FIRMWARE_VERSION = 1,
   MONOCTR_SECMON_VERSION = 2,
 } monoctr_type_t;
 
-// Write a new value to the monotonic counter
-// Returns sectrue on success, when value is lower than the current value
-// the write fails and returns secfalse
+/**
+ * @brief Initializes the monotonic counter module.
+ *
+ * This function should be called before any other operations on the monotonic
+ * counter.
+ */
+void monoctr_init(void);
+
+/**
+ * @brief Write a new value to the monotonic counter
+ *
+ * @param type The type of the monotonic counter to write to.
+ * @param value The new value to write to the monotonic counter.
+ *              Maximum value is defined by MONOCTR_MAX_VALUE.
+ *
+ * @return  Returns sectrue on success, when value is lower than the current
+ * value. If the write fails, returns secfalse.
+ */
 secbool monoctr_write(monoctr_type_t type, uint8_t value);
 
-// Read the current value of the monotonic counter
+/**
+ * @brief Read the current value of the monotonic counter
+ *
+ * @param type The type of the monotonic counter to read from.
+ * @param value Pointer to store the current value of the monotonic counter.
+ *
+ * @return Returns sectrue on success, or secfalse if the read fails.
+ */
 secbool monoctr_read(monoctr_type_t type, uint8_t* value);
 
 #endif  // SECURE_MODE

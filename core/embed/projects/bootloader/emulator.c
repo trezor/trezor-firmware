@@ -228,15 +228,6 @@ int main(int argc, char **argv) {
   (void)!flash_otp_write(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, otp_data,
                          sizeof(otp_data));
 
-  // Initialize monotonic counters
-
-  ensure(monoctr_write(MONOCTR_FIRMWARE_VERSION, 0),
-         "initialize firmware monotonic counter");
-#ifdef USE_SECMON_VERIFICATION
-  ensure(monoctr_write(MONOCTR_SECMON_VERSION, 0),
-         "initialize secure-monitor monotonic counter");
-#endif
-
   int exit_code = bootloader_main();
 
   char msg[64];

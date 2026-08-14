@@ -23,6 +23,7 @@
 #include <io/display.h>
 #include <io/rsod.h>
 #include <sec/board_capabilities.h>
+#include <sec/monoctr.h>
 #include <sec/option_bytes.h>
 #include <sec/rsod_special.h>
 #include <sys/bootutils.h>
@@ -72,6 +73,8 @@
 #endif
 
 static void drivers_init(void) {
+  monoctr_init();
+
 #ifdef USE_PMIC
   pmic_init();
 #endif

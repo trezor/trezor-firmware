@@ -28,6 +28,7 @@
 #include <io/usb.h>
 #include <io/usb_config.h>
 #include <sec/image.h>
+#include <sec/monoctr.h>
 #include <sec/random_delays.h>
 #include <sec/rsod_special.h>
 #include <sys/bootargs.h>
@@ -60,6 +61,8 @@
 #define USB_IFACE_NUM SYSHANDLE_USB_WIRE
 
 static void drivers_init(void) {
+  monoctr_init();
+
   display_init(DISPLAY_RESET_CONTENT);
 
   random_delays_init();

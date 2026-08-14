@@ -22,6 +22,7 @@
 
 #include <sec/board_capabilities.h>
 #include <sec/boot_image.h>
+#include <sec/monoctr.h>
 #include <sec/option_bytes.h>
 #include <sec/random_delays.h>
 #include <sec/secure_aes.h>
@@ -98,6 +99,8 @@ void usb_power_init(void) {
 
 static void drivers_init(void) {
   flash_init();
+
+  monoctr_init();
 
   parse_boardloader_capabilities();
   unit_properties_init();
