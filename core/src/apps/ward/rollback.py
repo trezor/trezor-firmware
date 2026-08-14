@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WARDRollback, WARDRollbackAck
+    from trezor.messages import WardRollback, WardRollbackAck
 
 
-async def rollback(msg: WARDRollback) -> WARDRollbackAck:
+async def rollback(msg: WardRollback) -> WardRollbackAck:
     """Demote the head by exactly one step, with the user's consent.
 
     This is the escape from a stuck wallet. A device whose write never reached the WM is
@@ -40,7 +40,7 @@ async def rollback(msg: WARDRollback) -> WARDRollbackAck:
     time obtained through a sync round before rolling back -- neither of which belongs in
     this change. Until then the screen names the change but cannot date it.
     """
-    from trezor.messages import WARDRollbackAck
+    from trezor.messages import WardRollbackAck
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
@@ -88,7 +88,7 @@ async def rollback(msg: WARDRollback) -> WARDRollbackAck:
     new_counter = counter + 1
     await set_root(to_root, new_counter)
 
-    return WARDRollbackAck(
+    return WardRollbackAck(
         counter=new_counter,
         new_root=to_root,
         auth_commit=auth_commit(

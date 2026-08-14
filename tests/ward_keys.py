@@ -166,7 +166,7 @@ _AAD_CONTENT = b"\x02"
 
 
 def _open(key: bytes, domain: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
-    """Open a sealed part. `part` is a LeafContent.encrypted / LeafIdentity.encrypted."""
+    """Open a sealed part. `part` is a WardLeafContent.encrypted / WardLeafIdentity.encrypted."""
     from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
     aad = domain + entry_key_ + key_type.encode()

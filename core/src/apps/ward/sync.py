@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WARDSync, WARDSyncAck
+    from trezor.messages import WardSync, WardSyncAck
 
 
-async def sync(msg: WARDSync) -> WARDSyncAck:
+async def sync(msg: WardSync) -> WardSyncAck:
     """Begin a sync round: mint the nonce the WM's attestation must be bound to.
 
     Minting happens BEFORE the host talks to the WM, and that ordering is the point. The
@@ -14,7 +14,7 @@ async def sync(msg: WARDSync) -> WARDSyncAck:
     event -- that closes replay entirely.
     """
     from trezor.crypto import random
-    from trezor.messages import WARDSyncAck
+    from trezor.messages import WardSyncAck
 
     from . import round as sync_round
     from .attest import NONCE_LENGTH
@@ -26,4 +26,4 @@ async def sync(msg: WARDSync) -> WARDSyncAck:
     nonce = random.bytes(NONCE_LENGTH)
     sync_round.begin(nonce)
 
-    return WARDSyncAck(nonce=nonce, ward_id=await derive_ward_id())
+    return WardSyncAck(nonce=nonce, ward_id=await derive_ward_id())

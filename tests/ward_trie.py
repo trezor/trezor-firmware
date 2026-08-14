@@ -59,7 +59,7 @@ def addr_bit(entry_key: bytes, bit: int) -> int:
 
 
 def _part_bytes(part) -> bytes:
-    """A wire LeafContent/LeafIdentity submessage -> its canonical framing."""
+    """A wire WardLeafContent/WardLeafIdentity submessage -> its canonical framing."""
     if part is None:
         return bytes([1, 0, 0]) + _u32(0)  # the empty (deleted) part
     if getattr(part, "plaintext", None) is not None:

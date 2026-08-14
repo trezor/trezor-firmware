@@ -399,25 +399,25 @@ enum MessageType {
     MessageType_TronWithdrawBalance = 2213 [(wire_in) = true];
 
     // WARD (plaintext, pull-only phase)
-    MessageType_WARDGetEntry = 2300 [(wire_in) = true];
-    MessageType_WARDEntryRequest = 2301 [(wire_out) = true];
-    MessageType_WARDEntryAck = 2302 [(wire_in) = true];
-    MessageType_WARDSetEntry = 2303 [(wire_in) = true];
-    MessageType_WARDDeleteEntry = 2304 [(wire_in) = true];
-    MessageType_WARDLeafAck = 2305 [(wire_out) = true];
-    reserved 2306;  // was WARDDebugSetRoot: the device derives its own root now
-    MessageType_WARDSync = 2307 [(wire_in) = true];
-    MessageType_WARDSyncAck = 2308 [(wire_out) = true];
-    MessageType_WARDIngestAttestation = 2309 [(wire_in) = true];
-    MessageType_WARDIngestAttestationAck = 2310 [(wire_out) = true];
-    MessageType_WARDReconcile = 2311 [(wire_in) = true];
-    MessageType_WARDReconcileAck = 2312 [(wire_out) = true];
-    MessageType_WARDVerifyChain = 2313 [(wire_in) = true];
-    MessageType_WARDVerifyChainAck = 2314 [(wire_out) = true];
-    MessageType_WARDRollback = 2315 [(wire_in) = true];
-    MessageType_WARDRollbackAck = 2316 [(wire_out) = true];
-    MessageType_WARDRecoverCounter = 2317 [(wire_in) = true];
-    MessageType_WARDRecoverCounterAck = 2318 [(wire_out) = true];
+    MessageType_WardGetEntry = 2300 [(wire_in) = true];
+    MessageType_WardEntryRequest = 2301 [(wire_out) = true];
+    MessageType_WardEntryAck = 2302 [(wire_in) = true];
+    MessageType_WardSetEntry = 2303 [(wire_in) = true];
+    MessageType_WardDeleteEntry = 2304 [(wire_in) = true];
+    MessageType_WardLeafAck = 2305 [(wire_out) = true];
+    reserved 2306;  // was WardDebugSetRoot: the device derives its own root now
+    MessageType_WardSync = 2307 [(wire_in) = true];
+    MessageType_WardSyncAck = 2308 [(wire_out) = true];
+    MessageType_WardIngestAttestation = 2309 [(wire_in) = true];
+    MessageType_WardIngestAttestationAck = 2310 [(wire_out) = true];
+    MessageType_WardReconcile = 2311 [(wire_in) = true];
+    MessageType_WardReconcileAck = 2312 [(wire_out) = true];
+    MessageType_WardVerifyChain = 2313 [(wire_in) = true];
+    MessageType_WardVerifyChainAck = 2314 [(wire_out) = true];
+    MessageType_WardRollback = 2315 [(wire_in) = true];
+    MessageType_WardRollbackAck = 2316 [(wire_out) = true];
+    MessageType_WardRecoverCounter = 2317 [(wire_in) = true];
+    MessageType_WardRecoverCounterAck = 2318 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

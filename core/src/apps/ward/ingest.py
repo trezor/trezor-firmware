@@ -1,17 +1,17 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WARDIngestAttestation, WARDIngestAttestationAck
+    from trezor.messages import WardIngestAttestation, WardIngestAttestationAck
 
 
-async def ingest(msg: WARDIngestAttestation) -> WARDIngestAttestationAck:
+async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
     """Verify the WM's attestation of the current (counter, mac) for this round.
 
     Adopts nothing: the root has not been seen yet. This step establishes only that some
     authority the device trusts says a particular (counter, mac) is current, and that the
     statement was made in response to THIS round's nonce.
     """
-    from trezor.messages import WARDIngestAttestationAck
+    from trezor.messages import WardIngestAttestationAck
     from trezor.wire import DataError
 
     from . import round as sync_round
@@ -54,4 +54,4 @@ async def ingest(msg: WARDIngestAttestation) -> WARDIngestAttestationAck:
         raise DataError("attested time is older than the stored time")
 
     sync_round.set_attested(counter, mac, timestamp)
-    return WARDIngestAttestationAck(counter=counter)
+    return WardIngestAttestationAck(counter=counter)

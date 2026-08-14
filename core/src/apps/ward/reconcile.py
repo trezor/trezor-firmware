@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WARDReconcile, WARDReconcileAck
+    from trezor.messages import WardReconcile, WardReconcileAck
 
 
-async def reconcile(msg: WARDReconcile) -> WARDReconcileAck:
+async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     """Bind the host's root to the attested mac, and adopt it.
 
     This is where a device learns a tree it did not build. The host supplies the root; the
@@ -12,7 +12,7 @@ async def reconcile(msg: WARDReconcile) -> WARDReconcileAck:
     K_mac never leaves the device, the host cannot produce a mac for a tree of its
     choosing, so the only root that passes is the one the attested mac was made for.
     """
-    from trezor.messages import WARDReconcileAck
+    from trezor.messages import WardReconcileAck
     from trezor.wire import DataError
 
     from . import round as sync_round
@@ -47,7 +47,7 @@ async def reconcile(msg: WARDReconcile) -> WARDReconcileAck:
     # fail-closed and recoverable, rather than a silent loss.
     #
     # A LOWER counter is adopted here without further ceremony, and that is not a hole: the
-    # only way one reaches an attested round is through WARDRecoverCounter, which refuses
+    # only way one reaches an attested round is through WardRecoverCounter, which refuses
     # anything that is not going backwards and holds for confirmation first. Re-asking here
     # would be asking about a decision already made.
     stored_counter = await get_counter()
@@ -61,4 +61,4 @@ async def reconcile(msg: WARDReconcile) -> WARDReconcileAck:
     await set_root(root, counter, timestamp)
     sync_round.clear()
 
-    return WARDReconcileAck(counter=counter, new_root=root)
+    return WardReconcileAck(counter=counter, new_root=root)

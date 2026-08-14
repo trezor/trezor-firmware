@@ -17,7 +17,7 @@
 """WARD client -- sealed leaf, PULL-only, keyed path, proofs against a root.
 
 The device stores no entries. It asks the host for the one it needs mid-workflow, so
-the host must be prepared to answer a device-initiated `WARDEntryRequest` while its own
+the host must be prepared to answer a device-initiated `WardEntryRequest` while its own
 call is still in flight. That is the same shape as `btc.sign_tx` answering `TxRequest`:
 call, inspect what came back, answer it, repeat until the workflow returns.
 
@@ -58,8 +58,8 @@ class Leaf(NamedTuple):
     path they sit at. Both parts empty means the entry was deleted.
     """
 
-    identity: Optional[messages.LeafIdentity]
-    content: Optional[messages.LeafContent]
+    identity: Optional[messages.WardLeafIdentity]
+    content: Optional[messages.WardLeafContent]
 
 
 class Answer(NamedTuple):
@@ -127,10 +127,10 @@ def _call_answering_pulls(
     msg: "protobuf.MessageType",
     provider: EntryProvider,
 ) -> WardResult:
-    """Drive a WARD workflow, answering every `WARDEntryRequest` from `provider`.
+    """Drive a WARD workflow, answering every `WardEntryRequest` from `provider`.
 
     Note `Session.call` is used WITHOUT `expect=`: it defaults to the `MessageType`
-    base, so either a `WARDEntryRequest` or the final `Success` is accepted and we
+    base, so either a `WardEntryRequest` or the final `Success` is accepted and we
     dispatch on the type. Using `call_raw` instead would lose Failure-to-exception
     conversion and the button-request handling, both of which we want.
 
@@ -142,13 +142,13 @@ def _call_answering_pulls(
     res = session.call(msg)
     entry_key = b""
 
-    while isinstance(res, messages.WARDEntryRequest):
+    while isinstance(res, messages.WardEntryRequest):
         entry_key = res.entry_key or b""
         answer = provider(entry_key)
         leaf = answer.leaf
         # Hand back exactly what was stored. Absent identity+content means "no entry".
         res = session.call(
-            messages.WARDEntryAck(
+            messages.WardEntryAck(
                 identity=leaf.identity if leaf is not None else None,
                 content=leaf.content if leaf is not None else None,
                 proof=answer.proof or [],
@@ -162,7 +162,7 @@ def _call_answering_pulls(
             )
         )
 
-    if isinstance(res, messages.WARDLeafAck):
+    if isinstance(res, messages.WardLeafAck):
         return WardResult(
             res,
             res.entry_key or entry_key,
@@ -194,7 +194,7 @@ def get_entry(
     """
     return _call_answering_pulls(
         session,
-        messages.WARDGetEntry(app_id=app_id, identifier=identifier),
+        messages.WardGetEntry(app_id=app_id, identifier=identifier),
         provider,
     )
 
@@ -222,7 +222,7 @@ def set_entry(
     """
     return _call_answering_pulls(
         session,
-        messages.WARDSetEntry(app_id=app_id, identifier=identifier, value=value),
+        messages.WardSetEntry(app_id=app_id, identifier=identifier, value=value),
         provider,
     )
 
@@ -252,14 +252,14 @@ def delete_entry(
     """
     return _call_answering_pulls(
         session,
-        messages.WARDDeleteEntry(app_id=app_id, identifier=identifier),
+        messages.WardDeleteEntry(app_id=app_id, identifier=identifier),
         provider,
     )
 
 
-def sync(session: "Session") -> messages.WARDSyncAck:
+def sync(session: "Session") -> messages.WardSyncAck:
     """Open a sync round: the device mints the nonce the WM must sign against."""
-    return session.call(messages.WARDSync(), expect=messages.WARDSyncAck)
+    return session.call(messages.WardSync(), expect=messages.WardSyncAck)
 
 
 def ingest_attestation(
@@ -268,13 +268,13 @@ def ingest_attestation(
     mac: bytes,
     wm_signature: bytes,
     timestamp: int = 0,
-) -> messages.WARDIngestAttestationAck:
+) -> messages.WardIngestAttestationAck:
     """Deliver the WM's signed (counter, mac, timestamp) for the open round."""
     return session.call(
-        messages.WARDIngestAttestation(
+        messages.WardIngestAttestation(
             counter=counter, mac=mac, wm_signature=wm_signature, timestamp=timestamp
         ),
-        expect=messages.WARDIngestAttestationAck,
+        expect=messages.WardIngestAttestationAck,
     )
 
 
@@ -284,39 +284,39 @@ def recover_counter(
     mac: bytes,
     wm_signature: bytes,
     timestamp: int = 0,
-) -> messages.WARDRecoverCounterAck:
+) -> messages.WardRecoverCounterAck:
     """Accept an attestation that goes backwards, after the user confirms.
 
     Only for recovering a WM whose register or clock regressed. It is the sole path that
     accepts a lower counter, and it holds for confirmation.
     """
     return session.call(
-        messages.WARDRecoverCounter(
+        messages.WardRecoverCounter(
             counter=counter, mac=mac, wm_signature=wm_signature, timestamp=timestamp
         ),
-        expect=messages.WARDRecoverCounterAck,
+        expect=messages.WardRecoverCounterAck,
     )
 
 
 def reconcile(
     session: "Session", root: Optional[bytes]
-) -> messages.WARDReconcileAck:
+) -> messages.WardReconcileAck:
     """Supply the root and adopt it, if it matches what was attested."""
     return session.call(
-        messages.WARDReconcile(root=root), expect=messages.WARDReconcileAck
+        messages.WardReconcile(root=root), expect=messages.WardReconcileAck
     )
 
 
-def verify_chain(session: "Session", links) -> messages.WARDVerifyChainAck:
+def verify_chain(session: "Session", links) -> messages.WardVerifyChainAck:
     """Adopt the attested head by proving it descends from the device's current one.
 
     Used instead of `reconcile` when the device has fallen more than a step behind.
     `links` are ordered from the device's own head forward.
     """
     return session.call(
-        messages.WARDVerifyChain(
+        messages.WardVerifyChain(
             links=[
-                messages.WARDChainLink(
+                messages.WardChainLink(
                     from_counter=fc,
                     from_root=fr,
                     to_counter=tc,
@@ -326,13 +326,13 @@ def verify_chain(session: "Session", links) -> messages.WARDVerifyChainAck:
                 for (fc, fr, tc, tr, ac) in links
             ]
         ),
-        expect=messages.WARDVerifyChainAck,
+        expect=messages.WardVerifyChainAck,
     )
 
 
 def rollback(
     session: "Session", to_root: Optional[bytes], auth_commit: bytes
-) -> messages.WARDRollbackAck:
+) -> messages.WardRollbackAck:
     """Undo the device's most recent transition, one step.
 
     `auth_commit` is the authorisation that CREATED the current head, which the caller
@@ -340,12 +340,12 @@ def rollback(
     counter and root, so the demotion target cannot be chosen by the caller.
     """
     return session.call(
-        messages.WARDRollback(to_root=to_root, auth_commit=auth_commit),
-        expect=messages.WARDRollbackAck,
+        messages.WardRollback(to_root=to_root, auth_commit=auth_commit),
+        expect=messages.WardRollbackAck,
     )
 
 
-def apply_rollback(store, ack: messages.WARDRollbackAck) -> None:
+def apply_rollback(store, ack: messages.WardRollbackAck) -> None:
     """Roll the caller's store back to match, and record the demotion as a transition.
 
     The store must be able to reproduce the demoted tree, so this only rewinds the

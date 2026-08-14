@@ -6,7 +6,7 @@ holds that root, PERSISTED per hidden wallet.
 The device DERIVES it: every confirmed write recomputes the root from a state the host had
 to prove (see `trie.compute_new_root`), so this is a value the device computed, never one
 it was handed. There is deliberately no way for the host to set it -- an earlier
-`WARDDebugSetRoot` existed only while writes could not derive one, and was removed rather
+`WardDebugSetRoot` existed only while writes could not derive one, and was removed rather
 than left as a back door into the one number the whole scheme rests on.
 
 It cannot live in a module global, and that is not a style preference: `trezor.wire` wraps
