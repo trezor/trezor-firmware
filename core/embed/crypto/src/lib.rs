@@ -7,6 +7,7 @@ pub mod aesgcm;
 pub mod cosi;
 pub mod crc32;
 pub mod curve25519;
+pub mod ecdsa;
 pub mod ed25519;
 mod ffi;
 pub mod hmac;
