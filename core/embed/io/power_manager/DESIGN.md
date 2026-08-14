@@ -71,12 +71,17 @@ replaces it.
 power_manager/
   inc/io/  power_manager.h  pmic.h                   # PUBLIC seams (have external consumers)
   power_manager_poll.{c,h}                           # shared internal, loose at root (cf. touch_poll.c)
-  policy/   managed/  simple/         # orchestration; subdirs NEVER name a chip
+  managed/                                           # the hardware policy (state machine); never names a chip
+  unix/                                              # emulator policy (mocks the managed core)
   pmic/     pmic_charger.h  npm1300/  npm2100/  power_latch/  # HW behind pmic.h + internal charger ext
   fuel_gauge/  battery.h  lifepo4/  primary/         # pure algorithm behind internal battery.h
   wireless/  stwlc38/
-  unix/                                              # emulator (mocks the managed core)
 ```
+
+`managed/` and `unix/` are the two policy implementations (hardware vs
+emulator), mutually exclusive at build time. There is only one hardware policy,
+so they sit as sibling directories rather than under a `policy/` wrapper (which
+would nest a single child).
 
 Only `power_manager.h` and `pmic.h` live in the public `inc/io/` — they have
 consumers outside the module (e.g. `boardloader` includes `<io/pmic.h>`). The
@@ -84,7 +89,7 @@ consumers outside the module (e.g. `boardloader` includes `<io/pmic.h>`). The
 consumers) and sit next to their implementations, included via relative path
 like `power_manager_poll.h`.
 
-Rule of thumb, self-documenting: `pmic/*` is only hardware, `policy/*` is only
+Rule of thumb, self-documenting: `pmic/*` is only hardware, `managed/` is only
 orchestration and never mentions a chip, `fuel_gauge/*`/`wireless/*` are their
 own kinds. Kept nested inside `power_manager/` rather than promoted to `io/`
 peers — it is all one `io` crate, so promotion would only scatter tightly
