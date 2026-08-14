@@ -585,16 +585,105 @@ def test_ward_delete_entry_names_the_value_being_removed(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_delete_entry_refuses_when_the_host_holds_nothing(session: Session):
-    """The host asked to delete an entry and then, answering the pull, said it holds no
-    such entry. That is a contradiction, so the device refuses rather than returning a
-    leaf the host could bank as a completed delete.
+def test_ward_delete_entry_is_idempotent_on_a_proved_absence(session: Session):
+    """Deleting a path that already holds nothing succeeds, and changes nothing.
 
-    Delete is deliberately NOT idempotent here: a no-op delete is a host bug worth
-    surfacing. The failure arrives after the pull but before any screen.
+    The absence is PROVED before this decides anything -- the pull demands a
+    non-membership witness against the trusted root -- so the device is not taking the
+    host's word for it. That is what makes idempotence safe here rather than lax.
+
+    No screen: a hold-to-confirm that always means "nothing happened" is one that gets
+    approved without being read. Hence no input flow, and WARDLeafAck arrives with no
+    ButtonRequest before it.
     """
-    with pytest.raises(exceptions.TrezorFailure, match="no such entry"):
-        ward.delete_entry(session, _APP, b"ghost", lambda _k: ward.Answer())
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"keep_me")  # so absence needs a real witness
+    before = store.counter
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.WARDEntryRequest, m.WARDLeafAck])
+        res = ward.delete_entry(session, _APP, b"ghost", ward.store_provider(store))
+
+    # the same empty leaf a real delete returns, so a host applies both the same way
+    assert res.leaf is not None
+    assert res.leaf.content.plaintext.content == b""
+    # ...but nothing moved: no transition happened, so none was authorised
+    assert res.auth_commit is None
+    assert res.counter == before
+    assert res.mac is not None  # the device still states where it is
+
+    ward.apply(store, res)
+    assert list(store.blobs) == [expected_entry_key(_K_PATH, _APP, b"addr1")]
+    assert store.counter == before
+
+
+@pytest.mark.models("core")
+def test_ward_delete_entry_retry_after_a_lost_response_succeeds(session: Session):
+    """The case idempotence exists for: the ack was lost, so the host asks again.
+
+    The host applied the delete (it can derive the post-delete root itself, holding the
+    whole tree) but never learned whether the device did. Under the old refusal this second
+    attempt failed with "no such entry" and the host had no way to tell a completed delete
+    from an entry that never existed. Now it succeeds, and the returned counter confirms
+    the device is where the host thinks it is.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"doomed")
+    _seed(session, store, b"addr2", b"keep_me")
+
+    res, _rec = _write(
+        session, store, lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        "ward_delete_entry",
+    )
+    ward.apply(store, res)
+    after = res.counter
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.WARDEntryRequest, m.WARDLeafAck])
+        again = ward.delete_entry(session, _APP, b"addr1", ward.store_provider(store))
+
+    assert again.auth_commit is None
+    assert again.counter == after  # the device is exactly where the first delete left it
+    ward.apply(store, again)
+    assert list(store.blobs) == [expected_entry_key(_K_PATH, _APP, b"addr2")]
+
+
+@pytest.mark.models("core")
+def test_ward_delete_entry_still_refuses_an_unproved_absence(session: Session):
+    """Idempotence rests on the proof, so an unwitnessed denial is still refused.
+
+    Without this, "delete succeeds when the host says the entry is gone" would let a host
+    suppress an entry and have the device agree it never existed.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"present")
+
+    def denies_everything(_entry_key: bytes) -> ward.Answer:
+        return ward.Answer()
+
+    with pytest.raises(exceptions.TrezorFailure, match="witness"):
+        ward.delete_entry(session, _APP, b"addr1", denies_everything)
+
+
+@pytest.mark.models("core")
+def test_ward_apply_refuses_to_drop_a_no_change_result_on_a_live_entry(session: Session):
+    """Host-side guard: "nothing changed" must not be applied over an entry that exists.
+
+    If the device reports no transition while the store still holds the entry, the two
+    disagree about the world. Silently carrying on leaves a row the device believes is
+    gone, and every later proof for it is refused with nothing to say why.
+    """
+    store = WardTrie()
+    key = _seed(session, store, b"addr1", b"present")
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.WARDEntryRequest, m.WARDLeafAck])
+        res = ward.delete_entry(session, _APP, b"ghost", ward.store_provider(store))
+
+    # pretend the no-change result was for the live entry -- the shape a confused host
+    # would produce
+    with pytest.raises(ValueError, match="disagree about the current state"):
+        ward.apply(store, res._replace(entry_key=key))
 
 
 @pytest.mark.models("core")

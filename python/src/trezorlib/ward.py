@@ -102,6 +102,12 @@ class WardResult(NamedTuple):
 
     `leaf` is the leaf the device built, present for writes and deletes and None for a
     read. For a delete both its parts are empty and the record should be removed.
+
+    `auth_commit` is the authorisation for the transition this call made -- and its ABSENCE
+    means no transition was made. That is the shape of an idempotent delete of a path that
+    already held nothing: same empty leaf, same counter, nothing to authorise. Callers
+    should branch on it rather than on the counter, which is equal to the stored one in that
+    case and cannot be compared without knowing the store is in sync.
     """
 
     response: protobuf.MessageType
@@ -229,9 +235,17 @@ def delete_entry(
 ) -> WardResult:
     """Ask the device to confirm deleting the entry for (app_id, identifier).
 
-    The device pulls the entry first so the screen can name the value being removed, and
-    fails with "no such entry" if `provider` reports none -- delete is deliberately not
-    idempotent here, since a no-op delete means the caller and its own store disagree.
+    The device pulls the entry first so the screen can name the value being removed.
+
+    IDEMPOTENT on a path that already holds nothing: the call succeeds, `auth_commit` is
+    None to say no transition happened, the counter is unchanged, and no confirmation is
+    shown. `provider` must still PROVE the absence with a non-membership witness -- an
+    unwitnessed "I hold none" is refused, so a host cannot get the device to agree that an
+    entry it is hiding never existed.
+
+    This covers the retry-after-a-lost-response case only once the caller has applied the
+    delete to its own store. A caller that retries while still holding the row serves a
+    proof against a root the device has moved past, and is refused.
 
     **The device does not delete.** It returns a leaf with both parts empty and the
     caller must remove the record at the returned `entry_key` -- see `apply`.
@@ -392,9 +406,26 @@ def apply(store, result: WardResult) -> None:
     result the caller drops on the floor means the user approved a change that never
     happened. An empty content body is a delete, so the record goes away rather than
     being kept as a tombstone.
+
+    NO AUTH_COMMIT MEANS NOTHING CHANGED. A delete of an already-absent path succeeds
+    idempotently and authorises no transition, so there is nothing to apply. That is
+    asserted rather than assumed: if the device reports no transition while the store still
+    holds the entry, the two disagree about the world, and continuing would leave a row the
+    device believes is gone -- every later proof for it refused, with nothing to say why.
+    Failing here names it instead.
     """
     if result.leaf is None:
         raise ValueError("this result carries no leaf; nothing to apply")
+
+    if result.auth_commit is None:
+        if result.entry_key in store:
+            raise ValueError(
+                "device reports no change but the store still holds this entry; "
+                "the two disagree about the current state"
+            )
+        if result.counter is not None:
+            store.counter = result.counter
+        return
 
     before_root, before_counter = store.root(), store.counter
     if leaf_is_delete(result.leaf):
@@ -405,10 +436,9 @@ def apply(store, result: WardResult) -> None:
     # Keep the counter with the root. The device is the counter authority, and a store
     # that tracked only the root could not tell the WM which state it is publishing.
     if result.counter is not None:
-        if result.auth_commit is not None:
-            # The transition log. The host cannot forge or read these -- it holds them so
-            # another device of the wallet can verify the steps it missed.
-            store.links.append(
-                (before_counter, before_root, result.counter, store.root(), result.auth_commit)
-            )
+        # The transition log. The host cannot forge or read these -- it holds them so
+        # another device of the wallet can verify the steps it missed.
+        store.links.append(
+            (before_counter, before_root, result.counter, store.root(), result.auth_commit)
+        )
         store.counter = result.counter

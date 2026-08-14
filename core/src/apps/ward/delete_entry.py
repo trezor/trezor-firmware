@@ -18,10 +18,29 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
     non-membership proof for this path must succeed. Note the reference keeps the
     identity part alive on delete, leaving a self-describing tombstone; we do not, since
     a tombstone that survives is a record of which entries once existed.
+
+    IDEMPOTENT ON A PROVED ABSENCE. Deleting a path that already holds nothing succeeds,
+    changing nothing: same empty leaf, same counter, no authorised transition, and no
+    screen. It is not a favour to sloppy hosts -- the absence has already been PROVED by
+    the time this decides anything, because `pull_leaf` demands a non-membership witness
+    against the trusted root before it will report nothing. So the device is not taking
+    "I do not have it" on the host's word; it has checked, which makes this strictly more
+    verified than the refusal it replaces.
+
+    There is deliberately no confirmation for the no-op. A hold-to-confirm that always
+    means "nothing happened" is a screen that gets approved without being read, which
+    costs real safety on the paths where holding matters.
+
+    WHAT THIS DOES NOT FIX. If a delete succeeds and its response is lost, the host still
+    holds the row and the pre-delete root, so a retry serves that row with a proof against
+    a root the device has already moved past -- refused, correctly, as a stale current
+    state. Idempotence covers the retry AFTER the host has applied the delete, which is the
+    natural pattern once a host derives the post-delete root itself (it can: it holds the
+    whole tree). Closing the un-applied case needs the host to be able to ASK for the
+    device's head, which no message currently offers.
     """
     from trezor.messages import WARDLeafAck
     from trezor.ui.layouts import confirm_properties
-    from trezor.wire import DataError
 
     from .attest import root_mac
     from .cas import auth_commit
@@ -43,12 +62,25 @@ async def delete_entry(msg: WARDDeleteEntry) -> WARDLeafAck:
     entry_key = await entry_key_for(app_id, identifier, key_type)
     current, old_leaf, material = await pull_leaf(entry_key, key_type)
     if current is None:
-        # The host asked to delete this entry and, answering the pull, reported that it
-        # does not hold it -- a contradiction, so one side is wrong. Refuse rather than
-        # return a leaf the host could bank as a completed delete. This deliberately
-        # makes delete non-idempotent: a no-op delete is a host bug worth surfacing, not
-        # a success worth papering over.
-        raise DataError("no such entry")
+        # Already gone, and provably so. Report the state rather than changing it: the
+        # counter does not move, and no auth_commit is issued because no transition
+        # happened -- an authorisation for (n, R) -> (n, R) would be a link that authorises
+        # nothing and would pollute the chain any other device has to walk.
+        #
+        # The mac IS returned, over the device's current head, and that is the useful part:
+        # a host that believes it is a counter behind learns from this that its earlier
+        # delete did land. The mac grants nothing new -- any write hands one out, and the
+        # counter floor bounds what a replayed one can do.
+        counter = await get_counter()
+        return WARDLeafAck(
+            entry_key=entry_key,
+            identity=make_leaf_identity(key_type, EMPTY_PART),
+            content=make_leaf_content(EMPTY_PART),
+            counter=counter,
+            mac=root_mac(
+                await derive_k_mac(), await derive_ward_id(), counter, await get_root()
+            ),
+        )
 
     props = [
         ("Domain", app_id, False),
