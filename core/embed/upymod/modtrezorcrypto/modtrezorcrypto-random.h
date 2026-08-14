@@ -92,12 +92,27 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_shuffle_obj,
                                  mod_trezorcrypto_random_shuffle);
 
 #ifdef TREZOR_EMULATOR
+
+#if USE_OPTIGA
+#include <sec/optiga.h>
+#endif
+#if USE_TROPIC
+#include <sec/tropic.h>
+#endif
+
 /// def reseed(value: int) -> None:
 ///     """
 ///     Re-seed the RNG with given value.
 ///     """
 static mp_obj_t mod_trezorcrypto_random_reseed(mp_obj_t data) {
-  random_reseed(trezor_obj_get_uint(data));
+  uint32_t seed = trezor_obj_get_uint(data);
+  rng_reseed(seed);
+#if USE_OPTIGA
+  optiga_random_reseed(seed);
+#endif
+#if USE_TROPIC
+  tropic_random_reseed(seed);
+#endif
   return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_reseed_obj,

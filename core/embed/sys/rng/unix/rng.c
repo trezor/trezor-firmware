@@ -20,24 +20,40 @@
 #include <trezor_rtl.h>
 
 #include <sys/rng.h>
+#include <sys/rng_mock.h>
 
 #include "rand.h"
 
-void rng_fill_buffer(void* buffer, size_t buffer_size) {
+// Guard against this file ever being compiled into a bare-metal build.
+
+#ifndef TREZOR_EMULATOR
+#error "Mock RNG must not be compiled into a non-emulator build"
+#endif
+
+_Static_assert(sizeof(void*) == 8,
+               "Mock RNG compiled for a 32-bit target -- device build?");
+
+#if !defined(__linux__) && !defined(__APPLE__) && !defined(_WIN32)
+#error "Insecure PRNG is not supported on this target"
+#endif
+
+#if __STDC_HOSTED__ == 0
+#error "Insecure PRNG must not be compiled for a freestanding target"
+#endif
+
 #ifdef USE_INSECURE_PRNG
 
-  // Use PRNG implemented in crypto/rand_insecure.c
-  random_buffer((uint8_t*)buffer, buffer_size);
+// Deterministic, MCU-unique random stream.
+static rng_mock_stream_t random_stream = {.tag = "<PRNG-MCU>"};
 
-#else
+void rng_reseed(uint32_t seed) { rng_mock_reseed(&random_stream, seed); }
 
-  static FILE* frand = NULL;
-  if (!frand) {
-    frand = fopen("/dev/urandom", "r");
-  }
-  ensure(sectrue * (frand != NULL), "fopen failed");
-  ensure(sectrue * (buffer_size == fread(buffer, 1, buffer_size, frand)),
-         "fread failed");
-
-#endif
+void rng_fill_buffer(void* buffer, size_t buffer_size) {
+  rng_mock_fill(&random_stream, (uint8_t*)buffer, buffer_size);
 }
+
+// Implements random_buffer() function declared in crypto/rand.h
+// as a wrapper for rng_fill_buffer().
+void random_buffer(uint8_t* buf, size_t len) { rng_fill_buffer(buf, len); }
+
+#endif  // USE_INSECURE_PRNG
