@@ -10219,6 +10219,7 @@ class WardLeafAck(protobuf.MessageType):
         4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         5: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("auth_sig", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10230,6 +10231,7 @@ class WardLeafAck(protobuf.MessageType):
         counter: Optional["int"] = None,
         mac: Optional["bytes"] = None,
         auth_commit: Optional["bytes"] = None,
+        auth_sig: Optional["bytes"] = None,
     ) -> None:
         self.entry_key = entry_key
         self.identity = identity
@@ -10237,6 +10239,7 @@ class WardLeafAck(protobuf.MessageType):
         self.counter = counter
         self.mac = mac
         self.auth_commit = auth_commit
+        self.auth_sig = auth_sig
 
 
 class WardChainLink(protobuf.MessageType):
@@ -10411,6 +10414,7 @@ class WardRollbackAck(protobuf.MessageType):
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("auth_sig", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10419,10 +10423,12 @@ class WardRollbackAck(protobuf.MessageType):
         counter: Optional["int"] = None,
         new_root: Optional["bytes"] = None,
         auth_commit: Optional["bytes"] = None,
+        auth_sig: Optional["bytes"] = None,
     ) -> None:
         self.counter = counter
         self.new_root = new_root
         self.auth_commit = auth_commit
+        self.auth_sig = auth_sig
 
 
 class WardRecoverCounter(protobuf.MessageType):

@@ -23,7 +23,7 @@ async def set_entry(msg: WardSetEntry) -> WardLeafAck:
     from trezor.wire import DataError
 
     from .attest import root_mac
-    from .cas import auth_commit
+    from .cas import auth_commit, sig_commit
     from .common import WARNING_UNVERIFIED, display_bytes, pull_leaf, require_key
     from .keys import (
         ENTRY_TYPE_ADDRESS,
@@ -31,6 +31,7 @@ async def set_entry(msg: WardSetEntry) -> WardLeafAck:
         derive_k_data,
         derive_k_ident,
         derive_k_mac,
+        derive_k_sig,
         derive_ward_id,
         entry_key_for,
     )
@@ -108,6 +109,14 @@ async def set_entry(msg: WardSetEntry) -> WardLeafAck:
         mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
         auth_commit=auth_commit(
             await derive_k_auth(),
+            await derive_ward_id(),
+            counter - 1,
+            from_root,
+            counter,
+            new_root,
+        ),
+        auth_sig=sig_commit(
+            await derive_k_sig(),
             await derive_ward_id(),
             counter - 1,
             from_root,
