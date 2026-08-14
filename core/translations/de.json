@@ -725,7 +725,6 @@
     "cardano__vote_public_key": "Public Key für Vote",
     "cardano__voting_purpose": "Voting-Zweck",
     "cardano__warning": "Warnung",
-    "cardano__weight": "Gewicht",
     "cardano__withdrawal_for_address_template": "Auszahlung für {0} Adresse bestätigen",
     "cardano__x_of_y_signatures_template": "Erfordert {0} von {1} Signaturen.",
     "coinjoin__access_account": "Auf CoinJoin-Konto zugreifen?",
@@ -4031,6 +4030,7 @@
     "words__voting": "Abstimmung",
     "words__wallet": "Wallet",
     "words__warning": "Warnung",
+    "words__weight": "Gewicht",
     "words__writable": "Beschreibbar",
     "words__yes": "Ja"
   }

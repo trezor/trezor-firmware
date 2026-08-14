@@ -990,7 +990,7 @@ async def confirm_cvote_registration_delegation(
         (TR.cardano__delegating_to, public_key, True),
     ]
     if weight is not None:
-        props.append((TR.cardano__weight, str(weight), True))
+        props.append((TR.words__weight, str(weight), True))
 
     await confirm_properties(
         "confirm_cvote_registration_delegation",

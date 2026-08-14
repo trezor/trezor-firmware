@@ -620,7 +620,6 @@
     "cardano__vote_public_key": "Chave pública de voto",
     "cardano__voting_purpose": "Objetivo da votação",
     "cardano__warning": "Aviso",
-    "cardano__weight": "Peso",
     "cardano__withdrawal_for_address_template": "Confirmar saque para endereço de {0}",
     "cardano__x_of_y_signatures_template": "Requer {0} de {1} assinaturas.",
     "coinjoin__access_account": "Acessar sua conta coinjoin?",
@@ -3696,6 +3695,7 @@
     "words__voting": "Votação",
     "words__wallet": "Carteira",
     "words__warning": "Aviso",
+    "words__weight": "Peso",
     "words__writable": "Gravável",
     "words__yes": "Sim"
   }

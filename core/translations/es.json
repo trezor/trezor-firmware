@@ -600,7 +600,6 @@
     "cardano__vote_public_key": "Clave pública de voto",
     "cardano__voting_purpose": "Propósito del voto",
     "cardano__warning": "Advertencia",
-    "cardano__weight": "Peso",
     "cardano__withdrawal_for_address_template": "Confirmar retiro para la dirección de {0}",
     "cardano__x_of_y_signatures_template": "Requiere {0} de {1} firmas.",
     "coinjoin__access_account": "¿Acceder a tu cuenta de CoinJoin?",
@@ -3591,6 +3590,7 @@
     "words__voting": "Votación",
     "words__wallet": "Billetera",
     "words__warning": "Advertencia",
+    "words__weight": "Peso",
     "words__writable": "Modificable",
     "words__yes": "Sí"
   }
