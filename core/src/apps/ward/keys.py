@@ -11,6 +11,9 @@ changing those vectors and the TS host together.
 K_path is derived from the passphrase-dependent seed, so each hidden wallet has its own
 key space: the same identifier maps to a different path under a different passphrase.
 
+    K_sig     = SLIP21(seed, [b"ward", b"K_sig"]).key()      -- Ed25519 secret
+    ward_id   = ed25519.publickey(K_sig)                     -- the WM-facing handle
+
 Siblings reserved under the same [b"ward"] root, for later phases: K_ident(key_type) and
 K_data(key_type) at [b"ward", b"K_ident"/b"K_data", key_type], which seal the two leaf
 parts once leaves stop being plaintext.
@@ -48,16 +51,34 @@ async def derive_wallet_id() -> bytes:
     return (await _derive_slip21([b"ward", b"wallet_id"]))[:16]
 
 
-async def derive_ward_id() -> bytes:
-    """The 32-byte handle the WM knows this wallet by.
+async def derive_k_sig() -> bytes:
+    """K_sig = SLIP21(seed, [b"ward", b"K_sig"]).key() -- an Ed25519 secret.
 
-    Diverges from the reference, which routes this through
-    RIPEMD160(SHA256(secp256k1 master pubkey)) -- dragging a BIP-32 key in purely to
-    build an identifier. A SLIP-21 leaf gives the same thing: passphrase-dependent, so it
-    distinguishes wallets, and opaque, so a WM learns nothing from it but that two
-    requests concern the same wallet (which it must know to keep a counter at all).
+    COMPLEMENTARY to K_auth, never a replacement. K_auth's HMAC is what a DEVICE of this
+    wallet verifies, and it stays the authority on authenticity; K_sig exists so a party
+    holding no secret -- the WM -- can also check that a transition came from a real device
+    of this wallet, which is what lets it arbitrate ordering without being trusted for
+    anything but freshness. See `cas.sig_commit`.
     """
-    return await _derive_slip21([b"ward", b"ward_id"])
+    return await _derive_slip21([b"ward", b"K_sig"])
+
+
+async def derive_ward_id() -> bytes:
+    """The 32-byte handle the WM knows this wallet by: the PUBLIC KEY of K_sig.
+
+    Being a key rather than an opaque label is what makes it useful to the WM -- the
+    identifier a transition is attributed to IS the key that verifies it, so there is no
+    second per-wallet value to keep in step and no enrolment step that can bind the wrong
+    pair. It is still passphrase-dependent, since K_sig is, so it distinguishes hidden
+    wallets and tells a WM nothing beyond "these requests concern one wallet", which it must
+    know to keep a counter at all.
+
+    Both this and the reference's RIPEMD160(SHA256(secp256k1 master pubkey)) are public keys
+    of seed-derived secrets; this one avoids dragging a BIP-32 key in for the purpose.
+    """
+    from trezor.crypto.curve import ed25519
+
+    return ed25519.publickey(await derive_k_sig())
 
 
 async def derive_k_mac() -> bytes:

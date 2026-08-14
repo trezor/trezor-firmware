@@ -78,9 +78,31 @@ def derive_k_path(seed: bytes) -> bytes:
     return slip21_key(seed, [b"ward", b"K_path"])
 
 
+def derive_k_sig(seed: bytes) -> bytes:
+    """K_sig = SLIP21(seed, [b"ward", b"K_sig"]) -- the Ed25519 secret behind ward_id."""
+    return slip21_key(seed, [b"ward", b"K_sig"])
+
+
 def derive_ward_id(seed: bytes) -> bytes:
-    """The handle the WM knows this wallet by."""
-    return slip21_key(seed, [b"ward", b"ward_id"])
+    """ward_id = ed25519.publickey(K_sig).
+
+    The WM-facing handle IS the key that verifies a transition, so there is no second
+    per-wallet value to keep in step. See `apps.ward.keys.derive_ward_id`.
+    """
+    from trezorlib import _ed25519
+
+    return _ed25519.publickey_unsafe(derive_k_sig(seed))
+
+
+def verify_sig_commit(ward_id: bytes, preimage: bytes, sig: bytes) -> bool:
+    """Check a transition signature the way a WM would: with no secret at all."""
+    from trezorlib import _ed25519
+
+    try:
+        _ed25519.checkvalid(sig, preimage, ward_id)
+        return True
+    except Exception:
+        return False
 
 
 def derive_k_mac(seed: bytes) -> bytes:
@@ -112,6 +134,30 @@ def derive_k_auth(seed: bytes) -> bytes:
     return slip21_key(seed, [b"ward", b"K_auth"])
 
 
+def transition_preimage(
+    ward_id: bytes,
+    from_counter: int,
+    from_root,
+    to_counter: int,
+    to_root,
+    tag: bytes = b"WARD COMMIT v1",
+) -> bytes:
+    """tag || ward_id || from_counter || from_root || to_counter || to_root.
+
+    Both authenticators cover exactly these bytes: the MAC a device checks, and the Ed25519
+    signature the WM checks. Kept as one function so a test cannot verify one against a
+    layout the other does not use.
+    """
+    return (
+        tag
+        + ward_id
+        + from_counter.to_bytes(4, "big")
+        + _root_or_empty(from_root)
+        + to_counter.to_bytes(4, "big")
+        + _root_or_empty(to_root)
+    )
+
+
 def auth_commit(
     k_auth: bytes,
     ward_id: bytes,
@@ -124,12 +170,7 @@ def auth_commit(
     """HMAC(K_auth, tag || ward_id || from_counter || from_root || to_counter || to_root)."""
     return hmac.new(
         k_auth,
-        tag
-        + ward_id
-        + from_counter.to_bytes(4, "big")
-        + _root_or_empty(from_root)
-        + to_counter.to_bytes(4, "big")
-        + _root_or_empty(to_root),
+        transition_preimage(ward_id, from_counter, from_root, to_counter, to_root, tag),
         hashlib.sha256,
     ).digest()
 

@@ -76,9 +76,9 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from .cas import TAG_REVERT, auth_commit, verify_auth_commit
+    from .cas import TAG_REVERT, auth_commit, sig_commit, verify_auth_commit
     from .common import WARNING_UNVERIFIED, require_initialized
-    from .keys import derive_k_auth, derive_ward_id
+    from .keys import derive_k_auth, derive_k_sig, derive_ward_id
     from .root import get_attested_counter, get_counter, get_root, set_root
 
     require_initialized()
@@ -140,5 +140,14 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
         new_root=to_root,
         auth_commit=auth_commit(
             k_auth, ward_id, counter, head, new_counter, to_root, TAG_REVERT
+        ),
+        auth_sig=sig_commit(
+            await derive_k_sig(),
+            ward_id,
+            counter,
+            head,
+            new_counter,
+            to_root,
+            TAG_REVERT,
         ),
     )
