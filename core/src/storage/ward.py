@@ -16,45 +16,37 @@ way to notice; refusing instead degrades only the wallet being introduced right 
 operates session-only and keeps saying so on screen. Fewer wallets protected, none
 silently weakened.
 
-Each slot carries the root, the anti-rollback counter and the last attested time, because
-a root alone does not identify a moment: roots repeat whenever contents repeat, so an old
-signature naming today's root would otherwise be replayable (ward-design.md 2.4, 8.2 --
-bind on the counter, not the root).
+Each slot carries the root and the anti-rollback counter -- 52 bytes, wallet_id(16) +
+root(32) + counter(4). A root alone does not identify a moment, since roots repeat whenever
+contents repeat, so an old signature naming today's root would be replayable
+(ward-design.md 2.4, 8.2 -- bind on the counter, not the root).
 
-FIXME(ward): the root and the timestamp probably do not belong in persistent storage at all.
-Only the counter is irreducible.
+Two fields that used to be here are gone. The last attested TIME was never an independent
+signal: anti-replay is the counter's job and a malicious WM lies about the clock freely. The
+last attested COUNTER became redundant once writes stopped committing -- every stored counter
+now arrives from an attestation, so it and the head counter are the same number.
 
-The ROOT is DERIVABLE. A sync round re-establishes it from the WM's attestation plus the
-root the host supplies, because the mac binds the two together and only a seed-holding
-device can compute one. Nothing here is the sole surviving copy of anything.
+POSTPONED, DELIBERATELY: dropping the ROOT too, which would reach 20 bytes and roughly
+two-and-a-half times the hidden wallets. It is derivable -- a sync round re-establishes it
+from the WM's attestation plus a root the host supplies, since the mac binds the two and only
+a seed-holding device can compute one -- so nothing here is a sole surviving copy.
 
-The TIMESTAMP is not an independent security signal. Anti-replay is the counter's job; a
-malicious WM simply lies about the time, and an honest WM whose clock regresses without its
-counter regressing is not an attack. Its one remaining consumer is the recovery screen's
-"going back about N hours" -- genuinely useful, since a counter delta of 5 does not say
-whether that is five minutes or five months, but that is a UX signal, not a check.
+What stopped it is the cost of recovering it EVERY SESSION rather than the difficulty of
+recovering it at all. Every operation reads the root, plain reads included, so with it out of
+flash it would live in the session cache and each reconnect would need a WM round before an
+address could be shown. That trades working offline reads for wallet capacity, which is a
+product decision rather than a technical one.
 
-THE PAYOFF IS SIZE. The record is wallet_id(16) + root(32) + counter(4) + timestamp(8) = 60
-bytes, and MAX_WALLETS is small because of it. At 20 bytes the same flash holds roughly three
-times the wallets, which directly relieves the refuse-a-newcomer policy above -- more wallets
-protected, which is the thing that policy is currently trading away.
+Two things that used to block it no longer do: the same-counter fork check no longer depends
+on a stored root, because commit-on-WM-confirmation means no device can hold an unconfirmed
+head at all; and the sequencing worry -- that dropping the root before that change would ship
+a brick -- is moot now that it has landed. Reads already fail closed.
 
-TWO THINGS PERSISTENCE BUYS TODAY, both needing an answer first:
-
-  The same-counter FORK check in `reconcile`. Two devices of one wallet can each write at
-  counter N+1 from the same base, yielding two different-but-valid (counter, mac) pairs.
-  Comparing the attested root against the stored one is what makes that a refusal rather
-  than a silently adopted fork and a lost write. Without a stored root the check cannot run,
-  and the mac will not catch it -- both pairs are genuine.
-
-  No unverified window after boot. Without a stored root the device verifies nothing until a
-  round completes, and `common._verify_against_root` currently treats "no root" as "skip",
-  which is the failure direction that hides. Dropping the root therefore wants reads to FAIL
-  CLOSED until a round completes -- stricter than today, not weaker, and aligned with the
-  attested-root work the warning in `common.py` is waiting on.
-
-The timestamp's place in the ATTESTATION PREIMAGE is a separate question from its place here:
-dropping it from storage needs no wire change.
+Two things still need care if it is ever done. `rollback` mints its REVERT authorisation over
+the device's CURRENT head, so with no persisted root it needs a sync round first. And the host
+must be able to supply that root from its own link log even when it cannot reconstruct the
+tree -- which is the same requirement `rollback` already imposes, and which the host model
+satisfies (`WardTrie.links`).
 
 THE OFFLINE QUEUE: DECIDED FOR NOW, WITH ITS BLOCKERS LISTED. MVP is online-only, so the
 queue lives in EVOLU rather than on the device -- which duplicates the leaf data there, and is
@@ -75,7 +67,7 @@ and what stands in its way:
 
   FLASH, when it comes, must be keyed by wallet_id exactly as the root is -- otherwise a
   passphrase switch applies one wallet's queue to another. It also spends the same budget as
-  the shrink discussed below: MAX_WALLETS is 8 because a record is 60 bytes, and a queue is
+  the shrink discussed above: MAX_WALLETS is 8 because a record is 52 bytes, and a queue is
   orders of magnitude larger, so the two trade against each other directly.
 
   EVOLU works because the sealed leaf is itself an AUTHENTICATOR: the AEAD's AAD is
@@ -97,31 +89,6 @@ so the user never learns, or it re-confirms what was already approved once. Both
 resolved by `rollback` when they go wrong, which is one more reason that path is load-bearing
 rather than an escape hatch (see `apps/ward/rollback.py`).
 
-THE PROPOSED ENABLER, AND WHY IT IS NOT YET ESTABLISHED. The argument for dropping the root
-is that if writes commit only on WM CONFIRMATION -- change held pending until the WM
-acknowledges the next (counter, root), another device forced to synchronise first or be
-refused -- then a device never holds an unconfirmed head, so the fork check above has nothing
-to check and the root is purely derivable. That much holds. What does not follow is that the
-root is then free to drop, for three reasons, in increasing order of how much they cost:
-
-  ROLLBACK IS CHECKED AGAINST THE DEVICE'S OWN HEAD. `rollback` verifies the supplied
-  auth_commit describes (counter - 1, to_root) -> (counter, head) where `head` is what THIS
-  device holds. With no persisted root, `head` reads as the empty tree after a reboot and
-  every rollback is refused. Recovering the head first needs a sync round -- so rollback
-  would require an attestation, which is precisely the property its design refuses: an escape
-  that needs the WM is unavailable in the situation it exists for.
-
-  SO THE TWO CHANGES MUST LAND TOGETHER, not in sequence. While a device can still commit
-  ahead of the WM, the attestation it would need to re-establish its head is refused by the
-  counter floor in `ingest` -- no root, therefore no rollback, therefore permanently stuck.
-  Dropping the root BEFORE commit-on-confirmation would ship a brick.
-
-  AND THE HOST MUST KEEP A HEAD LOG. In the durability case (see `rollback`), the leaves are
-  gone but recovery still needs (counter, root, auth_commit) to re-establish the head and then
-  demote it. That makes retaining those 32 bytes -- separately from the leaf data, so it
-  survives losing the data -- a REQUIREMENT on the host rather than a convenience. The host
-  model already keeps exactly this shape (`WardTrie.links`), so it is satisfiable, but it has
-  to be stated before `@trezor/ward` is written rather than discovered afterwards.
 """
 
 from micropython import const
