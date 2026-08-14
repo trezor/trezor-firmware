@@ -132,8 +132,12 @@ _WALLET_ID_LEN = const(16)
 _ROOT_LEN = const(32)
 _COUNTER_LEN = const(4)
 _TIMESTAMP_LEN = const(8)
+# The head counter alone cannot say whether a state was ever CONFIRMED: writes and
+# attestations both advance it. Kept separately so `rollback` can refuse to discard a change
+# the WM has already vouched for -- see `apps.ward.rollback`.
+_ATTESTED_LEN = const(4)
 
-# 8 wallets at 60 bytes each. Raising this costs flash and nothing else.
+# 8 wallets at 64 bytes each. Raising this costs flash and nothing else.
 MAX_WALLETS = const(8)
 _FIRST_KEY = const(1)
 
@@ -169,6 +173,24 @@ def get_root(wallet_id: bytes) -> bytes | None:
     return root
 
 
+def get_attested_counter(wallet_id: bytes) -> int:
+    """The highest counter a WM attestation has confirmed for this wallet. Zero if never.
+
+    Zero is also the honest answer for a record written before this field existed: nothing
+    is known to be confirmed, so nothing is protected by it, which fails safe for
+    availability rather than for integrity.
+    """
+    index = _find(wallet_id)
+    if index is None:
+        return 0
+    rec = _slot(index)
+    assert rec is not None
+    off = _WALLET_ID_LEN + _ROOT_LEN + _COUNTER_LEN + _TIMESTAMP_LEN
+    if len(rec) < off + _ATTESTED_LEN:
+        return 0
+    return int.from_bytes(rec[off : off + _ATTESTED_LEN], "big")
+
+
 def get_counter(wallet_id: bytes) -> int:
     """The anti-rollback floor: the highest counter this wallet has accepted.
 
@@ -200,9 +222,13 @@ def get_timestamp(wallet_id: bytes) -> int:
 
 
 def set_root(
-    wallet_id: bytes, root: bytes | None, counter: int = 0, timestamp: int = 0
+    wallet_id: bytes,
+    root: bytes | None,
+    counter: int = 0,
+    timestamp: int = 0,
+    attested_counter: int = 0,
 ) -> None:
-    """Record this wallet's root, counter and last attested time."""
+    """Record this wallet's root, counter, last attested time and last attested counter."""
     if len(wallet_id) != _WALLET_ID_LEN:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
 
@@ -223,5 +249,6 @@ def set_root(
         wallet_id
         + (root if root is not None else bytes(_ROOT_LEN))
         + counter.to_bytes(_COUNTER_LEN, "big")
-        + timestamp.to_bytes(_TIMESTAMP_LEN, "big"),
+        + timestamp.to_bytes(_TIMESTAMP_LEN, "big")
+        + attested_counter.to_bytes(_ATTESTED_LEN, "big"),
     )

@@ -50,17 +50,27 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     would otherwise demote the wallet to a state from arbitrarily long ago in a single hop,
     with the one-step rule perfectly satisfied.
 
-    FIXME(ward): the age is now a PREREQUISITE, not a nicety. The design puts the AGE of the
-    discarded change on this screen and calls it the actionable signal -- a legitimate
-    rollback discards something minutes old, while "created 3 months ago" means a host is
-    rewinding under cover of a fabricated deadlock. Given the paragraph above, it is the only
-    thing that lets a user tell a stale relay from lost data.
-    The attestation timestamps did NOT supply this, contrary to what this note used to
-    predict: the device stores when its head was last ATTESTED, and an age needs the
-    interval between then and now. The device has no clock, so it cannot compute one. The
-    honest options are a host-supplied "now" the user sanity-checks on screen, or the WM's
-    time obtained through a sync round before rolling back -- neither of which belongs in
-    this change. Until then the screen names the change but cannot date it.
+    ON THE AGE THE DESIGN ASKED FOR, which was previously a FIXME here: it cannot be shown
+    the obvious way, and the bound above is what replaces it.
+
+    The design wants the discarded change's age on screen, on the grounds that a legitimate
+    rollback discards something minutes old while "created 3 months ago" means a host is
+    rewinding under cover of a fabricated deadlock. The device has no clock, so the only
+    sources of "now" are the host and the WM. NEITHER WORKS:
+
+      A host-supplied "now" is worthless against precisely this attack. The attacker controls
+      it, and the direction they need is to make an old change look FRESH -- claim now is
+      about equal to the stored attested time and the age reads as minutes. A number the
+      adversary picks cannot bound the adversary.
+
+      The WM's time arrives through `ingest`, which refuses an attestation whose counter is
+      below the stored one. That is exactly the state rollback exists for, so the WM's time
+      is unavailable in the one situation it would be needed.
+
+    So the screen still names the change without dating it, and the protection is mechanical
+    instead: the attested-counter bound above, plus the requirement that the presented
+    authorisation be a COMMIT -- which means a rollback cannot be chained, since the
+    transition a rollback produces is authorised as a REVERT.
     """
     from trezor.messages import WardRollbackAck
     from trezor.ui.layouts import confirm_properties
@@ -69,7 +79,7 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     from .cas import TAG_REVERT, auth_commit, verify_auth_commit
     from .common import WARNING_UNVERIFIED, require_initialized
     from .keys import derive_k_auth, derive_ward_id
-    from .root import get_counter, get_root, set_root
+    from .root import get_attested_counter, get_counter, get_root, set_root
 
     require_initialized()
 
@@ -82,6 +92,21 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     supplied = msg.auth_commit
     if supplied is None:
         raise DataError("auth_commit is required")
+
+    # A change the WM has CONFIRMED is one it demonstrably knows about, so the justification
+    # for rolling back -- "my write never reached the WM, and it refuses every sync as a
+    # rollback" -- cannot apply to it. Demoting below the attested counter therefore has no
+    # legitimate use, and refusing is a mechanical bound where previously only a screen stood
+    # between a host and the most recent confirmed write.
+    #
+    # This needs the attested counter kept SEPARATELY (see `storage.ward`): the head counter
+    # is advanced by writes too, so it cannot say what was confirmed. Zero means never
+    # synced, which correctly bounds nothing.
+    attested = await get_attested_counter()
+    if counter - 1 < attested:
+        raise DataError(
+            "cannot discard a change the sync service has already confirmed"
+        )
 
     ward_id = await derive_ward_id()
     k_auth = await derive_k_auth()

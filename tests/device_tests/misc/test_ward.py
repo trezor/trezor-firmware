@@ -1572,6 +1572,41 @@ def test_ward_rollback_refuses_an_authorisation_for_an_older_step(session: Sessi
 
 
 @pytest.mark.models("core")
+def test_ward_rollback_refuses_to_discard_a_confirmed_change(session: Session):
+    """A change the WM has confirmed can no longer be rolled back at all.
+
+    Rollback exists for one situation: a write that never reached the WM, so every sync is
+    refused and nothing can move. That justification cannot apply to a change the WM has
+    demonstrably seen -- so demoting below the attested counter has no legitimate use, and it
+    is now refused mechanically rather than argued about on a screen.
+
+    What that closes: until now a host could undo the most recent write even after the WM had
+    confirmed it, with only a hold-to-confirm in the way. The complementary case -- an
+    UNCONFIRMED write still being undoable, which is the whole point of the feature -- is
+    covered by the test below.
+
+    Needs the attested counter to be stored SEPARATELY from the head counter, since writes
+    advance the head too. Fails before any screen, hence no input flow.
+    """
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+
+    wm = MockWM()
+    _attest(session, wm, store)  # the WM confirms the state INCLUDING "b"
+
+    from_counter, from_root, _tc, _tr, ac = store.links[-1]
+    assert from_counter == store.counter - 1  # the link that produced the current head
+
+    with pytest.raises(exceptions.TrezorFailure, match="already confirmed"):
+        ward.rollback(session, from_root, ac)
+
+    # nothing was discarded
+    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"b", p))
+    assert "two" in rec.squashed
+
+
+@pytest.mark.models("core")
 def test_ward_rollback_unsticks_a_wallet_the_wm_never_saw(session: Session):
     """End to end: a write that never reached the WM blocks sync; undoing it unblocks."""
     store = WardTrie()
