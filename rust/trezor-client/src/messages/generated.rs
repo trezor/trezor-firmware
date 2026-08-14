@@ -346,6 +346,28 @@ trezor_message_impl! {
     TronWithdrawBalance => MessageType_TronWithdrawBalance,
 }
 
+#[cfg(feature = "ward")]
+trezor_message_impl! {
+    WardGetEntry => MessageType_WardGetEntry,
+    WardEntryRequest => MessageType_WardEntryRequest,
+    WardEntryAck => MessageType_WardEntryAck,
+    WardSetEntry => MessageType_WardSetEntry,
+    WardDeleteEntry => MessageType_WardDeleteEntry,
+    WardLeafAck => MessageType_WardLeafAck,
+    WardSync => MessageType_WardSync,
+    WardSyncAck => MessageType_WardSyncAck,
+    WardIngestAttestation => MessageType_WardIngestAttestation,
+    WardIngestAttestationAck => MessageType_WardIngestAttestationAck,
+    WardReconcile => MessageType_WardReconcile,
+    WardReconcileAck => MessageType_WardReconcileAck,
+    WardVerifyChain => MessageType_WardVerifyChain,
+    WardVerifyChainAck => MessageType_WardVerifyChainAck,
+    WardRollback => MessageType_WardRollback,
+    WardRollbackAck => MessageType_WardRollbackAck,
+    WardRecoverCounter => MessageType_WardRecoverCounter,
+    WardRecoverCounterAck => MessageType_WardRecoverCounterAck,
+}
+
 #[cfg(feature = "webauthn")]
 trezor_message_impl! {
     WebAuthnListResidentCredentials => MessageType_WebAuthnListResidentCredentials,

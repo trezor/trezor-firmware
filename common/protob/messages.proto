@@ -398,7 +398,7 @@ enum MessageType {
     MessageType_TronUnDelegateResourceContract = 2212 [(wire_in) = true];
     MessageType_TronWithdrawBalance = 2213 [(wire_in) = true];
 
-    // WARD (plaintext, pull-only phase)
+    // Ward
     MessageType_WardGetEntry = 2300 [(wire_in) = true];
     MessageType_WardEntryRequest = 2301 [(wire_out) = true];
     MessageType_WardEntryAck = 2302 [(wire_in) = true];
