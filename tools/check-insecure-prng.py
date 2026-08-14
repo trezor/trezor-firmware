@@ -8,22 +8,22 @@ from typing import Iterable
 
 import click
 
-MCU_TAG = b"<PRNG-MCU>"
-OPTIGA_TAG = b"<PRNG-Optiga>"
-TROPIC_TAG = b"<PRNG-Tropic>"
+MCU_MARKER = b"<PRNG-MCU>"
+OPTIGA_MARKER = b"<PRNG-Optiga>"
+TROPIC_MARKER = b"<PRNG-Tropic>"
 
-MODEL_TAGS = {
-    "T2T1": (MCU_TAG,),
-    "T2B1": (MCU_TAG, OPTIGA_TAG),
-    "T3B1": (MCU_TAG, OPTIGA_TAG),
-    "T3T1": (MCU_TAG, OPTIGA_TAG),
-    "T3W1": (MCU_TAG, OPTIGA_TAG, TROPIC_TAG),
+MODEL_MARKERS = {
+    "T2T1": (MCU_MARKER,),
+    "T2B1": (MCU_MARKER, OPTIGA_MARKER),
+    "T3B1": (MCU_MARKER, OPTIGA_MARKER),
+    "T3T1": (MCU_MARKER, OPTIGA_MARKER),
+    "T3W1": (MCU_MARKER, OPTIGA_MARKER, TROPIC_MARKER),
 }
 
 CHUNK_SIZE = 1024 * 1024
 
 
-def contains_any(path: Path, markers: Iterable[bytes]) -> set[bytes]:
+def find_markers(path: Path, markers: Iterable[bytes]) -> set[bytes]:
     markers = tuple(markers)
     found: set[bytes] = set()
     overlap_size = max(len(marker) for marker in markers) - 1
@@ -40,6 +40,10 @@ def contains_any(path: Path, markers: Iterable[bytes]) -> set[bytes]:
     return found
 
 
+def format_markers(markers: Iterable[bytes]) -> str:
+    return ", ".join(marker.decode("ascii") for marker in sorted(markers))
+
+
 @click.command()
 @click.option(
     "--present",
@@ -54,7 +58,7 @@ def contains_any(path: Path, markers: Iterable[bytes]) -> set[bytes]:
 @click.option(
     "-m",
     "--model",
-    type=click.Choice(sorted(MODEL_TAGS)),
+    type=click.Choice(sorted(MODEL_MARKERS)),
     help="Firmware model, required with --present.",
 )
 @click.argument(
@@ -67,25 +71,25 @@ def main(present: bool, absent: bool, model: str | None, filename: Path) -> None
     if present:
         if model is None:
             raise click.UsageError("--model is required with --present")
-        markers = MODEL_TAGS[model]
+        markers = MODEL_MARKERS[model]
     else:
         markers = (b"<PRNG-",)
-    found = contains_any(filename, markers)
+    found = find_markers(filename, markers)
 
     if present:
         missing = set(markers) - found
         if missing:
-            formatted = ", ".join(marker.decode() for marker in sorted(missing))
+            formatted = format_markers(missing)
             click.echo(
                 f"{filename}: missing insecure PRNG marker(s): {formatted}",
                 err=True,
             )
             raise click.exceptions.Exit(1)
     elif found:
-        click.echo(f"{filename}: contains insecure PRNG marker: <PRNG-", err=True)
+        formatted = format_markers(found)
+        click.echo(f"{filename}: contains insecure PRNG marker(s): {formatted}", err=True)
         raise click.exceptions.Exit(1)
 
 
 if __name__ == "__main__":
     main()
-    
