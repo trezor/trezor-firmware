@@ -19,16 +19,13 @@ signed Ed25519 under the WM key. The nonce is minted by the device per round and
 come back inside the signature, so the host cannot stockpile signed anchors and replay
 one later -- against a host-only adversary that closes eclipse entirely.
 
-THE TIMESTAMP constrains honest-but-broken operators, not hostile ones -- a malicious WM
-simply lies about the time. What it catches is an operator who restored from a backup or
-whose clock jumped, which typically regresses the counter and the clock together, and it
-forces a forking WM to keep time monotone per device on every branch. The device has no
-clock and needs none: this is a stored-value comparison, the same cost as the counter.
-
-It ships WITH its recovery path, never before. A backward jump past EPSILON locks the
-wallet out, and monotonicity that protects against replay becomes a denial of service
-against the owner; WardRecoverCounter is the way back. Shipping the check alone would have
-been shipping a brick with no key.
+THE TIMESTAMP IS CARRIED BUT NO LONGER CHECKED. It is still covered by the signature, so a
+WM cannot alter it, and it stays in the preimage because removing it would be a version bump
+for no gain. But nothing compares it any more: anti-replay is the counter's job, a malicious
+WM lies about the clock freely, and an honest one whose clock regressed without its counter
+regressing was never an attack. Checking it required storing a time to compare against, and
+that storage bought nothing -- see `storage.ward`. A future check can be reinstated without a
+wire change, which is exactly why the field stays.
 """
 
 from typing import TYPE_CHECKING
@@ -115,12 +112,6 @@ def _verify(message: bytes, signature: bytes) -> bool:
     if __debug__:
         return ed25519.verify(_WM_PUBKEY_DEBUG, signature, message)
     return False
-
-
-# Allowance for clock jitter and NTP correction, in seconds. Too generous weakens the
-# check; too tight turns ordinary time-sync hiccups into support tickets. A real tuning
-# decision rather than a free win.
-EPSILON_SECONDS = 300
 
 
 def attestation_preimage(

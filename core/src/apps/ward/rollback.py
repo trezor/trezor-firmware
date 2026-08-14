@@ -73,7 +73,7 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     from .cas import TAG_REVERT, auth_commit, sig_commit, verify_auth_commit
     from .common import WARNING_UNVERIFIED, require_initialized
     from .keys import derive_k_auth, derive_k_sig, derive_ward_id
-    from .root import get_attested_counter, get_counter, get_root
+    from .root import get_counter, get_root
 
     require_initialized()
 
@@ -110,13 +110,12 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
         raise DataError("auth_commit does not describe the target state")
 
     # Both numbers come from authenticated values: `counter` is the device's own, and
-    # `to_counter` is covered by the MAC just verified. The attested counter is kept
-    # separately from the head counter precisely so this second number can be stated -- the
-    # head is advanced by writes too, so it cannot say what the WM confirmed.
+    # `to_counter` is covered by the MAC just verified.
+    #
+    # There is no longer a separate "how many of these were confirmed" line. Since writes
+    # commit only on WM confirmation, every counter the device holds was confirmed, so that
+    # number always equalled the whole discarded span and told the user nothing.
     discarded = counter - to_counter
-    confirmed = await get_attested_counter() - to_counter
-    if confirmed < 0:
-        confirmed = 0
 
     props = [
         (
@@ -125,9 +124,6 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
             False,
         ),
     ]
-    if confirmed:
-        # The part another device may already hold, and therefore the destructive part.
-        props.append(("Already synced", "%d of them" % confirmed, False))
     props.append(("Restoring", "change #%d" % to_counter, False))
     props.append(("Warning", "Discarded changes cannot be recovered.", False))
     props.append(WARNING_UNVERIFIED)

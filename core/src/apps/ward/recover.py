@@ -4,22 +4,6 @@ if TYPE_CHECKING:
     from trezor.messages import WardRecoverCounter, WardRecoverCounterAck
 
 
-def _age(seconds: int) -> str:
-    """How far back, in terms a person can act on.
-
-    Deliberately coarse. The decision this informs is "does that sound like the outage I
-    know about, or like something else", and a precise duration would imply a precision
-    the WM's clock does not have.
-    """
-    if seconds < 90:
-        return "under a minute"
-    if seconds < 3600:
-        return "about %d minutes" % (seconds // 60)
-    if seconds < 172800:
-        return "about %d hours" % (seconds // 3600)
-    return "about %d days" % (seconds // 86400)
-
-
 async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
     """Accept an attestation that goes backwards, with the user's explicit consent.
 
@@ -45,6 +29,11 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
     material; the difference lives entirely in whether the user means it. That makes this
     the strongest social-engineering target in the protocol, so the prompt names both
     counters, says how far back the state is, and holds -- and says plainly what is lost.
+
+    "How far back" is a COUNT, not a duration. The device has no clock, and the stored time it
+    once compared against is gone with the rest of the timestamp: it was never a security
+    signal, since a malicious WM lies about the clock freely. The count is authenticated --
+    both counters come from verified material -- which the duration never was.
     """
     from trezor.messages import WardRecoverCounterAck
     from trezor.ui.layouts import confirm_properties
@@ -54,14 +43,14 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
     from .attest import verify_attestation
     from .common import require_initialized
     from .keys import derive_ward_id
-    from .root import get_counter, get_timestamp
+    from .root import get_counter
 
     require_initialized()
 
     ctx = sync_round.get()
     if ctx is None:
         raise DataError("no sync round in progress")
-    _state, nonce, _c, _m, _t = ctx
+    _state, nonce, _c, _m = ctx
 
     counter = msg.counter
     mac = msg.mac
@@ -76,12 +65,11 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
         raise DataError("WM attestation verification failed")
 
     stored_counter = await get_counter()
-    stored_time = await get_timestamp()
 
     # Refuse to be used for anything but its purpose. An attestation that does NOT go
     # backwards belongs on the ordinary path, where it needs no confirmation -- routing it
     # through here would train users to approve this screen.
-    if counter >= stored_counter and timestamp >= stored_time:
+    if counter >= stored_counter:
         raise DataError("attestation is not older; use the ordinary sync path")
 
     await confirm_properties(
@@ -90,7 +78,7 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
         [
             ("Currently at", "change #%d" % stored_counter, False),
             ("Resetting to", "change #%d" % counter, False),
-            ("Going back", _age(max(stored_time - timestamp, 0)), False),
+            ("Going back", "%d changes" % (stored_counter - counter), False),
             (
                 "Warning",
                 "Changes after #%d may be lost. Only continue if you are recovering "
@@ -101,5 +89,5 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
         hold=True,
     )
 
-    sync_round.set_attested(counter, mac, timestamp)
+    sync_round.set_attested(counter, mac)
     return WardRecoverCounterAck(counter=counter)
