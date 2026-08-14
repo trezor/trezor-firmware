@@ -32,7 +32,7 @@ static int get_otp_block(monoctr_type_t type) {
     case MONOCTR_FIRMWARE_VERSION:
       return FLASH_OTP_BLOCK_FIRMWARE_VERSION;
     case MONOCTR_SECMON_VERSION:
-      return 31;  // Workaround until we implement monoctrl properly for STM32U5
+      return 31;  // Workaround until we implement STM32U5 monoctr emulator properly
     default:
       return -1;
   }
