@@ -180,6 +180,67 @@ existing branch. For a random key that is the ordinary case, not a corner one. S
 re-parents the branch immediately below, whose `skiplen` must be restated:
 `skiplen' = its_split_bit - (new_split_bit + 1)`.
 
+## Host storage: the store's own history
+
+The host keeps **one** table: `entry_key → leaf`, holding the entries that currently exist.
+The trie is built over the rows where `isDeleted = false`.
+
+There is no WARD-specific history table, because the store already has one. In Evolu:
+
+- **`evolu_history`** is append-only — `(ownerId, table, id, column, timestamp, value)`, one
+  row per column write (`packages/common/src/local-first/Db.ts`). Its own comment notes that
+  *"time travel is available when last-write-win isn't desired"*. It is written by
+  `applyColumnChange` on every message application, so a freshly synced replica reconstructs
+  the full history rather than only current state.
+- **There is no hard delete.** `isDeleted` is a *system column* that user tables may not
+  redefine, and deleting a row means `update(table, { id, isDeleted: true })`. A deleted row
+  and its history both survive.
+
+Two consequences, and they are why this shape was chosen over a WARD-owned log:
+
+**The membership rule is the store's, not ours.** "Build the trie over rows with
+`isDeleted = false`" is the same filter every other consumer of that store applies. A
+WARD-specific rule — *"a row with an empty content part is not a leaf"* — would be a second,
+private rule that can disagree with the first. The device's empty-parts leaf (`WardLeafAck`
+with both parts empty) is the **signal to set the flag**, never an independent test for tree
+membership.
+
+**The tombstone is not a WARD decision.** The store retains history however we encode a
+delete, so choosing "no tombstone" only ever hid past entries from a party seeing current
+state alone. Reclaiming that privacy would have to happen at the store layer.
+
+### Sweeping to a past state
+
+Replay reconstructs the tree at any counter, which is what lets a second device catch up and
+what lets a replica rebuild after losing its materialised state. Two requirements:
+
+- **The counter must be a column on the row.** History is ordered by the store's own logical
+  clock, and once two devices write, that order is not the WARD counter's order. "State at
+  counter *N*" means, per row, the latest history value whose counter ≤ *N*.
+- **Rows carry full sealed leaves, not diffs.** Replay must reconstruct each live leaf's
+  `commit`, which is computed over the encoded parts. `isDeleted` is itself a column with
+  history, so replay knows whether a row was deleted at counter *N* without anything extra.
+
+### What replay does and does not prove
+
+It detects that the replica is **missing something**: counters must be contiguous up to the
+WM-attested counter. That is worth having, because an eventually-consistent store gives no
+completeness signal of its own — "I have everything" and "I am still missing rows" are the
+same observation.
+
+It proves nothing about **authenticity or currency**. The history is the host's own record; a
+malicious host can write a self-consistent one. The anchors are unchanged and both live
+outside the store: the `mac`, which only a seed-holding device can compute, and the WM's
+attestation of `(counter, mac)`. So replay narrows the device's role from *the only
+completeness oracle* to *the authority on currency* — see the note in `apps/ward/common.py`.
+
+### Open
+
+`evolu_history` is an internal table with no exported history API. Reading it from the
+application — raw SQL against the local database — needs confirming before the host code is
+written. If it turns out to be inaccessible, a WARD-owned append-only log comes back, with the
+counter, the sealed leaf and the `auth_commit` per row.
+
 ## Conformance
 
 Two artefacts back this document.
