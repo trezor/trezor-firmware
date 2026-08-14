@@ -298,9 +298,7 @@ def recover_counter(
     )
 
 
-def reconcile(
-    session: "Session", root: Optional[bytes]
-) -> messages.WardReconcileAck:
+def reconcile(session: "Session", root: Optional[bytes]) -> messages.WardReconcileAck:
     """Supply the root and adopt it, if it matches what was attested."""
     return session.call(
         messages.WardReconcile(root=root), expect=messages.WardReconcileAck
@@ -353,7 +351,13 @@ def apply_rollback(store, ack: messages.WardRollbackAck) -> None:
     knows what the earlier tree held.
     """
     store.links.append(
-        (store.counter, store.root(), ack.counter, ack.new_root or None, ack.auth_commit)
+        (
+            store.counter,
+            store.root(),
+            ack.counter,
+            ack.new_root or None,
+            ack.auth_commit,
+        )
     )
     store.counter = ack.counter
 
@@ -439,6 +443,12 @@ def apply(store, result: WardResult) -> None:
         # The transition log. The host cannot forge or read these -- it holds them so
         # another device of the wallet can verify the steps it missed.
         store.links.append(
-            (before_counter, before_root, result.counter, store.root(), result.auth_commit)
+            (
+                before_counter,
+                before_root,
+                result.counter,
+                store.root(),
+                result.auth_commit,
+            )
         )
         store.counter = result.counter

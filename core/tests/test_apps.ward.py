@@ -3,19 +3,11 @@ from common import *  # isort:skip
 
 from trezor.wire import DataError
 
-from apps.ward.keys import _scope, entry_key
 from apps.ward import attest as A
-from apps.ward.attest import EMPTY_ROOT
 from apps.ward import cas as CAS
 from apps.ward import leaf as L
-from apps.ward.trie import (
-    addr_bit,
-    compute_new_root,
-    internal_hash,
-    validate_proof_shape,
-    verify_membership,
-    verify_nonmembership,
-)
+from apps.ward.attest import EMPTY_ROOT
+from apps.ward.keys import _scope, entry_key
 from apps.ward.leaf import (
     EMPTY_PART,
     ENC_ENCRYPTED,
@@ -32,6 +24,14 @@ from apps.ward.leaf import (
     part_bytes,
     unpack_content,
     unpack_identity,
+)
+from apps.ward.trie import (
+    addr_bit,
+    compute_new_root,
+    internal_hash,
+    validate_proof_shape,
+    verify_membership,
+    verify_nonmembership,
 )
 
 # Seed used by the reference implementation's own vectors, so the constants below are
@@ -74,7 +74,9 @@ class TestWardKeys(unittest.TestCase):
         ENTRY_KEY = bytes.fromhex(
             "20f3088c1a70e4749e21b2f1969b6f982ced4f8d1983cdda856b292bbb51750a"
         )
-        self.assertEqual(entry_key(k_path, "bitcoin", b"alice", "address", 7), ENTRY_KEY)
+        self.assertEqual(
+            entry_key(k_path, "bitcoin", b"alice", "address", 7), ENTRY_KEY
+        )
 
         # The sibling keys that seal the two leaf parts once leaves stop being plaintext.
         # Not used yet; pinned now so the labels cannot drift before they are.
@@ -93,7 +95,9 @@ class TestWardKeys(unittest.TestCase):
         # app_id=None is the empty string, not an omission or a placeholder
         self.assertEqual(_scope(None, "address", 0), b"\x00address\x00\x00")
         # bytes pass through unchanged; str is UTF-8
-        self.assertEqual(_scope(b"bitcoin", "address", 0), _scope("bitcoin", "address", 0))
+        self.assertEqual(
+            _scope(b"bitcoin", "address", 0), _scope("bitcoin", "address", 0)
+        )
 
     def test_scope_rejects_nul(self):
         """The delimiters are only unambiguous while the fields cannot contain them.
@@ -184,8 +188,10 @@ class TestWardLeaf(unittest.TestCase):
             pack_identity(b"alice", "bitcoin", 7),
             (5).to_bytes(2, "big") + b"alice" + bytes([7]) + b"bitcoin" + bytes([7]),
         )
-        self.assertEqual(unpack_identity(pack_identity(b"alice", "bitcoin", 7)),
-                         (b"alice", b"bitcoin", 7))
+        self.assertEqual(
+            unpack_identity(pack_identity(b"alice", "bitcoin", 7)),
+            (b"alice", b"bitcoin", 7),
+        )
         # empty identifier and empty app_id are representable
         self.assertEqual(unpack_identity(pack_identity(b"", b"", 0)), (b"", b"", 0))
         # padding past the end is tolerated, which is what sealing will add
@@ -205,7 +211,9 @@ class TestWardLeaf(unittest.TestCase):
             pack_content(5, b"data_alice"),
             (5).to_bytes(4, "big") + (10).to_bytes(4, "big") + b"data_alice",
         )
-        self.assertEqual(unpack_content(pack_content(5, b"data_alice")), (5, b"data_alice"))
+        self.assertEqual(
+            unpack_content(pack_content(5, b"data_alice")), (5, b"data_alice")
+        )
         padded = pack_content(5, b"v") + b"\x00" * 50
         self.assertEqual(unpack_content(padded), (5, b"v"))
 
@@ -225,17 +233,22 @@ class TestWardLeaf(unittest.TestCase):
         self.assertEqual(deleted, EMPTY_PART)
 
         # ...and an empty value survives the round trip AS an empty value
-        self.assertEqual(decode_content(self.K_DATA, self.EK, self.KT, empty_value), (0, b""))
+        self.assertEqual(
+            decode_content(self.K_DATA, self.EK, self.KT, empty_value), (0, b"")
+        )
         self.assertIsNone(decode_content(self.K_DATA, self.EK, self.KT, deleted))
 
     def test_content_round_trip(self):
         part = encode_content(self.K_DATA, self.EK, self.KT, b"hello", c_leaf=9)
-        self.assertEqual(decode_content(self.K_DATA, self.EK, self.KT, part), (9, b"hello"))
+        self.assertEqual(
+            decode_content(self.K_DATA, self.EK, self.KT, part), (9, b"hello")
+        )
 
     def test_identity_round_trip(self):
         part = encode_identity(self.K_IDENT, self.EK, self.KT, b"alice", "bitcoin", 7)
         self.assertEqual(
-            decode_identity(self.K_IDENT, self.EK, self.KT, part), (b"alice", b"bitcoin", 7)
+            decode_identity(self.K_IDENT, self.EK, self.KT, part),
+            (b"alice", b"bitcoin", 7),
         )
         self.assertIsNone(decode_identity(self.K_IDENT, self.EK, self.KT, EMPTY_PART))
 
@@ -407,11 +420,15 @@ class TestWardSealedLeaf(unittest.TestCase):
         accept it even in a sealed build -- otherwise a build rejects its own delete."""
         from trezor.messages import WardLeafContent, WardPlaintextLeaf
 
-        wire = WardLeafContent(encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=b""))
+        wire = WardLeafContent(
+            encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=b"")
+        )
         self.assertTrue(is_delete(L.read_leaf_content(wire)))
 
         # a NON-empty plaintext part, by contrast, must be refused
-        wire = WardLeafContent(encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=b"x"))
+        wire = WardLeafContent(
+            encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=b"x")
+        )
         with self.assertRaises(DataError):
             L.read_leaf_content(wire)
 
@@ -473,11 +490,18 @@ class TestWardTrie(unittest.TestCase):
 
     def test_frozen_membership_proof(self):
         """The commit, the proof and the root, byte-for-byte across three impls."""
-        self.assertEqual(commit_of("address", self.ID_PART, self.VAL_PART), self.WITNESS_COMMIT)
+        self.assertEqual(
+            commit_of("address", self.ID_PART, self.VAL_PART), self.WITNESS_COMMIT
+        )
         self.assertEqual(len(self.PROOF[0]), 36)
         self.assertTrue(
             verify_membership(
-                self.MEMBER, "address", self.ID_PART, self.VAL_PART, self.PROOF, self.ROOT
+                self.MEMBER,
+                "address",
+                self.ID_PART,
+                self.VAL_PART,
+                self.PROOF,
+                self.ROOT,
             )
         )
 
@@ -492,7 +516,12 @@ class TestWardTrie(unittest.TestCase):
     def test_membership_against_a_wrong_root_fails(self):
         self.assertFalse(
             verify_membership(
-                self.MEMBER, "address", self.ID_PART, self.VAL_PART, self.PROOF, bytes(32)
+                self.MEMBER,
+                "address",
+                self.ID_PART,
+                self.VAL_PART,
+                self.PROOF,
+                bytes(32),
             )
         )
 
@@ -505,7 +534,9 @@ class TestWardTrie(unittest.TestCase):
             else:
                 valp = (valp[0], valp[1], valp[2], valp[3] + b"x")
             self.assertFalse(
-                verify_membership(self.MEMBER, "address", idp, valp, self.PROOF, self.ROOT)
+                verify_membership(
+                    self.MEMBER, "address", idp, valp, self.PROOF, self.ROOT
+                )
             )
         # ...and so does the key_type, which is why it is inside the commit
         self.assertFalse(
@@ -546,7 +577,9 @@ class TestWardTrie(unittest.TestCase):
         for bad in (
             good[:35],  # wrong element length
             bytes([1, 0]) + bytes([0, 0]) + good[4:],  # split_bit >= 256
-            bytes([0, 5]) + bytes([0, 0]) + good[4:],  # skiplen != split_bit - start_bit
+            bytes([0, 5])
+            + bytes([0, 0])
+            + good[4:],  # skiplen != split_bit - start_bit
         ):
             with self.assertRaises(DataError):
                 validate_proof_shape([bad])
@@ -641,7 +674,11 @@ class TestWardComputeNewRoot(unittest.TestCase):
         # one leaf left, and a single-leaf tree's root IS that leaf hash
         self.assertEqual(
             compute_new_root(
-                a, self._leaf(b"a"), None, proof, root,
+                a,
+                self._leaf(b"a"),
+                None,
+                proof,
+                root,
                 sibling_leaf=(b, self._commit(b"b")),
             ),
             lb,
@@ -649,7 +686,11 @@ class TestWardComputeNewRoot(unittest.TestCase):
         # a leaf witness that does not reproduce the committed hash is refused
         with self.assertRaises(DataError):
             compute_new_root(
-                a, self._leaf(b"a"), None, proof, root,
+                a,
+                self._leaf(b"a"),
+                None,
+                proof,
+                root,
                 sibling_leaf=(b, self._commit(b"WRONG")),
             )
 
@@ -681,8 +722,13 @@ class TestWardComputeNewRoot(unittest.TestCase):
         # nor may both forms be sent: the device would have to choose which to believe
         with self.assertRaises(DataError):
             compute_new_root(
-                a, self._leaf(b"a"), None, proof, root,
-                sibling_node=(5, lb, lc), sibling_leaf=(b, self._commit(b"b")),
+                a,
+                self._leaf(b"a"),
+                None,
+                proof,
+                root,
+                sibling_node=(5, lb, lc),
+                sibling_leaf=(b, self._commit(b"b")),
             )
 
     def test_emptying_the_tree_yields_a_root_that_says_so(self):
@@ -771,8 +817,13 @@ class TestWardComputeNewRoot(unittest.TestCase):
         proof = [self._elem(5, 5, lc)]  # witness is b
 
         got = compute_new_root(
-            a, None, self._leaf(b"a"), proof, root,
-            witness_entry_key=b, witness_commit=self._commit(b"b"),
+            a,
+            None,
+            self._leaf(b"a"),
+            proof,
+            root,
+            witness_entry_key=b,
+            witness_commit=self._commit(b"b"),
         )
         # canonical: root branches at bit 2, b/c hangs below with skiplen 5-(2+1) = 2
         self.assertEqual(got, internal_hash(2, 2, internal_hash(5, 2, lb, lc), la))
@@ -787,8 +838,13 @@ class TestWardComputeNewRoot(unittest.TestCase):
         root = internal_hash(0, 0, lb, lc)
         proof = [self._elem(0, 0, lc)]
         got = compute_new_root(
-            a, None, self._leaf(b"a"), proof, root,
-            witness_entry_key=b, witness_commit=self._commit(b"b"),
+            a,
+            None,
+            self._leaf(b"a"),
+            proof,
+            root,
+            witness_entry_key=b,
+            witness_commit=self._commit(b"b"),
         )
         self.assertEqual(got, internal_hash(0, 0, internal_hash(1, 0, lb, la), lc))
 
@@ -833,7 +889,9 @@ class TestWardAttestation(unittest.TestCase):
         # the counter, which is the point: roots repeat whenever contents repeat, so a mac
         # over the root alone would name a shape rather than a moment
         self.assertNotEqual(mac, A.root_mac(self.K_MAC, self.WARD_ID, 6, self.ROOT))
-        self.assertNotEqual(mac, A.root_mac(self.K_MAC, self.WARD_ID, 5, bytes([8]) * 32))
+        self.assertNotEqual(
+            mac, A.root_mac(self.K_MAC, self.WARD_ID, 5, bytes([8]) * 32)
+        )
         self.assertNotEqual(mac, A.root_mac(self.K_MAC, bytes(32), 5, self.ROOT))
         self.assertNotEqual(mac, A.root_mac(bytes(32), self.WARD_ID, 5, self.ROOT))
 
@@ -859,19 +917,33 @@ class TestWardAttestation(unittest.TestCase):
 
     def test_a_genuine_attestation_verifies(self):
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME))
-        self.assertTrue(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig))
+        sig = self._sign(
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME)
+        )
+        self.assertTrue(
+            A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig)
+        )
 
     def test_every_signed_field_is_bound(self):
         """Changing anything the signature covers must break it -- notably the nonce, which
         is what stops a host stockpiling anchors and replaying one later."""
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME))
+        sig = self._sign(
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME)
+        )
 
-        self.assertFalse(A.verify_attestation(self.WARD_ID, bytes(32), 5, mac, self.TIME, sig))
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 6, mac, self.TIME, sig))
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, bytes(32), self.TIME, sig))
-        self.assertFalse(A.verify_attestation(bytes(32), self.NONCE, 5, mac, self.TIME, sig))
+        self.assertFalse(
+            A.verify_attestation(self.WARD_ID, bytes(32), 5, mac, self.TIME, sig)
+        )
+        self.assertFalse(
+            A.verify_attestation(self.WARD_ID, self.NONCE, 6, mac, self.TIME, sig)
+        )
+        self.assertFalse(
+            A.verify_attestation(self.WARD_ID, self.NONCE, 5, bytes(32), self.TIME, sig)
+        )
+        self.assertFalse(
+            A.verify_attestation(bytes(32), self.NONCE, 5, mac, self.TIME, sig)
+        )
         self.assertFalse(
             A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME + 1, sig)
         )
@@ -880,7 +952,9 @@ class TestWardAttestation(unittest.TestCase):
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
         pre = A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME)
         sig = self._sign(pre, seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig))
+        self.assertFalse(
+            A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig)
+        )
 
     def test_a_zero_signature_never_verifies(self):
         """Not paranoia. Against the all-zero placeholder key an all-zero signature is a
@@ -890,13 +964,23 @@ class TestWardAttestation(unittest.TestCase):
         placeholder key.
         """
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, bytes(64)))
+        self.assertFalse(
+            A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, bytes(64))
+        )
 
     def test_a_malformed_signature_is_refused(self):
         mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        sig = self._sign(A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME))
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig[:63]))
-        self.assertFalse(A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig + b"\x00"))
+        sig = self._sign(
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME)
+        )
+        self.assertFalse(
+            A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig[:63])
+        )
+        self.assertFalse(
+            A.verify_attestation(
+                self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig + b"\x00"
+            )
+        )
 
 
 class TestWardCas(unittest.TestCase):
@@ -927,7 +1011,9 @@ class TestWardCas(unittest.TestCase):
         """Binding only the destination would let a link be lifted out of its place in the
         history and replayed after a different predecessor -- which is what a chain exists
         to prevent."""
-        pre = CAS.transition_preimage(CAS.TAG_COMMIT, self.WARD_ID, 4, self.R1, 5, self.R2)
+        pre = CAS.transition_preimage(
+            CAS.TAG_COMMIT, self.WARD_ID, 4, self.R1, 5, self.R2
+        )
         self.assertEqual(
             pre,
             CAS.TAG_COMMIT
@@ -940,13 +1026,17 @@ class TestWardCas(unittest.TestCase):
         # the empty tree appears as the sentinel, not as an absent field
         self.assertTrue(
             A.EMPTY_ROOT
-            in CAS.transition_preimage(CAS.TAG_COMMIT, self.WARD_ID, 0, None, 1, self.R1)
+            in CAS.transition_preimage(
+                CAS.TAG_COMMIT, self.WARD_ID, 0, None, 1, self.R1
+            )
         )
 
     def test_every_field_is_bound(self):
         mac = CAS.auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2)
         self.assertTrue(
-            CAS.verify_auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, mac)
+            CAS.verify_auth_commit(
+                self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, mac
+            )
         )
         for args in (
             (self.K_AUTH, self.WARD_ID, 3, self.R1, 5, self.R2),
@@ -974,7 +1064,10 @@ class TestWardCas(unittest.TestCase):
 
     def test_a_genuine_chain_folds_to_its_head(self):
         counter, root = 0, None
-        for link in (self._link(0, None, 1, self.R1), self._link(1, self.R1, 2, self.R2)):
+        for link in (
+            self._link(0, None, 1, self.R1),
+            self._link(1, self.R1, 2, self.R2),
+        ):
             counter, root = CAS.verify_chain_step(
                 self.K_AUTH, self.WARD_ID, counter, root, link
             )
@@ -991,12 +1084,20 @@ class TestWardCas(unittest.TestCase):
         # a link from another branch
         with self.assertRaises(DataError):
             CAS.verify_chain_step(
-                self.K_AUTH, self.WARD_ID, 1, self.R1, self._link(1, self.R2, 2, self.R2)
+                self.K_AUTH,
+                self.WARD_ID,
+                1,
+                self.R1,
+                self._link(1, self.R2, 2, self.R2),
             )
         # a link that starts somewhere the running head is not
         with self.assertRaises(DataError):
             CAS.verify_chain_step(
-                self.K_AUTH, self.WARD_ID, 5, self.R1, self._link(1, self.R1, 2, self.R2)
+                self.K_AUTH,
+                self.WARD_ID,
+                5,
+                self.R1,
+                self._link(1, self.R1, 2, self.R2),
             )
         # and one that was never authorised at all
         with self.assertRaises(DataError):

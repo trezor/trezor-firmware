@@ -90,12 +90,7 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     from trezor.wire import context
 
     from .keys import derive_k_data
-    from .leaf import (
-        decode_content,
-        is_delete,
-        read_leaf_content,
-        read_leaf_identity,
-    )
+    from .leaf import decode_content, is_delete, read_leaf_content, read_leaf_identity
 
     # Mirrors apps/webauthn/list_resident_credentials.py, which uses the same primitive
     # to ask the host for data mid-workflow.
@@ -149,7 +144,9 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
 
     # Opening is the other half of authenticity: a part the host forged, corrupted, or
     # lifted from another path fails the tag and raises here.
-    decoded = decode_content(await derive_k_data(key_type), entry_key, key_type, val_part)
+    decoded = decode_content(
+        await derive_k_data(key_type), entry_key, key_type, val_part
+    )
     value = None if decoded is None else decoded[1]
     return value, (leaf_key_type, id_part, val_part), material
 
@@ -199,9 +196,7 @@ def _verify_against_root(
         return
 
     if present:
-        if not verify_membership(
-            entry_key, key_type, id_part, val_part, proof, root
-        ):
+        if not verify_membership(entry_key, key_type, id_part, val_part, proof, root):
             raise DataError("WARD: entry does not match the trusted root")
         return
 

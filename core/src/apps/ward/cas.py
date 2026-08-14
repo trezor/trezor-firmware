@@ -78,9 +78,7 @@ def auth_commit(
     return hmac(
         hmac.SHA256,
         k_auth,
-        transition_preimage(
-            tag, ward_id, from_counter, from_root, to_counter, to_root
-        ),
+        transition_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root),
     ).digest()
 
 
