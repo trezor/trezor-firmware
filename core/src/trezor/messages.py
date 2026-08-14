@@ -8266,12 +8266,14 @@ if TYPE_CHECKING:
     class WardSyncAck(protobuf.MessageType):
         nonce: "AnyBytes | None"
         ward_id: "AnyBytes | None"
+        counter: "int | None"
 
         def __init__(
             self,
             *,
             nonce: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
+            counter: "int | None" = None,
         ) -> None:
             pass
 

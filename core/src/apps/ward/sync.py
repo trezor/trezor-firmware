@@ -12,6 +12,11 @@ async def sync(msg: WardSync) -> WardSyncAck:
     drawer of previously-signed anchors and serve whichever suits it. Against a host-only
     adversary -- the likelier one, since compromising the WM is a separate and harder
     event -- that closes replay entirely.
+
+    The ack also states the device's current counter, which makes this the "where are we"
+    exchange as well as the round opener. A host that lost a write's response cannot
+    otherwise tell a completed write from one that never happened: it retries, serves a proof
+    against a root the device has already moved past, and is refused with nothing to say why.
     """
     from trezor.crypto import random
     from trezor.messages import WardSyncAck
@@ -20,10 +25,13 @@ async def sync(msg: WardSync) -> WardSyncAck:
     from .attest import NONCE_LENGTH
     from .common import require_initialized
     from .keys import derive_ward_id
+    from .root import get_counter
 
     require_initialized()
 
     nonce = random.bytes(NONCE_LENGTH)
     sync_round.begin(nonce)
 
-    return WardSyncAck(nonce=nonce, ward_id=await derive_ward_id())
+    return WardSyncAck(
+        nonce=nonce, ward_id=await derive_ward_id(), counter=await get_counter()
+    )
