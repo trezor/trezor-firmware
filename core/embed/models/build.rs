@@ -50,7 +50,6 @@ fn main() -> Result<()> {
             "-Wpointer-arith",
             "-Wno-unused-parameter",
             "-Wno-sign-compare",
-            "-Wno-implicit-fallthrough",
             "-Wno-enum-conversion",
             "-Wno-type-limits",
             "-Wfloat-conversion",
