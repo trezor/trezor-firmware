@@ -10225,11 +10225,6 @@ class WardEntryAck(protobuf.MessageType):
         4: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
         5: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
-        7: protobuf.Field("sibling_split_bit", "uint32", repeated=False, required=False, default=None),
-        8: protobuf.Field("sibling_left", "bytes", repeated=False, required=False, default=None),
-        9: protobuf.Field("sibling_right", "bytes", repeated=False, required=False, default=None),
-        10: protobuf.Field("sibling_entry_key", "bytes", repeated=False, required=False, default=None),
-        11: protobuf.Field("sibling_commit", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10240,22 +10235,12 @@ class WardEntryAck(protobuf.MessageType):
         content: Optional["WardLeafContent"] = None,
         witness_entry_key: Optional["bytes"] = None,
         witness_commit: Optional["bytes"] = None,
-        sibling_split_bit: Optional["int"] = None,
-        sibling_left: Optional["bytes"] = None,
-        sibling_right: Optional["bytes"] = None,
-        sibling_entry_key: Optional["bytes"] = None,
-        sibling_commit: Optional["bytes"] = None,
     ) -> None:
         self.proof: Sequence["bytes"] = proof if proof is not None else []
         self.identity = identity
         self.content = content
         self.witness_entry_key = witness_entry_key
         self.witness_commit = witness_commit
-        self.sibling_split_bit = sibling_split_bit
-        self.sibling_left = sibling_left
-        self.sibling_right = sibling_right
-        self.sibling_entry_key = sibling_entry_key
-        self.sibling_commit = sibling_commit
 
 
 class WardLeafAck(protobuf.MessageType):

@@ -102,10 +102,10 @@ def commit(body: bytes) -> bytes:
 #
 # These are the substance of the fixture. Op count is nearly irrelevant next to geometry:
 # a sweep of 2880 operations over random keys was measured never to reach a split_bit above
-# 8 or a skiplen above 2, and skiplen is the quantity that goes stale on re-parenting and
-# caused every known bug. Real entry_keys ARE random (they are HMAC outputs), so the
-# deep-prefix sets are not realistic inputs -- they are the only way to exercise the
-# arithmetic that random keys leave untested.
+# 8, and depth is what every known bug turned on, since all of them were about a node moving
+# between levels. Real entry_keys ARE random (they are HMAC outputs), so the deep-prefix sets
+# are not realistic inputs -- they are the only way to exercise shapes random keys never
+# reach.
 
 
 def keys_random(n: int) -> list[bytes]:
@@ -208,17 +208,8 @@ def build(keys: list[bytes]) -> list[dict]:
         else:
             assert key in live, "script deletes a missing key"
             proof = model.membership_proof(key)
-            sib = model.sibling_witness(key)
-            kwargs = {}
-            if sib is None:
-                record["sibling"] = "none"
-            elif sib[0] == "branch":
-                kwargs["sibling_node"] = (sib[1], sib[2], sib[3])
-                record["sibling"] = "branch"
-            else:
-                kwargs["sibling_leaf"] = (sib[1], sib[2])
-                record["sibling"] = "leaf"
-            root = compute_new_root(key, leaf(live[key]), None, proof, root, **kwargs)
+            root = compute_new_root(key, leaf(live[key]), None, proof, root)
+            record["last"] = not proof  # the delete that empties the tree
             model.remove(key)
             del live[key]
 
@@ -265,23 +256,19 @@ def _check_coverage(data: dict) -> None:
     """Refuse to write a fixture that does not reach the shapes that have actually broken.
 
     A conformance fixture that silently covers only the easy cases is worse than none: it
-    reads as agreement. Every known trie bug involved a re-parented BRANCH sibling or the
-    empty tree, so both must appear.
+    reads as agreement. Every historical trie bug involved a node changing depth or the empty
+    tree, so every geometry must both delete down to empty and write again afterwards.
     """
-    kinds = {}
     for name, g in data["geometries"].items():
-        seen = set()
-        for step in g["steps"]:
-            if step["op"] == "delete":
-                seen.add(step["sibling"])
-        kinds[name] = seen
-        for required in ("leaf", "branch", "none"):
-            if required not in seen:
-                raise SystemExit(
-                    "fixture geometry %r never exercises a %r sibling delete: %s"
-                    % (name, required, sorted(seen))
-                )
-    return kinds
+        ops = [s["op"] for s in g["steps"]]
+        if not any(s.get("last") for s in g["steps"] if s["op"] == "delete"):
+            raise SystemExit("fixture geometry %r never empties the tree" % name)
+        if ops[-1] != "insert":
+            raise SystemExit("fixture geometry %r never writes after emptying" % name)
+    return {
+        n: sum(1 for s in g["steps"] if s["op"] == "delete")
+        for n, g in data["geometries"].items()
+    }
 
 
 def main() -> int:
@@ -306,9 +293,7 @@ def main() -> int:
         "wrote %s (%d geometries, %d steps)" % (FIXTURE, len(data["geometries"]), total)
     )
     for name in sorted(kinds):
-        print(
-            "  %-14s sibling kinds covered: %s" % (name, ", ".join(sorted(kinds[name])))
-        )
+        print("  %-14s deletes: %d" % (name, kinds[name]))
     return 0
 
 

@@ -47,7 +47,7 @@ def _keys_random(n):
 
 
 def _keys_shared_prefix(n):
-    """Keys agreeing on their first 160 bits, so branches sit deep and skiplens are large."""
+    """Keys agreeing on their first 160 bits, so branches sit deep in the key."""
     p = bytes([0xAB]) * 20
     return [p + sha256(bytes([i])).digest()[:12] for i in range(n)]
 
@@ -55,8 +55,9 @@ def _keys_shared_prefix(n):
 def _keys_ladder(n):
     """Key i is i leading 1-bits then zeros: every level is a compressed run.
 
-    This is the geometry that maximises branch-sibling deletes -- the D1 case -- because
-    almost every leaf's sibling is the subtree holding all the deeper keys.
+    This is the geometry where almost every leaf's sibling is a BRANCH -- the subtree holding
+    all the deeper keys -- which used to be the hard case for delete and is now the ordinary
+    one.
     """
     out = []
     for i in range(n):
@@ -93,14 +94,16 @@ class TestWardTrieCanonicity(unittest.TestCase):
     locally-wrong tree. That is exactly how the sibling-kind bug survived -- the device
     verified its own proofs happily against a root no rebuilder agreed with, and the wallet
     would only have wedged when a host recomputed. Only a rebuilder can see it, and the
-    device is never a rebuilder. Hence a differential test rather than an assertion.
+    device is never a rebuilder. Hence a differential test rather than an assertion. All
+    three of those bugs are gone now, having been artifacts of committing to a node's depth,
+    but the test that would have caught them is worth more than the bugs were.
 
     All three trie bugs in this subsystem's history are this class of bug.
 
     GEOMETRY MATTERS MORE THAN OP COUNT, which is not obvious and was measured rather than
     guessed. An earlier sweep of 2880 operations over random keys never reached a split_bit
-    above 8 or a skiplen above 2, with 86% of proof elements at skiplen 0 -- and skiplen is
-    precisely the quantity that goes stale on re-parenting and caused every one of the bugs.
+    above 8 -- and depth is what every one of the bugs turned on, since they were all about a
+    node moving between levels.
     So the four key sets below are the substance of this test, and it FAILS if the sweep
     stops reaching the hard shapes rather than merely reporting that it did not.
     """
@@ -112,16 +115,15 @@ class TestWardTrieCanonicity(unittest.TestCase):
     def _run_geometry(self, keys, seed):
         """Drive one randomised op sequence, asserting canonicity after every step.
 
-        Returns per-class op counts and the largest skiplen seen, for the coverage floors.
+        Returns per-class op counts and the deepest split_bit seen, for the coverage floors.
         """
         counts = {
             "insert": 0,
             "update": 0,
-            "delete_leaf_sibling": 0,
-            "delete_branch_sibling": 0,
+            "delete": 0,
             "delete_last": 0,
         }
-        max_skiplen = 0
+        max_split_bit = 0
         rng = _Rng(seed)
 
         model = CanonicalTrie()
@@ -133,25 +135,14 @@ class TestWardTrieCanonicity(unittest.TestCase):
             proof = model.membership_proof(key) if key in live else None
             if proof:
                 for elem in proof:
-                    sk = int.from_bytes(elem[2:4], "big")
-                    if sk > max_skiplen:
-                        max_skiplen = sk
+                    sb = int.from_bytes(elem[0:2], "big")
+                    if sb > max_split_bit:
+                        max_split_bit = sb
 
             if key in live and rng.below(100) < 45:
-                # DELETE -- the sibling witness is whichever form actually applies
-                sib = model.sibling_witness(key)
-                kwargs = {}
-                if sib is None:
-                    counts["delete_last"] += 1
-                elif sib[0] == "branch":
-                    kwargs["sibling_node"] = (sib[1], sib[2], sib[3])
-                    counts["delete_branch_sibling"] += 1
-                else:
-                    kwargs["sibling_leaf"] = (sib[1], sib[2])
-                    counts["delete_leaf_sibling"] += 1
-                root = compute_new_root(
-                    key, _leaf(live[key]), None, proof, root, **kwargs
-                )
+                # DELETE -- the proof is all of it; the sibling promotes unchanged
+                counts["delete_last" if not proof else "delete"] += 1
+                root = compute_new_root(key, _leaf(live[key]), None, proof, root)
                 model.remove(key)
                 del live[key]
 
@@ -194,20 +185,11 @@ class TestWardTrieCanonicity(unittest.TestCase):
             key = sorted(live)[rng.below(len(live))]
             proof = model.membership_proof(key)
             for elem in proof:
-                sk = int.from_bytes(elem[2:4], "big")
-                if sk > max_skiplen:
-                    max_skiplen = sk
-            sib = model.sibling_witness(key)
-            kwargs = {}
-            if sib is None:
-                counts["delete_last"] += 1
-            elif sib[0] == "branch":
-                kwargs["sibling_node"] = (sib[1], sib[2], sib[3])
-                counts["delete_branch_sibling"] += 1
-            else:
-                kwargs["sibling_leaf"] = (sib[1], sib[2])
-                counts["delete_leaf_sibling"] += 1
-            root = compute_new_root(key, _leaf(live[key]), None, proof, root, **kwargs)
+                sb = int.from_bytes(elem[0:2], "big")
+                if sb > max_split_bit:
+                    max_split_bit = sb
+            counts["delete_last" if not proof else "delete"] += 1
+            root = compute_new_root(key, _leaf(live[key]), None, proof, root)
             model.remove(key)
             del live[key]
             self.assertEqual(root, model.root())
@@ -222,7 +204,7 @@ class TestWardTrieCanonicity(unittest.TestCase):
         model.set(first, _commit(b"again"))
         self.assertEqual(root, model.root())
 
-        return counts, max_skiplen
+        return counts, max_split_bit
 
     def test_derived_root_matches_a_rebuild_and_reaches_the_hard_shapes(self):
         """Every op in every geometry lands on the canonical root -- and the sweep is
@@ -234,40 +216,40 @@ class TestWardTrieCanonicity(unittest.TestCase):
 
         Reporting the counts would not be enough either. A change to key generation or to the
         op mix can quietly reduce this to inserting random keys into shallow trees, which
-        passes and reads like coverage. So each class must stay non-zero, and skiplen must
-        stay large somewhere -- that last one is why `shared_prefix` and `ladder` exist at
-        all, since random keys never got it past 2.
+        passes and reads like coverage. So each class must stay non-zero, and the split_bit
+        must reach deep somewhere -- that last one is why `shared_prefix` and `ladder` exist
+        at all, since random keys never get past single digits.
         """
         totals = {}
-        max_skiplen = 0
+        max_split_bit = 0
         for name, make in GEOMETRIES:
             keys = make(self.KEYS)
             for trial in range(self.TRIALS):
                 counts, sk = self._run_geometry(keys, seed=0x5EED + trial)
                 for k, v in counts.items():
                     totals[k] = totals.get(k, 0) + v
-                if sk > max_skiplen:
-                    max_skiplen = sk
+                if sk > max_split_bit:
+                    max_split_bit = sk
 
         for name in (
             "insert",
             "update",
-            "delete_leaf_sibling",
-            "delete_branch_sibling",
+            "delete",
             "delete_last",
         ):
             self.assertTrue(totals.get(name, 0) > 0, "no coverage of: " + name)
         self.assertTrue(
-            max_skiplen >= 32,
-            "deep-skiplen shapes were not reached (max=%d)" % max_skiplen,
+            max_split_bit >= 32,
+            "deep shapes were not reached (max split_bit=%d)" % max_split_bit,
         )
 
-    def test_a_delete_must_identify_its_sibling(self):
-        """The omission that D1 closed, restated against a rebuilt tree.
+    def test_a_delete_needs_nothing_but_its_proof(self):
+        """What the sibling-kind witness used to be needed for, and no longer is.
 
-        Withholding both witness forms is refused. Set up so the sibling really is a BRANCH:
-        against a leaf sibling the old code was right by accident, and this would prove
-        nothing.
+        Set up with the shape that was hardest: the collapsing sibling is a BRANCH, which
+        used to have to arrive decomposed so the device could re-derive it at its new depth.
+        A node's hash no longer commits to depth, so it promotes unchanged -- and this
+        asserts the result is still the canonical one, which is the only thing that mattered.
         """
         keys = _keys_ladder(6)
         model = CanonicalTrie()
@@ -285,39 +267,12 @@ class TestWardTrieCanonicity(unittest.TestCase):
             )
             model.set(k, _commit(bytes([i])))
 
-        target = None
-        for i, k in enumerate(keys):
-            sib = model.sibling_witness(k)
-            if sib is not None and sib[0] == "branch":
-                target = (i, k, sib)
-                break
-        self.assertTrue(target is not None)
-        i, k, sib = target
-        proof = model.membership_proof(k)
-
-        with self.assertRaises(DataError):
-            compute_new_root(k, _leaf(bytes([i])), None, proof, root)
-        with self.assertRaises(DataError):
-            compute_new_root(
-                k,
-                _leaf(bytes([i])),
-                None,
-                proof,
-                root,
-                sibling_node=(sib[1], sib[2], sib[3]),
-                sibling_leaf=(k, _commit(bytes([i]))),
-            )
-
-        # the honest form lands on the canonical root
-        got = compute_new_root(
-            k,
-            _leaf(bytes([i])),
-            None,
-            proof,
-            root,
-            sibling_node=(sib[1], sib[2], sib[3]),
-        )
-        model.remove(k)
+        # a ladder puts a branch under almost every leaf, so this is the branch-sibling case
+        target, body = keys[0], bytes([0])
+        proof = model.membership_proof(target)
+        self.assertTrue(len(proof) > 0)
+        got = compute_new_root(target, _leaf(body), None, proof, root)
+        model.remove(target)
         self.assertEqual(got, model.root())
 
     def test_the_model_agrees_with_the_firmware_on_an_empty_tree(self):

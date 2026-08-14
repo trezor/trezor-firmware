@@ -89,7 +89,7 @@ async def set_entry(msg: WardSetEntry) -> WardLeafAck:
     # The device DERIVES its own new root rather than being told one. That is what makes
     # the root worth anything: it is a value the device computed from a state the host had
     # to prove, not a number it was handed.
-    proof, witness_entry_key, witness_commit, _sib_node, _sib_leaf = material
+    proof, witness_entry_key, witness_commit = material
     new_root = compute_new_root(
         entry_key,
         old_leaf,

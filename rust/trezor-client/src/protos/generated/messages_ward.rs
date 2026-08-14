@@ -2237,16 +2237,6 @@ pub struct WardEntryAck {
     pub witness_entry_key: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardEntryAck.witness_commit)
     pub witness_commit: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardEntryAck.sibling_split_bit)
-    pub sibling_split_bit: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardEntryAck.sibling_left)
-    pub sibling_left: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardEntryAck.sibling_right)
-    pub sibling_right: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardEntryAck.sibling_entry_key)
-    pub sibling_entry_key: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardEntryAck.sibling_commit)
-    pub sibling_commit: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardEntryAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2335,171 +2325,8 @@ impl WardEntryAck {
         self.witness_commit.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional uint32 sibling_split_bit = 7;
-
-    pub fn sibling_split_bit(&self) -> u32 {
-        self.sibling_split_bit.unwrap_or(0)
-    }
-
-    pub fn clear_sibling_split_bit(&mut self) {
-        self.sibling_split_bit = ::std::option::Option::None;
-    }
-
-    pub fn has_sibling_split_bit(&self) -> bool {
-        self.sibling_split_bit.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_sibling_split_bit(&mut self, v: u32) {
-        self.sibling_split_bit = ::std::option::Option::Some(v);
-    }
-
-    // optional bytes sibling_left = 8;
-
-    pub fn sibling_left(&self) -> &[u8] {
-        match self.sibling_left.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_sibling_left(&mut self) {
-        self.sibling_left = ::std::option::Option::None;
-    }
-
-    pub fn has_sibling_left(&self) -> bool {
-        self.sibling_left.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_sibling_left(&mut self, v: ::std::vec::Vec<u8>) {
-        self.sibling_left = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_sibling_left(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.sibling_left.is_none() {
-            self.sibling_left = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.sibling_left.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_sibling_left(&mut self) -> ::std::vec::Vec<u8> {
-        self.sibling_left.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    // optional bytes sibling_right = 9;
-
-    pub fn sibling_right(&self) -> &[u8] {
-        match self.sibling_right.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_sibling_right(&mut self) {
-        self.sibling_right = ::std::option::Option::None;
-    }
-
-    pub fn has_sibling_right(&self) -> bool {
-        self.sibling_right.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_sibling_right(&mut self, v: ::std::vec::Vec<u8>) {
-        self.sibling_right = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_sibling_right(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.sibling_right.is_none() {
-            self.sibling_right = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.sibling_right.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_sibling_right(&mut self) -> ::std::vec::Vec<u8> {
-        self.sibling_right.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    // optional bytes sibling_entry_key = 10;
-
-    pub fn sibling_entry_key(&self) -> &[u8] {
-        match self.sibling_entry_key.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_sibling_entry_key(&mut self) {
-        self.sibling_entry_key = ::std::option::Option::None;
-    }
-
-    pub fn has_sibling_entry_key(&self) -> bool {
-        self.sibling_entry_key.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_sibling_entry_key(&mut self, v: ::std::vec::Vec<u8>) {
-        self.sibling_entry_key = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_sibling_entry_key(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.sibling_entry_key.is_none() {
-            self.sibling_entry_key = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.sibling_entry_key.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_sibling_entry_key(&mut self) -> ::std::vec::Vec<u8> {
-        self.sibling_entry_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    // optional bytes sibling_commit = 11;
-
-    pub fn sibling_commit(&self) -> &[u8] {
-        match self.sibling_commit.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_sibling_commit(&mut self) {
-        self.sibling_commit = ::std::option::Option::None;
-    }
-
-    pub fn has_sibling_commit(&self) -> bool {
-        self.sibling_commit.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_sibling_commit(&mut self, v: ::std::vec::Vec<u8>) {
-        self.sibling_commit = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_sibling_commit(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.sibling_commit.is_none() {
-            self.sibling_commit = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.sibling_commit.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_sibling_commit(&mut self) -> ::std::vec::Vec<u8> {
-        self.sibling_commit.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(10);
+        let mut fields = ::std::vec::Vec::with_capacity(5);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, WardLeafIdentity>(
             "identity",
@@ -2525,31 +2352,6 @@ impl WardEntryAck {
             "witness_commit",
             |m: &WardEntryAck| { &m.witness_commit },
             |m: &mut WardEntryAck| { &mut m.witness_commit },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "sibling_split_bit",
-            |m: &WardEntryAck| { &m.sibling_split_bit },
-            |m: &mut WardEntryAck| { &mut m.sibling_split_bit },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "sibling_left",
-            |m: &WardEntryAck| { &m.sibling_left },
-            |m: &mut WardEntryAck| { &mut m.sibling_left },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "sibling_right",
-            |m: &WardEntryAck| { &m.sibling_right },
-            |m: &mut WardEntryAck| { &mut m.sibling_right },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "sibling_entry_key",
-            |m: &WardEntryAck| { &m.sibling_entry_key },
-            |m: &mut WardEntryAck| { &mut m.sibling_entry_key },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "sibling_commit",
-            |m: &WardEntryAck| { &m.sibling_commit },
-            |m: &mut WardEntryAck| { &mut m.sibling_commit },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardEntryAck>(
             "WardEntryAck",
@@ -2584,21 +2386,6 @@ impl ::protobuf::Message for WardEntryAck {
                 50 => {
                     self.witness_commit = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                56 => {
-                    self.sibling_split_bit = ::std::option::Option::Some(is.read_uint32()?);
-                },
-                66 => {
-                    self.sibling_left = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                74 => {
-                    self.sibling_right = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                82 => {
-                    self.sibling_entry_key = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                90 => {
-                    self.sibling_commit = ::std::option::Option::Some(is.read_bytes()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2628,21 +2415,6 @@ impl ::protobuf::Message for WardEntryAck {
         if let Some(v) = self.witness_commit.as_ref() {
             my_size += ::protobuf::rt::bytes_size(6, &v);
         }
-        if let Some(v) = self.sibling_split_bit {
-            my_size += ::protobuf::rt::uint32_size(7, v);
-        }
-        if let Some(v) = self.sibling_left.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(8, &v);
-        }
-        if let Some(v) = self.sibling_right.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(9, &v);
-        }
-        if let Some(v) = self.sibling_entry_key.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(10, &v);
-        }
-        if let Some(v) = self.sibling_commit.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(11, &v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2663,21 +2435,6 @@ impl ::protobuf::Message for WardEntryAck {
         }
         if let Some(v) = self.witness_commit.as_ref() {
             os.write_bytes(6, v)?;
-        }
-        if let Some(v) = self.sibling_split_bit {
-            os.write_uint32(7, v)?;
-        }
-        if let Some(v) = self.sibling_left.as_ref() {
-            os.write_bytes(8, v)?;
-        }
-        if let Some(v) = self.sibling_right.as_ref() {
-            os.write_bytes(9, v)?;
-        }
-        if let Some(v) = self.sibling_entry_key.as_ref() {
-            os.write_bytes(10, v)?;
-        }
-        if let Some(v) = self.sibling_commit.as_ref() {
-            os.write_bytes(11, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2701,11 +2458,6 @@ impl ::protobuf::Message for WardEntryAck {
         self.proof.clear();
         self.witness_entry_key = ::std::option::Option::None;
         self.witness_commit = ::std::option::Option::None;
-        self.sibling_split_bit = ::std::option::Option::None;
-        self.sibling_left = ::std::option::Option::None;
-        self.sibling_right = ::std::option::Option::None;
-        self.sibling_entry_key = ::std::option::Option::None;
-        self.sibling_commit = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2716,11 +2468,6 @@ impl ::protobuf::Message for WardEntryAck {
             proof: ::std::vec::Vec::new(),
             witness_entry_key: ::std::option::Option::None,
             witness_commit: ::std::option::Option::None,
-            sibling_split_bit: ::std::option::Option::None,
-            sibling_left: ::std::option::Option::None,
-            sibling_right: ::std::option::Option::None,
-            sibling_entry_key: ::std::option::Option::None,
-            sibling_commit: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -6025,23 +5772,20 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     encoding\x12\x19\n\x08key_type\x18\x02\x20\x01(\tR\x07keyType\x12L\n\ten\
     crypted\x18\x03\x20\x01(\x0b2..hw.trezor.messages.ward.WardEncryptedIden\
     tityR\tencrypted\x12@\n\x05plain\x18\x04\x20\x01(\x0b2*.hw.trezor.messag\
-    es.ward.WardPlainIdentityR\x05plain\"\xcf\x03\n\x0cWardEntryAck\x12E\n\
+    es.ward.WardPlainIdentityR\x05plain\"\xa6\x02\n\x0cWardEntryAck\x12E\n\
     \x08identity\x18\x02\x20\x01(\x0b2).hw.trezor.messages.ward.WardLeafIden\
     tityR\x08identity\x12B\n\x07content\x18\x03\x20\x01(\x0b2(.hw.trezor.mes\
     sages.ward.WardLeafContentR\x07content\x12\x14\n\x05proof\x18\x04\x20\
     \x03(\x0cR\x05proof\x12*\n\x11witness_entry_key\x18\x05\x20\x01(\x0cR\
     \x0fwitnessEntryKey\x12%\n\x0ewitness_commit\x18\x06\x20\x01(\x0cR\rwitn\
-    essCommit\x12*\n\x11sibling_split_bit\x18\x07\x20\x01(\rR\x0fsiblingSpli\
-    tBit\x12!\n\x0csibling_left\x18\x08\x20\x01(\x0cR\x0bsiblingLeft\x12#\n\
-    \rsibling_right\x18\t\x20\x01(\x0cR\x0csiblingRight\x12*\n\x11sibling_en\
-    try_key\x18\n\x20\x01(\x0cR\x0fsiblingEntryKey\x12%\n\x0esibling_commit\
-    \x18\x0b\x20\x01(\x0cR\rsiblingCommitJ\x04\x08\x01\x10\x02\"\x9d\x02\n\
-    \x0bWardLeafAck\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\
-    \x12E\n\x08identity\x18\x02\x20\x01(\x0b2).hw.trezor.messages.ward.WardL\
-    eafIdentityR\x08identity\x12B\n\x07content\x18\x03\x20\x01(\x0b2(.hw.tre\
-    zor.messages.ward.WardLeafContentR\x07content\x12\x18\n\x07counter\x18\
-    \x04\x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x05\x20\x01(\x0cR\x03ma\
-    c\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\x12\x19\n\
+    essCommitJ\x04\x08\x01\x10\x02J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\
+    \x04\x08\t\x10\nJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c\"\x9d\x02\n\x0b\
+    WardLeafAck\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12E\
+    \n\x08identity\x18\x02\x20\x01(\x0b2).hw.trezor.messages.ward.WardLeafId\
+    entityR\x08identity\x12B\n\x07content\x18\x03\x20\x01(\x0b2(.hw.trezor.m\
+    essages.ward.WardLeafContentR\x07content\x12\x18\n\x07counter\x18\x04\
+    \x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x05\x20\x01(\x0cR\x03mac\
+    \x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\x12\x19\n\
     \x08auth_sig\x18\x07\x20\x01(\x0cR\x07authSig\"\xa8\x01\n\rWardChainLink\
     \x12!\n\x0cfrom_counter\x18\x01\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfr\
     om_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counter\x18\x03\
