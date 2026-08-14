@@ -51,15 +51,27 @@ def transition_preimage(
     link be lifted out of its place in the history and replayed after a different
     predecessor, which is the whole point of a chain.
     """
+    from trezor.wire import DataError
+
     from .attest import root_or_empty
+
+    # Fixed widths, for the reason spelled out in `leaf.leaf_hash_of`: concatenating
+    # variable-length fields leaves the boundary ambiguous, and here from_root || to_counter
+    # || to_root can be re-split so a shifted (to_counter, to_root) reproduces a genuine
+    # authorisation byte for byte. Nothing exploits that today -- the shifted counter lands
+    # out of range and the handlers reject it -- which is accident, not design.
+    from_root = root_or_empty(from_root)
+    to_root = root_or_empty(to_root)
+    if len(ward_id) != 32 or len(from_root) != 32 or len(to_root) != 32:
+        raise DataError("WARD: transition operands must be 32 bytes")
 
     return (
         tag
         + ward_id
         + from_counter.to_bytes(4, "big")
-        + root_or_empty(from_root)
+        + from_root
         + to_counter.to_bytes(4, "big")
-        + root_or_empty(to_root)
+        + to_root
     )
 
 

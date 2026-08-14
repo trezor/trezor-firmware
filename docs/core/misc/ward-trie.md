@@ -52,10 +52,18 @@ EMPTY_ROOT = sha256( 0x03 )
            = 084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5
 ```
 
+**Every opaque operand is exactly 32 bytes, and that is load-bearing.** `entry_key`,
+`commit`, `ward_id`, `mac` and every root are fixed-width. The preimages above concatenate
+them with nothing marking the boundary, so a variable width makes the split ambiguous: with
+`leaf`, the pair `(K, C)` and the pair `(K ‖ C[0], C[1:])` hash identically, no attack on
+SHA-256 required. A non-membership witness is supplied by the host, and the other checks do
+not save it — a shifted witness key *differs* from the target and *routes* identically, since
+routing reads bits 0..255. A host could therefore pass the target's own **membership** proof
+off as proof of **absence**, hiding any present entry on every read. Implementations must
+reject wrong-width operands in the hashing primitives themselves rather than at call sites.
+
 The four tags `0x00`–`0x03` are disjoint, so no node can be reinterpreted as a node of
-another kind. That is load-bearing rather than tidy: a delete proves its sibling is a leaf by
-recomputing the leaf hash from `(entry_key, commit)` and matching the hash the proof
-committed to, which is only sound because a branch preimage can never produce it.
+another kind, so a leaf hash can never be passed off as an internal one or the reverse.
 
 `commit` is over the **encoded parts**, not the plaintext value. That is what lets a host
 serve proofs for entries it cannot read.
@@ -130,12 +138,14 @@ left or right according to `addr_bit(entry_key, split_bit)`, and comparing to th
 root.
 
 **Non-membership** has no "absent" node to point at, so it exhibits the leaf that already
-occupies the path the target would take. Three things must hold, and dropping any one makes
+occupies the path the target would take. Four things must hold, and dropping any one makes
 it forgeable:
 
-1. the witness key differs from the target — otherwise it proves presence;
-2. the witness folds up to the trusted root, i.e. it really is in the tree;
-3. the witness agrees with the target at **every** bit the proof branches on. Since the shape
+1. every operand is exactly 32 bytes — see the note under **Hashing**; without this the
+   remaining checks are all satisfiable by a witness that is the target with bytes glued on;
+2. the witness key differs from the target — otherwise it proves presence;
+3. the witness folds up to the trusted root, i.e. it really is in the tree;
+4. the witness agrees with the target at **every** bit the proof branches on. Since the shape
    rules above already force those branch points to be increasing with every skipped bit
    accounted for, agreeing at them is agreeing on the whole prefix down to where the paths
    part.
