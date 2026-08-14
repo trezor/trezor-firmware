@@ -7,10 +7,30 @@ if TYPE_CHECKING:
 async def rollback(msg: WardRollback) -> WardRollbackAck:
     """Demote the head by exactly one step, with the user's consent.
 
-    This is the escape from a stuck wallet. A device whose write never reached the WM is
-    ahead of it, so every sync is refused as a rollback and nothing can move; undoing that
-    write is the only way forward. It deliberately needs NO attestation -- requiring one
-    would make the escape unavailable in exactly the situation it exists for.
+    This is the escape from a stuck wallet, and there are two ways to get stuck. It
+    deliberately needs NO attestation -- requiring one would make the escape unavailable in
+    exactly the situation it exists for.
+
+    THE DURABLE REASON: the freshness authority and the data store are DIFFERENT SYSTEMS.
+    The WM vouches for (counter, mac); the leaves live in an eventually-consistent store
+    (an Evolu relay). A confirmation from the first says nothing about durability in the
+    second, so a device can commit a head whose backing data was never persisted -- a
+    client wrote locally, the relay never received it, that client's database went away.
+    The device is then committed to a root NO host can ever produce proofs against, for
+    good. Nothing else in the protocol recovers from that.
+
+    THE TRANSIENT REASON: a device whose write never reached the WM is ahead of it, so every
+    sync is refused as a rollback. This one disappears if writes ever commit only on WM
+    confirmation; the durable reason above does not, because that confirmation is not a
+    durability guarantee.
+
+    AND THE PART THAT MAKES THIS DANGEROUS: a host that is merely BEHIND is indistinguishable
+    from data that is GONE. Both present as proofs that do not match the trusted root -- see
+    `common._verify_against_root`. Rolling back in the first case destroys a legitimate
+    change. An eventually-consistent backend makes the first case ORDINARY, which means users
+    meet this screen during normal operation and learn to approve it. That is how a
+    hold-to-confirm stops being read, and it makes the rewind attack below more practical
+    rather than less. The screen alone cannot separate the two cases; only the age can.
 
     The design's own framing is that the naive version of this -- signing a demotion to a
     root the host names -- is the single most exploitable path in the protocol: a host that
@@ -30,9 +50,11 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     would otherwise demote the wallet to a state from arbitrarily long ago in a single hop,
     with the one-step rule perfectly satisfied.
 
-    FIXME(ward): the design puts the AGE of the discarded change on this screen and calls
-    it the actionable signal -- a legitimate rollback discards something minutes old, while
-    "created 3 months ago" means a host is rewinding under cover of a fabricated deadlock.
+    FIXME(ward): the age is now a PREREQUISITE, not a nicety. The design puts the AGE of the
+    discarded change on this screen and calls it the actionable signal -- a legitimate
+    rollback discards something minutes old, while "created 3 months ago" means a host is
+    rewinding under cover of a fabricated deadlock. Given the paragraph above, it is the only
+    thing that lets a user tell a stale relay from lost data.
     The attestation timestamps did NOT supply this, contrary to what this note used to
     predict: the device stores when its head was last ATTESTED, and an age needs the
     interval between then and now. The device has no clock, so it cannot compute one. The
