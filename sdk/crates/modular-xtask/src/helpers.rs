@@ -66,23 +66,6 @@ pub fn is_workspace() -> Result<bool> {
     }
 }
 
-/// Returns the root of the trezor-firmware repository holding the cargo workspace.
-pub fn repo_root() -> Result<PathBuf> {
-    let marker = Path::new("core").join("tools").join("trezor_core_tools");
-    let workspace = root_dir()?;
-
-    workspace
-        .ancestors()
-        .find(|dir| dir.join(&marker).is_dir())
-        .map(Path::to_path_buf)
-        .ok_or_else(|| {
-            anyhow!(
-                "Failed to locate the repository root above {}",
-                workspace.display()
-            )
-        })
-}
-
 pub fn app_package(package_name: &str) -> Result<Package> {
     let metadata = MetadataCommand::new()
         .no_deps()
@@ -118,6 +101,39 @@ pub fn standalone_project_name() -> Result<String> {
 pub fn artifacts_dir(model: Model, emulator: bool) -> Result<PathBuf> {
     let model_dir = format!("{}{}", model.model_id(), if emulator { "-emu" } else { "" });
     Ok(build_dir()?.join("artifacts").join(model_dir))
+}
+
+/// Updates the `artifacts/latest` symlink to point at `model_dir`, mirroring
+/// core/embed/xtask's own `artifacts/latest` convenience symlink. Kept as a
+/// separate directory per model/emulator combination (see `artifacts_dir`)
+/// rather than merged like core/embed/xtask's, since the Merkle-proof and
+/// RootPacket generation in `postbuild.rs` bundles every `.elf` found in a
+/// single artifact directory into one ring -- firmware and emulator builds
+/// (or builds for different models) must not land in the same directory.
+pub fn update_latest_symlink(model_dir: &Path) -> Result<()> {
+    let latest_symlink = model_dir
+        .parent()
+        .context("Failed to get artifact parent directory")?
+        .join("latest");
+
+    if latest_symlink.symlink_metadata().is_ok() {
+        std::fs::remove_file(&latest_symlink).with_context(|| {
+            format!(
+                "Failed to remove existing symlink `{}`",
+                latest_symlink.display()
+            )
+        })?;
+    }
+
+    std::os::unix::fs::symlink(model_dir, &latest_symlink).with_context(|| {
+        format!(
+            "Failed to create symlink `{}` -> `{}`",
+            latest_symlink.display(),
+            model_dir.display()
+        )
+    })?;
+
+    Ok(())
 }
 
 /// Checks if the given directory exists, and creates it if it doesn't.
