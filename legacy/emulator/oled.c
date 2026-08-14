@@ -20,7 +20,9 @@
 #include "oled.h"
 
 #include <SDL3/SDL.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
@@ -59,16 +61,52 @@ void oledInit(void) {
   int scale = emulatorScale();
   int fullscreen = emulatorFullscreen();
 
-  SDL_Window *window =
-      SDL_CreateWindow("Trezor^emu", OLED_WIDTH * scale, OLED_HEIGHT * scale,
-                       fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+  SDL_Window *window = NULL;
+
+  // SDL3 renderer creation can fail on Wayland.
+  // On failure falls back to X11 via XWayland.
+  for (int attempt = 1; attempt <= 2; attempt++) {
+    if (attempt == 2) {
+      // Second attempt: tear down Wayland, reinit with X11
+      fprintf(stderr, "Renderer failed on Wayland (%s), retrying with X11\n",
+              SDL_GetError());
+      SDL_DestroyWindow(window);
+      window = NULL;
+      SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+      SDL_SetHintWithPriority(SDL_HINT_VIDEO_DRIVER, "x11", SDL_HINT_OVERRIDE);
+      if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
+        fprintf(stderr, "Failed to initialize SDL with X11: %s\n",
+                SDL_GetError());
+        exit(1);
+      }
+    }
+
+    window =
+        SDL_CreateWindow("Trezor^emu", OLED_WIDTH * scale, OLED_HEIGHT * scale,
+                         fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+    if (window == NULL) {
+      break;
+    }
+
+    renderer = SDL_CreateRenderer(window, NULL);
+    if (renderer) {
+      break;  // success
+    }
+
+    // Retry if we're on Wayland and this is the first attempt
+    const char *video_driver = SDL_GetCurrentVideoDriver();
+    if (attempt == 1 && video_driver && strcmp(video_driver, "wayland") == 0) {
+      continue;  // try fallback with x11
+    }
+    break;  // no fallback possible
+  }
 
   if (window == NULL) {
     fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
     exit(1);
   }
 
-  renderer = SDL_CreateRenderer(window, NULL);
   if (!renderer) {
     fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
     exit(1);
