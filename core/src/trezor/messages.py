@@ -8143,6 +8143,7 @@ if TYPE_CHECKING:
         content: "LeafContent | None"
         counter: "int | None"
         mac: "AnyBytes | None"
+        auth_commit: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8152,11 +8153,64 @@ if TYPE_CHECKING:
             content: "LeafContent | None" = None,
             counter: "int | None" = None,
             mac: "AnyBytes | None" = None,
+            auth_commit: "AnyBytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDLeafAck"]:
+            return isinstance(msg, cls)
+
+    class WARDChainLink(protobuf.MessageType):
+        from_counter: "int | None"
+        from_root: "AnyBytes | None"
+        to_counter: "int | None"
+        to_root: "AnyBytes | None"
+        auth_commit: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            from_counter: "int | None" = None,
+            from_root: "AnyBytes | None" = None,
+            to_counter: "int | None" = None,
+            to_root: "AnyBytes | None" = None,
+            auth_commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDChainLink"]:
+            return isinstance(msg, cls)
+
+    class WARDVerifyChain(protobuf.MessageType):
+        links: "list[WARDChainLink]"
+
+        def __init__(
+            self,
+            *,
+            links: "list[WARDChainLink] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDVerifyChain"]:
+            return isinstance(msg, cls)
+
+    class WARDVerifyChainAck(protobuf.MessageType):
+        counter: "int | None"
+        new_root: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int | None" = None,
+            new_root: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDVerifyChainAck"]:
             return isinstance(msg, cls)
 
     class WARDSync(protobuf.MessageType):

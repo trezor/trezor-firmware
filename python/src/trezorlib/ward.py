@@ -106,6 +106,9 @@ class WardResult(NamedTuple):
     # ahead of it and its next sync is refused as a rollback.
     counter: Optional[int] = None
     mac: Optional[bytes] = None
+    # Authorises this write's transition. The caller stores it with the link so another
+    # device of the wallet can later verify the step without having witnessed it.
+    auth_commit: Optional[bytes] = None
 
 
 def _call_answering_pulls(
@@ -153,6 +156,7 @@ def _call_answering_pulls(
             Leaf(res.identity, res.content),
             res.counter,
             res.mac,
+            res.auth_commit,
         )
 
     if not isinstance(res, messages.Success):
@@ -258,6 +262,29 @@ def reconcile(
     )
 
 
+def verify_chain(session: "Session", links) -> messages.WARDVerifyChainAck:
+    """Adopt the attested head by proving it descends from the device's current one.
+
+    Used instead of `reconcile` when the device has fallen more than a step behind.
+    `links` are ordered from the device's own head forward.
+    """
+    return session.call(
+        messages.WARDVerifyChain(
+            links=[
+                messages.WARDChainLink(
+                    from_counter=fc,
+                    from_root=fr,
+                    to_counter=tc,
+                    to_root=tr,
+                    auth_commit=ac,
+                )
+                for (fc, fr, tc, tr, ac) in links
+            ]
+        ),
+        expect=messages.WARDVerifyChainAck,
+    )
+
+
 def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
     """A leaf whose content body is empty is a deletion, not an empty-valued entry."""
     if leaf is None or leaf.content is None:
@@ -307,6 +334,7 @@ def apply(store, result: WardResult) -> None:
     if result.leaf is None:
         raise ValueError("this result carries no leaf; nothing to apply")
 
+    before_root, before_counter = store.root(), store.counter
     if leaf_is_delete(result.leaf):
         store.remove(result.entry_key)
     else:
@@ -315,4 +343,10 @@ def apply(store, result: WardResult) -> None:
     # Keep the counter with the root. The device is the counter authority, and a store
     # that tracked only the root could not tell the WM which state it is publishing.
     if result.counter is not None:
+        if result.auth_commit is not None:
+            # The transition log. The host cannot forge or read these -- it holds them so
+            # another device of the wallet can verify the steps it missed.
+            store.links.append(
+                (before_counter, before_root, result.counter, store.root(), result.auth_commit)
+            )
         store.counter = result.counter

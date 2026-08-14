@@ -776,6 +776,8 @@ if TYPE_CHECKING:
         WARDIngestAttestationAck = 2310
         WARDReconcile = 2311
         WARDReconcileAck = 2312
+        WARDVerifyChain = 2313
+        WARDVerifyChainAck = 2314
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102
