@@ -33,7 +33,7 @@
 #define WANT_WRP_SECTORS (OB_WRP_SECTOR_0 | OB_WRP_SECTOR_1 | OB_WRP_SECTOR_2)
 #else
 #define WANT_RDP_LEVEL (OB_RDP_LEVEL_0)
-#define WANT_WRP_SECTORS (0)
+#define WANT_WRP_SECTORS (0U)
 #endif
 
 // BOR LEVEL 3: Reset level threshold is around 2.5 V
