@@ -73,7 +73,7 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     from .cas import TAG_REVERT, auth_commit, sig_commit, verify_auth_commit
     from .common import WARNING_UNVERIFIED, require_initialized
     from .keys import derive_k_auth, derive_k_sig, derive_ward_id
-    from .root import get_attested_counter, get_counter, get_root, set_root
+    from .root import get_attested_counter, get_counter, get_root
 
     require_initialized()
 
@@ -137,8 +137,12 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     # Forward, even though the head goes back. Reusing a counter would let the writes being
     # undone replay afterwards, since their authorisations name those counters -- and it is
     # also what lets the WM accept this as an ordinary advance.
+    #
+    # NOT COMMITTED HERE either, for the same reason writes are not: committing a revert
+    # locally would put the device ahead of the WM again, which is exactly the state
+    # commit-on-confirmation removes. The host publishes this transition like any other and
+    # the head moves at `reconcile`.
     new_counter = counter + 1
-    await set_root(to_root, new_counter)
 
     return WardRollbackAck(
         counter=new_counter,
