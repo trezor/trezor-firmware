@@ -288,7 +288,6 @@ async def confirm_payment_op(op: StellarPaymentOp, output_index: int) -> None:
 
 async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
     from trezor.enums import StellarSignerType
-    from trezor.ui.layouts import confirm_blob
 
     from .. import helpers
 
@@ -358,10 +357,6 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
         if signer_key is None or op.signer_weight is None:
             raise DataError("Stellar: invalid signer option data.")
 
-        if op.signer_weight > 0:
-            title = TR.stellar__add_signer
-        else:
-            title = TR.stellar__remove_signer
         data: StrOrBytes = ""
         if signer_type == StellarSignerType.ACCOUNT:
             description = TR.words__account
@@ -375,11 +370,18 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
         else:
             raise ProcessError("Stellar: invalid signer type")
 
-        await confirm_blob(
+        props = [(description, data, True)]
+
+        if op.signer_weight > 0:
+            title = TR.stellar__add_signer
+            props.append((TR.words__weight, str(op.signer_weight), True))
+        else:
+            title = TR.stellar__remove_signer
+
+        await confirm_properties(
             "op_signer",
             title=title,
-            description=description,
-            data=data,
+            props=props,
             verb=TR.buttons__continue,
         )
 
