@@ -28,6 +28,26 @@ WARNING_UNVERIFIED: "StrPropertyType" = (
 # translation blobs (TR.*) before this is shippable; kept literal while the wire shape
 # and the screens are still moving.
 
+# GAP(ward): a host cannot know whether its replica is COMPLETE, and this is where that
+# surfaces.
+#
+# A root commits to the whole key set, so a replica missing one leaf does not fail to produce
+# a proof -- it produces a well-formed proof that reconstructs to a DIFFERENT root. In an
+# eventually-consistent store there is no completeness signal either: "I have everything" and
+# "I am still missing rows" are the same observation, which is what eventual consistency
+# declines to distinguish. The host cannot check itself against the WM's head, because it
+# cannot verify a mac.
+#
+# So the DEVICE is the only completeness oracle in the system, and `WardReconcile` is the
+# only way to consult it: an accepted reconcile means the host's root matched the attested
+# mac, i.e. its replica was complete at that counter. That belongs in the host-side design
+# before `@trezor/ward` is written.
+#
+# The cost is that ONE refusal below covers three different situations -- a replica that is
+# behind, a replica that is partial, and data that is permanently lost -- and the device
+# cannot tell them apart. Only the first two are waitable; the third needs `WardRollback`,
+# which is why that screen is dangerous rather than routine. See `rollback.py`.
+
 
 def display_bytes(value: bytes) -> str:
     """Best-effort rendering of an arbitrary byte string for a trusted screen:
@@ -50,6 +70,12 @@ def require_initialized() -> None:
 
 def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, bytes]":
     """Validate the (app_id, identifier) pair every WARD request carries.
+
+    GAP(ward): app_id is taken from the WIRE, so there is no ACL -- any caller may claim any
+    app_id and read another app's entries. The intended model has core fill it in from the
+    caller's identity, which needs a notion of app identity the device does not have yet.
+    Deferred until an app boundary actually exists; until then app_id is a namespace, not a
+    permission.
 
     The wire fields are `optional` on purpose -- a proto2 `required` field a caller
     forgets to set is an encode-time failure in every binding -- so the check lives

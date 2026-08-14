@@ -59,6 +59,12 @@ EMPTY_ROOT = (
 )
 
 
+# GAP(ward): whether the WM may hold ROOTS is deferred. Serving them would let a device
+# reconcile without the host supplying one, at the cost of the blindness above -- the WM would
+# learn the root sequence. Safe only while it still attests (counter, mac): a WM that attested
+# roots directly could name a state the wallet never reached.
+
+
 def root_or_empty(root: bytes | None) -> bytes:
     """A root in its preimage form: itself, or the empty-tree stand-in."""
     return root if root is not None else EMPTY_ROOT
