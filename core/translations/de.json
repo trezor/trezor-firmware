@@ -80,12 +80,7 @@
     "address__title_provider_address": "Anbieteradresse",
     "address__title_receive_address": "Empfangsadresse",
     "address__title_refund_address": "Refund-Adresse",
-    "address__title_yours": {
-      "Bolt": "Deine",
-      "Caesar": "Deiner",
-      "Delizia": "Deiner",
-      "Eckhart": "Deiner"
-    },
+    "address__title_yours": "Deiner",
     "address__warning_not_yours": {
       "Bolt": "",
       "Caesar": "",
@@ -992,7 +987,12 @@
       "Eckhart": "EIP-7702-Autorisierung signiert."
     },
     "ethereum__auth_title": "EIP-7702-Autorisierung",
-    "ethereum__auth_warn": "Dein Konto mithilfe von EIP-7702 für einen Drittanbieter-Contract autorisieren?",
+    "ethereum__auth_warn": {
+      "Bolt": "Konto via EIP-7702 für Drittanbieter-Contract autorisieren?",
+      "Caesar": "Dein Konto mithilfe von EIP-7702 für einen Drittanbieter-Contract autorisieren?",
+      "Delizia": "Dein Konto mithilfe von EIP-7702 für einen Drittanbieter-Contract autorisieren?",
+      "Eckhart": "Dein Konto mithilfe von EIP-7702 für einen Drittanbieter-Contract autorisieren?"
+    },
     "ethereum__calldata_digest": "ERC-8213-Digest",
     "ethereum__calldata_suffix": "Calldata-Suffix",
     "ethereum__confirm_contract": "Vertrag bestätigen",

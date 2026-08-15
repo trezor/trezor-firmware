@@ -318,7 +318,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Zapněte Bluetooth pro připojení nového zařízení."
+      "Eckhart": "Pro párování s novým zařízení musíte zapnout Bluetooth."
     },
     "ble__pair_new": {
       "Bolt": "",
@@ -348,7 +348,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Zrušit spárování všech zařízení Bluetooth"
+      "Eckhart": "Odpárovat všechna zařízení Bluetooth"
     },
     "ble__unpair_current": {
       "Bolt": "",
@@ -383,7 +383,7 @@
     },
     "brightness__title": "Nastavení jasu",
     "buttons__abort": "Zrušit",
-    "buttons__access": "Přístup",
+    "buttons__access": "Použít",
     "buttons__again": "Znovu",
     "buttons__allow": "Povolit",
     "buttons__back": "Zpět",
@@ -551,12 +551,12 @@
     "cardano__weight": "Váha",
     "cardano__withdrawal_for_address_template": "Potvrďte výběr pro adresu typu {0}",
     "cardano__x_of_y_signatures_template": "Vyžaduje {0} podpis ze {1}.",
-    "coinjoin__access_account": "Získat přístup k účtu coinjoin?",
+    "coinjoin__access_account": "Použít váš coinjoin účet?",
     "coinjoin__do_not_disconnect": "Neodpojujte svůj Trezor!",
     "coinjoin__max_coordinator_fee_pct": "",
-    "coinjoin__max_mining_fee": "Max. poplatek za těžbu",
+    "coinjoin__max_mining_fee": "Maximální poplatek za těžbu",
     "coinjoin__max_rounds": "Maximum kol",
-    "coinjoin__title": "Schválit coinjoin",
+    "coinjoin__title": "Schválení coinjoinu",
     "coinjoin__title_progress": {
       "Bolt": "Probíhá coinjoin",
       "Caesar": "Probíhá coinjoin",
@@ -814,16 +814,16 @@
       "Eckhart": ""
     },
     "ethereum__all_evms": "Všechny EVM",
-    "ethereum__approve": "Povolit",
+    "ethereum__approve": "Schválit",
     "ethereum__approve_amount_allowance": "Limit částky",
     "ethereum__approve_chain_id": "ID sítě",
-    "ethereum__approve_intro": "Zkontrolujte údaje pro povolení utracení tokenu.",
+    "ethereum__approve_intro": "Zkontrolujte údaje pro schválení utracení tokenu.",
     "ethereum__approve_intro_revoke": "Zkontrolujte údaje pro zrušení povolení tokenu.",
     "ethereum__approve_intro_title": "Schválení tokenu",
     "ethereum__approve_intro_title_revoke": "Odvolání tokenu",
     "ethereum__approve_revoke": "Zrušit",
     "ethereum__approve_revoke_from": "Zrušit pro",
-    "ethereum__approve_to": "Povolit pro",
+    "ethereum__approve_to": "Schválit pro",
     "ethereum__approve_unlimited_template": {
       "Bolt": "Povolujete neomezené množství {0}",
       "Caesar": "Povolujete neomezené množství {0}",
@@ -840,7 +840,7 @@
     "ethereum__auth_warn": "Autorizovat pomocí EIP-7702 váš účet pro kontrakt třetí strany?",
     "ethereum__calldata_digest": "Otisk ERC-8213",
     "ethereum__calldata_suffix": "Dodatečná calldata",
-    "ethereum__confirm_contract": "Potvrdit kontrakt",
+    "ethereum__confirm_contract": "Potvrzení kontraktu",
     "ethereum__contract_address": "Adresa kontraktu poskytovatele",
     "ethereum__data_size_template": "Velikost: {0} bajtů",
     "ethereum__delegate_done": {
@@ -954,7 +954,7 @@
     "ethereum__withdraw_to": "Výběr na",
     "experimental_mode__enable": "Povolit experimentální funkce?",
     "experimental_mode__only_for_dev": "Pouze pro vývoj a beta testování!",
-    "experimental_mode__title": "Experiment. režim",
+    "experimental_mode__title": "Experimentální režim",
     "fido__already_registered": "Registrace už proběhla",
     "fido__device_already_registered": "Toto zařízení je už v této aplikaci zaregistrované.",
     "fido__device_already_registered_with_template": "Toto zařízení je už na {0} zaregistrované.",
@@ -1069,7 +1069,7 @@
     "homescreen__title_backup_failed": "Záloha selhala",
     "homescreen__title_backup_needed": "Je potřeba záloha",
     "homescreen__title_coinjoin_authorized": "Coinjoin schválen",
-    "homescreen__title_experimental_mode": "Experiment. režim",
+    "homescreen__title_experimental_mode": "Experimentální režim",
     "homescreen__title_no_usb_connection": "Žádné USB připojení",
     "homescreen__title_pin_not_set": "Není nastaven PIN",
     "homescreen__title_seedless": "Bez seedu",
@@ -2526,7 +2526,7 @@
       "Delizia": "Bezpečnostní kontroly",
       "Eckhart": "Bezpečnostní kontroly"
     },
-    "safety_checks__title_safety_override": "Vyřazení zabezpeč.",
+    "safety_checks__title_safety_override": "Vyřazení zabezpečení",
     "sd_card__all_data_will_be_lost": {
       "Bolt": "Všechna data na SD kartě budou ztracena.",
       "Caesar": "",
@@ -2769,7 +2769,7 @@
     "solana__is_provided_via_lookup_table_template": "{0} pochází z vyhledávací tabulky.",
     "solana__lookup_table_address": "Adresa vyhledávací tabulky",
     "solana__max_fees_rent": "Maximalní poplatky a nájemné",
-    "solana__max_rent_fee": "Max. poplatek za nájem",
+    "solana__max_rent_fee": "Maximální poplatek za nájem",
     "solana__multiple_signers": "Více podepisujících",
     "solana__offchain_is_multisig": "Následující zpráva vyžaduje více podepisujících.",
     "solana__priority_fee": "Poplatek za prioritu",
@@ -2910,7 +2910,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Zadejte jednorázový bezpečnostní kód na {0}"
+      "Eckhart": "Zadejte tento jednorázový bezpečnostní kód na {0}"
     },
     "thp__code_title": {
       "Bolt": "",
@@ -2964,7 +2964,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Spárovat s novým zařízením"
+      "Eckhart": "Párování s novým zařízením"
     },
     "thp__pair_title": {
       "Bolt": "",
@@ -3009,7 +3009,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Poslední"
+      "Eckhart": "Poslední krok"
     },
     "tutorial__lets_begin": {
       "Bolt": "",
@@ -3087,7 +3087,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Tento tutoriál si kdykoliv přehrajte z aplikace Trezor Suite."
+      "Eckhart": "Tento tutoriál si můžete kdykoliv přehrát z aplikace Trezor Suite."
     },
     "tutorial__sure_you_want_skip": {
       "Bolt": "",
@@ -3367,7 +3367,7 @@
     "words__function": "",
     "words__important": "Důležité",
     "words__instructions": "Pokyny",
-    "words__intent": "Akce",
+    "words__intent": "Záměr",
     "words__keep_it_safe": {
       "Bolt": "",
       "Caesar": "Dávejte na ni pozor!",
