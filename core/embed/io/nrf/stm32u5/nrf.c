@@ -475,7 +475,7 @@ bool nrf_get_info(nrf_info_t *info) {
   drv->info_valid = false;
 
   uint8_t data[1] = {MGMT_CMD_INFO};
-  if (nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL) < 0) {
+  if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
     return false;
   }
 
@@ -500,7 +500,7 @@ uint32_t nrf_get_version(void) {
   drv->info_valid = false;
 
   uint8_t data[1] = {MGMT_CMD_INFO};
-  if (nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL) < 0) {
+  if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
     return 0;
   }
 
@@ -574,8 +574,7 @@ bool nrf_authenticate(void) {
   drv->auth_data_valid = false;
   memset(drv->auth_data, 0, sizeof(drv->auth_data));
 
-  if (nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data), NULL, NULL) <
-      0) {
+  if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data), NULL, NULL)) {
     return false;
   }
 

@@ -127,8 +127,7 @@ static void ble_pairing_end(ble_driver_t *drv) {
 static bool ble_send_state_request(ble_driver_t *drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_SEND_STATE;
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
-         0;
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
 static bool ble_send_advertising_on(ble_driver_t *drv, bool whitelist) {
@@ -152,44 +151,39 @@ static bool ble_send_advertising_on(ble_driver_t *drv, bool whitelist) {
   memcpy(data.name, drv->adv_name, BLE_ADV_NAME_LEN);
 
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&data, sizeof(data),
-                      NULL, NULL) >= 0;
+                      NULL, NULL);
 }
 
 static bool ble_send_speed_request(ble_driver_t *drv, bool high_speed) {
   (void)drv;
   uint8_t cmd =
       high_speed ? INTERNAL_CMD_SET_SPEED_HIGH : INTERNAL_CMD_SET_SPEED_LOW;
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
-         0;
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
 static bool ble_send_power_level_request(ble_driver_t *drv,
                                          ble_tx_power_level_t power_level) {
   (void)drv;
   uint8_t cmd[2] = {INTERNAL_CMD_SET_TX_POWER, (uint8_t)power_level};
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, cmd, sizeof(cmd), NULL, NULL) >=
-         0;
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, cmd, sizeof(cmd), NULL, NULL);
 }
 
 static bool ble_send_advertising_off(ble_driver_t *drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_ADVERTISING_OFF;
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
-         0;
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
 static bool ble_send_erase_bonds(ble_driver_t *drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_ERASE_BONDS;
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
-         0;
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
 static bool ble_send_disconnect(ble_driver_t *drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_DISCONNECT;
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
-         0;
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
 static bool ble_send_pairing_reject(ble_driver_t *drv) {
@@ -1302,14 +1296,14 @@ bool ble_unpair(const bt_le_addr_t *addr) {
   bool result;
   if (addr == NULL) {
     uint8_t cmd = INTERNAL_CMD_UNPAIR;
-    result = nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL,
-                          NULL) >= 0;
+    result =
+        nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
   } else {
     uint8_t data[1 + sizeof(bt_le_addr_t)] = {0};
     data[0] = INTERNAL_CMD_UNPAIR;
     memcpy(&data[1], addr, sizeof(bt_le_addr_t));
-    result = nrf_send_msg(NRF_SERVICE_BLE_MANAGER, data, sizeof(data), NULL,
-                          NULL) >= 0;
+    result =
+        nrf_send_msg(NRF_SERVICE_BLE_MANAGER, data, sizeof(data), NULL, NULL);
   }
 
   if (!result) {
