@@ -122,10 +122,10 @@ void nrf_unregister_listener(nrf_service_id_t service);
  * @param len       Length of the data buffer
  * @param callback  Function to call upon transmission completion
  * @param context   Context pointer passed to the callback
- * @return ID of the message if successfully queued; -1 otherwise
+ * @return true if successfully queued; false otherwise
  */
-int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
-                     uint32_t len, nrf_tx_callback_t callback, void *context);
+bool nrf_send_msg(nrf_service_id_t service, const uint8_t *data, uint32_t len,
+                  nrf_tx_callback_t callback, void *context);
 
 /**
  * @brief Abort a queued message by its ID.
