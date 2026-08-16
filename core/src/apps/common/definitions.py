@@ -23,11 +23,11 @@ if TYPE_CHECKING:
 
 
 def decode_definition(definition: AnyBytes, expected_type: type[DefType]) -> DefType:
-    from trezor.crypto.cosi import verify as cosi_verify
     from trezor.crypto.hashlib import sha256
     from trezor.enums import DefinitionType
     from trezor.protobuf import decode as protobuf_decode
     from trezor.utils import BufferReader
+    from trezordefinitions import verify
 
     from apps.common import readers
 
@@ -87,13 +87,9 @@ def decode_definition(definition: AnyBytes, expected_type: type[DefType]) -> Def
         raise DataError("Invalid definition")
 
     # verify signature
-    result = cosi_verify(signature, hash, consts.THRESHOLD, consts.PUBLIC_KEYS, sigmask)
-    if __debug__:
-        debug_result = cosi_verify(
-            signature, hash, consts.THRESHOLD, consts.DEV_PUBLIC_KEYS, sigmask
-        )
-        result = result or debug_result
-    if not result:
+    try:
+        verify(hash, signature, sigmask)
+    except ValueError:
         raise DataError("Invalid definition signature")
 
     # decode it if it's OK

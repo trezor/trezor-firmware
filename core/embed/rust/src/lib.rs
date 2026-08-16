@@ -23,6 +23,8 @@ mod macros;
 mod align;
 #[cfg(feature = "debug")]
 mod coverage;
+#[cfg(feature = "universal_fw")]
+mod definitions;
 mod error;
 mod io;
 mod maybe_trace;

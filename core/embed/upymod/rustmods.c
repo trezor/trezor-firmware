@@ -32,6 +32,10 @@ MP_REGISTER_MODULE(MP_QSTR_trezorproto, mp_module_trezorproto);
 MP_REGISTER_MODULE(MP_QSTR_trezortranslate, mp_module_trezortranslate);
 #endif
 
+#if MICROPY_PY_TREZORDEFINITIONS
+MP_REGISTER_MODULE(MP_QSTR_trezordefinitions, mp_module_trezordefinitions);
+#endif
+
 #ifdef USE_BLE
 MP_REGISTER_MODULE(MP_QSTR_trezorble, mp_module_trezorble);
 #endif
