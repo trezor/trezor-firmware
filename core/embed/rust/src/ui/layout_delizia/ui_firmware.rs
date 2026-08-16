@@ -58,8 +58,9 @@ impl FirmwareUI for UIDelizia {
         reverse: bool,
         prompt_screen: bool,
         prompt_title: Option<TString<'static>>,
-        _external_menu: bool, // Delizia always uses external menu
+        _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        debug_assert!(_external_menu, "Delizia always uses external menu.");
         let flow = flow::confirm_action::new_confirm_action(
             title,
             action,
@@ -450,6 +451,7 @@ impl FirmwareUI for UIDelizia {
         _verb: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        debug_assert!(_external_menu, "Delizia always uses external menu.");
         let paragraphs = PropsList::new(items)?;
 
         let flow = flow::new_confirm_action_simple(
