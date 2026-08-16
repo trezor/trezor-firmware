@@ -1056,6 +1056,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__made_in;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__name;
+  MP_QSTR_words__network;
   MP_QSTR_words__no;
   MP_QSTR_words__not_recommended;
   MP_QSTR_words__note;
@@ -1164,7 +1165,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__message_text;
   MP_QSTR_cardano__multisig_path;
   MP_QSTR_cardano__nested_scripts_template;
-  MP_QSTR_cardano__network;
   MP_QSTR_cardano__no_output_tx;
   MP_QSTR_cardano__nonce;
   MP_QSTR_cardano__other;
@@ -1297,7 +1297,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__interaction_contract;
   MP_QSTR_ethereum__max_gas_price;
   MP_QSTR_ethereum__name_and_version;
-  MP_QSTR_ethereum__network;
   MP_QSTR_ethereum__new_contract;
   MP_QSTR_ethereum__no_message_field;
   MP_QSTR_ethereum__priority_fee;

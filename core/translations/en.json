@@ -513,7 +513,6 @@
     "cardano__message_text": "Message text",
     "cardano__multisig_path": "multi-sig path",
     "cardano__nested_scripts_template": "Contains {0} nested scripts.",
-    "cardano__network": "Network",
     "cardano__no_output_tx": "Transaction has no outputs, network cannot be verified.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Other",
@@ -894,7 +893,6 @@
     },
     "ethereum__max_gas_price": "Max fee per gas",
     "ethereum__name_and_version": "Name and version",
-    "ethereum__network": "Network",
     "ethereum__new_contract": "New contract will be deployed",
     "ethereum__no_message_field": "No message field",
     "ethereum__priority_fee": "Max priority fee",
@@ -3450,6 +3448,7 @@
     },
     "words__my_trezor": "My Trezor",
     "words__name": "Name",
+    "words__network": "Network",
     "words__no": "No",
     "words__not_recommended": {
       "Bolt": "",

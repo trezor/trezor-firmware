@@ -620,7 +620,6 @@
     "cardano__message_text": "Nachrichtentext",
     "cardano__multisig_path": "Multisig-Pfad",
     "cardano__nested_scripts_template": "Enthält {0} verschachtelte Skripte.",
-    "cardano__network": "Netzwerk",
     "cardano__no_output_tx": "Transaktion hat keine Ausgaben. Netzwerk kann nicht verifiziert werden.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Andere",
@@ -1061,7 +1060,6 @@
     "ethereum__interaction_contract": "Interaktionsvertrag",
     "ethereum__max_gas_price": "Max. Gas-Preis",
     "ethereum__name_and_version": "Name und Version",
-    "ethereum__network": "Netzwerk",
     "ethereum__new_contract": {
       "Bolt": "Neuen Vertrag einstellen",
       "Caesar": "Neuen Vertrag einstellen",
@@ -3900,6 +3898,7 @@
     },
     "words__my_trezor": "Mein Trezor",
     "words__name": "Name",
+    "words__network": "Netzwerk",
     "words__no": "Nein",
     "words__not_recommended": {
       "Bolt": "",
