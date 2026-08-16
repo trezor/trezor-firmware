@@ -554,7 +554,12 @@
     "coinjoin__access_account": "Použít váš coinjoin účet?",
     "coinjoin__do_not_disconnect": "Neodpojujte svůj Trezor!",
     "coinjoin__max_coordinator_fee_pct": "",
-    "coinjoin__max_mining_fee": "Maximální poplatek za těžbu",
+    "coinjoin__max_mining_fee": {
+      "Bolt": "Max. poplatek za těžbu",
+      "Caesar": "Maximální poplatek za těžbu",
+      "Delizia": "Maximální poplatek za těžbu",
+      "Eckhart": "Maximální poplatek za těžbu"
+    },
     "coinjoin__max_rounds": "Maximum kol",
     "coinjoin__title": "Schválení coinjoinu",
     "coinjoin__title_progress": {
@@ -818,11 +823,11 @@
     "ethereum__approve_amount_allowance": "Limit částky",
     "ethereum__approve_chain_id": "ID sítě",
     "ethereum__approve_intro": "Zkontrolujte údaje pro schválení utracení tokenu.",
-    "ethereum__approve_intro_revoke": "Zkontrolujte údaje pro zrušení povolení tokenu.",
+    "ethereum__approve_intro_revoke": "Zkontrolujte údaje pro odvolání povolení tokenu.",
     "ethereum__approve_intro_title": "Schválení tokenu",
     "ethereum__approve_intro_title_revoke": "Odvolání tokenu",
-    "ethereum__approve_revoke": "Zrušit",
-    "ethereum__approve_revoke_from": "Zrušit pro",
+    "ethereum__approve_revoke": "Odvolání",
+    "ethereum__approve_revoke_from": "Odvolání pro",
     "ethereum__approve_to": "Schválit pro",
     "ethereum__approve_unlimited_template": {
       "Bolt": "Povolujete neomezené množství {0}",
@@ -1724,7 +1729,7 @@
     "passphrase__hide": "Skrýt passphrase z aplikace?",
     "passphrase__next_screen_will_show_passphrase": "Na další obrazovce se zobrazí vaše passphrase.",
     "passphrase__please_enter": "Zadejte passphrase.",
-    "passphrase__revoke_on_device": "Chcete zrušit passphrase v nastavení zařízení?",
+    "passphrase__revoke_on_device": "Chcete vypnout povinnost zadávání passphrase pouze na zařízení?",
     "passphrase__show": {
       "Bolt": "Ukázat passphrase",
       "Caesar": "Zobrazit passphrase",
@@ -2769,7 +2774,12 @@
     "solana__is_provided_via_lookup_table_template": "{0} pochází z vyhledávací tabulky.",
     "solana__lookup_table_address": "Adresa vyhledávací tabulky",
     "solana__max_fees_rent": "Maximalní poplatky a nájemné",
-    "solana__max_rent_fee": "Maximální poplatek za nájem",
+    "solana__max_rent_fee": {
+      "Bolt": "Maximální poplatek za nájem",
+      "Caesar": "Maximální poplatek za nájem",
+      "Delizia": "Max. poplatek za nájem",
+      "Eckhart": "Maximální poplatek za nájem"
+    },
     "solana__multiple_signers": "Více podepisujících",
     "solana__offchain_is_multisig": "Následující zpráva vyžaduje více podepisujících.",
     "solana__priority_fee": "Poplatek za prioritu",
@@ -2839,7 +2849,7 @@
     "stellar__preauth_transaction": "Předem ověřená transakce",
     "stellar__price_per_template": "Cena za {0}",
     "stellar__remove_signer": "Odstranit podepisujícího",
-    "stellar__revoke_trust": "Zrušit důvěru",
+    "stellar__revoke_trust": "Odebrání důvěry",
     "stellar__selling": "Prodej",
     "stellar__set_data": "Nastavit data",
     "stellar__set_flags": "Nastavit příznaky",
