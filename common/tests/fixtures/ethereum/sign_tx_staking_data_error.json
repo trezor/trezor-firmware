@@ -63,6 +63,106 @@
                 "sig_r": "0x0",
                 "sig_s": "0x0"
             }
+        },
+        {
+            "name": "unstake_with_value",
+            "parameters": {
+                "comment": "Unstake transaction - Mainnet. Non-zero msg.value, unstake is non-payable.",
+                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xD523794C879D9eC028960a231F866758e405bE34",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x16345785D8A0000"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "0x0",
+                "sig_s": "0x0"
+            }
+        },
+        {
+            "name": "claim_with_value",
+            "parameters": {
+                "comment": "Claim transaction - Mainnet. Non-zero msg.value, claim is non-payable.",
+                "data": "33986ffa",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x7a7f0b3c23C23a31cFcb0c44709be70d4D545c6e",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x16345785D8A0000"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "0x0",
+                "sig_s": "0x0"
+            }
+        },
+        {
+            "name": "stake_main_trailing_data",
+            "parameters": {
+                "comment": "Stake transaction - Mainnet. Trailing data.",
+                "data": "3a29dbae000000000000000000000000000000000000000000000000000000000000000100",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xD523794C879D9eC028960a231F866758e405bE34",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "0x0",
+                "sig_s": "0x0"
+            }
+        },
+        {
+            "name": "unstake_main_trailing_data",
+            "parameters": {
+                "comment": "Unstake transaction - Mainnet. Trailing data.",
+                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011234",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xD523794C879D9eC028960a231F866758e405bE34",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "0x0",
+                "sig_s": "0x0"
+            }
+        },
+        {
+            "name": "claim_main_trailing_data",
+            "parameters": {
+                "comment": "Claim transaction - Mainnet. Trailing data.",
+                "data": "33986ffa0000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x7a7f0b3c23C23a31cFcb0c44709be70d4D545c6e",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "0x0",
+                "sig_s": "0x0"
+            }
         }
     ]
 }
