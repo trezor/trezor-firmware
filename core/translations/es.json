@@ -540,7 +540,6 @@
     "cardano__message_text": "Texto del mensaje",
     "cardano__multisig_path": "ruta multi-firma",
     "cardano__nested_scripts_template": "Contiene {0} scripts anidados.",
-    "cardano__network": "Red",
     "cardano__no_output_tx": "La transacción no tiene salidas; la red no se puede verificar.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Otros",
@@ -931,7 +930,6 @@
     },
     "ethereum__max_gas_price": "Comisión máx. de gas",
     "ethereum__name_and_version": "Nombre y versión",
-    "ethereum__network": "Red",
     "ethereum__new_contract": "Se desplegará un nuevo contrato",
     "ethereum__no_message_field": "Sin campo de mensaje.",
     "ethereum__priority_fee": "Comisión máx. de prioridad",
@@ -3455,6 +3453,7 @@
     },
     "words__my_trezor": "Mi Trezor",
     "words__name": "Nombre",
+    "words__network": "Red",
     "words__no": "No",
     "words__not_recommended": {
       "Bolt": "",

@@ -530,7 +530,6 @@
     "cardano__message_text": "Text zprávy",
     "cardano__multisig_path": "multisig cesta",
     "cardano__nested_scripts_template": "Počet vnořených skriptů: {0}.",
-    "cardano__network": "Síť",
     "cardano__no_output_tx": "Transakce nemá žádné výstupy, síť nelze ověřit.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Jiné",
@@ -916,7 +915,6 @@
     },
     "ethereum__max_gas_price": "Maximální cena gasu",
     "ethereum__name_and_version": "Název a verze",
-    "ethereum__network": "Síť",
     "ethereum__new_contract": "Bude nasazen nový kontrakt",
     "ethereum__no_message_field": "Žádné pole zprávy",
     "ethereum__priority_fee": "Poplatek za prioritu",
@@ -3450,6 +3448,7 @@
     },
     "words__my_trezor": "Můj Trezor",
     "words__name": "Název",
+    "words__network": "Síť",
     "words__no": "Ne",
     "words__not_recommended": {
       "Bolt": "",

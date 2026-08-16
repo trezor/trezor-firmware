@@ -626,7 +626,7 @@ async def confirm_tx(
     total_amount = format_coin_amount(spending, network_id)
     fee_amount = format_coin_amount(fee, network_id)
     items: Iterable[StrPropertyType] = (
-        (TR.cardano__network, protocol_magics.to_ui_string(protocol_magic), True),
+        (TR.words__network, protocol_magics.to_ui_string(protocol_magic), True),
         (
             TR.cardano__valid_since,
             format_optional_int(validity_interval_start),
@@ -676,7 +676,7 @@ async def confirm_tx_details(
     if is_network_id_verifiable:
         append(
             (
-                TR.cardano__network,
+                TR.words__network,
                 protocol_magics.to_ui_string(protocol_magic),
                 None,
             )
@@ -866,7 +866,7 @@ async def confirm_stake_pool_registration_final(
         TR.cardano__confirm_transaction,
         (
             (None, TR.cardano__confirm_signing_stake_pool, None),
-            (TR.cardano__network, protocol_magics.to_ui_string(protocol_magic), True),
+            (TR.words__network, protocol_magics.to_ui_string(protocol_magic), True),
             (
                 TR.cardano__valid_since,
                 format_optional_int(validity_interval_start),

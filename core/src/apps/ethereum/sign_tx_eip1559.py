@@ -248,7 +248,7 @@ async def _handle_eip7702(
     if account is None or account_path is None:
         raise DataError("Unknown account")
 
-    network_item = (TR.ethereum__network, defs.network.name, None)
+    network_item = (TR.words__network, defs.network.name, None)
     delegate_addr = msg.auth7702.delegate
     delegate_bytes = bytes_from_address(delegate_addr)
     if delegate_bytes == b"\x00" * 20:  # -> revocation

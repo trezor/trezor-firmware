@@ -630,7 +630,6 @@
     "cardano__message_text": "Texte du message",
     "cardano__multisig_path": "chemin multi-signature",
     "cardano__nested_scripts_template": "Contient {0} scripts imbriqués.",
-    "cardano__network": "Réseau",
     "cardano__no_output_tx": "La transaction n'a pas de sortie, le réseau ne peut pas être vérifié.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Autres",
@@ -1056,7 +1055,6 @@
     "ethereum__interaction_contract": "Contrat d'interaction",
     "ethereum__max_gas_price": "Frais max par gas",
     "ethereum__name_and_version": "Nom et version",
-    "ethereum__network": "Réseau",
     "ethereum__new_contract": "Le nouveau contrat sera déployé",
     "ethereum__no_message_field": "Aucun champ de message",
     "ethereum__priority_fee": "Frais de priorité max",
@@ -3695,6 +3693,7 @@
     },
     "words__my_trezor": "Mon Trezor",
     "words__name": "Nom",
+    "words__network": "Réseau",
     "words__no": "Non",
     "words__not_recommended": {
       "Bolt": "",

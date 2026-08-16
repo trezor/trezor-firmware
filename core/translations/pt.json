@@ -555,7 +555,6 @@
     "cardano__message_text": "Texto da mensagem",
     "cardano__multisig_path": "caminho multiassinatura",
     "cardano__nested_scripts_template": "Contém {0} scripts aninhados.",
-    "cardano__network": "Rede",
     "cardano__no_output_tx": "A transação não tem saídas; a rede não pode ser verificada.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Outros",
@@ -936,7 +935,6 @@
     "ethereum__interaction_contract": "Contrato de interação",
     "ethereum__max_gas_price": "Taxa máxima por gás",
     "ethereum__name_and_version": "Nome e versão",
-    "ethereum__network": "Rede",
     "ethereum__new_contract": "Novo contrato será implantado",
     "ethereum__no_message_field": "Sem campo de mensagem",
     "ethereum__priority_fee": "Taxa de prioridade máx.",
@@ -3565,6 +3563,7 @@
     },
     "words__my_trezor": "Meu Trezor",
     "words__name": "Nome",
+    "words__network": "Rede",
     "words__no": "Não",
     "words__not_recommended": {
       "Bolt": "",
