@@ -128,19 +128,6 @@ bool nrf_send_msg(nrf_service_id_t service, const uint8_t *data, uint32_t len,
                   nrf_tx_callback_t callback, void *context);
 
 /**
- * @brief Abort a queued message by its ID.
- *
- * If the message is already sent or the ID is not found, this function does
- * nothing and returns false. If the message is queued, it will be removed from
- * the queue. If the message is in the process of being sent, it will complete,
- * but its callback will not be invoked.
- *
- * @param id  Identifier of the message to abort
- * @return false if the message was already sent or not found, true if aborted
- */
-bool nrf_abort_msg(int32_t id);
-
-/**
  * @brief Read version and other information from the NRF application.
  *
  * Blocking function that fills the provided nrf_info_t structure.

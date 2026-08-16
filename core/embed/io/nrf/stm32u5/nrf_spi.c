@@ -192,29 +192,6 @@ bool nrf_send_msg(nrf_service_id_t service, const uint8_t *data, uint32_t len,
   return queued;
 }
 
-bool nrf_abort_msg(int32_t id) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (!drv->initialized) {
-    return false;
-  }
-
-  bool aborted = tsqueue_abort(&drv->tx_queue, id, NULL, 0, NULL);
-
-  if (aborted) {
-    return true;
-  }
-
-  irq_key_t key = irq_lock();
-  if (drv->tx_request_id == id) {
-    drv->tx_request_id = -1;
-    irq_unlock(key);
-    return true;
-  }
-
-  irq_unlock(key);
-  return false;
-}
-
 static bool nrf_is_valid_startbyte(uint8_t val) {
   if ((val & 0xF0) != START_BYTE) {
     return false;
