@@ -92,7 +92,7 @@ def get_address(
     default=stellar.DEFAULT_BIP32_PATH,
 )
 @click.option(
-    "-n",
+    "-p",
     "--network-passphrase",
     default=stellar.DEFAULT_NETWORK_PASSPHRASE,
     required=False,
