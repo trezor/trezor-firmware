@@ -2033,14 +2033,11 @@ def confirm_metadata(
     br_name: str,
     title: str,
     content: str,
-    param: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     hold: bool = False,
     verb: str | None = None,
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__continue  # def_arg
-    if param is not None:
-        content = content.format(param)
     return confirm_action(
         br_name,
         title=title,

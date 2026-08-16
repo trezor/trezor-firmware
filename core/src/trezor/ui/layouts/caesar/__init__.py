@@ -2147,14 +2147,13 @@ def confirm_metadata(
     br_name: str,
     title: str,
     content: str,
-    param: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     hold: bool = False,
 ) -> Awaitable[None]:
     return _placeholder_confirm(
         br_name,
         title,
-        description=content.format(param),
+        description=content,
         hold=hold,
         br_code=br_code,
     )

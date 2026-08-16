@@ -25,8 +25,9 @@ async def require_confirm_fee(action: str, fee: int) -> None:
     await confirm_metadata(
         "confirm_fee",
         TR.words__confirm_fee,
-        action + "\n{}",
-        format_amount_unit(format_amount(fee, NEM_MAX_DIVISIBILITY), "XEM"),
+        action
+        + "\n"
+        + format_amount_unit(format_amount(fee, NEM_MAX_DIVISIBILITY), "XEM"),
         ButtonRequestType.ConfirmOutput,
     )
 
@@ -46,7 +47,8 @@ async def require_confirm_final(fee: int) -> None:
     await confirm_metadata(
         "confirm_final",
         TR.nem__final_confirm,
-        TR.nem__sign_tx_fee_template,
-        format_amount_unit(format_amount(fee, NEM_MAX_DIVISIBILITY), "XEM"),
+        TR.nem__sign_tx_fee_template.format(
+            format_amount_unit(format_amount(fee, NEM_MAX_DIVISIBILITY), "XEM")
+        ),
         hold=True,
     )

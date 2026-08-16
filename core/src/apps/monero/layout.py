@@ -198,7 +198,6 @@ async def _require_confirm_fee(fee: int) -> None:
     await confirm_metadata(
         "confirm_final",
         TR.words__confirm_fee,
-        "{}",
         _format_amount(fee),
         hold=True,
     )
@@ -208,7 +207,6 @@ async def _require_confirm_unlock_time(unlock_time: int) -> None:
     await confirm_metadata(
         "confirm_locktime",
         TR.monero__confirm_unlock_time,
-        TR.monero__unlock_time_set_template,
-        str(unlock_time),
+        TR.monero__unlock_time_set_template.format(str(unlock_time)),
         BRT_SignTx,
     )
