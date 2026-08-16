@@ -27,6 +27,8 @@
 #include "messages-ethereum.pb.h"
 
 #define CHAIN_ID_UNKNOWN UINT64_MAX
+#define CHAIN_ID_MAINNET 1
+#define CHAIN_ID_HOODI_TESTNET 560048
 
 void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
                            const EthereumDefinitionsDecoded *defs);

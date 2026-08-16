@@ -657,8 +657,10 @@ static bool isEthereumStakingTx(const struct signing_params *params,
   const uint8_t *pubkeyhash = params->pubkeyhash;
   const uint8_t *data_chunk = params->data_initial_chunk_bytes;
   bool is_address_pool =
-      ((memcmp(pubkeyhash, POOL_HOODI_TESTNET, PUBKEYHASH_LEN) == 0) ||
-       (memcmp(pubkeyhash, POOL_MAINNET, PUBKEYHASH_LEN) == 0));
+      ((params->chain_id == CHAIN_ID_HOODI_TESTNET &&
+        memcmp(pubkeyhash, POOL_HOODI_TESTNET, PUBKEYHASH_LEN) == 0) ||
+       (params->chain_id == CHAIN_ID_MAINNET &&
+        memcmp(pubkeyhash, POOL_MAINNET, PUBKEYHASH_LEN) == 0));
   if (is_address_pool) {
     if (memcmp(data_chunk, SC_FUNC_SIG_STAKE, SC_FUNC_SIG_BYTES) == 0) {
       *op = ETH_STAKING_STAKE;
@@ -670,8 +672,10 @@ static bool isEthereumStakingTx(const struct signing_params *params,
     }
   }
   bool is_address_accounting =
-      ((memcmp(pubkeyhash, ACCOUNTING_HOODI_TESTNET, PUBKEYHASH_LEN) == 0) ||
-       (memcmp(pubkeyhash, ACCOUNTING_MAINNET, PUBKEYHASH_LEN) == 0));
+      ((params->chain_id == CHAIN_ID_HOODI_TESTNET &&
+        memcmp(pubkeyhash, ACCOUNTING_HOODI_TESTNET, PUBKEYHASH_LEN) == 0) ||
+       (params->chain_id == CHAIN_ID_MAINNET &&
+        memcmp(pubkeyhash, ACCOUNTING_MAINNET, PUBKEYHASH_LEN) == 0));
   if (is_address_accounting) {
     if (memcmp(data_chunk, SC_FUNC_SIG_CLAIM, SC_FUNC_SIG_BYTES) == 0) {
       *op = ETH_STAKING_CLAIM;
@@ -688,6 +692,7 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
       params->data_initial_chunk_bytes + SC_FUNC_SIG_BYTES;
 
   bignum256 value = {0};
+  parse_bignum256(params->value_bytes, params->value_size, &value);
   struct ethereum_amount amount = {.value = "", .unit = ""};
   const char *_line1 = NULL;
   const char *_line2 = NULL;
@@ -699,7 +704,6 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
       if (args_size != SC_ARGUMENT_BYTES) {
         return false;
       }
-      parse_bignum256(params->value_bytes, params->value_size, &value);
       ethereumFormatAmount(&value, NULL, /*use_gwei=*/false, &amount);
       _line1 = _("Stake");
       _line2 = amount.value;
@@ -714,6 +718,10 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
       if (args_size != 3 * SC_ARGUMENT_BYTES) {
         return false;
       }
+      // unstake is non-payable, so msg.value must be zero
+      if (!bn_is_zero(&value)) {
+        return false;
+      }
       bn_read_be(args_bytes, &value);
       ethereumFormatAmount(&value, NULL, /*use_gwei=*/false, &amount);
       _line1 = _("Unstake");
@@ -724,6 +732,10 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
     case ETH_STAKING_CLAIM:
       // claim has no args
       if (args_size != 0) {
+        return false;
+      }
+      // claim is non-payable, so msg.value must be zero
+      if (!bn_is_zero(&value)) {
         return false;
       }
       _line1 = _("Claim ETH");
@@ -741,7 +753,8 @@ static bool ethereum_signing_confirm_common(
     const struct signing_params *params) {
   enum staking_operation_t staking_op;
   if (isEthereumStakingTx(params, &staking_op)) {
-    if (!layoutEthereumConfirmStakingTx(params, staking_op)) {
+    if ((params->data_length != params->data_initial_chunk_size) ||
+        !layoutEthereumConfirmStakingTx(params, staking_op)) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Invalid staking transaction call"));
       return false;
