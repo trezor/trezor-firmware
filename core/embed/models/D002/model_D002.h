@@ -20,7 +20,6 @@
 #pragma once
 
 #include <rtl/sizedefs.h>
-#include "bootloaders/bootloader_hashes.h"
 #include "secret_layout.h"
 
 #define MODEL_NAME "D002"
