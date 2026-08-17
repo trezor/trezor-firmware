@@ -68,46 +68,43 @@ def get_diff(
         if models and model not in models:
             continue
 
-        master_groups = master.get(model, {})
-        current_groups = current.get(model, {})
-        for group in master_groups.keys() | current_groups.keys():
-            master_tests = master_groups.get(group, {})
-            current_tests = current_groups.get(group, {})
+        master_tests = master.get(model, {})
+        current_tests = current.get(model, {})
 
-            def testkey(test: str) -> TestCase:
-                return TestCase.from_fixtures(test, group)
+        def testkey(test: str) -> TestCase:
+            return TestCase.from_fixtures(test)
 
-            # removed items
-            removed_here = {
-                testkey(test): master_tests[test]
-                for test in (master_tests.keys() - current_tests.keys())
-            }
-            # added items
-            added_here = {
-                testkey(test): current_tests[test]
-                for test in (current_tests.keys() - master_tests.keys())
-            }
-            # create the diff from items in both branches
-            diff_here = {}
-            for master_test, master_hash in master_tests.items():
-                key = testkey(master_test)
-                if key in removed_here:
-                    continue
-                if current_tests.get(master_test) == master_hash:
-                    continue
-                diff_here[key] = (
-                    master_tests[master_test],
-                    current_tests[master_test],
-                )
+        # removed items
+        removed_here = {
+            testkey(test): master_tests[test]
+            for test in (master_tests.keys() - current_tests.keys())
+        }
+        # added items
+        added_here = {
+            testkey(test): current_tests[test]
+            for test in (current_tests.keys() - master_tests.keys())
+        }
+        # create the diff from items in both branches
+        diff_here = {}
+        for master_test, master_hash in master_tests.items():
+            key = testkey(master_test)
+            if key in removed_here:
+                continue
+            if current_tests.get(master_test) == master_hash:
+                continue
+            diff_here[key] = (
+                master_tests[master_test],
+                current_tests[master_test],
+            )
 
-            removed.update(removed_here)
-            added.update(added_here)
-            diff.update(diff_here)
-            if print_to_console:
-                print(f"{model} {group}")
-                print(f"  removed: {len(removed_here)}")
-                print(f"  added: {len(added_here)}")
-                print(f"  diff: {len(diff_here)}")
+        removed.update(removed_here)
+        added.update(added_here)
+        diff.update(diff_here)
+        if print_to_console:
+            print(f"{model}")
+            print(f"  removed: {len(removed_here)}")
+            print(f"  added: {len(added_here)}")
+            print(f"  diff: {len(diff_here)}")
 
     return removed, added, diff
 
@@ -137,21 +134,19 @@ def document(
 
 def _preprocess_master_compat(master_fixtures: dict[str, Any]) -> FixturesType:
     new_fixtures = {}
-    for model, groups_by_model in master_fixtures.items():
+    for model, tests_by_model in master_fixtures.items():
         if model not in LEGACY_MODEL_NAMES:
-            new_fixtures[model] = groups_by_model
+            new_fixtures[model] = tests_by_model
             continue
 
-        # (a) replace model group name
-        model = LEGACY_MODEL_NAMES.get(model)
-        new_groups_by_model = new_fixtures.setdefault(model, {})
-        for group, tests_by_group in groups_by_model.items():
-            new_tests_by_group = new_groups_by_model.setdefault(group, {})
-            for key, val in tests_by_group.items():
-                case = TestCase.from_fixtures(key, group)
-                # (b) in individual testcases, replace model name prefix
-                new_case = case.replace(model=model)
-                new_tests_by_group[new_case.fixtures_name] = val
+        # replace model name for legacy models
+        new_model = LEGACY_MODEL_NAMES.get(model)
+        new_tests_by_model = new_fixtures.setdefault(new_model, {})
+        for key, val in tests_by_model.items():
+            case = TestCase.from_fixtures(key)
+            # in individual testcases, replace model name prefix
+            new_case = case.replace(model=new_model)
+            new_tests_by_model[new_case.fixtures_name] = val
 
     return FixturesType(new_fixtures)
 
