@@ -43,13 +43,14 @@ def get_address(
     help=PATH_HELP,
 )
 @click.argument("raw_data_hex", type=str)
+@click.option("-C", "--chunkify", is_flag=True)
 @with_session
-def sign_tx(session: "Session", address: str, raw_data_hex: str) -> str:
+def sign_tx(session: "Session", address: str, raw_data_hex: str, chunkify: bool) -> str:
     """Sign a raw transaction."""
 
     raw_data = bytes.fromhex(raw_data_hex)
     tx, contract = tron.from_raw_data(raw_data)
     address_n = tools.parse_path(address)
-    signed_tx = tron.sign_tx(session, tx, contract, address_n)
+    signed_tx = tron.sign_tx(session, tx, contract, address_n, chunkify)
 
     return signed_tx.signature.hex()
