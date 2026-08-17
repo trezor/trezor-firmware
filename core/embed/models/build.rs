@@ -1,4 +1,4 @@
-use xbuild::{CLibrary, Result, bail_unsupported};
+use xbuild::{CLibrary, Result, bail, bail_unsupported};
 
 fn main() -> Result<()> {
     // Emit model identity for dependent build scripts (readable as
@@ -111,6 +111,10 @@ fn main() -> Result<()> {
 
                 if cfg!(feature = "secure_mode") || !cfg!(feature = "secmon_layout") {
                     lib.add_flag("-mcmse");
+                }
+
+                if cfg!(feature = "asan") {
+                    bail!("ASAN is not supported in non-emulator build");
                 }
             } else {
                 bail_unsupported!();

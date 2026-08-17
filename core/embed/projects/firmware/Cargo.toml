@@ -24,6 +24,7 @@ upymod.workspace = true
 # Build options
 # --------------------------------------------------------------------------
 
+asan = ["models/asan"]
 benchmark = ["upymod/benchmark", "crypto/aes_gcm"]
 block_on_vcp = ["sys/block_on_vcp"]
 bootloader_devel = ["sec/bootloader_devel"]

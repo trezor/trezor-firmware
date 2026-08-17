@@ -28,6 +28,7 @@ sys.workspace = true
 # Build options
 # --------------------------------------------------------------------------
 
+asan = ["models/asan"]
 bootloader_devel = ["sec/bootloader_devel"]
 clippy = []
 emulator = ["io/emulator"]

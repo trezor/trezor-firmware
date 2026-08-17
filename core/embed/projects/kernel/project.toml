@@ -44,6 +44,7 @@ elf_sections = [".flash", ".data"]
 
 # xtask build options mapped to the cargo features
 [build-options]
+asan                          = { true = ["asan"] }
 apps                          = { true = ["app_loading"] }
 block-on-vcp                  = { true = ["block_on_vcp"] }
 bootloader-devel              = { true = ["bootloader_devel"] }

@@ -37,10 +37,6 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
 
     if args.emulator {
         features.push("emulator".into());
-
-        if args.asan {
-            features.push("asan".into());
-        }
     }
 
     // Option-mapped features, validated against the target package's declared
