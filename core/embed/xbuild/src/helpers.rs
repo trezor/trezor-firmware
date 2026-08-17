@@ -7,6 +7,8 @@ use color_eyre::Result;
 use color_eyre::eyre::{WrapErr, eyre};
 use pathdiff::diff_paths;
 
+use crate::cargo_out;
+
 /// Checks if the parent directory of the given output path exists,
 /// and creates it if it doesn't.
 pub fn ensure_parent_directory(output: impl AsRef<Path>) -> Result<()> {
@@ -225,6 +227,6 @@ where
     P: AsRef<Path>,
 {
     for file in files {
-        println!("cargo:rerun-if-changed={}", file.as_ref().display());
+        cargo_out::rerun_if_changed(file);
     }
 }

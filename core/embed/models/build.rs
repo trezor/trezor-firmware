@@ -1,4 +1,4 @@
-use xbuild::{CLibrary, Result, bail_unsupported};
+use xbuild::{CLibrary, Result, bail_unsupported, cargo_out};
 
 fn main() -> Result<()> {
     // Emit model identity for dependent build scripts (readable as
@@ -24,14 +24,14 @@ fn main() -> Result<()> {
     } else {
         ""
     };
-    println!("cargo:model={model_id}");
+    cargo_out::metadata("model", model_id);
 
     // Board header is resolved by xtask from the selected board's TOML and
     // passed here so the correct revision header is used regardless of which
     // board revision is active. When building outside xtask (rust-analyzer or a
     // bare `cargo` invocation) the variable is unset, so fall back to the
     // model's default board header to keep the build working.
-    println!("cargo:rerun-if-env-changed=TREZOR_BOARD_HEADER");
+    cargo_out::rerun_if_env_changed("TREZOR_BOARD_HEADER");
     let board_header_path = match std::env::var("TREZOR_BOARD_HEADER") {
         Ok(path) => path,
         Err(_) => default_board_header(model_id)?,
@@ -205,7 +205,7 @@ fn default_board_header(model_id: &str) -> Result<String> {
     let model_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR")?).join(model_id);
 
     let read_toml = |path: &std::path::Path| -> Result<toml::Value> {
-        println!("cargo:rerun-if-changed={}", path.display());
+        cargo_out::rerun_if_changed(path);
         let content = std::fs::read_to_string(path)?;
         Ok(toml::from_str(&content)?)
     };

@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use color_eyre::Result;
 use color_eyre::eyre::{WrapErr, ensure};
 
+use crate::cargo_out;
 use crate::helpers::{join_paths_lexically, library_metadata, relative_to_manifest};
 
 /// Attributes for configuring C compilation.
@@ -183,7 +184,7 @@ impl CompileAttrs {
             })
             .collect::<Vec<_>>()
             .join(";");
-        println!("cargo::metadata=public_c_includes={}", includes);
+        cargo_out::metadata("public_c_includes", includes);
 
         let defines = self
             .defines
@@ -197,10 +198,10 @@ impl CompileAttrs {
             })
             .collect::<Vec<_>>()
             .join(";");
-        println!("cargo::metadata=public_c_defines={}", defines);
+        cargo_out::metadata("public_c_defines", defines);
 
         let flags = self.flags.join(";");
-        println!("cargo::metadata=public_c_flags={}", flags);
+        cargo_out::metadata("public_c_flags", flags);
 
         Ok(())
     }
