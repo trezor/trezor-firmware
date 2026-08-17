@@ -408,6 +408,11 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       uint16_t *size = (uint16_t *)args[2];
       args[0] = tropic_data_read__verified(udata_slot, data, size);
     } break;
+
+    case SMCALL_TROPIC_GET_BATCH_ID: {
+      uint8_t *batch_id = (uint8_t *)args[0];
+      args[0] = tropic_get_batch_id__verified(batch_id);
+    } break;
 #endif
 
 #ifdef USE_BACKUP_RAM

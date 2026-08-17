@@ -358,6 +358,8 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
 bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
                                 uint16_t *size);
 
+bool tropic_get_batch_id__verified(uint8_t *batch_id);
+
 #endif
 
 #ifdef USE_APP_LOADING

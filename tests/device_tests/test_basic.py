@@ -23,6 +23,8 @@ from trezorlib.debuglink import TrezorTestContext as Client
 
 from ..click_tests.device_menu.common import open_device_menu
 
+TROPIC_BATCH_ID_SIZE = 5
+
 
 def test_capabilities(session: Session):
     assert (messages.Capability.Translations in session.features.capabilities) == (
@@ -31,6 +33,20 @@ def test_capabilities(session: Session):
     assert (messages.Capability.BLE in session.features.capabilities) == (
         session.model is models.T3W1
     )
+
+
+@pytest.mark.models("t3w1")
+def test_tropic_batch_id_features(session: Session):
+    feature_fields = {field.name for field in messages.Features.FIELDS.values()}
+
+    assert "tropic_batch_id" in feature_fields
+
+    session.refresh_features()
+    tropic_batch_id = session.features.tropic_batch_id
+
+    if tropic_batch_id is not None:
+        assert isinstance(tropic_batch_id, bytes)
+        assert len(tropic_batch_id) == TROPIC_BATCH_ID_SIZE
 
 
 def test_ping(session: Session):

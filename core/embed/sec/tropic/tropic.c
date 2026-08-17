@@ -25,6 +25,11 @@
 #include <sec/tropic.h>
 #include <sys/systick.h>
 
+#if defined(USE_TELEMETRY) && !defined(TREZOR_PRODTEST)
+#include <sec/telemetry.h>
+#define TROPIC_TRACK_ALARMS 1
+#endif
+
 #include "bignum.h"
 #include "hmac.h"
 
@@ -129,6 +134,16 @@ typedef enum {
   TROPIC_CONFIG_STRICTNESS_INCOMPARABLE,
 } tropic_config_strictness_t;
 
+// Records a Tropic chip alarm into telemetry and passes the result through.
+static lt_ret_t tropic_track_alarm(lt_ret_t ret) {
+#ifdef TROPIC_TRACK_ALARMS
+  if (ret == LT_L1_CHIP_ALARM_MODE) {
+    telemetry_update_tropic_alarms(1);
+  }
+#endif
+  return ret;
+}
+
 #ifdef TREZOR_EMULATOR
 #define TROPIC_RETRY_COMMAND(command) command
 #else
@@ -149,7 +164,7 @@ static bool is_retryable(lt_ret_t ret) {
         g_tropic_driver.session_started;                                  \
     lt_pkey_index_t TROPIC_RETRY_COMMAND_pairing_key_index =              \
         g_tropic_driver.pairing_key_index;                                \
-    lt_ret_t TROPIC_RETRY_COMMAND_res = command;                          \
+    lt_ret_t TROPIC_RETRY_COMMAND_res = tropic_track_alarm(command);      \
     for (int TROPIC_RETRY_COMMAND_i = 0;                                  \
          TROPIC_RETRY_COMMAND_i < TROPIC_MAX_RETRIES - 1;                 \
          TROPIC_RETRY_COMMAND_i++) {                                      \
@@ -167,7 +182,7 @@ static bool is_retryable(lt_ret_t ret) {
           continue;                                                       \
         }                                                                 \
       }                                                                   \
-      TROPIC_RETRY_COMMAND_res = command;                                 \
+      TROPIC_RETRY_COMMAND_res = tropic_track_alarm(command);             \
     }                                                                     \
     TROPIC_RETRY_COMMAND_res;                                             \
   })
@@ -985,7 +1000,7 @@ lt_ret_t tropic_init(cli_t *cli) {
   // Initialize crypto context
   drv->handle.l3.crypto_ctx = &drv->crypto_ctx;
 
-  lt_ret_t ret = lt_init(&drv->handle);
+  lt_ret_t ret = tropic_track_alarm(lt_init(&drv->handle));
 #if !defined(TREZOR_PRODTEST) && !defined(TREZOR_EMULATOR)
   // On HW Firmware, retry a failed init.
   // Prodtest skips it to surface the init error.
@@ -993,7 +1008,7 @@ lt_ret_t tropic_init(cli_t *cli) {
   for (int i = 0; i < TROPIC_MAX_RETRIES - 1 && is_retryable(ret); i++) {
     lt_deinit(&drv->handle);
     systick_delay_ms(TROPIC_RESTART_DELAY_MS);
-    ret = lt_init(&drv->handle);
+    ret = tropic_track_alarm(lt_init(&drv->handle));
   }
 #endif  // !TREZOR_PRODTEST && !TREZOR_EMULATOR
 
@@ -1103,6 +1118,35 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
   return res == LT_OK;
 }
 
+// The batch ID is read once and cached because GetFeatures is called often.
+static uint8_t g_batch_id_cached[TROPIC_BATCH_ID_SIZE] = {0};
+static bool g_is_batch_id_cached = false;
+
+bool tropic_get_batch_id(uint8_t batch_id[TROPIC_BATCH_ID_SIZE]) {
+  tropic_driver_t *drv = &g_tropic_driver;
+  if (batch_id == NULL) {
+    return false;
+  }
+
+  if (!g_is_batch_id_cached) {
+    if (!drv->initialized) {
+      return false;
+    }
+
+    lt_chip_id_t chip_id = {0};
+    if (TROPIC_RETRY_COMMAND(lt_get_info_chip_id(&drv->handle, &chip_id)) !=
+        LT_OK) {
+      return false;
+    }
+
+    memcpy(g_batch_id_cached, chip_id.batch_id, TROPIC_BATCH_ID_SIZE);
+    g_is_batch_id_cached = true;
+  }
+
+  memcpy(batch_id, g_batch_id_cached, TROPIC_BATCH_ID_SIZE);
+  return true;
+}
+
 void tropic_get_factory_privkey(curve25519_key privkey) {
 #ifdef TREZOR_EMULATOR
   curve25519_key factory_private = {
@@ -1140,7 +1184,8 @@ bool tropic_random_buffer(void *buffer, size_t length) {
   while (remaining > 0) {
     // lt_random_value_get() uses uint8_t as a size parameter
     size_t chunk = remaining > 255 ? 255 : remaining;
-    if (LT_OK != lt_random_value_get(&drv->handle, dst, chunk)) {
+    if (LT_OK !=
+      TROPIC_RETRY_COMMAND(lt_random_value_get(&drv->handle, dst, chunk))) {
       return false;
     }
     dst += chunk;
