@@ -1,0 +1,50 @@
+
+[package]
+name = "trezor-app-sdk"
+version = "0.1.0"
+edition = "2024"
+description = "no_std SDK for developing Trezor extapps in Rust"
+license = "GPL-3.0-only"
+exclude = ["supply-chain/"]
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+rkyv = { version = "0.8", default-features = false }
+critical-section = "1.2.0"
+ufmt = "0.2.0"
+spin = "0.10.0"
+cty = "0.2.2"
+num_enum = { version = "0.7.5", default-features = false }
+embedded_alloc = { package = "embedded-alloc", version = "0.7.0", optional = true }
+mock_sha3 = { package = "sha3", version = "0.11", optional = true }
+mock_hmac_sha256 = { package = "hmac-sha256", version = "1.1", optional = true }
+mock_hmac_sha512 = { package = "hmac-sha512", version = "1.1", optional = true }
+
+[features]
+# --------------------------------------------------------------------------
+# Log level features
+# --------------------------------------------------------------------------
+log_level_error = []
+log_level_warn = []
+log_level_info = []
+log_level_debug = []
+
+debug = []
+
+app = ["rkyv/alloc", "rkyv/bytecheck", "embedded_alloc"]
+
+# Enables use of unstable (nightly-only) language/library features
+# (`core_intrinsics`, `lang_items`). Required for the default panic/abort
+# machinery under the `debug` feature. Disable on stable toolchains; the
+# affected code paths fall back to stable-compatible implementations.
+nightly = []
+
+
+default = ["app", "nightly"]
+
+# --------------------------------------------------------------------------
+# Selectable features
+# --------------------------------------------------------------------------
+test = ["mock_sha3", "mock_hmac_sha256", "mock_hmac_sha512"]

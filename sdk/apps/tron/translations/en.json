@@ -1,0 +1,90 @@
+{
+  "header": {
+    "language": "en-US",
+    "version": "2.11.2"
+  },
+  "translations": {
+    "address__check_with_source": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Check the address with source."
+    },
+    "address__confirmed": "Receive address confirmed.",
+    "address__warning_not_yours": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "This is NOT your address"
+    },
+    "address_details__account_info": "Account info",
+    "address_details__derivation_path": "Derivation path",
+    "buttons__cancel": "Cancel",
+    "buttons__confirm": "Confirm",
+    "buttons__continue": "Continue",
+    "buttons__hold_to_confirm": "Hold to confirm",
+    "ethereum__approve_amount_allowance": "Amount allowance",
+    "ethereum__approve_intro": "Review details to approve token spending.",
+    "ethereum__approve_intro_revoke": "Review details to revoke token approval.",
+    "ethereum__approve_intro_title": "Token approval",
+    "ethereum__approve_intro_title_revoke": "Token revocation",
+    "ethereum__approve_revoke_from": "Revoke from",
+    "ethereum__approve_to": "Approve to",
+    "ethereum__no_message_field": "No message field",
+    "ethereum__sign_eip712": "Really sign EIP-712 typed data?",
+    "ethereum__staking_claim": "Claim",
+    "ethereum__staking_stake": "Stake",
+    "ethereum__staking_unstake": "Unstake",
+    "ethereum__title_confirm_message": "Confirm message",
+    "ethereum__title_confirm_message_hash": "Confirm message hash",
+    "ethereum__title_confirm_typed_data": "Confirm typed data",
+    "ethereum__title_input_data": "Data",
+    "ethereum__title_token_contract": {
+      "Delizia": "Token contract",
+      "Eckhart": "Token contract address"
+    },
+    "ethereum__token_contract": {
+      "Bolt": "Token contract address",
+      "Caesar": "Token contract",
+      "Delizia": "Token contract address",
+      "Eckhart": "Token contract address"
+    },
+    "ethereum__unknown_contract_address": {
+      "Delizia": "Unknown contract address.",
+      "Eckhart": "Unknown token contract address."
+    },
+    "instructions__continue_in_app": "Continue in the app",
+    "send__cancel_sign": "Cancel sign",
+    "send__cancel_transaction": "Cancel transaction",
+    "send__send_from": "Send from",
+    "send__transaction_signed": {
+      "Delizia": "Transaction signed",
+      "Eckhart": "Transaction signed."
+    },
+    "tron__claim_unfrozen_balance": "Claim unfrozen balance?",
+    "tron__claim_voting_rewards": "Claim voting rewards?",
+    "tron__owner_address": "Owner address",
+    "words__account": "Account",
+    "words__address": "Address",
+    "words__amount": "Amount",
+    "words__cancel_and_exit": "Cancel and exit",
+    "words__chain": "Chain",
+    "words__confirm_all": "Confirm all",
+    "words__fee_limit": "Fee limit",
+    "words__important": "Important",
+    "words__know_what_your_doing": "Continue only if you know what you are doing!",
+    "words__note": "Note",
+    "words__recipient": "Recipient",
+    "words__resource": "Resource",
+    "words__review": "Review",
+    "words__send": "Send",
+    "words__show_next": "Show next",
+    "words__title_done": "Done",
+    "words__title_information": "Information",
+    "words__title_summary": "Summary",
+    "words__token": "Token",
+    "words__unlimited": "Unlimited",
+    "words__votes": "Votes",
+    "words__voting": "Voting"
+  }
+}

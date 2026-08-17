@@ -638,4 +638,31 @@ access_violation:
 }
 #endif  // USE_TELEMETRY
 
+#ifdef USE_MLDSA44
+
+ts_t mldsa44_verify__verified(const mldsa44_signature_t *sig, const void *m,
+                              size_t mlen, const mldsa44_public_key_t *pk,
+                              secbool *valid) {
+  if (!probe_read_access(sig, sizeof(*sig))) {
+    goto access_violation;
+  }
+  if (!probe_read_access(m, mlen)) {
+    goto access_violation;
+  }
+  if (!probe_read_access(pk, sizeof(*pk))) {
+    goto access_violation;
+  }
+  if (!probe_write_access(valid, sizeof(*valid))) {
+    goto access_violation;
+  }
+
+  return mldsa44_verify(sig, m, mlen, pk, valid);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+#endif  // USE_MLDSA44
+
 #endif  // SECMON

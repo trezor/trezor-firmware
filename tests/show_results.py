@@ -87,7 +87,9 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 
 def launch_http_server(port: int) -> None:
-    http.server.test(HandlerClass=NoCacheRequestHandler, bind="localhost", port=port)  # type: ignore ["test" is not a known attribute]
+    http.server.test(  # pyright: ignore [reportAttributeAccessIssue]
+        HandlerClass=NoCacheRequestHandler, bind="localhost", port=port
+    )
 
 
 @click.command()
