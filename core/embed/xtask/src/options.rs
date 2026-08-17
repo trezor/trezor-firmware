@@ -260,6 +260,10 @@ build_options! {
     /// Enable verbose output
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     opt verbose: bool,
+
+    /// Log build script progress (executed commands and timings)
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    opt xbuild_trace: bool,
 }
 
 impl ResolvedBuildArgs {

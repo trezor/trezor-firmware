@@ -6,7 +6,9 @@ use std::time::SystemTime;
 use color_eyre::Result;
 use color_eyre::eyre::{WrapErr, ensure};
 
-use crate::helpers::{delete_file_if_exists, emit_rerun_if_changed, ensure_parent_directory};
+use crate::helpers::{
+    delete_file_if_exists, emit_rerun_if_changed, ensure_parent_directory, trace,
+};
 
 /// Runs a command with dependency tracking and optional C compiler dependency
 /// file support.
@@ -94,7 +96,7 @@ where
             command_failed_error(cmd, cmd_output.status)
         );
 
-        eprintln!("@@ command executed: {:?}", cmd);
+        trace!("@@ command executed: {:?}", cmd);
 
         Ok(())
     })
@@ -157,7 +159,7 @@ where
         fs::write(&output, &cmd_output.stdout)
             .with_context(|| format!("Failed to write to {}", output.as_ref().display()))?;
 
-        eprintln!("@@ command executed: {:?}", cmd);
+        trace!("@@ command executed: {:?}", cmd);
 
         Ok(())
     })
