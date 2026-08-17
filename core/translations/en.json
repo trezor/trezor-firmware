@@ -916,7 +916,7 @@
     },
     "ethereum__units_template": "{0} units",
     "ethereum__unknown_contract_address": {
-      "Bolt": "Unknown contract address",
+      "Bolt": "Unknown contract address.",
       "Caesar": "Unknown contract address",
       "Delizia": "Unknown contract address.",
       "Eckhart": "Unknown token contract address."
@@ -2830,7 +2830,7 @@
     "stellar__delete_passive_offer": "Delete Passive Offer",
     "stellar__delete_trust": "Delete trust",
     "stellar__destination": "Destination",
-    "stellar__exchanges_require_memo": "Memo is not set.\nTypically needed when sending to exchanges.",
+    "stellar__exchanges_require_memo": "Memo is not set. It's typically needed when sending to exchanges.",
     "stellar__ext_auth": "External Authorizations",
     "stellar__ext_auth_message": "Transaction contains additional invocations authorized by external means.",
     "stellar__final_confirm": "Final confirm",
