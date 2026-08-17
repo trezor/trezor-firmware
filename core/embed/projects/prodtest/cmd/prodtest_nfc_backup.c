@@ -56,7 +56,6 @@ typedef struct {
     uint8_t  signature[64];               // Ed25519 Signature (64 bytes)
 } nfc_backup_certificate_t;
 
-
 typedef ts_t (*on_tap_callback_t) (cli_t *cli);
 
 static ts_t nfc_poll_start(cli_t *cli) {
@@ -161,7 +160,10 @@ static ts_t nfc_backup_tap(cli_t *cli, on_tap_callback_t callback) {
     return  status;
   }
 
+  uint32_t tic = systick_ms();
   status = nfc_wait_for_tap(cli, callback);
+  cli_trace(cli, "> Operation time: %d ms", systick_ms() - tic);
+
   if (ts_error(status)) {
     nfc_poll_stop();
     return status;
@@ -432,17 +434,17 @@ static void print_certificate(cli_t *cli, nfc_backup_certificate_t const* cert){
   char text[256];
 
   cli_trace(cli, "Certificate:");
-  cli_trace(cli, "  Version: %u", cert->version);
-  cli_trace(cli, "  Serial Number: %u", cert->serial_number);
+  //cli_trace(cli, "  Version: %u", cert->version);
+  //cli_trace(cli, "  Serial Number: %u", cert->serial_number);
   cli_trace(cli, "  Subject: %s (%s)", cert->subject_cn, cert->subject_serial);
   cli_trace(cli, "  Issuer: %s (%s)", cert->issuer_cn, cert->issuer_o);
-  cli_trace(cli, "  Validity: Not Before=%s, Not After=%s", cert->not_before, cert->not_after);
+  //cli_trace(cli, "  Validity: Not Before=%s, Not After=%s", cert->not_before, cert->not_after);
   cstr_encode_hex(text, sizeof(text), cert->public_key, sizeof(cert->public_key));
   cli_trace(cli, "  Public Key: %s", text);
-  cli_trace(cli, "  Is CA: %s", cert->is_ca ? "true" : "false");
-  cli_trace(cli, "  Key Usage: 0x%02X", cert->key_usage);
-  cstr_encode_hex(text, sizeof(text), cert->auth_key_id, sizeof(cert->auth_key_id));
-  cli_trace(cli, "  Authority Key Identifier: %s", text);
+  //cli_trace(cli, "  Is CA: %s", cert->is_ca ? "true" : "false");
+  //cli_trace(cli, "  Key Usage: 0x%02X", cert->key_usage);
+  //cstr_encode_hex(text, sizeof(text), cert->auth_key_id, sizeof(cert->auth_key_id));
+  //cli_trace(cli, "  Authority Key Identifier: %s", text);
 
 }
 
@@ -479,7 +481,6 @@ static ts_t nfc_backup_compose_apdu(uint8_t cla, uint8_t ins, uint8_t p1,
 cleanup:
   TSH_RETURN;
 }
-
 
 static ts_t nfc_backup_noise(cli_t* cli, uint8_t (*psk)[32]) {
 
