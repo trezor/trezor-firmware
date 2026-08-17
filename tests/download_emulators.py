@@ -22,8 +22,6 @@ OLDEST_AVAILABLE = {
 }
 
 EMULATORS_URL_PREFIX = "https://data.trezor.io/dev/firmware/releases/emulators-new"
-TROPIC_CAPABLE_MODELS = {"T3W1"}
-TROPIC_REMOTE_SUBPATH_SUFFIX = "_tropic_on"
 
 TESTS_DIR = Path(__file__).resolve().parent
 SAVE_DIR = TESTS_DIR / "emulators"
@@ -143,7 +141,6 @@ def get_all_releases() -> EmulatorDict:
 
 def get_emulators_for_model(model: str, firmwares: EmulatorDict) -> list[Emulator]:
     emulators: list[Emulator] = []
-    is_tropic_capable = model in TROPIC_CAPABLE_MODELS
 
     def create_and_check_emulator(
         version: str, subpath_suffix: str = "", artifact_label: str = "Artifact"
@@ -167,13 +164,6 @@ def get_emulators_for_model(model: str, firmwares: EmulatorDict) -> list[Emulato
     for version, models in firmwares.items():
         if model in models:
             create_and_check_emulator(version=version)
-
-            if is_tropic_capable:
-                create_and_check_emulator(
-                    version=version,
-                    subpath_suffix=TROPIC_REMOTE_SUBPATH_SUFFIX,
-                    artifact_label="Tropic artifact",
-                )
     return emulators
 
 
