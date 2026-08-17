@@ -264,14 +264,11 @@ def _get_current_results() -> FixturesType:
     current: FixturesType = {}  # type: ignore
     for res in TestResult.recent_results():
         model = res.test.model
-        group = res.test.group
         fixtures_name = res.test.fixtures_name
         actual_hash = res.actual_hash
         if model not in current:
             current[model] = {}
-        if group not in current[model]:
-            current[model][group] = {}
-        current[model][group][fixtures_name] = actual_hash
+        current[model][fixtures_name] = actual_hash
     return current
 
 
