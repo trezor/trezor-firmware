@@ -22,6 +22,8 @@
 // IPS(GV024QVQ-N81-3QP0)_AN_20230829); the module datasheets for
 // LX240D4508CTP05A/B do not themselves provide a register init table.
 
+#pragma GCC optimize ("O0")
+
 #include <trezor_model.h>
 
 #include "../display_io.h"
