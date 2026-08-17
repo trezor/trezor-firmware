@@ -42,6 +42,11 @@
 #define PANEL_INIT_SEQ lx200b4501ctp03_init_seq
 #define PANEL_ROTATE lx200b4501ctp03_rotate
 #define PANEL_REINIT lx200b4501ctp03_init_seq
+#elif defined(DISPLAY_PANEL_LX240D4508CTP05)
+#include "panels/lx240d4508ctp05.h"
+#define PANEL_INIT_SEQ lx240d4508ctp05_init_seq
+#define PANEL_ROTATE lx240d4508ctp05_rotate
+#define PANEL_REINIT lx240d4508ctp05_init_seq
 #elif defined(DISPLAY_PANEL_LHS200KB_IF21)
 #include "panels/lhs200kb-if21.h"
 #define PANEL_INIT_SEQ lhs200kb_if21_init_seq

@@ -92,6 +92,7 @@ touch_sitronix = ["sys/i2c_bus"]
 touch_panel_t2t1 = []
 touch_panel_lx154a2422cpt23 = []
 touch_panel_lx200b4501ctp03 = []
+touch_panel_lx240d4508ctp05 = []
 touch_panel_lx250a2410a = []
 
 # Drivers below that always need framebuffer pull it in implicitly,
@@ -111,6 +112,7 @@ display_panel_t2t1 = []
 display_panel_lx154a2482 = []
 display_panel_dem240320b1 = []
 display_panel_lx200b4501ctp03 = []
+display_panel_lx240d4508ctp05 = []
 display_panel_vg2864 = []
 
 # --------------------------------------------------------------------------

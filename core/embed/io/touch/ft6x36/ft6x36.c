@@ -32,6 +32,8 @@
 #include "panels/lx154a2422cpt23.h"
 #elif defined TOUCH_PANEL_LX200B4501CTP03
 #include "panels/lx200b4501ctp03.h"
+#elif defined TOUCH_PANEL_LX240D4508CTP05
+#include "panels/lx240d4508ctp05.h"
 #elif defined TOUCH_PANEL_LHS200KB_IF21
 #include "panels/lhs200kb-if21.h"
 #endif
@@ -259,6 +261,8 @@ static void ft6x36_panel_correction(uint16_t x, uint16_t y, uint16_t* x_new,
   lx154a2422cpt23_touch_correction(x, y, x_new, y_new);
 #elif defined TOUCH_PANEL_LX200B4501CTP03
   lx200b4501ctp03_touch_correction(x, y, x_new, y_new);
+#elif defined TOUCH_PANEL_LX240D4508CTP05
+  lx240d4508ctp05_touch_correction(x, y, x_new, y_new);
 #elif defined TOUCH_PANEL_LHS200KB_IF21
   lhs200kb_if21_touch_correction(x, y, x_new, y_new);
 #else
