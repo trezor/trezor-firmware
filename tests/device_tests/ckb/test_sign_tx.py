@@ -11,9 +11,14 @@ from . import prevtx
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("t3w1")]
 
+# blake160 of the public key at m/44'/309'/0'/0/0, the signer in every test here.
+SENDER_LOCK_ARGS = bytes.fromhex("0af9cea353cca00eb173c7420547e358aead128f")
+
 SHANNON = 100_000_000
 DAO_CODE_HASH = "82d76d1b75fe2fd9a27dfbaa65a039221a380d76c926f378d3f81cf3e7e13f2e"
+# Accumulated rates of the deposit and withdraw blocks: +0.5 % compensation.
 AR_DEPOSIT = 10_000_000_000_000_000
+AR_WITHDRAW = 10_050_000_000_000_000
 
 
 def _dao_header(number, ar, timestamp=1_573_852_800_000):
@@ -31,6 +36,35 @@ def _dao_header(number, ar, timestamp=1_573_852_800_000):
         dao=prevtx.make_dao(1, ar, 2, 3),
         nonce="00" * 16,
     )
+
+
+def _default_witnesses(inputs_count: int) -> list[bytes]:
+    """The witness vector trezorlib sends when the caller passes none: the
+    signing WitnessArgs with its 65-byte lock blanked, then empty raw witnesses."""
+    return [prevtx.build_witness_args(65)] + [b""] * (inputs_count - 1)
+
+
+def assert_signature_covers_sighash(
+    resp, witnesses=None, group_indices=None, inputs_count=1
+):
+    """The device must sign sighash_all of the transaction it hashed.
+
+    The tx hash alone says nothing about the digest that was signed, so this
+    recomputes sighash_all on the host and recovers the signer from the
+    signature. Only a device that hashed the same witnesses, blanked the same
+    lock and converted the recovery byte the same way recovers to the signer's
+    lock args.
+    """
+    if witnesses is None:
+        witnesses = _default_witnesses(inputs_count)
+    if group_indices is None:
+        group_indices = list(range(inputs_count))
+
+    sighash = prevtx.sighash_all(
+        bytes(resp.serialized.tx_hash), witnesses, group_indices, inputs_count
+    )
+    recovered = prevtx.recover_lock_args(bytes(resp.serialized.signature), sighash)
+    assert recovered == SENDER_LOCK_ARGS, "signature does not cover sighash_all"
 
 
 def _build_outputs(parameters):
@@ -128,11 +162,12 @@ def test_sign_tx(session: Session, parameters, result):
     assert len(sig) == 65
     assert len(tx_hash) == 32
 
-    # The device must hash exactly the transaction we sent; check it against an
-    # independent host-side serialization rather than a stored golden value
-    # (the inputs are synthesized, so the old recorded hashes no longer apply).
     expected = prevtx.raw_tx_hash(inputs, outputs, _outputs_data(outputs), cell_deps)
     assert tx_hash == expected
+    # The recorded hash keeps the synthesized inputs from quietly changing.
+    assert tx_hash.hex() == result["tx_hash"]
+
+    assert_signature_covers_sighash(resp, inputs_count=len(inputs))
 
 
 def test_sign_tx_streaming_protocol(session: Session):
@@ -224,16 +259,126 @@ def test_sign_tx_streaming_protocol(session: Session):
                 raise AssertionError(f"unexpected request type {rt}")
             res = session.call(ack, expect=messages.CKBTxRequest)
 
-    # The current tx is streamed first, then the previous txs are verified, then
-    # the witnesses are requested.
-    assert seen.index(RT.TXINPUT) < seen.index(RT.TXPREVMETA)
+    # Previous txs are verified before the witnesses are requested.
     assert seen.index(RT.TXPREVMETA) < seen.index(RT.TXWITNESS)
     assert RT.TXPREVOUTPUT in seen
 
     assert res.details is None
     assert res.serialized is not None
-    assert len(res.serialized.signature) == 65
     assert len(res.serialized.tx_hash) == 32
+    assert_signature_covers_sighash(res, inputs_count=2)
+
+
+def test_sign_tx_signs_a_non_trivial_witness_structure(session: Session):
+    # A signing group not starting at input 0, a trailing witness, and non-empty
+    # type slices: the parts of sighash_all no plain transfer reaches.
+    outputs = _build_outputs(
+        {
+            "outputs": [
+                {
+                    "capacity": 10000000000,
+                    "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                    "lock_hash_type": 1,
+                    "lock_args": "abcdef0123456789abcdef0123456789abcdef01",
+                }
+            ]
+        }
+    )
+    fee = 1000
+    prev_a, hash_a = prevtx.synth_prev_tx([6_000_000_000], salt=0)
+    prev_b, hash_b = prevtx.synth_prev_tx([4_000_000_000 + fee], salt=1)
+    inputs = [
+        ckb.create_cell_input(tx_hash=hash_a, index=0),
+        ckb.create_cell_input(tx_hash=hash_b, index=0),
+    ]
+
+    input_type = b"\x07" * 8
+    output_type = b"\x09" * 3
+    leading = b"\xa1" * 4
+    trailing = b"\xb2" * 6
+    witnesses = [
+        ckb.create_witness_raw(leading),
+        ckb.create_witness_args(input_type=input_type, output_type=output_type),
+        ckb.create_witness_raw(trailing),
+    ]
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        resp = ckb.sign_tx(
+            session,
+            parse_path("m/44h/309h/0h/0/0"),
+            inputs=inputs,
+            outputs=outputs,
+            network="Mainnet",
+            prev_txs={hash_a: prev_a, hash_b: prev_b},
+            witnesses=witnesses,
+            sign_group_input_indices=[1],
+        )
+
+    assert resp.serialized.tx_hash == prevtx.raw_tx_hash(
+        inputs, outputs, _outputs_data(outputs), []
+    )
+    assert_signature_covers_sighash(
+        resp,
+        witnesses=[
+            leading,
+            prevtx.build_witness_args(
+                65, input_type=input_type, output_type=output_type
+            ),
+            trailing,
+        ],
+        group_indices=[1],
+        inputs_count=2,
+    )
+
+
+def test_sign_tx_verifies_a_previous_tx_with_inputs_and_cell_deps(session: Session):
+    # Previous txs elsewhere carry outputs only, so TXPREVINPUT/TXPREVCELLDEP
+    # are never requested; a real funding tx commits both in its hash.
+    spent = ckb.create_cell_output(
+        capacity=10_000_000_000 + 1000,  # output + fee
+        lock_code_hash=prevtx.LOCK_CODE_HASH,
+        lock_hash_type=1,
+        lock_args="22" * 20,
+    )
+    prev_inputs = [ckb.create_cell_input(tx_hash="33" * 32, index=7, since=42)]
+    prev_cell_deps = [ckb.create_cell_dep(tx_hash="44" * 32, index=1, dep_type=0)]
+    prev_hash = prevtx.raw_tx_hash(prev_inputs, [spent], [b""], prev_cell_deps)
+    prev = ckb.create_prev_tx(
+        outputs=[spent], inputs=prev_inputs, cell_deps=prev_cell_deps
+    )
+
+    inputs = [ckb.create_cell_input(tx_hash=prev_hash, index=0)]
+    outputs = _build_outputs(
+        {
+            "outputs": [
+                {
+                    "capacity": 10000000000,
+                    "lock_code_hash": "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                    "lock_hash_type": 1,
+                    "lock_args": "abcdef0123456789abcdef0123456789abcdef01",
+                }
+            ]
+        }
+    )
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        resp = ckb.sign_tx(
+            session,
+            parse_path("m/44h/309h/0h/0/0"),
+            inputs=inputs,
+            outputs=outputs,
+            network="Mainnet",
+            prev_txs={prev_hash: prev},
+        )
+
+    assert resp.serialized.tx_hash == prevtx.raw_tx_hash(
+        inputs, outputs, _outputs_data(outputs), []
+    )
+    assert_signature_covers_sighash(resp)
 
 
 def test_sign_tx_with_header_deps(session: Session):
@@ -289,6 +434,8 @@ def test_sign_tx_with_header_deps(session: Session):
     without = prevtx.raw_tx_hash(inputs, outputs, outputs_data, cell_deps)
     assert tx_hash != without
 
+    assert_signature_covers_sighash(resp, inputs_count=len(inputs))
+
 
 def test_sign_tx_dao_withdraw(session: Session):
     # A Nervos DAO phase-2 withdrawal: the input is a withdrawing cell whose
@@ -296,13 +443,11 @@ def test_sign_tx_dao_withdraw(session: Session):
     # single output is LARGER than the input capacity. The device must accept it
     # by verifying the deposit/withdraw block headers and crediting the
     # compensation, instead of rejecting with "Inputs do not cover outputs".
-    ar_deposit = AR_DEPOSIT
-    ar_withdraw = 10_050_000_000_000_000  # +0.5% accumulated rate
     deposit_number = 100
     withdraw_number = 200_000
 
-    deposit_header = _dao_header(deposit_number, ar_deposit)
-    withdraw_header = _dao_header(withdraw_number, ar_withdraw, 1_576_852_800_000)
+    deposit_header = _dao_header(deposit_number, AR_DEPOSIT)
+    withdraw_header = _dao_header(withdraw_number, AR_WITHDRAW, 1_576_852_800_000)
     headers = [deposit_header, withdraw_header]
     header_deps = [
         prevtx.header_hash(deposit_header),
@@ -337,7 +482,7 @@ def test_sign_tx_dao_withdraw(session: Session):
     # chain-anchored golden test pins to real data.
     occupied = prevtx.occupied_capacity(lock_args_len=20, type_args_len=0, data_len=8)
     max_withdraw = prevtx.dao_maximum_withdraw(
-        deposit_capacity, occupied, ar_deposit, ar_withdraw
+        deposit_capacity, occupied, AR_DEPOSIT, AR_WITHDRAW
     )
     fee = 1000
     out_capacity = max_withdraw - fee
@@ -349,6 +494,11 @@ def test_sign_tx_dao_withdraw(session: Session):
         lock_hash_type=1,
         lock_args="aa" * 20,
     )
+
+    # The DAO type script reads the deposit header's index in header_deps from
+    # the witness, so a phase-2 withdrawal always carries it.
+    deposit_index = (0).to_bytes(8, "little")
+    witnesses = [ckb.create_witness_args(input_type=deposit_index)]
 
     address_n = parse_path("m/44'/309'/0'/0/0")
     with session.test_ctx as client:
@@ -365,12 +515,42 @@ def test_sign_tx_dao_withdraw(session: Session):
             prev_txs={prev_hash: prev},
             header_deps=header_deps,
             headers=headers,
+            witnesses=witnesses,
         )
 
-    assert resp.serialized.signature is not None
-    assert len(resp.serialized.signature) == 65
     expected = prevtx.raw_tx_hash([inp], [output], [b""], [], header_deps=header_deps)
     assert resp.serialized.tx_hash == expected
+    assert_signature_covers_sighash(
+        resp,
+        witnesses=[prevtx.build_witness_args(65, input_type=deposit_index)],
+        group_indices=[0],
+        inputs_count=1,
+    )
+
+    # Bound the credited compensation from above as well: spending one shannon
+    # more than the maximum withdraw must be refused.
+    too_much = ckb.create_cell_output(
+        capacity=max_withdraw + 1,
+        lock_code_hash=prevtx.LOCK_CODE_HASH,
+        lock_hash_type=1,
+        lock_args="aa" * 20,
+    )
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        with pytest.raises(TrezorFailure, match="Inputs do not cover outputs"):
+            ckb.sign_tx(
+                session,
+                address_n,
+                inputs=[inp],
+                outputs=[too_much],
+                cell_deps=[],
+                network="Mainnet",
+                prev_txs={prev_hash: prev},
+                header_deps=header_deps,
+                headers=headers,
+                witnesses=witnesses,
+            )
 
 
 def test_sign_tx_rejects_dao_withdraw_tampered_header(session: Session):
@@ -379,7 +559,7 @@ def test_sign_tx_rejects_dao_withdraw_tampered_header(session: Session):
     deposit_number = 100
 
     honest_deposit = _dao_header(deposit_number, AR_DEPOSIT)
-    honest_withdraw = _dao_header(200_000, 10_050_000_000_000_000)
+    honest_withdraw = _dao_header(200_000, AR_WITHDRAW)
     header_deps = [
         prevtx.header_hash(honest_deposit),
         prevtx.header_hash(honest_withdraw),
@@ -592,7 +772,6 @@ def test_sign_tx_rejects_inputs_below_outputs(session: Session):
             ]
         }
     )
-    # Input supplies less capacity than the outputs require.
     prev, prev_hash = prevtx.synth_prev_tx([9000000000])
     inputs = [ckb.create_cell_input(tx_hash=prev_hash, index=0)]
 
@@ -612,8 +791,6 @@ def test_sign_tx_rejects_inputs_below_outputs(session: Session):
 
 
 def test_sign_tx_high_fee_warns_and_signs(session: Session):
-    # Fee far above 10 % of the sent amount: the warning flow is exercised and
-    # the transaction still signs once confirmed.
     outputs = _build_outputs(
         {
             "outputs": [
@@ -630,9 +807,17 @@ def test_sign_tx_high_fee_warns_and_signs(session: Session):
     prev, prev_hash = prevtx.synth_prev_tx([10000000000 + fee])
     inputs = [ckb.create_cell_input(tx_hash=prev_hash, index=0)]
 
+    # InputFlowConfirmAllWarnings also passes when no warning appears at all, so
+    # the screens are recorded and the warning text is required among them.
+    screens: list[str] = []
+
     with session.test_ctx as client:
         if not session.debug.legacy_debug:
-            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+            client.set_input_flow(
+                InputFlowConfirmAllWarnings(
+                    client, on_page=lambda layout: screens.append(layout.text_content())
+                ).get()
+            )
         resp = ckb.sign_tx(
             session,
             parse_path("m/44h/309h/0h/0/0"),
@@ -642,7 +827,11 @@ def test_sign_tx_high_fee_warns_and_signs(session: Session):
             chunkify=True,
             prev_txs={prev_hash: prev},
         )
-    assert len(resp.serialized.signature) == 65
+
+    assert any(
+        "unusually high" in screen for screen in screens
+    ), f"high-fee warning was not shown; screens: {screens}"
+    assert_signature_covers_sighash(resp)
 
 
 def test_sign_tx_invalid_path(session: Session):
@@ -921,6 +1110,401 @@ def test_sign_tx_zero_outputs(session: Session):
         )
 
 
+_TRANSFER_CAPACITY = 10_000_000_000
+_TRANSFER_FEE = 1000
+
+
+def _transfer_components(n_inputs=1):
+    """A one-output transfer funded by ``n_inputs`` synthetic previous txs."""
+    outputs = [
+        ckb.create_cell_output(
+            capacity=_TRANSFER_CAPACITY,
+            lock_code_hash=prevtx.LOCK_CODE_HASH,
+            lock_hash_type=1,
+            lock_args="ab" * 20,
+        )
+    ]
+    caps = [_TRANSFER_CAPACITY + _TRANSFER_FEE - (n_inputs - 1)] + [1] * (n_inputs - 1)
+    inputs = []
+    prev_txs = {}
+    for i, cap in enumerate(caps):
+        prev, prev_hash = prevtx.synth_prev_tx([cap], salt=i)
+        prev_txs[prev_hash] = prev
+        inputs.append(ckb.create_cell_input(tx_hash=prev_hash, index=0))
+    return inputs, outputs, prev_txs
+
+
+def _expect_sign_failure(session, match, inputs, outputs, prev_txs, **kwargs):
+    """Drive an ECDSA signing flow that must fail with ``match``, confirming the
+    output screens shown before the error surfaces."""
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        with pytest.raises(TrezorFailure, match=match):
+            ckb.sign_tx(
+                session,
+                parse_path("m/44h/309h/0h/0/0"),
+                inputs=inputs,
+                outputs=outputs,
+                network="Mainnet",
+                prev_txs=prev_txs,
+                **kwargs,
+            )
+
+
+def test_sign_tx_rejects_duplicate_sign_group_indices(session: Session):
+    inputs, outputs, prev_txs = _transfer_components(n_inputs=2)
+    _expect_sign_failure(
+        session,
+        "sorted and unique",
+        inputs,
+        outputs,
+        prev_txs,
+        sign_group_input_indices=[0, 0],
+    )
+
+
+def test_sign_tx_rejects_out_of_range_group_index(session: Session):
+    inputs, outputs, prev_txs = _transfer_components(n_inputs=2)
+    _expect_sign_failure(
+        session,
+        "Signing group index out of range",
+        inputs,
+        outputs,
+        prev_txs,
+        sign_group_input_indices=[0, 5],
+    )
+
+
+def test_sign_tx_rejects_empty_witness_vector(session: Session):
+    # witnesses_count = 0 leaves no slot for the signature itself.
+    inputs, outputs, prev_txs = _transfer_components()
+    _expect_sign_failure(
+        session,
+        "Signing witness index out of range",
+        inputs,
+        outputs,
+        prev_txs,
+        witnesses=[],
+    )
+
+
+def test_sign_tx_rejects_raw_signing_witness(session: Session):
+    # A raw blob in the signing slot would make the signed preimage
+    # host-controlled; the device must build that witness itself.
+    inputs, outputs, prev_txs = _transfer_components()
+    _expect_sign_failure(
+        session,
+        "Missing WitnessArgs for signing witness",
+        inputs,
+        outputs,
+        prev_txs,
+        witnesses=[ckb.create_witness_raw(b"\x00" * 16)],
+    )
+
+
+def test_sign_tx_rejects_witness_args_outside_signing_slot(session: Session):
+    inputs, outputs, prev_txs = _transfer_components()
+    _expect_sign_failure(
+        session,
+        "Unexpected WitnessArgs for non-signing witness",
+        inputs,
+        outputs,
+        prev_txs,
+        witnesses=[ckb.create_witness_args(), ckb.create_witness_args()],
+    )
+
+
+def test_sign_tx_rejects_nonstandard_lock_size(session: Session):
+    # Any size but the lock script's 65 bytes hashes a preimage the on-chain
+    # verifier cannot reproduce.
+    inputs, outputs, prev_txs = _transfer_components()
+    _expect_sign_failure(
+        session,
+        "Unexpected lock size for signing witness",
+        inputs,
+        outputs,
+        prev_txs,
+        witnesses=[ckb.create_witness_args(lock_size=64)],
+    )
+
+
+def test_sign_tx_rejects_out_of_range_prev_output_index(session: Session):
+    # The previous tx itself verifies, so the index check is the only guard.
+    prev, prev_hash = prevtx.synth_prev_tx([10_000_001_000])
+    inputs = [ckb.create_cell_input(tx_hash=prev_hash, index=3)]
+    outputs = [
+        ckb.create_cell_output(
+            capacity=10_000_000_000,
+            lock_code_hash=prevtx.LOCK_CODE_HASH,
+            lock_hash_type=1,
+            lock_args="ab" * 20,
+        )
+    ]
+    _expect_sign_failure(
+        session,
+        "previous_output_index out of range",
+        inputs,
+        outputs,
+        {prev_hash: prev},
+    )
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    [
+        pytest.param("inputs_count", 257, "Invalid inputs_count", id="inputs"),
+        pytest.param("outputs_count", 257, "Invalid outputs_count", id="outputs"),
+        pytest.param("cell_deps_count", 65, "Invalid cell_deps_count", id="cell-deps"),
+        pytest.param("witnesses_count", 513, "Invalid witnesses_count", id="witnesses"),
+    ],
+)
+def test_sign_tx_rejects_oversized_counts(session: Session, field, value, match):
+    # Each count is one over its limit and fails before anything is streamed or
+    # shown, so no signing workflow is left half-open.
+    fields = dict(
+        address_n=parse_path("m/44h/309h/0h/0/0"),
+        network="Mainnet",
+        inputs_count=1,
+        outputs_count=1,
+        cell_deps_count=0,
+        witnesses_count=1,
+        sign_group_input_indices=[0],
+    )
+    fields[field] = value
+
+    with pytest.raises(TrezorFailure, match=match):
+        session.call(messages.CKBSignTx(**fields), expect=messages.Failure)
+
+
+@pytest.mark.parametrize(
+    "field,match",
+    [
+        pytest.param("witnesses_count", "Missing witnesses_count", id="witnesses"),
+        pytest.param(
+            "sign_group_input_indices",
+            "Missing sign_group_input_indices",
+            id="sign-group",
+        ),
+    ],
+)
+def test_sign_tx_rejects_missing_witness_declaration(session: Session, field, match):
+    # ckb.sign_tx() always fills both fields in, so the opening message is built
+    # by hand and the rest of the stream served as usual.
+    from trezorlib.ckb import _serve_tx_requests
+
+    inputs, outputs, prev_txs = _transfer_components()
+    fields = dict(
+        address_n=parse_path("m/44h/309h/0h/0/0"),
+        network="Mainnet",
+        inputs_count=1,
+        outputs_count=1,
+        cell_deps_count=0,
+        witnesses_count=1,
+        sign_group_input_indices=[0],
+    )
+    del fields[field]
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        res = session.call(messages.CKBSignTx(**fields), expect=messages.CKBTxRequest)
+        with pytest.raises(TrezorFailure, match=match):
+            _serve_tx_requests(
+                session,
+                res,
+                inputs=inputs,
+                outputs=outputs,
+                cell_deps=[],
+                witnesses=[],
+                prev_tx_map=prev_txs,
+                headers=None,
+            )
+
+
+def test_sign_tx_rejects_lying_prev_meta_counts(session: Session):
+    # The bound must fire on the declared count, not after the streaming.
+    inputs, outputs, _ = _transfer_components()
+    RT = messages.CKBTxRequestType
+
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        res = session.call(
+            messages.CKBSignTx(
+                address_n=parse_path("m/44h/309h/0h/0/0"),
+                network="Mainnet",
+                inputs_count=1,
+                outputs_count=1,
+                cell_deps_count=0,
+                witnesses_count=1,
+                sign_group_input_indices=[0],
+            ),
+            expect=messages.CKBTxRequest,
+        )
+        with pytest.raises(
+            TrezorFailure, match="Previous transaction inputs_count out of range"
+        ):
+            for _ in range(20):
+                if res.request_type == RT.TXINPUT:
+                    ack = messages.CKBTxAckInput(input=inputs[0])
+                elif res.request_type == RT.TXOUTPUT:
+                    ack = messages.CKBTxAckOutput(output=outputs[0])
+                elif res.request_type == RT.TXPREVMETA:
+                    ack = messages.CKBTxAckPrevMeta(
+                        version=0,
+                        inputs_count=2000,  # > _MAX_PREV_INPUTS
+                        outputs_count=1,
+                        cell_deps_count=0,
+                        header_deps=[],
+                    )
+                else:
+                    raise AssertionError(f"unexpected request type {res.request_type}")
+                res = session.call(ack, expect=messages.CKBTxRequest)
+
+
+def _dao_withdraw_kwargs(
+    ar_deposit=AR_DEPOSIT,
+    ar_withdraw=AR_WITHDRAW,
+    deposit_number=100,
+    withdraw_number=200_000,
+    cell_number=None,
+    capacity=20_000 * SHANNON,
+    header_indices=(0, 1),
+):
+    """kwargs for a phase-2 DAO withdrawal, with knobs to break each invariant.
+
+    The output simply returns the plain capacity, so a scenario that fails
+    during input verification never reaches the fee check.
+    """
+    deposit_header = _dao_header(deposit_number, ar_deposit)
+    withdraw_header = _dao_header(withdraw_number, ar_withdraw, 1_576_852_800_000)
+
+    cell_data = (deposit_number if cell_number is None else cell_number).to_bytes(
+        8, "little"
+    )
+    withdrawing_cell = ckb.create_cell_output(
+        capacity=capacity,
+        lock_code_hash=prevtx.LOCK_CODE_HASH,
+        lock_hash_type=1,
+        lock_args="11" * 20,
+        type_code_hash=DAO_CODE_HASH,
+        type_hash_type=1,
+        type_args=b"",
+        data=cell_data,
+    )
+    prev_hash = prevtx.raw_tx_hash([], [withdrawing_cell], [cell_data], [])
+
+    dep_idx, wit_idx = header_indices if header_indices else (None, None)
+    inp = ckb.create_cell_input(
+        tx_hash=prev_hash,
+        index=0,
+        dao_deposit_header_index=dep_idx,
+        dao_withdraw_header_index=wit_idx,
+    )
+    output = ckb.create_cell_output(
+        capacity=capacity,
+        lock_code_hash=prevtx.LOCK_CODE_HASH,
+        lock_hash_type=1,
+        lock_args="aa" * 20,
+    )
+    return dict(
+        inputs=[inp],
+        outputs=[output],
+        witnesses=[ckb.create_witness_args(input_type=(0).to_bytes(8, "little"))],
+        prev_txs={prev_hash: ckb.create_prev_tx(outputs=[withdrawing_cell])},
+        header_deps=[
+            prevtx.header_hash(deposit_header),
+            prevtx.header_hash(withdraw_header),
+        ],
+        headers=[deposit_header, withdraw_header],
+    )
+
+
+@pytest.mark.parametrize(
+    "overrides,match",
+    [
+        pytest.param(
+            {"header_indices": None},
+            "DAO withdrawal input requires header indices",
+            id="missing-indices",
+        ),
+        pytest.param(
+            {"header_indices": (5, 1)},
+            "DAO header index out of range",
+            id="index-out-of-range",
+        ),
+        pytest.param(
+            {"cell_number": 101},
+            "DAO deposit header does not match cell",
+            id="wrong-deposit-header",
+        ),
+        pytest.param(
+            {"withdraw_number": 100},
+            "DAO withdraw header must be after the deposit header",
+            id="withdraw-before-deposit",
+        ),
+        pytest.param(
+            {"ar_deposit": 0, "ar_withdraw": 0},
+            "Invalid DAO deposit rate",
+            id="zero-deposit-rate",
+        ),
+        pytest.param(
+            {"ar_withdraw": AR_DEPOSIT - 1},
+            "DAO compensation must be non-negative",
+            id="negative-compensation",
+        ),
+        pytest.param(
+            # this cell occupies 102 bytes, i.e. 102 CKB it cannot cover
+            {"capacity": 100 * SHANNON},
+            "DAO occupied capacity exceeds deposit",
+            id="occupied-exceeds-deposit",
+        ),
+    ],
+)
+def test_sign_tx_rejects_invalid_dao_withdrawals(session: Session, overrides, match):
+    # Each case breaks exactly one invariant of the RFC 0023 verification while
+    # the rest of the transaction stays valid.
+    kwargs = _dao_withdraw_kwargs(**overrides)
+    _expect_sign_failure(
+        session,
+        match,
+        kwargs.pop("inputs"),
+        kwargs.pop("outputs"),
+        kwargs.pop("prev_txs"),
+        **kwargs,
+    )
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    [
+        pytest.param(
+            "parent_hash", "00" * 31, "CKB header field must be 32 bytes", id="hash"
+        ),
+        pytest.param(
+            "nonce", "00" * 15, "CKB header nonce must be 16 bytes", id="nonce"
+        ),
+    ],
+)
+def test_sign_tx_rejects_malformed_dao_header(session: Session, field, value, match):
+    # A field of the wrong width must fail as a clean wire error. (Omitting the
+    # header entirely is stopped by the protobuf decoder: the field is required.)
+    kwargs = _dao_withdraw_kwargs()
+    malformed = _dao_header(100, AR_DEPOSIT)
+    setattr(malformed, field, bytes.fromhex(value))
+    kwargs["headers"][0] = malformed
+
+    _expect_sign_failure(
+        session,
+        match,
+        kwargs.pop("inputs"),
+        kwargs.pop("outputs"),
+        kwargs.pop("prev_txs"),
+        **kwargs,
+    )
+
+
 def test_ckb_header_hash_matches_real_block():
     # Real CKB testnet block 0x14862de (get_header). prevtx.header_hash mirrors the
     # device, so matching the real block hash proves the device serializes headers
@@ -951,7 +1535,6 @@ def test_dao_maximum_withdraw_matches_real_chain():
     # testnet DAO cell (100000 CKB; deposit block 19863841, withdraw block 19876418),
     # so the formula is checked against the chain, not just the synthetic test above.
     # AR is the second uint64 (LE) of each block's `dao` field.
-    SHANNON = 100_000_000
     # Use the same helpers the device tests check the device against, so this
     # anchors the (device-mirrored) occupied + compensation math to the chain.
     occupied = prevtx.occupied_capacity(lock_args_len=20, type_args_len=0, data_len=8)

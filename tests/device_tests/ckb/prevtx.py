@@ -134,6 +134,35 @@ def raw_tx_hash(inputs, outputs, outputs_data, cell_deps, version=0, header_deps
     return _hash(raw)
 
 
+def message_digest(message: bytes) -> bytes:
+    """blake2b_256(personal="ckb-default-hash", "Nervos Message:" || message),
+    as ckb-cli and Neuron compute it."""
+    h = blake2b(digest_size=32, person=b"ckb-default-hash")
+    h.update(b"Nervos Message:")
+    h.update(message)
+    return h.digest()
+
+
+def recover_lock_args(signature: bytes, digest: bytes) -> bytes:
+    """Lock args (blake160 of the pubkey) recovered from a CKB signature.
+
+    ``signature`` is the device's native [R(32) | S(32) | recovery_id(1)], and
+    the recovery runs on the host with a third-party ECDSA implementation.
+    """
+    from ecdsa import SECP256k1, VerifyingKey
+    from ecdsa.util import sigdecode_string
+
+    if len(signature) != 65:
+        raise ValueError(f"expected a 65-byte CKB signature, got {len(signature)}")
+    recid = signature[64]
+    candidates = VerifyingKey.from_public_key_recovery_with_digest(
+        signature[:64], digest, SECP256k1, sigdecode=sigdecode_string
+    )
+    if recid >= len(candidates):
+        raise ValueError(f"recovery id {recid} has no candidate key")
+    return _hash(candidates[recid].to_string("compressed"))[:20]
+
+
 def make_dao(c: int, ar: int, s: int, u: int) -> bytes:
     """Pack a header's 32-byte ``dao`` field (C, AR, S, U as uint64 LE)."""
     return _u64(c) + _u64(ar) + _u64(s) + _u64(u)
@@ -157,12 +186,30 @@ def header_hash(header) -> bytes:
     return _hash(blob)
 
 
+def sphincs_lock_args(public_key: bytes, variant: int) -> bytes:
+    """blake2b_256(personal="ckb-sphincs+-sct",
+    [0x80, 0x01, 0x01, 0x01, variant << 1] || public_key).
+
+    Catches a wrong hashing of the returned key, not a wrong key.
+    """
+    h = blake2b(digest_size=32, person=b"ckb-sphincs+-sct")
+    h.update(bytes([0x80, 0x01, 0x01, 0x01, (variant << 1) & 0xFF]))
+    h.update(public_key)
+    return h.digest()
+
+
+def bytes_opt(data: bytes | None) -> bytes:
+    """Molecule ``BytesOpt``: length-prefixed bytes when present, nothing when
+    absent."""
+    return _blob(data) if data is not None else b""
+
+
 def build_witness_args(lock_size, input_type=None, output_type=None) -> bytes:
     """Molecule WitnessArgs with the lock blanked to ``lock_size`` zero bytes;
     mirrors the device's _build_witness_args."""
     lock_s = _blob(bytes(lock_size))
-    input_s = _blob(input_type) if input_type is not None else b""
-    output_s = _blob(output_type) if output_type is not None else b""
+    input_s = bytes_opt(input_type)
+    output_s = bytes_opt(output_type)
     off_lock = 16
     off_input = off_lock + len(lock_s)
     off_output = off_input + len(input_s)
@@ -248,16 +295,11 @@ def ckb_tx_message_all(
     inputs_count,
     witnesses_count,
 ):
-    """Independent re-implementation of the SPHINCS+ signing message.
+    """The SPHINCS+ signing message; mirrors the device's
+    _compute_ckb_tx_message_all without sharing any code with it.
 
-    The device builds the same bytes in
-    apps.ckb.sign_sphincs_tx._compute_ckb_tx_message_all. This copy shares no
-    code with it, so a coding error on either side shows up as a signature that
-    does not verify rather than as two implementations agreeing on the wrong
-    message.
-
-    ``input_cells`` is a list of (cell output, cell data) in input order; the
-    ``*_type`` slices are molecule BytesOpt encodings (empty when absent).
+    ``input_cells``: (cell output, cell data) per input; the ``*_type`` slices
+    are molecule BytesOpt encodings (empty when absent).
     """
     h = blake2b(digest_size=32, person=b"ckb-sphincs+-msg")
     h.update(tx_hash)

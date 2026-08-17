@@ -15,6 +15,7 @@ import ctypes
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import NoReturn
 
 _REF = Path(__file__).resolve().parents[3] / "vendor" / "sphincsplus" / "ref"
 _SOURCES = (
@@ -31,6 +32,24 @@ _lib: ctypes.CDLL | None = None
 
 class BuildUnavailable(Exception):
     """The reference verifier could not be built in this environment."""
+
+
+def skip_or_fail(exc: BuildUnavailable) -> NoReturn:
+    """Skip the calling test locally, but FAIL it on CI.
+
+    The signature-covers-the-message tests are the strongest cryptographic
+    checks in the suite; on a developer box without a C toolchain skipping is a
+    convenience, but on CI a silent skip would drop that whole layer without
+    anyone noticing.
+    """
+    import os
+
+    import pytest
+
+    # GitHub Actions sets CI=true; some runners set CI=false, still a truthy str.
+    if os.environ.get("CI", "").lower() not in ("", "0", "false"):
+        pytest.fail(f"reference verifier must build on CI: {exc}")
+    pytest.skip(f"reference verifier unavailable: {exc}")
 
 
 def _load() -> ctypes.CDLL:
