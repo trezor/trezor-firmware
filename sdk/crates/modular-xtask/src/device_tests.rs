@@ -7,9 +7,11 @@ use std::process;
 
 /// Runs `pytest` against the app image already published for
 /// `args.model`/`args.emulator` (see [`crate::postbuild::publish_artifact`]),
-/// restricted to `args.test` if given. Requires a Trezor emulator or
-/// physical device to already be running and reachable; this does not start
-/// one itself.
+/// restricted to `args.test` if given, with the running Core set to
+/// `args.lang`. Requires a Trezor emulator or physical device to already be
+/// running and reachable; this does not start one itself. Pass `args.ui` to
+/// additionally enable UI screenshot testing (`--ui=test --ui-check-missing
+/// --do-master-diff`).
 pub fn device_tests(args: &DeviceTestsArgs) -> Result<()> {
     let mut project_dir = helpers::root_dir()?;
     if helpers::is_workspace()? {
@@ -37,11 +39,12 @@ pub fn device_tests(args: &DeviceTestsArgs) -> Result<()> {
         "pytest",
         &format!("--app={}", binary.display()),
         "--verbose",
+        &format!("--lang={}", args.lang),
         args.test.as_str(),
     ]);
 
-    if args.emulator {
-        cmd.arg("--ui=test");
+    if args.ui {
+        cmd.args(["--ui=test", "--ui-check-missing", "--do-master-diff"]);
     }
 
     cmd.env("TREZOR_TRANSLATIONS_DIR", project_dir.join("translations"))
