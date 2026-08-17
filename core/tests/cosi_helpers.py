@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from .curve import ed25519
+from trezor.crypto.curve import ed25519
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes

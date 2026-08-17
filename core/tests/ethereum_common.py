@@ -1,5 +1,5 @@
+import cosi_helpers as cosi
 from trezor import messages, protobuf
-from trezor.crypto import cosi
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
 from trezor.enums import DefinitionType

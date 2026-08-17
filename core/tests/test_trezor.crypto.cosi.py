@@ -1,7 +1,8 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import cosi, random
+import cosi_helpers as cosi
+from trezor.crypto import random
 from trezor.crypto.curve import ed25519
 
 
