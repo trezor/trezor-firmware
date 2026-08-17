@@ -295,7 +295,7 @@ def _prepared_test_ctx(
     # Load language again, as it got erased in wipe
     lang = request.session.config.getoption("lang") or "en"
     assert isinstance(lang, str)
-    translations.check_language(session, lang)
+    translations.set_language(session, lang)
 
     setup_params.configure_client(session)
     session.close()

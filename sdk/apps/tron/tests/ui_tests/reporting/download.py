@@ -9,7 +9,7 @@ from typing import Any
 import requests
 
 RECORDS_WEBSITE = "https://data.trezor.io/dev/firmware/ui_tests/"
-FIXTURES_MASTER = "https://raw.githubusercontent.com/trezor/trezor-firmware/master/tests/ui_tests/fixtures.json"
+FIXTURES_MASTER = "https://raw.githubusercontent.com/trezor/trezor-firmware/master/sdk/apps/tron/tests/ui_tests/fixtures.json"
 FIXTURES_CURRENT = Path(__file__).resolve().parent.parent / "fixtures.json"
 
 
