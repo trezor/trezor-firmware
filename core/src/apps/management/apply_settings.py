@@ -277,6 +277,8 @@ async def _require_confirm_experimental_features(enable: bool) -> None:
             reverse=True,
             br_code=BRT_PROTECT_CALL,
             prompt_screen=True,
+            hold=True,
+            hold_danger=True,
         )
 
 
