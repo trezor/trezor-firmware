@@ -3,7 +3,7 @@ use std::{env, thread};
 
 use color_eyre::Result;
 
-use crate::helpers::measure_time;
+use crate::helpers::{measure_time, trace};
 
 /// Executes a function in parallel across multiple worker threads for a
 /// collection of input units.
@@ -38,7 +38,7 @@ where
 
     let n_jobs = optimal_parallel_job_count(unit_count);
 
-    eprintln!(
+    trace!(
         "$$ Parallel processing of {} units with {} worker threads",
         unit_count, n_jobs
     );

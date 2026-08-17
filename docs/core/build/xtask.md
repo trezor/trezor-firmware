@@ -90,6 +90,7 @@ cannot be used bare:
 - `--emit-memory-analysis` — emit type/stack size analysis.
 - `--timings` — output cargo timings.
 - `--verbose` — verbose cargo output.
+- `--xbuild-trace` — log build script progress (executed commands and timings).
 - `--apps` — enable external app loading.
 - `--n4w1` — enable N4W1 support.
 - `--unsafe-fw` — enable unsafe firmware features.
