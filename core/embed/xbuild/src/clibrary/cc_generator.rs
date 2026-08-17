@@ -2,6 +2,7 @@ use color_eyre::Result;
 use color_eyre::eyre::WrapErr;
 
 use super::CLibrary;
+use crate::cargo_out;
 use crate::helpers::{derive_output_path, join_paths_lexically, links_name, path_from_env};
 
 /// Path to the partial compile_commands.json fragment within OUT_DIR.
@@ -61,10 +62,7 @@ impl CLibrary {
             .with_context(|| format!("Failed to write {}", output_path.display()))?;
 
         // Export path to partial compile_commands.json
-        println!(
-            "cargo::metadata=public_c_compile_commands={}",
-            output_path.display()
-        );
+        cargo_out::metadata("public_c_compile_commands", output_path.display());
 
         Ok(())
     }

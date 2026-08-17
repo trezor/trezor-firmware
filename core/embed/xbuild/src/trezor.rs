@@ -11,8 +11,8 @@ use std::{env, fs};
 use color_eyre::Result;
 use color_eyre::eyre::{WrapErr, bail};
 
-use crate::CLibrary;
 use crate::helpers::{is_rust_analyzer, links_name};
+use crate::{CLibrary, cargo_out};
 
 fn package_name() -> Result<String> {
     Ok(env::var("CARGO_PKG_NAME")?)
@@ -38,7 +38,7 @@ pub fn current_model_id() -> Result<String> {
 /// directory and each `model.toml` so callers rebuild when the model set
 /// changes.
 pub fn model_ids(models_dir: &Path) -> Result<Vec<String>> {
-    println!("cargo::rerun-if-changed={}", models_dir.display());
+    cargo_out::rerun_if_changed(models_dir);
     let mut models = Vec::new();
     for entry in fs::read_dir(models_dir).context("Failed to read models directory")? {
         let entry = entry?;
@@ -46,7 +46,7 @@ pub fn model_ids(models_dir: &Path) -> Result<Vec<String>> {
         if !model_toml.exists() {
             continue;
         }
-        println!("cargo::rerun-if-changed={}", model_toml.display());
+        cargo_out::rerun_if_changed(&model_toml);
         models.push(entry.file_name().to_string_lossy().into_owned());
     }
     models.sort();
@@ -61,7 +61,7 @@ pub fn vendor_header_path(models_dir: impl AsRef<Path>, target: &str) -> Result<
     if let Ok(vendor_header) = env::var("VENDOR_HEADER")
         && !vendor_header.is_empty()
     {
-        println!("cargo:warning=Using custom vendor header: {vendor_header}");
+        cargo_out::warning(format!("Using custom vendor header: {vendor_header}"));
         return Ok(PathBuf::from(vendor_header));
     }
 
@@ -136,6 +136,9 @@ pub fn build(f: impl FnOnce(&mut CLibrary) -> Result<()>) -> Result<()> {
         }
     }
 
+    // The build succeeded — release the collected `cargo::` directives.
+    cargo_out::flush();
+
     Ok(())
 }
 
@@ -161,6 +164,9 @@ pub fn build_and_link(target: &str, f: impl FnOnce(&mut CLibrary) -> Result<()>)
     }
 
     lib.link_as(target)?;
+
+    // The build succeeded — release the collected `cargo::` directives.
+    cargo_out::flush();
 
     Ok(())
 }
@@ -190,21 +196,21 @@ impl CLibrary {
         // to each archive instead of toggling global linker state.
         std::iter::once(this_lib.as_str())
             .chain(self.get_libs())
-            .for_each(|dep| println!("cargo:rustc-link-lib=static:+whole-archive={dep}"));
+            .for_each(|dep| cargo_out::rustc_link_lib(format!("static:+whole-archive={dep}")));
 
         self.get_external_libs()
             .into_iter()
-            .for_each(|dep| println!("cargo:rustc-link-arg=-l{dep}"));
+            .for_each(|dep| cargo_out::rustc_link_arg(format!("-l{dep}")));
 
         if has_feature("emulator") {
-            println!("cargo:rustc-link-lib=c");
-            println!("cargo:rustc-link-lib=m");
-            println!("cargo:rustc-link-lib=dl");
-            println!("cargo:rustc-link-lib=pthread");
+            cargo_out::rustc_link_lib("c");
+            cargo_out::rustc_link_lib("m");
+            cargo_out::rustc_link_lib("dl");
+            cargo_out::rustc_link_lib("pthread");
         } else {
-            println!("cargo:rustc-link-arg=-lm");
-            println!("cargo:rustc-link-arg=-lgcc");
-            println!("cargo:rustc-link-arg=-lc_nano");
+            cargo_out::rustc_link_arg("-lm");
+            cargo_out::rustc_link_arg("-lgcc");
+            cargo_out::rustc_link_arg("-lc_nano");
 
             // Include the linker script that defines memory layout constants
             // according to the current model.
@@ -219,8 +225,8 @@ impl CLibrary {
                 format!("models/{model_id}/memory{suffix}.ld")
             };
 
-            println!("cargo:rustc-link-arg=-T{memory_ld}");
-            println!("cargo:rerun-if-changed={memory_ld}");
+            cargo_out::rustc_link_arg(format!("-T{memory_ld}"));
+            cargo_out::rerun_if_changed(&memory_ld);
 
             // Include the linker script that defines the layout of the
             // final binary according to the selected binary type.
@@ -236,20 +242,20 @@ impl CLibrary {
                 bail!("Unsupported configuration");
             };
 
-            println!("cargo:rustc-link-arg=-T{target_ld}");
-            println!("cargo:rerun-if-changed={target_ld}");
+            cargo_out::rustc_link_arg(format!("-T{target_ld}"));
+            cargo_out::rerun_if_changed(&target_ld);
 
             // Generate a map file for the final binary in the same directory
             // as the final binary.
             let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
             let map_file = out_dir.join(format!("../../../{package_name}.map"));
-            println!("cargo:rustc-link-arg=-Wl,-Map={}", map_file.display());
+            cargo_out::rustc_link_arg(format!("-Wl,-Map={}", map_file.display()));
 
             // Instruct the linker to perform garbage collection of
             // unused sections to minimize the final binary size.
-            println!("cargo:rustc-link-arg=-Wl,--gc-sections");
+            cargo_out::rustc_link_arg("-Wl,--gc-sections");
 
-            println!("cargo:rustc-link-arg=-nostdlib");
+            cargo_out::rustc_link_arg("-nostdlib");
 
             if binary_type == "secmon" {
                 // Generate an import library for the CMSE veneer functions
@@ -257,11 +263,8 @@ impl CLibrary {
                 // against this import library to call the secure monitor API.
 
                 let implib_file = out_dir.join("../../../secmon_api.o");
-                println!("cargo:rustc-link-arg=-Wl,-cmse-implib");
-                println!(
-                    "cargo:rustc-link-arg=-Wl,--out-implib={}",
-                    implib_file.display()
-                );
+                cargo_out::rustc_link_arg("-Wl,-cmse-implib");
+                cargo_out::rustc_link_arg(format!("-Wl,--out-implib={}", implib_file.display()));
             }
         }
 
