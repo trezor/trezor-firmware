@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_ST7789_PANEL_H
-#define TREZORHAL_ST7789_PANEL_H
+#ifndef TREZORHAL_I8080_PANEL_H
+#define TREZORHAL_I8080_PANEL_H
 
 #include <trezor_types.h>
 
@@ -59,4 +59,4 @@ void display_panel_rotate(int angle);
 void display_panel_preserve_inversion(void);
 #endif
 
-#endif  // TREZORHAL_ST7789_PANEL_H
+#endif  // TREZORHAL_I8080_PANEL_H
