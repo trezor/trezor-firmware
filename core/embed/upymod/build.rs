@@ -829,9 +829,12 @@ impl<'a> MpyBuilder<'a> {
             .output()
             .with_context(|| format!("Failed to execute {:?}", cmd))?;
 
+        // Forward make's own output instead of folding it into the error
+        xbuild::emit_command_output(&cmd_output, true);
+
         // Check if the command executed successfully
         if !cmd_output.status.success() {
-            bail!(xbuild::format_command_error(&cmd, &cmd_output));
+            bail!("make failed with {}", cmd_output.status);
         }
 
         Ok(build_dir.join("mpy-cross"))
