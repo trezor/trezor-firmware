@@ -81,37 +81,19 @@ def get_emulator_path(
 ) -> Path:
     expected_name = f"trezor-emu-{gen}-{model}-{tag}"
     top_level_path = BINDIR / model / expected_name
-    nested_paths = sorted(
-        p for p in (BINDIR / model).glob(f"*/{expected_name}") if p.is_file()
-    )
 
-    if is_tropic_capable_model(model):
-        if nested_paths:
-            return nested_paths[0]
-        raise ValueError(
-            f"tropic-capable emulator executable not found: {BINDIR / model / '*/' / expected_name}"
-        )
-    else:
-        return top_level_path
+    return top_level_path
 
 
 def get_tags() -> dict[str, list[str]]:
     result = defaultdict(list)
     for model_dir in sorted(p for p in BINDIR.iterdir() if p.is_dir()):
         seen_tags = set()
-        model_name = model_dir.name
 
         top_level_files = sorted(
             p for p in model_dir.glob("trezor-emu-*") if p.is_file()
         )
-        nested_files = sorted(
-            p for p in model_dir.glob("*/trezor-emu-*") if p.is_file()
-        )
-
-        if is_tropic_capable_model(model_name):
-            files = nested_files
-        else:
-            files = [*top_level_files, *nested_files]
+        files = list(top_level_files)
 
         for f in files:
             try:
