@@ -13,7 +13,7 @@ pub use clibrary::compile::OutputType;
 pub use color_eyre::Result;
 pub use color_eyre::eyre::{WrapErr, bail, ensure};
 pub use dep_tracking::{
-    format_command_error, needs_rebuild, run_command, run_command_to_file, run_if_changed,
+    emit_command_output, needs_rebuild, run_command, run_command_to_file, run_if_changed,
 };
 pub use helpers::{cargo_target_dir, derive_output_path, emit_rerun_if_changed, is_rust_analyzer};
 pub use input_files::InputFiles;
