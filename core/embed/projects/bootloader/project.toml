@@ -47,6 +47,7 @@ elf_sections = [".header", ".flash", ".data"]
 
 # xtask build options mapped to the cargo features
 [build-options]
+asan              = { true = ["asan"] }
 bootloader-devel  = { true = ["bootloader_devel"] }
 dbg-console       = { vcp = ["dbg_console_vcp"], swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 debug-link        = { true = ["debuglink", "ui_debug"] }

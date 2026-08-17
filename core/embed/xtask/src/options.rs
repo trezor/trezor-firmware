@@ -227,7 +227,7 @@ build_options! {
 
     /// Enable Address Sanitizer (ASAN) instrumentation
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    opt asan: bool,
+    map asan: bool,
 
     /// Enable external app loading
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]

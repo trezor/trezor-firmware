@@ -55,6 +55,7 @@ secmon_header_sections = [".vendorheader", ".header"]
 
 # xtask build options mapped to the cargo features.
 [build-options]
+asan             = { true = ["asan"] }
 bootloader-devel = { true = ["bootloader_devel"] }
 dbg-console      = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 debug-link       = { true = ["debuglink", "ui_debug"] }
