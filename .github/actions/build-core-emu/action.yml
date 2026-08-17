@@ -14,10 +14,6 @@ inputs:
     description: 'Binary suffix appended to version, e.g. -arm'
     required: false
     default: ''
-  s3-subpath:
-    description: 'Optional extra S3 subpath under model path, e.g. T3W1_tropic_on/'
-    required: false
-    default: ''
   build-bootloader:
     description: 'Build bootloader before unix emulator build'
     required: false
@@ -51,12 +47,7 @@ runs:
     - name: Upload emulator binaries
       if: github.repository == 'trezor/trezor-firmware'
       run: |
-        SUBPATH="${{ inputs.s3-subpath }}"
-        SUBPATH="${SUBPATH#/}"
-        if [ -n "$SUBPATH" ] && [ "${SUBPATH%/}" = "$SUBPATH" ]; then
-          SUBPATH="${SUBPATH}/"
-        fi
-        aws s3 cp "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ inputs.model }}/${SUBPATH}"
+        aws s3 cp "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ inputs.model }}/"
       shell: sh
 
     - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
