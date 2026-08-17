@@ -1,5 +1,6 @@
 use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
+use std::sync::OnceLock;
 use std::{env, fs};
 
 use color_eyre::Result;
@@ -182,6 +183,33 @@ pub fn cargo_target_dir() -> Result<PathBuf> {
     };
 
     Ok(target_dir.to_path_buf())
+}
+
+/// Returns the `-fdiagnostics-color` flag to pass to `tool`, or None if the
+/// tool is not GCC- or Clang-like and would not understand it.
+///
+/// Compiler output is captured (see `emit_command_output`), so the compiler
+/// sees a pipe and disables color unless explicitly told otherwise.
+pub fn diagnostics_color_flag(tool: &cc::Tool) -> Option<&'static str> {
+    if !(tool.is_like_gnu() || tool.is_like_clang()) {
+        return None;
+    }
+
+    Some(if color_diagnostics_enabled() {
+        "-fdiagnostics-color=always"
+    } else {
+        "-fdiagnostics-color=never"
+    })
+}
+
+/// Decides whether compiler diagnostics should be colored.
+///
+/// The answer comes from `CARGO_TERM_COLOR`, resolved to `always`/`never` by
+/// `xtask` (see `forward_color_choice` there). A build script cannot detect
+/// the terminal itself - Cargo pipes its output - so under a bare
+/// `cargo build` the variable is unset and diagnostics stay plain.
+fn color_diagnostics_enabled() -> bool {
+    env::var_os("CARGO_TERM_COLOR").is_some_and(|v| v == "always")
 }
 
 /// Checks if the `IS_RUST_ANALYZER` environment variable is set,

@@ -1,4 +1,5 @@
-use std::process;
+use std::io::IsTerminal;
+use std::{env, io, process};
 
 use anyhow::{Result, bail};
 
@@ -106,6 +107,33 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
     })
 }
 
+/// Resolves `CARGO_TERM_COLOR` to `always`/`never` for the spawned Cargo.
+///
+/// Build scripts see only pipes (Cargo captures their output), so `xtask` -
+/// the last process attached to the real terminal - decides for them; `xbuild`
+/// reads the result to color C compiler diagnostics. An explicit
+/// `always`/`never` in the environment is left alone (the child inherits it).
+fn forward_color_choice(cmd: &mut process::Command) {
+    let explicit = env::var("CARGO_TERM_COLOR").is_ok_and(|v| v == "always" || v == "never");
+    if explicit {
+        return;
+    }
+
+    // https://no-color.org
+    let color = if env::var_os("NO_COLOR").is_some_and(|v| !v.is_empty()) {
+        "never"
+    // https://bixense.com/clicolors
+    } else if env::var_os("CLICOLOR_FORCE").is_some_and(|v| !v.is_empty() && v != "0") {
+        "always"
+    } else if io::stderr().is_terminal() {
+        "always"
+    } else {
+        "never"
+    };
+
+    cmd.env("CARGO_TERM_COLOR", color);
+}
+
 /// Configures a cargo command with the appropriate arguments and features.
 pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> Result<()> {
     let resolved = resolve_features(args)?;
@@ -171,6 +199,8 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
     if rebuild_std {
         cmd.arg("-Zbuild-std=core");
     }
+
+    forward_color_choice(cmd);
 
     Ok(())
 }
