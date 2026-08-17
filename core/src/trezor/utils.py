@@ -19,6 +19,7 @@ from trezorutils import (  # noqa: F401
     NOTIFY_UNLOCK,
     NOTIFY_UNPAIR,
     NOTIFY_WIPE,
+    PRODUCTION,
     SCM_REVISION_XOR2,
     UI_LAYOUT,
     USE_APP_LOADING,
