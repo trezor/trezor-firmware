@@ -116,6 +116,58 @@ void bg_copy_start_const_out_8(const uint8_t *src, uint8_t *dst, size_t size,
   HAL_DMA_Start_IT(&DMA_Handle, (uint32_t)src, (uint32_t)dst, data_to_send);
 }
 
+void bg_copy_start_const_out_16(const uint16_t *src, uint16_t *dst,
+                                size_t size, bg_copy_callback_t callback) {
+  uint32_t data_to_send = size > MAX_DATA_SIZE ? MAX_DATA_SIZE : size;
+  dma_transfer_remaining = size;
+  dma_data_transferred = 0;
+  data_src = (void *)src;
+  data_dst = (void *)dst;
+  bg_copy_callback = callback;
+
+  // setup DMA for data copy to constant output address, 16 bits at a time
+
+  __HAL_RCC_GPDMA1_CLK_ENABLE();
+
+  DMA_Handle.Instance = GPDMA1_Channel0;
+  DMA_Handle.XferCpltCallback = HAL_DMA_XferCpltCallback;
+  DMA_Handle.Init.Request = GPDMA1_REQUEST_HASH_IN;
+  DMA_Handle.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
+  DMA_Handle.Init.Direction = DMA_MEMORY_TO_MEMORY;
+  DMA_Handle.Init.SrcInc = DMA_SINC_INCREMENTED;
+  DMA_Handle.Init.DestInc = DMA_DINC_FIXED;
+  DMA_Handle.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_HALFWORD;
+  DMA_Handle.Init.DestDataWidth = DMA_DEST_DATAWIDTH_HALFWORD;
+  DMA_Handle.Init.Priority = DMA_LOW_PRIORITY_HIGH_WEIGHT;
+  DMA_Handle.Init.SrcBurstLength = 1;
+  DMA_Handle.Init.DestBurstLength = 1;
+  DMA_Handle.Init.TransferAllocatedPort =
+      DMA_SRC_ALLOCATED_PORT1 | DMA_DEST_ALLOCATED_PORT0;
+  DMA_Handle.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
+  DMA_Handle.Init.Mode = DMA_NORMAL;
+  HAL_DMA_Init(&DMA_Handle);
+
+  // No byte exchange here: the frame buffer already holds each pixel in the
+  // native uint16_t layout the panel expects over its 16-bit-wide bus - the
+  // CPU-loop path elsewhere (ISSUE_DATA_BYTE()/ISSUE_PIXEL_DATA() for
+  // DISPLAY_I8080_16BIT_DW) writes that very same value verbatim, with no
+  // swap - so a plain halfword-wide copy is correct as-is. Unlike the 8-bit
+  // MSB-first panel case, there's no byte-order mismatch to fix up here.
+  DMA_DataHandlingConfTypeDef data_handling = {0};
+  data_handling.DataExchange = DMA_EXCHANGE_NONE;
+  data_handling.DataAlignment = DMA_DATA_RIGHTALIGN_ZEROPADDED;
+  HAL_DMAEx_ConfigDataHandling(&DMA_Handle, &data_handling);
+
+  HAL_DMA_ConfigChannelAttributes(
+      &DMA_Handle, DMA_CHANNEL_PRIV | DMA_CHANNEL_SEC | DMA_CHANNEL_SRC_SEC |
+                       DMA_CHANNEL_DEST_SEC);
+
+  NVIC_SetPriority(GPDMA1_Channel0_IRQn, IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);
+
+  HAL_DMA_Start_IT(&DMA_Handle, (uint32_t)src, (uint32_t)dst, data_to_send);
+}
+
 void bg_copy_abort(void) {
   dma_transfer_remaining = 0;
   dma_data_transferred = 0;
