@@ -356,7 +356,12 @@
     "buttons__again": "Lagi",
     "buttons__allow": "Izinkan",
     "buttons__back": "Kembali",
-    "buttons__back_up": "Cadangkan",
+    "buttons__back_up": {
+      "Bolt": "Cadang- kan",
+      "Caesar": "Cadangkan",
+      "Delizia": "Cadangkan",
+      "Eckhart": "Cadangkan"
+    },
     "buttons__cancel": "Batalkan",
     "buttons__change": "Ubah",
     "buttons__check": "Periksa",
@@ -2020,7 +2025,12 @@
       "Delizia": "Periksa bagian {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Periksa cadangan dompet",
+    "reset__check_wallet_backup_title": {
+      "Bolt": "Periksa cadangan",
+      "Caesar": "Periksa cadangan dompet",
+      "Delizia": "Periksa cadangan",
+      "Eckhart": "Periksa cadangan dompet"
+    },
     "reset__continue_with_next_share": {
       "Bolt": "Lanjutkan dengan bagian berikutnya.",
       "Caesar": "Lanjutkan dengan bagian berikutnya.",
