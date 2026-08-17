@@ -7,8 +7,8 @@ use super::CLibrary;
 use crate::attrs::CompileAttrs;
 use crate::dep_tracking::{run_command, run_command_with_cc_dep};
 use crate::helpers::{
-    derive_output_path, ensure_parent_directory, join_paths_lexically, links_name, measure_time,
-    path_from_env,
+    derive_output_path, diagnostics_color_flag, ensure_parent_directory, join_paths_lexically,
+    links_name, measure_time, path_from_env,
 };
 use crate::parallel::run_parallel;
 
@@ -55,6 +55,10 @@ struct CompileArtifact {
 impl CompileUnit {
     fn compile(&self, tool: &cc::Tool) -> Result<CompileArtifact> {
         let mut cmd = tool.to_command();
+
+        if let Some(flag) = diagnostics_color_flag(tool) {
+            cmd.arg(flag);
+        }
 
         if let Some(attrs) = &self.attrs {
             for arg in attrs.to_compiler_args() {
@@ -216,10 +220,11 @@ impl CLibrary {
     ///
     /// Returns an error if preprocessing fails.
     pub fn preprocess_file(&self, input: &Path, output: &Path) -> Result<()> {
-        let mut cmd = self
-            .get_merged_attrs()
-            .get_configured_compiler()
-            .to_command();
+        let tool = self.get_merged_attrs().get_configured_compiler();
+        let mut cmd = tool.to_command();
+        if let Some(flag) = diagnostics_color_flag(&tool) {
+            cmd.arg(flag);
+        }
 
         cmd.arg("-E").arg(input).arg("-o").arg(output);
 
