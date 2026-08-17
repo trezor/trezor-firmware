@@ -23,8 +23,6 @@
 #include <rtl/sizedefs.h>
 #include "secret_layout.h"
 
-#include "bootloaders/bootloader_hashes.h"
-
 #define MODEL_NAME "Safe 7"
 #define MODEL_FULL_NAME "Trezor Safe 7"
 #define MODEL_INTERNAL_NAME "T3W1"
