@@ -17,7 +17,7 @@
 	modular_xtask_test modular_xtask_doctest modular_xtask_doc \
 	modular_xtask_audit modular_xtask_vet \
 	extapp_build_firmware extapp_build_emu \
-	extapp_unit_tests extapp_device_tests \
+	extapp_unit_tests extapp_test_emu extapp_test_emu_ui \
 	extapp_fmt extapp_fmt_check \
 	extapp_py_style extapp_py_style_check \
 	extapp_translation_style extapp_translation_style_check \
@@ -267,6 +267,17 @@ EXTAPP ?= tron
 EXTAPP_MODEL ?= t3w1
 EXTAPP_LANG ?= en
 
+# Same emulator-running setup as core/Makefile, so extapp device tests behave
+# the same way as core's own (see core/Makefile's own TREZOR_MODEL/EMU/etc.).
+TREZOR_MODEL ?= T3W1
+PYTEST_TIMEOUT ?= 500
+TEST_LANG ?= "en"
+
+EMU = core/emu.py
+EMU_LOG_FILE ?= tests/trezor.log
+EMU_TEST_ARGS = --disable-animation --headless --output=$(EMU_LOG_FILE) --temporary-profile
+EMU_TEST = $(EMU) $(EMU_TEST_ARGS) -c
+
 extapp_build_firmware: ## build an extapp's firmware (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
 	@echo [EXTAPP-BUILD-FIRMWARE]
 	@xtask modular build -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG)
@@ -279,9 +290,13 @@ extapp_unit_tests: ## run unit tests for an extapp (set EXTAPP/EXTAPP_MODEL/EXTA
 	@echo [EXTAPP-UNIT-TESTS]
 	@xtask modular unit-tests -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG)
 
-extapp_device_tests: ## run device tests for an extapp against a universal firmware emulator (set EXTAPP/EXTAPP_MODEL)
-	@echo [EXTAPP-DEVICE-TESTS]
-	@core/emu.py --disable-animation --headless --temporary-profile -c xtask modular device-tests -p $(EXTAPP) -m $(EXTAPP_MODEL) -e
+extapp_test_emu: ## run device tests for an extapp against a universal firmware emulator (set EXTAPP/EXTAPP_MODEL/TEST_LANG)
+	@echo [EXTAPP-TEST-EMU]
+	$(EMU_TEST) xtask modular device-tests -p $(EXTAPP) -m $(EXTAPP_MODEL) -e --lang $(TEST_LANG)
+
+extapp_test_emu_ui: ## run device tests with UI screenshot testing for an extapp against a universal firmware emulator (set EXTAPP/EXTAPP_MODEL/TEST_LANG)
+	@echo [EXTAPP-TEST-EMU-UI]
+	$(EMU_TEST) xtask modular device-tests -p $(EXTAPP) -m $(EXTAPP_MODEL) -e --ui --lang $(TEST_LANG)
 
 extapp_fmt: ## apply code style on all extapps
 	@echo [EXTAPP-RUSTFMT]
