@@ -363,6 +363,18 @@ pub struct DeviceTestsArgs {
     /// Test to run (defaults to all tests in the package)
     #[arg(long, short = 't', default_value = "")]
     pub test: String,
+
+    /// Run with UI screenshot testing enabled (passes `--ui=test
+    /// --ui-check-missing --do-master-diff` to pytest), independent of
+    /// `--emulator`, matching core's own `test_emu` vs `test_emu_ui` split.
+    #[arg(long)]
+    pub ui: bool,
+
+    /// Language the running Core device/emulator's own UI should use for
+    /// this test run -- independent of the language the app itself was
+    /// built with (see `xtask modular build --lang`).
+    #[arg(long, default_value = "en")]
+    pub lang: String,
 }
 
 /// Arguments for the Python-style and translation-style subcommands, which
