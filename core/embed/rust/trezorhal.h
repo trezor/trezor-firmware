@@ -9,10 +9,7 @@
 #include <io/usb.h>
 #include <rtl/secbool.h>
 #include <sys/flash.h>
-#include <sys/irq.h>
-#include <sys/logging.h>
 #include <sys/sysevent.h>
-#include <sys/systick.h>
 #include "rust_types.h"
 
 #ifdef USE_HW_JPEG_DECODER
@@ -21,10 +18,6 @@
 
 #ifdef USE_BLE
 #include <io/ble.h>
-#endif
-
-#ifdef USE_NRF
-#include <io/nrf.h>
 #endif
 
 #ifdef USE_BUTTON

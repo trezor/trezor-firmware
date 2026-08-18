@@ -325,8 +325,6 @@ fn generate_trezorhal_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("pm_hibernate")
             .allowlist_function("pm_charging_enable")
             .allowlist_function("pm_charging_disable")
-            // nrf
-            .allowlist_function("nrf_send_uart_data")
             // c_layout
             .allowlist_type("c_layout_t")
             .allowlist_function("bootloader_process_ble")
