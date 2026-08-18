@@ -2884,7 +2884,6 @@
     "stellar__sign_authorization": "Firmar autorización",
     "stellar__sign_with": "Firmar con",
     "stellar__source_account": "Cuenta origen",
-    "stellar__timebounds": "Ventana de tiempo",
     "stellar__token_info": "Info del token",
     "stellar__transaction_source": "Fuente de transacción",
     "stellar__transaction_source_diff_warning": "La fuente de la transacción no pertenece a este Trezor.",

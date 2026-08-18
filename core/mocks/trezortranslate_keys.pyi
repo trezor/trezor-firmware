@@ -985,7 +985,6 @@ class TR:
     stellar__sign_with: str = "Sign with"
     stellar__source_account: str = "Source account"
     stellar__spender: str = "Spender"
-    stellar__timebounds: str = "Timebounds"
     stellar__to: str = "To"
     stellar__token_contract: str = "Token contract"
     stellar__token_info: str = "Token info"
