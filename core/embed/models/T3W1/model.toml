@@ -1,5 +1,5 @@
 mcu = "stm32u5g"
-default_board = "revC"
+default_board = "lx200d2406a"
 secmon = true
 bootloader_header_tool = "headertool_pq"
 
@@ -28,5 +28,4 @@ features = [
     "thp",
     "touch_wakeup",
     "layout_eckhart",
-    "display_rgba8888",
 ]
