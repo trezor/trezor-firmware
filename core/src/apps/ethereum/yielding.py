@@ -84,6 +84,85 @@ CLAIM_DISPLAY_FORMAT = DisplayFormat(
 )
 
 
+def _is_merkl_xyz_claim(
+    func_sig: bytes, address_bytes: AnyBytes, chain_id: int
+) -> bool:
+    if func_sig != FUNC_SIG_CLAIM or address_bytes != _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR:
+        return False
+
+    # https://api.merkl.xyz/v4/chains
+    _MERKL_XYZ_CHAIN_IDS = (
+        1,  # Ethereum
+        10,  # Optimism
+        30,  # Rootstock
+        50,  # XDC
+        56,  # BNB Chain
+        100,  # Gnosis
+        122,  # Fuse
+        130,  # Unichain
+        137,  # Polygon
+        143,  # Monad
+        146,  # Sonic
+        151,  # Redbelly
+        169,  # Manta
+        196,  # XLayer
+        239,  # TAC
+        250,  # Fantom
+        252,  # Fraxtal
+        324,  # ZKsync Era
+        480,  # World Chain
+        592,  # Astar
+        747,  # Flow
+        988,  # Stable
+        999,  # HyperEVM
+        1101,  # Polygon zkEVM
+        1135,  # Lisk
+        1284,  # Moonbeam
+        1329,  # Sei
+        1672,  # Pharos
+        1868,  # Soneium
+        1923,  # Swell
+        2020,  # Ronin
+        4114,  # Citrea
+        4217,  # Tempo
+        4326,  # MegaETH
+        4663,  # Robinhood Chain
+        5000,  # Mantle
+        5464,  # Saga EVM
+        6900,  # Nibiru
+        8217,  # Kaia
+        8453,  # Base
+        9745,  # Plasma
+        13371,  # Immutable
+        16661,  # 0g ai
+        25363,  # Fluent
+        31612,  # Mezo
+        34443,  # Mode
+        42161,  # Arbitrum
+        42220,  # Celo
+        42793,  # Etherlink
+        43111,  # Hemi
+        43114,  # Avalanche
+        48900,  # Zircuit
+        57073,  # Ink
+        59144,  # Linea
+        60808,  # BOB
+        80094,  # Berachain
+        81457,  # Blast
+        98866,  # Plume
+        167000,  # Taiko
+        534352,  # Scroll
+        685689,  # Gensyn
+        747474,  # Katana
+        1440000,  # XRPL EVM
+        5064014,  # Ethereal
+        21000000,  # Corn
+        2046399126,  # Skale
+    )
+
+    return chain_id in _MERKL_XYZ_CHAIN_IDS
+
+
 async def get_approver(
     msg: MsgInSignTx,
     initial_data: AnyBytes,
@@ -131,10 +210,7 @@ async def get_approver(
             vault=vault,
             token=token,
         )
-    elif (
-        func_sig == FUNC_SIG_CLAIM
-        and address_bytes == _MERKL_XYZ_CLAIM_DISTRIBUTOR_ADDR
-    ):
+    elif _is_merkl_xyz_claim(func_sig, address_bytes, network.chain_id):
         handler = await _prepare_merkl_claim(
             calldata=calldata,
             msg=msg,
@@ -216,9 +292,7 @@ async def _prepare_merkl_claim(
     from .yielding_vaults import get_token_label
 
     if int.from_bytes(msg.value, "big") != 0:
-        raise DataError(
-            "Non-zero ETH transfer with claim rewards transaction not allowed"
-        )
+        raise DataError("ETH transfer with Merkl.xyz claim not allowed")
 
     defs = Definitions(network, {})
 
