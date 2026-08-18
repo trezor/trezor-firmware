@@ -8,8 +8,8 @@ use super::super::super::component::keyboard::common::{render_pending_marker, Mu
 use super::super::super::component::theme;
 use super::super::super::constant::SCREEN;
 use super::super::super::cshape;
-use crate::strutil::{ShortString, TString};
-use crate::ui::component::base::ComponentExt;
+use crate::strutil::TString;
+use crate::ui::component::base::{ComponentExt, FlowMsgText};
 use crate::ui::component::swipe_detect::SwipeConfig;
 use crate::ui::component::text::common::TextBox;
 use crate::ui::component::text::layout::{LayoutFit, LineBreaking};
@@ -24,7 +24,7 @@ use crate::ui::shape::{Bar, Renderer, Text, ToifImage};
 use crate::ui::util::{DisplayStyle, Pager};
 
 pub enum PassphraseKeyboardMsg {
-    Confirmed(ShortString),
+    Confirmed(FlowMsgText),
     Cancelled,
 }
 
@@ -356,12 +356,12 @@ impl Component for PassphraseKeyboard {
         // Confirm button was clicked, we're done.
         if let Some(ButtonMsg::Clicked) = self.confirm_empty_btn.event(ctx, event) {
             return Some(PassphraseKeyboardMsg::Confirmed(unwrap!(
-                ShortString::try_from(self.passphrase())
+                FlowMsgText::try_from(self.passphrase())
             )));
         }
         if let Some(ButtonMsg::Clicked) = self.confirm_btn.event(ctx, event) {
             return Some(PassphraseKeyboardMsg::Confirmed(unwrap!(
-                ShortString::try_from(self.passphrase())
+                FlowMsgText::try_from(self.passphrase())
             )));
         }
         if let Some(ButtonMsg::Clicked) = self.cancel_btn.event(ctx, event) {

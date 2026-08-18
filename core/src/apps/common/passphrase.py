@@ -5,7 +5,7 @@ import storage.device as storage_device
 from trezor import utils
 from trezor.wire import DataError
 
-_MAX_PASSPHRASE_LEN = const(50)
+_MAX_PASSPHRASE_LEN = const(128)
 
 if TYPE_CHECKING:
     from trezor.messages import ThpCreateNewSession
