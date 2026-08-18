@@ -27,9 +27,13 @@
 #include "rand.h"
 #include "sha2.h"
 
-#define NONCE_LIMIT 0xFFFFFFFFFFFFFFFFULL
+// The counter is restricted to 48 bits: 2^48 messages of at most 65535 bytes
+// produce at most 2^60 AES blocks under one key, well below the 2^64 blocks
+// per key that NIST SP 800-38D, Appendix B recommends as a limit.
+// https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=51288
+#define NONCE_LIMIT 0x1000000000000ULL  // 2^48
 #define NONCE_ARRAY_SIZE_BYTES 12
-#define NOISE_TAG_SIZE_BYTES 16
+#define NOISE_TAG_SIZE_BYTES NOISE_XXPSK3_TAG_SIZE
 
 /**
  * @brief translate nonce into 12 byte big-endian array with
@@ -205,7 +209,11 @@ static void generate_keypair(uint8_t (*private_key)[NOISE_XXPSK3_DHLEN],
 static bool encrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
                             size_t ad_len, const uint8_t *plaintext,
                             size_t plaintext_len, uint8_t *ciphertext) {
+  // A nonce at the limit is never used, so the counter below cannot wrap and no
+  // message is ever protected with a repeated nonce
   if (!cs->has_key || cs->nonce >= NONCE_LIMIT) {
+    cs->has_key = false;
+    memzero(cs->key, NOISE_XXPSK3_HASHLEN);
     return false;
   } else {
     // Encrypt with AEAD
@@ -227,7 +235,9 @@ static bool encrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
                             ciphertext + plaintext_len, NOISE_TAG_SIZE_BYTES,
                             &ctx) != RETURN_GOOD) {
       memzero(&ctx, sizeof(ctx));
-      memzero(ciphertext, plaintext_len + NOISE_TAG_SIZE_BYTES);
+      if (ciphertext != NULL) {
+        memzero(ciphertext, plaintext_len + NOISE_TAG_SIZE_BYTES);
+      }
       memzero(nonce_bytes, sizeof(nonce_bytes));
       return false;
     }
@@ -257,8 +267,9 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
                             size_t ad_len, const uint8_t *ciphertext,
                             size_t ciphertext_len, uint8_t *plaintext) {
   if (!cs->has_key || cs->nonce >= NONCE_LIMIT) {
+    cs->has_key = false;
+    memzero(cs->key, NOISE_XXPSK3_HASHLEN);
     return false;
-
   } else {
     if (ciphertext_len < NOISE_TAG_SIZE_BYTES) {
       // encrypted message is too short to contain the auth. tag
@@ -432,7 +443,8 @@ bool noise_xxpsk3_responder_handle_request1(
     goto cleanup;
   }
 
-  if (request_len < NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES) {
+  if (request_len < NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES ||
+      request_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE) {
     goto cleanup;
   }
 
@@ -485,6 +497,11 @@ bool noise_xxpsk3_responder_create_response1(
       rspn->handshake_stage != NOISE_XXPSK3_RSPN_READY_FOR_RESPONSE1 ||
       !state->has_remote_ephemeral_public ||
       (payload == NULL && payload_size != 0)) {
+    goto cleanup;
+  }
+
+  if (payload_size > NOISE_XXPSK3_MAX_MESSAGE_SIZE -
+                         (2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES)) {
     goto cleanup;
   }
 
@@ -557,7 +574,8 @@ bool noise_xxpsk3_responder_handle_request2(
   }
   // Check if message is large enough to contain the encrypted remote static
   // public key and at least empty encrypted payload (just NOISE_TAG)
-  if (request_len < (NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES)) {
+  if (request_len < (NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES) ||
+      request_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE) {
     goto cleanup;
   }
 
@@ -666,6 +684,11 @@ bool noise_xxpsk3_initiator_create_request1(
     goto cleanup;
   }
 
+  if (payload_size > NOISE_XXPSK3_MAX_MESSAGE_SIZE -
+                         (NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES)) {
+    goto cleanup;
+  }
+
   if (max_request_size <
       (NOISE_XXPSK3_DHLEN + payload_size + NOISE_TAG_SIZE_BYTES)) {
     goto cleanup;
@@ -711,7 +734,8 @@ bool noise_xxpsk3_initiator_handle_response1(
     goto cleanup;
   }
 
-  if (response_len < 2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES) {
+  if (response_len < 2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES ||
+      response_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE) {
     goto cleanup;
   }
 
@@ -786,6 +810,11 @@ bool noise_xxpsk3_initiator_create_request2(
     goto cleanup;
   }
 
+  if (payload_size > NOISE_XXPSK3_MAX_MESSAGE_SIZE -
+                         (NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES)) {
+    goto cleanup;
+  }
+
   if (max_request_size <
       (NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES + payload_size)) {
     goto cleanup;
@@ -838,6 +867,10 @@ bool noise_xxpsk3_send_message(noise_xxpsk3_transport_state_t *ts,
     return false;
   }
 
+  if (payload_size > NOISE_XXPSK3_MAX_PLAINTEXT_SIZE) {
+    return false;
+  }
+
   if (max_ciphertext_size < payload_size + NOISE_TAG_SIZE_BYTES) {
     return false;
   }
@@ -863,7 +896,11 @@ bool noise_xxpsk3_receive_message(noise_xxpsk3_transport_state_t *ts,
   if (ciphertext_size < NOISE_TAG_SIZE_BYTES) {
     return false;
   }
-  if (ciphertext_size > max_payload_size + NOISE_TAG_SIZE_BYTES) {
+  if (ciphertext_size > NOISE_XXPSK3_MAX_MESSAGE_SIZE) {
+    return false;
+  }
+  // The tag length check above rules out underflow
+  if (ciphertext_size - NOISE_TAG_SIZE_BYTES > max_payload_size) {
     return false;
   }
 
