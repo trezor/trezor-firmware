@@ -29,7 +29,6 @@
 
 #define NONCE_LIMIT 0xFFFFFFFFFFFFFFFFULL
 #define NONCE_ARRAY_SIZE_BYTES 12
-#define NOISE_TAG_SIZE_BYTES NOISE_XXPSK3_TAG_SIZE
 
 /**
  * @brief translate nonce into 12 byte big-endian array with
@@ -224,7 +223,7 @@ static void generate_keypair(uint8_t (*private_key)[NOISE_XXPSK3_DHLEN],
  * `plaintext_len`
  * @param plaintext_len size of the plaintext
  * @param ciphertext pointer to the ciphertext output of size defined
- * by `plaintext_len + NOISE_TAG_SIZE_BYTES`
+ * by `plaintext_len + NOISE_XXPSK3_TAG_SIZE`
  * @return bool;
  */
 static bool encrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
@@ -249,10 +248,10 @@ static bool encrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
 
     if (gcm_encrypt_message(nonce_bytes, NONCE_ARRAY_SIZE_BYTES, ad, ad_len,
                             ciphertext, plaintext_len,
-                            ciphertext + plaintext_len, NOISE_TAG_SIZE_BYTES,
+                            ciphertext + plaintext_len, NOISE_XXPSK3_TAG_SIZE,
                             &cs->gcm) != RETURN_GOOD) {
       if (ciphertext != NULL) {
-        memzero(ciphertext, plaintext_len + NOISE_TAG_SIZE_BYTES);
+        memzero(ciphertext, plaintext_len + NOISE_XXPSK3_TAG_SIZE);
       }
       memzero(nonce_bytes, sizeof(nonce_bytes));
       return false;
@@ -275,7 +274,7 @@ static bool encrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
  * by `ciphertext_len`
  * @param ciphertext_len size of the ciphertext
  * @param plaintext pointer to the plaintext output of size defined
- * by `ciphertext_len - NOISE_TAG_SIZE_BYTES`
+ * by `ciphertext_len - NOISE_XXPSK3_TAG_SIZE`
  * @return bool;
  */
 static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
@@ -285,7 +284,7 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
     return false;
 
   } else {
-    if (ciphertext_len < NOISE_TAG_SIZE_BYTES) {
+    if (ciphertext_len < NOISE_XXPSK3_TAG_SIZE) {
       // encrypted message is too short to contain the auth. tag
       return false;
     }
@@ -299,7 +298,7 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
     nonce_to_bytes(cs->nonce, &nonce_bytes);
 
     // decrypted message is shorter by auth. tag
-    size_t plaintext_len = ciphertext_len - NOISE_TAG_SIZE_BYTES;
+    size_t plaintext_len = ciphertext_len - NOISE_XXPSK3_TAG_SIZE;
 
     if (plaintext != NULL && ciphertext != NULL) {  // to suppress asan warning
       memcpy(plaintext, ciphertext, plaintext_len);
@@ -307,7 +306,7 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
 
     if (gcm_decrypt_message(nonce_bytes, NONCE_ARRAY_SIZE_BYTES, ad, ad_len,
                             plaintext, plaintext_len,
-                            ciphertext + plaintext_len, NOISE_TAG_SIZE_BYTES,
+                            ciphertext + plaintext_len, NOISE_XXPSK3_TAG_SIZE,
                             &cs->gcm) != RETURN_GOOD) {
       if (plaintext != NULL) {
         memzero(plaintext, plaintext_len);
@@ -331,7 +330,7 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
  * `plaintext_len`
  * @param plaintext_len size of the plaintext
  * @param ciphertext pointer to the ciphertext output of size defined by
- * `plaintext_len + NOISE_TAG_SIZE_BYTES`
+ * `plaintext_len + NOISE_XXPSK3_TAG_SIZE`
  * @return bool;
  */
 static bool ss_encrypt_and_hash(noise_xxpsk3_symmetric_state_t *ss,
@@ -343,7 +342,7 @@ static bool ss_encrypt_and_hash(noise_xxpsk3_symmetric_state_t *ss,
     return false;
   }
 
-  ss_mix_hash(ss, ciphertext, plaintext_len + NOISE_TAG_SIZE_BYTES);
+  ss_mix_hash(ss, ciphertext, plaintext_len + NOISE_XXPSK3_TAG_SIZE);
 
   return true;
 }
@@ -356,7 +355,7 @@ static bool ss_encrypt_and_hash(noise_xxpsk3_symmetric_state_t *ss,
  * `ciphertext_len`
  * @param ciphertext_len size of the ciphertext
  * @param plaintext pointer to the plaintext output of size defined by
- * `ciphertext_len - NOISE_TAG_SIZE_BYTES`
+ * `ciphertext_len - NOISE_XXPSK3_TAG_SIZE`
  * @return bool;
  */
 static bool ss_decrypt_and_hash(noise_xxpsk3_symmetric_state_t *ss,
@@ -453,7 +452,7 @@ bool noise_xxpsk3_responder_handle_request1(
     goto cleanup;
   }
 
-  if (request_len < NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES ||
+  if (request_len < NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE ||
       request_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE) {
     goto cleanup;
   }
@@ -471,7 +470,7 @@ bool noise_xxpsk3_responder_handle_request1(
 
   size_t ciphertext_len = request_len - NOISE_XXPSK3_DHLEN;
 
-  if (max_payload_size < ciphertext_len - NOISE_TAG_SIZE_BYTES) {
+  if (max_payload_size < ciphertext_len - NOISE_XXPSK3_TAG_SIZE) {
     goto cleanup;
   }
 
@@ -483,7 +482,7 @@ bool noise_xxpsk3_responder_handle_request1(
   }
 
   if (payload_size != NULL) {
-    *payload_size = ciphertext_len - NOISE_TAG_SIZE_BYTES;
+    *payload_size = ciphertext_len - NOISE_XXPSK3_TAG_SIZE;
   }
 
   rspn->handshake_stage = NOISE_XXPSK3_RSPN_READY_FOR_RESPONSE1;
@@ -511,13 +510,13 @@ bool noise_xxpsk3_responder_create_response1(
   }
 
   if (payload_size > NOISE_XXPSK3_MAX_MESSAGE_SIZE -
-                         (2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES)) {
+                         (2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_XXPSK3_TAG_SIZE)) {
     goto cleanup;
   }
 
   // Check if response buffer is large enough to hold the response
   if (max_response_size <
-      (2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES + payload_size)) {
+      (2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_XXPSK3_TAG_SIZE + payload_size)) {
     goto cleanup;
   }
 
@@ -550,12 +549,12 @@ bool noise_xxpsk3_responder_create_response1(
   // Encrypt payload
   if (!ss_encrypt_and_hash(
           &state->symmetric_state, payload, payload_size,
-          response + (2 * NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES))) {
+          response + (2 * NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE))) {
     goto cleanup;
   }
 
   *response_size =
-      2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES + payload_size;
+      2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_XXPSK3_TAG_SIZE + payload_size;
 
   rspn->handshake_stage = NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST2;
   return true;
@@ -584,13 +583,13 @@ bool noise_xxpsk3_responder_handle_request2(
   }
   // Check if message is large enough to contain the encrypted remote static
   // public key and at least empty encrypted payload (just NOISE_TAG)
-  if (request_len < (NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES) ||
+  if (request_len < (NOISE_XXPSK3_DHLEN + 2 * NOISE_XXPSK3_TAG_SIZE) ||
       request_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE) {
     goto cleanup;
   }
 
   if (!ss_decrypt_and_hash(&state->symmetric_state, request,
-                           NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES,
+                           NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE,
                            remote_static_public_key)) {
     goto cleanup;
   }
@@ -605,20 +604,20 @@ bool noise_xxpsk3_responder_handle_request2(
   ss_mix_key_and_hash(&state->symmetric_state, &state->psk);
 
   size_t ciphertext_len =
-      request_len - (NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES);
+      request_len - (NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE);
 
-  if (max_payload_size < ciphertext_len - NOISE_TAG_SIZE_BYTES) {
+  if (max_payload_size < ciphertext_len - NOISE_XXPSK3_TAG_SIZE) {
     goto cleanup;
   }
 
   if (!ss_decrypt_and_hash(&state->symmetric_state,
-                           request + NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES,
+                           request + NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE,
                            ciphertext_len, payload)) {
     goto cleanup;
   }
 
   if (payload_size != NULL) {
-    *payload_size = ciphertext_len - NOISE_TAG_SIZE_BYTES;
+    *payload_size = ciphertext_len - NOISE_XXPSK3_TAG_SIZE;
   }
 
   ss_ts_split(&state->symmetric_state, &rspn->transport_state, false);
@@ -695,12 +694,12 @@ bool noise_xxpsk3_initiator_create_request1(
   }
 
   if (payload_size > NOISE_XXPSK3_MAX_MESSAGE_SIZE -
-                         (NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES)) {
+                         (NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE)) {
     goto cleanup;
   }
 
   if (max_request_size <
-      (NOISE_XXPSK3_DHLEN + payload_size + NOISE_TAG_SIZE_BYTES)) {
+      (NOISE_XXPSK3_DHLEN + payload_size + NOISE_XXPSK3_TAG_SIZE)) {
     goto cleanup;
   }
 
@@ -720,7 +719,7 @@ bool noise_xxpsk3_initiator_create_request1(
     goto cleanup;
   }
 
-  *request_size = NOISE_XXPSK3_DHLEN + payload_size + NOISE_TAG_SIZE_BYTES;
+  *request_size = NOISE_XXPSK3_DHLEN + payload_size + NOISE_XXPSK3_TAG_SIZE;
   intr->handshake_stage = NOISE_XXPSK3_INTR_WAITING_FOR_RESPONSE1;
   return true;
 
@@ -744,7 +743,7 @@ bool noise_xxpsk3_initiator_handle_response1(
     goto cleanup;
   }
 
-  if (response_len < 2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES ||
+  if (response_len < 2 * NOISE_XXPSK3_DHLEN + 2 * NOISE_XXPSK3_TAG_SIZE ||
       response_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE) {
     goto cleanup;
   }
@@ -765,7 +764,7 @@ bool noise_xxpsk3_initiator_handle_response1(
 
   if (!ss_decrypt_and_hash(&state->symmetric_state,
                            response + NOISE_XXPSK3_DHLEN,
-                           NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES,
+                           NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE,
                            remote_static_public_key)) {
     goto cleanup;
   }
@@ -777,21 +776,21 @@ bool noise_xxpsk3_initiator_handle_response1(
   memzero(input_key_material, sizeof(input_key_material));
 
   size_t ciphertext_len =
-      response_len - (2 * NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES);
+      response_len - (2 * NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE);
 
-  if (max_payload_size < ciphertext_len - NOISE_TAG_SIZE_BYTES) {
+  if (max_payload_size < ciphertext_len - NOISE_XXPSK3_TAG_SIZE) {
     goto cleanup;
   }
 
   if (!ss_decrypt_and_hash(
           &state->symmetric_state,
-          response + (2 * NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES),
+          response + (2 * NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE),
           ciphertext_len, payload)) {
     goto cleanup;
   }
 
   if (payload_size != NULL) {
-    *payload_size = ciphertext_len - NOISE_TAG_SIZE_BYTES;
+    *payload_size = ciphertext_len - NOISE_XXPSK3_TAG_SIZE;
   }
 
   intr->handshake_stage = NOISE_XXPSK3_INTR_READY_FOR_REQUEST2;
@@ -821,12 +820,12 @@ bool noise_xxpsk3_initiator_create_request2(
   }
 
   if (payload_size > NOISE_XXPSK3_MAX_MESSAGE_SIZE -
-                         (NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES)) {
+                         (NOISE_XXPSK3_DHLEN + 2 * NOISE_XXPSK3_TAG_SIZE)) {
     goto cleanup;
   }
 
   if (max_request_size <
-      (NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES + payload_size)) {
+      (NOISE_XXPSK3_DHLEN + 2 * NOISE_XXPSK3_TAG_SIZE + payload_size)) {
     goto cleanup;
   }
 
@@ -847,11 +846,11 @@ bool noise_xxpsk3_initiator_create_request2(
 
   if (!ss_encrypt_and_hash(
           &state->symmetric_state, payload, payload_size,
-          request + NOISE_XXPSK3_DHLEN + NOISE_TAG_SIZE_BYTES)) {
+          request + NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE)) {
     goto cleanup;
   }
 
-  *request_size = NOISE_XXPSK3_DHLEN + 2 * NOISE_TAG_SIZE_BYTES + payload_size;
+  *request_size = NOISE_XXPSK3_DHLEN + 2 * NOISE_XXPSK3_TAG_SIZE + payload_size;
 
   ss_ts_split(&state->symmetric_state, &intr->transport_state, true);
   memzero(state, sizeof(noise_xxpsk3_handshake_state_t));
@@ -881,7 +880,7 @@ bool noise_xxpsk3_send_message(noise_xxpsk3_transport_state_t *ts,
     return false;
   }
 
-  if (max_ciphertext_size < payload_size + NOISE_TAG_SIZE_BYTES) {
+  if (max_ciphertext_size < payload_size + NOISE_XXPSK3_TAG_SIZE) {
     return false;
   }
 
@@ -890,7 +889,7 @@ bool noise_xxpsk3_send_message(noise_xxpsk3_transport_state_t *ts,
     return false;
   }
 
-  *ciphertext_size = payload_size + NOISE_TAG_SIZE_BYTES;
+  *ciphertext_size = payload_size + NOISE_XXPSK3_TAG_SIZE;
   return true;
 }
 
@@ -903,13 +902,13 @@ bool noise_xxpsk3_receive_message(noise_xxpsk3_transport_state_t *ts,
       payload_size == NULL) {
     return false;
   }
-  if (ciphertext_size < NOISE_TAG_SIZE_BYTES) {
+  if (ciphertext_size < NOISE_XXPSK3_TAG_SIZE) {
     return false;
   }
   if (ciphertext_size > NOISE_XXPSK3_MAX_MESSAGE_SIZE) {
     return false;
   }
-  if (ciphertext_size > max_payload_size + NOISE_TAG_SIZE_BYTES) {
+  if (ciphertext_size > max_payload_size + NOISE_XXPSK3_TAG_SIZE) {
     return false;
   }
 
@@ -918,6 +917,6 @@ bool noise_xxpsk3_receive_message(noise_xxpsk3_transport_state_t *ts,
     return false;
   }
 
-  *payload_size = ciphertext_size - NOISE_TAG_SIZE_BYTES;
+  *payload_size = ciphertext_size - NOISE_XXPSK3_TAG_SIZE;
   return true;
 }
