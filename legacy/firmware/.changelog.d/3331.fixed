@@ -1,0 +1,1 @@
+Show "not registered" message instead of a registration prompt when Firefox sends its dummy U2F register request.

@@ -70,6 +70,10 @@ static uint8_t u2f_out_packets[U2F_OUT_PKT_BUFFER_LEN][HID_RPT_SIZE];
 #define BOGUS_APPID_CHROME "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 #define BOGUS_APPID_FIREFOX \
   "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+// SHA-256 of "make.me.blink", used by Firefox's authenticator-rs.
+#define BOGUS_APPID_FIREFOX_BLINK                                    \
+  "\xe8\x45\x41\xea\xf2\x07\xf7\xd7\x5a\xd0\x51\x43\x47\x70\xf6\xd1" \
+  "\xa9\xbf\x62\xf7\xea\x9b\xe5\x14\xfd\x4e\x0c\xa8\x27\x2b\x1d\xeb"
 
 // Auth/Register request state machine
 typedef enum {
@@ -560,7 +564,8 @@ void u2f_register(const APDU *a) {
     // error: testof-user-presence is required
     buttonUpdate();  // Clear button state
     if (0 == memcmp(req->appId, BOGUS_APPID_CHROME, U2F_APPID_SIZE) ||
-        0 == memcmp(req->appId, BOGUS_APPID_FIREFOX, U2F_APPID_SIZE)) {
+        0 == memcmp(req->appId, BOGUS_APPID_FIREFOX, U2F_APPID_SIZE) ||
+        0 == memcmp(req->appId, BOGUS_APPID_FIREFOX_BLINK, U2F_APPID_SIZE)) {
       if (cid == last_good_auth_check_cid) {
         layoutDialog(&bmp_icon_warning, NULL, _("OK"), NULL,
                      _("Already registered."), NULL, _("This U2F device is"),
