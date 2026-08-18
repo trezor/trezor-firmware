@@ -128,6 +128,7 @@ test_rust: ## run rs unit tests
 	xtask test crypto
 	xtask test rtl
 	xtask test sys
+	xtask test io
 	xtask test trezor_lib
 	# TODO:
 	# xtask test all
