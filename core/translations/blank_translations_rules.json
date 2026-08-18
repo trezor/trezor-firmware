@@ -140,6 +140,7 @@
       "wipe_code__reenter_to_confirm",
       "wipe_code__title_check",
       "wipe_code__title_invalid",
+      "words__continue_with",
       "words__keep_it_safe",
       "words__title_check",
       "words__title_group",
@@ -182,6 +183,9 @@
     "exact": [
       "address__check_with_source",
       "backup__not_recommend",
+      "buttons__authenticate",
+      "buttons__disconnect",
+      "buttons__forget",
       "homescreen__backup_needed_info",
       "instructions__hold_to_continue",
       "instructions__menu_to_continue",
@@ -209,8 +213,11 @@
       "wipe_code__change",
       "wipe_code__remove",
       "wipe_code__title",
+      "words__bluetooth",
       "words__cancel_question",
+      "words__connected",
       "words__disabled",
+      "words__disconnected",
       "words__enabled",
       "words__made_in",
       "words__off",
@@ -226,6 +233,7 @@
       "addr_mismatch__key_mismatch",
       "backup__want_to_skip",
       "buttons__check_again",
+      "buttons__confirm_all",
       "reset__button_create",
       "reset__button_recover",
       "reset__continue_with_share_template",
@@ -257,6 +265,7 @@
   },
   {
     "exact": [
+      "ethereum__approve_revoke",
       "fido__title_reset",
       "passphrase__access_wallet",
       "passphrase__wallet",
@@ -311,6 +320,13 @@
   },
   {
     "exact": [
+      "buttons__show_next"
+    ],
+    "allowedLayouts": [ "Bolt", "Eckhart" ],
+    "description": "These are specific to Bolt and Eckhart layouts"
+  },
+  {
+    "exact": [
       "reset__check_backup_title"
     ],
     "allowedLayouts": [ "Caesar", "Eckhart" ],
@@ -320,6 +336,7 @@
     "exact": [
       "backup__new_wallet_created",
       "backup__title_skip",
+      "recovery__word_x_of_y_template",
       "reset__write_down_words_template"
     ],
     "allowedLayouts": [ "Caesar", "Delizia", "Eckhart" ],
@@ -329,9 +346,11 @@
     "exact": [
       "address__cancel_contact_support",
       "address__cancel_receive",
+      "address__public_key_confirmed",
       "backup__create_backup_to_prevent_loss",
       "backup__title_backup_completed",
       "buttons__continue_anyway",
+      "buttons__view_all_data",
       "fido__select_intro",
       "homescreen__set_default",
       "instructions__continue_in_app",
