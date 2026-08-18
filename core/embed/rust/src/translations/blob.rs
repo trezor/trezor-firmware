@@ -53,7 +53,7 @@ fn validate_offset_table(
     // sentinel needs to be at least data_len - MAX_TABLE_PADDING, and at most
     // data_len
     let sentinel: usize = prev.into();
-    if sentinel < data_len - MAX_TABLE_PADDING || sentinel > data_len {
+    if sentinel > data_len || data_len - sentinel > MAX_TABLE_PADDING {
         return Err(INVALID_TRANSLATIONS_BLOB);
     }
     Ok(())
@@ -681,5 +681,13 @@ mod tests {
             ENGLISH_CHUNK.get(i).expect("valid index");
         }
         assert_eq!(ENGLISH_CHUNK.get(ENGLISH_CHUNK.len()), None);
+    }
+
+    #[test]
+    fn test_empty_table() {
+        // A table with no entries (just the sentinel) and no data must be accepted,
+        // not panic. This is the case for a language that needs no extra font
+        // glyphs, e.g. Indonesian.
+        validate_offset_table(0, [0u16].into_iter()).expect("empty table is valid");
     }
 }

@@ -1,0 +1,3448 @@
+{
+  "fonts": {
+    "Bolt": {},
+    "Caesar": {},
+    "Delizia": {},
+    "Eckhart": {}
+  },
+  "header": {
+    "language": "id-ID",
+    "version": "2.12.5"
+  },
+  "translations": {
+    "addr_mismatch__contact_support_at": "Hubungi Dukungan Trezor di",
+    "addr_mismatch__key_mismatch": {
+      "Bolt": "Kunci tidak cocok?",
+      "Caesar": "Kunci tidak cocok?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "addr_mismatch__mismatch": "Alamat tidak cocok?",
+    "addr_mismatch__support_url": "trezor.io/support",
+    "addr_mismatch__wrong_derivation_path": "Derivation path akun terpilih tidak benar.",
+    "addr_mismatch__xpub_mismatch": "XPUB tidak cocok?",
+    "address__cancel_contact_support": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Jika alamat penerimaan tidak cocok, hubungi Dukungan Trezor di trezor.io/support.",
+      "Eckhart": "Jika alamat penerimaan tidak cocok, hubungi Dukungan Trezor di trezor.io/support."
+    },
+    "address__cancel_receive": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Batalkan terima",
+      "Eckhart": "Batalkan terima?"
+    },
+    "address__check_with_source": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Periksa alamat dengan sumber."
+    },
+    "address__coin_address_template": "Alamat {0}",
+    "address__confirmed": {
+      "Bolt": "Alamat penerimaan dikonfirmasi",
+      "Caesar": "Alamat penerimaan dikonfirmasi",
+      "Delizia": "Alamat penerimaan dikonfirmasi.",
+      "Eckhart": "Alamat penerimaan dikonfirmasi."
+    },
+    "address__public_key": "Kunci publik",
+    "address__public_key_confirmed": "Kunci publik dikonfirmasi",
+    "address__qr_code": "Kode QR",
+    "address__title_cosigner": "Penjamin",
+    "address__title_cosigner_template": "Penjamin {0}",
+    "address__title_provider_address": "Alamat penyedia",
+    "address__title_receive_address": "Alamat penerimaan",
+    "address__title_refund_address": "Alamat refund",
+    "address__title_yours": "Milik Anda",
+    "address__warning_not_yours": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ini BUKAN alamat Anda"
+    },
+    "address__xpub": {
+      "Bolt": "XPUB",
+      "Caesar": "XPUB",
+      "Delizia": "XPUB",
+      "Eckhart": "Kunci publik (XPUB)"
+    },
+    "address_details__account_info": "Info akun",
+    "address_details__derivation_path": "Derivation path",
+    "address_details__derivation_path_colon": "Derivation path:",
+    "address_details__title_receive_address": "Alamat penerimaan",
+    "authenticate__confirm_template": "Izinkan aplikasi terhubung memeriksa keaslian {0} Anda?",
+    "authenticate__header": "Autentikasi perangkat",
+    "auto_lock__change_template": "Kunci Trezor otomatis setelah {0} tidak aktif?",
+    "auto_lock__description": "Atur waktu sebelum Trezor Anda mengunci otomatis.",
+    "auto_lock__on_battery": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "dengan baterai / wireless charger"
+    },
+    "auto_lock__on_usb": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "terhubung ke USB"
+    },
+    "auto_lock__title": {
+      "Bolt": "Jeda kunci otomatis",
+      "Caesar": "Jeda kunci otomatis",
+      "Delizia": "Jeda kunci otomatis",
+      "Eckhart": "Kunci otomatis"
+    },
+    "backup__can_back_up_anytime": {
+      "Bolt": "Cadangkan Trezor sekali saja, kapan saja.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "backup__create_backup_to_prevent_loss": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Buat cadangan agar tidak kehilangan akses ke dana Anda",
+      "Eckhart": "Buat dompet cadangan agar tidak kehilangan akses ke dana Anda."
+    },
+    "backup__info_multi_share_backup": "Cadangan dompet Anda berisi beberapa daftar kata dengan urutan tertentu (bagian).",
+    "backup__info_single_share_backup": "Cadangan dompet Anda berisi {0} kata dengan urutan tertentu.",
+    "backup__it_should_be_backed_up": {
+      "Bolt": "Anda harus mencadangkan dompet baru Anda sekarang.",
+      "Caesar": "",
+      "Delizia": "Anda harus mencadangkan dompet baru Anda sekarang.",
+      "Eckhart": "Cadangkan dompet baru Anda sekarang."
+    },
+    "backup__it_should_be_backed_up_now": {
+      "Bolt": "",
+      "Caesar": "Perlu dicadangkan sekarang!",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "backup__new_wallet_created": {
+      "Bolt": "",
+      "Caesar": "Dompet dibuat.\n",
+      "Delizia": "Dompet dibuat.\n",
+      "Eckhart": "Dompet dibuat.\n"
+    },
+    "backup__new_wallet_successfully_created": {
+      "Bolt": "Dompet berhasil dibuat.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "backup__not_recommend": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Kami tidak menyarankan melewati pencadangan dompet."
+    },
+    "backup__recover_anytime": {
+      "Bolt": "",
+      "Caesar": "Anda dapat menggunakan cadangan untuk memulihkan dompet kapan saja.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "backup__title_backup_completed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Pencadangan dompet selesai.",
+      "Eckhart": "Pencadangan dompet selesai."
+    },
+    "backup__title_backup_wallet": {
+      "Bolt": "",
+      "Caesar": "Cadangkan dompet",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "backup__title_create_wallet_backup": "Buat cadangan dompet",
+    "backup__title_skip": {
+      "Bolt": "",
+      "Caesar": "Lewati pencadangan",
+      "Delizia": "Lewati pencadangan",
+      "Eckhart": "Lewati pencadangan"
+    },
+    "backup__type_create": "",
+    "backup__type_have": "",
+    "backup__type_n4w1": "",
+    "backup__type_wordlist": "",
+    "backup__want_to_skip": {
+      "Bolt": "Anda yakin ingin melewati pencadangan?",
+      "Caesar": "Anda yakin ingin melewati pencadangan?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "bitcoin__commitment_data": "Data komitmen",
+    "bitcoin__confirm_locktime": "Konfirmasi batas waktu transaksi",
+    "bitcoin__create_proof_of_ownership": "Apakah Anda ingin membuat bukti kepemilikan?",
+    "bitcoin__high_mining_fee_template": "Biaya penambangan\n{0}\nsedang tinggi.",
+    "bitcoin__locktime_no_effect": "Batas waktu transaksi sudah diatur, tetapi tidak akan berpengaruh.",
+    "bitcoin__locktime_set_to": "Batas waktu transaksi diatur ke",
+    "bitcoin__locktime_set_to_blockheight": "Batas waktu transaksi diatur ke tinggi blok",
+    "bitcoin__lot_of_change_outputs": "Banyak output kembalian.",
+    "bitcoin__multiple_accounts": "Banyak akun",
+    "bitcoin__new_fee_rate": "Kurs biaya baru",
+    "bitcoin__simple_send_of": "Kirim sederhana sebesar",
+    "bitcoin__ticket_amount": "Jumlah tiket",
+    "bitcoin__title_confirm_details": "Konfirmasi detail",
+    "bitcoin__title_finalize_transaction": "Finalisasi transaksi",
+    "bitcoin__title_high_mining_fee": "Biaya penambangan tinggi",
+    "bitcoin__title_meld_transaction": "Gabungkan transaksi",
+    "bitcoin__title_modify_amount": "Modifikasi jumlah",
+    "bitcoin__title_payjoin": "Payjoin",
+    "bitcoin__title_proof_of_ownership": "Bukti kepemilikan",
+    "bitcoin__title_purchase_ticket": "Beli tiket",
+    "bitcoin__title_update_transaction": "Perbarui transaksi",
+    "bitcoin__unknown_path": "Jalur tidak dikenal",
+    "bitcoin__unknown_transaction": "Transaksi tidak dikenal",
+    "bitcoin__unusually_high_fee": "Biaya sedang tinggi.",
+    "bitcoin__unverified_external_inputs": "Transaksi berisi input eksternal yang belum diverifikasi.",
+    "bitcoin__valid_signature": "Tanda tangan valid.",
+    "bitcoin__voting_rights": "Hak voting kepada",
+    "ble__apps_connected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Aplikasi terhubung"
+    },
+    "ble__disable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Nonaktifkan Bluetooth?"
+    },
+    "ble__enable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Aktifkan Bluetooth?"
+    },
+    "ble__forget_all": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Lupakan semua"
+    },
+    "ble__forget_all_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ini akan dihapus, dan perlu memasangkannya lagi sebelum digunakan."
+    },
+    "ble__forget_all_devices": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Lupakan semua perangkat?"
+    },
+    "ble__forget_all_success": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Semua perangkat dihapus."
+    },
+    "ble__forget_this_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ini akan dihapus, dan perlu memasangkannya lagi sebelum digunakan."
+    },
+    "ble__forget_this_device": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Lupakan perangkat ini?"
+    },
+    "ble__forget_this_success": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Perangkat dihapus."
+    },
+    "ble__host_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Info koneksi"
+    },
+    "ble__limit_reached": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Batas perangkat terpasang sudah maksimal"
+    },
+    "ble__mac_address": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Alamat MAC"
+    },
+    "ble__manage_paired": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Kelola perangkat tersambung"
+    },
+    "ble__must_be_enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bluetooth harus diaktifkan untuk memasangkan perangkat baru."
+    },
+    "ble__pair_new": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Pasang perangkat baru"
+    },
+    "ble__pair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Pasang & Hubungkan"
+    },
+    "ble__pairing_match": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Kode pemasangan cocok?"
+    },
+    "ble__pairing_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Pemasangan Bluetooth"
+    },
+    "ble__unpair_all": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Putuskan semua perangkat bluetooth"
+    },
+    "ble__unpair_current": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Putuskan perangkat terhubung"
+    },
+    "ble__unpair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Putuskan"
+    },
+    "ble__version": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Versi Bluetooth"
+    },
+    "ble__waiting_for_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Menunggu koneksi..."
+    },
+    "brightness__change_title": "Ubah kecerahan layar",
+    "brightness__changed_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Kecerahan tampilan diubah.",
+      "Eckhart": ""
+    },
+    "brightness__title": "Kecerahan tampilan",
+    "buttons__abort": "Batalkan",
+    "buttons__access": "Akses",
+    "buttons__again": "Lagi",
+    "buttons__allow": "Izinkan",
+    "buttons__back": "Kembali",
+    "buttons__back_up": {
+      "Bolt": "Cadang- kan",
+      "Caesar": "Cadangkan",
+      "Delizia": "Cadangkan",
+      "Eckhart": "Cadangkan"
+    },
+    "buttons__cancel": "Batalkan",
+    "buttons__change": "Ubah",
+    "buttons__check": "Periksa",
+    "buttons__check_again": {
+      "Bolt": "Periksa lagi",
+      "Caesar": "Periksa lagi",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "buttons__close": "Tutup",
+    "buttons__confirm": "Konfirmasi",
+    "buttons__continue": "Lanjutkan",
+    "buttons__details": "Detail",
+    "buttons__enable": "Aktikan",
+    "buttons__enter_share": "Masukkan bagian",
+    "buttons__export": "Ekspor",
+    "buttons__finish": "Selesai",
+    "buttons__format": "Format",
+    "buttons__go_back": "Kembali",
+    "buttons__hold_to_confirm": "Tahan untuk konfirmasi",
+    "buttons__info": "Info",
+    "buttons__install": "Instal",
+    "buttons__more_info": "Info lainnya",
+    "buttons__ok_i_understand": "Baik, saya mengerti",
+    "buttons__purchase": "Beli",
+    "buttons__quit": "Keluar",
+    "buttons__restart": "Mulai ulang",
+    "buttons__retry": "Coba lagi",
+    "buttons__select": "Pilih",
+    "buttons__set": "Atur",
+    "buttons__show_all": "Lihat semua",
+    "buttons__show_details": "Lihat detail",
+    "buttons__show_words": "Lihat kata",
+    "buttons__skip": "Lewati",
+    "buttons__try_again": "Coba lagi",
+    "buttons__turn_off": "Nonaktifkan",
+    "buttons__turn_on": "Aktifkan",
+    "buttons__view": "Lihat",
+    "buttons__view_all_data": "Lihat semua data",
+    "cardano__addr_base": "Base",
+    "cardano__addr_enterprise": "Enterprise",
+    "cardano__addr_legacy": "Format lama",
+    "cardano__addr_pointer": "Pointer",
+    "cardano__addr_reward": "Imbalan",
+    "cardano__address_no_staking": "Alamat - tanpa imbalan staking.",
+    "cardano__always_abstain": "Selalu Abstain",
+    "cardano__always_no_confidence": "Selalu No Confidence",
+    "cardano__amount_burned_decimals_unknown": "Jumlah dibakar (desimal tidak diketahui)",
+    "cardano__amount_minted_decimals_unknown": "Jumlah di-mint (desimal tidak diketahui)",
+    "cardano__amount_sent_decimals_unknown": "Jumlah dikirim (desimal tidak diketahui)",
+    "cardano__anonymous_pool": "Pool tidak memiliki metadata (pool anonim)",
+    "cardano__asset_fingerprint": "Sidik jari aset",
+    "cardano__auxiliary_data_hash": "Hash data tambahan",
+    "cardano__block": "Blok",
+    "cardano__catalyst": "Katalis",
+    "cardano__certificate": "Sertifikat",
+    "cardano__change_output": "Ubah output",
+    "cardano__check_all_items": "Periksa semua item secara saksama.",
+    "cardano__choose_level_of_details": "Pilih tingkat detail:",
+    "cardano__collateral_input_id": "ID input jaminan",
+    "cardano__collateral_input_index": "Indeks input jaminan",
+    "cardano__collateral_output_contains_tokens": "Output pengembalian jaminan berisi token.",
+    "cardano__collateral_return": "Pengembalian jaminan",
+    "cardano__confirm_message": "Konfirmasi pesan",
+    "cardano__confirm_signing_stake_pool": "Konfirmasi penandatanganan pendaftaran stake pool sebagai pemilik.",
+    "cardano__confirm_transaction": "Konfirmasi transaksi",
+    "cardano__confirming_a_multisig_transaction": "Mengonfirmasi transaksi multisig.",
+    "cardano__confirming_a_plutus_transaction": "Mengonfirmasi transaksi Plutus.",
+    "cardano__confirming_pool_registration": "Mengofirmasi pendaftaran pool sebagai pemilik.",
+    "cardano__confirming_transaction": "Mengonfirmasi transaksi.",
+    "cardano__cost": "Biaya",
+    "cardano__credential_intro_template": {
+      "Bolt": "Kredensial {0} adalah {1}",
+      "Caesar": "Kredensial {0} adalah {1}",
+      "Delizia": "Kredensial {0} adalah {1}:",
+      "Eckhart": "Kredensial {0} adalah {1}:"
+    },
+    "cardano__credential_mismatch": "Kredensial tidak cocok dengan kredensial pembayaran.",
+    "cardano__datum_hash": "Hash datum",
+    "cardano__delegating_to": "Mendelegasikan ke",
+    "cardano__delegating_to_key_hash": "Mendelegasikan ke hash kunci",
+    "cardano__delegating_to_script": "Mendelegasikan ke skrip",
+    "cardano__empty_message": "Pesan kosong",
+    "cardano__for_account_and_index_template": "Untuk akun {0} dan indeks {1}",
+    "cardano__for_account_template": "Untuk akun {0}",
+    "cardano__for_key_hash": "Untuk hash kunci",
+    "cardano__for_script": "Untuk skrip",
+    "cardano__inline_datum": "Datum inline",
+    "cardano__input_id": "ID input",
+    "cardano__input_index": "Indeks input",
+    "cardano__intro_text_change": "Alamat berikut adalah alamat kembalian. Alamatnya",
+    "cardano__intro_text_owned_by_device": "Alamat berikut dimiliki oleh perangkat ini. Alamatnya",
+    "cardano__intro_text_registration_payment": "Alamat pembayaran registrasi vote key berikut dimiliki perangkat ini. Alamatnya",
+    "cardano__key_hash": "hash kunci",
+    "cardano__key_path": "jalur kunci",
+    "cardano__margin": "Margin",
+    "cardano__message_hex": "Heks pesan",
+    "cardano__message_text": "Teks pesan",
+    "cardano__multisig_path": "jalur multi-sig",
+    "cardano__nested_scripts_template": "Mengandung {0} skrip bertingkat.",
+    "cardano__network": "Jaringan",
+    "cardano__no_output_tx": "Transaksi tidak memiliki output, jaringan tidak dapat diverifikasi.",
+    "cardano__nonce": "Nonce",
+    "cardano__other": "Lainnya",
+    "cardano__path": "jalur",
+    "cardano__pledge": "Pledge",
+    "cardano__pointer": "pointer",
+    "cardano__policy_id": "ID kebijakan",
+    "cardano__pool_metadata_hash": "Hash metadata pool",
+    "cardano__pool_metadata_url": "URL metadata pool",
+    "cardano__pool_owner": "Pemilik pool",
+    "cardano__pool_reward_account": "Akun imbalan pool",
+    "cardano__reference_input_id": "ID input referensi",
+    "cardano__reference_input_index": "Indeks input referensi",
+    "cardano__reference_script": "Skrip referensi",
+    "cardano__required_signer": "Penandatangan wajib",
+    "cardano__reward": "Imbalan",
+    "cardano__reward_address": "Alamat adalah alamat imbalan.",
+    "cardano__reward_eligibility_warning": "Peringatan: Bukan alamat pembayaran, tidak memenuhi syarat untuk menerima imbalan.",
+    "cardano__rewards_go_to": "Imbalan masuk ke",
+    "cardano__script": "skrip",
+    "cardano__script_all": "semua",
+    "cardano__script_any": "apapun",
+    "cardano__script_data_hash": "Hash data skrip",
+    "cardano__script_hash": "Hash skrip",
+    "cardano__script_invalid_before": "tidak valid sebelum",
+    "cardano__script_invalid_hereafter": "tidak valid setelah",
+    "cardano__script_key": "kunci",
+    "cardano__script_n_of_k": "N dari K",
+    "cardano__script_reward": "Imbalan skrip",
+    "cardano__sending": "Mengirim",
+    "cardano__show_simple": "Lihat Sederhana",
+    "cardano__sign_message_path_template": "Tandatangani pesan dengan {0}",
+    "cardano__sign_tx_path_template": "Tandatangani transaksi dengan {0}",
+    "cardano__stake_delegation": "Delegasi staking",
+    "cardano__stake_deregistration": "Pembatalan registrasi kunci staking",
+    "cardano__stake_pool_registration": "Registrasi pool staking",
+    "cardano__stake_pool_registration_pool_id": "Registrasi pool staking\nID pool",
+    "cardano__stake_registration": "Registrasi kunci staking",
+    "cardano__staking_key_for_account": "Kunci staking untuk akun",
+    "cardano__to_pool": "Ke pool",
+    "cardano__token_minting_path": "jalur mint token",
+    "cardano__total_collateral": "Jaminan total",
+    "cardano__transaction": "Transaksi",
+    "cardano__transaction_contains_minting_or_burning": "Transaksi berisi mint atau pembakaran token.",
+    "cardano__transaction_contains_script_address_no_datum": "Output transaksi berikut berisi alamat skrip, tetapi tidak berisi datum.",
+    "cardano__transaction_id": "ID transaksi",
+    "cardano__transaction_no_collateral_input": "Transaksi tidak berisi input jaminan. Skrip Plutus tidak dapat dijalankan.",
+    "cardano__transaction_no_script_data_hash": "Transaksi tidak berisi hash data skrip. Skrip Plutus tidak dapat dijalankan.",
+    "cardano__transaction_output_contains_tokens": "Output transaksi berikut berisi token.",
+    "cardano__ttl": "TTL",
+    "cardano__unknown_collateral_amount": "Jumlah jaminan tidak diketahui.",
+    "cardano__unusual_path": "Jalur tidak biasa.",
+    "cardano__valid_since": "Valid sejak",
+    "cardano__verify_script": "Verifikasi skrip",
+    "cardano__vote_delegation": "Delegasi voting",
+    "cardano__vote_key_registration": "Pendaftaran kunci voting (CIP-36)",
+    "cardano__vote_public_key": "Kunci publik voting",
+    "cardano__voting_purpose": "Tujuan voting",
+    "cardano__warning": "Peringatan",
+    "cardano__weight": "Bobot",
+    "cardano__withdrawal_for_address_template": "Konfirmasi penarikan untuk alamat {0}",
+    "cardano__x_of_y_signatures_template": "Membutuhkan {0} dari {1} tandatangan.",
+    "coinjoin__access_account": "Akses akun coinjoin Anda?",
+    "coinjoin__do_not_disconnect": "Jangan lepaskan Trezor Anda!",
+    "coinjoin__max_coordinator_fee_pct": "",
+    "coinjoin__max_mining_fee": "Maks. biaya penambangan",
+    "coinjoin__max_rounds": "Maks. putaran",
+    "coinjoin__title": "Otorisasi coinjoin",
+    "coinjoin__title_progress": {
+      "Bolt": "Coinjoin berlangsung",
+      "Caesar": "Coinjoin berlangsung",
+      "Delizia": "Coinjoin berlangsung",
+      "Eckhart": "Coinjoin berlangsung..."
+    },
+    "coinjoin__waiting_for_others": "Menunggu yang lain",
+    "confirm_total__fee_rate": "Kurs biaya",
+    "confirm_total__title_fee": "Info biaya",
+    "confirm_total__title_sending_from": {
+      "Bolt": "",
+      "Caesar": "Mengirim dari",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "debug__loading_seed": "Memuat seed",
+    "debug__loading_seed_not_recommended": "Mengimpor seed privat tidak disarankan.",
+    "device_name__change_template": "Ubah nama perangkat ke {0}?",
+    "device_name__enter": "Masukkan nama perangkat",
+    "device_name__title": "Nama perangkat",
+    "entropy__send": "Anda yakin ingin mengirim entropi?",
+    "entropy__title_confirm": "Konfirmasi entropi",
+    "eos__about_to_sign_template": {
+      "Bolt": "Anda akan menandatangani {0}.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__action_name": {
+      "Bolt": "Nama Tindakan",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__arbitrary_data": {
+      "Bolt": "Data arbitrer",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__buy_ram": {
+      "Bolt": "Beli RAM",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__bytes": {
+      "Bolt": "Byte",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__cancel_vote": {
+      "Bolt": "Batalkan suara",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__checksum": {
+      "Bolt": "Checksum",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__code": {
+      "Bolt": "Kode",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__contract": {
+      "Bolt": "Kontrak",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__cpu": {
+      "Bolt": "CPU",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__creator": {
+      "Bolt": "Pembuat",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__delegate": {
+      "Bolt": "Delegasikan",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__delete_auth": {
+      "Bolt": "Hapus otorisasi",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__from": {
+      "Bolt": "Dari",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__link_auth": {
+      "Bolt": "Tautkan otorisasi",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__memo": {
+      "Bolt": "Memo",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__name": {
+      "Bolt": "Nama",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__net": {
+      "Bolt": "NET",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__new_account": {
+      "Bolt": "Akun baru",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__owner": {
+      "Bolt": "Pemilik",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__parent": {
+      "Bolt": "Induk",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__payer": {
+      "Bolt": "Pembayar",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__permission": {
+      "Bolt": "Izin",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__proxy": {
+      "Bolt": "Proxy",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__receiver": {
+      "Bolt": "Penerima",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__refund": {
+      "Bolt": "Refund",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__requirement": {
+      "Bolt": "Persyaratan",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__sell_ram": {
+      "Bolt": "Jual RAM",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__sender": {
+      "Bolt": "Pengirim",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__threshold": {
+      "Bolt": "Ambang batas",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__to": {
+      "Bolt": "Ke",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__transfer": {
+      "Bolt": "Transfer",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__type": {
+      "Bolt": "Jenis",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__undelegate": {
+      "Bolt": "Batalkan delegasi",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__unlink_auth": {
+      "Bolt": "Batalkan tautan otorisasi",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__update_auth": {
+      "Bolt": "Pebarui otorisasi",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__vote_for_producers": {
+      "Bolt": "Pilih produsen",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__vote_for_proxy": {
+      "Bolt": "Pilih proxy",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__voter": {
+      "Bolt": "Pemilih",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "ethereum__all_evms": "Semua EVM",
+    "ethereum__approve": "Setujui",
+    "ethereum__approve_amount_allowance": "Batas jumlah",
+    "ethereum__approve_chain_id": "ID Jaringan",
+    "ethereum__approve_intro": "Tinjau detail untuk menyetujui penggunaan token.",
+    "ethereum__approve_intro_revoke": "Tinjau detail untuk cabut persetujuan token.",
+    "ethereum__approve_intro_title": "Persetujuan token",
+    "ethereum__approve_intro_title_revoke": "Pencabutan akses token",
+    "ethereum__approve_revoke": "Cabut akses",
+    "ethereum__approve_revoke_from": "Cabut akses dari",
+    "ethereum__approve_to": "Setujui untuk",
+    "ethereum__approve_unlimited_template": {
+      "Bolt": "Menyetujui jumlah {0} tanpa batas",
+      "Caesar": "Menyetujui jumlah {0} tanpa batas",
+      "Delizia": "Menyetujui jumlah {0} tanpa batas.",
+      "Eckhart": "Menyetujui jumlah {0} tanpa batas."
+    },
+    "ethereum__auth_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Otorisasi EIP-7702 ditandatangani.",
+      "Eckhart": "Otorisasi EIP-7702 ditandatangani."
+    },
+    "ethereum__auth_title": "Otorisasi EIP-7702",
+    "ethereum__auth_warn": "Otorisasi akun Anda ke kontrak pihak ketiga dengan EIP-7702?",
+    "ethereum__calldata_digest": "Digest ERC-8213",
+    "ethereum__calldata_suffix": "Sufiks calldata",
+    "ethereum__confirm_contract": "Konfirmasi kontrak",
+    "ethereum__contract_address": "Alamat kontrak penyedia",
+    "ethereum__data_size_template": "Ukuran: {0} byte",
+    "ethereum__delegate_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Delegasi EIP-7702 ditandatangani.",
+      "Eckhart": "Delegasi EIP-7702 ditandatangani."
+    },
+    "ethereum__delegate_title": "Delegasi EIP-7702",
+    "ethereum__delegate_warn": "Delegasikan akun Anda ke kontrak pihak ketiga?",
+    "ethereum__delegating": "Mendelegasikan",
+    "ethereum__deposit_amount": "Jumlah deposit",
+    "ethereum__deposit_to": "Deposit ke",
+    "ethereum__eip_712_empty_domain": "",
+    "ethereum__gas_limit": "Batas gas",
+    "ethereum__gas_price": "Harga gas",
+    "ethereum__interaction_contract": {
+      "Bolt": "Kontrak interaksi",
+      "Caesar": "Kontrak interaksi",
+      "Delizia": "Kontrak interaksi",
+      "Eckhart": "Alamat kontrak interaksi"
+    },
+    "ethereum__max_gas_price": "Biaya maks. per gas",
+    "ethereum__name_and_version": "Nama dan versi",
+    "ethereum__network": "Jaringan",
+    "ethereum__new_contract": "Kontrak baru akan di-deploy",
+    "ethereum__no_message_field": "Tidak ada kolom pesan",
+    "ethereum__priority_fee": "Maks. biaya prioritas",
+    "ethereum__redeem": "Tukar",
+    "ethereum__redeem_amount": "Jumlah penukaran",
+    "ethereum__redeem_from": "Tukar dari",
+    "ethereum__revoke_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Pencabutan EIP-7702 ditandatangani.",
+      "Eckhart": "Pencabutan EIP-7702 ditandatangani."
+    },
+    "ethereum__revoke_title": "Pencabutan EIP-7702",
+    "ethereum__revoke_warn": "Cabut akses {0} dari delegasi smart account?",
+    "ethereum__reward_tokens": "Token imbalan",
+    "ethereum__rewards_claim": "Klaim imbalan",
+    "ethereum__show_full_array": "Lihat array lengkap",
+    "ethereum__show_full_domain": "Lihat domain lengkap",
+    "ethereum__show_full_message": "Lihat pesan lengkap",
+    "ethereum__show_full_struct": "Lihat struktur lengkap",
+    "ethereum__sign_eip712": "Yakin ingin tandatangani typed data EIP-712?",
+    "ethereum__smart_info": "Info kontrak smart account",
+    "ethereum__staking_claim": "Klaim",
+    "ethereum__staking_claim_address": "Alamat klaim",
+    "ethereum__staking_claim_intro": "Claim ETH dari Everstake?",
+    "ethereum__staking_stake": "Stake",
+    "ethereum__staking_stake_address": "Alamat staking",
+    "ethereum__staking_stake_intro": "Stake ETH di Everstake?",
+    "ethereum__staking_unstake": "Unstake",
+    "ethereum__staking_unstake_intro": "Unstake ETH dari Everstake?",
+    "ethereum__subtitle_input_data_bytes": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "{0} / {1} byte",
+      "Eckhart": ""
+    },
+    "ethereum__title_confirm_domain": "Konfirmasi domain",
+    "ethereum__title_confirm_message": "Konfirmasi pesan",
+    "ethereum__title_confirm_message_hash": "Konfirmasi hash pesan",
+    "ethereum__title_confirm_struct": "Konfirmasi struktur",
+    "ethereum__title_confirm_typed_data": "Konfirmasi typed data",
+    "ethereum__title_input_data": "Data",
+    "ethereum__title_input_data_bytes": {
+      "Bolt": "Data:\n{0} / {1} byte",
+      "Caesar": "Data: {0} / {1} byte",
+      "Delizia": "Data",
+      "Eckhart": "Data:\n{0} / {1} byte"
+    },
+    "ethereum__title_signing_address": "Alamat penandatanganan",
+    "ethereum__title_token_contract": {
+      "Bolt": "Kontrak token",
+      "Caesar": "Alamat kontrak token",
+      "Delizia": "Kontrak token",
+      "Eckhart": "Alamat kontrak token"
+    },
+    "ethereum__to": "Ke",
+    "ethereum__token_contract": {
+      "Bolt": "Alamat kontrak token",
+      "Caesar": "Kontrak token",
+      "Delizia": "Alamat kontrak token",
+      "Eckhart": "Alamat kontrak token"
+    },
+    "ethereum__units_template": "{0} unit",
+    "ethereum__unknown_contract_address": {
+      "Bolt": "Alamat kontrak tidak dikenal",
+      "Caesar": "Alamat kontrak tidak dikenal",
+      "Delizia": "Alamat kontrak tidak dikenal.",
+      "Eckhart": "Alamat kontrak token tidak dikenal."
+    },
+    "ethereum__unknown_token": "Token tidak dikenal",
+    "ethereum__valid_signature": "Tanda tangan valid.",
+    "ethereum__vault_claim_intro": "Klaim imbalan dari Merkl.xyz",
+    "ethereum__vault_claim_to": "Klaim ke",
+    "ethereum__vault_deposit_intro": "Tinjau detail untuk deposit ke vault.",
+    "ethereum__vault_redeem_intro": "Tinjau detail untuk tukar dari vault.",
+    "ethereum__vault_redeem_to": "Tukar ke",
+    "ethereum__vault_withdraw_intro": "Tinjau detail untuk menarik dari vault.",
+    "ethereum__withdraw": "Tarik",
+    "ethereum__withdraw_amount": "Jumlah penarikan",
+    "ethereum__withdraw_from": "Tarik dari",
+    "ethereum__withdraw_to": "Tarik ke",
+    "experimental_mode__enable": "Aktifkan fitur eksperimental?",
+    "experimental_mode__only_for_dev": "Hanya untuk pengembangan dan pengujian beta!",
+    "experimental_mode__title": "Mode eksperimental",
+    "fido__already_registered": "Sudah terdaftar",
+    "fido__device_already_registered": "Perangkat ini sudah terdaftar dengan aplikasi ini.",
+    "fido__device_already_registered_with_template": "Perangkat ini sudah terdaftar dengan {0}.",
+    "fido__device_not_registered": "Perangkat ini tidak terdaftar dengan aplikasi ini.",
+    "fido__does_not_belong": "Kredensial yang ingin Anda impor bukan milik autentikator ini.",
+    "fido__erase_credentials": {
+      "Bolt": "hapus semua kredensial?",
+      "Caesar": "",
+      "Delizia": "hapus semua kredensial?",
+      "Eckhart": "Hapus semua kredensial tersimpan?"
+    },
+    "fido__export_credentials": "Ekspor informasi tentang kredensial yang tersimpan di perangkat ini?",
+    "fido__more_credentials": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Kredensial lain",
+      "Eckhart": ""
+    },
+    "fido__not_registered": "Tidak terdaftar",
+    "fido__not_registered_with_template": "Perangkat ini tidak terdaftar dengan {0}.",
+    "fido__please_enable_pin_protection": "Harap aktifkan proteksi PIN.",
+    "fido__select_intro": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Pilih kredensial yang ingin Anda gunakan untuk autentikasi.",
+      "Eckhart": "Pilih kredensial yang ingin Anda gunakan untuk autentikasi."
+    },
+    "fido__title_authenticate": "Autentikasi FIDO2",
+    "fido__title_credential_details": "Detail kredensial",
+    "fido__title_for_authentication": "untuk autentikasi",
+    "fido__title_import_credential": "Impor kredensial",
+    "fido__title_list_credentials": "Daftar kredensial",
+    "fido__title_register": "Pendaftaran FIDO2",
+    "fido__title_remove_credential": "Hapus kredensial",
+    "fido__title_reset": {
+      "Bolt": "Reset FIDO2",
+      "Caesar": "Reset FIDO2",
+      "Delizia": "Reset FIDO2",
+      "Eckhart": ""
+    },
+    "fido__title_select_credential": "Pilih kredensial",
+    "fido__title_u2f_auth": "Autentikasi U2F",
+    "fido__title_u2f_register": "Pendaftaran U2F",
+    "fido__title_verify_user": "Verifikasi pengguna FIDO2",
+    "fido__unable_to_verify_user": "Tidak dapat memverifikasi pengguna.",
+    "fido__wanna_erase_credentials": {
+      "Bolt": "",
+      "Caesar": "Anda yakin ingin menghapus semua kredensial?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "firmware_update__restart": "Trezor akan dimulai ulang setelah pembaruan.",
+    "firmware_update__title": "Perbarui firmware",
+    "firmware_update__title_fingerprint": "Sidikjari FW",
+    "haptic_feedback__disable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Matikan umpan balik haptik?",
+      "Eckhart": "Matikan umpan balik haptik?"
+    },
+    "haptic_feedback__enable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Aktifkan umpan balik haptik?",
+      "Eckhart": "Aktifkan umpan balik haptik?"
+    },
+    "haptic_feedback__subtitle": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Pengaturan",
+      "Eckhart": "Pengaturan"
+    },
+    "haptic_feedback__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Umpan balik haptik",
+      "Eckhart": "Umpan balik haptik"
+    },
+    "homescreen__backup_needed_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Buka Trezor Suite dan buat cadangan dompet. Ini satu-satunya cara untuk memulihkan akses ke aset Anda."
+    },
+    "homescreen__click_to_connect": {
+      "Bolt": "",
+      "Caesar": "Klik untuk Terhubung",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "homescreen__click_to_unlock": {
+      "Bolt": "",
+      "Caesar": "Klik untuk Membuka",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "homescreen__firmware_type": "Jenis firmware",
+    "homescreen__firmware_version": "Versi firmware",
+    "homescreen__set_default": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Ubah wallpaper ke gambar default?",
+      "Eckhart": "Ubah wallpaper ke gambar default?"
+    },
+    "homescreen__settings_subtitle": "Pengaturan",
+    "homescreen__settings_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Wallpaper",
+      "Eckhart": ""
+    },
+    "homescreen__title_backup_failed": "Pencadangan gagal",
+    "homescreen__title_backup_needed": "Butuh pencadangan",
+    "homescreen__title_coinjoin_authorized": "Coinjoin diotorisasi",
+    "homescreen__title_experimental_mode": "Mode eksperimental",
+    "homescreen__title_no_usb_connection": "Tidak ada koneksi USB",
+    "homescreen__title_pin_not_set": "PIN belum diatur",
+    "homescreen__title_seedless": "Tanpa seed",
+    "homescreen__title_set": "Ubah wallpaper",
+    "inputs__back": {
+      "Bolt": "",
+      "Caesar": "KEMBALI",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "inputs__cancel": {
+      "Bolt": "",
+      "Caesar": "BATAL",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "inputs__delete": {
+      "Bolt": "",
+      "Caesar": "HAPUS",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "inputs__enter": {
+      "Bolt": "",
+      "Caesar": "ENTER",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "inputs__previous": {
+      "Bolt": "",
+      "Caesar": "SEBELUMNYA",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "inputs__return": {
+      "Bolt": "",
+      "Caesar": "KEMBALI",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "inputs__show": {
+      "Bolt": "",
+      "Caesar": "TAMPILKAN",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "inputs__space": {
+      "Bolt": "",
+      "Caesar": "SPASI",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "instructions__continue_holding": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Terus\ntahan",
+      "Eckhart": "Terus tahan"
+    },
+    "instructions__continue_in_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Lanjutkan di aplikasi",
+      "Eckhart": "Lanjutkan di aplikasi"
+    },
+    "instructions__enter_next_share": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Masukkan bagian berikutnya",
+      "Eckhart": "Masukkan bagian berikutnya"
+    },
+    "instructions__hold_to_confirm": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Tahan untuk konfirmasi",
+      "Eckhart": ""
+    },
+    "instructions__hold_to_continue": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Tahan untuk melanjutkan"
+    },
+    "instructions__hold_to_exit_tutorial": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Tahan untuk keluar tutorial",
+      "Eckhart": "Tahan untuk keluar tutorial"
+    },
+    "instructions__hold_to_sign": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Tahan untuk tandatangani",
+      "Eckhart": "Tahan untuk tandatangani"
+    },
+    "instructions__menu_to_continue": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Gunakan menu untuk melanjutkan"
+    },
+    "instructions__shares_continue_with_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Lanjutkan dengan bagian {0}",
+      "Eckhart": ""
+    },
+    "instructions__shares_start_with_1": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Mulai dengan bagian 1",
+      "Eckhart": "Mulai dengan bagian 1"
+    },
+    "instructions__shares_start_with_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Mulai dengan bagian {0}"
+    },
+    "instructions__swipe_down": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Usap ke bawah",
+      "Eckhart": ""
+    },
+    "instructions__swipe_horizontally": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Usap secara horizontal",
+      "Eckhart": ""
+    },
+    "instructions__tap": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Ketuk",
+      "Eckhart": ""
+    },
+    "instructions__tap_to_confirm": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Ketuk untuk konfirmasi",
+      "Eckhart": ""
+    },
+    "instructions__tap_to_continue": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Ketuk untuk lanjut",
+      "Eckhart": ""
+    },
+    "instructions__view_all_data": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Lihat semua data di menu.",
+      "Eckhart": "Lihat semua data di menu."
+    },
+    "joint__title": {
+      "Bolt": "",
+      "Caesar": "Transaksi gabungan",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "joint__to_the_total_amount": {
+      "Bolt": "",
+      "Caesar": "Ke jumlah total",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "joint__you_are_contributing": {
+      "Bolt": "",
+      "Caesar": "Anda berkontribusi",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "language__change_to_template": "Ubah bahasa ke {0}?",
+    "language__changed": {
+      "Bolt": "Bahasa berhasil diubah",
+      "Caesar": "Bahasa berhasil diubah",
+      "Delizia": "Bahasa berhasil diubah.",
+      "Eckhart": "Bahasa berhasil diubah."
+    },
+    "language__progress": {
+      "Bolt": "Mengubah bahasa",
+      "Caesar": "Mengubah bahasa",
+      "Delizia": "Mengubah bahasa",
+      "Eckhart": "Mengubah bahasa..."
+    },
+    "language__title": "Pengaturan bahasa",
+    "led__disable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Nonaktifkan LED?"
+    },
+    "led__enable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Aktifkan LED?"
+    },
+    "led__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "LED"
+    },
+    "lockscreen__tap_to_connect": {
+      "Bolt": "Ketuk untuk hubungkan",
+      "Caesar": "",
+      "Delizia": "Ketuk untuk hubungkan",
+      "Eckhart": ""
+    },
+    "lockscreen__tap_to_unlock": {
+      "Bolt": "Ketuk untuk buka kunci",
+      "Caesar": "",
+      "Delizia": "Ketuk untuk buka kunci",
+      "Eckhart": ""
+    },
+    "lockscreen__title_locked": {
+      "Bolt": "Terkunci",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "lockscreen__title_not_connected": {
+      "Bolt": "Tidak terhubung",
+      "Caesar": "",
+      "Delizia": "Tidak terhubung",
+      "Eckhart": ""
+    },
+    "lockscreen__unlock": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Buka kunci"
+    },
+    "misc__decrypt_value": "Dekripsi nilai",
+    "misc__enable_labeling": "Aktifkan pelabelan?",
+    "misc__encrypt_value": "Enkripsi nilai",
+    "misc__title_suite_labeling": "Pelabelan Suite",
+    "modify_amount__decrease_amount": {
+      "Bolt": "Kurangi jumlah sebesar:",
+      "Caesar": "Kurangi jumlah sebesar:",
+      "Delizia": "Kurangi jumlah sebesar",
+      "Eckhart": "Kurangi jumlah sebesar"
+    },
+    "modify_amount__increase_amount": {
+      "Bolt": "Tingkatkan jumlah sebesar:",
+      "Caesar": "Tingkatkan jumlah sebesar:",
+      "Delizia": "Tingkatkan jumlah sebesar",
+      "Eckhart": "Tingkatkan jumlah sebesar"
+    },
+    "modify_amount__new_amount": {
+      "Bolt": "Jumlah baru:",
+      "Caesar": "Jumlah baru:",
+      "Delizia": "Jumlah baru",
+      "Eckhart": "Jumlah baru"
+    },
+    "modify_amount__title": "Atur jumlah",
+    "modify_fee__decrease_fee": {
+      "Bolt": "Kurangi biaya sebesar:",
+      "Caesar": "Kurangi biaya sebesar:",
+      "Delizia": "Kurangi biaya sebesar",
+      "Eckhart": "Kurangi biaya sebesar"
+    },
+    "modify_fee__fee_rate": {
+      "Bolt": "",
+      "Caesar": "Kurs biaya:",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "modify_fee__increase_fee": {
+      "Bolt": "Tingkatkan biaya sebesar:",
+      "Caesar": "Tingkatkan biaya sebesar:",
+      "Delizia": "Tingkatkan biaya sebesar",
+      "Eckhart": "Tingkatkan biaya sebesar"
+    },
+    "modify_fee__new_transaction_fee": {
+      "Bolt": "Biaya transaksi baru:",
+      "Caesar": "",
+      "Delizia": "Biaya transaksi baru",
+      "Eckhart": "Biaya transaksi baru"
+    },
+    "modify_fee__no_change": {
+      "Bolt": "Biaya tidak berubah.\n",
+      "Caesar": "Biaya tidak berubah.\n",
+      "Delizia": "Biaya tidak berubah.\n",
+      "Eckhart": "Biaya tidak berubah"
+    },
+    "modify_fee__title": "Atur biaya",
+    "modify_fee__transaction_fee": {
+      "Bolt": "Biaya transaksi:",
+      "Caesar": "Biaya transaksi:",
+      "Delizia": "Biaya transaksi",
+      "Eckhart": "Biaya transaksi"
+    },
+    "monero__confirm_export": "Konfirmasi ekspor",
+    "monero__confirm_ki_sync": "Konfirmasi sync ki",
+    "monero__confirm_refresh": "Konfirmasi muat ulang",
+    "monero__confirm_unlock_time": "Konfirmasi waktu buka kunci",
+    "monero__hashing_inputs": "Meng-hash input",
+    "monero__payment_id": "ID pembayaran",
+    "monero__postprocessing": "Memproses akhir...",
+    "monero__processing": "Memproses...",
+    "monero__processing_inputs": "Memproses input",
+    "monero__processing_outputs": "Memproses output",
+    "monero__signing": "Menandatangani...",
+    "monero__signing_inputs": "Menandatangani input",
+    "monero__unlock_time_set_template": "Waktu aktivasi transaksi diatur ke {0}",
+    "monero__wanna_export_tx_der": "Anda yakin ingin mengekspor tx_der untuk tx_proof?",
+    "monero__wanna_export_tx_key": "Anda yakin ingin mengekspor tx_key?",
+    "monero__wanna_export_watchkey": "Anda yakin ingin mengekspor kredensial watch-only?",
+    "monero__wanna_start_refresh": "Anda yakin ingin memulai\npemuatan ulang?",
+    "monero__wanna_sync_key_images": "Anda yakin ingin sync\nkey image?",
+    "n4w1__err_damaged": "",
+    "n4w1__err_empty": "",
+    "n4w1__err_nonempty": "",
+    "n4w1__footer_first": "",
+    "n4w1__footer_last": "",
+    "n4w1__footer_next": "",
+    "n4w1__hold_first": "",
+    "n4w1__hold_last": "",
+    "n4w1__hold_next": "",
+    "n4w1__reading": "",
+    "n4w1__writing": "",
+    "nem__absolute": {
+      "Bolt": "absolut",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__activate": {
+      "Bolt": "Aktifkan",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__add": {
+      "Bolt": "Tambahkan",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_action": {
+      "Bolt": "Konfirmasi tindakan",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_address": {
+      "Bolt": "Konfirmasi alamat",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_creation_fee": {
+      "Bolt": "Konfirmasi biaya pembuatan",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_mosaic": {
+      "Bolt": "Konfirmasi mosaic",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_multisig_fee": {
+      "Bolt": "Konfirmasi biaya multisig",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_namespace": {
+      "Bolt": "Konfirmasi namespace",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_payload": {
+      "Bolt": "Konfirmasi payload",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_properties": {
+      "Bolt": "Konfirmasi properti",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_rental_fee": {
+      "Bolt": "Konfirmasi biaya sewa",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_transfer_of": {
+      "Bolt": "Konfirmasi transfer",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__convert_account_to_multisig": {
+      "Bolt": "Konversi akun ke akun multisig?",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__cosign_transaction_for": {
+      "Bolt": "Tandatangani transaksi untuk",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__cosignatory": {
+      "Bolt": " penjamin",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__create_mosaic": {
+      "Bolt": "Buat mosaic",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__create_namespace": {
+      "Bolt": "Buat namespace",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__deactivate": {
+      "Bolt": "Nonaktifkan",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__decrease": {
+      "Bolt": "Kurangi",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__description": {
+      "Bolt": "Deskripsi",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__divisibility_and_levy_cannot_be_shown": {
+      "Bolt": "Divisibilitas dan levy tidak dapat ditampilkan untuk mosaic yang tidak dikenal",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__encrypted": {
+      "Bolt": "Terenkripsi",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__final_confirm": {
+      "Bolt": "Konfirmasi akhir",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__immutable": {
+      "Bolt": "imutabel",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__increase": {
+      "Bolt": "Tingkatkan",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__initial_supply": {
+      "Bolt": "Persediaan awal",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__initiate_transaction_for": {
+      "Bolt": "Mulai transaksi untuk",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_divisibility": {
+      "Bolt": "Divisibilitas levy",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_fee": {
+      "Bolt": "Biaya levy",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_fee_of": {
+      "Bolt": "Konfirmasi biaya levy mosaic sebesar",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_mosaic": {
+      "Bolt": "Mosaic levy",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_namespace": {
+      "Bolt": "Namespace levy",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_recipient": {
+      "Bolt": "Penerima levy",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_type": {
+      "Bolt": "Jenis levy",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__modify_supply_for": {
+      "Bolt": "Atur suplai untuk",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__modify_the_number_of_cosignatories_by": {
+      "Bolt": "Atur jumlah penjamin sebesar ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__mutable": {
+      "Bolt": "mutabel",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__of": {
+      "Bolt": "dari",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__percentile": {
+      "Bolt": "persentil",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__raw_units_template": {
+      "Bolt": "{0} unit mentah",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__remote_harvesting": {
+      "Bolt": " panen jarak jauh?",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__remove": {
+      "Bolt": "Hapus",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__set_minimum_cosignatories_to": {
+      "Bolt": "Atur jumlah minimum penjamin ke ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__sign_tx_fee_template": {
+      "Bolt": "Tandatangani transaksi ini\ndan bayar {0}\nuntuk biaya jaringan?",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__supply_change": {
+      "Bolt": "Perubahan suplai",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__supply_units_template": {
+      "Bolt": "{0} suplai sebesar {1} unit utuh?",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__transferable": {
+      "Bolt": "Transferabel",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__under_namespace": {
+      "Bolt": "di bawah namespace",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__unencrypted": {
+      "Bolt": "Tidak terenkripsi",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__unknown_mosaic": {
+      "Bolt": "Mosaic tidak dikenal!",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nostr__event_kind_template": "Jenis peristiwa: {0}",
+    "passphrase__access_hidden_wallet": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Akses Dompet passphrase"
+    },
+    "passphrase__access_wallet": {
+      "Bolt": "Akses Dompet passphrase?",
+      "Caesar": "Akses Dompet passphrase?",
+      "Delizia": "Akses Dompet passphrase?",
+      "Eckhart": ""
+    },
+    "passphrase__always_on_device": "Selalu isi passphrase Anda di Trezor?",
+    "passphrase__continue_with_empty_passphrase": "Lanjutkan dengan passphrase kosong?",
+    "passphrase__from_host_not_shown": "Passphrase dari aplikasi terhubung akan digunakan, tetapi tidak akan ditampilkan karena pengaturan perangkat.",
+    "passphrase__hidden_wallet": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dompet passphrase"
+    },
+    "passphrase__hide": {
+      "Bolt": "Sembunyikan passphrase dari aplikasi?",
+      "Caesar": "Sembunyikan passphrase dari aplikasi?",
+      "Delizia": "Sembunyikan passphrase dari aplikasi?",
+      "Eckhart": "Sembunyikan passphrase Trezor dari aplikasi terhubung?"
+    },
+    "passphrase__next_screen_will_show_passphrase": "Layar berikutnya menampilkan passphrase Anda.",
+    "passphrase__please_enter": "Harap masukkan passphrase Anda.",
+    "passphrase__revoke_on_device": "Anda ingin menonaktifkan pengaturan passphrase di perangkat?",
+    "passphrase__show": "Lihat passphrase",
+    "passphrase__title_confirm": "Konfirmasi passphrase",
+    "passphrase__title_enter": "Masukkan passphrase",
+    "passphrase__title_hide": "Sembunyikan passphrase",
+    "passphrase__title_passphrase": "Passphrase",
+    "passphrase__title_settings": "Pengaturan passphrase",
+    "passphrase__title_source": "Sumber passphrase",
+    "passphrase__turn_off": "Nonaktifkan proteksi passphrase?",
+    "passphrase__turn_on": "Aktikan proteksi passphrase?",
+    "passphrase__wallet": {
+      "Bolt": "Dompet passphrase",
+      "Caesar": "Dompet passphrase",
+      "Delizia": "Dompet passphrase",
+      "Eckhart": ""
+    },
+    "pin__cancel_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Lanjutkan tanpa PIN",
+      "Eckhart": ""
+    },
+    "pin__cancel_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Tanpa PIN, siapapun dapat mengakses perangkat ini.",
+      "Eckhart": "Tanpa PIN, siapapun dapat mengakses perangkat ini."
+    },
+    "pin__cancel_setup": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Batalkan atur PIN",
+      "Eckhart": "Batalkan atur PIN?"
+    },
+    "pin__change": "Ubah PIN",
+    "pin__change_question": "Ubah PIN?",
+    "pin__changed": "PIN diubah.",
+    "pin__cursor_will_change": {
+      "Bolt": "",
+      "Caesar": "Posisi kursor akan berubah setiap kali PIN dimasukkan untuk meningkatkan keamanan.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "pin__diff_from_wipe_code": "PIN baru harus berbeda dengan kode wipe Anda.",
+    "pin__disabled": "Proteksi PIN\ndinonaktifkan.",
+    "pin__enabled": {
+      "Bolt": "Proteksi PIN\ndiaktifkan.",
+      "Caesar": "Proteksi PIN\ndiaktifkan.",
+      "Delizia": "Proteksi PIN\ndiaktifkan.",
+      "Eckhart": ""
+    },
+    "pin__enter": "Masukkan PIN",
+    "pin__enter_new": "Masukkan PIN baru",
+    "pin__entered_not_valid": "PIN yang Anda masukkan tidak valid.",
+    "pin__info": "PIN akan diperlukan untuk mengakses perangkat ini.",
+    "pin__invalid_pin": "PIN tidak valid",
+    "pin__last_attempt": "Upaya terakhir",
+    "pin__mismatch": "PIN yang dimasukkan tidak cocok!",
+    "pin__pin_mismatch": "PIN tidak cocok",
+    "pin__please_check_again": {
+      "Bolt": "",
+      "Caesar": "Harap periksa lagi.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "pin__reenter": "Masukkan ulang PIN",
+    "pin__reenter_new": "Masukkan lagi PIN baru",
+    "pin__reenter_new_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Masukkan lagi PIN baru.",
+      "Eckhart": ""
+    },
+    "pin__reenter_to_confirm": {
+      "Bolt": "",
+      "Caesar": "Harap masukkan kembali PIN untuk konfirmasi.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "pin__remove": "Hapus PIN",
+    "pin__setup_completed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Pengaturan PIN berhasil."
+    },
+    "pin__should_be_long": {
+      "Bolt": "",
+      "Caesar": "PIN harus terdiri dari 4-50 digit.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "pin__title": "Kode PIN",
+    "pin__title_check_pin": {
+      "Bolt": "",
+      "Caesar": "Periksa PIN",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "pin__title_settings": "Pengaturan PIN",
+    "pin__title_wrong_pin": "PIN salah",
+    "pin__tries_left": "percobaan lagi",
+    "pin__turn_off": "Anda yakin ingin nonaktifkan perlindungan PIN?",
+    "pin__turn_on": "Aktifkan proteksi PIN?",
+    "pin__wipe_code_exists_description": "Kode wipe harus nonaktif sebelum menonaktifkan proteksi PIN.",
+    "pin__wipe_code_exists_title": "Kode wipe diatur",
+    "pin__wrong_pin": "PIN salah",
+    "plurals__contains_x_keys": "kunci|kunci",
+    "plurals__days": "hari|hari",
+    "plurals__hours": "jam|jam",
+    "plurals__milliseconds": "milidetik|milidetik",
+    "plurals__minutes": "menit|menit",
+    "plurals__seconds": "detik|detik",
+    "plurals__sign_x_actions": "tindakan|tindakan",
+    "plurals__transaction_of_x_operations": "operasi|operasi",
+    "plurals__x_groups_needed": "grup|grup",
+    "plurals__x_shares_needed": "bagian|bagian",
+    "progress__authenticity_check": "Memeriksa keaslian...",
+    "progress__done": "Selesai",
+    "progress__loading_transaction": "Memuat transaksi...",
+    "progress__locking_device": {
+      "Bolt": "Mengunci perangkat...",
+      "Caesar": "Mengunci perangkat...",
+      "Delizia": "Mengunci perangkat...",
+      "Eckhart": ""
+    },
+    "progress__one_second_left": "Tersisa 1 detik",
+    "progress__please_wait": {
+      "Bolt": "Harap tunggu",
+      "Caesar": "Harap tunggu",
+      "Delizia": "Harap tunggu",
+      "Eckhart": "Harap tunggu..."
+    },
+    "progress__refreshing": "Memuat ulang...",
+    "progress__signing_transaction": "Menandatangani transaksi...",
+    "progress__syncing": "Menyinkronkan...",
+    "progress__x_seconds_left_template": "Tersisa {0} detik",
+    "reboot_to_bootloader__restart": "Trezor akan dimulai ulang dalam mode bootloader.",
+    "reboot_to_bootloader__title": "Ke bootloader",
+    "reboot_to_bootloader__version_by_template": "Versi firmware {0}\noleh {1}",
+    "recovery__cancel_dry_run": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Batalkan pemeriksaan",
+      "Eckhart": ""
+    },
+    "recovery__check_dry_run": {
+      "Bolt": "Periksa cadangan?",
+      "Caesar": "Periksa cadangan?",
+      "Delizia": "Mari periksa cadangan dompet.",
+      "Eckhart": "Mari periksa cadangan dompet."
+    },
+    "recovery__cursor_will_change": {
+      "Bolt": "",
+      "Caesar": "Posisi kursor akan berubah setiap kali PIN dimasukkan untuk meningkatkan keamanan.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "recovery__dry_run_bip39_valid_match": "Cadangan dompet yang dimasukkan valid dan cocok dengan perangkat ini.",
+    "recovery__dry_run_bip39_valid_mismatch": "Cadangan dompet yang dimasukkan valid, tapi tidak cocok dengan perangkat ini.",
+    "recovery__dry_run_slip39_valid_match": "Cadangan dompet yang dimasukkan valid dan cocok dengan perangkat ini.",
+    "recovery__dry_run_slip39_valid_mismatch": "Cadangan dompet yang dimasukkan valid, tapi tidak cocok dengan perangkat ini.",
+    "recovery__enter_any_share": "Masukkan bagian apapun.",
+    "recovery__enter_backup": "Masukkan cadangan Anda.",
+    "recovery__enter_different_share": {
+      "Bolt": "Masukkan bagian berbeda.",
+      "Caesar": "Masukkan bagian berbeda.",
+      "Delizia": "Masukkan bagian berbeda.",
+      "Eckhart": ""
+    },
+    "recovery__enter_each_word": "Masukkan setiap kata cadangan dompet Anda berurutan.",
+    "recovery__enter_share_from_diff_group": "Masukkan bagian dari grup lain.",
+    "recovery__group_num_template": {
+      "Bolt": "Grup {0}",
+      "Caesar": "Grup {0}",
+      "Delizia": "Grup {0}",
+      "Eckhart": ""
+    },
+    "recovery__group_threshold_reached": "Ambang batas grup tercapai.",
+    "recovery__invalid_share_entered": "Bagian pemulihan yang dimasukkan tidak valid.",
+    "recovery__invalid_wallet_backup_entered": "Cadangan dompet yang dimasukkan tidak valid.",
+    "recovery__more_shares_needed": {
+      "Bolt": "Butuh lebih banyak bagian",
+      "Caesar": "Butuh lebih banyak bagian",
+      "Delizia": "Butuh lebih banyak bagian",
+      "Eckhart": "Butuh lebih banyak bagian."
+    },
+    "recovery__num_of_words": "Pilih jumlah kata dalam cadangan Anda.",
+    "recovery__progress_will_be_lost": "Semua progres akan hilang.",
+    "recovery__share_already_entered": {
+      "Bolt": "Bagian sudah dimasukkan",
+      "Caesar": "Bagian sudah dimasukkan",
+      "Delizia": "Bagian sudah dimasukkan",
+      "Eckhart": "Bagian sudah dimasukkan. Masukkan bagian lain."
+    },
+    "recovery__share_does_not_match": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bagian tidak cocok"
+    },
+    "recovery__share_from_another_multi_share_backup": "Anda telah memasukkan bagian dari cadangan berbeda.",
+    "recovery__share_from_group_entered_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bagian {0} grup {1} dimasukkan."
+    },
+    "recovery__share_num_template": "Bagian {0}",
+    "recovery__start_entering": "Mulai masukkan",
+    "recovery__title": "Pulihkan dompet",
+    "recovery__title_cancel_dry_run": "Batalkan pemeriksaan cadangan",
+    "recovery__title_cancel_recovery": "Batalkan pemulihan",
+    "recovery__title_dry_run": "Pemeriksaan cadangan",
+    "recovery__title_recover": "Pulihkan dompet",
+    "recovery__title_remaining_shares": "Bagian tersisa",
+    "recovery__title_unlock_repeated_backup": "Cadangan Multi-bagian",
+    "recovery__type_word_x_of_y_template": "Ketik kata {0} dari {1}",
+    "recovery__unlock_repeated_backup": "Buat cadangan tambahan?",
+    "recovery__unlock_repeated_backup_verb": "Buat cadangan",
+    "recovery__wallet_recovered": {
+      "Bolt": "Pemulihan dompet selesai",
+      "Caesar": "Pemulihan dompet selesai",
+      "Delizia": "Pemulihan dompet selesai.",
+      "Eckhart": "Pemulihan dompet selesai."
+    },
+    "recovery__wanna_cancel_dry_run": "Anda yakin ingin membatalkan pemeriksaan cadangan?",
+    "recovery__wanna_cancel_recovery": "Anda yakin ingin membatalkan proses pemulihan?",
+    "recovery__word_count_template": "({0} kata)",
+    "recovery__word_x_of_y_template": "Kata ke {0} dari {1}",
+    "recovery__x_more_items_starting_template_plural": {
+      "Bolt": "{count} {plural} lagi dimulai",
+      "Caesar": "",
+      "Delizia": "{count} {plural} lagi dimulai",
+      "Eckhart": "Anda perlu {count} {plural} lagi yang dimulai dengan"
+    },
+    "recovery__x_more_shares_needed_template_plural": {
+      "Bolt": "{count} {plural} lagi diperlukan",
+      "Caesar": "{count} {plural} lagi diperlukan",
+      "Delizia": "{count} {plural} lagi diperlukan",
+      "Eckhart": "{count} {plural} lagi diperlukan."
+    },
+    "recovery__x_of_y_entered_template": {
+      "Bolt": "{0} dari {1} bagian dimasukkan",
+      "Caesar": "{0} dari {1} bagian dimasukkan",
+      "Delizia": "{0} dari {1} bagian dimasukkan",
+      "Eckhart": "{0} dari {1} bagian dimasukkan."
+    },
+    "recovery__you_have_entered": {
+      "Bolt": "Anda telah memasukkan",
+      "Caesar": "Anda telah memasukkan",
+      "Delizia": "Anda telah memasukkan",
+      "Eckhart": ""
+    },
+    "regulatory__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Regulasi"
+    },
+    "reset__advanced_group_threshold_info": {
+      "Bolt": "Ambang batas grup menentukan jumlah grup yang diperlukan untuk memulihkan dompet Anda.",
+      "Caesar": "",
+      "Delizia": "Ambang batas grup menentukan jumlah grup yang diperlukan untuk memulihkan dompet Anda.",
+      "Eckhart": "Ambang batas grup menentukan jumlah grup yang diperlukan untuk memulihkan dompet Anda."
+    },
+    "reset__all_x_of_y_template": {
+      "Bolt": "semua {0} dari {1} bagian",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__any_x_of_y_template": {
+      "Bolt": "{0} dari {1} bagian apapun",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__button_create": {
+      "Bolt": "Buat dompet",
+      "Caesar": "Buat dompet",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__button_recover": {
+      "Bolt": "Pulihkan dompet",
+      "Caesar": "Pulihkan dompet",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__by_continuing": "Dengan melanjutkan, Anda menyetujui syarat dan ketentuan Trezor.",
+    "reset__cancel_create_wallet": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Batalkan buat dompet",
+      "Eckhart": ""
+    },
+    "reset__check_backup_instructions": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Mari periksa cadangan Anda terlebih dahulu.",
+      "Eckhart": "Mari periksa cadangan Anda terlebih dahulu."
+    },
+    "reset__check_backup_title": {
+      "Bolt": "",
+      "Caesar": "Periksa cadangan",
+      "Delizia": "",
+      "Eckhart": "Periksa cadangan"
+    },
+    "reset__check_group_share_title_template": {
+      "Bolt": "Bagian {1} grup {0}",
+      "Caesar": "",
+      "Delizia": "Bagian {1} grup {0}",
+      "Eckhart": "Bagian {1} grup {0}"
+    },
+    "reset__check_share_backup_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Mari periksa bagian {0} dulu."
+    },
+    "reset__check_share_title_template": {
+      "Bolt": "Periksa bagian {0}",
+      "Caesar": "",
+      "Delizia": "Periksa bagian {0}",
+      "Eckhart": ""
+    },
+    "reset__check_wallet_backup_title": "Periksa cadangan",
+    "reset__continue_with_next_share": {
+      "Bolt": "Lanjutkan dengan bagian berikutnya.",
+      "Caesar": "Lanjutkan dengan bagian berikutnya.",
+      "Delizia": "Lanjutkan dengan bagian berikutnya.",
+      "Eckhart": "Masukkan bagian berikutnya"
+    },
+    "reset__continue_with_share_template": {
+      "Bolt": "Lanjutkan dengan bagian {0}.",
+      "Caesar": "Lanjutkan dengan bagian {0}.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__create_x_of_y_multi_share_backup_template": "Apakah Anda ingin membuat candangan multi-bagian {0} dari {1}?",
+    "reset__finished_verifying_group_template": {
+      "Bolt": "Anda telah selesai memverifikasi bagian pemulihan untuk grup {0}.",
+      "Caesar": "Anda telah selesai memverifikasi bagian pemulihan untuk grup {0}.",
+      "Delizia": "Grup {0} diverifikasi",
+      "Eckhart": "Anda telah selesai memverifikasi bagian pemulihan untuk grup {0}."
+    },
+    "reset__finished_verifying_shares": {
+      "Bolt": "Anda telah selesai memverifikasi bagian pemulihan.",
+      "Caesar": "Anda telah selesai memverifikasi bagian pemulihan.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__finished_verifying_wallet_backup": {
+      "Bolt": "Anda telah selesai memverifikasi cadangan dompet.",
+      "Caesar": "Anda telah selesai memverifikasi cadangan dompet.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__group_description": {
+      "Bolt": "Grup terdiri dari bagian pemulihan.",
+      "Caesar": "",
+      "Delizia": "Grup terdiri dari bagian pemulihan.",
+      "Eckhart": "Grup terdiri dari bagian pemulihan."
+    },
+    "reset__group_info": {
+      "Bolt": "Setiap grup memiliki jumlah bagian dan ambang batasnya sendiri. Di langkah berikutnya, Anda akan menentukan jumlah bagian dan ambang batasnya.",
+      "Caesar": "",
+      "Delizia": "Setiap grup memiliki jumlah bagian dan ambang batasnya sendiri. Di langkah berikutnya, Anda akan menentukan jumlah bagian dan ambang batasnya.",
+      "Eckhart": "Setiap grup memiliki jumlah bagian dan ambang batasnya sendiri. Di langkah berikutnya, Anda akan menentukan jumlah bagian dan ambang batasnya."
+    },
+    "reset__group_share_checked_successfully_template": {
+      "Bolt": "Bagian {0} grup {1} berhasil diperiksa.",
+      "Caesar": "Bagian {0} grup {1} berhasil diperiksa.",
+      "Delizia": "Bagian {1} grup {0} selesai",
+      "Eckhart": "Bagian {0} grup {1} berhasil diperiksa."
+    },
+    "reset__group_share_title_template": {
+      "Bolt": "Bagian {1} dari grup {0}",
+      "Caesar": "",
+      "Delizia": "Bagian {1} dari grup {0}",
+      "Eckhart": "Bagian {1} dari grup {0}"
+    },
+    "reset__incorrect_word_selected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Kata yang dipilih salah",
+      "Eckhart": "Kata yang dipilih salah."
+    },
+    "reset__more_info_at": {
+      "Bolt": "Info lainnya di",
+      "Caesar": "Info lainnya di",
+      "Delizia": "Info lainnya di",
+      "Eckhart": ""
+    },
+    "reset__need_all_share_template": {
+      "Bolt": "Untuk pemulihan, Anda butuh semua {0} bagian.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__need_any_share_template": {
+      "Bolt": "Untuk pemulihan, Anda butuh setidaknya {0} bagian.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__needed_to_form_a_group": {
+      "Bolt": "dibutuhkan untuk membuat grup. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__needed_to_recover_your_wallet": {
+      "Bolt": "dibutuhkan untuk memulihkan dompet. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__never_make_digital_copy": "Jangan pernah simpan cadangan Anda dalam bentuk digital.",
+    "reset__num_of_share_holders_template": {
+      "Bolt": "{0} orang atau lokasi akan masing-masing memegang satu bagian.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__num_of_shares_advanced_info_template": {
+      "Bolt": "Setiap bagian pemulihan terdiri dari {0} kata. Anda akan memilih ambang batas bagian yang diperlukan untuk membentuk grup {1}.",
+      "Caesar": "",
+      "Delizia": "Setiap bagian pemulihan terdiri dari {0} kata. Anda akan memilih ambang batas bagian yang diperlukan untuk membentuk grup {1}.",
+      "Eckhart": "Setiap bagian pemulihan terdiri dari {0} kata. Anda akan memilih ambang batas bagian yang diperlukan untuk membentuk grup {1}."
+    },
+    "reset__num_of_shares_basic_info_template": {
+      "Bolt": "Setiap bagian pemulihan terdiri dari {0} kata. Anda akan memilih berapa jumlah bagian yang dibutuhkan untuk memulihkan dompet.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__num_of_shares_how_many": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Berapa bagian cadangan dompet yang ingin Anda buat?",
+      "Eckhart": "Berapa bagian cadangan dompet yang ingin Anda buat?"
+    },
+    "reset__num_of_shares_long_info_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Setiap bagian cadangan terdiri dari {0} kata.\nSimpan setiap daftar kata di lokasi yang berbeda dan aman, atau bagikan ke orang tepercaya. Kumpulkan untuk memulihkan dompet Anda.",
+      "Eckhart": "Setiap bagian cadangan terdiri dari {0} kata.\nSimpan setiap daftar kata di lokasi yang berbeda dan aman, atau bagikan ke orang tepercaya. Kumpulkan untuk memulihkan dompet Anda."
+    },
+    "reset__num_shares_for_group_template": {
+      "Bolt": "Jumlah bagian yang dibutuhkan untuk membuat grup {0}.",
+      "Caesar": "",
+      "Delizia": "Jumlah bagian yang dibutuhkan untuk membuat grup {0}.",
+      "Eckhart": "Jumlah bagian yang dibutuhkan untuk membuat grup {0}."
+    },
+    "reset__number_of_shares_info": {
+      "Bolt": "",
+      "Caesar": "= jumlah total bagian untuk cadangan dompet.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__one_share": {
+      "Bolt": "1 bagian",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__only_one_share_will_be_created": {
+      "Bolt": "Hanya satu bagian yang akan dibuat.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__recovery_share_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bagian pemulihan adalah daftar kata yang Anda catat saat menyiapkan Trezor."
+    },
+    "reset__recovery_share_number": "Cadangan dompet Anda terdiri dari 1 hingga 16 bagian.",
+    "reset__recovery_share_title_template": {
+      "Bolt": "Bagian pemulihan {0}",
+      "Caesar": "",
+      "Delizia": "Bagian pemulihan {0}",
+      "Eckhart": ""
+    },
+    "reset__recovery_wallet_backup_title": "Cadangan dompet",
+    "reset__repeat_for_all_shares": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Ulangi untuk semua bagian.",
+      "Eckhart": "Ulangi untuk semua bagian."
+    },
+    "reset__required_number_of_groups": {
+      "Bolt": "Jumlah grup yang diperlukan untuk pemulihan.",
+      "Caesar": "",
+      "Delizia": "Jumlah grup yang diperlukan untuk pemulihan.",
+      "Eckhart": "Jumlah grup yang diperlukan untuk pemulihan."
+    },
+    "reset__select_correct_word": {
+      "Bolt": "",
+      "Caesar": "Pilih kata yang tepat untuk setiap posisi.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__select_threshold": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Pilih minimum bagian diperlukan untuk memulihkan dompet.",
+      "Eckhart": "Pilih minimum bagian diperlukan untuk memulihkan dompet."
+    },
+    "reset__select_word_from_share_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Pilih kata {0} dari bagian {1}"
+    },
+    "reset__select_word_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Pilih kata {0} dari dompet cadangan Anda"
+    },
+    "reset__select_word_x_of_y_template": {
+      "Bolt": "Pilih kata {0} dari {1}:",
+      "Caesar": "Pilih kata {0} dari {1}:",
+      "Delizia": "Pilih kata {0} dari {1}",
+      "Eckhart": ""
+    },
+    "reset__set_it_to_count_template": {
+      "Bolt": "Atur ke {0}, dan Anda akan memerlukan ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__share_checked_successfully_template": {
+      "Bolt": "Bagian {0} berhasil diperiksa.",
+      "Caesar": "Bagian {0} berhasil diperiksa.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__share_completed_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Bagian {0} selesai.",
+      "Eckhart": "Bagian {0} selesai."
+    },
+    "reset__share_words_title": {
+      "Bolt": "",
+      "Caesar": "Cadangan standar",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__slip39_checklist_more_info_threshold": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Ambang batas menentukan jumlah minimum bagian untuk memulihkan dompet.",
+      "Eckhart": "Ambang batas menentukan jumlah minimum bagian untuk memulihkan dompet."
+    },
+    "reset__slip39_checklist_more_info_threshold_example_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Jika Anda menetapkan {0} dari {1} bagian, jumlah bagian diperlukan untuk memulihkan dompet Anda adalah {0}.",
+      "Eckhart": "Jika Anda menetapkan {0} dari {1} bagian, jumlah bagian diperlukan untuk memulihkan dompet Anda adalah {0}."
+    },
+    "reset__slip39_checklist_num_groups": {
+      "Bolt": "",
+      "Caesar": "Jumlah grup",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__slip39_checklist_num_groups_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Jumlah grup: {0}",
+      "Eckhart": "Jumlah grup: {0}"
+    },
+    "reset__slip39_checklist_num_shares": {
+      "Bolt": "",
+      "Caesar": "Jumlah bagian",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__slip39_checklist_num_shares_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Jumlah bagian: {0}",
+      "Eckhart": "Jumlah bagian: {0}"
+    },
+    "reset__slip39_checklist_set_num_groups": {
+      "Bolt": "Atur jumlah grup",
+      "Caesar": "",
+      "Delizia": "Atur jumlah grup",
+      "Eckhart": "Atur jumlah grup"
+    },
+    "reset__slip39_checklist_set_num_shares": {
+      "Bolt": "Atur jumlah bagian",
+      "Caesar": "",
+      "Delizia": "Atur jumlah bagian",
+      "Eckhart": "Atur jumlah bagian"
+    },
+    "reset__slip39_checklist_set_sizes": {
+      "Bolt": "",
+      "Caesar": "Atur ukuran dan ambang batas",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__slip39_checklist_set_sizes_longer": {
+      "Bolt": "Atur jumlah bagian dan ambang batas tiap grup",
+      "Caesar": "",
+      "Delizia": "Atur jumlah bagian dan ambang batas tiap grup",
+      "Eckhart": "Atur jumlah bagian dan ambang batas tiap grup"
+    },
+    "reset__slip39_checklist_set_threshold": {
+      "Bolt": "Atur ambang batas",
+      "Caesar": "Atur ambang batas",
+      "Delizia": "Atur ambang batas",
+      "Eckhart": "Atur ambang batas pemulihan"
+    },
+    "reset__slip39_checklist_threshold_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Ambang batas pemulihan: {0}",
+      "Eckhart": "Ambang batas pemulihan: {0}"
+    },
+    "reset__slip39_checklist_title": {
+      "Bolt": "Checklist cadangan",
+      "Caesar": "Checklist cadangan",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__slip39_checklist_write_down": {
+      "Bolt": "Tulis dan periksa semua bagian",
+      "Caesar": "Tulis dan periksa semua bagian",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__slip39_checklist_write_down_recovery": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Tulis & periksa semua bagian cadangan dompet",
+      "Eckhart": "Tulis & periksa semua bagian cadangan dompet"
+    },
+    "reset__the_threshold_sets_the_number_of_shares": {
+      "Bolt": "Ambang batas ini mengatur jumlah bagian ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__the_word_is_repeated": {
+      "Bolt": "Kata ini berulang",
+      "Caesar": "Kata ini berulang",
+      "Delizia": "Kata ini berulang",
+      "Eckhart": "Kata tersebut muncul beberapa kali di cadangan."
+    },
+    "reset__threshold_info": {
+      "Bolt": "",
+      "Caesar": "= minimum bagian untuk pemulihan.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__title_backup_is_done": "Pencadangan selesai",
+    "reset__title_create_wallet": "Buat dompet",
+    "reset__title_group_threshold": {
+      "Bolt": "",
+      "Caesar": "Ambang batas grup",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__title_number_of_groups": "Jumlah grup",
+    "reset__title_number_of_shares": {
+      "Bolt": "",
+      "Caesar": "Jumlah bagian",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__title_set_group_threshold": {
+      "Bolt": "Atur ambang batas",
+      "Caesar": "",
+      "Delizia": "Atur ambang batas",
+      "Eckhart": "Atur ambang batas"
+    },
+    "reset__title_set_number_of_groups": {
+      "Bolt": "Atur jumlah grup",
+      "Caesar": "",
+      "Delizia": "Atur jumlah grup",
+      "Eckhart": "Atur jumlah grup"
+    },
+    "reset__title_set_number_of_shares": {
+      "Bolt": "Atru jumlah bagian",
+      "Caesar": "",
+      "Delizia": "Atru jumlah bagian",
+      "Eckhart": "Atru jumlah bagian"
+    },
+    "reset__title_set_threshold": {
+      "Bolt": "Atur ambang batas",
+      "Caesar": "",
+      "Delizia": "Atur ambang batas",
+      "Eckhart": ""
+    },
+    "reset__title_shamir_backup": "Cadangan Multi-bagian",
+    "reset__to_form_group_template": {
+      "Bolt": "untuk membuat grup {0}.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__tos_link": {
+      "Bolt": "trezor.io/tos",
+      "Caesar": "trezor.io/tos",
+      "Delizia": "trezor.io/tos",
+      "Eckhart": "Lainnya di trezor.io/tos"
+    },
+    "reset__total_number_of_shares_in_group_template": {
+      "Bolt": "Atur jumlah total bagian di grup {0}.",
+      "Caesar": "",
+      "Delizia": "Atur jumlah total bagian di grup {0}.",
+      "Eckhart": "Atur jumlah total bagian di grup {0}."
+    },
+    "reset__use_your_backup": {
+      "Bolt": "Gunakan cadangan Anda ketika perlu memulihkan dompet.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__words_may_repeat": "Kata mungkin berulang.",
+    "reset__words_written_down_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Saya mencatat semua {0} kata berurutan.",
+      "Eckhart": "Saya mencatat semua {0} kata berurutan."
+    },
+    "reset__write_down_words_template": {
+      "Bolt": "",
+      "Caesar": "Tulis {0} kata berikut secara berurutan pada kartu cadangan dompet Anda.",
+      "Delizia": "Tulis {0} kata berikut secara berurutan pada kartu cadangan dompet Anda.",
+      "Eckhart": "Tulis {0} kata berikut secara berurutan pada kartu cadangan dompet Anda."
+    },
+    "reset__wrong_word_selected": {
+      "Bolt": "Kata yang dipilih salah!",
+      "Caesar": "Kata yang dipilih salah!",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__you_need_one_share": {
+      "Bolt": "Untuk pemulihan, Anda butuh 1 bagian.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__your_backup_is_done": "Pencadangan Anda selesai.",
+    "ripple__account_deletion_warning": "Hapus akun Ripple?",
+    "ripple__account_to_be_deleted": "Akan dihapus",
+    "ripple__confirm_tag": "Konfirmasi tag",
+    "ripple__destination_tag_missing": "Tag tujuan belum diatur. Biasanya dibutuhkan ketika mengirim ke bursa.",
+    "ripple__destination_tag_template": "Tag tujuan:\n{0}",
+    "rotation__change_template": "Ubah orientasi layar ke {0}?",
+    "rotation__east": "timur",
+    "rotation__north": "utara",
+    "rotation__south": "selatan",
+    "rotation__title_change": "Orientasi layar",
+    "rotation__west": "barat",
+    "safety_checks__approve_unsafe_always": "Trezor akan mengizinkan Anda menyetujui tindakan yang mungkin tidak aman.",
+    "safety_checks__approve_unsafe_temporary": "Trezor akan sementara mengizinkan Anda menyetujui tindakan yang mungkin tidak aman.",
+    "safety_checks__enforce_strict": "Anda yakin ingin menerapkan pemeriksaan keamanan ketat (disarankan)?",
+    "safety_checks__title": "Pemeriksaan keamanan",
+    "safety_checks__title_safety_override": "Override keamanan",
+    "sd_card__all_data_will_be_lost": {
+      "Bolt": "Semua data pada kartu SD akan hilang.",
+      "Caesar": "",
+      "Delizia": "Semua data pada kartu SD akan hilang.",
+      "Eckhart": ""
+    },
+    "sd_card__card_required": {
+      "Bolt": "Kartu SD diperlukan.",
+      "Caesar": "",
+      "Delizia": "Kartu SD diperlukan.",
+      "Eckhart": ""
+    },
+    "sd_card__disable": {
+      "Bolt": "Anda yakin ingin menghapus perlindungan kartu SD dari perangkat Anda?",
+      "Caesar": "",
+      "Delizia": "Anda yakin ingin menghapus perlindungan kartu SD dari perangkat Anda?",
+      "Eckhart": ""
+    },
+    "sd_card__disabled": {
+      "Bolt": "Anda berhasil menonaktifkan proteksi kartu SD.",
+      "Caesar": "",
+      "Delizia": "Anda berhasil menonaktifkan proteksi kartu SD.",
+      "Eckhart": ""
+    },
+    "sd_card__enable": {
+      "Bolt": "Anda yakin ingin mengamankan perangkat dengan perlindungan kartu SD?",
+      "Caesar": "",
+      "Delizia": "Anda yakin ingin mengamankan perangkat dengan perlindungan kartu SD?",
+      "Eckhart": ""
+    },
+    "sd_card__enabled": {
+      "Bolt": "Anda berhasil mengaktifkan proteksi kartu SD.",
+      "Caesar": "",
+      "Delizia": "Anda berhasil mengaktifkan proteksi kartu SD.",
+      "Eckhart": ""
+    },
+    "sd_card__error": {
+      "Bolt": "Kartu SD eror",
+      "Caesar": "",
+      "Delizia": "Kartu SD eror",
+      "Eckhart": ""
+    },
+    "sd_card__format_card": {
+      "Bolt": "Format kartu SD",
+      "Caesar": "",
+      "Delizia": "Format kartu SD",
+      "Eckhart": ""
+    },
+    "sd_card__insert_correct_card": {
+      "Bolt": "Harap masukkan kartu SD yang benar ke perangkat ini.",
+      "Caesar": "",
+      "Delizia": "Harap masukkan kartu SD yang benar ke perangkat ini.",
+      "Eckhart": ""
+    },
+    "sd_card__please_insert": {
+      "Bolt": "Harap masukkan kartu SD Anda.",
+      "Caesar": "",
+      "Delizia": "Harap masukkan kartu SD Anda.",
+      "Eckhart": ""
+    },
+    "sd_card__please_unplug_and_insert": {
+      "Bolt": "Harap cabut perangkat dan masukkan kartu SD Anda.",
+      "Caesar": "",
+      "Delizia": "Harap cabut perangkat dan masukkan kartu SD Anda.",
+      "Eckhart": ""
+    },
+    "sd_card__problem_accessing": {
+      "Bolt": "Terjadi masalah saat mengakses kartu SD.",
+      "Caesar": "",
+      "Delizia": "Terjadi masalah saat mengakses kartu SD.",
+      "Eckhart": ""
+    },
+    "sd_card__refresh": {
+      "Bolt": "Anda yakin ingin mengganti rahasia kartu SD saat ini dengan yang baru dibuat?",
+      "Caesar": "",
+      "Delizia": "Anda yakin ingin mengganti rahasia kartu SD saat ini dengan yang baru dibuat?",
+      "Eckhart": ""
+    },
+    "sd_card__refreshed": {
+      "Bolt": "Anda berhasil memuat ulang proteksi kartu SD.",
+      "Caesar": "",
+      "Delizia": "Anda berhasil memuat ulang proteksi kartu SD.",
+      "Eckhart": ""
+    },
+    "sd_card__restart": {
+      "Bolt": "Anda ingin mulai ulang Trezor dalam mode bootloader?",
+      "Caesar": "",
+      "Delizia": "Anda ingin mulai ulang Trezor dalam mode bootloader?",
+      "Eckhart": ""
+    },
+    "sd_card__title": {
+      "Bolt": "Proteksi kartu SD",
+      "Caesar": "",
+      "Delizia": "Proteksi kartu SD",
+      "Eckhart": ""
+    },
+    "sd_card__title_problem": {
+      "Bolt": "Masalah kartu SD",
+      "Caesar": "",
+      "Delizia": "Masalah kartu SD",
+      "Eckhart": ""
+    },
+    "sd_card__unknown_filesystem": {
+      "Bolt": "Sistem file tidak dikenal.",
+      "Caesar": "",
+      "Delizia": "Sistem file tidak dikenal.",
+      "Eckhart": ""
+    },
+    "sd_card__unplug_and_insert_correct": {
+      "Bolt": "Harap cabut perangkat dan masukkan kartu SD yang benar.",
+      "Caesar": "",
+      "Delizia": "Harap cabut perangkat dan masukkan kartu SD yang benar.",
+      "Eckhart": ""
+    },
+    "sd_card__use_different_card": {
+      "Bolt": "Gunakan kartu lain atau format kartu SD ke sistem file FAT32.",
+      "Caesar": "",
+      "Delizia": "Gunakan kartu lain atau format kartu SD ke sistem file FAT32.",
+      "Eckhart": ""
+    },
+    "sd_card__wanna_format": {
+      "Bolt": "Ada yakin ingin memformat kartu SD?",
+      "Caesar": "",
+      "Delizia": "Ada yakin ingin memformat kartu SD?",
+      "Eckhart": ""
+    },
+    "sd_card__wrong_sd_card": {
+      "Bolt": "Kartu SD salah.",
+      "Caesar": "",
+      "Delizia": "Kartu SD salah.",
+      "Eckhart": ""
+    },
+    "send__cancel_sign": "Batalkan tandatangan",
+    "send__cancel_transaction": "Batalkan transaksi",
+    "send__confirm_sending": "Jumlah dikirim",
+    "send__from_multiple_accounts": "Mengirim dari beberapa akun.",
+    "send__incl_transaction_fee": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "termasuk biaya transaksi",
+      "Eckhart": "termasuk biaya transaksi"
+    },
+    "send__including_fee": {
+      "Bolt": "Termasuk biaya",
+      "Caesar": "Termasuk biaya",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "send__maximum_fee": "Maks. biaya",
+    "send__multisig_different_paths": "Menggunakan jalur berbeda untuk XPUB berbeda.",
+    "send__receiving_to_multisig": "Menerima ke alamat multisig.",
+    "send__send_from": "Kirim dari",
+    "send__send_in_the_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Setelah penandatanganan, kirim transaksi di aplikasi."
+    },
+    "send__sign_cancelled": "Tandatangan batal.",
+    "send__sign_transaction": "Tandatangani transaksi",
+    "send__title_confirm_sending": "Konfirmasi pengiriman",
+    "send__title_joint_transaction": "Transaksi gabungan",
+    "send__title_receiving_to": {
+      "Bolt": "Menerima ke",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "send__title_sending": "Mengirim",
+    "send__title_sending_amount": "Jumlah dikirim",
+    "send__title_sending_to": "Mengirim ke",
+    "send__to_the_total_amount": {
+      "Bolt": "Ke jumlah total:",
+      "Caesar": "",
+      "Delizia": "Ke jumlah total:",
+      "Eckhart": "Ke jumlah total:"
+    },
+    "send__total_amount": "Jumlah total",
+    "send__transaction_id": "ID transaksi",
+    "send__transaction_signed": {
+      "Bolt": "Transaksi ditandatangani",
+      "Caesar": "Transaksi ditandatangani",
+      "Delizia": "Transaksi ditandatangani.",
+      "Eckhart": "Transaksi ditandatangani."
+    },
+    "send__you_are_contributing": {
+      "Bolt": "Anda berkontribusi:",
+      "Caesar": "",
+      "Delizia": "Anda berkontribusi:",
+      "Eckhart": "Anda berkontribusi:"
+    },
+    "setting__adjust": "Atur",
+    "setting__apply": "Terapkan",
+    "share_words__words_in_order": {
+      "Bolt": "",
+      "Caesar": " kata-kata sesuai urutan.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "share_words__wrote_down_all": {
+      "Bolt": "",
+      "Caesar": "Sudah saya tulis semua ",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "sign_message__bytes_template": "{0} Byte",
+    "sign_message__confirm_address": "Alamat penandatanganan",
+    "sign_message__confirm_message": "Konfirmasi pesan",
+    "sign_message__confirm_without_review": "Konfirmasi tanpa tinjau",
+    "sign_message__message_size": {
+      "Bolt": "Ukuran pesan",
+      "Caesar": "",
+      "Delizia": "Ukuran pesan",
+      "Eckhart": "Ukuran pesan"
+    },
+    "sign_message__verify_address": "Verifikasi alamat",
+    "sn__action": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Izinkan perangkat terhubung untuk mendapatkan nomor seri Trezor Safe 7 Anda?"
+    },
+    "sn__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Nomor seri"
+    },
+    "solana__account_index": "Indeks akun",
+    "solana__associated_token_account": "Akun token terkait",
+    "solana__base_fee": "Biaya dasar",
+    "solana__claim": "Klaim",
+    "solana__claim_question": "Klaim SOL dari akun staking?",
+    "solana__claim_recipient_warning": "Mengklaim SOL ke alamat di luar dompet Anda saat ini.",
+    "solana__confirm_multisig": "Konfirmasi multisig",
+    "solana__expected_fee": "Perkiraan biaya",
+    "solana__instruction_accounts_template": "Instruksi berisi {0} akun dan datanya sepanjang {1} byte.",
+    "solana__instruction_data": "Data instruksi",
+    "solana__instruction_is_multisig": "Instruksi berikut adalah instruksi multisig.",
+    "solana__is_provided_via_lookup_table_template": "{0} disediakan melalui lookup table.",
+    "solana__lookup_table_address": "Alamat lookup table",
+    "solana__max_fees_rent": "Maks. biaya dan sewa",
+    "solana__max_rent_fee": "Maks. biaya sewa",
+    "solana__multiple_signers": "Beberapa penandatangan",
+    "solana__offchain_is_multisig": "Pesan berikut membutuhkan beberapa penandatangan.",
+    "solana__priority_fee": "Biaya prioritas",
+    "solana__stake": "Stake",
+    "solana__stake_account": "Akun staking",
+    "solana__stake_on_question": "Stake SOL di {0}?",
+    "solana__stake_question": "Stake SOL?",
+    "solana__stake_withdrawal_warning": "Dompet saat ini bukan otoritas penarikan staking SOL.",
+    "solana__stake_withdrawal_warning_title": "Alamat otoritas penarikan",
+    "solana__transaction_contains_unknown_instructions": "Transaksi berisi instruksi yang tidak dikenal.",
+    "solana__transaction_requires_x_signers_template": "Transaksi butuh {0} penandatangan, yang meningkatkan biaya.",
+    "solana__unknown_token": "Token tidak dikenal",
+    "solana__unknown_token_address": {
+      "Bolt": "Alamat token tidak dikenal",
+      "Caesar": "Alamat token tidak dikenal",
+      "Delizia": "Alamat token tidak dikenal.",
+      "Eckhart": "Alamat token tidak dikenal."
+    },
+    "solana__unstake": "Unstake",
+    "solana__unstake_question": "Unstake SOL dari akun staking?",
+    "solana__vote_account": "Akun voting",
+    "stellar__account_merge": "Penggabungan Akun",
+    "stellar__account_thresholds": "Ambang Batas Akun",
+    "stellar__add_signer": "Tambahkan Penandatangan",
+    "stellar__add_trust": "Tambahkan Trust",
+    "stellar__all_will_be_sent_to": "Semua XLM akan dikirim ke",
+    "stellar__allow_trust": "Izinkan Trust",
+    "stellar__balance_id": "ID Saldo",
+    "stellar__bump_sequence": "Bump Sequence",
+    "stellar__buying": "Pembelian",
+    "stellar__claim_claimable_balance": "Klaim Saldo Tersedia",
+    "stellar__clear_data": "Hapus data",
+    "stellar__clear_flags": "Hapus flag",
+    "stellar__confirm_issuer": "Konfirmasi Penerbit",
+    "stellar__confirm_memo": "Konfirmasi memo",
+    "stellar__confirm_operation": "Konfirmasi operasi",
+    "stellar__confirm_timebounds": "Konfirmasi batas waktu",
+    "stellar__create_account": "Buat Akun",
+    "stellar__debited_amount": "Jumlah terdebit",
+    "stellar__delete": "Hapus",
+    "stellar__delete_passive_offer": "Hapus Penawaran Pasif",
+    "stellar__delete_trust": "Hapus trust",
+    "stellar__destination": "Tujuan",
+    "stellar__exchanges_require_memo": "Memo belum diatur.\nBiasanya dibutuhkan ketika mengirim ke bursa.",
+    "stellar__ext_auth": "",
+    "stellar__ext_auth_message": "",
+    "stellar__final_confirm": "Konfirmasi akhir",
+    "stellar__hash": "Hash",
+    "stellar__high": "Tinggi",
+    "stellar__home_domain": "Home Domain",
+    "stellar__inflation": "Inflasi",
+    "stellar__invoke_contract": "",
+    "stellar__issuer_template": "Penerbit {0}",
+    "stellar__key": "Kunci",
+    "stellar__limit": "Batas",
+    "stellar__low": "Rendah",
+    "stellar__master_weight": "Bobot Master",
+    "stellar__medium": "Sedang",
+    "stellar__new_offer": "Tawaran baru",
+    "stellar__new_passive_offer": "Tawaran Pasif baru",
+    "stellar__no_memo_set": "Memo belum diatur!",
+    "stellar__no_restriction": "[tanpa batasan]",
+    "stellar__path_pay": "Path Pay",
+    "stellar__path_pay_at_least": "Path Pay setidaknya",
+    "stellar__pay": "Pay",
+    "stellar__pay_at_most": "Bayar maksimal",
+    "stellar__preauth_transaction": "Pre-auth transaction",
+    "stellar__price_per_template": "Harga per {0}",
+    "stellar__remove_signer": "Hapus Penandatangan",
+    "stellar__revoke_trust": "Cabut trust",
+    "stellar__selling": "Penjualan",
+    "stellar__set_data": "Atur data",
+    "stellar__set_flags": "Atur flag",
+    "stellar__set_sequence_to_template": "Atur sequence ke {0}?",
+    "stellar__sign_tx_count_template": "Tandatangani transaksi ini yang terdiri dari {0}",
+    "stellar__sign_tx_fee_template": "dan bayar {0}\nuntuk biaya?",
+    "stellar__sign_with": "Tandatangani dengan",
+    "stellar__source_account": "Akun sumber",
+    "stellar__timebounds": "Timebounds",
+    "stellar__token_info": "Info token",
+    "stellar__transaction_source": "Sumber transaksi",
+    "stellar__transaction_source_diff_warning": "Sumber transaksi bukan milik Trezor ini.",
+    "stellar__trusted_account": "Akun Terpercaya",
+    "stellar__update": "Perbarui",
+    "stellar__valid_from": "Valid dari (UTC)",
+    "stellar__valid_to": "Valid hingga (UTC)",
+    "stellar__value_sha256": "Nilai (SHA-256)",
+    "stellar__wanna_clean_value_key_template": "Anda ingin menghapus kunci nilai {0}?",
+    "storage_msg__processing": {
+      "Bolt": "Memproses",
+      "Caesar": "Memproses",
+      "Delizia": "Memproses",
+      "Eckhart": "Memproses..."
+    },
+    "storage_msg__starting": "Memulai",
+    "storage_msg__verifying_pin": {
+      "Bolt": "Memverifikasi PIN",
+      "Caesar": "Memverifikasi PIN",
+      "Delizia": "Memverifikasi PIN",
+      "Eckhart": "Memverifikasi PIN..."
+    },
+    "storage_msg__wrong_pin": "PIN salah",
+    "suite_sync__delegated_identity_key_no_thp": "Izinkan Trezor Suite gunakan Suite Sync dgn Trezor ini?",
+    "suite_sync__delegated_identity_key_thp": "Izinkan {0} di {1} gunakan Suite Sync dengan Trezor ini?",
+    "suite_sync__header": "Suite Sync",
+    "suite_sync__rotate_key": "Anda akan merotasi kunci identitas terdelegasi untuk Suite Sync. Tindakan ini akan membatalkan kunci sebelumnya. Anda ingin melanjutkan?",
+    "tezos__baker_address": "Alamat baker",
+    "tezos__balance": "Saldo",
+    "tezos__ballot": "Surat suara",
+    "tezos__confirm_delegation": "Konfirmasi delegasi",
+    "tezos__confirm_origination": "Konfirmasi origination",
+    "tezos__delegator": "Pendelegasi",
+    "tezos__proposal": "Proposal",
+    "tezos__register_delegate": "Daftarkan delegasi",
+    "tezos__remove_delegation": "Hapus delegasi",
+    "tezos__submit_ballot": "Kirim suara",
+    "tezos__submit_proposal": "Kirim proposal",
+    "tezos__submit_proposals": "Kirim proposal",
+    "thp__autoconnect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Izinkan {0} untuk terhubung otomatis ke Trezor ini?"
+    },
+    "thp__autoconnect_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Izinkan {0} di {1} untuk terhubung otomatis ke Trezor ini?"
+    },
+    "thp__autoconnect_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Kredensial hubung otomatis"
+    },
+    "thp__code_entry": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Masukkan kode keamanan sekali pakai di {0}"
+    },
+    "thp__code_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Selangkah lagi"
+    },
+    "thp__connect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Izinkan {0} untuk terhubung dengan Trezor ini?"
+    },
+    "thp__connect_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Izinkan {0} di {1} untuk terhubung dengan Trezor ini?"
+    },
+    "thp__connect_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dialog koneksi"
+    },
+    "thp__nfc_text": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dekatkan Trezor Anda ke ponsel untuk menyelesaikan penyiapan."
+    },
+    "thp__pair": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Izinkan {0} untuk terpasang dengan Trezor ini?"
+    },
+    "thp__pair_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Izinkan {0} di {1} untuk terpasang dengan Trezor ini?"
+    },
+    "thp__pair_name": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "{0} adalah nama Trezor Anda."
+    },
+    "thp__pair_new_device": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Pasang dengan perangkat baru"
+    },
+    "thp__pair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Sebelum melanjutkan"
+    },
+    "thp__qr_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Pindai kode QR untuk memasangkan"
+    },
+    "tron__claim_unfrozen_balance": "Klaim saldo yang dicairkan?",
+    "tron__claim_voting_rewards": "Klaim imbalan voting?",
+    "tron__owner_address": "Alamat pemilik",
+    "tutorial__continue": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Lanjutkan tutorial"
+    },
+    "tutorial__did_you_know": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Tahukah Anda?",
+      "Eckhart": ""
+    },
+    "tutorial__exit": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Keluar tutorial",
+      "Eckhart": "Keluar tutorial"
+    },
+    "tutorial__first_wallet": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Trezor Model One, dibuat di 2013, merupakan dompet perangkat keras pertama dunia.",
+      "Eckhart": ""
+    },
+    "tutorial__last_one": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Terakhir"
+    },
+    "tutorial__lets_begin": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Pelajari cara menggunakan perangkat ini dengan mudah.",
+      "Eckhart": ""
+    },
+    "tutorial__menu": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Temukan tindakan dan opsi yang sesuai konteks di menu.",
+      "Eckhart": "Temukan tindakan dan opsi yang sesuai konteks di menu."
+    },
+    "tutorial__menu_appendix": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Lihat selengkapnya, keluar dari alur..."
+    },
+    "tutorial__middle_click": {
+      "Bolt": "",
+      "Caesar": "Tekan kedua tombol kiri dan kanan bersamaan untuk konfirmasi.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__navigation_ts7": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Gunakan tombol di layar untuk bernavigasi dan mengonfirmasi tindakan Anda."
+    },
+    "tutorial__one_more_step": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Selangkah lagi"
+    },
+    "tutorial__power": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Gunakan tombol daya di sisi untuk menyalakan atau mematikan perangkat Anda."
+    },
+    "tutorial__press_and_hold": {
+      "Bolt": "",
+      "Caesar": "Tekan dan tahan tombol kanan untuk menyetujui operasi penting.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__ready_to_use": {
+      "Bolt": "",
+      "Caesar": "Anda siap\nmenggunakan Trezor.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__ready_to_use_safe5": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Anda siap untuk menggunakan perangkat Anda!",
+      "Eckhart": "Anda siap untuk menggunakan perangkat Anda!"
+    },
+    "tutorial__restart_tutorial": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Ulangi tutorial",
+      "Eckhart": "Ulangi tutorial"
+    },
+    "tutorial__scroll_down": {
+      "Bolt": "",
+      "Caesar": "Tekan kanan untuk menggulir ke bawah dan membaca seluruh konten jika teks tidak muat pada layar.\n\rTekan kiri untuk menggulir ke atas.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__suite_restart": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ulangi tutorial ini kapan saja dari app Trezor Suite."
+    },
+    "tutorial__sure_you_want_skip": {
+      "Bolt": "",
+      "Caesar": "Anda yakin ingin melewati tutorial?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__swipe_up_and_down": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Ketuk bagian bawah layar untuk lanjut, atau usap ke bawah untuk kembali.",
+      "Eckhart": ""
+    },
+    "tutorial__tap_to_start": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ketuk untuk memulai tutorial"
+    },
+    "tutorial__title_easy_navigation": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Navigasi mudah",
+      "Eckhart": ""
+    },
+    "tutorial__title_handy_menu": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Menu praktis",
+      "Eckhart": "Menu praktis"
+    },
+    "tutorial__title_hello": {
+      "Bolt": "",
+      "Caesar": "Halo",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_hold": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Tahan untuk mengon- firmasi tindakan penting",
+      "Eckhart": "Tahan tombol di bagian bawah layar untuk mengonfirmasi tindakan penting."
+    },
+    "tutorial__title_lets_begin": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Mari mulai",
+      "Eckhart": ""
+    },
+    "tutorial__title_screen_scroll": {
+      "Bolt": "",
+      "Caesar": "Gulir layar",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_skip": {
+      "Bolt": "",
+      "Caesar": "Lewati tutorial",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_tutorial_complete": {
+      "Bolt": "",
+      "Caesar": "Tutorial selesai",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_well_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Bagus sekali!",
+      "Eckhart": "Bagus sekali!"
+    },
+    "tutorial__tropic_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "TROPIC01 adalah chip secure element generasi terbaru yang dirancang untuk keamanan transparan dan dapat diaudit."
+    },
+    "tutorial__use_trezor": {
+      "Bolt": "",
+      "Caesar": "Gunakan Trezor dengan\nmenekan tombol kiri dan kanan.\n\rLanjut ke kanan.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__welcome_press_right": {
+      "Bolt": "",
+      "Caesar": "Selamat datang di Trezor. Tekan kanan untuk melanjutkan.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__welcome_safe5": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Selamat datang di\nTrezor Safe 5",
+      "Eckhart": ""
+    },
+    "tutorial__welcome_safe7": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Selamat datang\ndi Trezor\nSafe 7"
+    },
+    "tutorial__what_is_tropic": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Apa itu TROPIC01?"
+    },
+    "u2f__get": "Tingkatkan dan dapatkan penghitung U2F?",
+    "u2f__set_template": "Atur penghitung U2F ke {0}?",
+    "u2f__title_get": "Dapatkan penghitung U2F",
+    "u2f__title_set": "Atur penghitung U2F",
+    "wipe__info": "Semua data akan dihapus.",
+    "wipe__start_again": "Hapus Trezor Anda dan mulai proses penyiapan kembali.",
+    "wipe__title": "Hapus perangkat",
+    "wipe__want_to_wipe": "Anda yakin ingin menghapus perangkat?\n",
+    "wipe_code__cancel_setup": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Batalkan penyiapan kode wipe",
+      "Eckhart": "Batalkan penyiapan kode wipe?"
+    },
+    "wipe_code__change": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ubah kode wipe"
+    },
+    "wipe_code__change_question": "Ubah kode wipe?",
+    "wipe_code__changed": "Kode wipe diubah.",
+    "wipe_code__diff_from_pin": "Kode wipe harus berbeda dengan PIN Anda.",
+    "wipe_code__disabled": "Kode wipe dinonaktifkan.",
+    "wipe_code__enabled": "Kode wipe diaktifkan.",
+    "wipe_code__enter_new": "Kode wipe baru",
+    "wipe_code__info": {
+      "Bolt": "Kode wipe digunakan untuk menghapus semua data dari perangkat ini.",
+      "Caesar": "Kode wipe digunakan untuk menghapus semua data dari perangkat ini.",
+      "Delizia": "",
+      "Eckhart": "Kode wipe digunakan untuk menghapus semua data dari perangkat ini."
+    },
+    "wipe_code__invalid": {
+      "Bolt": "Kode wipe tidak valid",
+      "Caesar": "",
+      "Delizia": "Kode wipe tidak valid",
+      "Eckhart": ""
+    },
+    "wipe_code__mismatch": "Kode wipe yang Anda masukkan tidak cocok.",
+    "wipe_code__pin_not_set_description": "PIN harus diatur sebelum aktifkan kode wipe.",
+    "wipe_code__reenter": "Masukkan ulang kode wipe",
+    "wipe_code__reenter_to_confirm": {
+      "Bolt": "",
+      "Caesar": "Harap masukkan kembali kode wipe untuk konfirmasi.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "wipe_code__remove": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hapus kode wipe"
+    },
+    "wipe_code__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Kode wipe"
+    },
+    "wipe_code__title_check": {
+      "Bolt": "",
+      "Caesar": "Periksa kode wipe",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "wipe_code__title_invalid": {
+      "Bolt": "",
+      "Caesar": "Kode wipe tidak valid",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "wipe_code__title_settings": "Pengaturan kode wipe",
+    "wipe_code__turn_off": "Nonaktifkan proteksi kode wipe?",
+    "wipe_code__turn_on": {
+      "Bolt": "Aktifkan proteksi kode wipe?",
+      "Caesar": "Aktifkan proteksi kode wipe?",
+      "Delizia": "Aktifkan proteksi kode wipe?",
+      "Eckhart": ""
+    },
+    "wipe_code__wipe_code_mismatch": {
+      "Bolt": "Kode wipe tidak cocok",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "word_count__title": "Jumlah kata",
+    "words__about": "Tentang",
+    "words__account": "Akun",
+    "words__account_colon": "Akun:",
+    "words__account_deletion": "Penghapusan akun",
+    "words__address": "Alamat",
+    "words__amount": "Jumlah",
+    "words__are_you_sure": "Anda yakin?",
+    "words__arguments": "",
+    "words__array_of": "Array dari",
+    "words__asset": "Aset",
+    "words__assets": "Aset",
+    "words__authenticate": "Autentikasi",
+    "words__authorization": "",
+    "words__blockhash": "Blockhash",
+    "words__bluetooth": "Bluetooth",
+    "words__buying": "Pembelian",
+    "words__cancel_and_exit": "Batalkan dan keluar",
+    "words__cancel_question": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Batalkan?"
+    },
+    "words__chain": "Jaringan",
+    "words__comm_continue": "Komunikasi dengan perangkat yang terhubung gagal. Aman untuk melanjutkan.",
+    "words__comm_trouble": "Komunikasi dengan perangkat yang terhubung gagal. Batalkan lalu coba lagi.",
+    "words__confirm": "Konfirmasi",
+    "words__confirm_all": "Konfirmasi semua",
+    "words__confirm_fee": "Konfirmasi biaya",
+    "words__connect": "Hubungkan",
+    "words__connected": "Terhubung",
+    "words__contains": "Mengandung",
+    "words__continue_anyway": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Lanjutkan saja",
+      "Eckhart": "Lanjutkan saja"
+    },
+    "words__continue_anyway_question": "Lanjutkan saja?",
+    "words__continue_with": "Lanjutkan dengan",
+    "words__deposit": "Deposit",
+    "words__device": "Perangkat",
+    "words__disabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dinonaktifkan"
+    },
+    "words__disconnect": "Putuskan",
+    "words__disconnected": "Terputus",
+    "words__enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Diaktifkan"
+    },
+    "words__error": "Error",
+    "words__fee": "Biaya",
+    "words__fee_limit": "Batas biaya",
+    "words__forget": "Lupakan",
+    "words__from": {
+      "Bolt": "dari",
+      "Caesar": "dari",
+      "Delizia": "dari",
+      "Eckhart": ""
+    },
+    "words__function": "",
+    "words__important": "Penting",
+    "words__instructions": "Instruksi",
+    "words__intent": "Niat",
+    "words__keep_it_safe": {
+      "Bolt": "",
+      "Caesar": "Jaga dengan aman!",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__know_what_your_doing": "Lanjukan hanya jika Anda tahu apa yang Anda lakukan!",
+    "words__led": "LED",
+    "words__made_in": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dibuat di"
+    },
+    "words__manage": "Kelola",
+    "words__my_trezor": "Trezor saya",
+    "words__name": "Nama",
+    "words__no": "Tidak",
+    "words__not_recommended": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Tidak disarankan!",
+      "Eckhart": ""
+    },
+    "words__note": "Catatan",
+    "words__off": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "NONAKTIF"
+    },
+    "words__on": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "AKTIF"
+    },
+    "words__operation_cancelled": "Operasi dibatalkan",
+    "words__outputs": "output",
+    "words__pay_attention": "Perhatikan",
+    "words__please_check_again": {
+      "Bolt": "Harap periksa lagi.",
+      "Caesar": "Harap periksa lagi.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__please_try_again": {
+      "Bolt": "Harap coba lagi.",
+      "Caesar": "Harap coba lagi",
+      "Delizia": "Harap coba lagi",
+      "Eckhart": ""
+    },
+    "words__power": "Daya",
+    "words__provider": "Penyedia",
+    "words__really_wanna": {
+      "Bolt": "Anda yakin ingin",
+      "Caesar": "",
+      "Delizia": "Anda yakin ingin",
+      "Eckhart": ""
+    },
+    "words__receive": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Terima"
+    },
+    "words__recipient": "Penerima",
+    "words__recovery_share": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bagian pemulihan"
+    },
+    "words__resource": "Sumber daya",
+    "words__review": "Tinjau",
+    "words__security": "Keamanan",
+    "words__send": "Kirim",
+    "words__set": "Atur",
+    "words__settings": "Pengaturan",
+    "words__show_next": "Lihat berikutnya",
+    "words__sign": "Tandatangani",
+    "words__signer": "Penandatangan",
+    "words__swap": "Swap",
+    "words__tap_to_wake": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ketuk untuk bangun"
+    },
+    "words__title_check": {
+      "Bolt": "",
+      "Caesar": "Periksa",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_done": "Selesai",
+    "words__title_group": {
+      "Bolt": "",
+      "Caesar": "Grup",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_information": "Informasi",
+    "words__title_remember": {
+      "Bolt": "",
+      "Caesar": "Ingat",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_share": {
+      "Bolt": "",
+      "Caesar": "Bagian",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_shares": {
+      "Bolt": "",
+      "Caesar": "Bagian",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_success": "Sukses",
+    "words__title_summary": "Ringkasan",
+    "words__title_threshold": {
+      "Bolt": "",
+      "Caesar": "Ambang batas",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__token": "Token",
+    "words__transaction_fee": "Biaya transaksi",
+    "words__try_again": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Coba lagi.",
+      "Eckhart": "Coba lagi"
+    },
+    "words__unknown": "Tidak dikenal",
+    "words__unlimited": "Tanpa batas",
+    "words__unlocked": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Kunci terbuka",
+      "Eckhart": ""
+    },
+    "words__votes": "Suara",
+    "words__voting": "Pemungutan suara",
+    "words__wallet": "Dompet",
+    "words__warning": "Peringatan",
+    "words__wipe": "Hapus",
+    "words__writable": "Bisa ditulis",
+    "words__yes": "Ya"
+  }
+}
