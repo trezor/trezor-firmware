@@ -203,7 +203,7 @@ uint32_t display_fb_init(void) {
   return (uint32_t)get_fb_ptr(0);
 }
 
-void HAL_LTDC_LineEvenCallback(LTDC_HandleTypeDef *hltdc) {
+void HAL_LTDC_LineEventCallback(LTDC_HandleTypeDef *hltdc) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
