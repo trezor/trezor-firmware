@@ -1,10 +1,16 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{fs, process};
 
 use anyhow::{Context, Result, ensure};
 
-use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, Project, ResetArgs};
+use crate::args::{
+    FlashArgs, FlashEraseArgs, FlashReadArgs, FlashSection, Model, Project, ResetArgs,
+};
 use crate::{combine, helpers};
+
+/// Name of the flash dump written by [`flash_read()`] when no output file is
+/// given.
+const DEFAULT_DUMP_NAME: &str = "flash-dump.bin";
 
 /// Flashes the specified project to the device using OpenOCD.
 pub fn flash(args: FlashArgs) -> Result<()> {
@@ -67,6 +73,52 @@ pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
     run_openocd(args.model, &instr)
 }
 
+/// Reads the whole flash of the connected device into a file using OpenOCD.
+pub fn flash_read(args: FlashReadArgs) -> Result<()> {
+    let output = match args.output {
+        Some(path) => path,
+        None => helpers::artifacts_dir(args.model)?.join(DEFAULT_DUMP_NAME),
+    };
+    let output = absolute_output_path(&output)?;
+
+    println!(
+        "Reading flash of `{:?}` into `{}`",
+        args.model,
+        output.display()
+    );
+
+    run_openocd(args.model, &build_flash_read_instruction(&output))?;
+
+    let size = fs::metadata(&output)
+        .with_context(|| format!("`openocd` did not write `{}`", output.display()))?
+        .len();
+    println!("Read {} bytes into `{}`", size, output.display());
+
+    Ok(())
+}
+
+/// Makes `output` absolute, creating its parent directory if needed. OpenOCD
+/// resolves relative paths against its own working directory, so it has to be
+/// given an absolute one.
+fn absolute_output_path(output: &Path) -> Result<PathBuf> {
+    let parent = match output.parent() {
+        Some(parent) if !parent.as_os_str().is_empty() => parent.to_path_buf(),
+        // A bare file name is relative to the current directory.
+        _ => PathBuf::from("."),
+    };
+    helpers::ensure_directory(&parent)?;
+
+    let file_name = output
+        .file_name()
+        .with_context(|| format!("`{}` is not a valid output file", output.display()))?;
+
+    let parent = parent
+        .canonicalize()
+        .with_context(|| format!("Failed to resolve `{}`", parent.display()))?;
+
+    Ok(parent.join(file_name))
+}
+
 /// Resets the connected device using OpenOCD.
 pub fn reset(args: ResetArgs) -> Result<()> {
     println!("Resetting `{:?}`", args.model);
@@ -97,6 +149,15 @@ fn build_flash_write_instruction(binary: &Path, address: u32) -> String {
         "init; reset halt; flash write_image erase {} 0x{:X}; exit",
         binary.display(),
         address
+    )
+}
+
+/// Bank 0 spans the whole flash on every supported MCU, same as the
+/// `flash-erase all` instruction relies on.
+fn build_flash_read_instruction(output: &Path) -> String {
+    format!(
+        "init; reset halt; flash read_bank 0 {}; exit",
+        output.display()
     )
 }
 
@@ -140,7 +201,9 @@ fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result
 mod tests {
     use std::path::Path;
 
-    use super::{build_flash_erase_instruction, build_flash_write_instruction};
+    use super::{
+        build_flash_erase_instruction, build_flash_read_instruction, build_flash_write_instruction,
+    };
     use crate::args::FlashSection;
 
     #[test]
@@ -150,6 +213,16 @@ mod tests {
         assert_eq!(
             instruction,
             "init; reset halt; flash write_image erase /tmp/fw.bin 0x8004000; exit"
+        );
+    }
+
+    #[test]
+    fn builds_flash_read_instruction_for_the_whole_bank() {
+        let instruction = build_flash_read_instruction(Path::new("/tmp/dump.bin"));
+
+        assert_eq!(
+            instruction,
+            "init; reset halt; flash read_bank 0 /tmp/dump.bin; exit"
         );
     }
 

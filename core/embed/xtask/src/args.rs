@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use anyhow::{Result, anyhow};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use serde::Deserialize;
@@ -151,6 +153,8 @@ pub enum Cmd {
     Flash(FlashArgs),
     /// Erase flash or part of it using OpenOCD
     FlashErase(FlashEraseArgs),
+    /// Read the whole flash of the connected device into a file using OpenOCD
+    FlashRead(FlashReadArgs),
     /// Reset the connected device using OpenOCD
     Reset(ResetArgs),
     /// Upload firmware to device
@@ -218,6 +222,18 @@ pub struct FlashEraseArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+}
+
+#[derive(Args, Debug)]
+pub struct FlashReadArgs {
+    /// Target model
+    #[arg(long, short = 'm', ignore_case = true)]
+    pub model: Model,
+
+    /// File to write the flash contents to
+    /// (default `<artifacts>/<MODEL>/flash-dump.bin`)
+    #[arg(long, short = 'o')]
+    pub output: Option<PathBuf>,
 }
 
 #[derive(Args, Debug)]
