@@ -169,7 +169,9 @@ _FIDO_ATT_CERT = b"0\x82\x01\xcd0\x82\x01s\xa0\x03\x02\x01\x02\x02\x04\x03E`\xc4
 _BOGUS_RP_ID = ".dummy"
 _BOGUS_APPID_CHROME = b"A" * 32
 _BOGUS_APPID_FIREFOX = b"\0" * 32
-_BOGUS_APPIDS = (_BOGUS_APPID_CHROME, _BOGUS_APPID_FIREFOX)
+# SHA-256 of "make.me.blink", used by Firefox's authenticator-rs.
+_BOGUS_APPID_FIREFOX_BLINK = b"\xe8\x45\x41\xea\xf2\x07\xf7\xd7\x5a\xd0\x51\x43\x47\x70\xf6\xd1\xa9\xbf\x62\xf7\xea\x9b\xe5\x14\xfd\x4e\x0c\xa8\x27\x2b\x1d\xeb"
+_BOGUS_APPIDS = (_BOGUS_APPID_CHROME, _BOGUS_APPID_FIREFOX, _BOGUS_APPID_FIREFOX_BLINK)
 _AAGUID = b"\xd6\xd0\xbd\xc3b\xee\xc4\xdb\xde\x8dzenJD\x87"  # First 16 bytes of SHA-256("TREZOR 2")
 
 # authentication control byte
