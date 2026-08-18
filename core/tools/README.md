@@ -171,6 +171,57 @@ Key options: `--delay 5` changes the pause between images (default: 10 s), `--lo
 cycles indefinitely, `--backlight LEVEL` sets the display backlight (0–255) before the
 slideshow starts.
 
+### `display-slideshow` prodtest command
+
+The prodtest firmware has a built-in `display-slideshow` command that cycles through
+images embedded directly in the firmware.  Advance to the next image by touching the
+screen or pressing a button; pass a timeout in milliseconds to advance automatically.
+Send any input from the terminal to exit early at any time:
+
+```
+display-slideshow                           # wait for touch/button input
+display-slideshow 3000                      # advance every 3 seconds automatically
+display-slideshow --loop                    # loop indefinitely, manual advance; send any terminal input to exit
+display-slideshow 3000 --loop               # loop indefinitely, auto-advance every 3 s; send any terminal input to exit
+display-slideshow --backlight 200           # set backlight to 200 before starting
+display-slideshow 3000 --loop --backlight 200  # combine options freely
+```
+
+#### Adding an image to the slideshow
+
+1. Convert the source image to a C header:
+
+   ```
+   cd core/tools
+   python display_image_converter.py MY_IMAGE.png \
+       --width 240 --height 320 \
+       --output-c ../embed/projects/prodtest/cmd/prodtest_img_MY_IMAGE.h \
+       --symbol prodtest_img_MY_IMAGE
+   ```
+
+2. Add an `#include` line in `core/embed/projects/prodtest/cmd/prodtest_display_images.h`:
+
+   ```c
+   #include "prodtest_img_MY_IMAGE.h"
+   ```
+
+3. Add an entry to the `PRODTEST_IMAGES[]` array in the same file:
+
+   ```c
+   {"My Image Label", prodtest_img_MY_IMAGE_WIDTH, prodtest_img_MY_IMAGE_HEIGHT, prodtest_img_MY_IMAGE},
+   ```
+
+4. Rebuild the prodtest firmware:
+
+   ```
+   .venv/bin/xtask build --model T3W1 --board lx200d2406a prodtest
+   ```
+
+#### Removing an image from the slideshow
+
+Remove the corresponding `#include` line and the entry from `PRODTEST_IMAGES[]` in
+`prodtest_display_images.h`, then delete the `.h` file and rebuild.
+
 ### `make_cmakelists.py`
 
 Generate a CMakeLists.txt file for the core.
