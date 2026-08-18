@@ -275,6 +275,13 @@ def _check_change(
     # that spends exactly 0 coins to a random address.
     # See https://github.com/monero-project/monero/pull/1415
     if change_index is None and state.output_change.amount == 0 and len(outputs) == 2:
+        # The change address is not validated as ours on this path -- for a sweep it is
+        # the random address of the fake output. It must therefore never be the address
+        # of an output that actually carries money, otherwise that output would be keyed
+        # as change (a*R) in step 6 and nobody would be able to spend it.
+        for out in outputs:
+            if out.amount and addr_eq(out.addr, change_addr):
+                raise signing.ChangeAddressError("Change address spends to a recipient")
         state.mem_trace("Sweep tsx" if __debug__ else None)
         return
 
