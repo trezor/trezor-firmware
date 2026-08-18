@@ -6,7 +6,7 @@
 # This charade serves to differentiate commands run under uv shell and ncs shell since their pythons are not compatible
 
 # Update the OPTSTRING to include 'a:'
-OPTSTRING=":b:a:pdsfc"
+OPTSTRING=":b:a:i:pdsfc"
 
 APP_DIR="trezor-ble"
 BOARD=
@@ -19,6 +19,21 @@ HEADER_SIZE=
 SLOT_ADDR=
 SLOT_SIZE=
 MODEL_IDENTIFIER=
+# MCUboot child-image Kconfig fragments (names under <app>/sysbuild/), assembled
+# from -d/-p and then extended per board -- see the BOARD block.
+MCUBOOT_CONFS=
+# Optional founder-signed app image to merge/flash instead of the bare build output.
+# The literal "auto" means "resolve it from the trezor-firmware bundle" (-i with no
+# path argument).
+SIGNED_IMAGE=
+# Decoded from CONFIG_MODEL_IDENTIFIER by parse_partition_info (e.g. "T3W1"), so the
+# trezor-firmware paths below work even when -s runs without -b.
+MODEL_NAME=
+# trezor-firmware core/, relative to nordic/trezor where this script is run.
+CORE_DIR="../../core"
+# "legacy" or "founder" -- which signing scheme this model's MCUboot verifies.
+# Resolved from the build (see resolve_sign_variant), never passed in.
+SIGN_VARIANT=
 # Resolved by verify_environment(); pins the toolchain used by the build subshell.
 NCS_TOOLCHAIN_VERSION=
 
@@ -61,8 +76,8 @@ run_under_ncs_subshell() {
     fi
 }
 
-# Run host-side signing/merge tools in the *current* shell. imgtool, hash_signer
-# and the helper Python scripts come from the uv/.venv (or nix) environment and
+# Run host-side layout/merge tools in the *current* shell. imgtool and the helper
+# Python scripts come from the uv/.venv (or nix) environment and
 # must NOT inherit the NCS toolchain's Python env (PYTHONHOME), which points a
 # different-version interpreter at the wrong stdlib ("SRE module mismatch").
 # Only 'west build'/'west flash' need the NCS toolchain (run_under_ncs_subshell).
@@ -71,16 +86,23 @@ run_native() {
 }
 
 usage() {
-    echo "$0 [-b board_name] [-a app_dir] [-p] [-d] [-r] [-s] [-f]"
+    echo "$0 [-b board_name] [-a app_dir] [-i signed_image] [-p] [-d] [-c] [-s] [-f]"
     cat <<END
     Parameters:
     -b board: full board target (e.g. t3t2_dk/nrf54ls05b/cpuapp) or a model
               alias (t3t2, t3w1) that expands to that model's default board
     -a app_dir: specify application directory (default: trezor-ble)
+    -i [image]: merge/flash a FOUNDER-SIGNED app image instead of the bare build
+                output. With no path, takes it from the trezor-firmware bundle:
+                  core/build-xtask/tree/<MODEL>/trezor-ble[-dev].bin
+                Use with -s (and -f to flash). Without -i the BARE app is merged,
+                which this MCUboot rejects -- which is what you want to install a
+                new MCUboot, or to force the OTA push.
     -p: production build
     -d: use debug overlay when building
     -c: clean build (pristine)
-    -s: sign result
+    -s: lay out the app image (and, on -d builds, copy it to
+        core/embed/models/<MODEL>/ for founder signing)
     -f: flash board
 
     Each of build/sign/flash can be done in one run or separately, but the sequence must follow to make sense.
@@ -115,6 +137,43 @@ parse_partition_info() {
     local hex
     hex=$(printf '%08x' "$model_id_dec")
     MODEL_IDENTIFIER="0x${hex:6:2}${hex:4:2}${hex:2:2}${hex:0:2}"
+
+    # Same bytes, as ASCII -- names the trezor-firmware model folder. Taken from the
+    # BUILD rather than from -b so it is still right when signing in a separate
+    # invocation (and cannot disagree with what was actually built).
+    MODEL_NAME=$(printf "\\x${hex:6:2}\\x${hex:4:2}\\x${hex:2:2}\\x${hex:0:2}")
+    case "$MODEL_NAME" in
+        [A-Z][0-9A-Z][0-9A-Z][0-9A-Z]) ;;
+        *) fatal "could not decode a model name from CONFIG_MODEL_IDENTIFIER (got '$MODEL_NAME')" ;;
+    esac
+}
+
+# Which signing scheme the model's MCUboot expects. This follows the SDK, which is
+# pinned per board (see verify_environment) because a published model cannot change
+# SDK for certification reasons:
+#
+#   T3W1  NCS 2.9  mcuboot trezor-v2.1.0-ncs3   LEGACY: two Ed25519 signatures over
+#                                               the image hash (TLVs 0x00A0/0x00A1),
+#                                               against the nRF's own key pool.
+#   T3T2  NCS 3.3  mcuboot trezor-ncs3.3.0      FOUNDER: post-quantum founder Merkle
+#                                               tree (CONFIG_BOOT_PQ_SECURE_BOOT); the
+#                                               image carries no signature of its own.
+#
+# Derived from the BUILD (MODEL_NAME) rather than from -b, so it cannot disagree with
+# what was actually built, and still works when -s runs in a separate invocation.
+resolve_sign_variant() {
+    case "$MODEL_NAME" in
+        T3W1) SIGN_VARIANT="legacy" ;;
+        T3T2) SIGN_VARIANT="founder" ;;
+        *)    fatal "model '$MODEL_NAME' has no known signing variant; add it to resolve_sign_variant()" ;;
+    esac
+    echo "signing variant: $SIGN_VARIANT (model $MODEL_NAME)"
+}
+
+# Name of this model's committed/bundled nRF image. Dev builds (-d) use the -dev
+# variant, matching trezor-firmware's default_nrf_image().
+nrf_image_name() {
+    if [ -n "$DEBUG" ]; then echo "trezor-ble-dev.bin"; else echo "trezor-ble.bin"; fi
 }
 
 # Verify the active nRF Connect SDK / toolchain match the target board before
@@ -218,6 +277,14 @@ while getopts ${OPTSTRING} opt; do
     a)
       APP_DIR="$OPTARG"
       ;;
+    i)
+      # Optional argument. getopts always grabs the next word for "i:", so if that
+      # word is actually the next option, hand it back and fall through to "auto".
+      case "$OPTARG" in
+        -*) OPTIND=$((OPTIND - 1)); SIGNED_IMAGE="auto" ;;
+        *)  SIGNED_IMAGE="$OPTARG" ;;
+      esac
+      ;;
     c)
       # Force a full wipe (not 'auto'): switching SDK/toolchain leaves a
       # CMakeCache.txt with stale toolchain paths (ninja, zephyr-sdk) that 'auto'
@@ -225,16 +292,29 @@ while getopts ${OPTSTRING} opt; do
       PRISTINE="--pristine=always"
       ;;
     d)
-      DEBUG="-DOVERLAY_CONFIG=debug.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_debug.conf\""
+      DEBUG="-DOVERLAY_CONFIG=debug.conf"
+      MCUBOOT_CONFS="mcuboot.conf;mcuboot_debug.conf"
       ;;
     p)
-      PRODUCTION="-DOVERLAY_CONFIG=prod.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_prod.conf\""
+      PRODUCTION="-DOVERLAY_CONFIG=prod.conf"
+      MCUBOOT_CONFS="mcuboot.conf;mcuboot_prod.conf"
       ;;
     s)
       SIGN=1
       ;;
     f)
       FLASH=1
+      ;;
+    :)
+      # Missing argument. For -i that is legitimate ("use the bundle's image");
+      # anything else is a usage error.
+      if [ "$OPTARG" = "i" ]; then
+        SIGNED_IMAGE="auto"
+      else
+        echo "option -$OPTARG requires an argument"
+        usage
+        exit 2
+      fi
       ;;
     ?)
       usage
@@ -257,11 +337,31 @@ if [ -n "$BOARD" ]; then
     # NCS 2.9 aborts the build with an "undefined symbol" Kconfig warning.
     SB_OVERLAY=
     case "$BOARD" in
-        t3t2_dk*) SB_OVERLAY="-DSB_EXTRA_CONF_FILE=$PWD/$APP_DIR/sysbuild_nrf54l.conf" ;;
+        t3t2_dk*)
+            SB_OVERLAY="-DSB_EXTRA_CONF_FILE=$PWD/$APP_DIR/sysbuild_nrf54l.conf"
+            # Founder-tree (post-quantum) verification is NCS 3.3 / nRF54L only:
+            # CONFIG_BOOT_PQ_SECURE_BOOT does not exist in the NCS 2.9 MCUboot
+            # revision, and assigning an undefined symbol aborts the Kconfig run.
+            # T3W1 stays on 2.9 (certification) with the legacy signing scheme.
+            MCUBOOT_CONFS="${MCUBOOT_CONFS:-mcuboot.conf};mcuboot_t3t2.conf"
+            ;;
     esac
 
+    # Expand the fragment names to absolute paths for -Dmcuboot_EXTRA_CONF_FILE.
+    MCUBOOT_ARG=
+    if [ -n "$MCUBOOT_CONFS" ]; then
+        _confs=
+        IFS=';' read -ra _names <<< "$MCUBOOT_CONFS"
+        for _n in "${_names[@]}"; do
+            [ -f "$APP_DIR/sysbuild/$_n" ] || fatal "missing mcuboot fragment: $APP_DIR/sysbuild/$_n"
+            _confs="${_confs:+$_confs;}$PWD/$APP_DIR/sysbuild/$_n"
+        done
+        MCUBOOT_ARG="-Dmcuboot_EXTRA_CONF_FILE=\"$_confs\""
+        echo "mcuboot config: $MCUBOOT_CONFS"
+    fi
+
     # Assemble all post-'--' cmake args; emit the '--' separator only if any exist.
-    EXTRA_CMAKE_ARGS="$DEBUG $PRODUCTION $SB_OVERLAY"
+    EXTRA_CMAKE_ARGS="$DEBUG $PRODUCTION $SB_OVERLAY $MCUBOOT_ARG"
     CMAKE_SEP=
     [ -n "${EXTRA_CMAKE_ARGS// /}" ] && CMAKE_SEP="--"
 
@@ -303,23 +403,121 @@ if [ "$SIGN" -eq 1 ]; then
     dd if="build/$APP_DIR/zephyr/zephyr.bin" bs=1 skip="$((HEADER_SIZE))" \
         of="build/$APP_DIR/zephyr/zephyr_nohdr.bin" \
         || { rm -f "build/$APP_DIR/zephyr/zephyr_nohdr.bin"; fatal "dd failed to strip header from zephyr.bin"; }
+# Hand the laid-out app image to trezor-firmware, which commits it as this model's
+# model-tree leaf AND embeds it in the coreapp (firmware/build.rs reads the same
+# path). Dev builds only: -dev is the image a --bootloader-devel bundle picks up,
+# and production signing is a separate, deliberate flow we should not stage into
+# silently.
+stage_for_signing() {
+    [ -n "$DEBUG" ] || return 0
+    local model_dir="$CORE_DIR/embed/models/$MODEL_NAME"
+    if [ ! -d "$model_dir" ]; then
+        echo "note: $model_dir not found; skipping the copy for signing"
+        return 0
+    fi
+    cp "build/$APP_DIR/zephyr/zephyr.trz.bin" "$model_dir/$(nrf_image_name)" \
+        || fatal "failed to copy the image into $model_dir"
+    echo "copied for signing -> $model_dir/$(nrf_image_name)"
+}
+
+
+    resolve_sign_variant
+
+    if [ "$SIGN_VARIANT" = "legacy" ]; then
+        # LEGACY (NCS 2.9 / T3W1): imgtool lays out the image and computes the
+        # image-hash TLV; the two Trezor Ed25519 signatures over that hash are
+        # inserted afterwards (TLVs 0x00A0/0x00A1) and verified by MCUboot against
+        # the nRF's OWN key pool. 0x00A2 names which of those keys signed, 0x00A3
+        # pins the model; both are PROTECTED, so covered by the image hash.
+        run_native \
+            "imgtool sign --version $VERSION --align 4 --header-size $HEADER_SIZE -S $SLOT_SIZE --pad-header build/$APP_DIR/zephyr/zephyr_nohdr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 $MODEL_IDENTIFIER && \
+             ../bootloader/mcuboot/scripts/imgtool.py dumpinfo ./build/$APP_DIR/zephyr/zephyr.prep.bin > ./build/$APP_DIR/zephyr/dump.txt"
+
+        HASH=$(python ./scripts/extract_hash.py ./build/$APP_DIR/zephyr/dump.txt)
+        SIGNATURE0=$(hash_signer -d "$HASH" -s0)
+        SIGNATURE1=$(hash_signer -d "$HASH" -s1)
+        echo "Signed hash $HASH, signature0 $SIGNATURE0, signature1 $SIGNATURE1"
+
+        run_native \
+            "python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.bin $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.trz.bin"
+        echo "nRF app image (legacy-signed): build/$APP_DIR/zephyr/zephyr.trz.bin"
+        [ -z "$SIGNED_IMAGE" ] || echo "note: -i is ignored for the legacy variant (the image is signed here)"
+        SIGNED_IMAGE=
+        # Fully signed already -- nothing to hand back for founder signing, but the
+        # tree build and the coreapp still read it from models/, so stage it. This
+        # used to live only on the founder path, which left the legacy image with no
+        # way to reach the tree at all.
+        stage_for_signing
+        echo "next: (cd $CORE_DIR && make build_pq TREZOR_MODEL=$MODEL_NAME)"
+    else
+        # FOUNDER (NCS 3.3 / T3T2): no signature of its own. imgtool only lays out
+        # the image and computes the image-hash TLV; authenticity comes from the
+        # founder Merkle tree, the SAME signature the Trezor STM boot header carries
+        # over modelRoot (SLH-DSA + Ed25519 hybrid, 2-of-3). Both custom TLVs are
+        # PROTECTED, hence inside the founder leaf:
+        #   0x00A2 sigmask  -- PLACEHOLDER (0x00). The value is the SIGNER's to
+        #                      choose; trezor-firmware stamps it (re-stamping the
+        #                      image hash, which protected TLVs are part of) before
+        #                      computing the leaf. Keeping it out of the build is what
+        #                      makes founder key rotation a re-sign, not a rebuild.
+        #   0x00A3 model id -- pins the image to this model
+        run_native \
+            "imgtool sign --version $VERSION --align 4 --header-size $HEADER_SIZE -S $SLOT_SIZE --pad-header build/$APP_DIR/zephyr/zephyr_nohdr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x00 --custom-tlv 0x00A3 $MODEL_IDENTIFIER && \
+             ../bootloader/mcuboot/scripts/imgtool.py dumpinfo ./build/$APP_DIR/zephyr/zephyr.prep.bin > ./build/$APP_DIR/zephyr/dump.txt"
+
+        # -i with no path: take the founder-signed image from the trezor-firmware
+        # bundle for this model.
+        if [ "$SIGNED_IMAGE" = "auto" ]; then
+            SIGNED_IMAGE="$CORE_DIR/build-xtask/tree/$MODEL_NAME/$(nrf_image_name)"
+            echo "-i: using the signed image from the bundle: $SIGNED_IMAGE"
+            [ -f "$SIGNED_IMAGE" ] || fatal "-i: $SIGNED_IMAGE not found.
+Sign it first, from trezor-firmware/core:
+    make build_pq TREZOR_MODEL=$MODEL_NAME TREE_OPTS=\"--nrf-pq-native\""
+        fi
+
+        # Which app image ends up in the merged hex:
+        #
+        #   default   the BARE image -- this MCUboot REJECTS it, so the nRF waits in
+        #             serial recovery until the STM pushes a founder-signed image over
+        #             OTA. Useful to install a new MCUboot, and to force the OTA push
+        #             (the STM sees no valid nRF app, so it cannot skip the update).
+        #
+        #   -i [img]  the FOUNDER-SIGNED image, so the nRF boots straight away. Use
+        #             this to test the nRF's own founder verification without OTA.
+        #             The STM will then SKIP the push, since the running nRF already
+        #             matches the bundle's image hash.
+        if [ -n "$SIGNED_IMAGE" ]; then
+            [ -f "$SIGNED_IMAGE" ] || fatal "-i: no such file: $SIGNED_IMAGE"
+            img_size=$(wc -c < "$SIGNED_IMAGE")
+            [ "$img_size" -le "$((SLOT_SIZE))" ] \
+                || fatal "-i: image is $img_size B, slot0 is $((SLOT_SIZE)) B"
+            cp "$SIGNED_IMAGE" "build/$APP_DIR/zephyr/zephyr.trz.bin" \
+                || fatal "failed to stage $SIGNED_IMAGE"
+            echo "nRF app image (founder-signed, from $SIGNED_IMAGE): $img_size B"
+        else
+            cp "build/$APP_DIR/zephyr/zephyr.prep.bin" "build/$APP_DIR/zephyr/zephyr.trz.bin" \
+                || fatal "failed to stage zephyr.trz.bin"
+            echo "nRF app image (BARE, founder material pending -- MCUboot will reject it):"
+            echo "  build/$APP_DIR/zephyr/zephyr.trz.bin"
+
+            # Hand the bare image straight to trezor-firmware for founder signing.
+            # Dev builds only: -dev is the image trezor-firmware picks up for a
+            # --bootloader-devel bundle, and production signing is a separate,
+            # deliberate flow we should not stage into silently.
+            stage_for_signing
+            if [ -n "$DEBUG" ]; then
+                echo "next: (cd $CORE_DIR && make build_pq TREZOR_MODEL=$MODEL_NAME \
+TREE_OPTS=\"--nrf-pq-native\") && $0 -b <board> -d -s -f -i"
+            fi
+        fi
+    fi
 
     run_native \
-        "imgtool sign --version $VERSION --align 4 --header-size $HEADER_SIZE -S $SLOT_SIZE --pad-header build/$APP_DIR/zephyr/zephyr_nohdr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 $MODEL_IDENTIFIER && \
-         ../bootloader/mcuboot/scripts/imgtool.py dumpinfo ./build/$APP_DIR/zephyr/zephyr.prep.bin > ./build/$APP_DIR/zephyr/dump.txt"
-
-    HASH=$(python ./scripts/extract_hash.py ./build/$APP_DIR/zephyr/dump.txt)
-    SIGNATURE0=$(hash_signer -d "$HASH" -s0)
-    SIGNATURE1=$(hash_signer -d "$HASH" -s1)
-    echo "Signed hash $HASH, signature0 $SIGNATURE0, signature1 $SIGNATURE1"
-
-    run_native \
-        "python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.bin $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.bin && \
-         python -c \"from intelhex import IntelHex; ih = IntelHex(); ih.loadbin('build/$APP_DIR/zephyr/zephyr.signed_trz.bin', offset=$SLOT_ADDR); ih.tofile('build/$APP_DIR/zephyr/zephyr.signed_trz.hex', format='hex')\" && \
-         python ../zephyr/scripts/build/mergehex.py build/mcuboot/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.signed_trz.hex -o build/zephyr.merged.signed_trz.hex"
+        "python -c \"from intelhex import IntelHex; ih = IntelHex(); ih.loadbin('build/$APP_DIR/zephyr/zephyr.trz.bin', offset=$SLOT_ADDR); ih.tofile('build/$APP_DIR/zephyr/zephyr.trz.hex', format='hex')\" && \
+         python ../zephyr/scripts/build/mergehex.py build/mcuboot/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.trz.hex -o build/zephyr.merged.trz.hex"
 fi
 
 if [ "$FLASH" -eq 1 ]; then
     run_under_ncs_subshell \
-        "west flash --domain \"$APP_DIR\" --hex-file ./build/zephyr.merged.signed_trz.hex"
+        "west flash --domain \"$APP_DIR\" --hex-file ./build/zephyr.merged.trz.hex"
 fi
