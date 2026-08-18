@@ -1267,5 +1267,13 @@
   "1265": "stellar__sign_authorization",
   "1266": "stellar__valid_until_ledger",
   "1267": "ethereum__subcall",
-  "1268": "ethereum__subcall_to"
+  "1268": "ethereum__subcall_to",
+  "1269": "buttons__authenticate",
+  "1270": "buttons__cancel_and_exit",
+  "1271": "buttons__confirm_all",
+  "1272": "buttons__continue_anyway",
+  "1273": "buttons__disconnect",
+  "1274": "buttons__forget",
+  "1275": "buttons__show_next",
+  "1276": "buttons__wipe"
 }
