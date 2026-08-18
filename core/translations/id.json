@@ -2025,12 +2025,7 @@
       "Delizia": "Periksa bagian {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": {
-      "Bolt": "Periksa cadangan",
-      "Caesar": "Periksa cadangan dompet",
-      "Delizia": "Periksa cadangan",
-      "Eckhart": "Periksa cadangan dompet"
-    },
+    "reset__check_wallet_backup_title": "Periksa cadangan",
     "reset__continue_with_next_share": {
       "Bolt": "Lanjutkan dengan bagian berikutnya.",
       "Caesar": "Lanjutkan dengan bagian berikutnya.",
@@ -3072,7 +3067,7 @@
     "tutorial__title_hold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Tahan untuk mengonfirmasi tindakan penting",
+      "Delizia": "Tahan untuk mengon- firmasi tindakan penting",
       "Eckhart": "Tahan tombol di bagian bawah layar untuk mengonfirmasi tindakan penting."
     },
     "tutorial__title_lets_begin": {
