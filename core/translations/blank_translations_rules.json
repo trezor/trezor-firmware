@@ -331,6 +331,7 @@
       "address__cancel_receive",
       "backup__create_backup_to_prevent_loss",
       "backup__title_backup_completed",
+      "buttons__continue_anyway",
       "fido__select_intro",
       "homescreen__set_default",
       "instructions__continue_in_app",
@@ -364,7 +365,6 @@
       "tutorial__title_hold",
       "tutorial__title_well_done",
       "wipe_code__cancel_setup",
-      "words__continue_anyway",
       "words__try_again"
     ],
     "allowedLayouts": [ "Delizia", "Eckhart" ],

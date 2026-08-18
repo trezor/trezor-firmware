@@ -396,9 +396,11 @@
     "buttons__access": "Zugriff",
     "buttons__again": "Wiederholen",
     "buttons__allow": "Zulassen",
+    "buttons__authenticate": "Authentifizieren",
     "buttons__back": "Zurück",
     "buttons__back_up": "Sichern",
     "buttons__cancel": "Abbrechen",
+    "buttons__cancel_and_exit": "Abbrechen und schließen",
     "buttons__change": "Ändern",
     "buttons__check": "Prüfen",
     "buttons__check_again": {
@@ -409,8 +411,16 @@
     },
     "buttons__close": "Schliessen",
     "buttons__confirm": "Bestätigen",
+    "buttons__confirm_all": "Alles bestätigen",
     "buttons__continue": "Weiter",
+    "buttons__continue_anyway": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Trotzdem fortfahren",
+      "Eckhart": "Trotzdem fortfahren"
+    },
     "buttons__details": "Details",
+    "buttons__disconnect": "Trennen",
     "buttons__enable": "Aktivieren",
     "buttons__enter_share": "Share eingeben",
     "buttons__export": "Exportieren",
@@ -420,6 +430,7 @@
       "Delizia": "Bestätigen",
       "Eckhart": "Bestätigen"
     },
+    "buttons__forget": "Vergessen",
     "buttons__format": {
       "Bolt": "Formatier.",
       "Caesar": "",
@@ -455,6 +466,7 @@
       "Delizia": "Details anz.",
       "Eckhart": "Detailansicht"
     },
+    "buttons__show_next": "Nächstes anzeigen",
     "buttons__show_words": {
       "Bolt": "Wörteransicht",
       "Caesar": "Wörter anz.",
@@ -472,6 +484,12 @@
     "buttons__turn_on": "Aktivieren",
     "buttons__view": "Anzeigen",
     "buttons__view_all_data": "Zeige Daten",
+    "buttons__wipe": {
+      "Bolt": "Wischen",
+      "Caesar": "Löschen",
+      "Delizia": "Löschen",
+      "Eckhart": "Löschen"
+    },
     "cardano__addr_base": "Basis",
     "cardano__addr_enterprise": {
       "Bolt": "Unternehmen",
@@ -3774,12 +3792,10 @@
     "words__array_of": "Array von",
     "words__asset": "Asset",
     "words__assets": "Assets",
-    "words__authenticate": "Authentifizieren",
     "words__authorization": "",
     "words__blockhash": "Blockhash",
     "words__bluetooth": "Bluetooth",
     "words__buying": "Kaufen",
-    "words__cancel_and_exit": "Abbrechen und schließen",
     "words__cancel_question": {
       "Bolt": "",
       "Caesar": "",
@@ -3790,17 +3806,10 @@
     "words__comm_continue": "Die Kommunikation mit deinem verbundenen Gerät ist fehlgeschlagen. Du kannst den Vorgang sicher fortsetzen.",
     "words__comm_trouble": "Die Kommunikation mit deinem verbundenen Gerät ist fehlgeschlagen. Brich den Vorgang ab und versuche es erneut.",
     "words__confirm": "Bestätigen",
-    "words__confirm_all": "Alles bestätigen",
     "words__confirm_fee": "Gebühr bestätigen",
     "words__connect": "Verbinden",
     "words__connected": "Verbunden",
     "words__contains": "Enthält",
-    "words__continue_anyway": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Trotzdem fortfahren",
-      "Eckhart": "Trotzdem fortfahren"
-    },
     "words__continue_anyway_question": "Trotzdem fortfahren?",
     "words__continue_with": "Weiter mit",
     "words__deposit": "Einzahlung",
@@ -3811,7 +3820,6 @@
       "Delizia": "",
       "Eckhart": "Deaktiviert"
     },
-    "words__disconnect": "Trennen",
     "words__disconnected": "Getrennt",
     "words__enabled": {
       "Bolt": "",
@@ -3822,7 +3830,6 @@
     "words__error": "Fehler",
     "words__fee": "Gebühr",
     "words__fee_limit": "Gebührenlimit",
-    "words__forget": "Vergessen",
     "words__from": {
       "Bolt": "von",
       "Caesar": "von",
@@ -3915,14 +3922,7 @@
     "words__review": "Prüfen",
     "words__security": "Sicherheit",
     "words__send": "Senden",
-    "words__set": {
-      "Bolt": "Einstellen",
-      "Caesar": "Festlegen",
-      "Delizia": "setzen",
-      "Eckhart": "Festlegen"
-    },
     "words__settings": "Einstellungen",
-    "words__show_next": "Nächstes anzeigen",
     "words__sign": "Signieren",
     "words__signer": "Signer",
     "words__swap": "Swap",
@@ -3992,12 +3992,6 @@
     "words__voting": "Abstimmung",
     "words__wallet": "Wallet",
     "words__warning": "Warnung",
-    "words__wipe": {
-      "Bolt": "Wischen",
-      "Caesar": "Löschen",
-      "Delizia": "Löschen",
-      "Eckhart": "Löschen"
-    },
     "words__writable": "Beschreibbar",
     "words__yes": "Ja"
   }
