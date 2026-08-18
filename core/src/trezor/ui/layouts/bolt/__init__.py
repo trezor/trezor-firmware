@@ -1725,7 +1725,6 @@ if not utils.BITCOIN_ONLY:
                 else TR.stellar__sign_with
             ),
             extra_items=extra_items,
-            extra_title=TR.words__title_information,  # The performance on T2T1 is different from other devices, so we do not use TR.stellar__timebounds here.
             br_name="confirm_stellar_tx",
             br_code=ButtonRequestType.SignTx,
         )

@@ -134,11 +134,23 @@ async def require_confirm_payment_request(
     )
 
 
-async def require_confirm_final(
+def _get_network_name(network_passphrase: str) -> str:
+    from . import consts
+
+    _KNOWN_NETWORKS = {
+        consts.NETWORK_PASSPHRASE_PUBLIC: "Mainnet",
+        consts.NETWORK_PASSPHRASE_TESTNET: "Testnet",
+        consts.NETWORK_PASSPHRASE_FUTURENET: "Futurenet",
+    }
+    return _KNOWN_NETWORKS.get(network_passphrase, f"Unknown ({network_passphrase})")
+
+
+async def confirm_tx_final(
     address_n: list[int],
     fee: int,
     timebounds: tuple[int, int],
     is_sending_from_trezor_account: bool,
+    network_passphrase: str,
 ) -> None:
     from trezor.wire import DataError
 
@@ -166,6 +178,7 @@ async def require_confirm_final(
             ),
             None,
         ),
+        (TR.words__network, _get_network_name(network_passphrase), None),
     )
 
     account_name = paths.get_account_name("Stellar", address_n, PATTERN, SLIP44_ID)
@@ -234,8 +247,9 @@ async def require_confirm_auth_on_behalf_of(address: str) -> None:
     )
 
 
-async def require_confirm_signature_expiration_ledger(
+async def confirm_auth_final(
     signature_expiration_ledger: int,
+    network_passphrase: str,
 ) -> None:
     await layouts.confirm_value(
         title=TR.stellar__sign_authorization,
@@ -245,6 +259,9 @@ async def require_confirm_signature_expiration_ledger(
         br_code=ButtonRequestType.SignTx,
         hold=True,
         is_data=False,
+        info_items=[
+            (TR.words__network, _get_network_name(network_passphrase), None),
+        ],
     )
 
 

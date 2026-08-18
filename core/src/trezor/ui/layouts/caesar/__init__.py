@@ -1815,7 +1815,6 @@ if not utils.BITCOIN_ONLY:
                 else TR.stellar__sign_with
             ),
             extra_items=with_colon(extra_items),
-            extra_title=TR.stellar__timebounds,
         ) as layout:
             return await raise_if_not_confirmed(
                 layout,

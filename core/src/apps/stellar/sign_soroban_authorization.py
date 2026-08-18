@@ -66,8 +66,9 @@ async def sign_soroban_authorization(
     await layout.confirm_authorized_invocation(
         auth.invocation, network_id, auth.address
     )
-    await layout.require_confirm_signature_expiration_ledger(
-        auth.signature_expiration_ledger
+    await layout.confirm_auth_final(
+        auth.signature_expiration_ledger,
+        msg.network_passphrase,
     )
 
     payload = sha256(w).digest()

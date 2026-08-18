@@ -218,11 +218,12 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
         )
 
     # final confirm
-    await layout.require_confirm_final(
+    await layout.confirm_tx_final(
         msg.address_n,
         msg.fee,
         (msg.timebounds_start, msg.timebounds_end),
         is_sending_from_trezor_account,
+        msg.network_passphrase,
     )
 
     # sign
