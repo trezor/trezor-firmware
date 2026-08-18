@@ -1,7 +1,7 @@
 //! Reexporting the `screens` module according to the
 //! current feature (Trezor model)
 
-use rtl::util::CSlice;
+use rtl::CSlice;
 
 #[cfg(feature = "ui_debug")]
 use crate::ui::util::set_animation_disabled;

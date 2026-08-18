@@ -1,5 +1,4 @@
-use crate::ffi;
-use crate::util::CSlice;
+use crate::{CSlice, ffi};
 
 pub fn system_exit() -> ! {
     // SAFETY: safe

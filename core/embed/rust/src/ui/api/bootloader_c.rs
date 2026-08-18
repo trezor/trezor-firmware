@@ -1,4 +1,4 @@
-use rtl::util::CSlice;
+use rtl::CSlice;
 
 use crate::strutil::hexlify;
 use crate::ui::ui_bootloader::BootloaderUI;

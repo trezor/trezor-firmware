@@ -1,5 +1,5 @@
+use rtl::CSlice;
 use rtl::error::unwrap;
-use rtl::util::CSlice;
 
 use super::{echo, image_info, process_rx_byte, reset, upload};
 

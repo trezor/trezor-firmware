@@ -1,4 +1,4 @@
-use rtl::util::CSlice;
+use rtl::CSlice;
 
 use super::ffi;
 

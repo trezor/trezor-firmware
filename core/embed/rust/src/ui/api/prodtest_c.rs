@@ -2,7 +2,7 @@
 use cty::int16_t;
 #[cfg(feature = "touch")]
 use heapless::Vec;
-use rtl::util::CSlice;
+use rtl::CSlice;
 
 use crate::trezorhal::layout_buf::{c_layout_t, LayoutBuffer};
 use crate::trezorhal::sysevent::{parse_event, sysevents_t};
