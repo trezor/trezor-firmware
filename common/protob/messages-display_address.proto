@@ -1,0 +1,36 @@
+syntax = "proto2";
+package hw.trezor.messages.display_address;
+
+option java_outer_classname = "TrezorMessageDisplayAddress";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+
+/**
+ * Request: show an arbitrary address on a trusted screen, labelled from WARD.
+ *
+ * THE FIRST CONSUMER OF WARD THAT IS NOT WARD ITSELF. Every other WARD message is the
+ * host asking the device to operate on an entry; this one is an ON-DEVICE APP asking WARD
+ * what an address is called, which is what WARD is ultimately for -- a "Send to" screen
+ * that says `alice-savings` rather than a bare string of base58.
+ *
+ * The host names ONLY the address. It attaches no label and no proof, and there is no
+ * field here through which it could: the label is resolved inside the device, from the
+ * source that session is entitled to (see `apps.ward.label`), and the screen states which
+ * source that was. A host that could supply the label would be naming the recipient on the
+ * screen the user checks the recipient against, which would defeat the point of showing it.
+ *
+ * The address is shown WHETHER OR NOT a label resolves. An address with no label is the
+ * ordinary case for a fresh wallet, and a lookup that fails is a labelling failure, not an
+ * address failure -- aborting would train users to retry until something appears.
+ * @start
+ * @next WardEntryRequest
+ * @next Success
+ * @next Failure
+ */
+message DisplayAddress {
+    optional string address = 1;   // the address to display; required in practice
+    optional string title = 2;     // custom screen title
+    optional string subtitle = 3;  // shown only when NO label resolves
+    optional bool case_sensitive = 4 [default = true];
+    optional bool chunkify = 5;    // display the address in chunks of 4 characters
+    optional string app_id = 6;    // WARD domain to look the label up in
+}

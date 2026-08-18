@@ -170,6 +170,10 @@ def _find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.WardFlushQueue:
             return "apps.ward.flush_queue"
 
+        # display_address -- an on-device consumer of WARD labels, not part of WARD itself
+        if msg_type == MessageType.DisplayAddress:
+            return "apps.display_address.show"
+
         # webauthn
         if msg_type == MessageType.WebAuthnListResidentCredentials:
             return "apps.webauthn.list_resident_credentials"

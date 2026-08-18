@@ -422,6 +422,9 @@ enum MessageType {
     MessageType_WardEraseCachedEntry = 2320 [(wire_in) = true];
     MessageType_WardFlushQueue = 2321 [(wire_in) = true];
 
+    // Display address (an on-device consumer of WARD labels)
+    MessageType_DisplayAddress = 2322 [(wire_in) = true];
+
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];

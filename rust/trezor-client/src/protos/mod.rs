@@ -43,6 +43,8 @@ mod generated {
         "tezos" => messages_tezos
         "tron" => messages_tron
         "ward" => messages_ward
+        // DisplayAddress is an on-device consumer of WARD labels, so it rides the same feature
+        "ward" => messages_display_address
         "webauthn" => messages_webauthn
     }
 }
