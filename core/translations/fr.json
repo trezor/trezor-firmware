@@ -466,6 +466,7 @@
     "buttons__access": "Accéder",
     "buttons__again": "Refaire",
     "buttons__allow": "Autoriser",
+    "buttons__authenticate": "Authentifier",
     "buttons__back": "Retour",
     "buttons__back_up": {
       "Bolt": "Sauveg.",
@@ -474,6 +475,7 @@
       "Eckhart": "Sauvegarder"
     },
     "buttons__cancel": "Annuler",
+    "buttons__cancel_and_exit": "Annuler et quitter",
     "buttons__change": "Changer",
     "buttons__check": "Vérifier",
     "buttons__check_again": {
@@ -489,8 +491,16 @@
       "Delizia": "Confirmer",
       "Eckhart": "Confirmer"
     },
+    "buttons__confirm_all": "Tout confirmer",
     "buttons__continue": "Continuer",
+    "buttons__continue_anyway": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Continuer quand même",
+      "Eckhart": "Continuer quand même"
+    },
     "buttons__details": "Détails",
+    "buttons__disconnect": "Déconnecter",
     "buttons__enable": "Activer",
     "buttons__enter_share": {
       "Bolt": "Saisir le fragm.",
@@ -500,6 +510,7 @@
     },
     "buttons__export": "Exporter",
     "buttons__finish": "Terminer",
+    "buttons__forget": "Oublier",
     "buttons__format": "Formater",
     "buttons__go_back": "Retour",
     "buttons__hold_to_confirm": {
@@ -530,6 +541,7 @@
     "buttons__set": "Définir",
     "buttons__show_all": "Tout afficher",
     "buttons__show_details": "Afficher les détails",
+    "buttons__show_next": "Afficher la suite",
     "buttons__show_words": "Afficher les mots",
     "buttons__skip": "Ignorer",
     "buttons__try_again": "Réessayer",
@@ -537,6 +549,7 @@
     "buttons__turn_on": "Activer",
     "buttons__view": "Afficher",
     "buttons__view_all_data": "Voir toutes les données",
+    "buttons__wipe": "Effacer",
     "cardano__addr_base": "Base",
     "cardano__addr_enterprise": "Entreprise",
     "cardano__addr_legacy": "Ancienne",
@@ -3559,12 +3572,10 @@
     "words__array_of": "Tableau de",
     "words__asset": "Actif",
     "words__assets": "Actifs",
-    "words__authenticate": "Authentifier",
     "words__authorization": "",
     "words__blockhash": "Hash du bloc",
     "words__bluetooth": "Bluetooth",
     "words__buying": "Achat",
-    "words__cancel_and_exit": "Annuler et quitter",
     "words__cancel_question": {
       "Bolt": "",
       "Caesar": "",
@@ -3585,17 +3596,10 @@
       "Eckhart": "La communication avec votre appareil connecté a échoué. Annulez et réessayez."
     },
     "words__confirm": "Confirmer",
-    "words__confirm_all": "Tout confirmer",
     "words__confirm_fee": "Confirmer les frais",
     "words__connect": "Connecter",
     "words__connected": "Connecté",
     "words__contains": "Contient",
-    "words__continue_anyway": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Continuer quand même",
-      "Eckhart": "Continuer quand même"
-    },
     "words__continue_anyway_question": "Continuer quand même ?",
     "words__continue_with": "Continuer avec",
     "words__deposit": "Dépôt",
@@ -3606,7 +3610,6 @@
       "Delizia": "",
       "Eckhart": "Désactivé"
     },
-    "words__disconnect": "Déconnecter",
     "words__disconnected": "Déconnecté",
     "words__enabled": {
       "Bolt": "",
@@ -3617,7 +3620,6 @@
     "words__error": "Erreur",
     "words__fee": "Frais",
     "words__fee_limit": "Limite de frais",
-    "words__forget": "Oublier",
     "words__from": {
       "Bolt": "du",
       "Caesar": "du",
@@ -3705,9 +3707,7 @@
     "words__review": "Vérifier",
     "words__security": "Sécurité",
     "words__send": "Envoyer",
-    "words__set": "Définir",
     "words__settings": "Paramètres",
-    "words__show_next": "Afficher la suite",
     "words__sign": "Signer",
     "words__signer": "Signataire",
     "words__swap": "Swap",
@@ -3777,7 +3777,6 @@
     "words__voting": "Vote",
     "words__wallet": "Portefeuille",
     "words__warning": "Avertissement",
-    "words__wipe": "Effacer",
     "words__writable": "Inscriptible",
     "words__yes": "Oui"
   }
