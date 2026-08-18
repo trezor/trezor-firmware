@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::PathBuf;
 
 use anyhow::{Context, Result, ensure};
 
@@ -6,6 +7,22 @@ use crate::args::{CombineArgs, Model, Project};
 use crate::{helpers, postbuild};
 
 const COMBINED_PREFIX: &str = "combined-";
+
+/// Returns the path of the combined image produced by [`combine()`] for the
+/// given project.
+pub fn combined_binary_path(model: Model, project: Project) -> Result<PathBuf> {
+    ensure!(
+        project.combinable(),
+        "Combining is not supported for `{}`",
+        project.binary_name()
+    );
+
+    Ok(helpers::artifacts_dir(model)?.join(format!(
+        "{}{}.bin",
+        COMBINED_PREFIX,
+        project.binary_name()
+    )))
+}
 
 /// Byte used to pad the gaps between combined sections. Matches the original
 /// `combine_firmware.py`, which padded with zero bytes.
@@ -109,14 +126,9 @@ pub fn combine(args: CombineArgs) -> Result<()> {
     }
 
     // Save the combined binary to the artifacts directory
-    let artifact_dir = helpers::artifacts_dir(args.model)?;
-    helpers::ensure_directory(&artifact_dir)?;
+    helpers::ensure_directory(&helpers::artifacts_dir(args.model)?)?;
 
-    let output_path = artifact_dir.join(format!(
-        "{}{}.bin",
-        COMBINED_PREFIX,
-        args.project.binary_name()
-    ));
+    let output_path = combined_binary_path(args.model, args.project)?;
     println!("Writing combined binary to `{}`", output_path.display());
     fs::write(&output_path, &binary).with_context(|| {
         format!(

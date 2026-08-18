@@ -98,6 +98,15 @@ impl Project {
         self.flash_start_symbol().is_ok()
     }
 
+    /// Returns whether the project can be combined with the projects it boots
+    /// through (see the `combine` subcommand).
+    pub fn combinable(self) -> bool {
+        matches!(
+            self,
+            Project::Bootloader | Project::BootloaderCi | Project::Firmware | Project::Prodtest
+        )
+    }
+
     /// Returns whether the project can be uploaded to a device
     /// using the `upload` subcommand.
     pub fn uploadable(self) -> bool {
@@ -184,6 +193,11 @@ pub struct FlashArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Flash the combined image produced by `xtask combine` instead of the
+    /// project binary alone
+    #[arg(long, short = 'c')]
+    pub combined: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
