@@ -2884,7 +2884,6 @@
     "stellar__sign_authorization": "Podpis autorizace",
     "stellar__sign_with": "Podepsat pomocí",
     "stellar__source_account": "Zdrojový účet",
-    "stellar__timebounds": "Časové rozmezí",
     "stellar__token_info": "Informace o tokenu",
     "stellar__transaction_source": "Zdroj transakce",
     "stellar__transaction_source_diff_warning": "Zdroj transakce nepatří tomuto Trezoru.",

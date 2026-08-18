@@ -2999,7 +2999,6 @@
     "stellar__sign_authorization": "Assinar autorização",
     "stellar__sign_with": "Assinar com",
     "stellar__source_account": "Conta de origem",
-    "stellar__timebounds": "Janela de tempo",
     "stellar__token_info": "Info. do token",
     "stellar__transaction_source": "Origem da transação",
     "stellar__transaction_source_diff_warning": "A origem da transação não pertence a este Trezor.",

@@ -3294,7 +3294,6 @@
       "Eckhart": "Signiere mit"
     },
     "stellar__source_account": "Quellkonto",
-    "stellar__timebounds": "Zeitfenster",
     "stellar__token_info": "Token-Info",
     "stellar__transaction_source": "Transaktionsquelle",
     "stellar__transaction_source_diff_warning": "Transaktionsquelle gehört nicht zu diesem Trezor.",
