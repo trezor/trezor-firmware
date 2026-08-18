@@ -243,6 +243,18 @@ message WardLeafAck {
     // freshness only -- can still tell a real device's transition from anyone else's.
     // Without it a WM that arbitrates ordering is a denial-of-service oracle.
     optional bytes auth_sig = 7;
+
+    // Set when the change was QUEUED LOCALLY rather than applied. The device had no synced
+    // host, so it could not pull, could not prove current state, and could not derive a root
+    // -- there is therefore no counter, no mac and no auth_commit to send, and their absence
+    // is not an omission but the honest report. The host must not treat a queued ack as a
+    // write it can store; the change reaches it later, sealed, through WardFlushQueue.
+    optional bool queued = 8;
+
+    // WardFlushQueue only: how many queued changes remain after this one. The host loops
+    // until it reads zero. One intent per round-trip, so a failure costs one step rather
+    // than a batch -- see the atomicity note in the device's storage/ward.py.
+    optional uint32 remaining = 9;
 }
 
 /**
@@ -494,4 +506,77 @@ message WardRecoverCounter {
  */
 message WardRecoverCounterAck {
     optional uint32 counter = 1;
+}
+
+
+/**
+ * Request: keep the entry at (app_id, identifier) on the device for offline use.
+ *
+ * The device pulls the leaf, verifies it as a read would, shows the value and asks. Only
+ * then is anything written. Pinning is EXPLICIT because persistent storage is small and
+ * shared: viewing an entry once should not consume a slot that the user must later be asked
+ * to give up.
+ *
+ * The device derives entry_key itself, exactly as WardGetEntry does -- the host cannot name
+ * a path to pin.
+ *
+ * If the store is full the request FAILS and nothing is evicted: every occupant is either a
+ * value the user chose to keep or a change they confirmed and that is not published yet.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message WardPinCachedEntry {
+    optional string app_id     = 1;  // domain that owns the entry
+    optional bytes  identifier = 2;  // key within that domain
+}
+
+/**
+ * Request: remove the device's local copy of (app_id, identifier).
+ *
+ * NOT a WARD deletion. This erases only what this device holds; the entry itself is
+ * untouched, and `WardDeleteEntry` remains the way to remove one. Kept separate because the
+ * two answer different questions -- "stop keeping this here" and "this should no longer
+ * exist" -- and one confirmation cannot honestly stand for both.
+ *
+ * This is also the ONLY way a record leaves flash. Nothing evicts, expires, or cleans up:
+ * staleness, supersession and an unreadable format all leave the record in place and require
+ * the user to say so here. The screen shows what is being lost before the hold.
+ *
+ * The device derives entry_key itself; the host cannot name an arbitrary path to erase.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message WardEraseCachedEntry {
+    optional string app_id     = 1;  // domain that owns the entry
+    optional bytes  identifier = 2;  // key within that domain
+}
+
+/**
+ * Request: publish ONE queued change, sealed.
+ *
+ * Changes made with no synced host are held locally in the clear -- the device's own storage
+ * already encrypts and authenticates them -- and are sealed HERE, on the way out, because
+ * that is where they stop being covered by it.
+ *
+ * A queued intent is an INTENT, not a transition: it was formed with no root to derive
+ * against, so this re-derives it against CURRENT state. The device pulls the entry's present
+ * leaf, proves it against the trusted root, and only then computes the new root and stamps
+ * the next counter.
+ *
+ * One change per request, and the host repeats until `remaining` reads zero. A queued batch
+ * has no transaction to apply under, so this bounds a partial application to a single step
+ * rather than pretending the batch is atomic.
+ *
+ * The change stays queued until a WardReconcile adopts its counter -- the same boundary an
+ * online write commits at. A host that never publishes leaves it queued and re-sendable,
+ * which is the recoverable direction.
+ *
+ * Requires a synced session: with no trusted root there is nothing to derive against.
+ * @start
+ * @next WardLeafAck
+ * @next Failure
+ */
+message WardFlushQueue {
 }

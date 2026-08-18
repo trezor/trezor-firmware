@@ -97,12 +97,54 @@ def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, byt
     return app_id, identifier
 
 
+async def pull_leaf_from_host(entry_key: bytes):
+    """Ask the host for its leaf at this path and return the raw ack. Verifies NOTHING.
+
+    Split out so the verification below can be reached without a host round-trip, and so
+    callers that need the ack's other fields do not have to re-issue the call. The request
+    names ONLY the opaque path -- see `keys.entry_key_for`.
+
+    Mirrors apps/webauthn/list_resident_credentials.py, which uses the same primitive to ask
+    the host for data mid-workflow.
+    """
+    from trezor.messages import WardEntryAck, WardEntryRequest
+    from trezor.wire import context
+
+    return await context.call(
+        WardEntryRequest(entry_key=entry_key),
+        expected_type=WardEntryAck,
+    )
+
+
+async def decode_leaf(entry_key: bytes, key_type: str, val_part) -> bytes | None:
+    """Open a content part and return its value, or None if it carries none.
+
+    The other half of authenticity: a part the host forged, corrupted, or lifted from another
+    path fails the tag and raises here. The AAD is domain || entry_key || key_type, so a
+    successful open is itself the statement that this part was sealed by a holder of K_data
+    FOR THIS PATH and this key type.
+    """
+    from .keys import derive_k_data
+    from .leaf import decode_content
+
+    decoded = decode_content(
+        await derive_k_data(key_type), entry_key, key_type, val_part
+    )
+    return None if decoded is None else decoded[1]
+
+
 async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     """PULL the host's leaf for an already-derived keyed path, verified.
 
-    This is the one mechanism the whole subsystem is built on: the device holds nothing,
-    so it asks the host mid-workflow and the host answers while its own call is still in
-    flight. The request names ONLY the opaque path -- see `keys.entry_key_for`.
+    The three steps -- ask, check against the trusted root, open -- are `pull_leaf_from_host`,
+    `verify_leaf_against_root` and `decode_leaf`, composed here in the order that matters. This
+    is the ONLINE path; a device with no synced host reads its own store instead, which is a
+    different function in a different module (`apps.ward.offline_store`) precisely so that
+    "verified against a trusted root" and "a local copy" can never be confused for each other.
+
+    THE DEVICE NO LONGER HOLDS NOTHING. It keeps pinned copies of selected leaves and writes it
+    has not been able to publish yet -- see `storage/ward.py`. None of that is consulted here:
+    this function's answer is the host's, checked, and nothing else.
 
     Returns `(value, old_leaf, write_material)`:
 
@@ -117,18 +159,9 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     identifier and app_id, having derived the path from them, so it is carried only
     because the leaf hash commits to it.
     """
-    from trezor.messages import WardEntryAck, WardEntryRequest
-    from trezor.wire import context
+    from .leaf import is_delete, read_leaf_content, read_leaf_identity
 
-    from .keys import derive_k_data
-    from .leaf import decode_content, is_delete, read_leaf_content, read_leaf_identity
-
-    # Mirrors apps/webauthn/list_resident_credentials.py, which uses the same primitive
-    # to ask the host for data mid-workflow.
-    ack = await context.call(
-        WardEntryRequest(entry_key=entry_key),
-        expected_type=WardEntryAck,
-    )
+    ack = await pull_leaf_from_host(entry_key)
 
     val_part = read_leaf_content(ack.content)
     wire_key_type, id_part = read_leaf_identity(ack.identity)
@@ -140,7 +173,7 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     # simply by denying it exists.
     from .root import get_counter, get_root
 
-    _verify_against_root(
+    verify_leaf_against_root(
         await get_root(),
         await get_counter(),
         entry_key,
@@ -158,12 +191,7 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     if not present:
         return None, None, material
 
-    # Opening is the other half of authenticity: a part the host forged, corrupted, or
-    # lifted from another path fails the tag and raises here.
-    decoded = decode_content(
-        await derive_k_data(key_type), entry_key, key_type, val_part
-    )
-    value = None if decoded is None else decoded[1]
+    value = await decode_leaf(entry_key, key_type, val_part)
     return value, (leaf_key_type, id_part, val_part), material
 
 
@@ -173,7 +201,7 @@ async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
     return value
 
 
-def _verify_against_root(
+def verify_leaf_against_root(
     root: bytes | None,
     counter: int,
     entry_key: bytes,

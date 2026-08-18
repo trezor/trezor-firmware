@@ -418,6 +418,9 @@ enum MessageType {
     MessageType_WardRollbackAck = 2316 [(wire_out) = true];
     MessageType_WardRecoverCounter = 2317 [(wire_in) = true];
     MessageType_WardRecoverCounterAck = 2318 [(wire_out) = true];
+    MessageType_WardPinCachedEntry = 2319 [(wire_in) = true];
+    MessageType_WardEraseCachedEntry = 2320 [(wire_in) = true];
+    MessageType_WardFlushQueue = 2321 [(wire_in) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

@@ -240,3 +240,105 @@ def unpack_content(pt: bytes) -> tuple[int, bytes]:
     c_leaf = int.from_bytes(pt[0:4], "big")
     val_len = int.from_bytes(pt[4:8], "big")
     return c_leaf, pt[8 : 8 + val_len]
+
+
+# --- sealing, for the one case the device cannot stage for itself -------------------
+#
+# The device is normally the only party that can build a leaf, and every other fixture in
+# these tests goes through a real confirmed write for exactly that reason. ONE state cannot
+# be reached that way: a device that has NEVER synced, whose host already holds an entry.
+# That is not exotic -- it is Suite before the trie lands, and a second device of the same
+# wallet having written the entry -- but a single-device harness cannot produce it, because
+# the first sync teaches the device the tree is EMPTY and it then rightly refuses any leaf
+# claiming to be in it.
+#
+# So the oracle seals one here. Same warning as the rest of this file: only a test may hold
+# these keys, and only because it knows the device's seed.
+
+
+def pack_identity(identifier: bytes, app_id: str | bytes, device_id: int = 0) -> bytes:
+    """Inverse of `unpack_identity`."""
+    if isinstance(app_id, str):
+        app_id = app_id.encode()
+    return (
+        len(identifier).to_bytes(2, "big")
+        + identifier
+        + bytes([len(app_id)])
+        + app_id
+        + bytes([device_id])
+    )
+
+
+def pack_content(c_leaf: int, value: bytes) -> bytes:
+    """Inverse of `unpack_content`."""
+    return c_leaf.to_bytes(4, "big") + len(value).to_bytes(4, "big") + value
+
+
+_AEAD_BUCKETS = (64, 256, 1024, 4096)
+
+
+def _pad_bucket(pt: bytes) -> bytes:
+    """Pad to the next bucket, as the device does, so a length leaks only a coarse band."""
+    for bucket in _AEAD_BUCKETS:
+        if len(pt) <= bucket:
+            return pt + bytes(bucket - len(pt))
+    return pt
+
+
+def _seal(
+    key: bytes, domain: bytes, entry_key_: bytes, key_type: str, pt: bytes, nonce: bytes
+):
+    from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+
+    aad = domain + entry_key_ + key_type.encode()
+    sealed = ChaCha20Poly1305(key).encrypt(nonce, _pad_bucket(pt), aad)
+    # the wire keeps ciphertext and tag apart; `cryptography` returns them joined
+    return sealed[:-16], sealed[-16:]
+
+
+def seal_identity(
+    k_ident: bytes,
+    entry_key_: bytes,
+    key_type: str,
+    identifier: bytes,
+    app_id: str | bytes,
+    device_id: int = 0,
+    nonce: bytes = b"\x11" * 12,
+):
+    """A sealed identity part, as protobuf. Fixed nonce: a test wants reproducibility, and
+    nonce freshness is asserted where it matters (the device's own writes)."""
+    from trezorlib import messages
+
+    ct, tag = _seal(
+        k_ident,
+        _AAD_IDENTITY,
+        entry_key_,
+        key_type,
+        pack_identity(identifier, app_id, device_id),
+        nonce,
+    )
+    return messages.WardLeafIdentity(
+        encoding=0,
+        key_type=key_type,
+        encrypted=messages.WardEncryptedIdentity(nonce=nonce, tag=tag, ct=ct),
+    )
+
+
+def seal_content(
+    k_data: bytes,
+    entry_key_: bytes,
+    key_type: str,
+    value: bytes,
+    c_leaf: int = 0,
+    nonce: bytes = b"\x22" * 12,
+):
+    """A sealed content part, as protobuf."""
+    from trezorlib import messages
+
+    ct, tag = _seal(
+        k_data, _AAD_CONTENT, entry_key_, key_type, pack_content(c_leaf, value), nonce
+    )
+    return messages.WardLeafContent(
+        encoding=0,
+        encrypted=messages.WardEncryptedLeaf(nonce=nonce, tag=tag, ct=ct),
+    )

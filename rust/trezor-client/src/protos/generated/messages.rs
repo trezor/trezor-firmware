@@ -647,6 +647,12 @@ pub enum MessageType {
     MessageType_WardRecoverCounter = 2317,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardRecoverCounterAck)
     MessageType_WardRecoverCounterAck = 2318,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardPinCachedEntry)
+    MessageType_WardPinCachedEntry = 2319,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardEraseCachedEntry)
+    MessageType_WardEraseCachedEntry = 2320,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardFlushQueue)
+    MessageType_WardFlushQueue = 2321,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -980,6 +986,9 @@ impl ::protobuf::Enum for MessageType {
             2316 => ::std::option::Option::Some(MessageType::MessageType_WardRollbackAck),
             2317 => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounter),
             2318 => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounterAck),
+            2319 => ::std::option::Option::Some(MessageType::MessageType_WardPinCachedEntry),
+            2320 => ::std::option::Option::Some(MessageType::MessageType_WardEraseCachedEntry),
+            2321 => ::std::option::Option::Some(MessageType::MessageType_WardFlushQueue),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1302,6 +1311,9 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_WardRollbackAck" => ::std::option::Option::Some(MessageType::MessageType_WardRollbackAck),
             "MessageType_WardRecoverCounter" => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounter),
             "MessageType_WardRecoverCounterAck" => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounterAck),
+            "MessageType_WardPinCachedEntry" => ::std::option::Option::Some(MessageType::MessageType_WardPinCachedEntry),
+            "MessageType_WardEraseCachedEntry" => ::std::option::Option::Some(MessageType::MessageType_WardEraseCachedEntry),
+            "MessageType_WardFlushQueue" => ::std::option::Option::Some(MessageType::MessageType_WardFlushQueue),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1623,6 +1635,9 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_WardRollbackAck,
         MessageType::MessageType_WardRecoverCounter,
         MessageType::MessageType_WardRecoverCounterAck,
+        MessageType::MessageType_WardPinCachedEntry,
+        MessageType::MessageType_WardEraseCachedEntry,
+        MessageType::MessageType_WardFlushQueue,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
@@ -1950,12 +1965,15 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_WardRollbackAck => 307,
             MessageType::MessageType_WardRecoverCounter => 308,
             MessageType::MessageType_WardRecoverCounterAck => 309,
-            MessageType::MessageType_BenchmarkListNames => 310,
-            MessageType::MessageType_BenchmarkNames => 311,
-            MessageType::MessageType_BenchmarkRun => 312,
-            MessageType::MessageType_BenchmarkResult => 313,
-            MessageType::MessageType_TelemetryGet => 314,
-            MessageType::MessageType_Telemetry => 315,
+            MessageType::MessageType_WardPinCachedEntry => 310,
+            MessageType::MessageType_WardEraseCachedEntry => 311,
+            MessageType::MessageType_WardFlushQueue => 312,
+            MessageType::MessageType_BenchmarkListNames => 313,
+            MessageType::MessageType_BenchmarkNames => 314,
+            MessageType::MessageType_BenchmarkRun => 315,
+            MessageType::MessageType_BenchmarkResult => 316,
+            MessageType::MessageType_TelemetryGet => 317,
+            MessageType::MessageType_Telemetry => 318,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1974,7 +1992,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xa7o\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xa6p\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2329,23 +2347,27 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     sageType_WardRollbackAck\x10\x8c\x12\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eM\
     essageType_WardRecoverCounter\x10\x8d\x12\x1a\x04\x90\xb5\x18\x01\x12,\n\
     !MessageType_WardRecoverCounterAck\x10\x8e\x12\x1a\x04\x98\xb5\x18\x01\
-    \x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\
-    \x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\
-    \x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\
-    \x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\
-    \x12'\n\x18MessageType_TelemetryGet\x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\
-    \x90\xb5\x18\x01\x12$\n\x15MessageType_Telemetry\x10\xcd\x08\x1a\x08\x80\
-    \xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\
-    \x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x05\
-    \x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\
-    \xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\x06\x08\xe3\x01\x10\xe3\x01\"\
-    \x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\x01\x10\xe5\x01\"\x06\x08\xe7\
-    \x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\x01\"\x06\x08\xe9\x01\x10\xe9\
-    \x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\x08\xec\x01\x10\xec\x01\"\x06\
-    \x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\
-    \x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\x07\
-    \"\x06\x08\xfa\x07\x10\xcb\x08\"\x06\x08\x82\x12\x10\x82\x12B8\n#com.sat\
-    oshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
+    \x12)\n\x1eMessageType_WardPinCachedEntry\x10\x8f\x12\x1a\x04\x90\xb5\
+    \x18\x01\x12+\n\x20MessageType_WardEraseCachedEntry\x10\x90\x12\x1a\x04\
+    \x90\xb5\x18\x01\x12%\n\x1aMessageType_WardFlushQueue\x10\x91\x12\x1a\
+    \x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\
+    \x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\
+    \x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\
+    \x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\
+    \x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\x10\xcc\x08\x1a\
+    \x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_Telemetry\x10\
+    \xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\
+    \xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10J\"\x04\
+    \x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\
+    \x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\x06\x08\xe3\x01\
+    \x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\x01\x10\xe5\x01\
+    \"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\x01\"\x06\x08\
+    \xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\x08\xec\x01\x10\
+    \xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\
+    \x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\
+    \x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08\"\x06\x08\x82\x12\x10\x82\
+    \x12B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\
+    \x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

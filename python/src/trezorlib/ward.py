@@ -117,6 +117,14 @@ class WardResult(NamedTuple):
     # forwards it to the WM, which needs it to tell a real device's transition from anyone
     # else's; the host itself can verify it but has no reason to.
     auth_sig: Optional[bytes] = None
+    # Set when the device QUEUED the change instead of applying it, having no synced host to
+    # pull from. There is then no leaf, no counter and no mac -- none of them can exist
+    # without current state to derive against. The host must not store anything; the change
+    # arrives later, sealed, through `flush_queue`.
+    queued: bool = False
+    # `flush_queue` only: queued changes still waiting to be handed over after this one. Loop
+    # until it reads zero.
+    remaining: Optional[int] = None
 
 
 def _call_answering_pulls(
@@ -155,14 +163,20 @@ def _call_answering_pulls(
         )
 
     if isinstance(res, messages.WardLeafAck):
+        # A queued ack carries no leaf at all -- reporting Leaf(None, None) would let a caller
+        # "store" an entry made of nothing, which is precisely the mistake `queued` exists to
+        # prevent.
+        queued = bool(res.queued)
         return WardResult(
             res,
             res.entry_key or entry_key,
-            Leaf(res.identity, res.content),
+            None if queued else Leaf(res.identity, res.content),
             res.counter,
             res.mac,
             res.auth_commit,
             res.auth_sig,
+            queued,
+            res.remaining,
         )
 
     if not isinstance(res, messages.Success):
@@ -458,3 +472,60 @@ def apply(store, result: WardResult) -> None:
             )
         )
         store.counter = result.counter
+
+
+def pin_cached_entry(
+    session: "Session",
+    app_id: str,
+    identifier: bytes,
+    provider: EntryProvider,
+) -> WardResult:
+    """Ask the device to keep (app_id, identifier) for offline use.
+
+    The device pulls the leaf, verifies it exactly as a read does, shows the value and asks.
+    Nothing is written before that confirmation, so a rejected screen leaves flash untouched.
+
+    Fails if the device's store is FULL -- it never evicts, because every record it holds is
+    either a value the user chose to keep or a change they confirmed and that is not published
+    yet. The user erases something first, via `erase_cached_entry`.
+    """
+    return _call_answering_pulls(
+        session,
+        messages.WardPinCachedEntry(app_id=app_id, identifier=identifier),
+        provider,
+    )
+
+
+def erase_cached_entry(
+    session: "Session",
+    app_id: str,
+    identifier: bytes,
+) -> messages.Success:
+    """Ask the device to remove its local copy of (app_id, identifier), on confirmation.
+
+    NOT a WARD deletion: the entry itself is untouched and `delete_entry` remains the way to
+    remove one. This is the only way a record leaves the device's storage -- nothing evicts,
+    expires or is cleaned up.
+
+    No provider: the device shows what it already holds, and needs no host round-trip. It
+    derives the path itself, so a host cannot name an arbitrary record to destroy.
+    """
+    return session.call(
+        messages.WardEraseCachedEntry(app_id=app_id, identifier=identifier),
+        expect=messages.Success,
+    )
+
+
+def flush_queue(session: "Session", provider: EntryProvider) -> WardResult:
+    """Publish ONE queued change, sealed and re-derived against current state.
+
+    Returns a result whose `remaining` says how many are still waiting; call again while it
+    is non-zero. `apply` the leaf and publish (counter, mac) to the WM exactly as for a
+    write -- the change does not take effect until the WM confirms that counter, and until
+    then the device keeps it queued and will offer it again.
+
+    `remaining == 0` with no `entry_key` means the queue was already empty.
+
+    Requires a synced session: with no trusted root there is nothing to derive against.
+    """
+    return _call_answering_pulls(session, messages.WardFlushQueue(), provider)
