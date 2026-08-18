@@ -137,7 +137,7 @@ pub fn new_confirm_fido(
         ActionBar::new_cancel_confirm()
     } else {
         ActionBar::new_single(
-            Button::with_text(TR::words__authenticate.into())
+            Button::with_text(TR::buttons__authenticate.into())
                 .styled(theme::button_confirm())
                 .with_gradient(Gradient::SignGreen),
         )

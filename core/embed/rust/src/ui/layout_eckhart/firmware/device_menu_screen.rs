@@ -729,7 +729,7 @@ impl DeviceMenuScreen {
                 TR::homescreen__title_pin_not_set.into(),
                 DeviceMenuMsg::SetOrChangePin,
             )
-            .with_subtext(Some((TR::words__set.into(), None)))
+            .with_subtext(Some((TR::buttons__set.into(), None)))
             .light_warn();
             items.add(item);
         }
@@ -838,7 +838,7 @@ impl DeviceMenuScreen {
                 let mut menu = VerticalMenu::empty();
                 if device_screen.connected {
                     menu.item(Button::new_menu_item(
-                        TR::words__disconnect.into(),
+                        TR::buttons__disconnect.into(),
                         theme::menu_item_title(),
                     ));
                 }
@@ -847,7 +847,7 @@ impl DeviceMenuScreen {
                     theme::menu_item_title(),
                 ));
                 menu.item(Button::new_menu_item(
-                    TR::words__forget.into(),
+                    TR::buttons__forget.into(),
                     theme::menu_item_title_orange(),
                 ));
                 *self.active_screen.deref_mut() = ActiveScreen::Device(

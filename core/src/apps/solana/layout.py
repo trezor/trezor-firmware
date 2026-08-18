@@ -436,7 +436,7 @@ async def confirm_stake_withdrawer(withdrawer_account: bytes, chunkify: bool) ->
     await show_danger(
         title=TR.words__important,
         content=TR.solana__stake_withdrawal_warning,
-        verb_cancel=TR.words__cancel_and_exit,
+        verb_cancel=TR.buttons__cancel_and_exit,
         br_name="confirm_stake_warning",
     )
     await confirm_address(

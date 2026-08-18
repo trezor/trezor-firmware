@@ -138,7 +138,7 @@ def confirm_path_warning(
         value=path,
         title=TR.words__important,
         menu_title=TR.words__receive,
-        verb_cancel=TR.words__cancel_and_exit,
+        verb_cancel=TR.buttons__cancel_and_exit,
         br_code=ButtonRequestType.UnknownDerivationPath,
     )
 
@@ -157,7 +157,7 @@ def confirm_multisig_different_paths_warning() -> Awaitable[None]:
         title=TR.words__important,
         menu_title=TR.words__receive,
         br_code=ButtonRequestType.Warning,
-        verb_cancel=TR.words__cancel_and_exit,
+        verb_cancel=TR.buttons__cancel_and_exit,
     )
 
 
@@ -371,7 +371,7 @@ async def show_warning(
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
-    button = button or TR.words__continue_anyway  # def_arg
+    button = button or TR.buttons__continue_anyway  # def_arg
     with trezorui_api.show_warning(
         title=TR.words__important,
         button=button,
@@ -1029,7 +1029,7 @@ if not utils.BITCOIN_ONLY:
         prefix = data[: 9 * 9]  # 9 rows x 18 hex digits
         confirmed_len += len(prefix)
         verb = (
-            TR.words__show_next if confirmed_len < total_len else TR.buttons__continue
+            TR.buttons__show_next if confirmed_len < total_len else TR.buttons__continue
         )
 
         show_more = not await should_show_more(

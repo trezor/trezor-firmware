@@ -205,7 +205,7 @@ async def handle_ReviewFailedBackup() -> None:
 
     with trezorui_api.show_warning(
         title=TR.homescreen__title_backup_failed,
-        button=TR.words__wipe,
+        button=TR.buttons__wipe,
         description=TR.wipe__start_again,
         danger=True,
     ) as layout:
