@@ -369,6 +369,7 @@ trezor_message_impl! {
     WardPinCachedEntry => MessageType_WardPinCachedEntry,
     WardEraseCachedEntry => MessageType_WardEraseCachedEntry,
     WardFlushQueue => MessageType_WardFlushQueue,
+    DisplayAddress => MessageType_DisplayAddress,
 }
 
 #[cfg(feature = "webauthn")]

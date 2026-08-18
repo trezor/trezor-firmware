@@ -326,3 +326,4 @@ if not utils.BITCOIN_ONLY:
     WardPinCachedEntry = 2319
     WardEraseCachedEntry = 2320
     WardFlushQueue = 2321
+    DisplayAddress = 2322
