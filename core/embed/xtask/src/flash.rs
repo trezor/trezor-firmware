@@ -3,25 +3,45 @@ use std::{fs, process};
 
 use anyhow::{Context, Result, ensure};
 
-use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, ResetArgs};
-use crate::helpers;
+use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, Project, ResetArgs};
+use crate::{combine, helpers};
 
 /// Flashes the specified project to the device using OpenOCD.
 pub fn flash(args: FlashArgs) -> Result<()> {
-    ensure!(
-        args.project.flashable(),
-        "Flashing is not supported for `{}`",
-        args.project.binary_name()
-    );
+    let (binary, flash_start, hint) = if args.combined {
+        // A combined image always starts with the boardloader, no matter which
+        // project it was combined for.
+        (
+            combine::combined_binary_path(args.model, args.project)?,
+            Project::Boardloader.flash_start_symbol()?,
+            format!(
+                ", run `xtask combine --model {} {}` first",
+                args.model.model_id().to_lowercase(),
+                args.project.binary_name()
+            ),
+        )
+    } else {
+        ensure!(
+            args.project.flashable(),
+            "Flashing is not supported for `{}`",
+            args.project.binary_name()
+        );
 
-    let binary =
-        helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.project.binary_name()));
+        (
+            helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.project.binary_name())),
+            args.project.flash_start_symbol()?,
+            String::new(),
+        )
+    };
 
-    let binary = binary
-        .canonicalize()
-        .with_context(|| format!("Failed to locate `{}` for flashing", binary.display()))?;
+    let binary = binary.canonicalize().with_context(|| {
+        format!(
+            "Failed to locate `{}` for flashing{}",
+            binary.display(),
+            hint
+        )
+    })?;
 
-    let flash_start = args.project.flash_start_symbol()?;
     let memory_ld = args.model.model_memory_ld()?;
     let address = helpers::read_symbol(&memory_ld, flash_start)?;
 
