@@ -1,4 +1,4 @@
-use crate::strutil::ShortString;
+use crate::ui::component::base::FlowMsgText;
 use crate::ui::component::EventCtx;
 use crate::ui::util::ResultExt;
 
@@ -15,13 +15,13 @@ pub enum TextEdit {
 /// operations over it. Text ops usually take a `EventCtx` to request a paint
 /// pass in case of any state modification.
 pub struct TextBox {
-    text: ShortString,
+    text: FlowMsgText,
 }
 
 impl TextBox {
     /// Create a new `TextBox` with content `text`.
     pub fn new(text: &str, max_len: usize) -> Self {
-        let text = unwrap!(ShortString::try_from(text));
+        let text = unwrap!(FlowMsgText::try_from(text));
         debug_assert!(text.capacity() >= max_len);
         Self { text }
     }
