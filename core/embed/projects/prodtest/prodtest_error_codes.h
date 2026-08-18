@@ -58,6 +58,7 @@
 //   common         : 23000 – 23999
 //   prodtest       : 24000 – 24999
 //   syslog         : 25000 – 25999
+//   display        : 26000 – 26999
 
 typedef enum {
 
@@ -469,5 +470,10 @@ typedef enum {
 
   // === syslog (25000–25999) ===
   PRODTEST_ERR_SYSLOG_FILTER_SET = 25010,
+
+  // === display (26000–26999) ===
+  PRODTEST_ERR_DISPLAY_IMAGE_FB_GET = 26010,
+  PRODTEST_ERR_DISPLAY_IMAGE_NOT_STARTED = 26011,
+  PRODTEST_ERR_DISPLAY_IMAGE_UNKNOWN_PHASE = 26012,
 
 } prodtest_error_t;

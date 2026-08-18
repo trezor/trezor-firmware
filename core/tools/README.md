@@ -126,6 +126,51 @@ Convert a JPG image to a C array that can be embedded into the firmware.
 
 (TODO could we replace it with xxd -i?)
 
+### `display_image_converter.py`
+
+Converts a regular image into a sequence of `display-image begin/chunk/end`
+commands for prodtest.
+
+Example:
+
+`python core/tools/display_image_converter.py input.png --width 240 --height 320 > upload.txt`
+
+Then paste `upload.txt` content into the prodtest CLI session.
+
+You can also send commands directly to a connected prodtest CLI tty:
+
+`python core/tools/display_image_converter.py input.png --width 240 --height 320 --tty /dev/ttyACM1`
+
+To generate a C header for embedding an image into the firmware (see `display-slideshow` below):
+
+`python core/tools/display_image_converter.py input.png --width 240 --height 320 --output-c prodtest_img_NAME.h --symbol prodtest_img_NAME`
+
+### `display_image_upload.py`
+
+Uploads a single image to prodtest over serial by issuing `display-image begin/chunk/end`
+commands.
+
+Example:
+
+`python core/tools/display_image_upload.py /dev/ttyACM1 input.png --width 240 --height 320`
+
+Key options: `--chunk-size` controls bytes per chunk (default: 4085), `--timings`
+prints conversion and transfer throughput statistics, `--backlight LEVEL` sets the
+display backlight (0–255) before the image is shown.
+
+### `display_image_slideshow.py`
+
+Sends a directory of images to prodtest one by one as a slideshow, with a configurable
+pause between each image.  The serial port is kept open for the entire run.
+
+Example:
+
+`python core/tools/display_image_slideshow.py /dev/ttyACM1 images/ --width 240 --height 320`
+
+Key options: `--delay 5` changes the pause between images (default: 10 s), `--loop`
+cycles indefinitely, `--backlight LEVEL` sets the display backlight (0–255) before the
+slideshow starts.
+
 ### `make_cmakelists.py`
 
 Generate a CMakeLists.txt file for the core.
