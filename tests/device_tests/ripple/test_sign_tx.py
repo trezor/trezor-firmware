@@ -201,6 +201,42 @@ def test_signtx_payment_req(session: Session):
         == "120000228000000024000000642e0001e240201b00051537614000000005f5e109684000000000000064732103dbed1e77cb91a005e2ec71afbccce5444c9be58276665a3859040f692de8fed2744730450221008770743a472bb2d1c746a53ef131cc17cc118d538ec910ca928d221db4494cf702201e4ef242d6c3bff110c3cc3897a471fed0f5ac10987ea57da63f98dfa01e94df8114bdf86f3ae715ba346b7772ea0e133f48828b766483148fb40e1ffa5d557ce9851a535af94965e0dd0988"
     )
 
+    # DestinationTag == 0 is a valid tag and must not be treated as "no tag".
+    msg = ripple.create_sign_tx_msg(
+        {
+            "TransactionType": "Payment",
+            "Payment": {
+                "Amount": 100000009,
+                "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
+                "DestinationTag": 0,
+            },
+            "Flags": 0,
+            "Fee": 100,
+            "Sequence": 100,
+            "LastLedgerSequence": 333111,
+        }
+    )
+    nonce = misc.get_nonce(session)
+    address = f"{msg.payment.destination}?dt={msg.payment.destination_tag}"
+    payment_req = make_payment_request(
+        recipient_name="trezor.io",
+        slip44=144,
+        outputs=[(msg.payment.amount, address)],
+        memos=[memo],
+        nonce=nonce,
+    )
+    resp = ripple.sign_tx(
+        session, parse_path("m/44h/144h/0h/0/2"), msg, payment_req=payment_req
+    )
+    assert (
+        resp.signature.hex()
+        == "3044022034503ece085fcdbc5a9b64bad5bf4a3fec9337fbb24ced9a0ef8dc73918c963202204fdd102d7e406434de14a007dddaa19da69df91ccde2c06e544e29f9d37a2a04"
+    )
+    assert (
+        resp.serialized_tx.hex()
+        == "120000228000000024000000642e00000000201b00051537614000000005f5e109684000000000000064732103dbed1e77cb91a005e2ec71afbccce5444c9be58276665a3859040f692de8fed274463044022034503ece085fcdbc5a9b64bad5bf4a3fec9337fbb24ced9a0ef8dc73918c963202204fdd102d7e406434de14a007dddaa19da69df91ccde2c06e544e29f9d37a2a048114bdf86f3ae715ba346b7772ea0e133f48828b766483148fb40e1ffa5d557ce9851a535af94965e0dd0988"
+    )
+
 
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_signtx_account_delete(session: Session, chunkify: bool):
