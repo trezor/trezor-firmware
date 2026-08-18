@@ -785,6 +785,7 @@ if TYPE_CHECKING:
         WardPinCachedEntry = 2319
         WardEraseCachedEntry = 2320
         WardFlushQueue = 2321
+        DisplayAddress = 2322
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

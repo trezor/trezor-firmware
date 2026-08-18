@@ -850,6 +850,7 @@ class MessageType(IntEnum):
     WardPinCachedEntry = 2319
     WardEraseCachedEntry = 2320
     WardFlushQueue = 2321
+    DisplayAddress = 2322
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -4970,6 +4971,35 @@ class EthereumDisplayFormatInfo(protobuf.MessageType):
         self.func_sig = func_sig
         self.intent = intent
         self.provider_name = provider_name
+
+
+class DisplayAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2322
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("title", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("subtitle", "string", repeated=False, required=False, default=None),
+        4: protobuf.Field("case_sensitive", "bool", repeated=False, required=False, default=True),
+        5: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        6: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: Optional["str"] = None,
+        title: Optional["str"] = None,
+        subtitle: Optional["str"] = None,
+        case_sensitive: Optional["bool"] = True,
+        chunkify: Optional["bool"] = None,
+        app_id: Optional["str"] = None,
+    ) -> None:
+        self.address = address
+        self.title = title
+        self.subtitle = subtitle
+        self.case_sensitive = case_sensitive
+        self.chunkify = chunkify
+        self.app_id = app_id
 
 
 class EosGetPublicKey(protobuf.MessageType):
