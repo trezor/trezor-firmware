@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use xtask::args::{Cli, Cmd};
-use xtask::{cargo, combine, flash, upload};
+use xtask::{cargo, combine, flash, helpers, upload};
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -18,5 +18,6 @@ fn main() -> Result<()> {
         Cmd::Reset(args) => flash::reset(args),
         Cmd::Upload(args) => upload::upload(args),
         Cmd::Combine(args) => combine::combine(args),
+        Cmd::PrintVersion(args) => helpers::print_version(args),
     }
 }
