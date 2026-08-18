@@ -1841,7 +1841,7 @@
     "recovery__cancel_dry_run": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Batalkan pemeriksaan cadangan",
+      "Delizia": "Batalkan pemeriksaan",
       "Eckhart": ""
     },
     "recovery__check_dry_run": {
