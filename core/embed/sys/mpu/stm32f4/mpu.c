@@ -232,6 +232,9 @@ bool mpu_inside_active_fb(const void* addr, size_t size) {
   irq_key_t lock = irq_lock();
 
   bool result =
+      // an inaccessible framebuffer contains nothing, see
+      // `mpu_set_active_fb()`
+      (drv->active_fb_addr != 0) && (drv->active_fb_size > 0) &&
       ((uintptr_t)addr + size >= (uintptr_t)addr) &&  // overflow check
       ((uintptr_t)addr >= drv->active_fb_addr) &&
       ((uintptr_t)addr + size <= drv->active_fb_addr + drv->active_fb_size);

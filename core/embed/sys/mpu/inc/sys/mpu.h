@@ -107,6 +107,9 @@ void mpu_set_active_fb(const void* addr, size_t size);
 
 // Returns true if the given address and size are inside
 // the active framebuffer previously set by `mpu_set_active_fb()`.
+//
+// Returns false whenever no framebuffer is set, for any address and size,
+// including a zero-length range at address 0.
 bool mpu_inside_active_fb(const void* addr, size_t size);
 
 #endif  // KERNEL_MODE
