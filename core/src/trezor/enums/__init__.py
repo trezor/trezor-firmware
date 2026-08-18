@@ -784,6 +784,9 @@ if TYPE_CHECKING:
         WardRollbackAck = 2316
         WardRecoverCounter = 2317
         WardRecoverCounterAck = 2318
+        WardPinCachedEntry = 2319
+        WardEraseCachedEntry = 2320
+        WardFlushQueue = 2321
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

@@ -48,47 +48,70 @@ must be able to supply that root from its own link log even when it cannot recon
 tree -- which is the same requirement `rollback` already imposes, and which the host model
 satisfies (`WardTrie.links`).
 
-THE OFFLINE QUEUE: DECIDED FOR NOW, WITH ITS BLOCKERS LISTED. MVP is online-only, so the
-queue lives in EVOLU rather than on the device -- which duplicates the leaf data there, and is
-accepted for that reason alone. Flash is the intended destination later. Each candidate home
-and what stands in its way:
+THE OFFLINE STORE: NOW HERE, IN FLASH. It holds two things that look different and are the
+same record: CACHED READS -- leaves the device authenticated and the user pinned -- and PENDING
+WRITES, changes made with no host able to take them. Both are entries this wallet owns, keyed
+the same way and subject to the same erase rule, so splitting them into two stores would have
+meant two capacity budgets, two lookup paths and two chances to key one of them wrong.
 
-  RAM is not actually available at the needed size. RAM that survives between requests is the
-  session cache, and its slots are FIXED-SIZE, statically declared as a literal tuple in
-  `cache_codec.py` / `cache_thp.py` and enforced by `utils.ensure(len(value) <= fields[key])`.
-  The largest existing slot is 128 bytes; WARD's round is 77. An intent is an entry_key plus a
-  value up to the 4096-byte AEAD bucket, so a queue of them fits nothing, and a module global
-  is not an option -- `trezor.wire` runs `unimport_end()` between workflows, which is what put
-  the sync round in the cache to begin with. A RAM queue therefore means a declared maximum of
-  two or three small intents, not a queue.
+It lives here rather than in EVOLU because the case that forced it cannot reach EVOLU: a host
+that does not speak WARD never sends `WardSync`, cannot answer `WardEntryRequest`, and has no
+replica to consult. Serving that host means serving it from this device.
 
-  A RAM queue also makes the confirmation LIE: the user holds to confirm, the session drops,
-  the change is gone and nothing said so. It needs its own screen wording, not the write's.
+KEYED BY wallet_id, exactly as the root is. A passphrase switch must not show one wallet's
+entries to another, nor apply one wallet's queued write under another's keys. Every lookup
+matches on wallet_id first; nothing is ever found by entry_key alone.
 
-  FLASH, when it comes, must be keyed by wallet_id exactly as the root is -- otherwise a
-  passphrase switch applies one wallet's queue to another. It also spends the same budget as
-  the shrink discussed above: MAX_WALLETS is 8 because a record is 52 bytes, and a queue is
-  orders of magnitude larger, so the two trade against each other directly.
+RECORDS ARE PLAINTEXT, and that is a decision with a citation rather than an omission.
+`storage.c` already encrypts every protected value with ChaCha20-Poly1305 under a PIN-derived
+key, with THE STORAGE SLOT NUMBER AS AAD, on top of a global authentication sum across all keys;
+a tag mismatch calls `handle_fault()`. So a record already cannot be read without the PIN, moved
+between slots, or silently corrupted -- and re-sealing it under K_data would buy a second copy of
+protections that are already there, at the cost of a nonce, a tag and AEAD bucket padding that
+would multiply a forty-byte address several times over. Sealing happens on EXPORT, where the
+data leaves the device and storage.c stops covering it, and nowhere else.
 
-  EVOLU works because the sealed leaf is itself an AUTHENTICATOR: the AEAD's AAD is
-  domain || entry_key || key_type, so only a holder of K_data -- every device of the wallet,
-  nobody else -- can produce a valid tag. A host cannot inject a fabricated write intent.
-  Deletes are the exception and need the sealed tombstone plus intent MAC described in
-  `delete_entry.py`; without those, uploading queued deletes lets a host delete anything.
+What plaintext genuinely gives up: K_data is passphrase-derived and the storage key is not, so
+nothing cryptographically binds a record to the hidden wallet that wrote it. wallet_id is a field
+inside the authenticated record and every lookup matches on it, so wallets still cannot bleed
+into each other; the residual gap needs an attacker holding the PIN, who owns the device anyway.
 
-WHATEVER THE HOME, TWO THINGS HOLD. A queued intent is an INTENT, not a transition: a device
-with no host cannot pull, so it cannot prove current state and cannot derive a root. And an
-intent formed against root R is not applicable to R' -- its proof material and derived root are
-relative to R -- so reconnecting means RE-DERIVING each one against current state, which is
-mandatory machinery rather than an optimisation.
+WHEN THE SLOTS RUN OUT, as with wallets above, the device REFUSES rather than evicting. Here the
+reason is sharper: an evicted record is either a value the user chose to keep or a change they
+confirmed and that has not been published yet. Neither may vanish to make room. See the erase
+rule below.
 
-KNOWN AND ACCEPTED: ATOMICITY AND CONSENT TRANSFER. A queued batch has no transaction to
-apply under -- Evolu's CRDT offers none -- so partial application can leave a state the user
-never approved. And when another device integrates intents, either it applies them silently,
-so the user never learns, or it re-confirms what was already approved once. Both are to be
-resolved by `rollback` when they go wrong, which is one more reason that path is load-bearing
-rather than an escape hatch (see `apps/ward/rollback.py`).
+NOTHING IS EVER ERASED IMPLICITLY. No LRU, no TTL, no clean-up on boot, on wallet switch, on root
+update, or on pressure. A record may become stale, superseded, incompatible with a newer format,
+or unreadable -- none of those authorises removing it. Only a user-confirmed erase or replacement
+takes bytes out of flash. This is the invariant the whole store is built to hold:
 
+    head/root:      authenticated global state
+    offline store:  local copies and local intents
+    advancing or changing the head must NEVER implicitly erase a record
+
+A pinned entry that is out of date is a solvable problem; an entry that disappeared because the
+tree moved is a lost one, and the user has no way to notice it happened.
+
+STILL TRUE, AND STILL UNSOLVED. A queued intent is an INTENT, not a transition: a device with no
+host cannot pull, so it cannot prove current state and cannot derive a root. An intent formed
+against root R is not applicable to R' -- its proof material and derived root are relative to R --
+so publishing means RE-DERIVING each one against current state, which is what `flush_queue` does
+and is mandatory machinery rather than an optimisation.
+
+KNOWN AND ACCEPTED: ATOMICITY AND CONSENT TRANSFER. A queued batch has no transaction to apply
+under -- Evolu's CRDT offers none -- so partial application can leave a state the user never
+approved; publishing ONE intent per round-trip bounds the damage without making the batch atomic.
+And when another device integrates intents, either it applies them silently, so the user never
+learns, or it re-confirms what was already approved once. Both are to be resolved by `rollback`
+when they go wrong, which is one more reason that path is load-bearing rather than an escape
+hatch (see `apps/ward/rollback.py`).
+
+DELETES ARE NOT QUEUED. Deleting offline means erasing the LOCAL record, user-confirmed -- it does
+not remove anything from WARD. A queued logical delete would need the sealed tombstone and the
+K_auth intent MAC described in `delete_entry.py`, because today's empty-part delete leaf is
+plaintext and any host can construct one for any entry_key; without both, uploading queued deletes
+lets a host delete anything. `WardDeleteEntry` therefore requires a connection.
 """
 
 from micropython import const
@@ -178,3 +201,145 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> None:
         + (root if root is not None else bytes(_ROOT_LEN))
         + counter.to_bytes(_COUNTER_LEN, "big"),
     )
+
+
+# --- the offline store ------------------------------------------------------------
+#
+# A DISJOINT KEY RANGE from the root slots above. Roots live at 1..MAX_WALLETS; records live
+# at 0x40 upwards, with a gap between them on purpose. Sharing one range would make "how many
+# wallets fit" and "how many records fit" the same number, and a record landing in a root slot
+# would be read as a root -- a wallet_id match at the same offset is exactly the kind of
+# collision that reads as ordinary operation.
+_STORE_FIRST_KEY = const(0x40)
+
+# 8 records. Plaintext keeps a typical address record near 150 bytes, so the whole store is a
+# few kilobytes -- it shares one norcow sector with every other setting on the device, and that
+# sector is 32 kB on the smallest model. Raising either constant costs flash and nothing else.
+MAX_STORE_ENTRIES = const(8)
+MAX_VALUE_LEN = const(512)
+
+STORE_VERSION = const(1)
+
+FLAG_PENDING = const(0x01)  # a local write that has not been published yet
+
+# THE FIRST 49 BYTES ARE FROZEN ACROSS EVERY FUTURE VERSION: version(1) || wallet_id(16) ||
+# entry_key(32). This is load-bearing rather than tidy. A build that meets a record written by
+# a newer firmware cannot parse it, and the erase rule forbids deleting what it cannot read --
+# so it must still be able to FIND that record, name it, and remove it when the user says so.
+# Freezing the prefix is what makes "report incompatible, require explicit removal" possible
+# instead of a blind wipe. Anything added later goes after byte 49.
+_STORE_VERSION_OFF = const(0)
+_STORE_ID_OFF = const(1)
+STORE_KEY_OFF = const(17)
+_ENTRY_KEY_LEN = const(32)
+STORE_PREFIX_LEN = const(49)
+
+
+def store_prefix(wallet_id: bytes, entry_key: bytes) -> bytes:
+    """The frozen header every record starts with. The single point that decides its layout."""
+    if len(wallet_id) != _WALLET_ID_LEN:
+        raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
+    if len(entry_key) != _ENTRY_KEY_LEN:
+        raise ValueError  # entry_key must be exactly _ENTRY_KEY_LEN bytes
+    return bytes([STORE_VERSION]) + wallet_id + entry_key
+
+
+def _store_slot(index: int) -> bytes | None:
+    return common.get(common.APP_WARD, index + _STORE_FIRST_KEY)
+
+
+def store_find(wallet_id: bytes, entry_key: bytes) -> int | None:
+    """This wallet's slot for entry_key, or None.
+
+    Matches at FIXED OFFSETS and deliberately ignores the version byte -- a record this build
+    cannot parse must still be locatable, or it could never be erased. See the frozen-prefix
+    note above.
+
+    Matching on wallet_id AND entry_key, never entry_key alone: the same identifier under a
+    different passphrase is a different wallet's entry, and serving one for the other is the
+    failure this key scheme exists to prevent.
+    """
+    if len(wallet_id) != _WALLET_ID_LEN or len(entry_key) != _ENTRY_KEY_LEN:
+        raise ValueError  # fixed-width operands only
+    for i in range(MAX_STORE_ENTRIES):
+        rec = _store_slot(i)
+        if rec is None or len(rec) < STORE_PREFIX_LEN:
+            continue
+        if (
+            rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id
+            and rec[STORE_KEY_OFF:STORE_PREFIX_LEN] == entry_key
+        ):
+            return i
+    return None
+
+
+def store_get(wallet_id: bytes, entry_key: bytes) -> bytes | None:
+    """The raw record, or None if this wallet has none for entry_key.
+
+    Raw on purpose: deciding whether the bytes are USABLE -- known version, well-formed
+    framing -- is the app layer's job, and returning None for an unreadable record would make
+    "no such entry" and "cannot read this entry" the same answer. They are not, and the
+    difference is what stops a corrupt record from silently reading as a miss.
+    """
+    index = store_find(wallet_id, entry_key)
+    if index is None:
+        return None
+    return _store_slot(index)
+
+
+def store_put(wallet_id: bytes, entry_key: bytes, record: bytes) -> bool:
+    """Write a record, replacing this wallet's existing one for entry_key. False if full.
+
+    NEVER EVICTS. When every slot belongs to some other entry the write FAILS and the caller
+    reports it, because each occupant is either a value the user chose to keep or a change they
+    confirmed and that is not published yet. Making room automatically would destroy one of
+    those to satisfy the other, silently, and the user would learn about it by finding the
+    entry gone.
+    """
+    if record[:STORE_PREFIX_LEN] != store_prefix(wallet_id, entry_key):
+        raise ValueError  # record header must name the wallet and key it is stored under
+
+    index = store_find(wallet_id, entry_key)
+    if index is None:
+        for i in range(MAX_STORE_ENTRIES):
+            if _store_slot(i) is None:
+                index = i
+                break
+    if index is None:
+        return False
+
+    common.set(common.APP_WARD, index + _STORE_FIRST_KEY, record)
+    return True
+
+
+def store_delete(wallet_id: bytes, entry_key: bytes) -> None:
+    """Remove this wallet's record for entry_key. A no-op if there is none.
+
+    A PRIMITIVE, NOT A POLICY. It asks nothing and checks nothing beyond the key: every caller
+    must already have the user's confirmation in hand. Keeping the question out of here is what
+    stops a future caller from acquiring the power to erase by accident -- there is exactly one
+    path to this function that a user has agreed to, and it is `apps.ward.erase_cached_entry`.
+    """
+    index = store_find(wallet_id, entry_key)
+    if index is None:
+        return
+    common.delete(common.APP_WARD, index + _STORE_FIRST_KEY)
+
+
+def store_list(wallet_id: bytes) -> list[bytes]:
+    """Every raw record belonging to THIS wallet, in slot order.
+
+    Scoped to one wallet with no way to ask for another: enumeration is the one operation where
+    a missing filter leaks the existence of a hidden wallet's entries rather than merely
+    failing.
+    """
+    if len(wallet_id) != _WALLET_ID_LEN:
+        raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
+    out = []
+    for i in range(MAX_STORE_ENTRIES):
+        rec = _store_slot(i)
+        if rec is None or len(rec) < STORE_PREFIX_LEN:
+            continue
+        if rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id:
+            out.append(rec)
+    return out

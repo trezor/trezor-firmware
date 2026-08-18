@@ -171,6 +171,39 @@ def part_bytes(part: "Part | None") -> bytes:
     )
 
 
+def part_from_bytes(buf: bytes, off: int = 0) -> "tuple[Part, int]":
+    """Parse one framed part, returning it and the offset just past it.
+
+    The exact inverse of `part_bytes`, and kept adjacent to it for that reason: two functions
+    that must agree byte for byte drift the moment they live apart, and a framing disagreement
+    here is silent -- it produces a WRONG part rather than an error, and the AEAD tag it then
+    fails to verify looks like corruption somewhere else entirely.
+    """
+    from trezor.wire import DataError
+
+    try:
+        encoding = buf[off]
+        nonce_len = buf[off + 1]
+        off += 2
+        nonce = buf[off : off + nonce_len]
+        off += nonce_len
+        tag_len = buf[off]
+        off += 1
+        tag = buf[off : off + tag_len]
+        off += tag_len
+        body_len = int.from_bytes(buf[off : off + 4], "big")
+        off += 4
+        body = buf[off : off + body_len]
+        off += body_len
+    except IndexError:
+        raise DataError("WARD: truncated leaf part")
+    # Slicing past the end returns SHORT rather than raising, so length has to be checked
+    # explicitly -- otherwise a truncated record parses into a plausible-looking short part.
+    if len(nonce) != nonce_len or len(tag) != tag_len or len(body) != body_len:
+        raise DataError("WARD: truncated leaf part")
+    return (encoding, nonce, tag, body), off
+
+
 def is_delete(part: "Part | None") -> bool:
     """An empty body is a delete, whatever the encoding."""
     return part is None or len(part[3]) == 0

@@ -323,3 +323,6 @@ if not utils.BITCOIN_ONLY:
     WardRollbackAck = 2316
     WardRecoverCounter = 2317
     WardRecoverCounterAck = 2318
+    WardPinCachedEntry = 2319
+    WardEraseCachedEntry = 2320
+    WardFlushQueue = 2321

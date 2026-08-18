@@ -366,6 +366,9 @@ trezor_message_impl! {
     WardRollbackAck => MessageType_WardRollbackAck,
     WardRecoverCounter => MessageType_WardRecoverCounter,
     WardRecoverCounterAck => MessageType_WardRecoverCounterAck,
+    WardPinCachedEntry => MessageType_WardPinCachedEntry,
+    WardEraseCachedEntry => MessageType_WardEraseCachedEntry,
+    WardFlushQueue => MessageType_WardFlushQueue,
 }
 
 #[cfg(feature = "webauthn")]
