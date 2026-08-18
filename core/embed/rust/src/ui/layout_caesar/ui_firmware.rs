@@ -621,7 +621,7 @@ impl FirmwareUI for UICaesar {
 
     fn confirm_with_info(
         title: TString<'static>,
-        _subtitle: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
         verb_info: Option<TString<'static>>,
@@ -629,6 +629,10 @@ impl FirmwareUI for UICaesar {
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
+
+        if let Some(subtitle) = subtitle {
+            paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, subtitle));
+        }
 
         for para in IterBuf::new().try_iterate(items)? {
             let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;

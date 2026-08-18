@@ -1001,6 +1001,7 @@ async def confirm_value(
     else:
         main_ctx = trezorui_api.confirm_with_info(
             title=title,
+            subtitle=description,
             items=((value, False),),
             verb=verb or TR.buttons__confirm,
             verb_info=INFO_ICON,
