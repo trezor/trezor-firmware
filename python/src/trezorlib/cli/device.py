@@ -295,8 +295,22 @@ def setup(
 
 
 @cli.command()
-@click.option("-t", "--group-threshold", type=int)
-@click.option("-g", "--group", "groups", type=(int, int), multiple=True, metavar="T N")
+@click.option(
+    "-t",
+    "--group-threshold",
+    type=int,
+    help="How many groups are needed to recover the wallet.",
+)
+@click.option(
+    "-g",
+    "--group",
+    "groups",
+    type=(int, int),
+    multiple=True,
+    metavar="T N",
+    help="One group as 'T N' (threshold, member count). Repeat for each group (advanced Shamir only), "
+    "e.g. '-g 2 3 -g 1 1'.",
+)
 @click.option("-m", "--method", "method", type=ChoiceType(BACKUP_METHOD))
 @with_session(seedless=True)
 def backup(
@@ -305,7 +319,17 @@ def backup(
     groups: t.Sequence[tuple[int, int]] = (),
     method: messages.BackupMethod = messages.BackupMethod.Display,
 ) -> None:
-    """Perform device seed backup."""
+    """Perform device seed backup.
+
+    For an advanced Shamir backup with multiple groups, specify the group
+    threshold with -t and repeat -g for each group:
+
+    \b
+    trezorctl device backup -t 1 -g 2 3 -g 1 1
+
+    This creates two groups (a 2-of-3 and a 1-of-1 share group), of which 1
+    group is required to recover the wallet.
+    """
 
     device.backup(session, group_threshold, groups, method)
 
