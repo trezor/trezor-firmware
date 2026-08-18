@@ -1118,7 +1118,7 @@ if not utils.BITCOIN_ONLY:
             title=TR.ethereum__title_input_data_bytes.format(confirmed_len, total_len),
             para=[(utils.hexlify_if_bytes(prefix), True)],
             button_text=button_text,  # will return True
-            confirm=TR.words__confirm_all,  # will return False
+            confirm=TR.buttons__confirm_all,  # will return False
             br_name=br_name,
             br_code=br_code,
         )

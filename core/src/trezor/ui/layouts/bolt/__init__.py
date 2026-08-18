@@ -532,7 +532,7 @@ async def confirm_payment_request(
         subtitle=TR.words__provider,
         value=recipient_name,
         description=None,
-        verb=TR.words__confirm,
+        verb=TR.buttons__confirm,
         verb_cancel=None,
         chunkify=False,
         info=True,
@@ -1068,13 +1068,13 @@ if not utils.BITCOIN_ONLY:
         )
         confirmed_len += len(prefix)
 
-        button_text = TR.words__show_next if confirmed_len < total_len else None
+        button_text = TR.buttons__show_next if confirmed_len < total_len else None
 
         show_more = await should_show_more(
             title=TR.ethereum__title_input_data_bytes.format(confirmed_len, total_len),
             items=[(utils.hexlify_if_bytes(part), True) for part in prefix_parts],
             button_text=button_text,  # will return True
-            confirm=TR.words__confirm_all,  # will return False
+            confirm=TR.buttons__confirm_all,  # will return False
             br_name=br_name,
             br_code=br_code,
         )

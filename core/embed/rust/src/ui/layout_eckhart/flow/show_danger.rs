@@ -53,7 +53,7 @@ pub fn new_show_danger(
     menu_title: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
-    let verb_cancel = verb_cancel.unwrap_or(TR::words__cancel_and_exit.into());
+    let verb_cancel = verb_cancel.unwrap_or(TR::buttons__cancel_and_exit.into());
 
     // Message
     let paragraphs = [
@@ -83,7 +83,7 @@ pub fn new_show_danger(
         VerticalMenu::<ShortMenuVec>::empty()
             .with_item(Button::new_menu_item(verb_cancel, theme::menu_item_title()))
             .with_item(Button::new_menu_item(
-                TR::words__continue_anyway.into(),
+                TR::buttons__continue_anyway.into(),
                 theme::menu_item_title_orange(),
             )),
     )

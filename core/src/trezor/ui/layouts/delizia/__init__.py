@@ -174,7 +174,7 @@ def confirm_path_warning(
         "path_warning",
         description,
         value=path,
-        verb_cancel=TR.words__cancel_and_exit,
+        verb_cancel=TR.buttons__cancel_and_exit,
         br_code=ButtonRequestType.UnknownDerivationPath,
     )
 

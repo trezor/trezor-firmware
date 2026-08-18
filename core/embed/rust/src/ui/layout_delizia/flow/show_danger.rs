@@ -48,10 +48,10 @@ pub fn new_show_danger(
     value: TString<'static>,
     verb_cancel: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
-    let confirm: TString = TR::words__continue_anyway.into();
+    let confirm: TString = TR::buttons__continue_anyway.into();
     let done_title: TString = TR::words__operation_cancelled.into();
 
-    let verb_cancel = verb_cancel.unwrap_or(TR::words__cancel_and_exit.into());
+    let verb_cancel = verb_cancel.unwrap_or(TR::buttons__cancel_and_exit.into());
 
     // Message
     let paragraphs = [
