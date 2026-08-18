@@ -327,12 +327,6 @@
       "Delizia": "",
       "Eckhart": "Bluetooth pairing"
     },
-    "ble__unpair_all": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Unpair all bluetooth devices"
-    },
     "ble__unpair_current": {
       "Bolt": "",
       "Caesar": "",
@@ -2836,8 +2830,6 @@
     "stellar__confirm_issuer": "Confirm Issuer",
     "stellar__confirm_memo": "Confirm memo",
     "stellar__confirm_operation": "Confirm operation",
-    "stellar__confirm_timebounds": "Confirm timebounds",
-    "stellar__create_account": "Create Account",
     "stellar__debited_amount": "Debited amount",
     "stellar__delete": "Delete",
     "stellar__delete_passive_offer": "Delete Passive Offer",
@@ -2876,8 +2868,6 @@
     "stellar__set_flags": "Set flags",
     "stellar__set_sequence_to_template": "Set sequence to {0}?",
     "stellar__sign_authorization": "Sign authorization",
-    "stellar__sign_tx_count_template": "Sign this transaction made up of {0}",
-    "stellar__sign_tx_fee_template": "and pay {0}\nfor fee?",
     "stellar__sign_with": "Sign with",
     "stellar__source_account": "Source account",
     "stellar__timebounds": "Timebounds",
@@ -3330,7 +3320,6 @@
     "words__authorization": "Authorization",
     "words__blockhash": "Blockhash",
     "words__bluetooth": "Bluetooth",
-    "words__buying": "Buying",
     "words__cancel_question": {
       "Bolt": "",
       "Caesar": "",
@@ -3342,7 +3331,6 @@
     "words__comm_trouble": "Communication with your connected device failed. Cancel and try again.",
     "words__confirm": "Confirm",
     "words__confirm_fee": "Confirm fee",
-    "words__connect": "Connect",
     "words__connected": "Connected",
     "words__contains": "Contains",
     "words__continue_anyway_question": "Continue anyway?",
@@ -3389,7 +3377,6 @@
       "Delizia": "",
       "Eckhart": "Made in"
     },
-    "words__manage": "Manage",
     "words__my_trezor": "My Trezor",
     "words__name": "Name",
     "words__no": "No",
