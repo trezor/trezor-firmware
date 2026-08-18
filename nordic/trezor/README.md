@@ -149,20 +149,63 @@ manifest and toolchain are active (see
 
 ## Alternative build methods
 
-### Signing custom method
-hash_signer needs to be invoked from nix-shell.
+### Signing schemes (per SDK / model)
+
+Which scheme a model uses follows its SDK, and the SDK is frozen per published
+model for certification reasons — so both schemes are supported side by side and
+`build_sign_flash.sh` picks one from the model it just built (never from a flag):
+
+| Model | SDK | MCUboot revision | Scheme |
+|-------|-----|------------------|--------|
+| `t3w1` | NCS 2.9 | `trezor-v2.1.0-ncs3` | **legacy**: two Ed25519 signatures over the image hash (TLVs `0x00A0`/`0x00A1`), against the nRF's own key pool |
+| `t3t2` | NCS 3.3 | `trezor-ncs3.3.0` | **founder**: post-quantum founder Merkle tree (`CONFIG_BOOT_PQ_SECURE_BOOT`) |
+
+`CONFIG_BOOT_PQ_SECURE_BOOT` lives in a board-scoped fragment
+(`sysbuild/mcuboot_t3t2.conf`) and must NOT reach t3w1: the symbol does not exist in
+the NCS 2.9 MCUboot, and assigning an undefined symbol aborts the Kconfig run.
+
+#### legacy (t3w1)
+
+`imgtool` lays out the image and computes the image-hash TLV; `extract_hash.py` +
+`hash_signer` + `insert_signatures.py` then add the two signatures. `-s` does all of
+it, so the merged hex carries a bootable app.
+
+#### founder (t3t2)
+
+The image carries **no signature of its own**. Authenticity comes from the founder
+Merkle tree: the image is a leaf under `modelRoot`, and the founder's hybrid
+signature over `modelRoot` (SLH-DSA + Ed25519, 2-of-3) is the same one the Trezor STM
+boot header carries. One post-quantum trust root covers both MCUs, and there is no
+separate nRF signing step.
+
+Which founder keys signed is declared by the image's PROTECTED sigmask TLV
+(`0x00A2`) — protected, so it sits inside MCUboot's image hash *and* the founder
+leaf, meaning the signature attests to the signer set. The build only emits a
+**placeholder**; the signer stamps the real value (and re-stamps the image hash,
+which protected TLVs are part of) before computing the leaf. That keeps founder key
+rotation a re-sign rather than an nRF rebuild.
+
+The founder signature only exists once the STM bootloader is signed, so signing is a
+round trip through trezor-firmware. On a dev build (`-d`) the bare image is copied
+there automatically:
+
 ```sh
-imgtool sign --version 0.1.0+0 --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/trezor-ble/zephyr/zephyr.bin build/trezor-ble/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x3
-imgtool sign --version 0.1.0+0 --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/trezor-ble/zephyr/zephyr.hex build/trezor-ble/zephyr/zephyr.prep.hex --custom-tlv 0x00A2 0x3
-imgtool dumpinfo  ./build/trezor-ble/zephyr/zephyr.prep.bin >> ./build/trezor-ble/zephyr/dump.txt
-python ./scripts/extract_hash.py ./build/trezor-ble/zephyr/dump.txt
-hash_signer -d e3d47ab7e90f15badb1a2fac8c082b727c3fa24f1238ad8607b67f720a63c4e9
-python ./scripts/insert_signatures.py ./build/trezor-ble/zephyr/zephyr.prep.hex 0x82a2258db3da5c14ceddfff92e39531c873f870bad81a66506d706fd31da4ab4ad8e76d62686f0b0bbcf02dd4473d27b3bf0a2b98182d8b52bb2f1336eb7630d 0x0003 -o ./build/trezor-ble/zephyr/zephyr.signed_trz.hex
-python ./scripts/insert_signatures.py ./build/trezor-ble/zephyr/zephyr.prep.bin 0x82a2258db3da5c14ceddfff92e39531c873f870bad81a66506d706fd31da4ab4ad8e76d62686f0b0bbcf02dd4473d27b3bf0a2b98182d8b52bb2f1336eb7630d 0x0003 -o ./build/trezor-ble/zephyr/zephyr.signed_trz.bin
-python ../zephyr/scripts/build/mergehex.py  build/mcuboot/zephyr/zephyr.hex build/trezor-ble/zephyr/zephyr.signed_trz.hex -o build/trezor-ble/zephyr.merged.signed.hex
-west flash --hex-file ./build/trezor-ble/zephyr.merged.signed.hex
+# 1. build + lay out the bare image (copies it to core/embed/models/<MODEL>/)
+./scripts/build_sign_flash.sh -b t3t2 -d -s
+
+# 2. fold it into the founder tree and sign
+(cd ../../core && make build_pq TREZOR_MODEL=T3T2 TREE_OPTS="--nrf-pq-native")
+
+# 3. merge the signed image and flash ( -i with no path = take it from the bundle )
+./scripts/build_sign_flash.sh -b t3t2 -d -s -f -i
 ```
 
+Without `-i` the **bare** image is merged, which this MCUboot rejects — which is what
+you want in order to install a new MCUboot, or to force an OTA push (the STM sees no
+valid nRF app, so it cannot skip the update).
+
+To check a signed image against a founder key pool without a flash cycle:
+`core/tools/trezor_core_tools/nrf_pq_check.py <image>`.
 
 ### Building the Application
 ```sh
