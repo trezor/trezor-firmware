@@ -48,6 +48,7 @@ static systask_scheduler_t g_systask_scheduler = {
     .active_task = &g_systask_scheduler.kernel_task,
     .waiting_task = &g_systask_scheduler.kernel_task,
     .task_id_map = 0x00000001,  // Kernel task is always present
+    .lock = PTHREAD_MUTEX_INITIALIZER,
     .kernel_task = {
         .id = 0,  // Kernel task ID == 0
         .cv = PTHREAD_COND_INITIALIZER,
@@ -122,9 +123,12 @@ static void systask_yield(void) {
     pthread_cond_wait(&current_task->cv, &scheduler->lock);
   }
 
+  // Capture the killed state before releasing the lock
+  bool killed = current_task->killed;
+
   pthread_mutex_unlock(&scheduler->lock);
 
-  if (current_task->killed) {
+  if (killed) {
     pthread_exit(0);
   }
 
@@ -173,9 +177,11 @@ static void* thread_trampoline(void* arg) {
   while (scheduler->active_task != task && !task->killed) {
     pthread_cond_wait(&task->cv, &scheduler->lock);
   }
+  // Capture the killed state before releasing the lock
+  bool killed = task->killed;
   pthread_mutex_unlock(&scheduler->lock);
 
-  if (task->killed) {
+  if (killed) {
     // The task was killed before it could start running,
     // so exit immediately.
     return 0;
@@ -235,9 +241,13 @@ static void systask_kill(systask_t* task) {
 
   systask_print_pminfo(task);
 
+  pthread_mutex_lock(&scheduler->lock);
+
   task->killed = 1;
 
   if (task == &scheduler->kernel_task) {
+    pthread_mutex_unlock(&scheduler->lock);
+
     // Call panic handler
     if (scheduler->error_handler != NULL) {
       scheduler->error_handler(&task->pminfo);
@@ -247,12 +257,15 @@ static void systask_kill(systask_t* task) {
     // if it returns. Neither is expected to happen.
     reboot_device();
   } else {
-    // Wake up the task if it’s waiting    // Free task ID
+    // Free task ID
     scheduler->task_id_map &= ~(1 << task->id);
+    bool task_is_active = (scheduler->active_task == task);
+    pthread_mutex_unlock(&scheduler->lock);
+
     // Notify all event sources about the task termination
     sysevents_notify_task_killed(task);
 
-    if (scheduler->active_task != task) {
+    if (!task_is_active) {
       // Wake-up killed task (it will terminate itself)
       pthread_cond_signal(&task->cv);
       // Ensure the task thread is fully terminated before returning.
@@ -265,7 +278,13 @@ static void systask_kill(systask_t* task) {
 }
 
 bool systask_is_alive(const systask_t* task) {
-  return task->initialized && !task->killed;
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
+
+  pthread_mutex_lock(&scheduler->lock);
+  bool alive = task->initialized && !task->killed;
+  pthread_mutex_unlock(&scheduler->lock);
+
+  return alive;
 }
 
 void systask_exit(systask_t* task, int exit_code) {
