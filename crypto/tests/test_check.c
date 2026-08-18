@@ -11631,10 +11631,14 @@ START_TEST(test_elligator2) {
 }
 END_TEST
 
-START_TEST(test_noise_kk1) {
-  // Inject the seed to the random number generator to make the test
-  // deterministic
-  random_reseed(2748932008);
+// Runs the KK1 handshake and leaves both contexts in the transport phase. The
+// keys are derived from `seed`, so the exchanged messages are deterministic.
+static void test_noise_kk1_handshake(uint32_t seed,
+                                     noise_kk1_context_t *initiator_context,
+                                     noise_kk1_context_t *responder_context,
+                                     noise_kk1_request_t *request,
+                                     noise_kk1_response_t *response) {
+  random_reseed(seed);
 
   curve25519_key initiator_private_key = {0};
   curve25519_key responder_private_key = {0};
@@ -11645,6 +11649,24 @@ START_TEST(test_noise_kk1) {
   curve25519_scalarmult_basepoint(initiator_public_key, initiator_private_key);
   curve25519_scalarmult_basepoint(responder_public_key, responder_private_key);
 
+  // Initiator sends request
+  ck_assert_int_eq(
+      noise_kk1_create_handshake_request(initiator_context, request), true);
+
+  // Responder receives request and sends response
+  ck_assert_int_eq(noise_kk1_handle_handshake_request(
+                       responder_context, initiator_public_key,
+                       responder_private_key, request, response),
+                   true);
+
+  // Initiator receives response
+  ck_assert_int_eq(noise_kk1_handle_handshake_response(
+                       initiator_context, initiator_private_key,
+                       responder_public_key, response),
+                   true);
+}
+
+START_TEST(test_noise_kk1) {
   noise_kk1_context_t initiator_context = {0};
   noise_kk1_context_t responder_context = {0};
 
@@ -11686,23 +11708,10 @@ START_TEST(test_noise_kk1) {
 
   bool ret = false;
 
-  // Initiator sends request
-  ret = noise_kk1_create_handshake_request(&initiator_context, &request);
-  ck_assert_int_eq(ret, true);
+  test_noise_kk1_handshake(2748932008, &initiator_context, &responder_context,
+                           &request, &response);
   ck_assert_mem_eq(&request, fromhex(expected_request_hex), sizeof(request));
-
-  // Responder receives request and sends response
-  ret = noise_kk1_handle_handshake_request(
-      &responder_context, initiator_public_key, responder_private_key, &request,
-      &response);
-  ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(&response, fromhex(expected_response_hex), sizeof(response));
-
-  // Initiator receives response
-  ret = noise_kk1_handle_handshake_response(&initiator_context,
-                                            initiator_private_key,
-                                            responder_public_key, &response);
-  ck_assert_int_eq(ret, true);
 
   // Initiator sends message1
   ret = noise_kk1_send_message(&initiator_context, associated_data1,
@@ -11766,10 +11775,67 @@ START_TEST(test_noise_kk1) {
 }
 END_TEST
 
-START_TEST(test_noise_xxpsk3) {
-  // Inject the seed to the random number generator to make the test
-  // deterministic
-  random_reseed(2748932008);
+START_TEST(test_noise_kk1_limits) {
+  noise_kk1_context_t initiator_context = {0};
+  noise_kk1_context_t responder_context = {0};
+  noise_kk1_request_t request = {0};
+  noise_kk1_response_t response = {0};
+  bool ret = false;
+
+  test_noise_kk1_handshake(2748932008, &initiator_context, &responder_context,
+                           &request, &response);
+
+  // --- Noise message size limit ---
+  // The buffers are large enough, it is the resulting Noise message that would
+  // exceed the 65535 byte limit
+  static uint8_t big_plaintext[NOISE_KK1_MAX_MESSAGE_SIZE + 1] = {0};
+  static uint8_t big_ciphertext[NOISE_KK1_MAX_MESSAGE_SIZE + 1] = {0};
+
+  ret =
+      noise_kk1_send_message(&initiator_context, NULL, 0, big_plaintext,
+                             NOISE_KK1_MAX_PLAINTEXT_SIZE + 1, big_ciphertext);
+  ck_assert_int_eq(ret, false);
+  ret =
+      noise_kk1_receive_message(&initiator_context, NULL, 0, big_ciphertext,
+                                NOISE_KK1_MAX_MESSAGE_SIZE + 1, big_plaintext);
+  ck_assert_int_eq(ret, false);
+
+  // The largest allowed plaintext passes the size check and is encrypted
+  ret = noise_kk1_send_message(&initiator_context, NULL, 0, big_plaintext,
+                               NOISE_KK1_MAX_PLAINTEXT_SIZE, big_ciphertext);
+  ck_assert_int_eq(ret, true);
+
+  // --- AES-GCM block limit ---
+  // Responder sends message5, which the initiator would normally receive
+  uint8_t message5[] = "message5";
+  uint8_t ciphertext5[sizeof(message5) + NOISE_KK1_TAG_SIZE] = {0};
+  uint8_t plaintext5[sizeof(message5)] = {0};
+  ret = noise_kk1_send_message(&responder_context, NULL, 0, message5,
+                               sizeof(message5), ciphertext5);
+  ck_assert_int_eq(ret, true);
+
+  // Once the receiving key has processed too many blocks, the message is
+  // refused even though it is authentic
+  initiator_context.decryption_context.blk_cnt = GCM_MAX_BLOCKS;
+  ret = noise_kk1_receive_message(&initiator_context, NULL, 0, ciphertext5,
+                                  sizeof(ciphertext5), plaintext5);
+  ck_assert_int_eq(ret, false);
+
+  // The same holds for the sending key
+  initiator_context.encryption_context.blk_cnt = GCM_MAX_BLOCKS;
+  ret = noise_kk1_send_message(&initiator_context, NULL, 0, message5,
+                               sizeof(message5), ciphertext5);
+  ck_assert_int_eq(ret, false);
+}
+END_TEST
+
+// Runs the XXpsk3 handshake with empty payloads and leaves both sides in the
+// transport phase, checking the message sizes and the exchanged static keys.
+// The keys are derived from `seed`.
+static void test_noise_xxpsk3_handshake(uint32_t seed,
+                                        noise_xxpsk3_initiator_t *initiator,
+                                        noise_xxpsk3_responder_t *responder) {
+  random_reseed(seed);
 
   uint8_t psk[32] = "this_is_a_32byte_preshared_key!!";
 
@@ -11783,71 +11849,64 @@ START_TEST(test_noise_xxpsk3) {
   curve25519_scalarmult_basepoint(initiator_public_key, initiator_private_key);
   curve25519_scalarmult_basepoint(responder_public_key, responder_private_key);
 
-  noise_xxpsk3_initiator_t initiator = {0};
-  noise_xxpsk3_responder_t responder = {0};
+  ck_assert_int_eq(
+      noise_xxpsk3_initiator_init(initiator, psk, initiator_private_key,
+                                  initiator_public_key),
+      true);
+  ck_assert_int_eq(
+      noise_xxpsk3_responder_init(responder, psk, responder_private_key,
+                                  responder_public_key),
+      true);
 
-  bool ret = false;
-
-  // Initialize initiator and responder
-  ret = noise_xxpsk3_initiator_init(&initiator, psk, initiator_private_key,
-                                    initiator_public_key);
-  ck_assert_int_eq(ret, true);
-
-  ret = noise_xxpsk3_responder_init(&responder, psk, responder_private_key,
-                                    responder_public_key);
-  ck_assert_int_eq(ret, true);
-
-  // --- Handshake ---
-
-  // Initiator creates request1
-  uint8_t request1[256] = {0};
-  size_t request1_size = 0;
-  ret = noise_xxpsk3_initiator_create_request1(
-      &initiator, NULL, 0, request1, sizeof(request1), &request1_size);
-  ck_assert_int_eq(ret, true);
-  ck_assert_int_eq(request1_size,
-                   32 + 0 + 16);  // NOISE_XXPSK3_DHLEN + payload + tag
-
-  // Responder handles request1
-  ret = noise_xxpsk3_responder_handle_request1(&responder, request1,
-                                               request1_size, NULL, 0, NULL);
-  ck_assert_int_eq(ret, true);
-
-  // Responder creates response1
-  uint8_t response1[256] = {0};
-  size_t response1_size = 0;
-  ret = noise_xxpsk3_responder_create_response1(
-      &responder, NULL, 0, response1, sizeof(response1), &response1_size);
-  ck_assert_int_eq(ret, true);
-  // response1 = ephemeral_pub[32] + enc_static_pub[48] + enc_payload[0+16]
-  ck_assert_int_eq(response1_size, 32 + 48 + 16);
-
-  // Initiator handles response1
+  uint8_t request1[256] = {0}, response1[256] = {0}, request2[256] = {0};
+  size_t request1_size = 0, response1_size = 0, request2_size = 0;
   uint8_t received_responder_public_key[32] = {0};
-  ret = noise_xxpsk3_initiator_handle_response1(
-      &initiator, response1, response1_size, received_responder_public_key,
-      NULL, 0, NULL);
-  ck_assert_int_eq(ret, true);
+  uint8_t received_initiator_public_key[32] = {0};
+
+  // request1 = ephemeral_public_key[32] + encrypted_payload[0 + 16]
+  ck_assert_int_eq(
+      noise_xxpsk3_initiator_create_request1(initiator, NULL, 0, request1,
+                                             sizeof(request1), &request1_size),
+      true);
+  ck_assert_int_eq(request1_size, 32 + 16);
+  ck_assert_int_eq(noise_xxpsk3_responder_handle_request1(
+                       responder, request1, request1_size, NULL, 0, NULL),
+                   true);
+
+  // response1 = ephemeral_public_key[32] + encrypted_static_public_key[48] +
+  //             encrypted_payload[0 + 16]
+  ck_assert_int_eq(
+      noise_xxpsk3_responder_create_response1(
+          responder, NULL, 0, response1, sizeof(response1), &response1_size),
+      true);
+  ck_assert_int_eq(response1_size, 32 + 48 + 16);
+  ck_assert_int_eq(noise_xxpsk3_initiator_handle_response1(
+                       initiator, response1, response1_size,
+                       received_responder_public_key, NULL, 0, NULL),
+                   true);
   ck_assert_mem_eq(received_responder_public_key, responder_public_key,
                    sizeof(responder_public_key));
 
-  // Initiator creates request2
-  uint8_t request2[256] = {0};
-  size_t request2_size = 0;
-  ret = noise_xxpsk3_initiator_create_request2(
-      &initiator, NULL, 0, request2, sizeof(request2), &request2_size);
-  ck_assert_int_eq(ret, true);
-  // request2 = enc_static_pub[48] + enc_payload[0+16]
+  // request2 = encrypted_static_public_key[48] + encrypted_payload[0 + 16]
+  ck_assert_int_eq(
+      noise_xxpsk3_initiator_create_request2(initiator, NULL, 0, request2,
+                                             sizeof(request2), &request2_size),
+      true);
   ck_assert_int_eq(request2_size, 48 + 16);
-
-  // Responder handles request2 — handshake complete
-  uint8_t received_initiator_public_key[32] = {0};
-  ret = noise_xxpsk3_responder_handle_request2(
-      &responder, request2, request2_size, received_initiator_public_key, NULL,
-      0, NULL);
-  ck_assert_int_eq(ret, true);
+  ck_assert_int_eq(noise_xxpsk3_responder_handle_request2(
+                       responder, request2, request2_size,
+                       received_initiator_public_key, NULL, 0, NULL),
+                   true);
   ck_assert_mem_eq(received_initiator_public_key, initiator_public_key,
                    sizeof(initiator_public_key));
+}
+
+START_TEST(test_noise_xxpsk3) {
+  noise_xxpsk3_initiator_t initiator = {0};
+  noise_xxpsk3_responder_t responder = {0};
+  bool ret = false;
+
+  test_noise_xxpsk3_handshake(2748932008, &initiator, &responder);
 
   // --- Transport phase: both directions ---
 
@@ -11929,19 +11988,22 @@ START_TEST(test_noise_xxpsk3) {
                                      &pt_bad_size);
   ck_assert_int_eq(ret, false);
 
-  // --- Double-init should fail ---
-  ret = noise_xxpsk3_initiator_init(&initiator, psk, initiator_private_key,
-                                    initiator_public_key);
-  ck_assert_int_eq(ret, false);
-
-  ret = noise_xxpsk3_responder_init(&responder, psk, responder_private_key,
-                                    responder_public_key);
-  ck_assert_int_eq(ret, false);
-
-  // Both sides must have the same handshake hash
+  // Both sides must have the same handshake hash.
   ck_assert_mem_eq(initiator.transport_state.handshake_hash,
                    responder.transport_state.handshake_hash,
                    NOISE_XXPSK3_HASHLEN);
+
+  // --- Double-init should fail ---
+  // The arguments are irrelevant, an already initialized structure is rejected
+  // before they are looked at
+  uint8_t unused_key[32] = {0};
+  ret = noise_xxpsk3_initiator_init(&initiator, unused_key, unused_key,
+                                    unused_key);
+  ck_assert_int_eq(ret, false);
+
+  ret = noise_xxpsk3_responder_init(&responder, unused_key, unused_key,
+                                    unused_key);
+  ck_assert_int_eq(ret, false);
 
   // Cleanup
   noise_xxpsk3_initiator_deinit(&initiator);
@@ -11952,6 +12014,102 @@ START_TEST(test_noise_xxpsk3) {
   noise_xxpsk3_responder_t zeroed_rspn = {0};
   ck_assert_int_eq(memcmp(&initiator, &zeroed_intr, sizeof(initiator)), 0);
   ck_assert_int_eq(memcmp(&responder, &zeroed_rspn, sizeof(responder)), 0);
+}
+END_TEST
+
+START_TEST(test_noise_xxpsk3_limits) {
+  // The buffers are large enough to hold an oversized Noise message, so only
+  // the message size limit itself can reject the calls below
+  static uint8_t payload_buf[NOISE_XXPSK3_MAX_MESSAGE_SIZE + 1] = {0};
+  static uint8_t message_buf[NOISE_XXPSK3_MAX_MESSAGE_SIZE + 1] = {0};
+  size_t message_size = 0;
+
+  noise_xxpsk3_initiator_t initiator = {0};
+  noise_xxpsk3_responder_t responder = {0};
+  bool ret = false;
+
+  // --- Handshake message size limit ---
+  // Any static key pair will do, the calls below are rejected on the length
+  // before any key is used
+  random_reseed(2748932008);
+  uint8_t psk[32] = "this_is_a_32byte_preshared_key!!";
+  uint8_t static_private_key[32] = {0};
+  uint8_t static_public_key[32] = {0};
+  random_buffer(static_private_key, sizeof(static_private_key));
+  curve25519_scalarmult_basepoint(static_public_key, static_private_key);
+
+  // request1 = ephemeral_public_key[32] + encrypted_payload[payload + 16]
+  ret = noise_xxpsk3_initiator_init(&initiator, psk, static_private_key,
+                                    static_public_key);
+  ck_assert_int_eq(ret, true);
+  ret = noise_xxpsk3_initiator_create_request1(
+      &initiator, payload_buf, NOISE_XXPSK3_MAX_MESSAGE_SIZE - (32 + 16) + 1,
+      message_buf, sizeof(message_buf), &message_size);
+  ck_assert_int_eq(ret, false);
+  // A rejected call deinitializes the initiator
+  ck_assert_int_eq(initiator.initialized, false);
+
+  ret = noise_xxpsk3_responder_init(&responder, psk, static_private_key,
+                                    static_public_key);
+  ck_assert_int_eq(ret, true);
+  ret = noise_xxpsk3_responder_handle_request1(
+      &responder, message_buf, NOISE_XXPSK3_MAX_MESSAGE_SIZE + 1, payload_buf,
+      sizeof(payload_buf), &message_size);
+  ck_assert_int_eq(ret, false);
+  ck_assert_int_eq(responder.initialized, false);
+
+  // --- Transport message size limit ---
+  // The failed calls above wiped both structures, so a fresh handshake can run
+  test_noise_xxpsk3_handshake(2748932008, &initiator, &responder);
+
+  ret = noise_xxpsk3_send_message(&initiator.transport_state, payload_buf,
+                                  NOISE_XXPSK3_MAX_PLAINTEXT_SIZE + 1,
+                                  message_buf, sizeof(message_buf),
+                                  &message_size);
+  ck_assert_int_eq(ret, false);
+
+  ret = noise_xxpsk3_receive_message(&responder.transport_state, message_buf,
+                                     NOISE_XXPSK3_MAX_MESSAGE_SIZE + 1,
+                                     payload_buf, sizeof(payload_buf),
+                                     &message_size);
+  ck_assert_int_eq(ret, false);
+
+  // The largest allowed plaintext passes the size check and is encrypted into a
+  // message of exactly the maximum size
+  ret = noise_xxpsk3_send_message(&initiator.transport_state, payload_buf,
+                                  NOISE_XXPSK3_MAX_PLAINTEXT_SIZE, message_buf,
+                                  sizeof(message_buf), &message_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_int_eq(message_size, NOISE_XXPSK3_MAX_MESSAGE_SIZE);
+
+  // --- AES-GCM block limit ---
+  uint8_t msg[] = "hello";
+  uint8_t ciphertext[sizeof(msg) + 16] = {0};
+  uint8_t plaintext[sizeof(msg)] = {0};
+  size_t ciphertext_size = 0, plaintext_size = 0;
+
+  ret = noise_xxpsk3_send_message(&responder.transport_state, msg, sizeof(msg),
+                                  ciphertext, sizeof(ciphertext),
+                                  &ciphertext_size);
+  ck_assert_int_eq(ret, true);
+
+  // Once the receiving key has processed too many blocks, the message is
+  // refused even though it is authentic
+  initiator.transport_state.receive_cipher_state.gcm.blk_cnt = GCM_MAX_BLOCKS;
+  ret = noise_xxpsk3_receive_message(&initiator.transport_state, ciphertext,
+                                     ciphertext_size, plaintext,
+                                     sizeof(plaintext), &plaintext_size);
+  ck_assert_int_eq(ret, false);
+
+  // The same holds for the sending key
+  responder.transport_state.send_cipher_state.gcm.blk_cnt = GCM_MAX_BLOCKS;
+  ret = noise_xxpsk3_send_message(&responder.transport_state, msg, sizeof(msg),
+                                  ciphertext, sizeof(ciphertext),
+                                  &ciphertext_size);
+  ck_assert_int_eq(ret, false);
+
+  noise_xxpsk3_initiator_deinit(&initiator);
+  noise_xxpsk3_responder_deinit(&responder);
 }
 END_TEST
 
@@ -12552,7 +12710,9 @@ Suite *test_suite(void) {
 
   tc = tcase_create("noise");
   tcase_add_test(tc, test_noise_kk1);
+  tcase_add_test(tc, test_noise_kk1_limits);
   tcase_add_test(tc, test_noise_xxpsk3);
+  tcase_add_test(tc, test_noise_xxpsk3_limits);
   tcase_add_test(tc, test_noise_xxpsk3_vectors);
   suite_add_tcase(s, tc);
 

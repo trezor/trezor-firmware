@@ -23,8 +23,15 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "aes/aesgcm.h"
+
 #define NOISE_XXPSK3_HASHLEN 32
 #define NOISE_XXPSK3_DHLEN 32
+#define NOISE_XXPSK3_TAG_SIZE 16
+
+#define NOISE_XXPSK3_MAX_MESSAGE_SIZE 65535
+#define NOISE_XXPSK3_MAX_PLAINTEXT_SIZE \
+  (NOISE_XXPSK3_MAX_MESSAGE_SIZE - NOISE_XXPSK3_TAG_SIZE)
 
 // Uncomment to enable initiator/responder functionality in the noise protocol
 // implementation.
@@ -32,7 +39,7 @@
 #define USE_NOISE_XXPSK3_RESPONDER
 
 typedef struct {
-  uint8_t key[NOISE_XXPSK3_HASHLEN];
+  gcm_ctx gcm;
   bool has_key;
   uint64_t nonce;
 } noise_xxpsk3_cipher_state_t;
@@ -345,7 +352,8 @@ bool noise_xxpsk3_responder_handle_request2(
  *
  * @param ts Pointer to the established transport state
  * @param payload Plaintext to encrypt (may be empty)
- * @param payload_size Length of the plaintext in bytes
+ * @param payload_size Length of the plaintext in bytes; must not exceed
+ * NOISE_XXPSK3_MAX_PLAINTEXT_SIZE
  * @param ciphertext Output buffer for the encrypted message
  * @param max_ciphertext_size Size of the output buffer; must be at least
  * payload_size + 16
@@ -364,6 +372,7 @@ bool noise_xxpsk3_send_message(noise_xxpsk3_transport_state_t *ts,
  * @param ts Pointer to the established transport state
  * @param ciphertext Encrypted message to decrypt
  * @param ciphertext_size Length of the encrypted message; must be at least 16
+ * and must not exceed NOISE_XXPSK3_MAX_MESSAGE_SIZE
  * @param payload Output buffer for the decrypted plaintext
  * @param max_payload_size Size of the output buffer; must be at least
  * ciphertext_size - 16

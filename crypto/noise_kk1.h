@@ -25,6 +25,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "aes/aesgcm.h"
 #include "ed25519-donna/ed25519.h"
 
 // Noise protocol using KK1 handshake pattern and X25519, AES-GCM and SHA256.
@@ -34,16 +35,17 @@
 #define NOISE_KK1_NONCE_SIZE 12
 #define NOISE_KK1_TAG_SIZE 16
 
+#define NOISE_KK1_MAX_MESSAGE_SIZE 65535
+#define NOISE_KK1_MAX_PLAINTEXT_SIZE \
+  (NOISE_KK1_MAX_MESSAGE_SIZE - NOISE_KK1_TAG_SIZE)
+
 typedef struct {
   curve25519_key initiator_ephemeral_private_key;  // This is used only by the
                                                    // initiator during handshake
   uint8_t encryption_nonce[NOISE_KK1_NONCE_SIZE];
   uint8_t decryption_nonce[NOISE_KK1_NONCE_SIZE];
-  // There is a time-memory trade-off between storing encryption/decryption keys
-  // and storing encryption/decryption contexts, we choose to optimize for
-  // memory usage by storing the keys
-  uint8_t encryption_key[NOISE_KK1_KEY_SIZE];
-  uint8_t decryption_key[NOISE_KK1_KEY_SIZE];
+  gcm_ctx encryption_context;
+  gcm_ctx decryption_context;
   bool initialized;
 } noise_kk1_context_t;
 
@@ -85,6 +87,7 @@ bool noise_kk1_handle_handshake_response_multiple_keys(
 
 // This is called by both the initiator and responder to send a message
 // len(ciphertext) == plaintext_length + NOISE_KK1_TAG_SIZE
+// plaintext_length must not exceed NOISE_KK1_MAX_PLAINTEXT_SIZE
 // The official Noise specification requires the associated_data to be empty
 bool noise_kk1_send_message(noise_kk1_context_t* ctx,
                             const uint8_t* associated_data,
@@ -94,6 +97,7 @@ bool noise_kk1_send_message(noise_kk1_context_t* ctx,
 
 // This is called by both the initiator and responder to receive a message
 // len(plaintext) == ciphertext_length - NOISE_KK1_TAG_SIZE
+// ciphertext_length must not exceed NOISE_KK1_MAX_MESSAGE_SIZE
 // The official Noise specification requires the associated_data to be empty
 bool noise_kk1_receive_message(noise_kk1_context_t* ctx,
                                const uint8_t* associated_data,

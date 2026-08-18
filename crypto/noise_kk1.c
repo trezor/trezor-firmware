@@ -33,17 +33,20 @@ static uint8_t protocol_name[SHA256_DIGEST_LENGTH] = {
     '5', '5', '1', '9', '_', 'A', 'E', 'S',  'G',  'C', 'M',
     '_', 'S', 'H', 'A', '2', '5', '6', 0x00, 0x00, 0x00};
 
-static bool encrypt(const uint8_t key[NOISE_KK1_KEY_SIZE],
-                    const uint8_t nonce[NOISE_KK1_NONCE_SIZE],
+// The KK1 handshake messages have a fixed size, so the Noise message size limit
+// can be checked at compile time instead of in the handshake functions
+_Static_assert(sizeof(noise_kk1_request_t) <= NOISE_KK1_MAX_MESSAGE_SIZE,
+               "handshake request must fit into a Noise message");
+_Static_assert(sizeof(noise_kk1_response_t) <= NOISE_KK1_MAX_MESSAGE_SIZE,
+               "handshake response must fit into a Noise message");
+
+// The context is keyed by the caller and reused for all messages, so the
+// AES-GCM block limit accumulates over the session.
+static bool encrypt(gcm_ctx *gcm, const uint8_t nonce[NOISE_KK1_NONCE_SIZE],
                     const uint8_t *associated_data,
                     size_t associated_data_length, const uint8_t *plaintext,
                     size_t plaintext_length, uint8_t *ciphertext) {
   // ciphertext = AES-GCM-Encrypt(key, nonce, associated_data, plaintext)
-  gcm_ctx ctx = {0};
-  if (gcm_init_and_key(key, NOISE_KK1_KEY_SIZE, &ctx) != RETURN_GOOD) {
-    return false;
-  }
-
   if (ciphertext != NULL && plaintext != NULL) {  // to suppress asan warning
     memcpy(ciphertext, plaintext, plaintext_length);
   }
@@ -51,18 +54,17 @@ static bool encrypt(const uint8_t key[NOISE_KK1_KEY_SIZE],
   if (gcm_encrypt_message(nonce, NOISE_KK1_NONCE_SIZE, associated_data,
                           associated_data_length, ciphertext, plaintext_length,
                           ciphertext + plaintext_length, NOISE_KK1_TAG_SIZE,
-                          &ctx) != RETURN_GOOD) {
-    memzero(&ctx, sizeof(ctx));
-    memzero(ciphertext, plaintext_length);
+                          gcm) != RETURN_GOOD) {
+    if (ciphertext != NULL) {
+      memzero(ciphertext, plaintext_length + NOISE_KK1_TAG_SIZE);
+    }
     return false;
   }
-  memzero(&ctx, sizeof(ctx));
 
   return true;
 }
 
-static bool decrypt(const uint8_t key[NOISE_KK1_KEY_SIZE],
-                    const uint8_t nonce[NOISE_KK1_NONCE_SIZE],
+static bool decrypt(gcm_ctx *gcm, const uint8_t nonce[NOISE_KK1_NONCE_SIZE],
                     const uint8_t *associated_data,
                     size_t associated_data_length, const uint8_t *ciphertext,
                     size_t ciphertext_length, uint8_t *plaintext) {
@@ -72,11 +74,6 @@ static bool decrypt(const uint8_t key[NOISE_KK1_KEY_SIZE],
   }
   const size_t plaintext_length = ciphertext_length - NOISE_KK1_TAG_SIZE;
 
-  gcm_ctx ctx = {0};
-  if (gcm_init_and_key(key, NOISE_KK1_KEY_SIZE, &ctx) != RETURN_GOOD) {
-    return false;
-  }
-
   if (plaintext != NULL && ciphertext != NULL) {  // to suppress asan warning
     memcpy(plaintext, ciphertext, plaintext_length);
   }
@@ -84,12 +81,12 @@ static bool decrypt(const uint8_t key[NOISE_KK1_KEY_SIZE],
   if (gcm_decrypt_message(nonce, NOISE_KK1_NONCE_SIZE, associated_data,
                           associated_data_length, plaintext, plaintext_length,
                           ciphertext + plaintext_length, NOISE_KK1_TAG_SIZE,
-                          &ctx) != RETURN_GOOD) {
-    memzero(&ctx, sizeof(ctx));
-    memzero(plaintext, plaintext_length);
+                          gcm) != RETURN_GOOD) {
+    if (plaintext != NULL) {
+      memzero(plaintext, plaintext_length);
+    }
     return false;
   }
-  memzero(&ctx, sizeof(ctx));
 
   return true;
 }
@@ -216,18 +213,38 @@ bool noise_kk1_handle_handshake_request(
                         request->initiator_ephemeral_public_key);
   mix_key(chaining_key, shared_secret, kauth);
   memzero(shared_secret, sizeof(shared_secret));
-  split(chaining_key, ctx->decryption_key, ctx->encryption_key);
+
+  uint8_t decryption_key[NOISE_KK1_KEY_SIZE] = {0};
+  uint8_t encryption_key[NOISE_KK1_KEY_SIZE] = {0};
+  split(chaining_key, decryption_key, encryption_key);
   memzero(chaining_key, sizeof(chaining_key));
+  const bool keys_set =
+      gcm_init_and_key(decryption_key, NOISE_KK1_KEY_SIZE,
+                       &ctx->decryption_context) == RETURN_GOOD &&
+      gcm_init_and_key(encryption_key, NOISE_KK1_KEY_SIZE,
+                       &ctx->encryption_context) == RETURN_GOOD;
+  memzero(decryption_key, sizeof(decryption_key));
+  memzero(encryption_key, sizeof(encryption_key));
+  if (!keys_set) {
+    memzero(kauth, sizeof(kauth));
+    memzero(ctx, sizeof(*ctx));
+    return false;
+  }
 
   memcpy(response, responder_ephemeral_public_key, sizeof(curve25519_key));
 
+  gcm_ctx auth_context = {0};
   uint8_t zero_nonce[NOISE_KK1_NONCE_SIZE] = {0};
-  if (!encrypt(kauth, zero_nonce, handshake_hash, sizeof(handshake_hash), NULL,
-               0, response->tag)) {
-    memzero(kauth, sizeof(kauth));
+  bool authenticated = gcm_init_and_key(kauth, NOISE_KK1_KEY_SIZE,
+                                        &auth_context) == RETURN_GOOD &&
+                       encrypt(&auth_context, zero_nonce, handshake_hash,
+                               sizeof(handshake_hash), NULL, 0, response->tag);
+  memzero(&auth_context, sizeof(auth_context));
+  memzero(kauth, sizeof(kauth));
+  if (!authenticated) {
+    memzero(ctx, sizeof(*ctx));
     return false;
   }
-  memzero(kauth, sizeof(kauth));
 
   // This is unnecessary, as the handshake hash is no longer used.
   // mix_hash(handshake_hash, response->tag, sizeof(response->tag));
@@ -278,17 +295,38 @@ bool noise_kk1_handle_handshake_response(
           sizeof(ctx->initiator_ephemeral_private_key));
   mix_key(chaining_key, shared_secret, kauth);
   memzero(shared_secret, sizeof(shared_secret));
-  split(chaining_key, ctx->encryption_key, ctx->decryption_key);
-  memzero(chaining_key, sizeof(chaining_key));
 
-  uint8_t zero_nonce[NOISE_KK1_NONCE_SIZE] = {0};
-  if (!decrypt(kauth, zero_nonce, handshake_hash, sizeof(handshake_hash),
-               response->tag, NOISE_KK1_TAG_SIZE, NULL)) {
-    // Wrong tag
+  uint8_t encryption_key[NOISE_KK1_KEY_SIZE] = {0};
+  uint8_t decryption_key[NOISE_KK1_KEY_SIZE] = {0};
+  split(chaining_key, encryption_key, decryption_key);
+  memzero(chaining_key, sizeof(chaining_key));
+  const bool keys_set =
+      gcm_init_and_key(encryption_key, NOISE_KK1_KEY_SIZE,
+                       &ctx->encryption_context) == RETURN_GOOD &&
+      gcm_init_and_key(decryption_key, NOISE_KK1_KEY_SIZE,
+                       &ctx->decryption_context) == RETURN_GOOD;
+  memzero(encryption_key, sizeof(encryption_key));
+  memzero(decryption_key, sizeof(decryption_key));
+  if (!keys_set) {
     memzero(kauth, sizeof(kauth));
+    memzero(ctx, sizeof(*ctx));
     return false;
   }
+
+  gcm_ctx auth_context = {0};
+  uint8_t zero_nonce[NOISE_KK1_NONCE_SIZE] = {0};
+  bool authenticated =
+      gcm_init_and_key(kauth, NOISE_KK1_KEY_SIZE, &auth_context) ==
+          RETURN_GOOD &&
+      decrypt(&auth_context, zero_nonce, handshake_hash, sizeof(handshake_hash),
+              response->tag, NOISE_KK1_TAG_SIZE, NULL);
+  memzero(&auth_context, sizeof(auth_context));
   memzero(kauth, sizeof(kauth));
+  if (!authenticated) {
+    // Wrong tag
+    memzero(ctx, sizeof(*ctx));
+    return false;
+  }
 
   // This is unnecessary, as the handshake hash is no longer used.
   // mix_hash(handshake_hash, response->tag, sizeof(response->tag));
@@ -309,7 +347,10 @@ bool noise_kk1_send_message(noise_kk1_context_t *ctx,
   if (!ctx->initialized) {
     return false;
   }
-  if (!encrypt(ctx->encryption_key, ctx->encryption_nonce, associated_data,
+  if (plaintext_length > NOISE_KK1_MAX_PLAINTEXT_SIZE) {
+    return false;
+  }
+  if (!encrypt(&ctx->encryption_context, ctx->encryption_nonce, associated_data,
                associated_data_length, plaintext, plaintext_length,
                ciphertext)) {
     return false;
@@ -332,7 +373,10 @@ bool noise_kk1_receive_message(noise_kk1_context_t *ctx,
   if (!ctx->initialized) {
     return false;
   }
-  if (!decrypt(ctx->decryption_key, ctx->decryption_nonce, associated_data,
+  if (ciphertext_length > NOISE_KK1_MAX_MESSAGE_SIZE) {
+    return false;
+  }
+  if (!decrypt(&ctx->decryption_context, ctx->decryption_nonce, associated_data,
                associated_data_length, ciphertext, ciphertext_length,
                plaintext)) {
     // Wrong tag
