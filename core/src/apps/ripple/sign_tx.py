@@ -1,9 +1,11 @@
 from typing import TYPE_CHECKING
 
+from trezor.messages import RipplePayment, RippleSignedTx
+
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import RippleSignedTx, RippleSignTx
+    from trezor.messages import RippleSignTx
 
     from apps.common.keychain import Keychain
 
@@ -15,7 +17,6 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
     from trezor.crypto import der
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha512
-    from trezor.messages import RippleSignedTx
     from trezor.ui.layouts import show_continue_in_app, show_warning
     from trezor.wire import ProcessError
 
@@ -27,7 +28,7 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
     payment = msg.payment
     account_delete = msg.account_delete
     if (payment is None) == (account_delete is None):
-        raise wire.DataError("Transaction cannot be both payment and account delete.")
+        raise wire.DataError("Invalid transaction type")
 
     await paths.validate_path(keychain, msg.address_n)
 
@@ -52,12 +53,12 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
         raise ProcessError("Fee must be in the range of 10 to 10,000 drops")
 
     if msg.payment_req:
-        assert payment is not None  # payment_req implies payment
+        assert RipplePayment.is_type_of(payment)
         from apps.common.payment_request import PaymentRequestVerifier
 
         verifier = PaymentRequestVerifier(msg.payment_req, SLIP44_ID, keychain)
         address = payment.destination
-        if payment.destination_tag:
+        if payment.destination_tag is not None:
             address += f"?dt={payment.destination_tag}"
         verifier.add_output(payment.amount, address)
         verifier.verify()
