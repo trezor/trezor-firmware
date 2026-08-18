@@ -50,7 +50,7 @@ from trezorlib import ward
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutContent, TrezorTestContext
 
-from ...input_flows import InputFlowConfirmAllWarnings
+from ...input_flows import InputFlowBase, InputFlowConfirmAllWarnings
 from ...ward_keys import derive_k_sig  # noqa: F401  -- asserted via ward_id below
 from ...ward_keys import (
     auth_commit,
@@ -67,6 +67,8 @@ from ...ward_keys import (
     open_content,
     open_identity,
     root_mac,
+    seal_content,
+    seal_identity,
     transition_preimage,
     unpack_content,
     unpack_identity,
@@ -184,6 +186,25 @@ def _publish(wm: MockWM, res) -> None:
     wm.publish(_WARD_ID, res.counter, res.mac, _T0 + res.counter)
 
 
+def _go_online(
+    session: Session,
+    store: WardTrie,
+    wm: "MockWM | None" = None,
+    k_mac: bytes | None = None,
+) -> None:
+    """Bring the session out of offline mode by completing one sync round.
+
+    A SESSION STARTS OFFLINE and stays there until a reconcile succeeds -- the device has no
+    reason to believe anything it holds is current before then. Offline, reads are served from
+    the device's own store and writes are queued, so any test that means to exercise the HOST
+    path has to sync first. A real host does this on connect; the tests simply have to say so.
+
+    Adopting the head the host already holds, at the counter it already has, so this changes
+    no state -- it only tells the device that what it has is confirmed.
+    """
+    _attest(session, wm or MockWM(), store, k_mac=k_mac)
+
+
 def _seed(
     session: Session,
     store: WardTrie,
@@ -197,10 +218,15 @@ def _seed(
     so every fixture below goes through a real confirmed write.
 
     The write alone does not move the device's head: since commit-on-WM-confirmation, only
-    an attestation does. So seeding an entry means write, apply, and then run the round --
-    which is what a real host does too, and why the round is folded in here rather than
+    an attestation does. So seeding an entry means sync, write, apply, and then run the round
+    again -- which is what a real host does too, and why it is folded in here rather than
     repeated at eighty call sites.
+
+    The LEADING round is what makes the write a write at all: offline, `WardSetEntry` queues
+    the change on the device instead of building a leaf, because with no host to pull from
+    there is no current state to derive a root against.
     """
+    _go_online(session, store, k_mac=k_mac)
     res, _rec = _write(
         session,
         store,
@@ -233,6 +259,7 @@ def _confirm(
 @pytest.mark.models("core")
 def test_ward_pull_names_only_the_opaque_key(session: Session):
     """The request must carry a 32-byte key and NOTHING that reveals the entry."""
+    _go_online(session, WardTrie())
     identifier = b"addr1"
     asked: list[bytes] = []
 
@@ -264,6 +291,7 @@ def test_ward_pull_key_is_the_expected_hmac(session: Session):
     wrong SLIP-21 label, or built the scope differently, would still pass every other
     test in this file while putting every entry at the wrong path.
     """
+    _go_online(session, WardTrie())
     res, _rec = _read(
         session, WardTrie(), lambda p: ward.get_entry(session, _APP, b"addr1", p)
     )
@@ -278,6 +306,7 @@ def test_ward_pull_key_is_deterministic_and_domain_separated(session: Session):
     one app's entry from resolving another's. Both are observable from the host side
     without any knowledge of the seed.
     """
+    _go_online(session, WardTrie())
     keys = [
         _read(
             session,
@@ -500,6 +529,7 @@ def test_ward_get_entry_pulls_and_shows(session: Session):
 def test_ward_get_entry_absent_is_distinct_from_empty(session: Session):
     """A missing entry (provider returns None) must not look like an entry whose value
     happens to be empty: the device says it was not found."""
+    _go_online(session, WardTrie())
     _res, rec = _read(
         session, WardTrie(), lambda p: ward.get_entry(session, _APP, b"nope", p)
     )
@@ -553,6 +583,7 @@ def test_ward_set_entry_add_shows_the_new_value(session: Session):
     """Writing a key the host does not hold is an ADD: nothing is being replaced, so the
     screen must not claim otherwise."""
     store = WardTrie()
+    _go_online(session, store)
 
     res, rec = _write(
         session,
@@ -928,6 +959,7 @@ def test_ward_root_survives_a_new_session(session: Session):
     # via the test context, not session.client: that returns a bare ThpSession with no
     # debug plumbing, so the input flows and expected-response checks would not attach
     fresh = session.test_ctx.get_session()
+    _go_online(fresh, store)
     _res, rec = _read(fresh, store, lambda p: ward.get_entry(fresh, _APP, b"addr1", p))
     assert "Petr_label" in rec.text
 
@@ -946,7 +978,10 @@ def test_ward_root_survives_a_new_session(session: Session):
     ward.apply(store, res)
     _confirm(session, store)
 
+    # Sync first: a session that has not is served from the device's own store, and would
+    # never ask the host for this leaf at all -- so there would be nothing to refuse.
     another = session.test_ctx.get_session()
+    _go_online(another, store)
     with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
         ward.get_entry(another, _APP, b"addr1", ward.store_provider(stale))
 
@@ -1256,6 +1291,7 @@ def test_ward_a_write_does_not_move_the_head_until_confirmed(session: Session):
     always-confirmed.
     """
     store = WardTrie()
+    _go_online(session, store)
     before = ward.sync(session).counter
 
     res, _rec = _write(
@@ -1281,6 +1317,7 @@ def test_ward_a_published_write_syncs_cleanly(session: Session):
     the round trip that closes the window the previous step had to document.
     """
     store = WardTrie()
+    _go_online(session, store)
     res, _rec = _write(
         session,
         store,
@@ -2059,6 +2096,7 @@ def test_ward_write_is_signed_for_a_verifier_holding_no_secret(session: Session)
     Verified here the way a WM must: from ward_id alone, which IS the public half of K_sig.
     """
     store = WardTrie()
+    _go_online(session, store)
     res, _rec = _write(
         session,
         store,
@@ -2089,3 +2127,560 @@ def test_ward_write_is_signed_for_a_verifier_holding_no_secret(session: Session)
         ),
         res.auth_sig,
     )
+
+
+# --- the offline store ------------------------------------------------------------
+#
+# Two hosts drive this. A host that does not speak WARD never sends WardSync, cannot answer
+# WardEntryRequest, and must be served from what the device already holds. And Suite, before
+# the trie lands, can push entries while the counter is still zero -- so the store has to work
+# in exactly the state where the device holds no trusted root.
+#
+# The rule everything below is really testing: a record may go stale, be superseded, or become
+# unreadable, and NONE of that lets the device delete it. Only a user-confirmed erase does.
+
+
+def _pin(session: Session, store: WardTrie, identifier: bytes, br_name: str) -> tuple:
+    """Pin an entry, walking its screen. Returns (result, recorder)."""
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(_expected(br_name))
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        res = ward.pin_cached_entry(
+            session, _APP, identifier, ward.store_provider(store)
+        )
+    return res, rec
+
+
+class _RejectFlow(InputFlowBase):
+    """Walk a confirm screen to its final page and REFUSE it.
+
+    Mirrors `InputFlowConfirmAllWarnings` page by page and diverges only at the decision, so
+    the screens under test are reached the same way they are when confirmed -- a cancel that
+    bailed on page one would not prove the confirmation is the thing guarding the write.
+
+    The button-press direction is per layout: Bolt and Caesar have a No button, while Delizia
+    and Eckhart cancel through the menu (item 0), the same route
+    `InputFlowNewWipeCodeCancel` takes.
+    """
+
+    def input_flow_bolt(self):
+        yield
+        self.debug.press_no()
+
+    def input_flow_caesar(self):
+        yield
+        self.debug.press_no()
+
+    def input_flow_delizia(self):
+        yield
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.button_actions.navigate_to_menu_item(0)
+
+    def input_flow_eckhart(self):
+        yield
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.button_actions.navigate_to_menu_item(0)
+
+
+def _reject_flow(session: Session):
+    return _RejectFlow(session).get()
+
+
+def _offline_read(session: Session, identifier: bytes) -> "_Recorded":
+    """Read with no sync round, and assert the device asks the host NOTHING.
+
+    The absent WardEntryRequest is the assertion, not a detail of it: an offline read that
+    still pulled would mean the fallback is reachable from a FAILED pull, and a hostile host
+    could then force an old value onto the screen by answering badly on purpose.
+    """
+    rec = _Recorded()
+
+    def provider(_entry_key: bytes) -> ward.Answer:
+        raise AssertionError("offline read must not pull from the host")
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.ButtonRequest(name="ward_get_entry"), m.Success])
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        ward.get_entry(session, _APP, identifier, provider)
+    return rec
+
+
+@pytest.mark.models("core")
+def test_ward_offline_read_serves_the_pinned_value(session: Session):
+    """The motivating case: a host that never syncs is still served.
+
+    A new session starts offline, so the read below happens in exactly the state a
+    WARD-unaware host leaves the device in -- and it is answered from flash, with wording
+    that says so rather than borrowing the verified read's.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"bc1qkeptoffline")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+
+    fresh = session.test_ctx.get_session()
+    rec = _offline_read(fresh, b"addr1")
+
+    assert "offline copy" in rec.title
+    assert "bc1qkeptoffline" in rec.squashed
+
+
+@pytest.mark.models("core")
+def test_ward_pinned_entry_survives_a_power_cycle(session: Session):
+    """Flash, not the session cache. A store that forgot here would serve only the session
+    that wrote it, which is the state this feature exists to leave."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"persist_me")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+
+    fresh = session.test_ctx.get_session()
+
+    rec = _offline_read(fresh, b"addr1")
+    assert "persist_me" in rec.squashed
+
+
+@pytest.mark.models("core")
+def test_ward_offline_read_of_an_unpinned_entry_says_so(session: Session):
+    """A miss is reported as a miss -- never as an empty value, and never by pulling."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+
+    fresh = session.test_ctx.get_session()
+    rec = _offline_read(fresh, b"addr1")
+
+    assert "not kept offline" in rec.title
+
+
+@pytest.mark.models("core")
+def test_ward_pin_at_counter_zero_is_allowed(session: Session):
+    """Bootstrap: with no trie on the host there is no proof and no root, so the AEAD is the
+    whole of the evidence -- and pinning adds no new trust assumption, because a READ in this
+    state already displays exactly these bytes on exactly this evidence.
+
+    What it cannot show is freshness, which is why the record carries counter 0 and turns
+    stale the moment the head moves. That is asserted separately below.
+    """
+    key = expected_entry_key(_K_PATH, _APP, b"addr1")
+
+    # A leaf sealed by ANOTHER device of this wallet, served to one that has never synced.
+    # It has to come from the oracle: the moment this device syncs it learns the tree is
+    # EMPTY, and from then on it rightly refuses any leaf claiming to be in it -- so the
+    # state under test cannot be reached through a local write. See tests/ward_keys.py.
+    leaf = ward.Leaf(
+        seal_identity(_K_IDENT, key, "address", b"addr1", _APP),
+        seal_content(_K_DATA, key, "address", b"bootstrap_value"),
+    )
+
+    def provider(_entry_key: bytes) -> ward.Answer:
+        # No proof, and none is asked for: the device holds no root to check one against.
+        return ward.Answer(leaf=leaf)
+
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(_expected("ward_pin_cached_entry"))
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        ward.pin_cached_entry(session, _APP, b"addr1", provider)
+
+    assert "keep for offline use" in rec.title
+    assert "bootstrap_value" in rec.squashed
+
+    read = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "bootstrap_value" in read.squashed
+    # Kept at counter 0 -- authentic, but with nothing to say it is current.
+    assert "counter 0" in read.text
+
+
+@pytest.mark.models("core")
+def test_ward_pin_rejects_a_forged_leaf(session: Session):
+    """A leaf the wallet never sealed fails its tag, and NOTHING is stored.
+
+    The negative half of the bootstrap argument: "the AEAD is the only check" is only
+    acceptable while the AEAD actually refuses everything a host can make up.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"genuine")
+
+    key = expected_entry_key(_K_PATH, _APP, b"addr1")
+    good = store.blobs[key]
+    forged = m.WardLeafContent(
+        encoding=0,
+        encrypted=m.WardEncryptedLeaf(
+            nonce=good.content.encrypted.nonce,
+            tag=good.content.encrypted.tag,
+            ct=bytes(len(good.content.encrypted.ct)),  # replaced ciphertext
+        ),
+    )
+
+    def provider(entry_key: bytes) -> ward.Answer:
+        answer = ward.store_provider(store)(entry_key)
+        return ward.Answer(
+            leaf=ward.Leaf(answer.leaf.identity, forged),
+            proof=answer.proof,
+            witness_entry_key=answer.witness_entry_key,
+            witness_commit=answer.witness_commit,
+        )
+
+    with pytest.raises(exceptions.TrezorFailure):
+        ward.pin_cached_entry(session, _APP, b"addr1", provider)
+
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "not kept offline" in rec.title
+
+
+@pytest.mark.models("core")
+def test_ward_pin_rejects_a_leaf_that_is_not_in_the_trusted_root(session: Session):
+    """Once the device holds a root, membership is required -- authenticity is not enough.
+
+    The leaf here is genuine: the device sealed it, and its tag verifies. It simply is not in
+    the tree the device trusts, which is exactly the shape of a host replaying an old value.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"first")
+    stale = {k: v for k, v in store.blobs.items()}
+    _seed(session, store, b"addr1", b"second")
+
+    def provider(entry_key: bytes) -> ward.Answer:
+        # a real leaf, proved against the tree it belonged to a counter ago
+        old = WardTrie()
+        for k, v in stale.items():
+            old.set(k, v)
+        return ward.store_provider(old)(entry_key)
+
+    with pytest.raises(exceptions.TrezorFailure):
+        ward.pin_cached_entry(session, _APP, b"addr1", provider)
+
+
+@pytest.mark.models("core")
+def test_ward_pinned_entry_goes_stale_when_the_head_moves(session: Session):
+    """Advancing the head changes a record's STATUS and not its existence.
+
+    The record is untouched by the reconcile -- staleness is computed at read time from the
+    trusted counter, precisely so that moving the head never needs to write to the store and
+    therefore can never acquire a reason to delete from it.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"pinned_value")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+
+    _seed(session, store, b"other", b"moves_the_counter")
+
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "pinned_value" in rec.squashed
+    assert "out of date" in rec.text.lower()
+
+
+@pytest.mark.models("core")
+def test_ward_repinning_an_identical_value_neither_asks_nor_writes(session: Session):
+    """Nothing was replaced, so there is nothing to authorise.
+
+    A confirmation on a no-op is worse than no confirmation: it is a hold that always means
+    "nothing happened", which is the kind of screen that gets approved without being read.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"same_value")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+
+    with session.test_ctx as ctx:
+        # No ButtonRequest at all -- the device pulls, sees identical bytes, and stops.
+        ctx.set_expected_responses([m.WardEntryRequest, m.Success])
+        ward.pin_cached_entry(session, _APP, b"addr1", ward.store_provider(store))
+
+
+@pytest.mark.models("core")
+def test_ward_replacing_a_pinned_value_needs_its_own_confirmation(session: Session):
+    """Replacement destroys the previous copy, so it is confirmed like a deletion.
+
+    The screen must show BOTH values: confirming a replacement without naming what is being
+    lost tells the user nothing they could act on.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"value_one")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+
+    _seed(session, store, b"addr1", b"value_two")
+    _res, rec = _pin(session, store, b"addr1", "ward_replace_cached_entry")
+
+    assert "replace offline copy" in rec.title
+    assert "value_one" in rec.squashed
+    assert "value_two" in rec.squashed
+
+    read = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "value_two" in read.squashed
+
+
+@pytest.mark.models("core")
+def test_ward_cancelling_a_replacement_leaves_the_old_copy(session: Session):
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"keep_this")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+    _seed(session, store, b"addr1", b"reject_this")
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(_reject_flow(session))
+        with pytest.raises(exceptions.Cancelled):
+            ward.pin_cached_entry(session, _APP, b"addr1", ward.store_provider(store))
+
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "keep_this" in rec.squashed
+    assert "reject_this" not in rec.squashed
+
+
+@pytest.mark.models("core")
+def test_ward_erase_removes_the_copy_only_after_confirmation(session: Session):
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"erase_me")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+
+    # cancelled: flash untouched
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(_reject_flow(session))
+        with pytest.raises(exceptions.Cancelled):
+            ward.erase_cached_entry(session, _APP, b"addr1")
+
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "erase_me" in rec.squashed
+
+    # confirmed: gone
+    erased = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_erase_cached_entry"), m.Success]
+        )
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=erased.on_page).get()
+        )
+        ward.erase_cached_entry(session, _APP, b"addr1")
+
+    assert "remove offline copy" in erased.title
+    assert "erase_me" in erased.squashed  # named what was being lost
+
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "not kept offline" in rec.title
+
+
+@pytest.mark.models("core")
+def test_ward_erasing_something_not_kept_is_a_silent_no_op(session: Session):
+    """No screen, because a hold that always means "nothing happened" trains the user to
+    approve without reading -- the same reasoning as the idempotent delete."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.Success])
+        ward.erase_cached_entry(session, _APP, b"addr1")
+
+
+@pytest.mark.models("core")
+def test_ward_deleting_an_entry_leaves_the_offline_copy(session: Session):
+    """Two different questions, and one confirmation cannot stand for both.
+
+    The user held to remove the ENTRY. They were never asked about the copy they deliberately
+    chose to keep on this device, so it stays until they say otherwise.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"still_local")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, b"addr1", p),
+        "ward_delete_entry",
+    )
+    ward.apply(store, res)
+    _confirm(session, store)
+
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "still_local" in rec.squashed
+
+
+# --- the queue --------------------------------------------------------------------
+
+
+@pytest.mark.models("core")
+def test_ward_offline_write_is_queued_not_applied(session: Session):
+    """With no host to pull from there is no current state, so no root and no counter can be
+    derived. The device holds the intent and SAYS SO -- an ack that looked like a write would
+    make the user's confirmation retroactively untrue."""
+    rec = _Recorded()
+
+    def provider(_entry_key: bytes) -> ward.Answer:
+        raise AssertionError("an offline write must not pull from the host")
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_queue_entry"), m.WardLeafAck]
+        )
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        res = ward.set_entry(session, _APP, b"addr1", b"queued_value", provider)
+
+    assert res.queued is True
+    assert res.counter is None
+    assert res.mac is None
+    assert res.leaf is None
+    assert "queue" in rec.title
+    assert "not applied yet" in rec.text.lower()
+
+
+@pytest.mark.models("core")
+def test_ward_a_queued_write_outlives_the_session_that_made_it(session: Session):
+    """Flash, not the session cache -- and the session is the thing that would lose it.
+
+    A queue held in RAM would make the confirmation a lie: the user holds, the session drops,
+    the change is gone and nothing said so. A new session is the sharpest available test of
+    that, since it is exactly what clears everything except flash.
+    """
+
+    def provider(_entry_key: bytes) -> ward.Answer:
+        raise AssertionError("an offline write must not pull from the host")
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.set_entry(session, _APP, b"addr1", b"survives", provider)
+
+    fresh = session.test_ctx.get_session()
+
+    rec = _offline_read(fresh, b"addr1")
+    assert "pending change" in rec.title
+    assert "survives" in rec.squashed
+
+
+@pytest.mark.models("core")
+def test_ward_flush_publishes_the_queued_change_sealed(session: Session):
+    """Sealing happens on the way OUT, which is the whole reason records sit in flash in the
+    clear: `storage.c` covers them until they leave the device, and not after.
+
+    The change is also RE-DERIVED here. It was formed with no root to derive against, so the
+    flush pulls the path's present leaf, proves it, and only then computes a new root.
+    """
+    store = WardTrie()
+
+    def offline_provider(_entry_key: bytes) -> ward.Answer:
+        raise AssertionError("an offline write must not pull from the host")
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.set_entry(session, _APP, b"addr1", b"published_value", offline_provider)
+
+    _go_online(session, store)
+
+    res = ward.flush_queue(session, ward.store_provider(store))
+    assert res.queued is False
+    assert res.counter is not None
+    assert res.mac is not None
+    assert res.remaining == 0
+
+    # the content really is sealed, and opens to what was queued
+    value = unpack_content(
+        open_content(_K_DATA, res.entry_key, "address", res.leaf.content.encrypted)
+    )[1]
+    assert value == b"published_value"
+
+
+@pytest.mark.models("core")
+def test_ward_flush_needs_a_synced_session(session: Session):
+    """With no trusted root there is nothing to derive against and nothing to prove the
+    pulled leaf with. Refusing is the honest answer."""
+    with pytest.raises(exceptions.TrezorFailure, match="sync"):
+        ward.flush_queue(session, lambda _k: ward.Answer())
+
+
+@pytest.mark.models("core")
+def test_ward_a_change_stays_queued_until_the_wm_confirms_it(session: Session):
+    """Handing the leaf to the host is not the change taking effect.
+
+    A host that never publishes leaves the change queued and re-sendable -- fail-closed and
+    recoverable, rather than a silent loss. This is the same boundary an online write commits
+    at, and the reason `reconcile` is where the flag comes off.
+    """
+    store = WardTrie()
+
+    def offline_provider(_entry_key: bytes) -> ward.Answer:
+        raise AssertionError("an offline write must not pull from the host")
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.set_entry(session, _APP, b"addr1", b"unconfirmed", offline_provider)
+
+    _go_online(session, store)
+    ward.flush_queue(session, ward.store_provider(store))
+    # The host neither stores the leaf nor publishes the counter -- the response was lost, as
+    # far as it is concerned. The next round therefore attests the OLD head, and the device
+    # must conclude its change did not land rather than that it did.
+    _confirm(session, store, wm=MockWM())
+
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "pending change" in rec.title
+    assert "unconfirmed" in rec.squashed
+
+
+@pytest.mark.models("core")
+def test_ward_a_confirmed_change_becomes_an_offline_copy(session: Session):
+    """Clearing the pending flag is a REWRITE, never a delete: the record stays on as the
+    cached copy of the value that was just published."""
+    store = WardTrie()
+
+    def offline_provider(_entry_key: bytes) -> ward.Answer:
+        raise AssertionError("an offline write must not pull from the host")
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.set_entry(session, _APP, b"addr1", b"landed", offline_provider)
+
+    _go_online(session, store)
+    res = ward.flush_queue(session, ward.store_provider(store))
+    ward.apply(store, res)
+    _publish(MockWM(), res)
+    _confirm(session, store)
+
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "offline copy" in rec.title
+    assert "landed" in rec.squashed
+
+
+@pytest.mark.models("core")
+def test_ward_discarding_a_queued_change_is_confirmed_and_says_what_it_is(
+    session: Session,
+):
+    """Erasing a pending record DISCARDS a change that was never published -- calling that a
+    deletion would suggest WARD ever had it."""
+
+    def offline_provider(_entry_key: bytes) -> ward.Answer:
+        raise AssertionError("an offline write must not pull from the host")
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.set_entry(session, _APP, b"addr1", b"discard_me", offline_provider)
+
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_erase_cached_entry"), m.Success]
+        )
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        ward.erase_cached_entry(session, _APP, b"addr1")
+
+    assert "discard pending change" in rec.title
+    assert "discard_me" in rec.squashed
+    assert "never published" in rec.text.lower()
+
+
+@pytest.mark.models("core")
+def test_ward_delete_requires_a_connection(session: Session):
+    """A queued delete cannot be made safe yet: `EMPTY_PART` is plaintext, so any host can
+    construct a delete leaf for any entry_key, and uploading queued deletes would hand a host
+    the power to delete anything. A write can wait in a queue; a delete cannot."""
+    with pytest.raises(exceptions.TrezorFailure, match="connect"):
+        ward.delete_entry(session, _APP, b"addr1", lambda _k: ward.Answer())

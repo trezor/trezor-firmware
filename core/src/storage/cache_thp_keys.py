@@ -18,3 +18,4 @@ if utils.USE_THP:
         APP_CARDANO_ICARUS_TREZOR_SECRET = const(10)
         APP_MONERO_LIVE_REFRESH = const(11)
         APP_WARD_SYNC = const(12)
+        APP_WARD_ONLINE = const(13)

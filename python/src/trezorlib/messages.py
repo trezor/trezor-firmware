@@ -849,6 +849,9 @@ class MessageType(IntEnum):
     WardRollbackAck = 2316
     WardRecoverCounter = 2317
     WardRecoverCounterAck = 2318
+    WardPinCachedEntry = 2319
+    WardEraseCachedEntry = 2320
+    WardFlushQueue = 2321
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -10253,6 +10256,8 @@ class WardLeafAck(protobuf.MessageType):
         5: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
         7: protobuf.Field("auth_sig", "bytes", repeated=False, required=False, default=None),
+        8: protobuf.Field("queued", "bool", repeated=False, required=False, default=None),
+        9: protobuf.Field("remaining", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10265,6 +10270,8 @@ class WardLeafAck(protobuf.MessageType):
         mac: Optional["bytes"] = None,
         auth_commit: Optional["bytes"] = None,
         auth_sig: Optional["bytes"] = None,
+        queued: Optional["bool"] = None,
+        remaining: Optional["int"] = None,
     ) -> None:
         self.entry_key = entry_key
         self.identity = identity
@@ -10273,6 +10280,8 @@ class WardLeafAck(protobuf.MessageType):
         self.mac = mac
         self.auth_commit = auth_commit
         self.auth_sig = auth_sig
+        self.queued = queued
+        self.remaining = remaining
 
 
 class WardChainLink(protobuf.MessageType):
@@ -10508,6 +10517,44 @@ class WardRecoverCounterAck(protobuf.MessageType):
         counter: Optional["int"] = None,
     ) -> None:
         self.counter = counter
+
+
+class WardPinCachedEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2319
+    FIELDS = {
+        1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        app_id: Optional["str"] = None,
+        identifier: Optional["bytes"] = None,
+    ) -> None:
+        self.app_id = app_id
+        self.identifier = identifier
+
+
+class WardEraseCachedEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2320
+    FIELDS = {
+        1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        app_id: Optional["str"] = None,
+        identifier: Optional["bytes"] = None,
+    ) -> None:
+        self.app_id = app_id
+        self.identifier = identifier
+
+
+class WardFlushQueue(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2321
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

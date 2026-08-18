@@ -68,6 +68,25 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
     means "nothing happened" is a screen that gets approved without being read, which
     costs real safety on the paths where holding matters.
 
+    REQUIRES A CONNECTION, and offline it refuses. A queued delete cannot be made safe with
+    what exists today: `EMPTY_PART` is plaintext with an empty body in both parts, so any host
+    can construct a delete leaf for any entry_key, and uploading queued deletes would hand a
+    host the power to delete anything. Closing that needs the sealed tombstone AND the intent
+    MAC described above -- both, since each stops an attack the other cannot. Until they exist,
+    refusing is the only honest answer; a write can wait in a queue, a delete cannot.
+
+    IT NEVER TOUCHES THE DEVICE'S OFFLINE COPY, and that is deliberate rather than an
+    oversight. This removes the entry from WARD; `WardEraseCachedEntry` removes the local copy.
+    They are different questions and one confirmation cannot honestly stand for both -- the
+    user holding to delete an entry has not been asked whether they also want the copy they
+    chose to keep on this device destroyed. The consequence is accepted: an entry deleted here
+    still reads offline, marked as a local copy, until the user removes it deliberately. That
+    is the recoverable direction, and it follows the same rule as everywhere else in this
+    subsystem -- nothing erases a record except the user saying so.
+
+    A host reporting an entry ABSENT is likewise not permission to erase the local copy. It is
+    the host's claim about the host's state, and the local copy is not the host's to discard.
+
     WHAT THIS DOES NOT FIX. If a delete succeeds and its response is lost, the host still
     holds the row and the pre-delete root, so a retry serves that row with a proof against
     a root the device has already moved past -- refused, correctly, as a stale current
@@ -78,7 +97,9 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
     """
     from trezor.messages import WardLeafAck
     from trezor.ui.layouts import confirm_properties
+    from trezor.wire import DataError
 
+    from . import round as sync_round
     from .attest import root_mac
     from .cas import auth_commit, sig_commit
     from .common import WARNING_UNVERIFIED, display_bytes, pull_leaf, require_key
@@ -95,6 +116,9 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
     from .trie import compute_new_root
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
+
+    if not sync_round.is_online():
+        raise DataError("WARD: connect to delete an entry")
 
     key_type = ENTRY_TYPE_ADDRESS
     entry_key = await entry_key_for(app_id, identifier, key_type)

@@ -65,6 +65,20 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
             raise DataError("attested counter matches but the root differs")
 
     await set_root(root, counter)
+
+    # THE SESSION IS NOW ONLINE, and this is the only place that becomes true. A WM attestation
+    # has been bound to an actual tree, so reads may go to the host and be checked against a
+    # root the device trusts. Before this line every read in this session is served from the
+    # offline store, which says on screen that it cannot vouch for currency.
+    sync_round.mark_online()
+
+    # Settle queued writes against the head just adopted: those the WM confirmed stop being
+    # pending, those it did not are offered again. A REWRITE either way -- adopting a head
+    # never deletes a record, however stale or superseded it makes one. See `offline_store`.
+    from .offline_store import reconcile_pending
+
+    await reconcile_pending(counter)
+
     sync_round.clear()
 
     return WardReconcileAck(counter=counter, new_root=root)

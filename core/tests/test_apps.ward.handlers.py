@@ -17,6 +17,9 @@ WARD_REQUESTS = (
     "WardVerifyChain",
     "WardRollback",
     "WardRecoverCounter",
+    "WardPinCachedEntry",
+    "WardEraseCachedEntry",
+    "WardFlushQueue",
 )
 
 
@@ -40,7 +43,7 @@ class TestWardHandlerWiring(unittest.TestCase):
 
     This is the only check that catches it without building firmware and running the
     emulator. Note it costs almost nothing: every WARD handler module imports only `typing`
-    at module level and defers the rest inside the function, so resolving all nine pulls in
+    at module level and defers the rest inside the function, so resolving them all pulls in
     no UI, no crypto and no storage.
 
     A mismatch does not even reach an assertion here -- `find_registered_handler` catches
