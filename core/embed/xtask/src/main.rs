@@ -16,6 +16,7 @@ fn main() -> Result<()> {
         Cmd::Flash(args) => flash::flash(args),
         Cmd::FlashErase(args) => flash::flash_erase(args),
         Cmd::FlashRead(args) => flash::flash_read(args),
+        Cmd::FlashWrite(args) => flash::flash_write(args),
         Cmd::Reset(args) => flash::reset(args),
         Cmd::Upload(args) => upload::upload(args),
         Cmd::Combine(args) => combine::combine(args),
