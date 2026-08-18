@@ -69,9 +69,10 @@ op_codes: dict[int, int] = {
 # https://github.com/stellar/go/blob/3d2c1defe73dbfed00146ebe0e8d7e07ce4bb1b6/amount/main.go#L23
 AMOUNT_DECIMALS = const(7)
 
-# https://github.com/stellar/go/blob/master/network/main.go
+# https://developers.stellar.org/docs/networks
 NETWORK_PASSPHRASE_PUBLIC = "Public Global Stellar Network ; September 2015"
 NETWORK_PASSPHRASE_TESTNET = "Test SDF Network ; September 2015"
+NETWORK_PASSPHRASE_FUTURENET = "Test SDF Future Network ; October 2022"
 
 # https://www.stellar.org/developers/guides/concepts/accounts.html#flags
 FLAG_AUTH_REQUIRED = const(1)
