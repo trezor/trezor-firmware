@@ -155,6 +155,8 @@ pub enum Cmd {
     FlashErase(FlashEraseArgs),
     /// Read the whole flash of the connected device into a file using OpenOCD
     FlashRead(FlashReadArgs),
+    /// Write a whole-flash dump back to the connected device using OpenOCD
+    FlashWrite(FlashWriteArgs),
     /// Reset the connected device using OpenOCD
     Reset(ResetArgs),
     /// Upload firmware to device
@@ -234,6 +236,18 @@ pub struct FlashReadArgs {
     /// (default `<artifacts>/<MODEL>/flash-dump.bin`)
     #[arg(long, short = 'o')]
     pub output: Option<PathBuf>,
+}
+
+#[derive(Args, Debug)]
+pub struct FlashWriteArgs {
+    /// Target model
+    #[arg(long, short = 'm', ignore_case = true)]
+    pub model: Model,
+
+    /// Dump to write back, as produced by `xtask flash-read`
+    /// (default `<artifacts>/<MODEL>/flash-dump.bin`)
+    #[arg(long, short = 'i')]
+    pub input: Option<PathBuf>,
 }
 
 #[derive(Args, Debug)]

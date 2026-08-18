@@ -1,16 +1,25 @@
 use std::path::{Path, PathBuf};
-use std::{fs, process};
+use std::{env, fs, process};
 
 use anyhow::{Context, Result, ensure};
 
 use crate::args::{
-    FlashArgs, FlashEraseArgs, FlashReadArgs, FlashSection, Model, Project, ResetArgs,
+    FlashArgs, FlashEraseArgs, FlashReadArgs, FlashSection, FlashWriteArgs, Model, Project,
+    ResetArgs,
 };
 use crate::{combine, helpers};
 
-/// Name of the flash dump written by [`flash_read()`] when no output file is
-/// given.
+/// Name of the flash dump read and written by [`flash_read()`] and
+/// [`flash_write()`] when no file is given.
 const DEFAULT_DUMP_NAME: &str = "flash-dump.bin";
+
+/// Value a flash byte reads as while it has never been programmed.
+const ERASED_BYTE: u8 = 0xFF;
+
+/// Granularity at which [`flash_write()`] decides whether a piece of a dump has
+/// to be programmed. This is the U5 quad-word, the largest write block of the
+/// supported MCUs, and a multiple of the F4 word.
+const RESTORE_BLOCK_SIZE: usize = 16;
 
 /// Flashes the specified project to the device using OpenOCD.
 pub fn flash(args: FlashArgs) -> Result<()> {
@@ -97,6 +106,93 @@ pub fn flash_read(args: FlashReadArgs) -> Result<()> {
     Ok(())
 }
 
+/// Writes a whole-flash dump back to the connected device using OpenOCD.
+///
+/// Only the parts of the dump that are not fully erased are programmed. A dump
+/// cannot tell an erased block apart from one programmed with `0xFF`, and on
+/// the U5 a quad-word may be programmed only once per erase -- programming the
+/// free space of a storage sector back would leave it reading as `0xFF` but no
+/// longer virgin, so the next append by NORCOW would fail. Blocks left out here
+/// stay erased by the preceding full-bank erase, which is the state the
+/// firmware expects.
+pub fn flash_write(args: FlashWriteArgs) -> Result<()> {
+    let input = match args.input {
+        Some(path) => path,
+        None => helpers::artifacts_dir(args.model)?.join(DEFAULT_DUMP_NAME),
+    };
+    let input = input
+        .canonicalize()
+        .with_context(|| format!("Failed to locate dump `{}`", input.display()))?;
+
+    let dump = fs::read(&input).with_context(|| format!("Failed to read `{}`", input.display()))?;
+    ensure!(!dump.is_empty(), "Dump `{}` is empty", input.display());
+
+    let runs = non_blank_runs(&dump);
+    ensure!(
+        !runs.is_empty(),
+        "Dump `{}` is fully erased, there is nothing to write",
+        input.display()
+    );
+
+    let programmed: usize = runs.iter().map(|(_, len)| len).sum();
+    println!(
+        "Writing `{}` to the flash of `{:?}`: {} of {} bytes in {} run(s), \
+         the rest is left erased",
+        input.display(),
+        args.model,
+        programmed,
+        dump.len(),
+        runs.len()
+    );
+
+    // OpenOCD writes whole files, so each run has to be handed over as one.
+    let chunk_dir = env::temp_dir().join(format!("xtask-flash-restore-{}", process::id()));
+    helpers::ensure_directory(&chunk_dir)?;
+
+    let result = write_runs(args.model, &dump, &runs, &chunk_dir);
+    let _ = fs::remove_dir_all(&chunk_dir);
+
+    result
+}
+
+/// Stages every run as its own file and writes them all in a single OpenOCD
+/// invocation.
+fn write_runs(model: Model, dump: &[u8], runs: &[(usize, usize)], chunk_dir: &Path) -> Result<()> {
+    let mut chunks = Vec::with_capacity(runs.len());
+
+    for &(offset, len) in runs {
+        let path = chunk_dir.join(format!("{:08x}.bin", offset));
+        fs::write(&path, &dump[offset..offset + len])
+            .with_context(|| format!("Failed to write `{}`", path.display()))?;
+        chunks.push((path, offset));
+    }
+
+    run_openocd(model, &build_flash_restore_instruction(&chunks))
+}
+
+/// Splits a dump into runs of consecutive [`RESTORE_BLOCK_SIZE`] blocks that
+/// are not fully erased, as `(offset, length)` pairs.
+fn non_blank_runs(dump: &[u8]) -> Vec<(usize, usize)> {
+    let mut runs: Vec<(usize, usize)> = Vec::new();
+
+    for (index, block) in dump.chunks(RESTORE_BLOCK_SIZE).enumerate() {
+        if block.iter().all(|&byte| byte == ERASED_BYTE) {
+            continue;
+        }
+
+        let offset = index * RESTORE_BLOCK_SIZE;
+        match runs.last_mut() {
+            // Extend the previous run if this block directly follows it.
+            Some((run_offset, run_len)) if *run_offset + *run_len == offset => {
+                *run_len += block.len();
+            }
+            _ => runs.push((offset, block.len())),
+        }
+    }
+
+    runs
+}
+
 /// Makes `output` absolute, creating its parent directory if needed. OpenOCD
 /// resolves relative paths against its own working directory, so it has to be
 /// given an absolute one.
@@ -161,6 +257,25 @@ fn build_flash_read_instruction(output: &Path) -> String {
     )
 }
 
+/// Counterpart of [`build_flash_read_instruction()`]. Chunks are written at
+/// their bank offset, so they land exactly where they were read from without
+/// having to know the base address of the bank. `write_bank` does not erase,
+/// hence the preceding full-bank erase.
+fn build_flash_restore_instruction(chunks: &[(PathBuf, usize)]) -> String {
+    let mut instr = String::from("init; reset halt; flash erase_sector 0 0 last; ");
+
+    for (path, offset) in chunks {
+        instr.push_str(&format!(
+            "flash write_bank 0 {} 0x{:X}; ",
+            path.display(),
+            offset
+        ));
+    }
+
+    instr.push_str("exit");
+    instr
+}
+
 fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result<String> {
     let mut instr = String::from("init; reset halt; flash info 0; ");
 
@@ -199,10 +314,11 @@ fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     use super::{
-        build_flash_erase_instruction, build_flash_read_instruction, build_flash_write_instruction,
+        RESTORE_BLOCK_SIZE, build_flash_erase_instruction, build_flash_read_instruction,
+        build_flash_restore_instruction, build_flash_write_instruction, non_blank_runs,
     };
     use crate::args::FlashSection;
 
@@ -224,6 +340,64 @@ mod tests {
             instruction,
             "init; reset halt; flash read_bank 0 /tmp/dump.bin; exit"
         );
+    }
+
+    #[test]
+    fn builds_flash_restore_instruction_that_erases_first() {
+        let chunks = [
+            (PathBuf::from("/tmp/00000000.bin"), 0),
+            (PathBuf::from("/tmp/00001000.bin"), 0x1000),
+        ];
+
+        let instruction = build_flash_restore_instruction(&chunks);
+
+        assert_eq!(
+            instruction,
+            "init; reset halt; flash erase_sector 0 0 last; \
+             flash write_bank 0 /tmp/00000000.bin 0x0; \
+             flash write_bank 0 /tmp/00001000.bin 0x1000; exit"
+        );
+    }
+
+    #[test]
+    fn skips_erased_blocks_when_restoring() {
+        let mut dump = vec![0xFF; 4 * RESTORE_BLOCK_SIZE];
+        // Two blocks of data, separated by an erased one.
+        dump[0] = 0x00;
+        dump[2 * RESTORE_BLOCK_SIZE] = 0x00;
+
+        assert_eq!(
+            non_blank_runs(&dump),
+            [
+                (0, RESTORE_BLOCK_SIZE),
+                (2 * RESTORE_BLOCK_SIZE, RESTORE_BLOCK_SIZE)
+            ]
+        );
+    }
+
+    #[test]
+    fn merges_adjacent_blocks_into_one_run() {
+        let mut dump = vec![0xFF; 3 * RESTORE_BLOCK_SIZE];
+        dump[RESTORE_BLOCK_SIZE] = 0x00;
+        dump[2 * RESTORE_BLOCK_SIZE] = 0x00;
+
+        assert_eq!(
+            non_blank_runs(&dump),
+            [(RESTORE_BLOCK_SIZE, 2 * RESTORE_BLOCK_SIZE)]
+        );
+    }
+
+    #[test]
+    fn keeps_a_trailing_partial_block() {
+        let mut dump = vec![0xFF; RESTORE_BLOCK_SIZE + 4];
+        dump[RESTORE_BLOCK_SIZE] = 0x00;
+
+        assert_eq!(non_blank_runs(&dump), [(RESTORE_BLOCK_SIZE, 4)]);
+    }
+
+    #[test]
+    fn finds_no_runs_in_a_fully_erased_dump() {
+        assert!(non_blank_runs(&[0xFF; 3 * RESTORE_BLOCK_SIZE]).is_empty());
     }
 
     #[test]
