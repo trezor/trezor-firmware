@@ -7,8 +7,8 @@ pub fn system_exit() -> ! {
 
 pub fn system_exit_error(title: Option<&str>, message: &str, footer: Option<&str>) -> ! {
     let message_ptr = CSlice::from(message);
-    let title_ptr = title.map(CSlice::from).unwrap_or_else(CSlice::null);
-    let footer_ptr = footer.map(CSlice::from).unwrap_or_else(CSlice::null);
+    let title_ptr = CSlice::from(title);
+    let footer_ptr = CSlice::from(footer);
 
     // SAFETY: safe
     unsafe {

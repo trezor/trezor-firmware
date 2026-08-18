@@ -230,6 +230,12 @@ impl<'a, T> From<&'a [T]> for CSlice<'a, T> {
     }
 }
 
+impl<'a, T> From<Option<&'a [T]>> for CSlice<'a, T> {
+    fn from(s: Option<&'a [T]>) -> Self {
+        s.map(From::from).unwrap_or_else(Self::null)
+    }
+}
+
 // Helper for converting &str to (signed) char*
 impl<'a> From<&'a str> for CSlice<'a, cty::c_char> {
     fn from(s: &str) -> Self {
@@ -239,6 +245,12 @@ impl<'a> From<&'a str> for CSlice<'a, cty::c_char> {
             len: charptr.len(),
             _marker: PhantomData,
         }
+    }
+}
+
+impl<'a> From<Option<&'a str>> for CSlice<'a, cty::c_char> {
+    fn from(s: Option<&'a str>) -> Self {
+        s.map(From::from).unwrap_or_else(Self::null)
     }
 }
 
@@ -296,5 +308,30 @@ mod tests {
         assert_eq!(fp.ptr(), core::ptr::null());
         assert_eq!(fp.len(), 0);
         assert!(fp.is_empty());
+    }
+
+    #[test]
+    fn test_from_option() {
+        let s: Option<&[u64]> = None;
+        let fp = CSlice::from(s);
+        assert!(fp.is_null());
+
+        let array = [1u64, 2u64, 3u64];
+        let s = Some(&array[..]);
+        let fp = CSlice::from(s);
+        assert!(!fp.is_null());
+        assert_eq!(fp.ptr(), array.as_ptr());
+        assert_eq!(fp.len(), array.len());
+
+        let s: Option<&str> = None;
+        let fp = CSlice::from(s);
+        assert!(fp.is_null());
+
+        let text = "Hello, world!";
+        let s = Some(text);
+        let fp = CSlice::from(s);
+        assert!(!fp.is_null());
+        assert_eq!(fp.ptr(), text.as_bytes().as_ptr() as *const _);
+        assert_eq!(fp.len(), text.len());
     }
 }
