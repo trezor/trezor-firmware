@@ -5,7 +5,8 @@ use super::super::keyboard::common::{
 };
 use super::super::keyboard::keypad::{Keypad, KeypadButton, KeypadMsg, KeypadState};
 use super::super::theme;
-use crate::strutil::{ShortString, TString};
+use crate::strutil::TString;
+use crate::ui::component::base::FlowMsgText;
 use crate::ui::component::swipe_detect::SwipeConfig;
 use crate::ui::component::{Component, Event, EventCtx, Label, Swipe};
 use crate::ui::flow::Swipable;
@@ -14,7 +15,7 @@ use crate::ui::shape::Renderer;
 use crate::ui::util::Pager;
 
 pub enum StringKeyboardMsg {
-    Confirmed(ShortString),
+    Confirmed(FlowMsgText),
     Cancelled,
 }
 
@@ -205,7 +206,7 @@ impl<I: StringInput> Component for StringKeyboard<I> {
             }
             Some(KeypadMsg::Confirm) => {
                 return Some(StringKeyboardMsg::Confirmed(unwrap!(
-                    ShortString::try_from(self.input.content())
+                    FlowMsgText::try_from(self.input.content())
                 )));
             }
             _ => {}

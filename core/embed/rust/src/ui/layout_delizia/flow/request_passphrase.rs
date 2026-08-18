@@ -3,6 +3,7 @@ use super::super::component::{
 };
 use crate::error;
 use crate::strutil::{ShortString, TString};
+use crate::ui::component::base::FlowMsgText;
 use crate::ui::component::ComponentExt;
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
 use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
@@ -36,7 +37,7 @@ impl FlowController for RequestPassphrase {
             (Self::Keypad, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
             (Self::ConfirmEmpty, FlowMsg::Cancelled) => Self::Keypad.goto(),
             (Self::ConfirmEmpty, FlowMsg::Confirmed) => {
-                self.return_msg(FlowMsg::Text(ShortString::new()))
+                self.return_msg(FlowMsg::Text(FlowMsgText::new()))
             }
             _ => self.do_nothing(),
         }

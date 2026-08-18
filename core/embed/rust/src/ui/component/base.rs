@@ -1,8 +1,8 @@
-use heapless::Vec;
+use heapless::{String, Vec};
 
 use super::Paginate;
 use crate::error::Error;
-use crate::strutil::{ShortString, TString};
+use crate::strutil::TString;
 use crate::time::Duration;
 use crate::ui::button_request::{ButtonRequest, ButtonRequestCode};
 use crate::ui::component::{MsgMap, PageMap};
@@ -601,6 +601,10 @@ impl EventCtx {
     }
 }
 
+/// A single string type for UI flows.
+/// Allows using passphrases longer than 50 characters (ShortString limit).
+pub type FlowMsgText = String<128>;
+
 /// Component::Msg for component parts of a swipe flow. Converting results of
 /// different screens to a shared type makes things easier to work with.
 ///
@@ -614,7 +618,7 @@ pub enum FlowMsg {
     Back,
     Next,
     Choice(usize),
-    Text(ShortString),
+    Text(FlowMsgText),
 }
 
 #[cfg(feature = "micropython")]
