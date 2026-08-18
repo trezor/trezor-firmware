@@ -223,7 +223,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__pair_title;
   MP_QSTR_ble__pairing_match;
   MP_QSTR_ble__pairing_title;
-  MP_QSTR_ble__unpair_all;
   MP_QSTR_ble__unpair_current;
   MP_QSTR_ble__unpair_title;
   MP_QSTR_ble__version;
@@ -1028,14 +1027,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__authorization;
   MP_QSTR_words__blockhash;
   MP_QSTR_words__bluetooth;
-  MP_QSTR_words__buying;
   MP_QSTR_words__cancel_question;
   MP_QSTR_words__chain;
   MP_QSTR_words__comm_continue;
   MP_QSTR_words__comm_trouble;
   MP_QSTR_words__confirm;
   MP_QSTR_words__confirm_fee;
-  MP_QSTR_words__connect;
   MP_QSTR_words__connected;
   MP_QSTR_words__contains;
   MP_QSTR_words__continue_anyway_question;
@@ -1057,7 +1054,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__know_what_your_doing;
   MP_QSTR_words__led;
   MP_QSTR_words__made_in;
-  MP_QSTR_words__manage;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__name;
   MP_QSTR_words__no;
@@ -1504,8 +1500,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__confirm_issuer;
   MP_QSTR_stellar__confirm_memo;
   MP_QSTR_stellar__confirm_operation;
-  MP_QSTR_stellar__confirm_timebounds;
-  MP_QSTR_stellar__create_account;
   MP_QSTR_stellar__debited_amount;
   MP_QSTR_stellar__delete;
   MP_QSTR_stellar__delete_passive_offer;
@@ -1544,8 +1538,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__set_flags;
   MP_QSTR_stellar__set_sequence_to_template;
   MP_QSTR_stellar__sign_authorization;
-  MP_QSTR_stellar__sign_tx_count_template;
-  MP_QSTR_stellar__sign_tx_fee_template;
   MP_QSTR_stellar__sign_with;
   MP_QSTR_stellar__source_account;
   MP_QSTR_stellar__timebounds;
