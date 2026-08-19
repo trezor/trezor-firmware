@@ -118,7 +118,7 @@ async def confirm_instruction(
 
                 formatted_value = property_template.format(value, *args)
                 if property_template.is_pubkey() and signer_public_key == value:
-                    formatted_value = f"{formatted_value} ({TR.words__signer})"
+                    formatted_value = f"{formatted_value} {TR.address__title_yours}"
 
             await confirm_properties(
                 br_name="confirm_instruction",
@@ -152,7 +152,9 @@ async def confirm_instruction(
                 if token is not None:
                     account_description = f"{token.name}\n{account_description}"
                 elif account_value[0] == signer_public_key:
-                    account_description = f"{account_description} ({TR.words__signer})"
+                    account_description = (
+                        f"{account_description} {TR.address__title_yours}"
+                    )
 
                 account_data.append(
                     (ui_property.display_name, account_description, True)
