@@ -2269,8 +2269,8 @@ def test_ward_pin_at_counter_zero_is_allowed(session: Session):
     whole of the evidence -- and pinning adds no new trust assumption, because a READ in this
     state already displays exactly these bytes on exactly this evidence.
 
-    What it cannot show is freshness, which is why the record carries counter 0 and turns
-    stale the moment the head moves. That is asserted separately below.
+    What it cannot show is freshness, and nothing pretends otherwise: the record stores no counter,
+    so a local read says only that this copy has not been checked against a host.
     """
     key = expected_entry_key(_K_PATH, _APP, b"addr1")
 
@@ -2300,8 +2300,8 @@ def test_ward_pin_at_counter_zero_is_allowed(session: Session):
 
     read = _offline_read(session.test_ctx.get_session(), b"addr1")
     assert "bootstrap_value" in read.squashed
-    # Kept at counter 0 -- authentic, but with nothing to say it is current.
-    assert "counter 0" in read.text
+    # Authentic, with nothing claiming it is current.
+    assert "not checked against the host" in read.text.lower()
 
 
 @pytest.mark.models("core")
@@ -2365,22 +2365,23 @@ def test_ward_pin_rejects_a_leaf_that_is_not_in_the_trusted_root(session: Sessio
 
 
 @pytest.mark.models("core")
-def test_ward_pinned_entry_goes_stale_when_the_head_moves(session: Session):
-    """Advancing the head changes a record's STATUS and not its existence.
+def test_ward_a_pinned_entry_survives_the_head_moving(session: Session):
+    """Advancing the head leaves a record alone -- it is not rewritten and not removed.
 
-    The record is untouched by the reconcile -- staleness is computed at read time from the
-    trusted counter, precisely so that moving the head never needs to write to the store and
-    therefore can never acquire a reason to delete from it.
+    It used to also change what the record READ as: a stored counter was compared against the
+    trusted one and the screen said "may be out of date". No counter is stored now, so a local copy
+    always reads as unchecked rather than sometimes as stale. Weaker wording, same record: moving the
+    head still never writes to the store, which is what keeps it from acquiring a reason to delete.
     """
     store = WardTrie()
     _seed(session, store, b"addr1", b"pinned_value")
     _pin(session, store, b"addr1", "ward_pin_cached_entry")
 
-    _seed(session, store, b"other", b"moves_the_counter")
+    _seed(session, store, b"other", b"moves_the_head")
 
     rec = _offline_read(session.test_ctx.get_session(), b"addr1")
     assert "pinned_value" in rec.squashed
-    assert "out of date" in rec.text.lower()
+    assert "not checked against the host" in rec.text.lower()
 
 
 @pytest.mark.models("core")

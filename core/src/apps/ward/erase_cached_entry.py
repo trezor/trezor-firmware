@@ -19,9 +19,9 @@ async def erase_cached_entry(msg: WardEraseCachedEntry) -> Success:
     A host reporting an entry as absent is likewise not permission to erase the local copy;
     the user is asked, here, or nothing happens.
 
-    THE DEVICE DERIVES THE PATH. `entry_key` comes from (app_id, identifier) exactly as every
-    other request derives it, so a host cannot name an arbitrary path to destroy -- which is
-    the whole reason this is not simply "erase the key I give you".
+    THE DEVICE NAMES THE RECORD. It is found by (key_type, app_id, identifier), with key_type this
+    handler's own constant, so a host cannot name an arbitrary record to destroy -- which is the whole
+    reason this is not simply "erase the key I give you".
 
     SHOW WHAT IS BEING LOST. Confirming a deletion by key alone tells the user nothing about
     what they are giving up, so the value goes on the screen. A pending change gets different
@@ -37,14 +37,13 @@ async def erase_cached_entry(msg: WardEraseCachedEntry) -> Success:
 
     from . import offline_store
     from .common import display_bytes, require_key
-    from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
+    from .keys import ENTRY_TYPE_ADDRESS
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
     key_type = ENTRY_TYPE_ADDRESS
-    entry_key = await entry_key_for(app_id, identifier, key_type)
 
-    status, entry = await offline_store.get(entry_key)
+    status, entry = await offline_store.get(key_type, app_id, identifier)
 
     if status == offline_store.MISS:
         # Nothing here. No screen: a hold-to-confirm that always means "nothing happened" is
@@ -89,6 +88,12 @@ async def erase_cached_entry(msg: WardEraseCachedEntry) -> Success:
 
     await confirm_properties("ward_erase_cached_entry", title, props, hold=True)
 
-    await offline_store.erase(entry_key)
+    if status == offline_store.CORRUPT or entry is None:
+        # An unreadable record cannot be named, so it cannot be erased by identity either -- the
+        # only handle left is the slot it occupies. See `offline_store.erase_unreadable`.
+        if not await offline_store.erase_unreadable():
+            return Success(message="WARD entry not kept offline")
+    else:
+        await offline_store.erase(key_type, app_id, identifier)
 
     return Success(message="WARD offline copy removed")

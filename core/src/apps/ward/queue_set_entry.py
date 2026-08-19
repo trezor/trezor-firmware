@@ -37,7 +37,7 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
 
     from . import offline_store
     from .common import display_bytes, require_key
-    from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
+    from .keys import ENTRY_TYPE_ADDRESS
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
@@ -49,12 +49,11 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
         raise DataError("value is required")
 
     key_type = ENTRY_TYPE_ADDRESS
-    entry_key = await entry_key_for(app_id, identifier, key_type)
 
     if msg.mac is not None:
-        return await _restore(app_id, identifier, entry_key, key_type, value, msg.mac)
+        return await _restore(app_id, identifier, key_type, value, msg.mac)
 
-    status, existing = await offline_store.get(entry_key)
+    status, existing = await offline_store.get(key_type, app_id, identifier)
 
     props = [
         ("Domain", app_id, False),
@@ -76,18 +75,9 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
 
     await confirm_properties("ward_queue_entry", title, props)
 
-    # Stored only after confirmation, and with counter 0 -- "no counter assigned". The counter is
-    # stamped by `flush_queue` when the change is finally derived against a real root.
-    await offline_store.put(
-        entry_key,
-        key_type,
-        app_id,
-        identifier,
-        0,
-        value,
-        0,
-        True,
-    )
+    # Stored only after confirmation, PENDING and not yet offered: the change is waiting for a host
+    # to take it, and `flush_queue` is what marks it as handed over.
+    await offline_store.put(key_type, app_id, identifier, value, True)
 
     # An EMPTY ack. There is no counter, no mac and no leaf because none of them exists yet, and the
     # ack type is what says the change was queued rather than applied. The keyed path is not here
@@ -99,7 +89,6 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
 async def _restore(
     app_id: str,
     identifier: bytes,
-    entry_key: bytes,
     key_type: str,
     value: bytes,
     mac: bytes,
@@ -108,10 +97,9 @@ async def _restore(
 
     WHY A MAC AND NOT TRUST. The blob was held by the HOST, which is free to change any byte of it.
     Every field the device would write back is inside the MAC -- see `cas.intent_preimage` -- so a
-    substituted value or a moved path fails here rather than becoming a queued change the user never
-    confirmed. Both `entry_key` and `key_type` are DERIVED here and then MAC-checked rather than
-    accepted from the request, so a host cannot aim a restore at a path of its choosing even with an
-    otherwise valid blob.
+    substituted value or a moved key fails here rather than becoming a queued change the user never
+    confirmed. `key_type` is this handler's own constant rather than something the request supplies,
+    and the MAC covers it, so a host cannot aim a restore at another key space either.
 
     VERIFY, THEN SHOW, THEN WRITE. Failing before the screen is the point: a confirmation for
     material that did not authenticate trains the user to approve one, and the whole value of the
@@ -126,7 +114,8 @@ async def _restore(
     be queued NOW. So a host may re-offer a change the user discarded, or one already published, and
     this accepts it. Refusing an occupied slot would be a handler change; comparing against the
     counter the intent was made at -- which is what `delete_entry` argues actually bounds a replay --
-    now needs that counter back on the wire, because a restore no longer carries one.
+    now needs that counter back on the wire -- and back into the record, which no longer holds one
+    either.
     """
     from trezor.messages import WardQueueSetAck
     from trezor.ui.layouts import confirm_properties
@@ -140,7 +129,6 @@ async def _restore(
     if not verify_intent_mac(
         await derive_k_auth(),
         await derive_ward_id(),
-        entry_key,
         OP_SET,
         key_type,
         app_id,
@@ -165,18 +153,9 @@ async def _restore(
         ],
     )
 
-    # Restored PENDING at counter 0 -- "no counter assigned". A restore cannot know whether an
-    # earlier publication landed, so the change is offered to `flush_queue` again; claiming a counter
-    # it might not have reached would make `reconcile_pending` clear a change that never applied.
-    await offline_store.put(
-        entry_key,
-        key_type,
-        app_id,
-        identifier,
-        0,
-        value,
-        0,
-        True,
-    )
+    # Restored PENDING and NOT offered. A restore cannot know whether an earlier publication landed,
+    # so the change goes back to the head of the queue; marking it offered would let the next
+    # reconcile clear a change that never applied.
+    await offline_store.put(key_type, app_id, identifier, value, True)
 
     return WardQueueSetAck()
