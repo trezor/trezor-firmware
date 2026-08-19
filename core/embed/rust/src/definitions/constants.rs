@@ -1,6 +1,10 @@
 use crypto::ed25519;
 
-pub const THRESHOLD: u8 = 2;
+// Definition format versions, encoded on the wire as ASCII digit bytes.
+pub const VERSION_1: u8 = b'1';
+
+// CoSi signature thresholds by definition format version.
+pub const THRESHOLD_V1: u8 = 2;
 
 #[cfg(feature = "dev_keys")]
 pub const PUBLIC_KEYS_DEVEL: [ed25519::PublicKey; 3] = [
