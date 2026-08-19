@@ -193,7 +193,9 @@ async def confirm_tx_data(
         address_from_bytes(address_bytes, network) if address_bytes else None
     )
 
-    if payment_request_verifier is not None:
+    if clear_signed:
+        return
+    elif payment_request_verifier is not None:
         if data_length != 0:
             raise DataError(
                 "Data length must be 0 when `payment_request_verifier` is provided."
@@ -219,7 +221,7 @@ async def confirm_tx_data(
             None,
             None,
         )
-    elif not clear_signed:
+    else:
         if data_length > 0:
             # Stream, confirm and hash the rest of the calldata chunks.
             await _confirm_data_chunks(
