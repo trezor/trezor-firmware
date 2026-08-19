@@ -34,6 +34,8 @@ Therefore, we do not show any fees to the user on the device. The host applicati
 - [X] `WithdrawExpireUnfreeze`: Claim Unstaked `TRX` past their lock-up period
 - [X] `VoteWitnessContract`: Vote using earned TRON Power.
 - [X] `WithdrawBalanceContract`: Claim Voting rewards.
+- [X] `DelegateResourceContract`: Delegate Energy or Bandwidth to other users.
+- [X] `UnDelegateResourceContract`: Undelegate previously delegated resource from other users.
 
 ### Notes
 

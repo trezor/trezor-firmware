@@ -66,14 +66,15 @@ async def confirm_instruction(
     signer_public_key: bytes,
     definitions: Definitions,
 ) -> None:
-    instruction_title = (
+    instruction_title_index = f"{instruction_index}/{instructions_count}"
+    instruction_subtitle = (
         f"{instruction_index}/{instructions_count}: {instruction.ui_name}"
     )
 
     if instruction.is_deprecated_warning is not None:
         await confirm_metadata(
             "confirm_deprecated_warning",
-            instruction_title,
+            instruction_subtitle,
             instruction.is_deprecated_warning,
             br_code=ButtonRequestType.Other,
         )
@@ -116,16 +117,16 @@ async def confirm_instruction(
                     raise ValueError  # Invalid property template
 
             await confirm_properties(
-                "confirm_instruction",
-                f"{instruction_index}/{instructions_count}",
-                (
+                br_name="confirm_instruction",
+                title=instruction_title_index,
+                subtitle=instruction.ui_name,
+                props=(
                     (
                         ui_property.display_name,
                         property_template.format(value, *args),
                         True,
                     ),
                 ),
-                instruction.ui_name,
             )
         elif ui_property.account is not None:
             # optional account, skip if not present
@@ -160,9 +161,9 @@ async def confirm_instruction(
 
             await confirm_properties(
                 "confirm_instruction",
-                f"{instruction_index}/{instructions_count}",
-                account_data,
-                instruction.ui_name,
+                title=instruction.ui_name,
+                props=account_data,
+                subtitle=instruction_title_index,
             )
         else:
             raise ValueError  # Invalid ui property
@@ -188,10 +189,10 @@ async def confirm_instruction(
                 )
 
         await confirm_properties(
-            "confirm_instruction",
-            f"{instruction_index}/{instructions_count}",
-            signers,
-            instruction.ui_name,
+            br_name="confirm_instruction",
+            title=instruction_title_index,
+            subtitle=instruction.ui_name,
+            props=signers,
         )
 
 
