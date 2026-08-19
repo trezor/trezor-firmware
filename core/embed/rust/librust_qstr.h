@@ -157,7 +157,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_backlight_set;
   MP_QSTR_backup__can_back_up_anytime;
   MP_QSTR_backup__create_backup_to_prevent_loss;
+  MP_QSTR_backup__info_multi_group_backup;
   MP_QSTR_backup__info_multi_share_backup;
+  MP_QSTR_backup__info_n_of_m_template;
   MP_QSTR_backup__info_single_share_backup;
   MP_QSTR_backup__it_should_be_backed_up;
   MP_QSTR_backup__it_should_be_backed_up_now;

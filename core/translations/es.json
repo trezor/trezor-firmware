@@ -141,7 +141,9 @@
       "Delizia": "Crea una c. seg. para evitar perder el acceso a tus fondos.",
       "Eckhart": "Crea una c. seg. para evitar perder el acceso a tus fondos."
     },
+    "backup__info_multi_group_backup": "La c. seg. de la billetera contiene {0} grupos con un umbral de grupo de {1}.",
     "backup__info_multi_share_backup": "La c. seg. de la billetera contiene varias listas de palabras en un orden concreto (partes).",
+    "backup__info_n_of_m_template": "{0}-de-{1}",
     "backup__info_single_share_backup": "La c. seg. de la billetera contiene {0} palabras en un orden concreto.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Debes realizar una c. seg. de tu billetera.",
@@ -1979,12 +1981,7 @@
     },
     "recovery__enter_each_word": "Introduce cada palabra de la c. seg. de la billetera en orden.",
     "recovery__enter_share_from_diff_group": "Introduce una parte de otro grupo.",
-    "recovery__group_num_template": {
-      "Bolt": "Grupo {0}",
-      "Caesar": "Grupo {0}",
-      "Delizia": "Grupo {0}",
-      "Eckhart": ""
-    },
+    "recovery__group_num_template": "Grupo {0}",
     "recovery__group_threshold_reached": "Umbral de grupo alcanzado.",
     "recovery__invalid_share_entered": "La parte de recuperación es inválida.",
     "recovery__invalid_wallet_backup_entered": "La c. seg. de la billetera es inválida.",

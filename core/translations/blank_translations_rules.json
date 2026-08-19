@@ -137,7 +137,6 @@
       "pin__enabled",
       "progress__locking_device",
       "recovery__enter_different_share",
-      "recovery__group_num_template",
       "recovery__you_have_entered",
       "reset__more_info_at",
       "reset__select_word_x_of_y_template",
