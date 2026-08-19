@@ -85,16 +85,19 @@ def multisig_xpub_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> in
 def multisig_get_pubkey(n: HDNodeType, p: paths.Bip32Path) -> bytes:
     from trezor.crypto import bip32
 
-    node = bip32.HDNode(
-        depth=n.depth,
-        fingerprint=n.fingerprint,
-        child_num=n.child_num,
-        chain_code=n.chain_code,
-        public_key=n.public_key,
-    )
-    for i in p:
-        node.derive(i, True)
-    return node.public_key()
+    try:
+        node = bip32.HDNode(
+            depth=n.depth,
+            fingerprint=n.fingerprint,
+            child_num=n.child_num,
+            chain_code=n.chain_code,
+            public_key=n.public_key,
+        )
+        for i in p:
+            node.derive(i, True)
+        return node.public_key()
+    except ValueError:
+        raise DataError("Invalid multisig pubkey")
 
 
 def multisig_get_pubkeys(multisig: MultisigRedeemScriptType) -> Sequence[AnyBytes]:
