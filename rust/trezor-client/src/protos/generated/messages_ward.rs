@@ -2909,6 +2909,12 @@ pub struct WardQueueSetEntry {
     pub identifier: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueSetEntry.value)
     pub value: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueSetEntry.mac)
+    pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueSetEntry.counter)
+    pub counter: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueSetEntry.key_type)
+    pub key_type: ::std::option::Option<::std::string::String>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardQueueSetEntry.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -3033,8 +3039,99 @@ impl WardQueueSetEntry {
         self.value.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes mac = 4;
+
+    pub fn mac(&self) -> &[u8] {
+        match self.mac.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_mac(&mut self) {
+        self.mac = ::std::option::Option::None;
+    }
+
+    pub fn has_mac(&self) -> bool {
+        self.mac.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mac = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mac.is_none() {
+            self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.mac.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+        self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional uint32 counter = 5;
+
+    pub fn counter(&self) -> u32 {
+        self.counter.unwrap_or(0)
+    }
+
+    pub fn clear_counter(&mut self) {
+        self.counter = ::std::option::Option::None;
+    }
+
+    pub fn has_counter(&self) -> bool {
+        self.counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_counter(&mut self, v: u32) {
+        self.counter = ::std::option::Option::Some(v);
+    }
+
+    // optional string key_type = 6;
+
+    pub fn key_type(&self) -> &str {
+        match self.key_type.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_key_type(&mut self) {
+        self.key_type = ::std::option::Option::None;
+    }
+
+    pub fn has_key_type(&self) -> bool {
+        self.key_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_key_type(&mut self, v: ::std::string::String) {
+        self.key_type = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_key_type(&mut self) -> &mut ::std::string::String {
+        if self.key_type.is_none() {
+            self.key_type = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.key_type.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_key_type(&mut self) -> ::std::string::String {
+        self.key_type.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(6);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "app_id",
@@ -3050,6 +3147,21 @@ impl WardQueueSetEntry {
             "value",
             |m: &WardQueueSetEntry| { &m.value },
             |m: &mut WardQueueSetEntry| { &mut m.value },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mac",
+            |m: &WardQueueSetEntry| { &m.mac },
+            |m: &mut WardQueueSetEntry| { &mut m.mac },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "counter",
+            |m: &WardQueueSetEntry| { &m.counter },
+            |m: &mut WardQueueSetEntry| { &mut m.counter },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "key_type",
+            |m: &WardQueueSetEntry| { &m.key_type },
+            |m: &mut WardQueueSetEntry| { &mut m.key_type },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardQueueSetEntry>(
             "WardQueueSetEntry",
@@ -3078,6 +3190,15 @@ impl ::protobuf::Message for WardQueueSetEntry {
                 26 => {
                     self.value = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                34 => {
+                    self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                40 => {
+                    self.counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                50 => {
+                    self.key_type = ::std::option::Option::Some(is.read_string()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -3099,6 +3220,15 @@ impl ::protobuf::Message for WardQueueSetEntry {
         if let Some(v) = self.value.as_ref() {
             my_size += ::protobuf::rt::bytes_size(3, &v);
         }
+        if let Some(v) = self.mac.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
+        if let Some(v) = self.counter {
+            my_size += ::protobuf::rt::uint32_size(5, v);
+        }
+        if let Some(v) = self.key_type.as_ref() {
+            my_size += ::protobuf::rt::string_size(6, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -3113,6 +3243,15 @@ impl ::protobuf::Message for WardQueueSetEntry {
         }
         if let Some(v) = self.value.as_ref() {
             os.write_bytes(3, v)?;
+        }
+        if let Some(v) = self.mac.as_ref() {
+            os.write_bytes(4, v)?;
+        }
+        if let Some(v) = self.counter {
+            os.write_uint32(5, v)?;
+        }
+        if let Some(v) = self.key_type.as_ref() {
+            os.write_string(6, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -3134,6 +3273,9 @@ impl ::protobuf::Message for WardQueueSetEntry {
         self.app_id = ::std::option::Option::None;
         self.identifier = ::std::option::Option::None;
         self.value = ::std::option::Option::None;
+        self.mac = ::std::option::Option::None;
+        self.counter = ::std::option::Option::None;
+        self.key_type = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -3142,6 +3284,9 @@ impl ::protobuf::Message for WardQueueSetEntry {
             app_id: ::std::option::Option::None,
             identifier: ::std::option::Option::None,
             value: ::std::option::Option::None,
+            mac: ::std::option::Option::None,
+            counter: ::std::option::Option::None,
+            key_type: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3964,6 +4109,16 @@ pub struct WardQueueGetAck {
     pub stale: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.counter)
     pub counter: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.key_type)
+    pub key_type: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.app_id)
+    pub app_id: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.identifier)
+    pub identifier: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.value)
+    pub value: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.mac)
+    pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardQueueGetAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -4111,8 +4266,188 @@ impl WardQueueGetAck {
         self.counter = ::std::option::Option::Some(v);
     }
 
+    // optional string key_type = 7;
+
+    pub fn key_type(&self) -> &str {
+        match self.key_type.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_key_type(&mut self) {
+        self.key_type = ::std::option::Option::None;
+    }
+
+    pub fn has_key_type(&self) -> bool {
+        self.key_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_key_type(&mut self, v: ::std::string::String) {
+        self.key_type = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_key_type(&mut self) -> &mut ::std::string::String {
+        if self.key_type.is_none() {
+            self.key_type = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.key_type.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_key_type(&mut self) -> ::std::string::String {
+        self.key_type.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional string app_id = 8;
+
+    pub fn app_id(&self) -> &str {
+        match self.app_id.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_app_id(&mut self) {
+        self.app_id = ::std::option::Option::None;
+    }
+
+    pub fn has_app_id(&self) -> bool {
+        self.app_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_app_id(&mut self, v: ::std::string::String) {
+        self.app_id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_app_id(&mut self) -> &mut ::std::string::String {
+        if self.app_id.is_none() {
+            self.app_id = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.app_id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_app_id(&mut self) -> ::std::string::String {
+        self.app_id.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional bytes identifier = 9;
+
+    pub fn identifier(&self) -> &[u8] {
+        match self.identifier.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_identifier(&mut self) {
+        self.identifier = ::std::option::Option::None;
+    }
+
+    pub fn has_identifier(&self) -> bool {
+        self.identifier.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_identifier(&mut self, v: ::std::vec::Vec<u8>) {
+        self.identifier = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_identifier(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.identifier.is_none() {
+            self.identifier = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.identifier.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_identifier(&mut self) -> ::std::vec::Vec<u8> {
+        self.identifier.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes value = 10;
+
+    pub fn value(&self) -> &[u8] {
+        match self.value.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_value(&mut self) {
+        self.value = ::std::option::Option::None;
+    }
+
+    pub fn has_value(&self) -> bool {
+        self.value.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_value(&mut self, v: ::std::vec::Vec<u8>) {
+        self.value = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_value(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.value.is_none() {
+            self.value = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.value.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_value(&mut self) -> ::std::vec::Vec<u8> {
+        self.value.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes mac = 11;
+
+    pub fn mac(&self) -> &[u8] {
+        match self.mac.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_mac(&mut self) {
+        self.mac = ::std::option::Option::None;
+    }
+
+    pub fn has_mac(&self) -> bool {
+        self.mac.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mac = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mac.is_none() {
+            self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.mac.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+        self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(6);
+        let mut fields = ::std::vec::Vec::with_capacity(11);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "entry_key",
@@ -4143,6 +4478,31 @@ impl WardQueueGetAck {
             "counter",
             |m: &WardQueueGetAck| { &m.counter },
             |m: &mut WardQueueGetAck| { &mut m.counter },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "key_type",
+            |m: &WardQueueGetAck| { &m.key_type },
+            |m: &mut WardQueueGetAck| { &mut m.key_type },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "app_id",
+            |m: &WardQueueGetAck| { &m.app_id },
+            |m: &mut WardQueueGetAck| { &mut m.app_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "identifier",
+            |m: &WardQueueGetAck| { &m.identifier },
+            |m: &mut WardQueueGetAck| { &mut m.identifier },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "value",
+            |m: &WardQueueGetAck| { &m.value },
+            |m: &mut WardQueueGetAck| { &mut m.value },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mac",
+            |m: &WardQueueGetAck| { &m.mac },
+            |m: &mut WardQueueGetAck| { &mut m.mac },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardQueueGetAck>(
             "WardQueueGetAck",
@@ -4183,6 +4543,21 @@ impl ::protobuf::Message for WardQueueGetAck {
                 48 => {
                     self.counter = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                58 => {
+                    self.key_type = ::std::option::Option::Some(is.read_string()?);
+                },
+                66 => {
+                    self.app_id = ::std::option::Option::Some(is.read_string()?);
+                },
+                74 => {
+                    self.identifier = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                82 => {
+                    self.value = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                90 => {
+                    self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -4213,6 +4588,21 @@ impl ::protobuf::Message for WardQueueGetAck {
         if let Some(v) = self.counter {
             my_size += ::protobuf::rt::uint32_size(6, v);
         }
+        if let Some(v) = self.key_type.as_ref() {
+            my_size += ::protobuf::rt::string_size(7, &v);
+        }
+        if let Some(v) = self.app_id.as_ref() {
+            my_size += ::protobuf::rt::string_size(8, &v);
+        }
+        if let Some(v) = self.identifier.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(9, &v);
+        }
+        if let Some(v) = self.value.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(10, &v);
+        }
+        if let Some(v) = self.mac.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(11, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -4237,6 +4627,21 @@ impl ::protobuf::Message for WardQueueGetAck {
         if let Some(v) = self.counter {
             os.write_uint32(6, v)?;
         }
+        if let Some(v) = self.key_type.as_ref() {
+            os.write_string(7, v)?;
+        }
+        if let Some(v) = self.app_id.as_ref() {
+            os.write_string(8, v)?;
+        }
+        if let Some(v) = self.identifier.as_ref() {
+            os.write_bytes(9, v)?;
+        }
+        if let Some(v) = self.value.as_ref() {
+            os.write_bytes(10, v)?;
+        }
+        if let Some(v) = self.mac.as_ref() {
+            os.write_bytes(11, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -4260,6 +4665,11 @@ impl ::protobuf::Message for WardQueueGetAck {
         self.unreadable = ::std::option::Option::None;
         self.stale = ::std::option::Option::None;
         self.counter = ::std::option::Option::None;
+        self.key_type = ::std::option::Option::None;
+        self.app_id = ::std::option::Option::None;
+        self.identifier = ::std::option::Option::None;
+        self.value = ::std::option::Option::None;
+        self.mac = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -4271,6 +4681,11 @@ impl ::protobuf::Message for WardQueueGetAck {
             unreadable: ::std::option::Option::None,
             stale: ::std::option::Option::None,
             counter: ::std::option::Option::None,
+            key_type: ::std::option::Option::None,
+            app_id: ::std::option::Option::None,
+            identifier: ::std::option::Option::None,
+            value: ::std::option::Option::None,
+            mac: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -8167,64 +8582,70 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x05\x20\x01(\x0cR\x03mac\
     \x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\x12\x19\n\
     \x08auth_sig\x18\x07\x20\x01(\x0cR\x07authSigJ\x04\x08\x08\x10\tJ\x04\
-    \x08\t\x10\n\"`\n\x11WardQueueSetEntry\x12\x15\n\x06app_id\x18\x01\x20\
-    \x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifie\
-    r\x12\x14\n\x05value\x18\x03\x20\x01(\x0cR\x05value\".\n\x0fWardQueueSet\
-    Ack\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\"M\n\x14WardQ\
-    ueueDeleteEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\
-    \n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\"K\n\x12WardQueueDelete\
-    Ack\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\x18\n\x07\
-    missing\x18\x02\x20\x01(\x08R\x07missing\"J\n\x11WardQueueGetEntry\x12\
-    \x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\
-    \x02\x20\x01(\x0cR\nidentifier\"\xb2\x01\n\x0fWardQueueGetAck\x12\x1b\n\
-    \tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\x18\n\x07missing\x18\
-    \x02\x20\x01(\x08R\x07missing\x12\x18\n\x07pending\x18\x03\x20\x01(\x08R\
-    \x07pending\x12\x1e\n\nunreadable\x18\x04\x20\x01(\x08R\nunreadable\x12\
-    \x14\n\x05stale\x18\x05\x20\x01(\x08R\x05stale\x12\x18\n\x07counter\x18\
-    \x06\x20\x01(\rR\x07counter\"\xc1\x02\n\x11WardFlushQueueAck\x12\x1b\n\t\
-    entry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12E\n\x08identity\x18\x02\
-    \x20\x01(\x0b2).hw.trezor.messages.ward.WardLeafIdentityR\x08identity\
-    \x12B\n\x07content\x18\x03\x20\x01(\x0b2(.hw.trezor.messages.ward.WardLe\
-    afContentR\x07content\x12\x18\n\x07counter\x18\x04\x20\x01(\rR\x07counte\
-    r\x12\x10\n\x03mac\x18\x05\x20\x01(\x0cR\x03mac\x12\x1f\n\x0bauth_commit\
-    \x18\x06\x20\x01(\x0cR\nauthCommit\x12\x19\n\x08auth_sig\x18\x07\x20\x01\
-    (\x0cR\x07authSig\x12\x1c\n\tremaining\x18\x08\x20\x02(\rR\tremaining\"\
-    \xa8\x01\n\rWardChainLink\x12!\n\x0cfrom_counter\x18\x01\x20\x01(\rR\x0b\
-    fromCounter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\
-    \x1d\n\nto_counter\x18\x03\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\
-    \x18\x04\x20\x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x05\x20\
-    \x01(\x0cR\nauthCommit\"O\n\x0fWardVerifyChain\x12<\n\x05links\x18\x01\
-    \x20\x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05links\"I\n\x12\
-    WardVerifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\
-    \x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\n\n\x08WardSyn\
-    c\"V\n\x0bWardSyncAck\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\
-    \x12\x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wardId\x12\x18\n\x07count\
-    er\x18\x03\x20\x01(\rR\x07counter\"\x84\x01\n\x15WardIngestAttestation\
+    \x08\t\x10\n\"\xa7\x01\n\x11WardQueueSetEntry\x12\x15\n\x06app_id\x18\
+    \x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\ni\
+    dentifier\x12\x14\n\x05value\x18\x03\x20\x01(\x0cR\x05value\x12\x10\n\
+    \x03mac\x18\x04\x20\x01(\x0cR\x03mac\x12\x18\n\x07counter\x18\x05\x20\
+    \x01(\rR\x07counter\x12\x19\n\x08key_type\x18\x06\x20\x01(\tR\x07keyType\
+    \".\n\x0fWardQueueSetAck\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08e\
+    ntryKey\"M\n\x14WardQueueDeleteEntry\x12\x15\n\x06app_id\x18\x01\x20\x01\
+    (\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\"K\
+    \n\x12WardQueueDeleteAck\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08e\
+    ntryKey\x12\x18\n\x07missing\x18\x02\x20\x01(\x08R\x07missing\"J\n\x11Wa\
+    rdQueueGetEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\
+    \n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\"\xac\x02\n\x0fWardQueu\
+    eGetAck\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\x18\n\
+    \x07missing\x18\x02\x20\x01(\x08R\x07missing\x12\x18\n\x07pending\x18\
+    \x03\x20\x01(\x08R\x07pending\x12\x1e\n\nunreadable\x18\x04\x20\x01(\x08\
+    R\nunreadable\x12\x14\n\x05stale\x18\x05\x20\x01(\x08R\x05stale\x12\x18\
+    \n\x07counter\x18\x06\x20\x01(\rR\x07counter\x12\x19\n\x08key_type\x18\
+    \x07\x20\x01(\tR\x07keyType\x12\x15\n\x06app_id\x18\x08\x20\x01(\tR\x05a\
+    ppId\x12\x1e\n\nidentifier\x18\t\x20\x01(\x0cR\nidentifier\x12\x14\n\x05\
+    value\x18\n\x20\x01(\x0cR\x05value\x12\x10\n\x03mac\x18\x0b\x20\x01(\x0c\
+    R\x03mac\"\xc1\x02\n\x11WardFlushQueueAck\x12\x1b\n\tentry_key\x18\x01\
+    \x20\x01(\x0cR\x08entryKey\x12E\n\x08identity\x18\x02\x20\x01(\x0b2).hw.\
+    trezor.messages.ward.WardLeafIdentityR\x08identity\x12B\n\x07content\x18\
+    \x03\x20\x01(\x0b2(.hw.trezor.messages.ward.WardLeafContentR\x07content\
+    \x12\x18\n\x07counter\x18\x04\x20\x01(\rR\x07counter\x12\x10\n\x03mac\
+    \x18\x05\x20\x01(\x0cR\x03mac\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\
+    \x0cR\nauthCommit\x12\x19\n\x08auth_sig\x18\x07\x20\x01(\x0cR\x07authSig\
+    \x12\x1c\n\tremaining\x18\x08\x20\x02(\rR\tremaining\"\xa8\x01\n\rWardCh\
+    ainLink\x12!\n\x0cfrom_counter\x18\x01\x20\x01(\rR\x0bfromCounter\x12\
+    \x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counte\
+    r\x18\x03\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x04\x20\x01(\
+    \x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x05\x20\x01(\x0cR\nauthComm\
+    it\"O\n\x0fWardVerifyChain\x12<\n\x05links\x18\x01\x20\x03(\x0b2&.hw.tre\
+    zor.messages.ward.WardChainLinkR\x05links\"I\n\x12WardVerifyChainAck\x12\
+    \x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\
+    \x18\x02\x20\x01(\x0cR\x07newRoot\"\n\n\x08WardSync\"V\n\x0bWardSyncAck\
+    \x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x17\n\x07ward_id\
+    \x18\x02\x20\x01(\x0cR\x06wardId\x12\x18\n\x07counter\x18\x03\x20\x01(\r\
+    R\x07counter\"\x84\x01\n\x15WardIngestAttestation\x12\x18\n\x07counter\
+    \x18\x01\x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\
+    \x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\
+    \x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimestamp\"4\n\x18WardIngestAtt\
+    estationAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\"#\n\rWa\
+    rdReconcile\x12\x12\n\x04root\x18\x01\x20\x01(\x0cR\x04root\"G\n\x10Ward\
+    ReconcileAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\
+    \n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\xa7\x01\n\x0cWardRollb\
+    ack\x12\x17\n\x07to_root\x18\x01\x20\x01(\x0cR\x06toRoot\x12\x1f\n\x0bau\
+    th_commit\x18\x02\x20\x01(\x0cR\nauthCommit\x12!\n\x0cfrom_counter\x18\
+    \x03\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\x04\x20\x01(\
+    \x0cR\x08fromRoot\x12\x1d\n\nto_counter\x18\x05\x20\x01(\rR\ttoCounter\"\
+    \x82\x01\n\x0fWardRollbackAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\
+    \x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\
+    \x1f\n\x0bauth_commit\x18\x03\x20\x01(\x0cR\nauthCommit\x12\x19\n\x08aut\
+    h_sig\x18\x04\x20\x01(\x0cR\x07authSig\"\x81\x01\n\x12WardRecoverCounter\
     \x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x10\n\x03mac\
     \x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x01(\
     \x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimesta\
-    mp\"4\n\x18WardIngestAttestationAck\x12\x18\n\x07counter\x18\x01\x20\x01\
-    (\rR\x07counter\"#\n\rWardReconcile\x12\x12\n\x04root\x18\x01\x20\x01(\
-    \x0cR\x04root\"G\n\x10WardReconcileAck\x12\x18\n\x07counter\x18\x01\x20\
-    \x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRo\
-    ot\"\xa7\x01\n\x0cWardRollback\x12\x17\n\x07to_root\x18\x01\x20\x01(\x0c\
-    R\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x02\x20\x01(\x0cR\nauthCommit\
-    \x12!\n\x0cfrom_counter\x18\x03\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfr\
-    om_root\x18\x04\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counter\x18\x05\
-    \x20\x01(\rR\ttoCounter\"\x82\x01\n\x0fWardRollbackAck\x12\x18\n\x07coun\
-    ter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01\
-    (\x0cR\x07newRoot\x12\x1f\n\x0bauth_commit\x18\x03\x20\x01(\x0cR\nauthCo\
-    mmit\x12\x19\n\x08auth_sig\x18\x04\x20\x01(\x0cR\x07authSig\"\x81\x01\n\
-    \x12WardRecoverCounter\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07count\
-    er\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\
-    \x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\
-    \x01(\x04R\ttimestamp\"1\n\x15WardRecoverCounterAck\x12\x18\n\x07counter\
-    \x18\x01\x20\x01(\rR\x07counter\"K\n\x12WardPinCachedEntry\x12\x15\n\x06\
-    app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\
-    \x01(\x0cR\nidentifier\"M\n\x14WardEraseCachedEntry\x12\x15\n\x06app_id\
-    \x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0c\
-    R\nidentifier\"\x10\n\x0eWardFlushQueueB8\n#com.satoshilabs.trezor.lib.p\
-    rotobufB\x11TrezorMessageWard\
+    mp\"1\n\x15WardRecoverCounterAck\x12\x18\n\x07counter\x18\x01\x20\x01(\r\
+    R\x07counter\"K\n\x12WardPinCachedEntry\x12\x15\n\x06app_id\x18\x01\x20\
+    \x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifie\
+    r\"M\n\x14WardEraseCachedEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\
+    \x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\"\x10\
+    \n\x0eWardFlushQueueB8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorM\
+    essageWard\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

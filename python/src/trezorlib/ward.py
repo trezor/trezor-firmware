@@ -275,6 +275,9 @@ def queue_set_entry(
     app_id: str,
     identifier: bytes,
     value: Optional[bytes],
+    mac: Optional[bytes] = None,
+    counter: Optional[int] = None,
+    key_type: Optional[str] = None,
 ) -> messages.WardQueueSetAck:
     """Ask the device to HOLD a write until a synced host can publish it.
 
@@ -284,10 +287,51 @@ def queue_set_entry(
 
     `value` is typed Optional only so callers can exercise the device-side validation -- an
     absent value is rejected. Pass b"" for a genuinely empty value.
+
+    WITH `mac` THIS IS A RESTORE of a change exported by `queue_get_entry`: every field must be
+    exactly what came out, `counter` and `key_type` included, because all of them are inside the
+    MAC. Use `restore_queued_entry` rather than mapping the fields by hand.
     """
     return session.call(
-        messages.WardQueueSetEntry(app_id=app_id, identifier=identifier, value=value),
+        messages.WardQueueSetEntry(
+            app_id=app_id,
+            identifier=identifier,
+            value=value,
+            mac=mac,
+            counter=counter,
+            key_type=key_type,
+        ),
         expect=messages.WardQueueSetAck,
+    )
+
+
+def restore_queued_entry(
+    session: "Session",
+    backup: messages.WardQueueGetAck,
+) -> messages.WardQueueSetAck:
+    """Hand a backed-up queued change straight back to the device.
+
+    Takes the ack `queue_get_entry` returned and re-offers it unchanged, which is the only way it
+    can be offered: every field is MAC'd, so a caller that rebuilds the request field by field and
+    drops or defaults one gets a verification failure rather than a subtly different change. That
+    is why this exists instead of a documented mapping.
+
+    Only a PENDING record has a MAC; a pinned copy has nothing to re-queue and is rejected here
+    rather than at the device, since the request would be unauthenticated by construction.
+    """
+    if backup.mac is None:
+        raise ValueError(
+            "this backup carries no intent MAC; only a queued (pending) change can be restored"
+        )
+
+    return queue_set_entry(
+        session,
+        backup.app_id or "",
+        backup.identifier or b"",
+        backup.value or b"",
+        mac=backup.mac,
+        counter=backup.counter or 0,
+        key_type=backup.key_type,
     )
 
 
@@ -317,12 +361,16 @@ def queue_get_entry(
     app_id: str,
     identifier: bytes,
 ) -> messages.WardQueueGetAck:
-    """Ask the device to show what IT holds for (app_id, identifier).
+    """EXPORT what the device holds for (app_id, identifier), for backup.
 
     Reads the device's own store -- a queued change, or a pinned copy -- and needs no host round
-    trip. The value goes to the SCREEN and is not returned: the ack reports which case it was
-    (`missing`, `pending`, `unreadable`), the counter the record was authenticated at, and
-    whether that is behind the counter the device now trusts.
+    trip. The ack reports which case it was (`missing`, `pending`, `unreadable`), the record itself
+    in the clear, and for a pending record a MAC over all of it. Keep the whole ack: it is the
+    backup, and `restore_queued_entry` hands it back.
+
+    A queued change exists in ONE device's flash and nowhere else, which is what makes this worth a
+    round trip. A pinned copy comes back too, without a MAC -- WARD already holds that value, so
+    there is no intent to restore.
     """
     return session.call(
         messages.WardQueueGetEntry(app_id=app_id, identifier=identifier),
