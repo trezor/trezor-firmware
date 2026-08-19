@@ -153,7 +153,6 @@ jobs:
           retention-days: 7
 
   core_emu_arm:
-    if: github.event_name == 'schedule'
     name: Build emu ARM (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}, ${{ matrix.asan }}${{matrix.n4w1 && ', n4w1' || '' }})
     runs-on: ubuntu-latest-arm64
     needs: param
