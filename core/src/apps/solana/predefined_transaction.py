@@ -275,6 +275,109 @@ async def try_confirm_predefined_transaction(
     )
 
 
+def _is_predefined_stake(
+    instructions: list[Instruction],
+    signer_public_key: bytes,
+) -> bool:
+    """
+    Create account with seed, initialize and delegate instructions,
+    all operating on the same signer-controlled stake account,
+    with no lockup set.
+    """
+    from .transaction.instructions import (
+        StakeProgramDelegateStakeInstruction,
+        StakeProgramInitializeInstruction,
+        SystemProgramCreateAccountWithSeedInstruction,
+    )
+
+    if len(instructions) != 3:
+        return False
+    if not (
+        SystemProgramCreateAccountWithSeedInstruction.is_type_of(instructions[0])
+        and StakeProgramInitializeInstruction.is_type_of(instructions[1])
+        and StakeProgramDelegateStakeInstruction.is_type_of(instructions[2])
+    ):
+        return False
+
+    create, init, delegate = instructions
+
+    if base58.encode(create.owner) != _STAKE_PROGRAM_ID:
+        return False
+
+    if signer_public_key != create.funding_account[0]:
+        return False
+    if signer_public_key != create.base:
+        return False
+    if signer_public_key != init.staker:
+        return False
+    if signer_public_key != delegate.stake_authority[0]:
+        return False
+
+    if base58.encode(init.custodian) != _SYSTEM_PROGRAM_ID:
+        return False
+    if init.unix_timestamp != 0 or init.epoch != 0:
+        return False
+
+    stake_account = create.created_account[0]
+    if stake_account != init.uninitialized_stake_account[0]:
+        return False
+    if stake_account != delegate.initialized_stake_account[0]:
+        return False
+
+    if is_address_reference(delegate.vote_account) or is_address_reference(
+        delegate.initialized_stake_account
+    ):
+        return False
+
+    return True
+
+
+def _is_predefined_unstake(
+    instructions: list[Instruction],
+    signer_public_key: bytes,
+) -> bool:
+    """One or more deactivate instructions, all authorized by the signer."""
+    from .transaction.instructions import StakeProgramDeactivateInstruction
+
+    if not instructions or not all(
+        map(StakeProgramDeactivateInstruction.is_type_of, instructions)
+    ):
+        return False
+
+    for deactivate in instructions:
+        if signer_public_key != deactivate.stake_authority[0]:
+            return False
+
+    return True
+
+
+def _is_predefined_claim(
+    instructions: list[Instruction],
+    signer_public_key: bytes,
+) -> bool:
+    """
+    One or more withdraw instructions, all authorized by the signer
+    and sending to the same directly-addressed recipient.
+    """
+    from .transaction.instructions import StakeProgramWithdrawInstruction
+
+    if not instructions or not all(
+        map(StakeProgramWithdrawInstruction.is_type_of, instructions)
+    ):
+        return False
+
+    recipient = instructions[0].recipient_account[0]
+    for withdraw in instructions:
+        if signer_public_key != withdraw.withdrawal_authority[0]:
+            return False
+        if is_address_reference(withdraw.recipient_account):
+            return False
+        if recipient != withdraw.recipient_account[0]:
+            return False
+
+    return True
+
+
 async def try_confirm_staking_transaction(
     transaction: Transaction,
     fee: Fee,
@@ -283,61 +386,12 @@ async def try_confirm_staking_transaction(
     blockhash: bytes,
     chunkify: bool,
 ) -> bool:
-    from .transaction.instructions import (
-        StakeProgramDeactivateInstruction,
-        StakeProgramDelegateStakeInstruction,
-        StakeProgramInitializeInstruction,
-        StakeProgramWithdrawInstruction,
-        SystemProgramCreateAccountWithSeedInstruction,
-    )
-
     instructions = transaction.get_visible_instructions()
-    if not instructions:
-        return False
 
-    def _match_instructions(*expected_types: type[Instruction]) -> bool:
-        if len(instructions) != len(expected_types):
-            return False
-        return all(
-            expected_type.is_type_of(instruction)
-            for instruction, expected_type in zip(instructions, expected_types)
-        )
-
-    if _match_instructions(
-        SystemProgramCreateAccountWithSeedInstruction,
-        StakeProgramInitializeInstruction,
-        StakeProgramDelegateStakeInstruction,
-    ):
+    if _is_predefined_stake(instructions, signer_public_key):
         from .layout import confirm_stake_transaction, confirm_stake_withdrawer
 
         create, init, delegate = instructions
-        if base58.encode(create.owner) != _STAKE_PROGRAM_ID:
-            return False
-
-        if signer_public_key != create.funding_account[0]:
-            return False
-        if signer_public_key != create.base:
-            return False
-        if signer_public_key != init.staker:
-            return False
-        if signer_public_key != delegate.stake_authority[0]:
-            return False
-
-        if base58.encode(init.custodian) != _SYSTEM_PROGRAM_ID:
-            return False
-        if init.unix_timestamp != 0 or init.epoch != 0:
-            return False
-
-        stake_account = create.created_account[0]
-        if stake_account != init.uninitialized_stake_account[0]:
-            return False
-        if stake_account != delegate.initialized_stake_account[0]:
-            return False
-
-        if is_address_reference(delegate.vote_account) or is_address_reference(
-            delegate.initialized_stake_account
-        ):
-            return False
 
         if signer_public_key != init.withdrawer:
             await confirm_stake_withdrawer(init.withdrawer, chunkify)
@@ -352,31 +406,21 @@ async def try_confirm_staking_transaction(
         )
         return True
 
-    if all(map(StakeProgramDeactivateInstruction.is_type_of, instructions)):
+    if _is_predefined_unstake(instructions, signer_public_key):
         from .layout import confirm_unstake_transaction
-
-        for deactivate in instructions:
-            if signer_public_key != deactivate.stake_authority[0]:
-                return False
 
         await confirm_unstake_transaction(
             fee=fee, signer_path=signer_path, blockhash=blockhash, chunkify=chunkify
         )
         return True
 
-    if all(map(StakeProgramWithdrawInstruction.is_type_of, instructions)):
+    if _is_predefined_claim(instructions, signer_public_key):
         from .layout import confirm_claim_recipient, confirm_claim_transaction
 
-        total_amount = 0
+        # in _is_predefined_claim we made sure that the recipient is the same
+        # for all the withdraw instructions
         recipient = instructions[0].recipient_account[0]
-        for withdraw in instructions:
-            if signer_public_key != withdraw.withdrawal_authority[0]:
-                return False
-            if is_address_reference(withdraw.recipient_account):
-                return False
-            if recipient != withdraw.recipient_account[0]:
-                return False
-            total_amount += withdraw.lamports
+        total_amount = sum(withdraw.lamports for withdraw in instructions)
 
         if recipient != signer_public_key:
             await confirm_claim_recipient(recipient, chunkify)
