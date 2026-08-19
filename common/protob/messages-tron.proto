@@ -98,6 +98,7 @@ message TronTriggerSmartContract {
     required bytes owner_address = 1;     // Sender account, signs transaction
     required bytes contract_address = 2;  // Target smart contract address
     required bytes data = 4;              // ABI-encoded function call data
+    optional uint64 call_value = 5;        // native TRX to be transferred
 }
 
 /**

@@ -7765,6 +7765,7 @@ if TYPE_CHECKING:
         owner_address: "AnyBytes"
         contract_address: "AnyBytes"
         data: "AnyBytes"
+        call_value: "int | None"
 
         def __init__(
             self,
@@ -7772,6 +7773,7 @@ if TYPE_CHECKING:
             owner_address: "AnyBytes",
             contract_address: "AnyBytes",
             data: "AnyBytes",
+            call_value: "int | None" = None,
         ) -> None:
             pass
 
