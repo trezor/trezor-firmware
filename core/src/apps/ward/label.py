@@ -44,7 +44,8 @@ workflow over it has misread what it asked for.
 NOTE_UNVERIFIED = "Label not proven current."
 NOTE_ABSENT = "No label for this address."
 NOTE_OFFLINE = "Offline label; not checked with the host."
-NOTE_STALE = "Offline label; it has changed since."
+# NOTE_STALE went with the record's counter: nothing stores the counter a copy was authenticated at,
+# so nothing can say it has changed SINCE. NOTE_OFFLINE is the honest floor for a local copy.
 NOTE_PENDING = "Label not published yet."
 NOTE_NO_COPY = "No label kept on this device."
 NOTE_CORRUPT = "A label is stored here but cannot be read."
@@ -110,7 +111,7 @@ async def resolve_label(
             return None, NOTE_ABSENT
         return value, NOTE_UNVERIFIED
 
-    status, entry = await offline_store.get(entry_key)
+    status, entry = await offline_store.get(key_type, app_id, identifier)
 
     if status == offline_store.CORRUPT:
         # NOT reported as "no label". Something is stored at this path that this build
@@ -124,4 +125,6 @@ async def resolve_label(
     if entry.pending:
         return entry.value, NOTE_PENDING
 
-    return entry.value, NOTE_STALE if entry.stale else NOTE_OFFLINE
+    # No staleness to report: the record does not store the counter it was authenticated at, so
+    # "a local copy" is all this can honestly say.
+    return entry.value, NOTE_OFFLINE

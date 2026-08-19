@@ -25,22 +25,21 @@ async def queue_delete_entry(msg: WardQueueDeleteEntry) -> WardQueueDeleteAck:
     screen is shown for it either -- a hold-to-confirm that always means "nothing happened" is
     one that gets approved without being read, which costs real safety where holding matters.
 
-    THE DEVICE DERIVES THE PATH from (app_id, identifier), as every other request does, so a
-    host cannot name an arbitrary slot to discard.
+    THE DEVICE NAMES THE RECORD ITSELF, from (app_id, identifier) plus its own key_type, so a host
+    cannot name an arbitrary slot to discard.
     """
     from trezor.messages import WardQueueDeleteAck
     from trezor.ui.layouts import confirm_properties
 
     from . import offline_store
     from .common import display_bytes, require_key
-    from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
+    from .keys import ENTRY_TYPE_ADDRESS
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
     key_type = ENTRY_TYPE_ADDRESS
-    entry_key = await entry_key_for(app_id, identifier, key_type)
 
-    status, entry = await offline_store.get(entry_key)
+    status, entry = await offline_store.get(key_type, app_id, identifier)
 
     # A record this build cannot read is reported as MISSING rather than discarded. It may be a
     # queued change written by a newer firmware, and destroying it to tidy up would lose a change
@@ -63,6 +62,6 @@ async def queue_delete_entry(msg: WardQueueDeleteEntry) -> WardQueueDeleteAck:
 
     # After the confirmation returns, so a rejected screen leaves the record byte-for-byte as it
     # was -- ActionCancelled propagates out before any write.
-    await offline_store.erase(entry_key)
+    await offline_store.erase(key_type, app_id, identifier)
 
     return WardQueueDeleteAck()
