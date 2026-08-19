@@ -14,7 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from collections.abc import Iterable, Sequence
+from __future__ import annotations
+
+import os
+import typing as t
 from functools import reduce
 
 from . import _ed25519
@@ -26,7 +29,7 @@ Ed25519PublicPoint = bytes
 Ed25519Signature = bytes
 
 
-def combine_keys(pks: Iterable[Ed25519PublicPoint]) -> Ed25519PublicPoint:
+def combine_keys(pks: t.Iterable[Ed25519PublicPoint]) -> Ed25519PublicPoint:
     """Combine a list of Ed25519 points into a "global" CoSi key."""
     P = [_ed25519.decodepoint(pk) for pk in pks]
     combine = reduce(_ed25519.edwards_add, P)
@@ -34,7 +37,7 @@ def combine_keys(pks: Iterable[Ed25519PublicPoint]) -> Ed25519PublicPoint:
 
 
 def combine_sig(
-    global_R: Ed25519PublicPoint, sigs: Iterable[Ed25519Signature]
+    global_R: Ed25519PublicPoint, sigs: t.Iterable[Ed25519Signature]
 ) -> Ed25519Signature:
     """Combine a list of signatures into a single CoSi signature."""
     S = [_ed25519.decodeint(si) for si in sigs]
@@ -43,11 +46,8 @@ def combine_sig(
     return Ed25519Signature(sig)
 
 
-def get_nonce(
-    sk: Ed25519PrivateKey, data: bytes, ctr: int = 0
-) -> tuple[int, Ed25519PublicPoint]:
-    """Calculate CoSi nonces for given data.
-    These differ from Ed25519 deterministic nonces in that there is a counter appended at end.
+def get_nonce() -> tuple[int, Ed25519PublicPoint]:
+    """Generate a random CoSi nonce.
 
     Returns both the private point `r` and the partial signature `R`.
     `r` is returned for performance reasons: :func:`sign_with_privkey`
@@ -55,6 +55,32 @@ def get_nonce(
 
     `R` should be combined with other partial signatures through :func:`combine_keys`
     to obtain a "global commitment".
+    """
+    # r = random512 mod l
+    # R = rB
+    # Same construction as ed25519_cosi_commit() in crypto/ed25519-donna/ed25519.c
+    r = _ed25519.decodeint(os.urandom(64)) % _ed25519.l
+    R = _ed25519.scalarmult(_ed25519.B, r)
+    return r, Ed25519PublicPoint(_ed25519.encodepoint(R))
+
+
+def _get_deterministic_nonce(
+    sk: Ed25519PrivateKey, data: bytes, ctr: int = 0
+) -> tuple[int, Ed25519PublicPoint]:
+    """Calculate a deterministic CoSi nonce for given data.
+    This differs from Ed25519 deterministic nonces in that there is a counter appended
+    at end.
+
+    DANGER: only use this with private keys that are public knowledge, i.e. the
+    development keys. The nonce depends solely on (sk, data, ctr), but the CoSi
+    challenge depends on the global commitment, which is not known at the time the
+    nonce is generated and which is chosen by the coordinator. If the same key ever
+    signs the same data in two sessions whose global commitments differ, the two
+    partial signatures reveal the private scalar.
+
+    Use :func:`get_nonce` for anything else. See also :func:`sign_with_privkeys`.
+
+    Returns the same pair as :func:`get_nonce`.
     """
     # r = hash(hash(sk)[b .. 2b] + M + ctr)
     # R = rB
@@ -83,7 +109,7 @@ def verify(
     signature: Ed25519Signature,
     digest: bytes,
     sigs_required: int,
-    keys: Sequence[Ed25519PublicPoint],
+    keys: t.Sequence[Ed25519PublicPoint],
     mask: int,
 ) -> None:
     """Verify a CoSi multi-signature. Raise exception if the signature is invalid.
@@ -131,10 +157,24 @@ def sign_with_privkey(
     return Ed25519Signature(_ed25519.encodeint(S))
 
 
-def sign_with_privkeys(digest: bytes, privkeys: Sequence[bytes]) -> bytes:
-    """Locally produce a CoSi signature from a list of private keys."""
+def sign_with_privkeys(
+    digest: bytes, privkeys: t.Sequence[bytes], *, deterministic: bool = False
+) -> bytes:
+    """Locally produce a CoSi signature from a list of private keys.
+
+    Nonces are random by default. With `deterministic=True` the resulting signature
+    is a pure function of `(digest, privkeys)`, which is required where the signature
+    bytes are committed to a repository or compared across builds. It is only
+    safe for keys that are public knowledge, such as the development keys.
+    See :func:`_get_deterministic_nonce`.
+    """
     pubkeys = [pubkey_from_privkey(sk) for sk in privkeys]
-    nonces = [get_nonce(sk, digest, i) for i, sk in enumerate(privkeys)]
+    if deterministic:
+        nonces = [
+            _get_deterministic_nonce(sk, digest, i) for i, sk in enumerate(privkeys)
+        ]
+    else:
+        nonces = [get_nonce() for _ in privkeys]
 
     global_pk = combine_keys(pubkeys)
     global_R = combine_keys(R for _, R in nonces)

@@ -329,7 +329,7 @@ def gen(signed: bool, version_str: str | None, check: bool) -> None:
             "No matching signature found in signatures.json. Run `cli.py sign` first."
         )
 
-    signature = cosi.sign_with_privkeys(root, PRIVATE_KEYS_DEV)
+    signature = cosi.sign_with_privkeys(root, PRIVATE_KEYS_DEV, deterministic=True)
     sigmask = 0b111
     build_all_blobs(all_blobs, tree, sigmask, signature)
 
