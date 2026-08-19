@@ -2034,6 +2034,7 @@ if not utils.BITCOIN_ONLY:
         recipient_addr: str,
         amount_str: str,
         maximum_fee: str,
+        native_amount_str: str | None = None,
         chunkify: bool = False,
     ) -> None:
 
@@ -2069,12 +2070,13 @@ if not utils.BITCOIN_ONLY:
         )
 
         await _confirm_summary(
-            None,
-            None,
-            maximum_fee,
-            TR.words__fee_limit,
-            title,
-            None,
+            amount = native_amount_str,
+            amount_label = TR.words__amount if native_amount_str else None,
+            fee = maximum_fee,
+            fee_label = TR.words__fee_limit,
+            title = title,
+            br_name = br_name,
+            br_code = ButtonRequestType.SignTx
         )
 
     # TODO: #6359 Redo as ETH confirm_tx

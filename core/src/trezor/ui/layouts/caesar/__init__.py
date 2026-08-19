@@ -2072,6 +2072,7 @@ if not utils.BITCOIN_ONLY:
         recipient_addr: str,
         amount_str: str,
         maximum_fee: str,
+        native_amount_str: str | None = None,
         chunkify: bool = False,
     ) -> None:
         from ..properties import with_colon
@@ -2108,8 +2109,8 @@ if not utils.BITCOIN_ONLY:
         )
 
         with trezorui_api.confirm_summary(
-            amount=None,
-            amount_label=None,
+            amount=native_amount_str,
+            amount_label=with_colon(TR.words__amount) if native_amount_str else None,
             fee=maximum_fee,
             fee_label=with_colon(TR.words__fee_limit),
             title=title,
