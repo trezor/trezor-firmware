@@ -81,7 +81,9 @@ def sign_payload(
         merkle_proof.append(digest)
 
     merkle_proof = len(merkle_proof).to_bytes(1, "little") + b"".join(merkle_proof)
-    signature = cosi.sign_with_privkeys(digest, PRIVATE_KEYS_DEV[:threshold])
+    signature = cosi.sign_with_privkeys(
+        digest, PRIVATE_KEYS_DEV[:threshold], deterministic=True
+    )
     sigmask = 0
     for i in range(threshold):
         sigmask |= 1 << i
