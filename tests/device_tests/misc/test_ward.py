@@ -2530,12 +2530,11 @@ def test_ward_offline_write_is_queued_not_applied(session: Session):
         )
         ack = ward.queue_set_entry(session, _APP, b"addr1", b"queued_value")
 
-    # entry_key and nothing else: the ack TYPE is what says the change was only held, so the
-    # fields that would describe a transition do not exist on it to be misread.
-    assert len(ack.entry_key) == 32
-    assert not hasattr(ack, "counter")
-    assert not hasattr(ack, "mac")
-    assert not hasattr(ack, "queued")
+    # An EMPTY ack: the TYPE is what says the change was only held, so there is no field on it to
+    # misread -- not a leaf, not a counter, and not even the path, which nothing needs until the
+    # change reaches the tree.
+    assert not ack.FIELDS
+    assert isinstance(ack, m.WardQueueSetAck)
     assert "queue" in rec.title
     assert "not applied yet" in rec.text.lower()
 
@@ -2715,7 +2714,7 @@ def test_ward_queue_delete_discards_a_queued_change(session: Session):
     """The queue delete removes a change that was never published -- and nothing else."""
     with session.test_ctx as ctx:
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
-        queued = ward.queue_set_entry(session, _APP, b"addr1", b"never_published")
+        ward.queue_set_entry(session, _APP, b"addr1", b"never_published")
 
     rec = _Recorded()
     with session.test_ctx as ctx:
@@ -2727,7 +2726,6 @@ def test_ward_queue_delete_discards_a_queued_change(session: Session):
         )
         ack = ward.queue_delete_entry(session, _APP, b"addr1")
 
-    assert ack.entry_key == queued.entry_key
     assert ack.missing is None
     assert "discard queued change" in rec.title
     assert "never_published" in rec.squashed
@@ -2749,7 +2747,6 @@ def test_ward_queue_delete_of_nothing_is_reported_not_raised(session: Session):
         ack = ward.queue_delete_entry(session, _APP, b"never_queued")
 
     assert ack.missing is True
-    assert len(ack.entry_key) == 32
 
 
 @pytest.mark.models("core")
@@ -2812,9 +2809,8 @@ def test_ward_a_queued_change_round_trips_through_a_backup(session: Session):
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(fresh, on_page=rec.on_page).get()
         )
-        ack = ward.restore_queued_entry(fresh, backup)
+        ward.restore_queued_entry(fresh, backup)
 
-    assert ack.entry_key == backup.entry_key
     assert "restore queued change" in rec.title
     assert "backed_up" in rec.squashed
 
@@ -2859,7 +2855,6 @@ def test_ward_a_restored_change_still_publishes(session: Session):
         pytest.param(lambda b: {"value": b.value + b"!"}, id="value"),
         pytest.param(lambda b: {"identifier": b"addr2"}, id="identifier"),
         pytest.param(lambda b: {"app_id": "OTHER"}, id="app_id"),
-        pytest.param(lambda b: {"counter": (b.counter or 0) + 1}, id="counter"),
         pytest.param(lambda b: {"mac": bytes(32)}, id="mac"),
     ],
 )
@@ -2867,7 +2862,9 @@ def test_ward_a_tampered_backup_is_refused_before_any_screen(session: Session, c
     """EVERY field the device would write back is inside the MAC.
 
     A blob travelling in the clear is a blob a host can edit, so a MAC over the path alone would
-    authenticate a path while leaving the value free -- protection that looks like protection. The
+    authenticate a path while leaving the value free -- protection that looks like protection. Note
+    the path and the key space are not editable at all: the device derives both and MACs what it
+    derived, so an app_id or identifier edit changes the derived path and fails on that. The
     refusal happens BEFORE the confirmation, which `set_expected_responses` asserts by expecting no
     ButtonRequest: a screen for material that failed to authenticate teaches the user that the
     screen means nothing.
@@ -2881,9 +2878,7 @@ def test_ward_a_tampered_backup_is_refused_before_any_screen(session: Session, c
         "app_id": backup.app_id,
         "identifier": backup.identifier,
         "value": backup.value,
-        "counter": backup.counter,
         "mac": backup.mac,
-        "key_type": backup.key_type,
     }
     edited.update(corrupt(backup))
 
@@ -2897,8 +2892,6 @@ def test_ward_a_tampered_backup_is_refused_before_any_screen(session: Session, c
                 edited["identifier"],
                 edited["value"],
                 mac=edited["mac"],
-                counter=edited["counter"],
-                key_type=edited["key_type"],
             )
 
 

@@ -19,15 +19,21 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
     change shown in the wording of a stored value would make the user's earlier confirmation
     retroactively untrue.
 
-    UNREADABLE IS NOT MISSING. A record this build cannot decode -- a newer format, damaged
-    framing -- is named as such, on screen and in the ack. Reporting "nothing here" would invite
-    writing over it while telling the user it was never there.
+    UNREADABLE IS NOT MISSING, AND NOT A FLAG. A record this build cannot decode -- a newer format,
+    damaged framing -- FAILS the request. Reporting "nothing kept for this path" would invite writing
+    over it while telling the caller it was never there, which is the one collapse
+    `offline_store` forbids outright; and there is nothing to show, so there is no screen either.
+    `WardEraseCachedEntry` remains the deliberate, user-confirmed way such a record goes.
 
     BACKUP IS WHY THIS EXISTS. A queued change lives in this device's flash and nowhere else, so
     losing the device loses a change the user confirmed. The ack therefore carries the RECORD --
-    key_type, app_id, identifier, value, counter -- and, for a pending record, a MAC over all of
-    it under K_auth. `queue_set_entry` accepts those bytes back only if the MAC verifies, so a
-    backup is something a host can hold without being able to invent one.
+    key_type, app_id, identifier, value -- and, for a pending record, a MAC over all of it under
+    K_auth. `queue_set_entry` accepts those bytes back only if the MAC verifies, so a backup is
+    something a host can hold without being able to invent one.
+
+    THE RECORD'S COUNTER AND ITS STALENESS STAY HERE. They are this device's bookkeeping, and the
+    SCREEN is where the user is warned that what they are looking at may be behind; a host has
+    nothing to do with either, and a restored change comes back at "no counter assigned" regardless.
 
     THE BLOB IS PLAINTEXT, and that is a deliberate exception rather than an oversight. The host's
     leaf store contains no identifiers -- that is what the keyed path buys -- but a queue backup
@@ -44,6 +50,7 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
     """
     from trezor.messages import WardQueueGetAck
     from trezor.ui.layouts import confirm_properties
+    from trezor.wire import DataError
 
     from . import offline_store
     from .cas import OP_SET, intent_mac
@@ -63,15 +70,12 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
     ]
 
     if status == offline_store.CORRUPT or (status == offline_store.VALID and entry is None):
-        title = "Cannot be read"
-        props.append(
-            ("Result", "Something is stored here that this firmware cannot read.", False)
-        )
-        ack = WardQueueGetAck(entry_key=entry_key, unreadable=True)
-    elif status == offline_store.MISS or entry is None:
+        raise DataError("WARD: the offline copy cannot be read")
+
+    if status == offline_store.MISS or entry is None:
         title = "Not kept offline"
         props.append(("Result", "No offline copy. Connect to read this entry.", False))
-        ack = WardQueueGetAck(entry_key=entry_key, missing=True)
+        ack = WardQueueGetAck(missing=True)
     elif entry.pending:
         # A change the user confirmed that no host has taken yet. It is what this device believes,
         # not what WARD holds -- and the one kind of record worth backing up, since it exists
@@ -86,10 +90,7 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
             )
         )
         ack = WardQueueGetAck(
-            entry_key=entry_key,
             pending=True,
-            stale=entry.stale,
-            counter=entry.counter,
             key_type=entry.key_type,
             app_id=entry.app_id,
             identifier=entry.identifier,
@@ -99,7 +100,6 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
                 await derive_ward_id(),
                 entry_key,
                 OP_SET,
-                entry.counter,
                 entry.key_type,
                 entry.app_id,
                 entry.identifier,
@@ -124,9 +124,6 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
         # No MAC: this is a copy of something WARD already holds, not a change waiting to be
         # published, so there is no intent for a restore to re-queue.
         ack = WardQueueGetAck(
-            entry_key=entry_key,
-            stale=entry.stale,
-            counter=entry.counter,
             key_type=entry.key_type,
             app_id=entry.app_id,
             identifier=entry.identifier,

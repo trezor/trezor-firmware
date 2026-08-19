@@ -208,6 +208,11 @@ def verify_chain_step(
 # `delete_entry` records as decided and unbuilt: "a queued intent additionally carries a MAC over
 # (entry_key, op, counter) under K_auth".
 #
+# THE COUNTER IS NOT IN HERE. A restore sends only the fields the host was given, and the record's
+# counter is not one of them -- a restored change comes back at "no counter assigned", because after
+# a restore nobody knows whether an earlier publication landed. That is the honest state, and it
+# costs the replay bound `delete_entry` wanted the counter for: adding it back is a WIRE change.
+#
 # Same key as a transition, because the question is the same one: was this produced by a device of
 # THIS wallet. A different key would buy nothing -- the verifier set is identical -- and the tag
 # below is what keeps the two preimages from ever colliding.
@@ -224,7 +229,6 @@ def intent_preimage(
     ward_id: bytes,
     entry_key: bytes,
     op: int,
-    counter: int,
     key_type: str,
     app_id: str,
     identifier: bytes,
@@ -233,13 +237,17 @@ def intent_preimage(
     """The bytes a queued intent is authenticated over.
 
     THE VALUE IS BOUND, not just the path. The blob travels in the clear, so a MAC over
-    (entry_key, op, counter) alone would authenticate a PATH while leaving the host free to
-    substitute any value at it -- protection that looks like protection and is not. Everything the
-    device would write back on a restore is therefore in here.
+    (entry_key, op) alone would authenticate a PATH while leaving the host free to substitute any
+    value at it -- protection that looks like protection and is not. Everything the device would
+    write back on a restore is therefore in here.
 
     Length-prefixed, not concatenated, for the reason `transition_preimage` and `leaf.leaf_hash_of`
     already give: adjacent variable-length fields leave their boundary ambiguous, so
     (app_id="ab", identifier="c") and (app_id="a", identifier="bc") would otherwise MAC alike.
+
+    `entry_key` and `key_type` are covered even though a restore never sends them: the device
+    DERIVES both, exactly as every other request does, and MACs what it derived. That is what stops
+    a valid blob being aimed at a path of the host's choosing.
 
     NOT `offline_store.encode_record`. That is the canonical form of a record in FLASH -- it is
     prefixed with the device-local slot key and its sameness is what makes a no-op refresh
@@ -262,7 +270,6 @@ def intent_preimage(
         + ward_id
         + entry_key
         + bytes([op])
-        + counter.to_bytes(4, "big")
         + bytes([len(kt)])
         + kt
         + bytes([len(ai)])
@@ -279,7 +286,6 @@ def intent_mac(
     ward_id: bytes,
     entry_key: bytes,
     op: int,
-    counter: int,
     key_type: str,
     app_id: str,
     identifier: bytes,
@@ -291,9 +297,7 @@ def intent_mac(
     return hmac(
         hmac.SHA256,
         k_auth,
-        intent_preimage(
-            ward_id, entry_key, op, counter, key_type, app_id, identifier, value
-        ),
+        intent_preimage(ward_id, entry_key, op, key_type, app_id, identifier, value),
     ).digest()
 
 
@@ -302,7 +306,6 @@ def verify_intent_mac(
     ward_id: bytes,
     entry_key: bytes,
     op: int,
-    counter: int,
     key_type: str,
     app_id: str,
     identifier: bytes,
@@ -316,6 +319,6 @@ def verify_intent_mac(
     replay note in `queue_set_entry`.
     """
     expected = intent_mac(
-        k_auth, ward_id, entry_key, op, counter, key_type, app_id, identifier, value
+        k_auth, ward_id, entry_key, op, key_type, app_id, identifier, value
     )
     return expected == mac

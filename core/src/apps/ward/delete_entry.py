@@ -52,6 +52,12 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
       has nothing to be compared against. Only a counter inside an authenticated intent
       bounds it.
 
+      PARTLY BUILT NOW. `cas.intent_mac` authenticates a queued intent, and `queue_set_entry`
+      verifies one on the way back in -- so a host can hold a queue backup it cannot forge.
+      The COUNTER is not in that preimage, though, so the replay above is still open: a
+      restore carries no counter, and adding one back is a wire change. The tombstone half
+      remains unbuilt, and queued deletes remain impossible.
+
     Both are the same lesson as the sibling-kind fix that this file used to carry: anything
     inferred from an absent or empty field is host-controlled. A cleartext op discriminator
     would be too, which is why the op goes inside the MAC.
