@@ -1,6 +1,25 @@
 use crypto::ed25519;
 
-pub const THRESHOLD: u8 = 2;
+// Definition format versions, encoded on the wire as ASCII digit bytes.
+pub enum DefsVersion {
+    V1,
+}
+
+impl DefsVersion {
+    // CoSi signature threshold for this version.
+    pub const fn threshold(self) -> u8 {
+        match self {
+            DefsVersion::V1 => 2,
+        }
+    }
+
+    pub const fn from_byte(byte: u8) -> Option<Self> {
+        match byte {
+            b'1' => Some(DefsVersion::V1),
+            _ => None,
+        }
+    }
+}
 
 #[cfg(feature = "dev_keys")]
 pub const PUBLIC_KEYS_DEVEL: [ed25519::PublicKey; 3] = [
