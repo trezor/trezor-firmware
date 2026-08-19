@@ -100,8 +100,10 @@ uint16_t backup_ram_search(uint16_t min_key);
  * @param key Key to identify the data
  * @param data Pointer to the data to be stored
  * @param type Type of the data being stored
- * @param data_size Size of the data in bytes. If the key does not exist, this
- * value will be set to 0. If data_size == 0, the item will be removed.
+ * @param data_size Size of the data in bytes
+ *
+ * `data` must not be NULL and `data_size` must not be zero. Use
+ * `backup_ram_erase_item()` to remove an item.
  *
  * @return true if the operation was successful, false otherwise.
  */
