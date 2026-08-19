@@ -218,17 +218,26 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> None:
 # collision that reads as ordinary operation.
 _STORE_FIRST_KEY = const(0x40)
 
-# 20 records, one shared pool across every wallet. Plaintext keeps a typical record near 110 bytes,
-# so the store is a couple of kilobytes in practice -- it shares one norcow sector with every other
-# setting on the device, and that sector is 32 kB on the smallest model.
+# 20 records, one shared pool across every wallet. Plaintext keeps a typical label record near 110
+# bytes, so the store is a couple of kilobytes in practice.
 MAX_STORE_ENTRIES = const(20)
 
-# The caps that make "20 records fit" a GUARANTEE rather than a hope. A value cap alone does not
-# bound a record: `app_id` may be 255 bytes and `identifier` 65535 by their framing, so the whole
-# record is capped too. Worst case is therefore 20 x 256 = 5 kB, against ~13 kB if the value cap
-# alone were trusted at its old 512.
-MAX_VALUE_LEN = const(128)
-MAX_RECORD_LEN = const(256)
+# A VALUE MAY BE A WALLET POLICY, not just a label, and that sets the per-record cap. A BIP-388
+# descriptor template runs 40-300 bytes and each key adds ~130 (`[fingerprint/derivation]xpub`), so
+# 2-of-3 is ~430 bytes, 3-of-5 ~700, and 5-of-7 comfortably under a kilobyte.
+MAX_VALUE_LEN = const(1024)
+MAX_RECORD_LEN = const(1152)  # a value plus the identity framing around it
+
+# THE GUARANTEE IS ON THE TOTAL, not on entries x record cap. Those two multiply to 23 kB, and the
+# norcow sector is 32 kB on the smallest model (T3T2) -- shared with everything else the device
+# stores, including a homescreen that may itself be 16 kB. Promising 20 maximum-size records would be
+# promising flash that is not there, and the failure would arrive as norcow refusing to write, which
+# reaches a host as a generic firmware error rather than as "the store is full".
+#
+# So the store bounds the BYTES it holds and lets the mix be whatever the user has: 20 typical labels
+# (~2.2 kB), or five 1 kB policies, or any combination inside the budget. Whichever limit binds first
+# -- slots or bytes -- reports the same "full", and the caller turns it into "erase an entry first".
+MAX_STORE_BYTES = const(6144)
 
 # Version 2 dropped entry_key, the counter and device_id from the record. THE KEYED PATH IS NOT
 # THE QUEUE'S TO HOLD: it is what a leaf sits at in the TRIE, assigned when the change is published,
@@ -322,14 +331,38 @@ def store_get(wallet_id: bytes, identity: bytes) -> bytes | None:
     return _store_slot(index)
 
 
+def store_bytes_used(exclude_index: "int | None" = None) -> int:
+    """How many bytes every record in the store occupies, across ALL wallets.
+
+    DEVICE-WIDE on purpose: the budget it feeds is flash, and flash does not care which wallet spent
+    it. That does mean one wallet's records can fill the store and another's write then fails --
+    which is already true of the shared slot pool, and is reported the same way.
+
+    It leaks no more than the slot pool already does: a byte count, never a wallet or an identity.
+
+    `exclude_index` leaves out the slot a replacement is about to overwrite, so replacing a record
+    with a smaller one is never refused for the space the old one was using.
+    """
+    total = 0
+    for i in range(MAX_STORE_ENTRIES):
+        if i == exclude_index:
+            continue
+        rec = _store_slot(i)
+        if rec is not None:
+            total += len(rec)
+    return total
+
+
 def store_put(wallet_id: bytes, identity: bytes, record: bytes) -> bool:
     """Write a record, replacing this wallet's existing one for `identity`. False if full.
 
-    NEVER EVICTS. When every slot belongs to some other entry the write FAILS and the caller
-    reports it, because each occupant is either a value the user chose to keep or a change they
-    confirmed and that is not published yet. Making room automatically would destroy one of
-    those to satisfy the other, silently, and the user would learn about it by finding the
-    entry gone.
+    FULL MEANS EITHER LIMIT: no free slot, or no room in `MAX_STORE_BYTES`. Both answer the same
+    question -- can this be stored -- and the caller has the same thing to say about either.
+
+    NEVER EVICTS. When there is no room the write FAILS and the caller reports it, because each
+    occupant is either a value the user chose to keep or a change they confirmed and that is not
+    published yet. Making room automatically would destroy one of those to satisfy the other,
+    silently, and the user would learn about it by finding the entry gone.
     """
     if record[: STORE_KEY_OFF + len(identity)] != store_prefix(wallet_id) + identity:
         raise ValueError  # record header must name the wallet and identity it is stored under
@@ -343,6 +376,11 @@ def store_put(wallet_id: bytes, identity: bytes, record: bytes) -> bool:
                 index = i
                 break
     if index is None:
+        return False
+
+    # Checked BEFORE the write, and against the store as it will be: a replacement pays only the
+    # difference, because the bytes it is about to free are not spent any more.
+    if store_bytes_used(exclude_index=index) + len(record) > MAX_STORE_BYTES:
         return False
 
     common.set(common.APP_WARD, index + _STORE_FIRST_KEY, record)

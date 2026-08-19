@@ -240,15 +240,16 @@ async def put(
         wallet_id, key_type, app_id, identifier, value, pending, offered
     )
     # The value cap alone does not bound a record: app_id and identifier have their own framing, so a
-    # long enough pair would blow the capacity budget while every individual field looked legal. See
-    # `storage.ward.MAX_RECORD_LEN`.
+    # long enough pair would make one record eat most of the store's byte budget while every
+    # individual field looked legal. See `storage.ward.MAX_RECORD_LEN`.
     if len(record) > ward_store.MAX_RECORD_LEN:
         raise DataError("WARD: entry too large to keep offline")
     if not ward_store.store_put(
         wallet_id, identity_block(key_type, app_id, identifier), record
     ):
-        # Full means FULL. No eviction, so the user is told and chooses what to give up --
-        # every occupant is either something they pinned or a change they confirmed.
+        # Full means FULL, whether it ran out of slots or of the byte budget -- both mean the same
+        # thing to whoever asked. No eviction, so the user is told and chooses what to give up: every
+        # occupant is either something they pinned or a change they confirmed.
         raise DataError("WARD: offline store is full; erase an entry first")
 
 
@@ -294,7 +295,7 @@ async def list_entries() -> "list[StoredEntry]":
 
     A LIST, not a generator. An async generator would suspend inside a loop that is reading
     flash, and the store is small enough that the whole of it costs less than the machinery
-    would -- twenty records, each capped by `storage.ward.MAX_RECORD_LEN`.
+    would -- twenty records at most, and `storage.ward.MAX_STORE_BYTES` of them in total.
 
     Unreadable records are SKIPPED here, not deleted and not raised on: enumeration is a
     background question ("what is pending?"), and one bad record must not make the rest

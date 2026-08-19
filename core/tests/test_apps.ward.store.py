@@ -261,6 +261,45 @@ class TestWardStore(unittest.TestCase):
         self.assertEqual(ward_store.get_root(_WALLET_A), b"\x01" * 32)
         self.assertEqual(ward_store.get_root(twin), b"\x02" * 32)
 
+    def test_the_byte_budget_binds_before_the_slots_do(self):
+        """Big records run out of BYTES long before they run out of slots, and that is the point.
+
+        20 x MAX_RECORD_LEN is 23 kB against a 32 kB norcow sector shared with everything else, so the
+        store bounds what it holds rather than promising flash it does not have. The assertion that
+        matters is the second half: a refusal must leave every existing record untouched.
+        """
+        big = b"p" * (ward_store.MAX_VALUE_LEN - 1)
+        stored = {}
+        for i in range(ward_store.MAX_STORE_ENTRIES):
+            ident = _identity(bytes([i]) * 4)
+            rec = _record(_WALLET_A, ident, big)
+            if not ward_store.store_put(_WALLET_A, ident, rec):
+                break
+            stored[ident] = rec
+
+        # it stopped on BYTES, with slots to spare
+        self.assertLess(len(stored), ward_store.MAX_STORE_ENTRIES)
+        self.assertLessEqual(ward_store.store_bytes_used(), ward_store.MAX_STORE_BYTES)
+
+        for ident, rec in stored.items():
+            self.assertEqual(ward_store.store_get(_WALLET_A, ident), rec)
+
+    def test_a_replacement_pays_only_the_difference(self):
+        """Otherwise a store near its budget could not shrink a record -- the write would be refused
+        for space the record it replaces was already using."""
+        big = b"p" * (ward_store.MAX_VALUE_LEN - 1)
+        idents = []
+        for i in range(ward_store.MAX_STORE_ENTRIES):
+            ident = _identity(bytes([i]) * 4)
+            if not ward_store.store_put(_WALLET_A, ident, _record(_WALLET_A, ident, big)):
+                break
+            idents.append(ident)
+
+        # replacing one of them with the same size, at a budget that is already full
+        again = _record(_WALLET_A, idents[0], b"q" * (ward_store.MAX_VALUE_LEN - 1))
+        self.assertTrue(ward_store.store_put(_WALLET_A, idents[0], again))
+        self.assertEqual(ward_store.store_get(_WALLET_A, idents[0]), again)
+
     def test_a_record_past_the_cap_is_refused(self):
         """The capacity guarantee is per RECORD, not per value.
 
