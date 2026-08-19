@@ -2509,10 +2509,6 @@ pub struct WardLeafAck {
     pub auth_commit: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardLeafAck.auth_sig)
     pub auth_sig: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardLeafAck.queued)
-    pub queued: ::std::option::Option<bool>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardLeafAck.remaining)
-    pub remaining: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardLeafAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2526,6 +2522,1811 @@ impl<'a> ::std::default::Default for &'a WardLeafAck {
 
 impl WardLeafAck {
     pub fn new() -> WardLeafAck {
+        ::std::default::Default::default()
+    }
+
+    // required bytes entry_key = 1;
+
+    pub fn entry_key(&self) -> &[u8] {
+        match self.entry_key.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_entry_key(&mut self) {
+        self.entry_key = ::std::option::Option::None;
+    }
+
+    pub fn has_entry_key(&self) -> bool {
+        self.entry_key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_entry_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.entry_key = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_entry_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.entry_key.is_none() {
+            self.entry_key = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.entry_key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_entry_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.entry_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional uint32 counter = 4;
+
+    pub fn counter(&self) -> u32 {
+        self.counter.unwrap_or(0)
+    }
+
+    pub fn clear_counter(&mut self) {
+        self.counter = ::std::option::Option::None;
+    }
+
+    pub fn has_counter(&self) -> bool {
+        self.counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_counter(&mut self, v: u32) {
+        self.counter = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes mac = 5;
+
+    pub fn mac(&self) -> &[u8] {
+        match self.mac.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_mac(&mut self) {
+        self.mac = ::std::option::Option::None;
+    }
+
+    pub fn has_mac(&self) -> bool {
+        self.mac.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mac = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mac.is_none() {
+            self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.mac.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+        self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes auth_commit = 6;
+
+    pub fn auth_commit(&self) -> &[u8] {
+        match self.auth_commit.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_auth_commit(&mut self) {
+        self.auth_commit = ::std::option::Option::None;
+    }
+
+    pub fn has_auth_commit(&self) -> bool {
+        self.auth_commit.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_auth_commit(&mut self, v: ::std::vec::Vec<u8>) {
+        self.auth_commit = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_auth_commit(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.auth_commit.is_none() {
+            self.auth_commit = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.auth_commit.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_auth_commit(&mut self) -> ::std::vec::Vec<u8> {
+        self.auth_commit.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes auth_sig = 7;
+
+    pub fn auth_sig(&self) -> &[u8] {
+        match self.auth_sig.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_auth_sig(&mut self) {
+        self.auth_sig = ::std::option::Option::None;
+    }
+
+    pub fn has_auth_sig(&self) -> bool {
+        self.auth_sig.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_auth_sig(&mut self, v: ::std::vec::Vec<u8>) {
+        self.auth_sig = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_auth_sig(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.auth_sig.is_none() {
+            self.auth_sig = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.auth_sig.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_auth_sig(&mut self) -> ::std::vec::Vec<u8> {
+        self.auth_sig.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "entry_key",
+            |m: &WardLeafAck| { &m.entry_key },
+            |m: &mut WardLeafAck| { &mut m.entry_key },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, WardLeafIdentity>(
+            "identity",
+            |m: &WardLeafAck| { &m.identity },
+            |m: &mut WardLeafAck| { &mut m.identity },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, WardLeafContent>(
+            "content",
+            |m: &WardLeafAck| { &m.content },
+            |m: &mut WardLeafAck| { &mut m.content },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "counter",
+            |m: &WardLeafAck| { &m.counter },
+            |m: &mut WardLeafAck| { &mut m.counter },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mac",
+            |m: &WardLeafAck| { &m.mac },
+            |m: &mut WardLeafAck| { &mut m.mac },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "auth_commit",
+            |m: &WardLeafAck| { &m.auth_commit },
+            |m: &mut WardLeafAck| { &mut m.auth_commit },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "auth_sig",
+            |m: &WardLeafAck| { &m.auth_sig },
+            |m: &mut WardLeafAck| { &mut m.auth_sig },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardLeafAck>(
+            "WardLeafAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardLeafAck {
+    const NAME: &'static str = "WardLeafAck";
+
+    fn is_initialized(&self) -> bool {
+        if self.entry_key.is_none() {
+            return false;
+        }
+        for v in &self.identity {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.content {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.entry_key = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.identity)?;
+                },
+                26 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.content)?;
+                },
+                32 => {
+                    self.counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                42 => {
+                    self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                50 => {
+                    self.auth_commit = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                58 => {
+                    self.auth_sig = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.entry_key.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.identity.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.content.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.counter {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        if let Some(v) = self.mac.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(5, &v);
+        }
+        if let Some(v) = self.auth_commit.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(6, &v);
+        }
+        if let Some(v) = self.auth_sig.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(7, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.entry_key.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.identity.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        if let Some(v) = self.content.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        }
+        if let Some(v) = self.counter {
+            os.write_uint32(4, v)?;
+        }
+        if let Some(v) = self.mac.as_ref() {
+            os.write_bytes(5, v)?;
+        }
+        if let Some(v) = self.auth_commit.as_ref() {
+            os.write_bytes(6, v)?;
+        }
+        if let Some(v) = self.auth_sig.as_ref() {
+            os.write_bytes(7, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardLeafAck {
+        WardLeafAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.entry_key = ::std::option::Option::None;
+        self.identity.clear();
+        self.content.clear();
+        self.counter = ::std::option::Option::None;
+        self.mac = ::std::option::Option::None;
+        self.auth_commit = ::std::option::Option::None;
+        self.auth_sig = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardLeafAck {
+        static instance: WardLeafAck = WardLeafAck {
+            entry_key: ::std::option::Option::None,
+            identity: ::protobuf::MessageField::none(),
+            content: ::protobuf::MessageField::none(),
+            counter: ::std::option::Option::None,
+            mac: ::std::option::Option::None,
+            auth_commit: ::std::option::Option::None,
+            auth_sig: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardLeafAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardLeafAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardLeafAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardLeafAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardQueueSetEntry)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardQueueSetEntry {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueSetEntry.app_id)
+    pub app_id: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueSetEntry.identifier)
+    pub identifier: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueSetEntry.value)
+    pub value: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardQueueSetEntry.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardQueueSetEntry {
+    fn default() -> &'a WardQueueSetEntry {
+        <WardQueueSetEntry as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardQueueSetEntry {
+    pub fn new() -> WardQueueSetEntry {
+        ::std::default::Default::default()
+    }
+
+    // optional string app_id = 1;
+
+    pub fn app_id(&self) -> &str {
+        match self.app_id.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_app_id(&mut self) {
+        self.app_id = ::std::option::Option::None;
+    }
+
+    pub fn has_app_id(&self) -> bool {
+        self.app_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_app_id(&mut self, v: ::std::string::String) {
+        self.app_id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_app_id(&mut self) -> &mut ::std::string::String {
+        if self.app_id.is_none() {
+            self.app_id = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.app_id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_app_id(&mut self) -> ::std::string::String {
+        self.app_id.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional bytes identifier = 2;
+
+    pub fn identifier(&self) -> &[u8] {
+        match self.identifier.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_identifier(&mut self) {
+        self.identifier = ::std::option::Option::None;
+    }
+
+    pub fn has_identifier(&self) -> bool {
+        self.identifier.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_identifier(&mut self, v: ::std::vec::Vec<u8>) {
+        self.identifier = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_identifier(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.identifier.is_none() {
+            self.identifier = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.identifier.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_identifier(&mut self) -> ::std::vec::Vec<u8> {
+        self.identifier.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes value = 3;
+
+    pub fn value(&self) -> &[u8] {
+        match self.value.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_value(&mut self) {
+        self.value = ::std::option::Option::None;
+    }
+
+    pub fn has_value(&self) -> bool {
+        self.value.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_value(&mut self, v: ::std::vec::Vec<u8>) {
+        self.value = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_value(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.value.is_none() {
+            self.value = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.value.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_value(&mut self) -> ::std::vec::Vec<u8> {
+        self.value.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "app_id",
+            |m: &WardQueueSetEntry| { &m.app_id },
+            |m: &mut WardQueueSetEntry| { &mut m.app_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "identifier",
+            |m: &WardQueueSetEntry| { &m.identifier },
+            |m: &mut WardQueueSetEntry| { &mut m.identifier },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "value",
+            |m: &WardQueueSetEntry| { &m.value },
+            |m: &mut WardQueueSetEntry| { &mut m.value },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardQueueSetEntry>(
+            "WardQueueSetEntry",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardQueueSetEntry {
+    const NAME: &'static str = "WardQueueSetEntry";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.app_id = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.identifier = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                26 => {
+                    self.value = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.app_id.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.identifier.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.value.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.app_id.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.identifier.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.value.as_ref() {
+            os.write_bytes(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardQueueSetEntry {
+        WardQueueSetEntry::new()
+    }
+
+    fn clear(&mut self) {
+        self.app_id = ::std::option::Option::None;
+        self.identifier = ::std::option::Option::None;
+        self.value = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardQueueSetEntry {
+        static instance: WardQueueSetEntry = WardQueueSetEntry {
+            app_id: ::std::option::Option::None,
+            identifier: ::std::option::Option::None,
+            value: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardQueueSetEntry {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardQueueSetEntry").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardQueueSetEntry {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardQueueSetEntry {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardQueueSetAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardQueueSetAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueSetAck.entry_key)
+    pub entry_key: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardQueueSetAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardQueueSetAck {
+    fn default() -> &'a WardQueueSetAck {
+        <WardQueueSetAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardQueueSetAck {
+    pub fn new() -> WardQueueSetAck {
+        ::std::default::Default::default()
+    }
+
+    // required bytes entry_key = 1;
+
+    pub fn entry_key(&self) -> &[u8] {
+        match self.entry_key.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_entry_key(&mut self) {
+        self.entry_key = ::std::option::Option::None;
+    }
+
+    pub fn has_entry_key(&self) -> bool {
+        self.entry_key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_entry_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.entry_key = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_entry_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.entry_key.is_none() {
+            self.entry_key = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.entry_key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_entry_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.entry_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "entry_key",
+            |m: &WardQueueSetAck| { &m.entry_key },
+            |m: &mut WardQueueSetAck| { &mut m.entry_key },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardQueueSetAck>(
+            "WardQueueSetAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardQueueSetAck {
+    const NAME: &'static str = "WardQueueSetAck";
+
+    fn is_initialized(&self) -> bool {
+        if self.entry_key.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.entry_key = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.entry_key.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.entry_key.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardQueueSetAck {
+        WardQueueSetAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.entry_key = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardQueueSetAck {
+        static instance: WardQueueSetAck = WardQueueSetAck {
+            entry_key: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardQueueSetAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardQueueSetAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardQueueSetAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardQueueSetAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardQueueDeleteEntry)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardQueueDeleteEntry {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueDeleteEntry.app_id)
+    pub app_id: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueDeleteEntry.identifier)
+    pub identifier: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardQueueDeleteEntry.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardQueueDeleteEntry {
+    fn default() -> &'a WardQueueDeleteEntry {
+        <WardQueueDeleteEntry as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardQueueDeleteEntry {
+    pub fn new() -> WardQueueDeleteEntry {
+        ::std::default::Default::default()
+    }
+
+    // optional string app_id = 1;
+
+    pub fn app_id(&self) -> &str {
+        match self.app_id.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_app_id(&mut self) {
+        self.app_id = ::std::option::Option::None;
+    }
+
+    pub fn has_app_id(&self) -> bool {
+        self.app_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_app_id(&mut self, v: ::std::string::String) {
+        self.app_id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_app_id(&mut self) -> &mut ::std::string::String {
+        if self.app_id.is_none() {
+            self.app_id = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.app_id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_app_id(&mut self) -> ::std::string::String {
+        self.app_id.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional bytes identifier = 2;
+
+    pub fn identifier(&self) -> &[u8] {
+        match self.identifier.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_identifier(&mut self) {
+        self.identifier = ::std::option::Option::None;
+    }
+
+    pub fn has_identifier(&self) -> bool {
+        self.identifier.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_identifier(&mut self, v: ::std::vec::Vec<u8>) {
+        self.identifier = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_identifier(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.identifier.is_none() {
+            self.identifier = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.identifier.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_identifier(&mut self) -> ::std::vec::Vec<u8> {
+        self.identifier.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "app_id",
+            |m: &WardQueueDeleteEntry| { &m.app_id },
+            |m: &mut WardQueueDeleteEntry| { &mut m.app_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "identifier",
+            |m: &WardQueueDeleteEntry| { &m.identifier },
+            |m: &mut WardQueueDeleteEntry| { &mut m.identifier },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardQueueDeleteEntry>(
+            "WardQueueDeleteEntry",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardQueueDeleteEntry {
+    const NAME: &'static str = "WardQueueDeleteEntry";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.app_id = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.identifier = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.app_id.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.identifier.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.app_id.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.identifier.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardQueueDeleteEntry {
+        WardQueueDeleteEntry::new()
+    }
+
+    fn clear(&mut self) {
+        self.app_id = ::std::option::Option::None;
+        self.identifier = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardQueueDeleteEntry {
+        static instance: WardQueueDeleteEntry = WardQueueDeleteEntry {
+            app_id: ::std::option::Option::None,
+            identifier: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardQueueDeleteEntry {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardQueueDeleteEntry").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardQueueDeleteEntry {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardQueueDeleteEntry {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardQueueDeleteAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardQueueDeleteAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueDeleteAck.entry_key)
+    pub entry_key: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueDeleteAck.missing)
+    pub missing: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardQueueDeleteAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardQueueDeleteAck {
+    fn default() -> &'a WardQueueDeleteAck {
+        <WardQueueDeleteAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardQueueDeleteAck {
+    pub fn new() -> WardQueueDeleteAck {
+        ::std::default::Default::default()
+    }
+
+    // required bytes entry_key = 1;
+
+    pub fn entry_key(&self) -> &[u8] {
+        match self.entry_key.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_entry_key(&mut self) {
+        self.entry_key = ::std::option::Option::None;
+    }
+
+    pub fn has_entry_key(&self) -> bool {
+        self.entry_key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_entry_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.entry_key = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_entry_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.entry_key.is_none() {
+            self.entry_key = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.entry_key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_entry_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.entry_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bool missing = 2;
+
+    pub fn missing(&self) -> bool {
+        self.missing.unwrap_or(false)
+    }
+
+    pub fn clear_missing(&mut self) {
+        self.missing = ::std::option::Option::None;
+    }
+
+    pub fn has_missing(&self) -> bool {
+        self.missing.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_missing(&mut self, v: bool) {
+        self.missing = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "entry_key",
+            |m: &WardQueueDeleteAck| { &m.entry_key },
+            |m: &mut WardQueueDeleteAck| { &mut m.entry_key },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "missing",
+            |m: &WardQueueDeleteAck| { &m.missing },
+            |m: &mut WardQueueDeleteAck| { &mut m.missing },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardQueueDeleteAck>(
+            "WardQueueDeleteAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardQueueDeleteAck {
+    const NAME: &'static str = "WardQueueDeleteAck";
+
+    fn is_initialized(&self) -> bool {
+        if self.entry_key.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.entry_key = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                16 => {
+                    self.missing = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.entry_key.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.missing {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.entry_key.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.missing {
+            os.write_bool(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardQueueDeleteAck {
+        WardQueueDeleteAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.entry_key = ::std::option::Option::None;
+        self.missing = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardQueueDeleteAck {
+        static instance: WardQueueDeleteAck = WardQueueDeleteAck {
+            entry_key: ::std::option::Option::None,
+            missing: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardQueueDeleteAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardQueueDeleteAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardQueueDeleteAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardQueueDeleteAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardQueueGetEntry)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardQueueGetEntry {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetEntry.app_id)
+    pub app_id: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetEntry.identifier)
+    pub identifier: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardQueueGetEntry.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardQueueGetEntry {
+    fn default() -> &'a WardQueueGetEntry {
+        <WardQueueGetEntry as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardQueueGetEntry {
+    pub fn new() -> WardQueueGetEntry {
+        ::std::default::Default::default()
+    }
+
+    // optional string app_id = 1;
+
+    pub fn app_id(&self) -> &str {
+        match self.app_id.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_app_id(&mut self) {
+        self.app_id = ::std::option::Option::None;
+    }
+
+    pub fn has_app_id(&self) -> bool {
+        self.app_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_app_id(&mut self, v: ::std::string::String) {
+        self.app_id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_app_id(&mut self) -> &mut ::std::string::String {
+        if self.app_id.is_none() {
+            self.app_id = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.app_id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_app_id(&mut self) -> ::std::string::String {
+        self.app_id.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional bytes identifier = 2;
+
+    pub fn identifier(&self) -> &[u8] {
+        match self.identifier.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_identifier(&mut self) {
+        self.identifier = ::std::option::Option::None;
+    }
+
+    pub fn has_identifier(&self) -> bool {
+        self.identifier.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_identifier(&mut self, v: ::std::vec::Vec<u8>) {
+        self.identifier = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_identifier(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.identifier.is_none() {
+            self.identifier = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.identifier.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_identifier(&mut self) -> ::std::vec::Vec<u8> {
+        self.identifier.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "app_id",
+            |m: &WardQueueGetEntry| { &m.app_id },
+            |m: &mut WardQueueGetEntry| { &mut m.app_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "identifier",
+            |m: &WardQueueGetEntry| { &m.identifier },
+            |m: &mut WardQueueGetEntry| { &mut m.identifier },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardQueueGetEntry>(
+            "WardQueueGetEntry",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardQueueGetEntry {
+    const NAME: &'static str = "WardQueueGetEntry";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.app_id = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.identifier = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.app_id.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.identifier.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.app_id.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.identifier.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardQueueGetEntry {
+        WardQueueGetEntry::new()
+    }
+
+    fn clear(&mut self) {
+        self.app_id = ::std::option::Option::None;
+        self.identifier = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardQueueGetEntry {
+        static instance: WardQueueGetEntry = WardQueueGetEntry {
+            app_id: ::std::option::Option::None,
+            identifier: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardQueueGetEntry {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardQueueGetEntry").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardQueueGetEntry {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardQueueGetEntry {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardQueueGetAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardQueueGetAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.entry_key)
+    pub entry_key: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.missing)
+    pub missing: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.pending)
+    pub pending: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.unreadable)
+    pub unreadable: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.stale)
+    pub stale: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardQueueGetAck.counter)
+    pub counter: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardQueueGetAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardQueueGetAck {
+    fn default() -> &'a WardQueueGetAck {
+        <WardQueueGetAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardQueueGetAck {
+    pub fn new() -> WardQueueGetAck {
+        ::std::default::Default::default()
+    }
+
+    // required bytes entry_key = 1;
+
+    pub fn entry_key(&self) -> &[u8] {
+        match self.entry_key.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_entry_key(&mut self) {
+        self.entry_key = ::std::option::Option::None;
+    }
+
+    pub fn has_entry_key(&self) -> bool {
+        self.entry_key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_entry_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.entry_key = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_entry_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.entry_key.is_none() {
+            self.entry_key = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.entry_key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_entry_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.entry_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bool missing = 2;
+
+    pub fn missing(&self) -> bool {
+        self.missing.unwrap_or(false)
+    }
+
+    pub fn clear_missing(&mut self) {
+        self.missing = ::std::option::Option::None;
+    }
+
+    pub fn has_missing(&self) -> bool {
+        self.missing.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_missing(&mut self, v: bool) {
+        self.missing = ::std::option::Option::Some(v);
+    }
+
+    // optional bool pending = 3;
+
+    pub fn pending(&self) -> bool {
+        self.pending.unwrap_or(false)
+    }
+
+    pub fn clear_pending(&mut self) {
+        self.pending = ::std::option::Option::None;
+    }
+
+    pub fn has_pending(&self) -> bool {
+        self.pending.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_pending(&mut self, v: bool) {
+        self.pending = ::std::option::Option::Some(v);
+    }
+
+    // optional bool unreadable = 4;
+
+    pub fn unreadable(&self) -> bool {
+        self.unreadable.unwrap_or(false)
+    }
+
+    pub fn clear_unreadable(&mut self) {
+        self.unreadable = ::std::option::Option::None;
+    }
+
+    pub fn has_unreadable(&self) -> bool {
+        self.unreadable.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_unreadable(&mut self, v: bool) {
+        self.unreadable = ::std::option::Option::Some(v);
+    }
+
+    // optional bool stale = 5;
+
+    pub fn stale(&self) -> bool {
+        self.stale.unwrap_or(false)
+    }
+
+    pub fn clear_stale(&mut self) {
+        self.stale = ::std::option::Option::None;
+    }
+
+    pub fn has_stale(&self) -> bool {
+        self.stale.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_stale(&mut self, v: bool) {
+        self.stale = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 counter = 6;
+
+    pub fn counter(&self) -> u32 {
+        self.counter.unwrap_or(0)
+    }
+
+    pub fn clear_counter(&mut self) {
+        self.counter = ::std::option::Option::None;
+    }
+
+    pub fn has_counter(&self) -> bool {
+        self.counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_counter(&mut self, v: u32) {
+        self.counter = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(6);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "entry_key",
+            |m: &WardQueueGetAck| { &m.entry_key },
+            |m: &mut WardQueueGetAck| { &mut m.entry_key },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "missing",
+            |m: &WardQueueGetAck| { &m.missing },
+            |m: &mut WardQueueGetAck| { &mut m.missing },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "pending",
+            |m: &WardQueueGetAck| { &m.pending },
+            |m: &mut WardQueueGetAck| { &mut m.pending },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "unreadable",
+            |m: &WardQueueGetAck| { &m.unreadable },
+            |m: &mut WardQueueGetAck| { &mut m.unreadable },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "stale",
+            |m: &WardQueueGetAck| { &m.stale },
+            |m: &mut WardQueueGetAck| { &mut m.stale },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "counter",
+            |m: &WardQueueGetAck| { &m.counter },
+            |m: &mut WardQueueGetAck| { &mut m.counter },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardQueueGetAck>(
+            "WardQueueGetAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardQueueGetAck {
+    const NAME: &'static str = "WardQueueGetAck";
+
+    fn is_initialized(&self) -> bool {
+        if self.entry_key.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.entry_key = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                16 => {
+                    self.missing = ::std::option::Option::Some(is.read_bool()?);
+                },
+                24 => {
+                    self.pending = ::std::option::Option::Some(is.read_bool()?);
+                },
+                32 => {
+                    self.unreadable = ::std::option::Option::Some(is.read_bool()?);
+                },
+                40 => {
+                    self.stale = ::std::option::Option::Some(is.read_bool()?);
+                },
+                48 => {
+                    self.counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.entry_key.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.missing {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.pending {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.unreadable {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.stale {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.counter {
+            my_size += ::protobuf::rt::uint32_size(6, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.entry_key.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.missing {
+            os.write_bool(2, v)?;
+        }
+        if let Some(v) = self.pending {
+            os.write_bool(3, v)?;
+        }
+        if let Some(v) = self.unreadable {
+            os.write_bool(4, v)?;
+        }
+        if let Some(v) = self.stale {
+            os.write_bool(5, v)?;
+        }
+        if let Some(v) = self.counter {
+            os.write_uint32(6, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardQueueGetAck {
+        WardQueueGetAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.entry_key = ::std::option::Option::None;
+        self.missing = ::std::option::Option::None;
+        self.pending = ::std::option::Option::None;
+        self.unreadable = ::std::option::Option::None;
+        self.stale = ::std::option::Option::None;
+        self.counter = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardQueueGetAck {
+        static instance: WardQueueGetAck = WardQueueGetAck {
+            entry_key: ::std::option::Option::None,
+            missing: ::std::option::Option::None,
+            pending: ::std::option::Option::None,
+            unreadable: ::std::option::Option::None,
+            stale: ::std::option::Option::None,
+            counter: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardQueueGetAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardQueueGetAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardQueueGetAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardQueueGetAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardFlushQueueAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardFlushQueueAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardFlushQueueAck.entry_key)
+    pub entry_key: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardFlushQueueAck.identity)
+    pub identity: ::protobuf::MessageField<WardLeafIdentity>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardFlushQueueAck.content)
+    pub content: ::protobuf::MessageField<WardLeafContent>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardFlushQueueAck.counter)
+    pub counter: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardFlushQueueAck.mac)
+    pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardFlushQueueAck.auth_commit)
+    pub auth_commit: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardFlushQueueAck.auth_sig)
+    pub auth_sig: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardFlushQueueAck.remaining)
+    pub remaining: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardFlushQueueAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardFlushQueueAck {
+    fn default() -> &'a WardFlushQueueAck {
+        <WardFlushQueueAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardFlushQueueAck {
+    pub fn new() -> WardFlushQueueAck {
         ::std::default::Default::default()
     }
 
@@ -2692,26 +4493,7 @@ impl WardLeafAck {
         self.auth_sig.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional bool queued = 8;
-
-    pub fn queued(&self) -> bool {
-        self.queued.unwrap_or(false)
-    }
-
-    pub fn clear_queued(&mut self) {
-        self.queued = ::std::option::Option::None;
-    }
-
-    pub fn has_queued(&self) -> bool {
-        self.queued.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_queued(&mut self, v: bool) {
-        self.queued = ::std::option::Option::Some(v);
-    }
-
-    // optional uint32 remaining = 9;
+    // required uint32 remaining = 8;
 
     pub fn remaining(&self) -> u32 {
         self.remaining.unwrap_or(0)
@@ -2731,65 +4513,73 @@ impl WardLeafAck {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut fields = ::std::vec::Vec::with_capacity(8);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "entry_key",
-            |m: &WardLeafAck| { &m.entry_key },
-            |m: &mut WardLeafAck| { &mut m.entry_key },
+            |m: &WardFlushQueueAck| { &m.entry_key },
+            |m: &mut WardFlushQueueAck| { &mut m.entry_key },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, WardLeafIdentity>(
             "identity",
-            |m: &WardLeafAck| { &m.identity },
-            |m: &mut WardLeafAck| { &mut m.identity },
+            |m: &WardFlushQueueAck| { &m.identity },
+            |m: &mut WardFlushQueueAck| { &mut m.identity },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, WardLeafContent>(
             "content",
-            |m: &WardLeafAck| { &m.content },
-            |m: &mut WardLeafAck| { &mut m.content },
+            |m: &WardFlushQueueAck| { &m.content },
+            |m: &mut WardFlushQueueAck| { &mut m.content },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "counter",
-            |m: &WardLeafAck| { &m.counter },
-            |m: &mut WardLeafAck| { &mut m.counter },
+            |m: &WardFlushQueueAck| { &m.counter },
+            |m: &mut WardFlushQueueAck| { &mut m.counter },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "mac",
-            |m: &WardLeafAck| { &m.mac },
-            |m: &mut WardLeafAck| { &mut m.mac },
+            |m: &WardFlushQueueAck| { &m.mac },
+            |m: &mut WardFlushQueueAck| { &mut m.mac },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "auth_commit",
-            |m: &WardLeafAck| { &m.auth_commit },
-            |m: &mut WardLeafAck| { &mut m.auth_commit },
+            |m: &WardFlushQueueAck| { &m.auth_commit },
+            |m: &mut WardFlushQueueAck| { &mut m.auth_commit },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "auth_sig",
-            |m: &WardLeafAck| { &m.auth_sig },
-            |m: &mut WardLeafAck| { &mut m.auth_sig },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "queued",
-            |m: &WardLeafAck| { &m.queued },
-            |m: &mut WardLeafAck| { &mut m.queued },
+            |m: &WardFlushQueueAck| { &m.auth_sig },
+            |m: &mut WardFlushQueueAck| { &mut m.auth_sig },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "remaining",
-            |m: &WardLeafAck| { &m.remaining },
-            |m: &mut WardLeafAck| { &mut m.remaining },
+            |m: &WardFlushQueueAck| { &m.remaining },
+            |m: &mut WardFlushQueueAck| { &mut m.remaining },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardLeafAck>(
-            "WardLeafAck",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardFlushQueueAck>(
+            "WardFlushQueueAck",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for WardLeafAck {
-    const NAME: &'static str = "WardLeafAck";
+impl ::protobuf::Message for WardFlushQueueAck {
+    const NAME: &'static str = "WardFlushQueueAck";
 
     fn is_initialized(&self) -> bool {
+        if self.remaining.is_none() {
+            return false;
+        }
+        for v in &self.identity {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.content {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -2818,9 +4608,6 @@ impl ::protobuf::Message for WardLeafAck {
                     self.auth_sig = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 64 => {
-                    self.queued = ::std::option::Option::Some(is.read_bool()?);
-                },
-                72 => {
                     self.remaining = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 tag => {
@@ -2858,11 +4645,8 @@ impl ::protobuf::Message for WardLeafAck {
         if let Some(v) = self.auth_sig.as_ref() {
             my_size += ::protobuf::rt::bytes_size(7, &v);
         }
-        if let Some(v) = self.queued {
-            my_size += 1 + 1;
-        }
         if let Some(v) = self.remaining {
-            my_size += ::protobuf::rt::uint32_size(9, v);
+            my_size += ::protobuf::rt::uint32_size(8, v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -2891,11 +4675,8 @@ impl ::protobuf::Message for WardLeafAck {
         if let Some(v) = self.auth_sig.as_ref() {
             os.write_bytes(7, v)?;
         }
-        if let Some(v) = self.queued {
-            os.write_bool(8, v)?;
-        }
         if let Some(v) = self.remaining {
-            os.write_uint32(9, v)?;
+            os.write_uint32(8, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2909,8 +4690,8 @@ impl ::protobuf::Message for WardLeafAck {
         &mut self.special_fields
     }
 
-    fn new() -> WardLeafAck {
-        WardLeafAck::new()
+    fn new() -> WardFlushQueueAck {
+        WardFlushQueueAck::new()
     }
 
     fn clear(&mut self) {
@@ -2921,13 +4702,12 @@ impl ::protobuf::Message for WardLeafAck {
         self.mac = ::std::option::Option::None;
         self.auth_commit = ::std::option::Option::None;
         self.auth_sig = ::std::option::Option::None;
-        self.queued = ::std::option::Option::None;
         self.remaining = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static WardLeafAck {
-        static instance: WardLeafAck = WardLeafAck {
+    fn default_instance() -> &'static WardFlushQueueAck {
+        static instance: WardFlushQueueAck = WardFlushQueueAck {
             entry_key: ::std::option::Option::None,
             identity: ::protobuf::MessageField::none(),
             content: ::protobuf::MessageField::none(),
@@ -2935,7 +4715,6 @@ impl ::protobuf::Message for WardLeafAck {
             mac: ::std::option::Option::None,
             auth_commit: ::std::option::Option::None,
             auth_sig: ::std::option::Option::None,
-            queued: ::std::option::Option::None,
             remaining: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -2943,20 +4722,20 @@ impl ::protobuf::Message for WardLeafAck {
     }
 }
 
-impl ::protobuf::MessageFull for WardLeafAck {
+impl ::protobuf::MessageFull for WardFlushQueueAck {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardLeafAck").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardFlushQueueAck").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for WardLeafAck {
+impl ::std::fmt::Display for WardFlushQueueAck {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for WardLeafAck {
+impl ::protobuf::reflect::ProtobufValue for WardFlushQueueAck {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -6380,26 +8159,47 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x03(\x0cR\x05proof\x12*\n\x11witness_entry_key\x18\x05\x20\x01(\x0cR\
     \x0fwitnessEntryKey\x12%\n\x0ewitness_commit\x18\x06\x20\x01(\x0cR\rwitn\
     essCommitJ\x04\x08\x01\x10\x02J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\
-    \x04\x08\t\x10\nJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c\"\xd3\x02\n\x0b\
-    WardLeafAck\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12E\
+    \x04\x08\t\x10\nJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c\"\xa9\x02\n\x0b\
+    WardLeafAck\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12E\
     \n\x08identity\x18\x02\x20\x01(\x0b2).hw.trezor.messages.ward.WardLeafId\
     entityR\x08identity\x12B\n\x07content\x18\x03\x20\x01(\x0b2(.hw.trezor.m\
     essages.ward.WardLeafContentR\x07content\x12\x18\n\x07counter\x18\x04\
     \x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x05\x20\x01(\x0cR\x03mac\
     \x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\x12\x19\n\
-    \x08auth_sig\x18\x07\x20\x01(\x0cR\x07authSig\x12\x16\n\x06queued\x18\
-    \x08\x20\x01(\x08R\x06queued\x12\x1c\n\tremaining\x18\t\x20\x01(\rR\trem\
-    aining\"\xa8\x01\n\rWardChainLink\x12!\n\x0cfrom_counter\x18\x01\x20\x01\
-    (\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRo\
-    ot\x12\x1d\n\nto_counter\x18\x03\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_\
-    root\x18\x04\x20\x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x05\
-    \x20\x01(\x0cR\nauthCommit\"O\n\x0fWardVerifyChain\x12<\n\x05links\x18\
-    \x01\x20\x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05links\"I\n\
-    \x12WardVerifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07count\
-    er\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\n\n\x08WardS\
-    ync\"V\n\x0bWardSyncAck\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonc\
-    e\x12\x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wardId\x12\x18\n\x07coun\
-    ter\x18\x03\x20\x01(\rR\x07counter\"\x84\x01\n\x15WardIngestAttestation\
+    \x08auth_sig\x18\x07\x20\x01(\x0cR\x07authSigJ\x04\x08\x08\x10\tJ\x04\
+    \x08\t\x10\n\"`\n\x11WardQueueSetEntry\x12\x15\n\x06app_id\x18\x01\x20\
+    \x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifie\
+    r\x12\x14\n\x05value\x18\x03\x20\x01(\x0cR\x05value\".\n\x0fWardQueueSet\
+    Ack\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\"M\n\x14WardQ\
+    ueueDeleteEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\
+    \n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\"K\n\x12WardQueueDelete\
+    Ack\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\x18\n\x07\
+    missing\x18\x02\x20\x01(\x08R\x07missing\"J\n\x11WardQueueGetEntry\x12\
+    \x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\
+    \x02\x20\x01(\x0cR\nidentifier\"\xb2\x01\n\x0fWardQueueGetAck\x12\x1b\n\
+    \tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\x18\n\x07missing\x18\
+    \x02\x20\x01(\x08R\x07missing\x12\x18\n\x07pending\x18\x03\x20\x01(\x08R\
+    \x07pending\x12\x1e\n\nunreadable\x18\x04\x20\x01(\x08R\nunreadable\x12\
+    \x14\n\x05stale\x18\x05\x20\x01(\x08R\x05stale\x12\x18\n\x07counter\x18\
+    \x06\x20\x01(\rR\x07counter\"\xc1\x02\n\x11WardFlushQueueAck\x12\x1b\n\t\
+    entry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12E\n\x08identity\x18\x02\
+    \x20\x01(\x0b2).hw.trezor.messages.ward.WardLeafIdentityR\x08identity\
+    \x12B\n\x07content\x18\x03\x20\x01(\x0b2(.hw.trezor.messages.ward.WardLe\
+    afContentR\x07content\x12\x18\n\x07counter\x18\x04\x20\x01(\rR\x07counte\
+    r\x12\x10\n\x03mac\x18\x05\x20\x01(\x0cR\x03mac\x12\x1f\n\x0bauth_commit\
+    \x18\x06\x20\x01(\x0cR\nauthCommit\x12\x19\n\x08auth_sig\x18\x07\x20\x01\
+    (\x0cR\x07authSig\x12\x1c\n\tremaining\x18\x08\x20\x02(\rR\tremaining\"\
+    \xa8\x01\n\rWardChainLink\x12!\n\x0cfrom_counter\x18\x01\x20\x01(\rR\x0b\
+    fromCounter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\
+    \x1d\n\nto_counter\x18\x03\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\
+    \x18\x04\x20\x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x05\x20\
+    \x01(\x0cR\nauthCommit\"O\n\x0fWardVerifyChain\x12<\n\x05links\x18\x01\
+    \x20\x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05links\"I\n\x12\
+    WardVerifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\
+    \x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\n\n\x08WardSyn\
+    c\"V\n\x0bWardSyncAck\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\
+    \x12\x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wardId\x12\x18\n\x07count\
+    er\x18\x03\x20\x01(\rR\x07counter\"\x84\x01\n\x15WardIngestAttestation\
     \x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x10\n\x03mac\
     \x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x01(\
     \x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimesta\
@@ -6442,7 +8242,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(28);
+            let mut messages = ::std::vec::Vec::with_capacity(35);
             messages.push(WardGetEntry::generated_message_descriptor_data());
             messages.push(WardSetEntry::generated_message_descriptor_data());
             messages.push(WardDeleteEntry::generated_message_descriptor_data());
@@ -6455,6 +8255,13 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(WardLeafIdentity::generated_message_descriptor_data());
             messages.push(WardEntryAck::generated_message_descriptor_data());
             messages.push(WardLeafAck::generated_message_descriptor_data());
+            messages.push(WardQueueSetEntry::generated_message_descriptor_data());
+            messages.push(WardQueueSetAck::generated_message_descriptor_data());
+            messages.push(WardQueueDeleteEntry::generated_message_descriptor_data());
+            messages.push(WardQueueDeleteAck::generated_message_descriptor_data());
+            messages.push(WardQueueGetEntry::generated_message_descriptor_data());
+            messages.push(WardQueueGetAck::generated_message_descriptor_data());
+            messages.push(WardFlushQueueAck::generated_message_descriptor_data());
             messages.push(WardChainLink::generated_message_descriptor_data());
             messages.push(WardVerifyChain::generated_message_descriptor_data());
             messages.push(WardVerifyChainAck::generated_message_descriptor_data());

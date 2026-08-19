@@ -169,6 +169,12 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ward.erase_cached_entry"
         if msg_type == MessageType.WardFlushQueue:
             return "apps.ward.flush_queue"
+        if msg_type == MessageType.WardQueueSetEntry:
+            return "apps.ward.queue_set_entry"
+        if msg_type == MessageType.WardQueueDeleteEntry:
+            return "apps.ward.queue_delete_entry"
+        if msg_type == MessageType.WardQueueGetEntry:
+            return "apps.ward.queue_get_entry"
 
         # display_address -- an on-device consumer of WARD labels, not part of WARD itself
         if msg_type == MessageType.DisplayAddress:
