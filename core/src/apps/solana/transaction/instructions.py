@@ -2634,7 +2634,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "source_account",
-                        "Revoke delegate",
+                        "Revoke delegate for",
                         None,
                     ),
                     UIProperty(
@@ -2797,7 +2797,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "owner",
-                        "Mint authority",
+                        "Owner",
                         "signer",
                     ),
                 ),
@@ -2869,7 +2869,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "freeze_authority",
-                        "Owner",
+                        "Freeze authority",
                         "signer",
                     ),
                 ),
@@ -2905,7 +2905,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "freeze_authority",
-                        "Owner",
+                        "Freeze authority",
                         "signer",
                     ),
                 ),
@@ -3088,7 +3088,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "minting_authority",
-                        "Owner",
+                        "Mint authority",
                         "signer",
                     ),
                 ),
@@ -3501,7 +3501,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "source_account",
-                        "Rewoke delegate",
+                        "Revoke delegate for",
                         None,
                     ),
                     UIProperty(
@@ -3664,7 +3664,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "owner",
-                        "Mint authority",
+                        "Owner",
                         "signer",
                     ),
                 ),
@@ -3736,7 +3736,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "freeze_authority",
-                        "Owner",
+                        "Freeze authority",
                         "signer",
                     ),
                 ),
@@ -3772,7 +3772,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "freeze_authority",
-                        "Owner",
+                        "Freeze authority",
                         "signer",
                     ),
                 ),
@@ -3955,7 +3955,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "minting_authority",
-                        "Owner",
+                        "Mint authority",
                         "signer",
                     ),
                 ),
