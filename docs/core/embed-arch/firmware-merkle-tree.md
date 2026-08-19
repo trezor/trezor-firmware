@@ -240,8 +240,124 @@ treated as official.
 | variant manifest | firmware image start | yes (variant leaf under `firmwareRoot`) |
 | module code | firmware image, per module | yes (via the manifest `code_hash`) |
 
-## Related firmware on the nRF co-processor
+## Firmware on the nRF co-processor
 
-On models with a separate BLE co-processor (nRF), that chip's firmware runs on
-its own MCU and is currently embedded in the app module, covered transitively by
-that module's `code_hash` and released one-to-one with the STM firmware.
+On models with a separate BLE co-processor (nRF), that chip's firmware runs on its
+own MCU under its own MCUboot, so it cannot be covered by a firmware module's
+`code_hash`. Instead it gets **its own slot in the model tree** — one slot per
+co-processor, a peer of the boot header rather than something hanging off the
+firmware sub-tree. There is no separate nRF signature: the one boot-header
+signature over `modelRoot` already covers that slot.
+
+### The leaf
+
+The slot value is MCUboot's *own* image hash — the SHA-256 it computes for itself
+and publishes in TLV `0x10`:
+
+```
+image_hash = SHA256(header ‖ payload ‖ protected TLVs)
+leaf       = SHA256(0x00 ‖ image_hash)
+```
+
+Uniform for every co-processor image, classic (Ed25519, T3W1) or PQ-native
+(founder, T3T2) — no per-model branch. MCUboot's hash range is exactly
+"everything except the unprotected TLV area", which is the boundary the founder
+material needs: it signs `modelRoot`, so it cannot lie inside its own preimage.
+Taking MCUboot's definition instead of deriving an equivalent rule means the STM,
+the nRF and the host signer commit to the same bytes without agreeing on anything
+private, and neither verifier hashes the image twice. Committing a
+collision-resistant hash commits the bytes, so this is no weaker than hashing the
+range directly.
+
+Because the value is a bare 32 bytes, it is foldable on its own: a device can
+establish *which* co-processor image a release expects without holding the image —
+fold `H(0x00 ‖ hash)` through the co-path and compare against `modelRoot`.
+
+### The unprotected area is not covered by the fold
+
+The hash stops at the protected TLVs, so the fold proves nothing about the
+unprotected TLV area — which is precisely where both schemes keep their signature
+records. Anything that must be trusted there is checked explicitly, in two layers:
+
+- **structure** — a per-scheme whitelist: exactly the expected records, no
+  duplicates, right lengths, ending precisely at `tlv_end`. A rogue TLV added
+  there leaves leaf, `modelRoot` and signature all intact, so only a shape check
+  catches it. The two sets are:
+
+  | scheme | unprotected records |
+  | --- | --- |
+  | classic | `0x0010` hash (32), `0x00A0` + `0x00A1` Ed25519 (64 each) |
+  | founder | `0x0010` hash (32), `0x00A4`/`0x00A5` SLH-DSA, `0x00A6`/`0x00A7` Ed25519, `0x00A8` co-path (whole 32-byte nodes) |
+
+  Both are **exact**, and deliberately stricter than the co-processor's own
+  `allowed_unprot_tlvs`, which also tolerates KEYHASH, PUBKEY, other digests and
+  the encryption TLVs. Being stricter can only refuse an image the co-processor
+  would have taken, never accept one it would refuse — and refusing is the safe
+  direction, since the alternative is erasing its only slot for an image it then
+  rejects. The sets match what the signers actually emit: for classic, imgtool
+  runs *without* a key (so it contributes only the hash TLV) and
+  `insert_signatures.py` appends exactly the two signature records.
+- **acceptance** — the co-processor's own verdict, predicted: for founder images
+  the four records are byte-compared against the boot header's copies (possible
+  because there is one signing per release); for classic images the two Ed25519
+  records are verified against the nRF's own key pool, selected by the sigmask
+  from the *protected* area.
+
+The STM runs both before pushing, where they are a prediction that stops it
+erasing a working co-processor for an image that would then be refused — on a
+BLE-only device that is the host link, so it would be a remotely triggerable
+brick. The co-processor runs them at boot, where they are the verdict.
+
+That predicate is stronger than a wider leaf would be: "these bytes were signed"
+becomes "the co-processor will accept these bytes". A model whose nRF is PQ-native
+has no classic key pool and therefore *refuses* classic images rather than
+accepting them unverified.
+
+The classic key pool is **per model** (`MODEL_NRF_LEGACY_KEYS_*` in the model
+header), unlike the founder root keys in `sec/root_keys.h`, which are one ceremony
+covering every model. `root_keys_check.py` compares every copy against MCUboot's,
+including order — the sigmask selects by index, so a reordering leaves the sets
+equal while making the STM predict the wrong keys.
+
+### Bounds discipline
+
+The unprotected TLV area's declared extent (`it_tlv_tot`) and every record length
+inside it are covered by no signature and no hash. With the leaf no longer
+reaching them, the parser's bounds checks stop being belt-and-braces and become
+the *only* defence. Four invariants:
+
+1. **A declared extent that overruns the image is REJECTED, not clamped.**
+   Clamping is safe against an over-read but not against a brick: MCUboot's
+   generic validate takes `tlv_end` straight from `it_tlv_tot`
+   (`bootutil_tlv_iter_begin` does not clamp), reads past the image into the slot,
+   and refuses the image. An STM that clamped would predict acceptance, erase the
+   co-processor's only slot, and be wrong. A well-formed image has
+   `prot_end + it_tlv_tot == image_len` exactly, so nothing legitimate is refused.
+2. **A record's declared length is checked before the read, not after** —
+   `p + 4 + len > tlv_end` rejects, and only then is the value read.
+3. **All offset arithmetic is 64-bit.** 16-bit lengths added to 32-bit offsets are
+   summed in `uint64_t`, so no sum can wrap into a small value that passes a naive
+   bound.
+4. **A trailing stub too small to be a record is a failure, not a stop.** Silently
+   ignoring a partial record at the end would let one be appended.
+
+All four are covered by negative tests in `nrf_crossvalidate.c`, which assert
+*rejection* rather than merely "does not crash" — an over-read that happened to
+land inside the staging area would otherwise pass unnoticed. Each test mutation is
+asserted to leave the leaf unchanged, so it really is invisible to the fold.
+
+> The nRF's own `pq_parse_layout` still clamps here rather than rejecting. That is
+> not exploitable, because its generic validate refuses the image anyway, but the
+> two should be aligned.
+
+### Where it lives
+
+| implementation | file |
+| --- | --- |
+| STM (verify + push gate) | `core/embed/io/nrf/nrf_image.c` |
+| nRF (its own MCUboot) | `bootloader/mcuboot/boot/bootutil/src/image_pq.c` |
+| host signer | `core/tools/trezor_core_tools/nrf_tree.py` |
+
+All three must agree byte-for-byte; a mismatch is silent (images simply stop
+verifying), so they are cross-validated against shared vectors in
+`core/tests/fw_merkle`.

@@ -77,6 +77,12 @@
 
 #include "nrf_image_internal.h"
 
+#ifndef BOOT_HEADER_MERKLE_SHIMMED
+_Static_assert(NRF_PQ_SLH_SIG_LEN == BOOT_HEADER_PQ_SIGNATURE_LEN,
+               "nRF PQ signature record must match the boot header's");
+_Static_assert(NRF_PQ_EC_SIG_LEN == BOOT_HEADER_EC_SIGNATURE_LEN,
+               "nRF EC signature record must match the boot header's");
+#endif
 
 typedef struct __attribute__((packed)) {
   uint32_t ih_magic;
@@ -335,6 +341,552 @@ secbool nrf_image_verify_in_tree(
    * become the slot value. */
   return boot_header_verify_slot(image_hash, proof, proof_count,
                                  trusted_model_root);
+}
+
+// ---------------------------------------------------------------------------
+// The push gate (phase 3)
+//
+// Scheme-agnostic entry point: nrf_image_verify_for_push dispatches on whether
+// the image carries founder material, then applies THAT scheme's shape
+// whitelist and acceptance check. Both schemes need one, for the same reason --
+// the leaf is the MCUboot image hash, so neither scheme's signature records are
+// covered by the fold.
+//
+// For a PQ-NATIVE image the founder material lives OUTSIDE the leaf (it
+// commits to modelRoot, so it cannot sit inside the leaf that produces it). The
+// fold therefore proves the CODE is authentic but says nothing about that
+// material -- and the nRF has no dual slot, so pushing an image its own MCUboot
+// then refuses leaves it with no valid app at all. On a BLE-only device that is
+// the host link, i.e. a remote-triggerable brick.
+//
+// So before OVERWRITING a working nRF, the STM must check everything MCUboot
+// will check that the fold does not already cover. Three things, and none of
+// them is implied by the others:
+//
+//   1. fold with the co-path from the IMAGE's TLV -- MCUboot uses that copy,
+//   not
+//      the one in the OTA wrapper, and two copies could disagree;
+//   2. the PQ signature records equal the boot header's, byte for byte;
+//   3. the uncovered region is EXACTLY the expected records -- a rogue TLV
+//   leaves
+//      leaf, modelRoot and signature all intact (so both the fold AND a full
+//      signature re-verify pass) yet MCUboot rejects it on its unprotected-TLV
+//      whitelist. Only a shape check sees it.
+//
+// (2) needs no crypto, and is not a shortcut: the founder signature is a
+// function of modelRoot ALONE and there is exactly one signing operation per
+// release, so an image that folds to THIS modelRoot necessarily carries the
+// same signature bytes this boot header carries. A mismatch means a different
+// signing ceremony -- reject and let the release be rebuilt. That fails closed,
+// whereas re-implementing the hybrid verify here would duplicate
+// boot_header_check_signature's logic and its key policy for no gain.
+//
+// The sigmask needs no check: it is a PROTECTED TLV, hence inside the leaf,
+// hence already covered by the fold.
+//
+// A CLASSIC image takes none of this path -- it carries no founder material at
+// all. It is gated instead by nrf_image_legacy_accept_ok, which predicts its
+// own MCUboot's verdict directly: the two Ed25519 records verified against this
+// model's nRF key pool, with the keys the PROTECTED sigmask names.
+// nrf_image_pq_material_present() is the discriminator.
+
+// True iff the image carries PQ founder material (i.e. is PQ-native).
+static secbool nrf_image_pq_material_present(const uint8_t* image,
+                                             size_t image_len) {
+  nrf_image_layout_t layout;
+  if (nrf_image_parse(image, image_len, &layout) != sectrue ||
+      !layout.has_unprot) {
+    return secfalse;
+  }
+  // Any record in the founder range makes this a PQ-native image. Walking
+  // rather than trusting a length: every bound below is checked before it is
+  // used, since the unprotected area's extent is not covered by any signature.
+  uint64_t p = (uint64_t)layout.prot_end + 4u;
+  while (p + 4u <= (uint64_t)layout.unprot_end) {
+    uint16_t type = 0;
+    uint16_t len = 0;
+    memcpy(&type, image + (size_t)p, sizeof(type));
+    memcpy(&len, image + (size_t)p + 2, sizeof(len));
+    if (p + 4u + (uint64_t)len > (uint64_t)layout.unprot_end) {
+      return secfalse;  // malformed record: not a well-formed PQ image
+    }
+    if (type >= NRF_PQ_TLV_FIRST && type <= NRF_PQ_TLV_LAST) {
+      return sectrue;
+    }
+    p += 4u + (uint64_t)len;
+  }
+  return secfalse;
+}
+
+// Compiled where the legacy predicate lives, plus in the host harness, which
+// cross-checks this mapping exhaustively without needing Ed25519. A model whose
+// nRF is PQ-native has no classic pool and needs neither.
+#if defined(MODEL_NRF_LEGACY_KEYS_PRODUCTION) || \
+    defined(BOOT_HEADER_MERKLE_SHIMMED)
+// Which two of the nRF's OWN Ed25519 keys a classic image's sigmask names.
+//
+// PURE, and separated from the crypto on purpose: this mapping is the part that
+// is easy to get wrong, and it is exhaustively cross-checked in
+// tests/fw_merkle.
+//
+// It is NOT the founder scheme's "i-th lowest set bit". The nRF's legacy path
+// uses a bespoke 2-of-3 map (image_validate.c, !CONFIG_BOOT_PQ_SECURE_BOOT):
+//
+//     sig0_idx = sigmask & (1 << 0) ? 0 : 1;
+//     sig1_idx = sigmask & (1 << 2) ? 2 : 1;
+//
+// which for the three legal masks yields 0b011 -> {0,1}, 0b101 -> {0,2},
+// 0b110 -> {1,2}. Mirrored EXACTLY: a divergence here would make the STM
+// predict the wrong verdict -- false rejects at best, and at worst pushing an
+// image the nRF refuses, which is the brick this predicate exists to prevent.
+secbool nrf_image_legacy_sig_slots(uint8_t sigmask, uint32_t key_count,
+                                   int out_idx[2]) {
+  if (out_idx == NULL || key_count == 0) {
+    return secfalse;
+  }
+  // Exactly two keys named, none outside the pool -- the nRF's own checks.
+  if (__builtin_popcount((unsigned)sigmask) != 2) {
+    return secfalse;
+  }
+  if ((sigmask & (uint8_t)~((1u << key_count) - 1u)) != 0) {
+    return secfalse;
+  }
+  int i0 = (sigmask & (1u << 0)) ? 0 : 1;
+  int i1 = (sigmask & (1u << 2)) ? 2 : 1;
+  if (i0 == i1) {  // the nRF rejects this too
+    return secfalse;
+  }
+  if ((uint32_t)i0 >= key_count || (uint32_t)i1 >= key_count) {
+    return secfalse;
+  }
+  out_idx[0] = i0;
+  out_idx[1] = i1;
+  return sectrue;
+}
+#endif  // legacy sigmask mapping needed
+
+// Is the classic ACCEPTANCE predicate available in this build? It needs two
+// things: the model's Ed25519 key pool, and an Ed25519 implementation to verify
+// with. On device both arrive with the model. A host harness opts in by
+// defining NRF_LEGACY_ED25519_HOST once it has linked one -- see
+// tests/fw_merkle/nrf_crossvalidate.c, which does exactly that so the predicate
+// is exercised end-to-end against real signatures rather than stubbed out.
+#if defined(MODEL_NRF_LEGACY_KEYS_PRODUCTION) && \
+    (!defined(BOOT_HEADER_MERKLE_SHIMMED) || defined(NRF_LEGACY_ED25519_HOST))
+#define NRF_LEGACY_PREDICATE_AVAILABLE 1
+#endif
+
+#ifdef NRF_LEGACY_PREDICATE_AVAILABLE
+/*
+ * The nRF co-processor's own Ed25519 key pool for the classic signing scheme,
+ * supplied PER MODEL (MODEL_NRF_LEGACY_KEYS_* in models/<M>/model_<M>.h)
+ * because these keys belong to that model's nRF -- unlike the founder/root keys
+ * in sec/root_keys.h, which are one ceremony covering every model.
+ *
+ * Absent for a model whose nRF is PQ-native: there is no classic pool to
+ * predict against, and a classic image is refused rather than guessed at --
+ * which is what leaves NRF_LEGACY_PREDICATE_AVAILABLE undefined there.
+ */
+static const uint8_t* const NRF_LEGACY_KEYS[] = {
+#if BOOTLOADER_DEVEL
+    MODEL_NRF_LEGACY_KEYS_DEVEL
+#else
+    MODEL_NRF_LEGACY_KEYS_PRODUCTION
+#endif
+};
+// Locate one TLV in the PROTECTED area only. The sigmask must come from there:
+// an unprotected copy is outside the image hash, hence outside the leaf, hence
+// attacker-controlled. Only the legacy predicate needs this, so it lives inside
+// the same guard.
+static uint16_t nrf_image_find_prot_tlv(const uint8_t* image, size_t image_len,
+                                        uint16_t want,
+                                        const uint8_t** out_val) {
+  nrf_image_layout_t layout;
+  if (out_val == NULL ||
+      nrf_image_parse(image, image_len, &layout) != sectrue) {
+    return 0;
+  }
+  uint16_t hdr_size = 0;
+  uint16_t prot_size = 0;
+  uint32_t img_size = 0;
+  memcpy(&hdr_size, image + 8, sizeof(hdr_size));
+  memcpy(&prot_size, image + 10, sizeof(prot_size));
+  memcpy(&img_size, image + 12, sizeof(img_size));
+  if (prot_size == 0) {
+    return 0;
+  }
+  uint64_t start = (uint64_t)hdr_size + (uint64_t)img_size;
+  uint64_t end = start + (uint64_t)prot_size;
+  if (end > (uint64_t)image_len) {
+    return 0;
+  }
+  // Validate the protected TLV-info header before trusting the 4 bytes we skip.
+  // The fold already commits these bytes (the protected area is inside the
+  // image hash), but this parser does not get to assume the fold ran first: the
+  // legacy path reads the sigmask through here, and the harness calls it on
+  // arbitrary fixtures. Mirrors the check nrf_image_parse does for the
+  // unprotected area.
+  uint16_t prot_magic = 0;
+  memcpy(&prot_magic, image + (size_t)start, sizeof(prot_magic));
+  if (prot_magic != NRF_MCUBOOT_TLV_PROT_INFO_MAGIC) {
+    return 0;
+  }
+  uint64_t p = start + 4u;  // past the protected TLV-info header
+  while (p + 4u <= end) {
+    uint16_t type = 0;
+    uint16_t len = 0;
+    memcpy(&type, image + (size_t)p, sizeof(type));
+    memcpy(&len, image + (size_t)p + 2, sizeof(len));
+    if (p + 4u + (uint64_t)len > end) {
+      return 0;  // malformed record
+    }
+    if (type == want) {
+      *out_val = image + (size_t)p + 4u;
+      return len;
+    }
+    p += 4u + (uint64_t)len;
+  }
+  return 0;
+}
+
+#define NRF_LEGACY_KEY_N (sizeof(NRF_LEGACY_KEYS) / sizeof(NRF_LEGACY_KEYS[0]))
+#endif  // NRF_LEGACY_PREDICATE_AVAILABLE
+
+// The classic image's own TLVs: two Ed25519 signatures in the UNPROTECTED area,
+// and the sigmask naming which keys signed in the PROTECTED one. Format
+// constants, so unconditional -- the shape check below needs them on every
+// model, including those with no classic key pool to verify against.
+#define NRF_LEGACY_TLV_SIG_0 0x00A0U
+#define NRF_LEGACY_TLV_SIG_1 0x00A1U
+#define NRF_LEGACY_TLV_SIGMASK 0x00A2U
+#define NRF_LEGACY_SIG_LEN 64U
+
+// Locate one TLV in the UNPROTECTED area only (the PQ records live there; a
+// protected copy of the same type must never be substituted for them). Returns
+// 0 if absent/malformed, else the value length with *out_val set.
+uint16_t nrf_image_find_unprot_tlv(const uint8_t* image, size_t image_len,
+                                   uint16_t want, const uint8_t** out_val) {
+  const uint32_t image_magic = 0x96F3B83DU;
+  const uint16_t tlv_info_magic = 0x6907U;
+  if (image == NULL || image_len < 16) {
+    return 0;
+  }
+  uint32_t magic = 0;
+  uint16_t hdr_size = 0;
+  uint16_t prot_size = 0;
+  uint32_t img_size = 0;
+  memcpy(&magic, image, sizeof(magic));
+  memcpy(&hdr_size, image + 8, sizeof(hdr_size));
+  memcpy(&prot_size, image + 10, sizeof(prot_size));
+  memcpy(&img_size, image + 12, sizeof(img_size));
+  if (magic != image_magic) {
+    return 0;
+  }
+  uint64_t unprot_off =
+      (uint64_t)hdr_size + (uint64_t)img_size + (uint64_t)prot_size;
+  if (unprot_off + 4u > (uint64_t)image_len) {
+    return 0;
+  }
+  uint16_t info_magic = 0;
+  uint16_t info_len = 0;
+  memcpy(&info_magic, image + (size_t)unprot_off, sizeof(info_magic));
+  memcpy(&info_len, image + (size_t)unprot_off + 2, sizeof(info_len));
+  if (info_magic != tlv_info_magic) {
+    return 0;
+  }
+  uint64_t end = unprot_off + (uint64_t)info_len;
+  if (end > (uint64_t)image_len) {
+    end = (uint64_t)image_len;
+  }
+  uint64_t p = unprot_off + 4u;
+  while (p + 4u <= end) {
+    uint16_t type = 0;
+    uint16_t len = 0;
+    memcpy(&type, image + (size_t)p, sizeof(type));
+    memcpy(&len, image + (size_t)p + 2, sizeof(len));
+    if (p + 4u + (uint64_t)len > end) {
+      return 0;  // malformed record
+    }
+    if (type == want) {
+      *out_val = image + (size_t)p + 4u;
+      return len;
+    }
+    p += 4u + (uint64_t)len;
+  }
+  return 0;
+}
+
+// One expected record in the unprotected TLV area.
+//
+// `len` is the exact value length; 0 means variable, in which case the length
+// must be a non-zero multiple of `unit` and at most `max_units` of them. Only
+// the founder Merkle proof is variable -- every classic record is fixed-size.
+typedef struct {
+  uint16_t type;
+  uint16_t len;
+  uint16_t unit;
+  uint16_t max_units;
+} nrf_image_unprot_spec_t;
+
+// The unprotected TLV area must consist of EXACTLY the expected records: each
+// one present once, at its declared length, with no rogue types, no duplicates
+// and no slack before `tlv_end`.
+//
+// This is the only structural constraint on the area, because the leaf --
+// MCUboot's image hash -- stops at the protected TLVs and no signature covers
+// the declared extent either. Exactness is what does the work: loosening it to
+// "contains at least" would leave the length unconstrained, and a rogue record
+// there keeps leaf, modelRoot and signature all intact, so the fold AND a full
+// signature re-verify both pass while the co-processor's own allow-list rejects
+// the image. Mirrors pq_region_shape_ok() in the nRF's MCUboot
+// (boot/bootutil/src/image_pq.c), which is what actually rejects.
+//
+// Per SCHEME, not per model: what belongs in the area is a property of how the
+// image was signed, and each scheme has its own table below.
+static secbool nrf_image_unprot_shape_ok(
+    const uint8_t* image, size_t image_len,
+    const nrf_image_unprot_spec_t* expected, uint32_t n_expected) {
+  const uint32_t all_seen =
+      (n_expected >= 32u) ? 0xFFFFFFFFu : ((1u << n_expected) - 1u);
+
+  nrf_image_layout_t layout;
+  if (nrf_image_parse(image, image_len, &layout) != sectrue ||
+      !layout.has_unprot) {
+    return secfalse;
+  }
+
+  uint32_t seen = 0;
+  uint64_t p = (uint64_t)layout.prot_end + 4u;  // past the TLV-info header
+  const uint64_t tlv_end = (uint64_t)layout.unprot_end;
+  while (p < tlv_end) {
+    if (p + 4u > tlv_end) {
+      return secfalse;  // trailing stub too small to be a record
+    }
+    uint16_t type = 0;
+    uint16_t len = 0;
+    memcpy(&type, image + (size_t)p, sizeof(type));
+    memcpy(&len, image + (size_t)p + 2, sizeof(len));
+    if (p + 4u + (uint64_t)len > tlv_end) {
+      return secfalse;  // record overruns the area
+    }
+
+    // Must be one of the expected records, and not a repeat. Anything else -- a
+    // rogue type, a duplicate, a wrong length -- fails.
+    bool matched = false;
+    for (uint32_t i = 0; i < n_expected; i++) {
+      if (type != expected[i].type) {
+        continue;
+      }
+      if (seen & (1u << i)) {
+        return secfalse;  // duplicate
+      }
+      if (expected[i].len != 0) {
+        if (len != expected[i].len) {
+          return secfalse;
+        }
+      } else {
+        // Variable: whole units, non-empty, bounded.
+        if (len == 0 || expected[i].unit == 0 ||
+            (len % expected[i].unit) != 0 ||
+            (len / expected[i].unit) > expected[i].max_units) {
+          return secfalse;
+        }
+      }
+      seen |= (1u << i);
+      matched = true;
+      break;
+    }
+    if (!matched) {
+      return secfalse;  // rogue or unexpected record
+    }
+    p += 4u + (uint64_t)len;
+  }
+
+  // Every expected record present, and the last ended exactly at tlv_end (the
+  // loop condition guarantees the latter -- no slack tolerated).
+  return (seen == all_seen) ? sectrue : secfalse;
+}
+
+// FOUNDER (PQ-native) images: the image hash plus the founder material. This is
+// check (3) of the push gate. Every record's value is independently pinned once
+// the shape holds: TLV 0x10 by MCUboot comparing it against the hash it
+// computed (and that hash is what the fold commits), the four signature records
+// by the push gate's byte-comparison against the boot header, and the proof by
+// the fold reaching modelRoot.
+static secbool nrf_image_pq_shape_ok(const uint8_t* image, size_t image_len) {
+  static const nrf_image_unprot_spec_t expected[] = {
+      {NRF_MCUBOOT_TLV_IMAGE_HASH, SHA256_DIGEST_LENGTH, 0, 0},
+      {NRF_PQ_TLV_SLH_SIG_0, NRF_PQ_SLH_SIG_LEN, 0, 0},
+      {NRF_PQ_TLV_SLH_SIG_1, NRF_PQ_SLH_SIG_LEN, 0, 0},
+      {NRF_PQ_TLV_EC_SIG_0, NRF_PQ_EC_SIG_LEN, 0, 0},
+      {NRF_PQ_TLV_EC_SIG_1, NRF_PQ_EC_SIG_LEN, 0, 0},
+      {NRF_PQ_TLV_MERKLE_PROOF, 0, (uint16_t)sizeof(merkle_proof_node_t),
+       MODEL_TREE_MAX_PROOF_NODES},
+  };
+  return nrf_image_unprot_shape_ok(
+      image, image_len, expected,
+      (uint32_t)(sizeof(expected) / sizeof(expected[0])));
+}
+
+// CLASSIC images: the image hash plus the two Ed25519 signature records, whose
+// values nrf_image_legacy_accept_ok then verifies. The sigmask is NOT here --
+// it is a protected TLV, hence inside the image hash and already covered by the
+// fold.
+//
+// The set is EXACT, and deliberately stricter than the co-processor's own
+// allowed_unprot_tlvs (which also tolerates KEYHASH, PUBKEY, other digests and
+// the encryption TLVs). Confirmed against what the signer actually emits:
+// imgtool is invoked WITHOUT a key, so it contributes only the hash TLV, and
+// insert_signatures.py appends exactly 0x00A0 and 0x00A1 -- nothing else. Being
+// stricter can only refuse an image the nRF would have taken, never accept one
+// it would refuse, and refusing is the safe direction here: the alternative is
+// erasing the co-processor's only slot for an image it then rejects.
+static secbool nrf_image_legacy_shape_ok(const uint8_t* image,
+                                         size_t image_len) {
+  static const nrf_image_unprot_spec_t expected[] = {
+      {NRF_MCUBOOT_TLV_IMAGE_HASH, SHA256_DIGEST_LENGTH, 0, 0},
+      {NRF_LEGACY_TLV_SIG_0, NRF_LEGACY_SIG_LEN, 0, 0},
+      {NRF_LEGACY_TLV_SIG_1, NRF_LEGACY_SIG_LEN, 0, 0},
+  };
+  return nrf_image_unprot_shape_ok(
+      image, image_len, expected,
+      (uint32_t)(sizeof(expected) / sizeof(expected[0])));
+}
+
+#ifdef NRF_LEGACY_PREDICATE_AVAILABLE
+// Will the nRF's own MCUboot accept this CLASSIC image? Answered by doing what
+// it will do: verify the two Ed25519 records over the image hash, with the keys
+// the protected sigmask names.
+//
+// Needed because the leaf is the image hash, which stops at the protected TLVs
+// -- so the fold says nothing about the signature records in the unprotected
+// area. A host could swap them while leaving header, payload and protected TLVs
+// intact: the fold would pass, the STM would erase the nRF's only slot, and the
+// nRF would then refuse the image. Predicting acceptance directly is strictly
+// stronger than what the old whole-image leaf gave us ("these bytes were
+// signed" -> "the nRF will accept these bytes").
+//
+// The signatures cover exactly the image hash, which is already computed here
+// as the leaf value, so this costs two Ed25519 verifications and nothing else.
+static secbool nrf_image_legacy_accept_ok(const uint8_t* image,
+                                          size_t image_len) {
+  uint8_t image_hash[SHA256_DIGEST_LENGTH];
+  if (nrf_image_hash(image, image_len, image_hash) != sectrue) {
+    return secfalse;
+  }
+
+  // Sigmask from the PROTECTED area only: it is inside the image hash, hence
+  // inside the leaf, hence covered by the fold. An unprotected copy would be
+  // attacker-controlled.
+  const uint8_t* mask_val = NULL;
+  if (nrf_image_find_prot_tlv(image, image_len, NRF_LEGACY_TLV_SIGMASK,
+                              &mask_val) != 1 ||
+      mask_val == NULL) {
+    return secfalse;
+  }
+  int idx[2] = {-1, -1};
+  if (nrf_image_legacy_sig_slots(*mask_val, NRF_LEGACY_KEY_N, idx) != sectrue) {
+    return secfalse;
+  }
+
+  const uint16_t sig_tlv[2] = {NRF_LEGACY_TLV_SIG_0, NRF_LEGACY_TLV_SIG_1};
+  for (int i = 0; i < 2; i++) {
+    const uint8_t* sig = NULL;
+    if (nrf_image_find_unprot_tlv(image, image_len, sig_tlv[i], &sig) !=
+            NRF_LEGACY_SIG_LEN ||
+        sig == NULL) {
+      return secfalse;
+    }
+    if (ed25519_sign_open(image_hash, sizeof(image_hash),
+                          NRF_LEGACY_KEYS[idx[i]], sig) != 0) {
+      return secfalse;
+    }
+  }
+  return sectrue;
+}
+#endif  // NRF_LEGACY_PREDICATE_AVAILABLE
+
+secbool nrf_image_verify_for_push(const uint8_t* image, size_t image_len,
+                                  const merkle_proof_node_t* trusted_model_root,
+                                  const uint8_t* expected_slh_sig0,
+                                  const uint8_t* expected_slh_sig1,
+                                  const uint8_t* expected_ec_sig0,
+                                  const uint8_t* expected_ec_sig1) {
+  if (image == NULL || trusted_model_root == NULL ||
+      expected_slh_sig0 == NULL || expected_slh_sig1 == NULL ||
+      expected_ec_sig0 == NULL || expected_ec_sig1 == NULL) {
+    return secfalse;
+  }
+  // Classic image: the fold covers only up to the protected TLVs, so it does
+  // NOT prove the unprotected signature records are intact. Predict the nRF's
+  // verdict instead -- the same two layers the founder path gets, against ITS
+  // scheme.
+  if (nrf_image_pq_material_present(image, image_len) != sectrue) {
+    // (3) shape first, exactly as below: cheapest, needs no crypto, and it is
+    // the only thing that catches a rogue record out here. Without it the
+    // signatures would verify (they cover the image hash, which a rogue TLV
+    // does not change), the fold would pass, the STM would erase the nRF's only
+    // slot -- and the nRF would then refuse the image on its own
+    // unprotected-TLV allow-list.
+    if (nrf_image_legacy_shape_ok(image, image_len) != sectrue) {
+      return secfalse;
+    }
+#ifdef NRF_LEGACY_PREDICATE_AVAILABLE
+    return nrf_image_legacy_accept_ok(image, image_len);
+#elif defined(BOOT_HEADER_MERKLE_SHIMMED)
+    // A host build without an Ed25519 implementation: the shape layer above is
+    // all this scheme can check here.
+    return sectrue;
+#else
+    // This model's nRF is PQ-native, so there is no classic key pool to predict
+    // against. Refuse rather than guess: a classic image here is either the
+    // wrong artifact or an attempt to sidestep founder verification, and
+    // pushing it would erase the nRF's only slot for something we cannot vouch
+    // for.
+    return secfalse;
+#endif
+  }
+
+  // (3) shape first: cheapest, and it bounds what the reads below can see.
+  if (nrf_image_pq_shape_ok(image, image_len) != sectrue) {
+    return secfalse;
+  }
+
+  // (1) fold with the co-path from the IMAGE, which is the copy MCUboot uses.
+  const uint8_t* proof = NULL;
+  uint16_t proof_len =
+      nrf_image_find_unprot_tlv(image, image_len, NRF_PQ_TLV_MERKLE_PROOF, &proof);
+  if (proof_len == 0 || (proof_len % sizeof(merkle_proof_node_t)) != 0) {
+    return secfalse;
+  }
+  if (nrf_image_verify_in_tree(image, image_len,
+                         (const merkle_proof_node_t*)(const void*)proof,
+                         proof_len / sizeof(merkle_proof_node_t),
+                         trusted_model_root) != sectrue) {
+    return secfalse;
+  }
+
+  // (2) the signature records must be the ones this boot header carries.
+  const struct {
+    uint16_t type;
+    const uint8_t* expected;
+    uint16_t len;
+  } sigs[] = {
+      {NRF_PQ_TLV_SLH_SIG_0, expected_slh_sig0, NRF_PQ_SLH_SIG_LEN},
+      {NRF_PQ_TLV_SLH_SIG_1, expected_slh_sig1, NRF_PQ_SLH_SIG_LEN},
+      {NRF_PQ_TLV_EC_SIG_0, expected_ec_sig0, NRF_PQ_EC_SIG_LEN},
+      {NRF_PQ_TLV_EC_SIG_1, expected_ec_sig1, NRF_PQ_EC_SIG_LEN},
+  };
+  for (uint32_t i = 0; i < sizeof(sigs) / sizeof(sigs[0]); i++) {
+    const uint8_t* val = NULL;
+    uint16_t len =
+        nrf_image_find_unprot_tlv(image, image_len, sigs[i].type, &val);
+    if (len != sigs[i].len || val == NULL ||
+        memcmp(val, sigs[i].expected, len) != 0) {
+      return secfalse;
+    }
+  }
+  return sectrue;
 }
 
 #endif  // SECURE_MODE || shimmed
