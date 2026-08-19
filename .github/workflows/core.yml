@@ -95,9 +95,10 @@ jobs:
       # - run: nix-shell --run "uv run ./tools/print-rust-type-sizes.sh core/build/firmware/rust-type-sizes.log" | awk '$1 >= 1000' | sort -k1 -n
       - run: nix-shell --run "uv run ./tools/check-bitcoin-only core/build-xtask/artifacts/latest/firmware.bin"
         if: matrix.coins == 'btconly' && matrix.type != 'debuglink'
-      - run: nix-shell --run "uv run ./tools/check-insecure-prng.py --absent core/build-xtask/artifacts/latest/firmware.bin"
       - run: nix-shell --run "uv run ./tools/check-insecure-prng.py --absent core/build-xtask/artifacts/latest/boardloader.bin"
       - run: nix-shell --run "uv run ./tools/check-insecure-prng.py --absent core/build-xtask/artifacts/latest/bootloader.bin"
+      - run: nix-shell --run "uv run ./tools/check-insecure-prng.py --absent core/build-xtask/artifacts/latest/prodtest.bin"
+      - run: nix-shell --run "uv run ./tools/check-insecure-prng.py --absent core/build-xtask/artifacts/latest/firmware.bin"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-firmware-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}${{ matrix.n4w1 && '-n4w1' || '' }}
