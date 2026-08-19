@@ -309,8 +309,6 @@ async def try_confirm_staking_transaction(
             return False
         if signer_public_key != create.base:
             return False
-        if signer_public_key != init.withdrawer:
-            await confirm_stake_withdrawer(init.withdrawer, chunkify)
         if signer_public_key != init.staker:
             return False
         if signer_public_key != delegate.stake_authority[0]:
@@ -331,6 +329,9 @@ async def try_confirm_staking_transaction(
             delegate.initialized_stake_account
         ):
             return False
+
+        if signer_public_key != init.withdrawer:
+            await confirm_stake_withdrawer(init.withdrawer, chunkify)
 
         await confirm_stake_transaction(
             fee=fee,
