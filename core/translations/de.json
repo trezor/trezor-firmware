@@ -228,12 +228,7 @@
     "bitcoin__title_confirm_details": "Details bestätigen",
     "bitcoin__title_finalize_transaction": "Transaktion abschliessen",
     "bitcoin__title_high_mining_fee": "Hohe Mining-Gebühr",
-    "bitcoin__title_meld_transaction": {
-      "Bolt": "Transaktionen vereinen",
-      "Caesar": "Transaktionen vereinen",
-      "Delizia": "Transaktion vereinen",
-      "Eckhart": "Transakt. vereinen"
-    },
+    "bitcoin__title_meld_transaction": "Transaktionen zusammenführen",
     "bitcoin__title_modify_amount": "Betrag ändern",
     "bitcoin__title_payjoin": "Payjoin",
     "bitcoin__title_proof_of_ownership": "Eigentumsnachweis",
@@ -2400,8 +2395,8 @@
       "Eckhart": ""
     },
     "reset__button_recover": {
-      "Bolt": "Wallet wiederherst.",
-      "Caesar": "Wallet wiederherst.",
+      "Bolt": "Wallet wiederherstellen",
+      "Caesar": "Wallet wiederherstellen",
       "Delizia": "",
       "Eckhart": ""
     },

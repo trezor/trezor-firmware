@@ -511,12 +511,7 @@
       "Eckhart": "Déconnecter"
     },
     "buttons__enable": "Activer",
-    "buttons__enter_share": {
-      "Bolt": "Saisir le fragm.",
-      "Caesar": "Saisir le fragment",
-      "Delizia": "Saisir le fragment",
-      "Eckhart": "Saisir le fragment"
-    },
+    "buttons__enter_share": "Saisir le fragment",
     "buttons__export": "Exporter",
     "buttons__finish": "Terminer",
     "buttons__forget": {
@@ -2330,7 +2325,7 @@
       "Eckhart": ""
     },
     "reset__button_recover": {
-      "Bolt": "Récupérer",
+      "Bolt": "Récupérer portefeuille",
       "Caesar": "Récupérer portefeuille",
       "Delizia": "",
       "Eckhart": ""
@@ -2581,8 +2576,8 @@
     },
     "reset__select_word_x_of_y_template": {
       "Bolt": "Le mot {0} sur {1} est :",
-      "Caesar": "Mot {0} sur {1} :",
-      "Delizia": "Sélect. mot {0} sur {1}",
+      "Caesar": "Le mot {0} sur {1} est :",
+      "Delizia": "Le mot {0} sur {1} est",
       "Eckhart": ""
     },
     "reset__set_it_to_count_template": {
