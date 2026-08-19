@@ -7,11 +7,28 @@ from trezor import config
 _WALLET_A = b"\xa0" * 16
 _WALLET_B = b"\xb0" * 16
 
-_KEY_1 = b"\x11" * 32
-_KEY_2 = b"\x22" * 32
+def _identity(identifier, key_type=b"address", app_id=b"btc"):
+    """The bytes a record is FOUND by, framed the way `offline_store.identity_block` frames them.
+
+    Deliberately assembled HERE rather than imported, as with `_record`: this file is about the
+    storage layer's slot behaviour, and it treats an identity as opaque bytes -- which is exactly
+    the contract `store_find` documents.
+    """
+    return (
+        bytes([len(key_type)])
+        + key_type
+        + bytes([len(app_id)])
+        + app_id
+        + len(identifier).to_bytes(2, "big")
+        + identifier
+    )
 
 
-def _record(wallet_id, entry_key, payload=b"value", counter=7, pending=False):
+_ID_1 = _identity(b"addr1")
+_ID_2 = _identity(b"addr2")
+
+
+def _record(wallet_id, identity, payload=b"value", pending=False):
     """A minimal well-formed record, built the way `offline_store.encode_record` builds one.
 
     Deliberately assembled HERE rather than imported: this file is about the storage layer's
@@ -19,16 +36,9 @@ def _record(wallet_id, entry_key, payload=b"value", counter=7, pending=False):
     break these tests for reasons that have nothing to do with what they assert.
     """
     return (
-        ward_store.store_prefix(wallet_id, entry_key)
+        ward_store.store_prefix(wallet_id)
+        + identity
         + bytes([0x01 if pending else 0x00])
-        + counter.to_bytes(4, "big")
-        + b"\x00"  # device_id
-        + bytes([7])
-        + b"address"
-        + bytes([3])
-        + b"btc"
-        + len(b"id").to_bytes(2, "big")
-        + b"id"
         + len(payload).to_bytes(2, "big")
         + payload
     )
@@ -61,12 +71,12 @@ class TestWardStore(unittest.TestCase):
         ever served the session that wrote them -- which is exactly the state this feature
         exists to leave.
         """
-        rec = _record(_WALLET_A, _KEY_1, b"bc1qexampleaddress")
-        self.assertTrue(ward_store.store_put(_WALLET_A, _KEY_1, rec))
+        rec = _record(_WALLET_A, _ID_1, b"bc1qexampleaddress")
+        self.assertTrue(ward_store.store_put(_WALLET_A, _ID_1, rec))
 
         self.reboot()
 
-        self.assertEqual(ward_store.store_get(_WALLET_A, _KEY_1), rec)
+        self.assertEqual(ward_store.store_get(_WALLET_A, _ID_1), rec)
 
     def test_wallets_cannot_see_each_others_records(self):
         """A passphrase switch must not surface another wallet's entry at the same path.
@@ -75,16 +85,16 @@ class TestWardStore(unittest.TestCase):
         entry_key alone would find whichever was written last, and the user would be shown one
         hidden wallet's data while believing they were in another.
         """
-        rec_a = _record(_WALLET_A, _KEY_1, b"wallet-a-value")
-        self.assertTrue(ward_store.store_put(_WALLET_A, _KEY_1, rec_a))
+        rec_a = _record(_WALLET_A, _ID_1, b"wallet-a-value")
+        self.assertTrue(ward_store.store_put(_WALLET_A, _ID_1, rec_a))
 
-        self.assertIsNone(ward_store.store_get(_WALLET_B, _KEY_1))
+        self.assertIsNone(ward_store.store_get(_WALLET_B, _ID_1))
 
-        rec_b = _record(_WALLET_B, _KEY_1, b"wallet-b-value")
-        self.assertTrue(ward_store.store_put(_WALLET_B, _KEY_1, rec_b))
+        rec_b = _record(_WALLET_B, _ID_1, b"wallet-b-value")
+        self.assertTrue(ward_store.store_put(_WALLET_B, _ID_1, rec_b))
 
-        self.assertEqual(ward_store.store_get(_WALLET_A, _KEY_1), rec_a)
-        self.assertEqual(ward_store.store_get(_WALLET_B, _KEY_1), rec_b)
+        self.assertEqual(ward_store.store_get(_WALLET_A, _ID_1), rec_a)
+        self.assertEqual(ward_store.store_get(_WALLET_B, _ID_1), rec_b)
 
     def test_both_wallets_survive_switching_across_reboots(self):
         """Write A, cycle, write B, cycle, and both are still there.
@@ -93,16 +103,16 @@ class TestWardStore(unittest.TestCase):
         A `_find` that matched too loosely, or an allocator that handed out an occupied slot,
         would pass isolation within one session and still lose a wallet across a switch.
         """
-        rec_a = _record(_WALLET_A, _KEY_1, b"a")
-        self.assertTrue(ward_store.store_put(_WALLET_A, _KEY_1, rec_a))
+        rec_a = _record(_WALLET_A, _ID_1, b"a")
+        self.assertTrue(ward_store.store_put(_WALLET_A, _ID_1, rec_a))
         self.reboot()
 
-        rec_b = _record(_WALLET_B, _KEY_2, b"b")
-        self.assertTrue(ward_store.store_put(_WALLET_B, _KEY_2, rec_b))
+        rec_b = _record(_WALLET_B, _ID_2, b"b")
+        self.assertTrue(ward_store.store_put(_WALLET_B, _ID_2, rec_b))
         self.reboot()
 
-        self.assertEqual(ward_store.store_get(_WALLET_A, _KEY_1), rec_a)
-        self.assertEqual(ward_store.store_get(_WALLET_B, _KEY_2), rec_b)
+        self.assertEqual(ward_store.store_get(_WALLET_A, _ID_1), rec_a)
+        self.assertEqual(ward_store.store_get(_WALLET_B, _ID_2), rec_b)
 
     def test_a_full_store_refuses_and_keeps_everything(self):
         """Full means full: the write fails and not one existing record moves.
@@ -111,14 +121,14 @@ class TestWardStore(unittest.TestCase):
         failure while having already evicted something would pass a test that only checked the
         return value, and the user would discover the loss later with nothing to explain it.
         """
-        keys = [bytes([i]) * 32 for i in range(ward_store.MAX_STORE_ENTRIES)]
+        keys = [_identity(bytes([i]) * 4) for i in range(ward_store.MAX_STORE_ENTRIES)]
         records = {}
         for k in keys:
-            rec = _record(_WALLET_A, k, b"payload-" + k[:1])
+            rec = _record(_WALLET_A, k, b"payload")
             records[k] = rec
             self.assertTrue(ward_store.store_put(_WALLET_A, k, rec))
 
-        overflow_key = b"\xff" * 32
+        overflow_key = _identity(b"\xff" * 4)
         self.assertFalse(
             ward_store.store_put(
                 _WALLET_A, overflow_key, _record(_WALLET_A, overflow_key)
@@ -132,11 +142,11 @@ class TestWardStore(unittest.TestCase):
     def test_a_full_store_still_accepts_a_replacement(self):
         """Being full blocks NEW records, not updates to ones already held.
 
-        Otherwise a full store would freeze every entry in it: a user could neither refresh a
-        pinned value nor let a queued write advance its counter without first erasing something
-        unrelated.
+        Otherwise a full store would freeze every entry in it: a user could neither replace a
+        pinned value nor let a queued write be marked as handed over without first erasing
+        something unrelated.
         """
-        keys = [bytes([i]) * 32 for i in range(ward_store.MAX_STORE_ENTRIES)]
+        keys = [_identity(bytes([i]) * 4) for i in range(ward_store.MAX_STORE_ENTRIES)]
         for k in keys:
             self.assertTrue(ward_store.store_put(_WALLET_A, k, _record(_WALLET_A, k)))
 
@@ -153,7 +163,7 @@ class TestWardStore(unittest.TestCase):
         prefix were not frozen, the only options left would be to strand the record forever or
         to wipe blind.
         """
-        rec = bytearray(_record(_WALLET_A, _KEY_1))
+        rec = bytearray(_record(_WALLET_A, _ID_1))
         rec[0] = 0x7F  # a version this build knows nothing about
         rec = bytes(rec)
 
@@ -162,38 +172,38 @@ class TestWardStore(unittest.TestCase):
 
         common.set(common.APP_WARD, 0x40, rec)
 
-        self.assertEqual(ward_store.store_find(_WALLET_A, _KEY_1), 0)
-        self.assertEqual(ward_store.store_get(_WALLET_A, _KEY_1), rec)
+        self.assertEqual(ward_store.store_find(_WALLET_A, _ID_1), 0)
+        self.assertEqual(ward_store.store_get(_WALLET_A, _ID_1), rec)
 
-        ward_store.store_delete(_WALLET_A, _KEY_1)
-        self.assertIsNone(ward_store.store_get(_WALLET_A, _KEY_1))
+        ward_store.store_delete(_WALLET_A, _ID_1)
+        self.assertIsNone(ward_store.store_get(_WALLET_A, _ID_1))
 
     def test_deleting_frees_the_slot_and_leaves_neighbours_alone(self):
-        rec1 = _record(_WALLET_A, _KEY_1, b"one")
-        rec2 = _record(_WALLET_A, _KEY_2, b"two")
-        self.assertTrue(ward_store.store_put(_WALLET_A, _KEY_1, rec1))
-        self.assertTrue(ward_store.store_put(_WALLET_A, _KEY_2, rec2))
+        rec1 = _record(_WALLET_A, _ID_1, b"one")
+        rec2 = _record(_WALLET_A, _ID_2, b"two")
+        self.assertTrue(ward_store.store_put(_WALLET_A, _ID_1, rec1))
+        self.assertTrue(ward_store.store_put(_WALLET_A, _ID_2, rec2))
 
-        ward_store.store_delete(_WALLET_A, _KEY_1)
+        ward_store.store_delete(_WALLET_A, _ID_1)
 
-        self.assertIsNone(ward_store.store_get(_WALLET_A, _KEY_1))
-        self.assertEqual(ward_store.store_get(_WALLET_A, _KEY_2), rec2)
+        self.assertIsNone(ward_store.store_get(_WALLET_A, _ID_1))
+        self.assertEqual(ward_store.store_get(_WALLET_A, _ID_2), rec2)
 
-        key3 = b"\x33" * 32
+        key3 = _identity(b"addr3")
         rec3 = _record(_WALLET_A, key3, b"three")
         self.assertTrue(ward_store.store_put(_WALLET_A, key3, rec3))
         self.assertEqual(ward_store.store_get(_WALLET_A, key3), rec3)
 
     def test_deleting_something_that_is_not_there_is_a_no_op(self):
-        ward_store.store_delete(_WALLET_A, _KEY_1)
-        self.assertIsNone(ward_store.store_get(_WALLET_A, _KEY_1))
+        ward_store.store_delete(_WALLET_A, _ID_1)
+        self.assertIsNone(ward_store.store_get(_WALLET_A, _ID_1))
 
     def test_listing_is_scoped_to_one_wallet(self):
         """Enumeration is where a missing filter leaks another hidden wallet's existence."""
-        rec_a = _record(_WALLET_A, _KEY_1, b"a")
-        rec_b = _record(_WALLET_B, _KEY_2, b"b")
-        ward_store.store_put(_WALLET_A, _KEY_1, rec_a)
-        ward_store.store_put(_WALLET_B, _KEY_2, rec_b)
+        rec_a = _record(_WALLET_A, _ID_1, b"a")
+        rec_b = _record(_WALLET_B, _ID_2, b"b")
+        ward_store.store_put(_WALLET_A, _ID_1, rec_a)
+        ward_store.store_put(_WALLET_B, _ID_2, rec_b)
 
         self.assertEqual(ward_store.store_list(_WALLET_A), [rec_a])
         self.assertEqual(ward_store.store_list(_WALLET_B), [rec_b])
@@ -206,12 +216,12 @@ class TestWardStore(unittest.TestCase):
         of confusion that looks like ordinary operation rather than an error.
         """
         ward_store.set_root(_WALLET_A, b"\x01" * 32, 5)
-        rec = _record(_WALLET_A, _KEY_1, b"kept")
-        self.assertTrue(ward_store.store_put(_WALLET_A, _KEY_1, rec))
+        rec = _record(_WALLET_A, _ID_1, b"kept")
+        self.assertTrue(ward_store.store_put(_WALLET_A, _ID_1, rec))
 
         ward_store.set_root(_WALLET_A, b"\x02" * 32, 6)
 
-        self.assertEqual(ward_store.store_get(_WALLET_A, _KEY_1), rec)
+        self.assertEqual(ward_store.store_get(_WALLET_A, _ID_1), rec)
         self.assertEqual(ward_store.get_root(_WALLET_A), b"\x02" * 32)
         self.assertEqual(ward_store.get_counter(_WALLET_A), 6)
 
@@ -222,19 +232,44 @@ class TestWardStore(unittest.TestCase):
         would be unfindable -- present in flash, invisible to every lookup, and occupying a slot
         the user cannot free.
         """
-        rec = _record(_WALLET_A, _KEY_1)
+        rec = _record(_WALLET_A, _ID_1)
         with self.assertRaises(ValueError):
-            ward_store.store_put(_WALLET_B, _KEY_1, rec)
+            ward_store.store_put(_WALLET_B, _ID_1, rec)
         with self.assertRaises(ValueError):
-            ward_store.store_put(_WALLET_A, _KEY_2, rec)
+            ward_store.store_put(_WALLET_A, _ID_2, rec)
 
-    def test_fixed_width_operands_only(self):
+    def test_operands_are_checked(self):
+        """The wallet_id is fixed-width; the identity is variable but never empty.
+
+        An empty identity would match every record's header prefix-wise, so the first slot of the
+        wallet would answer for any lookup -- which is the failure mode that matters here.
+        """
         for bad in (b"", b"\x00" * 15, b"\x00" * 17):
             with self.assertRaises(ValueError):
-                ward_store.store_find(bad, _KEY_1)
-        for bad in (b"", b"\x00" * 31, b"\x00" * 33):
-            with self.assertRaises(ValueError):
-                ward_store.store_find(_WALLET_A, bad)
+                ward_store.store_find(bad, _ID_1)
+        with self.assertRaises(ValueError):
+            ward_store.store_find(_WALLET_A, b"")
+
+    def test_an_unreadable_record_is_findable_by_slot_and_removable(self):
+        """The other half of the frozen header: a record whose IDENTITY cannot be parsed.
+
+        Version 2 moved the identity into the header, so a record written by a build that framed it
+        differently cannot be matched by identity at all -- only the version byte and the wallet_id
+        are dependable. Without a by-slot handle such a record would hold its slot forever, which is
+        the state the erase rule forbids.
+        """
+        rec = bytearray(_record(_WALLET_A, _ID_1))
+        rec[0] = 0x7F  # a version this build knows nothing about
+        from storage import common
+
+        common.set(common.APP_WARD, 0x40, bytes(rec))
+
+        self.assertEqual(ward_store.store_find_unreadable(_WALLET_A), 0)
+        # ...and not another wallet's problem
+        self.assertIsNone(ward_store.store_find_unreadable(_WALLET_B))
+
+        ward_store.store_delete_slot(0)
+        self.assertIsNone(ward_store.store_find_unreadable(_WALLET_A))
 
 
 if __name__ == "__main__":

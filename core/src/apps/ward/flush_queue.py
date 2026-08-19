@@ -54,6 +54,7 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
         derive_k_mac,
         derive_k_sig,
         derive_ward_id,
+        entry_key_for,
     )
     from .leaf import (
         encode_content,
@@ -74,7 +75,10 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
         return WardFlushQueueAck(remaining=0)
 
     key_type = entry.key_type
-    entry_key = entry.entry_key
+    # THE KEYED PATH IS ASSIGNED HERE. A queued change has none -- it is not in the trie -- so the
+    # store holds the identity and this derives the path from it at the moment of publication, which
+    # is the only moment a path means anything.
+    entry_key = await entry_key_for(entry.app_id, entry.identifier, key_type)
 
     # Re-derivation against CURRENT state. This proves the path's present leaf against the
     # trusted root, so the new root below is computed from a state the host had to
@@ -90,7 +94,6 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
         key_type,
         entry.identifier,
         entry.app_id,
-        device_id=entry.device_id,
     )
     val_part = encode_content(
         await derive_k_data(key_type),
@@ -111,20 +114,11 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
         witness_commit=witness_commit,
     )
 
-    # Record the counter this publication claimed, keeping the record PENDING. That number is
-    # what `reconcile` later compares an attested counter against to decide the change has
-    # landed. Written before the ack goes out so a lost response cannot leave the device
-    # unable to recognise its own change being confirmed.
-    await offline_store.put(
-        entry_key,
-        key_type,
-        entry.app_id,
-        entry.identifier,
-        entry.device_id,
-        entry.value,
-        counter,
-        True,
-    )
+    # Mark the record OFFERED, keeping it PENDING. That flag is what stops this loop offering the
+    # same change forever, and what `reconcile` looks at to decide the change has landed. Written
+    # before the ack goes out, so a lost response cannot leave the device offering it again as though
+    # nothing had happened.
+    await offline_store.mark_offered(entry, counter)
 
     remaining = await offline_store.count_unsent()
 
@@ -150,9 +144,9 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
             counter,
             new_root,
         ),
-        # Counts only records NOT YET HANDED OVER, so this one is excluded -- it now carries
-        # an assigned counter. The host loops while this is non-zero; a record that was sent
-        # but never confirmed comes back only through `reconcile_pending`, which is the point
-        # at which the device can tell whether it landed.
+        # Counts only records NOT YET HANDED OVER, so this one is excluded -- it is marked offered
+        # now. The host loops while this is non-zero; a record that was sent but never confirmed
+        # comes back only through `reconcile_pending`, which is the point at which the device can
+        # tell the head has moved at all.
         remaining=remaining,
     )

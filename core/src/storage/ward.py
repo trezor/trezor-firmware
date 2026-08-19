@@ -58,9 +58,15 @@ It lives here rather than in EVOLU because the case that forced it cannot reach 
 that does not speak WARD never sends `WardSync`, cannot answer `WardEntryRequest`, and has no
 replica to consult. Serving that host means serving it from this device.
 
-KEYED BY wallet_id, exactly as the root is. A passphrase switch must not show one wallet's
-entries to another, nor apply one wallet's queued write under another's keys. Every lookup
-matches on wallet_id first; nothing is ever found by entry_key alone.
+KEYED BY wallet_id AND IDENTITY, never by the keyed path. A passphrase switch must not show one
+wallet's entries to another, nor apply one wallet's queued write under another's keys, so every
+lookup matches on wallet_id first and nothing is ever found by identity alone.
+
+THE KEYED PATH IS NOT STORED HERE AT ALL. `entry_key` is where a leaf sits in the TRIE, and it is
+assigned when a change is published -- a queued change has not been. Keeping it in a record would
+have meant storing a derived value that a pending record has no business claiming, and then keeping
+it in step with the identity it was derived from. It is derived instead, from the identity, at the
+one moment it is needed: publication.
 
 RECORDS ARE PLAINTEXT, and that is a decision with a citation rather than an omission.
 `storage.c` already encrypts every protected value with ChaCha20-Poly1305 under a PIN-derived
@@ -218,77 +224,81 @@ _STORE_FIRST_KEY = const(0x40)
 MAX_STORE_ENTRIES = const(8)
 MAX_VALUE_LEN = const(512)
 
-STORE_VERSION = const(1)
+# Version 2 dropped entry_key, the counter and device_id from the record. THE KEYED PATH IS NOT
+# THE QUEUE'S TO HOLD: it is what a leaf sits at in the TRIE, assigned when the change is published,
+# and a queued change has not been published. Records are found by the IDENTITY they carry instead,
+# and the path is derived from that identity at the one moment it is needed.
+STORE_VERSION = const(2)
 
 FLAG_PENDING = const(0x01)  # a local write that has not been published yet
+FLAG_OFFERED = const(0x02)  # ...and it has already been handed to a host this side of a reconcile
 
-# THE FIRST 49 BYTES ARE FROZEN ACROSS EVERY FUTURE VERSION: version(1) || wallet_id(16) ||
-# entry_key(32). This is load-bearing rather than tidy. A build that meets a record written by
-# a newer firmware cannot parse it, and the erase rule forbids deleting what it cannot read --
-# so it must still be able to FIND that record, name it, and remove it when the user says so.
-# Freezing the prefix is what makes "report incompatible, require explicit removal" possible
-# instead of a blind wipe. Anything added later goes after byte 49.
+# THE HEADER IS FROZEN ACROSS EVERY FUTURE VERSION: version(1) || wallet_id(16) || identity, where
+# identity is len8(key_type)||key_type || len8(app_id)||app_id || len16(identifier)||identifier.
+# This is load-bearing rather than tidy. A build that meets a record written by a newer firmware
+# cannot parse it, and the erase rule forbids deleting what it cannot read -- so it must still be
+# able to FIND that record and remove it when the user says so. Freezing the header is what makes
+# "report incompatible, require explicit removal" possible instead of a blind wipe. Anything added
+# later goes after the identity.
 _STORE_VERSION_OFF = const(0)
 _STORE_ID_OFF = const(1)
-STORE_KEY_OFF = const(17)
-_ENTRY_KEY_LEN = const(32)
-STORE_PREFIX_LEN = const(49)
+STORE_KEY_OFF = const(17)  # where the identity begins
+STORE_PREFIX_LEN = const(17)
 
 
-def store_prefix(wallet_id: bytes, entry_key: bytes) -> bytes:
-    """The frozen header every record starts with. The single point that decides its layout."""
+def store_prefix(wallet_id: bytes) -> bytes:
+    """The fixed part of the frozen header. The single point that decides its layout."""
     if len(wallet_id) != _WALLET_ID_LEN:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
-    if len(entry_key) != _ENTRY_KEY_LEN:
-        raise ValueError  # entry_key must be exactly _ENTRY_KEY_LEN bytes
-    return bytes([STORE_VERSION]) + wallet_id + entry_key
+    return bytes([STORE_VERSION]) + wallet_id
 
 
 def _store_slot(index: int) -> bytes | None:
     return common.get(common.APP_WARD, index + _STORE_FIRST_KEY)
 
 
-def store_find(wallet_id: bytes, entry_key: bytes) -> int | None:
-    """This wallet's slot for entry_key, or None.
+def store_find(wallet_id: bytes, identity: bytes) -> int | None:
+    """This wallet's slot for `identity`, or None.
 
     Matches at FIXED OFFSETS and deliberately ignores the version byte -- a record this build
-    cannot parse must still be locatable, or it could never be erased. See the frozen-prefix
-    note above.
+    cannot parse must still be locatable, or it could never be erased. See the frozen-header note
+    above.
 
-    Matching on wallet_id AND entry_key, never entry_key alone: the same identifier under a
-    different passphrase is a different wallet's entry, and serving one for the other is the
-    failure this key scheme exists to prevent.
+    Matching on wallet_id AND identity, never identity alone: the same identifier under a different
+    passphrase is a different wallet's entry, and serving one for the other is the failure this key
+    scheme exists to prevent. Note the identity is compared as OPAQUE BYTES -- its framing is
+    `apps.ward.offline_store`'s business, and this layer only needs it to be canonical.
     """
-    if len(wallet_id) != _WALLET_ID_LEN or len(entry_key) != _ENTRY_KEY_LEN:
-        raise ValueError  # fixed-width operands only
+    if len(wallet_id) != _WALLET_ID_LEN or not identity:
+        raise ValueError  # a record is always named by a wallet and an identity
     for i in range(MAX_STORE_ENTRIES):
         rec = _store_slot(i)
         if rec is None or len(rec) < STORE_PREFIX_LEN:
             continue
         if (
             rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id
-            and rec[STORE_KEY_OFF:STORE_PREFIX_LEN] == entry_key
+            and rec[STORE_KEY_OFF : STORE_KEY_OFF + len(identity)] == identity
         ):
             return i
     return None
 
 
-def store_get(wallet_id: bytes, entry_key: bytes) -> bytes | None:
-    """The raw record, or None if this wallet has none for entry_key.
+def store_get(wallet_id: bytes, identity: bytes) -> bytes | None:
+    """The raw record, or None if this wallet has none for `identity`.
 
     Raw on purpose: deciding whether the bytes are USABLE -- known version, well-formed
     framing -- is the app layer's job, and returning None for an unreadable record would make
     "no such entry" and "cannot read this entry" the same answer. They are not, and the
     difference is what stops a corrupt record from silently reading as a miss.
     """
-    index = store_find(wallet_id, entry_key)
+    index = store_find(wallet_id, identity)
     if index is None:
         return None
     return _store_slot(index)
 
 
-def store_put(wallet_id: bytes, entry_key: bytes, record: bytes) -> bool:
-    """Write a record, replacing this wallet's existing one for entry_key. False if full.
+def store_put(wallet_id: bytes, identity: bytes, record: bytes) -> bool:
+    """Write a record, replacing this wallet's existing one for `identity`. False if full.
 
     NEVER EVICTS. When every slot belongs to some other entry the write FAILS and the caller
     reports it, because each occupant is either a value the user chose to keep or a change they
@@ -296,10 +306,10 @@ def store_put(wallet_id: bytes, entry_key: bytes, record: bytes) -> bool:
     those to satisfy the other, silently, and the user would learn about it by finding the
     entry gone.
     """
-    if record[:STORE_PREFIX_LEN] != store_prefix(wallet_id, entry_key):
-        raise ValueError  # record header must name the wallet and key it is stored under
+    if record[: STORE_KEY_OFF + len(identity)] != store_prefix(wallet_id) + identity:
+        raise ValueError  # record header must name the wallet and identity it is stored under
 
-    index = store_find(wallet_id, entry_key)
+    index = store_find(wallet_id, identity)
     if index is None:
         for i in range(MAX_STORE_ENTRIES):
             if _store_slot(i) is None:
@@ -312,17 +322,52 @@ def store_put(wallet_id: bytes, entry_key: bytes, record: bytes) -> bool:
     return True
 
 
-def store_delete(wallet_id: bytes, entry_key: bytes) -> None:
-    """Remove this wallet's record for entry_key. A no-op if there is none.
+def store_delete(wallet_id: bytes, identity: bytes) -> None:
+    """Remove this wallet's record for `identity`. A no-op if there is none.
 
-    A PRIMITIVE, NOT A POLICY. It asks nothing and checks nothing beyond the key: every caller
+    A PRIMITIVE, NOT A POLICY. It asks nothing and checks nothing beyond the identity: every caller
     must already have the user's confirmation in hand. Keeping the question out of here is what
     stops a future caller from acquiring the power to erase by accident -- there is exactly one
     path to this function that a user has agreed to, and it is `apps.ward.erase_cached_entry`.
     """
-    index = store_find(wallet_id, entry_key)
+    index = store_find(wallet_id, identity)
     if index is None:
         return
+    common.delete(common.APP_WARD, index + _STORE_FIRST_KEY)
+
+
+def store_find_unreadable(wallet_id: bytes) -> int | None:
+    """A slot of this wallet holding a record THIS BUILD CANNOT PARSE, or None.
+
+    THE ESCAPE HATCH THE FROZEN HEADER EXISTS FOR. A record written by a newer firmware carries its
+    identity in a layout this build does not know, so it cannot be found by identity -- and without
+    this it would occupy a slot forever, unnameable and unremovable, which is exactly the state the
+    erase rule forbids. The version byte and the wallet_id are frozen, so it can always be found by
+    those two alone.
+
+    Deliberately NOT part of `store_delete`'s lookup: erasing a record nobody can read is a
+    different question from erasing one the user can see, and only the confirmed path in
+    `apps.ward.erase_cached_entry` may ask it.
+    """
+    if len(wallet_id) != _WALLET_ID_LEN:
+        raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
+    for i in range(MAX_STORE_ENTRIES):
+        rec = _store_slot(i)
+        if rec is None or len(rec) < STORE_PREFIX_LEN:
+            continue
+        if rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id and rec[_STORE_VERSION_OFF] != STORE_VERSION:
+            return i
+    return None
+
+
+def store_delete_slot(index: int) -> None:
+    """Remove whatever occupies one slot. For the unreadable-record path only.
+
+    THE CALLER MUST ALREADY HOLD THE USER'S CONFIRMATION -- see `store_delete`. This exists because
+    a record that cannot be parsed cannot be named, so the only handle left is the slot it sits in.
+    """
+    if not 0 <= index < MAX_STORE_ENTRIES:
+        raise ValueError  # slot index out of range
     common.delete(common.APP_WARD, index + _STORE_FIRST_KEY)
 
 

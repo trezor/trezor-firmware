@@ -31,9 +31,9 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
     K_auth. `queue_set_entry` accepts those bytes back only if the MAC verifies, so a backup is
     something a host can hold without being able to invent one.
 
-    THE RECORD'S COUNTER AND ITS STALENESS STAY HERE. They are this device's bookkeeping, and the
-    SCREEN is where the user is warned that what they are looking at may be behind; a host has
-    nothing to do with either, and a restored change comes back at "no counter assigned" regardless.
+    NO COUNTER, NO STALENESS. The record no longer stores the counter it was authenticated at, so
+    neither the ack nor the screen can say how far behind a copy might be -- only that it has not been
+    checked against a host, which is the honest floor.
 
     THE BLOB IS PLAINTEXT, and that is a deliberate exception rather than an oversight. The host's
     leaf store contains no identifiers -- that is what the keyed path buys -- but a queue backup
@@ -55,14 +55,13 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
     from . import offline_store
     from .cas import OP_SET, intent_mac
     from .common import display_bytes, require_key
-    from .keys import ENTRY_TYPE_ADDRESS, derive_k_auth, derive_ward_id, entry_key_for
+    from .keys import ENTRY_TYPE_ADDRESS, derive_k_auth, derive_ward_id
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
     key_type = ENTRY_TYPE_ADDRESS
-    entry_key = await entry_key_for(app_id, identifier, key_type)
 
-    status, entry = await offline_store.get(entry_key)
+    status, entry = await offline_store.get(key_type, app_id, identifier)
 
     props = [
         ("Domain", app_id, False),
@@ -98,7 +97,6 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
             mac=intent_mac(
                 await derive_k_auth(),
                 await derive_ward_id(),
-                entry_key,
                 OP_SET,
                 entry.key_type,
                 entry.app_id,
@@ -109,15 +107,10 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
     else:
         title = "Send offline copy?"
         props.append(("Value", display_bytes(entry.value), True))
-        props.append(("Kept at", "counter " + str(entry.counter), False))
         props.append(
             (
                 "Warning",
-                (
-                    "May be out of date; the entry has changed since."
-                    if entry.stale
-                    else "Local copy, not checked against the host."
-                ),
+                "Local copy, not checked against the host. It may be out of date.",
                 False,
             )
         )

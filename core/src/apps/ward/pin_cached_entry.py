@@ -106,33 +106,18 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     if len(value) > MAX_VALUE_LEN:
         raise DataError("WARD: entry too large to keep offline")
 
-    status, existing = await offline_store.get(entry_key)
+    status, existing = await offline_store.get(key_type, app_id, identifier)
 
     if status == offline_store.VALID and existing is not None:
         if existing.value == value:
-            # SAME VALUE. Nothing is being destroyed, so there is nothing to authorise: a
-            # hold that always means "keep what you already have" is a screen that gets
-            # approved without being read.
+            # SAME VALUE, so nothing at all happens: nothing is being destroyed, and a hold that
+            # always means "keep what you already have" is a screen that gets approved without being
+            # read.
             #
-            # The counter may still have moved, and refreshing it is not a replacement -- it
-            # records that this same value was seen again at a later confirmed state, which
-            # is what stops a perfectly current copy from reading as stale forever. Compared
-            # on the VALUE rather than on the record bytes for exactly that reason: the two
-            # differ whenever the counter has advanced, which would otherwise make every
-            # refresh look like a destructive overwrite.
-            if existing.counter == trusted_counter:
-                return Success(message="WARD entry already kept offline")
-            await offline_store.put(
-                entry_key,
-                key_type,
-                app_id,
-                identifier,
-                0,
-                value,
-                trusted_counter,
-                False,
-            )
-            return Success(message="WARD offline copy refreshed")
+            # This used to REFRESH the record, rewriting it at the current counter so a still-current
+            # copy would stop reading as stale. No counter is stored now, so there is nothing to
+            # refresh -- and one fewer reason to write to flash.
+            return Success(message="WARD entry already kept offline")
 
         await confirm_properties(
             "ward_replace_cached_entry",
@@ -176,15 +161,8 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
             ],
         )
 
-    await offline_store.put(
-        entry_key,
-        key_type,
-        app_id,
-        identifier,
-        0,
-        value,
-        trusted_counter,
-        False,
-    )
+    # NOT pending: this is a copy of a value WARD already holds, proved against the trusted root
+    # above, not a change waiting to be published.
+    await offline_store.put(key_type, app_id, identifier, value, False)
 
     return Success(message="WARD entry kept offline")
