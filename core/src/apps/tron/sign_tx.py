@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
     from apps.common.keychain import Keychain
 
+_INT64_MAX = const(9_223_372_036_854_775_807)
 
 @with_slip44_keychain(PATTERN, slip44_id=SLIP44_ID, curve=CURVE)
 async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
@@ -91,11 +92,6 @@ async def process_contract(
 
     from .helpers import get_encoded_address
 
-    _INT64_MAX = const(9_223_372_036_854_775_807)
-
-    # Every Tron contract carries an `owner_address` (proto field 1). Encode it
-    # and compare against the signing address once here so any contract branch
-    # can reuse `is_different_owner`.
     owner_address_bytes = getattr(contract, "owner_address", None)
     owner_address = (
         get_encoded_address(owner_address_bytes)
@@ -200,14 +196,17 @@ async def process_contract(
 async def process_smart_contract(
     contract: TronTriggerSmartContract, fee_limit: int, chunkify: bool
 ) -> None:
-    if await process_known_trc20_contract(contract, fee_limit, chunkify):
+    trx_value = None
+    if contract.call_value not in (None, 0) and contract.call_value > _INT64_MAX:
+        trx_value = contract.call_value
+    if await process_known_trc20_contract(contract, fee_limit, trx_value, chunkify):
         return
     else:
-        await layout.confirm_unknown_smart_contract(contract, fee_limit, chunkify)
+        await layout.confirm_unknown_smart_contract(contract, fee_limit, trx_value, chunkify)
 
 
 async def process_known_trc20_contract(
-    contract: TronTriggerSmartContract, fee_limit: int, chunkify: bool
+    contract: TronTriggerSmartContract, fee_limit: int, trx_value: int | None, chunkify: bool
 ) -> bool:
     """Returns False when the contract is unrecognised. i.e. not (Transfer and known TRC-20)"""
     from trezor.utils import BufferReader
@@ -250,13 +249,14 @@ async def process_known_trc20_contract(
     amount_arg = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
 
     await layout.confirm_known_trc20_smart_contract(
-        func_sig == SC_FUNC_SIG_APPROVE,
-        recipient,
-        amount_arg,
-        fee_limit,
-        token_decimals,
-        token_symbol,
-        chunkify,
+        is_approve=func_sig == SC_FUNC_SIG_APPROVE,
+        recipient_addr=recipient,
+        amount_arg=amount_arg,
+        fee_limit=fee_limit,
+        token_decimals=token_decimals,
+        token_symbol=token_symbol,
+        trx_value=trx_value,
+        chunkify=chunkify,
     )
     return True
 

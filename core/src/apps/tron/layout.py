@@ -47,7 +47,7 @@ async def confirm_trx_transfer(
 
 # TODO: Refactor ETH references to crypto-neutral references.
 async def confirm_unknown_smart_contract(
-    contract: TronTriggerSmartContract, fee_limit: int, chunkify: bool
+    contract: TronTriggerSmartContract, fee_limit: int, trx_value: int | None, chunkify: bool
 ) -> None:
 
     from trezor.enums import ButtonRequestType
@@ -79,7 +79,9 @@ async def confirm_unknown_smart_contract(
     )
 
     await confirm_tron_summary(
-        TR.words__title_summary, None, format_energy_amount(fee_limit)
+        title=TR.words__title_summary,
+        amount=format_trx_amount(trx_value) if trx_value else None,
+        fee=format_energy_amount(fee_limit)
     )
 
 
@@ -90,6 +92,7 @@ async def confirm_known_trc20_smart_contract(
     fee_limit: int,
     token_decimals: int,
     token_symbol: str,
+    trx_value: int | None,
     chunkify: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_tron_approve, confirm_tron_transfer
@@ -119,6 +122,7 @@ async def confirm_known_trc20_smart_contract(
                 int.from_bytes(amount_arg, "big"), token_decimals, token_symbol
             ),
             maximum_fee=format_energy_amount(fee_limit),
+            native_amount_str=format_trx_amount(trx_value) if trx_value else None,
             chunkify=chunkify,
         )
 
