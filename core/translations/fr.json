@@ -166,12 +166,14 @@
       "Delizia": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds.",
       "Eckhart": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds."
     },
+    "backup__info_multi_group_backup": "Votre sauvegarde de portefeuille contient {0} groupes avec un seuil de groupe de {1}.",
     "backup__info_multi_share_backup": {
       "Bolt": "La sauvegarde contient plusieurs listes dans un ordre spécifique (fragments).",
       "Caesar": "La sauvegarde contient plusieurs listes dans un ordre spécifique (fragments).",
       "Delizia": "Votre sauvegarde de portefeuille contient plusieurs listes de mots dans un ordre spécifique (fragments).",
       "Eckhart": "Votre sauvegarde de portefeuille contient plusieurs listes de mots dans un ordre spécifique (fragments)."
     },
+    "backup__info_n_of_m_template": "{0}-sur-{1}",
     "backup__info_single_share_backup": "Votre sauvegarde de portefeuille contient {0} mots dans un ordre spécifique.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Sauvegardez-le dès maintenant.",
@@ -2184,12 +2186,7 @@
       "Eckhart": "Saisissez chaque mot de la sauvegarde de votre portefeuille dans l'ordre."
     },
     "recovery__enter_share_from_diff_group": "Saisissez un fragment d'un autre groupe.",
-    "recovery__group_num_template": {
-      "Bolt": "Groupe {0}",
-      "Caesar": "Groupe {0}",
-      "Delizia": "Groupe {0}",
-      "Eckhart": ""
-    },
+    "recovery__group_num_template": "Groupe {0}",
     "recovery__group_threshold_reached": "Seuil de groupe atteint.",
     "recovery__invalid_share_entered": "Fragment de récupération saisi invalide.",
     "recovery__invalid_wallet_backup_entered": "Sauvegarde de portefeuille saisie invalide.",

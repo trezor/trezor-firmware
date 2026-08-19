@@ -146,7 +146,9 @@
       "Delizia": "Erstelle ein Backup, um den Zugriff auf deine Assets nicht zu verlieren.",
       "Eckhart": "Erstelle ein Backup, um den Zugriff auf deine Assets nicht zu verlieren."
     },
+    "backup__info_multi_group_backup": "Dein Wallet-Backup enthält {0} Gruppen mit einem Gruppen-Schwellenwert von {1}.",
     "backup__info_multi_share_backup": "Dein Wallet-Backup enthält mehrere Listen von Wörtern in einer bestimmten Reihenfolge (Shares).",
+    "backup__info_n_of_m_template": "{0}-von-{1}",
     "backup__info_single_share_backup": "Dein Wallet-Backup enthält {0} Wörter in einer bestimmten Reihenfolge.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Du solltest jetzt dein neues Wallet sichern.",
@@ -2264,12 +2266,7 @@
     },
     "recovery__enter_each_word": "Gib jedes Wort aus deinem Wallet-Backup nacheinander ein.",
     "recovery__enter_share_from_diff_group": "Share von anderer Gruppe eingeben.",
-    "recovery__group_num_template": {
-      "Bolt": "Gruppe {0}",
-      "Caesar": "Gruppe {0}",
-      "Delizia": "Gruppe {0}",
-      "Eckhart": ""
-    },
+    "recovery__group_num_template": "Gruppe {0}",
     "recovery__group_threshold_reached": "Gruppenschwelle wurde erreicht.",
     "recovery__invalid_share_entered": "Eingegebener Recovery Share ist ungültig.",
     "recovery__invalid_wallet_backup_entered": "Eingegebener Recovery Seed ist ungültig.",

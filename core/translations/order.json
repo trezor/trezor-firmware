@@ -1282,5 +1282,7 @@
   "1280": "stellar__spender",
   "1281": "stellar__to",
   "1282": "stellar__token_contract",
-  "1283": "stellar__transfer_token"
+  "1283": "stellar__transfer_token",
+  "1284": "backup__info_multi_group_backup",
+  "1285": "backup__info_n_of_m_template"
 }

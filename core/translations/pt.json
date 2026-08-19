@@ -146,12 +146,14 @@
       "Delizia": "Crie um backup de carteira para evitar perder acesso aos seus fundos.",
       "Eckhart": "Crie um backup de carteira para evitar perder acesso aos seus fundos."
     },
+    "backup__info_multi_group_backup": "O backup da sua carteira contém {0} grupos com um limite de grupo de {1}.",
     "backup__info_multi_share_backup": {
       "Bolt": "O backup contém listas de palavras em uma ordem específica (shares).",
       "Caesar": "O backup da sua carteira contém diversas listas de palavras em uma ordem específica (shares).",
       "Delizia": "O backup da sua carteira contém diversas listas de palavras em uma ordem específica (shares).",
       "Eckhart": "O backup da sua carteira contém diversas listas de palavras em uma ordem específica (shares)."
     },
+    "backup__info_n_of_m_template": "{0}-de-{1}",
     "backup__info_single_share_backup": "O backup da sua carteira contém {0} palavras em uma ordem específica.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Você deve fazer o backup da sua nova carteira agora.",
@@ -2049,12 +2051,7 @@
     },
     "recovery__enter_each_word": "Insira, em ordem, cada palavra do backup da sua carteira.",
     "recovery__enter_share_from_diff_group": "Insira um share de um grupo diferente.",
-    "recovery__group_num_template": {
-      "Bolt": "Grupo {0}",
-      "Caesar": "Grupo {0}",
-      "Delizia": "Grupo {0}",
-      "Eckhart": ""
-    },
+    "recovery__group_num_template": "Grupo {0}",
     "recovery__group_threshold_reached": "Limite mínimo do grupo atingido.",
     "recovery__invalid_share_entered": "O share de recuperação inserido é inválido.",
     "recovery__invalid_wallet_backup_entered": "O backup de carteira inserido é inválido.",

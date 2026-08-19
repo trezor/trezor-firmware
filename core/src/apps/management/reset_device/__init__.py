@@ -6,7 +6,7 @@ import storage.device as storage_device
 from trezor import TR
 from trezor.crypto import hmac, slip39
 from trezor.enums import BackupType, MessageType
-from trezor.ui.layouts import confirm_action
+from trezor.ui.layouts import BR_CODE_OTHER, confirm_action, confirm_properties
 from trezor.wire import ProcessError
 
 from apps.common import backup_types
@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
     from trezor.messages import ResetDevice, Success
+    from trezor.ui.layouts import PropertyType
 
 
 BAK_T_BIP39 = BackupType.Bip39  # global_import_cache
@@ -292,17 +293,42 @@ async def backup_slip39_custom(
         mnemonics = _get_slip39_mnemonics(
             encrypted_master_secret, group_threshold, groups, extendable
         )
-        await confirm_action(
-            "warning_shamir_backup",
-            TR.reset__title_shamir_backup,
-            description=TR.reset__create_x_of_y_multi_share_backup_template.format(
-                groups[0][0], groups[0][1]
-            ),
-            verb=TR.buttons__continue,
-        )
         if len(groups) == 1:
+            await confirm_action(
+                "warning_shamir_backup",
+                TR.reset__title_shamir_backup,
+                description=TR.reset__create_x_of_y_multi_share_backup_template.format(
+                    groups[0][0], groups[0][1]
+                ),
+                verb=TR.buttons__continue,
+            )
             await layout.slip39_basic_show_and_confirm_shares(handler, mnemonics[0])
         else:
+            await confirm_action(
+                "warning_shamir_advanced_backup",
+                TR.reset__recovery_wallet_backup_title,
+                description=TR.backup__info_multi_group_backup.format(
+                    len(groups), group_threshold
+                ),
+                verb=TR.buttons__continue,
+            )
+
+            props: list[PropertyType] = []
+            for idx, (threshold, n_group) in enumerate(groups):
+                props.append(
+                    (
+                        TR.recovery__group_num_template.format(idx + 1),
+                        TR.backup__info_n_of_m_template.format(threshold, n_group),
+                        False,
+                    )
+                )
+            await confirm_properties(
+                "shamir_advanced_backup_groups",
+                TR.reset__recovery_wallet_backup_title,
+                props,
+                br_code=BR_CODE_OTHER,
+                verb=TR.buttons__continue,
+            )
             await layout.slip39_advanced_show_and_confirm_shares(handler, mnemonics)
 
 

@@ -136,7 +136,9 @@
       "Delizia": "Vytvořte si zálohu peněženky, abyste neztratili přístup ke svým prostředkům.",
       "Eckhart": "Vytvořte si zálohu peněženky, abyste neztratili přístup ke svým prostředkům."
     },
+    "backup__info_multi_group_backup": "Vaše záloha peněženky obsahuje {0} skupin s prahem skupiny {1}.",
     "backup__info_multi_share_backup": "Vaše záloha peněženky obsahuje několik seznamů slov v určitém pořadí (podílů).",
+    "backup__info_n_of_m_template": "{0}-z-{1}",
     "backup__info_single_share_backup": "Vaše záloha peněženky obsahuje {0} slov v určitém pořadí.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Novou peněženku byste si měli ihned zálohovat.",
@@ -1979,12 +1981,7 @@
     },
     "recovery__enter_each_word": "Zadejte popořadě všechna slova vaší zálohy peněženky.",
     "recovery__enter_share_from_diff_group": "Zadejte podíl z jiné skupiny.",
-    "recovery__group_num_template": {
-      "Bolt": "Skupiny {0}",
-      "Caesar": "Skupiny {0}",
-      "Delizia": "Skupiny {0}",
-      "Eckhart": ""
-    },
+    "recovery__group_num_template": "Skupiny {0}",
     "recovery__group_threshold_reached": "Práh skupiny dosažen.",
     "recovery__invalid_share_entered": "Zadali jste neplatný podíl zálohy.",
     "recovery__invalid_wallet_backup_entered": "Zadali jste neplatnou zálohu.",
