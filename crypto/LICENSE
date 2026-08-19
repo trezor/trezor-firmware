@@ -57,6 +57,13 @@ ranges as they appear in the individual file headers.
   Copyright (c) 2017 Saleem Rashid
       base32.c, base32.h, hasher.c, hasher.h, nem.c, nem.h, rc4.c, rc4.h
 
+  Dusan Klinec (2018)
+      monero/monero.h, monero/serialize.c, monero/serialize.h, monero/xmr.c,
+      monero/xmr.h
+      These files carry no copyright notice or license text, only a
+      "Created by Dusan Klinec" author comment; they were contributed to
+      the library under the MIT terms above.
+
   Copyright (c) 2019 / 2023 Andrew R. Kozlik
   Copyright (c) 2023 Andrew Kozlik
       aes/aesccm.c, aes/aesccm.h, hmac_drbg.c, hmac_drbg.h, tls_prf.c,
@@ -90,11 +97,13 @@ https://github.com/BrianGladman/aes
 
 Files: aes/aes.h, aes/aes_modes.c, aes/aescrypt.c, aes/aesgcm.c,
        aes/aesgcm.h, aes/aeskey.c, aes/aesopt.h, aes/aestab.c, aes/aestab.h,
-       aes/aestst.c, aes/aestst.h, aes/brg_endian.h, aes/gf128mul.c,
-       aes/gf128mul.h, aes/gf_mul_lo.h, aes/mode_hdr.h
+       aes/aestst.h, aes/brg_endian.h, aes/gf128mul.c, aes/gf128mul.h,
+       aes/gf_mul_lo.h, aes/mode_hdr.h
 
-The end year of the copyright notice varies per file and is one of 2008,
-2010, 2013 or 2014; the broadest range is reproduced here.
+The end year of the copyright notice varies per file and is one of 2010,
+2013 or 2014; the broadest range is reproduced here. aes/aestst.c carries
+an older variant of the license with an additional non-endorsement
+condition and is listed separately below.
 --------------------------------------------------------------------------------
 
 Copyright (c) 1998-2014, Brian Gladman, Worcester, UK. All rights reserved.
@@ -111,6 +120,36 @@ is allowed without the payment of fees or royalties provided that:
 This software is provided 'as is' with no explicit or implied warranties
 in respect of its operation, including, but not limited to, correctness
 and fitness for purpose.
+
+
+--------------------------------------------------------------------------------
+AES self-test -- Brian Gladman, older license variant
+https://github.com/BrianGladman/aes
+
+Files: aes/aestst.c
+--------------------------------------------------------------------------------
+
+Copyright (c) 1998-2008, Brian Gladman, Worcester, UK. All rights reserved.
+
+LICENSE TERMS
+
+The redistribution and use of this software (with or without changes)
+is allowed without the payment of fees or royalties provided that:
+
+  1. source code distributions include the above copyright notice, this
+     list of conditions and the following disclaimer;
+
+  2. binary distributions include the above copyright notice, this list
+     of conditions and the following disclaimer in their documentation;
+
+  3. the name of the copyright holder is not used to endorse products
+     built using this software without specific written permission.
+
+DISCLAIMER
+
+This software is provided 'as is' with no explicit or implied warranties
+in respect of its properties, including, but not limited to, correctness
+and/or fitness for purpose.
 
 
 --------------------------------------------------------------------------------
@@ -277,8 +316,14 @@ OTHER DEALINGS IN THE SOFTWARE.
 ChaCha20-Poly1305 -- Will Glozer
 https://github.com/wg/c20p1305
 
-Files: chacha20poly1305/ (except chacha_merged.c, see below)
+Files: chacha20poly1305/chacha20poly1305.c, chacha20poly1305/chacha20poly1305.h,
+       chacha20poly1305/rfc7539.c, chacha20poly1305/rfc7539.h
 Also present verbatim as chacha20poly1305/LICENSE
+
+The remaining files under chacha20poly1305/ were imported through this
+project but are the work of other authors: the Poly1305 implementation is
+Andrew Moon's poly1305-donna and the ChaCha20 core and ECRYPT headers are
+D. J. Bernstein's eSTREAM submission; see their own entries below.
 --------------------------------------------------------------------------------
 
 The MIT License (MIT)
@@ -400,9 +445,27 @@ Bo-Yin Yang.
 
 
 --------------------------------------------------------------------------------
-ChaCha20 core -- D. J. Bernstein
+Poly1305 -- poly1305-donna, Andrew Moon
+https://github.com/floodyberry/poly1305-donna
+
+Files: chacha20poly1305/poly1305-donna.c, chacha20poly1305/poly1305-donna.h,
+       chacha20poly1305/poly1305-donna-32.h
+
+The files carry no license header; upstream offers the code as "MIT or
+PUBLIC DOMAIN" at the recipient's option.
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+ChaCha20 core and ECRYPT API headers -- D. J. Bernstein, eSTREAM project
 
 Files: chacha20poly1305/chacha_merged.c
+       chacha20poly1305/ecrypt-config.h, chacha20poly1305/ecrypt-machine.h,
+       chacha20poly1305/ecrypt-portable.h, chacha20poly1305/ecrypt-sync.h,
+       chacha20poly1305/ecrypt-types.h
+
+The ecrypt-*.h files are the eSTREAM ECRYPT benchmarking API headers
+distributed with the same submission; they carry no copyright notice.
 --------------------------------------------------------------------------------
 
 chacha-merged.c version 20080118
