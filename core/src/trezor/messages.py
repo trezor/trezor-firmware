@@ -8186,8 +8186,6 @@ if TYPE_CHECKING:
         identifier: "AnyBytes | None"
         value: "AnyBytes | None"
         mac: "AnyBytes | None"
-        counter: "int | None"
-        key_type: "str | None"
 
         def __init__(
             self,
@@ -8196,8 +8194,6 @@ if TYPE_CHECKING:
             identifier: "AnyBytes | None" = None,
             value: "AnyBytes | None" = None,
             mac: "AnyBytes | None" = None,
-            counter: "int | None" = None,
-            key_type: "str | None" = None,
         ) -> None:
             pass
 
@@ -8206,14 +8202,6 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardQueueSetAck(protobuf.MessageType):
-        entry_key: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            entry_key: "AnyBytes",
-        ) -> None:
-            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardQueueSetAck"]:
@@ -8236,13 +8224,11 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardQueueDeleteAck(protobuf.MessageType):
-        entry_key: "AnyBytes"
         missing: "bool | None"
 
         def __init__(
             self,
             *,
-            entry_key: "AnyBytes",
             missing: "bool | None" = None,
         ) -> None:
             pass
@@ -8268,12 +8254,8 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardQueueGetAck(protobuf.MessageType):
-        entry_key: "AnyBytes"
         missing: "bool | None"
         pending: "bool | None"
-        unreadable: "bool | None"
-        stale: "bool | None"
-        counter: "int | None"
         key_type: "str | None"
         app_id: "str | None"
         identifier: "AnyBytes | None"
@@ -8283,12 +8265,8 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
-            entry_key: "AnyBytes",
             missing: "bool | None" = None,
             pending: "bool | None" = None,
-            unreadable: "bool | None" = None,
-            stale: "bool | None" = None,
-            counter: "int | None" = None,
             key_type: "str | None" = None,
             app_id: "str | None" = None,
             identifier: "AnyBytes | None" = None,
