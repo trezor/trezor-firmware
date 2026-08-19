@@ -1,6 +1,7 @@
 use super::super::fonts;
 use super::theme;
 use crate::strutil::ShortString;
+use crate::ui::component::base::FlowMsgText;
 use crate::ui::component::{Component, Event, EventCtx, Never, Pad};
 use crate::ui::display::Font;
 use crate::ui::geometry::{Alignment, Point, Rect};
@@ -12,7 +13,7 @@ use crate::ui::util::long_line_content_with_ellipsis;
 /// and without being affected by other components.
 pub struct ChangingTextLine {
     pad: Pad,
-    text: ShortString,
+    text: FlowMsgText,
     font: Font,
     /// Whether to show the text. Can be disabled.
     show_content: bool,
@@ -25,7 +26,7 @@ pub struct ChangingTextLine {
 
 impl ChangingTextLine {
     pub fn new(text: &str, font: Font, alignment: Alignment, max_len: usize) -> Self {
-        let text = unwrap!(ShortString::try_from(text));
+        let text = unwrap!(FlowMsgText::try_from(text));
         debug_assert!(text.capacity() >= max_len);
         Self {
             pad: Pad::with_background(theme::BG),

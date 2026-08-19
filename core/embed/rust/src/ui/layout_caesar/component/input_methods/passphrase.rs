@@ -287,17 +287,17 @@ impl PassphraseEntry {
 
     fn update_passphrase_dots(&mut self, ctx: &mut EventCtx) {
         debug_assert!({
-            let s = ShortString::new();
+            let s = FlowMsgText::new();
             s.capacity() >= self.max_len
         });
 
         let text_to_show = if self.show_plain_passphrase {
-            unwrap!(ShortString::try_from(self.passphrase()))
+            unwrap!(FlowMsgText::try_from(self.passphrase()))
         } else if self.is_empty() {
-            unwrap!(ShortString::try_from(""))
+            unwrap!(FlowMsgText::try_from(""))
         } else {
             // Showing asterisks and possibly the last digit.
-            let mut dots = ShortString::new();
+            let mut dots = FlowMsgText::new();
             for _ in 0..self.textbox.len() - 1 {
                 unwrap!(dots.push('*'));
             }
