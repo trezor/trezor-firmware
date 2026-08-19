@@ -1,0 +1,1 @@
+CoSi nonces are now generated randomly by default. Deterministic nonce derivation is persisted, it is safe for publicly known keys only.

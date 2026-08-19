@@ -118,7 +118,7 @@ def test_combine_keys():
     assert cosi.combine_keys(pubkeys) == COMBINED_KEY
 
     Rs = [
-        cosi.get_nonce(privkey, message)[1]
+        cosi._get_deterministic_nonce(privkey, message)[1]
         for privkey, _, message, _ in RFC8032_VECTORS
     ]
     assert cosi.combine_keys(Rs) == GLOBAL_COMMIT
@@ -131,7 +131,7 @@ def test_cosi_combination(keyset):
 
     # zip(*iterable) turns a list of tuples to a tuple of lists
     privkeys, pubkeys, _, _ = zip(*selection)
-    nonce_pairs = [cosi.get_nonce(pk, message) for pk in privkeys]
+    nonce_pairs = [cosi._get_deterministic_nonce(pk, message) for pk in privkeys]
     nonces, commits = zip(*nonce_pairs)
 
     # calculate global pubkey and commitment
@@ -163,7 +163,7 @@ def test_m_of_n():
     sigmask = sum(1 << i for i in signer_ids)
 
     # generate multisignature
-    nonce_pairs = [cosi.get_nonce(pk, message) for pk in signers]
+    nonce_pairs = [cosi._get_deterministic_nonce(pk, message) for pk in signers]
     nonces, commits = zip(*nonce_pairs)
     global_pk = cosi.combine_keys(signer_pubkeys)
     global_commit = cosi.combine_keys(commits)
@@ -199,3 +199,14 @@ def test_m_of_n():
         # wrong sigmask
         cosi.verify(global_sig, message, 3, pubkeys, 7)
     assert "signature does not pass verification" in e.value.args[0]
+
+
+def test_random_nonces_differ():
+    privkeys = [privkey for privkey, _, _, _ in RFC8032_VECTORS]
+    digest = hashlib.sha512(b"same digest, two sessions").digest()
+    sig_a = cosi.sign_with_privkeys(digest, privkeys)
+    sig_b = cosi.sign_with_privkeys(digest, privkeys)
+    assert sig_a != sig_b
+    global_pk = cosi.combine_keys([cosi.pubkey_from_privkey(sk) for sk in privkeys])
+    cosi.verify_combined(sig_a, digest, global_pk)
+    cosi.verify_combined(sig_b, digest, global_pk)

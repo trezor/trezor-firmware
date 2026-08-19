@@ -172,7 +172,9 @@ def cli(
 
     if privkeys:
         echo("Signing with local private keys...", err=True)
-        signature = cosi.sign_with_privkeys(digest, privkeys)
+        signature = cosi.sign_with_privkeys(
+            digest, privkeys, deterministic=bool(sign_dev_keys)
+        )
 
     if insert_signature:
         echo("Inserting external signature...", err=True)

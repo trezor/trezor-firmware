@@ -87,7 +87,9 @@ def sign_blob(blob: translations.TranslationsBlob) -> bytes:
     """
     # build 0-item Merkle proof
     digest = sha256(b"\x00" + blob.header_bytes).digest()
-    signature = cosi.sign_with_privkeys(digest, common.PRIVATE_KEYS_DEV)
+    signature = cosi.sign_with_privkeys(
+        digest, common.PRIVATE_KEYS_DEV, deterministic=True
+    )
     blob.proof = translations.Proof(
         merkle_proof=[],
         sigmask=0b111,
