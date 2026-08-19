@@ -10322,8 +10322,6 @@ class WardQueueSetEntry(protobuf.MessageType):
         2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
-        6: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10333,29 +10331,15 @@ class WardQueueSetEntry(protobuf.MessageType):
         identifier: Optional["bytes"] = None,
         value: Optional["bytes"] = None,
         mac: Optional["bytes"] = None,
-        counter: Optional["int"] = None,
-        key_type: Optional["str"] = None,
     ) -> None:
         self.app_id = app_id
         self.identifier = identifier
         self.value = value
         self.mac = mac
-        self.counter = counter
-        self.key_type = key_type
 
 
 class WardQueueSetAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2324
-    FIELDS = {
-        1: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        entry_key: "bytes",
-    ) -> None:
-        self.entry_key = entry_key
 
 
 class WardQueueDeleteEntry(protobuf.MessageType):
@@ -10378,17 +10362,14 @@ class WardQueueDeleteEntry(protobuf.MessageType):
 class WardQueueDeleteAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2326
     FIELDS = {
-        1: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
         2: protobuf.Field("missing", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        entry_key: "bytes",
         missing: Optional["bool"] = None,
     ) -> None:
-        self.entry_key = entry_key
         self.missing = missing
 
 
@@ -10412,12 +10393,8 @@ class WardQueueGetEntry(protobuf.MessageType):
 class WardQueueGetAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2328
     FIELDS = {
-        1: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
         2: protobuf.Field("missing", "bool", repeated=False, required=False, default=None),
         3: protobuf.Field("pending", "bool", repeated=False, required=False, default=None),
-        4: protobuf.Field("unreadable", "bool", repeated=False, required=False, default=None),
-        5: protobuf.Field("stale", "bool", repeated=False, required=False, default=None),
-        6: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         7: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
         8: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
         9: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
@@ -10428,24 +10405,16 @@ class WardQueueGetAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        entry_key: "bytes",
         missing: Optional["bool"] = None,
         pending: Optional["bool"] = None,
-        unreadable: Optional["bool"] = None,
-        stale: Optional["bool"] = None,
-        counter: Optional["int"] = None,
         key_type: Optional["str"] = None,
         app_id: Optional["str"] = None,
         identifier: Optional["bytes"] = None,
         value: Optional["bytes"] = None,
         mac: Optional["bytes"] = None,
     ) -> None:
-        self.entry_key = entry_key
         self.missing = missing
         self.pending = pending
-        self.unreadable = unreadable
-        self.stale = stale
-        self.counter = counter
         self.key_type = key_type
         self.app_id = app_id
         self.identifier = identifier

@@ -309,12 +309,13 @@ message WardLeafAck {
  *                that fails to authenticate never reaches a screen: a confirmation for
  *                unauthenticated bytes teaches the user that the screen means nothing.
  *
- * A restore therefore carries the fields the fresh path derives or defaults -- `counter` and
- * `key_type` -- because both are inside the MAC and neither can be re-guessed on the way in.
+ * A restore sends only what the host was given. Everything else the MAC covers is derived on the
+ * device, so there is nothing here for a host to steer.
  *
  * NO REPLAY BOUND, deliberately and for now: a correctly-MAC'd intent is accepted whenever it
- * arrives, so a host can re-offer a change the user discarded or one already published. `counter`
- * is carried and MAC'd, so bounding it later is a handler change and not a wire change.
+ * arrives, so a host can re-offer a change the user discarded or one already published. Note that
+ * bounding it will need the record's counter back on the wire -- it used to be here, and dropping
+ * it makes that a wire change rather than a handler change.
  * @start
  * @next WardQueueSetAck
  * @next Failure
@@ -324,23 +325,29 @@ message WardQueueSetEntry {
     optional bytes  identifier = 2;  // key within that domain
     optional bytes  value      = 3;  // the value to queue; empty is allowed, absent is not
 
-    // RESTORE ONLY, and all three are meaningless without the first.
+    // RESTORE ONLY. The rest of what the MAC covers is DERIVED rather than sent: the device
+    // computes entry_key from (app_id, identifier) as it does for every request, and key_type is
+    // its own constant. A restore therefore cannot be aimed at a path of the host's choosing even
+    // with an otherwise valid blob.
     optional bytes  mac        = 4;  // 32B intent MAC, exactly as WardQueueGetAck returned it
-    optional uint32 counter    = 5;  // the counter the record carried when it was exported
-    optional string key_type   = 6;  // the key space the entry belongs to; MAC'd, so not defaulted
+
+    // 5 and 6 were counter and key_type. The counter is not accepted from a host: a restored change
+    // comes back at "no counter assigned", which is the honest state -- after a restore nobody
+    // knows whether an earlier publication landed, so the change must be offered again.
+    reserved 5, 6;
 }
 
 /**
- * Response: the change is held on the device.
+ * Response: the change is held on the device. EMPTY, and that is the whole report.
  *
- * entry_key AND NOTHING ELSE. There is no counter, no mac and no leaf because none of them
- * exists yet -- and the message type, not a flag, is what tells the host so. The path is still
- * worth returning: it is the key the host's store is organised by, and the host has no other way
- * to learn it.
+ * There is no counter, no mac and no leaf because none of them exists yet, and the message TYPE is
+ * what says the change was queued rather than applied. The keyed path is not here either: the queue
+ * is addressed by (app_id, identifier) end to end, and the path first matters when the change
+ * reaches the tree -- WardFlushQueueAck carries it then.
  * @end
  */
 message WardQueueSetAck {
-    required bytes entry_key = 1;  // 32B keyed path the queued change is for
+    reserved 1;  // was entry_key, which no caller of a QUEUE operation ever needs
 }
 
 /**
@@ -369,7 +376,7 @@ message WardQueueDeleteEntry {
  * @end
  */
 message WardQueueDeleteAck {
-    required bytes entry_key = 1;  // 32B keyed path asked about
+    reserved 1;                    // was entry_key; the request already named the entry
     optional bool  missing   = 2;  // set when no queued change was held at this path
 }
 
@@ -409,29 +416,32 @@ message WardQueueGetEntry {
  * that the host never saw. Accepted deliberately, so that a backup is something a host can hold,
  * inspect and restore without holding any device key.
  *
- * `mac` IS THE POINT. It authenticates (entry_key, op, counter, key_type, app_id, identifier,
- * value) under K_auth -- see `cas.intent_preimage` -- so a restore can be checked against what
- * this wallet actually queued rather than trusted because a host says so. Present ONLY for a
- * pending record: a pinned copy is not an intent, there is nothing to re-queue, and returning a
- * MAC for one would invite a restore that means nothing.
+ * `mac` IS THE POINT. It authenticates (entry_key, op, key_type, app_id, identifier, value) under
+ * K_auth -- see `cas.intent_preimage` -- so a restore can be checked against what this wallet
+ * actually queued rather than trusted because a host says so. Present ONLY for a pending record: a
+ * pinned copy is not an intent, there is nothing to re-queue, and returning a MAC for one would
+ * invite a restore that means nothing.
  *
  * A true `mac` does NOT mean the intent should be queued again now -- it carries no freshness. See
  * the replay note on WardQueueSetEntry.
  *
- * `stale` is DERIVED, not stored: it compares the counter the record was authenticated at with
- * the counter the device trusts now, so advancing the head never has to touch a record.
+ * A RECORD THAT CANNOT BE READ IS AN ERROR, not a flag and not `missing`. There is no field for it
+ * here on purpose: reporting "nothing kept for this path" for a record that exists but does not
+ * parse invites writing over it while telling the caller it was never there, which is the one
+ * collapse `apps.ward.offline_store` forbids outright. The request fails instead.
  * @end
  */
 message WardQueueGetAck {
-    required bytes  entry_key = 1;  // 32B keyed path asked about
+    reserved 1;                     // was entry_key; the request already named the entry
     optional bool   missing   = 2;  // nothing kept for this path; connect to read it
     optional bool   pending   = 3;  // a queued change -- what this device believes, not what WARD holds
-    optional bool   unreadable = 4; // stored but not decodable by this build; NOT the same as missing
-    optional bool   stale     = 5;  // authenticated at a counter older than the trusted one
-    optional uint32 counter   = 6;  // the counter the record was authenticated at; 0 = never
+    // 4, 5 and 6 were unreadable, stale and counter. Unreadable is a Failure now (see above);
+    // staleness and the record's counter are the device's own bookkeeping, and the SCREEN is where
+    // a user is warned that what they are looking at may be behind.
+    reserved 4, 5, 6;
 
-    // The record itself, absent when nothing readable was found. Hand all of these back
-    // UNCHANGED with the mac to restore the intent; every one of them is MAC'd.
+    // The record itself, absent when nothing was found. Hand all of these back UNCHANGED with the
+    // mac to restore the intent; every one of them is MAC'd.
     optional string key_type   = 7;
     optional string app_id     = 8;
     optional bytes  identifier = 9;

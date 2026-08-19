@@ -276,8 +276,6 @@ def queue_set_entry(
     identifier: bytes,
     value: Optional[bytes],
     mac: Optional[bytes] = None,
-    counter: Optional[int] = None,
-    key_type: Optional[str] = None,
 ) -> messages.WardQueueSetAck:
     """Ask the device to HOLD a write until a synced host can publish it.
 
@@ -288,18 +286,13 @@ def queue_set_entry(
     `value` is typed Optional only so callers can exercise the device-side validation -- an
     absent value is rejected. Pass b"" for a genuinely empty value.
 
-    WITH `mac` THIS IS A RESTORE of a change exported by `queue_get_entry`: every field must be
-    exactly what came out, `counter` and `key_type` included, because all of them are inside the
-    MAC. Use `restore_queued_entry` rather than mapping the fields by hand.
+    WITH `mac` THIS IS A RESTORE of a change exported by `queue_get_entry`: the three fields must be
+    exactly what came out, because the device MACs them together with the path and key space it
+    derives itself. Use `restore_queued_entry` rather than mapping the fields by hand.
     """
     return session.call(
         messages.WardQueueSetEntry(
-            app_id=app_id,
-            identifier=identifier,
-            value=value,
-            mac=mac,
-            counter=counter,
-            key_type=key_type,
+            app_id=app_id, identifier=identifier, value=value, mac=mac
         ),
         expect=messages.WardQueueSetAck,
     )
@@ -330,8 +323,6 @@ def restore_queued_entry(
         backup.identifier or b"",
         backup.value or b"",
         mac=backup.mac,
-        counter=backup.counter or 0,
-        key_type=backup.key_type,
     )
 
 
@@ -364,9 +355,12 @@ def queue_get_entry(
     """EXPORT what the device holds for (app_id, identifier), for backup.
 
     Reads the device's own store -- a queued change, or a pinned copy -- and needs no host round
-    trip. The ack reports which case it was (`missing`, `pending`, `unreadable`), the record itself
-    in the clear, and for a pending record a MAC over all of it. Keep the whole ack: it is the
-    backup, and `restore_queued_entry` hands it back.
+    trip. The ack reports which case it was (`missing`, `pending`), the record itself in the clear,
+    and for a pending record a MAC over all of it. Keep the whole ack: it is the backup, and
+    `restore_queued_entry` hands it back.
+
+    A record this build cannot read FAILS rather than coming back flagged: "there is something here
+    I cannot vouch for" must not be reported as "nothing here", which would invite writing over it.
 
     A queued change exists in ONE device's flash and nowhere else, which is what makes this worth a
     round trip. A pinned copy comes back too, without a MAC -- WARD already holds that value, so

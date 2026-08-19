@@ -47,7 +47,7 @@ async def queue_delete_entry(msg: WardQueueDeleteEntry) -> WardQueueDeleteAck:
     # the user confirmed -- the one thing the erase rule forbids outright. `WardEraseCachedEntry`
     # has the deliberate, user-confirmed escape hatch for such a record.
     if status != offline_store.VALID or entry is None or not entry.pending:
-        return WardQueueDeleteAck(entry_key=entry_key, missing=True)
+        return WardQueueDeleteAck(missing=True)
 
     await confirm_properties(
         "ward_queue_delete_entry",
@@ -65,4 +65,4 @@ async def queue_delete_entry(msg: WardQueueDeleteEntry) -> WardQueueDeleteAck:
     # was -- ActionCancelled propagates out before any write.
     await offline_store.erase(entry_key)
 
-    return WardQueueDeleteAck(entry_key=entry_key)
+    return WardQueueDeleteAck()
