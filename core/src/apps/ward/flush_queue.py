@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WardFlushQueue, WardLeafAck
+    from trezor.messages import WardFlushQueue, WardFlushQueueAck
 
 
-async def flush_queue(msg: WardFlushQueue) -> WardLeafAck:
+async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
     """WardFlushQueue handler: publish ONE queued change, sealed and re-derived.
 
     WHY A QUEUED CHANGE CANNOT SIMPLY BE SENT. It was made with no host, so the device could
@@ -39,7 +39,7 @@ async def flush_queue(msg: WardFlushQueue) -> WardLeafAck:
     against and nothing to prove the pulled leaf with. Refusing is the honest answer: the
     device cannot publish while it cannot see current state.
     """
-    from trezor.messages import WardLeafAck
+    from trezor.messages import WardFlushQueueAck
     from trezor.wire import DataError
 
     from . import offline_store
@@ -71,7 +71,7 @@ async def flush_queue(msg: WardFlushQueue) -> WardLeafAck:
 
     entry = await offline_store.next_unsent()
     if entry is None:
-        return WardLeafAck(remaining=0)
+        return WardFlushQueueAck(remaining=0)
 
     key_type = entry.key_type
     entry_key = entry.entry_key
@@ -128,7 +128,7 @@ async def flush_queue(msg: WardFlushQueue) -> WardLeafAck:
 
     remaining = await offline_store.count_unsent()
 
-    return WardLeafAck(
+    return WardFlushQueueAck(
         entry_key=entry_key,
         identity=make_leaf_identity(key_type, id_part),
         content=make_leaf_content(val_part),

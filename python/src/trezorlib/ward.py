@@ -117,13 +117,9 @@ class WardResult(NamedTuple):
     # forwards it to the WM, which needs it to tell a real device's transition from anyone
     # else's; the host itself can verify it but has no reason to.
     auth_sig: Optional[bytes] = None
-    # Set when the device QUEUED the change instead of applying it, having no synced host to
-    # pull from. There is then no leaf, no counter and no mac -- none of them can exist
-    # without current state to derive against. The host must not store anything; the change
-    # arrives later, sealed, through `flush_queue`.
-    queued: bool = False
-    # `flush_queue` only: queued changes still waiting to be handed over after this one. Loop
-    # until it reads zero.
+    # `flush_queue` only (so, `WardFlushQueueAck` only): queued changes still waiting to be
+    # handed over after this one. Loop until it reads zero. There is no `queued` field: a queued
+    # change is not a WardResult at all, because the queue requests answer their own ack types.
     remaining: Optional[int] = None
 
 
@@ -162,21 +158,21 @@ def _call_answering_pulls(
             )
         )
 
-    if isinstance(res, messages.WardLeafAck):
-        # A queued ack carries no leaf at all -- reporting Leaf(None, None) would let a caller
-        # "store" an entry made of nothing, which is precisely the mistake `queued` exists to
-        # prevent.
-        queued = bool(res.queued)
+    # Both leaf-bearing acks land here. WardLeafAck ends a direct write or delete;
+    # WardFlushQueueAck ends a flush, which publishes an ordinary leaf and adds `remaining` --
+    # a field that exists only there, because only a drain has anything to count. Nothing that
+    # merely touched the QUEUE reaches this function at all: those requests never pull, so they
+    # are plain calls (see `queue_set_entry` and friends).
+    if isinstance(res, (messages.WardLeafAck, messages.WardFlushQueueAck)):
         return WardResult(
             res,
             res.entry_key or entry_key,
-            None if queued else Leaf(res.identity, res.content),
+            Leaf(res.identity, res.content),
             res.counter,
             res.mac,
             res.auth_commit,
             res.auth_sig,
-            queued,
-            res.remaining,
+            getattr(res, "remaining", None),
         )
 
     if not isinstance(res, messages.Success):
@@ -223,6 +219,9 @@ def set_entry(
     it verbatim under the returned `entry_key` -- see `apply`. A result the caller ignores
     means the user confirmed a write that never happened.
 
+    REQUIRES A SYNCED SESSION and fails without one. Queueing is a separate request --
+    `queue_set_entry` -- so that one call never means two different things.
+
     `value` is typed Optional only so callers can exercise the device-side validation --
     an absent value is rejected, because writing "nothing specified" as if it were an
     empty value would silently blank an entry. Pass b"" for a genuinely empty value.
@@ -261,6 +260,73 @@ def delete_entry(
         session,
         messages.WardDeleteEntry(app_id=app_id, identifier=identifier),
         provider,
+    )
+
+
+# --- the offline queue: its own requests, none of which pull -------------------------------
+#
+# These operate on the DEVICE'S OWN STORE and never on the trie, so there is no proof material
+# to serve and no `provider` argument to pass. They also answer their own ack types, which is
+# what stops a caller confusing "held on the device" with "in the tree".
+
+
+def queue_set_entry(
+    session: "Session",
+    app_id: str,
+    identifier: bytes,
+    value: Optional[bytes],
+) -> messages.WardQueueSetAck:
+    """Ask the device to HOLD a write until a synced host can publish it.
+
+    Nothing is applied: the device stores the intent, shows a screen that says so, and returns
+    the path it will live at. Publish it later with `flush_queue`, which re-derives it against
+    whatever the tree has become and hands back the sealed leaf.
+
+    `value` is typed Optional only so callers can exercise the device-side validation -- an
+    absent value is rejected. Pass b"" for a genuinely empty value.
+    """
+    return session.call(
+        messages.WardQueueSetEntry(app_id=app_id, identifier=identifier, value=value),
+        expect=messages.WardQueueSetAck,
+    )
+
+
+def queue_delete_entry(
+    session: "Session",
+    app_id: str,
+    identifier: bytes,
+) -> messages.WardQueueDeleteAck:
+    """Ask the device to DISCARD a queued change, on confirmation.
+
+    Not a WARD deletion: the entry in the tree is untouched, and `delete_entry` remains the way
+    to remove one. Pending records only -- a copy pinned by `pin_cached_entry` is reported as
+    `missing` and left alone, since "do not publish this" and "stop keeping this here" are
+    different questions. `erase_cached_entry` is the pinned-copy path.
+
+    `missing` is an ANSWER, not a failure: a caller reconciling its own view of the queue will
+    legitimately ask about a change that has already been published.
+    """
+    return session.call(
+        messages.WardQueueDeleteEntry(app_id=app_id, identifier=identifier),
+        expect=messages.WardQueueDeleteAck,
+    )
+
+
+def queue_get_entry(
+    session: "Session",
+    app_id: str,
+    identifier: bytes,
+) -> messages.WardQueueGetAck:
+    """Ask the device to show what IT holds for (app_id, identifier).
+
+    Reads the device's own store -- a queued change, or a pinned copy -- and needs no host round
+    trip. The value goes to the SCREEN and is not returned: the ack reports which case it was
+    (`missing`, `pending`, `unreadable`), the counter the record was authenticated at, and
+    whether that is behind the counter the device now trusts.
+    """
+    return session.call(
+        messages.WardQueueGetEntry(app_id=app_id, identifier=identifier),
+        expect=messages.WardQueueGetAck,
     )
 
 
@@ -525,6 +591,9 @@ def flush_queue(session: "Session", provider: EntryProvider) -> WardResult:
     then the device keeps it queued and will offer it again.
 
     `remaining == 0` with no `entry_key` means the queue was already empty.
+
+    Answers a `WardFlushQueueAck`: an ordinary leaf with the full authenticators, plus
+    `remaining`, which lives there and nowhere else -- a direct write has nothing to count.
 
     Requires a synced session: with no trusted root there is nothing to derive against.
     """

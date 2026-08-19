@@ -113,6 +113,10 @@ class _Recorded:
     def __init__(self) -> None:
         self._titles: list[str] = []
         self._texts: list[str] = []
+        # Set by helpers that also want the ack back, e.g. `_offline_read` -- the screen and the
+        # message are two halves of the same answer and asserting one without the other has
+        # already let a wrong flag through.
+        self.ack = None
 
     def on_page(self, layout: LayoutContent) -> None:
         self._titles.append(layout.title())
@@ -195,9 +199,10 @@ def _go_online(
     """Bring the session out of offline mode by completing one sync round.
 
     A SESSION STARTS OFFLINE and stays there until a reconcile succeeds -- the device has no
-    reason to believe anything it holds is current before then. Offline, reads are served from
-    the device's own store and writes are queued, so any test that means to exercise the HOST
-    path has to sync first. A real host does this on connect; the tests simply have to say so.
+    reason to believe anything it holds is current before then. Offline, `WardGetEntry` and
+    `WardSetEntry` REFUSE (the local store has its own requests now), so any test that means to
+    exercise the host path has to sync first. A real host does this on connect; the tests simply
+    have to say so.
 
     Adopting the head the host already holds, at the counter it already has, so this changes
     no state -- it only tells the device that what it has is confirmed.
@@ -222,9 +227,9 @@ def _seed(
     again -- which is what a real host does too, and why it is folded in here rather than
     repeated at eighty call sites.
 
-    The LEADING round is what makes the write a write at all: offline, `WardSetEntry` queues
-    the change on the device instead of building a leaf, because with no host to pull from
-    there is no current state to derive a root against.
+    The LEADING round is what makes the write possible at all: offline, `WardSetEntry` refuses,
+    because with no host to pull from there is no current state to derive a root against. Holding
+    the change instead is `WardQueueSetEntry`, a different request with a different ack.
     """
     _go_online(session, store, k_mac=k_mac)
     res, _rec = _write(
@@ -2192,23 +2197,24 @@ def _reject_flow(session: Session):
 
 
 def _offline_read(session: Session, identifier: bytes) -> "_Recorded":
-    """Read with no sync round, and assert the device asks the host NOTHING.
+    """Read the DEVICE'S store, and assert it asks the host NOTHING.
 
-    The absent WardEntryRequest is the assertion, not a detail of it: an offline read that
-    still pulled would mean the fallback is reachable from a FAILED pull, and a hostile host
-    could then force an old value onto the screen by answering badly on purpose.
+    `WardQueueGetEntry` is a different request from `WardGetEntry` rather than a mode of it, so
+    there is no provider to pass and no pull to answer. The absent WardEntryRequest in the
+    expected sequence is still the assertion: a local read that pulled would mean this path can
+    be reached from a FAILED pull, and a hostile host could then force an old value onto the
+    screen by answering badly on purpose.
     """
     rec = _Recorded()
 
-    def provider(_entry_key: bytes) -> ward.Answer:
-        raise AssertionError("offline read must not pull from the host")
-
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.ButtonRequest(name="ward_get_entry"), m.Success])
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_queue_get_entry"), m.WardQueueGetAck]
+        )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
-        ward.get_entry(session, _APP, identifier, provider)
+        rec.ack = ward.queue_get_entry(session, _APP, identifier)
     return rec
 
 
@@ -2509,25 +2515,27 @@ def test_ward_deleting_an_entry_leaves_the_offline_copy(session: Session):
 def test_ward_offline_write_is_queued_not_applied(session: Session):
     """With no host to pull from there is no current state, so no root and no counter can be
     derived. The device holds the intent and SAYS SO -- an ack that looked like a write would
-    make the user's confirmation retroactively untrue."""
-    rec = _Recorded()
+    make the user's confirmation retroactively untrue.
 
-    def provider(_entry_key: bytes) -> ward.Answer:
-        raise AssertionError("an offline write must not pull from the host")
+    It says so by the MESSAGE TYPE: `WardQueueSetAck` carries a path and nothing else, so there
+    is no leaf-shaped answer for a host to store and no flag it can fail to read."""
+    rec = _Recorded()
 
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_queue_entry"), m.WardLeafAck]
+            [m.ButtonRequest(name="ward_queue_entry"), m.WardQueueSetAck]
         )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
-        res = ward.set_entry(session, _APP, b"addr1", b"queued_value", provider)
+        ack = ward.queue_set_entry(session, _APP, b"addr1", b"queued_value")
 
-    assert res.queued is True
-    assert res.counter is None
-    assert res.mac is None
-    assert res.leaf is None
+    # entry_key and nothing else: the ack TYPE is what says the change was only held, so the
+    # fields that would describe a transition do not exist on it to be misread.
+    assert len(ack.entry_key) == 32
+    assert not hasattr(ack, "counter")
+    assert not hasattr(ack, "mac")
+    assert not hasattr(ack, "queued")
     assert "queue" in rec.title
     assert "not applied yet" in rec.text.lower()
 
@@ -2541,12 +2549,9 @@ def test_ward_a_queued_write_outlives_the_session_that_made_it(session: Session)
     that, since it is exactly what clears everything except flash.
     """
 
-    def provider(_entry_key: bytes) -> ward.Answer:
-        raise AssertionError("an offline write must not pull from the host")
-
     with session.test_ctx as ctx:
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
-        ward.set_entry(session, _APP, b"addr1", b"survives", provider)
+        ward.queue_set_entry(session, _APP, b"addr1", b"survives")
 
     fresh = session.test_ctx.get_session()
 
@@ -2565,17 +2570,16 @@ def test_ward_flush_publishes_the_queued_change_sealed(session: Session):
     """
     store = WardTrie()
 
-    def offline_provider(_entry_key: bytes) -> ward.Answer:
-        raise AssertionError("an offline write must not pull from the host")
-
     with session.test_ctx as ctx:
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
-        ward.set_entry(session, _APP, b"addr1", b"published_value", offline_provider)
+        ward.queue_set_entry(session, _APP, b"addr1", b"published_value")
 
     _go_online(session, store)
 
     res = ward.flush_queue(session, ward.store_provider(store))
-    assert res.queued is False
+    # A published queued change is an ordinary leaf, reported by the one ack type that also
+    # carries `remaining` -- which a direct write has nothing to count and therefore never has.
+    assert isinstance(res.response, m.WardFlushQueueAck)
     assert res.counter is not None
     assert res.mac is not None
     assert res.remaining == 0
@@ -2605,12 +2609,9 @@ def test_ward_a_change_stays_queued_until_the_wm_confirms_it(session: Session):
     """
     store = WardTrie()
 
-    def offline_provider(_entry_key: bytes) -> ward.Answer:
-        raise AssertionError("an offline write must not pull from the host")
-
     with session.test_ctx as ctx:
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
-        ward.set_entry(session, _APP, b"addr1", b"unconfirmed", offline_provider)
+        ward.queue_set_entry(session, _APP, b"addr1", b"unconfirmed")
 
     _go_online(session, store)
     ward.flush_queue(session, ward.store_provider(store))
@@ -2630,12 +2631,9 @@ def test_ward_a_confirmed_change_becomes_an_offline_copy(session: Session):
     cached copy of the value that was just published."""
     store = WardTrie()
 
-    def offline_provider(_entry_key: bytes) -> ward.Answer:
-        raise AssertionError("an offline write must not pull from the host")
-
     with session.test_ctx as ctx:
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
-        ward.set_entry(session, _APP, b"addr1", b"landed", offline_provider)
+        ward.queue_set_entry(session, _APP, b"addr1", b"landed")
 
     _go_online(session, store)
     res = ward.flush_queue(session, ward.store_provider(store))
@@ -2655,12 +2653,9 @@ def test_ward_discarding_a_queued_change_is_confirmed_and_says_what_it_is(
     """Erasing a pending record DISCARDS a change that was never published -- calling that a
     deletion would suggest WARD ever had it."""
 
-    def offline_provider(_entry_key: bytes) -> ward.Answer:
-        raise AssertionError("an offline write must not pull from the host")
-
     with session.test_ctx as ctx:
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
-        ward.set_entry(session, _APP, b"addr1", b"discard_me", offline_provider)
+        ward.queue_set_entry(session, _APP, b"addr1", b"discard_me")
 
     rec = _Recorded()
     with session.test_ctx as ctx:
@@ -2684,3 +2679,95 @@ def test_ward_delete_requires_a_connection(session: Session):
     the power to delete anything. A write can wait in a queue; a delete cannot."""
     with pytest.raises(exceptions.TrezorFailure, match="connect"):
         ward.delete_entry(session, _APP, b"addr1", lambda _k: ward.Answer())
+
+
+@pytest.mark.models("core")
+def test_ward_set_entry_refuses_offline_and_names_the_queue_request(session: Session):
+    """The online write no longer falls back to queueing, and the refusal says what to use.
+
+    The fallback made ONE request mean two different things depending on state the host cannot
+    see: sometimes a leaf came back, sometimes a receipt. A host could not tell from the request
+    it sent whether its change had applied, which is the question the whole protocol exists to
+    answer.
+    """
+    with pytest.raises(exceptions.TrezorFailure, match="WardQueueSetEntry"):
+        ward.set_entry(
+            session, _APP, b"addr1", b"v", lambda _k: ward.Answer()
+        )
+
+
+@pytest.mark.models("core")
+def test_ward_get_entry_refuses_offline_and_names_the_queue_request(session: Session):
+    """Same for the read, and here the refusal is also the security property.
+
+    A device that pulled first and used its own copy whenever the pull failed would let a
+    hostile host force an old value onto the screen by answering badly on purpose: fail the
+    proof, get the cache. Now the local read is a request the host had to ask for by name.
+    """
+    with pytest.raises(exceptions.TrezorFailure, match="WardQueueGetEntry"):
+        ward.get_entry(session, _APP, b"addr1", lambda _k: ward.Answer())
+
+
+@pytest.mark.models("core")
+def test_ward_queue_delete_discards_a_queued_change(session: Session):
+    """The queue delete removes a change that was never published -- and nothing else."""
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        queued = ward.queue_set_entry(session, _APP, b"addr1", b"never_published")
+
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_queue_delete_entry"), m.WardQueueDeleteAck]
+        )
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        ack = ward.queue_delete_entry(session, _APP, b"addr1")
+
+    assert ack.entry_key == queued.entry_key
+    assert ack.missing is None
+    assert "discard queued change" in rec.title
+    assert "never_published" in rec.squashed
+
+    # and it is really gone, which the local read is the only way to see
+    after = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "not kept offline" in after.title
+    assert after.ack.missing is True
+
+
+@pytest.mark.models("core")
+def test_ward_queue_delete_of_nothing_is_reported_not_raised(session: Session):
+    """"Nothing was queued" is an ANSWER. A host reconciling its own view of the queue will ask
+    about a change that has already been published, and a Failure would make that ordinary case
+    look like a fault. No screen either: a hold that always means "nothing happened" is one that
+    gets approved without being read."""
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.WardQueueDeleteAck])
+        ack = ward.queue_delete_entry(session, _APP, b"never_queued")
+
+    assert ack.missing is True
+    assert len(ack.entry_key) == 32
+
+
+@pytest.mark.models("core")
+def test_ward_queue_delete_will_not_touch_a_pinned_copy(session: Session):
+    """A pinned read and a queued write live in the same store and are NOT the same question.
+
+    "Do not publish this change" and "stop keeping this value on the device" cannot share one
+    confirmation, so the queue delete reports a pinned record as missing and leaves it alone.
+    `WardEraseCachedEntry` is the only way a pinned copy goes.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"pinned_value")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.WardQueueDeleteAck])
+        ack = ward.queue_delete_entry(session, _APP, b"addr1")
+    assert ack.missing is True
+
+    fresh = session.test_ctx.get_session()
+    rec = _offline_read(fresh, b"addr1")
+    assert "offline copy" in rec.title
+    assert "pinned_value" in rec.squashed

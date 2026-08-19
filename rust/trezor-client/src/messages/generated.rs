@@ -369,6 +369,13 @@ trezor_message_impl! {
     WardPinCachedEntry => MessageType_WardPinCachedEntry,
     WardEraseCachedEntry => MessageType_WardEraseCachedEntry,
     WardFlushQueue => MessageType_WardFlushQueue,
+    WardQueueSetEntry => MessageType_WardQueueSetEntry,
+    WardQueueSetAck => MessageType_WardQueueSetAck,
+    WardQueueDeleteEntry => MessageType_WardQueueDeleteEntry,
+    WardQueueDeleteAck => MessageType_WardQueueDeleteAck,
+    WardQueueGetEntry => MessageType_WardQueueGetEntry,
+    WardQueueGetAck => MessageType_WardQueueGetAck,
+    WardFlushQueueAck => MessageType_WardFlushQueueAck,
     DisplayAddress => MessageType_DisplayAddress,
 }
 

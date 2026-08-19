@@ -653,6 +653,20 @@ pub enum MessageType {
     MessageType_WardEraseCachedEntry = 2320,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardFlushQueue)
     MessageType_WardFlushQueue = 2321,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardQueueSetEntry)
+    MessageType_WardQueueSetEntry = 2323,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardQueueSetAck)
+    MessageType_WardQueueSetAck = 2324,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardQueueDeleteEntry)
+    MessageType_WardQueueDeleteEntry = 2325,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardQueueDeleteAck)
+    MessageType_WardQueueDeleteAck = 2326,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardQueueGetEntry)
+    MessageType_WardQueueGetEntry = 2327,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardQueueGetAck)
+    MessageType_WardQueueGetAck = 2328,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardFlushQueueAck)
+    MessageType_WardFlushQueueAck = 2329,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DisplayAddress)
     MessageType_DisplayAddress = 2322,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
@@ -991,6 +1005,13 @@ impl ::protobuf::Enum for MessageType {
             2319 => ::std::option::Option::Some(MessageType::MessageType_WardPinCachedEntry),
             2320 => ::std::option::Option::Some(MessageType::MessageType_WardEraseCachedEntry),
             2321 => ::std::option::Option::Some(MessageType::MessageType_WardFlushQueue),
+            2323 => ::std::option::Option::Some(MessageType::MessageType_WardQueueSetEntry),
+            2324 => ::std::option::Option::Some(MessageType::MessageType_WardQueueSetAck),
+            2325 => ::std::option::Option::Some(MessageType::MessageType_WardQueueDeleteEntry),
+            2326 => ::std::option::Option::Some(MessageType::MessageType_WardQueueDeleteAck),
+            2327 => ::std::option::Option::Some(MessageType::MessageType_WardQueueGetEntry),
+            2328 => ::std::option::Option::Some(MessageType::MessageType_WardQueueGetAck),
+            2329 => ::std::option::Option::Some(MessageType::MessageType_WardFlushQueueAck),
             2322 => ::std::option::Option::Some(MessageType::MessageType_DisplayAddress),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
@@ -1317,6 +1338,13 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_WardPinCachedEntry" => ::std::option::Option::Some(MessageType::MessageType_WardPinCachedEntry),
             "MessageType_WardEraseCachedEntry" => ::std::option::Option::Some(MessageType::MessageType_WardEraseCachedEntry),
             "MessageType_WardFlushQueue" => ::std::option::Option::Some(MessageType::MessageType_WardFlushQueue),
+            "MessageType_WardQueueSetEntry" => ::std::option::Option::Some(MessageType::MessageType_WardQueueSetEntry),
+            "MessageType_WardQueueSetAck" => ::std::option::Option::Some(MessageType::MessageType_WardQueueSetAck),
+            "MessageType_WardQueueDeleteEntry" => ::std::option::Option::Some(MessageType::MessageType_WardQueueDeleteEntry),
+            "MessageType_WardQueueDeleteAck" => ::std::option::Option::Some(MessageType::MessageType_WardQueueDeleteAck),
+            "MessageType_WardQueueGetEntry" => ::std::option::Option::Some(MessageType::MessageType_WardQueueGetEntry),
+            "MessageType_WardQueueGetAck" => ::std::option::Option::Some(MessageType::MessageType_WardQueueGetAck),
+            "MessageType_WardFlushQueueAck" => ::std::option::Option::Some(MessageType::MessageType_WardFlushQueueAck),
             "MessageType_DisplayAddress" => ::std::option::Option::Some(MessageType::MessageType_DisplayAddress),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
@@ -1642,6 +1670,13 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_WardPinCachedEntry,
         MessageType::MessageType_WardEraseCachedEntry,
         MessageType::MessageType_WardFlushQueue,
+        MessageType::MessageType_WardQueueSetEntry,
+        MessageType::MessageType_WardQueueSetAck,
+        MessageType::MessageType_WardQueueDeleteEntry,
+        MessageType::MessageType_WardQueueDeleteAck,
+        MessageType::MessageType_WardQueueGetEntry,
+        MessageType::MessageType_WardQueueGetAck,
+        MessageType::MessageType_WardFlushQueueAck,
         MessageType::MessageType_DisplayAddress,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
@@ -1973,13 +2008,20 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_WardPinCachedEntry => 310,
             MessageType::MessageType_WardEraseCachedEntry => 311,
             MessageType::MessageType_WardFlushQueue => 312,
-            MessageType::MessageType_DisplayAddress => 313,
-            MessageType::MessageType_BenchmarkListNames => 314,
-            MessageType::MessageType_BenchmarkNames => 315,
-            MessageType::MessageType_BenchmarkRun => 316,
-            MessageType::MessageType_BenchmarkResult => 317,
-            MessageType::MessageType_TelemetryGet => 318,
-            MessageType::MessageType_Telemetry => 319,
+            MessageType::MessageType_WardQueueSetEntry => 313,
+            MessageType::MessageType_WardQueueSetAck => 314,
+            MessageType::MessageType_WardQueueDeleteEntry => 315,
+            MessageType::MessageType_WardQueueDeleteAck => 316,
+            MessageType::MessageType_WardQueueGetEntry => 317,
+            MessageType::MessageType_WardQueueGetAck => 318,
+            MessageType::MessageType_WardFlushQueueAck => 319,
+            MessageType::MessageType_DisplayAddress => 320,
+            MessageType::MessageType_BenchmarkListNames => 321,
+            MessageType::MessageType_BenchmarkNames => 322,
+            MessageType::MessageType_BenchmarkRun => 323,
+            MessageType::MessageType_BenchmarkResult => 324,
+            MessageType::MessageType_TelemetryGet => 325,
+            MessageType::MessageType_Telemetry => 326,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1998,7 +2040,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xcdp\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xf3r\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2356,25 +2398,32 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12)\n\x1eMessageType_WardPinCachedEntry\x10\x8f\x12\x1a\x04\x90\xb5\
     \x18\x01\x12+\n\x20MessageType_WardEraseCachedEntry\x10\x90\x12\x1a\x04\
     \x90\xb5\x18\x01\x12%\n\x1aMessageType_WardFlushQueue\x10\x91\x12\x1a\
-    \x04\x90\xb5\x18\x01\x12%\n\x1aMessageType_DisplayAddress\x10\x92\x12\
-    \x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\
-    \x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\
-    \x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8e\
-    G\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\
-    \x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\x10\xcc\x08\
-    \x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_Telemetry\
-    \x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\
-    \x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10J\"\
-    \x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\
-    \x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\x06\x08\xe3\
-    \x01\x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\x01\x10\xe5\
-    \x01\"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\x01\"\x06\
-    \x08\xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\x08\xec\x01\
-    \x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\x10\xb0\x02\
-    \"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\
-    \xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08\"\x06\x08\x82\x12\x10\
-    \x82\x12B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\
-    \x1d\x01\
+    \x04\x90\xb5\x18\x01\x12(\n\x1dMessageType_WardQueueSetEntry\x10\x93\x12\
+    \x1a\x04\x90\xb5\x18\x01\x12&\n\x1bMessageType_WardQueueSetAck\x10\x94\
+    \x12\x1a\x04\x98\xb5\x18\x01\x12+\n\x20MessageType_WardQueueDeleteEntry\
+    \x10\x95\x12\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_WardQueueDele\
+    teAck\x10\x96\x12\x1a\x04\x98\xb5\x18\x01\x12(\n\x1dMessageType_WardQueu\
+    eGetEntry\x10\x97\x12\x1a\x04\x90\xb5\x18\x01\x12&\n\x1bMessageType_Ward\
+    QueueGetAck\x10\x98\x12\x1a\x04\x98\xb5\x18\x01\x12(\n\x1dMessageType_Wa\
+    rdFlushQueueAck\x10\x99\x12\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageTyp\
+    e_DisplayAddress\x10\x92\x12\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageTy\
+    pe_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessage\
+    Type_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageTy\
+    pe_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_B\
+    enchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_Te\
+    lemetryGet\x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\
+    \x15MessageType_Telemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\
+    \x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\
+    \x08M\x10N\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\
+    \x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\
+    \x10\xe2\x01\"\x06\x08\xe3\x01\x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\
+    \"\x06\x08\xe5\x01\x10\xe5\x01\"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\
+    \xe8\x01\x10\xe8\x01\"\x06\x08\xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\
+    \xea\x01\"\x06\x08\xec\x01\x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\
+    \x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\
+    \x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\
+    \x08\"\x06\x08\x82\x12\x10\x82\x12B8\n#com.satoshilabs.trezor.lib.protob\
+    ufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

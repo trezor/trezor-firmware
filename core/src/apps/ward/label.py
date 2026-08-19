@@ -9,10 +9,15 @@ workflow, and returns rather than displays.
 
 THE SAME TWO SOURCES, CHOSEN THE SAME WAY. Online (this session has adopted a WM-attested
 head) means pull from the host and check the answer against the trusted root; offline means
-this device's own store. The choice is made UP FRONT on `round.is_online()`, exactly as in
-`get_entry`, and for the same reason: a device that pulled first and fell back to its local
-copy on failure would let a hostile host choose which of the two the user sees, simply by
+this device's own store. The choice is made UP FRONT on `round.is_online()`, for the reason
+`get_entry` now enforces by refusing outright: a device that pulled first and fell back to its
+local copy on failure would let a hostile host choose which of the two the user sees, simply by
 answering badly.
+
+WHY THIS ONE STILL FORKS while the host-facing requests were split in two. The caller here is an
+ON-DEVICE app, not a host: there is no request for it to name, and no host to be told which
+message to send. What the split bought -- one request, one meaning -- is already true of a
+function whose only callers are inside the firmware.
 
 PROVENANCE TRAVELS WITH THE LABEL. The caller gets `(label, note)`, never a bare label,
 because the four ways a label can arrive are not interchangeable on a screen a user checks

@@ -20,6 +20,12 @@ WARD_REQUESTS = (
     "WardPinCachedEntry",
     "WardEraseCachedEntry",
     "WardFlushQueue",
+    # The offline queue's own requests. They exist as separate messages so that a request never
+    # means two things depending on whether the session is synced -- which also means three more
+    # handlers that have to resolve.
+    "WardQueueSetEntry",
+    "WardQueueDeleteEntry",
+    "WardQueueGetEntry",
 )
 
 

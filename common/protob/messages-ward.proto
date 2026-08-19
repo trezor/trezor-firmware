@@ -38,9 +38,21 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
  * screen is authentic but not proven current, and the screens say exactly that. The
  * warning is narrower than it was before sealing, not gone.
  *
- * All fields are `optional` deliberately. A proto2 `required` field that a caller
- * forgets to set is an encode-time failure in every binding, which has bitten this
- * protocol before; the handler validates instead.
+ * REQUEST fields are `optional` deliberately. A proto2 `required` field that a caller forgets
+ * to set is an encode-time failure in every binding, which has bitten this protocol before;
+ * the handler validates instead.
+ *
+ * The exception is `entry_key` on the acks, which is `required`. The argument above is about
+ * fields a HOST fills in; entry_key is filled in by the DEVICE, which derives it and always
+ * has it. It is also the only way a host can learn the path a leaf belongs at -- an ack
+ * without it is unusable, so a decode failure is the honest outcome rather than a record
+ * stored under nothing.
+ *
+ * THE OFFLINE QUEUE HAS ITS OWN REQUESTS. WardQueueSetEntry / WardQueueDeleteEntry /
+ * WardQueueGetEntry, each with its own ack. They are not modes of the messages above: a
+ * request whose meaning depends on whether the session happens to be synced is one a host
+ * cannot reason about, and it made "did my change apply?" a question about hidden state. The
+ * online requests now REFUSE when there is no synced session and say which message to use.
  */
 
 /**
@@ -61,6 +73,11 @@ message WardGetEntry {
  * The device pulls the current value first, so an ADD and an OVERWRITE are different
  * screens and the user sees the value being replaced. The device returns the leaf it
  * built (WardLeafAck) and the host stores it.
+ *
+ * REQUIRES A SYNCED SESSION and refuses without one. It used to queue the change silently,
+ * which made one request mean two different things depending on state the host cannot see --
+ * and made "did this apply?" unanswerable from the request alone. Queueing is now asked for by
+ * name: WardQueueSetEntry.
  * @start
  * @next WardLeafAck
  * @next Failure
@@ -216,9 +233,14 @@ message WardEntryAck {
  *
  * The host has no other way to learn entry_key, so this is also how a newly created
  * entry acquires its key.
+ *
+ * ONLY FOR A LEAF THAT ENTERED THE TRIE. Every ack of this type reports a real transition of
+ * the tree: a new or replaced leaf, or the empty-part leaf of a delete. Nothing that merely
+ * touched the device's own queue is reported here -- those have their own messages, and keeping
+ * them out is why this one can promise a leaf and a path at all.
  */
 message WardLeafAck {
-    optional bytes        entry_key = 1;  // 32B keyed path this leaf belongs at
+    required bytes        entry_key = 1;  // 32B keyed path this leaf belongs at; ALWAYS set
     optional WardLeafIdentity identity  = 2;
     optional WardLeafContent  content   = 3;  // empty part = the entry was deleted
 
@@ -244,17 +266,151 @@ message WardLeafAck {
     // Without it a WM that arbitrates ordering is a denial-of-service oracle.
     optional bytes auth_sig = 7;
 
-    // Set when the change was QUEUED LOCALLY rather than applied. The device had no synced
-    // host, so it could not pull, could not prove current state, and could not derive a root
-    // -- there is therefore no counter, no mac and no auth_commit to send, and their absence
-    // is not an omission but the honest report. The host must not treat a queued ack as a
-    // write it can store; the change reaches it later, sealed, through WardFlushQueue.
-    optional bool queued = 8;
+    // 8 and 9 were `queued` and `remaining`, which only ever applied to the OFFLINE QUEUE.
+    // They now live on WardQueueAck, which is a separate message precisely so that neither
+    // field can appear on an ack that carries a real leaf. Reserved rather than reused, so a
+    // stale host cannot have an old field silently reinterpreted.
+    reserved 8, 9;
+}
 
-    // WardFlushQueue only: how many queued changes remain after this one. The host loops
-    // until it reads zero. One intent per round-trip, so a failure costs one step rather
-    // than a batch -- see the atomicity note in the device's storage/ward.py.
-    optional uint32 remaining = 9;
+/**
+ * THE OFFLINE QUEUE: three requests, three acks, no shared shapes.
+ *
+ * Everything below operates on the DEVICE'S OWN STORE and never on the trie. Nothing here
+ * derives a root, stamps a counter or produces a leaf -- it cannot, because with no synced host
+ * the device can neither pull the current value nor prove what state the tree is in. That is
+ * exactly why these are separate messages rather than modes of WardSetEntry / WardDeleteEntry /
+ * WardGetEntry: the answers have nothing in common with a leaf, and a host that could confuse
+ * the two would store an entry made of nothing.
+ *
+ * A queued write reaches the tree later, sealed and re-derived, through WardFlushQueue.
+ */
+
+/**
+ * Request: hold a write on the device until a synced host can publish it.
+ *
+ * The device shows what is being queued -- and, if it already holds a copy, what that copy says
+ * -- and stores the intent only after the user confirms. The screen must read QUEUED rather than
+ * done: a confirmation that looks like "applied" when nothing has been applied leaves the user
+ * with no reason to think anything is outstanding.
+ * @start
+ * @next WardQueueSetAck
+ * @next Failure
+ */
+message WardQueueSetEntry {
+    optional string app_id     = 1;  // domain that owns the entry
+    optional bytes  identifier = 2;  // key within that domain
+    optional bytes  value      = 3;  // the value to queue; empty is allowed, absent is not
+}
+
+/**
+ * Response: the change is held on the device.
+ *
+ * entry_key AND NOTHING ELSE. There is no counter, no mac and no leaf because none of them
+ * exists yet -- and the message type, not a flag, is what tells the host so. The path is still
+ * worth returning: it is the key the host's store is organised by, and the host has no other way
+ * to learn it.
+ * @end
+ */
+message WardQueueSetAck {
+    required bytes entry_key = 1;  // 32B keyed path the queued change is for
+}
+
+/**
+ * Request: DISCARD a queued change. Removes it from the device's queue; the WARD entry itself is
+ * untouched, and WardDeleteEntry remains the only way to remove one from the tree.
+ *
+ * PENDING RECORDS ONLY. A pinned read at the same path is reported as `missing` and left alone --
+ * "stop keeping this here" is a different question from "do not publish this", and one
+ * confirmation cannot honestly stand for both. WardEraseCachedEntry is the pinned-copy path.
+ * @start
+ * @next WardQueueDeleteAck
+ * @next Failure
+ */
+message WardQueueDeleteEntry {
+    optional string app_id     = 1;  // domain that owns the entry
+    optional bytes  identifier = 2;  // key within that domain
+}
+
+/**
+ * Response: what happened to the queued change.
+ *
+ * `missing` is reported rather than raised because "there was nothing queued" is an ANSWER, not
+ * a failure -- a host draining its own view of the queue will legitimately ask about a path the
+ * device has already published. No screen is shown in that case either: a hold-to-confirm that
+ * always means "nothing happened" is one that gets approved without being read.
+ * @end
+ */
+message WardQueueDeleteAck {
+    required bytes entry_key = 1;  // 32B keyed path asked about
+    optional bool  missing   = 2;  // set when no queued change was held at this path
+}
+
+/**
+ * Request: read what the DEVICE holds for (app_id, identifier), with no host involved.
+ *
+ * Serves from the device's own store: a change queued but not yet published, or a copy pinned by
+ * WardPinCachedEntry. It never pulls, so the host is not asked for anything and cannot influence
+ * the answer.
+ * @start
+ * @next WardQueueGetAck
+ * @next Failure
+ */
+message WardQueueGetEntry {
+    optional string app_id     = 1;  // domain that owns the entry
+    optional bytes  identifier = 2;  // key within that domain
+}
+
+/**
+ * Response: WHAT the device found, never the value it found.
+ *
+ * The value goes to the SCREEN and stays there. Returning it would hand back the one thing the
+ * offline store exists to serve without a host -- and for a queued change the host has never
+ * seen it at all. The flags are what a host can act on: whether to prompt the user to connect,
+ * whether a change is still outstanding, whether what was shown is known to be behind.
+ *
+ * `stale` is DERIVED, not stored: it compares the counter the record was authenticated at with
+ * the counter the device trusts now, so advancing the head never has to touch a record.
+ * @end
+ */
+message WardQueueGetAck {
+    required bytes  entry_key = 1;  // 32B keyed path asked about
+    optional bool   missing   = 2;  // nothing kept for this path; connect to read it
+    optional bool   pending   = 3;  // a queued change -- what this device believes, not what WARD holds
+    optional bool   unreadable = 4; // stored but not decodable by this build; NOT the same as missing
+    optional bool   stale     = 5;  // authenticated at a counter older than the trusted one
+    optional uint32 counter   = 6;  // the counter the record was authenticated at; 0 = never
+}
+
+/**
+ * Response: device -> host, ending a WardFlushQueue.
+ *
+ * A published queued change IS an ordinary leaf -- sealed here, re-derived against proven
+ * current state -- so this carries exactly what WardLeafAck carries, plus the one thing only a
+ * drain needs. It is a separate message so that `remaining` cannot appear on an ack for a write
+ * the host made directly, where it would mean nothing.
+ *
+ * With an EMPTY QUEUE only `remaining = 0` is set: there is no leaf and no path, because there
+ * was no change to publish.
+ * @end
+ */
+message WardFlushQueueAck {
+    optional bytes            entry_key = 1;  // absent when the queue was already empty
+    optional WardLeafIdentity identity  = 2;
+    optional WardLeafContent  content   = 3;
+
+    // The state this publication claimed, as on WardLeafAck: the device derived the new root and
+    // stamped the next counter, and the host must publish the pair to the WM.
+    optional uint32 counter = 4;
+    optional bytes  mac     = 5;  // mac over (new root, counter); the WM signs it blind
+
+    optional bytes auth_commit = 6;  // authorises this transition; see WardLeafAck.auth_commit
+    optional bytes auth_sig    = 7;  // Ed25519 over the same preimage; see WardLeafAck.auth_sig
+
+    // How many queued changes remain after this one. The host loops until it reads zero. One
+    // intent per round-trip, so a failure costs one step rather than a batch -- see the
+    // atomicity note in the device's storage/ward.py.
+    required uint32 remaining = 8;
 }
 
 /**
@@ -575,7 +731,7 @@ message WardEraseCachedEntry {
  *
  * Requires a synced session: with no trusted root there is nothing to derive against.
  * @start
- * @next WardLeafAck
+ * @next WardFlushQueueAck
  * @next Failure
  */
 message WardFlushQueue {
