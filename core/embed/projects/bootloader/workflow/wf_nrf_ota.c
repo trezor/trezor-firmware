@@ -76,6 +76,29 @@ static upload_status_t nrf_on_chunk(image_upload_handler_t *base,
   return UPLOAD_OK;  // fold + model-id verified in on_finish
 }
 
+// Run the PQ-native push gate against the boot header at `header_address` (the
+// one whose modelRoot we folded against). A classic image passes trivially; a
+// PQ-native one must additionally carry this release's founder signature
+// records, an image-side Merkle proof that folds, and no rogue TLVs --
+// otherwise its own MCUboot would reject it AFTER we had already erased the
+// only slot. See nrf_image_verify_for_push.
+static secbool nrf_pq_gate(const uint8_t *image, size_t image_len,
+                           const merkle_proof_node_t *model_root,
+                           uint32_t header_address) {
+  const boot_header_auth_t *hdr = boot_header_auth_get(header_address);
+  if (hdr == NULL) {
+    return secfalse;
+  }
+  const boot_header_unauth_t *unauth = boot_header_unauth_get(hdr);
+  if (unauth == NULL) {
+    return secfalse;
+  }
+  return nrf_image_verify_for_push(
+      image, image_len, model_root, unauth->slh_signature[0],
+      unauth->slh_signature[1], unauth->ec_signature[0],
+      unauth->ec_signature[1]);
+}
+
 static upload_status_t nrf_on_finish(image_upload_handler_t *base,
                                      protob_io_t *iface) {
   nrf_upload_handler_t *h = (nrf_upload_handler_t *)base;
@@ -109,7 +132,23 @@ static upload_status_t nrf_on_finish(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_MODEL;
   }
 
-  // 3. Persist the descriptor (co-path) as the FINAL staging commit. The push
+  // 3. PQ-native gate: everything MCUboot will check that the fold above does
+  // not
+  //    cover -- the image-side Merkle proof, this release's signature records,
+  //    and the absence of rogue TLVs. Checked against the STAGED boot header,
+  //    since that is the header h->model_root came from (ucb_stage_verify). A
+  //    classic image passes trivially. Rejecting here means we never erase a
+  //    working nRF for an image its own MCUboot would refuse.
+  uint32_t staged_hdr = (uint32_t)(uintptr_t)flash_area_get_address(
+      &STAGING_AREA, 0, sizeof(boot_header_auth_t));
+  if (staged_hdr == 0 ||
+      nrf_pq_gate(image, h->image_len, &h->model_root, staged_hdr) != sectrue) {
+    send_msg_failure(iface, FailureType_Failure_ProcessError,
+                     "nRF image would be rejected by its bootloader");
+    return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
+  }
+
+  // 4. Persist the descriptor (co-path) as the FINAL staging commit. The push
   //    itself is deferred to the boot-time resume driver (see the file header);
   //    writing the descriptor last means a half-staged image never presents as
   //    valid. The nRF's own MCUboot Ed25519 check remains the authoritative
@@ -185,13 +224,22 @@ void nrf_ota_resume_boot(void) {
   // Founder commitment + cross-model guard against the INSTALLED root. A
   // stale/aborted/foreign descriptor (e.g. staged for a bootloader we did NOT
   // end up installing) will not fold -> discard and boot normally. This fold is
-  // the coupling between the two durable flags (UCB armed / staging valid): only
-  // a staging that matches the running bootloader's tree is acted on.
+  // the coupling between the two durable flags (UCB armed / staging valid):
+  // only a staging that matches the running bootloader's tree is acted on.
   uint8_t model_id[NRF_IMAGE_MODEL_ID_LEN];
   if (nrf_image_verify_in_tree(image, image_len, co_path, co_path_count,
-                         &model_root) != sectrue ||
+                               &model_root) != sectrue ||
       !nrf_image_model_id(image, image_len, model_id) ||
       memcmp(model_id, MODEL_INTERNAL_NAME, NRF_IMAGE_MODEL_ID_LEN) != 0) {
+    nrf_staging_clear();
+    return;
+  }
+
+  // PQ-native gate, now against the INSTALLED boot header (the swap has
+  // happened, so this is the release the staged nRF belongs to). Re-checked
+  // here and not just trusted from staging time: this runs after a reboot, and
+  // the push is what actually erases the nRF's only slot.
+  if (nrf_pq_gate(image, image_len, &model_root, BOOTLOADER_START) != sectrue) {
     nrf_staging_clear();
     return;
   }
