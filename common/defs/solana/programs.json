@@ -1264,7 +1264,7 @@
           "ui_properties": [
             {
               "account": "source_account",
-              "display_name": "Revoke delegate"
+              "display_name": "Revoke delegate for"
             },
             {
               "account": "owner",
@@ -1386,7 +1386,7 @@
             },
             {
               "account": "owner",
-              "display_name": "Mint authority",
+              "display_name": "Owner",
               "default_value_to_hide": "signer"
             }
           ]
@@ -1440,7 +1440,7 @@
             },
             {
               "account": "freeze_authority",
-              "display_name": "Owner",
+              "display_name": "Freeze authority",
               "default_value_to_hide": "signer"
             }
           ]
@@ -1467,7 +1467,7 @@
             },
             {
               "account": "freeze_authority",
-              "display_name": "Owner",
+              "display_name": "Freeze authority",
               "default_value_to_hide": "signer"
             }
           ]
@@ -1615,7 +1615,7 @@
             },
             {
               "account": "minting_authority",
-              "display_name": "Owner",
+              "display_name": "Mint authority",
               "default_value_to_hide": "signer"
             }
           ]
@@ -1916,7 +1916,7 @@
           "ui_properties": [
             {
               "account": "source_account",
-              "display_name": "Rewoke delegate"
+              "display_name": "Revoke delegate for"
             },
             {
               "account": "owner",
@@ -2038,7 +2038,7 @@
             },
             {
               "account": "owner",
-              "display_name": "Mint authority",
+              "display_name": "Owner",
               "default_value_to_hide": "signer"
             }
           ]
@@ -2092,7 +2092,7 @@
             },
             {
               "account": "freeze_authority",
-              "display_name": "Owner",
+              "display_name": "Freeze authority",
               "default_value_to_hide": "signer"
             }
           ]
@@ -2119,7 +2119,7 @@
             },
             {
               "account": "freeze_authority",
-              "display_name": "Owner",
+              "display_name": "Freeze authority",
               "default_value_to_hide": "signer"
             }
           ]
@@ -2267,7 +2267,7 @@
             },
             {
               "account": "minting_authority",
-              "display_name": "Owner",
+              "display_name": "Mint authority",
               "default_value_to_hide": "signer"
             }
           ]
