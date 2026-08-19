@@ -1929,6 +1929,7 @@ if not utils.BITCOIN_ONLY:
         amount_str: str,
         is_revoke: bool,
         maximum_fee: str,
+        native_amount_str: str | None = None,
         chunkify: bool = False,
     ) -> None:
         br_name = "tron/approve"
@@ -1979,8 +1980,8 @@ if not utils.BITCOIN_ONLY:
         )
 
         await _confirm_summary(
-            None,
-            None,
+            native_amount_str,
+            TR.words__amount if native_amount_str else None,
             maximum_fee,
             TR.words__fee_limit,
             title,
@@ -1992,6 +1993,7 @@ if not utils.BITCOIN_ONLY:
         recipient_addr: str,
         amount_str: str,
         maximum_fee: str,
+        native_amount_str: str | None = None,
         chunkify: bool = False,
     ) -> None:
         br_name = "tron/transfer"
@@ -2027,12 +2029,13 @@ if not utils.BITCOIN_ONLY:
         )
 
         await _confirm_summary(
-            None,
-            None,
-            maximum_fee,
-            TR.words__fee_limit,
-            title,
-            None,
+            amount=native_amount_str,
+            amount_label=TR.words__amount if native_amount_str else None,
+            fee=maximum_fee,
+            fee_label=TR.words__fee_limit,
+            title=title,
+            br_name=br_name,
+            br_code=ButtonRequestType.SignTx,
         )
 
     async def confirm_tron_voting(voting_list: list[tuple[int, str]]) -> None:
