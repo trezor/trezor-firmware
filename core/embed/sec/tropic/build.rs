@@ -50,7 +50,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_includes([
         tropic_dir.join("include"),
         tropic_dir.join("src"),
-        tropic_dir.join("TROPIC01_fw_update_files/boot_v_2_0_1/fw_v_1_0_0"),
+        tropic_dir.join("TROPIC01_fw_update_files/boot_v_2_0_1/fw_v_2_1_0"),
     ]);
 
     lib.add_defines([
@@ -59,6 +59,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         ("LT_L1_READ_RETRY_DELAY_MS", Some("1")),
         ("LT_L1_READ_MAX_TRIES", Some("1250")),
     ]);
+
+    if cfg!(feature = "tropic_logging") {
+        lib.add_define("LT_LOG_ENABLE_ERROR", Some("1"));
+    }
 
     Ok(())
 }

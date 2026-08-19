@@ -1,0 +1,1 @@
+Update `tropic-update-fw` to target RISC-V FW 2.1.0 and SPECT FW 1.3.0; only the ACAB silicon revision is supported.

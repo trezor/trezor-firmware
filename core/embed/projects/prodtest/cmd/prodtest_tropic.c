@@ -24,6 +24,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
+#include <rtl/printf.h>
 #include <sec/tropic.h>
 #include <sys/rng.h>
 #include <sys/systick.h>
@@ -41,6 +42,7 @@
 #include "fw_SPECT.h"
 #include "libtropic.h"
 #include "libtropic_l2.h"
+#include "libtropic_port.h"
 
 #include <sec/tropic.h>
 #include <sec/tropic_configs.h>
@@ -56,6 +58,21 @@ typedef enum {
 
 static tropic_handshake_state_t g_tropic_handshake_state =
     TROPIC_HANDSHAKE_STATE_0;
+
+#ifndef TREZOR_EMULATOR
+extern cli_t g_cli;
+
+int lt_port_log(const char* format, ...) {
+  char line[128];
+  va_list args;
+  va_start(args, format);
+  int len = vsnprintf_(line, sizeof(line), format, args);
+  va_end(args);
+  line[strcspn(line, "\n")] = '\0';
+  cli_trace(&g_cli, "%s", line);
+  return len;
+}
+#endif  // TREZOR_EMULATOR
 
 // TODO: Update this link to correspond with the latest chip revision when it
 // becomes available.
@@ -1472,6 +1489,8 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
     return;
   }
 
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+
   lt_handle_t* h = tropic_prodtest_init_and_get_handle(cli);
   if (h == NULL) {
     cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
@@ -1489,7 +1508,11 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
             chip_id.silicon_rev[3]);
 
 #ifdef LT_SILICON_REV_ABAB
-  if (strncmp((char*)chip_id.silicon_rev, "ABAB", 4) != 0) {
+  cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_WRONG_REVISION,
+            "ABAB revision detected. The bundled fw is for ACAB only.");
+  return;
+#elif defined(LT_SILICON_REV_ACAB)
+  if (strncmp((char*)chip_id.silicon_rev, "ACAB", 4) != 0) {
     cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_WRONG_REVISION,
               "Wrong tropic chip silicon revision");
     return;
@@ -1498,34 +1521,14 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
   cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_NO_REVISION,
             "Tropic chip silicon revision not set");
   return;
-#endif
-
-  // For firmware update chip must be rebooted into MAINTENANCE mode.
-  cli_trace(cli, "Rebooting into Maintenance mode");
-  lt_ret_t ret = lt_reboot(h, TR01_MAINTENANCE_REBOOT);
-  if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_REBOOT_MAINTENANCE,
-              "lt_reboot() failed, ret=%s", lt_ret_verbose(ret));
-    return;
-  }
-
-  cli_trace(cli, "Chip is executing bootloader");
+#endif  // LT_SILICON_REV_ABAB
 
   cli_trace(cli, "Updating RISC-V and SPECT FW");
-  ret = lt_do_mutable_fw_update(h, fw_CPU, sizeof(fw_CPU), fw_SPECT,
-                                sizeof(fw_SPECT));
+  lt_ret_t ret = lt_do_mutable_fw_update(h, fw_CPU, sizeof(fw_CPU), fw_SPECT,
+                                         sizeof(fw_SPECT));
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_FW, "FW update failed, ret=%s",
               lt_ret_verbose(ret));
-    goto cleanup;
-  }
-
-  // To read firmware versions chip must be rebooted into application mode.
-  cli_trace(cli, "Rebooting into Application mode");
-  ret = lt_reboot(h, TR01_REBOOT);
-  if (ret != LT_OK) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_REBOOT_APP,
-              "lt_reboot() failed, ret=%s", lt_ret_verbose(ret));
     goto cleanup;
   }
 
@@ -1557,6 +1560,7 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
   cli_trace(cli, "Chip is executing SPECT FW version: %d.%d.%d (+ .%d)",
             spect_fw_ver[3], spect_fw_ver[2], spect_fw_ver[1], spect_fw_ver[0]);
 
+  tropic_deinit();
   cli_ok(cli, "");
 
   return;
