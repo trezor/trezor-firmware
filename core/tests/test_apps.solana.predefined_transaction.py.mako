@@ -7,7 +7,12 @@ from common import Any, unittest, utils  # isort:skip
 if not utils.BITCOIN_ONLY:
     from trezor.crypto import base58
 
-    from apps.solana.predefined_transaction import is_predefined_token_transfer
+    from apps.solana.predefined_transaction import (
+        _is_predefined_claim,
+        _is_predefined_stake,
+        _is_predefined_unstake,
+        is_predefined_token_transfer,
+    )
     from apps.solana.transaction.instruction import Instruction
     from apps.solana.types import AddressType
 
@@ -246,6 +251,181 @@ class TestSolanaPredefinedTransactions(unittest.TestCase):
 
         for instructions in invalid_test_cases:
             self.assertFalse(is_predefined_token_transfer(instructions))
+
+
+# derived using m/44'/501'/0'/0' from the "all all ..." seed
+SIGNER = "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
+STAKE_ACCOUNT = "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv"
+VOTE_ACCOUNT = "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF"
+FOREIGN_ACCOUNT = "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq"
+
+
+def create_staking_instructions(
+    unix_timestamp=0,
+    epoch=0,
+    custodian=SYSTEM_PROGRAM_ID,
+    funding_account=SIGNER,
+    staker=SIGNER,
+    withdrawer=SIGNER,
+    delegate_stake_account=STAKE_ACCOUNT,
+    vote_account_is_reference=False,
+):
+    create = create_mock_instruction(
+        SYSTEM_PROGRAM_ID,
+        SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
+        {
+            "funding_account": create_account(funding_account),
+            "created_account": create_account(STAKE_ACCOUNT),
+            "base": base58.decode(SIGNER),
+            "owner": base58.decode(STAKE_PROGRAM_ID),
+        },
+    )
+    init = create_mock_instruction(
+        STAKE_PROGRAM_ID,
+        STAKE_PROGRAM_ID_INS_INITIALIZE,
+        {
+            "uninitialized_stake_account": create_account(STAKE_ACCOUNT),
+            "staker": base58.decode(staker),
+            "withdrawer": base58.decode(withdrawer),
+            "unix_timestamp": unix_timestamp,
+            "epoch": epoch,
+            "custodian": base58.decode(custodian),
+        },
+    )
+    delegate = create_mock_instruction(
+        STAKE_PROGRAM_ID,
+        STAKE_PROGRAM_ID_INS_DELEGATE_STAKE,
+        {
+            "initialized_stake_account": create_account(delegate_stake_account),
+            "vote_account": create_account(VOTE_ACCOUNT, vote_account_is_reference),
+            "stake_authority": create_account(SIGNER),
+        },
+    )
+    return [create, init, delegate]
+
+
+def create_deactivate_instruction(stake_authority=SIGNER):
+    return create_mock_instruction(
+        STAKE_PROGRAM_ID,
+        STAKE_PROGRAM_ID_INS_DEACTIVATE,
+        {
+            "delegated_stake_account": create_account(STAKE_ACCOUNT),
+            "stake_authority": create_account(stake_authority),
+        },
+    )
+
+
+def create_withdraw_instruction(
+    withdrawal_authority=SIGNER,
+    recipient_account=SIGNER,
+    recipient_is_reference=False,
+):
+    return create_mock_instruction(
+        STAKE_PROGRAM_ID,
+        STAKE_PROGRAM_ID_INS_WITHDRAW,
+        {
+            "stake_account": create_account(STAKE_ACCOUNT),
+            "recipient_account": create_account(
+                recipient_account, recipient_is_reference
+            ),
+            "withdrawal_authority": create_account(withdrawal_authority),
+        },
+    )
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestSolanaStakingTransactions(unittest.TestCase):
+    def test_is_predefined_stake(self):
+        signer = base58.decode(SIGNER)
+
+        valid_test_cases = [
+            # no lockup
+            create_staking_instructions(),
+            # foreign withdrawer, it only triggers an extra confirmation screen
+            create_staking_instructions(withdrawer=FOREIGN_ACCOUNT),
+        ]
+
+        invalid_test_cases = [
+            # empty transaction
+            [],
+            # missing delegate instruction
+            create_staking_instructions()[:2],
+            # lockup time set
+            create_staking_instructions(unix_timestamp=4102444800),
+            # lockup epoch set
+            create_staking_instructions(epoch=1000),
+            # lockup custodian set
+            create_staking_instructions(custodian=FOREIGN_ACCOUNT),
+            # funding account is not the signer
+            create_staking_instructions(funding_account=FOREIGN_ACCOUNT),
+            # staker is not the signer
+            create_staking_instructions(staker=FOREIGN_ACCOUNT),
+            # delegate operates on a different stake account
+            create_staking_instructions(delegate_stake_account=FOREIGN_ACCOUNT),
+            # ALT-referenced vote account
+            create_staking_instructions(vote_account_is_reference=True),
+        ]
+
+        for instructions in valid_test_cases:
+            self.assertTrue(_is_predefined_stake(instructions, signer))
+
+        for instructions in invalid_test_cases:
+            self.assertFalse(_is_predefined_stake(instructions, signer))
+
+    def test_is_predefined_unstake(self):
+        signer = base58.decode(SIGNER)
+
+        valid_test_cases = [
+            [create_deactivate_instruction()],
+            [create_deactivate_instruction(), create_deactivate_instruction()],
+        ]
+
+        invalid_test_cases = [
+            # empty transaction
+            [],
+            # stake authority is not the signer
+            [create_deactivate_instruction(stake_authority=FOREIGN_ACCOUNT)],
+            # other instruction types present
+            [create_deactivate_instruction(), create_withdraw_instruction()],
+        ]
+
+        for instructions in valid_test_cases:
+            self.assertTrue(_is_predefined_unstake(instructions, signer))
+
+        for instructions in invalid_test_cases:
+            self.assertFalse(_is_predefined_unstake(instructions, signer))
+
+    def test_is_predefined_claim(self):
+        signer = base58.decode(SIGNER)
+
+        valid_test_cases = [
+            [create_withdraw_instruction()],
+            [create_withdraw_instruction(), create_withdraw_instruction()],
+            # foreign recipient, it only triggers an extra confirmation screen
+            [create_withdraw_instruction(recipient_account=FOREIGN_ACCOUNT)],
+        ]
+
+        invalid_test_cases = [
+            # empty transaction
+            [],
+            # withdrawal authority is not the signer
+            [create_withdraw_instruction(withdrawal_authority=FOREIGN_ACCOUNT)],
+            # ALT-referenced recipient
+            [create_withdraw_instruction(recipient_is_reference=True)],
+            # recipient mismatch
+            [
+                create_withdraw_instruction(),
+                create_withdraw_instruction(recipient_account=FOREIGN_ACCOUNT),
+            ],
+            # other instruction types present
+            [create_withdraw_instruction(), create_deactivate_instruction()],
+        ]
+
+        for instructions in valid_test_cases:
+            self.assertTrue(_is_predefined_claim(instructions, signer))
+
+        for instructions in invalid_test_cases:
+            self.assertFalse(_is_predefined_claim(instructions, signer))
 
 
 if __name__ == "__main__":
