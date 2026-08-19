@@ -110,6 +110,11 @@ async def _restore(
     Silently re-queueing on a MAC alone would make a restore indistinguishable from nothing
     happening.
 
+    AND THE SCREEN NAMES WHAT IT REPLACES. A path may already hold a change made since the backup was
+    taken; the record on the device is the LATER one and the backup is older material, so the screen
+    shows both rather than one "value". Note it cannot claim WHICH is newer -- no record stores a
+    counter or a time -- so it labels them by where they came from and lets the user decide.
+
     GAP(ward): NO REPLAY BOUND. A MAC proves this wallet queued these bytes, never that they should
     be queued NOW. So a host may re-offer a change the user discarded, or one already published, and
     this accepts it. Refusing an occupied slot would be a handler change; comparing against the
@@ -138,20 +143,42 @@ async def _restore(
     ):
         raise DataError("WARD: this queued change was not authenticated by this wallet")
 
-    await confirm_properties(
-        "ward_queue_restore_entry",
-        "Restore queued change?",
-        [
-            ("Domain", app_id, False),
-            ("Key", display_bytes(identifier), True),
-            ("Value", display_bytes(value), True),
-            (
-                "Warning",
-                "From a backup. Still not applied -- held until you connect.",
-                False,
-            ),
-        ],
+    # WHAT IS BEING OVERWRITTEN GOES ON THE SCREEN. A restore lands on a path that may already hold a
+    # change the user made since the backup was taken, and replacing it silently is the failure the
+    # online write and the fresh queue write both design against -- both name what they replace. The
+    # order matters too: the record on the device is what the user did LAST, and the backup is by
+    # definition older material, so the two have to be told apart rather than merged into "value".
+    status, existing = await offline_store.get(key_type, app_id, identifier)
+
+    props = [
+        ("Domain", app_id, False),
+        ("Key", display_bytes(identifier), True),
+    ]
+
+    if status == offline_store.CORRUPT:
+        # Something unreadable sits here. Its value cannot be shown, so it is named instead -- the
+        # user is still told they are about to lose something.
+        title = "Replace offline copy?"
+        props.append(("Existing", "An offline copy that cannot be read.", False))
+    elif status == offline_store.VALID and existing is not None and existing.pending:
+        title = "Replace pending change?"
+        props.append(("Existing pending change", display_bytes(existing.value), True))
+    elif status == offline_store.VALID and existing is not None:
+        title = "Replace offline copy?"
+        props.append(("Existing offline copy", display_bytes(existing.value), True))
+    else:
+        title = "Restore queued change?"
+
+    props.append(("Restored pending change", display_bytes(value), True))
+    props.append(
+        (
+            "Warning",
+            "From a backup. Still not applied -- held until you connect.",
+            False,
+        )
     )
+
+    await confirm_properties("ward_queue_restore_entry", title, props)
 
     # Restored PENDING and NOT offered. A restore cannot know whether an earlier publication landed,
     # so the change goes back to the head of the queue; marking it offered would let the next
