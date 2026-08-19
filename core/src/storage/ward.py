@@ -218,22 +218,43 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> None:
 # collision that reads as ordinary operation.
 _STORE_FIRST_KEY = const(0x40)
 
-# 8 records. Plaintext keeps a typical address record near 150 bytes, so the whole store is a
-# few kilobytes -- it shares one norcow sector with every other setting on the device, and that
-# sector is 32 kB on the smallest model. Raising either constant costs flash and nothing else.
-MAX_STORE_ENTRIES = const(8)
-MAX_VALUE_LEN = const(512)
+# 20 records, one shared pool across every wallet. Plaintext keeps a typical record near 110 bytes,
+# so the store is a couple of kilobytes in practice -- it shares one norcow sector with every other
+# setting on the device, and that sector is 32 kB on the smallest model.
+MAX_STORE_ENTRIES = const(20)
+
+# The caps that make "20 records fit" a GUARANTEE rather than a hope. A value cap alone does not
+# bound a record: `app_id` may be 255 bytes and `identifier` 65535 by their framing, so the whole
+# record is capped too. Worst case is therefore 20 x 256 = 5 kB, against ~13 kB if the value cap
+# alone were trusted at its old 512.
+MAX_VALUE_LEN = const(128)
+MAX_RECORD_LEN = const(256)
 
 # Version 2 dropped entry_key, the counter and device_id from the record. THE KEYED PATH IS NOT
 # THE QUEUE'S TO HOLD: it is what a leaf sits at in the TRIE, assigned when the change is published,
 # and a queued change has not been published. Records are found by the IDENTITY they carry instead,
 # and the path is derived from that identity at the one moment it is needed.
-STORE_VERSION = const(2)
+STORE_VERSION = const(3)
+
+# THE STORE TRUNCATES wallet_id TO 7 BYTES; the root slots above keep all 16. The two answer
+# different questions. A root slot is the wallet's authenticated head, written once and read on every
+# verification, so its identifier costs 16 bytes eight times and buys the full 128 bits. A record
+# carries the same tag 20 times, and all it has to do there is tell one wallet's records from
+# another's on THIS device.
+#
+# 56 bits is ample for that. Accidental collision across 8 wallets is ~4e-16, and the adversarial
+# case does not tighten it: computing a candidate wallet_id needs the SEED (it is a SLIP-21 leaf),
+# and anyone holding the PIN can already read every record -- `storage.c` decrypts under a
+# PIN-derived key without consulting this tag at all. It disambiguates; it does not authorise.
+#
+# The truncation lives HERE, not in `keys.derive_wallet_id`, because it is a property of this
+# format. Callers pass the whole 16-byte id and this layer takes what it stores.
+_STORE_WALLET_ID_LEN = const(7)
 
 FLAG_PENDING = const(0x01)  # a local write that has not been published yet
 FLAG_OFFERED = const(0x02)  # ...and it has already been handed to a host this side of a reconcile
 
-# THE HEADER IS FROZEN ACROSS EVERY FUTURE VERSION: version(1) || wallet_id(16) || identity, where
+# THE HEADER IS FROZEN ACROSS EVERY FUTURE VERSION: version(1) || wallet_id(7) || identity, where
 # identity is len8(key_type)||key_type || len8(app_id)||app_id || len16(identifier)||identifier.
 # This is load-bearing rather than tidy. A build that meets a record written by a newer firmware
 # cannot parse it, and the erase rule forbids deleting what it cannot read -- so it must still be
@@ -242,15 +263,19 @@ FLAG_OFFERED = const(0x02)  # ...and it has already been handed to a host this s
 # later goes after the identity.
 _STORE_VERSION_OFF = const(0)
 _STORE_ID_OFF = const(1)
-STORE_KEY_OFF = const(17)  # where the identity begins
-STORE_PREFIX_LEN = const(17)
+STORE_KEY_OFF = const(8)  # where the identity begins
+STORE_PREFIX_LEN = const(8)
 
 
 def store_prefix(wallet_id: bytes) -> bytes:
-    """The fixed part of the frozen header. The single point that decides its layout."""
+    """The fixed part of the frozen header. The single point that decides its layout.
+
+    Takes the WHOLE wallet_id and stores its first `_STORE_WALLET_ID_LEN` bytes, so that no caller
+    has to know this format truncates -- and so that only one place decides how much of it is kept.
+    """
     if len(wallet_id) != _WALLET_ID_LEN:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
-    return bytes([STORE_VERSION]) + wallet_id
+    return bytes([STORE_VERSION]) + wallet_id[:_STORE_WALLET_ID_LEN]
 
 
 def _store_slot(index: int) -> bytes | None:
@@ -276,7 +301,7 @@ def store_find(wallet_id: bytes, identity: bytes) -> int | None:
         if rec is None or len(rec) < STORE_PREFIX_LEN:
             continue
         if (
-            rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id
+            rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id[:_STORE_WALLET_ID_LEN]
             and rec[STORE_KEY_OFF : STORE_KEY_OFF + len(identity)] == identity
         ):
             return i
@@ -308,6 +333,8 @@ def store_put(wallet_id: bytes, identity: bytes, record: bytes) -> bool:
     """
     if record[: STORE_KEY_OFF + len(identity)] != store_prefix(wallet_id) + identity:
         raise ValueError  # record header must name the wallet and identity it is stored under
+    if len(record) > MAX_RECORD_LEN:
+        raise ValueError  # a record past the cap breaks the capacity guarantee, see MAX_RECORD_LEN
 
     index = store_find(wallet_id, identity)
     if index is None:
@@ -355,7 +382,10 @@ def store_find_unreadable(wallet_id: bytes) -> int | None:
         rec = _store_slot(i)
         if rec is None or len(rec) < STORE_PREFIX_LEN:
             continue
-        if rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id and rec[_STORE_VERSION_OFF] != STORE_VERSION:
+        if (
+            rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id[:_STORE_WALLET_ID_LEN]
+            and rec[_STORE_VERSION_OFF] != STORE_VERSION
+        ):
             return i
     return None
 
@@ -385,6 +415,6 @@ def store_list(wallet_id: bytes) -> list[bytes]:
         rec = _store_slot(i)
         if rec is None or len(rec) < STORE_PREFIX_LEN:
             continue
-        if rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id:
+        if rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id[:_STORE_WALLET_ID_LEN]:
             out.append(rec)
     return out

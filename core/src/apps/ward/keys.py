@@ -47,6 +47,10 @@ async def derive_wallet_id() -> bytes:
     than anything derived from a root or an identifier -- so it names the wallet without
     revealing what the wallet contains. Used only to key this device's own storage; it is
     never sent anywhere.
+
+    Callers always get the whole 16 bytes. The OFFLINE STORE keeps only the first 7 of them in each
+    record, which is `storage.ward`'s business rather than this function's -- the root slots keep all
+    16. See `storage.ward._STORE_WALLET_ID_LEN` for why 56 bits is enough there.
     """
     return (await _derive_slip21([b"ward", b"wallet_id"]))[:16]
 
