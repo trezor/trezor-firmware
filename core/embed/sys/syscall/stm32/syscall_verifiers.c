@@ -1156,10 +1156,6 @@ jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input) {
   // the ones the implementation uses.
   jpegdec_input_t input_copy = *input;
 
-  if (input_copy.offset > input_copy.size) {
-    goto access_violation;
-  }
-
   // `jpegdec_process()` consumes `data[offset]` up to `data[size]`
   if (!probe_read_access(input_copy.data, input_copy.size)) {
     goto access_violation;
