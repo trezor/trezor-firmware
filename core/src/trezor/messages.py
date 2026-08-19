@@ -7766,6 +7766,7 @@ if TYPE_CHECKING:
     class TronTriggerSmartContract(protobuf.MessageType):
         owner_address: "AnyBytes"
         contract_address: "AnyBytes"
+        call_value: "int | None"
         data: "AnyBytes"
 
         def __init__(
@@ -7774,6 +7775,7 @@ if TYPE_CHECKING:
             owner_address: "AnyBytes",
             contract_address: "AnyBytes",
             data: "AnyBytes",
+            call_value: "int | None" = None,
         ) -> None:
             pass
 
