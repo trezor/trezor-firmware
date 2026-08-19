@@ -17,6 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "sha2.h"
@@ -209,18 +210,167 @@ int main(void) {
     printf("PQ-native: tamper inside covered range rejected: OK\n");
   }
 
-  /* PQ-native, tamper in the FOUNDER MATERIAL -> BY DESIGN still folds: that
-   * material signs modelRoot, so it cannot be inside its own leaf. This is exactly
-   * why the STM must ALSO verify the founder material before overwriting a working
-   * nRF (no dual slot). Asserted so the boundary cannot drift silently. */
+  /* PQ-native, tamper in the PQ MATERIAL -> BY DESIGN still folds: that material
+   * signs modelRoot, so it cannot be inside its own leaf. Asserted so the boundary
+   * cannot drift silently -- and it is precisely why nrf_image_verify_for_push exists,
+   * exercised below. */
   memcpy(bad_pq, PQ_OTA, PQ_OTA_LEN);
   bad_pq[PQ_OTA_LEN - 1] ^= 0xFF;
   if (harness_ota_gate(bad_pq, PQ_OTA_LEN, &root, DEVICE_MODEL_ID, NULL, NULL) !=
       sectrue) {
-    printf("FAIL: PQ-native founder-material tamper broke the fold\n");
+    printf("FAIL: PQ-native PQ-material tamper broke the fold\n");
     fails++;
   } else {
-    printf("PQ-native: founder-material tamper still folds (by design): OK\n");
+    printf("PQ-native: PQ-material tamper still folds (by design): OK\n");
+  }
+
+  /* ---- the push gate (phase 3): what the fold cannot cover ------------------
+   * The "expected" signature records are the ones the boot header of this release
+   * carries -- which, the founder signature being a function of modelRoot alone,
+   * are byte-identical to the genuine image's. So point at those. */
+  {
+    const uint8_t *e_slh0 = NULL, *e_slh1 = NULL, *e_ec0 = NULL, *e_ec1 = NULL;
+    int have = (nrf_image_find_unprot_tlv(PQ_IMAGE, PQ_IMAGE_LEN,
+                                       NRF_PQ_TLV_SLH_SIG_0, &e_slh0) ==
+                NRF_PQ_SLH_SIG_LEN) &&
+               (nrf_image_find_unprot_tlv(PQ_IMAGE, PQ_IMAGE_LEN,
+                                       NRF_PQ_TLV_SLH_SIG_1, &e_slh1) ==
+                NRF_PQ_SLH_SIG_LEN) &&
+               (nrf_image_find_unprot_tlv(PQ_IMAGE, PQ_IMAGE_LEN,
+                                       NRF_PQ_TLV_EC_SIG_0, &e_ec0) ==
+                NRF_PQ_EC_SIG_LEN) &&
+               (nrf_image_find_unprot_tlv(PQ_IMAGE, PQ_IMAGE_LEN,
+                                       NRF_PQ_TLV_EC_SIG_1, &e_ec1) ==
+                NRF_PQ_EC_SIG_LEN);
+    if (!have) {
+      printf("FAIL: could not read the PQ signature records from the fixture\n");
+      fails++;
+    }
+
+    /* genuine PQ-native image -> safe to push */
+    if (nrf_image_verify_for_push(PQ_IMAGE, PQ_IMAGE_LEN, &root, e_slh0, e_slh1,
+                               e_ec0, e_ec1) != sectrue) {
+      printf("FAIL: push gate rejected a genuine PQ-native image\n");
+      fails++;
+    } else {
+      printf("push gate: genuine PQ-native image accepted: OK\n");
+    }
+
+    /* THE PHASE-3 PAYOFF: the rogue-TLV image folds (asserted above) and even a
+     * full signature re-verify would pass, yet its own MCUboot rejects it on the
+     * unprotected-TLV whitelist. The gate must catch what the fold cannot. */
+    if (nrf_image_verify_for_push(PQ_IMAGE_ROGUE, PQ_IMAGE_ROGUE_LEN, &root, e_slh0,
+                               e_slh1, e_ec0, e_ec1) != secfalse) {
+      printf("FAIL: push gate ACCEPTED a rogue TLV (brick path still open)\n");
+      fails++;
+    } else {
+      printf("push gate: rogue TLV rejected (fold alone accepted it): OK\n");
+    }
+
+    /* tampered signature record -> not this release's material */
+    static uint8_t bad_sig[sizeof(PQ_IMAGE)];
+    memcpy(bad_sig, PQ_IMAGE, PQ_IMAGE_LEN);
+    bad_sig[PQ_IMAGE_LEN - 1] ^= 0xFF;
+    if (nrf_image_verify_for_push(bad_sig, PQ_IMAGE_LEN, &root, e_slh0, e_slh1, e_ec0,
+                               e_ec1) != secfalse) {
+      printf("FAIL: push gate ACCEPTED tampered PQ material\n");
+      fails++;
+    } else {
+      printf("push gate: tampered PQ material rejected: OK\n");
+    }
+
+    /* a CLASSIC image is gated against its OWN scheme; under the host shim there
+     * is no Ed25519, so this exercises the founder/classic branch split only */
+    if (nrf_image_verify_for_push(NRF_IMAGE, NRF_IMAGE_LEN, &root, e_slh0, e_slh1,
+                               e_ec0, e_ec1) != sectrue) {
+      printf("FAIL: push gate rejected a classic image (should be a no-op)\n");
+      fails++;
+    } else {
+      printf("push gate: classic image accepted (own-scheme predicate): OK\n");
+    }
+
+    /* A rogue TLV in a CLASSIC image's unprotected area. Its Ed25519 signatures
+     * cover the image hash, which this does not change, so they still verify and
+     * the fold still passes -- the classic shape whitelist is the ONLY thing that
+     * sees it. Without it the STM would erase the nRF's only slot for an image the
+     * nRF then refuses on its own unprotected-TLV allow-list. */
+    if (nrf_image_verify_for_push(NRF_IMAGE_ROGUE, NRF_IMAGE_ROGUE_LEN, &root,
+                               e_slh0, e_slh1, e_ec0, e_ec1) != secfalse) {
+      printf("FAIL: push gate ACCEPTED a classic image with a rogue TLV\n");
+      fails++;
+    } else {
+      printf("push gate: rogue TLV in a classic image rejected (shape): OK\n");
+    }
+
+    /* ---- bounds discipline on the unauthenticated lengths ----------------
+     *
+     * it_tlv_tot and every record length in the unprotected area are
+     * attacker-controlled with NO cryptographic backstop: the leaf is the image
+     * hash, which stops at the protected TLVs. So the fold PASSES on all six of
+     * these -- asserted below, or the cases would prove nothing -- and the parser's
+     * bounds checks are the only thing standing between them and an over-read.
+     *
+     * The generator asserts the leaf is unchanged for every mutation that leaves
+     * the header alone, so these really are invisible to the fold.
+     *
+     * Each is checked against the nRF's OWN parser too, because AGREEING is the
+     * property that matters: if the STM accepted what the nRF refuses, the push
+     * would erase the co-processor's only slot for an image it then rejects. Both
+     * therefore reject an overrunning declared extent rather than clamping it. */
+    for (unsigned i = 0; i < PQ_BOUNDS_COUNT; i++) {
+      const unsigned char *img = PQ_BOUNDS[i].img;
+      const unsigned int len = PQ_BOUNDS[i].len;
+      struct flat_image fi = {img, len};
+      bool present = false;
+
+      secbool stm =
+          nrf_image_verify_for_push(img, len, &root, e_slh0, e_slh1, e_ec0, e_ec1);
+      int nrf = pq_region_shape_ok(flat_read, &fi, len, &present);
+
+      if (stm != secfalse) {
+        printf("FAIL: STM push gate ACCEPTED: %s\n", PQ_BOUNDS[i].what);
+        fails++;
+      } else if (nrf == 0 && present) {
+        printf("FAIL: nRF accepted what the STM refused (they must agree): %s\n",
+               PQ_BOUNDS[i].what);
+        fails++;
+      } else {
+        printf("bounds: %s rejected by both: OK\n", PQ_BOUNDS[i].what);
+      }
+    }
+
+    /* ---- the classic ACCEPTANCE predicate, end to end -------------------
+     *
+     * These run real Ed25519 against the pool above, so they cover the layer the
+     * shape check cannot: that the STM predicts the nRF's verdict on the SIGNATURE
+     * VALUES. Each negative breaks exactly one thing, and every one of them leaves
+     * leaf/modelRoot intact where the sigmask is untouched -- which is precisely
+     * why the fold cannot see them. */
+    struct {
+      const unsigned char *img;
+      unsigned int len;
+      const char *what;
+    } bad[] = {
+        {NRF_IMAGE_BADSIG0, NRF_IMAGE_BADSIG0_LEN, "corrupt signature slot 0"},
+        {NRF_IMAGE_BADSIG1, NRF_IMAGE_BADSIG1_LEN, "corrupt signature slot 1"},
+        {NRF_IMAGE_SWAPPED, NRF_IMAGE_SWAPPED_LEN,
+         "signatures swapped between slots"},
+        {NRF_IMAGE_WRONGMASK, NRF_IMAGE_WRONGMASK_LEN,
+         "sigmask names keys that did not sign"},
+        {NRF_IMAGE_ILLEGALMASK, NRF_IMAGE_ILLEGALMASK_LEN,
+         "illegal sigmask (not 2-of-3)"},
+        {NRF_IMAGE_OUTOFPOOL, NRF_IMAGE_OUTOFPOOL_LEN,
+         "sigmask names a key outside the pool"},
+    };
+    for (unsigned i = 0; i < sizeof(bad) / sizeof(bad[0]); i++) {
+      if (nrf_image_verify_for_push(bad[i].img, bad[i].len, &root, e_slh0, e_slh1,
+                                 e_ec0, e_ec1) != secfalse) {
+        printf("FAIL: predicate ACCEPTED a classic image with %s\n", bad[i].what);
+        fails++;
+      } else {
+        printf("predicate: %s rejected: OK\n", bad[i].what);
+      }
+    }
   }
 
   /* ---- THIRD implementation: the nRF's own (MCUboot image_pq.c) --------
@@ -299,6 +449,41 @@ int main(void) {
       fails++;
     } else {
       printf("nRF impl: malformed image rejected: OK\n");
+    }
+
+    /* ---- legacy sigmask -> key slots: exhaustive against MCUboot's own logic ---
+     *
+     * The STM must predict which keys the nRF will use, and the legacy mapping is a
+     * bespoke 2-of-3 (NOT "i-th lowest set bit"). A divergence would make the STM
+     * mispredict the verdict -- at worst pushing an image the nRF refuses, which is
+     * the brick the predicate exists to prevent. So mirror MCUboot's expression
+     * here, independently, and compare over EVERY mask rather than the three legal
+     * ones: the illegal ones are where a subtle rewrite would drift. */
+    {
+    int mismatches = 0;
+    for (unsigned m = 0; m < 256; m++) {
+      const uint8_t mask = (uint8_t)m;
+      /* independent mirror of image_validate.c's !CONFIG_BOOT_PQ_SECURE_BOOT path */
+      int e0 = (mask & (1u << 0)) ? 0 : 1;
+      int e1 = (mask & (1u << 2)) ? 2 : 1;
+      bool expect_ok = (__builtin_popcount((unsigned)mask) == 2) &&
+                       ((mask & (uint8_t)~((1u << 3) - 1u)) == 0) && (e0 != e1);
+
+      int got[2] = {-1, -1};
+      secbool ok = nrf_image_legacy_sig_slots(mask, 3, got);
+      if ((ok == sectrue) != expect_ok ||
+          (expect_ok && (got[0] != e0 || got[1] != e1))) {
+        if (mismatches++ == 0) {
+          printf("FAIL: legacy sig slots differ for mask 0x%02x "
+                 "(ok=%d want=%d, got {%d,%d} want {%d,%d})\n",
+                 mask, ok == sectrue, expect_ok, got[0], got[1], e0, e1);
+          fails++;
+        }
+      }
+    }
+    if (mismatches == 0) {
+      printf("legacy sigmask -> key slots: matches MCUboot for all 256 masks: OK\n");
+    }
     }
 
     /* ---- shape check: the ROGUE-TLV gap the fold cannot see ---------------- */
