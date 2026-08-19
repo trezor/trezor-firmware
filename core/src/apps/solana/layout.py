@@ -117,6 +117,8 @@ async def confirm_instruction(
                         raise ValueError  # Invalid property template
 
                 formatted_value = property_template.format(value, *args)
+                if property_template.is_pubkey() and signer_public_key == value:
+                    formatted_value = f"{formatted_value} ({TR.words__signer})"
 
             await confirm_properties(
                 br_name="confirm_instruction",
