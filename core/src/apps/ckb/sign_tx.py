@@ -37,6 +37,20 @@ SHANNONS_PER_BYTE = 100000000
 DAO_TYPE_CODE_HASH = b"\x82\xd7\x6d\x1b\x75\xfe\x2f\xd9\xa2\x7d\xfb\xaa\x65\xa0\x39\x22\x1a\x38\x0d\x76\xc9\x26\xf3\x78\xd3\xf8\x1c\xf3\xe7\xe1\x3f\x2e"
 DAO_TYPE_HASH_TYPE = 1  # "type"
 
+# Genesis txs of each network (system script code cells and their dep groups).
+# CKB signatures carry no chain id; a cell_dep on one of these outpoints is what
+# pins the chain a signed transaction can be valid on.
+_GENESIS_TX_HASHES = {
+    "Mainnet": (
+        b"\xe2\xfb\x19\x98\x10\xd4\x9a\x4d\x8b\xee\xc5\x67\x18\xba\x25\x93\xb6\x65\xdb\x9d\x52\x29\x9a\x0f\x9e\x6e\x75\x41\x6d\x73\xff\x5c",
+        b"\x71\xa7\xba\x8f\xc9\x63\x49\xfe\xa0\xed\x3a\x5c\x47\x99\x2e\x3b\x40\x84\xb0\x31\xa4\x22\x64\xa0\x18\xe0\x07\x2e\x81\x72\xe4\x6c",
+    ),
+    "Testnet": (
+        b"\x8f\x8c\x79\xeb\x66\x71\x70\x96\x33\xfe\x6a\x46\xde\x93\xc0\xfe\xdc\x9c\x1b\x8a\x65\x27\xa1\x8d\x39\x83\x87\x95\x42\x63\x5c\x9f",
+        b"\xf8\xde\x3b\xb4\x7d\x05\x5c\xdf\x46\x0d\x93\xa2\xa6\xe1\xb0\x5f\x74\x32\xf9\x77\x7c\x8c\x47\x4a\xbf\x4e\xec\x1d\x4a\xee\x5d\x37",
+    ),
+}
+
 
 def _blake2b_hash(data: bytes) -> bytes:
     """Compute Blake2b hash with CKB personalization."""
@@ -391,6 +405,20 @@ def _validate_sign_group(
         raise DataError("Signing witness index out of range")
 
 
+def _check_network_binding(network: str, cell_deps: list["CKBCellDep"]) -> None:
+    """Reject a cell_dep on another network's genesis scripts.
+
+    A CKB signature carries no chain id, so the declared network is otherwise
+    unenforced. The default lock's code is type-id'd to the genesis cell, so a
+    real spend references its own chain's genesis dep - never the other's.
+    """
+    for dep in cell_deps:
+        tx_hash = bytes(dep.tx_hash)
+        for net, genesis in _GENESIS_TX_HASHES.items():
+            if net != network and tx_hash in genesis:
+                raise DataError(f"cell_deps reference the CKB {net} genesis")
+
+
 def _serialize_header(header: "CKBBlockHeader") -> bytes:
     """
     Serialize a Molecule ``Header`` (the 192-byte fixed RawHeader struct followed
@@ -510,10 +538,9 @@ async def _dao_withdraw_value(
 
         (capacity - occupied) * AR_withdraw / AR_deposit + occupied
 
-    Both headers are verified against header_deps. The deposit header is pinned to
-    the cell (its number must equal the deposit number stored in the cell data);
-    the withdraw header is host-asserted, so the host can only shift the displayed
-    fee within the signed header_deps, never the amount consensus enforces on chain.
+    The device can't tell which header is the withdraw block, so AR_withdraw is
+    the highest rate over header_deps after the deposit: an upper bound, so the
+    displayed fee is never understated.
     """
     if inp.dao_deposit_header_index is None or inp.dao_withdraw_header_index is None:
         raise DataError("DAO withdrawal input requires header indices")
@@ -521,9 +548,16 @@ async def _dao_withdraw_value(
     deposit_number, ar_deposit = await _verify_header(
         inp.dao_deposit_header_index, header_deps, header_cache
     )
-    _, ar_withdraw = await _verify_header(
+    withdraw_number, ar_withdraw = await _verify_header(
         inp.dao_withdraw_header_index, header_deps, header_cache
     )
+    if withdraw_number <= deposit_number:
+        raise DataError("DAO withdraw header must be after the deposit header")
+
+    for index in range(len(header_deps)):
+        number, rate = await _verify_header(index, header_deps, header_cache)
+        if number > deposit_number and rate > ar_withdraw:
+            ar_withdraw = rate
 
     cell_data = spent.data
     if cell_data is None or len(cell_data) < 8:
@@ -767,6 +801,8 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
             raise DataError("Missing cell_dep data")
         cell_deps.append(ack.cell_dep)
 
+    _check_network_binding(msg.network, cell_deps)
+
     # Compute transaction hash. This also validates the structural lengths of
     # inputs, outputs, and cell_deps before the (more expensive) previous-tx
     # streaming below, so malformed data fails fast.
@@ -788,14 +824,18 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     # (header index) -> (block number, accumulated rate), filled on demand while
     # verifying Nervos DAO withdrawing-cell inputs.
     header_cache: dict[int, tuple[int, int]] = {}
+    seen_outpoints: set[tuple[bytes, int]] = set()
     total_in = 0
     for inp in inputs:
         prev_hash = bytes(inp.previous_output_tx_hash)
+        index = inp.previous_output_index
+        if (prev_hash, index) in seen_outpoints:
+            raise DataError("Duplicate input outpoint")
+        seen_outpoints.add((prev_hash, index))
         outs = prev_tx_outputs.get(prev_hash)
         if outs is None:
             outs = await _verify_prev_tx_outputs(prev_hash)
             prev_tx_outputs[prev_hash] = outs
-        index = inp.previous_output_index
         if index >= len(outs):
             raise DataError("Input previous_output_index out of range")
         spent = outs[index]

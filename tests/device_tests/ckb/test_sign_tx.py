@@ -11,6 +11,27 @@ from . import prevtx
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("t3w1")]
 
+SHANNON = 100_000_000
+DAO_CODE_HASH = "82d76d1b75fe2fd9a27dfbaa65a039221a380d76c926f378d3f81cf3e7e13f2e"
+AR_DEPOSIT = 10_000_000_000_000_000
+
+
+def _dao_header(number, ar, timestamp=1_573_852_800_000):
+    """A block header carrying ``ar`` in its dao field; only number/AR matter here."""
+    return ckb.create_block_header(
+        version=0,
+        compact_target=0x1A08A97E,
+        timestamp=timestamp,
+        number=number,
+        epoch=0,
+        parent_hash="00" * 32,
+        transactions_root="00" * 32,
+        proposals_hash="00" * 32,
+        extra_hash="00" * 32,
+        dao=prevtx.make_dao(1, ar, 2, 3),
+        nonce="00" * 16,
+    )
+
 
 def _build_outputs(parameters):
     return [
@@ -275,31 +296,13 @@ def test_sign_tx_dao_withdraw(session: Session):
     # single output is LARGER than the input capacity. The device must accept it
     # by verifying the deposit/withdraw block headers and crediting the
     # compensation, instead of rejecting with "Inputs do not cover outputs".
-    SHANNON = 100_000_000
-    DAO_CODE_HASH = "82d76d1b75fe2fd9a27dfbaa65a039221a380d76c926f378d3f81cf3e7e13f2e"
-
-    ar_deposit = 10_000_000_000_000_000
+    ar_deposit = AR_DEPOSIT
     ar_withdraw = 10_050_000_000_000_000  # +0.5% accumulated rate
     deposit_number = 100
     withdraw_number = 200_000
 
-    def _hdr(number, ar, timestamp):
-        return ckb.create_block_header(
-            version=0,
-            compact_target=0x1A08A97E,
-            timestamp=timestamp,
-            number=number,
-            epoch=0,
-            parent_hash="00" * 32,
-            transactions_root="00" * 32,
-            proposals_hash="00" * 32,
-            extra_hash="00" * 32,
-            dao=prevtx.make_dao(1, ar, 2, 3),
-            nonce="00" * 16,
-        )
-
-    deposit_header = _hdr(deposit_number, ar_deposit, 1_573_852_800_000)
-    withdraw_header = _hdr(withdraw_number, ar_withdraw, 1_576_852_800_000)
+    deposit_header = _dao_header(deposit_number, ar_deposit)
+    withdraw_header = _dao_header(withdraw_number, ar_withdraw, 1_576_852_800_000)
     headers = [deposit_header, withdraw_header]
     header_deps = [
         prevtx.header_hash(deposit_header),
@@ -373,34 +376,17 @@ def test_sign_tx_dao_withdraw(session: Session):
 def test_sign_tx_rejects_dao_withdraw_tampered_header(session: Session):
     # The device must reject a DAO withdrawal whose supplied header does not hash
     # to the committed header_deps entry (a host inflating the compensation).
-    SHANNON = 100_000_000
-    DAO_CODE_HASH = "82d76d1b75fe2fd9a27dfbaa65a039221a380d76c926f378d3f81cf3e7e13f2e"
     deposit_number = 100
 
-    def _hdr(number, ar):
-        return ckb.create_block_header(
-            version=0,
-            compact_target=0x1A08A97E,
-            timestamp=1_573_852_800_000,
-            number=number,
-            epoch=0,
-            parent_hash="00" * 32,
-            transactions_root="00" * 32,
-            proposals_hash="00" * 32,
-            extra_hash="00" * 32,
-            dao=prevtx.make_dao(1, ar, 2, 3),
-            nonce="00" * 16,
-        )
-
-    honest_deposit = _hdr(deposit_number, 10_000_000_000_000_000)
-    honest_withdraw = _hdr(200_000, 10_050_000_000_000_000)
+    honest_deposit = _dao_header(deposit_number, AR_DEPOSIT)
+    honest_withdraw = _dao_header(200_000, 10_050_000_000_000_000)
     header_deps = [
         prevtx.header_hash(honest_deposit),
         prevtx.header_hash(honest_withdraw),
     ]
     # Host lies: serves a withdraw header with a much higher AR than the one whose
     # hash is committed in header_deps.
-    lying_withdraw = _hdr(200_000, 99_000_000_000_000_000)
+    lying_withdraw = _dao_header(200_000, 99_000_000_000_000_000)
     headers = [honest_deposit, lying_withdraw]
 
     cell_data = deposit_number.to_bytes(8, "little")
@@ -445,6 +431,117 @@ def test_sign_tx_rejects_dao_withdraw_tampered_header(session: Session):
                 prev_txs={prev_hash: prev},
                 header_deps=header_deps,
                 headers=headers,
+            )
+
+
+def test_sign_tx_dao_withdraw_credits_the_highest_header_rate(session: Session):
+    # The device cannot know which header_dep is the withdrawing cell's block, so
+    # it must credit the highest rate among headers after the deposit whichever
+    # index the host names: real withdraw block (+20 %) at 1, decoy (+0.01 %) at 2.
+    ar_deposit = AR_DEPOSIT
+    ar_real = ar_deposit * 120 // 100
+    ar_decoy = ar_deposit * 10001 // 10000
+    deposit_number = 100
+
+    headers = [
+        _dao_header(deposit_number, ar_deposit),
+        _dao_header(200_000, ar_real, 1_576_852_800_000),
+        _dao_header(150_000, ar_decoy, 1_575_852_800_000),
+    ]
+    header_deps = [prevtx.header_hash(h) for h in headers]
+
+    deposit_capacity = 20000 * SHANNON
+    cell_data = deposit_number.to_bytes(8, "little")
+    withdrawing_cell = ckb.create_cell_output(
+        capacity=deposit_capacity,
+        lock_code_hash=prevtx.LOCK_CODE_HASH,
+        lock_hash_type=1,
+        lock_args="11" * 20,
+        type_code_hash=DAO_CODE_HASH,
+        type_hash_type=1,
+        type_args=b"",
+        data=cell_data,
+    )
+    prev = ckb.create_prev_tx(outputs=[withdrawing_cell])
+    prev_hash = prevtx.raw_tx_hash([], [withdrawing_cell], [cell_data], [])
+    occupied = prevtx.occupied_capacity(lock_args_len=20, type_args_len=0, data_len=8)
+    max_withdraw = prevtx.dao_maximum_withdraw(
+        deposit_capacity, occupied, ar_deposit, ar_real
+    )
+    address_n = parse_path("m/44'/309'/0'/0/0")
+
+    def _sign(withdraw_index: int, out_capacity: int, screens: list[str]):
+        inp = ckb.create_cell_input(
+            tx_hash=prev_hash,
+            index=0,
+            dao_deposit_header_index=0,
+            dao_withdraw_header_index=withdraw_index,
+        )
+        output = ckb.create_cell_output(
+            capacity=out_capacity,
+            lock_code_hash=prevtx.LOCK_CODE_HASH,
+            lock_hash_type=1,
+            lock_args="aa" * 20,
+        )
+        with session.test_ctx as client:
+            if not session.debug.legacy_debug:
+                client.set_input_flow(
+                    InputFlowConfirmAllWarnings(
+                        client,
+                        on_page=lambda layout: screens.append(layout.text_content()),
+                    ).get()
+                )
+            return ckb.sign_tx(
+                session,
+                address_n,
+                inputs=[inp],
+                outputs=[output],
+                cell_deps=[],
+                network="Mainnet",
+                prev_txs={prev_hash: prev},
+                header_deps=header_deps,
+                headers=headers,
+            )
+
+    # Up to the real maximum is accepted even when the host names the decoy...
+    _sign(2, max_withdraw - 1000, [])
+
+    # ...and the fee shown is the real one: leaving the whole compensation as fee
+    # triggers the high-fee warning for either index.
+    for withdraw_index in (1, 2):
+        screens: list[str] = []
+        _sign(withdraw_index, 20001 * SHANNON, screens)
+        assert any(
+            "unusually high" in screen for screen in screens
+        ), f"index {withdraw_index}: fee understated; screens: {screens}"
+
+
+def test_sign_tx_rejects_duplicate_input_outpoint(session: Session):
+    # Consensus refuses it; the device must not credit the cell twice.
+    prev, prev_hash = prevtx.synth_prev_tx([10_000_000_000])
+    inputs = [
+        ckb.create_cell_input(tx_hash=prev_hash, index=0),
+        ckb.create_cell_input(tx_hash=prev_hash, index=0),
+    ]
+    outputs = [
+        ckb.create_cell_output(
+            capacity=19_000_000_000,
+            lock_code_hash=prevtx.LOCK_CODE_HASH,
+            lock_hash_type=1,
+            lock_args="ab" * 20,
+        )
+    ]
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        with pytest.raises(TrezorFailure, match="Duplicate input outpoint"):
+            ckb.sign_tx(
+                session,
+                parse_path("m/44h/309h/0h/0/0"),
+                inputs=inputs,
+                outputs=outputs,
+                network="Mainnet",
+                prev_txs={prev_hash: prev},
             )
 
 
@@ -600,6 +697,88 @@ def test_rejects_invalid_network(session: Session):
             network="Devnet",
             chunkify=True,
         )
+
+
+MAINNET_SECP_DEP_GROUP = (
+    "71a7ba8fc96349fea0ed3a5c47992e3b4084b031a42264a018e0072e8172e46c"
+)
+TESTNET_SECP_DEP_GROUP = (
+    "f8de3bb47d055cdf460d93a2a6e1b05f7432f9777c8c474abf4eec1d4aee5d37"
+)
+
+
+def _network_binding_case(network: str, dep_tx_hash: str | None):
+    outputs = [
+        ckb.create_cell_output(
+            capacity=10_000_000_000,
+            lock_code_hash=prevtx.LOCK_CODE_HASH,
+            lock_hash_type=1,
+            lock_args="ab" * 20,
+        )
+    ]
+    prev, prev_hash = prevtx.synth_prev_tx([10_000_001_000])
+    inputs = [ckb.create_cell_input(tx_hash=prev_hash, index=0)]
+    cell_deps = (
+        [ckb.create_cell_dep(tx_hash=dep_tx_hash, index=0, dep_type=1)]
+        if dep_tx_hash
+        else []
+    )
+    return dict(
+        inputs=inputs,
+        outputs=outputs,
+        cell_deps=cell_deps,
+        network=network,
+        prev_txs={prev_hash: prev},
+    )
+
+
+@pytest.mark.parametrize(
+    "network,dep_tx_hash",
+    [
+        # A dep on the other network's genesis gives the deception away: signing
+        # a Mainnet-spending tx under a "Testnet" confirmation, or vice versa.
+        pytest.param(
+            "Testnet", MAINNET_SECP_DEP_GROUP, id="testnet-claims-mainnet-dep"
+        ),
+        pytest.param(
+            "Mainnet", TESTNET_SECP_DEP_GROUP, id="mainnet-claims-testnet-dep"
+        ),
+    ],
+)
+def test_sign_tx_rejects_contradicting_genesis_dep(session, network, dep_tx_hash):
+    other = "Mainnet" if network == "Testnet" else "Testnet"
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        with pytest.raises(TrezorFailure, match=f"reference the CKB {other} genesis"):
+            ckb.sign_tx(
+                session,
+                parse_path("m/44h/309h/0h/0/0"),
+                **_network_binding_case(network, dep_tx_hash),
+            )
+
+
+@pytest.mark.parametrize(
+    "network,dep_tx_hash",
+    [
+        ("Mainnet", MAINNET_SECP_DEP_GROUP),
+        ("Testnet", TESTNET_SECP_DEP_GROUP),
+        ("Testnet", None),  # no genesis dep is not a contradiction: still signs
+    ],
+)
+def test_sign_tx_signs_when_no_dep_contradicts_the_network(
+    session, network, dep_tx_hash
+):
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        resp = ckb.sign_tx(
+            session,
+            parse_path("m/44h/309h/0h/0/0"),
+            **_network_binding_case(network, dep_tx_hash),
+        )
+    assert resp.serialized.signature is not None
+    assert len(resp.serialized.signature) == 65
 
 
 def test_sign_tx_invalid_input_tx_hash_length(session: Session):
