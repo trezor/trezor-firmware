@@ -9775,6 +9775,7 @@ class TronTriggerSmartContract(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
         2: protobuf.Field("contract_address", "bytes", repeated=False, required=True),
+        3: protobuf.Field("call_value", "uint64", repeated=False, required=False, default=None),
         4: protobuf.Field("data", "bytes", repeated=False, required=True),
     }
 
@@ -9784,10 +9785,12 @@ class TronTriggerSmartContract(protobuf.MessageType):
         owner_address: "bytes",
         contract_address: "bytes",
         data: "bytes",
+        call_value: Optional["int"] = None,
     ) -> None:
         self.owner_address = owner_address
         self.contract_address = contract_address
         self.data = data
+        self.call_value = call_value
 
 
 class TronFreezeBalanceV2Contract(protobuf.MessageType):
