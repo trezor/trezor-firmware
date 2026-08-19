@@ -108,14 +108,18 @@ and packaged in the following binary format.
 
 All numbers are unsigned little endian.
 
-1. magic string `trzd1` (5 bytes)
-2. definition type according to `DefinitionType` enum (1 byte)
-3. data version of the definition (4 bytes)
-4. protobuf payload length (2 bytes)
-5. protobuf payload (N bytes)
+1. magic string `trzd` (4 bytes)
+2. format version, an ASCII digit byte: e.g. `1` (0x31), `2` (0x32), etc. (1 byte)
+3. definition type according to `DefinitionType` enum (1 byte)
+4. data version of the definition (4 bytes)
+5. protobuf payload length (2 bytes)
+6. protobuf payload (N bytes)
 
 A Merkle tree is constructed from all binary definitions (see below) and its root is
 signed by the CoSi algorithm.
+
+The format version is bumped on backward incompatible change.
+For versions 1 and 2, the data structure is identical.
 
 The full format of the definition is as follows:
 

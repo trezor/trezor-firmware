@@ -182,7 +182,8 @@ def test_trimmed_proof(session: Session) -> None:
 def test_bad_prefix(session: Session) -> None:
     for make, check in _cases(session):
         payload = make()
-        payload = b"trzd2" + payload[5:]
+        # mangle the magic, keep a valid version byte
+        payload = b"trze1" + payload[5:]
         proof, signature = sign_payload(payload, [])
         check(session, payload + proof + signature, "Invalid definition")
 

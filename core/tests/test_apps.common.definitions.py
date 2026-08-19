@@ -53,7 +53,7 @@ class TestDecodeDefinition(unittest.TestCase):
         self.assertFailed(payload + proof + bad_signature)
 
     def test_not_enough_signatures(self):
-        payload = make_payload()
+        payload = make_payload(format_version=b"1")
         proof, signature = sign_payload(payload, [], threshold=1)
         self.assertFailed(payload + proof + signature)
 
@@ -86,10 +86,16 @@ class TestDecodeDefinition(unittest.TestCase):
         bad_proof = proof[:-1]
         self.assertFailed(payload + bad_proof + signature)
 
-    def test_bad_prefix(self):
-        payload = make_payload(prefix=b"trzd2")
+    def test_bad_magic(self):
+        payload = make_payload(magic=b"trze")
         proof, signature = sign_payload(payload, [])
         self.assertFailed(payload + proof + signature)
+
+    def test_unsupported_format_version(self):
+        for version in (b"0", b"3", b"\x01", b"\xff"):
+            payload = make_payload(format_version=version)
+            proof, signature = sign_payload(payload, [])
+            self.assertFailed(payload + proof + signature)
 
     def test_bad_type(self):
         payload = make_payload(
