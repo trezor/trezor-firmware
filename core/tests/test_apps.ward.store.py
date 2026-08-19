@@ -238,6 +238,40 @@ class TestWardStore(unittest.TestCase):
         with self.assertRaises(ValueError):
             ward_store.store_put(_WALLET_A, _ID_2, rec)
 
+    def test_the_stored_wallet_tag_is_truncated_and_that_is_deliberate(self):
+        """Records key on the FIRST 7 BYTES of wallet_id; root slots keep all 16.
+
+        So two wallets whose ids agree on those 7 bytes would share records -- which is the trade the
+        truncation makes, at ~4e-16 across 8 wallets, for a tag that only has to tell one wallet's
+        records from another's on this device. Asserted rather than left implicit: a reader who finds
+        this surprising should find it DOCUMENTED, not discover it from a mixed-up label.
+        """
+        twin = _WALLET_A[:7] + b"\xff" * 9  # differs from _WALLET_A only past the truncation
+        self.assertNotEqual(twin, _WALLET_A)
+
+        rec = _record(_WALLET_A, _ID_1, b"shared")
+        self.assertTrue(ward_store.store_put(_WALLET_A, _ID_1, rec))
+
+        # ...and the twin finds it, because the store never saw the bytes that differ
+        self.assertEqual(ward_store.store_get(twin, _ID_1), rec)
+
+        # The ROOT table is not truncated, so the same pair is two different wallets there.
+        ward_store.set_root(_WALLET_A, b"\x01" * 32, 1)
+        ward_store.set_root(twin, b"\x02" * 32, 2)
+        self.assertEqual(ward_store.get_root(_WALLET_A), b"\x01" * 32)
+        self.assertEqual(ward_store.get_root(twin), b"\x02" * 32)
+
+    def test_a_record_past_the_cap_is_refused(self):
+        """The capacity guarantee is per RECORD, not per value.
+
+        app_id and identifier have their own framing, so a long enough pair would blow the budget
+        while every individual field looked legal -- and "20 records fit" would stop being true.
+        """
+        huge = _record(_WALLET_A, _identity(b"x" * 200), b"v")
+        self.assertGreater(len(huge), ward_store.MAX_RECORD_LEN)
+        with self.assertRaises(ValueError):
+            ward_store.store_put(_WALLET_A, _identity(b"x" * 200), huge)
+
     def test_operands_are_checked(self):
         """The wallet_id is fixed-width; the identity is variable but never empty.
 

@@ -30,6 +30,10 @@ here means only what that layer cannot know about: an unrecognised format versio
 that does not parse. See `storage/ward.py` for why re-sealing under K_data was not worth a
 second copy of protections that already exist.
 
+THE STORED wallet_id IS TRUNCATED, and `storage.ward` is where that happens -- this file hands over
+the whole 16-byte id and never has to know. 56 bits tells one wallet's records from another's on this
+device, which is all the tag does; the argument is in `storage.ward._STORE_WALLET_ID_LEN`.
+
 NO COUNTER IS STORED, so nothing here reports staleness. A record used to carry the counter it was
 authenticated at, and a read compared that against the counter the device trusted to decide whether
 the value might be behind. That comparison is gone with the field: a pinned copy now says only that
@@ -235,6 +239,11 @@ async def put(
     record = encode_record(
         wallet_id, key_type, app_id, identifier, value, pending, offered
     )
+    # The value cap alone does not bound a record: app_id and identifier have their own framing, so a
+    # long enough pair would blow the capacity budget while every individual field looked legal. See
+    # `storage.ward.MAX_RECORD_LEN`.
+    if len(record) > ward_store.MAX_RECORD_LEN:
+        raise DataError("WARD: entry too large to keep offline")
     if not ward_store.store_put(
         wallet_id, identity_block(key_type, app_id, identifier), record
     ):
@@ -285,7 +294,7 @@ async def list_entries() -> "list[StoredEntry]":
 
     A LIST, not a generator. An async generator would suspend inside a loop that is reading
     flash, and the store is small enough that the whole of it costs less than the machinery
-    would -- eight records, bounded by MAX_VALUE_LEN each.
+    would -- twenty records, each capped by `storage.ward.MAX_RECORD_LEN`.
 
     Unreadable records are SKIPPED here, not deleted and not raised on: enumeration is a
     background question ("what is pending?"), and one bad record must not make the rest
