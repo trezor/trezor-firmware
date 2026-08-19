@@ -8225,6 +8225,9 @@ if TYPE_CHECKING:
         app_id: "str | None"
         identifier: "AnyBytes | None"
         value: "AnyBytes | None"
+        mac: "AnyBytes | None"
+        counter: "int | None"
+        key_type: "str | None"
 
         def __init__(
             self,
@@ -8232,6 +8235,9 @@ if TYPE_CHECKING:
             app_id: "str | None" = None,
             identifier: "AnyBytes | None" = None,
             value: "AnyBytes | None" = None,
+            mac: "AnyBytes | None" = None,
+            counter: "int | None" = None,
+            key_type: "str | None" = None,
         ) -> None:
             pass
 
@@ -8308,6 +8314,11 @@ if TYPE_CHECKING:
         unreadable: "bool | None"
         stale: "bool | None"
         counter: "int | None"
+        key_type: "str | None"
+        app_id: "str | None"
+        identifier: "AnyBytes | None"
+        value: "AnyBytes | None"
+        mac: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8318,6 +8329,11 @@ if TYPE_CHECKING:
             unreadable: "bool | None" = None,
             stale: "bool | None" = None,
             counter: "int | None" = None,
+            key_type: "str | None" = None,
+            app_id: "str | None" = None,
+            identifier: "AnyBytes | None" = None,
+            value: "AnyBytes | None" = None,
+            mac: "AnyBytes | None" = None,
         ) -> None:
             pass
 

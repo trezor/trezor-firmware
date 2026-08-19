@@ -199,3 +199,123 @@ def verify_chain_step(
         raise DataError("WARD: chain link is not authorised")
 
     return to_counter, to_root
+
+
+# --- the queued INTENT ---------------------------------------------------------------------
+#
+# A queued change can be exported for BACKUP and handed back later. What comes back is host-held
+# material, so the device must be able to tell its own intent from anything else -- which is what
+# `delete_entry` records as decided and unbuilt: "a queued intent additionally carries a MAC over
+# (entry_key, op, counter) under K_auth".
+#
+# Same key as a transition, because the question is the same one: was this produced by a device of
+# THIS wallet. A different key would buy nothing -- the verifier set is identical -- and the tag
+# below is what keeps the two preimages from ever colliding.
+
+TAG_INTENT = b"WARD INTENT v1"
+
+OP_SET = 1  # queue a value at a path
+# OP_DELETE is deliberately absent: a queued delete needs the sealed tombstone `delete_entry`
+# describes, and until that exists there is no delete intent to authenticate. The op is inside the
+# MAC anyway, so adding one later does not change the preimage's shape.
+
+
+def intent_preimage(
+    ward_id: bytes,
+    entry_key: bytes,
+    op: int,
+    counter: int,
+    key_type: str,
+    app_id: str,
+    identifier: bytes,
+    value: bytes,
+) -> bytes:
+    """The bytes a queued intent is authenticated over.
+
+    THE VALUE IS BOUND, not just the path. The blob travels in the clear, so a MAC over
+    (entry_key, op, counter) alone would authenticate a PATH while leaving the host free to
+    substitute any value at it -- protection that looks like protection and is not. Everything the
+    device would write back on a restore is therefore in here.
+
+    Length-prefixed, not concatenated, for the reason `transition_preimage` and `leaf.leaf_hash_of`
+    already give: adjacent variable-length fields leave their boundary ambiguous, so
+    (app_id="ab", identifier="c") and (app_id="a", identifier="bc") would otherwise MAC alike.
+
+    NOT `offline_store.encode_record`. That is the canonical form of a record in FLASH -- it is
+    prefixed with the device-local slot key and its sameness is what makes a no-op refresh
+    detectable. This is a WIRE contract. Two encoders for two audiences, deliberately, because a
+    change to either one for its own reasons must not silently redefine the other.
+    """
+    from trezor.wire import DataError
+
+    kt = key_type.encode()
+    ai = app_id.encode()
+    if len(ward_id) != 32 or len(entry_key) != 32:
+        raise DataError("WARD: intent operands must be 32 bytes")
+    if len(kt) > 0xFF or len(ai) > 0xFF:
+        raise DataError("WARD: key_type or app_id too long to authenticate")
+    if len(identifier) > 0xFFFF or len(value) > 0xFFFF:
+        raise DataError("WARD: identifier or value too long to authenticate")
+
+    return (
+        TAG_INTENT
+        + ward_id
+        + entry_key
+        + bytes([op])
+        + counter.to_bytes(4, "big")
+        + bytes([len(kt)])
+        + kt
+        + bytes([len(ai)])
+        + ai
+        + len(identifier).to_bytes(2, "big")
+        + identifier
+        + len(value).to_bytes(2, "big")
+        + value
+    )
+
+
+def intent_mac(
+    k_auth: bytes,
+    ward_id: bytes,
+    entry_key: bytes,
+    op: int,
+    counter: int,
+    key_type: str,
+    app_id: str,
+    identifier: bytes,
+    value: bytes,
+) -> bytes:
+    """Authenticate a queued intent. Only a device holding the seed can produce this."""
+    from trezor.crypto import hmac
+
+    return hmac(
+        hmac.SHA256,
+        k_auth,
+        intent_preimage(
+            ward_id, entry_key, op, counter, key_type, app_id, identifier, value
+        ),
+    ).digest()
+
+
+def verify_intent_mac(
+    k_auth: bytes,
+    ward_id: bytes,
+    entry_key: bytes,
+    op: int,
+    counter: int,
+    key_type: str,
+    app_id: str,
+    identifier: bytes,
+    value: bytes,
+    mac: bytes,
+) -> bool:
+    """Did a device of this wallet queue EXACTLY this intent?
+
+    Note what a true answer does and does not mean. It means these bytes were queued by a device
+    of this wallet at some point. It does NOT mean they should be queued again now -- see the
+    replay note in `queue_set_entry`.
+    """
+    expected = intent_mac(
+        k_auth, ward_id, entry_key, op, counter, key_type, app_id, identifier, value
+    )
+    return expected == mac

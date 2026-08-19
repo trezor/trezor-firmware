@@ -2197,7 +2197,7 @@ def _reject_flow(session: Session):
 
 
 def _offline_read(session: Session, identifier: bytes) -> "_Recorded":
-    """Read the DEVICE'S store, and assert it asks the host NOTHING.
+    """EXPORT from the DEVICE'S store, and assert it asks the host NOTHING.
 
     `WardQueueGetEntry` is a different request from `WardGetEntry` rather than a mode of it, so
     there is no provider to pass and no pull to answer. The absent WardEntryRequest in the
@@ -2556,7 +2556,8 @@ def test_ward_a_queued_write_outlives_the_session_that_made_it(session: Session)
     fresh = session.test_ctx.get_session()
 
     rec = _offline_read(fresh, b"addr1")
-    assert "pending change" in rec.title
+    assert "queued change" in rec.title  # the export screen; still the pending record
+    assert rec.ack.pending is True
     assert "survives" in rec.squashed
 
 
@@ -2621,7 +2622,8 @@ def test_ward_a_change_stays_queued_until_the_wm_confirms_it(session: Session):
     _confirm(session, store, wm=MockWM())
 
     rec = _offline_read(session.test_ctx.get_session(), b"addr1")
-    assert "pending change" in rec.title
+    assert "queued change" in rec.title
+    assert rec.ack.pending is True
     assert "unconfirmed" in rec.squashed
 
 
@@ -2771,3 +2773,148 @@ def test_ward_queue_delete_will_not_touch_a_pinned_copy(session: Session):
     rec = _offline_read(fresh, b"addr1")
     assert "offline copy" in rec.title
     assert "pinned_value" in rec.squashed
+
+
+# --- backing the queue up ------------------------------------------------------------------
+
+
+@pytest.mark.models("core")
+def test_ward_a_queued_change_round_trips_through_a_backup(session: Session):
+    """Export a queued change, lose it, put it back -- and the device can tell it is its own.
+
+    A queued change lives in ONE device's flash. Without this, a wipe loses a change the user
+    confirmed and nothing can bring it back; with it, the host holds a blob it cannot forge.
+    """
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"backed_up")
+
+    backup = _offline_read(session.test_ctx.get_session(), b"addr1").ack
+    assert backup.pending is True
+    assert backup.value == b"backed_up"
+    assert backup.app_id == _APP
+    assert backup.identifier == b"addr1"
+    assert len(backup.mac) == 32
+
+    # lose it
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_delete_entry(session, _APP, b"addr1")
+    assert _offline_read(session.test_ctx.get_session(), b"addr1").ack.missing is True
+
+    # and put it back from the backup alone
+    rec = _Recorded()
+    fresh = session.test_ctx.get_session()
+    with fresh.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_queue_restore_entry"), m.WardQueueSetAck]
+        )
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(fresh, on_page=rec.on_page).get()
+        )
+        ack = ward.restore_queued_entry(fresh, backup)
+
+    assert ack.entry_key == backup.entry_key
+    assert "restore queued change" in rec.title
+    assert "backed_up" in rec.squashed
+
+    after = _offline_read(session.test_ctx.get_session(), b"addr1").ack
+    assert after.pending is True
+    assert after.value == b"backed_up"
+
+
+@pytest.mark.models("core")
+def test_ward_a_restored_change_still_publishes(session: Session):
+    """The restore has to produce a record `flush_queue` can actually derive from, not just one
+    that reads back. A backup that restores into something unpublishable would look correct on
+    screen and lose the change at the only moment it matters."""
+    store = WardTrie()
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"from_backup")
+
+    backup = _offline_read(session.test_ctx.get_session(), b"addr1").ack
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_delete_entry(session, _APP, b"addr1")
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.restore_queued_entry(session, backup)
+
+    _go_online(session, store)
+    res = ward.flush_queue(session, ward.store_provider(store))
+    assert res.remaining == 0
+    value = unpack_content(
+        open_content(_K_DATA, res.entry_key, "address", res.leaf.content.encrypted)
+    )[1]
+    assert value == b"from_backup"
+
+
+@pytest.mark.models("core")
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        pytest.param(lambda b: {"value": b.value + b"!"}, id="value"),
+        pytest.param(lambda b: {"identifier": b"addr2"}, id="identifier"),
+        pytest.param(lambda b: {"app_id": "OTHER"}, id="app_id"),
+        pytest.param(lambda b: {"counter": (b.counter or 0) + 1}, id="counter"),
+        pytest.param(lambda b: {"mac": bytes(32)}, id="mac"),
+    ],
+)
+def test_ward_a_tampered_backup_is_refused_before_any_screen(session: Session, corrupt):
+    """EVERY field the device would write back is inside the MAC.
+
+    A blob travelling in the clear is a blob a host can edit, so a MAC over the path alone would
+    authenticate a path while leaving the value free -- protection that looks like protection. The
+    refusal happens BEFORE the confirmation, which `set_expected_responses` asserts by expecting no
+    ButtonRequest: a screen for material that failed to authenticate teaches the user that the
+    screen means nothing.
+    """
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"authentic")
+
+    backup = _offline_read(session.test_ctx.get_session(), b"addr1").ack
+    edited = {
+        "app_id": backup.app_id,
+        "identifier": backup.identifier,
+        "value": backup.value,
+        "counter": backup.counter,
+        "mac": backup.mac,
+        "key_type": backup.key_type,
+    }
+    edited.update(corrupt(backup))
+
+    fresh = session.test_ctx.get_session()
+    with fresh.test_ctx as ctx:
+        ctx.set_expected_responses([m.Failure])
+        with pytest.raises(exceptions.TrezorFailure, match="authenticated"):
+            ward.queue_set_entry(
+                fresh,
+                edited["app_id"],
+                edited["identifier"],
+                edited["value"],
+                mac=edited["mac"],
+                counter=edited["counter"],
+                key_type=edited["key_type"],
+            )
+
+
+@pytest.mark.models("core")
+def test_ward_a_pinned_copy_exports_no_intent_mac(session: Session):
+    """A pinned read is not an intent: WARD already holds that value and there is nothing to
+    re-queue. Returning a MAC for one would invite a restore that means nothing, so the fields come
+    back for the host's records and the MAC does not."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"pinned_value")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+
+    backup = _offline_read(session.test_ctx.get_session(), b"addr1").ack
+    assert backup.pending is None
+    assert backup.value == b"pinned_value"
+    assert backup.mac is None
+
+    with pytest.raises(ValueError, match="no intent MAC"):
+        ward.restore_queued_entry(session, backup)

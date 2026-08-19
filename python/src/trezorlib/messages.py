@@ -10321,6 +10321,9 @@ class WardQueueSetEntry(protobuf.MessageType):
         1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
         2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        6: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10329,10 +10332,16 @@ class WardQueueSetEntry(protobuf.MessageType):
         app_id: Optional["str"] = None,
         identifier: Optional["bytes"] = None,
         value: Optional["bytes"] = None,
+        mac: Optional["bytes"] = None,
+        counter: Optional["int"] = None,
+        key_type: Optional["str"] = None,
     ) -> None:
         self.app_id = app_id
         self.identifier = identifier
         self.value = value
+        self.mac = mac
+        self.counter = counter
+        self.key_type = key_type
 
 
 class WardQueueSetAck(protobuf.MessageType):
@@ -10409,6 +10418,11 @@ class WardQueueGetAck(protobuf.MessageType):
         4: protobuf.Field("unreadable", "bool", repeated=False, required=False, default=None),
         5: protobuf.Field("stale", "bool", repeated=False, required=False, default=None),
         6: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        7: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
+        8: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+        9: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+        10: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+        11: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10420,6 +10434,11 @@ class WardQueueGetAck(protobuf.MessageType):
         unreadable: Optional["bool"] = None,
         stale: Optional["bool"] = None,
         counter: Optional["int"] = None,
+        key_type: Optional["str"] = None,
+        app_id: Optional["str"] = None,
+        identifier: Optional["bytes"] = None,
+        value: Optional["bytes"] = None,
+        mac: Optional["bytes"] = None,
     ) -> None:
         self.entry_key = entry_key
         self.missing = missing
@@ -10427,6 +10446,11 @@ class WardQueueGetAck(protobuf.MessageType):
         self.unreadable = unreadable
         self.stale = stale
         self.counter = counter
+        self.key_type = key_type
+        self.app_id = app_id
+        self.identifier = identifier
+        self.value = value
+        self.mac = mac
 
 
 class WardFlushQueueAck(protobuf.MessageType):

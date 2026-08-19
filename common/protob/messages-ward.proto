@@ -53,6 +53,12 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
  * request whose meaning depends on whether the session happens to be synced is one a host
  * cannot reason about, and it made "did my change apply?" a question about hidden state. The
  * online requests now REFUSE when there is no synced session and say which message to use.
+ *
+ * THE QUEUE IS BACKUPABLE, and that is what its get/set pair is really for. A queued change lives
+ * in one device's flash and nowhere else, so WardQueueGetEntry exports it WITH A MAC over
+ * everything the device would need to write it back, and WardQueueSetEntry accepts it again only
+ * if that MAC verifies. The blob is plaintext -- a backup a host can hold and inspect -- so the
+ * MAC is what stands between "a change this wallet queued" and "bytes a host made up".
  */
 
 /**
@@ -287,12 +293,28 @@ message WardLeafAck {
  */
 
 /**
- * Request: hold a write on the device until a synced host can publish it.
+ * Request: hold a write on the device until a synced host can publish it -- or RESTORE one that
+ * was held before, from a backup the device itself authenticated.
  *
- * The device shows what is being queued -- and, if it already holds a copy, what that copy says
- * -- and stores the intent only after the user confirms. The screen must read QUEUED rather than
- * done: a confirmation that looks like "applied" when nothing has been applied leaves the user
- * with no reason to think anything is outstanding.
+ * TWO SHAPES, told apart by `mac`, and the discriminator is cryptographic rather than declared:
+ *
+ *   mac ABSENT   a fresh intent. The device shows what is being queued -- and, if it already
+ *                holds a copy, what that copy says -- and stores it only after the user confirms.
+ *                The screen must read QUEUED rather than done: a confirmation that looks like
+ *                "applied" when nothing has been applied leaves the user with no reason to think
+ *                anything is outstanding.
+ *
+ *   mac PRESENT  a restore. The fields must be exactly what WardQueueGetAck once exported, and
+ *                the device recomputes the MAC over all of them before showing anything. Material
+ *                that fails to authenticate never reaches a screen: a confirmation for
+ *                unauthenticated bytes teaches the user that the screen means nothing.
+ *
+ * A restore therefore carries the fields the fresh path derives or defaults -- `counter` and
+ * `key_type` -- because both are inside the MAC and neither can be re-guessed on the way in.
+ *
+ * NO REPLAY BOUND, deliberately and for now: a correctly-MAC'd intent is accepted whenever it
+ * arrives, so a host can re-offer a change the user discarded or one already published. `counter`
+ * is carried and MAC'd, so bounding it later is a handler change and not a wire change.
  * @start
  * @next WardQueueSetAck
  * @next Failure
@@ -301,6 +323,11 @@ message WardQueueSetEntry {
     optional string app_id     = 1;  // domain that owns the entry
     optional bytes  identifier = 2;  // key within that domain
     optional bytes  value      = 3;  // the value to queue; empty is allowed, absent is not
+
+    // RESTORE ONLY, and all three are meaningless without the first.
+    optional bytes  mac        = 4;  // 32B intent MAC, exactly as WardQueueGetAck returned it
+    optional uint32 counter    = 5;  // the counter the record carried when it was exported
+    optional string key_type   = 6;  // the key space the entry belongs to; MAC'd, so not defaulted
 }
 
 /**
@@ -347,11 +374,23 @@ message WardQueueDeleteAck {
 }
 
 /**
- * Request: read what the DEVICE holds for (app_id, identifier), with no host involved.
+ * Request: EXPORT what the DEVICE holds for (app_id, identifier), so the host can back it up.
  *
  * Serves from the device's own store: a change queued but not yet published, or a copy pinned by
  * WardPinCachedEntry. It never pulls, so the host is not asked for anything and cannot influence
- * the answer.
+ * what comes back.
+ *
+ * BACKUP IS WHY THIS EXISTS. A queued change lives in one device's flash and nowhere else, so a
+ * lost or wiped device loses a change the user confirmed. Exporting it lets the host hold it and
+ * hand it back through WardQueueSetEntry -- and the `mac` below is what makes handing it back safe
+ * to accept.
+ *
+ * ONE RECORD, NAMED. The host must know (app_id, identifier) to ask, so a backup covers only what
+ * the host can name: a change queued by an ON-DEVICE app is not exportable this way, and nothing
+ * reports that gap. Closing it needs an iterator like WardFlushQueue's, which is not built.
+ *
+ * The user confirms the export, because it is the only notice they get that a value the device was
+ * holding for itself is leaving.
  * @start
  * @next WardQueueGetAck
  * @next Failure
@@ -362,12 +401,22 @@ message WardQueueGetEntry {
 }
 
 /**
- * Response: WHAT the device found, never the value it found.
+ * Response: the record, and -- for a queued change -- the MAC that lets it come back.
  *
- * The value goes to the SCREEN and stays there. Returning it would hand back the one thing the
- * offline store exists to serve without a host -- and for a queued change the host has never
- * seen it at all. The flags are what a host can act on: whether to prompt the user to connect,
- * whether a change is still outstanding, whether what was shown is known to be behind.
+ * IN THE CLEAR. app_id, identifier and value are returned as stored. This is an exception to the
+ * rule the keyed path buys elsewhere: the host's LEAF store contains no identifiers, but a queue
+ * backup contains both identifier and value, including for a change queued by an on-device app
+ * that the host never saw. Accepted deliberately, so that a backup is something a host can hold,
+ * inspect and restore without holding any device key.
+ *
+ * `mac` IS THE POINT. It authenticates (entry_key, op, counter, key_type, app_id, identifier,
+ * value) under K_auth -- see `cas.intent_preimage` -- so a restore can be checked against what
+ * this wallet actually queued rather than trusted because a host says so. Present ONLY for a
+ * pending record: a pinned copy is not an intent, there is nothing to re-queue, and returning a
+ * MAC for one would invite a restore that means nothing.
+ *
+ * A true `mac` does NOT mean the intent should be queued again now -- it carries no freshness. See
+ * the replay note on WardQueueSetEntry.
  *
  * `stale` is DERIVED, not stored: it compares the counter the record was authenticated at with
  * the counter the device trusts now, so advancing the head never has to touch a record.
@@ -380,6 +429,14 @@ message WardQueueGetAck {
     optional bool   unreadable = 4; // stored but not decodable by this build; NOT the same as missing
     optional bool   stale     = 5;  // authenticated at a counter older than the trusted one
     optional uint32 counter   = 6;  // the counter the record was authenticated at; 0 = never
+
+    // The record itself, absent when nothing readable was found. Hand all of these back
+    // UNCHANGED with the mac to restore the intent; every one of them is MAC'd.
+    optional string key_type   = 7;
+    optional string app_id     = 8;
+    optional bytes  identifier = 9;
+    optional bytes  value      = 10;
+    optional bytes  mac        = 11;  // 32B intent MAC; pending records only
 }
 
 /**

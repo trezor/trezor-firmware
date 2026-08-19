@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 
 async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
-    """WardQueueGetEntry handler: show what the DEVICE holds, with no host involved.
+    """WardQueueGetEntry handler: EXPORT what the DEVICE holds, so the host can back it up.
 
     NO PULL HAPPENS HERE, and that is the point rather than a limitation. A host that does not
     speak WARD cannot answer `WardEntryRequest`, and a host that does but has not synced has not
@@ -23,18 +23,32 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
     framing -- is named as such, on screen and in the ack. Reporting "nothing here" would invite
     writing over it while telling the user it was never there.
 
-    THE ACK CARRIES NO VALUE. What was found goes to the screen and stays there; the host gets
-    flags. Returning the value would hand back the one thing this store exists to serve WITHOUT
-    a host, and for a queued change the host has never seen it at all. The flags are what a host
-    can act on: prompt the user to connect, warn that a change is still outstanding, or note that
-    what was shown is known to be behind.
+    BACKUP IS WHY THIS EXISTS. A queued change lives in this device's flash and nowhere else, so
+    losing the device loses a change the user confirmed. The ack therefore carries the RECORD --
+    key_type, app_id, identifier, value, counter -- and, for a pending record, a MAC over all of
+    it under K_auth. `queue_set_entry` accepts those bytes back only if the MAC verifies, so a
+    backup is something a host can hold without being able to invent one.
+
+    THE BLOB IS PLAINTEXT, and that is a deliberate exception rather than an oversight. The host's
+    leaf store contains no identifiers -- that is what the keyed path buys -- but a queue backup
+    contains identifier and value, including for a change queued by an on-device app that the host
+    never saw. The trade is that a backup is inspectable and restorable by a host holding no device
+    key at all.
+
+    A PINNED COPY GETS NO MAC. It is not an intent: nothing queued it, and there is nothing to
+    re-queue. Returning a MAC for one would invite a restore that means nothing, so the fields come
+    back for the host's records and the MAC does not.
+
+    THE USER CONFIRMS THE EXPORT, because it is the only notice they get that a value the device
+    was holding for itself is leaving.
     """
     from trezor.messages import WardQueueGetAck
     from trezor.ui.layouts import confirm_properties
 
     from . import offline_store
+    from .cas import OP_SET, intent_mac
     from .common import display_bytes, require_key
-    from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
+    from .keys import ENTRY_TYPE_ADDRESS, derive_k_auth, derive_ward_id, entry_key_for
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
@@ -59,21 +73,41 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
         props.append(("Result", "No offline copy. Connect to read this entry.", False))
         ack = WardQueueGetAck(entry_key=entry_key, missing=True)
     elif entry.pending:
-        # A change the user confirmed that no host has taken yet. It is what this device
-        # believes, not what WARD holds.
-        title = "Pending change"
+        # A change the user confirmed that no host has taken yet. It is what this device believes,
+        # not what WARD holds -- and the one kind of record worth backing up, since it exists
+        # nowhere else.
+        title = "Back up queued change?"
         props.append(("Value", display_bytes(entry.value), True))
         props.append(
-            ("Warning", "Not published yet. Connect to apply this change.", False)
+            (
+                "Warning",
+                "Not published yet. The value is sent to the host so it can be restored.",
+                False,
+            )
         )
         ack = WardQueueGetAck(
             entry_key=entry_key,
             pending=True,
             stale=entry.stale,
             counter=entry.counter,
+            key_type=entry.key_type,
+            app_id=entry.app_id,
+            identifier=entry.identifier,
+            value=entry.value,
+            mac=intent_mac(
+                await derive_k_auth(),
+                await derive_ward_id(),
+                entry_key,
+                OP_SET,
+                entry.counter,
+                entry.key_type,
+                entry.app_id,
+                entry.identifier,
+                entry.value,
+            ),
         )
     else:
-        title = "Offline copy"
+        title = "Send offline copy?"
         props.append(("Value", display_bytes(entry.value), True))
         props.append(("Kept at", "counter " + str(entry.counter), False))
         props.append(
@@ -87,10 +121,16 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
                 False,
             )
         )
+        # No MAC: this is a copy of something WARD already holds, not a change waiting to be
+        # published, so there is no intent for a restore to re-queue.
         ack = WardQueueGetAck(
             entry_key=entry_key,
             stale=entry.stale,
             counter=entry.counter,
+            key_type=entry.key_type,
+            app_id=entry.app_id,
+            identifier=entry.identifier,
+            value=entry.value,
         )
 
     await confirm_properties("ward_queue_get_entry", title, props)
