@@ -422,6 +422,15 @@ enum MessageType {
     MessageType_WardEraseCachedEntry = 2320 [(wire_in) = true];
     MessageType_WardFlushQueue = 2321 [(wire_in) = true];
 
+    // The offline queue: its own requests, so a request never means two things
+    MessageType_WardQueueSetEntry = 2323 [(wire_in) = true];
+    MessageType_WardQueueSetAck = 2324 [(wire_out) = true];
+    MessageType_WardQueueDeleteEntry = 2325 [(wire_in) = true];
+    MessageType_WardQueueDeleteAck = 2326 [(wire_out) = true];
+    MessageType_WardQueueGetEntry = 2327 [(wire_in) = true];
+    MessageType_WardQueueGetAck = 2328 [(wire_out) = true];
+    MessageType_WardFlushQueueAck = 2329 [(wire_out) = true];
+
     // Display address (an on-device consumer of WARD labels)
     MessageType_DisplayAddress = 2322 [(wire_in) = true];
 
