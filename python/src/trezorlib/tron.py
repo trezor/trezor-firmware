@@ -59,6 +59,7 @@ def from_raw_data(
             owner_address=raw_contract.owner_address,
             contract_address=raw_contract.contract_address,
             data=raw_contract.data,
+            call_value=raw_contract.call_value,
         )
     elif contract_type == messages.TronRawContractType.FreezeBalanceV2Contract:
         raw_contract = load_message(
