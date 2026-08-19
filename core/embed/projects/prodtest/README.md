@@ -1242,20 +1242,17 @@ OK 00000001000000000000000000000000000000000000000000000000000000000000000001000
 ### tropic-update-fw
 
 Updates Tropic firmware to the embedded version.
+Only chips matching the silicon revision bundled in the build are supported: ACAB by default, or ABAB when built with `TROPIC_SILICON_REVISION=ABAB`.
 
 Example:
 ```
 tropic-update-fw
-# Silicon revision: ABAB
-# Rebooting into Maintenance mode
-# Chip is executing bootloader
-# Updating RISC-V FW
-# Updating SPECT FW
-# Rebooting into Application mode
+# Silicon revision: ACAB
+# Updating RISC-V and SPECT FW
 # Reading RISC-V FW version
-# Chip is executing RISC-V application FW version: 1.0.0 (+ .0)
+# Chip is executing RISC-V application FW version: 2.1.0 (+ .0)
 # Reading SPECT FW version
-# Chip is executing SPECT FW version: 1.0.0 (+ .0)
+# Chip is executing SPECT FW version: 1.3.0 (+ .0)
 OK
 ```
 

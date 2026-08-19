@@ -30,6 +30,7 @@
 
 #include <libtropic.h>
 #include <libtropic/cal/trezor_crypto/libtropic_trezor_crypto.h>
+#include <lt_l3_process.h>
 
 #ifdef TREZOR_EMULATOR
 #include <arpa/inet.h>
@@ -39,6 +40,34 @@
 
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
+
+#ifdef USE_TROPIC_LOGGING
+#include <rtl/printf.h>
+
+// CLI for libtropic's log output; non-NULL only while a caller has armed it.
+static cli_t *g_lt_log_cli = NULL;
+
+void tropic_set_log_sink(cli_t *cli) { g_lt_log_cli = cli; }
+
+#ifndef TREZOR_EMULATOR
+// Log sink called by libtropic's `LT_LOG_*()` macros. On the
+// emulator the libtropic POSIX port provides its own implementation.
+int lt_port_log(const char *format, ...) {
+  if (g_lt_log_cli == NULL) {
+    return 0;
+  }
+
+  char line[128] = {0};
+  va_list args = {0};
+  va_start(args, format);
+  int len = vsnprintf_(line, sizeof(line), format, args);
+  va_end(args);
+  line[strcspn(line, "\n")] = '\0';
+  cli_trace(g_lt_log_cli, "%s", line);
+  return len;
+}
+#endif  // TREZOR_EMULATOR
+#endif  // USE_TROPIC_LOGGING
 
 #ifdef SECURE_MODE
 
@@ -271,6 +300,12 @@ lt_ret_t tropic_session_invalidate(void) {
   }
   g_tropic_driver.session_started = false;
   return LT_OK;
+}
+
+void tropic_session_forget(void) {
+  tropic_driver_t *drv = &g_tropic_driver;
+  lt_l3_invalidate_host_session_data(&drv->handle.l3);
+  drv->session_started = false;
 }
 
 // If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.

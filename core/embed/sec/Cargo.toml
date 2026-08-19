@@ -62,6 +62,7 @@ tamper = []
 telemetry = ["backup_ram"]
 time_estimate = []
 tropic = []
+tropic_logging = []
 trustzone = ["sys/trustzone"]
 
 # --------------------------------------------------------------------------

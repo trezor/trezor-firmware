@@ -73,6 +73,11 @@ lt_ret_t tropic_init(cli_t* cli);
 
 void tropic_deinit(void);
 
+#ifdef USE_TROPIC_LOGGING
+// Routes libtropic's `LT_LOG_*()` output to `cli`. Pass NULL to stop.
+void tropic_set_log_sink(cli_t* cli);
+#endif  // USE_TROPIC_LOGGING
+
 typedef struct {
   uint32_t distribution_version;
   const lt_config_t* i_config;
@@ -87,6 +92,9 @@ lt_ret_t tropic_custom_session_start(cli_t* cli,
                                      lt_pkey_index_t pairing_key_index);
 
 lt_ret_t tropic_session_invalidate(void);
+
+// Discards the session data without communicating with Tropic.
+void tropic_session_forget(void);
 
 bool tropic_get_pubkey(cli_t* cli, lt_handle_t* tropic_handle,
                        curve25519_key pubkey);
