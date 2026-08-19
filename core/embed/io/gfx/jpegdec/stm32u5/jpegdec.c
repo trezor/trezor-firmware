@@ -297,6 +297,10 @@ jpegdec_state_t jpegdec_process(jpegdec_input_t *inp) {
     return JPEGDEC_STATE_ERROR;
   }
 
+  if (inp->offset > inp->size) {
+    return JPEGDEC_STATE_ERROR;
+  }
+
   // Check input buffer alignment
   if (inp->offset < inp->size) {
     if (!IS_ALIGNED(inp->offset, 4) ||
