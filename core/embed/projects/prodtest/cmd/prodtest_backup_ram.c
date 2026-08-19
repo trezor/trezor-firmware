@@ -171,7 +171,11 @@ static void prodtest_backup_ram_write(cli_t* cli) {
     return;
   }
 
-  if (!backup_ram_write(key, type, data, len)) {
+  // Omitting the value removes the key
+  bool ok = (len == 0) ? backup_ram_erase_item(key)
+                       : backup_ram_write(key, type, data, len);
+
+  if (!ok) {
     cli_error(cli, PRODTEST_ERR_BACKUP_RAM_KEY_WRITE, "Failed to write key #%d",
               key);
     return;

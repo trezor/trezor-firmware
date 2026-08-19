@@ -358,6 +358,21 @@ uint16_t backup_ram_search(uint16_t min_key) {
   return key;
 }
 
+// Drops an item from the payload, moving the following items down.
+//
+// The caller must hold the IRQ lock, must have located `item` with
+// `backup_ram_find_item()`, and must commit the change afterwards.
+static void backup_ram_drop_item(backup_ram_item_t* item) {
+  backup_ram_driver_t* drv = &g_backup_ram_driver;
+
+  size_t deleted_size = ITEM_SIZE(item->data_size);
+  uint8_t* next_item = (uint8_t*)item + deleted_size;
+  uint8_t* end_of_payload = drv->payload + drv->payload_size;
+  assert(next_item <= end_of_payload);
+  memmove(item, next_item, end_of_payload - next_item);
+  drv->payload_size -= deleted_size;
+}
+
 bool backup_ram_erase_item(uint16_t key) {
   backup_ram_driver_t* drv = &g_backup_ram_driver;
 
@@ -365,13 +380,20 @@ bool backup_ram_erase_item(uint16_t key) {
     return false;
   }
 
+  bool success = true;
+
   irq_key_t irq_key = irq_lock();
-  // Writing data_size==0 will just remove the item with the given key
-  // Type is don't care in this case.
-  bool status = backup_ram_write(key, BACKUP_RAM_ITEM_PUBLIC, NULL, 0);
+
+  backup_ram_item_t* item = backup_ram_find_item(key);
+
+  if (item != NULL) {
+    backup_ram_drop_item(item);
+    success = backup_ram_commit();
+  }
+
   irq_unlock(irq_key);
 
-  return status;
+  return success;
 }
 
 bool backup_ram_erase_protected(void) {
@@ -447,6 +469,12 @@ bool backup_ram_write(uint16_t key, backup_ram_item_type_t type,
     return false;
   }
 
+  if (data == NULL || data_size == 0) {
+    // There is nothing to store. Use `backup_ram_erase_item()` to remove an
+    // item.
+    return false;
+  }
+
   if (data_size > BACKUP_RAM_MAX_KEY_DATA_SIZE) {
     // Data size exceeds maximum allowed size
     return false;
@@ -458,7 +486,7 @@ bool backup_ram_write(uint16_t key, backup_ram_item_type_t type,
 
   backup_ram_item_t* item = backup_ram_find_item(key);
 
-  if (item != NULL && item->item_type != type && data_size != 0) {
+  if (item != NULL && item->item_type != type) {
     // Item exists but has a different type, not supported
     goto cleanup;
   }
@@ -482,25 +510,18 @@ bool backup_ram_write(uint16_t key, backup_ram_item_type_t type,
 
     // Remove the item if it exists
     if (item != NULL) {
-      size_t deleted_size = ITEM_SIZE(item->data_size);
-      uint8_t* next_item = (uint8_t*)item + deleted_size;
-      uint8_t* end_of_payload = drv->payload + drv->payload_size;
-      assert(next_item <= end_of_payload);
-      memmove(item, next_item, end_of_payload - next_item);
-      drv->payload_size -= deleted_size;
+      backup_ram_drop_item(item);
     }
 
     // Add a new item at the end of the payload
-    if (data_size > 0) {
-      item = (backup_ram_item_t*)&drv->payload[drv->payload_size];
-      item->key = key;
-      item->data_size = data_size;
-      item->item_type = type;
-      item->reserved = 0;
-      memcpy(item->data, data, data_size);
-      memset(&item->data[data_size], 0, ALIGN_UP(data_size, 4) - data_size);
-      drv->payload_size += ITEM_SIZE(data_size);
-    }
+    item = (backup_ram_item_t*)&drv->payload[drv->payload_size];
+    item->key = key;
+    item->data_size = data_size;
+    item->item_type = type;
+    item->reserved = 0;
+    memcpy(item->data, data, data_size);
+    memset(&item->data[data_size], 0, ALIGN_UP(data_size, 4) - data_size);
+    drv->payload_size += ITEM_SIZE(data_size);
   }
 
   // Commit the changes to backup RAM
