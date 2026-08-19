@@ -18,17 +18,23 @@ def _get_xpubs(
     coin: CoinInfo, xpub_magic: int, pubnodes: list[HDNodeType]
 ) -> list[str]:
     from trezor.crypto import bip32
+    from trezor.wire import DataError
 
     result = []
     for pubnode in pubnodes:
-        node = bip32.HDNode(
-            depth=pubnode.depth,
-            fingerprint=pubnode.fingerprint,
-            child_num=pubnode.child_num,
-            chain_code=pubnode.chain_code,
-            public_key=pubnode.public_key,
-            curve_name=coin.curve_name,
-        )
+        try:
+            node = bip32.HDNode(
+                depth=pubnode.depth,
+                fingerprint=pubnode.fingerprint,
+                child_num=pubnode.child_num,
+                chain_code=pubnode.chain_code,
+                public_key=pubnode.public_key,
+                curve_name=coin.curve_name,
+            )
+        except ValueError:
+            # The pubnode comes from the host. (A bad coin.curve_name would be
+            # a firmware bug, but it cannot happen with generated coininfo.)
+            raise DataError("Invalid multisig pubkey")
         result.append(node.serialize_public(xpub_magic))
 
     return result

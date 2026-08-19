@@ -334,6 +334,51 @@ def test_multisig_missing(session: Session, show_display):
             )
 
 
+@pytest.mark.multisig
+@pytest.mark.models("core", reason="Legacy does not validate multisig pubkeys")
+@pytest.mark.parametrize("show_display", (True, False))
+def test_multisig_invalid_pubkey(session: Session, show_display):
+    # 0x02-prefixed, 33 bytes long, but x=5 is not on the secp256k1 curve.
+    invalid_pubkey = bytes.fromhex(
+        "020000000000000000000000000000000000000000000000000000000000000005"
+    )
+
+    nodes = [
+        btc.get_public_node(session, parse_path(f"m/44h/0h/{i}h")).node
+        for i in range(3)
+    ]
+    nodes[1].public_key = invalid_pubkey
+
+    # Multisig with global suffix specification.
+    multisig1 = messages.MultisigRedeemScriptType(
+        nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
+    )
+
+    # Multisig with per-node suffix specification.
+    multisig2 = messages.MultisigRedeemScriptType(
+        pubkeys=[
+            messages.HDNodePathType(node=node, address_n=[0, 0]) for node in nodes
+        ],
+        signatures=[b"", b"", b""],
+        m=2,
+    )
+
+    for multisig in (multisig1, multisig2):
+        with (
+            pytest.raises(TrezorFailure, match="DataError: Invalid multisig pubkey"),
+            session.test_ctx as client,
+        ):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+            btc.get_address(
+                session,
+                "Bitcoin",
+                parse_path("m/44h/0h/0h/0/0"),
+                show_display=show_display,
+                multisig=multisig,
+            )
+
+
 @pytest.mark.altcoin
 @pytest.mark.multisig
 def test_bch_multisig(session: Session):
