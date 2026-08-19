@@ -2100,8 +2100,8 @@
       "Eckhart": ""
     },
     "reset__button_recover": {
-      "Bolt": "Recup. billet.",
-      "Caesar": "Recup. billet.",
+      "Bolt": "Recuperar billetera",
+      "Caesar": "Recuperar billetera",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2406,10 +2406,10 @@
       "Eckhart": "Número de partes: {0}"
     },
     "reset__slip39_checklist_set_num_groups": {
-      "Bolt": "Ajustar núm. grupos",
+      "Bolt": "Ajustar número de grupos",
       "Caesar": "",
       "Delizia": "Ajustar número de grupos",
-      "Eckhart": "Ajustar núm. grupos"
+      "Eckhart": "Ajustar número de grupos"
     },
     "reset__slip39_checklist_set_num_shares": {
       "Bolt": "Definir núm. partes",
