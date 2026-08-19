@@ -2812,6 +2812,8 @@ def test_ward_a_queued_change_round_trips_through_a_backup(session: Session):
         )
         ward.restore_queued_entry(fresh, backup)
 
+    # Nothing is being replaced here -- the change was discarded first -- so the screen restores
+    # rather than replaces. The replacing case is asserted separately below.
     assert "restore queued change" in rec.title
     assert "backed_up" in rec.squashed
 
@@ -2912,3 +2914,84 @@ def test_ward_a_pinned_copy_exports_no_intent_mac(session: Session):
 
     with pytest.raises(ValueError, match="no intent MAC"):
         ward.restore_queued_entry(session, backup)
+
+
+@pytest.mark.models("core")
+def test_ward_restoring_over_a_pending_change_names_both(session: Session):
+    """A restore lands on a path that may already hold a later change, and the screen has to say so.
+
+    The record on the device is what the user did LAST; the backup is older material by definition.
+    Replacing one with the other silently is the failure the online write and the fresh queue write
+    both design against -- both name what they replace -- and this is the path where it matters most,
+    because the value arrives from a host rather than from the user.
+
+    Note what the screen does NOT claim: which of the two is newer. No record stores a counter or a
+    time, so it labels them by provenance and leaves the decision where it belongs.
+    """
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"OLD_from_backup")
+
+    backup = _offline_read(session.test_ctx.get_session(), b"addr1").ack
+
+    # the user makes a later change at the same path
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"NEW_on_device")
+
+    rec = _Recorded()
+    fresh = session.test_ctx.get_session()
+    with fresh.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_queue_restore_entry"), m.WardQueueSetAck]
+        )
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(fresh, on_page=rec.on_page).get()
+        )
+        ward.restore_queued_entry(fresh, backup)
+
+    assert "replace pending change" in rec.title
+    # BOTH values, told apart by where they came from
+    assert "existing pending change" in rec.text.lower()
+    assert "NEW_on_device" in rec.squashed
+    assert "restored pending change" in rec.text.lower()
+    assert "OLD_from_backup" in rec.squashed
+
+    # and the backup is what is queued afterwards
+    after = _offline_read(session.test_ctx.get_session(), b"addr1").ack
+    assert after.value == b"OLD_from_backup"
+
+
+@pytest.mark.models("core")
+def test_ward_restoring_over_a_pinned_copy_says_which_it_is(session: Session):
+    """A pinned copy is not a pending change, and the screen must not call it one.
+
+    The two lead to different conclusions about what is being lost: a pinned copy is a value WARD
+    already holds, so replacing it costs a local read; a pending change is one nobody has published,
+    so replacing it costs the change itself.
+    """
+    store = WardTrie()
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"queued_then_backed_up")
+    backup = _offline_read(session.test_ctx.get_session(), b"addr1").ack
+
+    # replace what the device holds with a PINNED copy of a real entry at the same path
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_delete_entry(session, _APP, b"addr1")
+    _seed(session, store, b"addr1", b"pinned_value")
+    _pin(session, store, b"addr1", "ward_pin_cached_entry")
+
+    rec = _Recorded()
+    fresh = session.test_ctx.get_session()
+    with fresh.test_ctx as ctx:
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(fresh, on_page=rec.on_page).get()
+        )
+        ward.restore_queued_entry(fresh, backup)
+
+    assert "replace offline copy" in rec.title
+    assert "existing offline copy" in rec.text.lower()
+    assert "pinned_value" in rec.squashed
