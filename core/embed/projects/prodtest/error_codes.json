@@ -1332,18 +1332,8 @@
       "module": "tropic"
     },
     {
-      "code": 20077,
-      "name": "PRODTEST_ERR_TROPIC_UPDATE_REBOOT_MAINTENANCE",
-      "module": "tropic"
-    },
-    {
       "code": 20078,
       "name": "PRODTEST_ERR_TROPIC_UPDATE_FW",
-      "module": "tropic"
-    },
-    {
-      "code": 20079,
-      "name": "PRODTEST_ERR_TROPIC_UPDATE_REBOOT_APP",
       "module": "tropic"
     },
     {

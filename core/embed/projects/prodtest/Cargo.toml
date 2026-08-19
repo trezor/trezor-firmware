@@ -106,7 +106,7 @@ tamper = ["sec/tamper"]
 telemetry = ["sec/telemetry", "trezor_lib/telemetry"]
 touch = ["io/touch", "trezor_lib/touch"]
 touch_wakeup = ["io/touch_wakeup", "trezor_lib/touch_wakeup"]
-tropic = ["sec/tropic", "trezor_lib/tropic"]
+tropic = ["sec/tropic", "sec/tropic_logging", "trezor_lib/tropic"]
 
 # --------------------------------------------------------------------------
 # Automatically derived features (do not enable from outside)
