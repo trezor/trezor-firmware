@@ -83,7 +83,12 @@
       "Eckhart": "Adresse de réception confirmée."
     },
     "address__public_key": "Clé publique",
-    "address__public_key_confirmed": "Clé publique confirmée",
+    "address__public_key_confirmed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Clé publique confirmée",
+      "Eckhart": "Clé publique confirmée"
+    },
     "address__qr_code": "Code QR",
     "address__title_cosigner": "Cosignataire",
     "address__title_cosigner_template": "Cosignataire {0}",
@@ -424,12 +429,6 @@
       "Delizia": "",
       "Eckhart": "Appairage par Bluetooth"
     },
-    "ble__unpair_all": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Dissocier tous les appareils Bluetooth"
-    },
     "ble__unpair_current": {
       "Bolt": "",
       "Caesar": "",
@@ -466,7 +465,12 @@
     "buttons__access": "Accéder",
     "buttons__again": "Refaire",
     "buttons__allow": "Autoriser",
-    "buttons__authenticate": "Authentifier",
+    "buttons__authenticate": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Authentifier"
+    },
     "buttons__back": "Retour",
     "buttons__back_up": {
       "Bolt": "Sauveg.",
@@ -485,13 +489,13 @@
       "Eckhart": ""
     },
     "buttons__close": "Fermer",
-    "buttons__confirm": {
-      "Bolt": "Conf.",
-      "Caesar": "Confirmer",
-      "Delizia": "Confirmer",
-      "Eckhart": "Confirmer"
+    "buttons__confirm": "Confirmer",
+    "buttons__confirm_all": {
+      "Bolt": "Tout confirmer",
+      "Caesar": "Tout confirmer",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "buttons__confirm_all": "Tout confirmer",
     "buttons__continue": "Continuer",
     "buttons__continue_anyway": {
       "Bolt": "",
@@ -500,7 +504,12 @@
       "Eckhart": "Continuer quand même"
     },
     "buttons__details": "Détails",
-    "buttons__disconnect": "Déconnecter",
+    "buttons__disconnect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Déconnecter"
+    },
     "buttons__enable": "Activer",
     "buttons__enter_share": {
       "Bolt": "Saisir le fragm.",
@@ -510,7 +519,12 @@
     },
     "buttons__export": "Exporter",
     "buttons__finish": "Terminer",
-    "buttons__forget": "Oublier",
+    "buttons__forget": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Oublier"
+    },
     "buttons__format": "Formater",
     "buttons__go_back": "Retour",
     "buttons__hold_to_confirm": {
@@ -541,14 +555,24 @@
     "buttons__set": "Définir",
     "buttons__show_all": "Tout afficher",
     "buttons__show_details": "Afficher les détails",
-    "buttons__show_next": "Afficher la suite",
+    "buttons__show_next": {
+      "Bolt": "Afficher la suite",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Afficher la suite"
+    },
     "buttons__show_words": "Afficher les mots",
     "buttons__skip": "Ignorer",
     "buttons__try_again": "Réessayer",
     "buttons__turn_off": "Éteindre",
     "buttons__turn_on": "Activer",
     "buttons__view": "Afficher",
-    "buttons__view_all_data": "Voir toutes les données",
+    "buttons__view_all_data": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Voir toutes les données",
+      "Eckhart": "Voir toutes les données"
+    },
     "buttons__wipe": "Effacer",
     "cardano__addr_base": "Base",
     "cardano__addr_enterprise": "Entreprise",
@@ -994,7 +1018,12 @@
       "Eckhart": "Approbation du jeton"
     },
     "ethereum__approve_intro_title_revoke": "Révocation de jetons",
-    "ethereum__approve_revoke": "Révoquer",
+    "ethereum__approve_revoke": {
+      "Bolt": "Révoquer",
+      "Caesar": "Révoquer",
+      "Delizia": "Révoquer",
+      "Eckhart": ""
+    },
     "ethereum__approve_revoke_from": "Révoquer de",
     "ethereum__approve_to": "Approuver à",
     "ethereum__approve_unlimited_template": {
@@ -1060,6 +1089,7 @@
     "ethereum__show_full_message": "Afficher le message complet",
     "ethereum__show_full_struct": "Afficher le struct complet",
     "ethereum__sign_eip712": "Signer ces données structurées EIP-712 ?",
+    "ethereum__skip_to_hash": "",
     "ethereum__smart_info": "Infos sur le contrat du compte intelligent",
     "ethereum__staking_claim": "Réclamer",
     "ethereum__staking_claim_address": "Adresse de réclamation",
@@ -1074,6 +1104,8 @@
       "Eckhart": "Retirer du staking"
     },
     "ethereum__staking_unstake_intro": "Retirer les ETH mis en staking sur Everstake ?",
+    "ethereum__subcall": "",
+    "ethereum__subcall_to": "",
     "ethereum__subtitle_input_data_bytes": {
       "Bolt": "",
       "Caesar": "",
@@ -1113,7 +1145,7 @@
     },
     "ethereum__units_template": "{0} unités",
     "ethereum__unknown_contract_address": {
-      "Bolt": "Adresse de contrat inconnue",
+      "Bolt": "Adresse de contrat inconnue.",
       "Caesar": "Adresse de contrat inconnue",
       "Delizia": "Adresse de contrat inconnue.",
       "Eckhart": "Adresse de contrat du jeton inconnue."
@@ -1141,6 +1173,7 @@
       "Delizia": "Vérifiez pour retirer du coffre.",
       "Eckhart": "Vérifiez les détails pour retirer du coffre."
     },
+    "ethereum__view_data_and_hash": "",
     "ethereum__withdraw": "Retirer",
     "ethereum__withdraw_amount": "Montant du retrait",
     "ethereum__withdraw_from": "Retirer depuis",
@@ -2236,7 +2269,12 @@
     "recovery__wanna_cancel_dry_run": "Voulez-vous vraiment annuler la vérification de la sauvegarde ?",
     "recovery__wanna_cancel_recovery": "Voulez-vous vraiment annuler le processus de récupération ?",
     "recovery__word_count_template": "({0} mots)",
-    "recovery__word_x_of_y_template": "Mot {0} sur {1}",
+    "recovery__word_x_of_y_template": {
+      "Bolt": "",
+      "Caesar": "Mot {0} sur {1}",
+      "Delizia": "Mot {0} sur {1}",
+      "Eckhart": "Mot {0} sur {1}"
+    },
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "{count} {plural} supplémentaires commençant par",
       "Caesar": "",
@@ -3074,8 +3112,6 @@
     "stellar__confirm_issuer": "Confirmer l'émetteur",
     "stellar__confirm_memo": "Confirmer le mémo",
     "stellar__confirm_operation": "Confirmer l'opération",
-    "stellar__confirm_timebounds": "Confirmer la période de validité",
-    "stellar__create_account": "Créer un compte",
     "stellar__debited_amount": "Montant débité",
     "stellar__delete": "Supprimer",
     "stellar__delete_passive_offer": "Supprimer l'offre passive",
@@ -3100,6 +3136,7 @@
     "stellar__new_passive_offer": "Nouvelle offre passive",
     "stellar__no_memo_set": "Aucun mémo défini !",
     "stellar__no_restriction": "[aucune restriction]",
+    "stellar__on_behalf_of": "",
     "stellar__path_pay": "Path Pay",
     "stellar__path_pay_at_least": "Path Pay d'au moins",
     "stellar__pay": "Payer",
@@ -3112,8 +3149,7 @@
     "stellar__set_data": "Définir les données",
     "stellar__set_flags": "Définir les flags",
     "stellar__set_sequence_to_template": "Déf. séquence sur {0} ?",
-    "stellar__sign_tx_count_template": "Signer cette transaction composée de {0}",
-    "stellar__sign_tx_fee_template": "et payer {0}\nde frais ?",
+    "stellar__sign_authorization": "",
     "stellar__sign_with": "Signer avec",
     "stellar__source_account": "Compte source",
     "stellar__timebounds": "Période de validité",
@@ -3124,6 +3160,7 @@
     "stellar__update": "Mettre à jour",
     "stellar__valid_from": "Valide à partir de (UTC)",
     "stellar__valid_to": "Valide jusqu'à (UTC)",
+    "stellar__valid_until_ledger": "",
     "stellar__value_sha256": "Valeur (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Voulez-vous effacer la clé de valeur {0} ?",
     "storage_msg__processing": {
@@ -3574,8 +3611,12 @@
     "words__assets": "Actifs",
     "words__authorization": "",
     "words__blockhash": "Hash du bloc",
-    "words__bluetooth": "Bluetooth",
-    "words__buying": "Achat",
+    "words__bluetooth": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bluetooth"
+    },
     "words__cancel_question": {
       "Bolt": "",
       "Caesar": "",
@@ -3597,11 +3638,20 @@
     },
     "words__confirm": "Confirmer",
     "words__confirm_fee": "Confirmer les frais",
-    "words__connect": "Connecter",
-    "words__connected": "Connecté",
+    "words__connected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Connecté"
+    },
     "words__contains": "Contient",
     "words__continue_anyway_question": "Continuer quand même ?",
-    "words__continue_with": "Continuer avec",
+    "words__continue_with": {
+      "Bolt": "",
+      "Caesar": "Continuer avec",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__deposit": "Dépôt",
     "words__device": "Appareil",
     "words__disabled": {
@@ -3610,7 +3660,12 @@
       "Delizia": "",
       "Eckhart": "Désactivé"
     },
-    "words__disconnected": "Déconnecté",
+    "words__disconnected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Déconnecté"
+    },
     "words__enabled": {
       "Bolt": "",
       "Caesar": "",
@@ -3644,7 +3699,6 @@
       "Delizia": "",
       "Eckhart": "Fabriqué en"
     },
-    "words__manage": "Gérer",
     "words__my_trezor": "Mon Trezor",
     "words__name": "Nom",
     "words__no": "Non",
