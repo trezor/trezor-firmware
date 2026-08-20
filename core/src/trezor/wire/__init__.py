@@ -109,6 +109,14 @@ if utils.USE_THP:
     # Allocate THP read/write buffers in more stable area of memory
     THP_BUFFERS_PROVIDER = Provider((ThpBuffer(), ThpBuffer()))
 
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        # A POOL OF ITS OWN, so the WARD service interface can hold a channel while a wallet
+        # channel is live on another interface -- which is the entire point of giving the service
+        # its own interface. Sized like the default rather than smaller: the largest thing that
+        # crosses it is a mutation carrying a sealed leaf, and `ThpBuffer.get` refuses anything it
+        # cannot serve, so a smaller pool here is a cap on the protocol rather than a saving.
+        WARD_BUFFERS_PROVIDER = Provider((ThpBuffer(), ThpBuffer()))
+
     def buffers_provider_for(iface: WireInterface) -> Provider:
         """Which pool this interface draws its channel buffers from.
 
@@ -123,6 +131,12 @@ if utils.USE_THP:
         interface to receive a packet" would hand a private pool to whichever of USB or BLE
         happened to be second, silently changing how a second host is refused today.
         """
+        if utils.USE_WARD_SERVICE_CHANNEL:
+            import usb
+
+            if iface is usb.iface_ward:
+                return WARD_BUFFERS_PROVIDER
+
         return THP_BUFFERS_PROVIDER
 
     if __debug__:

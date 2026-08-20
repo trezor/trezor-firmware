@@ -39,6 +39,9 @@
 #define USB_IFACE_DEBUG_PORT_OFFSET 1
 #define USB_IFACE_WEBAUTHN_PORT_OFFSET 2
 #define USB_IFACE_VCP_PORT_OFFSET 3
+// 4 and 5 belong to BLE (`io/ble/unix/ble.c`) and 6 to the Tropic model
+// (`trezorlib._internal.emulator`), so the next free offset is 7.
+#define USB_IFACE_WARD_PORT_OFFSET 7
 
 static secbool usb_device_init(void) {
 #if defined(BOOTLOADER)
@@ -269,6 +272,42 @@ static secbool usb_vcp_iface_init(uint8_t *iface_num,
 }
 #endif  // USE_USB_IFACE_VCP
 
+// ----------------------------------------------------------------
+
+#ifdef USE_WARD_SERVICE_CHANNEL
+static secbool usb_ward_iface_init(uint8_t *iface_num) {
+  static uint8_t ward_iface_buffer[USB_PACKET_LEN];
+
+  const usb_webusb_info_t ward_iface = {
+      .handle = SYSHANDLE_USB_WARD,
+      .rx_buffer = ward_iface_buffer,
+      .iface_num = *iface_num,
+#ifdef TREZOR_EMULATOR
+      .emu_port = usb_emu_port(USB_IFACE_WARD_PORT_OFFSET),
+#else
+      .ep_in = 0x01 + *iface_num,
+      .ep_out = 0x01 + *iface_num,
+#endif
+      // DISTINCT FROM THE WIRE INTERFACE, which uses 0x00/0x00. The host cannot find this
+      // interface by index: whether debug, webauthn and vcp are present varies per build, so the
+      // index this lands on varies with it. A subclass/protocol pair of its own is something a
+      // host can scan the descriptors for and be sure of.
+      .subclass = 0x57,  // 'W'
+      .protocol = 0x01,
+      .polling_interval = 1,
+      .max_packet_len = sizeof(ward_iface_buffer),
+  };
+
+  if (sectrue != usb_webusb_add(&ward_iface)) {
+    return secfalse;
+  }
+
+  *iface_num += 1;
+
+  return sectrue;
+}
+#endif  // USE_WARD_SERVICE_CHANNEL
+
 secbool usb_configure(usb_vcp_intr_callback_t vcp_intr_callback) {
   if (sectrue != usb_device_init()) {
     goto cleanup;
@@ -296,6 +335,16 @@ secbool usb_configure(usb_vcp_intr_callback_t vcp_intr_callback) {
 
 #ifdef USE_USB_IFACE_VCP
   if (sectrue != usb_vcp_iface_init(&iface_num, vcp_intr_callback)) {
+    goto cleanup;
+  }
+#endif
+
+  // APPENDED LAST, and it must stay last. Interface numbers and endpoint addresses are handed out
+  // in call order, and hosts pin the ones they already know: trezorlib takes the wire interface as
+  // 0 / endpoint 1 and debug as 1 / endpoint 2. Inserting an interface ahead of webauthn or vcp
+  // would renumber them and break FIDO2 and debuglink on every existing host.
+#ifdef USE_WARD_SERVICE_CHANNEL
+  if (sectrue != usb_ward_iface_init(&iface_num)) {
     goto cleanup;
   }
 #endif

@@ -437,6 +437,15 @@ class CoreEmulator(Emulator):
     def tropic_port(self) -> int:
         return self.tropic_model_port or (self.port + 6)
 
+    def ward_port(self) -> int:
+        """The WARD service interface, present only in builds that serve WARD over its own channel.
+
+        Offsets 4 and 5 are BLE's and 6 is the Tropic model's, so this one is 7. Named here as
+        well as in `usb_config.c` because the two must agree: a collision does not surface as a
+        wrong port but as the emulator dying on a failed bind.
+        """
+        return self.port + 7
+
     def properties(self) -> dict[str, Any]:
         args = [str(self.executable), "--emulator-properties"]
         try:
