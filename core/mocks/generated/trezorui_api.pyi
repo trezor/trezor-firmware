@@ -76,8 +76,11 @@ class LayoutObj(Generic[T]):
         """Return (code, type) of button request made during the last event or timer pass."""
     def get_transition_out(self) -> AttachType:
         """Return the transition type."""
-    def return_value(self) -> T:
-        """Retrieve the return value of the layout object."""
+    def return_value(self) -> T | None:
+        """Take the return value of the layout object.
+        Not idempotent: after `return_value()` is called, subsequent calls will return None.
+        May raise in case there was an error when constructing the return value.
+        """
     # TODO: remove after https://github.com/trezor/trezor-firmware/issues/6811 is resolved.
     def __del__(self) -> None:
         """Calls drop on contents of the root component."""

@@ -1434,7 +1434,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     def get_transition_out(self) -> AttachType:
     ///         """Return the transition type."""
     ///
-    ///     def return_value(self) -> T:
+    ///     def return_value(self) -> T | None:
     ///         """Take the return value of the layout object.
     ///
     ///         Not idempotent: after `return_value()` is called, subsequent calls will return None.
