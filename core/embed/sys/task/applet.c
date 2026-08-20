@@ -84,4 +84,12 @@ cleanup:
   TSH_RETURN;
 }
 
+void applet_exit_fatal(applet_t* applet, const char* message, const char* file,
+                       int line) {
+  systask_t* task = applet != NULL ? &applet->task : NULL;
+  size_t message_len = message != NULL ? strlen(message) : 0;
+  size_t file_len = file != NULL ? strlen(file) : 0;
+  systask_exit_fatal(task, message, message_len, file, file_len, line);
+}
+
 #endif  // USE_APPLETS && KERNEL_MODE
