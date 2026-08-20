@@ -23,6 +23,21 @@
 #include "model_version.h"
 #include "version_check.h"
 
+// monoctr stores its counters UNARY -- value N is N written blocks -- so the
+// encoding, not the uint8_t the value travels in, is what caps them at
+// MONOCTR_MAX_VALUE. Past that, monoctr_write starts refusing at runtime: the
+// boardloader would report "BOOTLOADER DOWNGRADED" on a perfectly good image,
+// and the firmware/secmon floors would silently stop advancing. Catch it here
+// instead, at build time, for every model.
+_Static_assert(BOOTLOADER_MONOTONIC_VERSION <= MONOCTR_MAX_VALUE,
+               "BOOTLOADER_MONOTONIC_VERSION exceeds what monoctr can store");
+_Static_assert(FIRMWARE_MONOTONIC_VERSION <= MONOCTR_MAX_VALUE,
+               "FIRMWARE_MONOTONIC_VERSION exceeds what monoctr can store");
+#ifdef SECMON_MONOTONIC_VERSION  // only models with a secmon define it
+_Static_assert(SECMON_MONOTONIC_VERSION <= MONOCTR_MAX_VALUE,
+               "SECMON_MONOTONIC_VERSION exceeds what monoctr can store");
+#endif
+
 void ensure_bootloader_min_version(void) {
   monoctr_write(MONOCTR_BOOTLOADER_VERSION, BOOTLOADER_MONOTONIC_VERSION);
   uint8_t val = 0;
