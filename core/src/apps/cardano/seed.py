@@ -129,12 +129,17 @@ def derive_and_store_secrets(ctx: Context, passphrase: str) -> None:
         # nothing to do for SLIP-39, where we can derive the root from the main seed
         return
 
-    icarus_secret = mnemonic.derive_cardano_icarus(passphrase, trezor_derivation=False)
-
     words = mnemonic.get_secret()
     assert words is not None, "Mnemonic is not set"
     # count ASCII spaces, add 1 to get number of words
     words_count = sum(c == 0x20 for c in words) + 1
+
+    if words_count > 24:
+        # extended BIP-39 (SPHINCS+): no binary mnemonic for Icarus, and the
+        # session must still open for every other coin
+        return
+
+    icarus_secret = mnemonic.derive_cardano_icarus(passphrase, trezor_derivation=False)
 
     if words_count == 24:
         icarus_trezor_secret = mnemonic.derive_cardano_icarus(
@@ -174,7 +179,8 @@ async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychai
 
             await derive_and_store_roots_legacy()
             secret = context.cache_get(cache_entry)
-    assert secret is not None
+    if secret is None:
+        raise wire.ProcessError("Cardano is unavailable for this mnemonic")
 
     root = cardano.from_secret(secret)
     return Keychain(root)
