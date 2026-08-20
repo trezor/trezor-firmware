@@ -183,7 +183,7 @@ where
     F: Fn(u32) -> TString<'static>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        let value = self.value().try_into()?;
+        let value = self.value();
         match msg {
             NumberInputDialogMsg::Selected => Ok((CONFIRMED.as_obj(), value).try_into()?),
             NumberInputDialogMsg::InfoRequested => Ok((INFO.as_obj(), value).try_into()?),

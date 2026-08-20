@@ -67,13 +67,13 @@ static TR_TYPE: FullType = obj_type! {
 static TR_OBJ: SimpleTypeObj = SimpleTypeObj::new(&TR_TYPE);
 
 fn make_translations_header(header: &super::blob::TranslationsHeader<'_>) -> Result<Obj, Error> {
-    let version_objs: [Obj; 4] = {
+    let version_tuple = {
         let v = header.version;
-        [v[0].into(), v[1].into(), v[2].into(), v[3].into()]
+        (v[0], v[1], v[2], v[3])
     };
     attr_tuple! {
         Qstr::MP_QSTR_language => header.language.try_into()?,
-        Qstr::MP_QSTR_version => util::new_tuple(&version_objs)?,
+        Qstr::MP_QSTR_version => version_tuple.try_into()?,
         Qstr::MP_QSTR_data_len => header.data_len.try_into()?,
         Qstr::MP_QSTR_data_hash => header.data_hash.as_ref().try_into()?,
         Qstr::MP_QSTR_total_len => header.total_len.try_into()?,

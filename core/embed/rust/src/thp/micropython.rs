@@ -113,8 +113,8 @@ extern "C" fn thp_message_out(channel_id: Obj, receive_buffer_obj: Obj) -> Obj {
         // Something is very wrong if message is longer than 64k, OK to panic.
         let message_len = unwrap!(u16::try_from(message_len));
         (
-            sid.into(),
-            message_type.into(),
+            sid,
+            message_type,
             util::get_slice(receive_buffer_obj, APP_HEADER_LEN as u16, message_len)?,
         )
             .try_into()
@@ -275,9 +275,7 @@ extern "C" fn thp_next_timeout(iface_num: Obj) -> Obj {
         let thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
         match thp.next_timeout(iface_num)? {
             None => Ok(Obj::const_none()),
-            Some((channel_id, timeout_ms)) => {
-                (channel_id.into(), timeout_ms.try_into()?).try_into()
-            }
+            Some((channel_id, timeout_ms)) => (channel_id, timeout_ms).try_into(),
         }
     };
 

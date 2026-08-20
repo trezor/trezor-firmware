@@ -84,13 +84,6 @@ pub unsafe fn try_with_args_and_kwargs_inline(
     unsafe { try_or_raise(block) }
 }
 
-pub fn new_tuple(args: &[Obj]) -> Result<Obj, Error> {
-    // SAFETY: Safe.
-    // EXCEPTION: Raises if allocation fails, does not return NULL.
-    let obj = catch_exception(|| unsafe { ffi::mp_obj_new_tuple(args.len(), args.as_ptr()) })?;
-    Ok(obj)
-}
-
 /// Create a new "attrtuple", which is essentially a namedtuple / ad-hoc object.
 ///
 /// It is recommended to use the attr_tuple! macro instead of this function:
