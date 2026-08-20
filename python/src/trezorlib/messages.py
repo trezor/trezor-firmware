@@ -204,7 +204,7 @@ class BackupType(IntEnum):
 
 class BackupMethod(IntEnum):
     Display = 0
-    N4W1 = 1
+    N1W1 = 1
 
 
 class SafetyCheckLevel(IntEnum):
@@ -269,7 +269,7 @@ class Capability(IntEnum):
     BLE = 22
     NFC = 23
     Tron = 24
-    N4W1 = 25
+    N1W1 = 25
     TouchWakeup = 26
 
 
@@ -648,10 +648,10 @@ class MessageType(IntEnum):
     DebugLinkGetPairingInfo = 9011
     DebugLinkPairingInfo = 9012
     DebugLinkSetLogFilter = 9013
-    DebugLinkN4W1Connected = 9014
-    DebugLinkN4W1Write = 9015
-    DebugLinkN4W1Read = 9016
-    DebugLinkN4W1Response = 9017
+    DebugLinkN1W1Connected = 9014
+    DebugLinkN1W1Write = 9015
+    DebugLinkN1W1Read = 9016
+    DebugLinkN1W1Response = 9017
     DebugLinkSetBatteryState = 9018
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
@@ -4656,11 +4656,11 @@ class DebugLinkSetLogFilter(protobuf.MessageType):
         self.filter = filter
 
 
-class DebugLinkN4W1Connected(protobuf.MessageType):
+class DebugLinkN1W1Connected(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9014
 
 
-class DebugLinkN4W1Write(protobuf.MessageType):
+class DebugLinkN1W1Write(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9015
     FIELDS = {
         1: protobuf.Field("key", "string", repeated=False, required=False, default=None),
@@ -4677,7 +4677,7 @@ class DebugLinkN4W1Write(protobuf.MessageType):
         self.value = value
 
 
-class DebugLinkN4W1Read(protobuf.MessageType):
+class DebugLinkN1W1Read(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9016
     FIELDS = {
         1: protobuf.Field("key", "string", repeated=False, required=False, default=None),
@@ -4691,7 +4691,7 @@ class DebugLinkN4W1Read(protobuf.MessageType):
         self.key = key
 
 
-class DebugLinkN4W1Response(protobuf.MessageType):
+class DebugLinkN1W1Response(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9017
     FIELDS = {
         1: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),

@@ -3,4 +3,4 @@
 # isort:skip_file
 
 Display = 0
-N4W1 = 1
+N1W1 = 1

@@ -175,11 +175,11 @@
       "Delizia": "",
       "Eckhart": "Which type of wallet backup do you have?"
     },
-    "backup__type_n4w1": {
+    "backup__type_n1w1": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "N4W1 backup"
+      "Eckhart": "N1W1 backup"
     },
     "backup__type_wordlist": {
       "Bolt": "",
@@ -1392,67 +1392,67 @@
     "monero__wanna_export_watchkey": "Do you really want to export watch-only credentials?",
     "monero__wanna_start_refresh": "Do you really want to\nstart refresh?",
     "monero__wanna_sync_key_images": "Do you really want to\nsync key images?",
-    "n4w1__err_damaged": {
+    "n1w1__err_damaged": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "This tag is damaged. Continue to try again or scan the next tag."
     },
-    "n4w1__err_empty": {
+    "n1w1__err_empty": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "This tag is empty. Continue to scan a different tag."
     },
-    "n4w1__err_nonempty": {
+    "n1w1__err_nonempty": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Non-empty N4W1 tag."
+      "Eckhart": "Non-empty N1W1 tag."
     },
-    "n4w1__footer_first": {
+    "n1w1__footer_first": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Start with any tag"
     },
-    "n4w1__footer_last": {
+    "n1w1__footer_last": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Use the last remaining tag"
     },
-    "n4w1__footer_next": {
+    "n1w1__footer_next": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Use any remaining tag"
     },
-    "n4w1__hold_first": {
+    "n1w1__hold_first": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Hold the first tag to the back of this Trezor."
     },
-    "n4w1__hold_last": {
+    "n1w1__hold_last": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Hold the last tag to the back of this Trezor."
     },
-    "n4w1__hold_next": {
+    "n1w1__hold_next": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Hold the next tag to the back of this Trezor."
     },
-    "n4w1__reading": {
+    "n1w1__reading": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Reading tag..."
     },
-    "n4w1__writing": {
+    "n1w1__writing": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",

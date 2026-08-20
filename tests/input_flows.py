@@ -41,7 +41,7 @@ from .input_flows_helpers import (
     EthereumFlow,
     PinFlow,
     RecoveryFlow,
-    n4w1_handle_write,
+    n1w1_handle_write,
 )
 
 B = messages.ButtonRequestType
@@ -1828,9 +1828,9 @@ class InputFlowBip39Backup(InputFlowBase):
             # 2. Backup warning
             yield from click_through(self.debug, screens=2, code=B.ResetDevice)
             self.mnemonic = yield from get_mnemonic(self.debug)
-        elif self.method is messages.BackupMethod.N4W1:
+        elif self.method is messages.BackupMethod.N1W1:
             assert (yield).name == "backup_write"
-            self.mnemonic = n4w1_handle_write(self.debug).decode()
+            self.mnemonic = n1w1_handle_write(self.debug).decode()
             br = yield
             assert br.name == "success_backup"
             assert br.code == B.Success
@@ -1895,14 +1895,14 @@ class InputFlowBip39ResetBackup(InputFlowBase):
 
             # mnemonic phrases and rest
             self.mnemonic = yield from get_mnemonic(self.debug)
-        elif self.method is messages.BackupMethod.N4W1:
+        elif self.method is messages.BackupMethod.N1W1:
             # 1. Confirm Reset
             # 2. Wallet created
             # 3. Backup your seed
             yield from click_through(self.debug, screens=3, code=B.ResetDevice)
-            # 4. Backup using N4W1
+            # 4. Backup using N1W1
             assert (yield).name == "backup_write"
-            self.mnemonic = n4w1_handle_write(self.debug).decode()
+            self.mnemonic = n1w1_handle_write(self.debug).decode()
             # 5. Success
             br = yield
             assert br.name == "success_backup"
@@ -2016,9 +2016,9 @@ def load_N_shares(
                 assert br.name == expected_br_name
                 debug.press_yes()
 
-        elif method is messages.BackupMethod.N4W1:
+        elif method is messages.BackupMethod.N1W1:
             assert (yield).name == "backup_write"
-            mnemonics.append(n4w1_handle_write(debug).decode())
+            mnemonics.append(n1w1_handle_write(debug).decode())
         else:
             raise RuntimeError
 
@@ -2171,7 +2171,7 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
     def input_flow_eckhart(self) -> BRGeneratorType:
         assert self.method in (
             messages.BackupMethod.Display,
-            messages.BackupMethod.N4W1,
+            messages.BackupMethod.N1W1,
         )
         if self.repeated:
             # intro confirmation screen
@@ -2279,7 +2279,7 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
     def input_flow_eckhart(self) -> BRGeneratorType:
         num_screens = {
             messages.BackupMethod.Display: 10,
-            messages.BackupMethod.N4W1: 8,
+            messages.BackupMethod.N1W1: 8,
         }[self.method]
         # 1. Confirm Reset
         # 2. Wallet Created
@@ -2383,7 +2383,7 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
 
             yield  # Confirm show seeds
             self.debug.press_yes()
-        elif self.backup_method is messages.BackupMethod.N4W1:
+        elif self.backup_method is messages.BackupMethod.N1W1:
             if self.share_count > 1:
                 assert (yield).name == "warning_shamir_backup"
                 self.debug.press_yes()
@@ -2449,9 +2449,9 @@ def load_5_groups_5_shares(
                 # Phrase screen
                 mnemonic = yield from read_and_confirm_mnemonic(debug)
                 assert mnemonic is not None
-            elif backup_method is messages.BackupMethod.N4W1:
+            elif backup_method is messages.BackupMethod.N1W1:
                 assert (yield).name == "backup_write"
-                mnemonic = n4w1_handle_write(debug).decode()
+                mnemonic = n1w1_handle_write(debug).decode()
             else:
                 raise RuntimeError
             mnemonics.append(mnemonic)
@@ -2741,7 +2741,7 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
         # 20. Confirm show seeds (only for BackupMethod.Display)
         screens = {
             messages.BackupMethod.Display: 20,
-            messages.BackupMethod.N4W1: 18,
+            messages.BackupMethod.N1W1: 18,
         }[self.method]
         yield from click_through(self.debug, screens=screens, code=B.ResetDevice)
 

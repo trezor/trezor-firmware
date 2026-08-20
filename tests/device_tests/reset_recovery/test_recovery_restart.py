@@ -37,7 +37,7 @@ def test_recovery_avoid_restart(session: Session, backup_method: BackupMethod):
         # the device is now in recovery mode
         expected_br_names = {
             BackupMethod.Display: ("recovery_word_count", "recovery"),
-            BackupMethod.N4W1: ("backup_read",),
+            BackupMethod.N1W1: ("backup_read",),
         }[backup_method]
         assert (yield).name in expected_br_names
         # abort current workflow, but remain in recovery
@@ -61,15 +61,15 @@ def test_recovery_avoid_restart(session: Session, backup_method: BackupMethod):
 
         # Interact only via DebugLink
         homescreen_content = debug.read_layout().text_content()
-        if Capability.N4W1 in session.features.capabilities:
+        if Capability.N1W1 in session.features.capabilities:
             # Recovery homescreen = choose backup method:
             assert TR.backup__type_have in homescreen_content
-            assert TR.backup__type_n4w1 in homescreen_content
+            assert TR.backup__type_n1w1 in homescreen_content
             assert TR.backup__type_wordlist in homescreen_content
             # Move to the next layout from recovery homescreen
             buttons = debug.screen_buttons.word_check_words()
             coords = {
-                BackupMethod.N4W1: buttons[0],
+                BackupMethod.N1W1: buttons[0],
                 BackupMethod.Display: buttons[1],
             }[backup_method]
             debug.click(coords)

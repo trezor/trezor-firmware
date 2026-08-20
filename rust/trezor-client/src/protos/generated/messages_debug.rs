@@ -5352,38 +5352,38 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkSetLogFilter {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkN4W1Connected)
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkN1W1Connected)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct DebugLinkN4W1Connected {
+pub struct DebugLinkN1W1Connected {
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkN4W1Connected.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkN1W1Connected.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a DebugLinkN4W1Connected {
-    fn default() -> &'a DebugLinkN4W1Connected {
-        <DebugLinkN4W1Connected as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a DebugLinkN1W1Connected {
+    fn default() -> &'a DebugLinkN1W1Connected {
+        <DebugLinkN1W1Connected as ::protobuf::Message>::default_instance()
     }
 }
 
-impl DebugLinkN4W1Connected {
-    pub fn new() -> DebugLinkN4W1Connected {
+impl DebugLinkN1W1Connected {
+    pub fn new() -> DebugLinkN1W1Connected {
         ::std::default::Default::default()
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(0);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkN4W1Connected>(
-            "DebugLinkN4W1Connected",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkN1W1Connected>(
+            "DebugLinkN1W1Connected",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for DebugLinkN4W1Connected {
-    const NAME: &'static str = "DebugLinkN4W1Connected";
+impl ::protobuf::Message for DebugLinkN1W1Connected {
+    const NAME: &'static str = "DebugLinkN1W1Connected";
 
     fn is_initialized(&self) -> bool {
         true
@@ -5422,60 +5422,60 @@ impl ::protobuf::Message for DebugLinkN4W1Connected {
         &mut self.special_fields
     }
 
-    fn new() -> DebugLinkN4W1Connected {
-        DebugLinkN4W1Connected::new()
+    fn new() -> DebugLinkN1W1Connected {
+        DebugLinkN1W1Connected::new()
     }
 
     fn clear(&mut self) {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static DebugLinkN4W1Connected {
-        static instance: DebugLinkN4W1Connected = DebugLinkN4W1Connected {
+    fn default_instance() -> &'static DebugLinkN1W1Connected {
+        static instance: DebugLinkN1W1Connected = DebugLinkN1W1Connected {
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
     }
 }
 
-impl ::protobuf::MessageFull for DebugLinkN4W1Connected {
+impl ::protobuf::MessageFull for DebugLinkN1W1Connected {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkN4W1Connected").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkN1W1Connected").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for DebugLinkN4W1Connected {
+impl ::std::fmt::Display for DebugLinkN1W1Connected {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for DebugLinkN4W1Connected {
+impl ::protobuf::reflect::ProtobufValue for DebugLinkN1W1Connected {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkN4W1Write)
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkN1W1Write)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct DebugLinkN4W1Write {
+pub struct DebugLinkN1W1Write {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkN4W1Write.key)
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkN1W1Write.key)
     pub key: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkN4W1Write.value)
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkN1W1Write.value)
     pub value: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkN4W1Write.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkN1W1Write.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a DebugLinkN4W1Write {
-    fn default() -> &'a DebugLinkN4W1Write {
-        <DebugLinkN4W1Write as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a DebugLinkN1W1Write {
+    fn default() -> &'a DebugLinkN1W1Write {
+        <DebugLinkN1W1Write as ::protobuf::Message>::default_instance()
     }
 }
 
-impl DebugLinkN4W1Write {
-    pub fn new() -> DebugLinkN4W1Write {
+impl DebugLinkN1W1Write {
+    pub fn new() -> DebugLinkN1W1Write {
         ::std::default::Default::default()
     }
 
@@ -5556,24 +5556,24 @@ impl DebugLinkN4W1Write {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "key",
-            |m: &DebugLinkN4W1Write| { &m.key },
-            |m: &mut DebugLinkN4W1Write| { &mut m.key },
+            |m: &DebugLinkN1W1Write| { &m.key },
+            |m: &mut DebugLinkN1W1Write| { &mut m.key },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "value",
-            |m: &DebugLinkN4W1Write| { &m.value },
-            |m: &mut DebugLinkN4W1Write| { &mut m.value },
+            |m: &DebugLinkN1W1Write| { &m.value },
+            |m: &mut DebugLinkN1W1Write| { &mut m.value },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkN4W1Write>(
-            "DebugLinkN4W1Write",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkN1W1Write>(
+            "DebugLinkN1W1Write",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for DebugLinkN4W1Write {
-    const NAME: &'static str = "DebugLinkN4W1Write";
+impl ::protobuf::Message for DebugLinkN1W1Write {
+    const NAME: &'static str = "DebugLinkN1W1Write";
 
     fn is_initialized(&self) -> bool {
         true
@@ -5630,8 +5630,8 @@ impl ::protobuf::Message for DebugLinkN4W1Write {
         &mut self.special_fields
     }
 
-    fn new() -> DebugLinkN4W1Write {
-        DebugLinkN4W1Write::new()
+    fn new() -> DebugLinkN1W1Write {
+        DebugLinkN1W1Write::new()
     }
 
     fn clear(&mut self) {
@@ -5640,8 +5640,8 @@ impl ::protobuf::Message for DebugLinkN4W1Write {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static DebugLinkN4W1Write {
-        static instance: DebugLinkN4W1Write = DebugLinkN4W1Write {
+    fn default_instance() -> &'static DebugLinkN1W1Write {
+        static instance: DebugLinkN1W1Write = DebugLinkN1W1Write {
             key: ::std::option::Option::None,
             value: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
@@ -5650,42 +5650,42 @@ impl ::protobuf::Message for DebugLinkN4W1Write {
     }
 }
 
-impl ::protobuf::MessageFull for DebugLinkN4W1Write {
+impl ::protobuf::MessageFull for DebugLinkN1W1Write {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkN4W1Write").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkN1W1Write").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for DebugLinkN4W1Write {
+impl ::std::fmt::Display for DebugLinkN1W1Write {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for DebugLinkN4W1Write {
+impl ::protobuf::reflect::ProtobufValue for DebugLinkN1W1Write {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkN4W1Read)
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkN1W1Read)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct DebugLinkN4W1Read {
+pub struct DebugLinkN1W1Read {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkN4W1Read.key)
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkN1W1Read.key)
     pub key: ::std::option::Option<::std::string::String>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkN4W1Read.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkN1W1Read.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a DebugLinkN4W1Read {
-    fn default() -> &'a DebugLinkN4W1Read {
-        <DebugLinkN4W1Read as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a DebugLinkN1W1Read {
+    fn default() -> &'a DebugLinkN1W1Read {
+        <DebugLinkN1W1Read as ::protobuf::Message>::default_instance()
     }
 }
 
-impl DebugLinkN4W1Read {
-    pub fn new() -> DebugLinkN4W1Read {
+impl DebugLinkN1W1Read {
+    pub fn new() -> DebugLinkN1W1Read {
         ::std::default::Default::default()
     }
 
@@ -5730,19 +5730,19 @@ impl DebugLinkN4W1Read {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "key",
-            |m: &DebugLinkN4W1Read| { &m.key },
-            |m: &mut DebugLinkN4W1Read| { &mut m.key },
+            |m: &DebugLinkN1W1Read| { &m.key },
+            |m: &mut DebugLinkN1W1Read| { &mut m.key },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkN4W1Read>(
-            "DebugLinkN4W1Read",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkN1W1Read>(
+            "DebugLinkN1W1Read",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for DebugLinkN4W1Read {
-    const NAME: &'static str = "DebugLinkN4W1Read";
+impl ::protobuf::Message for DebugLinkN1W1Read {
+    const NAME: &'static str = "DebugLinkN1W1Read";
 
     fn is_initialized(&self) -> bool {
         true
@@ -5790,8 +5790,8 @@ impl ::protobuf::Message for DebugLinkN4W1Read {
         &mut self.special_fields
     }
 
-    fn new() -> DebugLinkN4W1Read {
-        DebugLinkN4W1Read::new()
+    fn new() -> DebugLinkN1W1Read {
+        DebugLinkN1W1Read::new()
     }
 
     fn clear(&mut self) {
@@ -5799,8 +5799,8 @@ impl ::protobuf::Message for DebugLinkN4W1Read {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static DebugLinkN4W1Read {
-        static instance: DebugLinkN4W1Read = DebugLinkN4W1Read {
+    fn default_instance() -> &'static DebugLinkN1W1Read {
+        static instance: DebugLinkN1W1Read = DebugLinkN1W1Read {
             key: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -5808,42 +5808,42 @@ impl ::protobuf::Message for DebugLinkN4W1Read {
     }
 }
 
-impl ::protobuf::MessageFull for DebugLinkN4W1Read {
+impl ::protobuf::MessageFull for DebugLinkN1W1Read {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkN4W1Read").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkN1W1Read").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for DebugLinkN4W1Read {
+impl ::std::fmt::Display for DebugLinkN1W1Read {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for DebugLinkN4W1Read {
+impl ::protobuf::reflect::ProtobufValue for DebugLinkN1W1Read {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkN4W1Response)
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkN1W1Response)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct DebugLinkN4W1Response {
+pub struct DebugLinkN1W1Response {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkN4W1Response.value)
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkN1W1Response.value)
     pub value: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkN4W1Response.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkN1W1Response.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a DebugLinkN4W1Response {
-    fn default() -> &'a DebugLinkN4W1Response {
-        <DebugLinkN4W1Response as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a DebugLinkN1W1Response {
+    fn default() -> &'a DebugLinkN1W1Response {
+        <DebugLinkN1W1Response as ::protobuf::Message>::default_instance()
     }
 }
 
-impl DebugLinkN4W1Response {
-    pub fn new() -> DebugLinkN4W1Response {
+impl DebugLinkN1W1Response {
+    pub fn new() -> DebugLinkN1W1Response {
         ::std::default::Default::default()
     }
 
@@ -5888,19 +5888,19 @@ impl DebugLinkN4W1Response {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "value",
-            |m: &DebugLinkN4W1Response| { &m.value },
-            |m: &mut DebugLinkN4W1Response| { &mut m.value },
+            |m: &DebugLinkN1W1Response| { &m.value },
+            |m: &mut DebugLinkN1W1Response| { &mut m.value },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkN4W1Response>(
-            "DebugLinkN4W1Response",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkN1W1Response>(
+            "DebugLinkN1W1Response",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for DebugLinkN4W1Response {
-    const NAME: &'static str = "DebugLinkN4W1Response";
+impl ::protobuf::Message for DebugLinkN1W1Response {
+    const NAME: &'static str = "DebugLinkN1W1Response";
 
     fn is_initialized(&self) -> bool {
         true
@@ -5948,8 +5948,8 @@ impl ::protobuf::Message for DebugLinkN4W1Response {
         &mut self.special_fields
     }
 
-    fn new() -> DebugLinkN4W1Response {
-        DebugLinkN4W1Response::new()
+    fn new() -> DebugLinkN1W1Response {
+        DebugLinkN1W1Response::new()
     }
 
     fn clear(&mut self) {
@@ -5957,8 +5957,8 @@ impl ::protobuf::Message for DebugLinkN4W1Response {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static DebugLinkN4W1Response {
-        static instance: DebugLinkN4W1Response = DebugLinkN4W1Response {
+    fn default_instance() -> &'static DebugLinkN1W1Response {
+        static instance: DebugLinkN1W1Response = DebugLinkN1W1Response {
             value: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -5966,20 +5966,20 @@ impl ::protobuf::Message for DebugLinkN4W1Response {
     }
 }
 
-impl ::protobuf::MessageFull for DebugLinkN4W1Response {
+impl ::protobuf::MessageFull for DebugLinkN1W1Response {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkN4W1Response").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkN1W1Response").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for DebugLinkN4W1Response {
+impl ::std::fmt::Display for DebugLinkN1W1Response {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for DebugLinkN4W1Response {
+impl ::protobuf::reflect::ProtobufValue for DebugLinkN1W1Response {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -6059,10 +6059,10 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     inkGcInfo.DebugLinkGcInfoItemR\x05items\x1a?\n\x13DebugLinkGcInfoItem\
     \x12\x12\n\x04name\x18\x01\x20\x02(\tR\x04name\x12\x14\n\x05value\x18\
     \x02\x20\x02(\x04R\x05value\"/\n\x15DebugLinkSetLogFilter\x12\x16\n\x06f\
-    ilter\x18\x01\x20\x01(\tR\x06filter\"\x18\n\x16DebugLinkN4W1Connected\"<\
-    \n\x12DebugLinkN4W1Write\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12\
-    \x14\n\x05value\x18\x02\x20\x01(\x0cR\x05value\"%\n\x11DebugLinkN4W1Read\
-    \x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\"-\n\x15DebugLinkN4W1Respon\
+    ilter\x18\x01\x20\x01(\tR\x06filter\"\x18\n\x16DebugLinkN1W1Connected\"<\
+    \n\x12DebugLinkN1W1Write\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12\
+    \x14\n\x05value\x18\x02\x20\x01(\x0cR\x05value\"%\n\x11DebugLinkN1W1Read\
+    \x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\"-\n\x15DebugLinkN1W1Respon\
     se\x12\x14\n\x05value\x18\x01\x20\x01(\x0cR\x05valueB=\n#com.satoshilabs\
     .trezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
 ";
@@ -6108,10 +6108,10 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(DebugLinkGetGcInfo::generated_message_descriptor_data());
             messages.push(DebugLinkGcInfo::generated_message_descriptor_data());
             messages.push(DebugLinkSetLogFilter::generated_message_descriptor_data());
-            messages.push(DebugLinkN4W1Connected::generated_message_descriptor_data());
-            messages.push(DebugLinkN4W1Write::generated_message_descriptor_data());
-            messages.push(DebugLinkN4W1Read::generated_message_descriptor_data());
-            messages.push(DebugLinkN4W1Response::generated_message_descriptor_data());
+            messages.push(DebugLinkN1W1Connected::generated_message_descriptor_data());
+            messages.push(DebugLinkN1W1Write::generated_message_descriptor_data());
+            messages.push(DebugLinkN1W1Read::generated_message_descriptor_data());
+            messages.push(DebugLinkN1W1Response::generated_message_descriptor_data());
             messages.push(debug_link_gc_info::DebugLinkGcInfoItem::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(5);
             enums.push(debug_link_decision::DebugSwipeDirection::generated_enum_descriptor_data());

@@ -213,7 +213,7 @@ async def show_dry_run_result(result: bool, is_slip39: bool) -> None:
         )
 
 
-if utils.USE_N4W1:
+if utils.USE_N1W1:
 
     async def choose_method(title: str, description: str) -> BackupMethod:
         import trezorui_api
@@ -222,7 +222,7 @@ if utils.USE_N4W1:
         with trezorui_api.select_word(
             title=title,
             description=description,
-            words=(TR.backup__type_n4w1, TR.backup__type_wordlist, ""),
+            words=(TR.backup__type_n1w1, TR.backup__type_wordlist, ""),
         ) as layout:
             index = await interact(layout, br_name="choose_method")
-        return (BackupMethod.N4W1, BackupMethod.Display)[index]
+        return (BackupMethod.N1W1, BackupMethod.Display)[index]
