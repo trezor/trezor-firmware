@@ -349,16 +349,6 @@ class LimitedReader:
             return nread
 
 
-class CountingWriter:
-    def __init__(self) -> None:
-        self.size = 0
-
-    def write(self, buf: bytes | bytearray | memoryview, /) -> int:
-        nwritten = len(buf)
-        self.size += nwritten
-        return nwritten
-
-
 def decode_packed_array_field(field: Field, reader: Reader) -> list[t.Any]:
     assert field.repeated, "Not decoding packed array into non-repeated field"
     length = load_uvarint(reader)
@@ -515,10 +505,12 @@ def dump_message(writer: Writer, msg: "MessageType") -> None:
                     raise ValueError(
                         f"Value {svalue} in field {field.name} is not {field.py_type.__name__}"
                     )
-                counter = CountingWriter()
-                dump_message(counter, svalue)
-                dump_uvarint(writer, counter.size)
-                dump_message(writer, svalue)
+                inner = BytesIO()
+                dump_message(inner, svalue)
+                inner = inner.getvalue()
+                dump_uvarint(writer, len(inner))
+                writer.write(inner)
+                inner = None
 
             elif issubclass(field.py_type, IntEnum):
                 if svalue not in field.py_type.__members__.values():
