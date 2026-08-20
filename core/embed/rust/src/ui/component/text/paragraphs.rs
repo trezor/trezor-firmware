@@ -557,8 +557,9 @@ impl<'a, T: ParagraphSource<'a>> PageBreakIterator<'_, T> {
     fn dyn_next(
         mut area: Rect,
         paragraphs: &dyn ParagraphSource<'_>,
-        mut offset: PageOffset,
+        initial_offset: PageOffset,
     ) -> Option<PageOffset> {
+        let mut offset = initial_offset;
         let full_height = area.height();
 
         while offset.par < paragraphs.size() {
@@ -571,6 +572,14 @@ impl<'a, T: ParagraphSource<'a>> PageBreakIterator<'_, T> {
                 assert_eq!(advance.offset.par, offset.par + 1);
                 area = remaining_area;
                 offset = advance.offset;
+            } else if advance.offset == initial_offset {
+                // No space remaining yet no advance - not a single letter fits, bail.
+                #[cfg(feature = "ui_debug")]
+                paragraphs
+                    .at(advance.offset.par, advance.offset.chr)
+                    .content()
+                    .map(|s| log::error!("Paragraphs area too small, content invisible: {}", s));
+                return None;
             } else {
                 return Some(advance.offset);
             }
