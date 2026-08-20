@@ -1,4 +1,5 @@
 name: 'Upload coverage data'
+description: 'Upload per-test MicroPython coverage data (generated with TREZOR_PROFILING=1)'
 runs:
   using: "composite"
   steps:
