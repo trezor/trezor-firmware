@@ -30,7 +30,8 @@ typedef struct applet applet_t;
 
 /** Applet privileges */
 typedef struct {
-  bool assets_area_access;
+  // Applet is allowed to access the active framebuffer 
+  bool framebuffer_access;
 } applet_privileges_t;
 
 /** Callback called when an applet is unloaded */
