@@ -94,21 +94,6 @@ BUFR_TYPEDEF(gcm_buf_t, UNIT_BITS, AES_BLOCK_SIZE);
 
 #define GCM_BLOCK_SIZE  AES_BLOCK_SIZE
 
-/*  The maximum number of AES blocks that may be processed under a single key.
-
-    AES-GCM stops being secure long before the 96-bit IV counter wraps: both
-    the confidentiality bound of CTR mode and the collision bound of GHASH
-    degrade with the square of the number of blocks processed under one key.
-    2^32 blocks (64 GiB) keeps that advantage negligible (about 2^-65) and is
-    the limit recommended by NIST SP 800-38D, Appendix C.
-
-    The counted blocks are the authenticated data blocks, the encrypted or
-    decrypted data blocks, and one block per message for the tag. Once the
-    limit is reached 'blk_cnt' saturates at it, which permanently expires the
-    context: only setting a new key resets the count.
-*/
-#define GCM_MAX_BLOCKS  ((uint32_t)0xffffffff)
-
 /* The GCM-AES  context  */
 
 typedef struct
@@ -135,8 +120,6 @@ typedef struct
     uint32_t        hdr_cnt;                /* header bytes so far          */
     uint32_t        txt_ccnt;               /* text bytes so far (encrypt)  */
     uint32_t        txt_acnt;               /* text bytes so far (auth)     */
-    uint32_t        blk_cnt;                /* blocks processed under the key,
-                                               saturates at GCM_MAX_BLOCKS   */
 } gcm_ctx;
 
 /* The following calls handle mode initialisation, keying and completion    */

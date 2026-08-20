@@ -5271,70 +5271,6 @@ START_TEST(test_aesgcm) {
 }
 END_TEST
 
-START_TEST(test_aesgcm_block_limit) {
-  uint8_t key[32] = {0};
-  uint8_t iv[12] = {0};
-  uint8_t aad[32] = {0};  // 2 blocks
-  uint8_t msg[48] = {0};  // 3 blocks
-  uint8_t tag[16] = {0};
-
-  // Every message costs the header blocks, the message blocks and one more
-  // block for the tag
-  const uint32_t cost = 2 + 3 + 1;
-
-  gcm_ctx ctx = {0};
-  ck_assert_int_eq(gcm_init_and_key(key, sizeof(key), &ctx), RETURN_GOOD);
-  ck_assert_uint_eq(ctx.blk_cnt, 0);
-
-  // The block counter accumulates across messages
-  ck_assert_int_eq(gcm_encrypt_message(iv, sizeof(iv), aad, sizeof(aad), msg,
-                                       sizeof(msg), tag, sizeof(tag), &ctx),
-                   RETURN_GOOD);
-  ck_assert_uint_eq(ctx.blk_cnt, cost);
-  ck_assert_int_eq(gcm_encrypt_message(iv, sizeof(iv), aad, sizeof(aad), msg,
-                                       sizeof(msg), tag, sizeof(tag), &ctx),
-                   RETURN_GOOD);
-  ck_assert_uint_eq(ctx.blk_cnt, 2 * cost);
-
-  // The last message that fits below the limit is still encrypted
-  ctx.blk_cnt = GCM_MAX_BLOCKS - cost;
-  ck_assert_int_eq(gcm_encrypt_message(iv, sizeof(iv), aad, sizeof(aad), msg,
-                                       sizeof(msg), tag, sizeof(tag), &ctx),
-                   RETURN_GOOD);
-  ck_assert_uint_eq(ctx.blk_cnt, GCM_MAX_BLOCKS);
-
-  // Reaching the limit makes every further operation fail
-  ck_assert_int_eq(gcm_encrypt_message(iv, sizeof(iv), aad, sizeof(aad), msg,
-                                       sizeof(msg), tag, sizeof(tag), &ctx),
-                   RETURN_ERROR);
-  ck_assert_uint_eq(ctx.blk_cnt, GCM_MAX_BLOCKS);
-  ck_assert_int_eq(gcm_init_message(iv, sizeof(iv), &ctx), RETURN_ERROR);
-  ck_assert_int_eq(gcm_encrypt_message(iv, sizeof(iv), aad, sizeof(aad), msg,
-                                       sizeof(msg), tag, sizeof(tag), &ctx),
-                   RETURN_ERROR);
-  ck_assert_int_eq(gcm_decrypt_message(iv, sizeof(iv), aad, sizeof(aad), msg,
-                                       sizeof(msg), tag, sizeof(tag), &ctx),
-                   RETURN_ERROR);
-
-  // A message that would only partially fit is rejected as a whole and expires
-  // the key
-  ck_assert_int_eq(gcm_init_and_key(key, sizeof(key), &ctx), RETURN_GOOD);
-  ctx.blk_cnt = GCM_MAX_BLOCKS - 1;
-  ck_assert_int_eq(gcm_init_message(iv, sizeof(iv), &ctx), RETURN_GOOD);
-  ck_assert_int_eq(gcm_auth_header(aad, sizeof(aad), &ctx), RETURN_ERROR);
-  ck_assert_uint_eq(ctx.blk_cnt, GCM_MAX_BLOCKS);
-
-  // Setting a new key resets the accounting
-  ck_assert_int_eq(gcm_init_and_key(key, sizeof(key), &ctx), RETURN_GOOD);
-  ck_assert_uint_eq(ctx.blk_cnt, 0);
-  ck_assert_int_eq(gcm_encrypt_message(iv, sizeof(iv), aad, sizeof(aad), msg,
-                                       sizeof(msg), tag, sizeof(tag), &ctx),
-                   RETURN_GOOD);
-
-  ck_assert_int_eq(gcm_end(&ctx), RETURN_GOOD);
-}
-END_TEST
-
 #define TEST1 "abc"
 #define TEST2_1 "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
 #define TEST2_2a "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
@@ -12511,7 +12447,6 @@ Suite *test_suite(void) {
 
   tc = tcase_create("aes_gcm");
   tcase_add_test(tc, test_aesgcm);
-  tcase_add_test(tc, test_aesgcm_block_limit);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("sha2");

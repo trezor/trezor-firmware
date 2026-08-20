@@ -95,31 +95,11 @@ extern "C"
 #define inc_ctr(x)  \
     {   int i = BLOCK_SIZE; while(i-- > CTR_POS && !++(UI8_PTR(x)[i])) ; }
 
-/*  The number of blocks needed to hold 'len' bytes  */
-#define blocks_for(len) (((uint64_t)(len) + BLOCK_SIZE - 1) / BLOCK_SIZE)
-
-/*  Account for the blocks that an operation is about to process and refuse to
-    continue once GCM_MAX_BLOCKS have been processed under the current key. The
-    refusal is sticky, expired context can be revived only by setting a new key.
-*/
-static ret_type use_blocks(uint64_t blocks, gcm_ctx ctx[1])
-{
-    if(blocks > (uint64_t)GCM_MAX_BLOCKS - ctx->blk_cnt)
-    {
-        ctx->blk_cnt = GCM_MAX_BLOCKS;
-        return RETURN_ERROR;
-    }
-    ctx->blk_cnt += (uint32_t)blocks;
-    return RETURN_GOOD;
-}
-
 ret_type gcm_init_and_key(                  /* initialise mode and set key  */
             const unsigned char key[],      /* the key value                */
             unsigned long key_len,          /* and its length in bytes      */
             gcm_ctx ctx[1])                 /* the mode context             */
 {
-    ctx->blk_cnt = 0;
-
     memset(ctx->ghash_h, 0, sizeof(ctx->ghash_h));
 
     /* set the AES key                          */
@@ -185,10 +165,6 @@ ret_type gcm_init_message(                  /* initialise a new message     */
 {   uint32_t i = 0, n_pos = 0;
     uint8_t *p = NULL;
 
-    /* The key has processed too many blocks to stay secure */
-    if(ctx->blk_cnt >= GCM_MAX_BLOCKS)
-        return RETURN_ERROR;
-
     /* NIST SP 800-38D, Section 5.2.1.1 forbids IV length of 0 */
     /* https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf */
     if(iv_len == 0)
@@ -238,10 +214,6 @@ ret_type gcm_auth_header(                   /* authenticate the header      */
 
     if(!hdr_len)
         return RETURN_GOOD;
-
-    if(use_blocks(blocks_for((uint64_t)ctx->hdr_cnt + hdr_len)
-                  - blocks_for(ctx->hdr_cnt), ctx) != RETURN_GOOD)
-        return RETURN_ERROR;
 
     if(ctx->hdr_cnt && b_pos == 0)
         gf_mul_hh(ctx->hdr_ghv, ctx);
@@ -357,10 +329,6 @@ ret_type gcm_crypt_data(                    /* encrypt or decrypt data      */
     if(!data_len)
         return RETURN_GOOD;
 
-    if(use_blocks(blocks_for((uint64_t)ctx->txt_ccnt + data_len)
-                  - blocks_for(ctx->txt_ccnt), ctx) != RETURN_GOOD)
-        return RETURN_ERROR;
-
     if(!((data - (UI8_PTR(ctx->enc_ctr) + b_pos)) & BUF_ADRMASK))
     {
         if(b_pos)
@@ -421,10 +389,6 @@ ret_type gcm_compute_tag(                   /* compute authentication tag   */
     gf_t tbuf = {0};
 
     if(ctx->txt_acnt != ctx->txt_ccnt && ctx->txt_ccnt > 0)
-        return RETURN_ERROR;
-
-    /* one more block is encrypted to mask the tag */
-    if(use_blocks(1, ctx) != RETURN_GOOD)
         return RETURN_ERROR;
 
     gf_mul_hh(ctx->hdr_ghv, ctx);
@@ -531,10 +495,9 @@ ret_type gcm_encrypt(                       /* encrypt & authenticate data  */
             unsigned long data_len,         /* and its length in bytes      */
             gcm_ctx ctx[1])                 /* the mode context             */
 {
-    if(gcm_crypt_data(data, data_len, ctx) != RETURN_GOOD)
-        return RETURN_ERROR;
-    if(gcm_auth_data(data, data_len, ctx) != RETURN_GOOD)
-        return RETURN_ERROR;
+
+    gcm_crypt_data(data, data_len, ctx);
+    gcm_auth_data(data, data_len, ctx);
     return RETURN_GOOD;
 }
 
@@ -543,10 +506,8 @@ ret_type gcm_decrypt(                       /* authenticate & decrypt data  */
             unsigned long data_len,         /* and its length in bytes      */
             gcm_ctx ctx[1])                 /* the mode context             */
 {
-    if(gcm_auth_data(data, data_len, ctx) != RETURN_GOOD)
-        return RETURN_ERROR;
-    if(gcm_crypt_data(data, data_len, ctx) != RETURN_GOOD)
-        return RETURN_ERROR;
+    gcm_auth_data(data, data_len, ctx);
+    gcm_crypt_data(data, data_len, ctx);
     return RETURN_GOOD;
 }
 
@@ -563,10 +524,8 @@ ret_type gcm_encrypt_message(               /* encrypt an entire message    */
 {
     if(gcm_init_message(iv, iv_len, ctx) != RETURN_GOOD)
         return RETURN_ERROR;
-    if(gcm_auth_header(hdr, hdr_len, ctx) != RETURN_GOOD)
-        return RETURN_ERROR;
-    if(gcm_encrypt(msg, msg_len, ctx) != RETURN_GOOD)
-        return RETURN_ERROR;
+    gcm_auth_header(hdr, hdr_len, ctx);
+    gcm_encrypt(msg, msg_len, ctx);
     return gcm_compute_tag(tag, tag_len, ctx) ? RETURN_ERROR : RETURN_GOOD;
 }
 
@@ -585,10 +544,8 @@ ret_type gcm_decrypt_message(               /* decrypt an entire message    */
 
     if(gcm_init_message(iv, iv_len, ctx) != RETURN_GOOD)
         return RETURN_ERROR;
-    if(gcm_auth_header(hdr, hdr_len, ctx) != RETURN_GOOD)
-        return RETURN_ERROR;
-    if(gcm_decrypt(msg, msg_len, ctx) != RETURN_GOOD)
-        return RETURN_ERROR;
+    gcm_auth_header(hdr, hdr_len, ctx);
+    gcm_decrypt(msg, msg_len, ctx);
     rr = gcm_compute_tag(local_tag, tag_len, ctx);
     return (rr != RETURN_GOOD || !consteq(tag, local_tag, tag_len)) ? RETURN_ERROR : RETURN_GOOD;
 }
