@@ -75,3 +75,4 @@ pyopt                         = { true = ["pyopt"], false = ["debug", "optiga_te
 source-lines                  = { true = ["micropy_enable_source_lines"] }
 storage-insecure-testing-mode = { true = ["storage_insecure_testing_mode"] }
 unsafe-fw                     = { true = ["unsafe_fw"] }
+ward-service-channel          = { true = ["ward_service_channel"] }

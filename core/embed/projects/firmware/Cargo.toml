@@ -108,6 +108,11 @@ app_loading = ["upymod/app_loading", "trezor_lib/app_loading", "io/ipc"]
 backlight = ["io/backlight", "upymod/backlight", "trezor_lib/backlight"]
 backup_ram = ["sec/backup_ram"]
 ble = ["io/ble", "upymod/ble", "trezor_lib/ble", "nrf", "nrf_auth"]
+ward_service_channel = [
+    "io/ward_service_channel",
+    "upymod/ward_service_channel",
+    "trezor_lib/ward_service_channel",
+]
 boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
 button = ["io/button", "upymod/button", "trezor_lib/button"]
 consumption_mask = ["sec/consumption_mask"]

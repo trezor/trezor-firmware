@@ -70,6 +70,9 @@ endif
 ifeq ($(N4W1),1)
 XTASK_BUILD_OPTS += --n4w1
 endif
+ifeq ($(WARD_SERVICE_CHANNEL),1)
+XTASK_BUILD_OPTS += --ward-service-channel
+endif
 ifeq ($(PRODUCTION),1)
 XTASK_BUILD_OPTS += --production
 endif

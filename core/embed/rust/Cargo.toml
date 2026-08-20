@@ -110,6 +110,7 @@ ui_overlay = []
 ui_performance_overlay = []
 universal_fw = []
 usb = []
+ward_service_channel = []
 
 # --------------------------------------------------------------------------
 # Unit test configuration

@@ -33,6 +33,15 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
         }
     }
 
+    // The WARD service channel and coin support are independent options, but not every
+    // combination means anything: WARD's message handlers are registered only when the firmware
+    // is not bitcoin-only, so a bitcoin-only build with the service channel would carry a
+    // dedicated interface with nothing behind it to serve. Rejected here rather than coupled to
+    // `universal_fw`, which would make the service channel un-selectable on its own.
+    if args.btc_only && args.ward_service_channel {
+        bail!("ward_service_channel needs WARD, which is not built in bitcoin-only firmware");
+    }
+
     let mut features: Vec<String> = vec![args.model.feature_name()];
 
     if args.emulator {

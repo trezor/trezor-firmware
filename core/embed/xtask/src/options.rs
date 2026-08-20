@@ -202,6 +202,10 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map n4w1: bool,
 
+    /// Enable the WARD service channel (its own dedicated interface)
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    map ward_service_channel: bool,
+
     /// Disable UI animations
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map disable_animation: bool,
