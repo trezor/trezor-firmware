@@ -140,6 +140,9 @@ fn generate_micropython_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("mp_print_strn")
             .allowlist_function("str_modulo_format")
             .allowlist_var("mp_plat_print")
+            // tuple
+            .allowlist_var("mp_type_tuple")
+            .allowlist_var("mp_const_empty_tuple_obj")
             // typ
             .allowlist_var("mp_type_type")
             // module
