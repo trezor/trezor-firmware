@@ -77,17 +77,25 @@ void syscall_ipc_dequeue(void) {
   syscall_struct_t* syscall = &ipc->syscall;
 
   if (syscall->task != NULL) {
+    systask_t* task = syscall->task;
+
     // Process enqueued syscall
-    syscall_handler(syscall->args, syscall->number, syscall->task->applet);
-    // Copy return value back to the task's registers
-    systask_set_r0r1(syscall->task, syscall->args[0], syscall->args[1]);
+    syscall_handler(syscall->args, syscall->number, task->applet);
+
+    bool task_alive = systask_is_alive(task);
+
+    if (task_alive) {
+      // Copy return value back to the task's registers
+      systask_set_r0r1(task, syscall->args[0], syscall->args[1]);
+    }
 
     // Remove the syscall from the queue
-    systask_t* task = syscall->task;
     memset(syscall, 0, sizeof(*syscall));
 
     // Get back to the unprivileged task
-    systask_yield_to(task);
+    if (task_alive) {
+      systask_yield_to(task);
+    }
   }
 }
 
