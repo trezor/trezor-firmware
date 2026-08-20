@@ -737,7 +737,8 @@ int fuzz_shamir_interpolate(void) {
 }
 
 int fuzz_ecdsa_sign_digest_functions(void) {
-  // bug result reference: https://github.com/trezor/trezor-firmware/pull/1697
+  // testcase bug result reference:
+  // https://github.com/trezor/trezor-firmware/pull/1697
 
   uint8_t curve_decider = 0;
   uint8_t priv_key[32] = {0};
@@ -1240,7 +1241,8 @@ int fuzz_ecdsa_recover_pub_from_sig_functions(void) {
 
   if ((res1 == 0 && res2 != 0) || (res1 != 0 && res2 == 0)) {
     // result mismatch
-    // bug result reference: https://github.com/trezor/trezor-firmware/pull/2050
+    // testcase bug result reference:
+    // https://github.com/trezor/trezor-firmware/pull/2050
     crash();
   }
 
@@ -1254,22 +1256,37 @@ int fuzz_ecdsa_recover_pub_from_sig_functions(void) {
 }
 
 int fuzz_ecdsa_sig_from_der(void) {
-  // bug result reference: https://github.com/trezor/trezor-firmware/pull/2058
+  // testcase bug result reference:
+  // https://github.com/trezor/trezor-firmware/pull/2058
+
+  uint8_t der_len = 0;
   uint8_t der[72] = {0};
   uint8_t out[72] = {0};
 
-  if (fuzzer_length < sizeof(der)) {
+  if (fuzzer_length < sizeof(der) + 1) {
     return FUZZ_MARK_UNINTERESTING;
   }
-  memcpy(der, fuzzer_input(sizeof(der)), sizeof(der));
-  // null-terminate
-  der[sizeof(der) - 1] = 0;
-  size_t der_len = strlen((const char *)der);
 
-  // IDEA use different fuzzer-controlled der_len such as 1 to 73
+  // let the fuzzer decide a length
+  memcpy(&der_len, fuzzer_input(1), 1);
+  if (der_len > sizeof(der)) {
+    der_len = sizeof(der);
+  }
+
+  memcpy(der, fuzzer_input(sizeof(der)), sizeof(der));
   int ret = ecdsa_sig_from_der(der, der_len, out);
-  (void)ret;
-  // IDEA check if back conversion works
+
+  // check back conversion
+  if (ret == 0) {
+    uint8_t der_roundtrip[sizeof(der)] = {0};
+    // ecdsa_sig_to_der() never signals failure
+    ecdsa_sig_to_der((const uint8_t *)&out, der_roundtrip);
+
+    if (memcmp(der, der_roundtrip, der_len) != 0) {
+      // different roundtrip results
+      crash();
+    }
+  }
 
   return 0;
 }
@@ -1277,15 +1294,27 @@ int fuzz_ecdsa_sig_from_der(void) {
 int fuzz_ecdsa_sig_to_der(void) {
   uint8_t sig[64] = {0};
   uint8_t der[72] = {0};
+  uint8_t sig_roundtrip[sizeof(sig)] = {0};
 
   if (fuzzer_length < sizeof(sig)) {
     return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(sig, fuzzer_input(sizeof(sig)), sizeof(sig));
 
-  int ret = ecdsa_sig_to_der((const uint8_t *)&sig, der);
-  (void)ret;
-  // IDEA check if back conversion works
+  // ecdsa_sig_to_der() always succeeds
+  int der_len = ecdsa_sig_to_der((const uint8_t *)&sig, der);
+
+  // calculate roundtrip result
+  int ret_roundtrip = ecdsa_sig_from_der(der, der_len, sig_roundtrip);
+  if (ret_roundtrip != 0) {
+    // roundtrip calculation failure
+    crash();
+  }
+
+  if (memcmp(sig, sig_roundtrip, sizeof(sig)) != 0) {
+    // roundtrip result mismatch
+    crash();
+  }
 
   return 0;
 }
