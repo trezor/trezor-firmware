@@ -231,6 +231,7 @@ def generate_index(root: Path, models: Sequence[str], version: list[int]) -> Pat
         model_json = {}
         model_lower = model.lower()
         for variant in ["universal", "bitcoin-only"]:
+            variant_dir = variant.replace("-", "")
             model_json[variant] = {
                 "firmware_type": variant,
                 "conditions": {
@@ -240,7 +241,7 @@ def generate_index(root: Path, models: Sequence[str], version: list[int]) -> Pat
                     },
                     "rollout_probability": 100,
                 },
-                "releasePath": f"{URL_PREFIX}/{model_lower}/{variant}/{model_lower}-{version_str}-{variant}.json",
+                "releasePath": f"{URL_PREFIX}/{model_lower}/{variant_dir}/{model_lower}-{version_str}-{variant}.json",
             }
         result["releases"][model.upper()] = model_json
 
