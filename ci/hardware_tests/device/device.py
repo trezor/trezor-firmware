@@ -20,6 +20,22 @@ class Device:
         self.log(f"[software/trezorctl] Running '{full_cmd}'")
         return run(full_cmd, shell=True, check=True, **kwargs)
 
+    def check_enumerated(self):
+        """Check that exactly one device is on the USB bus.
+
+        Uses `list -n`, which only enumerates transports. Plain `list` opens
+        each device and reads its features, which hangs on models with THP.
+        This proves the device came back on the bus after flashing; it cannot
+        tell firmware from bootloader.
+        """
+        res = self.run_trezorctl("list -n", capture_output=True, text=True)
+        self.log(res.stdout)
+        self.log(res.stderr)
+        lines = [line for line in res.stdout.splitlines() if line.strip()]
+        if len(lines) != 1:
+            raise RuntimeError(f"{len(lines)} Trezors connected")
+        return lines[0].strip()
+
     def check_model(self, model=None):
         res = self.run_trezorctl("list", capture_output=True, text=True)
         self.log(res.stdout)

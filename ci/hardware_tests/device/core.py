@@ -155,6 +155,11 @@ class TrezorCore(Device):
         # up rather than for whatever is on the bus right now.
         self.wait_until_debuggable()
 
-        # THP gets stuck on get-features
+        # THP gets stuck on get-features, and on `list` too, since that opens
+        # the device to read its name. Enumeration is all we can check there -
+        # but without it a device that fails to boot is only noticed by pytest,
+        # where it reads as a test failure rather than a flashing failure.
         if model_name != "Safe 7":
             print(self.check_model(model_name))
+        else:
+            print(self.check_enumerated())
