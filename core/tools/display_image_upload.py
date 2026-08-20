@@ -39,17 +39,20 @@ def _format_cmd_for_log(cmd: str) -> str:
     return f"{cmd[:80]}... <{len(cmd)} chars>"
 
 
-def send_cmd(ser: serial.Serial, cmd: str, expect_ok: bool = True) -> tuple[str, int]:
+def send_cmd(
+    ser: serial.Serial, cmd: str, expect_ok: bool = True, label: str = ""
+) -> tuple[str, int]:
     """Send a line, read response, and abort on CLI_ERROR."""
+    prefix = f"[{label}] " if label else ""
     written = ser.write((cmd + "\r\n").encode()) or 0
     time.sleep(0.05)
     resp = ser.readline().decode(errors="ignore").strip()
     while resp.startswith("#") or len(resp) == 0:
         resp = ser.readline().decode(errors="ignore").strip()
-    click.echo(f"> {_format_cmd_for_log(cmd)}")
-    click.echo(f"< {resp}")
+    click.echo(f"{prefix}> {_format_cmd_for_log(cmd)}")
+    click.echo(f"{prefix}< {resp}")
     if expect_ok and not resp.startswith("OK"):
-        click.echo("Error from device, aborting.", err=True)
+        click.echo(f"{prefix}Error from device, aborting.", err=True)
         sys.exit(1)
     return resp, written
 
@@ -70,23 +73,29 @@ def _serial_port_metadata(port: str) -> str:
 
 
 def upload_image(
-    port: str, raw: bytes, chunk_size: int, timings: bool, backlight: int | None
+    port: str,
+    raw: bytes,
+    chunk_size: int,
+    timings: bool,
+    backlight: int | None,
+    label: str = "",
 ) -> None:
+    prefix = f"[{label}] " if label else ""
     with serial.Serial(port, timeout=2) as ser:
         time.sleep(0.1)
         ser.reset_input_buffer()
         ser.reset_output_buffer()
 
         if timings:
-            click.echo(f"Serial device: {_serial_port_metadata(port)}", err=True)
+            click.echo(f"{prefix}Serial device: {_serial_port_metadata(port)}", err=True)
 
         exit_interactive_mode(ser)
 
         if backlight is not None:
-            send_cmd(ser, f"display-set-backlight {backlight}")
+            send_cmd(ser, f"display-set-backlight {backlight}", label=label)
 
         # --- begin ---
-        send_cmd(ser, "display-image begin")
+        send_cmd(ser, "display-image begin", label=label)
 
         # --- chunks ---
         data_size = len(raw)
@@ -95,24 +104,25 @@ def upload_image(
         t_start = time.monotonic()
         while offset < data_size:
             chunk = raw[offset : offset + chunk_size]
-            _, written = send_cmd(ser, f"display-image chunk {chunk.hex()}")
+            _, written = send_cmd(ser, f"display-image chunk {chunk.hex()}", label=label)
             tx_bytes += written
             offset += len(chunk)
             pct = offset * 100 // data_size
-            click.echo(f"  Uploaded {offset}/{data_size} bytes ({pct}%)")
+            click.echo(f"{prefix}  Uploaded {offset}/{data_size} bytes ({pct}%)")
         transfer_elapsed = time.monotonic() - t_start
 
         # --- end ---
-        send_cmd(ser, "display-image end")
+        send_cmd(ser, "display-image end", label=label)
 
         payload_kBs = data_size / transfer_elapsed / 1024 if transfer_elapsed > 0.001 else 0
         wire_kBs = tx_bytes / transfer_elapsed / 1024 if transfer_elapsed > 0.001 else 0
         click.echo(
-            f"Done — {data_size} bytes in {transfer_elapsed:.1f}s ({payload_kBs:.0f} kB/s) via {port}."
+            f"{prefix}Done — {data_size} bytes in {transfer_elapsed:.1f}s "
+            f"({payload_kBs:.0f} kB/s) via {port}."
         )
         if timings:
             click.echo(
-                f"Transfer: {tx_bytes} serial bytes in {transfer_elapsed:.3f}s "
+                f"{prefix}Transfer: {tx_bytes} serial bytes in {transfer_elapsed:.3f}s "
                 f"({wire_kBs:.0f} kB/s on-wire)",
                 err=True,
             )

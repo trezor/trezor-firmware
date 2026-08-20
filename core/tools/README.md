@@ -155,6 +155,24 @@ On macOS use `/dev/cu.*` instead of `/dev/tty.*` (the tool warns if you forget).
 Pass `--backlight LEVEL` (0–255) to set the display backlight before the image
 is shown.
 
+### `display_image_upload_multi.py`
+
+Uploads the same image (and, optionally, the same backlight level) to multiple
+prodtest devices at once — e.g. to show identical contents on several displays
+side by side. Each port is uploaded in its own thread so all displays refresh
+at roughly the same time; the image is converted only once.
+
+Example:
+
+`python core/tools/display_image_upload_multi.py \
+    /dev/ttyACM0 /dev/ttyACM1 /dev/ttyACM2 /dev/ttyACM3 input.png --width 240 --height 320 \
+    --backlight 180`
+
+Accepts the same `--width`/`--height`/`--chunk-size`/`--timings`/`--backlight`
+options as `display_image_upload.py`; ports are passed first (one or more),
+followed by the image path. If any port fails, the others still complete and
+the failures are summarized at the end.
+
 ### `display_image_slideshow.py`
 
 Sends a directory of images to prodtest one by one as a slideshow, with a configurable
