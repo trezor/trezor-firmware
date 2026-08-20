@@ -23,6 +23,9 @@ if TYPE_CHECKING:
     from trezorio import WireInterface
     from typing import Any, Generator
 
+    from .. import Provider
+    from .memory_manager import ThpBuffer
+
 
 _TRACE = const(False)
 
@@ -46,7 +49,11 @@ class ThpContext:
     """
 
     def __init__(self, *ifaces: WireInterface) -> None:
-        self._iface_ctxs = [InterfaceContext(iface, self) for iface in ifaces]
+        from .. import buffers_provider_for
+
+        self._iface_ctxs = [
+            InterfaceContext(iface, self, buffers_provider_for(iface)) for iface in ifaces
+        ]
         self.channel_ready_box: loop.mailbox[None] = loop.mailbox()
         # THE CHANNEL WHOSE MESSAGES THE MAIN LOOP DISPATCHES, on whichever interface it arrived --
         # this is what `get_dispatch_channel` hands to `handle_session_thp`. NOT "the foreground
@@ -112,8 +119,19 @@ class InterfaceContext:
     This class shuffles packets between an interface and non-blocking rust/trezor-thp code.
     """
 
-    def __init__(self, iface: WireInterface, thp_ctx: ThpContext) -> None:
+    def __init__(
+        self,
+        iface: WireInterface,
+        thp_ctx: ThpContext,
+        buffers_provider: Provider[tuple[ThpBuffer, ThpBuffer]],
+    ) -> None:
         self._iface = iface
+        # WHERE THIS INTERFACE GETS ITS CHANNEL BUFFERS, passed in rather than looked up, because
+        # WHICH provider an interface draws from is the whole question. A provider hands out its
+        # pair ONCE, so interfaces that share one can only ever have a channel one at a time --
+        # which is deliberate for USB and BLE, and is exactly what an interface hosting a service
+        # channel alongside a live wallet channel must not do.
+        self._buffers_provider = buffers_provider
         self._read = wait(iface.iface_num() | io.POLL_READ)
         self._write = wait(
             iface.iface_num() | io.POLL_WRITE, timeout_ms=_WRITE_TIMEOUT_MS
@@ -262,9 +280,7 @@ class InterfaceContext:
         buffer_size = (result >> 16) * 8
 
         if self.active_channel is None:
-            from .. import THP_BUFFERS_PROVIDER
-
-            if buffers := THP_BUFFERS_PROVIDER.take():
+            if buffers := self._buffers_provider.take():
                 self.active_channel = Channel(channel_id, self, buffers=buffers)
                 if self.thp_ctx.dispatch_channel is None:
                     self.thp_ctx.dispatch_channel = self.active_channel

@@ -16,8 +16,11 @@ if __debug__:
 
 
 class ThpBuffer:
-    def __init__(self) -> None:
-        self.buf = memoryview(bytearray(_PROTOBUF_BUFFER_SIZE))
+    def __init__(self, size: int = _PROTOBUF_BUFFER_SIZE) -> None:
+        # Sized so a second interface can be given buffers of its own without paying twice for
+        # the default. `get()` refuses anything larger, so the size a buffer is created with is a
+        # protocol bound on whatever travels through it -- not merely a memory tuning knob.
+        self.buf = memoryview(bytearray(size))
 
     def get(self, length: int) -> memoryview:
         assert length >= 0
