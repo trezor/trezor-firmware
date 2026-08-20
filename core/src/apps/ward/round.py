@@ -72,12 +72,17 @@ def clear() -> None:
 #
 # WHAT "ONLINE" MEANS, and why it is a device-side fact rather than something the host tells us.
 # A session begins knowing nothing current: the stored root may be any age, and no host claim
-# has been checked against the freshness authority yet. Only a completed reconcile changes
-# that, because only there has a WM attestation been bound to an actual tree.
+# has been checked against the freshness authority yet. Only ADOPTING a head changes that,
+# because only then has a WM attestation been bound to an actual tree.
 #
-# So this is a LATCH SET BY RECONCILE ALONE. `WardSync` mints a nonce and proves nothing;
-# `WardIngestAttestation` verifies a signature over a counter and a mac but adopts neither.
-# Neither may flip it.
+# So this is a LATCH SET BY ADOPTION ALONE, which is `reconcile` and `verify_chain` and nothing
+# else. `WardSync` mints a nonce and proves nothing; `WardIngestAttestation` verifies a signature
+# over a counter and a mac but adopts neither. Neither may flip it.
+#
+# `verify_chain` latches for the same reason `reconcile` does, and it is the stricter of the two:
+# it additionally proves authorised descent from the head this device already held. Leaving it
+# out meant the stronger route was the one a device could not come online by -- which is the
+# route multi-device catch-up arrives on.
 #
 # It lives in the session cache for its LIFETIME, not its size: a new session and a power cycle
 # both have to start offline, and putting it here means that happens by construction rather
@@ -92,7 +97,12 @@ _ONLINE = const(1)
 
 
 def mark_online() -> None:
-    """Record that this session has adopted a WM-attested head. Called only by `reconcile`."""
+    """Record that this session has adopted a WM-attested head.
+
+    Called by the two handlers that ADOPT one -- `reconcile` and `verify_chain` -- and by
+    nothing else. `WardSync` mints a nonce and proves nothing; `WardIngestAttestation`
+    verifies a signature but adopts no tree. Neither may flip it.
+    """
     from storage.cache_common import APP_WARD_ONLINE
     from trezor.wire import context
 
