@@ -291,7 +291,7 @@ access_violation:
 // ---------------------------------------------------------------------
 
 void system_exit__verified(int exit_code) {
-  systask_t *task = systask_active();
+  systask_t *task = &syscall_get_context()->task;
 
   systask_exit(task, exit_code);
 }
@@ -330,7 +330,7 @@ void system_exit_error__verified(const char *title, size_t title_len,
     footer = strncpy(footer_copy, footer, footer_len);
   }
 
-  systask_t *task = systask_active();
+  systask_t *task = &syscall_get_context()->task;
 
   systask_exit_error(task, title, title_len, message, message_len, footer,
                      footer_len);
@@ -364,7 +364,7 @@ void system_exit_fatal__verified(const char *message, size_t message_len,
     file = strncpy(file_copy, file, file_len);
   }
 
-  systask_t *task = systask_active();
+  systask_t *task = &syscall_get_context()->task;
 
   systask_exit_fatal(task, message, message_len, file, file_len, line);
 
