@@ -7,7 +7,7 @@ from trezor import loop, protobuf, utils, workflow
 
 from apps.thp.credential_manager import decode_credential, unwrap_credential
 
-from ..errors import DataError
+from ..errors import DataError, FirmwareError
 from ..protocol_common import Message
 from . import ChannelState, memory_manager
 
@@ -67,6 +67,21 @@ class Channel:
         self.receive_buffer: memoryview | None = None
 
         self._info = trezorthp.channel_info(channel_id)
+
+        # A CHANNEL BELONGS TO ONE INTERFACE, and this refuses to build one that disagrees.
+        #
+        # Not defensive tidiness: `trezorthp.packet_out_channel` looks a channel up by id alone --
+        # the lookup is global across interfaces and the binding is discarded -- and fragments into
+        # a buffer that `write_all_packets` then writes to whichever interface OWNS THIS OBJECT. So
+        # a channel paired with the wrong `InterfaceContext` puts one host's encrypted traffic on
+        # another host's wire, and every layer below here would consider that well-formed.
+        #
+        # Checked in the constructor so the invariant holds for every channel however it was made,
+        # rather than only where a caller remembered to look. NOT an assert: those are stripped
+        # under `pyopt`, which is exactly the build where this matters.
+        if self._info.iface_num != iface_ctx._iface.iface_num():
+            raise FirmwareError("THP channel does not belong to this interface")
+
         self.state = {
             TREZOR_STATE_UNPAIRED: ChannelState.TP0,
             TREZOR_STATE_PAIRED: ChannelState.TC1,
