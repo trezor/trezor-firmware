@@ -13,6 +13,8 @@ use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::{buffer, util};
 
+const MAX_NESTING: u8 = 16;
+
 pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: Obj) -> Obj {
     let block = || {
         let def = Gc::<MsgDefObj>::try_from(msg_def)?;
@@ -53,10 +55,22 @@ impl Decoder {
         stream: &mut InputStream,
         msg: &MsgDef,
     ) -> Result<Obj, Error> {
+        self.message_from_stream_ex(stream, msg, 0)
+    }
+
+    fn message_from_stream_ex(
+        &self,
+        stream: &mut InputStream,
+        msg: &MsgDef,
+        depth: u8,
+    ) -> Result<Obj, Error> {
+        if depth >= MAX_NESTING {
+            return Err(Error::OutOfRange);
+        }
         let mut obj = self.empty_message(msg)?;
         // SAFETY: We assume that `obj` is not aliased here.
         let map = unsafe { Gc::as_mut(&mut obj) }.map_mut();
-        self.decode_fields_into(stream, msg, map)?;
+        self.decode_fields_into(stream, msg, depth, map)?;
         self.decode_defaults_into(msg, map)?;
         self.assign_required_into(msg, map)?;
         Ok(obj.into())
@@ -88,6 +102,7 @@ impl Decoder {
         &self,
         stream: &mut InputStream,
         msg: &MsgDef,
+        depth: u8,
         map: &mut Map,
     ) -> Result<(), Error> {
         // Loop, trying to read the field key that contains the tag and primitive value
@@ -101,7 +116,7 @@ impl Decoder {
                     return Err(error::invalid_value(field.name.into()));
                 }
                 Some(field) => {
-                    let field_value = self.decode_field(stream, field)?;
+                    let field_value = self.decode_field(stream, field, depth)?;
                     let field_name = Qstr::from(field.name);
                     if field.is_repeated() {
                         // Repeated field, values are stored in a list. First, look up the list
@@ -176,7 +191,7 @@ impl Decoder {
                 }
             } else {
                 // Decode the value and assign it.
-                let field_value = self.decode_field(stream, field)?;
+                let field_value = self.decode_field(stream, field, 0)?;
                 map.set(field_name, field_value)?;
             }
         }
@@ -208,7 +223,12 @@ impl Decoder {
     }
 
     /// Decode one field value from the input stream.
-    fn decode_field(&self, stream: &mut InputStream, field: &FieldDef) -> Result<Obj, Error> {
+    fn decode_field(
+        &self,
+        stream: &mut InputStream,
+        field: &FieldDef,
+        depth: u8,
+    ) -> Result<Obj, Error> {
         if field.is_experimental() && !self.enable_experimental {
             return Err(error::experimental_not_enabled());
         }
@@ -246,7 +266,7 @@ impl Decoder {
             FieldType::Msg(msg_type) => {
                 let msg_len = num.try_into()?;
                 let sub_stream = &mut stream.read_stream(msg_len)?;
-                self.message_from_stream(sub_stream, &msg_type)
+                self.message_from_stream_ex(sub_stream, &msg_type, depth + 1)
             }
         }
     }

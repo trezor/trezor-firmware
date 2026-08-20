@@ -16,10 +16,11 @@
 
 import pytest
 
-from trezorlib import messages, models
+from trezorlib import exceptions, messages, models
 from trezorlib.client import get_client
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
+from trezorlib.protobuf import MessageType
 
 from ..click_tests.device_menu.common import open_device_menu
 
@@ -101,3 +102,25 @@ def test_get_features_avoids_restart(session: Session):
     # GetFeatures doesn't restart MicroPython event loop - device menu is still open.
     session.refresh_features()
     assert "DeviceMenuScreen" == debug.read_layout().main_component()
+
+
+@pytest.mark.altcoin  # there's no recursive bitcoin-only message at the moment
+@pytest.mark.cardano
+@pytest.mark.models("core")
+def test_protobuf_recursion(session: Session):
+    def make_msg(depth: int) -> MessageType:
+        script_type = messages.CardanoNativeScriptType.ANY
+        script = messages.CardanoNativeScript(type=script_type)
+        for _ in range(depth - 1):
+            script = messages.CardanoNativeScript(type=script_type, scripts=[script])
+        return messages.CardanoGetNativeScriptHash(
+            script=script,
+            display_format=messages.CardanoNativeScriptHashDisplayFormat.HIDE,
+            derivation_type=messages.CardanoDerivationType.ICARUS,
+        )
+
+    with pytest.raises(exceptions.TrezorFailure, match=r"DataError"):
+        session.call(make_msg(16))
+
+    res = session.call(make_msg(15))
+    assert isinstance(res, messages.CardanoNativeScriptHash)
