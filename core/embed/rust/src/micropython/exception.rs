@@ -216,7 +216,7 @@ impl Exception {
 }
 
 fn conversion_failed_exception() -> Exception {
-    Exception::new_with_arg(&builtin::TypeError, "Caught a non-exception object")
+    Exception::new_with_arg(builtin::TypeError, "Caught a non-exception object")
 }
 
 impl TryFrom<Obj> for Exception {

@@ -479,14 +479,13 @@ impl PageOffset {
 
         let layout = TextLayoutProxy::new(self, used);
 
-        let page_full: bool;
-        match fit {
+        let page_full = match fit {
             LayoutFit::Fitting { .. } => {
                 // Continue with start of next paragraph.
                 self.par += 1;
                 self.chr = 0;
                 // Handle hard break if requested for this paragraph.
-                page_full = paragraph.break_after;
+                paragraph.break_after
             }
             LayoutFit::OutOfBounds {
                 processed_chars, ..
@@ -494,9 +493,9 @@ impl PageOffset {
                 // Reached end of the page and not all content fits.
                 self.chr += processed_chars;
                 // Do not render more paragraphs.
-                page_full = true;
+                true
             }
-        }
+        };
 
         PageOffsetAdvance {
             offset: self,

@@ -15,7 +15,7 @@ pub(super) enum Error {
 }
 
 pub(super) static THP_EXCEPTION_TYPE: ExceptionType =
-    ExceptionType::new(&builtin::Exception, Qstr::MP_QSTR_ThpError);
+    ExceptionType::new(builtin::Exception, Qstr::MP_QSTR_ThpError);
 
 fn thp_exception_str(error: ThpError) -> &'static str {
     match error {

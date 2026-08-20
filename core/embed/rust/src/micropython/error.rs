@@ -27,24 +27,24 @@ impl Error {
     /// Create an exception instance matching the error code.
     pub fn into_exception(self) -> Exception {
         match self {
-            Error::TypeError => Exception::new(&builtin::TypeError, &[]),
-            Error::OutOfRange => Exception::new(&builtin::OverflowError, &[]),
-            Error::MissingKwargs => Exception::new(&builtin::TypeError, &[]),
-            Error::AllocationFailed => Exception::new(&builtin::MemoryError, &[]),
-            Error::IndexError => Exception::new(&builtin::IndexError, &[]),
-            Error::KeyError(key) => Exception::new_with_arg(&builtin::KeyError, key),
-            Error::ValueError(msg) => Exception::new_with_arg(&builtin::ValueError, msg),
+            Error::TypeError => Exception::new(builtin::TypeError, &[]),
+            Error::OutOfRange => Exception::new(builtin::OverflowError, &[]),
+            Error::MissingKwargs => Exception::new(builtin::TypeError, &[]),
+            Error::AllocationFailed => Exception::new(builtin::MemoryError, &[]),
+            Error::IndexError => Exception::new(builtin::IndexError, &[]),
+            Error::KeyError(key) => Exception::new_with_arg(builtin::KeyError, key),
+            Error::ValueError(msg) => Exception::new_with_arg(builtin::ValueError, msg),
             Error::ValueErrorParam(msg, param) => {
                 let args: &[Obj] = match msg.try_into() {
                     Ok(msg) => &[msg, param],
                     Err(_) => &[],
                 };
-                Exception::new(&builtin::ValueError, args)
+                Exception::new(builtin::ValueError, args)
             }
-            Error::AttributeError(attr) => Exception::new_with_arg(&builtin::AttributeError, attr),
-            Error::EOFError => Exception::new(&builtin::EOFError, &[]),
-            Error::RuntimeError(msg) => Exception::new_with_arg(&builtin::RuntimeError, msg),
-            Error::NotImplementedError => Exception::new(&builtin::NotImplementedError, &[]),
+            Error::AttributeError(attr) => Exception::new_with_arg(builtin::AttributeError, attr),
+            Error::EOFError => Exception::new(builtin::EOFError, &[]),
+            Error::RuntimeError(msg) => Exception::new_with_arg(builtin::RuntimeError, msg),
+            Error::NotImplementedError => Exception::new(builtin::NotImplementedError, &[]),
             Error::Exception(exception) => exception,
         }
     }
