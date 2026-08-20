@@ -73,6 +73,7 @@ usb_iface_debug = ["usb"]
 usb_iface_vcp = ["usb"]
 usb_iface_webauthn = ["usb"]
 usb_iface_wire = ["usb"]
+ward_service_channel = ["usb"]
 wireless_stwlc38 = ["sys/i2c_bus"]
 
 # --------------------------------------------------------------------------
