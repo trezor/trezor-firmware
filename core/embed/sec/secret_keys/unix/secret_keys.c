@@ -26,8 +26,20 @@
 #include <sec/secret_keys.h>
 #include "../secret_keys_common.h"
 
+#ifdef USE_SECRET
+#include <sec/secret.h>
+#endif
+
 #ifdef USE_MCU_ATTESTATION
 secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
+#ifdef TREZOR_PRODTEST
+  uint8_t key[SECRET_MASTER_KEY_SLOT_SIZE] = {0};
+  if (secret_key_get(SECRET_PRIVILEGED_MASTER_KEY_SLOT, key, sizeof(key)) !=
+      sectrue) {
+    return secfalse;
+  }
+#endif
+
   _Static_assert(MLDSA_SEEDBYTES == SHA256_DIGEST_LENGTH, "");
   memset(dest, 3, SHA256_DIGEST_LENGTH);
   return sectrue;
@@ -35,41 +47,26 @@ secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
 #endif  // USE_MCU_ATTESTATION
 
 #ifdef USE_TROPIC
-
-static uint8_t SECRET_TROPIC_PAIRING_BYTES[] = {
-    0xf0, 0xc4, 0xaa, 0x04, 0x8f, 0x00, 0x13, 0xa0, 0x96, 0x84, 0xdf,
-    0x05, 0xe8, 0xa2, 0x2e, 0xf7, 0x21, 0x38, 0x98, 0x28, 0x2b, 0xa9,
-    0x43, 0x12, 0xf3, 0x13, 0xdf, 0x2d, 0xce, 0x8d, 0x41, 0x64};
-
-static uint8_t SECRET_TROPIC_PUBKEY_BYTES[] = {
-    0x31, 0xE9, 0x0A, 0xF1, 0x50, 0x45, 0x10, 0xEE, 0x4E, 0xFD, 0x79,
-    0x13, 0x33, 0x41, 0x48, 0x15, 0x89, 0xA2, 0x89, 0x5C, 0xC5, 0xFB,
-    0xB1, 0x3E, 0xD5, 0x71, 0x1C, 0x1E, 0x9B, 0x81, 0x98, 0x72};
-
-_Static_assert(sizeof(SECRET_TROPIC_PAIRING_BYTES) == sizeof(curve25519_key),
-               "Invalid size of Tropic pairing key");
-
-_Static_assert(sizeof(SECRET_TROPIC_PUBKEY_BYTES) == sizeof(curve25519_key),
-               "Invalid size of Tropic public key");
-
 secbool secret_key_tropic_public(curve25519_key dest) {
-  memcpy(dest, SECRET_TROPIC_PUBKEY_BYTES, sizeof(curve25519_key));
-  return sectrue;
+  return secret_key_get(SECRET_TROPIC_TROPIC_PUBKEY_SLOT, dest,
+                        sizeof(curve25519_key));
 }
 
 secbool secret_key_tropic_pairing_unprivileged(curve25519_key dest) {
-  memset(dest, 2, sizeof(curve25519_key));
-  return sectrue;
+  return secret_key_derive_curve25519(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
+                                      KEY_INDEX_TROPIC_PAIRING_UNPRIVILEGED,
+                                      dest);
 }
 
 secbool secret_key_tropic_pairing_privileged(curve25519_key dest) {
-  memcpy(dest, SECRET_TROPIC_PAIRING_BYTES, sizeof(curve25519_key));
-  return sectrue;
+  return secret_key_derive_curve25519(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
+                                      KEY_INDEX_TROPIC_PAIRING_PRIVILEGED,
+                                      dest);
 }
 
 secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  memset(dest, 1, ECDSA_PRIVATE_KEY_SIZE);
-  return sectrue;
+  return secret_key_derive_nist256p1(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
+                                     KEY_INDEX_TROPIC_MASKING, 0, dest);
 }
 
 #endif  // USE_TROPIC

@@ -3041,6 +3041,26 @@ static void prodtest_tropic_tests_cleanup(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_tropic_update_configuration(cli_t* cli) {
+  if (cli_arg_count(cli) != 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (tropic_prodtest_init_and_get_handle(cli) == NULL) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT, "`tropic_init()` failed");
+    return;
+  }
+
+  if (tropic_ensure_configuration() != sectrue) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_CONFIGURATION,
+              "`tropic_ensure_configuration()` failed");
+    return;
+  }
+
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -3264,6 +3284,13 @@ PRODTEST_CLI_CMD(
   .name = "tropic-erase-all-slots",
   .func = prodtest_tropic_erase_all_slots,
   .info = "Erase all ECC keys, data slots and Mac&Destroy slots. Keeps pairing keys intact.",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-update-configuration",
+  .func = prodtest_tropic_update_configuration,
+  .info = "Update the Tropic configuration to the version embedded in the firmware",
   .args = ""
 );
 

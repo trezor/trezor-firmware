@@ -1482,6 +1482,16 @@ tropic-read-configs
 OK
 ```
 
+### tropic-update-configuration
+
+Updates the Tropic irreversible and reversible configuration to the version embedded in the firmware, performing the same configuration check as the firmware does on boot.
+
+Example:
+```
+tropic-update-configuration
+OK
+```
+
 ### tropic-erase-all-slots
 
 Erases all ECC key slots, data slots and MAC & Destroy slots.
