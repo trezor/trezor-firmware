@@ -461,8 +461,15 @@ stage_for_signing() {
         #                      computing the leaf. Keeping it out of the build is what
         #                      makes founder key rotation a re-sign, not a rebuild.
         #   0x00A3 model id -- pins the image to this model
+        # -s 0 emits the PROTECTED security-counter TLV (0x50) as a placeholder for
+        # the same reason: the signer stamps the STM boot header's monotonic_version
+        # into it, so the nRF enforces the SAME anti-rollback axis as the STM rather
+        # than a second, independent counter. It must exist here (imgtool owns the
+        # protected-area layout, and the leaf covers that area) for the signer to
+        # fill -- but its VALUE must not come from this build, or the two sides
+        # could disagree.
         run_native \
-            "imgtool sign --version $VERSION --align 4 --header-size $HEADER_SIZE -S $SLOT_SIZE --pad-header build/$APP_DIR/zephyr/zephyr_nohdr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x00 --custom-tlv 0x00A3 $MODEL_IDENTIFIER && \
+            "imgtool sign --version $VERSION --align 4 --header-size $HEADER_SIZE -S $SLOT_SIZE --pad-header -s 0 build/$APP_DIR/zephyr/zephyr_nohdr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x00 --custom-tlv 0x00A3 $MODEL_IDENTIFIER && \
              ../bootloader/mcuboot/scripts/imgtool.py dumpinfo ./build/$APP_DIR/zephyr/zephyr.prep.bin > ./build/$APP_DIR/zephyr/dump.txt"
 
         # -i with no path: take the founder-signed image from the trezor-firmware
