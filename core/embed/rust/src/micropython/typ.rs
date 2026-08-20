@@ -35,7 +35,7 @@ macro_rules! slot_setter {
         ///
         /// let my_type = MyType {
         ///     head: unsafe {
-        ///         EmptyType::new(Qstr::MP_QSTR_MyType)
+        ///         EmptyType::new(name_qstr)
         ///             // CORRECT:
         ///             .slot_index_make_new(1)  // points to slot 0
         ///             // INCORRECT:
