@@ -161,3 +161,21 @@ class SessionContext(GenericSessionContext):
     @property
     def cache(self) -> DataCache:
         return self.session_cache
+
+
+class WardServiceSessionContext(SessionContext):
+    """The session behind the WARD service channel.
+
+    A real allocated cache slot, unlike `SeedlessSessionContext`, because the service keeps state
+    there -- which is why it does not raise on `cache`.
+
+    IT IS NOT A WALLET SESSION AND MUST NEVER BECOME ONE. It holds no seed: the service is a
+    transport peer, and every derivation a WARD operation needs happens in the workflow that calls
+    the service, where the right hidden-wallet context already exists. A type of its own so that
+    "is this a wallet session?" is a question code can ask, rather than one answered by noticing
+    which state integer happens to be stored.
+
+    What keeps it from becoming one is that `ThpCreateNewSession` -- the only thing that derives and
+    stores a seed -- is refused on the WARD interface. This class is what makes that refusal
+    checkable rather than merely intended.
+    """

@@ -6,6 +6,7 @@ from .session_context import (
     GenericSessionContext,
     SeedlessSessionContext,
     SessionContext,
+    WardServiceSessionContext,
 )
 
 if TYPE_CHECKING:
@@ -37,4 +38,9 @@ def get_session_from_cache(
         return None
     elif cache_thp.is_seedless_session(session_cache):
         return SeedlessSessionContext(channel_ctx, session_id)
+    elif cache_thp.is_ward_service_session(session_cache):
+        # DISPATCHED EXPLICITLY, because the fall-through below builds a WALLET session. The state
+        # survives session restarts in the cache, so without this a service slot would come back as
+        # an ordinary `SessionContext` and nothing would distinguish it from a wallet's.
+        return WardServiceSessionContext(channel_ctx, session_cache)
     return SessionContext(channel_ctx, session_cache)
