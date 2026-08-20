@@ -194,7 +194,8 @@ systask_id_t systask_id(const systask_t* task) { return task->id; }
 void systask_set_mpu(systask_t* task) {
   if (task->applet != NULL) {
     applet_t* applet = (applet_t*)task->applet;
-    mpu_set_active_applet(&applet->layout);
+    mpu_set_active_applet(&applet->layout,
+                          applet->privileges.framebuffer_access);
   }
 }
 #endif  // USE_APPLETS
