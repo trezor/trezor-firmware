@@ -101,10 +101,10 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     # SIZE IS REFUSED BEFORE THE PROMPT. Asking the user to keep something and then failing to
     # store it wastes a confirmation and teaches them the screen means nothing. The online read
     # is unaffected -- an entry too large to keep is still perfectly readable.
-    from storage.ward import MAX_VALUE_LEN
-
-    if len(value) > MAX_VALUE_LEN:
-        raise DataError("WARD: entry too large to keep offline")
+    #
+    # Both caps, via one authority: the value cap alone would let a long app_id or identifier push a
+    # legal value past the RECORD cap and fail after the hold. See `offline_store.ensure_storable`.
+    offline_store.ensure_storable(key_type, app_id, identifier, value)
 
     status, existing = await offline_store.get(key_type, app_id, identifier)
 
