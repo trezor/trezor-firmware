@@ -36,6 +36,11 @@
 ssize_t dbg_console_write(const void* data, size_t data_size);
 #endif
 
+// Applets without the `unlimited_syscalls` privilege may only invoke
+// the syscalls backing the functions exposed through `trezor_api_v1_t`.
+// Keep this API in sync with the syscall whitelist in
+// `syscall_is_allowed()` (syscall_dispatch.c).
+
 typedef struct {
   void (*system_exit)(int exitcode);
 
