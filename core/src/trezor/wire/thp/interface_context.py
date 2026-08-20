@@ -105,6 +105,63 @@ class ThpContext:
             return saved
         return False
 
+    def attach_existing_channel(self, iface_num: int, channel_id: int) -> Channel:
+        """Make an already-open channel writable again on the interface it belongs to.
+
+        The Rust side keeps a channel across MicroPython session restarts, but the `Channel`
+        object does not survive them -- and a channel that is not its interface's
+        `active_channel` cannot be written at all: `Channel.write` only pokes the write loop,
+        which drains `active_channel` and nothing else. So a caller holding a channel id from
+        persisted state has to reattach before it can send anything.
+
+        THREE THINGS ARE CHECKED, and none of them is a formality:
+
+          the channel still exists -- Rust may have closed it since the id was recorded, and a
+          `Channel` for a dead id would fail later and further away;
+
+          it is on the interface the caller named -- `packet_out_channel` looks a channel up by
+          id ALONE and fragments into a buffer the caller then writes to its OWN interface, so
+          attaching to the wrong one puts a host's encrypted traffic on another host's wire.
+          `Channel.__init__` enforces this too; naming the interface here is what lets the
+          caller be told which of the two is wrong;
+
+          the interface is not already serving a different channel -- reattaching must never
+          displace one, because the displaced object is what some other task is awaiting.
+
+        Reattaching a channel that is already attached returns the existing object rather than
+        building a second one: two `Channel`s for one id would each hold half the state (one
+        has the mailbox being awaited, the other the buffers being filled).
+        """
+        from ..errors import DataError
+
+        for iface_ctx in self._iface_ctxs:
+            if iface_ctx._iface.iface_num() == iface_num:
+                break
+        else:
+            raise DataError("no such THP interface")
+
+        existing = iface_ctx.active_channel
+        if existing is not None:
+            if existing.channel_id != channel_id:
+                raise DataError("THP interface is busy with another channel")
+            return existing
+
+        buffers = iface_ctx._buffers_provider.take()
+        if buffers is None:
+            # The pool is held by a channel this interface no longer tracks. Refusing is the only
+            # safe answer: the buffers are still referenced by whatever took them.
+            raise DataError("no THP buffers left for this interface")
+
+        try:
+            channel = Channel(channel_id, iface_ctx, buffers=buffers)
+        except trezorthp.ThpError:
+            # Closed since the id was recorded -- report it as unavailable rather than letting a
+            # Rust-level error escape into a workflow.
+            raise DataError("THP channel is no longer open")
+
+        iface_ctx.active_channel = channel
+        return channel
+
     async def close(self) -> None:
         for iface_ctx in self._iface_ctxs:
             try:
