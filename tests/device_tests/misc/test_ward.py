@@ -1432,6 +1432,53 @@ def test_ward_catches_up_across_transitions_it_never_saw(session: Session):
 
 
 @pytest.mark.models("core")
+def test_ward_verify_chain_brings_a_fresh_session_online(session: Session):
+    """Adopting through the chain latches the session online, exactly as reconcile does.
+
+    Both routes end in the same place -- a head bound to a WM attestation -- and this one is
+    the STRICTER, since it also proves authorised descent from the head the device already
+    held. It nevertheless used to leave the session OFFLINE: `reconcile` called `mark_online`
+    and `verify_chain` did not. Every read then fell back to the offline store and every write
+    refused, with nothing on screen to say why.
+
+    IT HID BECAUSE THE LATCH IS PER SESSION WHILE THE ROOT IS IN FLASH. Any test that seeds an
+    entry has already reconciled, so it is online long before the chain is exercised -- which is
+    why `test_ward_catches_up_across_transitions_it_never_saw` reads successfully either way. A
+    fresh session is what separates the two, and it is also the real case: multi-device catch-up
+    arrives on a connection that has not reconciled, so the stronger route was precisely the one
+    a device could not come online by.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"Petr_label")
+
+    # A new session starts offline; the stored root survives -- see
+    # `test_ward_root_survives_a_new_session`.
+    fresh = session.test_ctx.get_session()
+
+    # Confirm the head the device already holds, by the chain route rather than reconcile.
+    # NO LINKS: the attested head IS the device's head, so there is nothing to fold. The empty
+    # chain is the "what I hold is current" case, and the terminal counter and mac checks still
+    # have to agree -- so this exercises adoption without needing transitions to invent.
+    wm = MockWM()
+    ack = ward.sync(fresh)
+    mac = root_mac(_K_MAC, ack.ward_id, store.counter, store.root())
+    wm.publish(ack.ward_id, store.counter, mac, _T0 + store.counter)
+    _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(fresh, store.counter, mac, sig, _T0 + store.counter)
+
+    res = ward.verify_chain(fresh, [])
+    assert res.counter == store.counter
+    assert res.new_root == store.root()
+
+    # THE ASSERTION. A read only reaches the host once the session is online -- offline it is
+    # served from the device's own store and never emits `WardEntryRequest` at all -- so
+    # `_read`'s expected-response check is itself the test, and the value merely confirms the
+    # answer came from the tree the chain adopted.
+    _res, rec = _read(fresh, store, lambda p: ward.get_entry(fresh, _APP, b"addr1", p))
+    assert "Petr_label" in rec.text
+
+
+@pytest.mark.models("core")
 def test_ward_refuses_a_chain_with_a_gap(session: Session):
     """A skipped step is how a fork stays invisible: every link is authentic, but the
     device never sees the transition that diverged."""
