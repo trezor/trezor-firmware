@@ -276,6 +276,7 @@ def queue_set_entry(
     identifier: bytes,
     value: Optional[bytes],
     mac: Optional[bytes] = None,
+    compact: bool = False,
 ) -> messages.WardQueueSetAck:
     """Ask the device to HOLD a write until a synced host can publish it.
 
@@ -289,10 +290,18 @@ def queue_set_entry(
     WITH `mac` THIS IS A RESTORE of a change exported by `queue_get_entry`: the three fields must be
     exactly what came out, because the device MACs them together with the path and key space it
     derives itself. Use `restore_queued_entry` rather than mapping the fields by hand.
+
+    WITH `compact` the device keeps a HASH of the identity instead of the identity -- 40-odd bytes less
+    flash per record. Such an entry is still readable and still backupable, but publishing it needs
+    `flush_queue` to be told which entry to publish, since a hash cannot become a keyed path.
     """
     return session.call(
         messages.WardQueueSetEntry(
-            app_id=app_id, identifier=identifier, value=value, mac=mac
+            app_id=app_id,
+            identifier=identifier,
+            value=value,
+            mac=mac,
+            compact=compact or None,
         ),
         expect=messages.WardQueueSetAck,
     )
@@ -301,6 +310,7 @@ def queue_set_entry(
 def restore_queued_entry(
     session: "Session",
     backup: messages.WardQueueGetAck,
+    compact: bool = False,
 ) -> messages.WardQueueSetAck:
     """Hand a backed-up queued change straight back to the device.
 
@@ -323,6 +333,7 @@ def restore_queued_entry(
         backup.identifier or b"",
         backup.value or b"",
         mac=backup.mac,
+        compact=compact,
     )
 
 
@@ -624,7 +635,12 @@ def erase_cached_entry(
     )
 
 
-def flush_queue(session: "Session", provider: EntryProvider) -> WardResult:
+def flush_queue(
+    session: "Session",
+    provider: EntryProvider,
+    app_id: Optional[str] = None,
+    identifier: Optional[bytes] = None,
+) -> WardResult:
     """Publish ONE queued change, sealed and re-derived against current state.
 
     Returns a result whose `remaining` says how many are still waiting; call again while it
@@ -634,9 +650,18 @@ def flush_queue(session: "Session", provider: EntryProvider) -> WardResult:
 
     `remaining == 0` with no `entry_key` means the queue was already empty.
 
+    NAME AN ENTRY with (app_id, identifier) to publish that one instead of the next in the queue. That
+    is the only way a COMPACT record can be published: it holds a hash of its identity, and the device
+    cannot turn a hash back into a keyed path -- so the caller, which has the identity in its backup,
+    supplies it.
+
     Answers a `WardFlushQueueAck`: an ordinary leaf with the full authenticators, plus
     `remaining`, which lives there and nowhere else -- a direct write has nothing to count.
 
     Requires a synced session: with no trusted root there is nothing to derive against.
     """
-    return _call_answering_pulls(session, messages.WardFlushQueue(), provider)
+    return _call_answering_pulls(
+        session,
+        messages.WardFlushQueue(app_id=app_id, identifier=identifier),
+        provider,
+    )

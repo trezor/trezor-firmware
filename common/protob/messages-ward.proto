@@ -335,6 +335,16 @@ message WardQueueSetEntry {
     // comes back at "no counter assigned", which is the honest state -- after a restore nobody
     // knows whether an earlier publication landed, so the change must be offered again.
     reserved 5, 6;
+
+    // STORE IT COMPACTLY: keep a hash of the identity instead of the identity itself, which is 40
+    // bytes less flash for a typical address. See WardQueueGetAck for what still comes back.
+    //
+    // THE IDENTITY THEN LIVES WITH THE HOST. A compact record can still be READ -- anyone asking
+    // already names the entry, and the device hashes what they named -- and still be BACKED UP, since
+    // the ack echoes the identity from the request. What the device can no longer do alone is PUBLISH
+    // it: WardFlushQueue has to be told which entry to publish. Best paired with a backup, which is
+    // where a restore already starts.
+    optional bool   compact    = 7;
 }
 
 /**
@@ -415,6 +425,11 @@ message WardQueueGetEntry {
  * backup contains both identifier and value, including for a change queued by an on-device app
  * that the host never saw. Accepted deliberately, so that a backup is something a host can hold,
  * inspect and restore without holding any device key.
+ *
+ * THE IDENTITY IS ECHOED FROM THE REQUEST when the record is stored COMPACTLY -- such a record keeps
+ * only a hash of it -- and read from the record otherwise. Either way the device has checked that the
+ * two agree, so a backup blob is identical in shape and equally restorable whichever form the record
+ * is in.
  *
  * `mac` IS THE POINT. It authenticates (entry_key, op, key_type, app_id, identifier, value) under
  * K_auth -- see `cas.intent_preimage` -- so a restore can be checked against what this wallet
@@ -796,10 +811,19 @@ message WardEraseCachedEntry {
  * online write commits at. A host that never publishes leaves it queued and re-sendable,
  * which is the recoverable direction.
  *
+ * NAME AN ENTRY, OR TAKE THE NEXT ONE. With app_id and identifier this publishes THAT queued change;
+ * without them it takes the next one in the queue, as it always has. Naming one is what makes a
+ * COMPACT record publishable: such a record holds only a hash of its identity, and the device cannot
+ * derive a keyed path from a hash -- so the host, which has the identity in its backup, supplies it.
+ * Asked for the next one when the next one is compact, the device refuses and says so: it cannot tell
+ * the host which identity to send.
+ *
  * Requires a synced session: with no trusted root there is nothing to derive against.
  * @start
  * @next WardFlushQueueAck
  * @next Failure
  */
 message WardFlushQueue {
+    optional string app_id     = 1;  // together with identifier: publish THIS queued change
+    optional bytes  identifier = 2;
 }
