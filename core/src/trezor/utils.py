@@ -37,6 +37,7 @@ from trezorutils import (  # noqa: F401
     USE_SERIAL_NUMBER,
     USE_TELEMETRY,
     USE_THP,
+    USE_WARD_SERVICE_CHANNEL,
     USE_TOUCH,
     USE_TOUCH_WAKEUP,
     USE_TROPIC,
