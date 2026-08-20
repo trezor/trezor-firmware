@@ -40,29 +40,13 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
     from trezor.wire import DataError
 
     from . import round as sync_round
-    from .attest import verify_attestation
+    from .adopt import verify_round_attestation
     from .common import require_initialized
-    from .keys import derive_ward_id
     from .root import get_counter
 
     require_initialized()
 
-    ctx = sync_round.get()
-    if ctx is None:
-        raise DataError("no sync round in progress")
-    _state, nonce, _c, _m = ctx
-
-    counter = msg.counter
-    mac = msg.mac
-    signature = msg.wm_signature
-    timestamp = msg.timestamp or 0
-    if counter is None or mac is None or signature is None:
-        raise DataError("counter, mac and wm_signature are required")
-
-    if not verify_attestation(
-        await derive_ward_id(), nonce, counter, mac, timestamp, signature
-    ):
-        raise DataError("WM attestation verification failed")
+    counter, mac = await verify_round_attestation(msg)
 
     stored_counter = await get_counter()
 
