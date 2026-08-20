@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from storage import cache_thp
 from storage.cache_common import InvalidSessionError
 from storage.cache_thp import SessionThpCache
-from trezor import protobuf
+from trezor import protobuf, utils
 from trezor.wire import message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.message_handler import failure, handle_single_message
@@ -105,6 +105,16 @@ class GenericSessionContext(Context):
             expected_type = protobuf.type_for_wire(
                 self.message_type_enum_name, message.type
             )
+
+        # prevent auto-lock while handling multi-message workflows on Bluetooth
+        # see also https://github.com/trezor/trezor-firmware/issues/7522
+        if utils.USE_BLE:
+            import trezorble as ble
+
+            if self.channel.iface is ble.interface:
+                from trezor.workflow import idle_timer
+
+                idle_timer.touch()
 
         return message_handler.wrap_protobuf_load(message.data, expected_type)
 
