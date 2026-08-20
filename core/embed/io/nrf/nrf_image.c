@@ -854,18 +854,32 @@ secbool nrf_image_verify_for_push(const uint8_t* image, size_t image_len,
 
   // (1) fold with the co-path from the IMAGE, which is the copy MCUboot uses.
   const uint8_t* proof = NULL;
-  uint16_t proof_len =
-      nrf_image_find_unprot_tlv(image, image_len, NRF_PQ_TLV_MERKLE_PROOF, &proof);
+  uint16_t proof_len = nrf_image_find_unprot_tlv(
+      image, image_len, NRF_PQ_TLV_MERKLE_PROOF, &proof);
   if (proof_len == 0 || (proof_len % sizeof(merkle_proof_node_t)) != 0) {
     return secfalse;
   }
   if (nrf_image_verify_in_tree(image, image_len,
-                         (const merkle_proof_node_t*)(const void*)proof,
-                         proof_len / sizeof(merkle_proof_node_t),
-                         trusted_model_root) != sectrue) {
+                               (const merkle_proof_node_t*)(const void*)proof,
+                               proof_len / sizeof(merkle_proof_node_t),
+                               trusted_model_root) != sectrue) {
     return secfalse;
   }
 
+  // NOT checked here, deliberately: the nRF image's security counter
+  // (IMAGE_TLV_SEC_CNT, the release's monotonic_version). It is a PROTECTED
+  // TLV, so it lies INSIDE the leaf -- and the fold above already proved that
+  // leaf reaches this boot header's modelRoot. An image that folds is therefore
+  // the one signed alongside THIS bootloader, carrying the counter the signer
+  // stamped from THIS header; a tampered counter simply fails the fold. Nor can
+  // the nRF refuse the push on rollback grounds: that needs the nRF's floor
+  // above the pushed counter, which needs the bootloader downgraded first,
+  // which check_bootloader_min_version already refuses.
+  //
+  // That is exactly why the signature records below DO need checking: they are
+  // UNPROTECTED, outside the leaf, so the fold says nothing about them. If the
+  // counter ever moves out of the protected area, it joins them.
+  //
   // (2) the signature records must be the ones this boot header carries.
   const struct {
     uint16_t type;

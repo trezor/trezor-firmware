@@ -93,6 +93,11 @@ static void put32(uint32_t off, uint32_t v) {
  * are left zeroed here: they live in the UNPROTECTED area, outside the image hash,
  * so they do not affect the leaf -- which is exactly what makes signing possible at
  * all (otherwise the signature would have to cover itself). */
+/* -1 => omit the security-counter TLV entirely */
+static long g_sec_cnt = -1;
+/* absolute offset of the counter value in `image`, 0 when omitted */
+static size_t off_sec_cnt = 0;
+
 static void build_image(uint8_t sigmask) {
   memset(image, 0, sizeof(image));
 
@@ -107,6 +112,19 @@ static void build_image(uint8_t sigmask) {
   prot[pl++] = IMAGE_TLV_PQ_SIGMASK >> 8;
   prot[pl++] = 1; prot[pl++] = 0;
   prot[pl++] = sigmask;
+  /* Security counter, PROTECTED like the real imgtool writes it -- so it lands
+   * inside the image hash and inside the founder leaf. g_sec_cnt < 0 omits it,
+   * which is the "image built without -s" case. */
+  size_t sec_cnt_rel = 0;
+  if (g_sec_cnt >= 0) {
+    sec_cnt_rel = pl + 4; /* value starts after this record's type+len */
+    prot[pl++] = IMAGE_TLV_PQ_SEC_CNT & 0xff;
+    prot[pl++] = IMAGE_TLV_PQ_SEC_CNT >> 8;
+    prot[pl++] = 4; prot[pl++] = 0;
+    const uint32_t c = (uint32_t)g_sec_cnt;
+    prot[pl++] = c & 0xff; prot[pl++] = (c >> 8) & 0xff;
+    prot[pl++] = (c >> 16) & 0xff; prot[pl++] = (c >> 24) & 0xff;
+  }
   const uint16_t prot_area = (uint16_t)(4 + pl);
 
   put32(0, IMG_MAGIC);
@@ -122,6 +140,8 @@ static void build_image(uint8_t sigmask) {
   put16(p, TLV_PROT_INFO_MAGIC);
   put16(p + 2, prot_area);
   memcpy(&image[p + 4], prot, pl);
+  /* Absolute offset of the counter VALUE, for the tamper case below. */
+  off_sec_cnt = (g_sec_cnt >= 0) ? (p + 4 + sec_cnt_rel) : 0;
   p += prot_area;
 
   /* Unprotected area: the image-hash TLV (0x10) then the founder records. 0x10
@@ -341,6 +361,53 @@ int main(void) {
     fails++;
   } else {
     printf("single-key sigmask rejected (2-of-3 enforced): OK\n");
+  }
+
+  /* ---- security counter (rollback protection input) ---- */
+  {
+    /* Absent must read as 0, not fail: any stored counter above 0 then refuses
+     * the image, so absence can only ever be MORE restrictive. */
+    g_sec_cnt = -1;
+    build_image(0x05);
+    memcpy(&image[off_copath], copath, sizeof(copath));
+    uint32_t got = 0xdeadbeef;
+    if (pq_image_security_counter(flat_read, &img, image_len, &got) != 0 ||
+        got != 0) {
+      printf("FAIL: absent security counter did not read as 0 (rc/val %u)\n",
+             (unsigned)got);
+      fails++;
+    } else {
+      printf("absent security counter reads as 0: OK\n");
+    }
+
+    /* Present, and byte-order correct: a big-endian read of 0x01020304 would
+     * yield 0x04030201, which silently inverts the ordering of every release. */
+    g_sec_cnt = 0x01020304;
+    build_image(0x05);
+    memcpy(&image[off_copath], copath, sizeof(copath));
+    got = 0;
+    if (pq_image_security_counter(flat_read, &img, image_len, &got) != 0 ||
+        got != 0x01020304u) {
+      printf("FAIL: security counter read as 0x%08x, expected 0x01020304\n",
+             (unsigned)got);
+      fails++;
+    } else {
+      printf("security counter read little-endian (0x01020304): OK\n");
+    }
+
+    /* It is PROTECTED, so it is inside the founder leaf: flipping it must break
+     * the signature. This is what makes the counter unforgeable rather than
+     * merely present. */
+    image[off_sec_cnt] ^= 0xFF;
+    FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL,
+             pq_keys, ec_keys, NUM_KEYS, NULL);
+    if (FIH_EQ(fih_rc, FIH_SUCCESS)) {
+      printf("FAIL: tampered security counter ACCEPTED (not covered by the leaf)\n");
+      fails++;
+    } else {
+      printf("tampered security counter rejected (inside the founder leaf): OK\n");
+    }
+    g_sec_cnt = -1;
   }
 
   /* A sigmask naming a key outside the pool must be rejected on range, not

@@ -122,6 +122,15 @@ def sign_firmware_images(
             # Must precede the leaf computation below.
             nrf_sigmask = bl.header.sigmask
             nrf_image = nrf_tree.set_protected_sigmask(nrf_image, nrf_sigmask)
+            # Same treatment for the security counter, and for a sharper reason: it
+            # must carry the boot header's monotonic_version so the nRF sits on the
+            # SAME anti-rollback axis as the STM rather than a second, independent
+            # one. Two axes could settle into states neither side rejects -- a
+            # forward STM paired with an nRF rolled back over serial recovery.
+            # Stamping it HERE, from the header being signed, makes them agree by
+            # construction: there is no build-script coordination to get wrong.
+            nrf_monotonic = bl.header.monotonic_version
+            nrf_image = nrf_tree.set_protected_monotonic(nrf_image, nrf_monotonic)
             # Then the founder records: placeholders now (their SIZES are inside the
             # leaf), values once the signature exists.
             nrf_image = nrf_tree.add_pq_placeholders(nrf_image)
@@ -143,6 +152,12 @@ def sign_firmware_images(
             # the header carried then; signing may set it again. If those ever differ
             # the nRF would carry a mask naming the wrong keys and would reject the
             # image at BOOT -- a late, confusing failure -- so fail here instead.
+            if bl.header.monotonic_version != nrf_monotonic:
+                raise SystemExit(
+                    f"monotonic_version changed during signing (stamped "
+                    f"{nrf_monotonic}, header now {bl.header.monotonic_version}); the "
+                    "nRF image would enforce a different rollback floor than the STM"
+                )
             if bl.header.sigmask != nrf_sigmask:
                 raise SystemExit(
                     f"sigmask changed during signing (stamped 0x{nrf_sigmask:02x}, "

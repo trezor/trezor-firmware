@@ -54,6 +54,10 @@ TLV_MODEL_ID = 0x00A3  # custom TLV: 4-byte model tag, e.g. b"T3W1" (protected)
 # it (set_protected_sigmask) before the leaf is computed, so the signature attests to
 # the signer set without binding the binary to one key selection.
 TLV_SIGMASK = 0x00A2
+# MCUboot's security counter (protected). Carries the STM boot header's
+# monotonic_version: ONE anti-rollback axis for the whole coupled release, not a
+# separate nRF counter -- see set_protected_monotonic.
+TLV_SEC_CNT = 0x50
 
 # The CLASSIC (non-founder) scheme's own signature records: two Ed25519 signatures
 # over the image hash, in the UNPROTECTED area, inserted by insert_signatures.py
@@ -407,55 +411,52 @@ def mcuboot_image_hash(image: bytes) -> bytes:
     return _sha256(image[: mcuboot_prot_end(image)])
 
 
-def set_protected_sigmask(image: bytes, sigmask: int) -> bytes:
-    """Write the founder `sigmask` into the image's PROTECTED sigmask TLV, keeping
-    MCUboot's image-hash TLV consistent.
+def _patch_protected_tlv(image: bytes, tlv_type: int, value: bytes, what: str) -> bytes:
+    """Overwrite a PROTECTED TLV's value in place, keeping MCUboot's image hash valid.
 
-    The signer owns this field, exactly as it owns the STM boot header's sigmask: it
-    sets the value, THEN the leaf is computed, THEN it signs. Being protected, the
-    mask is inside MCUboot's image hash AND inside the founder leaf, so it is
-    genuinely committed -- the founder signature attests to WHICH keys signed,
-    rather than the verifier inferring it. And because the signer (not the nRF
-    build) writes it, rotating founder keys needs only a re-sign, not an nRF rebuild.
+    Shared by the signer-owned protected fields (founder sigmask, security
+    counter). Patching a protected TLV invalidates MCUboot's image hash, so TLV
+    0x10 is recomputed here; MCUboot would otherwise reject the image on its hash
+    check. Must be called BEFORE the leaf/tree is computed -- protected TLVs are
+    inside the leaf, so changing one afterwards invalidates the signature.
 
-    Patching a protected TLV invalidates MCUboot's image hash, so TLV 0x10 is
-    recomputed here; MCUboot would otherwise reject the image on its hash check.
-    Must be called BEFORE the leaf/tree is computed.
+    The record must already exist with the right size: the nRF build emits a
+    placeholder and the signer fills it. That keeps these fields a re-sign rather
+    than an nRF rebuild.
     """
-    if not 0 <= sigmask <= 0xFF:
-        raise ValueError(f"sigmask {sigmask} out of range")
-
     out = bytearray(image)
     magic, _load, hdr, prot, imgsz, *_rest = _MCUBOOT_HDR.unpack_from(out)
     if magic != IMAGE_MAGIC:
         raise ValueError("not an MCUboot image (bad magic)")
     if prot == 0:
-        raise ValueError("image has no protected TLV area to hold the sigmask")
+        raise ValueError(f"image has no protected TLV area to hold the {what}")
 
-    # Locate the sigmask record inside the PROTECTED area only (a same-typed record
-    # in the unprotected area would not be committed, so it must not be used).
+    # PROTECTED area only: a same-typed record in the unprotected area would not
+    # be committed by the leaf, so it must never be used.
     prot_off = hdr + imgsz
     p, end = prot_off + 4, prot_off + prot
     while p + 4 <= end:
         t, ln = struct.unpack_from("<HH", out, p)
-        if t == TLV_SIGMASK:
-            if ln != 1:
-                raise ValueError(f"protected sigmask TLV has length {ln}, expected 1")
-            out[p + 4] = sigmask
+        if t == tlv_type:
+            if ln != len(value):
+                raise ValueError(
+                    f"protected {what} TLV has length {ln}, expected {len(value)}"
+                )
+            out[p + 4 : p + 4 + ln] = value
             break
         p += 4 + ln
     else:
         raise ValueError(
-            f"no protected sigmask TLV (0x{TLV_SIGMASK:04x}); the nRF image must be "
-            "built with a placeholder (imgtool --custom-tlv) for the signer to fill"
+            f"no protected {what} TLV (0x{tlv_type:04x}); the nRF image must be "
+            "built with a placeholder for the signer to fill"
         )
 
     # Re-stamp MCUboot's image hash over the (now modified) protected region.
     digest = mcuboot_image_hash(bytes(out))
-    hp, hend = prot_off + prot + 4, len(out)
     info_magic, info_len = struct.unpack_from("<HH", out, prot_off + prot)
     if info_magic != TLV_INFO_MAGIC:
         raise ValueError("image has no unprotected TLV area (no image-hash TLV)")
+    hp = prot_off + prot + 4
     hend = min(prot_off + prot + info_len, len(out))
     while hp + 4 <= hend:
         t, ln = struct.unpack_from("<HH", out, hp)
@@ -469,6 +470,54 @@ def set_protected_sigmask(image: bytes, sigmask: int) -> bytes:
         raise ValueError(f"no image-hash TLV (0x{MCUBOOT_TLV_SHA256:04x}) to re-stamp")
 
     return bytes(out)
+
+
+def set_protected_sigmask(image: bytes, sigmask: int) -> bytes:
+    """Write the founder `sigmask` into the image's PROTECTED sigmask TLV.
+
+    The signer owns this field, exactly as it owns the STM boot header's sigmask: it
+    sets the value, THEN the leaf is computed, THEN it signs. Being protected, the
+    mask is inside MCUboot's image hash AND inside the founder leaf, so the founder
+    signature attests to WHICH keys signed rather than the verifier inferring it.
+    """
+    if not 0 <= sigmask <= 0xFF:
+        raise ValueError(f"sigmask {sigmask} out of range")
+    return _patch_protected_tlv(image, TLV_SIGMASK, bytes([sigmask]), "sigmask")
+
+
+def set_protected_monotonic(image: bytes, monotonic_version: int) -> bytes:
+    """Write the release's `monotonic_version` into the PROTECTED security-counter TLV.
+
+    This is what keeps the nRF on the SAME anti-rollback axis as the STM instead of
+    giving it a second, independent one. The boot header's single-byte
+    monotonic_version is the axis for the whole coupled release (see
+    wf_firmware_update_pq.c); the STM enforces it in the boardloader against an NV
+    monoctr, and the nRF enforces the identical number against its own NV counter
+    (CONFIG_BOOT_PQ_ROLLBACK_PROT).
+
+    Two independent axes could drift into states neither side rejects -- notably a
+    forward STM paired with an nRF rolled back over serial recovery. One axis makes
+    that unreachable: any nRF image below the nRF's floor is refused, and the floor
+    advances with the same releases the STM's does.
+
+    Stamped by the SIGNER, not the nRF build, so the two cannot disagree by
+    construction -- there is no build-script coordination to get wrong. Protected,
+    so it is inside the founder leaf and cannot be raised without breaking the
+    founder signature.
+    """
+    # MONOCTR_MAX_VALUE in embed/sec/monoctr/inc/sec/monoctr.h. The STM stores the
+    # counter UNARY (value N = N written blocks), so its encoding -- not the
+    # uint8_t header field, and not the nRF's 240 slots -- is what bounds the
+    # shared axis. Refuse here so a release is caught at signing rather than by
+    # monoctr_write failing on device.
+    if not 0 <= monotonic_version <= 63:
+        raise ValueError(
+            f"monotonic_version {monotonic_version} exceeds MONOCTR_MAX_VALUE (63), "
+            "the STM's unary monoctr ceiling for the shared anti-rollback axis"
+        )
+    return _patch_protected_tlv(
+        image, TLV_SEC_CNT, struct.pack("<I", monotonic_version), "security counter"
+    )
 
 
 def add_pq_placeholders(image: bytes) -> bytes:
