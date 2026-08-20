@@ -96,16 +96,17 @@ BUFR_TYPEDEF(gcm_buf_t, UNIT_BITS, AES_BLOCK_SIZE);
 
 /*  The maximum number of AES blocks that may be processed under a single key.
 
-    AES-GCM stops being secure long before the 96-bit IV counter wraps: both
-    the confidentiality bound of CTR mode and the collision bound of GHASH
-    degrade with the square of the number of blocks processed under one key.
-    2^32 blocks (64 GiB) keeps that advantage negligible (about 2^-65) and is
-    the limit recommended by NIST SP 800-38D, Appendix C.
+    GCM's privacy advantage is bounded by (sigma + q + 1)^2 / 2^129 for sigma
+    blocks sent in q messages under one key, so the bound says nothing once
+    sigma nears 2^64; at 2^32 blocks (64 GiB) it stays near 2^-65. Proof:
+    Iwata, Ohashi, Minematsu, "Breaking and Repairing GCM Security Proofs",
+    CRYPTO 2012, https://eprint.iacr.org/2012/438
 
-    The counted blocks are the authenticated data blocks, the encrypted or
-    decrypted data blocks, and one block per message for the tag. Once the
-    limit is reached 'blk_cnt' saturates at it, which permanently expires the
-    context: only setting a new key resets the count.
+    This is a cumulative budget for the key, unrelated to the per-message
+    plaintext limit that the 32 bit counter field imposes. Header blocks, data
+    blocks and one tag block per message are counted. 'blk_cnt' saturates at
+    the limit (UINT32_MAX), permanently expiring the context: only setting a
+    new key resets the count.
 */
 #define GCM_MAX_BLOCKS  ((uint32_t)0xffffffff)
 
