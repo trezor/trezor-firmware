@@ -550,6 +550,37 @@ class TestWardStore(unittest.TestCase):
         ward_store.store_delete_slot(0)
         self.assertIsNone(ward_store.store_find_unreadable(_WALLET_A))
 
+    def test_a_root_write_reports_whether_it_landed(self):
+        """A full root store REFUSES, and says so, rather than silently doing nothing.
+
+        Refusing is the intended behaviour -- evicting would strip rollback protection from a
+        wallet the user still has, with no way to notice. But the refusal has to be REPORTABLE,
+        because the caller's next act is to mark the session online: a wallet that adopted a head
+        it never stored is left at counter 0 with no root, and `verify_leaf_against_root` reads
+        that as "nothing was ever written" and stops checking proofs. Silent refusal turned
+        "protected by fewer slots" into "verified by nothing" for the ninth wallet.
+        """
+        for i in range(ward_store.MAX_WALLETS):
+            wallet = bytes([i]) * 16
+            self.assertTrue(ward_store.set_root(wallet, bytes([i + 1]) * 32, i + 1))
+
+        # the ninth is refused...
+        ninth = b"\xee" * 16
+        self.assertFalse(ward_store.set_root(ninth, b"\x99" * 32, 99))
+        self.assertIsNone(ward_store.get_root(ninth))
+        self.assertEqual(ward_store.get_counter(ninth), 0)
+
+        # ...and no occupant was disturbed by the attempt
+        for i in range(ward_store.MAX_WALLETS):
+            wallet = bytes([i]) * 16
+            self.assertEqual(ward_store.get_root(wallet), bytes([i + 1]) * 32)
+            self.assertEqual(ward_store.get_counter(wallet), i + 1)
+
+        # a wallet that already holds a slot keeps being updatable while the store is full
+        first = bytes([0]) * 16
+        self.assertTrue(ward_store.set_root(first, b"\x77" * 32, 77))
+        self.assertEqual(ward_store.get_root(first), b"\x77" * 32)
+
 
 if __name__ == "__main__":
     unittest.main()

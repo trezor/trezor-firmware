@@ -48,8 +48,8 @@ async def get_counter() -> int:
     return ward_store.get_counter(await derive_wallet_id())
 
 
-async def set_root(root: bytes | None, counter: int | None = None) -> None:
-    """Record the root the device just adopted.
+async def set_root(root: bytes | None, counter: int | None = None) -> bool:
+    """Record the root the device just adopted. False if there was no slot for this wallet.
 
     `counter=None` keeps the stored one. Only `reconcile` and `verify_chain` reach here now,
     so every stored head is one a WM attestation named -- which is what made the separately
@@ -58,6 +58,11 @@ async def set_root(root: bytes | None, counter: int | None = None) -> None:
     An ABSENT root means the empty tree, and is stored as EMPTY_ROOT. No caller ever means
     "forget the root I had", so normalising here rather than at each call site keeps the
     "verifies nothing" state unreachable by omission.
+
+    A FALSE RETURN MUST FAIL THE ADOPTION. It means the wallet has no root slot -- eight are
+    protected and this is the ninth -- so the head was verified but not kept. Continuing would
+    leave the device online at counter 0 with no root, which `common.verify_leaf_against_root`
+    treats as "nothing was ever written" and accepts unproven.
     """
     import storage.ward as ward_store
 
@@ -69,4 +74,6 @@ async def set_root(root: bytes | None, counter: int | None = None) -> None:
     wallet_id = await derive_wallet_id()
     if counter is None:
         counter = ward_store.get_counter(wallet_id)
-    ward_store.set_root(wallet_id, root, counter)
+    # PROPAGATED, never swallowed: the store refuses a wallet it has no slot for, and a caller
+    # that adopted a head without storing it would go on to verify proofs against nothing.
+    return ward_store.set_root(wallet_id, root, counter)

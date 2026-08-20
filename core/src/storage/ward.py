@@ -179,13 +179,20 @@ def get_counter(wallet_id: bytes) -> int:
     return int.from_bytes(rec[off : off + _COUNTER_LEN], "big")
 
 
-def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> None:
-    """Record this wallet's root and counter.
+def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> bool:
+    """Record this wallet's root and counter. False if there was no slot for it.
 
     Nothing else is kept. The last attested TIME was not an independent signal -- anti-replay
     is the counter's job, and a malicious WM simply lies about the clock -- and the last
     attested COUNTER became redundant once writes stopped committing: every stored counter now
-    arrives from an attestation, so it and the head counter are the same number."""
+    arrives from an attestation, so it and the head counter are the same number.
+
+    THE RETURN VALUE IS NOT ADVISORY. Refusing a full store is deliberate (see the module
+    docstring), but a caller that ignores the refusal does not get the intended degradation --
+    it gets a wallet that believes it adopted a head it did not store, and `verify_leaf_against
+    _root` reads an absent root at counter 0 as "nothing was ever written" and stops checking
+    proofs at all. So the outcome has to be reported, and every caller has to act on it.
+    """
     if len(wallet_id) != _WALLET_ID_LEN:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
 
@@ -196,9 +203,9 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> None:
                 index = i
                 break
     if index is None:
-        # Every slot belongs to another wallet. Deliberately a no-op: see the module
-        # docstring on why this refuses rather than evicting.
-        return
+        # Every slot belongs to another wallet. See the module docstring on why this refuses
+        # rather than evicting.
+        return False
 
     common.set(
         common.APP_WARD,
@@ -207,6 +214,7 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> None:
         + (root if root is not None else bytes(_ROOT_LEN))
         + counter.to_bytes(_COUNTER_LEN, "big"),
     )
+    return True
 
 
 # --- the offline store ------------------------------------------------------------
@@ -267,7 +275,9 @@ STORE_VERSION_COMPACT = const(4)  # the identity is replaced by a 16-byte hash o
 _STORE_WALLET_ID_LEN = const(7)
 
 FLAG_PENDING = const(0x01)  # a local write that has not been published yet
-FLAG_OFFERED = const(0x02)  # ...and it has already been handed to a host this side of a reconcile
+FLAG_OFFERED = const(
+    0x02
+)  # ...and it has already been handed to a host this side of a reconcile
 
 # THE HEADER IS FROZEN ACROSS EVERY FUTURE VERSION: version(1) || wallet_id(7) || identity, where
 # identity is len8(key_type)||key_type || len8(app_id)||app_id || len16(identifier)||identifier.
@@ -341,9 +351,10 @@ def store_find(wallet_id: bytes, candidates: "list[tuple[int, bytes]]") -> int |
             # The FULL form is scoped by the tag it carries; the COMPACT form by its name, which is a
             # hash over wallet_id -- so a wallet mismatch there is a name mismatch and needs no
             # separate check. Both are checked against THIS wallet either way.
-            if version == STORE_VERSION and rec[
-                _STORE_ID_OFF:STORE_KEY_OFF
-            ] != wallet_id[:_STORE_WALLET_ID_LEN]:
+            if (
+                version == STORE_VERSION
+                and rec[_STORE_ID_OFF:STORE_KEY_OFF] != wallet_id[:_STORE_WALLET_ID_LEN]
+            ):
                 continue
             off = store_key_off(version)
             if rec[off : off + len(key)] == key:
@@ -388,7 +399,11 @@ def store_bytes_used(exclude_index: "int | None" = None) -> int:
 
 
 def store_put(
-    wallet_id: bytes, version: int, key: bytes, record: bytes, replaces: bytes | None = None
+    wallet_id: bytes,
+    version: int,
+    key: bytes,
+    record: bytes,
+    replaces: bytes | None = None,
 ) -> bool:
     """Write a record, replacing this wallet's existing one for `identity`. False if full.
 
@@ -464,9 +479,9 @@ def store_find_unreadable(wallet_id: bytes) -> int | None:
         rec = _store_slot(i)
         if rec is None or len(rec) < STORE_PREFIX_LEN:
             continue
-        if rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id[
-            :_STORE_WALLET_ID_LEN
-        ] and rec[_STORE_VERSION_OFF] not in (STORE_VERSION, STORE_VERSION_COMPACT):
+        if rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id[:_STORE_WALLET_ID_LEN] and rec[
+            _STORE_VERSION_OFF
+        ] not in (STORE_VERSION, STORE_VERSION_COMPACT):
             # Only a FULL-shaped record can be attributed here: an unreadable record's layout is
             # unknown by definition, and the tag at this offset is the one thing the frozen header
             # promises. A compact record of a build this one does not know is not findable at all,
