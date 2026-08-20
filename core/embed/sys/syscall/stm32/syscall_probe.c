@@ -61,7 +61,8 @@ bool probe_read_access(const void *addr, size_t len) {
   }
 
 #ifdef FRAMEBUFFER
-  if (mpu_inside_active_fb(addr, len)) {
+  if (applet->privileges.framebuffer_access &&
+      mpu_inside_active_fb(addr, len)) {
     return true;
   }
 #endif
@@ -111,7 +112,8 @@ bool probe_write_access(void *addr, size_t len) {
   }
 
 #ifdef FRAMEBUFFER
-  if (mpu_inside_active_fb(addr, len)) {
+  if (applet->privileges.framebuffer_access &&
+      mpu_inside_active_fb(addr, len)) {
     return true;
   }
 #endif
