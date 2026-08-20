@@ -143,10 +143,7 @@ bool probe_execute_access(const void *addr) {
 }
 
 void handle_access_violation(const char *file, int line) {
-  static const char *msg = "Access violation";
-  applet_t *applet = syscall_get_context();
-  systask_t *task = applet != NULL ? &applet->task : systask_active();
-  systask_exit_fatal(task, msg, strlen(msg), file, strlen(file), line);
+  applet_exit_fatal(syscall_get_context(), "Access violation", file, line);
 }
 
 #endif  // KERNEL
