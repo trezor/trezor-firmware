@@ -77,6 +77,16 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
         raise DataError("chain end does not match the attested mac")
 
     await set_root(running_root, counter)
+
+    # THE SESSION IS NOW ONLINE, exactly as it is after `reconcile`. This path is the STRICTER
+    # of the two -- it proves authorised descent from the head this device already held, on top of
+    # the same WM attestation reconcile checks -- so a head adopted here is at least as trustworthy
+    # as one adopted there, and refusing to latch would leave the stronger route unusable: every
+    # read would fall back to the offline store and every write would refuse, with nothing on
+    # screen to say why. Multi-device catch-up arrives through here, so that was the one route
+    # a device could not recover by.
+    sync_round.mark_online()
+
     sync_round.clear()
 
     return WardVerifyChainAck(counter=counter, new_root=running_root)
