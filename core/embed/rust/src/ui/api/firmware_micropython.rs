@@ -1437,7 +1437,12 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///         """Return the transition type."""
     ///
     ///     def return_value(self) -> T:
-    ///         """Retrieve the return value of the layout object."""
+    ///         """Take the return value of the layout object.
+    ///
+    ///         Not idempotent: after `return_value()` is called, subsequent calls will return None.
+    ///
+    ///         May raise in case there was an error when constructing the return value.
+    ///         """
     ///
     ///     # TODO: remove after https://github.com/trezor/trezor-firmware/issues/6811 is resolved.
     ///     def __del__(self) -> None:

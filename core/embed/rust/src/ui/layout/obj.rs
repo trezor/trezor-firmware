@@ -115,10 +115,12 @@ where
     }
 }
 
-impl<T> Layout<Result<Obj, Error>> for RootComponent<T, ModelUI>
+impl<T> Layout for RootComponent<T, ModelUI>
 where
     T: Component + ComponentMsgObj,
 {
+    type Value = Result<Obj, Error>;
+
     fn place(&mut self) {
         self.inner.place(ModelUI::SCREEN);
     }
@@ -134,8 +136,8 @@ where
         }
     }
 
-    fn value(&self) -> Option<&Result<Obj, Error>> {
-        self.returned_value.as_ref()
+    fn take_value(&mut self) -> Option<Self::Value> {
+        self.returned_value.take()
     }
 
     fn paint(&mut self) -> Result<(), PaintOutOfBounds> {
@@ -168,8 +170,8 @@ where
     }
 }
 
-pub trait LayoutMaybeTrace: Layout<Result<Obj, Error>> + MaybeTrace {}
-impl<T> LayoutMaybeTrace for T where T: Layout<Result<Obj, Error>> + MaybeTrace {}
+pub trait LayoutMaybeTrace: Layout<Value = Result<Obj, Error>> + MaybeTrace {}
+impl<T> LayoutMaybeTrace for T where T: Layout<Value = Result<Obj, Error>> + MaybeTrace {}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -364,10 +366,9 @@ impl LayoutObjInner {
         self.transition_out.to_obj()
     }
 
-    fn obj_return_value(&self) -> Result<Obj, Error> {
-        self.root()?
-            .value()
-            .cloned()
+    fn obj_return_value(&mut self) -> Result<Obj, Error> {
+        self.root_mut()?
+            .take_value()
             .unwrap_or(Ok(Obj::const_none()))
     }
 }
@@ -629,11 +630,11 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        let painted = this.inner_mut().obj_paint_if_requested();
-        if painted? {
+        let painted = this.inner_mut().obj_paint_if_requested()?;
+        if painted {
             display::refresh();
         }
-        Ok(painted?.into())
+        Ok(painted.into())
     };
     unsafe { util::try_or_raise(block) }
 }
