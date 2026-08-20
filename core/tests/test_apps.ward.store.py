@@ -208,6 +208,39 @@ class TestWardStore(unittest.TestCase):
         self.assertEqual(ward_store.store_list(_WALLET_A), [rec_a])
         self.assertEqual(ward_store.store_list(_WALLET_B), [rec_b])
 
+    def test_a_replacement_keeps_the_slot_it_had(self):
+        """A record is addressed by its slot, and a rewrite must not move it.
+
+        Below us norcow appends the new bytes and marks the old entry deleted -- a longer value cannot
+        be patched over a shorter one -- so the record's PHYSICAL position does change. None of that
+        may reach the store: `store_list` walks slots in order and `next_unsent` follows it, so a
+        record that moved would change the order queued changes are published in.
+        """
+        for i, ident in enumerate((_ID_1, _ID_2, _identity(b"addr3"))):
+            self.assertTrue(
+                ward_store.store_put(_WALLET_A, ident, _record(_WALLET_A, ident, b"v"))
+            )
+            self.assertEqual(ward_store.store_find(_WALLET_A, ident), i)
+
+        # the middle one, twice: longer, then shorter again
+        longer = _record(_WALLET_A, _ID_2, b"v" * 400)
+        self.assertTrue(ward_store.store_put(_WALLET_A, _ID_2, longer))
+        self.assertEqual(ward_store.store_find(_WALLET_A, _ID_2), 1)
+
+        shorter = _record(_WALLET_A, _ID_2, b"v")
+        self.assertTrue(ward_store.store_put(_WALLET_A, _ID_2, shorter))
+        self.assertEqual(ward_store.store_find(_WALLET_A, _ID_2), 1)
+
+        # and enumeration order is unchanged
+        self.assertEqual(
+            ward_store.store_list(_WALLET_A),
+            [
+                _record(_WALLET_A, _ID_1, b"v"),
+                shorter,
+                _record(_WALLET_A, _identity(b"addr3"), b"v"),
+            ],
+        )
+
     def test_records_never_collide_with_root_slots(self):
         """The two key ranges are disjoint, and a root write must not disturb a record.
 

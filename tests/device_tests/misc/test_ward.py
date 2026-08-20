@@ -3074,3 +3074,62 @@ def test_ward_a_value_past_the_cap_is_refused_and_the_old_one_survives(session: 
             ward.queue_set_entry(session, _APP, b"addr1", b"x" * 1025)
 
     assert _offline_read(session.test_ctx.get_session(), b"addr1").ack.value == b"keep_me"
+
+
+@pytest.mark.models("core")
+def test_ward_replacing_an_entry_keeps_its_place_in_the_queue(session: Session):
+    """add(1), add(2a), add(3), get(2a), add(2b) with 2b LONGER, set(2a) from the backup.
+
+    WHAT THE SEQUENCE IS ABOUT. A record is variable length, so 2b cannot be patched over 2a -- on
+    the blockwise models `flash_area_write_bytes` only succeeds when the new bytes are IDENTICAL, and
+    on the bitwise ones only when every bit goes 1->0 -- so each rewrite appends a fresh norcow entry
+    and marks the old one deleted. That is the layer below us reorganising itself, and the assertion
+    here is that NONE of it reaches the queue: a record is addressed by its logical slot, so 2 keeps
+    its place between 1 and 3 through both rewrites.
+
+    The order is observable where it matters -- `flush_queue` publishes `next_unsent`, which walks
+    slots in order -- so this checks the ORDER CHANGES ARE PUBLISHED IN, not just what is stored.
+    """
+    store = WardTrie()
+
+    for ident, value in ((b"addr1", b"one"), (b"addr2", b"two_a"), (b"addr3", b"three")):
+        with session.test_ctx as ctx:
+            ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+            ward.queue_set_entry(session, _APP, ident, value)
+
+    # get(2a): the backup is taken while 2a is still what the device holds
+    backup = _offline_read(session.test_ctx.get_session(), b"addr2").ack
+    assert backup.value == b"two_a"
+
+    # add(2b): longer than 2a, so nothing can be written over it in place
+    two_b = b"two_b" + b"x" * 400
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr2", two_b)
+    assert _offline_read(session.test_ctx.get_session(), b"addr2").ack.value == two_b
+
+    # set(2a): the backup goes back, shorter again -- and again not in place
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.restore_queued_entry(session, backup)
+    assert _offline_read(session.test_ctx.get_session(), b"addr2").ack.value == b"two_a"
+
+    # the neighbours never moved and never changed
+    assert _offline_read(session.test_ctx.get_session(), b"addr1").ack.value == b"one"
+    assert _offline_read(session.test_ctx.get_session(), b"addr3").ack.value == b"three"
+
+    # ORDERING: publication order is slot order, and slot order is insertion order. Two rewrites of
+    # the middle record did not push it behind the one added after it.
+    _go_online(session, store)
+    published = []
+    remaining = []
+    for _ in range(3):
+        res = ward.flush_queue(session, ward.store_provider(store))
+        published.append(res.entry_key)
+        remaining.append(res.remaining)
+
+    assert published == [
+        expected_entry_key(_K_PATH, _APP, ident)
+        for ident in (b"addr1", b"addr2", b"addr3")
+    ]
+    assert remaining == [2, 1, 0]
