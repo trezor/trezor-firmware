@@ -55,9 +55,6 @@ class SessionThpCache(DataCache):
                 0,  # APP_MONERO_LIVE_REFRESH
                 69,  # APP_WARD_SYNC
                 1,  # APP_WARD_ONLINE
-                # 8 queued changes at slot(1) || claimed counter(4). Session-scoped on purpose --
-                # see `apps.ward.offline_store.reconcile_pending`.
-                40,  # APP_WARD_OFFERS
             )
         super().__init__()
 

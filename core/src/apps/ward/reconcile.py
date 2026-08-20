@@ -64,6 +64,24 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
         if current is not None and current != root_or_empty(root):
             raise DataError("attested counter matches but the root differs")
 
+    # SETTLED BEFORE THE ROOT MOVES, and the order is the whole point. A claim names the
+    # transition it was filed for; once the stored head is at or past that transition, the walk that
+    # would have proved it is behind the baseline and no future sync can decide it. So a crash
+    # between these two writes must leave the claim decidable:
+    #
+    #   crash before settling : the root is still the old one, so the next sync crosses the
+    #                           transition again and settles the claim then.
+    #   crash after settling  : the claim is already resolved; the next sync simply adopts.
+    #
+    # The reverse order has no safe crash point -- it can leave a root past an unresolved claim,
+    # which is a queued change whose fate is permanently unknowable.
+    #
+    # No links here: `reconcile` binds a root to an attested mac and folds nothing, so the counter
+    # is all this path can settle by -- see `reconcile_pending`.
+    from .offline_store import reconcile_pending
+
+    await reconcile_pending(counter)
+
     # REFUSED RATHER THAN EVICTED when eight wallets already hold a slot, and the refusal has
     # to end the adoption: marking the session online next would leave it verifying against a
     # root that was never stored. The wallet stays usable offline, which is what
@@ -78,13 +96,6 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     # root the device trusts. Before this line every read in this session is served from the
     # offline store, which says on screen that it cannot vouch for currency.
     sync_round.mark_online()
-
-    # Settle queued writes against the head just adopted: those the WM confirmed stop being
-    # pending, those it did not are offered again. A REWRITE either way -- adopting a head
-    # never deletes a record, however stale or superseded it makes one. See `offline_store`.
-    from .offline_store import reconcile_pending
-
-    await reconcile_pending(counter)
 
     sync_round.clear()
 

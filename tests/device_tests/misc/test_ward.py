@@ -2675,6 +2675,92 @@ def test_ward_a_change_stays_queued_until_the_wm_confirms_it(session: Session):
 
 
 @pytest.mark.models("core")
+def test_ward_an_offered_change_settles_in_a_later_session(session: Session):
+    """The claim that settles a flush outlives the session that filed it.
+
+    A flush marks the record OFFERED and files a claim saying which change was handed over and
+    at which counter; the adoption that follows settles the two against each other. That claim
+    used to live in the SESSION CACHE, so it was lost on exactly the events recovery depends
+    on -- the channel closing, the cache being evicted, the device losing power. A record left
+    PENDING|OFFERED with no claim is then stranded: both `next_unsent` and `count_unsent` skip
+    an offered record, so `remaining` reports zero, the host's flush loop exits, and nothing
+    ever offers it again. Stored, never sent, and invisible as a problem.
+
+    So the flush and the adoption are deliberately put in DIFFERENT sessions here. Every other
+    flush test reconciles in the same one, which is why none of them noticed.
+    """
+    store = WardTrie()
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"landed_later")
+
+    _go_online(session, store)
+    res = ward.flush_queue(session, ward.store_provider(store))
+    ward.apply(store, res)
+    _publish(MockWM(), res)
+
+    # A NEW SESSION adopts the head the change is in. It shares the device's flash and nothing
+    # of the session that offered the change.
+    later = session.test_ctx.get_session()
+    _confirm(later, store)
+
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "offline copy" in rec.title
+    assert rec.ack.pending is None or rec.ack.pending is False
+    assert "landed_later" in rec.squashed
+
+
+@pytest.mark.models("core")
+@pytest.mark.setup_client(passphrase=True)
+def test_ward_one_wallet_does_not_settle_anothers_queued_change(
+    test_ctx: TrezorTestContext,
+):
+    """Reconciling one hidden wallet must not touch another wallet's queued records.
+
+    THIS GUARDS AN INVARIANT THE CLAIM JOURNAL PUTS AT RISK RATHER THAN A BUG IT FIXED. While
+    claims lived in the session cache, isolation came for free: each passphrase opens its own
+    session, so one wallet's reconcile simply could not see another's claims. The journal is
+    flash and therefore GLOBAL, so the same isolation now has to be stated -- every claim
+    carries the full 16-byte wallet_id and `reconcile_pending` filters on it.
+
+    Two wallets share one record pool and one counter space, so without that filter a wallet
+    that had advanced further would settle the other's offered change: PENDING cleared on a
+    record whose change that wallet never published, whose value then survives as a supposed
+    "offline copy" of something never written. Beta's counter is pushed past alpha's precisely
+    so a counter comparison alone would say "landed".
+    """
+    _SEED_ALPHA = bip39_seed(_MNEMONIC, "alpha")
+    _SEED_BETA = bip39_seed(_MNEMONIC, "beta")
+    alpha = test_ctx.get_session(passphrase="alpha")
+    beta = test_ctx.get_session(passphrase="beta")
+    k_mac_a = derive_k_mac(_SEED_ALPHA)
+    k_mac_b = derive_k_mac(_SEED_BETA)
+
+    store_a, store_b = WardTrie(), WardTrie()
+
+    # Alpha offers a change and never learns whether it landed.
+    with test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(alpha).get())
+        ward.queue_set_entry(alpha, _APP, b"addr1", b"alphas_change")
+    _go_online(alpha, store_a, k_mac=k_mac_a)
+    ward.flush_queue(alpha, ward.store_provider(store_a))
+
+    # Beta then advances its OWN head well past alpha's counter.
+    for i in range(3):
+        _seed(beta, store_b, b"b%d" % i, b"beta_value", k_mac=k_mac_b)
+    assert store_b.counter > store_a.counter
+
+    # Beta's adoption must leave alpha's record exactly as it was.
+    _confirm(beta, store_b, k_mac=k_mac_b)
+
+    rec = _offline_read(test_ctx.get_session(passphrase="alpha"), b"addr1")
+    assert "queued change" in rec.title
+    assert rec.ack.pending is True
+    assert "alphas_change" in rec.squashed
+
+
+@pytest.mark.models("core")
 def test_ward_a_confirmed_change_becomes_an_offline_copy(session: Session):
     """Clearing the pending flag is a REWRITE, never a delete: the record stays on as the
     cached copy of the value that was just published."""
