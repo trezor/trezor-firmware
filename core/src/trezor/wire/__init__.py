@@ -134,7 +134,7 @@ if utils.USE_THP:
 
         try:
             # wait until channel activity (on any interface)
-            channel = await ctx.get_active_channel()
+            channel = await ctx.get_dispatch_channel()
 
             # at this point channel has valid message waiting
             # process messages until it returns do_not_restart=False

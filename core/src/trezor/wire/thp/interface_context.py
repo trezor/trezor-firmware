@@ -48,39 +48,49 @@ class ThpContext:
     def __init__(self, *ifaces: WireInterface) -> None:
         self._iface_ctxs = [InterfaceContext(iface, self) for iface in ifaces]
         self.channel_ready_box: loop.mailbox[None] = loop.mailbox()
-        self.active_channel: Channel | None = None
+        # THE CHANNEL WHOSE MESSAGES THE MAIN LOOP DISPATCHES, on whichever interface it arrived --
+        # this is what `get_dispatch_channel` hands to `handle_session_thp`. NOT "the foreground
+        # channel": which channel gets dispatched is decided by which one received a packet first,
+        # so any interface's channel can hold this, and a channel that is not dispatched can still
+        # be alive and carrying traffic driven by a workflow running on another one.
+        #
+        # Distinct from `InterfaceContext.active_channel`, which is PER INTERFACE and is what that
+        # interface's write loop drains. A channel must be its interface's `active_channel` to be
+        # writable at all; being `dispatch_channel` is a separate question about whose messages the
+        # main loop reads.
+        self.dispatch_channel: Channel | None = None
 
     # Blocks until a channel in pairing/credential/transport phase starts receiving data.
-    async def get_active_channel(self) -> Channel:
+    async def get_dispatch_channel(self) -> Channel:
         """
         Reassemble a valid THP payload from any THP interface, and return its channel.
 
         Also handle THP channel allocation.
         """
         await self.channel_ready_box
-        assert self.active_channel is not None
-        return self.active_channel
+        assert self.dispatch_channel is not None
+        return self.dispatch_channel
 
-    def preempt_active_channel_if_stale(
+    def preempt_dispatch_channel_if_stale(
         self, iface_num: int, cid_hint: int, packet_buffer: AnyBytes
     ) -> bool:
         """
-        If the active channel is idle for more than _PREEMPT_TIMEOUT_MS, kill
+        If the dispatched channel is idle for more than _PREEMPT_TIMEOUT_MS, kill
         it and save the packet passed as an argument to be processed as if it
         was received when the next loop session is started.
 
         Returns True on success, False if the caller should send TRANSPORT_BUSY.
         """
-        if not self.active_channel:
+        if not self.dispatch_channel:
             return False
-        last_write_ms = self.active_channel.get_last_write()
+        last_write_ms = self.dispatch_channel.get_last_write()
         if last_write_ms is None or last_write_ms > _PREEMPT_TIMEOUT_MS:
-            self.active_channel.kill(ChannelPreemptedException())
+            self.dispatch_channel.kill(ChannelPreemptedException())
             saved = PREEMPTING_PACKET.set(iface_num, cid_hint, packet_buffer)
             if __debug__:
                 log.error(
                     __name__,
-                    f"Interrupted channel {hex(self.active_channel.channel_id)} after {last_write_ms} ms",
+                    f"Interrupted channel {hex(self.dispatch_channel.channel_id)} after {last_write_ms} ms",
                 )
                 log.debug(
                     __name__, f"Packet will be processed in next session: {saved}"
@@ -108,8 +118,11 @@ class InterfaceContext:
         self._write = wait(
             iface.iface_num() | io.POLL_WRITE, timeout_ms=_WRITE_TIMEOUT_MS
         )
-        # Currently only one active channel is allowed in a session. Without session restart
-        # this might become a dict[int, Channel].
+        # This interface's channel: the one its read loop feeds and its write loop drains. Only one
+        # per interface for now; without session restart this might become a dict[int, Channel].
+        #
+        # Separate from `ThpContext.dispatch_channel` -- see there. Several interfaces may each hold
+        # one of these at the same time while only one of them is being dispatched.
         self.active_channel: Channel | None = None
         self.thp_ctx = thp_ctx
 
@@ -227,7 +240,7 @@ class InterfaceContext:
 
         We can get rid of this logic if we ever get rid of loop restarts.
         """
-        waiting_for_channel = self.thp_ctx.active_channel is None
+        waiting_for_channel = self.thp_ctx.dispatch_channel is None
         expecting_message = False
         expecting_ack = False
         for ifctx in self.thp_ctx._iface_ctxs:
@@ -253,12 +266,12 @@ class InterfaceContext:
 
             if buffers := THP_BUFFERS_PROVIDER.take():
                 self.active_channel = Channel(channel_id, self, buffers=buffers)
-                if self.thp_ctx.active_channel is None:
-                    self.thp_ctx.active_channel = self.active_channel
+                if self.thp_ctx.dispatch_channel is None:
+                    self.thp_ctx.dispatch_channel = self.active_channel
                     self.thp_ctx.channel_ready_box.put(None, replace=True)
 
         if self.active_channel is None or self.active_channel.channel_id != channel_id:
-            preempted = self.thp_ctx.preempt_active_channel_if_stale(
+            preempted = self.thp_ctx.preempt_dispatch_channel_if_stale(
                 self._iface.iface_num(), result, packet_buffer
             )
             if not preempted:
