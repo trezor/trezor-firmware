@@ -1310,9 +1310,7 @@ pub extern "C" fn upy_backlight_get() -> Obj {
         }
         #[cfg(not(feature = "backlight"))]
         {
-            Err(Error::RuntimeError(
-                c"Backlight not supported",
-            ))
+            Err(Error::RuntimeError(c"Backlight not supported"))
         }
     };
     unsafe { util::try_or_raise(block) }
