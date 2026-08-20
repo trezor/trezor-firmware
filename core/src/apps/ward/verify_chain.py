@@ -53,6 +53,10 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     running_counter = await get_counter()
     running_root = await get_root()
 
+    # Every step's authorisation is kept, because it is the precise evidence a queued change
+    # landed: a claim filed by `flush_queue` carries the `auth_commit` of its own transition, so
+    # matching against this list distinguishes "the head reached N" from "MY change made it N".
+    crossed = []
     for link in msg.links:
         running_counter, running_root = verify_chain_step(
             k_auth,
@@ -67,6 +71,8 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
                 link.auth_commit,
             ),
         )
+        # After the step verified, never before: an unverified commitment is a host's claim.
+        crossed.append(link.auth_commit)
 
     if running_counter != counter:
         raise DataError("chain does not end at the attested counter")
@@ -75,6 +81,16 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     # chain could authorise a walk to a head the WM never vouched for.
     if root_mac(await derive_k_mac(), ward_id, counter, running_root) != mac:
         raise DataError("chain end does not match the attested mac")
+
+    # SETTLED BEFORE THE ROOT MOVES, for the reason spelled out in `reconcile`: a root past an
+    # unresolved claim leaves that claim permanently undecidable, because the transition it names
+    # is then behind every future sync's baseline.
+    #
+    # This path settles by the transitions it actually crossed rather than by the counter, so it
+    # does not clear a record whose change another device's write happened to advance past.
+    from .offline_store import reconcile_pending
+
+    await reconcile_pending(counter, landed_commits=crossed)
 
     # Same refusal as `reconcile`: no slot means the verified head was not kept, so the
     # adoption cannot be allowed to latch.

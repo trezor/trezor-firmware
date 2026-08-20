@@ -15,4 +15,3 @@ if not utils.USE_THP:
         APP_MONERO_LIVE_REFRESH = const(7)
         APP_WARD_SYNC = const(8)
         APP_WARD_ONLINE = const(9)
-        APP_WARD_OFFERS = const(10)

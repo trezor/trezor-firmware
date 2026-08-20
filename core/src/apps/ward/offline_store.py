@@ -577,102 +577,139 @@ async def count_unsent() -> int:
 # the direction that costs a re-send rather than a change.
 
 
-def _claims() -> dict:
-    """{slot: claimed counter} for this session, or empty if nothing has been offered."""
-    from storage.cache_common import APP_WARD_OFFERS
-    from trezor.wire import context
+async def _claim_wallet_id() -> bytes:
+    from .keys import derive_wallet_id
 
-    raw = context.cache_get(APP_WARD_OFFERS) or b""
-    out = {}
-    for i in range(0, len(raw) - 4, 5):
-        slot = raw[i]
-        if slot != 0xFF:
-            out[slot] = int.from_bytes(raw[i + 1 : i + 5], "big")
-    return out
+    return await derive_wallet_id()
 
 
-def _set_claims(claims: dict) -> None:
-    from storage.cache_common import APP_WARD_OFFERS
-    from trezor.wire import context
+async def file_claim(
+    entry: StoredEntry, counter: int, auth_commit: bytes
+) -> bool:
+    """Record which queued change was offered, at which counter, and for which transition.
 
-    raw = bytearray(b"\xff" * 40)
-    for i, (slot, counter) in enumerate(sorted(claims.items())[:8]):
-        raw[i * 5] = slot
-        raw[i * 5 + 1 : i * 5 + 5] = counter.to_bytes(4, "big")
-    context.cache_set(APP_WARD_OFFERS, bytes(raw))
+    False if the journal is full, which the caller must treat as "do not offer" -- see
+    `mark_offered`.
+    """
+    from storage import ward as ward_store
+
+    if entry.slot is None:
+        # Nothing to file it under. A caller without a slot cannot have read the record, so it
+        # cannot be offering one either.
+        raise ValueError
+
+    return ward_store.claim_put(
+        ward_store.claim_encode(
+            await _claim_wallet_id(),
+            entry.slot,
+            counter,
+            auth_commit,
+            record_commit(entry.raw),
+        )
+    )
 
 
-async def mark_offered(entry: StoredEntry, counter: int) -> None:
+async def mark_offered(entry: StoredEntry, counter: int, auth_commit: bytes) -> None:
     """Record that this queued change has been handed to a host, keeping it PENDING.
 
-    Two writes, deliberately in different places: the FLAG goes to flash, so a dropped session does
-    not make the device offer the same change again inside one flush loop; the CLAIMED COUNTER goes to
-    the session cache, because it is the thing a reconcile compares and the thing a record must not
-    hold. Both happen before the ack goes out.
+    Two writes, and THE ORDER IS THE POINT. The claim goes first, then the OFFERED flag:
+
+      claim written, flag not  -- a claim for a transition that was never offered. Harmless: the
+                                  next adoption finds the record still un-offered, settles nothing,
+                                  and retires the claim.
+      flag written, claim not  -- the stranded record this journal exists to prevent. The record is
+                                  OFFERED so no flush re-offers it, and there is no claim to settle
+                                  it by, so it is invisible to `next_unsent` and `count_unsent` and
+                                  `remaining` reports zero. Nothing ever asks for it again.
+
+    So a power failure between the two writes must fall on the harmless side, and that is what
+    fixes the order rather than taste.
+
+    A FULL JOURNAL REFUSES THE OFFER. Handing the change over without somewhere to record it is the
+    stranding case above, arrived at deliberately, so the caller is told instead.
 
     It stays pending either way: handing the leaf over is not the change taking effect -- the head
-    moves when the WM confirms, which is `reconcile`'s job.
+    moves when the WM confirms.
     """
+    from trezor.wire import DataError
+
+    if not await file_claim(entry, counter, auth_commit):
+        raise DataError("WARD: cannot record this change; settle the pending one first")
+
     await _set_flags(entry, True, True)
 
-    # The SLOT is the handle a claim is filed under: one byte, stable while the record lives, and
-    # already in hand -- it came with the record.
-    if entry.slot is not None:
-        claims = _claims()
-        claims[entry.slot] = counter
-        _set_claims(claims)
 
-
-async def reconcile_pending(adopted: int) -> None:
+async def reconcile_pending(adopted: int, landed_commits: "list | None" = None) -> None:
     """Settle every offered-but-unconfirmed write against the head just adopted.
 
     This is the ONLY place a queued write stops being queued, and it runs at the same boundary an
     online write commits at: the head moves when the WM confirms a counter, not when a host says it
-    stored something. Three outcomes, all REWRITES and none a delete:
+    stored something. Every outcome is a REWRITE and none is a delete.
 
-      claimed <= adopted : the change landed. Both flags go; the record stays as the cached copy of
-                           the value now in the tree.
+    TWO WAYS TO DECIDE WHETHER A CHANGE LANDED, because the two adoption routes carry different
+    evidence:
 
-      claimed >  adopted : the head did not reach it, so the host never published it. The OFFERED
-                           flag goes and the record stays PENDING, so `flush_queue` offers it again.
-                           Without this a lost or dropped publication would strand the change forever
-                           -- still stored, never re-sent, invisible to the user as a problem.
+      `landed_commits` given -- the caller verified a CHAIN, so it knows every transition it
+                               crossed. A claim landed exactly when its `auth_commit` is among
+                               them. That is precise: it separates "the head reached N" from "MY
+                               change is what made it N".
 
-    A record offered by a session that has since dropped has no claim, so it is not visited at all --
-    it stays PENDING and OFFERED, and the way back for it is a NAMED flush, which re-offers an already
-    offered record deliberately. That is the fail-closed direction: a re-send costs a round trip,
-    while clearing a change that never landed costs the change.
+      `landed_commits` None  -- `reconcile` adopts by binding a root to an attested mac and folds no
+                               links, so there is nothing to match against and the counter is all
+                               there is: claimed <= adopted. See the limitation below.
 
-    Records that were never offered are untouched.
+    AND THE RECORD MUST STILL BE THE ONE THAT WAS OFFERED. Slots are reused and a queued value can
+    be replaced in place, so the claim's `record_commit` is compared against whatever occupies the
+    slot now. A mismatch means the offered generation is gone: the transition is still resolved, but
+    this record is not the one it was about, so it is left exactly as it is. Without that check,
+    offering A, replacing it with B and then watching A land would clear B -- a change that never
+    landed, silently discarded.
 
-    KNOWN LIMITATION. "The head reached N" is not quite "my change is what made it N". If another
-    device of this wallet advanced the counter first, this clears a record whose change did not land,
-    and the value survives only as a cached copy. The divergence itself is caught by reconcile's
-    same-counter-different-root check; distinguishing the two properly needs a membership proof per
-    queued change, which is more machinery than one-intent-per-round-trip currently earns.
+      landed, record matches     : both flags go; the record stays as the cached copy of the value
+                                   now in the tree.
+      not landed, record matches : the OFFERED flag goes and the record stays PENDING, so
+                                   `flush_queue` offers it again. Without this a lost or dropped
+                                   publication would strand the change forever.
+      record does not match      : untouched.
+
+    The claim is retired either way, because its transition's fate is now known. Leaving it would
+    let the NEXT adoption settle the same records against a later head.
+
+    Records that were never offered are untouched, and so are other wallets' claims -- the journal
+    is scoped by wallet_id, which is what stops one wallet's reconciliation from rewriting another
+    wallet's queued records.
+
+    KNOWN LIMITATION, ON THE COUNTER PATH ONLY. "The head reached N" is not quite "my change is what
+    made it N": if another device of this wallet advanced the counter first, this clears a record
+    whose change did not land, and the value survives only as a cached copy. The divergence itself
+    is caught by reconcile's same-counter-different-root check. The chain path above does not have
+    this problem, which is the better reason to prefer it.
     """
     from storage import ward as ward_store
 
-    # DRIVEN BY THE LEDGER, NOT BY ENUMERATION. Every slot in it was offered by THIS wallet in THIS
-    # session, so the ledger is a stricter handle than "records of my wallet" -- and it is the only
-    # one a compact record can be reached by, since such a record carries nothing that says whose it
-    # is. It also touches exactly the records it offered, and no others.
-    claims = _claims()
-    for slot, claimed in claims.items():
+    # DRIVEN BY THE JOURNAL, NOT BY ENUMERATION. Every claim in it was filed by THIS wallet, so it
+    # is a stricter handle than "records of my wallet" -- and it is the only one a compact record
+    # can be reached by, since such a record carries nothing that says whose it is. It also touches
+    # exactly the records it offered, and no others.
+    wallet_id = await _claim_wallet_id()
+    for index, claim in ward_store.claim_list(wallet_id):
+        _w, slot, claimed, auth_commit, commit = ward_store.claim_parse(claim)
         record = ward_store.store_read_slot(slot)
         if record is None or record[0] not in (
             ward_store.STORE_VERSION,
             ward_store.STORE_VERSION_COMPACT,
         ):
-            # The record was erased, or replaced by something this build cannot read, since it was
-            # offered. Nothing to settle, and nothing here may delete.
+            # Erased, or replaced by something this build cannot read, since it was offered.
+            # Nothing to settle and nothing here may delete -- but the claim is spent.
+            ward_store.claim_delete(index)
             continue
-        entry = _parse(record, slot=slot)
-        if not entry.pending or not entry.offered:
-            continue
-        landed = claimed <= adopted
-        await _set_flags(entry, not landed, False)
 
-    # The ledger has served its purpose: every claim in it has been settled one way or the other, and
-    # leaving them would let the NEXT reconcile settle the same records against a later head.
-    _set_claims({})
+        entry = _parse(record, slot=slot)
+        if entry.pending and entry.offered and record_commit(record) == commit:
+            if landed_commits is not None:
+                landed = auth_commit in landed_commits
+            else:
+                landed = claimed <= adopted
+            await _set_flags(entry, not landed, False)
+
+        ward_store.claim_delete(index)
