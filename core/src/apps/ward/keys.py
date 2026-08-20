@@ -174,6 +174,53 @@ def entry_key(
     ).digest()
 
 
+WALLET_ENTRY_LEN = 16
+
+
+def wallet_entry(
+    wallet_id: bytes,
+    app_id: str | bytes | None,
+    identifier: bytes,
+    key_type: str = ENTRY_TYPE_ADDRESS,
+    device_id: int = 0,
+) -> bytes:
+    """The 16-byte name a COMPACT record is found by: SHA256(wallet_id || scope || identifier)[:16].
+
+    NOT AN HMAC, and that is the point of it. `entry_key` is HMAC under K_path because the HOST keeps
+    it and must not be able to learn an identifier from it. This one never leaves the device and
+    nobody else verifies it -- it exists so a record can be recognised without storing the identity
+    it was made from -- so a plain hash is enough. `wallet_id` sits inside it and is the secret that
+    stops anyone computing candidates offline.
+
+    Reuses `_scope`, so it is domain-separated exactly as the keyed path is: app_id and key_type are
+    NUL-terminated and cannot be slid past each other. Note the device_id byte comes along with the
+    scope; a compact record is therefore per device slot as well, which matches what the identity it
+    replaces carried.
+
+    SIXTEEN BYTES. Two records colliding would be two entries sharing one value, so the length has to
+    be enough that it never happens by accident (2^-128 territory for the twenty records a store
+    holds) -- and an attacker cannot search for a collision at all without wallet_id, which is
+    seed-derived and never sent anywhere.
+    """
+    from trezor.crypto.hashlib import sha256
+
+    return sha256(wallet_id + _scope(app_id, key_type, device_id) + identifier).digest()[
+        :WALLET_ENTRY_LEN
+    ]
+
+
+async def wallet_entry_for(
+    app_id: str | bytes | None,
+    identifier: bytes,
+    key_type: str = ENTRY_TYPE_ADDRESS,
+    device_id: int = 0,
+) -> bytes:
+    """`wallet_entry` under the active wallet."""
+    return wallet_entry(
+        await derive_wallet_id(), app_id, identifier, key_type, device_id
+    )
+
+
 async def entry_key_for(
     app_id: str | bytes | None,
     identifier: bytes,

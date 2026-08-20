@@ -9,6 +9,12 @@ the same wallet's entry under the same identity, found the same way and erased t
 stores would have meant two capacity budgets, two lookup paths, and two chances to key one of them
 wrong. `FLAG_PENDING` says which one a record is, and `reconcile_pending` clears it.
 
+TWO FORMS OF THE SAME RECORD. The FULL form carries the identity; the COMPACT form carries
+`keys.wallet_entry` -- a hash of it -- and is 40 bytes smaller for a typical address. Everything that
+reaches this module already knows the identity, so both forms are found the same way: compute both
+keys and match either. The difference shows up in one place only, `flush_queue`, which has no identity
+of its own to hash and must be told which entry to publish.
+
 NAMED BY IDENTITY, NOT BY THE KEYED PATH. A record carries (key_type, app_id, identifier) and is
 found by them. `entry_key` is where a leaf sits in the TRIE and is assigned when a change is
 published; a queued change has not been published, so it has no path to store, and storing one for
@@ -64,6 +70,9 @@ class StoredEntry:
         value: bytes,
         pending: bool,
         offered: bool,
+        compact: bool = False,
+        slot: "int | None" = None,
+        raw: bytes = b"",
     ) -> None:
         self.key_type = key_type
         self.app_id = app_id
@@ -71,6 +80,15 @@ class StoredEntry:
         self.value = value
         self.pending = pending
         self.offered = offered
+        # A compact record does not store its identity: the three fields above were filled in from
+        # whoever asked. Kept as a flag rather than left implicit, because `flush_queue` has to know
+        # that it cannot get an identity from this record on its own.
+        self.compact = compact
+        # The slot and the bytes that came out of it, for the two operations that change only FLAGS.
+        # They rewrite what is there rather than re-encoding, because re-encoding needs an identity
+        # and a compact record has none to give.
+        self.slot = slot
+        self.raw = raw
 
 
 def _u16(value: int) -> bytes:
@@ -105,6 +123,27 @@ def identity_block(key_type: str, app_id: str, identifier: bytes) -> bytes:
     )
 
 
+async def _candidates(
+    key_type: str, app_id: str, identifier: bytes
+) -> "list[tuple[int, bytes]]":
+    """Both names an entry can be stored under: its identity, and the hash that stands in for it.
+
+    Passing both to one lookup is what makes the two forms interchangeable to every caller here.
+    Order matters only for speed -- the full form is the common one, so it is tried first.
+    """
+    from storage.ward import STORE_VERSION, STORE_VERSION_COMPACT
+
+    from .keys import derive_wallet_id, wallet_entry
+
+    return [
+        (STORE_VERSION, identity_block(key_type, app_id, identifier)),
+        (
+            STORE_VERSION_COMPACT,
+            wallet_entry(await derive_wallet_id(), app_id, identifier, key_type),
+        ),
+    ]
+
+
 def encode_record(
     wallet_id: bytes,
     key_type: str,
@@ -113,12 +152,14 @@ def encode_record(
     value: bytes,
     pending: bool,
     offered: bool = False,
+    compact: bool = False,
 ) -> bytes:
     """The canonical bytes of one record. The only place a record becomes bytes.
 
     Layout, after the frozen prefix `storage.ward.store_prefix` supplies:
 
-        identity_block(key_type, app_id, identifier) || flags(1) || len16(value) || value
+        full     identity_block(key_type, app_id, identifier) || flags(1) || len16(value) || value
+        compact  wallet_entry(16)                             || flags(1) || len16(value) || value
 
     THE IDENTITY IS STORED, and it is stored FIRST because it is what the record is found by. It is
     also exactly what `leaf.pack_identity` needs, so the export path can seal the identity part when
@@ -129,27 +170,62 @@ def encode_record(
     recognised as a no-op, so that re-reading an unchanged entry neither prompts the user nor
     rewrites flash. Two encoders would make that comparison meaningless.
     """
-    from storage.ward import FLAG_OFFERED, FLAG_PENDING, store_prefix
+    from storage.ward import (
+        FLAG_OFFERED,
+        FLAG_PENDING,
+        STORE_VERSION,
+        STORE_VERSION_COMPACT,
+        store_prefix,
+    )
     from trezor.wire import DataError
+
+    from .keys import wallet_entry
 
     if len(value) > 0xFFFF:
         raise DataError("WARD: value too long to store")
 
     flags = (FLAG_PENDING if pending else 0) | (FLAG_OFFERED if offered else 0)
 
+    if compact:
+        version = STORE_VERSION_COMPACT
+        name = wallet_entry(wallet_id, app_id, identifier, key_type)
+    else:
+        version = STORE_VERSION
+        name = identity_block(key_type, app_id, identifier)
+
     return (
-        store_prefix(wallet_id)
-        + identity_block(key_type, app_id, identifier)
+        store_prefix(wallet_id, version)
+        + name
         + bytes([flags])
         + _u16(len(value))
         + value
     )
 
 
-def _parse(record: bytes) -> StoredEntry:
-    """Bytes back to a StoredEntry, or raise. Only `get` and `list_entries` call this."""
-    from storage.ward import FLAG_OFFERED, FLAG_PENDING, STORE_KEY_OFF
+def _parse(
+    record: bytes,
+    key_type: str | None = None,
+    app_id: str | None = None,
+    identifier: bytes | None = None,
+    slot: "int | None" = None,
+) -> StoredEntry:
+    """Bytes back to a StoredEntry, or raise. Only `get` and `list_entries` call this.
+
+    A COMPACT record has no identity to parse, so the caller's is used -- `get` has it from the
+    request and has just proved it hashes to what the record is named by. `list_entries` has none,
+    which is why a compact record comes back from there with empty identity fields and its `compact`
+    flag set: enumeration can count and settle such a record, but only a caller who names the entry
+    can say what it is.
+    """
+    from storage.ward import (
+        FLAG_OFFERED,
+        FLAG_PENDING,
+        STORE_KEY_OFF,
+        STORE_VERSION_COMPACT,
+    )
     from trezor.wire import DataError
+
+    from .keys import WALLET_ENTRY_LEN
 
     off = STORE_KEY_OFF
 
@@ -163,21 +239,69 @@ def _parse(record: bytes) -> StoredEntry:
         off += n
         return chunk
 
-    key_type = take(take(1)[0]).decode()
-    app_id = take(take(1)[0]).decode()
-    identifier = take(int.from_bytes(take(2), "big"))
+    compact = record[0] == STORE_VERSION_COMPACT
+    if compact:
+        take(WALLET_ENTRY_LEN)  # the hash the record is named by; nothing to read out of it
+    else:
+        key_type = take(take(1)[0]).decode()
+        app_id = take(take(1)[0]).decode()
+        identifier = take(int.from_bytes(take(2), "big"))
     flags = take(1)[0]
     value = take(int.from_bytes(take(2), "big"))
     if off != len(record):
         raise DataError("WARD: trailing bytes in record")
 
     return StoredEntry(
-        key_type=key_type,
-        app_id=app_id,
-        identifier=identifier,
+        key_type=key_type if key_type is not None else "",
+        app_id=app_id if app_id is not None else "",
+        identifier=identifier if identifier is not None else b"",
         value=value,
         pending=bool(flags & FLAG_PENDING),
         offered=bool(flags & FLAG_OFFERED),
+        compact=compact,
+        slot=slot,
+        raw=record,
+    )
+
+
+def _flags_off(record: bytes) -> int:
+    """Where the flags byte sits, whichever form the record is in.
+
+    Derived rather than remembered: the full form's identity is variable length, so the offset has to
+    be walked, and having one function do it keeps `_parse` and the flag rewrites from disagreeing
+    about where it is.
+    """
+    from storage.ward import STORE_KEY_OFF, STORE_VERSION_COMPACT
+
+    from .keys import WALLET_ENTRY_LEN
+
+    if record[0] == STORE_VERSION_COMPACT:
+        return STORE_KEY_OFF + WALLET_ENTRY_LEN
+
+    off = STORE_KEY_OFF
+    off += 1 + record[off]  # key_type
+    off += 1 + record[off]  # app_id
+    off += 2 + int.from_bytes(record[off : off + 2], "big")  # identifier
+    return off
+
+
+async def _set_flags(entry: StoredEntry, pending: bool, offered: bool) -> None:
+    """Rewrite one record's flags, in place, in whatever form it is stored.
+
+    NO IDENTITY NEEDED, which is the whole reason this exists: `flush_queue` and a reconcile change
+    only these two bits, and a compact record could not be re-encoded from what they hold.
+    """
+    from storage import ward as ward_store
+
+    if entry.slot is None:
+        raise ValueError  # only a record that came from `list_entries` can be flipped
+
+    flags = (ward_store.FLAG_PENDING if pending else 0) | (
+        ward_store.FLAG_OFFERED if offered else 0
+    )
+    off = _flags_off(entry.raw)
+    ward_store.store_write_slot(
+        entry.slot, entry.raw[:off] + bytes([flags]) + entry.raw[off + 1 :]
     )
 
 
@@ -190,8 +314,13 @@ async def get(
     from .keys import derive_wallet_id
 
     wallet_id = await derive_wallet_id()
-    identity = identity_block(key_type, app_id, identifier)
-    record = ward_store.store_get(wallet_id, identity)
+    # Found by SLOT rather than just by name: the slot travels with the entry, because it is the only
+    # handle `mark_offered` and a reconcile can use -- neither can re-find a compact record from an
+    # identity it does not carry.
+    slot = ward_store.store_find(
+        wallet_id, await _candidates(key_type, app_id, identifier)
+    )
+    record = None if slot is None else ward_store.store_read_slot(slot)
 
     if record is None:
         # A record written by a NEWER build carries its identity in a layout this one does not know,
@@ -205,11 +334,17 @@ async def get(
     # An unknown version is REPORTED, not removed. A newer firmware may have written this, and
     # the user may want it back by downgrading -- destroying it to tidy up would be a migration
     # that silently loses data, which is the one thing the erase rule forbids outright.
-    if record[0] != ward_store.STORE_VERSION:
+    #
+    # BOTH FORMS THIS BUILD KNOWS ARE KNOWN. Listing only the full one here made every compact record
+    # read as unreadable, which is the failure this check exists to avoid, pointed the wrong way.
+    if record[0] not in (ward_store.STORE_VERSION, ward_store.STORE_VERSION_COMPACT):
         return CORRUPT, None
 
     try:
-        return VALID, _parse(record)
+        # The caller's identity is handed to the parser: a compact record has none of its own, and
+        # this is the point at which it is known to be the right one -- the record was FOUND by the
+        # hash of exactly these three fields.
+        return VALID, _parse(record, key_type, app_id, identifier, slot)
     except Exception:
         # Framing that does not parse. Caught broadly on purpose: every way of failing to read
         # a record means the same thing to a caller, and a new failure mode leaking out as an
@@ -255,6 +390,7 @@ async def put(
     value: bytes,
     pending: bool,
     offered: bool = False,
+    compact: bool = False,
 ) -> None:
     """Write a record. Raises when the store is full -- it never makes room."""
     from storage import ward as ward_store
@@ -267,16 +403,20 @@ async def put(
 
     wallet_id = await derive_wallet_id()
     record = encode_record(
-        wallet_id, key_type, app_id, identifier, value, pending, offered
+        wallet_id, key_type, app_id, identifier, value, pending, offered, compact
     )
     # The value cap alone does not bound a record: app_id and identifier have their own framing, so a
     # long enough pair would make one record eat most of the store's byte budget while every
     # individual field looked legal. See `storage.ward.MAX_RECORD_LEN`.
     if len(record) > ward_store.MAX_RECORD_LEN:
         raise DataError("WARD: entry too large to keep offline")
-    if not ward_store.store_put(
-        wallet_id, identity_block(key_type, app_id, identifier), record
-    ):
+    candidates = await _candidates(key_type, app_id, identifier)
+    version, name = candidates[1] if compact else candidates[0]
+    other = candidates[0][1] if compact else candidates[1][1]
+    # `replaces` is what lets a record CHANGE FORM in place: written compact over a full record, or
+    # the other way round, it must take over the slot rather than leave a second copy of the same
+    # entry behind under the other name.
+    if not ward_store.store_put(wallet_id, version, name, record, replaces=other):
         # Full means FULL, whether it ran out of slots or of the byte budget -- both mean the same
         # thing to whoever asked. No eviction, so the user is told and chooses what to give up: every
         # occupant is either something they pinned or a change they confirmed.
@@ -295,7 +435,7 @@ async def erase(key_type: str, app_id: str, identifier: bytes) -> None:
     from .keys import derive_wallet_id
 
     ward_store.store_delete(
-        await derive_wallet_id(), identity_block(key_type, app_id, identifier)
+        await derive_wallet_id(), await _candidates(key_type, app_id, identifier)
     )
 
 
@@ -336,11 +476,14 @@ async def list_entries() -> "list[StoredEntry]":
     from .keys import derive_wallet_id
 
     out = []
-    for record in ward_store.store_list(await derive_wallet_id()):
-        if record[0] != ward_store.STORE_VERSION:
+    for slot, record in ward_store.store_list(await derive_wallet_id()):
+        if record[0] not in (ward_store.STORE_VERSION, ward_store.STORE_VERSION_COMPACT):
             continue
         try:
-            out.append(_parse(record))
+            # No identity is passed: enumeration does not know one, so a compact record comes back
+            # with its identity fields empty and `compact` set. Everything enumeration is for --
+            # counting what is pending, settling it after a reconcile -- works on flags alone.
+            out.append(_parse(record, slot=slot))
         except Exception:
             continue
     return out
@@ -428,23 +571,13 @@ async def mark_offered(entry: StoredEntry, counter: int) -> None:
     It stays pending either way: handing the leaf over is not the change taking effect -- the head
     moves when the WM confirms, which is `reconcile`'s job.
     """
-    await put(
-        entry.key_type, entry.app_id, entry.identifier, entry.value, True, offered=True
-    )
+    await _set_flags(entry, True, True)
 
-    # The SLOT is the handle a claim is filed under: it is one byte, stable while the record lives,
-    # and the record is already written by the time this runs.
-    from storage import ward as ward_store
-
-    from .keys import derive_wallet_id
-
-    slot = ward_store.store_find(
-        await derive_wallet_id(),
-        identity_block(entry.key_type, entry.app_id, entry.identifier),
-    )
-    if slot is not None:
+    # The SLOT is the handle a claim is filed under: one byte, stable while the record lives, and
+    # already in hand -- it came with the record.
+    if entry.slot is not None:
         claims = _claims()
-        claims[slot] = counter
+        claims[entry.slot] = counter
         _set_claims(claims)
 
 
@@ -475,30 +608,10 @@ async def reconcile_pending(adopted: int) -> None:
     same-counter-different-root check; distinguishing the two properly needs a membership proof per
     queued change, which is more machinery than one-intent-per-round-trip currently earns.
     """
-    from storage import ward as ward_store
-
-    from .keys import derive_wallet_id
-
-    wallet_id = await derive_wallet_id()
     claims = _claims()
     for entry in await list_entries():
         if not entry.pending or not entry.offered:
             continue
-        slot = ward_store.store_find(
-            wallet_id, identity_block(entry.key_type, entry.app_id, entry.identifier)
-        )
-        claimed = claims.get(slot) if slot is not None else None
+        claimed = claims.get(entry.slot) if entry.slot is not None else None
         landed = claimed is not None and claimed <= adopted
-        ward_store.store_put(
-            wallet_id,
-            identity_block(entry.key_type, entry.app_id, entry.identifier),
-            encode_record(
-                wallet_id,
-                entry.key_type,
-                entry.app_id,
-                entry.identifier,
-                entry.value,
-                not landed,
-                False,
-            ),
-        )
+        await _set_flags(entry, not landed, False)

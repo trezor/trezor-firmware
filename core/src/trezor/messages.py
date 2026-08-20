@@ -8226,6 +8226,7 @@ if TYPE_CHECKING:
         identifier: "AnyBytes | None"
         value: "AnyBytes | None"
         mac: "AnyBytes | None"
+        compact: "bool | None"
 
         def __init__(
             self,
@@ -8234,6 +8235,7 @@ if TYPE_CHECKING:
             identifier: "AnyBytes | None" = None,
             value: "AnyBytes | None" = None,
             mac: "AnyBytes | None" = None,
+            compact: "bool | None" = None,
         ) -> None:
             pass
 
@@ -8596,6 +8598,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardFlushQueue(protobuf.MessageType):
+        app_id: "str | None"
+        identifier: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            app_id: "str | None" = None,
+            identifier: "AnyBytes | None" = None,
+        ) -> None:
+            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardFlushQueue"]:

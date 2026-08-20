@@ -243,7 +243,8 @@ MAX_STORE_BYTES = const(6144)
 # THE QUEUE'S TO HOLD: it is what a leaf sits at in the TRIE, assigned when the change is published,
 # and a queued change has not been published. Records are found by the IDENTITY they carry instead,
 # and the path is derived from that identity at the one moment it is needed.
-STORE_VERSION = const(3)
+STORE_VERSION = const(3)  # the full form: the identity is in the record
+STORE_VERSION_COMPACT = const(4)  # the identity is replaced by a 16-byte hash of it
 
 # THE STORE TRUNCATES wallet_id TO 7 BYTES; the root slots above keep all 16. The two answer
 # different questions. A root slot is the wallet's authenticated head, written once and read on every
@@ -276,56 +277,72 @@ STORE_KEY_OFF = const(8)  # where the identity begins
 STORE_PREFIX_LEN = const(8)
 
 
-def store_prefix(wallet_id: bytes) -> bytes:
+def store_prefix(wallet_id: bytes, version: int = STORE_VERSION) -> bytes:
     """The fixed part of the frozen header. The single point that decides its layout.
 
     Takes the WHOLE wallet_id and stores its first `_STORE_WALLET_ID_LEN` bytes, so that no caller
     has to know this format truncates -- and so that only one place decides how much of it is kept.
+
+    `version` says which FORM follows: the identity, or the hash that stands in for it. The wallet tag
+    is in both, and deliberately so -- a compact record's hash covers wallet_id but cannot be reversed
+    to ask whose record it is, and `store_list` has to be able to answer exactly that.
     """
     if len(wallet_id) != _WALLET_ID_LEN:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
-    return bytes([STORE_VERSION]) + wallet_id[:_STORE_WALLET_ID_LEN]
+    if version not in (STORE_VERSION, STORE_VERSION_COMPACT):
+        raise ValueError  # only the forms this build knows may be written
+    return bytes([version]) + wallet_id[:_STORE_WALLET_ID_LEN]
 
 
 def _store_slot(index: int) -> bytes | None:
     return common.get(common.APP_WARD, index + _STORE_FIRST_KEY)
 
 
-def store_find(wallet_id: bytes, identity: bytes) -> int | None:
-    """This wallet's slot for `identity`, or None.
+def store_find(wallet_id: bytes, candidates: "list[tuple[int, bytes]]") -> int | None:
+    """This wallet's slot for any of `candidates`, or None.
 
-    Matches at FIXED OFFSETS and deliberately ignores the version byte -- a record this build
-    cannot parse must still be locatable, or it could never be erased. See the frozen-header note
-    above.
+    A CANDIDATE IS (version, key): the full form is named by its identity, the compact form by a hash
+    of it, and a caller that knows the identity can compute both. Passing them together is what lets
+    one lookup serve both forms without this layer knowing which is which -- the key is opaque bytes
+    here, and its framing is `apps.ward.offline_store`'s business.
 
-    Matching on wallet_id AND identity, never identity alone: the same identifier under a different
+    Matches at FIXED OFFSETS. The version is part of the match rather than ignored, because it is what
+    says which key the bytes at STORE_KEY_OFF are; `store_find_unreadable` is the path for a record
+    whose version this build does not know.
+
+    Matching on wallet_id AND the key, never the key alone: the same identifier under a different
     passphrase is a different wallet's entry, and serving one for the other is the failure this key
-    scheme exists to prevent. Note the identity is compared as OPAQUE BYTES -- its framing is
-    `apps.ward.offline_store`'s business, and this layer only needs it to be canonical.
+    scheme exists to prevent.
     """
-    if len(wallet_id) != _WALLET_ID_LEN or not identity:
-        raise ValueError  # a record is always named by a wallet and an identity
+    if len(wallet_id) != _WALLET_ID_LEN or not candidates:
+        raise ValueError  # a record is always named by a wallet and at least one key
+    for version, key in candidates:
+        if not key:
+            raise ValueError  # an empty key would match every record of the wallet
     for i in range(MAX_STORE_ENTRIES):
         rec = _store_slot(i)
         if rec is None or len(rec) < STORE_PREFIX_LEN:
             continue
-        if (
-            rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id[:_STORE_WALLET_ID_LEN]
-            and rec[STORE_KEY_OFF : STORE_KEY_OFF + len(identity)] == identity
-        ):
-            return i
+        if rec[_STORE_ID_OFF:STORE_KEY_OFF] != wallet_id[:_STORE_WALLET_ID_LEN]:
+            continue
+        for version, key in candidates:
+            if (
+                rec[_STORE_VERSION_OFF] == version
+                and rec[STORE_KEY_OFF : STORE_KEY_OFF + len(key)] == key
+            ):
+                return i
     return None
 
 
-def store_get(wallet_id: bytes, identity: bytes) -> bytes | None:
-    """The raw record, or None if this wallet has none for `identity`.
+def store_get(wallet_id: bytes, candidates: "list[tuple[int, bytes]]") -> bytes | None:
+    """The raw record, or None if this wallet has none matching `candidates`.
 
     Raw on purpose: deciding whether the bytes are USABLE -- known version, well-formed
     framing -- is the app layer's job, and returning None for an unreadable record would make
     "no such entry" and "cannot read this entry" the same answer. They are not, and the
     difference is what stops a corrupt record from silently reading as a miss.
     """
-    index = store_find(wallet_id, identity)
+    index = store_find(wallet_id, candidates)
     if index is None:
         return None
     return _store_slot(index)
@@ -353,7 +370,9 @@ def store_bytes_used(exclude_index: "int | None" = None) -> int:
     return total
 
 
-def store_put(wallet_id: bytes, identity: bytes, record: bytes) -> bool:
+def store_put(
+    wallet_id: bytes, version: int, key: bytes, record: bytes, replaces: bytes | None = None
+) -> bool:
     """Write a record, replacing this wallet's existing one for `identity`. False if full.
 
     FULL MEANS EITHER LIMIT: no free slot, or no room in `MAX_STORE_BYTES`. Both answer the same
@@ -364,12 +383,19 @@ def store_put(wallet_id: bytes, identity: bytes, record: bytes) -> bool:
     published yet. Making room automatically would destroy one of those to satisfy the other,
     silently, and the user would learn about it by finding the entry gone.
     """
-    if record[: STORE_KEY_OFF + len(identity)] != store_prefix(wallet_id) + identity:
-        raise ValueError  # record header must name the wallet and identity it is stored under
+    if record[: STORE_KEY_OFF + len(key)] != store_prefix(wallet_id, version) + key:
+        raise ValueError  # record header must name the version, wallet and key it is stored under
     if len(record) > MAX_RECORD_LEN:
         raise ValueError  # a record past the cap breaks the capacity guarantee, see MAX_RECORD_LEN
 
-    index = store_find(wallet_id, identity)
+    # `replaces` lets a write REPLACE the same entry held in the other form: switching a record to
+    # compact must reuse its slot rather than leaving the old one behind under a different key.
+    index = store_find(wallet_id, [(version, key)])
+    if index is None and replaces is not None:
+        other = (
+            STORE_VERSION if version == STORE_VERSION_COMPACT else STORE_VERSION_COMPACT
+        )
+        index = store_find(wallet_id, [(other, replaces)])
     if index is None:
         for i in range(MAX_STORE_ENTRIES):
             if _store_slot(i) is None:
@@ -387,15 +413,15 @@ def store_put(wallet_id: bytes, identity: bytes, record: bytes) -> bool:
     return True
 
 
-def store_delete(wallet_id: bytes, identity: bytes) -> None:
-    """Remove this wallet's record for `identity`. A no-op if there is none.
+def store_delete(wallet_id: bytes, candidates: "list[tuple[int, bytes]]") -> None:
+    """Remove this wallet's record matching `candidates`. A no-op if there is none.
 
     A PRIMITIVE, NOT A POLICY. It asks nothing and checks nothing beyond the identity: every caller
     must already have the user's confirmation in hand. Keeping the question out of here is what
     stops a future caller from acquiring the power to erase by accident -- there is exactly one
     path to this function that a user has agreed to, and it is `apps.ward.erase_cached_entry`.
     """
-    index = store_find(wallet_id, identity)
+    index = store_find(wallet_id, candidates)
     if index is None:
         return
     common.delete(common.APP_WARD, index + _STORE_FIRST_KEY)
@@ -420,10 +446,9 @@ def store_find_unreadable(wallet_id: bytes) -> int | None:
         rec = _store_slot(i)
         if rec is None or len(rec) < STORE_PREFIX_LEN:
             continue
-        if (
-            rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id[:_STORE_WALLET_ID_LEN]
-            and rec[_STORE_VERSION_OFF] != STORE_VERSION
-        ):
+        if rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id[
+            :_STORE_WALLET_ID_LEN
+        ] and rec[_STORE_VERSION_OFF] not in (STORE_VERSION, STORE_VERSION_COMPACT):
             return i
     return None
 
@@ -439,8 +464,39 @@ def store_delete_slot(index: int) -> None:
     common.delete(common.APP_WARD, index + _STORE_FIRST_KEY)
 
 
-def store_list(wallet_id: bytes) -> list[bytes]:
-    """Every raw record belonging to THIS wallet, in slot order.
+def store_read_slot(index: int) -> bytes | None:
+    """Whatever occupies one slot, by index.
+
+    The by-name reader is `store_get`; this is for callers that already hold a SLOT, which is the only
+    handle that works for the operations identity cannot serve -- flipping a record's flags, and
+    removing one whose form this build cannot parse.
+    """
+    if not 0 <= index < MAX_STORE_ENTRIES:
+        raise ValueError  # slot index out of range
+    return _store_slot(index)
+
+
+def store_write_slot(index: int, record: bytes) -> None:
+    """Rewrite the record in a slot IN PLACE, same length. For flag flips only.
+
+    Why it exists: `FLAG_OFFERED` and `FLAG_PENDING` are changed by `flush_queue` and by a reconcile,
+    neither of which has the record's identity in hand -- a COMPACT record does not carry one. Editing
+    the bytes that are already there needs no identity at all, and it keeps the byte budget exactly as
+    it was, which is why the length is required to match.
+
+    THE CALLER MUST ALREADY OWN THE SLOT: it comes from `store_list`, so it is a record of the
+    caller's own wallet. Nothing here re-checks that, in the same spirit as `store_delete`.
+    """
+    if not 0 <= index < MAX_STORE_ENTRIES:
+        raise ValueError  # slot index out of range
+    old = _store_slot(index)
+    if old is None or len(old) != len(record):
+        raise ValueError  # in-place means the same length; anything else goes through store_put
+    common.set(common.APP_WARD, index + _STORE_FIRST_KEY, record)
+
+
+def store_list(wallet_id: bytes) -> "list[tuple[int, bytes]]":
+    """Every raw record belonging to THIS wallet as (slot, record), in slot order.
 
     Scoped to one wallet with no way to ask for another: enumeration is the one operation where
     a missing filter leaks the existence of a hidden wallet's entries rather than merely
@@ -454,5 +510,7 @@ def store_list(wallet_id: bytes) -> list[bytes]:
         if rec is None or len(rec) < STORE_PREFIX_LEN:
             continue
         if rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id[:_STORE_WALLET_ID_LEN]:
-            out.append(rec)
+            # The SLOT comes with the record: a caller that wants to change a record's flags needs
+            # the handle, and a compact record cannot be re-found by an identity it does not carry.
+            out.append((i, rec))
     return out

@@ -3133,3 +3133,187 @@ def test_ward_replacing_an_entry_keeps_its_place_in_the_queue(session: Session):
         for ident in (b"addr1", b"addr2", b"addr3")
     ]
     assert remaining == [2, 1, 0]
+
+
+# --- the compact record form ---------------------------------------------------------------
+
+
+@pytest.mark.models("core")
+def test_ward_a_compact_record_reads_and_backs_up_like_any_other(session: Session):
+    """`compact` keeps a HASH of the identity instead of the identity, and nothing above notices.
+
+    Every request that touches a record already names the entry, so the device hashes what the caller
+    named and finds the record by that. The screens still say which domain and key they are about --
+    they read them from the REQUEST, which is where the full path gets them too -- and a backup still
+    carries the identity, echoed from the request after the hash has agreed.
+    """
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_queue_entry"), m.WardQueueSetAck]
+        )
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"compact_value", compact=True)
+
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "compact_value" in rec.squashed
+    assert _APP.lower() in rec.text.lower()  # the domain, from the request
+    ack = rec.ack
+    assert ack.pending is True
+    assert ack.app_id == _APP
+    assert ack.identifier == b"addr1"
+    assert ack.value == b"compact_value"
+    assert len(ack.mac) == 32
+
+    # a DIFFERENT identity hashes elsewhere and finds nothing
+    other = _offline_read(session.test_ctx.get_session(), b"addr2")
+    assert other.ack.missing is True
+
+    # the backup restores like any other, and may go back compact
+    fresh = session.test_ctx.get_session()
+    with fresh.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(fresh).get())
+        ward.queue_delete_entry(fresh, _APP, b"addr1")
+    with fresh.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(fresh).get())
+        ward.restore_queued_entry(fresh, ack, compact=True)
+
+    assert (
+        _offline_read(session.test_ctx.get_session(), b"addr1").ack.value
+        == b"compact_value"
+    )
+
+
+@pytest.mark.models("core")
+def test_ward_a_compact_record_is_published_when_it_is_named(session: Session):
+    """A compact record cannot be published by "take the next one" -- and it says so.
+
+    The device holds a hash, and a hash does not become a keyed path. It also cannot ask for the right
+    identity by name, because naming the entry is exactly what it gave up. So an unnamed flush refuses
+    and a named one works, which is the whole contract of the compact form.
+    """
+    store = WardTrie()
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"needs_a_name", compact=True)
+
+    _go_online(session, store)
+
+    with pytest.raises(exceptions.TrezorFailure, match="compactly"):
+        ward.flush_queue(session, ward.store_provider(store))
+
+    res = ward.flush_queue(
+        session, ward.store_provider(store), app_id=_APP, identifier=b"addr1"
+    )
+    assert res.remaining == 0
+    assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
+    value = unpack_content(
+        open_content(_K_DATA, res.entry_key, "address", res.leaf.content.encrypted)
+    )[1]
+    assert value == b"needs_a_name"
+
+
+@pytest.mark.models("core")
+def test_ward_naming_an_entry_publishes_that_one_not_the_first(session: Session):
+    """The named flush is not only for compact records: it picks the entry, whatever form it is in.
+
+    Worth pinning because the unnamed path publishes in slot order, and a host with several queued
+    changes and one backup in hand needs to be able to say which.
+    """
+    store = WardTrie()
+
+    for ident, value in ((b"addr1", b"first"), (b"addr2", b"second")):
+        with session.test_ctx as ctx:
+            ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+            ward.queue_set_entry(session, _APP, ident, value)
+
+    _go_online(session, store)
+
+    res = ward.flush_queue(
+        session, ward.store_provider(store), app_id=_APP, identifier=b"addr2"
+    )
+    assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr2")
+    # the other one is still waiting, and is what an unnamed flush takes
+    assert res.remaining == 1
+    res = ward.flush_queue(session, ward.store_provider(store))
+    assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
+    assert res.remaining == 0
+
+
+@pytest.mark.models("core")
+def test_ward_both_record_forms_share_one_store(session: Session):
+    """A full and a compact record of different entries, side by side.
+
+    Both are found by identity, both are counted as pending, and neither shadows the other -- the
+    lookup asks for both names at once, so which form an entry happens to be in never has to be known
+    by anything above the store.
+    """
+    store = WardTrie()
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"stored_full")
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr2", b"stored_compact", compact=True)
+
+    assert (
+        _offline_read(session.test_ctx.get_session(), b"addr1").ack.value
+        == b"stored_full"
+    )
+    assert (
+        _offline_read(session.test_ctx.get_session(), b"addr2").ack.value
+        == b"stored_compact"
+    )
+
+    # both are queued: the full one is publishable unnamed, and `remaining` counts them both
+    _go_online(session, store)
+    res = ward.flush_queue(session, ward.store_provider(store))
+    assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
+    assert res.remaining == 1
+
+    res = ward.flush_queue(
+        session, ward.store_provider(store), app_id=_APP, identifier=b"addr2"
+    )
+    assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr2")
+    assert res.remaining == 0
+
+
+@pytest.mark.models("core")
+def test_ward_rewriting_an_entry_compactly_replaces_it(session: Session):
+    """Changing form must take over the slot, not leave the old form behind.
+
+    Two records for one entry under two names would both be findable, and which one a read returned
+    would depend on slot order -- so a value the user replaced could come back later.
+    """
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"was_full")
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"now_compact", compact=True)
+
+    assert (
+        _offline_read(session.test_ctx.get_session(), b"addr1").ack.value
+        == b"now_compact"
+    )
+
+    # ...and back to the full form, still one record
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"full_again")
+    assert (
+        _offline_read(session.test_ctx.get_session(), b"addr1").ack.value
+        == b"full_again"
+    )
+
+    # one slot used: nineteen more entries still fit
+    for i in range(19):
+        with session.test_ctx as ctx:
+            ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+            ward.queue_set_entry(session, _APP, b"fill%d" % i, b"v", compact=True)
+    assert (
+        _offline_read(session.test_ctx.get_session(), b"addr1").ack.value
+        == b"full_again"
+    )
