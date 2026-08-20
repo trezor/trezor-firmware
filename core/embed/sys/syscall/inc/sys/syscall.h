@@ -27,24 +27,32 @@
 
 #ifdef KERNEL_MODE
 
-// Handles all syscall requests.
-//
-// `args` points to an array of six 32-bit arguments.
-// `syscall` is the syscall number, which is one of the `SYSCALL_XXX` constants.
-//
-// Input parameters are passed in `args[0]` to `args[5]`,
-// and unused arguments may have undefined values.
-//
-// Return values must be copied to `args[0]` and
-// `args[1]` (if returning a 64-bit value).
-void syscall_handler(uint32_t* args, uint32_t syscall, void* applet);
+/**
+ * @brief Handles all syscall requests
+ *
+ * Input parameters are passed in `args[0]` to `args[5]`, and unused arguments
+ * may have undefined values. Return values are copied to `args[0]` and
+ * `args[1]` (if returning a 64-bit value).
+ *
+ * @param args points to an array of six 32-bit arguments.
+ * @param syscall is the syscall number, which is one of the `SYSCALL_XXX`
+ * constants.
+ * @param applet_ptr is a pointer to the applet making the syscall.
+ *
+ */
+void syscall_handler(uint32_t* args, uint32_t syscall, void* applet_ptr);
 
 #endif  // KERNEL_MODE
 
-// Returns from the unprivileged callback invoked by the kernel
-//
-// Used for the storage callback and the unprivileged SAES hack callback.
-// Do not use for other purposes unless there is a very good reason.
+/**
+ * @brief Returns from the unprivileged callback invoked by the kernel.
+ *
+ * Used for the storage callback and the unprivileged SAES hack callback.
+ * Do not use for other purposes unless there is a very good reason.
+ *
+ * @param retval The return value to pass back to the kernel.
+ *
+ */
 static inline void __attribute__((no_stack_protector))
 return_from_unprivileged_callback(uint32_t retval) {
   register uint32_t r0 __asm__("r0") = retval;
