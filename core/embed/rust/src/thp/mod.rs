@@ -475,14 +475,24 @@ impl ThpContext {
     /// - duration between now and the last time a (non-ACK) packet has been
     ///   sent
     /// - phase of the channel, possibly with initial pairing state
-    pub fn channel_info(&self, channel_id: u16) -> Result<(Option<u32>, Phase), Error> {
+    /// - the interface the channel is bound to
+    ///
+    /// The interface is reported because micropython cannot otherwise learn it,
+    /// and it needs to: `packet_out_channel` looks a channel up by id alone and
+    /// writes into a buffer the caller then sends on ITS OWN interface, so a
+    /// channel attached to the wrong `InterfaceContext` would put one host's
+    /// encrypted traffic on another host's wire.
+    pub fn channel_info(&self, channel_id: u16) -> Result<(Option<u32>, Phase, u8), Error> {
         let ChannelEntry {
-            channel, timing, ..
+            channel,
+            timing,
+            iface_num,
+            ..
         } = self.lookup_channel(channel_id)?;
         let last_write_age_ms = timing
             .last_write_age(self.now())
             .map(|duration| duration.to_millis());
-        Ok((last_write_age_ms, channel.phase()))
+        Ok((last_write_age_ms, channel.phase(), *iface_num))
     }
 
     /// Indicate that a pairing+credential phase was successfully finished,

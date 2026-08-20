@@ -168,7 +168,7 @@ extern "C" fn thp_channel_info(channel_id: Obj) -> Obj {
 
         let thp = THP_CONTEXT.try_lock().ok_or(CANNOT_UNLOCK)?;
 
-        let (last_write_age_ms, phase) = thp.channel_info(channel_id)?;
+        let (last_write_age_ms, phase, iface_num) = thp.channel_info(channel_id)?;
         let hash = thp.handshake_hash(channel_id)?;
         let remote_static_pubkey = thp.remote_static_pubkey(channel_id)?;
         let pairing_state: Option<u8> = match phase {
@@ -189,6 +189,7 @@ extern "C" fn thp_channel_info(channel_id: Obj) -> Obj {
             Qstr::MP_QSTR_handshake_hash => hash.try_into()?,
             Qstr::MP_QSTR_host_static_public_key => remote_static_pubkey.try_into()?,
             Qstr::MP_QSTR_credential => credential,
+            Qstr::MP_QSTR_iface_num => iface_num.try_into()?,
         }
     };
 
@@ -488,6 +489,7 @@ pub static mp_module_trezorthp: Module = obj_module! {
     ///     handshake_hash: bytes | None
     ///     host_static_public_key: bytes
     ///     credential: bytes | None
+    ///     iface_num: int
     ///
     /// mock:global
 
@@ -499,6 +501,7 @@ pub static mp_module_trezorthp: Module = obj_module! {
     ///     * handshake hash
     ///     * host static public key
     ///     * encoded credential provided during handshake - it is discarded at the end of pairing/credential phase
+    ///     * the interface the channel is bound to
     ///     """
     Qstr::MP_QSTR_channel_info => obj_fn_1!(thp_channel_info).as_obj(),
 
