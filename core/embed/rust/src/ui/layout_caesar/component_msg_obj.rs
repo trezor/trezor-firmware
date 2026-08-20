@@ -110,8 +110,8 @@ impl ComponentMsgObj for CoinJoinProgress {
 impl ComponentMsgObj for NumberInput {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            Self::Msg::Cancel => (CANCELLED.as_obj(), 0.try_into()?).try_into(),
-            Self::Msg::Choice { item, .. } => (CONFIRMED.as_obj(), item.try_into()?).try_into(),
+            Self::Msg::Cancel => (CANCELLED.as_obj(), 0).try_into(),
+            Self::Msg::Choice { item, .. } => (CONFIRMED.as_obj(), item).try_into(),
         }
     }
 }

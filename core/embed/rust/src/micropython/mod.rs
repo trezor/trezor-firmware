@@ -18,6 +18,7 @@ pub mod print;
 pub mod qstr;
 pub mod runtime;
 pub mod simple_type;
+pub mod tuple;
 pub mod typ;
 pub mod util;
 
