@@ -279,7 +279,7 @@ static void app_arena_configure_mpu(const app_arena_entry_t* entry) {
   applet_layout_t layout = {
       .data1 = {.start = (uintptr_t)entry->mem_ptr, .size = entry->mem_size},
   };
-  mpu_set_active_applet(&layout);
+  mpu_set_active_applet(&layout, false);
 #endif
 }
 
