@@ -246,7 +246,12 @@ MAX_STORE_BYTES = const(6144)
 STORE_VERSION = const(3)  # the full form: the identity is in the record
 STORE_VERSION_COMPACT = const(4)  # the identity is replaced by a 16-byte hash of it
 
-# THE STORE TRUNCATES wallet_id TO 7 BYTES; the root slots above keep all 16. The two answer
+# THE FULL FORM TRUNCATES wallet_id TO 7 BYTES; the root slots above keep all 16. The COMPACT form
+# stores no wallet tag at all -- its name is a hash that already commits to wallet_id, so a tag would
+# be the same information twice. What that costs is `store_list`: it cannot say whose a compact record
+# is, so enumeration returns only the full form and everything that needs "my records" either works on
+# names (get, put, erase, a named flush) or on the session claim ledger (a reconcile).
+# The two answer
 # different questions. A root slot is the wallet's authenticated head, written once and read on every
 # verification, so its identifier costs 16 bytes eight times and buys the full 128 bits. A record
 # carries the same tag 20 times, and all it has to do there is tell one wallet's records from
@@ -280,18 +285,25 @@ STORE_PREFIX_LEN = const(8)
 def store_prefix(wallet_id: bytes, version: int = STORE_VERSION) -> bytes:
     """The fixed part of the frozen header. The single point that decides its layout.
 
-    Takes the WHOLE wallet_id and stores its first `_STORE_WALLET_ID_LEN` bytes, so that no caller
-    has to know this format truncates -- and so that only one place decides how much of it is kept.
+    FULL FORM: version || wallet_id[:_STORE_WALLET_ID_LEN]. Takes the WHOLE wallet_id and keeps its
+    first bytes, so no caller has to know this format truncates and only one place decides how much
+    of it is kept.
 
-    `version` says which FORM follows: the identity, or the hash that stands in for it. The wallet tag
-    is in both, and deliberately so -- a compact record's hash covers wallet_id but cannot be reversed
-    to ask whose record it is, and `store_list` has to be able to answer exactly that.
+    COMPACT FORM: version, and nothing else. The name that follows is a hash that already commits to
+    wallet_id, so a tag beside it would store the same fact twice.
     """
     if len(wallet_id) != _WALLET_ID_LEN:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
-    if version not in (STORE_VERSION, STORE_VERSION_COMPACT):
+    if version == STORE_VERSION_COMPACT:
+        return bytes([version])
+    if version != STORE_VERSION:
         raise ValueError  # only the forms this build knows may be written
     return bytes([version]) + wallet_id[:_STORE_WALLET_ID_LEN]
+
+
+def store_key_off(version: int) -> int:
+    """Where a record's NAME begins, which is the one thing the two forms disagree about."""
+    return 1 if version == STORE_VERSION_COMPACT else STORE_KEY_OFF
 
 
 def _store_slot(index: int) -> bytes | None:
@@ -321,15 +333,20 @@ def store_find(wallet_id: bytes, candidates: "list[tuple[int, bytes]]") -> int |
             raise ValueError  # an empty key would match every record of the wallet
     for i in range(MAX_STORE_ENTRIES):
         rec = _store_slot(i)
-        if rec is None or len(rec) < STORE_PREFIX_LEN:
-            continue
-        if rec[_STORE_ID_OFF:STORE_KEY_OFF] != wallet_id[:_STORE_WALLET_ID_LEN]:
+        if rec is None or len(rec) < 1 + _STORE_WALLET_ID_LEN:
             continue
         for version, key in candidates:
-            if (
-                rec[_STORE_VERSION_OFF] == version
-                and rec[STORE_KEY_OFF : STORE_KEY_OFF + len(key)] == key
-            ):
+            if rec[_STORE_VERSION_OFF] != version:
+                continue
+            # The FULL form is scoped by the tag it carries; the COMPACT form by its name, which is a
+            # hash over wallet_id -- so a wallet mismatch there is a name mismatch and needs no
+            # separate check. Both are checked against THIS wallet either way.
+            if version == STORE_VERSION and rec[
+                _STORE_ID_OFF:STORE_KEY_OFF
+            ] != wallet_id[:_STORE_WALLET_ID_LEN]:
+                continue
+            off = store_key_off(version)
+            if rec[off : off + len(key)] == key:
                 return i
     return None
 
@@ -383,7 +400,8 @@ def store_put(
     published yet. Making room automatically would destroy one of those to satisfy the other,
     silently, and the user would learn about it by finding the entry gone.
     """
-    if record[: STORE_KEY_OFF + len(key)] != store_prefix(wallet_id, version) + key:
+    header = store_prefix(wallet_id, version) + key
+    if record[: len(header)] != header:
         raise ValueError  # record header must name the version, wallet and key it is stored under
     if len(record) > MAX_RECORD_LEN:
         raise ValueError  # a record past the cap breaks the capacity guarantee, see MAX_RECORD_LEN
@@ -449,6 +467,11 @@ def store_find_unreadable(wallet_id: bytes) -> int | None:
         if rec[_STORE_ID_OFF:STORE_KEY_OFF] == wallet_id[
             :_STORE_WALLET_ID_LEN
         ] and rec[_STORE_VERSION_OFF] not in (STORE_VERSION, STORE_VERSION_COMPACT):
+            # Only a FULL-shaped record can be attributed here: an unreadable record's layout is
+            # unknown by definition, and the tag at this offset is the one thing the frozen header
+            # promises. A compact record of a build this one does not know is not findable at all,
+            # which is the price of dropping the tag -- and it is not reachable by name either, so
+            # nothing can overwrite it silently.
             return i
     return None
 
@@ -496,7 +519,12 @@ def store_write_slot(index: int, record: bytes) -> None:
 
 
 def store_list(wallet_id: bytes) -> "list[tuple[int, bytes]]":
-    """Every raw record belonging to THIS wallet as (slot, record), in slot order.
+    """Every FULL-form record belonging to THIS wallet as (slot, record), in slot order.
+
+    COMPACT RECORDS ARE NOT HERE, and cannot be: their name is a hash, so nothing in them says whose
+    they are. That is the whole price of dropping their wallet tag, and it is paid by the callers that
+    used to need enumeration -- `remaining` now counts what can be published unprompted, and a
+    reconcile works from the session claim ledger, which is a stricter handle anyway.
 
     Scoped to one wallet with no way to ask for another: enumeration is the one operation where
     a missing filter leaks the existence of a hidden wallet's entries rather than merely
