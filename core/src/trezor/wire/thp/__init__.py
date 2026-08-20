@@ -37,6 +37,12 @@ class SessionState(IntEnum):
     UNALLOCATED = 0
     ALLOCATED = 1
     SEEDLESS = 2
+    # A session serving the WARD service channel. Distinct from SEEDLESS -- which merely means "no
+    # seed derived yet" and is a state an ordinary wallet session passes through -- because this one
+    # must NEVER become a wallet session: the service holds no seed by design, and every derivation
+    # it would need happens in the workflow that calls it. A state of its own is what stops a later
+    # `ThpCreateNewSession` on that channel quietly turning it into one.
+    WARD_SERVICE = 3
 
 
 _DEFAULT_ENABLED_PAIRING_METHODS = [
