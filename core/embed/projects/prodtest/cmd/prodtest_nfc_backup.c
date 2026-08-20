@@ -36,6 +36,8 @@
 #define NFC_BACKUP_SEED_METADATA_SIZE 256
 #define NFC_BACKUP_SEED_SIZE 256
 #define NFC_BACKUP_VERBOSE_SECRETS false
+#define NFC_BACKUP_MAX_PIN_LEN 32
+#define ENC_TAG_SIZE 16
 
 static noise_xxpsk3_initiator_t intr = {0};
 
@@ -773,8 +775,25 @@ static ts_t api_authenticate(cli_t *cli, const char *pin, size_t pin_len) {
   nfc_apdu_message_t cmd = {0};
   nfc_apdu_message_t rsp = {0};
 
-  status = nfc_backup_compose_apdu(0x80, 0x03, 0x00, 0x00, (const uint8_t *)pin,
-                                   pin_len, &cmd);
+  TSH_CHECK_ARG(pin_len <= NFC_BACKUP_MAX_PIN_LEN);
+
+  // Pad pin with 0xFF
+  char pin_padded[NFC_BACKUP_MAX_PIN_LEN] = {0};
+  memcpy(pin_padded, pin, pin_len);
+  for (size_t i = pin_len; i < NFC_BACKUP_MAX_PIN_LEN; i++) {
+    pin_padded[i] = 0xFFU;
+  }
+
+  // Encrypt the PIN using Noise XXpsk3
+  uint8_t enc_pin[NFC_BACKUP_MAX_PIN_LEN + ENC_TAG_SIZE] = {0};
+  size_t enc_pin_size = 0;
+  bool ok = noise_xxpsk3_send_message(
+      &intr.transport_state, (const uint8_t *)pin_padded,
+      NFC_BACKUP_MAX_PIN_LEN, enc_pin, sizeof(enc_pin), &enc_pin_size);
+  TSH_CHECK(ok, TS_EINVAL);
+
+  status = nfc_backup_compose_apdu(
+      0x80, 0x03, 0x00, 0x00, (const uint8_t *)enc_pin, enc_pin_size, &cmd);
   TSH_CHECK_OK(status);
 
   status = nfc_backup_transceive_logged(cli, "authenticate", 0x03, &cmd, &rsp);
@@ -796,8 +815,25 @@ static ts_t api_set_pin(cli_t *cli, const char *new_pin, size_t new_pin_len) {
   nfc_apdu_message_t cmd = {0};
   nfc_apdu_message_t rsp = {0};
 
-  status = nfc_backup_compose_apdu(0x80, 0x04, 0x00, 0x00,
-                                   (const uint8_t *)new_pin, new_pin_len, &cmd);
+  TSH_CHECK_ARG(new_pin_len <= NFC_BACKUP_MAX_PIN_LEN);
+
+  // Pad pin with 0xFF
+  uint8_t pin_padded[NFC_BACKUP_MAX_PIN_LEN] = {0};
+  memcpy(pin_padded, new_pin, new_pin_len);
+  for (size_t i = new_pin_len; i < NFC_BACKUP_MAX_PIN_LEN; i++) {
+    pin_padded[i] = 0xFFU;
+  }
+
+  // Encrypt the new PIN using Noise XXpsk3
+  uint8_t enc_pin[NFC_BACKUP_MAX_PIN_LEN + ENC_TAG_SIZE] = {0};
+  size_t enc_pin_size = 0;
+  bool ok = noise_xxpsk3_send_message(
+      &intr.transport_state, (const uint8_t *)pin_padded,
+      NFC_BACKUP_MAX_PIN_LEN, enc_pin, sizeof(enc_pin), &enc_pin_size);
+  TSH_CHECK(ok, TS_EINVAL);
+
+  status = nfc_backup_compose_apdu(
+      0x80, 0x04, 0x00, 0x00, (const uint8_t *)enc_pin, enc_pin_size, &cmd);
   TSH_CHECK_OK(status);
 
   status = nfc_backup_transceive_logged(cli, "set-pin", 0x04, &cmd, &rsp);
@@ -1046,8 +1082,8 @@ static ts_t api_read_seed(cli_t *cli, uint8_t *seed, size_t seed_buf_size,
   TSH_CHECK(seed_buf_size >= NFC_BACKUP_SEED_SIZE, TS_EINVAL);
 
   bool ok = noise_xxpsk3_receive_message(&intr.transport_state, rsp.data,
-                                         NFC_BACKUP_SEED_SIZE + 16, seed,
-                                         seed_buf_size, seed_len);
+                                         NFC_BACKUP_SEED_SIZE + ENC_TAG_SIZE,
+                                         seed, seed_buf_size, seed_len);
   TSH_CHECK(ok, TS_EINVAL);
 
 cleanup:
@@ -1064,7 +1100,7 @@ static ts_t api_write_seed(cli_t *cli, const uint8_t *seed, size_t seed_len) {
   TSH_CHECK_ARG(seed != NULL);
   TSH_CHECK_ARG(seed_len == NFC_BACKUP_SEED_SIZE);
 
-  uint8_t enc_seed[NFC_BACKUP_SEED_SIZE + 16] = {0};
+  uint8_t enc_seed[NFC_BACKUP_SEED_SIZE + ENC_TAG_SIZE] = {0};
   size_t enc_seed_size = 0;
   bool ok =
       noise_xxpsk3_send_message(&intr.transport_state, seed, seed_len, enc_seed,
