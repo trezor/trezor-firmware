@@ -22,6 +22,7 @@ _SESSION_ID_LENGTH = const(1)
 _UNALLOCATED_STATE = const(0)
 _ALLOCATED_STATE = const(1)
 _SEEDLESS_STATE = const(2)
+_WARD_SERVICE_STATE = const(3)
 
 
 class SessionThpCache(DataCache):
@@ -139,6 +140,35 @@ def is_seedless_session(session_cache: SessionThpCache) -> bool:
     return session_cache.get_int(SESSION_STATE, _UNALLOCATED_STATE) == _SEEDLESS_STATE
 
 
+def is_ward_service_session(session_cache: SessionThpCache) -> bool:
+    return (
+        session_cache.get_int(SESSION_STATE, _UNALLOCATED_STATE) == _WARD_SERVICE_STATE
+    )
+
+
+def create_ward_service_session(
+    channel_id: bytes, session_id: bytes
+) -> SessionThpCache:
+    """Allocate the slot that holds the WARD service's state, deriving no seed.
+
+    Separate from `create_or_replace_session` because that one is reached through
+    `ThpCreateNewSession`, which derives and stores a wallet seed. The service must not have one:
+    it is a transport peer, not a wallet, and everything it would need a seed for is derived by
+    the workflow that calls it.
+    """
+    # AT MOST ONE, cleared before the new one is allocated. There is one service, so a second slot
+    # could only come from a host opening the service repeatedly -- and since these slots are exempt
+    # from eviction, letting them accumulate would let a host consume every session slot on the
+    # device and leave `_get_least_recently_used_session` with nothing it is allowed to reuse.
+    for existing in _SESSIONS:
+        if is_ward_service_session(existing):
+            clear_session(existing)
+
+    session = create_or_replace_session(channel_id, session_id)
+    session.set_int(SESSION_STATE, _WARD_SERVICE_STATE)
+    return session
+
+
 def create_or_replace_session(channel_id: bytes, session_id: bytes) -> SessionThpCache:
     index = get_allocated_session_index(channel_id, session_id)
     if index is None:
@@ -184,9 +214,21 @@ def _get_unallocated_session_index() -> int | None:
 
 
 def _get_least_recently_used_session() -> int:
+    """The slot to reuse when every one is taken.
+
+    THE WARD SERVICE SLOT IS EXEMPT. It is long-lived infrastructure rather than one host's
+    conversation: it holds the pointer's target, so evicting it would leave a stored pointer aimed
+    at a slot that now belongs to somebody else -- and the service is idle by nature, so it is
+    exactly what "least recently used" would pick. It is also the least likely to be missed at the
+    moment it is needed. Wallet sessions compete for the rest as before.
+    """
     lru_counter = _usage_counter + 1
+    # A candidate always exists: at most one slot is the service's (see
+    # `create_ward_service_session`), so index 0 is only ever returned when it is a real choice.
     lru_item_index = 0
     for i in range(_MAX_SESSIONS_COUNT):
+        if is_ward_service_session(_SESSIONS[i]):
+            continue
         if _SESSIONS[i].last_usage < lru_counter:
             lru_counter = _SESSIONS[i].last_usage
             lru_item_index = i
