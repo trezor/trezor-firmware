@@ -103,6 +103,7 @@ bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
 
   applet_privileges_t coreapp_privileges = {
       .framebuffer_access = true,
+      .unlimited_syscalls = true,
   };
 
   applet_init(applet, &coreapp_privileges, coreapp_unload_cb);
