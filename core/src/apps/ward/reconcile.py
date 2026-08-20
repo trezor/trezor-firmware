@@ -15,26 +15,20 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     from trezor.messages import WardReconcileAck
     from trezor.wire import DataError
 
-    from . import round as sync_round
-    from .attest import root_mac, root_or_empty
+    from .adopt import adopt, require_attested_round, verify_head_mac
+    from .attest import root_or_empty
     from .common import require_initialized
-    from .keys import derive_k_mac, derive_ward_id
-    from .root import get_counter, get_root, set_root
+    from .root import get_counter, get_root
 
     require_initialized()
 
-    ctx = sync_round.get()
-    if ctx is None or ctx[0] != sync_round._ATTESTED:
-        raise DataError("no attested sync round to reconcile")
-    _state, _nonce, counter, mac = ctx
+    counter, mac = require_attested_round("reconcile")
 
     root = msg.root or None
     if root is not None and len(root) != 32:
         raise DataError("root must be 32 bytes")
 
-    expected = root_mac(await derive_k_mac(), await derive_ward_id(), counter, root)
-    if expected != mac:
-        raise DataError("root does not match the attested mac")
+    await verify_head_mac(counter, mac, root)
 
     # One counter names one state. If the WM attests the counter this device already
     # holds, the state it names must be the state this device already has -- otherwise one
@@ -64,39 +58,11 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
         if current is not None and current != root_or_empty(root):
             raise DataError("attested counter matches but the root differs")
 
-    # SETTLED BEFORE THE ROOT MOVES, and the order is the whole point. A claim names the
-    # transition it was filed for; once the stored head is at or past that transition, the walk that
-    # would have proved it is behind the baseline and no future sync can decide it. So a crash
-    # between these two writes must leave the claim decidable:
+    # Everything after this point is shared with `verify_chain` -- settle, persist, latch, close
+    # -- and the order within it is load-bearing. See `adopt`.
     #
-    #   crash before settling : the root is still the old one, so the next sync crosses the
-    #                           transition again and settles the claim then.
-    #   crash after settling  : the claim is already resolved; the next sync simply adopts.
-    #
-    # The reverse order has no safe crash point -- it can leave a root past an unresolved claim,
-    # which is a queued change whose fate is permanently unknowable.
-    #
-    # No links here: `reconcile` binds a root to an attested mac and folds nothing, so the counter
-    # is all this path can settle by -- see `reconcile_pending`.
-    from .offline_store import reconcile_pending
-
-    await reconcile_pending(counter)
-
-    # REFUSED RATHER THAN EVICTED when eight wallets already hold a slot, and the refusal has
-    # to end the adoption: marking the session online next would leave it verifying against a
-    # root that was never stored. The wallet stays usable offline, which is what
-    # `storage.ward` means by degrading only the wallet being introduced.
-    if not await set_root(root, counter):
-        raise DataError(
-            "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
-        )
-
-    # THE SESSION IS NOW ONLINE. A WM attestation
-    # has been bound to an actual tree, so reads may go to the host and be checked against a
-    # root the device trusts. Before this line every read in this session is served from the
-    # offline store, which says on screen that it cannot vouch for currency.
-    sync_round.mark_online()
-
-    sync_round.clear()
+    # No links to offer it: `reconcile` binds a root to an attested mac and folds nothing, so the
+    # counter comparison is all this route can settle queued writes by.
+    await adopt(counter, root)
 
     return WardReconcileAck(counter=counter, new_root=root)
