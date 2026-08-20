@@ -12,10 +12,12 @@ pub enum LayoutState {
 
 pub struct PaintOutOfBounds;
 
-pub trait Layout<T> {
+pub trait Layout {
+    type Value;
+
     fn place(&mut self);
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<LayoutState>;
-    fn value(&self) -> Option<&T>;
+    fn take_value(&mut self) -> Option<Self::Value>;
     fn paint(&mut self) -> Result<(), PaintOutOfBounds>;
 }
 
