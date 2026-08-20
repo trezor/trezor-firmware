@@ -300,6 +300,49 @@ class TestWardStore(unittest.TestCase):
         self.assertTrue(ward_store.store_put(_WALLET_A, idents[0], again))
         self.assertEqual(ward_store.store_get(_WALLET_A, idents[0]), again)
 
+    def test_a_longer_replacement_is_refused_when_it_no_longer_fits(self):
+        """The same identity again with a BIGGER record, at a budget that cannot take the difference.
+
+        This is the write that can fail after having succeeded before: the slot is already the
+        record's own, so nothing about slots refuses it -- only the bytes do. What must not happen is
+        the store keeping the difference and losing the record: a refusal leaves the OLD value there,
+        whole, because a caller that reports "full" while having already destroyed the entry is worse
+        than one that never wrote.
+        """
+        big = b"p" * (ward_store.MAX_VALUE_LEN - 1)
+        idents = []
+        for i in range(ward_store.MAX_STORE_ENTRIES):
+            ident = _identity(bytes([i]) * 4)
+            if not ward_store.store_put(_WALLET_A, ident, _record(_WALLET_A, ident, big)):
+                break
+            idents.append(ident)
+
+        # Fill the SLACK first. Five 1 kB records leave ~900 bytes free, and a 100-byte growth fits
+        # into that quite legitimately -- the refusal being tested only happens at the brim.
+        free = ward_store.MAX_STORE_BYTES - ward_store.store_bytes_used()
+        filler = _identity(b"fill")
+        overhead = len(_record(_WALLET_A, filler, b""))
+        self.assertTrue(
+            ward_store.store_put(
+                _WALLET_A, filler, _record(_WALLET_A, filler, b"f" * (free - overhead - 10))
+            )
+        )
+        self.assertLess(ward_store.MAX_STORE_BYTES - ward_store.store_bytes_used(), 100)
+
+        first = idents[0]
+        before = ward_store.store_get(_WALLET_A, first)
+        longer = _record(_WALLET_A, first, big + b"q" * 100)
+        self.assertGreater(len(longer), len(before))
+
+        self.assertFalse(ward_store.store_put(_WALLET_A, first, longer))
+        self.assertEqual(ward_store.store_get(_WALLET_A, first), before)
+        self.assertLessEqual(ward_store.store_bytes_used(), ward_store.MAX_STORE_BYTES)
+
+        # ...and it succeeds once something else makes room
+        ward_store.store_delete(_WALLET_A, filler)
+        self.assertTrue(ward_store.store_put(_WALLET_A, first, longer))
+        self.assertEqual(ward_store.store_get(_WALLET_A, first), longer)
+
     def test_a_record_past_the_cap_is_refused(self):
         """The capacity guarantee is per RECORD, not per value.
 

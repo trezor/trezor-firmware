@@ -53,6 +53,10 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
     if msg.mac is not None:
         return await _restore(app_id, identifier, key_type, value, msg.mac)
 
+    # Before the screen, not after it. A value the store cannot take must not cost the user a
+    # confirmation first -- see `offline_store.ensure_storable`.
+    offline_store.ensure_storable(key_type, app_id, identifier, value)
+
     status, existing = await offline_store.get(key_type, app_id, identifier)
 
     props = [
@@ -142,6 +146,8 @@ async def _restore(
         mac,
     ):
         raise DataError("WARD: this queued change was not authenticated by this wallet")
+
+    offline_store.ensure_storable(key_type, app_id, identifier, value)
 
     # WHAT IS BEING OVERWRITTEN GOES ON THE SCREEN. A restore lands on a path that may already hold a
     # change the user made since the backup was taken, and replacing it silently is the failure the

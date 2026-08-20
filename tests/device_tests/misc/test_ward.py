@@ -2995,3 +2995,82 @@ def test_ward_restoring_over_a_pinned_copy_says_which_it_is(session: Session):
     assert "replace offline copy" in rec.title
     assert "existing offline copy" in rec.text.lower()
     assert "pinned_value" in rec.squashed
+
+
+@pytest.mark.models("core")
+def test_ward_queueing_a_longer_value_over_a_shorter_one(session: Session):
+    """The same (app_id, identifier) again, with a value that no longer fits where the old one did.
+
+    Worth its own test because the record is VARIABLE LENGTH and keyed by identity: the replacement
+    reuses the slot, so a longer value means norcow rewriting the entry rather than patching it in
+    place, and the byte budget sees the difference rather than the whole record. Values were address
+    labels when this store was written; a wallet policy is an order of magnitude bigger, which is the
+    case that never used to be exercised.
+
+    The screen still has to name what is being replaced -- being longer is not a reason to skip that.
+    """
+    short = b"label"
+    # policy-shaped: a descriptor template plus a few keys, well under MAX_VALUE_LEN but far past
+    # what a label ever was
+    long = (
+        b"wsh(sortedmulti(3,"
+        + b",".join(
+            b"[abcd1234/48h/0h/0h/2h]xpub" + bytes(str(i), "ascii") * 60 for i in range(5)
+        )
+        + b"/**))"
+    )
+    assert 400 < len(long) < 1024  # a real 3-of-5, and inside MAX_VALUE_LEN
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", short)
+
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [m.ButtonRequest(name="ward_queue_entry"), m.WardQueueSetAck]
+        )
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        ward.queue_set_entry(session, _APP, b"addr1", long)
+
+    # an update, and it says what it replaces
+    assert "queue update" in rec.title
+    assert short.decode() in rec.squashed
+
+    # ...and the longer value is what the device holds now, whole
+    after = _offline_read(session.test_ctx.get_session(), b"addr1").ack
+    assert after.pending is True
+    assert after.value == long
+
+    # the slot was REUSED, not added to: a second entry still fits, which it would not if the
+    # replacement had consumed a fresh slot's worth of budget on every write
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr2", long)
+    assert _offline_read(session.test_ctx.get_session(), b"addr2").ack.value == long
+
+    # and the first one is untouched by the second
+    assert _offline_read(session.test_ctx.get_session(), b"addr1").ack.value == long
+
+
+@pytest.mark.models("core")
+def test_ward_a_value_past_the_cap_is_refused_and_the_old_one_survives(session: Session):
+    """The other end of the same path: a value too long to store at all.
+
+    A refusal has to leave the record it would have replaced exactly as it was. Failing AFTER
+    clobbering the old value would be the worst outcome available here -- the user would have neither
+    the change they asked for nor the one they had.
+    """
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"keep_me")
+
+    # MAX_VALUE_LEN is 1024; this is one past it, so it is rejected before any screen is shown
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.Failure])
+        with pytest.raises(exceptions.TrezorFailure, match="too large"):
+            ward.queue_set_entry(session, _APP, b"addr1", b"x" * 1025)
+
+    assert _offline_read(session.test_ctx.get_session(), b"addr1").ack.value == b"keep_me"
