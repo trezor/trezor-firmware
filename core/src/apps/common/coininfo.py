@@ -705,6 +705,35 @@ def by_name(name: str) -> CoinInfo:
                     False,  # overwintered
                     None,  # confidential_assets
                 )
+            if name == "KingPepe":
+                return CoinInfo(
+                    name,  # coin_name
+                    "KPEPE",  # coin_shortcut
+                    8,  # decimals
+                    51,  # address_type
+                    50,  # address_type_p2sh
+                    2000000,  # maxfee_kb
+                    "Kingpepe Signed Message:\n",  # signed_message_header
+                    0x0488b21e,  # xpub_magic
+                    0x049d7cb2,  # xpub_magic_segwit_p2sh
+                    0x04b24746,  # xpub_magic_segwit_native
+                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
+                    0x0488b21e,  # xpub_magic_multisig_segwit_native
+                    "kpepe",  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    6789,  # slip44
+                    True,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
             if name == "Komodo":
                 return CoinInfo(
                     name,  # coin_name
@@ -2274,6 +2303,35 @@ def by_name(name: str) -> CoinInfo:
                     False,  # overwintered
                     None,  # confidential_assets
                 )
+            if name == "KingPepe":
+                return CoinInfo(
+                    name,  # coin_name
+                    "KPEPE",  # coin_shortcut
+                    8,  # decimals
+                    51,  # address_type
+                    50,  # address_type_p2sh
+                    2000000,  # maxfee_kb
+                    "Kingpepe Signed Message:\n",  # signed_message_header
+                    0x0488b21e,  # xpub_magic
+                    0x049d7cb2,  # xpub_magic_segwit_p2sh
+                    0x04b24746,  # xpub_magic_segwit_native
+                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
+                    0x0488b21e,  # xpub_magic_multisig_segwit_native
+                    "kpepe",  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    6789,  # slip44
+                    True,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
             if name == "Komodo":
                 return CoinInfo(
                     name,  # coin_name
@@ -3698,6 +3756,35 @@ def by_name(name: str) -> CoinInfo:
                     False,  # overwintered
                     None,  # confidential_assets
                 )
+            if name == "KingPepe":
+                return CoinInfo(
+                    name,  # coin_name
+                    "KPEPE",  # coin_shortcut
+                    8,  # decimals
+                    51,  # address_type
+                    50,  # address_type_p2sh
+                    2000000,  # maxfee_kb
+                    "Kingpepe Signed Message:\n",  # signed_message_header
+                    0x0488b21e,  # xpub_magic
+                    0x049d7cb2,  # xpub_magic_segwit_p2sh
+                    0x04b24746,  # xpub_magic_segwit_native
+                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
+                    0x0488b21e,  # xpub_magic_multisig_segwit_native
+                    "kpepe",  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    6789,  # slip44
+                    True,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
             if name == "Komodo":
                 return CoinInfo(
                     name,  # coin_name
@@ -5064,6 +5151,35 @@ def by_name(name: str) -> CoinInfo:
                     False,  # overwintered
                     None,  # confidential_assets
                 )
+            if name == "KingPepe":
+                return CoinInfo(
+                    name,  # coin_name
+                    "KPEPE",  # coin_shortcut
+                    8,  # decimals
+                    51,  # address_type
+                    50,  # address_type_p2sh
+                    2000000,  # maxfee_kb
+                    "Kingpepe Signed Message:\n",  # signed_message_header
+                    0x0488b21e,  # xpub_magic
+                    0x049d7cb2,  # xpub_magic_segwit_p2sh
+                    0x04b24746,  # xpub_magic_segwit_native
+                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
+                    0x0488b21e,  # xpub_magic_multisig_segwit_native
+                    "kpepe",  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    6789,  # slip44
+                    True,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
             if name == "Komodo":
                 return CoinInfo(
                     name,  # coin_name
@@ -6425,6 +6541,35 @@ def by_name(name: str) -> CoinInfo:
                     False,  # decred
                     False,  # negative_fee
                     'secp256k1-groestl',  # curve_name
+                    False,  # extra_data
+                    False,  # timestamp
+                    False,  # overwintered
+                    None,  # confidential_assets
+                )
+            if name == "KingPepe":
+                return CoinInfo(
+                    name,  # coin_name
+                    "KPEPE",  # coin_shortcut
+                    8,  # decimals
+                    51,  # address_type
+                    50,  # address_type_p2sh
+                    2000000,  # maxfee_kb
+                    "Kingpepe Signed Message:\n",  # signed_message_header
+                    0x0488b21e,  # xpub_magic
+                    0x049d7cb2,  # xpub_magic_segwit_p2sh
+                    0x04b24746,  # xpub_magic_segwit_native
+                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
+                    0x0488b21e,  # xpub_magic_multisig_segwit_native
+                    "kpepe",  # bech32_prefix
+                    None,  # cashaddr_prefix
+                    6789,  # slip44
+                    True,  # segwit
+                    False,  # taproot
+                    None,  # fork_id
+                    False,  # force_bip143
+                    False,  # decred
+                    False,  # negative_fee
+                    'secp256k1',  # curve_name
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
