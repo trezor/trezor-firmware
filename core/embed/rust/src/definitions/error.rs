@@ -24,7 +24,7 @@ impl From<crate::io::Error> for Error {
 }
 
 impl Error {
-    pub fn to_string(&self) -> &str {
+    pub fn to_string(self) -> &'static str {
         match self {
             Error::InvalidDefinition => INVALID_DEFINITION_STR,
             Error::InvalidSignature => INVALID_SIGNATURE_STR,

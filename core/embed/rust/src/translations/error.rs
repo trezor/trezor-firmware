@@ -30,7 +30,7 @@ impl From<core::str::Utf8Error> for Error {
 }
 
 impl Error {
-    pub fn to_string(&self) -> &str {
+    pub fn to_string(self) -> &'static str {
         match self {
             Error::InvalidString => INVALID_TRANSLATIONS_BLOB,
             Error::TranslationsInUse => "Translations in use",

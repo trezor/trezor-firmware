@@ -65,7 +65,7 @@ impl TryFrom<Obj> for Gc<Tuple> {
             let this = unsafe { Gc::from_raw(obj.as_ptr().cast()) };
             Ok(this)
         } else {
-            return Err(Error::TypeError);
+            Err(Error::TypeError)
         }
     }
 }

@@ -7,7 +7,6 @@ use super::firmware::{
     SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
     TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
-use crate::micropython::tuple::Tuple;
 use crate::micropython::{Error, Obj};
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
