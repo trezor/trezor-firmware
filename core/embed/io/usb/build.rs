@@ -22,6 +22,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_define("USE_USB_IFACE_VCP", Some("1"));
     }
 
+    if cfg!(feature = "ward_service_channel") {
+        lib.add_define("USE_WARD_SERVICE_CHANNEL", Some("1"));
+    }
+
     if cfg!(feature = "emulator") {
         lib.add_sources(["usb/unix/sock.c", "usb/unix/usb.c", "usb/usb_config.c"]);
     } else if cfg!(feature = "mcu_stm32") {

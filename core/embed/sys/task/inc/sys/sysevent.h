@@ -27,6 +27,11 @@ typedef enum {
   SYSHANDLE_USB_DEBUG,
   SYSHANDLE_USB_WEBAUTHN,
   SYSHANDLE_USB_VCP,
+  // Kept unconditional even though the interface itself is optional: the values below would
+  // otherwise shift between build configurations, and `SYSHANDLE_USB_IFACE_MAX` has to bound a
+  // CONTIGUOUS range for the poll loop to walk it. `SYSHANDLE_USB_WEBAUTHN` is unconditional for
+  // the same reason while its interface is not.
+  SYSHANDLE_USB_WARD,
   SYSHANDLE_BLE_IFACE_0,
   // SYSHANDLE_BLE_IFACE_N = SYSHANDLE_BLE_IFACE_0 + N - 1,
   SYSHANDLE_POWER_MANAGER,
@@ -45,7 +50,7 @@ typedef enum {
 } syshandle_t;
 
 #define SYSHANDLE_USB_IFACE_MIN SYSHANDLE_USB_WIRE
-#define SYSHANDLE_USB_IFACE_MAX SYSHANDLE_USB_VCP
+#define SYSHANDLE_USB_IFACE_MAX SYSHANDLE_USB_WARD
 
 /**
  * @brief Reads data from the specified device

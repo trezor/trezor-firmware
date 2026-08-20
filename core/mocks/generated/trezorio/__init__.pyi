@@ -133,3 +133,4 @@ WireInterface = USBIF | BLEIF
 USBIF_WIRE: int  # interface id of the USB wire interface
 USBIF_DEBUG: int  # interface id of the USB debug interface
 USBIF_WEBAUTHN: int  # interface id of the USB WebAuthn
+USBIF_WARD: int  # interface id of the USB WARD service interface
