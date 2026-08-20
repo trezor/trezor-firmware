@@ -6,6 +6,7 @@ from trezor.wire import DataError
 from apps.ward import attest as A
 from apps.ward import cas as CAS
 from apps.ward import leaf as L
+from apps.ward import offline_store as OS
 from apps.ward.attest import EMPTY_ROOT
 from apps.ward.keys import _scope, entry_key
 from apps.ward.leaf import (
@@ -1104,6 +1105,54 @@ class TestWardCas(unittest.TestCase):
             CAS.verify_chain_step(
                 self.K_AUTH, self.WARD_ID, 0, None, (0, None, 1, self.R1, bytes(32))
             )
+
+
+class TestWardRecordCommit(unittest.TestCase):
+    """`offline_store.record_commit`: what an offer claim names a queued record by."""
+
+    _WALLET = b"\xa0" * 16
+
+    def _rec(self, identifier=b"addr1", value=b"one", pending=False, offered=False):
+        return OS.encode_record(
+            self._WALLET, "address", "btc", identifier, value, pending, offered
+        )
+
+    def test_the_flags_are_normalised_out(self):
+        """A record is marked OFFERED after its claim is filed and loses PENDING when the claim
+        settles, so a commitment covering the flags would stop matching the record it was filed
+        for -- and the claim would silently decline to settle anything."""
+        base = self._rec()
+        for pending, offered in ((True, False), (False, True), (True, True)):
+            self.assertEqual(
+                OS.record_commit(base),
+                OS.record_commit(self._rec(pending=pending, offered=offered)),
+            )
+
+    def test_the_value_and_the_identity_are_covered(self):
+        """The point of the commitment. Slots are reused and a queued value can be replaced in
+        place, so a claim that matched a different generation would settle a change that never
+        landed -- clearing a record the user still expects to be published."""
+        base = OS.record_commit(self._rec())
+        self.assertNotEqual(base, OS.record_commit(self._rec(value=b"two")))
+        self.assertNotEqual(base, OS.record_commit(self._rec(value=b"")))
+        self.assertNotEqual(base, OS.record_commit(self._rec(identifier=b"addr2")))
+
+    def test_a_change_of_form_is_a_different_record(self):
+        """Compact and full records name the same entry differently, and a claim filed against
+        one must not settle the other: the form is part of what was offered."""
+        full = OS.encode_record(
+            self._WALLET, "address", "btc", b"addr1", b"one", True, False
+        )
+        compact = OS.encode_record(
+            self._WALLET, "address", "btc", b"addr1", b"one", True, False, compact=True
+        )
+        self.assertNotEqual(OS.record_commit(full), OS.record_commit(compact))
+
+    def test_it_is_stable(self):
+        """Re-encoding the same record must produce the same commitment, or a claim would never
+        match the record it was filed for."""
+        self.assertEqual(OS.record_commit(self._rec()), OS.record_commit(self._rec()))
+        self.assertEqual(len(OS.record_commit(self._rec())), 32)
 
 
 if __name__ == "__main__":

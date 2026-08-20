@@ -557,3 +557,154 @@ def store_list(wallet_id: bytes) -> "list[tuple[int, bytes]]":
             # the handle, and a compact record cannot be re-found by an identity it does not carry.
             out.append((i, rec))
     return out
+
+
+# --- the offer claim journal ------------------------------------------------------
+#
+# A THIRD DISJOINT KEY RANGE: roots at 1..MAX_WALLETS, claims at 0x20, records at 0x40. The gaps
+# are deliberate for the same reason the store's is -- three ranges that cannot grow into each
+# other, so no record is ever read as a claim or a root.
+#
+# WHAT A CLAIM IS FOR. `flush_queue` hands a queued change to a host and marks the record OFFERED,
+# but the head only moves when a WM attestation names it. Between those two moments the device has
+# to remember WHICH queued change it offered and at which counter, or it cannot decide the change's
+# fate when the head finally moves. That memory used to live in the session cache, which loses it
+# on exactly the events recovery depends on: the channel closing, the cache being evicted, or the
+# device losing power. A record left PENDING|OFFERED with no claim is then stranded -- invisible to
+# `next_unsent` and `count_unsent`, so `remaining` reports zero and no host ever offers it again.
+#
+# ONE CLAIM PER RECORD SLOT, so the journal can never be the binding constraint. A host drains the
+# queue by flushing repeatedly and reconciling once at the end -- `remaining` exists to drive
+# exactly that loop -- so every queued record can be outstanding at the same time. The cache field
+# this replaces held eight and silently dropped the rest (`sorted(...)[:8]`), which stranded every
+# record past the eighth in the state this journal exists to prevent.
+#
+# WHY A CLAIM NAMES THE RECORD AND NOT JUST ITS SLOT. Slots are reused, and a queued value can be
+# REPLACED in place (`apps.ward.queue_set_entry`). A claim carrying only a slot would settle
+# whatever occupies it later: offer A, replace it with B, watch A land, and B -- which never
+# landed -- is cleared as though it had. `record_commit` is what makes the claim name the exact
+# record generation it was filed for.
+_CLAIM_FIRST_KEY = const(0x20)
+
+MAX_CLAIMS = const(MAX_STORE_ENTRIES)
+
+_CLAIM_SLOT_LEN = const(1)
+_CLAIM_COUNTER_LEN = const(4)
+_CLAIM_AUTH_LEN = const(32)
+_CLAIM_COMMIT_LEN = const(32)
+# wallet_id(16) || slot(1) || counter(4) || auth_commit(32) || record_commit(32)
+CLAIM_LEN = const(
+    _WALLET_ID_LEN
+    + _CLAIM_SLOT_LEN
+    + _CLAIM_COUNTER_LEN
+    + _CLAIM_AUTH_LEN
+    + _CLAIM_COMMIT_LEN
+)
+
+
+def _claim_slot(index: int) -> bytes | None:
+    return common.get(common.APP_WARD, index + _CLAIM_FIRST_KEY)
+
+
+def claim_encode(
+    wallet_id: bytes, slot: int, counter: int, auth_commit: bytes, record_commit: bytes
+) -> bytes:
+    """The canonical bytes of one claim. The only place a claim becomes bytes.
+
+    THE FULL 16-BYTE wallet_id, not the 7-byte tag the offline store uses. That truncation is
+    justified where it sits -- it only has to separate a handful of records the user can see -- but
+    this is the boundary that stops one wallet's reconciliation from rewriting another wallet's
+    queued records, so it gets the whole identifier.
+    """
+    if len(wallet_id) != _WALLET_ID_LEN:
+        raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
+    if len(auth_commit) != _CLAIM_AUTH_LEN or len(record_commit) != _CLAIM_COMMIT_LEN:
+        raise ValueError  # both commitments are fixed width
+    if not 0 <= slot < MAX_STORE_ENTRIES:
+        raise ValueError  # a claim can only name a record slot that exists
+    return (
+        wallet_id
+        + bytes([slot])
+        + counter.to_bytes(_CLAIM_COUNTER_LEN, "big")
+        + auth_commit
+        + record_commit
+    )
+
+
+def claim_parse(rec: bytes) -> "tuple[bytes, int, int, bytes, bytes]":
+    """(wallet_id, slot, counter, auth_commit, record_commit), or raise on a wrong width."""
+    if len(rec) != CLAIM_LEN:
+        raise ValueError  # a short claim would parse into plausible-looking garbage
+    off = _WALLET_ID_LEN
+    wallet_id = rec[:off]
+    slot = rec[off]
+    off += _CLAIM_SLOT_LEN
+    counter = int.from_bytes(rec[off : off + _CLAIM_COUNTER_LEN], "big")
+    off += _CLAIM_COUNTER_LEN
+    auth_commit = rec[off : off + _CLAIM_AUTH_LEN]
+    off += _CLAIM_AUTH_LEN
+    return wallet_id, slot, counter, auth_commit, rec[off:]
+
+
+def claim_find(wallet_id: bytes, slot: int) -> int | None:
+    """The index holding this wallet's claim for this record slot, or None."""
+    if len(wallet_id) != _WALLET_ID_LEN:
+        raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
+    for i in range(MAX_CLAIMS):
+        rec = _claim_slot(i)
+        if rec is None or len(rec) != CLAIM_LEN:
+            continue
+        if rec[:_WALLET_ID_LEN] == wallet_id and rec[_WALLET_ID_LEN] == slot:
+            return i
+    return None
+
+
+def claim_list(wallet_id: bytes) -> "list[tuple[int, bytes]]":
+    """This wallet's claims as (index, record) pairs. Other wallets' claims are not returned.
+
+    The INDEX comes with the record because settling one means deleting it, and a caller that had
+    to search again could delete a claim written in between.
+    """
+    if len(wallet_id) != _WALLET_ID_LEN:
+        raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
+    out = []
+    for i in range(MAX_CLAIMS):
+        rec = _claim_slot(i)
+        if rec is None or len(rec) != CLAIM_LEN:
+            continue
+        if rec[:_WALLET_ID_LEN] == wallet_id:
+            out.append((i, rec))
+    return out
+
+
+def claim_put(rec: bytes) -> bool:
+    """File a claim, replacing this wallet's existing one for the same slot. False if full.
+
+    REPORTED RATHER THAN TRUNCATED. The journal filling up means a change is about to be offered
+    with no way to settle it, so the caller has to refuse the offer instead of proceeding -- which
+    is only possible if it learns that the write failed.
+    """
+    wallet_id, slot, _c, _a, _r = claim_parse(rec)
+    index = claim_find(wallet_id, slot)
+    if index is None:
+        for i in range(MAX_CLAIMS):
+            if _claim_slot(i) is None:
+                index = i
+                break
+    if index is None:
+        return False
+    common.set(common.APP_WARD, index + _CLAIM_FIRST_KEY, rec)
+    return True
+
+
+def claim_read(index: int) -> bytes | None:
+    """One claim by index, or None if the slot is empty or unreadable."""
+    rec = _claim_slot(index)
+    if rec is None or len(rec) != CLAIM_LEN:
+        return None
+    return rec
+
+
+def claim_delete(index: int) -> None:
+    """Retire a claim. Called once its outcome has been decided, and only then."""
+    common.delete(common.APP_WARD, index + _CLAIM_FIRST_KEY)

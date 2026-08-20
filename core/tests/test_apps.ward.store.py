@@ -581,6 +581,91 @@ class TestWardStore(unittest.TestCase):
         self.assertTrue(ward_store.set_root(first, b"\x77" * 32, 77))
         self.assertEqual(ward_store.get_root(first), b"\x77" * 32)
 
+    def test_a_claim_round_trips_and_is_scoped_to_its_wallet(self):
+        """The journal's slot layer: persistence, wallet scoping, and refusal to overflow."""
+        auth_a, commit_a = b"\xa1" * 32, b"\xa2" * 32
+        rec = ward_store.claim_encode(_WALLET_A, 3, 42, auth_a, commit_a)
+        self.assertTrue(ward_store.claim_put(rec))
+
+        i = ward_store.claim_find(_WALLET_A, 3)
+        self.assertIsNotNone(i)
+        self.assertEqual(
+            ward_store.claim_parse(ward_store.claim_read(i)),
+            (_WALLET_A, 3, 42, auth_a, commit_a),
+        )
+
+        # ANOTHER WALLET'S CLAIM IS NOT THIS WALLET'S, even at the same record slot. This is the
+        # scoping that stops one wallet's reconciliation rewriting another's queued records.
+        self.assertIsNone(ward_store.claim_find(_WALLET_B, 3))
+        self.assertEqual([r for _i, r in ward_store.claim_list(_WALLET_B)], [])
+        self.assertEqual([r for _i, r in ward_store.claim_list(_WALLET_A)], [rec])
+
+        # re-filing the same (wallet, slot) REPLACES rather than accumulating: a wallet has at
+        # most one outstanding claim per record, which is what makes MAX_CLAIMS enough
+        again = ward_store.claim_encode(_WALLET_A, 3, 43, auth_a, commit_a)
+        self.assertTrue(ward_store.claim_put(again))
+        self.assertEqual(len(ward_store.claim_list(_WALLET_A)), 1)
+        self.assertEqual(ward_store.claim_parse(ward_store.claim_read(i))[2], 43)
+
+        ward_store.claim_delete(i)
+        self.assertIsNone(ward_store.claim_find(_WALLET_A, 3))
+        self.assertIsNone(ward_store.claim_read(i))
+
+    def test_claims_survive_a_reboot_and_cover_every_record_slot(self):
+        """Claims are in flash BECAUSE the session is where they used to be lost.
+
+        A claim outlives the channel closing, the cache being evicted and the device losing
+        power -- the three events a lost publication recovery has to survive.
+
+        And there is one slot per RECORD, so a host that drains the queue by flushing repeatedly
+        and reconciling once at the end never runs out. The cache field this replaces held eight
+        and silently dropped the rest, stranding every record past the eighth.
+        """
+        self.assertEqual(ward_store.MAX_CLAIMS, ward_store.MAX_STORE_ENTRIES)
+
+        for i in range(ward_store.MAX_CLAIMS):
+            self.assertTrue(
+                ward_store.claim_put(
+                    ward_store.claim_encode(
+                        _WALLET_A, i, i, bytes([i]) * 32, bytes([i]) * 32
+                    )
+                )
+            )
+        self.assertEqual(len(ward_store.claim_list(_WALLET_A)), ward_store.MAX_CLAIMS)
+
+        # ...and once genuinely full, a further claim is REPORTED rather than dropped: the
+        # caller's next act is to mark a record offered, and a change offered with no claim to
+        # settle it is stranded, invisible to `next_unsent` and `count_unsent`.
+        self.assertFalse(
+            ward_store.claim_put(
+                ward_store.claim_encode(_WALLET_B, 0, 1, b"\x01" * 32, b"\x02" * 32)
+            )
+        )
+        self.assertIsNone(ward_store.claim_find(_WALLET_B, 0))
+
+        self.reboot()
+
+        for i in range(ward_store.MAX_CLAIMS):
+            j = ward_store.claim_find(_WALLET_A, i)
+            self.assertIsNotNone(j)
+            self.assertEqual(ward_store.claim_parse(ward_store.claim_read(j))[2], i)
+
+    def test_a_claim_rejects_operands_of_the_wrong_width(self):
+        """A short claim would parse into plausible-looking garbage, so it never gets written."""
+        with self.assertRaises(ValueError):
+            ward_store.claim_encode(b"\x00" * 15, 0, 0, b"\x01" * 32, b"\x02" * 32)
+        with self.assertRaises(ValueError):
+            ward_store.claim_encode(_WALLET_A, 0, 0, b"\x01" * 31, b"\x02" * 32)
+        with self.assertRaises(ValueError):
+            ward_store.claim_encode(_WALLET_A, 0, 0, b"\x01" * 32, b"\x02" * 33)
+        # ...and a slot that no record could occupy is refused too
+        with self.assertRaises(ValueError):
+            ward_store.claim_encode(
+                _WALLET_A, ward_store.MAX_STORE_ENTRIES, 0, b"\x01" * 32, b"\x02" * 32
+            )
+        with self.assertRaises(ValueError):
+            ward_store.claim_parse(b"\x00" * (ward_store.CLAIM_LEN - 1))
+
 
 if __name__ == "__main__":
     unittest.main()
