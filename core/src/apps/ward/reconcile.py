@@ -64,9 +64,16 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
         if current is not None and current != root_or_empty(root):
             raise DataError("attested counter matches but the root differs")
 
-    await set_root(root, counter)
+    # REFUSED RATHER THAN EVICTED when eight wallets already hold a slot, and the refusal has
+    # to end the adoption: marking the session online next would leave it verifying against a
+    # root that was never stored. The wallet stays usable offline, which is what
+    # `storage.ward` means by degrading only the wallet being introduced.
+    if not await set_root(root, counter):
+        raise DataError(
+            "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
+        )
 
-    # THE SESSION IS NOW ONLINE, and this is the only place that becomes true. A WM attestation
+    # THE SESSION IS NOW ONLINE. A WM attestation
     # has been bound to an actual tree, so reads may go to the host and be checked against a
     # root the device trusts. Before this line every read in this session is served from the
     # offline store, which says on screen that it cannot vouch for currency.

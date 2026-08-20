@@ -76,7 +76,12 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     if root_mac(await derive_k_mac(), ward_id, counter, running_root) != mac:
         raise DataError("chain end does not match the attested mac")
 
-    await set_root(running_root, counter)
+    # Same refusal as `reconcile`: no slot means the verified head was not kept, so the
+    # adoption cannot be allowed to latch.
+    if not await set_root(running_root, counter):
+        raise DataError(
+            "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
+        )
 
     # THE SESSION IS NOW ONLINE, exactly as it is after `reconcile`. This path is the STRICTER
     # of the two -- it proves authorised descent from the head this device already held, on top of
