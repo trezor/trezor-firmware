@@ -141,11 +141,23 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
         witness_commit=witness_commit,
     )
 
+    # The transition's own authorisation, computed here rather than in the ack below because the
+    # CLAIM has to carry it: it is what lets a later chain sync decide whether THIS change landed,
+    # rather than inferring it from the counter alone.
+    step = auth_commit(
+        await derive_k_auth(),
+        await derive_ward_id(),
+        counter - 1,
+        from_root,
+        counter,
+        new_root,
+    )
+
     # Mark the record OFFERED, keeping it PENDING. That flag is what stops this loop offering the
-    # same change forever, and what `reconcile` looks at to decide the change has landed. Written
-    # before the ack goes out, so a lost response cannot leave the device offering it again as though
-    # nothing had happened.
-    await offline_store.mark_offered(entry, counter)
+    # same change forever, and the claim beside it is what a later adoption settles it by. Both are
+    # written before the ack goes out, so a lost response cannot leave the device offering it again
+    # as though nothing had happened.
+    await offline_store.mark_offered(entry, counter, step)
 
     remaining = await offline_store.count_unsent()
 
@@ -155,14 +167,7 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
         content=make_leaf_content(val_part),
         counter=counter,
         mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
-        auth_commit=auth_commit(
-            await derive_k_auth(),
-            await derive_ward_id(),
-            counter - 1,
-            from_root,
-            counter,
-            new_root,
-        ),
+        auth_commit=step,
         auth_sig=sig_commit(
             await derive_k_sig(),
             await derive_ward_id(),
