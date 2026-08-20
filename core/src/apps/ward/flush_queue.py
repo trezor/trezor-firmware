@@ -82,8 +82,11 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
         status, entry = await offline_store.get(key_type, app_id, identifier)
         if status != offline_store.VALID or entry is None or not entry.pending:
             raise DataError("WARD: no queued change for this entry")
-        if entry.offered:
-            raise DataError("WARD: this queued change has already been handed over")
+        # AN ALREADY-OFFERED CHANGE MAY BE OFFERED AGAIN when the caller names it. The offered flag
+        # exists to stop the UNNAMED loop handing the same change out forever; a caller asking for
+        # this entry by name is saying it did not get it, or lost the response, and refusing would
+        # strand the change -- a compact record offered by a session that then dropped has no claim
+        # left for a reconcile to settle, so this is its only way back.
     else:
         entry = await offline_store.next_unsent()
         if entry is None:

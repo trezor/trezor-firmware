@@ -10,10 +10,14 @@ stores would have meant two capacity budgets, two lookup paths, and two chances 
 wrong. `FLAG_PENDING` says which one a record is, and `reconcile_pending` clears it.
 
 TWO FORMS OF THE SAME RECORD. The FULL form carries the identity; the COMPACT form carries
-`keys.wallet_entry` -- a hash of it -- and is 40 bytes smaller for a typical address. Everything that
-reaches this module already knows the identity, so both forms are found the same way: compute both
-keys and match either. The difference shows up in one place only, `flush_queue`, which has no identity
-of its own to hash and must be told which entry to publish.
+`keys.wallet_entry` -- a hash of it -- and no wallet tag either, since that hash already commits to
+wallet_id. It is 47 bytes smaller for a typical address. Everything that reaches this module already
+knows the identity, so both forms are found the same way: compute both names and match either.
+
+WHAT THE MISSING TAG COSTS: nothing can ask "whose is this compact record?" without the identity. So
+enumeration (`list_entries`) returns only full-form records, `count_unsent` counts what can be
+published UNPROMPTED, and a reconcile settles records through the session claim ledger, which names
+slots this wallet offered itself. A compact record is reachable by name and by slot, never by sweep.
 
 NAMED BY IDENTITY, NOT BY THE KEYED PATH. A record carries (key_type, app_id, identifier) and is
 found by them. `entry_key` is where a leaf sits in the TRIE and is assigned when a change is
@@ -217,17 +221,12 @@ def _parse(
     flag set: enumeration can count and settle such a record, but only a caller who names the entry
     can say what it is.
     """
-    from storage.ward import (
-        FLAG_OFFERED,
-        FLAG_PENDING,
-        STORE_KEY_OFF,
-        STORE_VERSION_COMPACT,
-    )
+    from storage.ward import FLAG_OFFERED, FLAG_PENDING, STORE_VERSION_COMPACT
     from trezor.wire import DataError
 
     from .keys import WALLET_ENTRY_LEN
 
-    off = STORE_KEY_OFF
+    off = ward_store_key_off(record)
 
     def take(n: int) -> bytes:
         nonlocal off
@@ -264,6 +263,13 @@ def _parse(
     )
 
 
+def ward_store_key_off(record: bytes) -> int:
+    """Where this record's NAME starts -- the one offset the two forms disagree about."""
+    from storage.ward import store_key_off
+
+    return store_key_off(record[0])
+
+
 def _flags_off(record: bytes) -> int:
     """Where the flags byte sits, whichever form the record is in.
 
@@ -271,14 +277,14 @@ def _flags_off(record: bytes) -> int:
     be walked, and having one function do it keeps `_parse` and the flag rewrites from disagreeing
     about where it is.
     """
-    from storage.ward import STORE_KEY_OFF, STORE_VERSION_COMPACT
+    from storage.ward import STORE_VERSION_COMPACT
 
     from .keys import WALLET_ENTRY_LEN
 
+    off = ward_store_key_off(record)
     if record[0] == STORE_VERSION_COMPACT:
-        return STORE_KEY_OFF + WALLET_ENTRY_LEN
+        return off + WALLET_ENTRY_LEN
 
-    off = STORE_KEY_OFF
     off += 1 + record[off]  # key_type
     off += 1 + record[off]  # app_id
     off += 2 + int.from_bytes(record[off : off + 2], "big")  # identifier
@@ -507,7 +513,12 @@ async def list_entries() -> "list[StoredEntry]":
 
 
 async def next_unsent() -> "StoredEntry | None":
-    """The oldest queued write that has not been handed to a host yet, or None."""
+    """The oldest queued write that has not been handed over yet and can be published UNPROMPTED.
+
+    Compact records are absent by construction: enumeration cannot attribute one to a wallet, and a
+    flush could not publish it anyway without being told which entry it is. So this answers exactly
+    the question the unnamed flush asks.
+    """
     for entry in await list_entries():
         if entry.pending and not entry.offered:
             return entry
@@ -515,7 +526,12 @@ async def next_unsent() -> "StoredEntry | None":
 
 
 async def count_unsent() -> int:
-    """How many queued writes are still waiting to be handed over."""
+    """How many queued writes are still waiting AND publishable unprompted -- the `remaining` figure.
+
+    A compact record is not counted. It can only be published by name, so the caller holding its
+    backup is the authority on how many of those are outstanding; counting them here would tell a host
+    to keep looping for changes this device cannot hand it.
+    """
     n = 0
     for entry in await list_entries():
         if entry.pending and not entry.offered:
@@ -596,9 +612,10 @@ async def reconcile_pending(adopted: int) -> None:
                            Without this a lost or dropped publication would strand the change forever
                            -- still stored, never re-sent, invisible to the user as a problem.
 
-      no claim recorded  : the session that offered it is gone, so the device cannot attribute the
-                           change either way. Treated as NOT LANDED, for the same reason: a re-send
-                           costs a round trip, a wrong clear costs the change.
+    A record offered by a session that has since dropped has no claim, so it is not visited at all --
+    it stays PENDING and OFFERED, and the way back for it is a NAMED flush, which re-offers an already
+    offered record deliberately. That is the fail-closed direction: a re-send costs a round trip,
+    while clearing a change that never landed costs the change.
 
     Records that were never offered are untouched.
 
@@ -608,10 +625,28 @@ async def reconcile_pending(adopted: int) -> None:
     same-counter-different-root check; distinguishing the two properly needs a membership proof per
     queued change, which is more machinery than one-intent-per-round-trip currently earns.
     """
+    from storage import ward as ward_store
+
+    # DRIVEN BY THE LEDGER, NOT BY ENUMERATION. Every slot in it was offered by THIS wallet in THIS
+    # session, so the ledger is a stricter handle than "records of my wallet" -- and it is the only
+    # one a compact record can be reached by, since such a record carries nothing that says whose it
+    # is. It also touches exactly the records it offered, and no others.
     claims = _claims()
-    for entry in await list_entries():
+    for slot, claimed in claims.items():
+        record = ward_store.store_read_slot(slot)
+        if record is None or record[0] not in (
+            ward_store.STORE_VERSION,
+            ward_store.STORE_VERSION_COMPACT,
+        ):
+            # The record was erased, or replaced by something this build cannot read, since it was
+            # offered. Nothing to settle, and nothing here may delete.
+            continue
+        entry = _parse(record, slot=slot)
         if not entry.pending or not entry.offered:
             continue
-        claimed = claims.get(entry.slot) if entry.slot is not None else None
-        landed = claimed is not None and claimed <= adopted
+        landed = claimed <= adopted
         await _set_flags(entry, not landed, False)
+
+    # The ledger has served its purpose: every claim in it has been settled one way or the other, and
+    # leaving them would let the NEXT reconcile settle the same records against a later head.
+    _set_claims({})

@@ -3187,9 +3187,9 @@ def test_ward_a_compact_record_reads_and_backs_up_like_any_other(session: Sessio
 def test_ward_a_compact_record_is_published_when_it_is_named(session: Session):
     """A compact record cannot be published by "take the next one" -- and it says so.
 
-    The device holds a hash, and a hash does not become a keyed path. It also cannot ask for the right
-    identity by name, because naming the entry is exactly what it gave up. So an unnamed flush refuses
-    and a named one works, which is the whole contract of the compact form.
+    The device holds a hash, and a hash does not become a keyed path -- nor can it say whose record it
+    is, so an unnamed flush cannot even see it. A named one works, which is the whole contract of the
+    compact form: the holder of the backup is the one who knows such a change is outstanding.
     """
     store = WardTrie()
 
@@ -3199,8 +3199,11 @@ def test_ward_a_compact_record_is_published_when_it_is_named(session: Session):
 
     _go_online(session, store)
 
-    with pytest.raises(exceptions.TrezorFailure, match="compactly"):
-        ward.flush_queue(session, ward.store_provider(store))
+    # UNNAMED, THERE IS NOTHING TO PUBLISH. A compact record is not enumerable -- that is the seven
+    # bytes it saves -- so the queue looks empty to a flush that was not told which entry to take.
+    empty = ward.flush_queue(session, ward.store_provider(store))
+    assert empty.remaining == 0
+    assert empty.entry_key == b""
 
     res = ward.flush_queue(
         session, ward.store_provider(store), app_id=_APP, identifier=b"addr1"
@@ -3266,17 +3269,17 @@ def test_ward_both_record_forms_share_one_store(session: Session):
         == b"stored_compact"
     )
 
-    # both are queued: the full one is publishable unnamed, and `remaining` counts them both
+    # `remaining` counts what can be published UNPROMPTED, so the compact one is not in it: only its
+    # holder knows it is there, and only a named flush can hand it over.
     _go_online(session, store)
     res = ward.flush_queue(session, ward.store_provider(store))
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
-    assert res.remaining == 1
+    assert res.remaining == 0
 
     res = ward.flush_queue(
         session, ward.store_provider(store), app_id=_APP, identifier=b"addr2"
     )
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr2")
-    assert res.remaining == 0
 
 
 @pytest.mark.models("core")
@@ -3317,3 +3320,36 @@ def test_ward_rewriting_an_entry_compactly_replaces_it(session: Session):
         _offline_read(session.test_ctx.get_session(), b"addr1").ack.value
         == b"full_again"
     )
+
+
+@pytest.mark.models("core")
+def test_ward_a_named_flush_may_hand_over_the_same_change_twice(session: Session):
+    """The offered flag stops the UNNAMED loop repeating itself; a caller naming an entry overrides it.
+
+    This is the way back for a change offered by a session that then dropped: the claim ledger went
+    with the session, so no reconcile will settle it, and refusing to re-offer would strand it. A
+    re-send costs a round trip; refusing costs the change.
+    """
+    store = WardTrie()
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, b"addr1", b"offered_twice")
+
+    _go_online(session, store)
+
+    first = ward.flush_queue(
+        session, ward.store_provider(store), app_id=_APP, identifier=b"addr1"
+    )
+    again = ward.flush_queue(
+        session, ward.store_provider(store), app_id=_APP, identifier=b"addr1"
+    )
+
+    assert first.entry_key == again.entry_key
+    value = unpack_content(
+        open_content(_K_DATA, again.entry_key, "address", again.leaf.content.encrypted)
+    )[1]
+    assert value == b"offered_twice"
+
+    # ...while the unnamed loop still considers it handed over
+    assert ward.flush_queue(session, ward.store_provider(store)).remaining == 0

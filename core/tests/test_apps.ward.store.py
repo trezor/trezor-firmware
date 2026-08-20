@@ -264,7 +264,7 @@ class TestWardStore(unittest.TestCase):
         entry_hash = b"\xab" * 16  # stands in for keys.wallet_entry, opaque to this layer
         compact = (
             ward_store.store_prefix(_WALLET_A, ward_store.STORE_VERSION_COMPACT)
-            + entry_hash
+            + entry_hash  # no wallet tag: the hash already commits to wallet_id
             + b"\x01"
             + len(b"v").to_bytes(2, "big")
             + b"v"
@@ -294,8 +294,9 @@ class TestWardStore(unittest.TestCase):
             )  # right bytes, wrong form
         )
 
-        # both are enumerated, and neither is mistaken for unreadable
-        self.assertEqual(len(ward_store.store_list(_WALLET_A)), 2)
+        # ENUMERATION SEES ONLY THE FULL FORM: a compact record carries nothing that says whose it
+        # is, which is exactly the seven bytes it saves. Neither is mistaken for unreadable.
+        self.assertEqual(len(ward_store.store_list(_WALLET_A)), 1)
         self.assertIsNone(ward_store.store_find_unreadable(_WALLET_A))
 
     def test_a_record_may_change_form_in_place(self):
@@ -327,7 +328,7 @@ class TestWardStore(unittest.TestCase):
             )
         )
 
-        self.assertEqual(len(ward_store.store_list(_WALLET_A)), 1)
+        self.assertEqual(len(ward_store.store_list(_WALLET_A)), 0)  # compact: not enumerable
         self.assertIsNone(
             ward_store.store_get(_WALLET_A, [(ward_store.STORE_VERSION, _ID_1)])
         )
@@ -367,6 +368,37 @@ class TestWardStore(unittest.TestCase):
             ward_store.store_put(_WALLET_B, ward_store.STORE_VERSION, _ID_1, rec)
         with self.assertRaises(ValueError):
             ward_store.store_put(_WALLET_A, ward_store.STORE_VERSION, _ID_2, rec)
+
+    def test_a_compact_record_is_scoped_by_its_name_alone(self):
+        """No wallet tag, so the NAME has to do the scoping -- and it does, being a hash over
+        wallet_id.
+
+        Two wallets asking about the same entry compute different names, so neither can reach the
+        other's record. Asserted with the hashes standing in for `keys.wallet_entry`, since this layer
+        only ever sees them as opaque bytes.
+        """
+        mine, theirs = b"\x11" * 16, b"\x22" * 16
+        rec = (
+            ward_store.store_prefix(_WALLET_A, ward_store.STORE_VERSION_COMPACT)
+            + mine
+            + b"\x01"
+            + (1).to_bytes(2, "big")
+            + b"v"
+        )
+        self.assertTrue(
+            ward_store.store_put(
+                _WALLET_A, ward_store.STORE_VERSION_COMPACT, mine, rec
+            )
+        )
+
+        # the other wallet's name for its own entry finds nothing...
+        self.assertIsNone(
+            ward_store.store_get(
+                _WALLET_B, [(ward_store.STORE_VERSION_COMPACT, theirs)]
+            )
+        )
+        # ...and the record is only 25 bytes: version, name, flags, len16, value
+        self.assertEqual(len(rec), 1 + 16 + 1 + 2 + 1)
 
     def test_the_stored_wallet_tag_is_truncated_and_that_is_deliberate(self):
         """Records key on the FIRST 7 BYTES of wallet_id; root slots keep all 16.
