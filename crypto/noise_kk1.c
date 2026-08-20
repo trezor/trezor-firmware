@@ -40,8 +40,8 @@ _Static_assert(sizeof(noise_kk1_request_t) <= NOISE_KK1_MAX_MESSAGE_SIZE,
 _Static_assert(sizeof(noise_kk1_response_t) <= NOISE_KK1_MAX_MESSAGE_SIZE,
                "handshake response must fit into a Noise message");
 
-// The context is keyed by the caller and reused for all messages, so the
-// AES-GCM block limit accumulates over the session.
+// The context is keyed by the caller during the handshake and reused for all
+// messages, which keeps the AES-GCM context available for the whole session.
 static bool encrypt(gcm_ctx *gcm, const uint8_t nonce[NOISE_KK1_NONCE_SIZE],
                     const uint8_t *associated_data,
                     size_t associated_data_length, const uint8_t *plaintext,
@@ -144,10 +144,15 @@ static void split(uint8_t chaining_key[SHA256_DIGEST_LENGTH],
                  "output1 and output2 must be truncated to NOISE_KK1_KEY_SIZE");
 }
 
+// The counter is restricted to 48 bits: 2^48 messages of at most 65535 bytes
+// produce at most 2^60 AES blocks under one key, well below the 2^64 blocks
+// where GCM's birthday bound goes vacuous. McGrew, Viega, INDOCRYPT 2004,
+// https://eprint.iacr.org/2004/193
 static bool increase_nonce(uint8_t nonce[NOISE_KK1_NONCE_SIZE]) {
   // The first 4 bytes of the nonce are zeros
-  // The last 8 bytes of the nonce are a big-endian encoded counter
-  for (int i = NOISE_KK1_NONCE_SIZE - 1; i >= 4; i--) {
+  // The last 8 bytes of the nonce are a big-endian encoded counter, of which
+  // only the low 6 bytes are ever used
+  for (int i = NOISE_KK1_NONCE_SIZE - 1; i >= 6; i--) {
     nonce[i]++;
     if (nonce[i] != 0) {
       return true;

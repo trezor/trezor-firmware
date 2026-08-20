@@ -11741,27 +11741,35 @@ START_TEST(test_noise_kk1_limits) {
                                NOISE_KK1_MAX_PLAINTEXT_SIZE, big_ciphertext);
   ck_assert_int_eq(ret, true);
 
-  // --- AES-GCM block limit ---
-  // Responder sends message5, which the initiator would normally receive
+  // --- Message limit ---
+  // The counter occupies the low 6 bytes of the nonce, so it is exhausted after
+  // 2^48 messages. The message that exhausts it is still processed, but the
+  // context is destroyed rather than reused with a wrapped counter.
   uint8_t message5[] = "message5";
   uint8_t ciphertext5[sizeof(message5) + NOISE_KK1_TAG_SIZE] = {0};
   uint8_t plaintext5[sizeof(message5)] = {0};
+
+  memset(responder_context.encryption_nonce, 0, NOISE_KK1_NONCE_SIZE);
+  memset(responder_context.encryption_nonce + 6, 0xFF, 6);
   ret = noise_kk1_send_message(&responder_context, NULL, 0, message5,
                                sizeof(message5), ciphertext5);
-  ck_assert_int_eq(ret, true);
+  ck_assert_int_eq(ret, false);
+  ck_assert_int_eq(responder_context.initialized, false);
 
-  // Once the receiving key has processed too many blocks, the message is
-  // refused even though it is authentic
-  initiator_context.decryption_context.blk_cnt = GCM_MAX_BLOCKS;
+  // Sending again is refused because the context is gone
+  ret = noise_kk1_send_message(&responder_context, NULL, 0, message5,
+                               sizeof(message5), ciphertext5);
+  ck_assert_int_eq(ret, false);
+
+  // The ciphertext produced above is authentic, so the peer does decrypt it,
+  // but its context reaches the limit as well
+  memset(initiator_context.decryption_nonce, 0, NOISE_KK1_NONCE_SIZE);
+  memset(initiator_context.decryption_nonce + 6, 0xFF, 6);
   ret = noise_kk1_receive_message(&initiator_context, NULL, 0, ciphertext5,
                                   sizeof(ciphertext5), plaintext5);
   ck_assert_int_eq(ret, false);
-
-  // The same holds for the sending key
-  initiator_context.encryption_context.blk_cnt = GCM_MAX_BLOCKS;
-  ret = noise_kk1_send_message(&initiator_context, NULL, 0, message5,
-                               sizeof(message5), ciphertext5);
-  ck_assert_int_eq(ret, false);
+  ck_assert_int_eq(initiator_context.initialized, false);
+  ck_assert_mem_eq(plaintext5, message5, sizeof(message5));
 }
 END_TEST
 
@@ -12018,30 +12026,31 @@ START_TEST(test_noise_xxpsk3_limits) {
   ck_assert_int_eq(ret, true);
   ck_assert_int_eq(message_size, NOISE_XXPSK3_MAX_MESSAGE_SIZE);
 
-  // --- AES-GCM block limit ---
+  // --- Message limit ---
   uint8_t msg[] = "hello";
   uint8_t ciphertext[sizeof(msg) + 16] = {0};
   uint8_t plaintext[sizeof(msg)] = {0};
   size_t ciphertext_size = 0, plaintext_size = 0;
 
+  // The last message below the limit, with the nonce at 2^48 - 1, is still
+  // encrypted, which advances the nonce to the limit
+  responder.transport_state.send_cipher_state.nonce = (1ULL << 48) - 1;
   ret = noise_xxpsk3_send_message(&responder.transport_state, msg, sizeof(msg),
                                   ciphertext, sizeof(ciphertext),
                                   &ciphertext_size);
   ck_assert_int_eq(ret, true);
 
-  // Once the receiving key has processed too many blocks, the message is
-  // refused even though it is authentic
-  initiator.transport_state.receive_cipher_state.gcm.blk_cnt = GCM_MAX_BLOCKS;
-  ret = noise_xxpsk3_receive_message(&initiator.transport_state, ciphertext,
-                                     ciphertext_size, plaintext,
-                                     sizeof(plaintext), &plaintext_size);
-  ck_assert_int_eq(ret, false);
-
-  // The same holds for the sending key
-  responder.transport_state.send_cipher_state.gcm.blk_cnt = GCM_MAX_BLOCKS;
+  // With the nonce at 2^48 no further message is encrypted
   ret = noise_xxpsk3_send_message(&responder.transport_state, msg, sizeof(msg),
                                   ciphertext, sizeof(ciphertext),
                                   &ciphertext_size);
+  ck_assert_int_eq(ret, false);
+
+  // The same limit applies to the receiving key
+  initiator.transport_state.receive_cipher_state.nonce = 1ULL << 48;
+  ret = noise_xxpsk3_receive_message(&initiator.transport_state, ciphertext,
+                                     ciphertext_size, plaintext,
+                                     sizeof(plaintext), &plaintext_size);
   ck_assert_int_eq(ret, false);
 
   noise_xxpsk3_initiator_deinit(&initiator);

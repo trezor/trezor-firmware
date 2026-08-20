@@ -27,7 +27,11 @@
 #include "rand.h"
 #include "sha2.h"
 
-#define NONCE_LIMIT 0xFFFFFFFFFFFFFFFFULL
+// The counter is restricted to 48 bits: 2^48 messages of at most 65535 bytes
+// produce at most 2^60 AES blocks under one key, well below the 2^64 blocks
+// where GCM's birthday bound goes vacuous. McGrew, Viega, INDOCRYPT 2004,
+// https://eprint.iacr.org/2004/193
+#define NONCE_LIMIT 0x1000000000000ULL  // 2^48
 #define NONCE_ARRAY_SIZE_BYTES 12
 
 /**
@@ -129,7 +133,7 @@ static void dh(const uint8_t (*private_key)[NOISE_XXPSK3_DHLEN],
 }
 
 // Derives the AES-GCM context from the key; the key itself is not retained.
-// The context is reused for all messages, so the block limit accumulates.
+// The context is reused for all messages of the session.
 static void cs_set_key(noise_xxpsk3_cipher_state_t *cs,
                        const uint8_t key[NOISE_XXPSK3_HASHLEN]) {
   memzero(&cs->gcm, sizeof(cs->gcm));
