@@ -11,6 +11,10 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
     session was unsynced, so one request meant two things depending on state the host cannot
     see. A host that wants to queue now says so, and gets an ack type that can only mean that.
 
+    EITHER SHAPE MAY BE STORED COMPACTLY -- `compact` keeps a hash of the identity instead of the
+    identity, 40 bytes less flash for a typical address, at the cost of needing to be told which entry
+    to publish later. See the field comment in the proto.
+
     TWO SHAPES, TOLD APART BY `mac`, and the discriminator is cryptographic rather than declared:
     a fresh intent has none, a restore carries the one `queue_get_entry` produced. The restore path
     verifies BEFORE it shows anything -- a confirmation screen for bytes that failed to
@@ -50,8 +54,10 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
 
     key_type = ENTRY_TYPE_ADDRESS
 
+    compact = bool(msg.compact)
+
     if msg.mac is not None:
-        return await _restore(app_id, identifier, key_type, value, msg.mac)
+        return await _restore(app_id, identifier, key_type, value, msg.mac, compact)
 
     # Before the screen, not after it. A value the store cannot take must not cost the user a
     # confirmation first -- see `offline_store.ensure_storable`.
@@ -81,7 +87,11 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
 
     # Stored only after confirmation, PENDING and not yet offered: the change is waiting for a host
     # to take it, and `flush_queue` is what marks it as handed over.
-    await offline_store.put(key_type, app_id, identifier, value, True)
+    #
+    # COMPACTLY IF ASKED. The identity then lives only with whoever keeps a backup; the device can
+    # still read and export the entry -- anyone asking names it -- but publishing needs to be told
+    # which entry to publish. See the note on `compact` in messages-ward.proto.
+    await offline_store.put(key_type, app_id, identifier, value, True, compact=compact)
 
     # An EMPTY ack. There is no counter, no mac and no leaf because none of them exists yet, and the
     # ack type is what says the change was queued rather than applied. The keyed path is not here
@@ -96,6 +106,7 @@ async def _restore(
     key_type: str,
     value: bytes,
     mac: bytes,
+    compact: bool = False,
 ) -> "WardQueueSetAck":
     """Put back a queued change this wallet authenticated on the way out.
 
@@ -189,6 +200,8 @@ async def _restore(
     # Restored PENDING and NOT offered. A restore cannot know whether an earlier publication landed,
     # so the change goes back to the head of the queue; marking it offered would let the next
     # reconcile clear a change that never applied.
-    await offline_store.put(key_type, app_id, identifier, value, True)
+    # A restore is the natural home for a compact record: it arrives FROM a backup, so the identity
+    # this form drops is already kept somewhere that survives the device.
+    await offline_store.put(key_type, app_id, identifier, value, True, compact=compact)
 
     return WardQueueSetAck()

@@ -48,6 +48,7 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
     from .cas import auth_commit, sig_commit
     from .common import pull_leaf, require_initialized
     from .keys import (
+        ENTRY_TYPE_ADDRESS,
         derive_k_auth,
         derive_k_data,
         derive_k_ident,
@@ -70,15 +71,35 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
     if not sync_round.is_online():
         raise DataError("WARD: sync before publishing queued changes")
 
-    entry = await offline_store.next_unsent()
-    if entry is None:
-        return WardFlushQueueAck(remaining=0)
+    # NAMED, OR THE NEXT ONE. A host that says which entry to publish gets that one -- and that is
+    # the only way a COMPACT record can be published, since such a record holds a hash of its identity
+    # and a hash cannot be turned back into a keyed path. Unnamed, this takes the next queued change
+    # as it always has.
+    app_id, identifier = msg.app_id, msg.identifier
+    key_type = ENTRY_TYPE_ADDRESS
 
-    key_type = entry.key_type
+    if app_id is not None and identifier is not None:
+        status, entry = await offline_store.get(key_type, app_id, identifier)
+        if status != offline_store.VALID or entry is None or not entry.pending:
+            raise DataError("WARD: no queued change for this entry")
+        if entry.offered:
+            raise DataError("WARD: this queued change has already been handed over")
+    else:
+        entry = await offline_store.next_unsent()
+        if entry is None:
+            return WardFlushQueueAck(remaining=0)
+        if entry.compact:
+            # The device cannot say WHICH entry this is -- that is what the compact form gives up --
+            # so it cannot ask for the identity by name either. The host holds the backup and can.
+            raise DataError(
+                "WARD: the next queued change is stored compactly; name it with app_id and identifier"
+            )
+        app_id, identifier = entry.app_id, entry.identifier
+        key_type = entry.key_type
     # THE KEYED PATH IS ASSIGNED HERE. A queued change has none -- it is not in the trie -- so the
-    # store holds the identity and this derives the path from it at the moment of publication, which
-    # is the only moment a path means anything.
-    entry_key = await entry_key_for(entry.app_id, entry.identifier, key_type)
+    # identity (from the record, or from the request when the record is compact) is turned into a path
+    # at the moment of publication, which is the only moment a path means anything.
+    entry_key = await entry_key_for(app_id, identifier, key_type)
 
     # Re-derivation against CURRENT state. This proves the path's present leaf against the
     # trusted root, so the new root below is computed from a state the host had to
@@ -88,12 +109,15 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
     from_root = await get_root()
     counter = await get_counter() + 1
 
+    # The identity SEALED into the leaf is the one that was verified against the record, not whatever
+    # the record happens to carry: for a compact record those fields are empty, and the request is
+    # where its identity came from.
     id_part = encode_identity(
         await derive_k_ident(key_type),
         entry_key,
         key_type,
-        entry.identifier,
-        entry.app_id,
+        identifier,
+        app_id,
     )
     val_part = encode_content(
         await derive_k_data(key_type),
