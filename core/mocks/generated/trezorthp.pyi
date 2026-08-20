@@ -117,6 +117,7 @@ class ThpChannelInfo:
     handshake_hash: bytes | None
     host_static_public_key: bytes
     credential: bytes | None
+    iface_num: int
 
 
 # rust/src/thp/micropython.rs
@@ -128,6 +129,7 @@ def channel_info(channel_id: int) -> ThpChannelInfo:
     * handshake hash
     * host static public key
     * encoded credential provided during handshake - it is discarded at the end of pairing/credential phase
+    * the interface the channel is bound to
     """
 
 
