@@ -310,6 +310,8 @@ UI_LAYOUT: str
 """UI layout identifier ("BOLT"-T, "CAESAR"-TS3, "DELIZIA"-TS5)."""
 USE_THP: bool
 """Whether the firmware supports Trezor-Host Protocol (version 2)."""
+USE_WARD_SERVICE_CHANNEL: bool
+"""Whether WARD is served over its own THP interface rather than the ordinary connection."""
 NOTIFY_BOOT: int
 """Notification event: boot completed."""
 NOTIFY_UNLOCK: int
