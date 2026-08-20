@@ -129,12 +129,15 @@ static inline bool syscall_is_allowed(const applet_t *applet,
 
 __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
                                                        uint32_t syscall,
-                                                       void *applet) {
-  if (!syscall_is_allowed((applet_t *)applet, syscall)) {
-    system_exit_fatal("Forbidden syscall", __FILE_NAME__, __LINE__);
-  }
+                                                       void *applet_ptr) {
+  applet_t *applet = (applet_t *)applet_ptr;
 
-  syscall_set_context((applet_t *)applet);
+  syscall_set_context(applet);
+
+  if (!syscall_is_allowed(applet, syscall)) {
+    applet_exit_fatal(applet, "Forbidden syscall", __FILE_NAME__, __LINE__);
+    return;
+  }
 
   switch (syscall) {
     case SYSCALL_RETURN_FROM_CALLBACK: {
@@ -1113,7 +1116,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
     default:
-      system_exit_fatal("Invalid syscall", __FILE_NAME__, __LINE__);
+      applet_exit_fatal(applet, "Invalid syscall", __FILE_NAME__, __LINE__);
       break;
   }
 }
