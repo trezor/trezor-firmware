@@ -10,6 +10,8 @@ if utils.USE_THP:
     from trezor.wire.errors import DataError, FirmwareError
     from trezor.wire.thp import channel as channel_mod
     from trezor.wire.thp.channel import Channel
+    from storage import cache_thp
+    from trezor import wire as wire_mod
     from trezor.wire import Provider
     from trezor.wire.thp.interface_context import ThpContext
     from trezor.wire.thp.memory_manager import ThpBuffer
@@ -47,6 +49,25 @@ if utils.USE_THP:
 
         def channel_info(self, _channel_id: int) -> "_Info":
             return _Info(self._iface_num)
+
+    class _ReplacingThp(_FakeThp):
+        """Reports that pairing replaced an older channel with the same host key."""
+
+        def __init__(self, iface_num: int, replaced: int) -> None:
+            super().__init__(iface_num)
+            self._replaced = replaced
+
+        def channel_paired(self, _channel_id: int) -> int:
+            return self._replaced
+
+    class _WorkflowSpy:
+        """Records whether the replacement path reached for global workflow exclusivity."""
+
+        def __init__(self) -> None:
+            self.close_others_calls = 0
+
+        def close_others(self) -> None:
+            self.close_others_calls += 1
 
     class _ClosedThp:
         """A channel the Rust side no longer has: `channel_info` raises `ThpError`."""
@@ -170,6 +191,92 @@ class TestThpAttachExistingChannel(unittest.TestCase):
         with patch(channel_mod, "trezorthp", _ClosedThp()):
             with self.assertRaises(DataError):
                 thp_ctx.attach_existing_channel(self._IFACE, self._CID)
+
+
+@unittest.skipUnless(utils.USE_THP, "only needed for THP")
+class TestThpServiceChannelReplacement(unittest.TestCase):
+    """What happens when a host reconnects with the same static key.
+
+    THP replaces the older channel, and the right response depends on WHOSE channel it was. For a
+    wallet host it means someone took over the conversation: its sessions move to the new channel
+    and running workflows are closed. For the service it means a daemon restarted, which is
+    ordinary -- and the workflows running at that moment belong to a wallet host on another
+    interface.
+    """
+
+    _OLD_CID = 0x1111
+    _NEW_CID = 0x2222
+    _IFACE = 7
+
+    def setUp(self):
+        # The session table is global and these tests move entries between channels, so without
+        # this each one inherits the previous one's leftovers.
+        cache_thp.clear_all()
+
+    def _channel(self, thp, iface_num: int) -> "Channel":
+        thp_ctx = ThpContext(MockHID(iface_num))
+        (iface_ctx,) = thp_ctx._iface_ctxs
+        iface_ctx._buffers_provider = Provider((ThpBuffer(64), ThpBuffer(64)))
+        with patch(channel_mod, "trezorthp", thp):
+            return Channel(self._NEW_CID, iface_ctx, buffers=(ThpBuffer(64), ThpBuffer(64)))
+
+    def test_a_wallet_host_takeover_migrates_and_closes_workflows(self):
+        """Today's behaviour, unchanged: the conversation moved, so what was running is stale."""
+        thp = _ReplacingThp(self._IFACE, self._OLD_CID)
+        channel = self._channel(thp, self._IFACE)
+        spy = _WorkflowSpy()
+
+        cache_thp.create_or_replace_session(
+            self._OLD_CID.to_bytes(2, "big"), b"\x01"
+        )
+
+        with patch(channel_mod, "trezorthp", thp):
+            with patch(channel_mod, "workflow", spy):
+                with patch(wire_mod, "is_ward_interface", lambda _iface: False):
+                    channel.end_pairing_and_replace()
+
+        self.assertEqual(spy.close_others_calls, 1)
+        # the session followed the channel rather than being dropped
+        self.assertIsNotNone(
+            cache_thp.get_allocated_session(self._NEW_CID.to_bytes(2, "big"), b"\x01")
+        )
+
+    def test_a_service_reconnect_leaves_other_workflows_alone(self):
+        """THE POINT. Replacement fires on an ordinary daemon restart, and the workflows running
+        then belong to a wallet host on another interface -- letting a service restart cancel a
+        signing flow would defeat most of the reason the service has its own interface."""
+        thp = _ReplacingThp(self._IFACE, self._OLD_CID)
+        channel = self._channel(thp, self._IFACE)
+        spy = _WorkflowSpy()
+
+        with patch(channel_mod, "trezorthp", thp):
+            with patch(channel_mod, "workflow", spy):
+                with patch(wire_mod, "is_ward_interface", lambda _iface: True):
+                    channel.end_pairing_and_replace()
+
+        self.assertEqual(spy.close_others_calls, 0)
+
+    def test_a_service_reconnect_clears_rather_than_migrates(self):
+        """`migrate_sessions` only repoints CHANNEL_ID, so a migrated service session would keep
+        its readiness state across a transport it cannot vouch for. Clearing makes the new channel
+        prove freshness again."""
+        thp = _ReplacingThp(self._IFACE, self._OLD_CID)
+        channel = self._channel(thp, self._IFACE)
+
+        old = self._OLD_CID.to_bytes(2, "big")
+        cache_thp.create_ward_service_session(old, b"\x01")
+        self.assertIsNotNone(cache_thp.get_allocated_session(old, b"\x01"))
+
+        with patch(channel_mod, "trezorthp", thp):
+            with patch(channel_mod, "workflow", _WorkflowSpy()):
+                with patch(wire_mod, "is_ward_interface", lambda _iface: True):
+                    channel.end_pairing_and_replace()
+
+        # gone from the old channel, and NOT reappearing under the new one
+        self.assertIsNone(cache_thp.get_allocated_session(old, b"\x01"))
+        self.assertIsNone(
+            cache_thp.get_allocated_session(self._NEW_CID.to_bytes(2, "big"), b"\x01")
+        )
 
 
 if __name__ == "__main__":

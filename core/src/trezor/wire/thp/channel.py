@@ -167,11 +167,30 @@ class Channel:
     def end_pairing_and_replace(self) -> None:
         replaced_channel_id = trezorthp.channel_paired(self.channel_id)
         if replaced_channel_id is not None:
-            migrate_sessions(
-                replaced_channel_id.to_bytes(2, "big"), self.channel_id_bytes()
-            )
-            # In case a channel was replaced, close all running workflows
-            workflow.close_others()
+            from .. import is_ward_interface
+
+            replaced_cid = replaced_channel_id.to_bytes(2, "big")
+
+            if is_ward_interface(self.iface):
+                # A SERVICE RECONNECT, NOT A HOST TAKING OVER, and the two need opposite handling.
+                #
+                # Do not close other workflows. Replacement fires whenever a host reconnects with
+                # the same static key, which for a daemon holding a persistent identity is an
+                # ordinary restart. The workflows running at that moment belong to a WALLET host on
+                # a different interface and have nothing to do with this channel; killing them
+                # would let a service restart cancel a signing flow, which is most of the reason
+                # the service has an interface of its own.
+                #
+                # Do not migrate the sessions either. `migrate_sessions` only repoints CHANNEL_ID,
+                # so a migrated service session would keep its readiness state while the transport
+                # under it has been replaced -- a service claiming to be synced across a
+                # reconnection it cannot vouch for. Clearing it means the new channel starts by
+                # proving freshness again, which is the correct reading of "the transport changed".
+                clear_sessions_with_channel_id(replaced_cid)
+            else:
+                migrate_sessions(replaced_cid, self.channel_id_bytes())
+                # In case a channel was replaced, close all running workflows
+                workflow.close_others()
         self.credential = None
         if __debug__ and _TRACE:
             self._log(
