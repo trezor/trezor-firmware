@@ -1,0 +1,43 @@
+/*
+ * MCUboot-image devicetree overlay for t3t2_dk (nRF54LS05B).
+ *
+ * Passed explicitly via -Dmcuboot_EXTRA_DTC_OVERLAY_FILE, and kept as a flat file
+ * beside the .conf fragments rather than at sysbuild/mcuboot/boards/<board>.overlay:
+ * sysbuild reads a sysbuild/<image-name>/ directory as that image's application
+ * config dir and then aborts for want of a prj.conf inside it.
+ *
+ * Declares the NSIB bl_storage node, which NCS does not provide for this SoC.
+ * bl_storage.c resolves its base from the devicetree:
+ *
+ *     #define BL_STORAGE_ADDRESS DT_REG_ADDR(DT_NODELABEL(bl_storage))
+ *
+ * so without this node, enabling CONFIG_SECURE_BOOT_STORAGE fails to compile with
+ * 'DT_N_NODELABEL_bl_storage_REG_IDX_0_VAL_ADDRESSU undeclared'.
+ *
+ * Every other nRF54L part gets this from its <soc>_cpuapp_partition.dtsi; there is
+ * no nrf54ls05* partition dtsi, on our NCS v3.3.0 pin OR on sdk-nrf main (checked
+ * 2026-08-20 -- main has since gained nrf54lc10a and nrf54lv10a partition dtsis
+ * but still not ls05), and nrf54ls05_a_b.dtsi's uicr node carries only compatible
+ * and reg. So this is an SDK gap for this part rather than something a newer NCS
+ * would fix; NSIB itself knows the part (bl_boot.c special-cases
+ * SOC_NRF54LS05B_CPUAPP) and bl_storage's RRAMC backend is selected series-wide.
+ *
+ * Offset and size copied verbatim from nrf54lv10a_cpuapp_partition.dtsi. UICR+0x500
+ * length 0x460 is identical across nRF54L05/L10/L15/LM20A/LM20B/LV10A/LC10A -- a
+ * stable NSIB software convention for the family, not a per-part hardware detail,
+ * so LS05B following it is the strong default rather than a guess.
+ *
+ * NOT yet validated on hardware. The remaining risk is solely whether LS05B's own
+ * UICR usage collides in 0x500..0x960; nothing in the SDK suggests it does. UICR on
+ * nRF54L lives in RRAM and is cleared by ERASEALL, so a wrong offset is recoverable
+ * on a devkit -- confirm against the LS05B UICR map before production.
+ */
+
+&uicr {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	bl_storage: uicr@500 {
+		reg = <0x500 0x460>;
+	};
+};
