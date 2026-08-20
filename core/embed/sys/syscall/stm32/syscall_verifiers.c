@@ -149,7 +149,15 @@ access_violation:
 
 ssize_t syslog_write_chunk__verified(const char *text, size_t text_len,
                                      bool end_record) {
-  if (!probe_read_access(text, text_len)) {
+  if (text == NULL) {
+    // A record is terminated with an empty chunk, and the Rust side coerces an
+    // empty slice to a NULL pointer, so NULL is a valid argument here. Only a
+    // zero length is accepted with it, which `syslog_write_chunk()` never
+    // dereferences.
+    if (text_len != 0) {
+      goto access_violation;
+    }
+  } else if (!probe_read_access(text, text_len)) {
     goto access_violation;
   }
 
