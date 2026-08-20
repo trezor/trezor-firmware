@@ -31,19 +31,15 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     from trezor.messages import WardVerifyChainAck
     from trezor.wire import DataError
 
-    from . import round as sync_round
-    from .attest import root_mac
+    from .adopt import adopt, require_attested_round, verify_head_mac
     from .cas import verify_chain_step
     from .common import require_initialized
-    from .keys import derive_k_auth, derive_k_mac, derive_ward_id
-    from .root import get_counter, get_root, set_root
+    from .keys import derive_k_auth, derive_ward_id
+    from .root import get_counter, get_root
 
     require_initialized()
 
-    ctx = sync_round.get()
-    if ctx is None or ctx[0] != sync_round._ATTESTED:
-        raise DataError("no attested sync round to verify against")
-    _state, _nonce, counter, mac = ctx
+    counter, mac = require_attested_round("verify against")
 
     ward_id = await derive_ward_id()
     k_auth = await derive_k_auth()
@@ -79,35 +75,11 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
 
     # ...and the state it ends in must be the state that was attested. Without this the
     # chain could authorise a walk to a head the WM never vouched for.
-    if root_mac(await derive_k_mac(), ward_id, counter, running_root) != mac:
-        raise DataError("chain end does not match the attested mac")
+    await verify_head_mac(counter, mac, running_root, subject="chain end")
 
-    # SETTLED BEFORE THE ROOT MOVES, for the reason spelled out in `reconcile`: a root past an
-    # unresolved claim leaves that claim permanently undecidable, because the transition it names
-    # is then behind every future sync's baseline.
-    #
-    # This path settles by the transitions it actually crossed rather than by the counter, so it
-    # does not clear a record whose change another device's write happened to advance past.
-    from .offline_store import reconcile_pending
-
-    await reconcile_pending(counter, landed_commits=crossed)
-
-    # Same refusal as `reconcile`: no slot means the verified head was not kept, so the
-    # adoption cannot be allowed to latch.
-    if not await set_root(running_root, counter):
-        raise DataError(
-            "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
-        )
-
-    # THE SESSION IS NOW ONLINE, exactly as it is after `reconcile`. This path is the STRICTER
-    # of the two -- it proves authorised descent from the head this device already held, on top of
-    # the same WM attestation reconcile checks -- so a head adopted here is at least as trustworthy
-    # as one adopted there, and refusing to latch would leave the stronger route unusable: every
-    # read would fall back to the offline store and every write would refuse, with nothing on
-    # screen to say why. Multi-device catch-up arrives through here, so that was the one route
-    # a device could not recover by.
-    sync_round.mark_online()
-
-    sync_round.clear()
+    # The shared tail -- settle, persist, latch, close -- see `adopt`. This route settles by the
+    # transitions it actually CROSSED rather than by the counter, so it does not clear a record
+    # whose change another device's write happened to advance past.
+    await adopt(counter, running_root, landed_commits=crossed)
 
     return WardVerifyChainAck(counter=counter, new_root=running_root)
