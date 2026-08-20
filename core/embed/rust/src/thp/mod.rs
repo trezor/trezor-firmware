@@ -32,10 +32,19 @@ type TrezorChannel = Channel<TrezorCrypto>;
 
 type PubKey = [u8; PUBKEY_LEN];
 
-#[cfg(not(any(test, feature = "ble")))]
-const MAX_INTERFACES: usize = 1;
-#[cfg(any(test, feature = "ble"))]
-const MAX_INTERFACES: usize = 2;
+/// One slot per interface this build can actually bring up. `wire` is always there; BLE and the
+/// WARD service channel each add their own.
+///
+/// Derived rather than enumerated because the two options are INDEPENDENT -- neither implies the
+/// other and all four combinations are legal -- so a hand-written ladder of `cfg` arms would need
+/// four of them and would silently under-count the day a third interface appears. `add_interface`
+/// returns "Too many interfaces" past this bound, which is a build-configuration bug rather than
+/// anything a host can provoke.
+///
+/// Tests get the BLE slot unconditionally so multi-interface paths stay exercisable.
+const MAX_INTERFACES: usize = 1
+    + cfg!(any(test, feature = "ble")) as usize
+    + cfg!(feature = "ward_service_channel") as usize;
 
 // Channel limits, shared across interfaces.
 const MAX_CHANNELS_OPENING: usize = 4;

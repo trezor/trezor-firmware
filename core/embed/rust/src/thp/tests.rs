@@ -11,7 +11,8 @@ use trezor_thp::credential::{CredentialStore, FoundCredential, NullCredentialSto
 use trezor_thp::error::TransportError;
 
 use super::{
-    Error, ThpAuxiliaryInfo, ThpContext, TrezorCrypto, TrezorInResult, THP_AUX, THP_CONTEXT,
+    Error, ThpAuxiliaryInfo, ThpContext, TrezorCrypto, TrezorInResult, MAX_INTERFACES, THP_AUX,
+    THP_CONTEXT,
 };
 use crate::micropython::func::Func;
 use crate::micropython::macros::obj_fn_2;
@@ -379,6 +380,30 @@ fn setup(ifaces: &[u8]) -> TestContext {
             .unwrap();
     }
     TestContext::new(thp)
+}
+
+/// Every declared interface slot is usable, and one past the bound is refused.
+///
+/// Follows `MAX_INTERFACES` rather than hardcoding a number, because the bound is DERIVED from
+/// which interface features the build enables -- `wire` always, plus BLE and the WARD service
+/// channel when selected. A bound computed too low would not fail here as a wrong constant; it
+/// would fail as `add_interface` refusing an interface the firmware genuinely brings up, which
+/// surfaces far away as a channel that cannot be allocated.
+#[test]
+fn test_every_declared_interface_slot_is_usable() {
+    let mut test = setup(&[]);
+
+    for i in 0..MAX_INTERFACES {
+        test.thp
+            .add_interface(i as u8, b"FakeDeviceProperties")
+            .expect("a declared interface slot must be usable");
+    }
+
+    assert_matches!(
+        test.thp
+            .add_interface(MAX_INTERFACES as u8, b"FakeDeviceProperties"),
+        Err(_)
+    );
 }
 
 #[test]
