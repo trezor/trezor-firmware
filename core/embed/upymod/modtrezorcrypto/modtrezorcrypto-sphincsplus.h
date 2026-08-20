@@ -94,6 +94,24 @@ STATIC void _sphincsplus_derive(const spx_variant_t *v,
   }
 }
 
+/* The SPHINCS+ reference code leaves copies of secret key material in stack
+ * frames it never zeroes. After keygen/sign return, recurse back down into
+ * that dead stack and zero ~4 KB of it. noinline + volatile + the asm
+ * barrier keep the compiler from optimizing the writes or the recursion
+ * away. Signing itself already went ~6.1 KB below this frame (measured), so
+ * this descent reuses stack and cannot overflow it. */
+#define SPX_STACK_SCRUB_BYTES 4096
+__attribute__((noinline)) static void _sphincsplus_scrub_stack(int remaining) {
+  volatile uint8_t buf[512];
+  for (size_t i = 0; i < sizeof(buf); i++) {
+    buf[i] = 0;
+  }
+  if (remaining > (int)sizeof(buf)) {
+    _sphincsplus_scrub_stack(remaining - (int)sizeof(buf));
+  }
+  __asm__ __volatile__("" : : "r"(buf) : "memory");
+}
+
 /// def derive_public_key(
 ///     master_seed: AnyBytes, account_index: int, variant: int
 /// ) -> bytes:
@@ -123,6 +141,7 @@ STATIC mp_obj_t mod_trezorcrypto_sphincsplus_derive_public_key(
 
   memzero(derived_seed, sizeof(derived_seed));
   memzero(sk_local, sizeof(sk_local));
+  _sphincsplus_scrub_stack(SPX_STACK_SCRUB_BYTES);
 
   if (ret != 0) {
     vstr_clear(&pk);
@@ -182,6 +201,7 @@ STATIC mp_obj_t mod_trezorcrypto_sphincsplus_derive_and_sign(
     memzero(sk_local, sizeof(sk_local));
     vstr_clear(&pk);
     vstr_clear(&sig);
+    _sphincsplus_scrub_stack(SPX_STACK_SCRUB_BYTES);
     mp_raise_ValueError(MP_ERROR_TEXT("SPHINCS+ keygen failed"));
   }
 
@@ -193,6 +213,7 @@ STATIC mp_obj_t mod_trezorcrypto_sphincsplus_derive_and_sign(
   if (ret_sign != 0) {
     vstr_clear(&pk);
     vstr_clear(&sig);
+    _sphincsplus_scrub_stack(SPX_STACK_SCRUB_BYTES);
     mp_raise_ValueError(MP_ERROR_TEXT("SPHINCS+ signing failed"));
   }
 
@@ -208,9 +229,12 @@ STATIC mp_obj_t mod_trezorcrypto_sphincsplus_derive_and_sign(
   if (ret_verify != 0) {
     vstr_clear(&pk);
     vstr_clear(&sig);
+    _sphincsplus_scrub_stack(SPX_STACK_SCRUB_BYTES);
     mp_raise_ValueError(
         MP_ERROR_TEXT("SPHINCS+ verify failed after sign (possible fault)"));
   }
+
+  _sphincsplus_scrub_stack(SPX_STACK_SCRUB_BYTES);
 
   mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
   tuple->items[0] = mp_obj_new_str_from_vstr(&mp_type_bytes, &pk);
