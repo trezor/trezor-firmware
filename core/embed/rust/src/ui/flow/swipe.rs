@@ -282,7 +282,9 @@ impl SwipeFlow {
 /// This way we can completely avoid implementing `Component`. That also allows
 /// us to pass around concrete Renderers instead of having to conform to
 /// `Component`'s not-object-safe interface.
-impl Layout<Result<Obj, Error>> for SwipeFlow {
+impl Layout for SwipeFlow {
+    type Value = Result<Obj, Error>;
+
     fn place(&mut self) {
         for elem in self.store.iter_mut() {
             elem.place(ModelUI::SCREEN);
@@ -293,8 +295,8 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
         self.event(ctx, event)
     }
 
-    fn value(&self) -> Option<&Result<Obj, Error>> {
-        self.returned_value.as_ref()
+    fn take_value(&mut self) -> Option<Self::Value> {
+        self.returned_value.take()
     }
 
     fn paint(&mut self) -> Result<(), PaintOutOfBounds> {
