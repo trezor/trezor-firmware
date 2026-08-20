@@ -109,6 +109,22 @@ if utils.USE_THP:
     # Allocate THP read/write buffers in more stable area of memory
     THP_BUFFERS_PROVIDER = Provider((ThpBuffer(), ThpBuffer()))
 
+    def buffers_provider_for(iface: WireInterface) -> Provider:
+        """Which pool this interface draws its channel buffers from.
+
+        ONE PROVIDER MEANS ONE CHANNEL AT A TIME, because a provider hands out its pair once and
+        then answers None. USB and BLE deliberately share `THP_BUFFERS_PROVIDER`: a session serves
+        one channel, and an interface that cannot get buffers answers TRANSPORT_BUSY, which is how
+        a second host is turned away.
+
+        That is exactly the sharing an interface hosting a service channel must not do -- it has to
+        be able to hold a channel WHILE another interface holds one -- so such an interface gets a
+        pool of its own. Decided here, per interface, rather than by position: "the second
+        interface to receive a packet" would hand a private pool to whichever of USB or BLE
+        happened to be second, silently changing how a second host is refused today.
+        """
+        return THP_BUFFERS_PROVIDER
+
     if __debug__:
         _THP_IFACES: list[InterfaceContext] = []
 
