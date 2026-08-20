@@ -618,13 +618,11 @@ def test_sign_tx_dao_withdraw_credits_the_highest_header_rate(session: Session):
     # The device cannot know which header_dep is the withdrawing cell's block, so
     # it must credit the highest rate among headers after the deposit whichever
     # index the host names: real withdraw block (+20 %) at 1, decoy (+0.01 %) at 2.
-    ar_deposit = AR_DEPOSIT
-    ar_real = ar_deposit * 120 // 100
-    ar_decoy = ar_deposit * 10001 // 10000
     deposit_number = 100
-
+    ar_real = AR_DEPOSIT * 120 // 100
+    ar_decoy = AR_DEPOSIT * 10001 // 10000
     headers = [
-        _dao_header(deposit_number, ar_deposit),
+        _dao_header(deposit_number, AR_DEPOSIT),
         _dao_header(200_000, ar_real, 1_576_852_800_000),
         _dao_header(150_000, ar_decoy, 1_575_852_800_000),
     ]
@@ -646,8 +644,9 @@ def test_sign_tx_dao_withdraw_credits_the_highest_header_rate(session: Session):
     prev_hash = prevtx.raw_tx_hash([], [withdrawing_cell], [cell_data], [])
     occupied = prevtx.occupied_capacity(lock_args_len=20, type_args_len=0, data_len=8)
     max_withdraw = prevtx.dao_maximum_withdraw(
-        deposit_capacity, occupied, ar_deposit, ar_real
+        deposit_capacity, occupied, AR_DEPOSIT, ar_real
     )
+    witnesses = [ckb.create_witness_args(input_type=(0).to_bytes(8, "little"))]
     address_n = parse_path("m/44'/309'/0'/0/0")
 
     def _sign(withdraw_index: int, out_capacity: int, screens: list[str]):
@@ -681,6 +680,7 @@ def test_sign_tx_dao_withdraw_credits_the_highest_header_rate(session: Session):
                 prev_txs={prev_hash: prev},
                 header_deps=header_deps,
                 headers=headers,
+                witnesses=witnesses,
             )
 
     # Up to the real maximum is accepted even when the host names the decoy...
@@ -694,35 +694,6 @@ def test_sign_tx_dao_withdraw_credits_the_highest_header_rate(session: Session):
         assert any(
             "unusually high" in screen for screen in screens
         ), f"index {withdraw_index}: fee understated; screens: {screens}"
-
-
-def test_sign_tx_rejects_duplicate_input_outpoint(session: Session):
-    # Consensus refuses it; the device must not credit the cell twice.
-    prev, prev_hash = prevtx.synth_prev_tx([10_000_000_000])
-    inputs = [
-        ckb.create_cell_input(tx_hash=prev_hash, index=0),
-        ckb.create_cell_input(tx_hash=prev_hash, index=0),
-    ]
-    outputs = [
-        ckb.create_cell_output(
-            capacity=19_000_000_000,
-            lock_code_hash=prevtx.LOCK_CODE_HASH,
-            lock_hash_type=1,
-            lock_args="ab" * 20,
-        )
-    ]
-    with session.test_ctx as client:
-        if not session.debug.legacy_debug:
-            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
-        with pytest.raises(TrezorFailure, match="Duplicate input outpoint"):
-            ckb.sign_tx(
-                session,
-                parse_path("m/44h/309h/0h/0/0"),
-                inputs=inputs,
-                outputs=outputs,
-                network="Mainnet",
-                prev_txs={prev_hash: prev},
-            )
 
 
 def test_sign_tx_rejects_tampered_prev_tx(session: Session):
@@ -966,8 +937,7 @@ def test_sign_tx_signs_when_no_dep_contradicts_the_network(
             parse_path("m/44h/309h/0h/0/0"),
             **_network_binding_case(network, dep_tx_hash),
         )
-    assert resp.serialized.signature is not None
-    assert len(resp.serialized.signature) == 65
+    assert_signature_covers_sighash(resp)
 
 
 def test_sign_tx_invalid_input_tx_hash_length(session: Session):
@@ -1150,6 +1120,26 @@ def _expect_sign_failure(session, match, inputs, outputs, prev_txs, **kwargs):
                 prev_txs=prev_txs,
                 **kwargs,
             )
+
+
+def test_sign_tx_rejects_duplicate_input_outpoint(session: Session):
+    # Consensus refuses it; the device must not credit the cell twice.
+    prev, prev_hash = prevtx.synth_prev_tx([10_000_000_000])
+    inputs = [
+        ckb.create_cell_input(tx_hash=prev_hash, index=0),
+        ckb.create_cell_input(tx_hash=prev_hash, index=0),
+    ]
+    outputs = [
+        ckb.create_cell_output(
+            capacity=19_000_000_000,
+            lock_code_hash=prevtx.LOCK_CODE_HASH,
+            lock_hash_type=1,
+            lock_args="ab" * 20,
+        )
+    ]
+    _expect_sign_failure(
+        session, "Duplicate input outpoint", inputs, outputs, {prev_hash: prev}
+    )
 
 
 def test_sign_tx_rejects_duplicate_sign_group_indices(session: Session):

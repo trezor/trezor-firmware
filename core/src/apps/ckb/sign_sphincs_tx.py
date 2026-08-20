@@ -272,11 +272,12 @@ async def sign_sphincs_tx(msg: "CKBSphincsPlusSignTx") -> "CKBTxRequest":
 
     # Derive the signer's public key and SPHINCS+ lock script up front so we can
     # detect change outputs and locate the signing group among the inputs. The
-    # seed stays in memory until the final signing step; the try/finally wipes
-    # it on every exit path.
+    # seed is wiped right after and read again only for the final signing step;
+    # the try/finally wipes it on every exit path.
     seed = _require_sphincs_mnemonic(variant)
     try:
         public_key = sphincsplus.derive_public_key(seed, account_index, variant)
+        _wipe(seed)
         sender_lock_args = _compute_lock_args(public_key, variant)
         if network == "Mainnet":
             sender_code_hash = _CODE_HASH_MAINNET
@@ -381,14 +382,18 @@ async def sign_sphincs_tx(msg: "CKBSphincsPlusSignTx") -> "CKBTxRequest":
         header_cache: dict[int, tuple[int, int]] = {}
         input_cells: list[tuple[bytes, bytes]] = []
         group_indices: list[int] = []
+        seen_outpoints: set[tuple[bytes, int]] = set()
         total_in = 0
         for i, inp in enumerate(inputs):
             prev_hash = bytes(inp.previous_output_tx_hash)
+            index = inp.previous_output_index
+            if (prev_hash, index) in seen_outpoints:
+                raise DataError("Duplicate input outpoint")
+            seen_outpoints.add((prev_hash, index))
             prev_outputs = prev_cache.get(prev_hash)
             if prev_outputs is None:
                 prev_outputs = await _stream_and_verify_prev_tx(prev_hash)
                 prev_cache[prev_hash] = prev_outputs
-            index = inp.previous_output_index
             if index >= len(prev_outputs):
                 raise DataError("Input previous_output_index out of range")
             spent = prev_outputs[index]
@@ -480,6 +485,7 @@ async def sign_sphincs_tx(msg: "CKBSphincsPlusSignTx") -> "CKBTxRequest":
         # otherwise matches FIPS 205, so this prefix turns it into a FIPS 205
         # SLH-DSA signature.
         fips205_message = b"\x00\x00" + sighash
+        seed = _require_sphincs_mnemonic(variant)
         signed_pk, raw_signature = sphincsplus.derive_and_sign(
             seed, account_index, variant, fips205_message
         )

@@ -37,6 +37,20 @@ SHANNONS_PER_BYTE = 100000000
 DAO_TYPE_CODE_HASH = b"\x82\xd7\x6d\x1b\x75\xfe\x2f\xd9\xa2\x7d\xfb\xaa\x65\xa0\x39\x22\x1a\x38\x0d\x76\xc9\x26\xf3\x78\xd3\xf8\x1c\xf3\xe7\xe1\x3f\x2e"
 DAO_TYPE_HASH_TYPE = 1  # "type"
 
+# Genesis txs of each network (system script code cells and their dep groups).
+# CKB signatures carry no chain id; a cell_dep on one of these outpoints is what
+# pins the chain a signed transaction can be valid on.
+_GENESIS_TX_HASHES = {
+    "Mainnet": (
+        b"\xe2\xfb\x19\x98\x10\xd4\x9a\x4d\x8b\xee\xc5\x67\x18\xba\x25\x93\xb6\x65\xdb\x9d\x52\x29\x9a\x0f\x9e\x6e\x75\x41\x6d\x73\xff\x5c",
+        b"\x71\xa7\xba\x8f\xc9\x63\x49\xfe\xa0\xed\x3a\x5c\x47\x99\x2e\x3b\x40\x84\xb0\x31\xa4\x22\x64\xa0\x18\xe0\x07\x2e\x81\x72\xe4\x6c",
+    ),
+    "Testnet": (
+        b"\x8f\x8c\x79\xeb\x66\x71\x70\x96\x33\xfe\x6a\x46\xde\x93\xc0\xfe\xdc\x9c\x1b\x8a\x65\x27\xa1\x8d\x39\x83\x87\x95\x42\x63\x5c\x9f",
+        b"\xf8\xde\x3b\xb4\x7d\x05\x5c\xdf\x46\x0d\x93\xa2\xa6\xe1\xb0\x5f\x74\x32\xf9\x77\x7c\x8c\x47\x4a\xbf\x4e\xec\x1d\x4a\xee\x5d\x37",
+    ),
+}
+
 # Bounds on host-declared counts, shared with the SPHINCS+ path; they guard the
 # streaming loops against DoS. Previous transactions are arbitrary on-chain data
 # (a batch payout can carry hundreds of outputs), so those are bounded looser.
@@ -589,10 +603,13 @@ async def _dao_withdraw_value(
     withdraw_number, ar_withdraw = await _verify_header(
         inp.dao_withdraw_header_index, header_deps, header_cache
     )
-    # Only rejects the nonsensical case; a host can still pick a later header
-    # to understate the compensation (and the displayed fee).
     if withdraw_number <= deposit_number:
         raise DataError("DAO withdraw header must be after the deposit header")
+
+    for index in range(len(header_deps)):
+        number, rate = await _verify_header(index, header_deps, header_cache)
+        if number > deposit_number and rate > ar_withdraw:
+            ar_withdraw = rate
 
     cell_data = spent.data
     if cell_data is None or len(cell_data) < 8:

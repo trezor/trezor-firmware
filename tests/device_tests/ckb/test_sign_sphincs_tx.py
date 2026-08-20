@@ -662,6 +662,26 @@ def test_sign_sphincs_tx_rejects_foreign_inputs(test_ctx: TrezorTestContext):
     )
 
 
+def test_sign_sphincs_tx_rejects_duplicate_input_outpoint(test_ctx: TrezorTestContext):
+    # Consensus refuses it; the device must not credit the cell twice.
+    session = _load_sphincs_session(test_ctx)
+    lock_args, _ = _sphincs_lock(session)
+
+    spent = _sphincs_cell(lock_args, 1000 * SHANNON)
+    prev_hash = prevtx.raw_tx_hash([], [spent], [b""], [])
+    _expect_sign_failure(
+        session,
+        "Duplicate input outpoint",
+        inputs=[
+            ckb.create_cell_input(tx_hash=prev_hash, index=0),
+            ckb.create_cell_input(tx_hash=prev_hash, index=0),
+        ],
+        outputs=[_external_output(1900 * SHANNON)],
+        prev_txs={prev_hash: ckb.create_prev_tx(outputs=[spent])},
+        sign_group_input_indices=[0, 1],
+    )
+
+
 def test_sign_sphincs_tx_rejects_wrong_sign_group(test_ctx: TrezorTestContext):
     # The claimed group (input 0) does not match where the signer's lock really
     # is (input 1); the host's witness layout was built for the wrong index.

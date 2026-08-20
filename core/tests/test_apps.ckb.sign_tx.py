@@ -12,6 +12,7 @@ if _CKB:
     from apps.ckb.sign_tx import (
         _blake2b_hash,
         _build_witness_args,
+        _check_network_binding,
         _compute_raw_tx_hash,
         _compute_sighash_all,
         _is_dao_type_script,
@@ -213,6 +214,52 @@ class TestCkbSignGroup(unittest.TestCase):
             _validate_sign_group([0, 5], 2, 2)  # index >= inputs_count
         with self.assertRaises(DataError):
             _validate_sign_group([1], 2, 1)  # signing witness absent
+
+
+@unittest.skipUnless(_CKB, "CKB is T3W1 only")
+class TestCkbNetworkBinding(unittest.TestCase):
+    """A CKB signature has no chain id; only genesis cell_deps can pin the
+    network the user was told about."""
+
+    MAINNET_DEP_GROUP = unhexlify(
+        "71a7ba8fc96349fea0ed3a5c47992e3b4084b031a42264a018e0072e8172e46c"
+    )
+    MAINNET_GENESIS = unhexlify(
+        "e2fb199810d49a4d8beec56718ba2593b665db9d52299a0f9e6e75416d73ff5c"
+    )
+    TESTNET_DEP_GROUP = unhexlify(
+        "f8de3bb47d055cdf460d93a2a6e1b05f7432f9777c8c474abf4eec1d4aee5d37"
+    )
+    TESTNET_GENESIS = unhexlify(
+        "8f8c79eb6671709633fe6a46de93c0fedc9c1b8a6527a18d3983879542635c9f"
+    )
+
+    def _dep(self, tx_hash, index=0, dep_type=1):
+        return CKBCellDep(tx_hash=tx_hash, index=index, dep_type=dep_type)
+
+    def test_a_matching_or_absent_genesis_dep_is_accepted(self):
+        # No positive proof required: only a contradicting dep is rejected.
+        _check_network_binding("Mainnet", [])
+        _check_network_binding("Mainnet", [self._dep(b"\x44" * 32)])
+        _check_network_binding("Mainnet", [self._dep(self.MAINNET_DEP_GROUP)])
+        _check_network_binding("Mainnet", [self._dep(self.MAINNET_GENESIS, 2, 0)])
+        _check_network_binding("Testnet", [])
+        _check_network_binding("Testnet", [self._dep(self.TESTNET_DEP_GROUP)])
+        _check_network_binding("Testnet", [self._dep(self.TESTNET_GENESIS, 1, 0)])
+
+    def test_other_network_genesis_contradicts_the_claim(self):
+        for dep in (self.TESTNET_DEP_GROUP, self.TESTNET_GENESIS):
+            with self.assertRaises(DataError):
+                _check_network_binding("Mainnet", [self._dep(dep)])
+        for dep in (self.MAINNET_DEP_GROUP, self.MAINNET_GENESIS):
+            with self.assertRaises(DataError):
+                _check_network_binding("Testnet", [self._dep(dep)])
+        # The contradicting dep is caught even alongside the matching one.
+        with self.assertRaises(DataError):
+            _check_network_binding(
+                "Testnet",
+                [self._dep(self.TESTNET_DEP_GROUP), self._dep(self.MAINNET_GENESIS)],
+            )
 
 
 @unittest.skipUnless(_CKB, "CKB is T3W1 only")
