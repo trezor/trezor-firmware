@@ -291,6 +291,32 @@ def _flags_off(record: bytes) -> int:
     return off
 
 
+def record_commit(record: bytes) -> bytes:
+    """A fingerprint of what a record MEANS, with its PENDING/OFFERED flags normalised out.
+
+    This is what lets an offer claim name the exact record GENERATION it was filed for. Slots are
+    reused and a queued value can be replaced in place (`queue_set_entry`), so a claim carrying
+    only a slot number settles whatever happens to occupy that slot later: offer A, replace it with
+    B, watch A land, and B -- which never landed -- is cleared as though it had. That is silent
+    local data loss, and comparing this hash is what refuses it.
+
+    THE FLAGS ARE EXCLUDED BECAUSE THEY MOVE. A record is marked OFFERED after its claim is filed
+    and loses PENDING when the claim settles, so including them would make a claim stop matching
+    the very record it describes. Everything else is included, and a record's NAME already commits
+    to the wallet, the app, the identifier and the key type -- in the full form as an identity
+    block, in the compact form as a hash over exactly those -- so a change of value, of identity or
+    of form all produce a different commitment.
+    """
+    from trezor.crypto.hashlib import sha256
+
+    off = _flags_off(record)
+    h = sha256(b"WARD RECORD v1")
+    h.update(record[:off])
+    h.update(b"\x00")
+    h.update(record[off + 1 :])
+    return h.digest()
+
+
 async def _set_flags(entry: StoredEntry, pending: bool, offered: bool) -> None:
     """Rewrite one record's flags, in place, in whatever form it is stored.
 
