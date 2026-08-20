@@ -288,8 +288,8 @@ USE_APP_LOADING: bool
 """Whether the firmware supports loading 3rd-party applications."""
 USE_TELEMETRY: bool
 """Whether a telemetry is supported."""
-USE_N4W1: bool
-"""Whether N4W1 is supported."""
+USE_N1W1: bool
+"""Whether N1W1 is supported."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str

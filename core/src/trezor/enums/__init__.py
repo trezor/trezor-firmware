@@ -181,7 +181,7 @@ if TYPE_CHECKING:
 
     class BackupMethod(IntEnum):
         Display = 0
-        N4W1 = 1
+        N1W1 = 1
 
     class SafetyCheckLevel(IntEnum):
         Strict = 0
@@ -239,7 +239,7 @@ if TYPE_CHECKING:
         BLE = 22
         NFC = 23
         Tron = 24
-        N4W1 = 25
+        N1W1 = 25
         TouchWakeup = 26
 
     class SdProtectOperationType(IntEnum):
@@ -581,10 +581,10 @@ if TYPE_CHECKING:
         DebugLinkGetPairingInfo = 9011
         DebugLinkPairingInfo = 9012
         DebugLinkSetLogFilter = 9013
-        DebugLinkN4W1Connected = 9014
-        DebugLinkN4W1Write = 9015
-        DebugLinkN4W1Read = 9016
-        DebugLinkN4W1Response = 9017
+        DebugLinkN1W1Connected = 9014
+        DebugLinkN1W1Write = 9015
+        DebugLinkN1W1Read = 9016
+        DebugLinkN1W1Response = 9017
         DebugLinkSetBatteryState = 9018
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451

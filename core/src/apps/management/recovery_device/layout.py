@@ -278,7 +278,7 @@ class _DisplayHandler:
             return None
 
 
-if not utils.USE_N4W1:
+if not utils.USE_N1W1:
 
     async def choose_handler(method: BackupMethod | None) -> type[RecoveryHandler]:
 
@@ -305,8 +305,8 @@ else:
 
             method = await choose_method(TR.recovery__title, TR.backup__type_have)
 
-        if method is BackupMethod.N4W1:
-            return _N4W1Handler
+        if method is BackupMethod.N1W1:
+            return _N1W1Handler
 
         if method not in (None, BackupMethod.Display):
             from trezor import log
@@ -321,30 +321,30 @@ else:
             self.msg = msg
 
     async def _read_share() -> str:
-        from apps.debug import n4w1_mock
+        from apps.debug import n1w1_mock
 
-        with n4w1_mock.ctx as ctx:
+        with n1w1_mock.ctx as ctx:
             # returns `None` on cancellation or retriable error.
             await ctx.confirm_connect(
                 title=TR.recovery__title,
-                description=TR.n4w1__hold_next,
-                button=TR.n4w1__footer_next,
+                description=TR.n1w1__hold_next,
+                button=TR.n1w1__footer_next,
                 br_name="backup_read",
             )
-            # continue N4W1 communication (the tag is connected)
+            # continue N1W1 communication (the tag is connected)
 
-            # TODO(N4W1): animate during read?
+            # TODO(N1W1): animate during read?
             if (blob := await ctx.read(key="mnemonic")) is None:
-                raise RetryRead(TR.n4w1__err_empty)
+                raise RetryRead(TR.n1w1__err_empty)
 
-            # TODO(N4W1): use protobuf?
+            # TODO(N1W1): use protobuf?
             blob = bytes(blob)
             try:
                 return blob.decode()
             except ValueError:
-                raise RetryRead(TR.n4w1__err_damaged)
+                raise RetryRead(TR.n1w1__err_damaged)
 
-    class _N4W1Handler:
+    class _N1W1Handler:
         def __init__(
             self,
             recovery_type: RecoveryType,
@@ -383,7 +383,7 @@ else:
                         danger=True,
                     ) as layout:
                         await raise_if_not_confirmed(layout, br_name="recovery_retry")
-                    # wait for a new N4W1 tag
+                    # wait for a new N1W1 tag
                     continue
 
             return await self.check_words(share)
@@ -397,7 +397,7 @@ else:
             backup_type = self.slip39_state and self.slip39_state[1]
             share_words = share.split(" ")
 
-            progress_obj = progress(description=TR.n4w1__reading)
+            progress_obj = progress(description=TR.n1w1__reading)
             progress_obj.start()
 
             try:

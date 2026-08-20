@@ -67,8 +67,8 @@ endif
 ifeq ($(BOOTLOADER_DEVEL),1)
 XTASK_BUILD_OPTS += --bootloader-devel
 endif
-ifeq ($(N4W1),1)
-XTASK_BUILD_OPTS += --n4w1
+ifeq ($(N1W1),1)
+XTASK_BUILD_OPTS += --n1w1
 endif
 ifeq ($(PRODUCTION),1)
 XTASK_BUILD_OPTS += --production

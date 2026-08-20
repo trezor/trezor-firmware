@@ -8,7 +8,7 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	DebugLinkGetPairingInfo DebugLinkPairingInfo DebugLinkGetGcInfo DebugLinkGcInfoItem \
 	DebugLinkGcInfo DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout \
 	DebugLinkLayout DebugLinkResetDebugEvents  DebugLinkSetBatteryState \
-	DebugLinkN4W1Connected DebugLinkN4W1Read DebugLinkN4W1Write DebugLinkN4W1Response \
+	DebugLinkN1W1Connected DebugLinkN1W1Read DebugLinkN1W1Write DebugLinkN1W1Response \
 	DebugLinkOptigaSetSecMax DebugLinkSetLogFilter \
 	GetNonce TxAckInput TxAckOutput TxAckPrev PaymentRequest \
 	EthereumABITupleInfo EthereumABIValueInfo EthereumERC7730FieldInfo EthereumDisplayFormatInfo EthereumERC7730Path \

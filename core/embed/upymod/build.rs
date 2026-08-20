@@ -68,8 +68,8 @@ fn main() -> Result<()> {
             lib.add_define("MICROPY_TREZOR_MEMPERF", Some("1"));
         }
 
-        if cfg!(feature = "n4w1") {
-            lib.add_define("USE_N4W1", Some("1"));
+        if cfg!(feature = "n1w1") {
+            lib.add_define("USE_N1W1", Some("1"));
         }
 
         lib.add_define(
@@ -958,7 +958,7 @@ impl<'a> MpyBuilder<'a> {
         let emulator = py_bool(cfg!(feature = "emulator"));
         let haptic = py_bool(cfg!(feature = "haptic"));
         let mcu_attestation = py_bool(cfg!(feature = "mcu_attestation"));
-        let n4w1 = py_bool(cfg!(feature = "n4w1"));
+        let n1w1 = py_bool(cfg!(feature = "n1w1"));
         let optiga = py_bool(cfg!(feature = "optiga"));
         let power_manager = py_bool(cfg!(feature = "power_manager"));
         let rgb_led = py_bool(cfg!(feature = "rgb_led"));
@@ -981,7 +981,7 @@ impl<'a> MpyBuilder<'a> {
             format!(r"s/utils\.USE_BLE/{ble}/g"),
             format!(r"s/utils\.USE_BUTTON/{button}/g"),
             format!(r"s/utils\.USE_HAPTIC/{haptic}/g"),
-            format!(r"s/utils\.USE_N4W1/{n4w1}/g"),
+            format!(r"s/utils\.USE_N1W1/{n1w1}/g"),
             format!(r"s/utils\.USE_MCU_ATTESTATION/{mcu_attestation}/g"),
             format!(r"s/utils\.USE_OPTIGA/{optiga}/g"),
             format!(r"s/utils\.USE_POWER_MANAGER/{power_manager}/g"),
@@ -1144,7 +1144,7 @@ impl<'a> MpyBuilder<'a> {
             files.add(src, "apps/debug/*.py")?;
 
             if current_model != "T3W1" {
-                files.remove(src, "apps/debug/n4w1_mock.py");
+                files.remove(src, "apps/debug/n1w1_mock.py");
             }
         }
 
