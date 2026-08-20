@@ -102,6 +102,7 @@ uint32_t last_touch_sample_time = 0;
 /// USBIF_WIRE: int  # interface id of the USB wire interface
 /// USBIF_DEBUG: int  # interface id of the USB debug interface
 /// USBIF_WEBAUTHN: int  # interface id of the USB WebAuthn
+/// USBIF_WARD: int  # interface id of the USB WARD service interface
 
 static const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
@@ -149,6 +150,7 @@ static const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USBIF_WIRE), MP_ROM_INT(SYSHANDLE_USB_WIRE)},
     {MP_ROM_QSTR(MP_QSTR_USBIF_DEBUG), MP_ROM_INT(SYSHANDLE_USB_DEBUG)},
     {MP_ROM_QSTR(MP_QSTR_USBIF_WEBAUTHN), MP_ROM_INT(SYSHANDLE_USB_WEBAUTHN)},
+    {MP_ROM_QSTR(MP_QSTR_USBIF_WARD), MP_ROM_INT(SYSHANDLE_USB_WARD)},
 
     {MP_ROM_QSTR(MP_QSTR_poll), MP_ROM_PTR(&mod_trezorio_poll_obj)},
     {MP_ROM_QSTR(MP_QSTR_POLL_READ), MP_ROM_INT(POLL_READ)},
