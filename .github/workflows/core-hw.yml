@@ -94,15 +94,27 @@ jobs:
           $NIX_RUN uhubctl || true
           $UV_RUN core/tools/check-usb-permissions.py |& tee check-usb-permissions.log
       - run: $UV_RUN make -C core build_firmware
+      # Started before bootstrap, so that the console output of the very first
+      # boot after flashing is captured. Firmware that dies during startup
+      # prints its RSOD here and nowhere else.
+      - name: Start capturing the device log
+        run: |
+          $NIX_RUN bash -c \
+            "setsid timeout 360m ./tools/read-device-log.sh /dev/ttyTREZOR > trezor.log 2>&1 < /dev/null &"
       - run: $UV_RUN ci/hardware_tests/bootstrap.py "$TREZOR_MODEL" core/build/artifacts/latest/firmware.bin
       - run: |
           $UV_RUN trezorctl list
           $UV_RUN trezorctl get-features
         if: matrix.model != 'T3W1'  # gets stuck on models with THP
-      - run: |
-          $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
-          $UV_RUN pytest -v --verbose-log-file pytest.log tests/device_tests -m 'not sd_card' -k 'not test_authenticate_device and not evolu and not test_telemetry' --durations=50 --session-timeout 19800
-      - run: tail -n50 trezor.log || true
+      - run: $UV_RUN pytest -v --verbose-log-file pytest.log tests/device_tests -m 'not sd_card' -k 'not test_authenticate_device and not evolu and not test_telemetry' --durations=50 --session-timeout 19800
+      # The capture is detached from the step's process group, so it has to be
+      # stopped explicitly - a leaked reader would hold the tty for every later
+      # job on this self-hosted runner. The brackets keep the pattern from
+      # matching the shell that runs `pkill`.
+      - name: Stop capturing the device log
+        if: always()
+        run: pkill -f "[r]ead-device-log.sh" || true
+      - run: tail -n100 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
@@ -145,13 +157,26 @@ jobs:
           nix-dev-shell: everything
       - run: $NIX_RUN uhubctl
       - run: $UV_RUN make -C core build_firmware
+      # Started before bootstrap, so that the console output of the very first
+      # boot after flashing is captured. Firmware that dies during startup
+      # prints its RSOD here and nowhere else.
+      - name: Start capturing the device log
+        run: |
+          $NIX_RUN bash -c \
+            "setsid timeout 360m ./tools/read-device-log.sh /dev/ttyTREZOR > trezor.log 2>&1 < /dev/null &"
       - run: $UV_RUN ci/hardware_tests/bootstrap.py "$TREZOR_MODEL" core/build/artifacts/latest/firmware.bin
       - run: $UV_RUN trezorctl list
       - run: $UV_RUN trezorctl get-features
       - run: |
-          $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
           $NIX_RUN ./core/tests/run_tests_device_emu_monero.sh --trezor-path webusb:
-      - run: tail -n50 trezor.log || true
+      # The capture is detached from the step's process group, so it has to be
+      # stopped explicitly - a leaked reader would hold the tty for every later
+      # job on this self-hosted runner. The brackets keep the pattern from
+      # matching the shell that runs `pkill`.
+      - name: Stop capturing the device log
+        if: always()
+        run: pkill -f "[r]ead-device-log.sh" || true
+      - run: tail -n100 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
