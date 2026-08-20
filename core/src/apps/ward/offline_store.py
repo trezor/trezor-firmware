@@ -218,6 +218,36 @@ async def get(
         return CORRUPT, None
 
 
+def ensure_storable(
+    key_type: str, app_id: str, identifier: bytes, value: bytes
+) -> None:
+    """Raise unless this entry would fit, WITHOUT writing anything.
+
+    SIZE IS REFUSED BEFORE THE PROMPT, which is why this is separate from `put`. Asking the user to
+    confirm something and then failing to store it wastes a confirmation and teaches them the screen
+    means nothing -- the same reason `pin_cached_entry` checks up front and the same reason a restore
+    verifies its MAC before showing anything.
+
+    `put` checks both caps again. That is not redundancy for its own sake: `put` is the only writer,
+    so its checks are what actually hold the format's promises, and this one exists so that a caller
+    with a screen to show can find out early.
+    """
+    from storage import ward as ward_store
+    from trezor.wire import DataError
+
+    if len(value) > ward_store.MAX_VALUE_LEN:
+        raise DataError("WARD: value too large to keep offline")
+
+    # The identity framing counts too: a long app_id or identifier can push a legal value past the
+    # record cap. Measured rather than estimated -- the encoder is the only authority on a record's
+    # size, and a wallet_id of the right width is all it needs to measure one.
+    record = encode_record(
+        bytes(16), key_type, app_id, identifier, value, False, False
+    )
+    if len(record) > ward_store.MAX_RECORD_LEN:
+        raise DataError("WARD: entry too large to keep offline")
+
+
 async def put(
     key_type: str,
     app_id: str,
