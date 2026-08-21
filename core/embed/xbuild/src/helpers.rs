@@ -209,25 +209,49 @@ pub fn path_from_env(name: &str) -> Result<PathBuf> {
         .with_context(|| format!("Environment variable `{name}` is required but not set"))
 }
 
+/// Returns the Cargo profile directory that holds final artifacts
+/// (`secmon.bin`, map files, …) for the current build.
+///
+/// `OUT_DIR` is always nested under this directory, but the nesting depth
+/// depends on Cargo's build-dir layout:
+///
+/// * legacy: `{profile}/build/<pkg>-<hash>/out`
+/// * layout v2: `{profile}/build/<pkg>/<hash>/out`
+///
+/// Walking to the nearest ancestor named `build` and taking its parent works
+/// for both. Hard-coding `OUT_DIR/../../..` does not.
+pub fn cargo_profile_dir() -> Result<PathBuf> {
+    cargo_profile_dir_from_out_dir(&path_from_env("OUT_DIR")?)
+}
+
 /// Returns Cargo's configured target directory for the current build.
 pub fn cargo_target_dir() -> Result<PathBuf> {
-    let out_dir = path_from_env("OUT_DIR")?;
     let target = env::var("TARGET").wrap_err("Failed to get TARGET")?;
+    cargo_target_dir_from_out_dir(&path_from_env("OUT_DIR")?, &target)
+}
 
-    let build_dir = out_dir
+fn cargo_build_dir_from_out_dir(out_dir: &Path) -> Result<&Path> {
+    out_dir
         .ancestors()
         .find(|path| path.file_name() == Some(OsStr::new("build")))
-        .ok_or_else(|| eyre!("Failed to locate Cargo build dir from OUT_DIR"))?;
+        .ok_or_else(|| eyre!("Failed to locate Cargo build dir from OUT_DIR"))
+}
 
-    let profile_dir = build_dir
+fn cargo_profile_dir_from_out_dir(out_dir: &Path) -> Result<PathBuf> {
+    cargo_build_dir_from_out_dir(out_dir)?
         .parent()
-        .ok_or_else(|| eyre!("Failed to locate Cargo profile dir from OUT_DIR"))?;
+        .map(Path::to_path_buf)
+        .ok_or_else(|| eyre!("Failed to locate Cargo profile dir from OUT_DIR"))
+}
+
+fn cargo_target_dir_from_out_dir(out_dir: &Path, target: &str) -> Result<PathBuf> {
+    let profile_dir = cargo_profile_dir_from_out_dir(out_dir)?;
 
     let parent = profile_dir
         .parent()
         .ok_or_else(|| eyre!("Failed to locate Cargo target dir from OUT_DIR"))?;
 
-    let target_dir = if parent.file_name() == Some(OsStr::new(&target)) {
+    let target_dir = if parent.file_name() == Some(OsStr::new(target)) {
         parent
             .parent()
             .ok_or_else(|| eyre!("Failed to locate Cargo target dir from target triple dir"))?
@@ -279,5 +303,68 @@ where
 {
     for file in files {
         cargo_out::rerun_if_changed(file);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const TARGET: &str = "thumbv8m.main-none-eabihf";
+
+    fn assert_dirs(out_dir: &str, profile: &str, target_dir: &str) {
+        let out_dir = Path::new(out_dir);
+        assert_eq!(
+            cargo_profile_dir_from_out_dir(out_dir).unwrap(),
+            PathBuf::from(profile)
+        );
+        assert_eq!(
+            cargo_target_dir_from_out_dir(out_dir, TARGET).unwrap(),
+            PathBuf::from(target_dir)
+        );
+    }
+
+    #[test]
+    fn locates_dirs_in_legacy_cross_layout() {
+        assert_dirs(
+            "/repo/core/build-xtask/thumbv8m.main-none-eabihf/release/build/kernel-e281cbafac5dc040/out",
+            "/repo/core/build-xtask/thumbv8m.main-none-eabihf/release",
+            "/repo/core/build-xtask",
+        );
+    }
+
+    #[test]
+    fn locates_dirs_in_layout_v2_cross() {
+        assert_dirs(
+            "/repo/core/build-xtask/thumbv8m.main-none-eabihf/release/build/kernel/e281cbafac5dc040/out",
+            "/repo/core/build-xtask/thumbv8m.main-none-eabihf/release",
+            "/repo/core/build-xtask",
+        );
+    }
+
+    #[test]
+    fn locates_dirs_in_legacy_host_layout() {
+        let out_dir = Path::new("/repo/core/build-xtask/debug/build/xbuild-abcdef0123456789/out");
+        assert_eq!(
+            cargo_profile_dir_from_out_dir(out_dir).unwrap(),
+            PathBuf::from("/repo/core/build-xtask/debug")
+        );
+        assert_eq!(
+            cargo_target_dir_from_out_dir(out_dir, "aarch64-apple-darwin").unwrap(),
+            PathBuf::from("/repo/core/build-xtask")
+        );
+    }
+
+    #[test]
+    fn locates_dirs_in_layout_v2_host() {
+        let out_dir = Path::new("/repo/core/build-xtask/debug/build/xbuild/abcdef0123456789/out");
+        assert_eq!(
+            cargo_profile_dir_from_out_dir(out_dir).unwrap(),
+            PathBuf::from("/repo/core/build-xtask/debug")
+        );
+        assert_eq!(
+            cargo_target_dir_from_out_dir(out_dir, "aarch64-apple-darwin").unwrap(),
+            PathBuf::from("/repo/core/build-xtask")
+        );
     }
 }

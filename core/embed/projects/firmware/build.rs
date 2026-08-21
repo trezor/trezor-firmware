@@ -1,6 +1,3 @@
-use std::env;
-use std::path::PathBuf;
-
 use xbuild::{CLibrary, Result, bail_unsupported};
 
 fn main() -> Result<()> {
@@ -45,8 +42,7 @@ fn main() -> Result<()> {
 }
 
 fn embed_kernel_binary(lib: &mut CLibrary) -> Result<()> {
-    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let kernel = out_dir.join("../../../kernel.bin");
+    let kernel = xbuild::cargo_profile_dir()?.join("kernel.bin");
     lib.embed_binary(&kernel, "kernel")
 }
 
