@@ -94,6 +94,7 @@ def _show(
 
 
 @pytest.mark.models("core")
+@pytest.mark.ward_transport("connect")
 def test_display_address_shows_the_label_wards_holds(session: Session):
     """The motivating case: an address the wallet has a name for is shown by that name."""
     store = WardTrie()

@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
+
 if TYPE_CHECKING:
     from trezor.ui.layouts import StrPropertyType
 
@@ -97,16 +99,29 @@ def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, byt
     return app_id, identifier
 
 
-async def pull_leaf_from_host(entry_key: bytes):
-    """Ask the host for its leaf at this path and return the raw ack. Verifies NOTHING.
+async def pull_leaf_from_backend(entry_key: bytes):
+    """Ask whoever owns the replica for its leaf at this path, and return the raw ack.
 
-    Split out so the verification below can be reached without a host round-trip, and so
-    callers that need the ack's other fields do not have to re-issue the call. The request
+    Verifies NOTHING. Split out so the verification below can be reached without a round-trip,
+    and so callers that need the ack's other fields do not have to re-issue the call. The request
     names ONLY the opaque path -- see `keys.entry_key_for`.
 
-    Mirrors apps/webauthn/list_resident_credentials.py, which uses the same primitive to ask
-    the host for data mid-workflow.
+    "BACKEND", NOT "HOST", because which party that is depends on how this firmware was built. A
+    connect build asks the wallet host over the same channel it is answering on, which is why the
+    request only exists inside a workflow (the pattern
+    `apps/webauthn/list_resident_credentials.py` uses). A service build asks a daemon on a channel
+    of its own, and asks a HEAD-AWARE question, which is a strictly better one: the daemon can say
+    "you are out of sync" instead of serving a proof that cannot verify.
+
+    THE ONE PLACE THE TRANSPORTS DIVERGE for reads. Everything above and below -- the keyed path,
+    the root check, the AEAD open -- is identical, and deliberately so: only the question's
+    addressee changes, never what makes the answer trustworthy.
     """
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        from .service import fetch
+
+        return await fetch(entry_key)
+
     from trezor.messages import WardEntryAck, WardEntryRequest
     from trezor.wire import context
 
@@ -136,7 +151,7 @@ async def decode_leaf(entry_key: bytes, key_type: str, val_part) -> bytes | None
 async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     """PULL the host's leaf for an already-derived keyed path, verified.
 
-    The three steps -- ask, check against the trusted root, open -- are `pull_leaf_from_host`,
+    The three steps -- ask, check against the trusted root, open -- are `pull_leaf_from_backend`,
     `verify_leaf_against_root` and `decode_leaf`, composed here in the order that matters. This
     is the ONLINE path; a device with no synced host reads its own store instead, which is a
     different function in a different module (`apps.ward.offline_store`) precisely so that
@@ -161,7 +176,7 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     """
     from .leaf import is_delete, read_leaf_content, read_leaf_identity
 
-    ack = await pull_leaf_from_host(entry_key)
+    ack = await pull_leaf_from_backend(entry_key)
 
     val_part = read_leaf_content(ack.content)
     wire_key_type, id_part = read_leaf_identity(ack.identity)

@@ -20,6 +20,7 @@ import pytest
 
 from trezorlib import messages
 from trezorlib.debuglink import TrezorTestContext as Client
+from trezorlib.transport import Timeout
 
 from ...ward_service import MockWardService
 
@@ -58,21 +59,6 @@ def test_an_unsupported_protocol_version_is_refused_by_name(client: Client) -> N
         assert isinstance(resp, messages.Failure)
         # ...and nothing was bound, so a correct daemon can still take the role
         assert isinstance(wardd.open_service(), messages.WardServiceOpenAck)
-
-
-def test_a_repeat_open_is_refused_while_the_binding_is_live(client: Client) -> None:
-    """A daemon cannot re-announce itself on a channel that is already the service.
-
-    It is the only way a LIVE binding can actually be collided with, and worth stating: two
-    channels of the same daemon cannot collide, because THP replaces a channel that arrives with
-    an already-known host static key -- so the older one is genuinely gone rather than merely
-    unused. Refusing here keeps a daemon from resetting the service's state mid-conversation.
-    """
-    with MockWardService(client) as wardd:
-        assert isinstance(wardd.open_service(), messages.WardServiceOpenAck)
-        resp = wardd.open_service()
-        assert isinstance(resp, messages.Failure)
-        assert resp.message == "a WARD service is already bound"
 
 
 def test_the_pinned_daemon_rebinds_after_a_restart(client: Client) -> None:
@@ -126,15 +112,30 @@ def test_a_different_daemon_is_refused_once_pinned(client: Client) -> None:
         stranger.close()
 
 
-def test_a_bound_channel_accepts_nothing_host_initiated(client: Client) -> None:
-    """Not even `GetFeatures`, and deliberately not `Cancel` or `EndSession` either.
+def test_a_bound_channel_is_not_listening(client: Client) -> None:
+    """Not "refused" -- NOT EVEN ACKNOWLEDGED. The device stops reading the channel once the
+    conversation inverts, so a host-initiated message does not get a reply and does not get a
+    THP ack either: the ack is emitted as a side effect of the application reading, and nothing
+    is reading on the daemon's behalf.
 
-    After binding, the device is the sole initiator. This stream has no request ids, so the device
-    cannot distinguish an unsolicited host message from the reply it is waiting for -- which is why
-    the rule is about direction rather than about which messages are harmless.
+    That is stronger than a refusal and it is what makes the single-initiator rule structural. A
+    channel has one incoming mailbox: if the device kept a dispatcher parked on it, that dispatcher
+    and the workflow awaiting its own reply would race for the same message, and which one won
+    would depend on scheduling. Nothing reads the channel except the workflow that just wrote a
+    request, so the race cannot arise -- and the daemon finds out at once rather than waiting on a
+    reply that is never coming.
+
+    Deliberately includes `Cancel` and `EndSession`. Both are host-initiated, and letting either
+    back would recreate exactly the ambiguity above -- this stream has no request ids, so the
+    device cannot tell an unsolicited `Cancel` from the reply it is waiting for.
     """
     with MockWardService(client) as wardd:
         assert isinstance(wardd.open_service(), messages.WardServiceOpenAck)
+
+        assert wardd.channel is not None
+        # Without this the send retries with exponential backoff for a long time before giving
+        # up. What is being asserted is that it never succeeds, not how patient trezorlib is.
+        wardd.channel.BUSY_RETRIES = 0
 
         for msg in (
             messages.GetFeatures(),
@@ -142,10 +143,8 @@ def test_a_bound_channel_accepts_nothing_host_initiated(client: Client) -> None:
             messages.EndSession(),
             messages.WardServiceOpen(protocol_version=1),
         ):
-            resp = wardd.call(msg)
-            assert isinstance(
-                resp, messages.Failure
-            ), f"{msg.__class__.__name__} was accepted on a bound service channel"
+            with pytest.raises(Timeout):
+                wardd.send(msg)
 
 
 def test_an_unbound_channel_accepts_nothing_else_either(client: Client) -> None:

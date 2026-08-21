@@ -22,8 +22,16 @@ from typing import TYPE_CHECKING
 from trezor import utils
 
 if TYPE_CHECKING:
-    from trezor.messages import WardServiceOpen, WardServiceOpenAck
+    from trezor import protobuf
+    from trezor.messages import WardEntryAck, WardServiceOpen, WardServiceOpenAck
+    from trezor.protobuf import MessageType as LoadedMessageType
+    from trezor.wire.thp.channel import Channel
 
+
+# HOW LONG A REVERSE RPC MAY TAKE. A daemon that stops answering must not hang the wallet
+# workflow that is waiting on it: WARD reads fail closed, and a hang is the one failure mode that
+# does not. Generous, because the daemon may have to consult a database and build a proof.
+RPC_TIMEOUT_MS = const(30_000)
 
 # The service protocol this firmware speaks. Bumped when the message set changes shape, so a
 # daemon built against an older firmware is refused by name instead of misreading a field.
@@ -132,13 +140,19 @@ async def service(msg: WardServiceOpen) -> WardServiceOpenAck:
         # ownership migration, with a user decision in it, and belongs in its own path.
         raise wire.DataError("another daemon is bound as the WARD service")
 
-    # NEVER DISPLACE A LIVE SERVICE. A second open from the pinned daemon is either a duplicate or
-    # a daemon that lost track of its own state; both are safer refused than allowed to replace a
-    # binding some in-flight operation is holding.
+    # NEVER DISPLACE A LIVE SERVICE. The displaced binding is what some in-flight operation is
+    # holding, so replacing it would strand that operation on a channel nothing answers for.
     #
     # LIVE, not merely recorded. A daemon restart leaves a binding naming a channel that is gone,
     # and refusing on that would lock the service out until the device rebooted -- so a recorded
     # binding only counts while its channel is still open.
+    #
+    # NOT REACHABLE TODAY, and worth saying so rather than implying coverage. Two channels of one
+    # daemon cannot coexist: THP replaces a channel arriving with an already-known host static
+    # key, so the older one is closed. A channel with a different key fails the pin above. And a
+    # repeat open on the bound channel itself is never dispatched, because binding hands the
+    # channel to the device. Kept because all three of those are properties of other code, and a
+    # binding must not be displaced silently if any of them changes.
     bound = get_binding()
     if bound is not None:
         from trezorthp import channel_is_open
@@ -152,4 +166,120 @@ async def service(msg: WardServiceOpen) -> WardServiceOpenAck:
     )
     set_binding(ctx.iface.iface_num(), ctx.channel_id, ctx.session_id)
 
+    # THE CONVERSATION INVERTS HERE. From now on the device asks and the daemon answers, so the
+    # interface's dispatcher must stop reading this channel -- otherwise it and the workflow
+    # awaiting its own reply would race for the same incoming message.
+    channel.iface_ctx.release_dispatch()
+
     return WardServiceOpenAck()
+
+
+# --- talking to the service ---------------------------------------------------------------
+#
+# THE DEVICE ASKS AND THE DAEMON ANSWERS, and after binding that is the only direction. One
+# message stream with no request ids cannot carry two independent conversations: a reply and an
+# unrelated request are indistinguishable. Rather than add ids, the channel is inverted.
+#
+# WHAT ENFORCES IT IS STRUCTURAL, not a flag. Once bound, the interface's dispatcher releases the
+# channel (`InterfaceContext.release_dispatch`), so nothing is reading it except the workflow that
+# just wrote a request. An earlier design gated the receive boundary on an "RPC in flight" flag;
+# that would have had to be right about `expecting_message`, which `Channel.write` clears as its
+# first act, and about ACK piggybacking, which can deliver a valid fast response while
+# `expecting_ack` is still set. Having exactly one reader removes the question.
+#
+# An unsolicited message from the daemon therefore is not dispatched at all: it sits in the
+# channel until the next RPC reads it, fails the type check below, and fails that operation. That
+# is the fail-closed direction, and it costs the daemon its own conversation rather than the
+# device's integrity.
+
+
+def _service_channel() -> tuple[Channel, int]:
+    """The bound channel, reattached so it can be written to, and the session id to write on.
+
+    REATTACHING IS NOT OPTIONAL. The Rust channel outlives MicroPython session restarts but the
+    `Channel` object does not, and a channel that is not its interface's `active_channel` cannot
+    be written at all -- `Channel.write` pokes a write loop that drains only that one.
+    """
+    from trezor.wire import DataError, context
+
+    bound = get_binding()
+    if bound is None:
+        raise DataError("no WARD service is bound")
+    iface_num, channel_id, session_id = bound
+
+    # Reached from the WALLET workflow, so the context here is Suite's channel -- borrowed only
+    # for the `ThpContext` it hangs off, which is the one object that knows every interface.
+    thp_ctx = context.get_context().channel.iface_ctx.thp_ctx
+    return thp_ctx.attach_existing_channel(iface_num, channel_id), session_id
+
+
+async def _rpc(
+    request: protobuf.MessageType, *expected: type[LoadedMessageType]
+) -> "protobuf.MessageType":
+    """Ask the service one question and read its answer.
+
+    The answer must be one of `expected` and must arrive on the service's own session. Anything
+    else fails the operation rather than being interpreted: the daemon is the only party on this
+    channel, so a surprise here means the conversation has desynchronised, and continuing would
+    mean acting on a message meant for something else.
+    """
+    from trezor import loop
+    from trezor.wire import DataError
+    from trezor.wire.message_handler import wrap_protobuf_load
+
+    channel, session_id = _service_channel()
+
+    await channel.write(request, session_id)
+
+    # `Channel.read` has no deadline of its own, and the caller is a wallet workflow the user is
+    # waiting on. `loop.sleep` returns an int, `read` a tuple -- which is how the race is decided.
+    answer = await loop.race(channel.read(), loop.sleep(RPC_TIMEOUT_MS))
+    if not isinstance(answer, tuple):
+        raise DataError("the WARD service did not answer")
+
+    reply_session_id, message = answer
+    if reply_session_id != session_id:
+        raise DataError("WARD service answered on another session")
+
+    for expected_type in expected:
+        if message.type == expected_type.MESSAGE_WIRE_TYPE:
+            return wrap_protobuf_load(message.data, expected_type)
+
+    raise DataError("unexpected message from the WARD service")
+
+
+async def fetch(entry_key: bytes) -> "WardEntryAck":
+    """Ask the service for its leaf at this path. Verifies NOTHING -- the caller does that.
+
+    HEAD-AWARE, unlike the connect-mode request it replaces. The device says which head it holds,
+    so the service can answer `WardSyncRequired` instead of serving a proof that cannot verify
+    against it. Both fields are needed: several roots may share a counter across forks, so the
+    counter alone does not name a head.
+
+    `WardSyncRequired` needs no authentication. Lying about it only forces an authenticated sync,
+    which is a denial of service rather than a way to corrupt anything.
+    """
+    from trezor.messages import WardEntryAck, WardServiceFetch, WardSyncRequired
+    from trezor.wire import DataError
+
+    from .root import get_counter, get_root
+
+    answer = await _rpc(
+        WardServiceFetch(
+            entry_key=entry_key,
+            current_counter=await get_counter(),
+            current_root=await get_root(),
+        ),
+        WardEntryAck,
+        WardSyncRequired,
+    )
+
+    # COMPARED BY WIRE TYPE, not `isinstance`: message classes here are C-backed and are not
+    # valid second arguments to `isinstance`, which fails at runtime rather than at import.
+    if answer.MESSAGE_WIRE_TYPE == WardSyncRequired.MESSAGE_WIRE_TYPE:
+        # A SYNC BELONGS HERE and is not written yet: driving one needs the round, the attestation
+        # and the adoption path, which arrive with the service sync. Until then this is reported
+        # rather than repaired -- the read fails closed, which is the direction that is safe.
+        raise DataError("WARD service reports this device is out of sync")
+
+    return answer

@@ -48,6 +48,9 @@ if t.TYPE_CHECKING:
 # `core/embed/io/usb/usb_config.c`, which must agree.
 WARD_PORT_OFFSET = 7
 
+# Answered once per session by `serves_ward_over_a_service_channel`.
+_IS_SERVICE_BUILD: bool | None = None
+
 # `trezorlib.thp.client`'s application header: session id, message type.
 _HEADER = ">BH"
 _HEADER_LEN = struct.calcsize(_HEADER)
@@ -56,26 +59,54 @@ _HEADER_LEN = struct.calcsize(_HEADER)
 PROTOCOL_VERSION = 1
 
 
-def ward_transport(client: TrezorTestContext) -> UdpTransport:
-    """A transport for the WARD interface, or skip if this build has none.
+def _open_ward_transport(client: TrezorTestContext) -> UdpTransport | None:
+    """An open transport for the WARD interface, or None if this build has no such interface.
 
-    Skipped rather than failed because the interface is a BUILD OPTION: a firmware serves WARD
-    either over the ordinary connection or over its own channel, never both, so a connect build
-    legitimately has nothing listening here. Probed rather than asked, the device having no way to
-    report it.
+    PROBED, NOT ASKED. Which transport a firmware serves WARD over is a build option and the
+    device has no way to report it -- there is no feature flag for it and deliberately so, since
+    a host that has to be told would be a host that could be lied to about it.
     """
     transport = client.transport
     if not isinstance(transport, UdpTransport):
-        pytest.skip("the WARD interface is only reachable over UDP on the emulator")
+        return None
 
     host, port = transport.device
     ward = UdpTransport(f"{host}:{port + WARD_PORT_OFFSET}")
     try:
         ward.open()
     except Exception:
-        pytest.skip("this build has no WARD service interface")
+        return None
     if not ward.is_ready():
         ward.close()
+        return None
+    return ward
+
+
+def serves_ward_over_a_service_channel(client: TrezorTestContext) -> bool:
+    """Whether this firmware is a SERVICE build. Cached: probing is a socket per call.
+
+    Cached for the session rather than per test because it cannot change under us -- it is a
+    property of the binary the emulator is running.
+    """
+    global _IS_SERVICE_BUILD
+
+    if _IS_SERVICE_BUILD is None:
+        ward = _open_ward_transport(client)
+        _IS_SERVICE_BUILD = ward is not None
+        if ward is not None:
+            ward.close()
+    return _IS_SERVICE_BUILD
+
+
+def ward_transport(client: TrezorTestContext) -> UdpTransport:
+    """A transport for the WARD interface, or skip if this build has none.
+
+    Skipped rather than failed because the interface is a BUILD OPTION: a firmware serves WARD
+    either over the ordinary connection or over its own channel, never both, so a connect build
+    legitimately has nothing listening here.
+    """
+    ward = _open_ward_transport(client)
+    if ward is None:
         pytest.skip("this build has no WARD service interface")
     return ward
 
