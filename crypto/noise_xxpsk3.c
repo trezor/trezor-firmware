@@ -64,7 +64,8 @@ static void ss_init(noise_xxpsk3_symmetric_state_t *ss,
   }
 
   memcpy(ss->chaining_key, ss->handshake_hash, NOISE_XXPSK3_HASHLEN);
-  memzero(&ss->cipher_state, sizeof(ss->cipher_state));
+  ss->cipher_state.has_key = false;
+  ss->cipher_state.nonce = 0;
 }
 
 static void ss_mix_hash(noise_xxpsk3_symmetric_state_t *ss, const uint8_t *data,
