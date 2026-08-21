@@ -21,29 +21,6 @@
 
 #include <trezor_types.h>
 
-typedef enum {
-  APP_ALLOC_IMAGE, /** Image memory allocation */
-  APP_ALLOC_DATA,  /** Data memory allocation */
-} app_alloc_type_t;
-
-/** Initializes the application arena.
- *
- * @return TS_OK on success, or an error code on failure.
- */
-ts_t __wur app_arena_init(void);
-
-/**
- * Allocates memory for an application.
- *
- * @param size The size of the memory to allocate in bytes.
- *
- * @return Pointer to the allocated memory, or NULL if allocation failed.
- */
-void* app_arena_alloc(size_t size, app_alloc_type_t type);
-
-/**
- * Frees memory previously allocated with app_arena_alloc().
- *
- * @param ptr Pointer to the memory to free. If NULL, no action is taken.
- */
-void app_arena_free(void* ptr);
+typedef struct {
+  uint8_t bytes[32];
+} sha256_digest_t;
