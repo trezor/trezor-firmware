@@ -227,3 +227,41 @@ message WardFlushQueueApplied {
     optional uint32 counter   = 2;
     optional uint32 remaining = 3;  // queued changes still waiting, excluding this one
 }
+
+/**
+ * Request: WALLET host -> device, on the ordinary interface. Unbind the WARD service, so that
+ * another daemon may claim the role.
+ *
+ * THE ONE MESSAGE HERE THAT IS NOT PART OF THE INVERTED CONVERSATION, and it has to be: the daemon
+ * whose key was lost is the party that cannot ask. Every other message in this file crosses the
+ * service channel; this one cannot, because the reason for sending it is that nothing can bind that
+ * channel any more.
+ *
+ * AN OWNERSHIP MIGRATION, NOT A CREDENTIAL RESET. Losing K_ward is not repaired by connecting a
+ * different daemon -- the new one correctly fails the pin check -- so the only way forward is to
+ * retire the pin, and that hands the role to whoever binds next. Hence a hold-to-confirm on the
+ * device and nothing weaker: the request is authenticated only as "some paired host", which is the
+ * granularity pinning exists to improve on.
+ *
+ * REFUSED WHILE A CLAIM IS UNRESOLVED, unless `force`. A claim is a queued change that was handed
+ * over and whose fate is not yet known, and only the service that received it can settle it -- a
+ * fresh daemon serves a wallet at genesis and cannot produce the history the answer is in. So the
+ * ordinary path is to recover those changes with the current service first; `force` says the user
+ * accepts that they may be lost, and gets a screen naming how many.
+ */
+message WardResetService {
+    // Reset even though claims are unresolved. The device warns, naming the count, and holds.
+    optional bool force = 1;
+}
+
+/**
+ * Response: device -> wallet host. The pin is retired; the next daemon to announce itself binds.
+ *
+ * `unresolved` is what was outstanding at the moment of the reset, and is reported rather than
+ * cleared: nothing in WARD discards a record except the user saying so, so those changes stay
+ * queued and re-offerable. It is zero unless `force` was used.
+ * @end
+ */
+message WardResetServiceAck {
+    optional uint32 unresolved = 1;
+}

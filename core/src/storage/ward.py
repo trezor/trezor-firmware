@@ -236,9 +236,10 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> bool:
 # WHICH daemon, and its absence means "no daemon has claimed the role yet", never "use the other
 # transport".
 #
-# THERE IS NO UNPIN HERE YET, deliberately. Losing the daemon's key is not repaired by letting the
-# next host connect -- it is an ownership migration, with the unresolved-claim question that comes
-# with it -- so the erase belongs with the code that asks the user about it.
+# THE UNPIN IS A SEPARATE DECISION, and `clear_service_host_key` below is deliberately the whole of
+# what this layer contributes to it. Losing the daemon's key is not repaired by letting the next host
+# connect -- it is an ownership migration, and the question of what unresolved changes it abandons
+# belongs to the code that can ask the user. See `apps.ward.service.reset_service`.
 _SERVICE_HOST_KEY = const(0x10)
 _SERVICE_HOST_KEY_LEN = const(32)
 
@@ -253,6 +254,17 @@ def set_service_host_key(key: bytes) -> None:
     if len(key) != _SERVICE_HOST_KEY_LEN:
         raise ValueError("service host key must be 32 bytes")
     common.set(common.APP_WARD, _SERVICE_HOST_KEY, key)
+
+
+def clear_service_host_key() -> None:
+    """Retire the pin, so the next daemon to announce itself may claim the role.
+
+    IT TOUCHES NOTHING ELSE, and that is the point of it being this small. It does not clear the
+    claim journal, the queued records or any root: the pin says which daemon answers for the
+    replica, and forgetting that is not a reason to discard what the user stored. The caller decides
+    whether the migration is allowed at all.
+    """
+    common.delete(common.APP_WARD, _SERVICE_HOST_KEY)
 
 
 # --- the offline store ------------------------------------------------------------

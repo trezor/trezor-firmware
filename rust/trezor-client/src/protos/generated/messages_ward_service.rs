@@ -2639,6 +2639,288 @@ impl ::protobuf::reflect::ProtobufValue for WardFlushQueueApplied {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardResetService)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardResetService {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardResetService.force)
+    pub force: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardResetService.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardResetService {
+    fn default() -> &'a WardResetService {
+        <WardResetService as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardResetService {
+    pub fn new() -> WardResetService {
+        ::std::default::Default::default()
+    }
+
+    // optional bool force = 1;
+
+    pub fn force(&self) -> bool {
+        self.force.unwrap_or(false)
+    }
+
+    pub fn clear_force(&mut self) {
+        self.force = ::std::option::Option::None;
+    }
+
+    pub fn has_force(&self) -> bool {
+        self.force.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_force(&mut self, v: bool) {
+        self.force = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "force",
+            |m: &WardResetService| { &m.force },
+            |m: &mut WardResetService| { &mut m.force },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardResetService>(
+            "WardResetService",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardResetService {
+    const NAME: &'static str = "WardResetService";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.force = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.force {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.force {
+            os.write_bool(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardResetService {
+        WardResetService::new()
+    }
+
+    fn clear(&mut self) {
+        self.force = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardResetService {
+        static instance: WardResetService = WardResetService {
+            force: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardResetService {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardResetService").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardResetService {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardResetService {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardResetServiceAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardResetServiceAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardResetServiceAck.unresolved)
+    pub unresolved: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardResetServiceAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardResetServiceAck {
+    fn default() -> &'a WardResetServiceAck {
+        <WardResetServiceAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardResetServiceAck {
+    pub fn new() -> WardResetServiceAck {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 unresolved = 1;
+
+    pub fn unresolved(&self) -> u32 {
+        self.unresolved.unwrap_or(0)
+    }
+
+    pub fn clear_unresolved(&mut self) {
+        self.unresolved = ::std::option::Option::None;
+    }
+
+    pub fn has_unresolved(&self) -> bool {
+        self.unresolved.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_unresolved(&mut self, v: u32) {
+        self.unresolved = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "unresolved",
+            |m: &WardResetServiceAck| { &m.unresolved },
+            |m: &mut WardResetServiceAck| { &mut m.unresolved },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardResetServiceAck>(
+            "WardResetServiceAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardResetServiceAck {
+    const NAME: &'static str = "WardResetServiceAck";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.unresolved = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.unresolved {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.unresolved {
+            os.write_uint32(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardResetServiceAck {
+        WardResetServiceAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.unresolved = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardResetServiceAck {
+        static instance: WardResetServiceAck = WardResetServiceAck {
+            unresolved: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardResetServiceAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardResetServiceAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardResetServiceAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardResetServiceAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x1bmessages-ward-service.proto\x12\x17hw.trezor.messages.ward\x1a\x13\
     messages-ward.proto\"<\n\x0fWardServiceOpen\x12)\n\x10protocol_version\
@@ -2672,8 +2954,10 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\x0cR\x08entryKey\x12\x18\n\x07counter\x18\x02\x20\x01(\rR\x07c\
     ounter\"l\n\x15WardFlushQueueApplied\x12\x1b\n\tentry_key\x18\x01\x20\
     \x01(\x0cR\x08entryKey\x12\x18\n\x07counter\x18\x02\x20\x01(\rR\x07count\
-    er\x12\x1c\n\tremaining\x18\x03\x20\x01(\rR\tremainingB?\n#com.satoshila\
-    bs.trezor.lib.protobufB\x18TrezorMessageWardService\
+    er\x12\x1c\n\tremaining\x18\x03\x20\x01(\rR\tremaining\"(\n\x10WardReset\
+    Service\x12\x14\n\x05force\x18\x01\x20\x01(\x08R\x05force\"5\n\x13WardRe\
+    setServiceAck\x12\x1e\n\nunresolved\x18\x01\x20\x01(\rR\nunresolvedB?\n#\
+    com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageWardService\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -2692,7 +2976,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_ward::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(11);
+            let mut messages = ::std::vec::Vec::with_capacity(13);
             messages.push(WardServiceOpen::generated_message_descriptor_data());
             messages.push(WardServiceOpenAck::generated_message_descriptor_data());
             messages.push(WardSyncRequest::generated_message_descriptor_data());
@@ -2704,6 +2988,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(WardPublishConflict::generated_message_descriptor_data());
             messages.push(WardMutationApplied::generated_message_descriptor_data());
             messages.push(WardFlushQueueApplied::generated_message_descriptor_data());
+            messages.push(WardResetService::generated_message_descriptor_data());
+            messages.push(WardResetServiceAck::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
