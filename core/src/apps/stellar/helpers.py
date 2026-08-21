@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 
     from trezor.messages import StellarAsset, StellarInvokeContractArgs
 
+    from .layout import StellarToken
+
 # Stellar strkey version bytes
 # See: https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md
 STRKEY_ED25519_PUBLIC_KEY = const(6)  # G...
@@ -62,7 +64,7 @@ def sac_address_from_asset(network_id: AnyBytes, asset: StellarAsset) -> str:
 
 def resolve_sep41_token(
     args: StellarInvokeContractArgs, network_id: AnyBytes
-) -> StellarAsset | None:
+) -> StellarToken | None:
     """Resolve token metadata for the dedicated SEP-41 UI.
 
     Currently, the host may identify a Stellar Asset Contract by supplying its
@@ -71,6 +73,8 @@ def resolve_sep41_token(
     invocation to the generic contract UI.
     """
     from trezor.wire import DataError
+
+    from .layout import StellarToken
 
     asset = args.asset_hint
     if asset is None:
@@ -81,7 +85,7 @@ def resolve_sep41_token(
         return None
     if sac_address != args.contract_address:
         return None
-    return asset
+    return StellarToken.from_asset(asset)
 
 
 def encode_strkey(version: int, data: AnyBytes) -> str:

@@ -25,6 +25,7 @@ if not utils.BITCOIN_ONLY:
     from trezor.wire import DataError
 
     from apps.stellar.layout import (
+        StellarToken,
         _format_i128,
         _format_i256,
         _format_sc_val,
@@ -66,6 +67,24 @@ if not utils.BITCOIN_ONLY:
 
     def _entry(key, value):
         return StellarSCValMapEntry(key=key, value=value)
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestStellarTokenFormat(unittest.TestCase):
+    # Classic assets are always 7-decimal, but a SEP-41 token contract sets its
+    # own precision and must not be rendered with the classic scale.
+    def test_format(self):
+        TESTS = [
+            # the same amount, scaled by the token's own precision
+            (200000000, 7, "XLM", "20 XLM"),
+            (200000000, 8, "SolvBTC", "2 SolvBTC"),
+        ]
+        for amount, decimals, symbol, expected in TESTS:
+            token = StellarToken(symbol, decimals, None)
+            self.assertEqual(token.format(amount), expected)
+
+    def test_format_native(self):
+        self.assertEqual(StellarToken.native().format(200000000), "20 XLM")
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

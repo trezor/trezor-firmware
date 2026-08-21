@@ -7,12 +7,11 @@ from trezor.wire import DataError, ProcessError
 
 from apps.common.paths import address_n_to_str
 
-from . import consts
 from .helpers import resolve_sep41_token
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Iterable
+    from typing import Iterable, Self
 
     from trezor.enums import StellarMemoType
     from trezor.messages import (
@@ -87,7 +86,9 @@ async def require_confirm_payment_request(
 
     from apps.common.payment_request import parse_amount
 
-    total_amount = format_amount(parse_amount(verified_payment_request), asset)
+    total_amount = StellarToken.from_asset(asset).format(
+        parse_amount(verified_payment_request)
+    )
 
     texts: list[tuple[str | None, str]] = []
     refunds = []
@@ -174,7 +175,7 @@ async def require_confirm_final(
         raise DataError("Stellar: Invalid account name")
 
     await layouts.confirm_stellar_tx(
-        format_amount(fee),
+        StellarToken.native().format(fee),  # the fee is always in XLM
         account_name,
         account_path,
         is_sending_from_trezor_account,
@@ -370,13 +371,13 @@ async def confirm_invoke_contract(
     """
     br_name_prefix = "op_invoke" if authorization_title is None else "op_auth"
 
-    asset = resolve_sep41_token(args, network_id)
-    if asset is not None:
+    token = resolve_sep41_token(args, network_id)
+    if token is not None:
         transfer = _parse_sep41_transfer(args)
         if transfer is not None:
             await _confirm_sep41_transfer(
                 transfer,
-                asset,
+                token,
                 args.contract_address,
                 authorizing_address,
                 br_name_prefix,
@@ -388,7 +389,7 @@ async def confirm_invoke_contract(
         if approve is not None:
             await _confirm_sep41_approve(
                 approve,
-                asset,
+                token,
                 args.contract_address,
                 authorizing_address,
                 br_name_prefix,
@@ -405,7 +406,7 @@ async def confirm_invoke_contract(
 
 async def _confirm_sep41_transfer(
     transfer: tuple[str, str, int],
-    asset: StellarAsset,
+    token: "StellarToken",
     token_contract: str,
     authorizing_address: str,
     br_name_prefix: str,
@@ -446,24 +447,24 @@ async def _confirm_sep41_transfer(
         await layouts.confirm_stellar_output_amount(
             screen_title,
             subtitle,
-            format_amount(amount, asset),
-            asset,
+            token.format(amount),
+            token,
             TR.words__amount,
             token_contract=token_contract,
         )
     else:
         await layouts.confirm_stellar_output(
             to_address,
-            format_amount(amount, asset),
+            token.format(amount),
             output_index=0,  # a Soroban operation is always the only one
-            asset=asset,
+            token=token,
             token_contract=token_contract,
         )
 
 
 async def _confirm_sep41_approve(
     approve: tuple[str, str, int, int],
-    asset: StellarAsset,
+    token: "StellarToken",
     token_contract: str,
     authorizing_address: str,
     br_name_prefix: str,
@@ -492,16 +493,16 @@ async def _confirm_sep41_approve(
     if amount == 0:
         # "Revoke approval" already communicates the zero allowance, so
         # identify the token instead of displaying the omitted amount.
-        display_value = format_asset(asset)
+        display_value = token.symbol
         value_label = TR.words__token
     else:
-        display_value = format_amount(amount, asset)
+        display_value = token.format(amount)
         value_label = TR.words__amount
     await layouts.confirm_stellar_output_amount(
         screen_title,
         subtitle,
         display_value,
-        asset,
+        token,
         value_label,
         token_contract=token_contract,
     )
@@ -737,21 +738,43 @@ def _format_i256(parts: StellarInt256Parts) -> str:
     return str(value)
 
 
-def format_asset(asset: StellarAsset | None) -> str:
-    from trezor.enums import StellarAssetType
-    from trezor.wire import DataError
+class StellarToken:
+    """Identity of the token an amount is denominated in.
 
-    if asset is None or asset.type == StellarAssetType.NATIVE:
-        return "XLM"
-    else:
-        if asset.code is None:
-            raise DataError("Stellar asset code is missing")
-        return asset.code
+    Only a token backed by a classic asset has an issuer; one that exists purely
+    as a SEP-41 contract does not. The contract being invoked is not part of the
+    identity -- it is a property of the invocation and is passed alongside.
+    """
 
+    def __init__(self, symbol: str, decimals: int, issuer: str | None) -> None:
+        self.symbol = symbol
+        self.decimals = decimals
+        self.issuer = issuer
 
-def format_amount(amount: int, asset: StellarAsset | None = None) -> str:
-    return (
-        strings.format_amount(amount, consts.AMOUNT_DECIMALS)
-        + " "
-        + format_asset(asset)
-    )
+    @classmethod
+    def native(cls) -> Self:
+        """Describe XLM."""
+        from .consts import AMOUNT_DECIMALS
+
+        return cls("XLM", AMOUNT_DECIMALS, None)
+
+    @classmethod
+    def from_asset(cls, asset: StellarAsset) -> Self:
+        """Describe a classic asset."""
+        from trezor.enums import StellarAssetType
+        from trezor.wire import DataError
+
+        from .consts import AMOUNT_DECIMALS
+
+        if asset.type == StellarAssetType.NATIVE:
+            # A native asset has neither a code nor an issuer, and `write_asset`
+            # leaves both out of the SAC address preimage. They must be ignored
+            # here as well, or a host could relabel XLM as an asset of its choice.
+            return cls.native()
+        if asset.code is None or asset.issuer is None:
+            raise DataError("Stellar: invalid asset definition")
+        return cls(asset.code, AMOUNT_DECIMALS, asset.issuer)
+
+    def format(self, amount: int) -> str:
+        """Format an amount with this token's precision and symbol."""
+        return strings.format_amount(amount, self.decimals) + " " + self.symbol
