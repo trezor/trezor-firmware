@@ -10,7 +10,7 @@ from trezor.ui.layouts import (
 )
 from trezor.wire import DataError, ProcessError
 
-from ..layout import confirm_invocation, confirm_invoke_contract, format_amount
+from ..layout import StellarToken, confirm_invocation, confirm_invoke_contract
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
@@ -87,7 +87,7 @@ async def confirm_bump_sequence_op(op: StellarBumpSequenceOp) -> None:
 async def confirm_change_trust_op(op: StellarChangeTrustOp) -> None:
     await confirm_value(
         TR.stellar__delete_trust if op.limit == 0 else TR.stellar__add_trust,
-        format_amount(op.limit, op.asset),
+        StellarToken.from_asset(op.asset).format(op.limit),
         description=TR.stellar__limit,
         br_name="op_change_trust",
         is_data=False,
@@ -100,14 +100,12 @@ async def confirm_change_trust_op(op: StellarChangeTrustOp) -> None:
 async def confirm_create_account_op(
     op: StellarCreateAccountOp, output_index: int
 ) -> None:
-    from trezor.enums import StellarAssetType
-    from trezor.messages import StellarAsset
-
+    token = StellarToken.native()
     await confirm_stellar_output(
         op.new_account,
-        format_amount(op.starting_balance),
+        token.format(op.starting_balance),
         output_index=output_index,
-        asset=StellarAsset(type=StellarAssetType.NATIVE),
+        token=token,
     )
 
 
@@ -150,10 +148,10 @@ async def _confirm_offer(
 ) -> None:
     from trezor.messages import StellarManageBuyOfferOp
 
-    from ..layout import format_asset
-
     buying_asset = op.buying_asset  # local_cache_attribute
     selling_asset = op.selling_asset  # local_cache_attribute
+    buying_token = StellarToken.from_asset(buying_asset)
+    selling_token = StellarToken.from_asset(selling_asset)
 
     buying: PropertyType
     selling: PropertyType
@@ -162,16 +160,16 @@ async def _confirm_offer(
     if StellarManageBuyOfferOp.is_type_of(op):
         buying = (
             TR.stellar__buying,
-            format_amount(op.amount, buying_asset),
+            buying_token.format(op.amount),
             False,
         )
         selling = (
             TR.stellar__selling,
-            format_asset(selling_asset),
+            selling_token.symbol,
             False,
         )
         price = (
-            TR.stellar__price_per_template.format(format_asset(selling_asset)),
+            TR.stellar__price_per_template.format(selling_token.symbol),
             str(op.price_n / op.price_d),
             False,
         )
@@ -184,12 +182,12 @@ async def _confirm_offer(
     else:
         selling = (
             TR.stellar__selling,
-            format_amount(op.amount, selling_asset),
+            selling_token.format(op.amount),
             False,
         )
-        buying = (TR.stellar__buying, format_asset(buying_asset), False)
+        buying = (TR.stellar__buying, buying_token.symbol, False)
         price = (
-            TR.stellar__price_per_template.format(format_asset(buying_asset)),
+            TR.stellar__price_per_template.format(buying_token.symbol),
             str(op.price_n / op.price_d),
             False,
         )
@@ -230,11 +228,13 @@ async def confirm_path_payment_strict_receive_op(
     op: StellarPathPaymentStrictReceiveOp,
     output_index: int,
 ) -> None:
+    destination_token = StellarToken.from_asset(op.destination_asset)
+    send_token = StellarToken.from_asset(op.send_asset)
     await confirm_stellar_output(
         op.destination_account,
-        format_amount(op.destination_amount, op.destination_asset),
+        destination_token.format(op.destination_amount),
         output_index,
-        op.destination_asset,
+        destination_token,
         address_description=TR.stellar__path_pay,
         amount_description=TR.stellar__path_pay,
     )
@@ -242,8 +242,8 @@ async def confirm_path_payment_strict_receive_op(
     await confirm_stellar_output_amount(
         TR.stellar__debited_amount,
         f"{TR.words__recipient} #{output_index + 1}",
-        format_amount(op.send_max, op.send_asset),
-        op.send_asset,
+        send_token.format(op.send_max),
+        send_token,
         TR.stellar__pay_at_most,
     )
 
@@ -252,11 +252,13 @@ async def confirm_path_payment_strict_send_op(
     op: StellarPathPaymentStrictSendOp,
     output_index: int,
 ) -> None:
+    destination_token = StellarToken.from_asset(op.destination_asset)
+    send_token = StellarToken.from_asset(op.send_asset)
     await confirm_stellar_output(
         op.destination_account,
-        format_amount(op.destination_min, op.destination_asset),
+        destination_token.format(op.destination_min),
         output_index,
-        op.destination_asset,
+        destination_token,
         address_description=TR.stellar__path_pay_at_least,
         amount_description=TR.stellar__path_pay_at_least,
     )
@@ -264,18 +266,19 @@ async def confirm_path_payment_strict_send_op(
     await confirm_stellar_output_amount(
         TR.stellar__debited_amount,
         f"{TR.words__recipient} #{output_index + 1}",
-        format_amount(op.send_amount, op.send_asset),
-        op.send_asset,
+        send_token.format(op.send_amount),
+        send_token,
         TR.stellar__pay,
     )
 
 
 async def confirm_payment_op(op: StellarPaymentOp, output_index: int) -> None:
+    token = StellarToken.from_asset(op.asset)
     await confirm_stellar_output(
         op.destination_account,
-        format_amount(op.amount, op.asset),
+        token.format(op.amount),
         output_index,
-        op.asset,
+        token,
     )
 
 

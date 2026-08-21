@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 
     from trezor.messages import StellarAsset, StellarInvokeContractArgs
 
+    from .layout import StellarToken
+
 # Stellar strkey version bytes
 # See: https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md
 STRKEY_ED25519_PUBLIC_KEY = const(6)  # G...
@@ -62,26 +64,39 @@ def sac_address_from_asset(network_id: AnyBytes, asset: StellarAsset) -> str:
 
 def resolve_sep41_token(
     args: StellarInvokeContractArgs, network_id: AnyBytes
-) -> StellarAsset | None:
+) -> StellarToken | None:
     """Resolve token metadata for the dedicated SEP-41 UI.
 
-    Currently, the host may identify a Stellar Asset Contract by supplying its
-    underlying asset. The hint is used only when its derived SAC address matches
-    the invoked contract; an absent, mismatched, or malformed hint leaves the
-    invocation to the generic contract UI.
+    A contract is recognized in two ways. The host may identify a Stellar Asset
+    Contract by supplying its underlying asset; the hint is used only when its
+    derived SAC address matches the invoked contract, so it cannot mislead the
+    user. Otherwise the contract may be one of the tokens hard-coded in the
+    firmware, which are vetted in advance and need no host cooperation at all.
+
+    A SAC match is cryptographically proven, so it takes precedence. Anything
+    left unrecognized goes to the generic contract UI.
     """
+    from trezor.crypto.hashlib import sha256
     from trezor.wire import DataError
 
+    from . import consts
+    from .layout import StellarToken
+
+    contract = args.contract_address
     asset = args.asset_hint
-    if asset is None:
-        return None
-    try:
-        sac_address = sac_address_from_asset(network_id, asset)
-    except DataError:
-        return None
-    if sac_address != args.contract_address:
-        return None
-    return asset
+    if asset is not None:
+        try:
+            if sac_address_from_asset(network_id, asset) == contract:
+                return StellarToken.from_asset(asset)
+        except DataError:
+            pass
+
+    if network_id == sha256(consts.NETWORK_PASSPHRASE_PUBLIC.encode()).digest():
+        known = consts.PUBLIC_TOKENS.get(contract)
+        if known is not None:
+            symbol, decimals = known
+            return StellarToken(symbol, decimals, issuer=None)
+    return None
 
 
 def encode_strkey(version: int, data: AnyBytes) -> str:
