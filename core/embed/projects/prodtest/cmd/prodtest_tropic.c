@@ -59,17 +59,24 @@ typedef enum {
 static tropic_handshake_state_t g_tropic_handshake_state =
     TROPIC_HANDSHAKE_STATE_0;
 
-#ifndef TREZOR_EMULATOR
-extern cli_t g_cli;
+// CLI for libtropic's log output; non-NULL only during the FW update.
+static cli_t* g_lt_log_cli = NULL;
 
+#ifndef TREZOR_EMULATOR
+// Log sink called by libtropic's `LT_LOG_*()` macros. On the
+// emulator the libtropic POSIX port provides its own implementation.
 int lt_port_log(const char* format, ...) {
+  if (g_lt_log_cli == NULL) {
+    return 0;
+  }
+
   char line[128] = {0};
   va_list args = {0};
   va_start(args, format);
   int len = vsnprintf_(line, sizeof(line), format, args);
   va_end(args);
   line[strcspn(line, "\n")] = '\0';
-  cli_trace(&g_cli, "%s", line);
+  cli_trace(g_lt_log_cli, "%s", line);
   return len;
 }
 #endif  // TREZOR_EMULATOR
@@ -1534,8 +1541,12 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
 #endif  // LT_SILICON_REV_ABAB
 
   cli_trace(cli, "Updating RISC-V and SPECT FW");
+  // We allow the libtropic's log to write to cli during the update, so that we
+  // can distinguish which step failed.
+  g_lt_log_cli = cli;
   lt_ret_t ret = lt_do_mutable_fw_update(h, fw_CPU, sizeof(fw_CPU), fw_SPECT,
                                          sizeof(fw_SPECT));
+  g_lt_log_cli = NULL;
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_FW, "FW update failed, ret=%s",
               lt_ret_verbose(ret));
