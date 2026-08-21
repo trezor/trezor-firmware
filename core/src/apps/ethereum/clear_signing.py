@@ -1496,6 +1496,8 @@ async def _handle_transfer(
         # SLIP-24 payment requests for ERC-20 token transfers
 
         assert msg.payment_req is not None
+        if native_value:
+            raise DataError("Non-zero ETH value")
 
         payment_request_verifier.add_output(arg1_raw_value, recipient_addr)
         payment_request_verifier.verify()
