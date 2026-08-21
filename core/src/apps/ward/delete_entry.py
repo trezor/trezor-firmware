@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
+
 if TYPE_CHECKING:
-    from trezor.messages import WardDeleteEntry, WardLeafAck
+    from trezor.messages import WardDeleteEntry, WardLeafAck, WardMutationApplied
 
 
-async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
+async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationApplied":
     """WardDeleteEntry handler: confirm removing a host-held entry.
 
     The device pulls the entry first so the screen can name what is being removed --
@@ -145,6 +147,15 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
         # delete did land. The mac grants nothing new -- any write hands one out, and the
         # counter floor bounds what a replayed one can do.
         counter = await get_counter()
+        if utils.USE_WARD_SERVICE_CHANNEL:
+            # NOTHING TO PUBLISH, and so nothing to publish it as. There is no transition, hence no
+            # authorisation and no new head -- so this must not clear the online latch or file a
+            # claim, both of which exist to describe a change whose fate is unknown. This one's
+            # fate is known: it did not happen, because it did not need to.
+            from trezor.messages import WardMutationApplied
+
+            return WardMutationApplied(entry_key=entry_key, counter=counter)
+
         return WardLeafAck(
             entry_key=entry_key,
             identity=make_leaf_identity(key_type, EMPTY_PART),
@@ -186,20 +197,33 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
     # one at all. Nothing needs storing in the meantime -- the mac is self-validating, so the
     # device can accept the root later purely because it reproduces the attested mac.
 
+    identity = make_leaf_identity(key_type, EMPTY_PART)
+    content = make_leaf_content(EMPTY_PART)
+    step = auth_commit(
+        await derive_k_auth(),
+        await derive_ward_id(),
+        counter - 1,
+        from_root,
+        counter,
+        new_root,
+    )
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        # The single transport branch -- see `set_entry` for what it costs and does not.
+        from trezor.messages import WardMutationApplied
+
+        from .service import publish
+
+        await publish(entry_key, identity, content, from_root, counter, new_root, step)
+        return WardMutationApplied(entry_key=entry_key, counter=counter)
+
     return WardLeafAck(
         entry_key=entry_key,
-        identity=make_leaf_identity(key_type, EMPTY_PART),
-        content=make_leaf_content(EMPTY_PART),
+        identity=identity,
+        content=content,
         counter=counter,
         mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
-        auth_commit=auth_commit(
-            await derive_k_auth(),
-            await derive_ward_id(),
-            counter - 1,
-            from_root,
-            counter,
-            new_root,
-        ),
+        auth_commit=step,
         auth_sig=sig_commit(
             await derive_k_sig(),
             await derive_ward_id(),

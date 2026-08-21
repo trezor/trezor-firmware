@@ -1,10 +1,18 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
+
 if TYPE_CHECKING:
-    from trezor.messages import WardFlushQueue, WardFlushQueueAck
+    from trezor.messages import (
+        WardFlushQueue,
+        WardFlushQueueAck,
+        WardFlushQueueApplied,
+    )
 
 
-async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
+async def flush_queue(
+    msg: WardFlushQueue,
+) -> "WardFlushQueueAck | WardFlushQueueApplied":
     """WardFlushQueue handler: publish ONE queued change, sealed and re-derived.
 
     WHY A QUEUED CHANGE CANNOT SIMPLY BE SENT. It was made with no host, so the device could
@@ -89,6 +97,12 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
     else:
         entry = await offline_store.next_unsent()
         if entry is None:
+            # AN EMPTY DRAIN PUBLISHES NOTHING. No transition, so no claim and no dropped latch --
+            # the same reasoning as an idempotent delete. The host's loop ends on the zero.
+            if utils.USE_WARD_SERVICE_CHANNEL:
+                from trezor.messages import WardFlushQueueApplied
+
+                return WardFlushQueueApplied(remaining=0)
             return WardFlushQueueAck(remaining=0)
         if entry.compact:
             # The device cannot say WHICH entry this is -- that is what the compact form gives up --
@@ -160,10 +174,29 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
 
     remaining = await offline_store.count_unsent()
 
+    identity = make_leaf_identity(key_type, id_part)
+    content = make_leaf_content(val_part)
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        # THE ORDER ACROSS THE TWO WRITES IS THE SAME ONE `mark_offered` ARGUES FOR, extended by one
+        # step: claim, then flag, then drop the latch, then publish. The claim is already in flash
+        # by the time the mutation leaves the device, so a publication whose answer is lost is
+        # settled by the next sync instead of being stranded.
+        from trezor.messages import WardFlushQueueApplied
+
+        from .service import publish
+
+        await publish(entry_key, identity, content, from_root, counter, new_root, step)
+        # `remaining` was counted BEFORE the publish and stands regardless of how it went: it
+        # describes what is still queued and un-offered, and this record is neither.
+        return WardFlushQueueApplied(
+            entry_key=entry_key, counter=counter, remaining=remaining
+        )
+
     return WardFlushQueueAck(
         entry_key=entry_key,
-        identity=make_leaf_identity(key_type, id_part),
-        content=make_leaf_content(val_part),
+        identity=identity,
+        content=content,
         counter=counter,
         mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
         auth_commit=step,

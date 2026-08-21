@@ -468,3 +468,119 @@ async def become_ready() -> bool:
 
     await sync()
     return sync_round.is_online()
+
+
+# --- publishing a mutation ----------------------------------------------------------------
+#
+# WHAT THIS REMOVES IS THE UNCONFIRMED WINDOW. On a connect build a write ends by handing the leaf
+# to the host and hoping: the host must publish to the WM, then run a whole sync round before the
+# device will believe its own write landed, and everything between is a state only the host knows.
+# Here the device hands the mutation to the party that owns the replica and gets the attestation
+# back in the same exchange.
+#
+# STRICTLY STRONGER THAN RECONCILE, and in a way worth being precise about. Reconcile adopts any
+# root that reproduces an attested mac -- which is sound, but the mac is merely REPRODUCIBLE by the
+# device. Here the device minted the mac itself, before anyone else saw the transition, and requires
+# the attestation to name that exact counter and that exact mac. There is no root to be persuaded
+# about.
+#
+# THE NONCE IS PER PUBLICATION, not per session. It is what stops a WM (or a daemon relaying one)
+# answering this write with an attestation of some earlier head it had already collected -- the
+# signature has to cover a value minted after the transition existed.
+
+
+async def publish(
+    entry_key: bytes,
+    identity: "protobuf.MessageType | None",
+    content: "protobuf.MessageType | None",
+    from_root: bytes | None,
+    counter: int,
+    new_root: bytes | None,
+    step: bytes,
+) -> None:
+    """Hand one mutation to the service, and adopt it if the WM attests it. Raises otherwise.
+
+    `counter` is the counter the transition REACHES, so it advances from `counter - 1`; the device
+    only ever moves by one, which is why the service is not told where it came from and cannot
+    choose a different baseline.
+
+    THE LATCH DROPS BEFORE THE REQUEST GOES OUT. From that moment the device cannot say whether the
+    daemon applied the mutation, and recording the doubt only on failure would leave the whole
+    unknown window looking known. `adopt` restores it, so the ordinary cost is one round trip.
+
+    A CONFLICT IS NOT AN AMBIGUITY, and the difference decides what happens to the channel. The
+    service says the WM's head was not the one this transition was built on -- so the write is known
+    NOT to have landed, `_rpc` leaves the channel up because nothing about the conversation is
+    unclear, and the operation fails cleanly. Everything else -- no answer, a wrong session, a type
+    that does not belong -- may have landed, so `_rpc` tears the channel down and the outcome is
+    settled by the next sync instead.
+
+    NOTHING IS DONE HERE TO REOPEN A QUEUED OFFER, and that is not an omission. A conflict leaves
+    the session offline, so the next WARD operation drives a sync, and that sync's `adopt` settles
+    every outstanding claim by the commitments it actually crossed -- this one among them, and
+    exactly as not-landed. Reopening it here would mean deciding the fate of one claim from a path
+    that cannot see the others, which is how a claim for a change that DID land gets cleared.
+    """
+    from trezor.crypto import random
+    from trezor.messages import WardPublish, WardPublishAck, WardPublishConflict
+    from trezor.wire import DataError
+
+    from . import round as sync_round
+    from .adopt import adopt, verify_round_attestation
+    from .attest import NONCE_LENGTH, root_mac
+    from .cas import wm_sig
+    from .keys import derive_k_mac, derive_k_sig, derive_ward_id
+
+    ward_id = await derive_ward_id()
+    k_mac = await derive_k_mac()
+
+    # BOTH HEADS ARE COMPUTED HERE, from the device's own key, and `to_mac` is the value the
+    # attestation below is required to name. A mac passed in by the caller would be a mac the check
+    # merely echoes.
+    from_mac = root_mac(k_mac, ward_id, counter - 1, from_root)
+    to_mac = root_mac(k_mac, ward_id, counter, new_root)
+
+    nonce = random.bytes(NONCE_LENGTH)
+    sync_round.begin(nonce)
+    sync_round.mark_offline()
+
+    answer = await _rpc(
+        WardPublish(
+            entry_key=entry_key,
+            identity=identity,
+            content=content,
+            counter=counter,
+            mac=to_mac,
+            auth_commit=step,
+            # OVER MAC HEADS, never roots: it is what the WM stores, and it is all the WM is ever
+            # shown. The device authorises the advance without the freshness authority learning
+            # anything about the tree.
+            wm_sig=wm_sig(
+                await derive_k_sig(), ward_id, counter - 1, from_mac, counter, to_mac
+            ),
+            nonce=nonce,
+        ),
+        WardPublishAck,
+        WardPublishConflict,
+    )
+
+    # Compared by wire type rather than `isinstance` -- see `fetch`.
+    if answer.MESSAGE_WIRE_TYPE == WardPublishConflict.MESSAGE_WIRE_TYPE:
+        raise DataError("WARD: another writer moved the head first; retry")
+
+    # The nonce binding, checked by the same code the sync route uses. What it does NOT check is
+    # which head was attested -- that is the next two lines, and it is the whole strength of this
+    # route.
+    attested_counter, attested_mac = await verify_round_attestation(answer)
+    if attested_counter != counter or attested_mac != to_mac:
+        # The WM vouched for something, but not for this. No `require_attested_round` here and no
+        # intermediate ATTESTED state: that machinery exists so a route which establishes its root
+        # SEPARATELY can be joined to an attestation across a host turn, and this route has neither
+        # a separate root nor a turn to cross -- the counter and mac are the device's own and are
+        # compared directly, which is stricter than anything the state could add.
+        raise DataError("the attestation does not name the head this device published")
+
+    # Settle, then a checked `set_root`, then latch, then close -- see `adopt`. The crossed
+    # commitment is this transition's own, so a queued change is settled by ITS authorisation
+    # landing rather than by the counter having moved past it.
+    await adopt(counter, new_root, landed_commits=[step])

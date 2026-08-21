@@ -31,10 +31,8 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 
 from ...input_flows import InputFlowConfirmAllWarnings
-from ...ward_keys import bip39_seed, derive_k_mac, derive_ward_id
-from ...ward_service import MockWardService
+from ...ward_service import DEFAULT_WARD_ID, bound_daemon
 from ...ward_trie import WardTrie
-from ...ward_wm import MockWM
 
 pytestmark = [
     pytest.mark.protocol("thp"),
@@ -43,12 +41,7 @@ pytestmark = [
 ]
 
 _APP = "TEST"
-
-# The device under test uses the default mnemonic and no passphrase (`SetupParams` in
-# tests/conftest.py), so the oracle can reproduce its keys.
-_SEED = bip39_seed(" ".join(["all"] * 12))
-_K_MAC = derive_k_mac(_SEED)
-_WARD_ID = derive_ward_id(_SEED)
+_WARD_ID = DEFAULT_WARD_ID
 
 
 def _nothing_on_the_wire(entry_key: bytes):
@@ -59,17 +52,6 @@ def _nothing_on_the_wire(entry_key: bytes):
     host in these tests happens to hold the same store.
     """
     raise AssertionError("a read reached the wallet channel instead of the service")
-
-
-def _daemon(client: Client, store: WardTrie, wm: MockWM | None = None) -> MockWardService:
-    """A connected, bound daemon serving `store`."""
-    wardd = MockWardService(client)
-    wardd.connect()
-    assert isinstance(wardd.open_service(), m.WardServiceOpenAck)
-    wardd.store = store
-    wardd.wm = wm if wm is not None else MockWM()
-    wardd.k_mac = _K_MAC
-    return wardd
 
 
 def _read(session: Session, identifier: bytes) -> tuple:
@@ -88,14 +70,13 @@ def _read(session: Session, identifier: bytes) -> tuple:
 def _write(session: Session, identifier: bytes, value: bytes) -> tuple:
     """Run a write on the wallet channel, walking its screen.
 
-    Still ends in `WardLeafAck` on a service build: the device does not publish yet, so the leaf
-    comes back to the wallet host and the host is what advances the daemon's replica. Handing the
-    mutation to the daemon instead is the next unit, and this file is deliberately written so that
-    it is the ACK type that changes and not the sync behaviour underneath.
+    Ends in `WardMutationApplied`, not `WardLeafAck`: the device publishes to the daemon itself, so
+    the wallet host is told that the change happened and is given no leaf to store. What this file
+    cares about is only that the write drives its own sync; the publication is `..._publish.py`.
     """
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_set_entry"), m.WardLeafAck]
+            [m.ButtonRequest(name="ward_set_entry"), m.WardMutationApplied]
         )
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         res = ward.set_entry(session, _APP, identifier, value, _nothing_on_the_wire)
@@ -112,7 +93,7 @@ def test_a_genesis_read_syncs_itself(client: Client) -> None:
     """
     store = WardTrie()
     session = client.get_session()
-    wardd = _daemon(client, store)
+    wardd = bound_daemon(client, store)
     try:
         with wardd.serving():
             res = _read(session, b"nothing-here")
@@ -129,7 +110,7 @@ def test_the_read_is_served_by_the_daemon(client: Client) -> None:
     over its own channel -- which is the whole point of the arrangement."""
     store = WardTrie()
     session = client.get_session()
-    wardd = _daemon(client, store)
+    wardd = bound_daemon(client, store)
     try:
         with wardd.serving():
             res = _read(session, b"absent")
@@ -152,53 +133,15 @@ def test_a_genesis_write_syncs_itself_too(client: Client) -> None:
     leave a wallet whose first WARD operation happens to be a write unable to perform it at all."""
     store = WardTrie()
     session = client.get_session()
-    wardd = _daemon(client, store)
+    wardd = bound_daemon(client, store)
     try:
         with wardd.serving():
             res = _write(session, b"first", b"value")
-        assert res.auth_commit is not None  # a transition really was authorised
-        assert wardd.wm.head(_WARD_ID)[0] == 0  # ...against the opening head the WM adopted
-    finally:
-        wardd.close()
-
-
-def test_the_device_follows_a_head_the_daemon_moved(client: Client) -> None:
-    """The multi-writer case, and the one the chain fold exists for.
-
-    The device does not commit its own writes -- the head moves only when an attestation names it
-    -- so after a write the daemon's replica is one transition ahead. On a connect build the host
-    has to know to run a sync round before the next read will work. Here the device notices on the
-    fetch, folds the link it is missing, and adopts, without the wallet host doing anything.
-
-    Asserted on the ROUND TRIPS as well as the value: a read that quietly served from the device's
-    own older tree would return the same absence and look identical.
-    """
-    store = WardTrie()
-    session = client.get_session()
-    wardd = _daemon(client, store)
-    try:
-        with wardd.serving():
-            res = _write(session, b"moved", b"v1")
-            ward.apply(store, res)
-            assert store.counter == 1  # the daemon is ahead; the device is still at 0
-
-            read = _read(session, b"moved")
-            assert read.response.message == "WARD entry shown"
-
-            # ...and the head it adopted STUCK: a second read needs no sync at all. Which is what
-            # separates having adopted the daemon's head from having merely survived one read.
-            _read(session, b"moved")
-
-        # The sync for the write, then the write's own fetch; then the read's fetch, which is told
-        # to sync, the sync, and the one retry; then the second read's single fetch.
-        assert wardd.served == [
-            "WardSyncRequest",
-            "WardServiceFetch",
-            "WardServiceFetch",
-            "WardSyncRequest",
-            "WardServiceFetch",
-            "WardServiceFetch",
-        ]
+        # The head-init bootstrap opened the wallet at 0, and the write moved it to 1 -- so the
+        # bootstrap really did happen here rather than the write having found a head already.
+        assert res.counter == 1
+        assert store.counter == 1
+        assert wardd.wm.head(_WARD_ID)[0] == 1
     finally:
         wardd.close()
 
@@ -212,7 +155,7 @@ def test_a_second_session_syncs_again(client: Client) -> None:
     would still read correctly here; only the missing round trip shows it.
     """
     store = WardTrie()
-    wardd = _daemon(client, store)
+    wardd = bound_daemon(client, store)
     try:
         with wardd.serving():
             _read(client.get_session(), b"absent")
@@ -241,13 +184,13 @@ def test_another_wallet_is_not_served_from_this_replica(client: Client) -> None:
     is built to refuse.
     """
     store = WardTrie()
-    wardd = _daemon(client, store)
+    wardd = bound_daemon(client, store)
     try:
         with wardd.serving():
             # Give the daemon a real head first: two empty trees agree trivially, and a test that
             # passed on that would prove nothing.
             owner = client.get_session(passphrase="")
-            ward.apply(store, _write(owner, b"theirs", b"secret"))
+            _write(owner, b"theirs", b"secret")
 
             other = client.get_session(passphrase="hidden")
             with pytest.raises(exceptions.TrezorFailure):
@@ -265,7 +208,7 @@ def test_a_sync_requirement_buys_exactly_one_retry(client: Client) -> None:
     """
     store = WardTrie()
     session = client.get_session()
-    wardd = _daemon(client, store)
+    wardd = bound_daemon(client, store)
     wardd.always_out_of_sync = True
     try:
         with wardd.serving():
@@ -290,7 +233,7 @@ def test_a_silent_daemon_fails_closed(client: Client) -> None:
     workflow parked forever on a daemon that went away is the one that is not.
     """
     session = client.get_session()
-    wardd = _daemon(client, WardTrie())
+    wardd = bound_daemon(client)
     try:
         # No `serving()`: nothing will answer.
         with pytest.raises(exceptions.TrezorFailure) as err:
@@ -315,9 +258,7 @@ def test_a_torn_down_service_can_come_back(client: Client) -> None:
     key = b"\x57" * 32
     store = WardTrie()
 
-    silent = MockWardService(client)
-    silent.connect(host_static_privkey=key)
-    assert isinstance(silent.open_service(), m.WardServiceOpenAck)
+    silent = bound_daemon(client, host_static_privkey=key)
     session = client.get_session()
     try:
         with pytest.raises(exceptions.TrezorFailure):
@@ -325,12 +266,7 @@ def test_a_torn_down_service_can_come_back(client: Client) -> None:
     finally:
         silent.close()
 
-    again = MockWardService(client)
-    again.connect(host_static_privkey=key)
-    assert isinstance(again.open_service(), m.WardServiceOpenAck)
-    again.store = store
-    again.wm = MockWM()
-    again.k_mac = _K_MAC
+    again = bound_daemon(client, store, host_static_privkey=key)
     try:
         with again.serving():
             res = _read(client.get_session(), b"anything")

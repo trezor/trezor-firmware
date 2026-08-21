@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
+
 if TYPE_CHECKING:
-    from trezor.messages import WardLeafAck, WardSetEntry
+    from trezor.messages import WardLeafAck, WardMutationApplied, WardSetEntry
 
 
-async def set_entry(msg: WardSetEntry) -> WardLeafAck:
+async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
     """WardSetEntry handler: confirm creating or replacing a host-held entry.
 
     The device pulls the CURRENT value before showing anything, which is what makes an
@@ -122,20 +124,38 @@ async def set_entry(msg: WardSetEntry) -> WardLeafAck:
     # one at all. Nothing needs storing in the meantime -- the mac is self-validating, so the
     # device can accept the root later purely because it reproduces the attested mac.
 
+    identity = make_leaf_identity(key_type, id_part)
+    content = make_leaf_content(val_part)
+    step = auth_commit(
+        await derive_k_auth(),
+        await derive_ward_id(),
+        counter - 1,
+        from_root,
+        counter,
+        new_root,
+    )
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        # THE ONE POINT WHERE THIS HANDLER'S TRANSPORT SHOWS. Everything above -- the pull, the
+        # screen, the sealing, the derived root -- is the same work in both builds; what differs is
+        # who is handed the result and whether the device waits to hear that it stuck.
+        from trezor.messages import WardMutationApplied
+
+        from .service import publish
+
+        await publish(entry_key, identity, content, from_root, counter, new_root, step)
+        # NO LEAF GOES BACK. The wallet host does not own the replica here, and `WardLeafAck` is not
+        # merely unhelpful in its place -- a host's `apply` reads an absent content body as a
+        # deletion, so an emptied ack would erase the entry it just wrote.
+        return WardMutationApplied(entry_key=entry_key, counter=counter)
+
     return WardLeafAck(
         entry_key=entry_key,
-        identity=make_leaf_identity(key_type, id_part),
-        content=make_leaf_content(val_part),
+        identity=identity,
+        content=content,
         counter=counter,
         mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
-        auth_commit=auth_commit(
-            await derive_k_auth(),
-            await derive_ward_id(),
-            counter - 1,
-            from_root,
-            counter,
-            new_root,
-        ),
+        auth_commit=step,
         auth_sig=sig_commit(
             await derive_k_sig(),
             await derive_ward_id(),
