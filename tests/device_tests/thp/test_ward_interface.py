@@ -1,39 +1,14 @@
 import pytest
 
+from trezorlib import messages
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.thp.channel import Channel
 from trezorlib.transport.udp import UdpTransport
 
+from ...ward_service import MockWardService, ward_transport
+
 Client = TrezorTestContext
 pytestmark = [pytest.mark.protocol("thp")]
-
-# Offsets 4 and 5 are BLE's and 6 is the Tropic model's -- see
-# `trezorlib._internal.emulator` and `core/embed/io/usb/usb_config.c`, which must agree.
-WARD_PORT_OFFSET = 7
-
-
-def _ward_transport(client: Client) -> UdpTransport:
-    """A transport for the WARD service interface, or skip if this build has no such interface.
-
-    Skipped rather than failed because the interface is a BUILD OPTION: WARD is served either over
-    the ordinary connection or over its own channel, never both, so a connect build legitimately
-    has nothing listening here. Detected by probing rather than by asking the device, which has no
-    way to report it.
-    """
-    transport = client.transport
-    if not isinstance(transport, UdpTransport):
-        pytest.skip("the WARD interface is only reachable over UDP on the emulator")
-
-    host, port = transport.device
-    ward = UdpTransport(f"{host}:{port + WARD_PORT_OFFSET}")
-    try:
-        ward.open()
-    except Exception:
-        pytest.skip("this build has no WARD service interface")
-    if not ward.is_ready():
-        ward.close()
-        pytest.skip("this build has no WARD service interface")
-    return ward
 
 
 def test_the_ward_interface_carries_its_own_channel(client: Client) -> None:
@@ -44,7 +19,7 @@ def test_the_ward_interface_carries_its_own_channel(client: Client) -> None:
     interface asked second was refused and reported TRANSPORT_BUSY. Two live channels on two
     interfaces is therefore the assertion, not one channel on the new port.
     """
-    ward = _ward_transport(client)
+    ward = ward_transport(client)
     try:
         on_wire = Channel.allocate(client.transport)
         on_wire._init_noise()
@@ -66,7 +41,7 @@ def test_the_ward_interface_completes_a_handshake(client: Client) -> None:
     device -- its own read loop, write loop and channel state -- rather than just being present in
     the descriptor.
     """
-    ward = _ward_transport(client)
+    ward = ward_transport(client)
     try:
         channel = Channel.allocate(ward)
         channel._init_noise()
@@ -74,6 +49,23 @@ def test_the_ward_interface_completes_a_handshake(client: Client) -> None:
         channel._read_handshake_init_response()
     finally:
         ward.close()
+
+
+def test_it_answers_while_the_wire_interface_holds_a_channel(client: Client) -> None:
+    """A message arriving here is HANDLED, not merely reassembled.
+
+    The session dispatches exactly one channel -- whichever received a packet first -- because a
+    wallet host's conversation is the session and the session restarts around it. A wallet channel
+    is normally live and holding that slot, so before the service interface had a dispatcher of its
+    own a message arriving here was reassembled and then read by nobody: the symptom was a daemon
+    that hung, with nothing on the device to indicate anything was wrong.
+
+    So the assertion is only that SOMETHING comes back. Which message it is depends on what the
+    interface is willing to serve, and that is a separate question from whether anyone is listening.
+    """
+    with MockWardService(client) as wardd:
+        # The wire interface has a live channel throughout: `client` is connected over it.
+        assert wardd.call(messages.GetFeatures(), timeout=10) is not None
 
 
 def test_the_existing_interfaces_keep_their_ports(client: Client) -> None:
