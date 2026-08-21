@@ -109,6 +109,28 @@ def mark_online() -> None:
     context.cache_set(APP_WARD_ONLINE, bytes([_ONLINE]))
 
 
+def mark_offline() -> None:
+    """Drop the latch: this session no longer knows it shares a head with the backend.
+
+    THE ONLY THING THAT CLEARS IT, and it exists for one moment: a service build about to hand a
+    mutation to the daemon. From the instant that request leaves, the device cannot say whether the
+    daemon applied it -- an ack that never arrives is indistinguishable from a write that never
+    happened -- so the honest state is "I do not know", and it has to be recorded BEFORE the
+    request rather than after the failure. Clearing it afterwards would leave the whole window in
+    which the answer is unknown looking like the window in which it is known.
+
+    No connect-mode route needs this: nothing there moves the backend's head without the device
+    having adopted the result in the same breath.
+
+    NOT A FAILURE PATH. `adopt` sets the latch again as the last thing it does, so the ordinary
+    outcome is a gap of one round trip.
+    """
+    from storage.cache_common import APP_WARD_ONLINE
+    from trezor.wire import context
+
+    context.cache_set(APP_WARD_ONLINE, bytes(1))
+
+
 def is_online() -> bool:
     """Whether a reconcile has succeeded in THIS session.
 
