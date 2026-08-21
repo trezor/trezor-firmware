@@ -343,6 +343,8 @@ uint32_t systask_get_r0(systask_t* task) {
 static void systask_kill(systask_t* task) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
+  systask_print_pminfo(task);
+
   task->killed = 1;
 
   if (task == &scheduler->kernel_task) {
@@ -354,13 +356,16 @@ static void systask_kill(systask_t* task) {
     // We reach this point only if error_handler is NULL or
     // if it returns. Neither is expected to happen.
     reboot_device();
-  } else if (task == scheduler->active_task) {
+  } else {
     // Free task ID
     scheduler->task_id_map &= ~(1 << task->id);
     // Notify all event sources about the task termination
     sysevents_notify_task_killed(task);
-    // Switch to the kernel task
-    systask_yield_to(&scheduler->kernel_task);
+
+    if (task == scheduler->active_task) {
+      // Switch to the kernel task
+      systask_yield_to(&scheduler->kernel_task);
+    }
   }
 }
 
