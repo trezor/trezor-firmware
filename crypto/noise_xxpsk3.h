@@ -23,8 +23,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "aes/aesgcm.h"
-
 #define NOISE_XXPSK3_HASHLEN 32
 #define NOISE_XXPSK3_DHLEN 32
 #define NOISE_XXPSK3_TAG_SIZE 16
@@ -39,7 +37,7 @@
 #define USE_NOISE_XXPSK3_RESPONDER
 
 typedef struct {
-  gcm_ctx gcm;
+  uint8_t key[NOISE_XXPSK3_HASHLEN];
   bool has_key;
   uint64_t nonce;
 } noise_xxpsk3_cipher_state_t;

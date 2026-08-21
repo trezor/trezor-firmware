@@ -132,74 +132,48 @@ static void dh(const uint8_t (*private_key)[NOISE_XXPSK3_DHLEN],
   curve25519_scalarmult(*output, *private_key, *public_key);
 }
 
-// Derives the AES-GCM context from the key; the key itself is not retained.
-// The context is reused for all messages of the session.
-static void cs_set_key(noise_xxpsk3_cipher_state_t *cs,
-                       const uint8_t key[NOISE_XXPSK3_HASHLEN]) {
-  memzero(&cs->gcm, sizeof(cs->gcm));
-  cs->has_key =
-      gcm_init_and_key(key, NOISE_XXPSK3_HASHLEN, &cs->gcm) == RETURN_GOOD;
-  cs->nonce = 0;
-}
-
 static void ss_mix_key(
     noise_xxpsk3_symmetric_state_t *ss,
     const uint8_t (*input_key_material)[NOISE_XXPSK3_DHLEN]) {
-  uint8_t temp_ck[NOISE_XXPSK3_HASHLEN] = {0};
-  uint8_t temp_k[NOISE_XXPSK3_HASHLEN] = {0};
-
   // Mix key
   hkdf2(ss->chaining_key, NOISE_XXPSK3_HASHLEN, *input_key_material,
         NOISE_XXPSK3_DHLEN,
-        &temp_ck,  // <- Output 1
-        &temp_k    // <- Output 2
+        &ss->chaining_key,     // <- Output 1
+        &ss->cipher_state.key  // <- Output 2
   );
-
-  memcpy(ss->chaining_key, temp_ck, NOISE_XXPSK3_HASHLEN);
-  cs_set_key(&ss->cipher_state, temp_k);
-
-  memzero(temp_ck, sizeof(temp_ck));  // Clear buffers from stack
-  memzero(temp_k, sizeof(temp_k));
+  ss->cipher_state.has_key = true;
+  ss->cipher_state.nonce = 0;
 }
 
 static void ss_mix_key_and_hash(noise_xxpsk3_symmetric_state_t *ss,
                                 const uint8_t (*key)[NOISE_XXPSK3_HASHLEN]) {
-  uint8_t temp_ck[NOISE_XXPSK3_HASHLEN] = {0};
   uint8_t temp_h[NOISE_XXPSK3_HASHLEN] = {0};
-  uint8_t temp_k[NOISE_XXPSK3_HASHLEN] = {0};
 
   hkdf3(ss->chaining_key, NOISE_XXPSK3_HASHLEN, (uint8_t *)key,
-        NOISE_XXPSK3_HASHLEN, &temp_ck, &temp_h, &temp_k);
+        NOISE_XXPSK3_HASHLEN, &ss->chaining_key, &temp_h,
+        &ss->cipher_state.key);
 
-  memcpy(ss->chaining_key, temp_ck, NOISE_XXPSK3_HASHLEN);
-  cs_set_key(&ss->cipher_state, temp_k);
-
+  ss->cipher_state.has_key = true;
+  ss->cipher_state.nonce = 0;
   ss_mix_hash(ss, temp_h, NOISE_XXPSK3_HASHLEN);
-
-  memzero(temp_ck, sizeof(temp_ck));  // Remove temp keys from stack
-  memzero(temp_h, sizeof(temp_h));
-  memzero(temp_k, sizeof(temp_k));
+  memzero(temp_h, sizeof(temp_h));  // Remove temp keys from stack
 }
 
 static void ss_ts_split(noise_xxpsk3_symmetric_state_t *ss,
                         noise_xxpsk3_transport_state_t *ts, bool initiator) {
-  uint8_t send_key[NOISE_XXPSK3_HASHLEN] = {0};
-  uint8_t receive_key[NOISE_XXPSK3_HASHLEN] = {0};
-
   if (initiator) {
-    hkdf2(ss->chaining_key, NOISE_XXPSK3_HASHLEN, NULL, 0, &send_key,
-          &receive_key);
+    hkdf2(ss->chaining_key, NOISE_XXPSK3_HASHLEN, NULL, 0,
+          &ts->send_cipher_state.key, &ts->receive_cipher_state.key);
   } else {
-    hkdf2(ss->chaining_key, NOISE_XXPSK3_HASHLEN, NULL, 0, &receive_key,
-          &send_key);
+    hkdf2(ss->chaining_key, NOISE_XXPSK3_HASHLEN, NULL, 0,
+          &ts->receive_cipher_state.key, &ts->send_cipher_state.key);
   }
 
-  cs_set_key(&ts->send_cipher_state, send_key);
-  cs_set_key(&ts->receive_cipher_state, receive_key);
+  ts->send_cipher_state.has_key = true;
+  ts->send_cipher_state.nonce = 0;
+  ts->receive_cipher_state.has_key = true;
+  ts->receive_cipher_state.nonce = 0;
   memcpy(ts->handshake_hash, ss->handshake_hash, NOISE_XXPSK3_HASHLEN);
-
-  memzero(send_key, sizeof(send_key));
-  memzero(receive_key, sizeof(receive_key));
 }
 
 /**
@@ -243,6 +217,13 @@ static bool encrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
       return false;
     }
 
+    // Encrypt with AEAD
+    gcm_ctx ctx = {0};
+    if (gcm_init_and_key(cs->key, NOISE_XXPSK3_HASHLEN, &ctx) != RETURN_GOOD) {
+      memzero(&ctx, sizeof(ctx));
+      return false;
+    }
+
     uint8_t nonce_bytes[NONCE_ARRAY_SIZE_BYTES] = {0};
     nonce_to_bytes(cs->nonce, &nonce_bytes);
 
@@ -253,7 +234,8 @@ static bool encrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
     if (gcm_encrypt_message(nonce_bytes, NONCE_ARRAY_SIZE_BYTES, ad, ad_len,
                             ciphertext, plaintext_len,
                             ciphertext + plaintext_len, NOISE_XXPSK3_TAG_SIZE,
-                            &cs->gcm) != RETURN_GOOD) {
+                            &ctx) != RETURN_GOOD) {
+      memzero(&ctx, sizeof(ctx));
       if (ciphertext != NULL) {
         memzero(ciphertext, plaintext_len + NOISE_XXPSK3_TAG_SIZE);
       }
@@ -261,6 +243,7 @@ static bool encrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
       return false;
     }
 
+    memzero(&ctx, sizeof(ctx));
     memzero(nonce_bytes, sizeof(nonce_bytes));
     cs->nonce++;
   }
@@ -298,6 +281,13 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
       return false;
     }
 
+    // Decrypt with AEAD
+    gcm_ctx ctx = {0};
+    if (gcm_init_and_key(cs->key, NOISE_XXPSK3_HASHLEN, &ctx) != RETURN_GOOD) {
+      memzero(&ctx, sizeof(ctx));
+      return false;
+    }
+
     uint8_t nonce_bytes[NONCE_ARRAY_SIZE_BYTES] = {0};
     nonce_to_bytes(cs->nonce, &nonce_bytes);
 
@@ -311,7 +301,8 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
     if (gcm_decrypt_message(nonce_bytes, NONCE_ARRAY_SIZE_BYTES, ad, ad_len,
                             plaintext, plaintext_len,
                             ciphertext + plaintext_len, NOISE_XXPSK3_TAG_SIZE,
-                            &cs->gcm) != RETURN_GOOD) {
+                            &ctx) != RETURN_GOOD) {
+      memzero(&ctx, sizeof(ctx));
       if (plaintext != NULL) {
         memzero(plaintext, plaintext_len);
       }
@@ -319,6 +310,7 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
       return false;
     }
 
+    memzero(&ctx, sizeof(ctx));
     memzero(nonce_bytes, sizeof(nonce_bytes));
     cs->nonce++;
   }

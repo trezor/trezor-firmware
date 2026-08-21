@@ -25,7 +25,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "aes/aesgcm.h"
 #include "ed25519-donna/ed25519.h"
 
 // Noise protocol using KK1 handshake pattern and X25519, AES-GCM and SHA256.
@@ -44,8 +43,11 @@ typedef struct {
                                                    // initiator during handshake
   uint8_t encryption_nonce[NOISE_KK1_NONCE_SIZE];
   uint8_t decryption_nonce[NOISE_KK1_NONCE_SIZE];
-  gcm_ctx encryption_context;
-  gcm_ctx decryption_context;
+  // There is a time-memory trade-off between storing encryption/decryption keys
+  // and storing encryption/decryption contexts, we choose to optimize for
+  // memory usage by storing the keys
+  uint8_t encryption_key[NOISE_KK1_KEY_SIZE];
+  uint8_t decryption_key[NOISE_KK1_KEY_SIZE];
   bool initialized;
 } noise_kk1_context_t;
 
