@@ -9,8 +9,15 @@ use zeroize::{Zeroize, ZeroizeOnDrop, zeroize_flat_type};
 ///
 /// # Safety
 ///
-/// Must only be implemented for types for which all-zero memory is a valid
-/// value, such as structs consumed by C.
+/// Must only be implemented for types that satisfy `zeroize_flat_type`'s safety
+/// guarantees:
+///
+/// * all-zero memory is a valid value
+/// * the type is flat, that is, does not hold Rust references nor dynamically
+///   sized data
+/// * values inside it do not have Drop impls
+///
+/// These are all generally true for FFI C structs.
 pub unsafe trait ZeroableMemory {}
 
 /// Zeroizing wrapper around sensitive memory contexts.
@@ -106,6 +113,14 @@ impl<T: ZeroableMemory> Zeroize for SecretContext<T> {
 /// Protects from hazardous calls which rely on the caller not copying out the
 /// sensitive context.
 ///
+/// **Important**: MUST NOT be instantiated with `D` a container type that
+/// returns an internal `&mut`` reference into itself. Doing so would transfer
+/// ownership of the secret bytes into the `SecretContextLock` struct, exposing
+/// it to copy hazard.
+///
+/// (Future development note: a custom marker trait `PointerToSecret` might be
+/// more appropriate than a generic `DerefMut`.)
+///
 /// You are responsible for not copying out the value obtained through
 /// [`SecretContextLock::hazard_mut`]. Prefer [`SecretContextLock::guarded`]
 /// and implementing the operation on [`HazardGuard`], which moves that
@@ -135,6 +150,10 @@ where
 {
     /// Lock `ctx` for exclusive use until this value is dropped.
     pub fn new(ctx: D) -> Self {
+        // using black_box at construction time (only) should ensure that a
+        // pointer is stored, preventing the compiler from doing something ugly
+        // like optimizing out the whole wrapper struct
+        // (UNPROVEN)
         Self(black_box(ctx))
     }
 
@@ -145,7 +164,7 @@ where
     /// You are responsible for not copying out the value (either manually or
     /// via something like `mem::replace`).
     pub fn hazard_mut(&mut self) -> &mut T {
-        black_box(self.0.hazard_mut())
+        self.0.hazard_mut()
     }
 
     /// Get a [`HazardGuard`] for the enclosed `SecretContext`.
@@ -153,7 +172,7 @@ where
     /// Operations on the sensitive context are implemented as methods of
     /// `HazardGuard`, so that they can only ever run on a locked context.
     pub fn guarded(&mut self) -> HazardGuard<'_, T> {
-        HazardGuard(black_box(&mut self.0))
+        HazardGuard(&mut self.0)
     }
 }
 
@@ -190,7 +209,7 @@ impl<'a, T: ZeroableMemory> HazardGuard<'a, T> {
     /// guarantees. This method is only provided as an escape hatch for contexts
     /// where a [`SecretContextLock`] cannot be used.
     pub fn hazard_new(ctx: &'a mut SecretContext<T>) -> Self {
-        Self(black_box(ctx))
+        Self(ctx)
     }
 
     /// Get a mutable reference to the guarded value, for passing to FFI.
@@ -200,7 +219,7 @@ impl<'a, T: ZeroableMemory> HazardGuard<'a, T> {
     /// You are responsible for not copying out the value (either manually or
     /// via something like `mem::replace`).
     pub fn hazard_mut(&mut self) -> &mut T {
-        black_box(self.0.hazard_mut())
+        self.0.hazard_mut()
     }
 }
 
