@@ -43,10 +43,9 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
     from trezor.wire import DataError
 
     from . import offline_store
-    from . import round as sync_round
     from .attest import root_mac
     from .cas import auth_commit, sig_commit
-    from .common import pull_leaf, require_initialized
+    from .common import online, pull_leaf, require_initialized
     from .keys import (
         ENTRY_TYPE_ADDRESS,
         derive_k_auth,
@@ -68,7 +67,7 @@ async def flush_queue(msg: WardFlushQueue) -> WardFlushQueueAck:
 
     require_initialized()
 
-    if not sync_round.is_online():
+    if not await online():
         raise DataError("WARD: sync before publishing queued changes")
 
     # NAMED, OR THE NEXT ONE. A host that says which entry to publish gets that one -- and that is
