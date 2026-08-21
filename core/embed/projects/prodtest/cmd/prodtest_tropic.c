@@ -24,7 +24,6 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <rtl/printf.h>
 #include <sec/tropic.h>
 #include <sys/rng.h>
 #include <sys/systick.h>
@@ -42,7 +41,6 @@
 #include "fw_SPECT.h"
 #include "libtropic.h"
 #include "libtropic_l2.h"
-#include "libtropic_port.h"
 
 #include <sec/tropic.h>
 #include <sec/tropic_configs.h>
@@ -58,28 +56,6 @@ typedef enum {
 
 static tropic_handshake_state_t g_tropic_handshake_state =
     TROPIC_HANDSHAKE_STATE_0;
-
-// CLI for libtropic's log output; non-NULL only during the FW update.
-static cli_t* g_lt_log_cli = NULL;
-
-#ifndef TREZOR_EMULATOR
-// Log sink called by libtropic's `LT_LOG_*()` macros. On the
-// emulator the libtropic POSIX port provides its own implementation.
-int lt_port_log(const char* format, ...) {
-  if (g_lt_log_cli == NULL) {
-    return 0;
-  }
-
-  char line[128] = {0};
-  va_list args = {0};
-  va_start(args, format);
-  int len = vsnprintf_(line, sizeof(line), format, args);
-  va_end(args);
-  line[strcspn(line, "\n")] = '\0';
-  cli_trace(g_lt_log_cli, "%s", line);
-  return len;
-}
-#endif  // TREZOR_EMULATOR
 
 // TODO: Update this link to correspond with the latest chip revision when it
 // becomes available.
@@ -1543,10 +1519,10 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
   cli_trace(cli, "Updating RISC-V and SPECT FW");
   // We allow the libtropic's log to write to cli during the update, so that we
   // can distinguish which step failed.
-  g_lt_log_cli = cli;
+  tropic_set_log_sink(cli);
   lt_ret_t ret = lt_do_mutable_fw_update(h, fw_CPU, sizeof(fw_CPU), fw_SPECT,
                                          sizeof(fw_SPECT));
-  g_lt_log_cli = NULL;
+  tropic_set_log_sink(NULL);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_FW, "FW update failed, ret=%s",
               lt_ret_verbose(ret));
@@ -1586,7 +1562,8 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
   ret = tropic_init(cli);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_INIT,
-              "Re-initialization after reboot failed with error '%s'", lt_ret_verbose(ret));
+              "Re-initialization after reboot failed with error '%s'",
+              lt_ret_verbose(ret));
     return;
   }
   cli_ok(cli, "");

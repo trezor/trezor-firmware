@@ -40,6 +40,34 @@
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
 
+#ifdef USE_TROPIC_LOGGING
+#include <rtl/printf.h>
+
+// CLI for libtropic's log output; non-NULL only while a caller has armed it.
+static cli_t *g_lt_log_cli = NULL;
+
+void tropic_set_log_sink(cli_t *cli) { g_lt_log_cli = cli; }
+
+#ifndef TREZOR_EMULATOR
+// Log sink called by libtropic's `LT_LOG_*()` macros. On the
+// emulator the libtropic POSIX port provides its own implementation.
+int lt_port_log(const char *format, ...) {
+  if (g_lt_log_cli == NULL) {
+    return 0;
+  }
+
+  char line[128] = {0};
+  va_list args = {0};
+  va_start(args, format);
+  int len = vsnprintf_(line, sizeof(line), format, args);
+  va_end(args);
+  line[strcspn(line, "\n")] = '\0';
+  cli_trace(g_lt_log_cli, "%s", line);
+  return len;
+}
+#endif  // TREZOR_EMULATOR
+#endif  // USE_TROPIC_LOGGING
+
 #ifdef SECURE_MODE
 
 // KEK masks used in PIN verification

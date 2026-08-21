@@ -70,7 +70,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     ]);
 
     if cfg!(feature = "tropic_logging") {
-        lib.add_define("LT_LOG_ENABLE_ERROR", Some("1"));
+        lib.add_defines([
+            ("LT_LOG_ENABLE_ERROR", Some("1")),
+            ("USE_TROPIC_LOGGING", Some("1")),
+        ]);
     }
 
     Ok(())
