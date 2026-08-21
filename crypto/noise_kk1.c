@@ -33,6 +33,13 @@ static uint8_t protocol_name[SHA256_DIGEST_LENGTH] = {
     '5', '5', '1', '9', '_', 'A', 'E', 'S',  'G',  'C', 'M',
     '_', 'S', 'H', 'A', '2', '5', '6', 0x00, 0x00, 0x00};
 
+// The KK1 handshake messages have a fixed size, so the Noise message size limit
+// can be checked at compile time instead of in the handshake functions
+_Static_assert(sizeof(noise_kk1_request_t) <= NOISE_KK1_MAX_MESSAGE_SIZE,
+               "handshake request must fit into a Noise message");
+_Static_assert(sizeof(noise_kk1_response_t) <= NOISE_KK1_MAX_MESSAGE_SIZE,
+               "handshake response must fit into a Noise message");
+
 static bool encrypt(const uint8_t key[NOISE_KK1_KEY_SIZE],
                     const uint8_t nonce[NOISE_KK1_NONCE_SIZE],
                     const uint8_t *associated_data,
@@ -53,7 +60,9 @@ static bool encrypt(const uint8_t key[NOISE_KK1_KEY_SIZE],
                           ciphertext + plaintext_length, NOISE_KK1_TAG_SIZE,
                           &ctx) != RETURN_GOOD) {
     memzero(&ctx, sizeof(ctx));
-    memzero(ciphertext, plaintext_length);
+    if (ciphertext != NULL) {
+      memzero(ciphertext, plaintext_length + NOISE_KK1_TAG_SIZE);
+    }
     return false;
   }
   memzero(&ctx, sizeof(ctx));
@@ -86,7 +95,9 @@ static bool decrypt(const uint8_t key[NOISE_KK1_KEY_SIZE],
                           ciphertext + plaintext_length, NOISE_KK1_TAG_SIZE,
                           &ctx) != RETURN_GOOD) {
     memzero(&ctx, sizeof(ctx));
-    memzero(plaintext, plaintext_length);
+    if (plaintext != NULL) {
+      memzero(plaintext, plaintext_length);
+    }
     return false;
   }
   memzero(&ctx, sizeof(ctx));
@@ -147,10 +158,15 @@ static void split(uint8_t chaining_key[SHA256_DIGEST_LENGTH],
                  "output1 and output2 must be truncated to NOISE_KK1_KEY_SIZE");
 }
 
+// The counter is restricted to 48 bits: 2^48 messages of at most 65535 bytes
+// produce at most 2^60 AES blocks under one key, well below the 2^64 blocks
+// per key that NIST SP 800-38D, Appendix B recommends as a limit.
+// https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=51288
 static bool increase_nonce(uint8_t nonce[NOISE_KK1_NONCE_SIZE]) {
   // The first 4 bytes of the nonce are zeros
-  // The last 8 bytes of the nonce are a big-endian encoded counter
-  for (int i = NOISE_KK1_NONCE_SIZE - 1; i >= 4; i--) {
+  // The last 8 bytes of the nonce are a big-endian encoded counter, of which
+  // only the low 6 bytes are ever used
+  for (int i = NOISE_KK1_NONCE_SIZE - 1; i >= 6; i--) {
     nonce[i]++;
     if (nonce[i] != 0) {
       return true;
@@ -225,6 +241,7 @@ bool noise_kk1_handle_handshake_request(
   if (!encrypt(kauth, zero_nonce, handshake_hash, sizeof(handshake_hash), NULL,
                0, response->tag)) {
     memzero(kauth, sizeof(kauth));
+    memzero(ctx, sizeof(*ctx));
     return false;
   }
   memzero(kauth, sizeof(kauth));
@@ -286,6 +303,7 @@ bool noise_kk1_handle_handshake_response(
                response->tag, NOISE_KK1_TAG_SIZE, NULL)) {
     // Wrong tag
     memzero(kauth, sizeof(kauth));
+    memzero(ctx, sizeof(*ctx));
     return false;
   }
   memzero(kauth, sizeof(kauth));
@@ -309,6 +327,11 @@ bool noise_kk1_send_message(noise_kk1_context_t *ctx,
   if (!ctx->initialized) {
     return false;
   }
+  if (associated_data_length > NOISE_KK1_MAX_PLAINTEXT_SIZE ||
+      plaintext_length >
+          NOISE_KK1_MAX_PLAINTEXT_SIZE - associated_data_length) {
+    return false;
+  }
   if (!encrypt(ctx->encryption_key, ctx->encryption_nonce, associated_data,
                associated_data_length, plaintext, plaintext_length,
                ciphertext)) {
@@ -330,6 +353,10 @@ bool noise_kk1_receive_message(noise_kk1_context_t *ctx,
                                const uint8_t *ciphertext,
                                size_t ciphertext_length, uint8_t *plaintext) {
   if (!ctx->initialized) {
+    return false;
+  }
+  if (associated_data_length > NOISE_KK1_MAX_MESSAGE_SIZE ||
+      ciphertext_length > NOISE_KK1_MAX_MESSAGE_SIZE - associated_data_length) {
     return false;
   }
   if (!decrypt(ctx->decryption_key, ctx->decryption_nonce, associated_data,
