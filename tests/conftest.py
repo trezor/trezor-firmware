@@ -405,6 +405,7 @@ def _prepared_test_ctx(
         pytest.xfail("Optiga is not available on this device.")
 
     _check_protocol(request, _raw_test_ctx)
+    _check_ward_transport(request, _raw_test_ctx)
 
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_test_ctx.sd_card_present:
@@ -503,6 +504,31 @@ def _check_protocol(request: pytest.FixtureRequest, client: TrezorTestContext) -
         pytest.skip(
             f"Test does not support protocol '{client.protocol_version.value}'."
         )
+
+
+def _check_ward_transport(
+    request: pytest.FixtureRequest, client: TrezorTestContext
+) -> None:
+    """Skip a test that does not apply to how this firmware serves WARD.
+
+    The two transports are MUTUALLY EXCLUSIVE by build: a firmware serves WARD either over the
+    ordinary connection or over a channel of its own, never both, and there is no runtime
+    fallback. So the connect-mode request set does not exist in a service build and vice versa,
+    and a test written against one of them is not a failure on the other -- it is inapplicable.
+
+    Detected by probing for the service interface rather than by asking the device. There is no
+    feature flag for this and deliberately so: a host that has to be told which transport to use
+    is a host that can be lied to about it.
+    """
+    marker = request.node.get_closest_marker("ward_transport")
+    if not marker:
+        return
+
+    from .ward_service import serves_ward_over_a_service_channel
+
+    actual = "service" if serves_ward_over_a_service_channel(client) else "connect"
+    if actual not in marker.args:
+        pytest.skip(f"Test does not apply to a '{actual}' WARD build.")
 
 
 def _is_main_runner(session_or_request: pytest.Session | pytest.FixtureRequest) -> bool:
