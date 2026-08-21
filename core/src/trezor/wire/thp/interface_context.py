@@ -201,10 +201,31 @@ class InterfaceContext:
         self.active_channel: Channel | None = None
         self.thp_ctx = thp_ctx
 
+        # Whether this interface dispatches its own inbound messages instead of handing them to
+        # the session's single dispatcher. True for the WARD service interface, whose daemon is not
+        # the session's host and must not have to wait for it.
+        from .. import is_ward_interface
+
+        self._serves_own_dispatch: bool = is_ward_interface(iface)
+        self._dispatch_box: loop.mailbox[None] = loop.mailbox()
+
         self._read_loop: loop.spawn = loop.spawn(self.read_loop())
         self._write_loop: loop.spawn = loop.spawn(self.write_loop())
         self._retrans_loop: loop.spawn = loop.spawn(self.retransmission_loop())
         self._handshake_key_task: loop.spawn | None = None
+
+        # A DISPATCHER OF ITS OWN, for the service interface only. `ThpContext.dispatch_channel`
+        # holds exactly one channel -- whichever received a packet first -- because a wallet host's
+        # conversation IS the session, and the session restarts around it. A wallet channel is
+        # normally live and holding that slot, so a message arriving on the service interface would
+        # be reassembled and then never read by anyone: the symptom is a daemon that hangs rather
+        # than an error.
+        #
+        # Serving it here rather than teaching the main loop to multiplex keeps the two
+        # conversations independent, which is the reason the interface is separate at all.
+        self._dispatch_loop: loop.spawn | None = None
+        if self._serves_own_dispatch:
+            self._dispatch_loop = loop.spawn(self.dispatch_loop())
 
         # Mailboxes used to wake up each loop.
         self._read_box: loop.mailbox[None] = loop.mailbox()
@@ -231,6 +252,8 @@ class InterfaceContext:
         """
         if self._handshake_key_task:
             self._handshake_key_task.close()
+        if self._dispatch_loop:
+            self._dispatch_loop.close()
         self._retrans_loop.close()
         self._read_loop.close()
 
@@ -299,6 +322,36 @@ class InterfaceContext:
             # wake up write loop in case broadcast/handshake channels have outgoing data
             self.request_write()
 
+    async def dispatch_loop(self) -> None:
+        """Handle host-initiated messages on this interface's own channel.
+
+        ONE MESSAGE SHAPE IN PRACTICE. `WardServiceOpen` is the last thing the daemon initiates;
+        afterwards the device asks and the daemon answers, and those replies are read by the
+        workflow that asked, never here. Everything else inbound is refused at the receive
+        boundary, so this loop stays a bootstrap path rather than a second general dispatcher.
+        """
+        from . import received_message_handler
+
+        while True:
+            await self._dispatch_box
+            channel = self.active_channel
+            while channel is not None and channel is self.active_channel:
+                try:
+                    await received_message_handler.handle_received_message(channel)
+                except Exception as exc:
+                    # The channel died, or a handler failed in a way `handle_received_message`
+                    # does not convert into a Failure. Either way this loop is not the place to
+                    # decide what that means -- go back to waiting for a channel rather than
+                    # retrying, which on a dead channel would spin.
+                    #
+                    # A channel that SURVIVES a failure here is therefore not served again until
+                    # a channel is next allocated on this interface. That is acceptable only
+                    # because the daemon initiates exactly one message: it reconnects, which
+                    # allocates a channel, which re-arms this loop.
+                    if __debug__:
+                        log.exception(__name__, exc)
+                    break
+
     def should_read(self) -> bool:
         """
         We want to avoid the following sequence of events:
@@ -330,6 +383,14 @@ class InterfaceContext:
                 f"should_read: waiting_for_channel:{waiting_for_channel} expecting_message:{expecting_message} expecting_ack:{expecting_ack}",
                 iface=self._iface,
             )
+        if self._serves_own_dispatch:
+            # ALWAYS LISTENING. The conditions below describe a channel whose traffic the session
+            # drives: the session is between messages, or a workflow is waiting for one. The
+            # service interface fits none of them -- the daemon may announce itself at any moment,
+            # with no workflow waiting and no restart pending -- and the buffer-loss race this
+            # guards against is handled for it by reattaching the channel instead.
+            return True
+
         return waiting_for_channel or expecting_message or expecting_ack
 
     def read_packet_for_channel(self, result: int, packet_buffer: AnyBytes) -> None:
@@ -339,7 +400,9 @@ class InterfaceContext:
         if self.active_channel is None:
             if buffers := self._buffers_provider.take():
                 self.active_channel = Channel(channel_id, self, buffers=buffers)
-                if self.thp_ctx.dispatch_channel is None:
+                if self._serves_own_dispatch:
+                    self._dispatch_box.put(None, replace=True)
+                elif self.thp_ctx.dispatch_channel is None:
                     self.thp_ctx.dispatch_channel = self.active_channel
                     self.thp_ctx.channel_ready_box.put(None, replace=True)
 
