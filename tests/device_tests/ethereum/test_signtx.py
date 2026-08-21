@@ -853,3 +853,15 @@ def test_signtx_payment_req_erc20_swap(session: Session):
         params,
         example_input_data_erc20_swap["result"],
     )
+
+    params = example_input_data_erc20_swap["parameters"]
+    params = params | dict(
+        payment_req=_create_payment_request(session, params),
+        # Non-zero ETH value is disallowed
+    )
+    with pytest.raises(TrezorFailure, match="DataError: Non-zero ETH value"):
+        _do_test_signtx(
+            session,
+            params,
+            result={},
+        )
