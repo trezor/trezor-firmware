@@ -1583,7 +1583,12 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
 
   // Tropic rebooted during the update, so the driver's session data is stale.
   tropic_deinit();
-  tropic_init(cli);
+  ret = tropic_init(cli);
+  if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_INIT,
+              "Re-initialization after reboot failed with error '%s'", lt_ret_verbose(ret));
+    return;
+  }
   cli_ok(cli, "");
 
   return;
