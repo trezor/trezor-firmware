@@ -8053,20 +8053,6 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardDeleteEntry"]:
             return isinstance(msg, cls)
 
-    class WardEntryRequest(protobuf.MessageType):
-        entry_key: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            entry_key: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardEntryRequest"]:
-            return isinstance(msg, cls)
-
     class WardEncryptedLeaf(protobuf.MessageType):
         nonce: "AnyBytes | None"
         tag: "AnyBytes | None"
@@ -8195,32 +8181,6 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardEntryAck"]:
             return isinstance(msg, cls)
 
-    class WardLeafAck(protobuf.MessageType):
-        entry_key: "AnyBytes"
-        identity: "WardLeafIdentity | None"
-        content: "WardLeafContent | None"
-        counter: "int | None"
-        mac: "AnyBytes | None"
-        auth_commit: "AnyBytes | None"
-        auth_sig: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            entry_key: "AnyBytes",
-            identity: "WardLeafIdentity | None" = None,
-            content: "WardLeafContent | None" = None,
-            counter: "int | None" = None,
-            mac: "AnyBytes | None" = None,
-            auth_commit: "AnyBytes | None" = None,
-            auth_sig: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardLeafAck"]:
-            return isinstance(msg, cls)
-
     class WardQueueSetEntry(protobuf.MessageType):
         app_id: "str | None"
         identifier: "AnyBytes | None"
@@ -8321,6 +8281,116 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardQueueGetAck"]:
             return isinstance(msg, cls)
 
+    class WardChainLink(protobuf.MessageType):
+        from_counter: "int | None"
+        from_root: "AnyBytes | None"
+        to_counter: "int | None"
+        to_root: "AnyBytes | None"
+        auth_commit: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            from_counter: "int | None" = None,
+            from_root: "AnyBytes | None" = None,
+            to_counter: "int | None" = None,
+            to_root: "AnyBytes | None" = None,
+            auth_commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardChainLink"]:
+            return isinstance(msg, cls)
+
+    class WardPinCachedEntry(protobuf.MessageType):
+        app_id: "str | None"
+        identifier: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            app_id: "str | None" = None,
+            identifier: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardPinCachedEntry"]:
+            return isinstance(msg, cls)
+
+    class WardEraseCachedEntry(protobuf.MessageType):
+        app_id: "str | None"
+        identifier: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            app_id: "str | None" = None,
+            identifier: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardEraseCachedEntry"]:
+            return isinstance(msg, cls)
+
+    class WardFlushQueue(protobuf.MessageType):
+        app_id: "str | None"
+        identifier: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            app_id: "str | None" = None,
+            identifier: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardFlushQueue"]:
+            return isinstance(msg, cls)
+
+    class WardEntryRequest(protobuf.MessageType):
+        entry_key: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardEntryRequest"]:
+            return isinstance(msg, cls)
+
+    class WardLeafAck(protobuf.MessageType):
+        entry_key: "AnyBytes"
+        identity: "WardLeafIdentity | None"
+        content: "WardLeafContent | None"
+        counter: "int | None"
+        mac: "AnyBytes | None"
+        auth_commit: "AnyBytes | None"
+        auth_sig: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes",
+            identity: "WardLeafIdentity | None" = None,
+            content: "WardLeafContent | None" = None,
+            counter: "int | None" = None,
+            mac: "AnyBytes | None" = None,
+            auth_commit: "AnyBytes | None" = None,
+            auth_sig: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardLeafAck"]:
+            return isinstance(msg, cls)
+
     class WardFlushQueueAck(protobuf.MessageType):
         entry_key: "AnyBytes | None"
         identity: "WardLeafIdentity | None"
@@ -8347,28 +8417,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardFlushQueueAck"]:
-            return isinstance(msg, cls)
-
-    class WardChainLink(protobuf.MessageType):
-        from_counter: "int | None"
-        from_root: "AnyBytes | None"
-        to_counter: "int | None"
-        to_root: "AnyBytes | None"
-        auth_commit: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            from_counter: "int | None" = None,
-            from_root: "AnyBytes | None" = None,
-            to_counter: "int | None" = None,
-            to_root: "AnyBytes | None" = None,
-            auth_commit: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardChainLink"]:
             return isinstance(msg, cls)
 
     class WardVerifyChain(protobuf.MessageType):
@@ -8563,54 +8611,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardRecoverCounterAck"]:
-            return isinstance(msg, cls)
-
-    class WardPinCachedEntry(protobuf.MessageType):
-        app_id: "str | None"
-        identifier: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            app_id: "str | None" = None,
-            identifier: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardPinCachedEntry"]:
-            return isinstance(msg, cls)
-
-    class WardEraseCachedEntry(protobuf.MessageType):
-        app_id: "str | None"
-        identifier: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            app_id: "str | None" = None,
-            identifier: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardEraseCachedEntry"]:
-            return isinstance(msg, cls)
-
-    class WardFlushQueue(protobuf.MessageType):
-        app_id: "str | None"
-        identifier: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            app_id: "str | None" = None,
-            identifier: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardFlushQueue"]:
             return isinstance(msg, cls)
 
     class WebAuthnListResidentCredentials(protobuf.MessageType):
