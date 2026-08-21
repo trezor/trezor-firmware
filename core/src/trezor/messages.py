@@ -8573,6 +8573,192 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardRecoverCounterAck"]:
             return isinstance(msg, cls)
 
+    class WardServiceOpen(protobuf.MessageType):
+        protocol_version: "int | None"
+
+        def __init__(
+            self,
+            *,
+            protocol_version: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardServiceOpen"]:
+            return isinstance(msg, cls)
+
+    class WardServiceOpenAck(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardServiceOpenAck"]:
+            return isinstance(msg, cls)
+
+    class WardSyncRequest(protobuf.MessageType):
+        nonce: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+        current_counter: "int | None"
+        current_root: "AnyBytes | None"
+        current_mac: "AnyBytes | None"
+        head_init_sig: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            nonce: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+            current_counter: "int | None" = None,
+            current_root: "AnyBytes | None" = None,
+            current_mac: "AnyBytes | None" = None,
+            head_init_sig: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardSyncRequest"]:
+            return isinstance(msg, cls)
+
+    class WardSyncResponse(protobuf.MessageType):
+        counter: "int | None"
+        mac: "AnyBytes | None"
+        timestamp: "int | None"
+        wm_signature: "AnyBytes | None"
+        links: "list[WardChainLink]"
+
+        def __init__(
+            self,
+            *,
+            links: "list[WardChainLink] | None" = None,
+            counter: "int | None" = None,
+            mac: "AnyBytes | None" = None,
+            timestamp: "int | None" = None,
+            wm_signature: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardSyncResponse"]:
+            return isinstance(msg, cls)
+
+    class WardServiceFetch(protobuf.MessageType):
+        entry_key: "AnyBytes | None"
+        current_counter: "int | None"
+        current_root: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes | None" = None,
+            current_counter: "int | None" = None,
+            current_root: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardServiceFetch"]:
+            return isinstance(msg, cls)
+
+    class WardSyncRequired(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardSyncRequired"]:
+            return isinstance(msg, cls)
+
+    class WardPublish(protobuf.MessageType):
+        entry_key: "AnyBytes | None"
+        identity: "WardLeafIdentity | None"
+        content: "WardLeafContent | None"
+        counter: "int | None"
+        mac: "AnyBytes | None"
+        auth_commit: "AnyBytes | None"
+        wm_sig: "AnyBytes | None"
+        nonce: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes | None" = None,
+            identity: "WardLeafIdentity | None" = None,
+            content: "WardLeafContent | None" = None,
+            counter: "int | None" = None,
+            mac: "AnyBytes | None" = None,
+            auth_commit: "AnyBytes | None" = None,
+            wm_sig: "AnyBytes | None" = None,
+            nonce: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardPublish"]:
+            return isinstance(msg, cls)
+
+    class WardPublishAck(protobuf.MessageType):
+        counter: "int | None"
+        mac: "AnyBytes | None"
+        timestamp: "int | None"
+        wm_signature: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int | None" = None,
+            mac: "AnyBytes | None" = None,
+            timestamp: "int | None" = None,
+            wm_signature: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardPublishAck"]:
+            return isinstance(msg, cls)
+
+    class WardPublishConflict(protobuf.MessageType):
+        head_counter: "int | None"
+
+        def __init__(
+            self,
+            *,
+            head_counter: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardPublishConflict"]:
+            return isinstance(msg, cls)
+
+    class WardMutationApplied(protobuf.MessageType):
+        entry_key: "AnyBytes | None"
+        counter: "int | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes | None" = None,
+            counter: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardMutationApplied"]:
+            return isinstance(msg, cls)
+
+    class WardFlushQueueApplied(protobuf.MessageType):
+        entry_key: "AnyBytes | None"
+        counter: "int | None"
+        remaining: "int | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes | None" = None,
+            counter: "int | None" = None,
+            remaining: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardFlushQueueApplied"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
         batch_size: "int | None"
 
