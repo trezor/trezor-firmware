@@ -213,13 +213,6 @@ static bool encrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
   if (!cs->has_key || cs->nonce >= NONCE_LIMIT) {
     return false;
   } else {
-    if (ad_len > NOISE_XXPSK3_MAX_PLAINTEXT_SIZE ||
-        plaintext_len > NOISE_XXPSK3_MAX_PLAINTEXT_SIZE - ad_len) {
-      // The associated data and the resulting Noise message would together
-      // exceed the maximum message size
-      return false;
-    }
-
     // Encrypt with AEAD
     gcm_ctx ctx = {0};
     if (gcm_init_and_key(cs->key, NOISE_XXPSK3_HASHLEN, &ctx) != RETURN_GOOD) {
@@ -276,13 +269,6 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
   } else {
     if (ciphertext_len < NOISE_XXPSK3_TAG_SIZE) {
       // encrypted message is too short to contain the auth. tag
-      return false;
-    }
-
-    if (ad_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE ||
-        ciphertext_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE - ad_len) {
-      // The associated data and the message together exceed the maximum
-      // message size
       return false;
     }
 
