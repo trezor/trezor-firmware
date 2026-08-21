@@ -24,10 +24,11 @@ test fail for a reason that looks like a firmware bug.
 from __future__ import annotations
 
 import pytest
-from ward_keys import head_init_sig, wm_sig
-from ward_wm import MockWM
 
 from trezorlib import _ed25519
+
+from .ward_keys import head_init_sig, wm_sig
+from .ward_wm import MockWM
 
 K_SIG = b"\x11" * 32
 WARD_ID = _ed25519.publickey_unsafe(K_SIG)

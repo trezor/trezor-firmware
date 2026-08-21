@@ -127,7 +127,7 @@ class MockWM:
         `head_init_sig` authorising the starting pair. Anyone could otherwise claim a wallet's
         opening head by being first to speak.
         """
-        from ward_keys import verify_head_init_sig, verify_wm_sig
+        from .ward_keys import verify_head_init_sig, verify_wm_sig
 
         known = self._heads.get(ward_id)
 
@@ -172,7 +172,7 @@ class MockWM:
         written, so there may be nothing to attest yet. Same authorisation as above -- the WM
         cannot compute a mac, so an opening head has to be supplied and signed.
         """
-        from ward_keys import verify_head_init_sig
+        from .ward_keys import verify_head_init_sig
 
         if ward_id not in self._heads:
             if not verify_head_init_sig(ward_id, current_mac, head_init_sig):

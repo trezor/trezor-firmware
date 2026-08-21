@@ -8,11 +8,17 @@ on that screen. A label lookup therefore never confirms, never fails the surroun
 workflow, and returns rather than displays.
 
 THE SAME TWO SOURCES, CHOSEN THE SAME WAY. Online (this session has adopted a WM-attested
-head) means pull from the host and check the answer against the trusted root; offline means
-this device's own store. The choice is made UP FRONT on `round.is_online()`, for the reason
-`get_entry` now enforces by refusing outright: a device that pulled first and fell back to its
-local copy on failure would let a hostile host choose which of the two the user sees, simply by
-answering badly.
+head) means pull from the backend and check the answer against the trusted root; offline means
+this device's own store. The choice is made UP FRONT, by `common.online_or_offline()`, for the
+reason `get_entry` now enforces by refusing outright: a device that pulled first and fell back to
+its local copy on failure would let a hostile backend choose which of the two the user sees, simply
+by answering badly.
+
+`online_or_offline` RATHER THAN `online`, and this is the ONLY caller entitled to it. On a service
+build the question can be answered by driving a sync, which can fail -- and every other caller must
+let that failure through, because for them "could not verify" must never become "here is a value".
+This one has a legitimate offline answer and a screen that says so, so a failed sync is a source
+selection here rather than an error.
 
 WHY THIS ONE STILL FORKS while the host-facing requests were split in two. The caller here is an
 ON-DEVICE app, not a host: there is no request for it to name, and no host to be told which
@@ -88,8 +94,7 @@ async def resolve_label(
     docstring on who absorbs that.
     """
     from . import offline_store
-    from . import round as sync_round
-    from .common import pull_entry, require_initialized
+    from .common import online_or_offline, pull_entry, require_initialized
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
 
     _authorize(principal, "read")
@@ -101,7 +106,7 @@ async def resolve_label(
 
     entry_key = await entry_key_for(app_id, identifier, key_type)
 
-    if sync_round.is_online():
+    if await online_or_offline():
         value = await pull_entry(entry_key, key_type)
         # ABSENT is a proven answer here, not a failure: the host had to exhibit a witness
         # for it. An entry whose value is EMPTY is a different thing and keeps its note --

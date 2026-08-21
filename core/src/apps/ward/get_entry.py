@@ -28,8 +28,13 @@ async def get_entry(msg: WardGetEntry) -> Success:
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from . import round as sync_round
-    from .common import WARNING_UNVERIFIED, display_bytes, pull_entry, require_key
+    from .common import (
+        WARNING_UNVERIFIED,
+        display_bytes,
+        online,
+        pull_entry,
+        require_key,
+    )
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
@@ -42,7 +47,7 @@ async def get_entry(msg: WardGetEntry) -> Success:
         ("Key", display_bytes(identifier), True),
     ]
 
-    if not sync_round.is_online():
+    if not await online():
         raise DataError("WARD: sync first, or read the local copy with WardQueueGetEntry")
 
     value = await pull_entry(entry_key, key_type)
