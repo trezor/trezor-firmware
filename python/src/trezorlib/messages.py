@@ -859,6 +859,17 @@ class MessageType(IntEnum):
     WardQueueGetEntry = 2327
     WardQueueGetAck = 2328
     WardFlushQueueAck = 2329
+    WardServiceOpen = 2330
+    WardServiceOpenAck = 2331
+    WardSyncRequest = 2332
+    WardSyncResponse = 2333
+    WardServiceFetch = 2334
+    WardSyncRequired = 2335
+    WardPublish = 2336
+    WardPublishAck = 2337
+    WardPublishConflict = 2338
+    WardMutationApplied = 2339
+    WardFlushQueueApplied = 2340
     DisplayAddress = 2322
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
@@ -10744,6 +10755,212 @@ class WardRecoverCounterAck(protobuf.MessageType):
         counter: Optional["int"] = None,
     ) -> None:
         self.counter = counter
+
+
+class WardServiceOpen(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2330
+    FIELDS = {
+        1: protobuf.Field("protocol_version", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        protocol_version: Optional["int"] = None,
+    ) -> None:
+        self.protocol_version = protocol_version
+
+
+class WardServiceOpenAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2331
+
+
+class WardSyncRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2332
+    FIELDS = {
+        1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("current_counter", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("current_root", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("current_mac", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("head_init_sig", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce: Optional["bytes"] = None,
+        ward_id: Optional["bytes"] = None,
+        current_counter: Optional["int"] = None,
+        current_root: Optional["bytes"] = None,
+        current_mac: Optional["bytes"] = None,
+        head_init_sig: Optional["bytes"] = None,
+    ) -> None:
+        self.nonce = nonce
+        self.ward_id = ward_id
+        self.current_counter = current_counter
+        self.current_root = current_root
+        self.current_mac = current_mac
+        self.head_init_sig = head_init_sig
+
+
+class WardSyncResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2333
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
+        4: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("links", "WardChainLink", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        links: Optional[Sequence["WardChainLink"]] = None,
+        counter: Optional["int"] = None,
+        mac: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
+        wm_signature: Optional["bytes"] = None,
+    ) -> None:
+        self.links: Sequence["WardChainLink"] = links if links is not None else []
+        self.counter = counter
+        self.mac = mac
+        self.timestamp = timestamp
+        self.wm_signature = wm_signature
+
+
+class WardServiceFetch(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2334
+    FIELDS = {
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("current_counter", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("current_root", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: Optional["bytes"] = None,
+        current_counter: Optional["int"] = None,
+        current_root: Optional["bytes"] = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.current_counter = current_counter
+        self.current_root = current_root
+
+
+class WardSyncRequired(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2335
+
+
+class WardPublish(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2336
+    FIELDS = {
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("identity", "WardLeafIdentity", repeated=False, required=False, default=None),
+        3: protobuf.Field("content", "WardLeafContent", repeated=False, required=False, default=None),
+        4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("wm_sig", "bytes", repeated=False, required=False, default=None),
+        8: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: Optional["bytes"] = None,
+        identity: Optional["WardLeafIdentity"] = None,
+        content: Optional["WardLeafContent"] = None,
+        counter: Optional["int"] = None,
+        mac: Optional["bytes"] = None,
+        auth_commit: Optional["bytes"] = None,
+        wm_sig: Optional["bytes"] = None,
+        nonce: Optional["bytes"] = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.identity = identity
+        self.content = content
+        self.counter = counter
+        self.mac = mac
+        self.auth_commit = auth_commit
+        self.wm_sig = wm_sig
+        self.nonce = nonce
+
+
+class WardPublishAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2337
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
+        4: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: Optional["int"] = None,
+        mac: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
+        wm_signature: Optional["bytes"] = None,
+    ) -> None:
+        self.counter = counter
+        self.mac = mac
+        self.timestamp = timestamp
+        self.wm_signature = wm_signature
+
+
+class WardPublishConflict(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2338
+    FIELDS = {
+        1: protobuf.Field("head_counter", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        head_counter: Optional["int"] = None,
+    ) -> None:
+        self.head_counter = head_counter
+
+
+class WardMutationApplied(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2339
+    FIELDS = {
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: Optional["bytes"] = None,
+        counter: Optional["int"] = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.counter = counter
+
+
+class WardFlushQueueApplied(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2340
+    FIELDS = {
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("remaining", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: Optional["bytes"] = None,
+        counter: Optional["int"] = None,
+        remaining: Optional["int"] = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.counter = counter
+        self.remaining = remaining
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

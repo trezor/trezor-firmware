@@ -431,6 +431,20 @@ enum MessageType {
     MessageType_WardQueueGetAck = 2328 [(wire_out) = true];
     MessageType_WardFlushQueueAck = 2329 [(wire_out) = true];
 
+    // WARD over its own channel. The device is the sole initiator after the service announces
+    // itself, so `wire_out` here means "the device asks" -- the reverse of the usual reading.
+    MessageType_WardServiceOpen = 2330 [(wire_in) = true];
+    MessageType_WardServiceOpenAck = 2331 [(wire_out) = true];
+    MessageType_WardSyncRequest = 2332 [(wire_out) = true];
+    MessageType_WardSyncResponse = 2333 [(wire_in) = true];
+    MessageType_WardServiceFetch = 2334 [(wire_out) = true];
+    MessageType_WardSyncRequired = 2335 [(wire_in) = true];
+    MessageType_WardPublish = 2336 [(wire_out) = true];
+    MessageType_WardPublishAck = 2337 [(wire_in) = true];
+    MessageType_WardPublishConflict = 2338 [(wire_in) = true];
+    MessageType_WardMutationApplied = 2339 [(wire_out) = true];
+    MessageType_WardFlushQueueApplied = 2340 [(wire_out) = true];
+
     // Display address (an on-device consumer of WARD labels)
     MessageType_DisplayAddress = 2322 [(wire_in) = true];
 
