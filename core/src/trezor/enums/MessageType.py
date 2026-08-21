@@ -333,4 +333,15 @@ if not utils.BITCOIN_ONLY:
     WardQueueGetEntry = 2327
     WardQueueGetAck = 2328
     WardFlushQueueAck = 2329
+    WardServiceOpen = 2330
+    WardServiceOpenAck = 2331
+    WardSyncRequest = 2332
+    WardSyncResponse = 2333
+    WardServiceFetch = 2334
+    WardSyncRequired = 2335
+    WardPublish = 2336
+    WardPublishAck = 2337
+    WardPublishConflict = 2338
+    WardMutationApplied = 2339
+    WardFlushQueueApplied = 2340
     DisplayAddress = 2322

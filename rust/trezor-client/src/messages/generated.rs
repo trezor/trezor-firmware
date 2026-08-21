@@ -376,6 +376,17 @@ trezor_message_impl! {
     WardQueueGetEntry => MessageType_WardQueueGetEntry,
     WardQueueGetAck => MessageType_WardQueueGetAck,
     WardFlushQueueAck => MessageType_WardFlushQueueAck,
+    WardServiceOpen => MessageType_WardServiceOpen,
+    WardServiceOpenAck => MessageType_WardServiceOpenAck,
+    WardSyncRequest => MessageType_WardSyncRequest,
+    WardSyncResponse => MessageType_WardSyncResponse,
+    WardServiceFetch => MessageType_WardServiceFetch,
+    WardSyncRequired => MessageType_WardSyncRequired,
+    WardPublish => MessageType_WardPublish,
+    WardPublishAck => MessageType_WardPublishAck,
+    WardPublishConflict => MessageType_WardPublishConflict,
+    WardMutationApplied => MessageType_WardMutationApplied,
+    WardFlushQueueApplied => MessageType_WardFlushQueueApplied,
     DisplayAddress => MessageType_DisplayAddress,
 }
 

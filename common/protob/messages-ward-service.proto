@@ -1,0 +1,229 @@
+syntax = "proto2";
+package hw.trezor.messages.ward;
+
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageWardService";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+
+import "messages-ward.proto";
+
+/*
+ * WARD OVER ITS OWN CHANNEL: the device asks, the service answers.
+ *
+ * These messages exist only in a firmware that serves WARD over a dedicated interface, talking to
+ * a daemon that owns the WARD replica. Shared types live in `messages-ward.proto`; the messages
+ * this set replaces live in `messages-ward-connect.proto`.
+ *
+ * THE DEVICE IS THE SOLE INITIATOR HERE, and that is the whole shape of this file. After the
+ * service announces itself once with WardServiceOpen, every exchange below is opened by the
+ * DEVICE and answered by the service -- there is no host-initiated request left on this channel.
+ *
+ * That is not a stylistic choice. The channel carries one message stream and has no request ids,
+ * so if both ends could open an exchange, a response could not be told apart from an unrelated
+ * incoming request: the device would read whichever arrived first and could only distinguish them
+ * by type. Making one end the initiator removes the ambiguity instead of papering over it, and it
+ * is why no request id appears anywhere below.
+ *
+ * It also means the service must hold its interface and keep reading continuously. It cannot
+ * connect only when it expects to be asked, because the asking starts on the device.
+ *
+ * WHAT REPLACES WHAT:
+ *
+ *   WardEntryRequest        -> WardServiceFetch, which names the head the device is asking
+ *                              ABOUT, so the service can say "you are behind" instead of
+ *                              serving a proof that cannot verify.
+ *   WardSync + WardIngest-  -> WardSyncRequest / WardSyncResponse: one exchange instead of
+ *   Attestation + Reconcile    three. The nonce no longer has to outlive two round trips, so it
+ *                              stops being session state and becomes a local variable.
+ *   WardLeafAck             -> WardPublish hands the mutation to the service, and
+ *                              WardMutationApplied tells the wallet host it happened. A wallet
+ *                              host on a service build is NOT given the leaf: it does not own the
+ *                              replica, and a copy it kept would be stale from the next write on.
+ */
+
+/**
+ * Request: host -> device, once, on the WARD interface. Announces that this channel is the WARD
+ * service.
+ *
+ * The LAST host-initiated application message on this channel: everything afterwards is opened by
+ * the device. Pairing authenticates the host's static key, but says nothing about what role the
+ * channel plays, which is what this establishes.
+ *
+ * Deliberately NOT preceded by ThpCreateNewSession. That derives and stores a wallet seed, and the
+ * service must not have one -- it is a transport peer, and every derivation a WARD operation needs
+ * happens in the workflow that calls the service, where the right hidden-wallet context already
+ * exists.
+ * @start
+ * @next WardServiceOpenAck
+ * @next Failure
+ */
+message WardServiceOpen {
+    optional uint32 protocol_version = 1;  // service protocol this daemon speaks
+}
+
+/**
+ * Response: the service is bound. It is not yet usable for anything: readiness comes from a sync,
+ * which the device performs when a WARD operation first needs it.
+ * @end
+ */
+message WardServiceOpenAck {
+}
+
+/**
+ * Response: device -> service. Asks for the current head, and says which one the device holds.
+ *
+ * The nonce is minted HERE, before the service talks to the WM, and that ordering is the entire
+ * freshness argument: the WM must sign a value it could not have known in advance, so a stockpiled
+ * anchor cannot be replayed. It survives only as a local variable for the length of this exchange
+ * -- unlike the connect-mode round, whose nonce had to be kept in the session cache because three
+ * separate host requests had to agree on it.
+ *
+ * current_counter and current_root name the device's OWN head. The service folds forward from
+ * exactly there, so what comes back proves descent from a state this device actually reached
+ * rather than from one it is told about.
+ *
+ * current_mac and head_init_sig are present only when the WM may not know this wallet yet. The WM
+ * cannot compute a mac -- it holds no key of ours -- so a wallet's first ever head has to be
+ * supplied and authenticated by the device, or there is nothing for a later CAS to compare
+ * against. They are ignored once the WM has a head.
+ */
+message WardSyncRequest {
+    optional bytes  nonce           = 1;  // 32B, minted by the device for this exchange
+    optional bytes  ward_id         = 2;  // 32B, the wallet the question is about
+    optional uint32 current_counter = 3;  // the head the device holds...
+    optional bytes  current_root    = 4;  // ...absent root means the empty tree
+
+    // Only for a wallet the WM has never seen. See above.
+    optional bytes  current_mac     = 5;
+    optional bytes  head_init_sig   = 6;
+}
+
+/**
+ * Request: service -> device. The attested head, and the authorised steps from the device's own
+ * head to it.
+ *
+ * CHAIN-ONLY, with no root-and-mac shortcut. The service owns the replica AND its history, so it
+ * can always show the steps -- and every adoption then proves two separate things: DESCENT, that
+ * each intervening transition was authorised by a device of this wallet and none was skipped, and
+ * CURRENCY, that the WM vouches for where it ends. Connect mode has a weaker route that takes the
+ * host's root on the WM's word alone; this file does not.
+ *
+ * links is empty when the device already holds the attested head -- the ordinary "nothing has
+ * changed" answer. One link after a publication the device did not see confirmed. Several when
+ * another device of the wallet has written in the meantime.
+ */
+message WardSyncResponse {
+    optional uint32 counter      = 1;  // the head the WM attests
+    optional bytes  mac          = 2;  // ...and the mac it signed for it
+    optional uint64 timestamp    = 3;
+    optional bytes  wm_signature = 4;  // over the nonce from the request, so it cannot be replayed
+
+    repeated WardChainLink links = 5;  // ordered, starting at the device's current head
+}
+
+/**
+ * Response: device -> service. Asks for one entry, and says which head the device is asking about.
+ *
+ * NAMING THE HEAD IS THE POINT, and it is what WardEntryRequest could not do. A proof is only
+ * meaningful against the root it was built for, so a service that has moved on cannot answer this
+ * usefully -- it can only produce a proof the device will reject. Told which head the device
+ * holds, it answers WardSyncRequired instead, and the device syncs and asks again.
+ *
+ * Both fields, not just the counter: several roots can share a counter across a fork, so the
+ * counter alone does not identify a state.
+ */
+message WardServiceFetch {
+    optional bytes  entry_key       = 1;  // 32B keyed path, as WardEntryRequest
+    optional uint32 current_counter = 2;
+    optional bytes  current_root    = 3;  // absent means the empty tree
+}
+
+/**
+ * Request: service -> device, in place of WardEntryAck. "Your head is not mine; sync first."
+ *
+ * UNAUTHENTICATED ON PURPOSE, and safely so: the only thing a service gains by lying here is to
+ * make the device perform a sync it did not need. That sync is itself authenticated, so a false
+ * claim cannot move the head or change what a proof means -- it costs a round trip. Refusing to
+ * answer at all would achieve the same, so there is nothing to protect.
+ */
+message WardSyncRequired {
+}
+
+/**
+ * Response: device -> service. A mutation the device has derived and sealed, for the service to
+ * store and publish.
+ *
+ * THE DEVICE HAS NOT ADOPTED IT YET. The head moves only once the WM attests this exact counter
+ * and mac, which is what WardPublishAck carries back -- so a publication that is lost leaves the
+ * device where it was rather than ahead of the service.
+ *
+ * wm_sig is what lets the WM authorise the write without being trusted with contents: it signs
+ * the transition between MAC HEADS, which is exactly what the WM stores, so the WM never receives
+ * a root. auth_commit remains the authenticator another DEVICE of this wallet checks.
+ */
+message WardPublish {
+    optional bytes  entry_key   = 1;
+    optional WardLeafIdentity identity = 2;
+    optional WardLeafContent  content  = 3;
+    optional uint32 counter     = 4;   // the counter this transition reaches
+    optional bytes  mac         = 5;   // the mac of the state it reaches
+    optional bytes  auth_commit = 6;   // for another device of this wallet
+    optional bytes  wm_sig      = 7;   // for the WM: over the mac heads, never the roots
+    optional bytes  nonce       = 8;   // 32B, so the attestation that comes back is for THIS write
+}
+
+/**
+ * Request: service -> device. The WM attested the published head.
+ *
+ * Checked against what the device just sent, not merely verified: the counter and mac must be the
+ * ones this device computed. That is stronger than connect-mode reconcile, where the device
+ * accepts any root reproducing an attested mac -- here it minted the mac itself.
+ */
+message WardPublishAck {
+    optional uint32 counter      = 1;
+    optional bytes  mac          = 2;
+    optional uint64 timestamp    = 3;
+    optional bytes  wm_signature = 4;  // over the nonce from WardPublish
+}
+
+/**
+ * Request: service -> device. The publication definitely did not happen: the WM's head was not the
+ * one this transition was built on, so somebody else wrote first.
+ *
+ * DISTINCT FROM A TIMEOUT, and that distinction is worth a message. A conflict is a fact -- the
+ * write is known not to have landed -- so the queued change can be re-offered at once and the
+ * channel stays up. An ambiguous failure is the opposite: the write may have landed, so the
+ * channel is torn down and the outcome is settled by the next sync instead.
+ */
+message WardPublishConflict {
+    optional uint32 head_counter = 1;  // where the WM actually is, for the service's own logs
+}
+
+/**
+ * Response: device -> wallet host, in place of WardLeafAck on a service build.
+ *
+ * CARRIES NO LEAF, deliberately. On a service build the wallet host does not own the replica, so a
+ * leaf it kept would be a second copy going stale from the next write onwards -- and a host that
+ * stored it would gradually diverge from the service without either side noticing. A separate
+ * message rather than a WardLeafAck with the fields left out, because the host's `apply` reads an
+ * absent content body as a DELETION: an emptied ack would not merely be unhelpful, it would erase
+ * the entry.
+ * @end
+ */
+message WardMutationApplied {
+    optional bytes  entry_key = 1;
+    optional uint32 counter   = 2;
+}
+
+/**
+ * Response: device -> wallet host, in place of WardFlushQueueAck on a service build.
+ *
+ * Keeps `remaining`, which is not decoration: the host drains the queue by flushing while this is
+ * non-zero, so dropping it would strand every queued change after the first.
+ * @end
+ */
+message WardFlushQueueApplied {
+    optional bytes  entry_key = 1;
+    optional uint32 counter   = 2;
+    optional uint32 remaining = 3;  // queued changes still waiting, excluding this one
+}
