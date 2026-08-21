@@ -73,6 +73,11 @@ lt_ret_t tropic_init(cli_t* cli);
 
 void tropic_deinit(void);
 
+#ifdef USE_TROPIC_LOGGING
+// Routes libtropic's `LT_LOG_*()` output to `cli`. Pass NULL to stop.
+void tropic_set_log_sink(cli_t* cli);
+#endif  // USE_TROPIC_LOGGING
+
 typedef struct {
   uint32_t distribution_version;
   const lt_config_t* i_config;

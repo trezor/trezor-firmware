@@ -1,0 +1,1 @@
+Update `tropic-update-fw` to RISC-V FW 2.1.0 and SPECT FW 1.3.0. The bundled firmware targets ACAB silicon, or ABAB when built with `TROPIC_SILICON_REVISION=ABAB`.
