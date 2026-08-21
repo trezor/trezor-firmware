@@ -868,6 +868,8 @@ class MessageType(IntEnum):
     WardPublishConflict = 2338
     WardMutationApplied = 2339
     WardFlushQueueApplied = 2340
+    WardResetService = 2341
+    WardResetServiceAck = 2342
     DisplayAddress = 2322
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
@@ -10913,6 +10915,34 @@ class WardFlushQueueApplied(protobuf.MessageType):
         self.entry_key = entry_key
         self.counter = counter
         self.remaining = remaining
+
+
+class WardResetService(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2341
+    FIELDS = {
+        1: protobuf.Field("force", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        force: Optional["bool"] = None,
+    ) -> None:
+        self.force = force
+
+
+class WardResetServiceAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2342
+    FIELDS = {
+        1: protobuf.Field("unresolved", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        unresolved: Optional["int"] = None,
+    ) -> None:
+        self.unresolved = unresolved
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

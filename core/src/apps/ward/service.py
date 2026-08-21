@@ -470,6 +470,36 @@ async def become_ready() -> bool:
     return sync_round.is_online()
 
 
+def close_bound_channel(reason: str) -> None:
+    """Close the service's channel if it is still open, so the interface is free for the next one.
+
+    NOT A TEARDOWN OF THE BINDING -- the caller decides that, and the two are not the same fact: a
+    daemon restart closes a channel and keeps its pin. This only ensures that no channel is left
+    occupying the interface, because it tracks one at a time and the next daemon would otherwise
+    meet a busy interface rather than a bind.
+
+    Silent when there is nothing to close, or when what is recorded is no longer reachable. The
+    caller is on its way to forgetting the binding anyway, so making that depend on the state of the
+    channel it is discarding would be the wrong way round.
+    """
+    from trezor.wire import DataError
+
+    bound = get_binding()
+    if bound is None:
+        return
+
+    from trezorthp import channel_is_open
+
+    if not channel_is_open(bound[1]):
+        return
+
+    try:
+        channel, _session_id = _service_channel()
+    except DataError:
+        return
+    channel.clear(DataError(reason))
+
+
 # --- publishing a mutation ----------------------------------------------------------------
 #
 # WHAT THIS REMOVES IS THE UNCONFIRMED WINDOW. On a connect build a write ends by handing the leaf

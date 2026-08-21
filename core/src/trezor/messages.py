@@ -8759,6 +8759,34 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardFlushQueueApplied"]:
             return isinstance(msg, cls)
 
+    class WardResetService(protobuf.MessageType):
+        force: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            force: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardResetService"]:
+            return isinstance(msg, cls)
+
+    class WardResetServiceAck(protobuf.MessageType):
+        unresolved: "int | None"
+
+        def __init__(
+            self,
+            *,
+            unresolved: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardResetServiceAck"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
         batch_size: "int | None"
 

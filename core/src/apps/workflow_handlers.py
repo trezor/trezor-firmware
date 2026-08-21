@@ -150,6 +150,10 @@ def _find_message_handler_module(msg_type: int) -> str:
             # registered here for it: everything else on that channel is opened by the device and
             # read back inside the workflow that asked, never dispatched.
             return "apps.ward.service"
+        if utils.USE_WARD_SERVICE_CHANNEL and msg_type == MessageType.WardResetService:
+            # Registered for the WALLET interface, unlike the message above it: the daemon whose
+            # key was lost is the one party that cannot ask for this.
+            return "apps.ward.reset_service"
         if msg_type == MessageType.WardGetEntry:
             return "apps.ward.get_entry"
         if msg_type == MessageType.WardSetEntry:
