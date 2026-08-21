@@ -63,8 +63,8 @@ static tropic_handshake_state_t g_tropic_handshake_state =
 extern cli_t g_cli;
 
 int lt_port_log(const char* format, ...) {
-  char line[128];
-  va_list args;
+  char line[128] = {0};
+  va_list args = {0};
   va_start(args, format);
   int len = vsnprintf_(line, sizeof(line), format, args);
   va_end(args);
