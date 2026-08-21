@@ -10,6 +10,9 @@ from pathlib import Path
 
 import click
 
+ALL_MODELS = ["T2T1", "T3B1", "T3T1", "T3W1"]
+# FIXME ALL_MODELS = ["T2B1", "T2T1", "T3B1", "T3T1", "T3W1"]
+
 
 @click.command(help=__doc__)
 @click.argument(
@@ -20,14 +23,19 @@ import click
     "--output",
     "output_dir",
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
-    default="firmware",
+    default="firmware/unsigned",
 )
 @click.option(
     "-r",
     "--releases",
     "releases_json",
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
-    default="common/releases.json",
+)
+@click.option(
+    "-v",
+    "--version",
+    "version",
+    help="manually specify version instead of using releases.json",
 )
 @click.option(
     "-t",
@@ -39,24 +47,30 @@ import click
 def main(
     artifact_dir: str | Path,
     output_dir: str | Path,
-    releases_json: str | Path,
+    releases_json: str | Path | None,
     translations_dir: str | Path,
+    version: str | None,
 ) -> None:
     artifact_dir = Path(artifact_dir)
     output_dir = Path(output_dir)
-    releases_json = Path(releases_json)
     translations_dir = Path(translations_dir)
 
-    releases = json.loads(releases_json.read_text())["firmware"]
-    latest, models = max(
-        releases.items(), key=lambda item: [int(n) for n in item[0].split(".")]
-    )
-    click.echo(f"Version: {latest}")
+    if releases_json is not None:
+        releases_json = Path(releases_json)
+        releases = json.loads(releases_json.read_text())["firmware"]
+        version, models = max(
+            releases.items(), key=lambda item: [int(n) for n in item[0].split(".")]
+        )
+    elif version is not None:
+        models = ALL_MODELS
+    else:
+        raise click.ClickException("Either --releases or --version is required")
+    click.echo(f"Version: {version}")
     click.echo(f"Models: {', '.join(models)}")
 
     for model in models:
         # firmware
-        model_dir = output_dir / "unsigned" / model.lower()
+        model_dir = output_dir / model.lower()
         model_dir.mkdir(parents=True, exist_ok=True)
 
         for coins in ("universal", "btconly"):
@@ -69,7 +83,7 @@ def main(
             shutil.copy(fw_file, model_dir / fw_file.name)
 
         # translations
-        model_dir = output_dir / "unsigned" / "translations" / model.lower()
+        model_dir = output_dir / "translations" / model.lower()
         model_dir.mkdir(parents=True, exist_ok=True)
 
         for f in translations_dir.glob(f"translation-{model}-*-unsigned.bin"):

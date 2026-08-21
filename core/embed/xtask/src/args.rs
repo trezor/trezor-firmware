@@ -148,6 +148,8 @@ pub enum Cmd {
     Upload(UploadArgs),
     /// Combine multiple firmware projects into a single binary for flashing
     Combine(CombineArgs),
+    /// Print current version of specified project
+    PrintVersion(PrintVersionArgs),
 }
 
 #[derive(Args, Debug, Clone)]
@@ -229,4 +231,10 @@ pub struct CombineArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+}
+
+#[derive(Args, Debug)]
+#[command(hide = true)] // Should probably go under some kind of misc subcommand.
+pub struct PrintVersionArgs {
+    pub project: Project,
 }

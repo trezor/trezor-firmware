@@ -4,7 +4,7 @@ use std::{env, fs};
 use anyhow::{Context, Result, anyhow};
 use cargo_metadata::MetadataCommand;
 
-use crate::args::{Model, Project};
+use crate::args::{Model, PrintVersionArgs, Project};
 use crate::options::ResolvedBuildArgs;
 
 /// Returns the path to the built ELF file for the given build arguments.
@@ -186,6 +186,12 @@ pub fn get_version_file(project: Project) -> Result<PathBuf> {
         .join("projects")
         .join(project.binary_name())
         .join("version.h"))
+}
+
+pub fn print_version(args: PrintVersionArgs) -> Result<()> {
+    let version_str = parse_version_file(&get_version_file(args.project)?)?;
+    println!("{}", version_str);
+    Ok(())
 }
 
 #[cfg(test)]
