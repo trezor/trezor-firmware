@@ -73,6 +73,19 @@ AMOUNT_DECIMALS = const(7)
 NETWORK_PASSPHRASE_PUBLIC = "Public Global Stellar Network ; September 2015"
 NETWORK_PASSPHRASE_TESTNET = "Test SDF Network ; September 2015"
 
+# Trusted SEP-41 token contracts of the public network that are not Stellar
+# Asset Contracts, and so can never be recognized from a host-supplied asset
+# hint. Keyed by contract address, mapping to `(symbol, decimals)` as the
+# contract itself reports them.
+PUBLIC_TOKENS: dict[str, tuple[str, int]] = {
+    # SolvBTC
+    # https://stellar.expert/explorer/public/contract/CBIJBDNZNF4X35BJ4FFZWCDBSCKOP5NB4PLG4SNENRMLAPYG4P5FM6VN
+    "CBIJBDNZNF4X35BJ4FFZWCDBSCKOP5NB4PLG4SNENRMLAPYG4P5FM6VN": ("SolvBTC", 8),
+    # xSolvBTC
+    # https://stellar.expert/explorer/public/contract/CAUP7NFABXE5TJRL3FKTPMWRLC7IAXYDCTHQRFSCLR5TMGKHOOQO772J
+    "CAUP7NFABXE5TJRL3FKTPMWRLC7IAXYDCTHQRFSCLR5TMGKHOOQO772J": ("xSolvBTC", 8),
+}
+
 # https://www.stellar.org/developers/guides/concepts/accounts.html#flags
 FLAG_AUTH_REQUIRED = const(1)
 FLAG_AUTH_REVOCABLE = const(2)
