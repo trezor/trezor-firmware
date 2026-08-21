@@ -241,7 +241,7 @@ def generate_index(root: Path, models: Sequence[str], version: list[int]) -> Pat
                     },
                     "rollout_probability": 100,
                 },
-                "releasePath": f"{URL_PREFIX}/{model_lower}/{variant_dir}/{model_lower}-{version_str}-{variant}.json",
+                "releasePath": f"{URL_PREFIX}/{model_lower}/{variant_dir}/{model_lower}-{version_str}-{variant_dir}.json",
             }
         result["releases"][model.upper()] = model_json
 
