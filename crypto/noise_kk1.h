@@ -89,7 +89,8 @@ bool noise_kk1_handle_handshake_response_multiple_keys(
 
 // This is called by both the initiator and responder to send a message
 // len(ciphertext) == plaintext_length + NOISE_KK1_TAG_SIZE
-// plaintext_length must not exceed NOISE_KK1_MAX_PLAINTEXT_SIZE
+// associated_data_length + plaintext_length must not exceed
+// NOISE_KK1_MAX_PLAINTEXT_SIZE
 // The official Noise specification requires the associated_data to be empty
 bool noise_kk1_send_message(noise_kk1_context_t* ctx,
                             const uint8_t* associated_data,
@@ -99,7 +100,8 @@ bool noise_kk1_send_message(noise_kk1_context_t* ctx,
 
 // This is called by both the initiator and responder to receive a message
 // len(plaintext) == ciphertext_length - NOISE_KK1_TAG_SIZE
-// ciphertext_length must not exceed NOISE_KK1_MAX_MESSAGE_SIZE
+// associated_data_length + ciphertext_length must not exceed
+// NOISE_KK1_MAX_MESSAGE_SIZE
 // The official Noise specification requires the associated_data to be empty
 bool noise_kk1_receive_message(noise_kk1_context_t* ctx,
                                const uint8_t* associated_data,

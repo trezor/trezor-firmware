@@ -327,7 +327,9 @@ bool noise_kk1_send_message(noise_kk1_context_t *ctx,
   if (!ctx->initialized) {
     return false;
   }
-  if (plaintext_length > NOISE_KK1_MAX_PLAINTEXT_SIZE) {
+  if (associated_data_length > NOISE_KK1_MAX_PLAINTEXT_SIZE ||
+      plaintext_length >
+          NOISE_KK1_MAX_PLAINTEXT_SIZE - associated_data_length) {
     return false;
   }
   if (!encrypt(ctx->encryption_key, ctx->encryption_nonce, associated_data,
@@ -353,7 +355,8 @@ bool noise_kk1_receive_message(noise_kk1_context_t *ctx,
   if (!ctx->initialized) {
     return false;
   }
-  if (ciphertext_length > NOISE_KK1_MAX_MESSAGE_SIZE) {
+  if (associated_data_length > NOISE_KK1_MAX_MESSAGE_SIZE ||
+      ciphertext_length > NOISE_KK1_MAX_MESSAGE_SIZE - associated_data_length) {
     return false;
   }
   if (!decrypt(ctx->decryption_key, ctx->decryption_nonce, associated_data,

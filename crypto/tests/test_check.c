@@ -11741,6 +11741,29 @@ START_TEST(test_noise_kk1_limits) {
                                NOISE_KK1_MAX_PLAINTEXT_SIZE, big_ciphertext);
   ck_assert_int_eq(ret, true);
 
+  // The associated data counts towards the same limit, so one byte of it makes
+  // the largest plaintext too long
+  ret = noise_kk1_send_message(&initiator_context, big_plaintext, 1,
+                               big_plaintext, NOISE_KK1_MAX_PLAINTEXT_SIZE,
+                               big_ciphertext);
+  ck_assert_int_eq(ret, false);
+  ret = noise_kk1_receive_message(&initiator_context, big_plaintext, 1,
+                                  big_ciphertext, NOISE_KK1_MAX_MESSAGE_SIZE,
+                                  big_plaintext);
+  ck_assert_int_eq(ret, false);
+
+  // Shortening the plaintext by that one byte is accepted again
+  ret = noise_kk1_send_message(&initiator_context, big_plaintext, 1,
+                               big_plaintext, NOISE_KK1_MAX_PLAINTEXT_SIZE - 1,
+                               big_ciphertext);
+  ck_assert_int_eq(ret, true);
+
+  // An associated data length beyond the limit is rejected on its own
+  ret = noise_kk1_send_message(&initiator_context, big_plaintext,
+                               NOISE_KK1_MAX_MESSAGE_SIZE + 1, big_plaintext, 0,
+                               big_ciphertext);
+  ck_assert_int_eq(ret, false);
+
   // --- Message limit ---
   // The counter occupies the low 6 bytes of the nonce, so it is exhausted after
   // 2^48 messages. The message that exhausts it is still processed, but the

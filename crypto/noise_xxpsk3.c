@@ -212,8 +212,10 @@ static bool encrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
   if (!cs->has_key || cs->nonce >= NONCE_LIMIT) {
     return false;
   } else {
-    if (plaintext_len > NOISE_XXPSK3_MAX_PLAINTEXT_SIZE) {
-      // The resulting Noise message would exceed the maximum message size
+    if (ad_len > NOISE_XXPSK3_MAX_PLAINTEXT_SIZE ||
+        plaintext_len > NOISE_XXPSK3_MAX_PLAINTEXT_SIZE - ad_len) {
+      // The associated data and the resulting Noise message would together
+      // exceed the maximum message size
       return false;
     }
 
@@ -276,8 +278,10 @@ static bool decrypt_with_ad(noise_xxpsk3_cipher_state_t *cs, const uint8_t *ad,
       return false;
     }
 
-    if (ciphertext_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE) {
-      // message exceeds the maximum message size
+    if (ad_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE ||
+        ciphertext_len > NOISE_XXPSK3_MAX_MESSAGE_SIZE - ad_len) {
+      // The associated data and the message together exceed the maximum
+      // message size
       return false;
     }
 
