@@ -37,7 +37,7 @@ import typing as t
 
 import pytest
 
-from trezorlib import protobuf
+from trezorlib import messages, protobuf
 from trezorlib.thp.channel import Channel
 from trezorlib.transport.udp import UdpTransport
 
@@ -51,6 +51,9 @@ WARD_PORT_OFFSET = 7
 # `trezorlib.thp.client`'s application header: session id, message type.
 _HEADER = ">BH"
 _HEADER_LEN = struct.calcsize(_HEADER)
+
+# Must match `apps.ward.service.PROTOCOL_VERSION`.
+PROTOCOL_VERSION = 1
 
 
 def ward_transport(client: TrezorTestContext) -> UdpTransport:
@@ -170,3 +173,11 @@ class MockWardService:
     ) -> protobuf.MessageType:
         self.send(msg)
         return self.receive(timeout=timeout)
+
+    def open_service(
+        self, protocol_version: int | None = None
+    ) -> protobuf.MessageType:
+        """Announce this channel as the WARD service. The last thing the daemon initiates."""
+        if protocol_version is None:
+            protocol_version = PROTOCOL_VERSION
+        return self.call(messages.WardServiceOpen(protocol_version=protocol_version))
