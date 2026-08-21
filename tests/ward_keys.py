@@ -53,6 +53,11 @@ __all__ = [
     "open_identity",
     "unpack_content",
     "unpack_identity",
+    "wm_head_preimage",
+    "wm_sig",
+    "verify_wm_sig",
+    "head_init_sig",
+    "verify_head_init_sig",
 ]
 
 
@@ -173,6 +178,111 @@ def auth_commit(
         transition_preimage(ward_id, from_counter, from_root, to_counter, to_root, tag),
         hashlib.sha256,
     ).digest()
+
+
+# --- the WM's authorisation, over MAC HEADS ------------------------------------------------
+#
+# Written out here rather than imported, like everything else in this file: an oracle that shared
+# code with the firmware would agree with it by construction and prove nothing.
+
+_TAG_WM_HEAD = b"WARD WM HEAD v1"
+_TAG_WM_HEAD_INIT = b"WARD WM HEAD INIT v1"
+
+
+def wm_head_preimage(
+    tag: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_mac: bytes,
+    to_counter: int,
+    to_mac: bytes,
+) -> bytes:
+    """len8(tag) || tag || ward_id || from_counter || from_mac || to_counter || to_mac.
+
+    MACS, NOT ROOTS. This is what the WM stores, so signing it means the WM never has to be sent
+    a root to check an authorisation. The tag is length-prefixed so this cannot be re-split into
+    a root transition's preimage, whose tags are a different length.
+    """
+    return (
+        bytes([len(tag)])
+        + tag
+        + ward_id
+        + from_counter.to_bytes(4, "big")
+        + from_mac
+        + to_counter.to_bytes(4, "big")
+        + to_mac
+    )
+
+
+def wm_sig(
+    k_sig: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_mac: bytes,
+    to_counter: int,
+    to_mac: bytes,
+) -> bytes:
+    """The signature a WM checks before letting a head advance."""
+    from trezorlib import _ed25519
+
+    return _ed25519.signature_unsafe(
+        wm_head_preimage(
+            _TAG_WM_HEAD, ward_id, from_counter, from_mac, to_counter, to_mac
+        ),
+        k_sig,
+        ward_id,
+    )
+
+
+def verify_wm_sig(
+    ward_id: bytes,
+    from_counter: int,
+    from_mac: bytes,
+    to_counter: int,
+    to_mac: bytes,
+    sig: bytes,
+) -> bool:
+    """What a WM does: verify with `ward_id` alone, holding no secret."""
+    from trezorlib import _ed25519
+
+    try:
+        _ed25519.checkvalid(
+            sig,
+            wm_head_preimage(
+                _TAG_WM_HEAD, ward_id, from_counter, from_mac, to_counter, to_mac
+            ),
+            ward_id,
+        )
+        return True
+    except Exception:
+        return False
+
+
+def head_init_sig(k_sig: bytes, ward_id: bytes, current_mac: bytes) -> bytes:
+    """Authorises the first head a WM ever holds for this wallet."""
+    from trezorlib import _ed25519
+
+    return _ed25519.signature_unsafe(
+        wm_head_preimage(_TAG_WM_HEAD_INIT, ward_id, 0, current_mac, 0, current_mac),
+        k_sig,
+        ward_id,
+    )
+
+
+def verify_head_init_sig(ward_id: bytes, current_mac: bytes, sig: bytes) -> bool:
+    from trezorlib import _ed25519
+
+    try:
+        _ed25519.checkvalid(
+            sig,
+            wm_head_preimage(
+                _TAG_WM_HEAD_INIT, ward_id, 0, current_mac, 0, current_mac
+            ),
+            ward_id,
+        )
+        return True
+    except Exception:
+        return False
 
 
 def derive_k_ident(seed: bytes, key_type: str = "address") -> bytes:

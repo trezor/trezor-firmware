@@ -17,8 +17,13 @@ device of the same wallet checks the chain; the WM and the host cannot, and have
 business doing so. An Ed25519 signature would extend verification to non-seed-holders and
 cost a signing operation on every write, buying nothing anyone currently needs. The design
 document specifies Ed25519 under K_sig for this; the reference implements both and ships
-with the Ed25519 path switched off. If a non-seed-holder ever has to verify -- a WM
-enforcing that only real devices may advance the head -- that is when to add it.
+with the Ed25519 path switched off.
+
+THAT NON-SEED-HOLDER NOW EXISTS: a WM that arbitrates ordering has to be able to tell a real
+device's write from anyone else's, or whoever knows `ward_id` could advance the counter and have
+every genuine device refused thereafter. Its authorisation is at the bottom of this file, and it
+does NOT reuse the bytes above -- it binds MAC HEADS, which is what a WM stores, so the WM is
+never sent a root it has no business holding.
 
 WHAT A CHAIN OF THESE PROVES, AND WHAT IT DOES NOT. Folding links from a trusted baseline
 to a claimed head shows each step was authorised by a device holding the seed, that the
@@ -35,6 +40,10 @@ if TYPE_CHECKING:
 
 TAG_COMMIT = b"WARD COMMIT v1"
 TAG_REVERT = b"WARD REVERT v1"
+
+# The WM's own authorisation, over MAC HEADS rather than roots -- see `wm_head_preimage`.
+TAG_WM_HEAD = b"WARD WM HEAD v1"
+TAG_WM_HEAD_INIT = b"WARD WM HEAD INIT v1"
 
 
 def transition_preimage(
@@ -318,3 +327,146 @@ def verify_intent_mac(
     """
     expected = intent_mac(k_auth, ward_id, op, key_type, app_id, identifier, value)
     return expected == mac
+
+
+# --- the WM's authorisation -------------------------------------------------------------
+#
+# A SECOND AUTHENTICATOR, FOR A DIFFERENT VERIFIER, OVER DIFFERENT OPERANDS. `auth_commit` above
+# is checked by another DEVICE of this wallet and binds roots. These bind MAC HEADS, because the
+# verifier is the WM and the WM stores `(counter, mac)` and nothing else.
+#
+# That is the whole reason these exist rather than reusing `sig_commit`, which signs the same bytes
+# as `auth_commit` and therefore names roots. To check that signature the WM would have to be sent
+# the roots -- widening what it receives beyond what it keeps, for a party trusted only for
+# freshness. Signing what it already holds costs it nothing and tells it nothing new.
+#
+# What it buys: a WM that arbitrates ordering can require that only a device of this wallet may
+# advance the head. Without it, whoever knows `ward_id` could advance the counter and have every
+# genuine device refused from then on -- the WM becomes a denial-of-service oracle. `ward_id` IS
+# the K_sig public key, so the WM verifies with the identifier it already keys by; there is no
+# enrolment step and no second value to keep in step.
+
+
+def wm_head_preimage(
+    tag: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_mac: bytes,
+    to_counter: int,
+    to_mac: bytes,
+) -> bytes:
+    """The bytes the WM's authorisation covers: one mac head to the next.
+
+    THE TAG IS LENGTH-PREFIXED, unlike `transition_preimage`. That one is safe as it stands
+    because both of its tags are the same length, so neither can be re-split into the other. These
+    tags are a different length again, and concatenating variable-length fields with nothing
+    marking the boundary is exactly the ambiguity `leaf.leaf_hash_of` documents -- so rather than
+    rely on the lengths happening not to line up, the prefix makes a cross-domain collision
+    impossible by construction.
+
+    Both endpoints are named for the same reason as a root transition: binding only the
+    destination would let an authorisation be lifted out of its place and replayed after a
+    different predecessor, which is precisely what a compare-and-swap must prevent.
+    """
+    from trezor.wire import DataError
+
+    if len(ward_id) != 32 or len(from_mac) != 32 or len(to_mac) != 32:
+        raise DataError("WARD: head operands must be 32 bytes")
+
+    return (
+        bytes([len(tag)])
+        + tag
+        + ward_id
+        + from_counter.to_bytes(4, "big")
+        + from_mac
+        + to_counter.to_bytes(4, "big")
+        + to_mac
+    )
+
+
+def wm_sig(
+    k_sig: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_mac: bytes,
+    to_counter: int,
+    to_mac: bytes,
+) -> bytes:
+    """Authorise a head advance to the WM. Only a device holding the seed can produce this.
+
+    Not a generic signing API: the preimage is built here from typed arguments, so this can never
+    be pointed at bytes a caller chose.
+    """
+    from trezor.crypto.curve import ed25519
+
+    return ed25519.sign(
+        k_sig,
+        wm_head_preimage(
+            TAG_WM_HEAD, ward_id, from_counter, from_mac, to_counter, to_mac
+        ),
+    )
+
+
+def verify_wm_sig(
+    ward_id: bytes,
+    from_counter: int,
+    from_mac: bytes,
+    to_counter: int,
+    to_mac: bytes,
+    signature: bytes,
+) -> bool:
+    """What the WM checks. Verifies against `ward_id`, which IS the public key.
+
+    On the device only so the construction can be pinned by a test; the party that needs it is the
+    WM.
+    """
+    from trezor.crypto.curve import ed25519
+
+    if len(signature) != 64:
+        return False
+    try:
+        return ed25519.verify(
+            ward_id,
+            signature,
+            wm_head_preimage(
+                TAG_WM_HEAD, ward_id, from_counter, from_mac, to_counter, to_mac
+            ),
+        )
+    except Exception:
+        return False
+
+
+def head_init_sig(k_sig: bytes, ward_id: bytes, current_mac: bytes) -> bytes:
+    """Authorise the FIRST head the WM ever holds for this wallet.
+
+    A compare-and-swap needs something to compare against, and a WM that has never seen this
+    wallet has nothing -- it cannot compute a mac, having no key of ours, so the first head has to
+    be supplied by the device and authenticated or it would be a value anyone could set.
+
+    Separate from `wm_sig` rather than a transition from a zero head: there is no predecessor to
+    name, and inventing one would give a genuine-looking authorisation for a transition that never
+    happened. Its own tag, so it can never be replayed as an advance.
+    """
+    from trezor.crypto.curve import ed25519
+
+    return ed25519.sign(
+        k_sig, wm_head_preimage(TAG_WM_HEAD_INIT, ward_id, 0, current_mac, 0, current_mac)
+    )
+
+
+def verify_head_init_sig(ward_id: bytes, current_mac: bytes, signature: bytes) -> bool:
+    """What the WM checks before adopting a wallet it has never seen."""
+    from trezor.crypto.curve import ed25519
+
+    if len(signature) != 64:
+        return False
+    try:
+        return ed25519.verify(
+            ward_id,
+            signature,
+            wm_head_preimage(
+                TAG_WM_HEAD_INIT, ward_id, 0, current_mac, 0, current_mac
+            ),
+        )
+    except Exception:
+        return False
