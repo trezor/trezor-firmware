@@ -149,7 +149,8 @@ access_violation:
 
 ssize_t syslog_write_chunk__verified(const char *text, size_t text_len,
                                      bool end_record) {
-  if (!probe_read_access(text, text_len)) {
+  // A record is terminated with an empty chunk, which arrives as NULL.
+  if (!probe_read_access_or_empty(text, text_len)) {
     goto access_violation;
   }
 
@@ -901,7 +902,9 @@ access_violation:
 
 int firmware_hash_start__verified(const uint8_t *challenge,
                                   size_t challenge_len) {
-  if (!probe_read_access(challenge, challenge_len)) {
+  // The challenge is optional; without one it arrives as an empty buffer,
+  // which `firmware_hash_start()` never reads from.
+  if (!probe_read_access_or_empty(challenge, challenge_len)) {
     goto access_violation;
   }
 

@@ -479,7 +479,9 @@ access_violation:
 
 int firmware_hash_start__verified(const uint8_t *challenge,
                                   size_t challenge_len) {
-  if (!probe_read_access(challenge, challenge_len)) {
+  // The challenge is optional; without one it arrives as an empty buffer,
+  // which `firmware_hash_start()` never reads from.
+  if (!probe_read_access_or_empty(challenge, challenge_len)) {
     goto access_violation;
   }
 
