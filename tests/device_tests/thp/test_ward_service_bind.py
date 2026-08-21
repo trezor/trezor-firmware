@@ -24,7 +24,15 @@ from trezorlib.transport import Timeout
 
 from ...ward_service import MockWardService
 
-pytestmark = [pytest.mark.protocol("thp")]
+pytestmark = [
+    pytest.mark.protocol("thp"),
+    # DECLARED, not inferred. These used to be skipped on a connect build as a side effect of
+    # `MockWardService.__init__` reaching for the interface through a fixture that skipped when it
+    # was absent. Now that the mock builds a real `WardServiceClient`, which has no business
+    # skipping tests, the marker has to say so -- and saying so is better anyway: an implicit skip
+    # inside a constructor is invisible to anyone reading this file.
+    pytest.mark.ward_transport("service"),
+]
 
 
 def test_a_daemon_binds_itself_as_the_service(client: Client) -> None:
