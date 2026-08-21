@@ -99,6 +99,53 @@ def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, byt
     return app_id, identifier
 
 
+async def online() -> bool:
+    """Whether this session may read from the backend, syncing first if it can.
+
+    THE ANSWER IS THE SAME QUESTION IN BOTH BUILDS -- "has a WM attestation been bound to a tree
+    this device actually holds, in THIS session" -- but who can establish it differs. A connect
+    build cannot: the sync is a sequence of requests the HOST issues, so the device can only
+    report what has already happened. A service build can, because the daemon is reachable
+    whenever the device wants it, so the first WARD operation of a session drives its own sync
+    instead of failing and asking the host to go first.
+
+    ONE ATTEMPT. See `service.become_ready`: a loop here would turn a disagreement with the daemon
+    into a hang in front of the user.
+
+    Raises whatever the sync failed with, deliberately. The generic "sync first" that callers
+    raise on a False answer says nothing about WHY, and on a service build there is now a real
+    reason to report -- an unreachable daemon, a refused attestation, a chain that does not
+    descend. `label` is the one caller that wants the offline answer instead, and asks for it by
+    name.
+    """
+    from . import round as sync_round
+
+    if sync_round.is_online():
+        return True
+
+    if not utils.USE_WARD_SERVICE_CHANNEL:
+        return False
+
+    from .service import become_ready
+
+    return await become_ready()
+
+
+async def online_or_offline() -> bool:
+    """`online`, but a failed sync answers False instead of raising.
+
+    FOR THE ONE CALLER WITH A LEGITIMATE OFFLINE ANSWER. `label` shows a name from the device's own
+    store when it cannot verify one, and says so on screen; every other caller refuses, because
+    for them "could not verify" must never become "here is a value". Swallowing is confined here
+    for exactly that reason -- widening it would recreate the fallback `get_entry` exists to
+    refuse.
+    """
+    try:
+        return await online()
+    except Exception:
+        return False
+
+
 async def pull_leaf_from_backend(entry_key: bytes):
     """Ask whoever owns the replica for its leaf at this path, and return the raw ack.
 

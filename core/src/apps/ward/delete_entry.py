@@ -105,10 +105,15 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from . import round as sync_round
     from .attest import root_mac
     from .cas import auth_commit, sig_commit
-    from .common import WARNING_UNVERIFIED, display_bytes, pull_leaf, require_key
+    from .common import (
+        WARNING_UNVERIFIED,
+        display_bytes,
+        online,
+        pull_leaf,
+        require_key,
+    )
     from .keys import (
         ENTRY_TYPE_ADDRESS,
         derive_k_auth,
@@ -123,7 +128,7 @@ async def delete_entry(msg: WardDeleteEntry) -> WardLeafAck:
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
-    if not sync_round.is_online():
+    if not await online():
         raise DataError("WARD: connect to delete an entry")
 
     key_type = ENTRY_TYPE_ADDRESS

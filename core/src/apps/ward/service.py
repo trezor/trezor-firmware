@@ -25,12 +25,19 @@ if TYPE_CHECKING:
     from trezor import protobuf
     from trezor.messages import WardEntryAck, WardServiceOpen, WardServiceOpenAck
     from trezor.protobuf import MessageType as LoadedMessageType
+    from trezor.wire.protocol_common import Message
     from trezor.wire.thp.channel import Channel
 
 
-# HOW LONG A REVERSE RPC MAY TAKE. A daemon that stops answering must not hang the wallet
-# workflow that is waiting on it: WARD reads fail closed, and a hang is the one failure mode that
-# does not. Generous, because the daemon may have to consult a database and build a proof.
+# HOW LONG A REVERSE RPC MAY TAKE, END TO END. A daemon that stops answering must not hang the
+# wallet workflow that is waiting on it: WARD reads fail closed, and a hang is the one failure mode
+# that does not. Generous, because the daemon may have to consult a database and build a proof.
+#
+# IT COVERS THE WRITE AS WELL AS THE READ, and that is not a detail. `Channel.write` waits for the
+# THP ack, and a daemon that has gone away acks nothing -- so the retransmission machinery is what
+# ends that wait, after MAX_RETRANSMISSION_COUNT attempts and upwards of a hundred seconds. Timing
+# only the read leaves the failure this bound exists to prevent exactly where it was: the workflow
+# parks in the write, and the deadline below is never reached.
 RPC_TIMEOUT_MS = const(30_000)
 
 # The service protocol this firmware speaks. Bumped when the message set changes shape, so a
@@ -221,34 +228,68 @@ async def _rpc(
     The answer must be one of `expected` and must arrive on the service's own session. Anything
     else fails the operation rather than being interpreted: the daemon is the only party on this
     channel, so a surprise here means the conversation has desynchronised, and continuing would
-    mean acting on a message meant for something else.
+    mean acting on a message meant for something else. It also costs the daemon its channel --
+    see `_desynchronised` for why the operation alone is not enough.
     """
     from trezor import loop
-    from trezor.wire import DataError
     from trezor.wire.message_handler import wrap_protobuf_load
 
     channel, session_id = _service_channel()
 
-    await channel.write(request, session_id)
+    async def exchange() -> "tuple[int, Message]":
+        # ONE DEADLINE OVER BOTH HALVES. Neither `write` nor `read` has one of its own, and the
+        # wait that actually strands a silent daemon is the FIRST: `write` returns when the ack
+        # arrives, so with nothing at the other end it sits there until THP exhausts its
+        # retransmissions. Racing them as one coroutine bounds the pair.
+        await channel.write(request, session_id)
+        return await channel.read()
 
-    # `Channel.read` has no deadline of its own, and the caller is a wallet workflow the user is
-    # waiting on. `loop.sleep` returns an int, `read` a tuple -- which is how the race is decided.
-    answer = await loop.race(channel.read(), loop.sleep(RPC_TIMEOUT_MS))
+    # `loop.sleep` returns an int, the exchange a tuple -- which is how the race is decided.
+    answer = await loop.race(exchange(), loop.sleep(RPC_TIMEOUT_MS))
     if not isinstance(answer, tuple):
-        raise DataError("the WARD service did not answer")
+        raise _desynchronised(channel, "the WARD service did not answer")
 
     reply_session_id, message = answer
     if reply_session_id != session_id:
-        raise DataError("WARD service answered on another session")
+        raise _desynchronised(channel, "WARD service answered on another session")
 
     for expected_type in expected:
         if message.type == expected_type.MESSAGE_WIRE_TYPE:
             return wrap_protobuf_load(message.data, expected_type)
 
-    raise DataError("unexpected message from the WARD service")
+    raise _desynchronised(channel, "unexpected message from the WARD service")
 
 
-async def fetch(entry_key: bytes) -> "WardEntryAck":
+def _desynchronised(channel: Channel, what: str) -> Exception:
+    """Tear the service channel down, and return the error to raise for having done so.
+
+    WHY THE CHANNEL GOES RATHER THAN JUST THE OPERATION. Each of these means the device no longer
+    knows where it is in the conversation: a request whose answer never came may still be answered
+    later, and a reply that is not the one asked for leaves the next read one message behind
+    forever. Since the device is the sole initiator, nothing else will ever resynchronise it --
+    there is no host turn in which to notice. Closing the channel is the resynchronisation, and it
+    costs the daemon a reconnect rather than costing the device its integrity.
+
+    A TIMED-OUT WRITE ALSO HAS TO GO. The abandoned message is still pending in the THP channel,
+    and the retransmission loop would keep re-sending it with no `send_buffer` behind it. Closing
+    discards it.
+
+    THE PIN IS NOT TOUCHED. This says the transport went away, which is what a daemon restart looks
+    like; it says nothing about WHICH daemon is entitled to the role. Erasing the pin here would
+    turn every dropped cable into an ownership migration.
+
+    Returned rather than raised so the caller's `raise` is where the flow ends, which keeps the
+    teardown from reading like a side effect of an unrelated error path.
+    """
+    from trezor.wire import DataError
+
+    exc = DataError(what)
+    clear_binding()
+    channel.clear(exc)
+    return exc
+
+
+async def fetch(entry_key: bytes, retry: bool = True) -> "WardEntryAck":
     """Ask the service for its leaf at this path. Verifies NOTHING -- the caller does that.
 
     HEAD-AWARE, unlike the connect-mode request it replaces. The device says which head it holds,
@@ -257,7 +298,8 @@ async def fetch(entry_key: bytes) -> "WardEntryAck":
     counter alone does not name a head.
 
     `WardSyncRequired` needs no authentication. Lying about it only forces an authenticated sync,
-    which is a denial of service rather than a way to corrupt anything.
+    which is a denial of service rather than a way to corrupt anything -- and the sync it forces
+    is the same one that would have happened anyway, so there is nothing to gain by it.
     """
     from trezor.messages import WardEntryAck, WardServiceFetch, WardSyncRequired
     from trezor.wire import DataError
@@ -277,9 +319,152 @@ async def fetch(entry_key: bytes) -> "WardEntryAck":
     # COMPARED BY WIRE TYPE, not `isinstance`: message classes here are C-backed and are not
     # valid second arguments to `isinstance`, which fails at runtime rather than at import.
     if answer.MESSAGE_WIRE_TYPE == WardSyncRequired.MESSAGE_WIRE_TYPE:
-        # A SYNC BELONGS HERE and is not written yet: driving one needs the round, the attestation
-        # and the adoption path, which arrive with the service sync. Until then this is reported
-        # rather than repaired -- the read fails closed, which is the direction that is safe.
+        if retry:
+            # ONE SYNC AND ONE RETRY, and then it is an error. A daemon that still says "out of
+            # sync" about the head the device just adopted from that same daemon is disagreeing
+            # with itself, and asking again cannot resolve it -- it can only spin in front of the
+            # user. The read fails closed, which is the safe direction.
+            await sync()
+            return await fetch(entry_key, retry=False)
         raise DataError("WARD service reports this device is out of sync")
 
     return answer
+
+
+# --- becoming ready -----------------------------------------------------------------------
+#
+# ONE RPC WHERE THE CONNECT PATH TAKES THREE. `WardSync` minted a nonce, `WardIngestAttestation`
+# checked the WM's answer against it, and `WardVerifyChain` proved descent and adopted -- three
+# separate host requests, which is exactly why the round's nonce had to live in the session cache
+# (`round.py`). As one exchange the nonce is a local across a single `await`.
+#
+# THE CACHE ENTRY STAYS ANYWAY, and that is a deliberate trade. `verify_round_attestation`,
+# `require_attested_round` and `adopt` all read the round from there, and they are the audited
+# path: the nonce binding, the counter rules, and above all the settle-then-persist-then-latch
+# order that recovery depends on. Reusing them costs one cache write per sync; forking them to
+# take the nonce as an argument would cost a second copy of that order, which is the last thing
+# in WARD that should exist twice.
+#
+# CHAIN-ONLY, which REMOVES a weaker path rather than adding one. The daemon owns the replica and
+# its history, so it can always produce the links; there is no reason to accept a head on the WM's
+# word plus a mac when descent from this device's own head is available. The two guarantees are
+# complementary -- the chain gives descent, the attestation gives currency -- and they are joined
+# by requiring the fold to end exactly at the attested counter with a root reproducing its mac.
+
+
+async def sync() -> None:
+    """Ask the service for the current head and adopt it, or raise.
+
+    The nonce is minted HERE, before the daemon talks to the WM, and that ordering is the whole
+    freshness argument: the WM must sign a value nobody could have known in advance, so a drawer
+    of previously-signed anchors is useless.
+
+    HEAD-INIT IS ALWAYS SENT, not only when the device thinks the WM is new. The device cannot
+    know whether the WM has ever seen this wallet -- that is the WM's state, not the device's --
+    and guessing wrong in the "it knows" direction would strand a genesis wallet with no way to
+    open its history. The WM ignores it once it holds a head, so the cost is one signature.
+    """
+    from trezor.crypto import random
+    from trezor.messages import WardSyncRequest, WardSyncResponse
+    from trezor.wire import DataError
+
+    from . import round as sync_round
+    from .adopt import (
+        adopt,
+        require_attested_round,
+        verify_head_mac,
+        verify_round_attestation,
+    )
+    from .attest import NONCE_LENGTH, root_mac
+    from .cas import head_init_sig, verify_chain_step
+    from .common import require_initialized
+    from .keys import derive_k_auth, derive_k_mac, derive_k_sig, derive_ward_id
+    from .root import get_counter, get_root
+
+    require_initialized()
+
+    ward_id = await derive_ward_id()
+    counter = await get_counter()
+    root = await get_root()
+
+    # The mac of the head the device ALREADY holds -- the opening head a WM that has never seen
+    # this wallet has nothing to compare against. It cannot compute one itself, holding no key of
+    # ours, so it has to be supplied and authorised or a wallet's first head is whatever the first
+    # speaker claims.
+    current_mac = root_mac(await derive_k_mac(), ward_id, counter, root)
+
+    nonce = random.bytes(NONCE_LENGTH)
+    sync_round.begin(nonce)
+
+    answer = await _rpc(
+        WardSyncRequest(
+            nonce=nonce,
+            ward_id=ward_id,
+            current_counter=counter,
+            current_root=root,
+            current_mac=current_mac,
+            head_init_sig=head_init_sig(await derive_k_sig(), ward_id, current_mac),
+        ),
+        WardSyncResponse,
+    )
+
+    # Same verification as `ingest`, and deliberately the same code: the attestation must be
+    # bound to THIS round's nonce, and nothing here adopts on the strength of it alone.
+    attested_counter, attested_mac = await verify_round_attestation(answer)
+    if attested_counter < counter:
+        # Anti-rollback. A malicious WM cannot forge a mac, so its entire remaining freedom is to
+        # replay a state this wallet genuinely reached; this is what bounds which ones. Equality
+        # is fine -- re-reading the same head is a no-op.
+        raise DataError("attested counter is older than the stored counter")
+    sync_round.set_attested(attested_counter, attested_mac)
+
+    attested_counter, attested_mac = require_attested_round("sync")
+
+    # THE BASELINE IS THE DEVICE'S OWN HEAD, never one the answer names. A backend-chosen starting
+    # point would let the walk begin at a state this device never reached.
+    running_counter = counter
+    running_root = root
+    k_auth = await derive_k_auth()
+    crossed = []
+    for link in answer.links:
+        running_counter, running_root = verify_chain_step(
+            k_auth,
+            ward_id,
+            running_counter,
+            running_root,
+            (
+                link.from_counter,
+                link.from_root or None,
+                link.to_counter,
+                link.to_root or None,
+                link.auth_commit,
+            ),
+        )
+        # After the step verified, never before: an unverified commitment is just a claim.
+        crossed.append(link.auth_commit)
+
+    if running_counter != attested_counter:
+        raise DataError("chain does not end at the attested counter")
+
+    await verify_head_mac(attested_counter, attested_mac, running_root, subject="chain end")
+
+    # The shared tail -- settle, persist, latch, close. The crossed commitments are passed so
+    # settlement is exact: a claim landed when its OWN authorisation is among them, which is not
+    # the same question as whether the counter moved past it.
+    await adopt(attested_counter, running_root, landed_commits=crossed)
+
+
+async def become_ready() -> bool:
+    """Drive one sync if this session is not already online. Returns whether it now is.
+
+    EXACTLY ONE ATTEMPT, no retry loop. A sync that fails to make the session online has been
+    answered by a daemon that is not going to do better on a second identical ask, and a loop here
+    would turn a disagreement into a hang in front of the user.
+    """
+    from . import round as sync_round
+
+    if sync_round.is_online():
+        return True
+
+    await sync()
+    return sync_round.is_online()

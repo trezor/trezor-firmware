@@ -27,10 +27,15 @@ async def set_entry(msg: WardSetEntry) -> WardLeafAck:
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from . import round as sync_round
     from .attest import root_mac
     from .cas import auth_commit, sig_commit
-    from .common import WARNING_UNVERIFIED, display_bytes, pull_leaf, require_key
+    from .common import (
+        WARNING_UNVERIFIED,
+        display_bytes,
+        online,
+        pull_leaf,
+        require_key,
+    )
     from .keys import (
         ENTRY_TYPE_ADDRESS,
         derive_k_auth,
@@ -61,7 +66,7 @@ async def set_entry(msg: WardSetEntry) -> WardLeafAck:
     key_type = ENTRY_TYPE_ADDRESS
     entry_key = await entry_key_for(app_id, identifier, key_type)
 
-    if not sync_round.is_online():
+    if not await online():
         raise DataError("WARD: sync first, or queue the change with WardQueueSetEntry")
 
     old, old_leaf, material = await pull_leaf(entry_key, key_type)
