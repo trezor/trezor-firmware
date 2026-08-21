@@ -220,6 +220,25 @@ example_input_data_too_long_value = {
     "result": {},
 }
 
+example_input_data_erc20_swap = {
+    "parameters": {
+        "chain_id": 1,
+        "path": "m/44'/60'/0'/0/0",
+        "nonce": "0x0",
+        "gas_price": "0x4a817c800",
+        "gas_limit": "0x125208",
+        "value": "0x59b09a229d59205d2",  # 103,405,359,019,777.459666 USDC - a value that will not fit in 8 bytes, but ETH allows 32 bytes
+        "to_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "tx_type": None,
+        "data": "a9059cbb000000000000000000000000A0b86991c6218b36c1d19D4a2e9Eb0cE3606eB480000000000000000000000000000000000000000000000059b09a229d59205d2",
+    },
+    "result": {
+        "sig_v": 37,
+        "sig_r": "20eeb99fc658d369a4df773ba5c330c452dbe48a98fec2b9d8479426ac84bdda",
+        "sig_s": "51a0346d880088915c354b62a86740673c338c371f6ac96e960bf940b8e76a56",
+    },
+}
+
 
 @pytest.mark.models("core", reason="T1 does not support input flows")
 def test_signtx_fee_info(session: Session):
@@ -820,3 +839,17 @@ def test_signtx_payment_req_long_value(session: Session):
             params | dict(payment_req=invalid_req),
             result={},
         )
+
+
+@pytest.mark.models("core")
+def test_signtx_payment_req_erc20_swap(session: Session):
+    params = example_input_data_erc20_swap["parameters"]
+    params = params | dict(
+        payment_req=_create_payment_request(session, params),
+        value="0x0",  # ETH is not sent
+    )
+    _do_test_signtx(
+        session,
+        params,
+        example_input_data_erc20_swap["result"],
+    )
