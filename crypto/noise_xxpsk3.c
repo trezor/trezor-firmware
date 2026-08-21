@@ -29,8 +29,8 @@
 
 // The counter is restricted to 48 bits: 2^48 messages of at most 65535 bytes
 // produce at most 2^60 AES blocks under one key, well below the 2^64 blocks
-// where GCM's birthday bound goes vacuous. McGrew, Viega, INDOCRYPT 2004,
-// https://eprint.iacr.org/2004/193
+// per key that NIST SP 800-38D, Appendix B recommends as a limit.
+// https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=51288
 #define NONCE_LIMIT 0x1000000000000ULL  // 2^48
 #define NONCE_ARRAY_SIZE_BYTES 12
 

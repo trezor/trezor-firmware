@@ -146,8 +146,8 @@ static void split(uint8_t chaining_key[SHA256_DIGEST_LENGTH],
 
 // The counter is restricted to 48 bits: 2^48 messages of at most 65535 bytes
 // produce at most 2^60 AES blocks under one key, well below the 2^64 blocks
-// where GCM's birthday bound goes vacuous. McGrew, Viega, INDOCRYPT 2004,
-// https://eprint.iacr.org/2004/193
+// per key that NIST SP 800-38D, Appendix B recommends as a limit.
+// https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=51288
 static bool increase_nonce(uint8_t nonce[NOISE_KK1_NONCE_SIZE]) {
   // The first 4 bytes of the nonce are zeros
   // The last 8 bytes of the nonce are a big-endian encoded counter, of which
