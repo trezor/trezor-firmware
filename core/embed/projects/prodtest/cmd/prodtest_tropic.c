@@ -1581,13 +1581,17 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
   cli_trace(cli, "Chip is executing SPECT FW version: %d.%d.%d (+ .%d)",
             spect_fw_ver[3], spect_fw_ver[2], spect_fw_ver[1], spect_fw_ver[0]);
 
+  // Tropic rebooted during the update, so the driver's session data is stale.
   tropic_deinit();
+  tropic_init(cli);
   cli_ok(cli, "");
 
   return;
 
 cleanup:
   tropic_deinit();
+  // `cli_error()` was already written; a later trace would desync the host.
+  tropic_init(NULL);
 }
 
 // Per-command identifiers used as PRNG seeds so that different commands sample
