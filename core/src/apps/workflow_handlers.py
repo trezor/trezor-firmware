@@ -145,6 +145,11 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.management.get_next_u2f_counter"
 
         # ward
+        if utils.USE_WARD_SERVICE_CHANNEL and msg_type == MessageType.WardServiceOpen:
+            # The only host-initiated WARD message on the service interface, and the only one
+            # registered here for it: everything else on that channel is opened by the device and
+            # read back inside the workflow that asked, never dispatched.
+            return "apps.ward.service"
         if msg_type == MessageType.WardGetEntry:
             return "apps.ward.get_entry"
         if msg_type == MessageType.WardSetEntry:
