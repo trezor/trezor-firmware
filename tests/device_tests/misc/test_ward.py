@@ -77,6 +77,12 @@ from ...ward_keys import (
 from ...ward_trie import WardTrie, addr_bit
 from ...ward_wm import MockWM
 
+# EVERY TEST HERE SPEAKS THE CONNECT-MODE REQUEST SET -- `WardEntryRequest`, `WardSync`,
+# `WardReconcile`, `WardVerifyChain`. Those messages do not exist in a firmware that serves WARD
+# over its own channel: the two transports are mutually exclusive by build, with no runtime
+# fallback, so on such a build these tests are inapplicable rather than failing.
+pytestmark = pytest.mark.ward_transport("connect")
+
 _APP = "TEST"
 
 # The device under test is set up with the default mnemonic and no passphrase

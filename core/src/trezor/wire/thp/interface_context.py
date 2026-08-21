@@ -208,6 +208,8 @@ class InterfaceContext:
 
         self._serves_own_dispatch: bool = is_ward_interface(iface)
         self._dispatch_box: loop.mailbox[None] = loop.mailbox()
+        # Set by a handler that has taken ownership of the conversation -- see `release_dispatch`.
+        self._dispatch_released: bool = False
 
         self._read_loop: loop.spawn = loop.spawn(self.read_loop())
         self._write_loop: loop.spawn = loop.spawn(self.write_loop())
@@ -322,13 +324,25 @@ class InterfaceContext:
             # wake up write loop in case broadcast/handshake channels have outgoing data
             self.request_write()
 
-    async def dispatch_loop(self) -> None:
-        """Handle host-initiated messages on this interface's own channel.
+    def release_dispatch(self) -> None:
+        """Stop dispatching this interface: a handler has taken over the conversation.
 
-        ONE MESSAGE SHAPE IN PRACTICE. `WardServiceOpen` is the last thing the daemon initiates;
+        WHAT IT PREVENTS IS TWO READERS. A channel has ONE incoming mailbox, so a dispatcher
+        parked in `Channel.read` and a workflow reading its own reply would race for the same
+        message -- and which one won would depend on scheduling. Handing the channel over
+        removes the race rather than arbitrating it.
+
+        Reset when a channel is next allocated here, because that is a new conversation.
+        """
+        self._dispatch_released = True
+
+    async def dispatch_loop(self) -> None:
+        """Handle host-initiated messages on this interface's own channel, until handed over.
+
+        ONE MESSAGE IN PRACTICE. `WardServiceOpen` is the last thing the daemon initiates;
         afterwards the device asks and the daemon answers, and those replies are read by the
-        workflow that asked, never here. Everything else inbound is refused at the receive
-        boundary, so this loop stays a bootstrap path rather than a second general dispatcher.
+        workflow that asked. So this loop stops as soon as that handler says so, and is a
+        bootstrap path rather than a second general dispatcher.
         """
         from . import received_message_handler
 
@@ -350,6 +364,8 @@ class InterfaceContext:
                     # allocates a channel, which re-arms this loop.
                     if __debug__:
                         log.exception(__name__, exc)
+                    break
+                if self._dispatch_released:
                     break
 
     def should_read(self) -> bool:
@@ -401,6 +417,7 @@ class InterfaceContext:
             if buffers := self._buffers_provider.take():
                 self.active_channel = Channel(channel_id, self, buffers=buffers)
                 if self._serves_own_dispatch:
+                    self._dispatch_released = False
                     self._dispatch_box.put(None, replace=True)
                 elif self.thp_ctx.dispatch_channel is None:
                     self.thp_ctx.dispatch_channel = self.active_channel

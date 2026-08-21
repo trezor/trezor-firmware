@@ -48,7 +48,7 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     from .common import (
         decode_leaf,
         display_bytes,
-        pull_leaf_from_host,
+        pull_leaf_from_backend,
         require_key,
         verify_leaf_against_root,
     )
@@ -61,7 +61,7 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     key_type = ENTRY_TYPE_ADDRESS
     entry_key = await entry_key_for(app_id, identifier, key_type)
 
-    ack = await pull_leaf_from_host(entry_key)
+    ack = await pull_leaf_from_backend(entry_key)
     val_part = read_leaf_content(ack.content)
     wire_key_type, id_part = read_leaf_identity(ack.identity)
     present = val_part is not None and not is_delete(val_part)
