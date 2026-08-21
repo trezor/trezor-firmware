@@ -908,7 +908,8 @@ bool noise_xxpsk3_receive_message(noise_xxpsk3_transport_state_t *ts,
   if (ciphertext_size > NOISE_XXPSK3_MAX_MESSAGE_SIZE) {
     return false;
   }
-  if (ciphertext_size > max_payload_size + NOISE_XXPSK3_TAG_SIZE) {
+  // The tag length check above rules out underflow
+  if (ciphertext_size - NOISE_XXPSK3_TAG_SIZE > max_payload_size) {
     return false;
   }
 
