@@ -217,6 +217,44 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> bool:
     return True
 
 
+# --- the pinned service host key ---------------------------------------------------
+#
+# A FOURTH KEY, in the gap between the root slots and the claim journal: roots at 1..MAX_WALLETS,
+# this at 0x10, claims at 0x20, records at 0x40.
+#
+# WHY IT IS PINNED AT ALL. Pairing already authenticates that a host holds a credential this device
+# issued, but every paired host passes that check, and Suite is one of them. The WARD service is
+# the party the device asks for proofs and for the WM round, so "some paired host" is the wrong
+# granularity: it would let any paired host present itself as the service and answer for the
+# replica. Pinning names ONE daemon.
+#
+# WHY IT IS IN FLASH AND NOT THE CACHE. The thing it protects against is a host taking the service
+# role over from another one, and the cheapest way to arrange that is to make the device forget --
+# by unplugging it. A binding that dissolved on reboot would be no binding at all.
+#
+# NOT A MODE MARKER. Which transport this firmware speaks is decided at build time; this says only
+# WHICH daemon, and its absence means "no daemon has claimed the role yet", never "use the other
+# transport".
+#
+# THERE IS NO UNPIN HERE YET, deliberately. Losing the daemon's key is not repaired by letting the
+# next host connect -- it is an ownership migration, with the unresolved-claim question that comes
+# with it -- so the erase belongs with the code that asks the user about it.
+_SERVICE_HOST_KEY = const(0x10)
+_SERVICE_HOST_KEY_LEN = const(32)
+
+
+def get_service_host_key() -> bytes | None:
+    """The daemon this device has bound to, or None if none has claimed the role."""
+    return common.get(common.APP_WARD, _SERVICE_HOST_KEY)
+
+
+def set_service_host_key(key: bytes) -> None:
+    """Pin the daemon. Refuses a wrong-width key rather than storing a truncated one."""
+    if len(key) != _SERVICE_HOST_KEY_LEN:
+        raise ValueError("service host key must be 32 bytes")
+    common.set(common.APP_WARD, _SERVICE_HOST_KEY, key)
+
+
 # --- the offline store ------------------------------------------------------------
 #
 # A DISJOINT KEY RANGE from the root slots above. Roots live at 1..MAX_WALLETS; records live

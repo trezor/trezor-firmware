@@ -21,6 +21,17 @@ APP_COMMON_BUSY_DEADLINE_MS = const(3 | SESSIONLESS_FLAG)
 APP_MISC_COSI_NONCE = const(4 | SESSIONLESS_FLAG)
 APP_MISC_COSI_COMMITMENT = const(5 | SESSIONLESS_FLAG)
 APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
+# WHICH CHANNEL IS THE WARD SERVICE: iface_num(1) || channel_id(2) || session_id(1).
+#
+# SESSIONLESS BECAUSE IT IS ASKED FROM THE OTHER CHANNEL. A WARD operation runs in the wallet
+# workflow on Suite's channel and needs to reach the service; a per-session slot would be the
+# wrong session's. There is one service per device, so one slot is the right shape.
+#
+# A POINTER, NOT A HANDLE. The Python `Channel` is destroyed between requests while the Rust
+# channel survives, so what is kept is the identity to look the channel up by -- which is also why
+# the interface number is part of it: a channel id can be closed and reallocated on a different
+# interface, and the answer to "is this still my service?" has to be checkable rather than assumed.
+APP_WARD_SERVICE = const(7 | SESSIONLESS_FLAG)
 
 
 if TYPE_CHECKING:
@@ -129,6 +140,7 @@ class SessionlessCache(DataCache):
             32,  # APP_MISC_COSI_NONCE
             32,  # APP_MISC_COSI_COMMITMENT
             0,  # APP_RECOVERY_REPEATED_BACKUP_UNLOCKED
+            4,  # APP_WARD_SERVICE
         )
         super().__init__()
 
