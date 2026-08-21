@@ -175,6 +175,20 @@ def _call_answering_pulls(
             getattr(res, "remaining", None),
         )
 
+    # A SERVICE BUILD ANSWERS WITH NEITHER, and the result must carry NO LEAF. The device published
+    # the mutation to the WARD service, which owns the replica; a leaf here would be a second copy
+    # going stale from the next write onwards. Constructing an empty `Leaf` instead of none would be
+    # worse than useless -- `apply` reads an absent content body as a deletion, so it would erase
+    # the entry that was just written. That is why these are separate messages rather than a
+    # `WardLeafAck` with the fields left out, and why nothing below fills the leaf in.
+    if isinstance(res, (messages.WardMutationApplied, messages.WardFlushQueueApplied)):
+        return WardResult(
+            res,
+            res.entry_key or entry_key,
+            counter=res.counter,
+            remaining=getattr(res, "remaining", None),
+        )
+
     if not isinstance(res, messages.Success):
         raise RuntimeError(
             f"unexpected response to {type(msg).__name__}: {type(res).__name__}"
@@ -550,6 +564,11 @@ def apply(store, result: WardResult) -> None:
     happened. An empty content body is a delete, so the record goes away rather than
     being kept as a tombstone.
 
+    NOT FOR A SERVICE BUILD. There the device published the mutation itself and the ack carries no
+    leaf, so this raises -- correctly. A host that owns no replica has nothing to apply, and the
+    absence of a leaf is the signal to stop treating the store as authoritative rather than
+    something to work around.
+
     NO AUTH_COMMIT MEANS NOTHING CHANGED. A delete of an already-absent path succeeds
     idempotently and authorises no transition, so there is nothing to apply. That is
     asserted rather than assumed: if the device reports no transition while the store still
@@ -657,6 +676,12 @@ def flush_queue(
 
     Answers a `WardFlushQueueAck`: an ordinary leaf with the full authenticators, plus
     `remaining`, which lives there and nowhere else -- a direct write has nothing to count.
+
+    ON A SERVICE BUILD it answers `WardFlushQueueApplied` instead, and everything above about
+    applying and publishing does not apply: the device handed the change to the WARD service and
+    adopted the attestation itself, so there is no leaf and nothing for the caller to do. Only
+    `remaining` carries over, and the drain loop is unchanged -- which is why it is on both
+    messages. Branch on the response type, never on whether a leaf happens to be present.
 
     Requires a synced session: with no trusted root there is nothing to derive against.
     """
