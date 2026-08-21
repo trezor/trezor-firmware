@@ -1508,9 +1508,19 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
             chip_id.silicon_rev[3]);
 
 #ifdef LT_SILICON_REV_ABAB
-  cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_WRONG_REVISION,
-            "ABAB revision detected. The bundled fw is for ACAB only.");
-  return;
+  // CHIP_ID v0.0.0.1 has no silicon revision field (libtropic reports it as
+  // "N/A") and was used only on ABAB silicon, so the version alone identifies
+  // the chip. Newer ABAB chips spell the revision out.
+  const bool rev_is_abab = strncmp((char*)chip_id.silicon_rev, "ABAB", 4) == 0;
+  const bool chip_id_is_v0001 =
+      chip_id.chip_id_ver[0] == 0 && chip_id.chip_id_ver[1] == 0 &&
+      chip_id.chip_id_ver[2] == 0 && chip_id.chip_id_ver[3] == 1;
+
+  if (!rev_is_abab && !chip_id_is_v0001) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_WRONG_REVISION,
+              "Wrong tropic chip silicon revision");
+    return;
+  }
 #elif defined(LT_SILICON_REV_ACAB)
   if (strncmp((char*)chip_id.silicon_rev, "ACAB", 4) != 0) {
     cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_WRONG_REVISION,

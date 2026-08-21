@@ -1,6 +1,7 @@
+use std::env;
 use std::path::PathBuf;
 
-use xbuild::{CLibrary, Result, bail_unsupported};
+use xbuild::{CLibrary, Result, bail, bail_unsupported, cargo_out};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("tropic/inc");
@@ -13,15 +14,20 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_sources(["tropic/unix/tropic01.c"]);
 
         lib.add_sources_in_dir(&tropic_dir, ["hal/posix/tcp/libtropic_port_posix_tcp.c"]);
-
-        lib.add_define("LT_SILICON_REV_ABAB", Some("1"));
     } else if cfg!(feature = "mcu_stm32u5") {
         lib.add_sources(["tropic/stm32/tropic01.c"]);
-
-        lib.add_define("LT_SILICON_REV_ACAB", Some("1"));
     } else {
         bail_unsupported!();
     }
+
+    cargo_out::rerun_if_env_changed("TROPIC_SILICON_REVISION");
+    let rev = env::var("TROPIC_SILICON_REVISION").unwrap_or_else(|_| "ACAB".into());
+    let (rev_define, fw_dir) = match rev.as_str() {
+        "ABAB" => ("LT_SILICON_REV_ABAB", "boot_v_1_0_1"),
+        "ACAB" => ("LT_SILICON_REV_ACAB", "boot_v_2_0_1"),
+        other => bail!("Unsupported TROPIC_SILICON_REVISION={other}"),
+    };
+    lib.add_define(rev_define, Some("1"));
 
     lib.add_sources(["tropic/tropic.c", "tropic/config/tropic_configs.c"]);
 
@@ -50,7 +56,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_includes([
         tropic_dir.join("include"),
         tropic_dir.join("src"),
-        tropic_dir.join("TROPIC01_fw_update_files/boot_v_2_0_1/fw_v_2_1_0"),
+        tropic_dir
+            .join("TROPIC01_fw_update_files")
+            .join(fw_dir)
+            .join("fw_v_2_1_0"),
     ]);
 
     lib.add_defines([

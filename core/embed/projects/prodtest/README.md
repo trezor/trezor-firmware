@@ -1242,7 +1242,7 @@ OK 00000001000000000000000000000000000000000000000000000000000000000000000001000
 ### tropic-update-fw
 
 Updates Tropic firmware to the embedded version.
-Only chips with the ACAB silicon revision are supported.
+Only chips matching the silicon revision bundled in the build are supported: ACAB by default, or ABAB when built with `TROPIC_SILICON_REVISION=ABAB`.
 
 Example:
 ```
