@@ -690,3 +690,22 @@ def flush_queue(
         messages.WardFlushQueue(app_id=app_id, identifier=identifier),
         provider,
     )
+
+
+def reset_service(
+    session: "Session", force: bool = False
+) -> messages.WardResetServiceAck:
+    """Unbind the WARD service, so another daemon may claim the role. Service builds only.
+
+    ON THE ORDINARY SESSION, unlike everything else about the service channel. The daemon whose key
+    was lost is the one party that cannot ask for this, so the request comes from the wallet host
+    and the device holds to confirm.
+
+    Refused while queued changes are unresolved -- publish them with the current service first.
+    `force` overrides that and gets a screen naming how many may be lost; the changes themselves are
+    not discarded, and `unresolved` on the ack reports what was outstanding.
+    """
+    return session.call(
+        messages.WardResetService(force=force or None),
+        expect=messages.WardResetServiceAck,
+    )

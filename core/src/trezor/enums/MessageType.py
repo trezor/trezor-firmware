@@ -344,4 +344,6 @@ if not utils.BITCOIN_ONLY:
     WardPublishConflict = 2338
     WardMutationApplied = 2339
     WardFlushQueueApplied = 2340
+    WardResetService = 2341
+    WardResetServiceAck = 2342
     DisplayAddress = 2322

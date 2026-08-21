@@ -409,9 +409,88 @@ class InterfaceContext:
 
         return waiting_for_channel or expecting_message or expecting_ack
 
+    def _retire_displaced_channel(self, channel_id: int) -> None:
+        """Give a newcomer the slot an incumbent is occupying, unless the incumbent is in use.
+
+        WHY THIS EXISTS AT ALL. An interface tracks one channel, and the machinery that lets a
+        newcomer displace an incumbent is `preempt_dispatch_channel_if_stale` -- which can only
+        preempt `ThpContext.dispatch_channel`. That is a WIRE channel by construction: an interface
+        that serves its own dispatch never installs one there. So on the service interface an
+        incumbent is never let go of, and the symptom is not an error but a LOCK-OUT -- the
+        newcomer's packets are answered with TRANSPORT_BUSY forever, its host retransmits, and
+        nothing on the device notices anything is wrong.
+
+        It was survivable by accident. A wallet channel that happened to be the dispatch channel and
+        happened to be idle got preempted instead, forcing a loop restart that rebuilt this object --
+        so a daemon reconnect cost a second and a half and an unrelated host's channel. With no
+        wallet workflow in flight there is nothing to preempt, and the interface stays locked until
+        the device reboots.
+
+        THE RULE IS THE SAME ONE THE WIRE INTERFACE ALREADY USES: an incumbent the device has
+        written to within `_PREEMPT_TIMEOUT_MS` is in use and is kept; anything else is displaced.
+        Applied here rather than borrowed, because the object it has to protect is this interface's
+        own channel and not the dispatch one.
+
+        WHY NOT "ONLY IF IT IS CLOSED", which was the first shape this took. A daemon that goes away
+        does not close anything -- a host process dying, or a socket dropped, is invisible to the
+        device -- so "closed" describes almost none of the cases that matter, and the interface would
+        stay locked for exactly the reason it needed unlocking.
+
+        WHY IT IS SAFE THAT AN IDLE BOUND CHANNEL CAN BE DISPLACED. The pin is untouched by any of
+        this: a newcomer still has to be the daemon this device bound before it can answer for the
+        replica, so what an interloper gains is not the role but the interruption. And it gains
+        nothing it did not already have -- a host that can open a channel here can hold the interface
+        by being first. Meanwhile the last write is exactly the right thing to measure: a workflow
+        parked in `service._rpc` has just written its request, so a genuine in-flight RPC is inside
+        the window and protected, and a real daemon knocked off while idle simply reconnects.
+
+        The buffers move across rather than being taken again: `wire.Provider` hands out its pool
+        once, so a slot reclaimed through the provider would come back empty.
+        """
+        channel = self.active_channel
+        if channel is None or channel.channel_id == channel_id:
+            return
+
+        last_write_ms = channel.get_last_write()
+        if last_write_ms is not None and last_write_ms <= _PREEMPT_TIMEOUT_MS:
+            # In use. The newcomer is told the interface is busy and retransmits; if the incumbent
+            # really is gone, the next attempt is past the window and gets in.
+            return
+
+        try:
+            # BUILT BEFORE THE INCUMBENT IS RETIRED, so a newcomer that has already gone away costs
+            # nothing: `Channel.__init__` refuses a closed id, and until it succeeds nothing here has
+            # changed. It only keeps references to the buffers, so sharing them across these two
+            # statements is safe.
+            replacement = Channel(
+                channel_id,
+                self,
+                buffers=(channel.receive_buf_src, channel.send_buf_src),
+            )
+        except trezorthp.ThpError:
+            return
+
+        # CLOSED, NOT MERELY FORGOTTEN, so a host that is still there finds out rather than holding
+        # a channel nothing will ever answer for. `clear` also drops its sessions, which is what
+        # `end_pairing_and_replace` does for a service reconnect and for the same reason: a session
+        # that outlived its transport would keep a readiness it can no longer vouch for.
+        channel.clear(trezorthp.ThpError("displaced on the service interface"))
+
+        self.active_channel = replacement
+
+        # A NEW CONVERSATION, so this interface listens again -- the released flag belonged to the
+        # channel that has just gone.
+        self._dispatch_released = False
+        self._dispatch_box.put(None, replace=True)
+
     def read_packet_for_channel(self, result: int, packet_buffer: AnyBytes) -> None:
         channel_id = result & 0xFFFF
         buffer_size = (result >> 16) * 8
+
+        if self._serves_own_dispatch:
+            # Only here. The wire interface has the preemption path above and session migration
+            # around it, and neither wants a second way to lose a channel.
+            self._retire_displaced_channel(channel_id)
 
         if self.active_channel is None:
             if buffers := self._buffers_provider.take():

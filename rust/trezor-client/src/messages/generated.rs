@@ -387,6 +387,8 @@ trezor_message_impl! {
     WardPublishConflict => MessageType_WardPublishConflict,
     WardMutationApplied => MessageType_WardMutationApplied,
     WardFlushQueueApplied => MessageType_WardFlushQueueApplied,
+    WardResetService => MessageType_WardResetService,
+    WardResetServiceAck => MessageType_WardResetServiceAck,
     DisplayAddress => MessageType_DisplayAddress,
 }
 

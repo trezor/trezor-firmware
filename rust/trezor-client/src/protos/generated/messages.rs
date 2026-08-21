@@ -689,6 +689,10 @@ pub enum MessageType {
     MessageType_WardMutationApplied = 2339,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardFlushQueueApplied)
     MessageType_WardFlushQueueApplied = 2340,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardResetService)
+    MessageType_WardResetService = 2341,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardResetServiceAck)
+    MessageType_WardResetServiceAck = 2342,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DisplayAddress)
     MessageType_DisplayAddress = 2322,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
@@ -1045,6 +1049,8 @@ impl ::protobuf::Enum for MessageType {
             2338 => ::std::option::Option::Some(MessageType::MessageType_WardPublishConflict),
             2339 => ::std::option::Option::Some(MessageType::MessageType_WardMutationApplied),
             2340 => ::std::option::Option::Some(MessageType::MessageType_WardFlushQueueApplied),
+            2341 => ::std::option::Option::Some(MessageType::MessageType_WardResetService),
+            2342 => ::std::option::Option::Some(MessageType::MessageType_WardResetServiceAck),
             2322 => ::std::option::Option::Some(MessageType::MessageType_DisplayAddress),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
@@ -1389,6 +1395,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_WardPublishConflict" => ::std::option::Option::Some(MessageType::MessageType_WardPublishConflict),
             "MessageType_WardMutationApplied" => ::std::option::Option::Some(MessageType::MessageType_WardMutationApplied),
             "MessageType_WardFlushQueueApplied" => ::std::option::Option::Some(MessageType::MessageType_WardFlushQueueApplied),
+            "MessageType_WardResetService" => ::std::option::Option::Some(MessageType::MessageType_WardResetService),
+            "MessageType_WardResetServiceAck" => ::std::option::Option::Some(MessageType::MessageType_WardResetServiceAck),
             "MessageType_DisplayAddress" => ::std::option::Option::Some(MessageType::MessageType_DisplayAddress),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
@@ -1732,6 +1740,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_WardPublishConflict,
         MessageType::MessageType_WardMutationApplied,
         MessageType::MessageType_WardFlushQueueApplied,
+        MessageType::MessageType_WardResetService,
+        MessageType::MessageType_WardResetServiceAck,
         MessageType::MessageType_DisplayAddress,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
@@ -2081,13 +2091,15 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_WardPublishConflict => 328,
             MessageType::MessageType_WardMutationApplied => 329,
             MessageType::MessageType_WardFlushQueueApplied => 330,
-            MessageType::MessageType_DisplayAddress => 331,
-            MessageType::MessageType_BenchmarkListNames => 332,
-            MessageType::MessageType_BenchmarkNames => 333,
-            MessageType::MessageType_BenchmarkRun => 334,
-            MessageType::MessageType_BenchmarkResult => 335,
-            MessageType::MessageType_TelemetryGet => 336,
-            MessageType::MessageType_Telemetry => 337,
+            MessageType::MessageType_WardResetService => 331,
+            MessageType::MessageType_WardResetServiceAck => 332,
+            MessageType::MessageType_DisplayAddress => 333,
+            MessageType::MessageType_BenchmarkListNames => 334,
+            MessageType::MessageType_BenchmarkNames => 335,
+            MessageType::MessageType_BenchmarkRun => 336,
+            MessageType::MessageType_BenchmarkResult => 337,
+            MessageType::MessageType_TelemetryGet => 338,
+            MessageType::MessageType_Telemetry => 339,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -2106,7 +2118,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xbav\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\x8fw\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2483,25 +2495,27 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x01\x12*\n\x1fMessageType_WardPublishConflict\x10\xa2\x12\x1a\x04\x90\
     \xb5\x18\x01\x12*\n\x1fMessageType_WardMutationApplied\x10\xa3\x12\x1a\
     \x04\x98\xb5\x18\x01\x12,\n!MessageType_WardFlushQueueApplied\x10\xa4\
-    \x12\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_DisplayAddress\x10\
-    \x92\x12\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListName\
-    s\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\
-    \x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\
-    \x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\
-    \x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\x10\xcc\
-    \x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_Telem\
-    etry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\xf3\
-    \x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10\
-    J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\
-    \x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\x06\x08\xe3\
-    \x01\x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\x01\x10\xe5\
-    \x01\"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\x01\"\x06\
-    \x08\xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\x08\xec\x01\
-    \x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\x10\xb0\x02\
-    \"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\
-    \xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08\"\x06\x08\x82\x12\x10\
-    \x82\x12B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\
-    \x1d\x01\
+    \x12\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessageType_WardResetService\x10\
+    \xa5\x12\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_WardResetServiceA\
+    ck\x10\xa6\x12\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_DisplayAddr\
+    ess\x10\x92\x12\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkL\
+    istNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_Benchmar\
+    kNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkR\
+    un\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResul\
+    t\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\
+    \x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageTy\
+    pe_Telemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\
+    \xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\
+    \x08G\x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\
+    \xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\
+    \x06\x08\xe3\x01\x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\
+    \x01\x10\xe5\x01\"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\
+    \x01\"\x06\x08\xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\
+    \x08\xec\x01\x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\
+    \x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\
+    \"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08\"\x06\x08\
+    \x82\x12\x10\x82\x12B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMes\
+    sage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
