@@ -2,14 +2,12 @@ use core::convert::{TryFrom, TryInto};
 
 use super::defs::{FieldDef, FieldType, MsgDef};
 use super::obj::MsgObj;
-use super::{error, zigzag};
-use crate::error::Error;
+use super::zigzag;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
-use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
-use crate::micropython::{buffer, util};
+use crate::micropython::{buffer, util, Error, Obj};
 
 pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
     let block = || {
@@ -209,7 +207,7 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += len;
                 buf.copy_from_slice(val);
             })
-            .ok_or_else(error::end_of_buffer)
+            .ok_or(Error::EOFError)
     }
 
     fn write_byte(&mut self, val: u8) -> Result<(), Error> {
@@ -220,6 +218,6 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += 1;
                 *buf = val;
             })
-            .ok_or_else(error::end_of_buffer)
+            .ok_or(Error::EOFError)
     }
 }

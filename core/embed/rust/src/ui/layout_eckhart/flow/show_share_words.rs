@@ -6,7 +6,7 @@ use super::super::firmware::{
 };
 use super::super::theme::gradient::Gradient;
 use super::super::theme::{self};
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::button_request::{ButtonRequest, ButtonRequestCode};
@@ -55,7 +55,7 @@ pub fn new_show_share_words_flow(
     instructions_verb: Option<TString<'static>>,
     text_confirm: TString<'static>,
     text_check: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let br: ButtonRequest = ButtonRequestCode::ResetDevice.with_name("share_words");
     // Determine whether to show the instructions or not
     let has_intro = instructions_paragraphs.is_some();
@@ -120,9 +120,9 @@ pub fn new_show_share_words_flow(
             _ => None,
         });
     let mut res = if has_intro {
-        SwipeFlow::new(&ShowShareWords::Instruction)?
+        SwipeFlow::new(&ShowShareWords::Instruction)
     } else {
-        SwipeFlow::new(&ShowShareWords::ShareWords)?
+        SwipeFlow::new(&ShowShareWords::ShareWords)
     };
     if has_intro {
         res.add_page(

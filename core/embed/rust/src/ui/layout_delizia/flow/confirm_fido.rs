@@ -5,9 +5,9 @@ use super::super::component::{
     VerticalMenu,
 };
 use super::super::theme;
-use crate::error;
 use crate::micropython::gc::Gc;
 use crate::micropython::list::List;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::paginated::Paginate as _;
@@ -88,7 +88,7 @@ pub fn new_confirm_fido(
     app_name: TString<'static>,
     icon_name: Option<TString<'static>>,
     accounts: Gc<List>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let num_accounts = accounts.len();
     SINGLE_CRED.store(num_accounts <= 1, Ordering::Relaxed);
     CRED_SELECTED.store(0, Ordering::Relaxed);
@@ -170,7 +170,7 @@ pub fn new_confirm_fido(
     } else {
         &ConfirmFido::Intro
     };
-    let mut flow = SwipeFlow::new(initial_page)?;
+    let mut flow = SwipeFlow::new(initial_page);
     flow.add_page(&ConfirmFido::Intro, content_intro)?
         .add_page(&ConfirmFido::ChooseCredential, content_choose_credential)?
         .add_page(&ConfirmFido::Details, content_details)?

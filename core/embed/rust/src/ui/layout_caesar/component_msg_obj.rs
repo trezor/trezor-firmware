@@ -5,8 +5,7 @@ use super::component::{
     ConfirmHomescreen, Flow, Frame, Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry,
     PinEntry, Progress, ScrollableFrame, ShowMore, WordlistEntry,
 };
-use crate::error::Error;
-use crate::micropython::obj::Obj;
+use crate::micropython::{Error, Obj};
 use crate::ui::component::base::Component;
 use crate::ui::component::paginated::{PageMsg, Paginate};
 use crate::ui::component::text::paragraphs::{ParagraphSource, Paragraphs};
@@ -111,8 +110,8 @@ impl ComponentMsgObj for CoinJoinProgress {
 impl ComponentMsgObj for NumberInput {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            Self::Msg::Cancel => (CANCELLED.as_obj(), 0.try_into()?).try_into(),
-            Self::Msg::Choice { item, .. } => (CONFIRMED.as_obj(), item.try_into()?).try_into(),
+            Self::Msg::Cancel => (CANCELLED.as_obj(), 0).try_into(),
+            Self::Msg::Choice { item, .. } => (CONFIRMED.as_obj(), item).try_into(),
         }
     }
 }

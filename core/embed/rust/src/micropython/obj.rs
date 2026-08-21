@@ -1,9 +1,9 @@
 use core::convert::{TryFrom, TryInto};
 use core::ffi::CStr;
 
+use super::error::Error;
 use super::ffi;
 use super::runtime::catch_exception;
-use crate::error::Error;
 
 pub type Obj = ffi::mp_obj_t;
 pub type ObjBase = ffi::mp_obj_base_t;
@@ -297,40 +297,6 @@ impl TryFrom<&'static CStr> for Obj {
         //  - `CStr` is guaranteed to be null-terminated UTF-8.
         //  - the argument is static so it will remain valid for the lifetime of result.
         let obj = unsafe { ffi::trezor_obj_str_from_rom_text(val.as_ptr() as _) };
-        if obj.is_null() {
-            Err(Error::AllocationFailed)
-        } else {
-            Ok(obj)
-        }
-    }
-}
-
-impl TryFrom<(Obj, Obj)> for Obj {
-    type Error = Error;
-
-    fn try_from(val: (Obj, Obj)) -> Result<Self, Self::Error> {
-        // SAFETY:
-        //  - Should work with any micropython objects.
-        // EXCEPTION: Will raise if allocation fails.
-        let values = [val.0, val.1];
-        let obj = catch_exception(|| unsafe { ffi::mp_obj_new_tuple(2, values.as_ptr()) })?;
-        if obj.is_null() {
-            Err(Error::AllocationFailed)
-        } else {
-            Ok(obj)
-        }
-    }
-}
-
-impl TryFrom<(Obj, Obj, Obj)> for Obj {
-    type Error = Error;
-
-    fn try_from(val: (Obj, Obj, Obj)) -> Result<Self, Self::Error> {
-        // SAFETY:
-        //  - Should work with any micropython objects.
-        // EXCEPTION: Will raise if allocation fails.
-        let values = [val.0, val.1, val.2];
-        let obj = catch_exception(|| unsafe { ffi::mp_obj_new_tuple(3, values.as_ptr()) })?;
         if obj.is_null() {
             Err(Error::AllocationFailed)
         } else {

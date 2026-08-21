@@ -1,4 +1,5 @@
 mod crypto;
+mod error;
 pub mod micropython;
 #[cfg(test)]
 mod tests;
@@ -23,8 +24,8 @@ use trezor_thp::credential::CredentialVerifier;
 use trezor_thp::error::TransportError;
 use trezor_thp::{ChannelIO, Error as ThpError};
 
-use crate::error::Error;
-use crate::micropython::obj::Obj;
+use self::error::Error;
+use crate::micropython::{Error as MpyError, Obj};
 
 type TrezorMux = Mux<TrezorCrypto>;
 type TrezorChannelOpen = ChannelOpen<TrezorCredentialVerifier, TrezorCrypto>;
@@ -40,10 +41,6 @@ const MAX_INTERFACES: usize = 2;
 // Channel limits, shared across interfaces.
 const MAX_CHANNELS_OPENING: usize = 4;
 const MAX_CHANNELS_APPDATA: usize = 10;
-
-const CANNOT_UNLOCK: Error = Error::ThpError(c"THP state locked");
-const CHANNEL_NOT_FOUND: Error = Error::ThpError(c"Channel not found");
-const INTERFACE_NOT_FOUND: Error = Error::ThpError(c"Invalid interface");
 
 /// Global THP state.
 /// Needs to be wrapped in a mutex because even without threads the compiler
@@ -115,7 +112,7 @@ impl ThpContext {
             }
             Entry::Vacant(v) => {
                 v.insert(TrezorMux::new(device_properties)?)
-                    .map_err(|_| Error::ThpError(c"Too many interfaces"))?;
+                    .map_err(|_| Error::TooManyInterfaces)?;
             }
         }
         Ok(())
@@ -129,7 +126,10 @@ impl ThpContext {
         packet_buffer: &[u8],
         credential_fn: Obj,
     ) -> Result<TrezorInResult, Error> {
-        let mux = self.ifaces.get_mut(&iface_num).ok_or(INTERFACE_NOT_FOUND)?;
+        let mux = self
+            .ifaces
+            .get_mut(&iface_num)
+            .ok_or(Error::InterfaceNotFound)?;
         let pir = mux.packet_in(packet_buffer, &mut []);
         let res = match pir {
             PacketInResult::Accepted { .. } => TrezorInResult::None,
@@ -169,7 +169,7 @@ impl ThpContext {
                 TrezorInResult::None
             }
             _ => {
-                return Err(Error::ThpError(c"Unexpected PacketInResult"));
+                return Err(Error::UnexpectedPacketInResult);
             }
         };
         Ok(res)
@@ -179,7 +179,10 @@ impl ThpContext {
     /// channel in handshake phase if needed.
     fn packet_in_alloc(&mut self, iface_num: u8) -> Result<(), Error> {
         let channel_id = self.get_channel_id();
-        let mux = self.ifaces.get_mut(&iface_num).ok_or(INTERFACE_NOT_FOUND)?;
+        let mux = self
+            .ifaces
+            .get_mut(&iface_num)
+            .ok_or(Error::InterfaceNotFound)?;
         let channel = mux.channel_alloc(
             channel_id,
             TrezorCredentialVerifier::new(iface_num, channel_id),
@@ -216,7 +219,7 @@ impl ThpContext {
         } = self
             .channel_opening
             .get_mut(&channel_id)
-            .ok_or(CHANNEL_NOT_FOUND)?;
+            .ok_or(Error::ChannelNotFound)?;
         // Set all host keys aside so that TrezorCredentialVerifier can look up
         // peer key for channel replacement purposes. Does not work across interfaces.
         // As a possible optimization we can check packet's control byte and only do it
@@ -224,7 +227,7 @@ impl ThpContext {
         // Alternatively we can copy these to micropython before credential_fn is
         // called.
         {
-            let mut aux = THP_AUX.try_lock().ok_or(CANNOT_UNLOCK)?;
+            let mut aux = THP_AUX.try_lock().ok_or(Error::CannotUnlock)?;
             aux.host_keys_copy_from(*iface_num, self.channel_appdata.as_view());
         };
         // Set credential verification callback here - we don't want to keep a
@@ -255,7 +258,7 @@ impl ThpContext {
                 TrezorInResult::KeyRequired { try_to_unlock }
             }
             _ => {
-                return Err(Error::ThpError(c"Unexpected PacketInResult"));
+                return Err(Error::UnexpectedPacketInResult);
             }
         };
         if channel.handshake_done() {
@@ -318,7 +321,7 @@ impl ThpContext {
                 TrezorInResult::Failed
             }
             _ => {
-                return Err(Error::ThpError(c"Unexpected PacketInResult"));
+                return Err(Error::UnexpectedPacketInResult);
             }
         };
         Ok(res)
@@ -335,7 +338,7 @@ impl ThpContext {
         let mux = self
             .ifaces
             .get_mut(&out_iface_num)
-            .ok_or(INTERFACE_NOT_FOUND)?;
+            .ok_or(Error::InterfaceNotFound)?;
         if mux.packet_out_ready() {
             mux.packet_out(packet_buffer, &[])?;
             return Ok(true);
@@ -427,7 +430,7 @@ impl ThpContext {
             che.channel.message_retransmit()?;
             che.channel.sending_retry()
         } else {
-            return Err(CHANNEL_NOT_FOUND);
+            return Err(Error::ChannelNotFound);
         };
         match retry {
             None => {
@@ -524,7 +527,7 @@ impl ThpContext {
 
         // Delete saved credential as it's no longer needed.
         {
-            let mut aux = THP_AUX.try_lock().ok_or(CANNOT_UNLOCK)?;
+            let mut aux = THP_AUX.try_lock().ok_or(Error::CannotUnlock)?;
             aux.delete_credential(channel_id);
         }
 
@@ -669,7 +672,7 @@ impl ThpContext {
         let now = self.now();
         let key = local_static_privkey
             .try_into()
-            .map_err(|_| Error::ThpError(c"Invalid key length"))?;
+            .map_err(|_| Error::InvalidKeyLength)?;
         let mut first_err = None;
         for che in self.channel_opening.values_mut() {
             if che.iface_num != iface_num {
@@ -696,7 +699,7 @@ impl ThpContext {
     ) -> Result<&mut ChannelEntry<TrezorChannel>, Error> {
         self.channel_appdata
             .get_mut(&channel_id)
-            .ok_or(CHANNEL_NOT_FOUND)
+            .ok_or(Error::ChannelNotFound)
     }
 
     /// Look up channel in pairing/credential/encrypted-transport phase by its
@@ -704,7 +707,7 @@ impl ThpContext {
     fn lookup_channel(&self, channel_id: u16) -> Result<&ChannelEntry<TrezorChannel>, Error> {
         self.channel_appdata
             .get(&channel_id)
-            .ok_or(CHANNEL_NOT_FOUND)
+            .ok_or(Error::ChannelNotFound)
     }
 
     /// Returns None if `channels` is not full, or ID of its least recently used
@@ -804,7 +807,7 @@ impl TrezorCredentialVerifier {
 impl CredentialVerifier for TrezorCredentialVerifier {
     fn verify(&self, remote_static_pubkey: &[u8], credential: &[u8]) -> PairingState {
         log::debug!("[{:04x}] TrezorCredentialVerifier::verify", self.channel_id);
-        let func = || -> Result<PairingState, Error> {
+        let func = || -> Result<PairingState, MpyError> {
             if self.verify_fn == Obj::const_none()
                 || credential.is_empty()
                 || remote_static_pubkey.is_empty()
@@ -815,10 +818,10 @@ impl CredentialVerifier for TrezorCredentialVerifier {
             let res = self
                 .verify_fn
                 .call_with_n_args(&[remote_static_pubkey.try_into()?, credential.try_into()?])?;
-            let ps = PairingState::try_from(u8::try_from(res)?)?;
+            let ps = PairingState::try_from(u8::try_from(res)?).map_err(Error::from)?;
             // Channel replacement - check if we already trust this key.
             if ps == PairingState::Paired {
-                let mut aux = THP_AUX.try_lock().ok_or(CANNOT_UNLOCK)?;
+                let mut aux = THP_AUX.try_lock().ok_or(Error::CannotUnlock)?;
                 aux.add_credential(self.channel_id, credential);
                 if aux.host_keys_contain(remote_static_pubkey) {
                     return Ok(PairingState::PairedAutoconnect);
@@ -828,14 +831,19 @@ impl CredentialVerifier for TrezorCredentialVerifier {
         };
         let res = func();
         match res {
-            Ok(ps) => log::debug!("[{:04x}] Result: {}", self.channel_id, ps as u8),
-            Err(e) => log::error!(
-                "[{:04x}] Credential verification error: {:?}",
-                self.channel_id,
-                e
-            ),
+            Ok(ps) => {
+                log::debug!("[{:04x}] Result: {}", self.channel_id, ps as u8);
+                ps
+            }
+            Err(e) => {
+                log::error!(
+                    "[{:04x}] Credential verification error: {:?}",
+                    self.channel_id,
+                    e
+                );
+                PairingState::Unpaired
+            }
         }
-        res.unwrap_or(PairingState::Unpaired)
     }
 }
 

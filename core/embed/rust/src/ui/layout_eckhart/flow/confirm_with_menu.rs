@@ -8,8 +8,8 @@ use super::super::firmware::{
 use super::super::theme::gradient::Gradient;
 use super::super::theme::{self};
 use super::util::single_page;
-use crate::error;
 use crate::maybe_trace::MaybeTrace;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::ComponentExt;
@@ -60,7 +60,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     extra_menu_label: Option<TString<'static>>,
     cancel_menu_label: Option<TString<'static>>,
     external_menu: bool,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     // Value
     let confirm_button = if hold {
         let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
@@ -93,7 +93,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     if external_menu {
         // TODO: will eventually replace the internal menu
         if extra_menu_label.is_some() || cancel_menu_label.is_some() {
-            return Err(error::Error::NotImplementedError);
+            return Err(Error::NotImplementedError);
         }
         return single_page(content_value);
     }
@@ -125,7 +125,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
             _ => None,
         });
 
-    let mut res = SwipeFlow::new(&ConfirmWithMenu::Value)?;
+    let mut res = SwipeFlow::new(&ConfirmWithMenu::Value);
     res.add_page(&ConfirmWithMenu::Value, content_value)?
         .add_page(&ConfirmWithMenu::Menu, content_menu)?;
     Ok(res)

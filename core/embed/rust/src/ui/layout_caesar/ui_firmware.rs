@@ -9,15 +9,13 @@ use super::component::{
     SimpleChoice, WordlistEntry, WordlistType,
 };
 use super::{constant, fonts, theme, UICaesar};
-use crate::error::Error;
 use crate::io::BinaryData;
 use crate::maybe_trace::MaybeTrace;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
-use crate::micropython::obj::Obj;
-use crate::micropython::util;
+use crate::micropython::{util, Error, Obj};
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::text::op::OpTextLayout;

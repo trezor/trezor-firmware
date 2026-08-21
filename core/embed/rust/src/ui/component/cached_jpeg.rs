@@ -1,10 +1,10 @@
 use super::paginated::SinglePage;
-use crate::error::Error;
 use crate::io::BinaryData;
 use crate::ui::component::{Component, Event, EventCtx, Never};
 use crate::ui::display::image::ImageInfo;
 use crate::ui::geometry::{Offset, Point, Rect};
 use crate::ui::shape::{self, render_on_canvas, ImageBuffer, Renderer, Rgb565Canvas};
+use crate::ui::UIError;
 
 pub struct CachedJpeg {
     area: Rect,
@@ -14,7 +14,7 @@ pub struct CachedJpeg {
 }
 
 impl CachedJpeg {
-    pub fn new(image: BinaryData<'static>, scale: u8) -> Result<Self, Error> {
+    pub fn new(image: BinaryData<'static>, scale: u8) -> Result<Self, UIError> {
         let size = match ImageInfo::parse(image) {
             ImageInfo::Jpeg(info) => {
                 if info.mcu_height() > 16 {
@@ -81,8 +81,7 @@ impl crate::trace::Trace for CachedJpeg {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::error::Error;
-    use crate::micropython::obj::Obj;
+    use crate::micropython::{Error, Obj};
     use crate::ui::layout::obj::ComponentMsgObj;
     impl ComponentMsgObj for super::CachedJpeg {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {

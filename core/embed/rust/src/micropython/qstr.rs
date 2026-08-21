@@ -6,9 +6,9 @@ use core::convert::TryFrom;
 use core::slice;
 use core::str::from_utf8;
 
+use super::error::Error;
 use super::ffi;
 use super::obj::Obj;
-use crate::error::Error;
 
 impl Qstr {
     pub const fn to_obj(self) -> Obj {

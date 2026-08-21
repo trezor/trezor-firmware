@@ -2,12 +2,11 @@ use heapless::String;
 use qrcodegen::{QrCode, QrCodeEcc, Version};
 
 use super::paginated::SinglePage;
-use crate::error::Error;
 use crate::ui::component::{Component, Event, EventCtx, Never};
 use crate::ui::display::Color;
 use crate::ui::geometry::{Offset, Rect};
-use crate::ui::shape;
 use crate::ui::shape::Renderer;
+use crate::ui::{shape, UIError};
 
 const NVERSIONS: usize = 10; // range of versions (=capacities) that we support
 const THRESHOLDS_BINARY: [usize; NVERSIONS] = [14, 26, 42, 62, 84, 106, 122, 152, 180, 213];
@@ -28,7 +27,7 @@ pub struct Qr {
 }
 
 impl Qr {
-    pub fn new<T>(text: T, case_sensitive: bool) -> Result<Self, Error>
+    pub fn new<T>(text: T, case_sensitive: bool) -> Result<Self, UIError>
     where
         T: AsRef<str>,
     {
@@ -40,11 +39,10 @@ impl Qr {
             && Self::is_alphanumeric_after_conversion(indata)
         {
             for c in indata.chars() {
-                s.push(c.to_ascii_uppercase())
-                    .map_err(|_| Error::OutOfRange)?;
+                s.push(c.to_ascii_uppercase())?;
             }
         } else {
-            s.push_str(indata).map_err(|_| Error::OutOfRange)?;
+            s.push_str(indata)?;
         }
 
         Ok(Self {
@@ -132,8 +130,7 @@ impl crate::trace::Trace for Qr {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::error::Error;
-    use crate::micropython::obj::Obj;
+    use crate::micropython::{Error, Obj};
     use crate::ui::layout::obj::ComponentMsgObj;
     impl ComponentMsgObj for super::Qr {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {

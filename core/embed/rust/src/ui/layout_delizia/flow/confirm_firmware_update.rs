@@ -1,6 +1,6 @@
 use super::super::component::{Frame, Header, PromptScreen, SwipeContent, VerticalMenu};
 use super::super::theme;
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::swipe_detect::SwipeSettings;
@@ -49,7 +49,7 @@ impl FlowController for ConfirmFirmwareUpdate {
 pub fn new_confirm_firmware_update(
     description: TString<'static>,
     fingerprint: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
     let content_intro = Frame::with_header(
         Header::left_aligned(TR::firmware_update__title.into()).with_menu_button(),
@@ -85,7 +85,7 @@ pub fn new_confirm_firmware_update(
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro)?;
+    let mut res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro);
     res.add_page(&ConfirmFirmwareUpdate::Intro, content_intro)?
         .add_page(&ConfirmFirmwareUpdate::Menu, content_menu)?
         .add_page(&ConfirmFirmwareUpdate::Fingerprint, content_fingerprint)?

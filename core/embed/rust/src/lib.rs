@@ -25,7 +25,6 @@ mod align;
 mod coverage;
 #[cfg(feature = "universal_fw")]
 mod definitions;
-mod error;
 mod io;
 mod maybe_trace;
 #[cfg(feature = "micropython")]

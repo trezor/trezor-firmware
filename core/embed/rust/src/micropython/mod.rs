@@ -4,6 +4,7 @@ pub mod macros;
 
 pub mod buffer;
 pub mod dict;
+pub mod error;
 pub mod exception;
 pub mod ffi;
 pub mod func;
@@ -17,8 +18,12 @@ pub mod print;
 pub mod qstr;
 pub mod runtime;
 pub mod simple_type;
+pub mod tuple;
 pub mod typ;
 pub mod util;
+
+pub use error::Error;
+pub use obj::Obj;
 
 #[cfg(feature = "dbg_console")]
 pub mod logging;

@@ -7,8 +7,7 @@ use super::component::{
     NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg,
     Progress, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog, SimplePage,
 };
-use crate::error::Error;
-use crate::micropython::obj::Obj;
+use crate::micropython::{Error, Obj};
 use crate::strutil::TString;
 use crate::ui::component::paginated::PageMsg;
 use crate::ui::component::placed::GridPlaced;
@@ -184,7 +183,7 @@ where
     F: Fn(u32) -> TString<'static>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        let value = self.value().try_into()?;
+        let value = self.value();
         match msg {
             NumberInputDialogMsg::Selected => Ok((CONFIRMED.as_obj(), value).try_into()?),
             NumberInputDialogMsg::InfoRequested => Ok((INFO.as_obj(), value).try_into()?),

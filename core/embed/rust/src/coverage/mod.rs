@@ -2,7 +2,7 @@
 use heapless::index_map::{Entry, FnvIndexMap};
 use spin::RwLock;
 
-use crate::error::Error;
+use crate::micropython::error::Error;
 use crate::micropython::list::List;
 use crate::micropython::macros::{obj_fn_0, obj_fn_2, obj_module};
 use crate::micropython::module::Module;

@@ -1,11 +1,11 @@
 use core::convert::TryFrom;
 
+use super::error::Error;
 use super::ffi;
 use super::gc::Gc;
 use super::map::Map;
 use super::obj::Obj;
 use super::runtime::catch_exception;
-use crate::error::Error;
 
 /// Insides of the MicroPython `dict` object.
 pub type Dict = ffi::mp_obj_dict_t;

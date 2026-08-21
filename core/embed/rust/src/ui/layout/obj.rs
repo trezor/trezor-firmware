@@ -8,8 +8,7 @@ use num_traits::FromPrimitive;
 use num_traits::ToPrimitive;
 use sys::time::Duration;
 
-use super::base::{Layout, LayoutState};
-use crate::error::Error;
+use super::base::{Layout, LayoutState, PaintOutOfBounds};
 use crate::maybe_trace::MaybeTrace;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::{self, Gc, GcBox};
@@ -21,13 +20,17 @@ use crate::micropython::obj::{Obj, ObjBase};
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
 use crate::micropython::typ::{FullType, Type};
-use crate::micropython::util;
+use crate::micropython::{util, Error};
+#[cfg(feature = "button")]
+use crate::trezorhal::button::{PhysicalButton, PhysicalButtonEvent};
 use crate::ui::button_request::ButtonRequest;
 use crate::ui::component::base::{AttachType, TimerToken};
 use crate::ui::component::{Component, Event, EventCtx, Never};
 use crate::ui::display::{self, Color};
 #[cfg(feature = "ble")]
 use crate::ui::event::BLEEvent;
+#[cfg(feature = "button")]
+use crate::ui::event::ButtonEvent;
 #[cfg(feature = "power_manager")]
 use crate::ui::event::PMEvent;
 use crate::ui::event::USBEvent;
@@ -37,11 +40,6 @@ use crate::ui::shape::Renderer;
 #[cfg(feature = "touch")]
 use crate::ui::{event::TouchEvent, geometry::Direction};
 use crate::ui::{CommonUI, ModelUI};
-#[cfg(feature = "button")]
-use crate::{
-    trezorhal::button::{PhysicalButton, PhysicalButtonEvent},
-    ui::event::ButtonEvent,
-};
 
 impl AttachType {
     fn to_obj(self) -> Obj {
@@ -117,10 +115,12 @@ where
     }
 }
 
-impl<T> Layout<Result<Obj, Error>> for RootComponent<T, ModelUI>
+impl<T> Layout for RootComponent<T, ModelUI>
 where
     T: Component + ComponentMsgObj,
 {
+    type Value = Result<Obj, Error>;
+
     fn place(&mut self) {
         self.inner.place(ModelUI::SCREEN);
     }
@@ -136,11 +136,11 @@ where
         }
     }
 
-    fn value(&self) -> Option<&Result<Obj, Error>> {
-        self.returned_value.as_ref()
+    fn take_value(&mut self) -> Option<Self::Value> {
+        self.returned_value.take()
     }
 
-    fn paint(&mut self) -> Result<(), Error> {
+    fn paint(&mut self) -> Result<(), PaintOutOfBounds> {
         #[cfg(feature = "ui_debug")]
         let mut overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
@@ -170,8 +170,8 @@ where
     }
 }
 
-pub trait LayoutMaybeTrace: Layout<Result<Obj, Error>> + MaybeTrace {}
-impl<T> LayoutMaybeTrace for T where T: Layout<Result<Obj, Error>> + MaybeTrace {}
+pub trait LayoutMaybeTrace: Layout<Value = Result<Obj, Error>> + MaybeTrace {}
+impl<T> LayoutMaybeTrace for T where T: Layout<Value = Result<Obj, Error>> + MaybeTrace {}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -320,7 +320,8 @@ impl LayoutObjInner {
 
         if self.repaint != Repaint::None {
             self.repaint = Repaint::None;
-            self.root_mut()?.paint().map(|_| true)
+            self.root_mut()?.paint().map_err(|_| Error::OutOfRange)?;
+            Ok(true)
         } else {
             Ok(false)
         }
@@ -357,7 +358,7 @@ impl LayoutObjInner {
     fn obj_button_request(&mut self) -> Result<Obj, Error> {
         match self.button_request.take() {
             None => Ok(Obj::const_none()),
-            Some(ButtonRequest { code, name }) => (code.num().into(), name.try_into()?).try_into(),
+            Some(ButtonRequest { code, name }) => (code.num(), name).try_into(),
         }
     }
 
@@ -365,10 +366,9 @@ impl LayoutObjInner {
         self.transition_out.to_obj()
     }
 
-    fn obj_return_value(&self) -> Result<Obj, Error> {
-        self.root()?
-            .value()
-            .cloned()
+    fn obj_return_value(&mut self) -> Result<Obj, Error> {
+        self.root_mut()?
+            .take_value()
             .unwrap_or(Ok(Obj::const_none()))
     }
 }
@@ -537,7 +537,7 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
         let event_type = unwrap!(PhysicalButtonEvent::from_u8(event_type_num));
         let button = unwrap!(PhysicalButton::from_u8(button_num));
 
-        let event = ButtonEvent::new(event_type, button)?;
+        let event = ButtonEvent::new(event_type, button);
         let msg = this.inner_mut().obj_event(Event::Button(event))?;
         Ok(msg)
     };
@@ -630,11 +630,11 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        let painted = this.inner_mut().obj_paint_if_requested();
-        if painted? {
+        let painted = this.inner_mut().obj_paint_if_requested()?;
+        if painted {
             display::refresh();
         }
-        Ok(painted?.into())
+        Ok(painted.into())
     };
     unsafe { util::try_or_raise(block) }
 }

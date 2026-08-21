@@ -1,10 +1,9 @@
-use crate::error::{value_error, Error};
 use crate::io::BinaryData;
 use crate::micropython::buffer::{hexlify_bytes, StrBuffer};
 use crate::micropython::gc::Gc;
 use crate::micropython::list::List;
-use crate::micropython::obj::Obj;
 use crate::micropython::util::{iter_into_array, try_or_raise};
+use crate::micropython::{Error, Obj};
 use crate::storage::{get_avatar_len, load_avatar};
 use crate::strutil::TString;
 use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
@@ -236,7 +235,7 @@ impl TryFrom<u32> for RecoveryType {
             0 => Ok(RecoveryType::Normal),
             1 => Ok(RecoveryType::DryRun),
             2 => Ok(RecoveryType::UnlockRepeatedBackup),
-            _ => Err(value_error!(c"Invalid RecoveryType")),
+            _ => Err(Error::ValueError(c"Invalid RecoveryType")),
         }
     }
 }
