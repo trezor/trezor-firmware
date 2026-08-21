@@ -1107,6 +1107,153 @@ class TestWardCas(unittest.TestCase):
             )
 
 
+class TestWardWmAuthorisation(unittest.TestCase):
+    """The authorisation a WM checks: over MAC HEADS, never roots.
+
+    A WM stores `(counter, mac)` and nothing else, so signing what it stores means it never has to
+    be sent a root to verify an advance. That is the whole reason this is not `sig_commit`, which
+    covers the same bytes as `auth_commit` and therefore names roots.
+    """
+
+    _K_SIG = b"\x11" * 32
+    _MAC_A = b"\xaa" * 32
+    _MAC_B = b"\xbb" * 32
+
+    def _ward_id(self):
+        from trezor.crypto.curve import ed25519
+
+        return ed25519.publickey(self._K_SIG)
+
+    def test_a_signature_verifies_against_ward_id_alone(self):
+        """`ward_id` IS the verifying key, so a WM needs nothing but the identifier it keys by."""
+        wid = self._ward_id()
+        sig = CAS.wm_sig(self._K_SIG, wid, 41, self._MAC_A, 42, self._MAC_B)
+        self.assertTrue(
+            CAS.verify_wm_sig(wid, 41, self._MAC_A, 42, self._MAC_B, sig)
+        )
+
+    def test_it_binds_both_endpoints(self):
+        """Binding only the destination would let an authorisation be lifted out of its place and
+        replayed after a different predecessor -- exactly what a compare-and-swap must prevent."""
+        wid = self._ward_id()
+        sig = CAS.wm_sig(self._K_SIG, wid, 41, self._MAC_A, 42, self._MAC_B)
+
+        # a different predecessor
+        self.assertFalse(
+            CAS.verify_wm_sig(wid, 40, self._MAC_A, 42, self._MAC_B, sig)
+        )
+        self.assertFalse(
+            CAS.verify_wm_sig(wid, 41, self._MAC_B, 42, self._MAC_B, sig)
+        )
+        # a different destination
+        self.assertFalse(
+            CAS.verify_wm_sig(wid, 41, self._MAC_A, 43, self._MAC_B, sig)
+        )
+        self.assertFalse(
+            CAS.verify_wm_sig(wid, 41, self._MAC_A, 42, self._MAC_A, sig)
+        )
+
+    def test_another_wallet_cannot_use_it(self):
+        wid = self._ward_id()
+        from trezor.crypto.curve import ed25519
+
+        sig = CAS.wm_sig(self._K_SIG, wid, 41, self._MAC_A, 42, self._MAC_B)
+        other = ed25519.publickey(b"\x22" * 32)
+        self.assertFalse(
+            CAS.verify_wm_sig(other, 41, self._MAC_A, 42, self._MAC_B, sig)
+        )
+
+    def test_head_init_cannot_be_replayed_as_an_advance(self):
+        """Its own tag, so the authorisation that opens a wallet's history cannot be re-presented
+        as a step within it."""
+        wid = self._ward_id()
+        init = CAS.head_init_sig(self._K_SIG, wid, self._MAC_A)
+        self.assertTrue(CAS.verify_head_init_sig(wid, self._MAC_A, init))
+        # the same bytes, offered as a 0 -> 0 advance
+        self.assertFalse(
+            CAS.verify_wm_sig(wid, 0, self._MAC_A, 0, self._MAC_A, init)
+        )
+
+        advance = CAS.wm_sig(self._K_SIG, wid, 0, self._MAC_A, 0, self._MAC_A)
+        self.assertFalse(CAS.verify_head_init_sig(wid, self._MAC_A, advance))
+
+    def test_the_preimage_cannot_be_confused_with_a_root_transition(self):
+        """The tag is length-prefixed here precisely so this cannot happen: root-transition tags
+        are a different length, and concatenation with no boundary marker is what makes such a
+        re-split possible at all."""
+        wid = self._ward_id()
+        head = CAS.wm_head_preimage(
+            CAS.TAG_WM_HEAD, wid, 41, self._MAC_A, 42, self._MAC_B
+        )
+        transition = CAS.transition_preimage(
+            CAS.TAG_COMMIT, wid, 41, self._MAC_A, 42, self._MAC_B
+        )
+        self.assertNotEqual(head, transition)
+        # and the two head domains are distinct from each other
+        self.assertNotEqual(
+            head,
+            CAS.wm_head_preimage(
+                CAS.TAG_WM_HEAD_INIT, wid, 41, self._MAC_A, 42, self._MAC_B
+            ),
+        )
+
+    def test_operands_must_be_fixed_width(self):
+        """Same reason as everywhere else in WARD: a short operand lets the preimage be re-split."""
+        wid = self._ward_id()
+        with self.assertRaises(DataError):
+            CAS.wm_head_preimage(CAS.TAG_WM_HEAD, wid[:31], 0, self._MAC_A, 1, self._MAC_B)
+        with self.assertRaises(DataError):
+            CAS.wm_head_preimage(CAS.TAG_WM_HEAD, wid, 0, self._MAC_A[:31], 1, self._MAC_B)
+        with self.assertRaises(DataError):
+            CAS.wm_head_preimage(CAS.TAG_WM_HEAD, wid, 0, self._MAC_A, 1, self._MAC_B + b"\x00")
+
+    def test_known_answer(self):
+        """Fixed vectors, so this agrees with `tests/ward_keys.py` -- which implements the same
+        two preimages independently, over `trezorlib._ed25519` rather than the crypto module. A
+        host that computes these differently would be caught here rather than at the WM, and the
+        oracle deliberately shares no code with this side: agreement by construction proves
+        nothing."""
+        wid = self._ward_id()
+        self.assertEqual(
+            wid,
+            bytes.fromhex(
+                "d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"
+            ),
+        )
+        self.assertEqual(
+            CAS.wm_head_preimage(CAS.TAG_WM_HEAD, wid, 41, self._MAC_A, 42, self._MAC_B),
+            bytes.fromhex(
+                "0f5741524420574d2048454144207631"
+                "d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"
+                "00000029" + "aa" * 32 + "0000002a" + "bb" * 32
+            ),
+        )
+        self.assertEqual(
+            CAS.wm_sig(self._K_SIG, wid, 41, self._MAC_A, 42, self._MAC_B),
+            bytes.fromhex(
+                "a0958b7c7e08eb6366cdcee2e480718d151db488b7b42fa67ec5d6b4f121ca26"
+                "61edf0906c56b8dbdf01706339635d01c30af75d94d9aafece901448dc3ba307"
+            ),
+        )
+        self.assertEqual(
+            CAS.head_init_sig(self._K_SIG, wid, self._MAC_A),
+            bytes.fromhex(
+                "73aa013c03370d5bb524e5cf6ea4c84535aa018b9c22f5619073059f3af8c3c4"
+                "dbd73b14d5ee9274e0f3340fd446a2da70e73a7f39031ce54aafb36c409ea00b"
+            ),
+        )
+
+    def test_a_malformed_signature_is_refused_not_raised(self):
+        wid = self._ward_id()
+        self.assertFalse(CAS.verify_wm_sig(wid, 0, self._MAC_A, 1, self._MAC_B, b""))
+        self.assertFalse(
+            CAS.verify_wm_sig(wid, 0, self._MAC_A, 1, self._MAC_B, b"\x00" * 63)
+        )
+        self.assertFalse(
+            CAS.verify_wm_sig(wid, 0, self._MAC_A, 1, self._MAC_B, b"\x00" * 64)
+        )
+
+
 class TestWardRecordCommit(unittest.TestCase):
     """`offline_store.record_commit`: what an offer claim names a queued record by."""
 
