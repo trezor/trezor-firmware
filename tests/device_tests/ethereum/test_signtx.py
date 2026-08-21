@@ -217,11 +217,7 @@ example_input_data_too_long_value = {
         "tx_type": None,
         "data": "",
     },
-    "result": {
-        "sig_v": 37,
-        "sig_r": "e398a281bab316c5d0192b8e1f6d7a9f1698f6ba2ada4efd8337d4dd2ac7fca4",
-        "sig_s": "5e5caa4a8b51bd5d9b4d7ad4c2c5a62875fbbbf9dc71eb1fb2f76807e5aa23db",
-    },
+    "result": {},
 }
 
 
@@ -774,10 +770,9 @@ def test_signtx_payment_req(
     )
 
 
-@pytest.mark.models("core")
-def test_signtx_payment_req_long_value(
-    session: Session,
-):
+def _create_payment_request(
+    session: Session, params: dict, *, amount_size_bytes: int = 32
+) -> messages.PaymentRequest:
     from trezorlib import btc, misc
 
     from ..payment_req import CoinPurchaseMemo, make_payment_request
@@ -796,36 +791,32 @@ def test_signtx_payment_req_long_value(
 
     nonce = misc.get_nonce(session)
 
-    params = dict(example_input_data_long_value["parameters"])
-    params["payment_req"] = make_payment_request(
+    return make_payment_request(
         recipient_name="trezor.io",
         slip44=60,
         outputs=[(int(params["value"], 16), params["to_address"])],
         memos=memos,
         nonce=nonce,
-        amount_size_bytes=32,
+        amount_size_bytes=amount_size_bytes,
     )
 
+
+@pytest.mark.models("core")
+def test_signtx_payment_req_long_value(session: Session):
+    params = example_input_data_long_value["parameters"]
     _do_test_signtx(
         session,
-        params,
+        params | dict(payment_req=_create_payment_request(session, params)),
         example_input_data_long_value["result"],
     )
 
-    params = dict(example_input_data_too_long_value["parameters"])
-    params["payment_req"] = make_payment_request(
-        recipient_name="trezor.io",
-        slip44=60,
-        outputs=[(int(params["value"], 16), params["to_address"])],
-        memos=memos,
-        nonce=nonce,
-        amount_size_bytes=64,
-    )
-
-    with pytest.raises(exceptions.TrezorFailure) as e:
+    params = example_input_data_too_long_value["parameters"]
+    with pytest.raises(
+        TrezorFailure, match="DataError: amount must be exactly 32 bytes"
+    ):
+        invalid_req = _create_payment_request(session, params, amount_size_bytes=64)
         _do_test_signtx(
             session,
-            params,
-            example_input_data_long_value["result"],
+            params | dict(payment_req=invalid_req),
+            result={},
         )
-    assert str(e.value.message) == "amount must be exactly 32 bytes"
