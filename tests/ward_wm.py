@@ -89,6 +89,98 @@ class MockWM:
             self.sign(ward_id, nonce, counter, mac, timestamp),
         )
 
+    # --- publish-and-attest, as one operation -----------------------------------------------
+
+    class Conflict(Exception):
+        """The head this transition was built on is not the head the WM holds."""
+
+        def __init__(self, head_counter: int) -> None:
+            super().__init__(f"WM head is at {head_counter}")
+            self.head_counter = head_counter
+
+    def publish_and_attest(
+        self,
+        ward_id: bytes,
+        nonce: bytes,
+        from_counter: int,
+        from_mac: bytes,
+        to_counter: int,
+        to_mac: bytes,
+        wm_sig: bytes,
+        timestamp: int,
+        head_init_sig: Optional[bytes] = None,
+    ) -> tuple[int, bytes, int, bytes]:
+        """Install a head and attest it, atomically. Returns (counter, mac, timestamp, sig).
+
+        ONE OPERATION, NOT TWO, and that is the point of replacing `publish` + `attest`. Between a
+        separate CAS and a separate attest another device can win: D1 advances 41->42, D2 advances
+        42->43, and D1's attest then describes 43 -- a head D1 did not publish. The device would
+        reject it, having minted neither that counter nor that mac, but its own write would already
+        have landed with no way to learn so. Attesting the head THIS call created removes the
+        window rather than detecting it afterwards.
+
+        THE SIGNATURE IS OVER MAC HEADS, so a WM verifies exactly what it stores. It is checked
+        against `ward_id`, which IS the verifying key -- so there is no enrolment and no second
+        per-wallet value.
+
+        A wallet the WM has never seen has no head to compare against, so the first call must carry
+        `head_init_sig` authorising the starting pair. Anyone could otherwise claim a wallet's
+        opening head by being first to speak.
+        """
+        from ward_keys import verify_head_init_sig, verify_wm_sig
+
+        known = self._heads.get(ward_id)
+
+        if known is None:
+            if head_init_sig is None:
+                raise ValueError("unknown ward_id and no head-init authorisation")
+            if not verify_head_init_sig(ward_id, from_mac, head_init_sig):
+                raise ValueError("head-init authorisation does not verify")
+            if from_counter != 0:
+                raise ValueError("a wallet's first head must start at counter 0")
+            self._heads[ward_id] = (from_counter, from_mac, timestamp)
+            known = self._heads[ward_id]
+
+        # COMPARE-AND-SWAP. Refusing an advance from a head we do not hold is what stops two
+        # devices both believing they wrote counter N.
+        head_counter, head_mac, _ts = known
+        if (head_counter, head_mac) != (from_counter, from_mac):
+            raise MockWM.Conflict(head_counter)
+
+        if to_counter != from_counter + 1:
+            raise ValueError("a head advances by exactly one")
+
+        if not verify_wm_sig(
+            ward_id, from_counter, from_mac, to_counter, to_mac, wm_sig
+        ):
+            raise ValueError("transition is not authorised by this wallet")
+
+        self._heads[ward_id] = (to_counter, to_mac, timestamp)
+        return (
+            to_counter,
+            to_mac,
+            timestamp,
+            self.sign(ward_id, nonce, to_counter, to_mac, timestamp),
+        )
+
+    def attest_head(
+        self, ward_id: bytes, nonce: bytes, current_mac: bytes, head_init_sig: bytes
+    ) -> tuple[int, bytes, int, bytes]:
+        """Attest the current head, adopting the wallet's opening head if it is unknown.
+
+        What a read-only first use needs: a device asks for the current head before it has ever
+        written, so there may be nothing to attest yet. Same authorisation as above -- the WM
+        cannot compute a mac, so an opening head has to be supplied and signed.
+        """
+        from ward_keys import verify_head_init_sig
+
+        if ward_id not in self._heads:
+            if not verify_head_init_sig(ward_id, current_mac, head_init_sig):
+                raise ValueError("head-init authorisation does not verify")
+            self._heads[ward_id] = (0, current_mac, 0)
+
+        return self.attest(ward_id, nonce)
+
     def sign(
         self, ward_id: bytes, nonce: bytes, counter: int, mac: bytes, timestamp: int
     ) -> bytes:
