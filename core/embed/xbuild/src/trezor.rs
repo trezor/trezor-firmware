@@ -11,7 +11,7 @@ use std::{env, fs};
 use color_eyre::Result;
 use color_eyre::eyre::{WrapErr, bail};
 
-use crate::helpers::{is_rust_analyzer, links_name};
+use crate::helpers::{cargo_profile_dir, is_rust_analyzer, links_name};
 use crate::{CLibrary, cargo_out};
 
 fn package_name() -> Result<String> {
@@ -247,8 +247,8 @@ impl CLibrary {
 
             // Generate a map file for the final binary in the same directory
             // as the final binary.
-            let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-            let map_file = out_dir.join(format!("../../../{package_name}.map"));
+            let profile_dir = cargo_profile_dir()?;
+            let map_file = profile_dir.join(format!("{package_name}.map"));
             cargo_out::rustc_link_arg(format!("-Wl,-Map={}", map_file.display()));
 
             // Instruct the linker to perform garbage collection of
@@ -262,7 +262,7 @@ impl CLibrary {
                 // in the same directory as the final binary. The Kernel will link
                 // against this import library to call the secure monitor API.
 
-                let implib_file = out_dir.join("../../../secmon_api.o");
+                let implib_file = profile_dir.join("secmon_api.o");
                 cargo_out::rustc_link_arg("-Wl,-cmse-implib");
                 cargo_out::rustc_link_arg(format!("-Wl,--out-implib={}", implib_file.display()));
             }

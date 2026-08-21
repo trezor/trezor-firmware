@@ -355,7 +355,7 @@ fn define_scm_revision(lib: &mut CLibrary) -> Result<u8> {
 /// when generating test coverage reports that need to process *.i files
 fn create_mpy_files_symlink() -> Result<()> {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let symlink_path = out_dir.join("../../../mpy-files");
+    let symlink_path = xbuild::cargo_profile_dir()?.join("mpy-files");
     let target_path = out_dir.join("__oot/src");
 
     if symlink_path.exists() {

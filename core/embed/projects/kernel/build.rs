@@ -1,4 +1,3 @@
-use std::env;
 use std::path::PathBuf;
 
 use xbuild::{CLibrary, Result};
@@ -42,8 +41,8 @@ fn embed_secmon_binary(lib: &mut CLibrary) -> Result<()> {
             lib.add_object(dir.join("secmon_api_DEV.o"));
             lib.embed_binary(dir.join("secmon_DEV.bin"), "secmon")?;
         } else {
-            // Take recently built secmon from the output directory
-            let dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join("../../..");
+            // Take recently built secmon from Cargo's profile directory
+            let dir = xbuild::cargo_profile_dir()?;
             lib.add_object(dir.join("secmon_api.o"));
             lib.embed_binary(dir.join("secmon.bin"), "secmon")?;
         }
