@@ -217,10 +217,25 @@ example_input_data_too_long_value = {
         "tx_type": None,
         "data": "",
     },
+    "result": {},
+}
+
+example_input_data_erc20_swap = {
+    "parameters": {
+        "chain_id": 1,
+        "path": "m/44'/60'/0'/0/0",
+        "nonce": "0x0",
+        "gas_price": "0x4a817c800",
+        "gas_limit": "0x125208",
+        "value": "0x59b09a229d59205d2",  # 103,405,359,019,777.459666 USDC - a value that will not fit in 8 bytes, but ETH allows 32 bytes
+        "to_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "tx_type": None,
+        "data": "a9059cbb000000000000000000000000A0b86991c6218b36c1d19D4a2e9Eb0cE3606eB480000000000000000000000000000000000000000000000059b09a229d59205d2",
+    },
     "result": {
         "sig_v": 37,
-        "sig_r": "e398a281bab316c5d0192b8e1f6d7a9f1698f6ba2ada4efd8337d4dd2ac7fca4",
-        "sig_s": "5e5caa4a8b51bd5d9b4d7ad4c2c5a62875fbbbf9dc71eb1fb2f76807e5aa23db",
+        "sig_r": "20eeb99fc658d369a4df773ba5c330c452dbe48a98fec2b9d8479426ac84bdda",
+        "sig_s": "51a0346d880088915c354b62a86740673c338c371f6ac96e960bf940b8e76a56",
     },
 }
 
@@ -774,10 +789,9 @@ def test_signtx_payment_req(
     )
 
 
-@pytest.mark.models("core")
-def test_signtx_payment_req_long_value(
-    session: Session,
-):
+def _create_payment_request(
+    session: Session, params: dict, *, amount_size_bytes: int = 32
+) -> messages.PaymentRequest:
     from trezorlib import btc, misc
 
     from ..payment_req import CoinPurchaseMemo, make_payment_request
@@ -796,36 +810,46 @@ def test_signtx_payment_req_long_value(
 
     nonce = misc.get_nonce(session)
 
-    params = dict(example_input_data_long_value["parameters"])
-    params["payment_req"] = make_payment_request(
+    return make_payment_request(
         recipient_name="trezor.io",
         slip44=60,
         outputs=[(int(params["value"], 16), params["to_address"])],
         memos=memos,
         nonce=nonce,
-        amount_size_bytes=32,
+        amount_size_bytes=amount_size_bytes,
     )
 
+
+@pytest.mark.models("core")
+def test_signtx_payment_req_long_value(session: Session):
+    params = example_input_data_long_value["parameters"]
     _do_test_signtx(
         session,
-        params,
+        params | dict(payment_req=_create_payment_request(session, params)),
         example_input_data_long_value["result"],
     )
 
-    params = dict(example_input_data_too_long_value["parameters"])
-    params["payment_req"] = make_payment_request(
-        recipient_name="trezor.io",
-        slip44=60,
-        outputs=[(int(params["value"], 16), params["to_address"])],
-        memos=memos,
-        nonce=nonce,
-        amount_size_bytes=64,
-    )
-
-    with pytest.raises(exceptions.TrezorFailure) as e:
+    params = example_input_data_too_long_value["parameters"]
+    with pytest.raises(
+        TrezorFailure, match="DataError: amount must be exactly 32 bytes"
+    ):
+        invalid_req = _create_payment_request(session, params, amount_size_bytes=64)
         _do_test_signtx(
             session,
-            params,
-            example_input_data_long_value["result"],
+            params | dict(payment_req=invalid_req),
+            result={},
         )
-    assert str(e.value.message) == "amount must be exactly 32 bytes"
+
+
+@pytest.mark.models("core")
+def test_signtx_payment_req_erc20_swap(session: Session):
+    params = example_input_data_erc20_swap["parameters"]
+    params = params | dict(
+        payment_req=_create_payment_request(session, params),
+        value="0x0",  # ETH is not sent
+    )
+    _do_test_signtx(
+        session,
+        params,
+        example_input_data_erc20_swap["result"],
+    )
