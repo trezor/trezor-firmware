@@ -66,16 +66,21 @@ class TrezorClientThp(client.TrezorClient[ThpSession]):
         *,
         mapping: ProtobufMapping | None,
         model: models.TrezorModel | None,
+        channel: Channel | None = None,
     ) -> None:
-        # used to override channel creation logic in tests
-        channel = Channel.allocate(transport)
-        try:
-            # try to open the channel
-            channel.open(app.get_credentials())
-        except exceptions.DeviceLockedError:
-            # If opening failed, the channel is now invalid.
-            # Allocate a new channel for someone else to open.
+        # `channel` lets a caller that had to build the channel itself hand the finished one over.
+        # `ward_service.WardServiceClient` needs that: the daemon's static key must be installed
+        # into the Noise state BEFORE the handshake, and allocating here and replacing afterwards
+        # would leave a second open channel on an interface that holds exactly one.
+        if channel is None:
             channel = Channel.allocate(transport)
+            try:
+                # try to open the channel
+                channel.open(app.get_credentials())
+            except exceptions.DeviceLockedError:
+                # If opening failed, the channel is now invalid.
+                # Allocate a new channel for someone else to open.
+                channel = Channel.allocate(transport)
         self.channel = channel
 
         if model is None:

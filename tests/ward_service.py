@@ -14,43 +14,57 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""A minimal stand-in for `wardd`: enough to bind the service channel and be talked to.
+"""A stand-in for `wardd`: a replica and a WM behind `trezorlib.ward_service`.
 
-DELIBERATELY NOT `trezorlib.thp.client.TrezorClientThp`. That client assumes it drives the
-conversation -- it opens sessions with `ThpCreateNewSession`, which derives a wallet seed the
-service must not have, and it reads only in reply to something it sent. The service channel is the
-other way round: the daemon speaks once, to announce itself, and answers from then on.
+WHAT IS LEFT HERE IS ONLY WHAT A MOCK SHOULD BE. The channel, the pairing, the announce and the
+responder loop are `trezorlib.ward_service`'s -- the real client a daemon will use -- so this file is
+the daemon's BUSINESS LOGIC and nothing else: what the replica holds, what the WM says about it, and
+the handful of knobs that make each failure mode reproducible.
 
-ONE OWNER OF THE CHANNEL, ALWAYS. trezorlib's THP `Channel` is synchronous and stateful -- sync
-bits, Noise state, transport reads -- so a reader in one thread plus a writer in another would have
-one consume the frame the other is waiting for. With the device as sole initiator there is exactly
-one loop and no second thread, which is why this file has no locking in it.
-
-The responder loop and the real client belong in `trezorlib`; this exists so the device side can be
-tested before the daemon does.
+That split is worth keeping honest. Anything living here is untested transport as far as production
+is concerned, so the more of it that moves into the library, the more of these device tests exercise
+the code a daemon will actually run.
 """
 
 from __future__ import annotations
 
-import struct
 import threading
 import typing as t
 from contextlib import contextmanager
 
 import pytest
 
-from trezorlib import messages, protobuf, ward
-from trezorlib.thp.channel import Channel
-from trezorlib.transport import Timeout
+from trezorlib import messages, ward
+from trezorlib.client import AppManifest
 from trezorlib.transport.udp import UdpTransport
+from trezorlib.ward_service import (
+    PROTOCOL_VERSION,
+    WARD_PORT_OFFSET,
+    WardServiceClient,
+    WardServiceServer,
+)
+from trezorlib.ward_service import ward_transport as _ward_interface_of
 
 from .ward_keys import EMPTY_ROOT, bip39_seed, derive_k_mac, derive_ward_id, root_mac
 
 if t.TYPE_CHECKING:
     from trezorlib.debuglink import TrezorTestContext
+    from trezorlib.protobuf import MessageType
+
     from .ward_trie import WardTrie
     from .ward_wm import MockWM
 
+__all__ = [
+    "DEFAULT_K_MAC",
+    "DEFAULT_SEED",
+    "DEFAULT_WARD_ID",
+    "PROTOCOL_VERSION",
+    "WARD_PORT_OFFSET",
+    "MockWardService",
+    "bound_daemon",
+    "serves_ward_over_a_service_channel",
+    "ward_transport",
+]
 
 # The keys of the wallet a default-set-up device holds: the default mnemonic and no passphrase
 # (`SetupParams` in conftest.py). A daemon has to be able to reproduce the device's macs, since the
@@ -59,19 +73,8 @@ DEFAULT_SEED = bip39_seed(" ".join(["all"] * 12))
 DEFAULT_K_MAC = derive_k_mac(DEFAULT_SEED)
 DEFAULT_WARD_ID = derive_ward_id(DEFAULT_SEED)
 
-# Offsets 4 and 5 are BLE's and 6 is the Tropic model's -- see `trezorlib._internal.emulator` and
-# `core/embed/io/usb/usb_config.c`, which must agree.
-WARD_PORT_OFFSET = 7
-
 # Answered once per session by `serves_ward_over_a_service_channel`.
 _IS_SERVICE_BUILD: bool | None = None
-
-# `trezorlib.thp.client`'s application header: session id, message type.
-_HEADER = ">BH"
-_HEADER_LEN = struct.calcsize(_HEADER)
-
-# Must match `apps.ward.service.PROTOCOL_VERSION`.
-PROTOCOL_VERSION = 1
 
 
 def _root_or_empty(root: bytes | None) -> bytes:
@@ -95,21 +98,24 @@ def _open_ward_transport(client: TrezorTestContext) -> UdpTransport | None:
     PROBED, NOT ASKED. Which transport a firmware serves WARD over is a build option and the
     device has no way to report it -- there is no feature flag for it and deliberately so, since
     a host that has to be told would be a host that could be lied to about it.
+
+    WHERE the interface is comes from `trezorlib.ward_service`, so a real daemon and this probe
+    cannot end up disagreeing about it.
     """
     transport = client.transport
     if not isinstance(transport, UdpTransport):
         return None
 
-    host, port = transport.device
-    ward = UdpTransport(f"{host}:{port + WARD_PORT_OFFSET}")
+    ward_iface = _ward_interface_of(transport)
+    assert isinstance(ward_iface, UdpTransport)
     try:
-        ward.open()
+        ward_iface.open()
     except Exception:
         return None
     for _attempt in range(_PROBE_ATTEMPTS):
-        if ward.is_ready():
-            return ward
-    ward.close()
+        if ward_iface.is_ready():
+            return ward_iface
+    ward_iface.close()
     return None
 
 
@@ -122,10 +128,10 @@ def serves_ward_over_a_service_channel(client: TrezorTestContext) -> bool:
     global _IS_SERVICE_BUILD
 
     if _IS_SERVICE_BUILD is None:
-        ward = _open_ward_transport(client)
-        _IS_SERVICE_BUILD = ward is not None
-        if ward is not None:
-            ward.close()
+        ward_iface = _open_ward_transport(client)
+        _IS_SERVICE_BUILD = ward_iface is not None
+        if ward_iface is not None:
+            ward_iface.close()
     return _IS_SERVICE_BUILD
 
 
@@ -136,33 +142,53 @@ def ward_transport(client: TrezorTestContext) -> UdpTransport:
     either over the ordinary connection or over its own channel, never both, so a connect build
     legitimately has nothing listening here.
     """
-    ward = _open_ward_transport(client)
-    if ward is None:
+    ward_iface = _open_ward_transport(client)
+    if ward_iface is None:
         pytest.skip("this build has no WARD service interface")
-    return ward
+    return ward_iface
 
 
 class MockWardService:
-    """The daemon's side of the channel: open it, announce, then answer what the device asks."""
+    """A replica, a WM, and the knobs that make each failure mode reproducible.
 
-    def __init__(self, client: TrezorTestContext, session_id: int = 0) -> None:
+    THE WM IS NEVER ASKED TO COMPUTE A MAC, and preserving that asymmetry is most of the point of
+    this mock. A real WM holds only (counter, mac) and no key of this wallet, so every mac it stores
+    was handed to it -- by a device in production, and by the oracle's `root_mac` here.
+    """
+
+    def __init__(self, client: TrezorTestContext) -> None:
+        # NOTE: constructing this on a connect build no longer skips the test. It used to, as a side
+        # effect of reaching for the interface through `ward_transport`; a real client has no
+        # business skipping tests, so a file that needs the interface says
+        # `pytest.mark.ward_transport("service")` and says it where it can be read.
         self._client = client
-        self._mapping = client.client.mapping
-        self.session_id = session_id
-        self.transport = ward_transport(client)
-        self.channel: Channel | None = None
-        # The key the device pins. Recorded so a test can reconnect AS THE SAME daemon, which is
-        # what separates "a stranger" from "the same daemon twice".
-        self.host_static_privkey: bytes | None = None
+        # A MANIFEST OF ITS OWN, sharing only the button callback. A daemon is a separate host
+        # application, so it must not inherit the test client's CREDENTIALS -- one matching this
+        # Trezor would install the wallet host's static key into this channel's handshake, and every
+        # test that distinguishes one daemon from another would be talking about the wrong key. The
+        # button callback is the one thing worth borrowing: pairing raises a `ButtonRequest`, and in
+        # a test the answer is "press it over debuglink" rather than "wait for a person".
+        self.service = WardServiceClient(
+            _ward_interface_of(client.transport),
+            app=AppManifest(
+                app_name="wardd-mock",
+                button_callback=client.client.app.button_callback,
+            ),
+        )
+        self.server = WardServiceServer(self.service, self.handle)
+
         # What the daemon serves from. Set by the test; a daemon with no replica can still bind,
         # which is the state a freshly started one is in.
-        self.store = None
-        self.wm = None
+        self.store: WardTrie | None = None
+        self.wm: MockWM | None = None
         self.k_mac = b""
         self.timestamp_base = 1_700_000_000
-        # Every request this daemon has answered, in order. A test that wants to assert how many
-        # round trips an operation took counts these rather than inferring it from timing.
-        self.served: list[str] = []
+        # The wallet this daemon is answering for, learned from the first sync. `WardServiceFetch`
+        # and `WardPublish` do not carry it, because one logical service fronts one replica -- so
+        # the sync is where it is established, exactly as it is for a real wardd.
+        self.ward_id: bytes | None = None
+
+        # --- knobs, each naming the one device-side behaviour it exists to reach ---
         # Answer every fetch with `WardSyncRequired`, whatever the device's head. Models a daemon
         # that disagrees with the device and keeps disagreeing.
         self.always_out_of_sync = False
@@ -173,64 +199,42 @@ class MockWardService:
         # a WM that is authentic but not answering the question asked -- which is the only freedom a
         # WM has, since it cannot forge a mac.
         self.publish_ack_override: tuple[int, bytes] | None = None
-        # The wallet this daemon is answering for, learned from the first sync. `WardServiceFetch`
-        # and `WardPublish` do not carry it, because one logical service fronts one replica -- so
-        # the sync is where it is established, exactly as it is for a real wardd.
-        self.ward_id: bytes | None = None
+
         self._stop = False
         self.error: Exception | None = None
 
     # --- lifecycle ---------------------------------------------------------------------
 
-    def connect(self, host_static_privkey: bytes | None = None) -> Channel:
-        """Allocate a channel, handshake, and pair it.
+    @property
+    def served(self) -> list[str]:
+        """Every request answered, in order. Counted rather than timed -- see `serve_one`."""
+        return self.server.served
+
+    @property
+    def host_static_privkey(self) -> bytes | None:
+        """The identity the device pins. Recorded so a test can reconnect AS THE SAME daemon,
+        which is what separates "a stranger" from "the same daemon twice"."""
+        return self.service.static_privkey
+
+    def connect(self, host_static_privkey: bytes | None = None) -> None:
+        """Handshake and pair.
 
         PAIRING IS NOT OPTIONAL. A handshaked-but-unpaired channel sits in the pairing state, where
-        every application message is refused as unrecognised -- so without this the device's own
+        every application message is refused as unrecognised -- so without it the device's own
         checks would never be reached and a test asserting "refused" would pass for the wrong
         reason.
 
         `host_static_privkey` makes the daemon's identity choosable: the key is what the device
-        pins, and a distinct one is how "a different daemon" is expressed. Left unset it is random
-        per channel, which is what a real daemon that has lost its key would look like.
+        pins, and a distinct one is how "a different daemon" is expressed. Left unset it is random,
+        which is what a real daemon that has lost its key would look like. A real daemon that has
+        NOT lost it persists the same value, inside the credential it stores after pairing.
         """
-        channel = Channel.allocate(self.transport)
-        channel._init_noise(static_privkey=host_static_privkey)
-        self.host_static_privkey = channel.host_static_privkey
-        channel.open([])
-        self.channel = channel
-        self._pair(channel)
-        return channel
-
-    def _pair(self, channel: Channel) -> None:
-        """Pair via SkipPairing, borrowing the host's client for the exchange.
-
-        `PairingController` drives the conversation through `client.channel`, so the client is
-        pointed at this channel and put back afterwards -- the wallet channel must keep working,
-        and these tests exist precisely to check the two do not disturb each other.
-        """
-        from trezorlib.thp.pairing import PairingController
-
-        client = self._client.client
-        saved_channel = client.channel
-        saved_pairing = client.pairing
-        saved_interact = client._interact_ctx
-        try:
-            client.channel = channel
-            client._interact_ctx = client._interact()
-            pairing = PairingController(client)
-            client.pairing = pairing
-            pairing.skip()
-        finally:
-            client.channel = saved_channel
-            client.pairing = saved_pairing
-            client._interact_ctx = saved_interact
+        self.service.static_privkey = host_static_privkey
+        self.service.connect()
+        self.service.pair(skip=True)
 
     def close(self) -> None:
-        if self.channel is not None:
-            self.channel.close()
-            self.channel = None
-        self.transport.close()
+        self.service.close()
 
     def __enter__(self) -> MockWardService:
         self.connect()
@@ -239,32 +243,32 @@ class MockWardService:
     def __exit__(self, *exc: object) -> None:
         self.close()
 
-    # --- the application layer ---------------------------------------------------------
+    # --- announcing -------------------------------------------------------------------
 
-    def send(self, msg: protobuf.MessageType) -> None:
-        assert self.channel is not None
-        msg_type, msg_bytes = self._mapping.encode(msg)
-        self.channel.write_chunk(
-            struct.pack(_HEADER, self.session_id, msg_type) + msg_bytes
-        )
+    @property
+    def channel(self):
+        """The THP channel, for tests that need to reach below the protocol."""
+        return self.service.channel
 
-    def receive(self, timeout: float | None = None) -> protobuf.MessageType:
-        assert self.channel is not None
-        raw = self.channel.read_chunk(timeout=timeout)
-        session_id, msg_type = struct.unpack(_HEADER, raw[:_HEADER_LEN])
-        assert session_id == self.session_id, "reply arrived for another session"
-        return self._mapping.decode(msg_type, raw[_HEADER_LEN:])
+    def send(self, msg: MessageType) -> None:
+        """Write without reading -- ONLY to prove that a daemon cannot.
 
-    def call(
-        self, msg: protobuf.MessageType, timeout: float | None = None
-    ) -> protobuf.MessageType:
-        self.send(msg)
-        return self.receive(timeout=timeout)
+        Deliberately absent from `trezorlib.ward_service`: after binding, the device is the sole
+        initiator, so an unsolicited message from this side is not a supported operation but the
+        thing the inversion exists to rule out. It gets no reply and no THP ack -- the ack is a side
+        effect of the application reading -- so this raises `Timeout`, which is the assertion.
+        """
+        self.service.session.write(msg)
 
-    def open_service(
-        self, protocol_version: int | None = None
-    ) -> protobuf.MessageType:
-        """Announce this channel as the WARD service. The last thing the daemon initiates."""
+    def call(self, msg: MessageType, timeout: float | None = None) -> MessageType:
+        return self.service.call(msg, timeout=timeout)
+
+    def open_service(self, protocol_version: int | None = None) -> MessageType:
+        """Announce this channel as the WARD service, RAW.
+
+        Raw because half of these tests are about being refused, and the refusal IS the assertion:
+        `WardServiceClient.announce` raises, which is right for a daemon and useless here.
+        """
         if protocol_version is None:
             protocol_version = PROTOCOL_VERSION
         return self.call(messages.WardServiceOpen(protocol_version=protocol_version))
@@ -272,29 +276,7 @@ class MockWardService:
     # --- serving, which is all the daemon does after announcing itself -------------------
 
     def serve_one(self, timeout: float | None = None) -> str:
-        """Answer exactly one device-initiated request. Returns which one it was.
-
-        A LOOP OF ONE, deliberately exposed. The device asks and the daemon answers, so a test that
-        wants to assert how many round trips an operation took can count them here instead of
-        inferring it from timing.
-        """
-        request = self.receive(timeout=timeout)
-        name = request.__class__.__name__
-
-        self.served.append(name)
-
-        if name == "WardSyncRequest":
-            self.send(self._sync_response(request))
-        elif name == "WardServiceFetch":
-            self.send(self._fetch_response(request))
-        elif name == "WardPublish":
-            answer = self._publish_response(request)
-            if answer is not None:
-                self.send(answer)
-        else:
-            raise AssertionError(f"the daemon was asked something it cannot serve: {name}")
-
-        return name
+        return self.server.serve_one(timeout=timeout)
 
     def serve_forever(self) -> None:
         """Answer requests until told to stop, or until something goes wrong.
@@ -303,14 +285,10 @@ class MockWardService:
         device timing out on an unanswered request -- which is a real failure mode of its own, so
         the two must not be confusable. `serving` re-raises whatever landed here.
         """
-        while not self._stop:
-            try:
-                self.serve_one(timeout=0.5)
-            except Timeout:
-                continue
-            except Exception as exc:  # noqa: B902
-                self.error = exc
-                return
+        try:
+            self.server.serve_forever(stop=lambda: self._stop)
+        except Exception as exc:  # noqa: B902
+            self.error = exc
 
     @contextmanager
     def serving(self) -> t.Iterator[MockWardService]:
@@ -336,6 +314,22 @@ class MockWardService:
 
     # --- what a daemon knows ------------------------------------------------------------
 
+    def handle(self, request: MessageType) -> "MessageType | None":
+        """The daemon itself: one device request in, one reply out.
+
+        The dispatch is on the message NAME rather than `isinstance`, so the mock stays readable
+        against a message set that grows -- and so an unexpected request is named in the failure
+        rather than silently falling through to a reply of the wrong type.
+        """
+        name = type(request).__name__
+        if name == "WardSyncRequest":
+            return self._sync_response(request)
+        if name == "WardServiceFetch":
+            return self._fetch_response(request)
+        if name == "WardPublish":
+            return self._publish_response(request)
+        raise AssertionError(f"the daemon was asked something it cannot serve: {name}")
+
     def _sync_response(self, request):
         """The current head, attested, with the links from the device's head forward.
 
@@ -360,7 +354,9 @@ class MockWardService:
             self.wm.attest_head(
                 ward_id, request.nonce, request.current_mac, request.head_init_sig
             )
-        if counter != self.wm.head(ward_id)[0]:
+        wm_head = self.wm.head(ward_id)
+        assert wm_head is not None  # just bootstrapped above if it was not there
+        if counter != wm_head[0]:
             # A head the WM does not hold yet. In production a device's publish would have put it
             # there; here the fixture is standing in for that device.
             self.wm.publish(ward_id, counter, mac, timestamp)
