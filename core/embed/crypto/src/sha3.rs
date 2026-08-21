@@ -17,7 +17,7 @@ impl ffi::SHA3_CTX {
     fn init(&mut self, bit_size: u32) -> Result<(), Error> {
         // SAFETY: ffi
         // COPY HAZARD: no sensitive data is encoded into the state
-        if unsafe { ffi::keccak_Init(self, bit_size) } {
+        if unsafe { ffi::sha3_Init(self, bit_size) } {
             Ok(())
         } else {
             Err(Error::InvalidParams)
