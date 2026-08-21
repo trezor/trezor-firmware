@@ -20,6 +20,7 @@
 #ifndef __SHA3_H__
 #define __SHA3_H__
 
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "options.h"
@@ -60,14 +61,13 @@ typedef struct SHA3_CTX
 	unsigned block_size;
 } SHA3_CTX;
 
-bool keccak_Init(SHA3_CTX *ctx, unsigned bits);
-
 /* methods for calculating the hash function */
 
 void sha3_224_Init(SHA3_CTX *ctx);
 void sha3_256_Init(SHA3_CTX *ctx);
 void sha3_384_Init(SHA3_CTX *ctx);
 void sha3_512_Init(SHA3_CTX *ctx);
+bool sha3_Init(SHA3_CTX *ctx, unsigned bits);
 void sha3_Update(SHA3_CTX *ctx, const unsigned char* msg, size_t size);
 void sha3_Final(SHA3_CTX *ctx, unsigned char* result);
 
