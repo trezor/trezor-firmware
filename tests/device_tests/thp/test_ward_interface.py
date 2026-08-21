@@ -10,6 +10,12 @@ from ...ward_service import MockWardService, ward_transport
 Client = TrezorTestContext
 pytestmark = [pytest.mark.protocol("thp")]
 
+# NOT A FILE-LEVEL MARKER, on purpose. Most tests here reach the interface through `ward_transport`,
+# which skips on a connect build by itself -- and one of them,
+# `test_the_existing_interfaces_keep_their_ports`, must run on BOTH builds, since what it guards is
+# that appending an interface did not move the ones every existing host pins. Marking the file would
+# skip exactly the regression test that matters most to a connect build.
+
 
 def test_the_ward_interface_carries_its_own_channel(client: Client) -> None:
     """A channel on the WARD interface, allocated while the wire interface holds one of its own.
@@ -51,6 +57,7 @@ def test_the_ward_interface_completes_a_handshake(client: Client) -> None:
         ward.close()
 
 
+@pytest.mark.ward_transport("service")
 def test_it_answers_while_the_wire_interface_holds_a_channel(client: Client) -> None:
     """A message arriving here is HANDLED, not merely reassembled.
 
