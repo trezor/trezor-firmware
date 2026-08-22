@@ -151,6 +151,8 @@ _EIP7702_ADDRESSES = {
         ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
         # https://etherscan.io/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
         ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
+        # https://etherscan.io/address/0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9
+        ("4Cd241E8d1510e30b2076397afc7508Ae59C66c9", "Simple7702Account")
     ],
     100: [  # Gnosis
         # https://gnosisscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
