@@ -187,21 +187,21 @@ impl BootloaderUI for UIDelizia {
         version_cmp: i32,
     ) -> u32 {
         let mut version_str: BootloaderString = String::new();
-        unwrap!(version_str.push_str("Firmware version "));
+        unwrap!(version_str.push_str("Firmware "));
         unwrap!(version_str.push_str(version));
         unwrap!(version_str.push_str("\nby "));
         unwrap!(version_str.push_str(vendor));
 
         let title_str = if is_newinstall {
-            "INSTALL FW"
+            "INSTALL\nFIRMWARE"
         } else if is_newvendor {
-            "CHANGE FW\nVENDOR"
+            "CHANGE FIRM-\nWARE VENDOR"
         } else if version_cmp > 0 {
-            "UPDATE FW"
+            "UPGRADE\nFIRMWARE"
         } else if version_cmp == 0 {
-            "REINSTALL FW"
+            "REINSTALL\nFIRMWARE"
         } else {
-            "DOWNGRADE FW"
+            "DOWNGRADE\nFIRMWARE"
         };
         let title = Label::left_aligned(title_str.into(), TEXT_BOLD).vertically_centered();
         let msg = Label::left_aligned(version_str.as_str().into(), TEXT_NORMAL);
@@ -230,7 +230,7 @@ impl BootloaderUI for UIDelizia {
 
         let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg)
             .with_info(
-                "FW FINGERPRINT".into(),
+                "FIRMWARE\nFINGERPRINT".into(),
                 fingerprint.into(),
                 button_bld_menu(),
             );
@@ -305,7 +305,7 @@ impl BootloaderUI for UIDelizia {
         unwrap!(title_str.push_str(bld_version));
 
         let mut version_str: BootloaderString = String::new();
-        unwrap!(version_str.push_str("Firmware version "));
+        unwrap!(version_str.push_str("Firmware "));
         unwrap!(version_str.push_str(version));
         unwrap!(version_str.push_str("\nby "));
         unwrap!(version_str.push_str(vendor));
