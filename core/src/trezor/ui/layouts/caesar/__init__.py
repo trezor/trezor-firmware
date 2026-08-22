@@ -61,7 +61,6 @@ async def confirm_action(
     title: str,
     action: str | None = None,
     description: str | None = None,
-    description_param: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = "",
@@ -74,8 +73,6 @@ async def confirm_action(
     prompt_title: str | None = None,
 ) -> None:
     verb = verb or TR.buttons__confirm  # def_arg
-    if description is not None and description_param is not None:
-        description = description.format(description_param)
 
     with trezorui_api.confirm_action(
         title=title,
@@ -1138,10 +1135,6 @@ if not utils.BITCOIN_ONLY:
             title=TR.ethereum__unknown_contract_address,
         )
 
-    def ethereum_address_title() -> str:
-        """Return the title for the Ethereum address confirmation."""
-        return TR.words__address
-
     async def confirm_ethereum_approve(
         recipient_addr: str,
         recipient_str: str | None,
@@ -2193,14 +2186,13 @@ def confirm_metadata(
     br_name: str,
     title: str,
     content: str,
-    param: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     hold: bool = False,
 ) -> Awaitable[None]:
     return _placeholder_confirm(
         br_name,
         title,
-        description=content.format(param),
+        description=content,
         hold=hold,
         br_code=br_code,
     )

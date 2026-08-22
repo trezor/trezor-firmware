@@ -40,7 +40,6 @@ async def confirm_action(
     title: str,
     action: str | None = None,
     description: str | None = None,
-    description_param: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
@@ -54,9 +53,6 @@ async def confirm_action(
 ) -> ui.UiResult:
     from trezor.ui.layouts.menu import Menu, interact_with_menu
 
-    if description is not None and description_param is not None:
-        description = description.format(description_param)
-
     with trezorui_api.confirm_action(
         title=title,
         action=action,
@@ -69,30 +65,19 @@ async def confirm_action(
         reverse=reverse,
         prompt_screen=prompt_screen,
         prompt_title=prompt_title or title,
-        external_menu=not (prompt_screen or hold),
+        external_menu=True,
     ) as flow:
+        menu = Menu.root(
+            cancel=verb_cancel or TR.buttons__cancel,
+        )
 
-        if prompt_screen or hold:
-            # Note: multi-step confirm (prompt_screen/hold)
-            # can't work with external menus yet
-            return await interact(
-                flow,
-                br_name,
-                br_code,
-                exc,
-            )
-        else:
-            menu = Menu.root(
-                cancel=verb_cancel or TR.buttons__cancel,
-            )
-
-            return await interact_with_menu(
-                flow,
-                menu,
-                br_name,
-                br_code,
-                exc,
-            )
+        return await interact_with_menu(
+            flow,
+            menu,
+            br_name,
+            br_code,
+            exc,
+        )
 
 
 async def confirm_single(
@@ -102,6 +87,8 @@ async def confirm_single(
     description_param: str | None = None,
     verb: str | None = None,
 ) -> None:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
     description_param = description_param or ""
 
     # Placeholders are coming from translations in form of {0}
@@ -114,10 +101,10 @@ async def confirm_single(
         items=(begin, (True, description_param), end),
         verb=verb,
     ) as layout:
-        return await raise_if_not_confirmed(
-            layout,
-            br_name,
-            ButtonRequestType.ProtectCall,
+        menu = Menu.root(cancel=TR.buttons__cancel)
+
+        return await confirm_with_menu(
+            layout, menu, br_name, ButtonRequestType.ProtectCall
         )
 
 
@@ -217,8 +204,8 @@ def lock_time_disabled_warning() -> Awaitable[None]:
 
 
 async def confirm_homescreen(image: AnyBytes) -> None:
-
     from trezor import workflow
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
     # Closing current homescreen workflow unlocks internal ImageBuffer,
     # in order to display the new homescreen image.
@@ -228,10 +215,10 @@ async def confirm_homescreen(image: AnyBytes) -> None:
         title=TR.homescreen__title_set,
         image=image,
     ) as layout:
-        return await raise_if_not_confirmed(
-            layout,
-            "set_homesreen",
-            ButtonRequestType.ProtectCall,
+        menu = Menu.root(cancel=TR.buttons__cancel)
+
+        return await confirm_with_menu(
+            layout, menu, "set_homesreen", ButtonRequestType.ProtectCall
         )
 
 
@@ -655,6 +642,7 @@ async def should_show_more(
         items=para,
         verb=(TR.buttons__confirm if confirm is None else confirm),
         verb_info=button_text,
+        external_menu=True,
     ) as layout_obj:
         result = await interact(layout_obj, br_name, br_code)
 
@@ -896,18 +884,18 @@ async def confirm_properties(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
 ) -> None:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
     with trezorui_api.confirm_properties(
         title=title,
         subtitle=subtitle,
         items=list(props),
         hold=hold,
+        external_menu=True,
     ) as layout:
-        return await raise_if_not_confirmed(
-            layout,
-            br_name,
-            br_code,
-        )
+        menu = Menu.root(cancel=TR.buttons__cancel)
+
+        return await confirm_with_menu(layout, menu, br_name, br_code)
 
 
 async def confirm_total(
@@ -1134,10 +1122,6 @@ if not utils.BITCOIN_ONLY:
             ),
         )
 
-    def ethereum_address_title() -> str:
-        """Return the title for the Ethereum address confirmation."""
-        return TR.words__address
-
     async def confirm_ethereum_approve(
         recipient_addr: str,
         recipient_str: str | None,
@@ -1194,6 +1178,7 @@ if not utils.BITCOIN_ONLY:
                 items=[(recipient_str, True)],
                 verb="",
                 verb_info=TR.ethereum__contract_address,
+                external_menu=True,
             )
             info_ctx = trezorui_api.show_info_with_cancel(
                 title=TR.ethereum__contract_address,
@@ -2106,7 +2091,6 @@ def confirm_metadata(
     br_name: str,
     title: str,
     content: str,
-    param: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     hold: bool = False,
     verb: str | None = None,
@@ -2117,7 +2101,6 @@ def confirm_metadata(
         title=title,
         action="",
         description=content,
-        description_param=param,
         verb=verb,
         hold=hold,
         br_code=br_code,
@@ -2205,12 +2188,16 @@ async def confirm_modify_fee(
 async def confirm_coinjoin(
     max_rounds: int, max_fee_per_vbyte: str, max_coordinator_fee_pct: str
 ) -> None:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
     with trezorui_api.confirm_coinjoin(
         max_rounds=str(max_rounds),
         max_feerate=max_fee_per_vbyte,
         max_coordinator_fee_pct=max_coordinator_fee_pct,
     ) as layout:
-        return await raise_if_not_confirmed(layout, "coinjoin_final", BR_CODE_OTHER)
+        menu = Menu.root(cancel=TR.buttons__cancel)
+
+        return await confirm_with_menu(layout, menu, "coinjoin_final", BR_CODE_OTHER)
 
 
 # TODO cleanup @ redesign

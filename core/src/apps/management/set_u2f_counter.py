@@ -21,8 +21,7 @@ async def set_u2f_counter(msg: SetU2FCounter) -> Success:
     await confirm_action(
         "set_u2f_counter",
         TR.u2f__title_set,
-        description=TR.u2f__set_template,
-        description_param=str(msg.u2f_counter),
+        description=TR.u2f__set_template.format(msg.u2f_counter),
         verb=TR.buttons__set,
         br_code=ButtonRequestType.ProtectCall,
         prompt_screen=True,

@@ -27,8 +27,7 @@ async def require_confirm_destination_tag(tag: int) -> None:
     await confirm_metadata(
         "confirm_destination_tag",
         TR.ripple__confirm_tag,
-        TR.ripple__destination_tag_template,
-        str(tag),
+        TR.ripple__destination_tag_template.format(str(tag)),
         ButtonRequestType.ConfirmOutput,
     )
 

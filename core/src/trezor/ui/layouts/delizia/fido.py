@@ -2,7 +2,8 @@ import trezorui_api
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_error_and_raise
 
-from ..common import interact, interact_simple
+from ..common import interact
+from ..menu import Menu, interact_with_menu
 
 
 async def confirm_fido(
@@ -48,8 +49,12 @@ async def confirm_fido_reset() -> bool:
         description=TR.words__really_wanna,
         reverse=True,
         prompt_screen=True,
+        external_menu=False,
     ) as layout:
-        return await interact_simple(layout) is trezorui_api.CONFIRMED
+        menu = Menu.root(
+            cancel=TR.buttons__cancel,
+        )
+        return await interact_with_menu(layout, menu, None) is trezorui_api.CONFIRMED
 
 
 async def credential_warning(br_name: str, content: str) -> None:
