@@ -92,7 +92,7 @@ cannot be used bare:
 - `--verbose` — verbose cargo output.
 - `--xbuild-trace` — log build script progress (executed commands and timings).
 - `--apps` — enable external app loading.
-- `--n4w1` — enable N4W1 support.
+- `--n1w1` — enable N1W1 support.
 - `--unsafe-fw` — enable unsafe firmware features.
 - `--storage-insecure-testing-mode` — insecure storage test mode (forbidden with
   `--production`).

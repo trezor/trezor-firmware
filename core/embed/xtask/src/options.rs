@@ -198,9 +198,9 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map debug_link: bool,
 
-    /// Enable N4W1 support
+    /// Enable N1W1 support
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    map n4w1: bool,
+    map n1w1: bool,
 
     /// Disable UI animations
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]

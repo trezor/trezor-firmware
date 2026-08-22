@@ -715,7 +715,7 @@ BACKUP_METHODS = [
     pytest.param(arg, id=arg.name)
     for arg in [
         messages.BackupMethod.Display,
-        messages.BackupMethod.N4W1,
+        messages.BackupMethod.N1W1,
     ]
 ]
 
@@ -728,7 +728,7 @@ def backup_method(request, _raw_test_ctx: TrezorTestContext) -> messages.BackupM
     See https://docs.pytest.org/en/stable/how-to/fixtures.html#parametrizing-fixtures.
     """
     REQUIRED_CAPABILITY = {
-        messages.BackupMethod.N4W1: messages.Capability.N4W1,
+        messages.BackupMethod.N1W1: messages.Capability.N1W1,
     }
     method: messages.BackupMethod = request.param
     if (capability := REQUIRED_CAPABILITY.get(method)) is not None:

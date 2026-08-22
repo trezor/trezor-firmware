@@ -3209,13 +3209,13 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSetLogFilter"]:
             return isinstance(msg, cls)
 
-    class DebugLinkN4W1Connected(protobuf.MessageType):
+    class DebugLinkN1W1Connected(protobuf.MessageType):
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkN4W1Connected"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkN1W1Connected"]:
             return isinstance(msg, cls)
 
-    class DebugLinkN4W1Write(protobuf.MessageType):
+    class DebugLinkN1W1Write(protobuf.MessageType):
         key: "str | None"
         value: "AnyBytes | None"
 
@@ -3228,10 +3228,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkN4W1Write"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkN1W1Write"]:
             return isinstance(msg, cls)
 
-    class DebugLinkN4W1Read(protobuf.MessageType):
+    class DebugLinkN1W1Read(protobuf.MessageType):
         key: "str | None"
 
         def __init__(
@@ -3242,10 +3242,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkN4W1Read"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkN1W1Read"]:
             return isinstance(msg, cls)
 
-    class DebugLinkN4W1Response(protobuf.MessageType):
+    class DebugLinkN1W1Response(protobuf.MessageType):
         value: "AnyBytes | None"
 
         def __init__(
@@ -3256,7 +3256,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkN4W1Response"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkN1W1Response"]:
             return isinstance(msg, cls)
 
     class DebugLinkGcInfoItem(protobuf.MessageType):

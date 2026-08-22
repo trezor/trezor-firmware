@@ -361,10 +361,10 @@ class RecoveryFlow:
             assert "MnemonicKeyboard" in self.debug.read_layout().all_components()
             for _, word in enumerate(mnemonic):
                 self.debug.input(word)
-        elif method is messages.BackupMethod.N4W1:
+        elif method is messages.BackupMethod.N1W1:
             assert br.code == B.Other
             assert br.name == "backup_read"
-            n4w1_handle_read(self.debug, " ".join(mnemonic).encode())
+            n1w1_handle_read(self.debug, " ".join(mnemonic).encode())
         else:
             raise RuntimeError
 
@@ -740,20 +740,20 @@ class EthereumFlow:
             raise ValueError("Unknown model!")
 
 
-def n4w1_handle_write(debug: DebugLink) -> bytes:
-    assert debug._call(messages.DebugLinkN4W1Connected()) == messages.DebugLinkN4W1Read(
+def n1w1_handle_write(debug: DebugLink) -> bytes:
+    assert debug._call(messages.DebugLinkN1W1Connected()) == messages.DebugLinkN1W1Read(
         key="mnemonic"
     )
     write = debug._call(
-        messages.DebugLinkN4W1Response(), expect=messages.DebugLinkN4W1Write
+        messages.DebugLinkN1W1Response(), expect=messages.DebugLinkN1W1Write
     )
     assert write.key == "mnemonic" and write.value is not None
-    assert debug._call(messages.DebugLinkN4W1Response(), expect=messages.Success)
+    assert debug._call(messages.DebugLinkN1W1Response(), expect=messages.Success)
     return write.value
 
 
-def n4w1_handle_read(debug: DebugLink, value: bytes | None) -> None:
-    assert debug._call(messages.DebugLinkN4W1Connected()) == messages.DebugLinkN4W1Read(
+def n1w1_handle_read(debug: DebugLink, value: bytes | None) -> None:
+    assert debug._call(messages.DebugLinkN1W1Connected()) == messages.DebugLinkN1W1Read(
         key="mnemonic"
     )
-    debug._call(messages.DebugLinkN4W1Response(value=value), expect=messages.Success)
+    debug._call(messages.DebugLinkN1W1Response(value=value), expect=messages.Success)

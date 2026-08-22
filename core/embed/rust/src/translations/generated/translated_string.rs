@@ -1520,13 +1520,13 @@ pub enum TranslatedString {
     ethereum__confirm_contract = 1183,  // "Confirm contract"
     words__intent = 1184,  // "Intent"
     suite_sync__rotate_key = 1185,  // "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?"
-    n4w1__footer_first = 1186,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Start with any tag"}
-    n4w1__footer_last = 1187,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Use the last remaining tag"}
-    n4w1__footer_next = 1188,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Use any remaining tag"}
-    n4w1__hold_first = 1189,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the first tag to the back of this Trezor."}
-    n4w1__hold_last = 1190,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the last tag to the back of this Trezor."}
-    n4w1__hold_next = 1191,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the next tag to the back of this Trezor."}
-    n4w1__writing = 1192,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Writing to tag..."}
+    n1w1__footer_first = 1186,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Start with any tag"}
+    n1w1__footer_last = 1187,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Use the last remaining tag"}
+    n1w1__footer_next = 1188,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Use any remaining tag"}
+    n1w1__hold_first = 1189,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the first tag to the back of this Trezor."}
+    n1w1__hold_last = 1190,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the last tag to the back of this Trezor."}
+    n1w1__hold_next = 1191,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the next tag to the back of this Trezor."}
+    n1w1__writing = 1192,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Writing to tag..."}
     #[cfg(feature = "universal_fw")]
     ethereum__deposit_amount = 1193,  // "Deposit amount"
     #[cfg(feature = "universal_fw")]
@@ -1555,7 +1555,7 @@ pub enum TranslatedString {
     cardano__credential_intro_template = 1207,  // {"Bolt": "{0} credential is a {1}", "Caesar": "{0} credential is a {1}", "Delizia": "{0} credential is a {1}:", "Eckhart": "{0} credential is a {1}:"}
     #[cfg(feature = "universal_fw")]
     cardano__key_path = 1208,  // "key path"
-    backup__type_n4w1 = 1209,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "N4W1 backup"}
+    backup__type_n1w1 = 1209,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "N1W1 backup"}
     backup__type_wordlist = 1210,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Wordlist backup"}
     #[cfg(feature = "universal_fw")]
     ethereum__title_token_contract = 1211,  // {"Bolt": "Token contract", "Caesar": "Token contract address", "Delizia": "Token contract", "Eckhart": "Token contract address"}
@@ -1577,10 +1577,10 @@ pub enum TranslatedString {
     ethereum__calldata_suffix = 1219,  // "Calldata suffix"
     backup__type_create = 1220,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Select the type of wallet backup you want to create."}
     backup__type_have = 1221,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Which type of wallet backup do you have?"}
-    n4w1__reading = 1222,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Reading tag..."}
-    n4w1__err_empty = 1223,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This tag is empty. Continue to scan a different tag."}
-    n4w1__err_nonempty = 1224,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Non-empty N4W1 tag."}
-    n4w1__err_damaged = 1225,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This tag is damaged. Continue to try again or scan the next tag."}
+    n1w1__reading = 1222,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Reading tag..."}
+    n1w1__err_empty = 1223,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This tag is empty. Continue to scan a different tag."}
+    n1w1__err_nonempty = 1224,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Non-empty N1W1 tag."}
+    n1w1__err_damaged = 1225,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "This tag is damaged. Continue to try again or scan the next tag."}
     #[cfg(feature = "universal_fw")]
     ripple__account_deletion_warning = 1226,  // "Delete Ripple account?"
     #[cfg(feature = "universal_fw")]
@@ -33821,7 +33821,7 @@ impl TranslatedString {
                 "",
                 "{0} credential is a {1}:",
                 "key path",
-                "N4W1 backup",
+                "N1W1 backup",
                 "Wordlist backup",
                 "Token contract address",
                 "Redeem",
@@ -33836,7 +33836,7 @@ impl TranslatedString {
                 "Which type of wallet backup do you have?",
                 "Reading tag...",
                 "This tag is empty. Continue to scan a different tag.",
-                "Non-empty N4W1 tag.",
+                "Non-empty N1W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
                 "Delete Ripple account?",
                 "To be deleted",
@@ -36398,7 +36398,7 @@ impl TranslatedString {
                 "",
                 "{0} credential is a {1}:",
                 "key path",
-                "N4W1 backup",
+                "N1W1 backup",
                 "Wordlist backup",
                 "Token contract address",
                 "Redeem",
@@ -36413,7 +36413,7 @@ impl TranslatedString {
                 "Which type of wallet backup do you have?",
                 "Reading tag...",
                 "This tag is empty. Continue to scan a different tag.",
-                "Non-empty N4W1 tag.",
+                "Non-empty N1W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
                 "Delete Ripple account?",
                 "To be deleted",
@@ -38975,7 +38975,7 @@ impl TranslatedString {
                 "",
                 "{0} credential is a {1}:",
                 "key path",
-                "N4W1 backup",
+                "N1W1 backup",
                 "Wordlist backup",
                 "Token contract address",
                 "Redeem",
@@ -38990,7 +38990,7 @@ impl TranslatedString {
                 "Which type of wallet backup do you have?",
                 "Reading tag...",
                 "This tag is empty. Continue to scan a different tag.",
-                "Non-empty N4W1 tag.",
+                "Non-empty N1W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
                 "Delete Ripple account?",
                 "To be deleted",
@@ -41552,7 +41552,7 @@ impl TranslatedString {
                 "",
                 "{0} credential is a {1}:",
                 "key path",
-                "N4W1 backup",
+                "N1W1 backup",
                 "Wordlist backup",
                 "Token contract address",
                 "Redeem",
@@ -41567,7 +41567,7 @@ impl TranslatedString {
                 "Which type of wallet backup do you have?",
                 "Reading tag...",
                 "This tag is empty. Continue to scan a different tag.",
-                "Non-empty N4W1 tag.",
+                "Non-empty N1W1 tag.",
                 "This tag is damaged. Continue to try again or scan the next tag.",
                 "Delete Ripple account?",
                 "To be deleted",
@@ -42974,7 +42974,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_backup__title_skip, Self::backup__title_skip),
         (Qstr::MP_QSTR_backup__type_create, Self::backup__type_create),
         (Qstr::MP_QSTR_backup__type_have, Self::backup__type_have),
-        (Qstr::MP_QSTR_backup__type_n4w1, Self::backup__type_n4w1),
+        (Qstr::MP_QSTR_backup__type_n1w1, Self::backup__type_n1w1),
         (Qstr::MP_QSTR_backup__type_wordlist, Self::backup__type_wordlist),
         (Qstr::MP_QSTR_backup__want_to_skip, Self::backup__want_to_skip),
         (Qstr::MP_QSTR_bitcoin__commitment_data, Self::bitcoin__commitment_data),
@@ -43759,17 +43759,17 @@ impl TranslatedString {
         (Qstr::MP_QSTR_monero__wanna_start_refresh, Self::monero__wanna_start_refresh),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_monero__wanna_sync_key_images, Self::monero__wanna_sync_key_images),
-        (Qstr::MP_QSTR_n4w1__err_damaged, Self::n4w1__err_damaged),
-        (Qstr::MP_QSTR_n4w1__err_empty, Self::n4w1__err_empty),
-        (Qstr::MP_QSTR_n4w1__err_nonempty, Self::n4w1__err_nonempty),
-        (Qstr::MP_QSTR_n4w1__footer_first, Self::n4w1__footer_first),
-        (Qstr::MP_QSTR_n4w1__footer_last, Self::n4w1__footer_last),
-        (Qstr::MP_QSTR_n4w1__footer_next, Self::n4w1__footer_next),
-        (Qstr::MP_QSTR_n4w1__hold_first, Self::n4w1__hold_first),
-        (Qstr::MP_QSTR_n4w1__hold_last, Self::n4w1__hold_last),
-        (Qstr::MP_QSTR_n4w1__hold_next, Self::n4w1__hold_next),
-        (Qstr::MP_QSTR_n4w1__reading, Self::n4w1__reading),
-        (Qstr::MP_QSTR_n4w1__writing, Self::n4w1__writing),
+        (Qstr::MP_QSTR_n1w1__err_damaged, Self::n1w1__err_damaged),
+        (Qstr::MP_QSTR_n1w1__err_empty, Self::n1w1__err_empty),
+        (Qstr::MP_QSTR_n1w1__err_nonempty, Self::n1w1__err_nonempty),
+        (Qstr::MP_QSTR_n1w1__footer_first, Self::n1w1__footer_first),
+        (Qstr::MP_QSTR_n1w1__footer_last, Self::n1w1__footer_last),
+        (Qstr::MP_QSTR_n1w1__footer_next, Self::n1w1__footer_next),
+        (Qstr::MP_QSTR_n1w1__hold_first, Self::n1w1__hold_first),
+        (Qstr::MP_QSTR_n1w1__hold_last, Self::n1w1__hold_last),
+        (Qstr::MP_QSTR_n1w1__hold_next, Self::n1w1__hold_next),
+        (Qstr::MP_QSTR_n1w1__reading, Self::n1w1__reading),
+        (Qstr::MP_QSTR_n1w1__writing, Self::n1w1__writing),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_nem__absolute, Self::nem__absolute),
         #[cfg(feature = "universal_fw")]

@@ -245,14 +245,14 @@ pub enum MessageType {
     MessageType_DebugLinkPairingInfo = 9012,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DebugLinkSetLogFilter)
     MessageType_DebugLinkSetLogFilter = 9013,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DebugLinkN4W1Connected)
-    MessageType_DebugLinkN4W1Connected = 9014,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DebugLinkN4W1Write)
-    MessageType_DebugLinkN4W1Write = 9015,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DebugLinkN4W1Read)
-    MessageType_DebugLinkN4W1Read = 9016,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DebugLinkN4W1Response)
-    MessageType_DebugLinkN4W1Response = 9017,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DebugLinkN1W1Connected)
+    MessageType_DebugLinkN1W1Connected = 9014,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DebugLinkN1W1Write)
+    MessageType_DebugLinkN1W1Write = 9015,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DebugLinkN1W1Read)
+    MessageType_DebugLinkN1W1Read = 9016,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DebugLinkN1W1Response)
+    MessageType_DebugLinkN1W1Response = 9017,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DebugLinkSetBatteryState)
     MessageType_DebugLinkSetBatteryState = 9018,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EthereumGetPublicKey)
@@ -739,10 +739,10 @@ impl ::protobuf::Enum for MessageType {
             9011 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkGetPairingInfo),
             9012 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkPairingInfo),
             9013 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkSetLogFilter),
-            9014 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN4W1Connected),
-            9015 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN4W1Write),
-            9016 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN4W1Read),
-            9017 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN4W1Response),
+            9014 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN1W1Connected),
+            9015 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN1W1Write),
+            9016 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN1W1Read),
+            9017 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN1W1Response),
             9018 => ::std::option::Option::Some(MessageType::MessageType_DebugLinkSetBatteryState),
             450 => ::std::option::Option::Some(MessageType::MessageType_EthereumGetPublicKey),
             451 => ::std::option::Option::Some(MessageType::MessageType_EthereumPublicKey),
@@ -1041,10 +1041,10 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_DebugLinkGetPairingInfo" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkGetPairingInfo),
             "MessageType_DebugLinkPairingInfo" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkPairingInfo),
             "MessageType_DebugLinkSetLogFilter" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkSetLogFilter),
-            "MessageType_DebugLinkN4W1Connected" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN4W1Connected),
-            "MessageType_DebugLinkN4W1Write" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN4W1Write),
-            "MessageType_DebugLinkN4W1Read" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN4W1Read),
-            "MessageType_DebugLinkN4W1Response" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN4W1Response),
+            "MessageType_DebugLinkN1W1Connected" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN1W1Connected),
+            "MessageType_DebugLinkN1W1Write" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN1W1Write),
+            "MessageType_DebugLinkN1W1Read" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN1W1Read),
+            "MessageType_DebugLinkN1W1Response" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkN1W1Response),
             "MessageType_DebugLinkSetBatteryState" => ::std::option::Option::Some(MessageType::MessageType_DebugLinkSetBatteryState),
             "MessageType_EthereumGetPublicKey" => ::std::option::Option::Some(MessageType::MessageType_EthereumGetPublicKey),
             "MessageType_EthereumPublicKey" => ::std::option::Option::Some(MessageType::MessageType_EthereumPublicKey),
@@ -1342,10 +1342,10 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_DebugLinkGetPairingInfo,
         MessageType::MessageType_DebugLinkPairingInfo,
         MessageType::MessageType_DebugLinkSetLogFilter,
-        MessageType::MessageType_DebugLinkN4W1Connected,
-        MessageType::MessageType_DebugLinkN4W1Write,
-        MessageType::MessageType_DebugLinkN4W1Read,
-        MessageType::MessageType_DebugLinkN4W1Response,
+        MessageType::MessageType_DebugLinkN1W1Connected,
+        MessageType::MessageType_DebugLinkN1W1Write,
+        MessageType::MessageType_DebugLinkN1W1Read,
+        MessageType::MessageType_DebugLinkN1W1Response,
         MessageType::MessageType_DebugLinkSetBatteryState,
         MessageType::MessageType_EthereumGetPublicKey,
         MessageType::MessageType_EthereumPublicKey,
@@ -1649,10 +1649,10 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_DebugLinkGetPairingInfo => 106,
             MessageType::MessageType_DebugLinkPairingInfo => 107,
             MessageType::MessageType_DebugLinkSetLogFilter => 108,
-            MessageType::MessageType_DebugLinkN4W1Connected => 109,
-            MessageType::MessageType_DebugLinkN4W1Write => 110,
-            MessageType::MessageType_DebugLinkN4W1Read => 111,
-            MessageType::MessageType_DebugLinkN4W1Response => 112,
+            MessageType::MessageType_DebugLinkN1W1Connected => 109,
+            MessageType::MessageType_DebugLinkN1W1Write => 110,
+            MessageType::MessageType_DebugLinkN1W1Read => 111,
+            MessageType::MessageType_DebugLinkN1W1Response => 112,
             MessageType::MessageType_DebugLinkSetBatteryState => 113,
             MessageType::MessageType_EthereumGetPublicKey => 114,
             MessageType::MessageType_EthereumPublicKey => 115,
@@ -1987,11 +1987,11 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x80\xa6\x1d\x01\xa0\xb5\x18\x01\x12/\n\x20MessageType_DebugLinkPairingI\
     nfo\x10\xb4F\x1a\x08\x80\xa6\x1d\x01\xa8\xb5\x18\x01\x120\n!MessageType_\
     DebugLinkSetLogFilter\x10\xb5F\x1a\x08\x80\xa6\x1d\x01\xa0\xb5\x18\x01\
-    \x121\n\"MessageType_DebugLinkN4W1Connected\x10\xb6F\x1a\x08\x80\xa6\x1d\
-    \x01\xa0\xb5\x18\x01\x12-\n\x1eMessageType_DebugLinkN4W1Write\x10\xb7F\
+    \x121\n\"MessageType_DebugLinkN1W1Connected\x10\xb6F\x1a\x08\x80\xa6\x1d\
+    \x01\xa0\xb5\x18\x01\x12-\n\x1eMessageType_DebugLinkN1W1Write\x10\xb7F\
     \x1a\x08\x80\xa6\x1d\x01\xa8\xb5\x18\x01\x12,\n\x1dMessageType_DebugLink\
-    N4W1Read\x10\xb8F\x1a\x08\x80\xa6\x1d\x01\xa8\xb5\x18\x01\x120\n!Message\
-    Type_DebugLinkN4W1Response\x10\xb9F\x1a\x08\x80\xa6\x1d\x01\xa0\xb5\x18\
+    N1W1Read\x10\xb8F\x1a\x08\x80\xa6\x1d\x01\xa8\xb5\x18\x01\x120\n!Message\
+    Type_DebugLinkN1W1Response\x10\xb9F\x1a\x08\x80\xa6\x1d\x01\xa0\xb5\x18\
     \x01\x123\n$MessageType_DebugLinkSetBatteryState\x10\xbaF\x1a\x08\x80\
     \xa6\x1d\x01\xa0\xb5\x18\x01\x12+\n\x20MessageType_EthereumGetPublicKey\
     \x10\xc2\x03\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessageType_EthereumPubli\
