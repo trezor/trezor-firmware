@@ -24,6 +24,7 @@
 #include <io/display.h>
 #include <io/rsod.h>
 #include <io/usb_config.h>
+#include <sec/monoctr.h>
 #include <sec/rsod_special.h>
 #include <sec/unit_properties.h>
 #include <sys/applet.h>
@@ -86,6 +87,8 @@ static void drivers_deinit(void) { flash_deinit(); }
 static void drivers_init(void) {
   flash_init();
   flash_otp_init();
+
+  monoctr_init();
 
   unit_properties_init();
 

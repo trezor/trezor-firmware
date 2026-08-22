@@ -55,8 +55,13 @@ const char* system_fault_message(const system_fault_t* fault) {
 
 void system_emergency_rescue(systask_error_handler_t error_handler,
                              const systask_postmortem_t* pminfo) {
+  // Copy the post-mortem information to a new memory location.
+  // This is necessary because the original `pminfo` may be overwritten
+  // by system_init() called in error_handler().
+  systask_postmortem_t pminfo_copy = *pminfo;
+
   if (error_handler != NULL) {
-    error_handler(pminfo);
+    error_handler(&pminfo_copy);
   }
 
   // We should never reach this point

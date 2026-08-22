@@ -84,7 +84,9 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
       exit(1);
     }
     if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
-      *wakeup_reason = WAKEUP_FLAG_BUTTON;
+      if (wakeup_reason != NULL) {
+        *wakeup_reason = WAKEUP_FLAG_BUTTON;
+      }
       break;
     }
 #ifdef USE_TOUCH_WAKEUP
@@ -94,7 +96,9 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
         /* tap-to-wake disabled: ignore touch and stay suspended */
         continue;
       }
-      *wakeup_reason = WAKEUP_FLAG_TOUCH;
+      if (wakeup_reason != NULL) {
+        *wakeup_reason = WAKEUP_FLAG_TOUCH;
+      }
       break;
     }
 #endif

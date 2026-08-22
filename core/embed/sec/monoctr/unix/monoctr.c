@@ -25,12 +25,26 @@
 #include <sec/monoctr.h>
 #include <sys/flash_otp.h>
 
+void monoctr_init(void) {
+  ensure(monoctr_write(MONOCTR_BOOTLOADER_VERSION, 0),
+         "initialize bootloader monotonic counter");
+  ensure(monoctr_write(MONOCTR_FIRMWARE_VERSION, 0),
+         "initialize firmware monotonic counter");
+#ifdef USE_SECMON_VERIFICATION
+  ensure(monoctr_write(MONOCTR_SECMON_VERSION, 0),
+         "initialize secure-monitor monotonic counter");
+#endif
+}
+
 static int get_otp_block(monoctr_type_t type) {
   switch (type) {
     case MONOCTR_BOOTLOADER_VERSION:
       return FLASH_OTP_BLOCK_BOOTLOADER_VERSION;
     case MONOCTR_FIRMWARE_VERSION:
       return FLASH_OTP_BLOCK_FIRMWARE_VERSION;
+    case MONOCTR_SECMON_VERSION:
+      return 31;  // Workaround until we implement STM32U5 monoctr emulator
+                  // properly
     default:
       return -1;
   }
