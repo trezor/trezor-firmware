@@ -25,10 +25,6 @@
 
 #include <pthread.h>
 
-#ifdef USE_DBG_CONSOLE
-#include <sys/dbg_console.h>
-#endif
-
 // Task scheduler state
 typedef struct {
   // Error handler called when a kernel task terminates
@@ -52,6 +48,7 @@ static systask_scheduler_t g_systask_scheduler = {
     .active_task = &g_systask_scheduler.kernel_task,
     .waiting_task = &g_systask_scheduler.kernel_task,
     .task_id_map = 0x00000001,  // Kernel task is always present
+    .lock = PTHREAD_MUTEX_INITIALIZER,
     .kernel_task = {
         .id = 0,  // Kernel task ID == 0
         .cv = PTHREAD_COND_INITIALIZER,
@@ -126,7 +123,14 @@ static void systask_yield(void) {
     pthread_cond_wait(&current_task->cv, &scheduler->lock);
   }
 
+  // Capture the killed state before releasing the lock
+  bool killed = current_task->killed;
+
   pthread_mutex_unlock(&scheduler->lock);
+
+  if (killed) {
+    pthread_exit(0);
+  }
 
   // Now the task called systask_yield() is active again
 
@@ -170,10 +174,18 @@ static void* thread_trampoline(void* arg) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
   pthread_mutex_lock(&scheduler->lock);
-  while (scheduler->active_task != task) {
+  while (scheduler->active_task != task && !task->killed) {
     pthread_cond_wait(&task->cv, &scheduler->lock);
   }
+  // Capture the killed state before releasing the lock
+  bool killed = task->killed;
   pthread_mutex_unlock(&scheduler->lock);
+
+  if (killed) {
+    // The task was killed before it could start running,
+    // so exit immediately.
+    return 0;
+  }
 
   int exit_code = (int)invoke_pushed_fn_call(task);
 
@@ -229,9 +241,13 @@ static void systask_kill(systask_t* task) {
 
   systask_print_pminfo(task);
 
+  pthread_mutex_lock(&scheduler->lock);
+
   task->killed = 1;
 
   if (task == &scheduler->kernel_task) {
+    pthread_mutex_unlock(&scheduler->lock);
+
     // Call panic handler
     if (scheduler->error_handler != NULL) {
       scheduler->error_handler(&task->pminfo);
@@ -243,15 +259,32 @@ static void systask_kill(systask_t* task) {
   } else {
     // Free task ID
     scheduler->task_id_map &= ~(1 << task->id);
+    bool task_is_active = (scheduler->active_task == task);
+    pthread_mutex_unlock(&scheduler->lock);
+
     // Notify all event sources about the task termination
     sysevents_notify_task_killed(task);
-    // Switch to the kernel task
-    systask_yield_to(&scheduler->kernel_task);
+
+    if (!task_is_active) {
+      // Wake-up killed task (it will terminate itself)
+      pthread_cond_signal(&task->cv);
+      // Ensure the task thread is fully terminated before returning.
+      pthread_join(task->pthread, NULL);
+    } else {
+      // Switch to the kernel task
+      systask_yield_to(&scheduler->kernel_task);
+    }
   }
 }
 
 bool systask_is_alive(const systask_t* task) {
-  return task->initialized && !task->killed;
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
+
+  pthread_mutex_lock(&scheduler->lock);
+  bool alive = task->initialized && !task->killed;
+  pthread_mutex_unlock(&scheduler->lock);
+
+  return alive;
 }
 
 void systask_exit(systask_t* task, int exit_code) {
@@ -332,46 +365,4 @@ void systask_exit_fatal(systask_t* task, const char* message,
   pminfo->fatal.line = line;
 
   systask_kill(task);
-}
-
-void systask_print_pminfo(systask_t* task) {
-#ifdef USE_DBG_CONSOLE
-
-  const systask_postmortem_t* pminfo = &task->pminfo;
-
-  if (pminfo->reason == TASK_TERM_REASON_EXIT && pminfo->exit.code == 0) {
-    dbg_printf("Task #%u terminated cleanly\n", task->id);
-    return;
-  }
-
-  dbg_printf("Task #%u terminated.\n", task->id);
-
-  switch (pminfo->reason) {
-    case TASK_TERM_REASON_EXIT:
-      dbg_printf("Exit code: %d\n", pminfo->exit.code);
-      break;
-
-    case TASK_TERM_REASON_ERROR:
-      dbg_printf("Error: %s\n", pminfo->error.message);
-      if (pminfo->error.title[0] != '\0') {
-        dbg_printf("Title: %s\n", pminfo->error.title);
-      }
-      if (pminfo->error.footer[0] != '\0') {
-        dbg_printf("Footer: %s\n", pminfo->error.footer);
-      }
-      break;
-
-    case TASK_TERM_REASON_FATAL:
-      dbg_printf("Fatal: %s", pminfo->fatal.expr);
-      if (pminfo->fatal.file[0] != '\0') {
-        dbg_printf(" at %s:%u", pminfo->fatal.file, pminfo->fatal.line);
-      }
-      dbg_printf("\n");
-      break;
-
-    case TASK_TERM_REASON_FAULT:
-      dbg_printf("Fault\n");
-      break;
-  }
-#endif  // USE_DBG_CONSOLE
 }
