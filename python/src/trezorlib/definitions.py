@@ -29,7 +29,7 @@ from .messages import DefinitionType
 
 LOG = logging.getLogger(__name__)
 
-FORMAT_MAGIC = b"trzd1"
+MAGIC = b"trzd"
 DEFS_BASE_URL = "https://data.trezor.io/firmware/definitions/"
 
 DEFINITIONS_DEV_SIGS_REQUIRED = 1
@@ -38,7 +38,11 @@ DEFINITIONS_DEV_PUBLIC_KEYS = [
     for key in ("db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d",)
 ]
 
-DEFINITIONS_SIGS_REQUIRED = 2
+# Number of CoSi signatures required by definition format version.
+# Version 1 requires 2 signatures, version 2 only 1.
+DEFINITIONS_SIGS_REQUIRED = {
+    1: 2,
+}
 DEFINITIONS_PUBLIC_KEYS = [
     bytes.fromhex(key)
     for key in (
@@ -54,12 +58,14 @@ ProofFormat = c.PrefixedArray(c.Int8ul, c.Bytes(32))
 
 class DefinitionPayload(Struct):
     magic: bytes
+    version: int  # ASCII digit byte of the format version, e.g. ord("1")
     data_type: DefinitionType
     timestamp: int
     data: bytes
 
     SUBCON = c.Struct(
-        "magic" / c.Const(FORMAT_MAGIC),
+        "magic" / c.Const(MAGIC),
+        "version" / c.Int8ul,
         "data_type" / EnumAdapter(c.Int8ul, DefinitionType),
         "timestamp" / c.Int32ul,
         "data" / c.Prefixed(c.Int16ul, c.GreedyBytes),
@@ -82,11 +88,25 @@ class Definition(Struct):
     def verify(self, dev: bool = False) -> None:
         payload = self.payload.build()
         root = merkle_tree.evaluate_proof(payload, self.proof)
+        if dev:
+            sigs_required, public_keys = (
+                DEFINITIONS_DEV_SIGS_REQUIRED,
+                DEFINITIONS_DEV_PUBLIC_KEYS,
+            )
+        else:
+            version = self.payload.version - ord("0")
+            try:
+                sigs_required = DEFINITIONS_SIGS_REQUIRED[version]
+            except KeyError:
+                raise ValueError(
+                    f"Unsupported definition format version {chr(self.payload.version)!r}"
+                ) from None
+            public_keys = DEFINITIONS_PUBLIC_KEYS
         cosi.verify(
             self.signature,
             root,
-            DEFINITIONS_DEV_SIGS_REQUIRED,
-            DEFINITIONS_DEV_PUBLIC_KEYS,
+            sigs_required,
+            public_keys,
             self.sigmask,
         )
 

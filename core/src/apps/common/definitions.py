@@ -46,15 +46,20 @@ def decode_definition(definition: AnyBytes, expected_type: type[DefType]) -> Def
         expected_type_number = DefinitionType.ETHEREUM_DISPLAY_FORMAT
 
     try:
-        # first check format version
-        if r.read_memoryview(len(consts.FORMAT_VERSION)) != consts.FORMAT_VERSION:
+        # first check magic
+        if r.read_memoryview(len(consts.MAGIC)) != consts.MAGIC:
             raise DataError("Invalid definition")
 
-        # second check the type of the data
+        # second check the format version
+        format_version = r.get()
+        if format_version not in consts.SUPPORTED_FORMAT_VERSIONS:
+            raise DataError("Invalid definition")
+
+        # third check the type of the data
         if r.get() != expected_type_number:
             raise DataError("Definition type mismatch")
 
-        # third check data version
+        # fourth check data version
         if readers.read_uint32_le(r) < consts.MIN_DATA_VERSION:
             raise DataError("Definition is outdated")
 
@@ -88,7 +93,7 @@ def decode_definition(definition: AnyBytes, expected_type: type[DefType]) -> Def
 
     # verify signature
     try:
-        verify(hash, signature, sigmask)
+        verify(hash, signature, sigmask, format_version)
     except ValueError:
         raise DataError("Invalid definition signature")
 

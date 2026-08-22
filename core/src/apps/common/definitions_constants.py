@@ -3,7 +3,11 @@
 # do not edit manually!
 
 MIN_DATA_VERSION = 1783520408
-FORMAT_VERSION = b"trzd1"
+MAGIC = b"trzd"
 
-# The public keys and signature threshold for definitions verification
+# Supported format versions of the definitions, encoded on the wire as
+# ASCII digit bytes ('1' = 0x31, '2' = 0x32, etc.).
+SUPPORTED_FORMAT_VERSIONS = (ord("1"),)
+
+# The public keys and signature thresholds for definitions verification
 # live in Rust (core/embed/rust/src/definitions/constants.rs).
