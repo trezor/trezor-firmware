@@ -18,14 +18,14 @@ from __future__ import annotations
 
 import base64
 import sys
-from typing import TYPE_CHECKING
+import typing as t
 
 import click
 
 from .. import stellar, tools
 from . import with_session
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from ..client import Session
 
 try:

@@ -16,19 +16,17 @@
 
 from __future__ import annotations
 
+import typing as t
 from collections.abc import Iterable, Iterator
-from typing import TYPE_CHECKING, Any, Union
 
 from . import exceptions, messages
 from .tools import workflow
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from .client import Session
     from .tools import Address
 
-    # `X | Y` needs Python 3.10 here: an alias is a plain assignment, so
-    # `from __future__ import annotations` does not cover it (PEP 563).
-    StellarMessageType = Union[
+    StellarMessageType = t.Union[
         messages.StellarAccountMergeOp,
         messages.StellarAllowTrustOp,
         messages.StellarBumpSequenceOp,
@@ -433,7 +431,7 @@ def _read_asset(asset: Asset) -> messages.StellarAsset:
 # ====== Client functions ====== #
 
 
-def get_address(*args: Any, **kwargs: Any) -> str:
+def get_address(*args: t.Any, **kwargs: t.Any) -> str:
     return get_authenticated_address(*args, **kwargs).address
 
 
