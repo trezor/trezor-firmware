@@ -33,6 +33,20 @@
             }
         },
         {
+            "name": "simple_nonce_1_chainid_1_mainnet",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9",
+                "tuple_nonce": 1,
+                "chain_id": 1
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "7e299c7d1f3790eddb5f8ebedaabc35e206c0f045db67b4c94029c7e4b543d42",
+                "sig_s": "2493d77e371f9ca5dc5c5e03934e762da3b9f80e6f8d874f5ddfca2b66321a04"
+            }
+        },
+        {
             "name": "ambire_nonce_3_chainid_8453_base",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
