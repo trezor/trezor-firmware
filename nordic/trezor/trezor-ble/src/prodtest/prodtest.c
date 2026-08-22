@@ -90,6 +90,12 @@ bool prodtest_pair(uint8_t *data, uint16_t len) {
 
 static void process_command(uint8_t *data, uint16_t len) {
   uint8_t resp_data[244] = {0};
+
+  if (len < 1) {
+    LOG_ERR("Empty command, dropping");
+    return;
+  }
+
   uint8_t cmd = data[0];
   switch (cmd) {
     case PRODTEST_CMD_SPI_DATA:
@@ -101,6 +107,10 @@ static void process_command(uint8_t *data, uint16_t len) {
       trz_comm_send_msg(NRF_SERVICE_PRODTEST, resp_data, 64);
       break;
     case PRODTEST_CMD_SET_OUTPUT:
+      if (len < 2) {
+        LOG_ERR("Set output command too short: %d", len);
+        return;
+      }
       signals_set_reserved(data[1]);
       break;
     case PRODTEST_CMD_PAIR:

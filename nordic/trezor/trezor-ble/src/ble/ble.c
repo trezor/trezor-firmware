@@ -27,6 +27,7 @@
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/hci_vs.h>
+#include <zephyr/bluetooth/l2cap.h>
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/settings/settings.h>
 
@@ -57,6 +58,21 @@ static int8_t g_act_tx_power_level = 0;
 static int8_t g_set_tx_power_level = 0;
 #endif
 
+// Address type and address prepended to every received packet
+#define BLE_RX_ADDR_PREFIX_SIZE (1 + BT_ADDR_SIZE)
+
+// Largest GATT write payload a peer can deliver: the ATT PDU that fits into a
+// single L2CAP RX buffer, less the ATT write opcode and the attribute handle.
+#define BLE_MAX_GATT_WRITE_SIZE (BT_L2CAP_RX_MTU - 3)
+
+// `BLE_RX_PACKET_SIZE` has to keep up with the Bluetooth buffer configuration,
+// which is what actually bounds how much a peer can write. If a peer could
+// deliver more, `bt_receive_cb()` would have to drop valid packets to keep
+// `data_copy` from overflowing.
+BUILD_ASSERT(BLE_MAX_GATT_WRITE_SIZE <= BLE_RX_PACKET_SIZE,
+             "CONFIG_BT_BUF_ACL_RX_SIZE allows a GATT write larger than "
+             "BLE_RX_PACKET_SIZE");
+
 static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
                           uint16_t len) {
   if (atomic_get(&g_busy_flag) != 0) {
@@ -71,13 +87,18 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 
   LOG_DBG("Received data from: %s, %d", addr, len);
 
-  uint8_t data_copy[BLE_RX_PACKET_SIZE + 7] = {0};
+  if (len > BLE_RX_PACKET_SIZE) {
+    LOG_WRN("Received data too long (%u bytes), dropping", len);
+    return;
+  }
+
+  uint8_t data_copy[BLE_RX_PACKET_SIZE + BLE_RX_ADDR_PREFIX_SIZE] = {0};
 
   data_copy[0] = bt_conn_get_dst(conn)->type;
   memcpy(data_copy + 1, bt_conn_get_dst(conn)->a.val, BT_ADDR_SIZE);
-  memcpy(data_copy + 1 + BT_ADDR_SIZE, data, len);
+  memcpy(data_copy + BLE_RX_ADDR_PREFIX_SIZE, data, len);
 
-  trz_comm_send_msg(NRF_SERVICE_BLE, data_copy, len + 1 + BT_ADDR_SIZE);
+  trz_comm_send_msg(NRF_SERVICE_BLE, data_copy, len + BLE_RX_ADDR_PREFIX_SIZE);
 }
 
 bool ble_init(void) {
@@ -127,12 +148,19 @@ void ble_write_thread(void) {
     /* Wait indefinitely for data to be sent over bluetooth */
     trz_packet_t *buf = trz_comm_poll_data(NRF_SERVICE_BLE);
 
+    // The address prefix is stripped below, so it has to be there
+    if (buf->len < BLE_RX_ADDR_PREFIX_SIZE) {
+      LOG_WRN("Data too short (%u bytes), dropping", buf->len);
+      k_free(buf);
+      continue;
+    }
+
     struct bt_conn *conn = connection_get_current();
 
     if (conn == NULL) {
       LOG_WRN("No active BLE connection, cannot send data");
       k_free(buf);
-      return;
+      continue;
     }
 
     const bt_addr_le_t *addr = bt_conn_get_dst(conn);
@@ -141,12 +169,20 @@ void ble_write_thread(void) {
         memcmp(addr->a.val, &buf->data[1], BT_ADDR_SIZE) != 0) {
       LOG_WRN("Address mismatch, cannot send data");
       k_free(buf);
-      return;
+      continue;
     }
 
     trz_packet_t *data_to_send = k_malloc(sizeof(*data_to_send));
-    data_to_send->len = buf->len - 1 - BT_ADDR_SIZE;
-    memcpy(data_to_send->data, &buf->data[1 + BT_ADDR_SIZE], data_to_send->len);
+
+    if (data_to_send == NULL) {
+      LOG_WRN("Not able to allocate send buffer");
+      k_free(buf);
+      continue;
+    }
+
+    data_to_send->len = buf->len - BLE_RX_ADDR_PREFIX_SIZE;
+    memcpy(data_to_send->data, &buf->data[BLE_RX_ADDR_PREFIX_SIZE],
+           data_to_send->len);
     k_free(buf);
 
     if (service_send(conn, data_to_send)) {
