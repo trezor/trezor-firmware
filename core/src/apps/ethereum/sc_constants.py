@@ -79,6 +79,8 @@ def lookup_eip7702_address(chain_id: int, address: bytes) -> str | None:
             return "Ambire"
         if address == b"\x63\xc0\xc1\x9a\x28\x2a\x1b\x52\xb0\x7d\xd5\xa6\x5b\x58\x94\x8a\x07\xda\xe3\x2b":
             return "MetaMask"
+        if address == b"\x4c\xd2\x41\xe8\xd1\x51\x0e\x30\xb2\x07\x63\x97\xaf\xc7\x50\x8a\xe5\x9c\x66\xc9":
+            return "Simple7702Account"
         return None
 
     if chain_id == 100:
