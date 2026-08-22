@@ -169,6 +169,10 @@ static int version_cmp(const nrf_app_version_t *v1,
 }
 
 bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
+  if (image_len < sizeof(struct image_header)) {
+    return false;
+  }
+
   for (int i = 0; i < 3; i++) {
     nrf_info_t info;
     uint8_t expected_hash[SHA256_DIGEST_LENGTH];

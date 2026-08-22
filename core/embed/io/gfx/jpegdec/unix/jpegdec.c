@@ -162,6 +162,10 @@ jpegdec_state_t jpegdec_process(jpegdec_input_t *input) {
     return JPEGDEC_STATE_ERROR;
   }
 
+  if (input->offset > input->size) {
+    return JPEGDEC_STATE_ERROR;
+  }
+
   dec->source_mgr.input = input;
 
   if (dec->state == JPEGDEC_STATE_SLICE_READY) {

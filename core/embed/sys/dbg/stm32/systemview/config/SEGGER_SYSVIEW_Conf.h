@@ -77,7 +77,7 @@ Additional information:
 
 #define SEGGER_SYSVIEW_RTT_BUFFER_SIZE          4096
 
-#define SEGGER_SYSVIEW_MAX_STRING_LEN           1024
+#define SEGGER_SYSVIEW_MAX_STRING_LEN           512
 
 #define SEGGER_SYSVIEW_BUFFER_SECTION "CCMRAM"
 
