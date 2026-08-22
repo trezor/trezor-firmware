@@ -18,14 +18,14 @@ from __future__ import annotations
 
 import base64
 import sys
-from typing import TYPE_CHECKING
+import typing as t
 
 import click
 
 from .. import stellar, tools
 from . import with_session
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from ..client import Session
 
 try:
@@ -46,7 +46,7 @@ ASSET_HINT_HELP = (
 )
 
 
-def _parse_asset(value: str) -> "Asset":
+def _parse_asset(value: str) -> Asset:
     """Parse an asset written the SEP-11 way: `native`, or CODE:ISSUER."""
     try:
         if value == "native":
@@ -76,7 +76,7 @@ def cli() -> None:
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def get_address(
-    session: "Session", address: str, show_display: bool, chunkify: bool
+    session: Session, address: str, show_display: bool, chunkify: bool
 ) -> str:
     """Get Stellar public address."""
     address_n = tools.parse_path(address)
@@ -102,7 +102,7 @@ def get_address(
 @click.argument("b64envelope")
 @with_session
 def sign_transaction(
-    session: "Session",
+    session: Session,
     b64envelope: str,
     address: str,
     network_passphrase: str,
@@ -171,7 +171,7 @@ def sign_transaction(
 @click.argument("b64entry")
 @with_session
 def sign_soroban_authorization(
-    session: "Session",
+    session: Session,
     b64entry: str,
     address: str,
     network_passphrase: str,
