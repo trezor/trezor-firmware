@@ -144,13 +144,11 @@ def zero_unused_stack() -> None:
     """
     Zero unused stack memory.
     """
-
-
-# upymod/modtrezorutils/modtrezorutils.c
-def estimate_unused_stack() -> int:
-    """
-    Estimate unused stack size.
-    """
+if __debug__:
+    def estimate_unused_stack() -> int:
+        """
+        Estimate unused stack size.
+        """
 if __debug__:
     def enable_oom_dump() -> None:
         """
