@@ -1654,6 +1654,255 @@ nfc-write-card [<timeout_ms>]
 OK
 ```
 
+### nfc-backup commands
+
+The NFC backup command group performs secure communication with the NFC backup
+card over ISO-DEP. Most commands run this sequence:
+
+1. Enable NFC discovery and wait for card tap.
+2. Run secure handshake (applet select, PSK exchange, Noise XXpsk3).
+3. Run one or more APDU commands.
+
+The operation can be aborted at any time by pressing `CTRL+C`.
+
+Common runtime traces:
+
+- Step traces:
+  - `# STEP 1/3: Waiting for NFC backup card tap.`
+  - `# STEP 2/3: NFC card detected.`
+  - `# STEP 3/3: Command finished in <ms> ms.`
+- Handshake traces:
+  - `# Handshake: start`
+  - `# Handshake step 1/4: selecting backup applet.`
+  - `# Handshake step 2/4: exchanging PSK.`
+  - `# Handshake step 3/4: running Noise XXpsk3.`
+  - `# Handshake step 4/4: secure channel established.`
+- APDU traces for API calls:
+  - `# APDU <name>: TX INS=0x.. (<bytes> bytes)`
+  - `# APDU <name>: RX SW=0x.... (<bytes> bytes)`
+
+By default, sensitive values are printed in shortened form (head/tail preview).
+
+#### nfc-backup-handshake
+Runs only the secure handshake and prints card certificate details.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-handshake
+# STEP 1/3: Waiting for NFC backup card tap.
+# Instruction: place card flat on antenna and hold still. Press Ctrl+C to abort.
+# STEP 2/3: NFC card detected.
+# Handshake: start
+# Handshake step 1/4: selecting backup applet.
+# Handshake step 2/4: exchanging PSK.
+#   Exchanged PSK: 9EE49A8672C0FED1...1829FFE14929C558 (32 bytes)
+# Handshake step 3/4: running Noise XXpsk3.
+# Certificate details:
+#   Version: v3
+#   Serial: 0x00000001 (1)
+#   Subject CN: NFC Backup Card
+#   Issuer CN: Trezor NFC CA
+#   Valid from: 26-06-15 15:41:43 UTC
+#   Valid to: 36-06-15 15:41:43 UTC
+#   Public key: 1122334455667788...99AABBCCDDEEFF00 (32 bytes)
+# Card welcome message: Hello
+# Handshake step 4/4: secure channel established.
+# Handshake: completed
+# STEP 3/3: Command finished in 245 ms.
+OK
+```
+
+#### nfc-backup-authenticate
+Runs handshake and sends `AUTHENTICATE` APDU. If `pin` is omitted, empty PIN is used.
+
+Arguments: `[pin]`
+
+Example:
+```
+nfc-backup-authenticate 1234
+# ... handshake traces ...
+# APDU authenticate: TX INS=0x03 (9 bytes)
+# APDU authenticate: RX SW=0x9000 (2 bytes)
+# STEP 3/3: Command finished in 312 ms.
+OK
+```
+
+#### nfc-backup-set-pin
+Runs handshake, authenticates with `old_pin` (or empty PIN if omitted), then sends `SET PIN` using `new_pin`.
+
+Arguments: `[new_pin] [old_pin]`
+
+Example:
+```
+nfc-backup-set-pin 9876 1234
+# ... handshake traces ...
+# APDU authenticate: TX INS=0x03 (9 bytes)
+# APDU authenticate: RX SW=0x9000 (2 bytes)
+# APDU set-pin: TX INS=0x04 (9 bytes)
+# APDU set-pin: RX SW=0x9000 (2 bytes)
+OK
+```
+
+#### nfc-backup-wipe
+Runs handshake and sends `WIPE` APDU. Erases card content according to card-side implementation.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-wipe
+# ... handshake traces ...
+# APDU wipe: TX INS=0x05 (5 bytes)
+# APDU wipe: RX SW=0x9000 (2 bytes)
+OK
+```
+
+#### nfc-backup-read-pin-counter
+Reads current PIN counter value from card.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-read-pin-counter
+# APDU read-pin-counter: TX INS=0x08 (5 bytes)
+# APDU read-pin-counter: RX SW=0x9000 (3 bytes)
+# PIN counter: 10
+OK
+```
+
+#### nfc-backup-read-success-log
+Reads success log record.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-read-success-log
+# APDU read-success-log: TX INS=0x09 (5 bytes)
+# APDU read-success-log: RX SW=0x9000 (34 bytes)
+# Success log (32 bytes): 00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF
+OK
+```
+
+If empty:
+```
+# Success log: empty
+```
+
+#### nfc-backup-read-failure-logs
+Reads failure log records. Each entry is 32 bytes.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-read-failure-logs
+# APDU read-failure-logs: TX INS=0x0A (5 bytes)
+# APDU read-failure-logs: RX SW=0x9000 (66 bytes)
+# Failure log entries: 2
+#   Entry 1/2: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+#   Entry 2/2: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+OK
+```
+
+If empty:
+```
+# Failure log: empty
+```
+
+#### nfc-backup-read-seed-metadata
+Reads seed metadata blob.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-read-seed-metadata
+# APDU read-seed-metadata: TX INS=0x0B (5 bytes)
+# APDU read-seed-metadata: RX SW=0x9000 (258 bytes)
+#   Seed metadata: 0001020304050607...F8F9FAFBFCFDFEFF (256 bytes)
+OK
+```
+
+If empty:
+```
+# Seed metadata: empty
+```
+
+#### nfc-backup-write-seed-metadata
+Runs handshake, authenticates, then writes metadata.
+
+Current implementation writes a test pattern `0x00..0xFF` (256 bytes).
+
+Arguments: `[pin]`
+
+Example:
+```
+nfc-backup-write-seed-metadata 1234
+# ... handshake traces ...
+# APDU authenticate: TX INS=0x03 (... bytes)
+# APDU authenticate: RX SW=0x9000 (2 bytes)
+# APDU write-seed-metadata: TX INS=0x0C (263 bytes)
+# APDU write-seed-metadata: RX SW=0x9000 (2 bytes)
+OK
+```
+
+#### nfc-backup-read-seed
+Runs handshake, authenticates, reads encrypted seed, decrypts it via Noise transport state, and prints a shortened preview.
+
+Arguments: `[pin]`
+
+Example:
+```
+nfc-backup-read-seed 1234
+# ... handshake traces ...
+# APDU authenticate: TX INS=0x03 (... bytes)
+# APDU authenticate: RX SW=0x9000 (2 bytes)
+# APDU read-seed: TX INS=0x0D (5 bytes)
+# APDU read-seed: RX SW=0x9000 (274 bytes)
+#   Seed: AAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAA (256 bytes)
+OK
+```
+
+If empty:
+```
+# Seed: empty
+```
+
+#### nfc-backup-write-seed
+Runs handshake, authenticates, encrypts and writes seed.
+
+Current implementation writes a test seed filled with `0xAA` (256 bytes).
+
+Arguments: `[pin]`
+
+Example:
+```
+nfc-backup-write-seed 1234
+# ... handshake traces ...
+# APDU authenticate: TX INS=0x03 (... bytes)
+# APDU authenticate: RX SW=0x9000 (2 bytes)
+# APDU write-seed: TX INS=0x0E (... bytes)
+# APDU write-seed: RX SW=0x9000 (2 bytes)
+OK
+```
+
+#### nfc-backup-activate-flashloader
+Sends flashloader activation command to the currently connected card/session.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-activate-flashloader
+OK
+```
+
+
+
 ### unit-test-run
 Prodtest have capability to verify the overall firmware functionality by running built-in unit tests which should excercise the basic
 features of the firmware drivers. This command will run all registered unit tests and return 'OK' if all tests passed.
@@ -1738,3 +1987,5 @@ Example:
 telemetry-reset
 OK
 ```
+
+

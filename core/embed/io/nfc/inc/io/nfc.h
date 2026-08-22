@@ -25,10 +25,10 @@
 #define NFC_MAX_UID_BUF_SIZE ((NFC_MAX_UID_LEN + 1) * 2)
 
 /**
- * @brief Must corespond to RFAL_FEATURE_ISO_DEP_IBLOCK_MAX_LEN in
+ * @brief Must correspond to RFAL_FEATURE_ISO_DEP_APDU_MAX_LEN in
  * rfal_platform.h
  */
-#define NFC_MAX_APDU_LEN 256
+#define NFC_MAX_APDU_LEN 512
 
 /** @brief Supported NFC types. **/
 typedef enum {
@@ -127,3 +127,22 @@ ts_t nfc_get_device_info(nfc_dev_info_t *dev_info);
  * @return TS_OK when the function pass, otherwise an error.
  */
 ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp);
+
+/**
+ * @brief Transceive psk message over ISO14443-3 customized frame (9-b header,
+ * no parity bits, augmented CRC).
+ *
+ * pcd_psk should be an array of 16 bytes, and picc_psk should be of the same
+ * size.
+ *
+ * @param pcd_psk [in] Pointer to the PSK message to transmit.
+ * @param pcd_psk_max_len [in] Length of the PSK message to transmit.
+ * @param picc_psk [out] Pointer to the buffer to store received PSK message.
+ * @param picc_psk_max_len [in] Capacity of the receive buffer.
+ * @param picc_psk_len [in/out] Pointer to the length of the received PSK
+ * message.
+ * @return TS_OK when the function pass, otherwise an error.
+ */
+ts_t nfc_transceive_psk(uint8_t *pcd_psk, size_t pcd_psk_max_len,
+                        uint8_t *picc_psk, size_t picc_psk_max_len,
+                        uint16_t *picc_psk_len);

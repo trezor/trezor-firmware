@@ -233,7 +233,11 @@ fn add_aes_gcm(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
 }
 
 fn add_noise(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
-    lib.add_sources_in_dir_with_attrs(CRYPTO_PATH, ["noise_kk1.c"], Some(attrs.clone()));
+    lib.add_sources_in_dir_with_attrs(
+        CRYPTO_PATH,
+        ["noise_kk1.c", "noise_xxpsk3.c"],
+        Some(attrs.clone()),
+    );
 
     Ok(())
 }
