@@ -63,17 +63,35 @@ class TropicModel:
         port: int = DEFAULT_PORT,
         logfile: TextIO | str | Path | None = None,
         configfile_output: Path | None = None,
+        reuse_existing: bool = False,
     ) -> None:
         self.profile_dir = Path(profile_dir).resolve()
         self.port = port
+        self.reuse_existing = reuse_existing
         self.configfile = configfile.resolve()
         self.configfile_output = (
             configfile_output or self.profile_dir / "tropic_model_config_output.yml"
         )
         self.logfile = logfile or self.profile_dir / "trezor-tropic-model.log"
         self.process: Optional[subprocess.Popen] = None
+        self.reused = False
+        """A model was already listening on the port, so we did not start our own."""
 
     def start(self) -> None:
+        # The model server binds with SO_REUSEPORT, so starting a second one on the
+        # same port succeeds and the kernel then splits connections between them.
+        # The emulator would talk to either model at random, and only one of them
+        # holds the keys written by previous runs.
+        if self._is_listening():
+            if self.reuse_existing:
+                LOG.info(f"Tropic model already listening on port {self.port}, reusing")
+                self.reused = True
+                return
+            LOG.warning(
+                f"Port {self.port} is already taken, most likely by another Tropic "
+                "model. Connections will be split between the two of them."
+            )
+
         self.process = self._launch_process()
         _RUNNING_PIDS.add(self.process)
         try:
@@ -123,6 +141,13 @@ class TropicModel:
             stdout=cast(TextIO, output),
             stderr=subprocess.STDOUT,
         )
+
+    def _is_listening(self) -> bool:
+        try:
+            with socket.create_connection(("127.0.0.1", self.port), timeout=1):
+                return True
+        except OSError:
+            return False
 
     def _wait_until_ready(self, timeout: float = TROPIC_MODEL_WAIT_TIME) -> None:
         assert self.process is not None, "Tropic model not started"
