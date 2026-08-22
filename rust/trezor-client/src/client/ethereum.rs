@@ -242,7 +242,14 @@ impl Trezor {
                 protos::MessageType::MessageType_PassphraseRequest => {
                     let _: protos::PassphraseRequest = resp.into_message()?;
                     let mut ack = protos::PassphraseAck::new();
-                    ack.set_on_device(true);
+                    let always_on_device = self
+                        .features()
+                        .is_some_and(protos::Features::passphrase_always_on_device);
+                    if always_on_device {
+                        ack.set_on_device(true);
+                    } else {
+                        ack.set_passphrase(String::new());
+                    }
                     resp = self.call_raw(ack)?;
                 }
                 protos::MessageType::MessageType_EthereumTypedDataStructRequest => {
