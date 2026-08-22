@@ -65,7 +65,7 @@
 #include <io/nrf.h>
 #endif
 
-#if !PYOPT && LOG_STACK_USAGE
+#ifndef TREZOR_EMULATOR
 #include <sys/stack_utils.h>
 #endif
 
@@ -409,23 +409,26 @@ static mp_obj_t mod_trezorutils_presize_module(mp_obj_t mod, mp_obj_t n) {
 static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_presize_module_obj,
                                  mod_trezorutils_presize_module);
 
-#if !PYOPT
-#if LOG_STACK_USAGE
 /// def zero_unused_stack() -> None:
 ///     """
 ///     Zero unused stack memory.
 ///     """
 static mp_obj_t mod_trezorutils_zero_unused_stack(void) {
+#ifndef TREZOR_EMULATOR
   clear_unused_stack();
+#endif
   return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_zero_unused_stack_obj,
                                  mod_trezorutils_zero_unused_stack);
 
-/// def estimate_unused_stack() -> int:
-///     """
-///     Estimate unused stack size.
-///     """
+#if !PYOPT
+#if LOG_STACK_USAGE
+/// if __debug__:
+///     def estimate_unused_stack() -> int:
+///         """
+///         Estimate unused stack size.
+///         """
 static mp_obj_t mod_trezorutils_estimate_unused_stack(void) {
   const uint8_t *stack_top = (const uint8_t *)MP_STATE_THREAD(stack_top);
   size_t stack_limit = MP_STATE_THREAD(stack_limit);
@@ -975,10 +978,10 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_N4W1), mp_const_false},
 #endif
-#if !PYOPT
-#if LOG_STACK_USAGE
     {MP_ROM_QSTR(MP_QSTR_zero_unused_stack),
      MP_ROM_PTR(&mod_trezorutils_zero_unused_stack_obj)},
+#if !PYOPT
+#if LOG_STACK_USAGE
     {MP_ROM_QSTR(MP_QSTR_estimate_unused_stack),
      MP_ROM_PTR(&mod_trezorutils_estimate_unused_stack_obj)},
 #endif

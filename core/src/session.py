@@ -1,6 +1,8 @@
 # isort: skip_file
 from trezor import log, loop, utils, wire, workflow
 
+utils.zero_unused_stack()  # clear the stack between event loop restarts
+
 import apps.base
 from apps.common import lock_manager
 import usb

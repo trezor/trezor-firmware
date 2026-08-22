@@ -60,6 +60,7 @@ from trezorutils import (  # noqa: F401
     unit_color,
     unit_packaging,
     unit_production_date,
+    zero_unused_stack,
 )
 
 if USE_TELEMETRY:
@@ -86,7 +87,7 @@ if __debug__:
     )
 
     if LOG_STACK_USAGE:
-        from trezorutils import estimate_unused_stack, zero_unused_stack  # noqa: F401
+        from trezorutils import estimate_unused_stack  # noqa: F401
 
     if EMULATOR:
         import os
