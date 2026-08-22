@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from trezor.messages import StellarAsset
 
     from ..common import ExceptionType, PropertyType, StrPropertyType
-    from ..menu import Details
+    from ..menu import MenuLeaf
     from ..properties import AboveThreshold
     from ..slip24 import Refund, Trade
 
@@ -517,7 +517,7 @@ async def confirm_payment_request(
     menu_items = []
     if recipient_address is not None:
         menu_items.append(
-            create_details(TR.address__title_provider_address, recipient_address)
+            create_info_menu_leaf(TR.address__title_provider_address, recipient_address)
         )
     for refund in refunds:
         refund_account_items: list[StrPropertyType] = [("", refund.address, None)]
@@ -528,7 +528,7 @@ async def confirm_payment_request(
                 (TR.address_details__derivation_path, refund.account_path, None)
             )
         menu_items.append(
-            create_details(
+            create_info_menu_leaf(
                 TR.address__title_refund_address,
                 refund_account_items,
             )
@@ -875,7 +875,7 @@ async def confirm_value(
 
     menu_items = []
     for name, p, page_title in info_items or []:
-        menu_items.append(create_details(name, p, page_title))
+        menu_items.append(create_info_menu_leaf(name, p, page_title))
     menu = Menu.root(
         menu_items,
         cancel=Cancel.from_layout(
@@ -1002,9 +1002,11 @@ async def confirm_trade(
         account_items.append(
             (TR.address_details__derivation_path, trade.account_path, None)
         )
-    menu_items = [create_details(TR.address__title_receive_address, account_items)]
+    menu_items = [
+        create_info_menu_leaf(TR.address__title_receive_address, account_items)
+    ]
     for k, v in extra_menu_items:
-        menu_items.append(create_details(k, v))
+        menu_items.append(create_info_menu_leaf(k, v))
     menu = Menu.root(menu_items, TR.send__cancel_sign)
 
     with trade_ctx as trade_layout:
@@ -1369,7 +1371,7 @@ if not utils.BITCOIN_ONLY:
         account_info_items = _get_account_info_items(account, account_path)
         if account_info_items:
             menu_items.append(
-                create_details(
+                create_info_menu_leaf(
                     TR.address_details__account_info,
                     account_info_items[0][1],
                     title=TR.address_details__account_info,
@@ -1482,7 +1484,7 @@ if not utils.BITCOIN_ONLY:
         account_info_items = _get_account_info_items(account, account_path)
         if account_info_items:
             menu_items.append(
-                create_details(
+                create_info_menu_leaf(
                     TR.address_details__account_info,
                     account_info_items[0][1],
                     title=TR.address_details__account_info,
@@ -1579,8 +1581,8 @@ if not utils.BITCOIN_ONLY:
                 (TR.cardano__nonce, str(nonce), False),
             ]
             children = [
-                create_details(TR.address_details__account_info, account_info),
-                create_details(TR.buttons__more_info, more_info),
+                create_info_menu_leaf(TR.address_details__account_info, account_info),
+                create_info_menu_leaf(TR.buttons__more_info, more_info),
             ]
             await confirm_with_menu(
                 layout,
@@ -1603,8 +1605,8 @@ if not utils.BITCOIN_ONLY:
         ]
         menu = Menu.root(
             children=[
-                create_details(TR.address_details__account_info, account_info),
-                create_details(TR.cardano__nonce, str(nonce)),
+                create_info_menu_leaf(TR.address_details__account_info, account_info),
+                create_info_menu_leaf(TR.cardano__nonce, str(nonce)),
             ],
             cancel=TR.buttons__cancel,
         )
@@ -1885,7 +1887,7 @@ if not utils.BITCOIN_ONLY:
         account_info_items = _get_account_info_items(account, account_path)
         if account_info_items:
             menu_items.append(
-                create_details(
+                create_info_menu_leaf(
                     TR.address_details__account_info,
                     account_info_items[0][1],
                     title=TR.address_details__account_info,
@@ -2255,13 +2257,13 @@ async def confirm_signverify(
         external_menu=True,
     )
 
-    items: list[Details] = []
+    items: list[MenuLeaf] = []
     if account is not None:
-        items.append(create_details(TR.words__account, account))
+        items.append(create_info_menu_leaf(TR.words__account, account))
     if path is not None:
-        items.append(create_details(TR.address_details__derivation_path, path))
+        items.append(create_info_menu_leaf(TR.address_details__derivation_path, path))
     items.append(
-        create_details(
+        create_info_menu_leaf(
             TR.sign_message__message_size,
             TR.sign_message__bytes_template.format(len(message)),
         )
@@ -2504,14 +2506,14 @@ async def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> None:
         return await raise_if_not_confirmed(layout, "tutorial", br_code)
 
 
-def create_details(
+def create_info_menu_leaf(
     name: str,
     value: Sequence[StrPropertyType] | str,
     title: str | None = None,
-) -> Details:
-    from trezor.ui.layouts.menu import Details
+) -> MenuLeaf:
+    from trezor.ui.layouts.menu import MenuLeaf
 
-    return Details.from_layout(
+    return MenuLeaf.from_layout(
         name,
         lambda: trezorui_api.show_properties(title=(title or name), value=value),
     )
