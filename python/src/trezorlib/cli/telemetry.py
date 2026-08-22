@@ -63,3 +63,6 @@ def get(session: Session) -> None:
 
     if res.battery_cycles is not None:
         click.echo(f"Battery cycles: {res.battery_cycles / 1000:.2f}")
+
+    if res.tropic_alarms is not None:
+        click.echo(f"Tropic alarms: {res.tropic_alarms}")

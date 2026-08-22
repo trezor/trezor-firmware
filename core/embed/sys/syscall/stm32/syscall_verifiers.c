@@ -1491,6 +1491,17 @@ access_violation:
   apptask_access_violation();
   return false;
 }
+
+bool tropic_get_batch_id__verified(uint8_t *batch_id) {
+  if (!probe_write_access(batch_id, TROPIC_BATCH_ID_SIZE)) {
+    goto access_violation;
+  }
+
+  return tropic_get_batch_id(batch_id);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
 #endif
 
 #ifdef USE_APP_LOADING

@@ -31,6 +31,7 @@
 // Max size of data slot fixed to 444 B for backwards compatibility. From
 // Tropic's (RISCV) FW version >=2.0.0, 475 B can be utilized from each slot.
 #define TROPIC_SLOT_MAX_SIZE_V1 (444)
+#define TROPIC_BATCH_ID_SIZE 5
 
 // FIDO attestation key and certificate.
 #define TROPIC_FIDO_CERT_FIRST_SLOT 0
@@ -135,6 +136,8 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t* dig,
                      uint16_t dig_len, uint8_t* sig);
 
 bool tropic_data_read(uint16_t udata_slot, uint8_t* data, uint16_t* size);
+
+bool tropic_get_batch_id(uint8_t batch_id[TROPIC_BATCH_ID_SIZE]);
 
 bool tropic_data_multi_size(uint16_t first_slot, size_t* data_length);
 

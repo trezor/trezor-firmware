@@ -2106,6 +2106,7 @@ if TYPE_CHECKING:
         usb_connected: "bool | None"
         wireless_connected: "bool | None"
         tap_to_wake: "bool | None"
+        tropic_batch_id: "AnyBytes | None"
 
         def __init__(
             self,
@@ -2170,6 +2171,7 @@ if TYPE_CHECKING:
             usb_connected: "bool | None" = None,
             wireless_connected: "bool | None" = None,
             tap_to_wake: "bool | None" = None,
+            tropic_batch_id: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -6980,6 +6982,7 @@ if TYPE_CHECKING:
         max_temp_c: "int | None"
         battery_errors: "int | None"
         battery_cycles: "int | None"
+        tropic_alarms: "int | None"
 
         def __init__(
             self,
@@ -6988,6 +6991,7 @@ if TYPE_CHECKING:
             max_temp_c: "int | None" = None,
             battery_errors: "int | None" = None,
             battery_cycles: "int | None" = None,
+            tropic_alarms: "int | None" = None,
         ) -> None:
             pass
 
