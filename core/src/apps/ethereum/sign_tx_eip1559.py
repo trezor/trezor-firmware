@@ -213,9 +213,9 @@ async def _handle_eip7702(
 
     from trezor import TR
     from trezor.ui import layouts
-    from trezor.wire import DataError, ProcessError
+    from trezor.wire import DataError
 
-    from apps.common import paths, safety_checks
+    from apps.common import paths
 
     from .helpers import bytes_from_address, get_account_and_path
     from .networks import UNKNOWN_NETWORK
@@ -252,7 +252,6 @@ async def _handle_eip7702(
     delegate_addr = msg.auth7702.delegate
     delegate_bytes = bytes_from_address(delegate_addr)
     if delegate_bytes == b"\x00" * 20:  # -> revocation
-        # revocation can be done with strict safety checks
         await layouts.confirm_ethereum_eip7702_revoke(
             network_item=network_item,
             account=account,
@@ -260,11 +259,6 @@ async def _handle_eip7702(
             nonce=nonce,
         )
     else:
-        if safety_checks.is_strict():
-            raise ProcessError(
-                "EIP-7702 authorisation not allowed with strict safety checks"
-            )
-
         delegate_name = lookup_eip7702_address(chain_id, delegate_bytes)
         if delegate_name is None:
             raise DataError("Unknown EIP-7702 delegate address")

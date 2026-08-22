@@ -21,7 +21,7 @@ from trezorlib._rlp import encode
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.ethereum import decode_hex
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.messages import EthereumAuth7702, PaymentRequest, SafetyCheckLevel
+from trezorlib.messages import EthereumAuth7702, PaymentRequest
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -32,10 +32,6 @@ pytestmark = [
     pytest.mark.ethereum,
     pytest.mark.models("core", reason="T1 does not support EIP 7702"),
 ]
-
-
-def is_revocation(parameters: dict) -> bool:
-    return parameters["delegate"] == "0x0000000000000000000000000000000000000000"
 
 
 # Test vectors validated with Foundry
@@ -73,20 +69,6 @@ def test_sign_eip7702(session: Session, parameters: dict, result: dict):
 
     device.apply_settings(session, experimental_features=True)
 
-    # Revocation doesn't require disabling strict safety checks.
-    if not is_revocation(parameters):
-        with pytest.raises(
-            TrezorFailure,
-            match="ProcessError: EIP-7702 authorisation not allowed with strict safety checks",
-        ):
-            _sign()
-
-        # Authorization requires disabling strict safety checks.
-        device.apply_settings(
-            session,
-            safety_checks=SafetyCheckLevel.PromptTemporarily,
-        )
-
     res = _sign()
     [auth7702_tuple] = res.auth7702_list
     chain_id, delegate, nonce, y_parity, r, s = auth7702_tuple
@@ -100,11 +82,7 @@ def test_sign_eip7702(session: Session, parameters: dict, result: dict):
 
 @parametrize_using_common_fixtures("ethereum/sign_auth_eip7702_errors.json")
 def test_sign_eip7702_errors(session: Session, parameters, result):
-    device.apply_settings(
-        session,
-        safety_checks=SafetyCheckLevel.PromptTemporarily,
-        experimental_features=True,
-    )
+    device.apply_settings(session, experimental_features=True)
 
     assert result["error"]  # make sure it's not an empty string
     with pytest.raises(TrezorFailure, match=result["error"]):
@@ -133,17 +111,7 @@ def test_sign_eip7702_errors(session: Session, parameters, result):
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_eip7702_mainnet.json")
 def test_sign_eip7702_mainnet(session: Session, parameters: dict, result: dict):
-    # Authorization requires disabling strict safety checks.
-    if is_revocation(parameters):
-        safety_checks = SafetyCheckLevel.Strict
-    else:
-        safety_checks = SafetyCheckLevel.PromptTemporarily
-
-    device.apply_settings(
-        session,
-        safety_checks=safety_checks,
-        experimental_features=True,
-    )
+    device.apply_settings(session, experimental_features=True)
 
     res = ethereum.sign_tx_eip1559(
         session,
