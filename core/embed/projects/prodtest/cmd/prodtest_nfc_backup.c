@@ -647,11 +647,19 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
   TSH_CHECK_ARG(*psk != NULL);
   bool noise_status = false;
 
-  // Generate static private key for initiator
-  uint8_t static_private_key[NOISE_XXPSK3_DHLEN] = {0};
-  rng_fill_buffer(static_private_key, sizeof(static_private_key));
+  // Test static keypair for Noise XXPSK3 handshake.
+  uint8_t static_private_key[NOISE_XXPSK3_DHLEN] = {
+      0x43, 0xa1, 0x7e, 0x8a, 0xad, 0x8b, 0xf5, 0xb0, 0x26, 0x12, 0xfe,
+      0x6d, 0xeb, 0x77, 0xcd, 0xc0, 0x84, 0x59, 0xad, 0x05, 0xf4, 0xd6,
+      0xb7, 0x32, 0xc5, 0xb4, 0xa2, 0xe1, 0xbf, 0xec, 0x99, 0x7b};
 
-  noise_status = noise_xxpsk3_initiator_init(&intr, *psk, static_private_key);
+  uint8_t static_public_key[NOISE_XXPSK3_DHLEN] = {
+      0x8a, 0xd7, 0x10, 0xc4, 0xcd, 0xa6, 0x35, 0xf7, 0x3f, 0x06, 0x04,
+      0x99, 0x4f, 0x79, 0xbd, 0x19, 0xe9, 0xba, 0xfa, 0x10, 0x9c, 0xef,
+      0xe4, 0x22, 0xdd, 0x60, 0x86, 0x63, 0xc2, 0xe1, 0xa4, 0x58};
+
+  noise_status = noise_xxpsk3_initiator_init(&intr, *psk, static_private_key,
+                                             static_public_key);
   TSH_CHECK(noise_status, TS_EINVAL);
 
   uint8_t request[256] = {0};
@@ -670,17 +678,24 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
   status = nfc_transceive(&cmd, &rsp);
   TSH_CHECK_OK(status);
 
+  uint8_t card_public_key[NOISE_XXPSK3_DHLEN] = {0};
+
   uint8_t certificate[512] = {0};
   size_t certificate_size = 0;
 
   noise_status = noise_xxpsk3_initiator_handle_response1(
-      &intr, rsp.data, rsp.data_len - 2, certificate, sizeof(certificate),
-      &certificate_size);
+      &intr, rsp.data, rsp.data_len - 2, card_public_key, certificate,
+      sizeof(certificate), &certificate_size);
   TSH_CHECK(noise_status, TS_EINVAL);
 
   nfc_backup_certificate_t cert = {0};
   parse_x509_certificate(certificate, certificate_size, &cert);
   print_certificate(cli, &cert);
+
+  if (memcmp(cert.public_key, card_public_key, NOISE_XXPSK3_DHLEN) != 0) {
+    cli_trace(cli, "Card public key does not match certificate public key.");
+    TSH_CHECK(false, TS_EINVAL);
+  }
 
   noise_status = noise_xxpsk3_initiator_create_request2(
       &intr, NULL, 0, request, sizeof(request), &request_size);
