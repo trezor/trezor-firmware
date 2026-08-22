@@ -143,27 +143,27 @@ void nrf_spi_deinit(void) {
   NRF_SPI_CLK_DIS();
 }
 
-int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
-                     uint32_t len, nrf_tx_callback_t callback, void *context) {
+bool nrf_send_msg(nrf_service_id_t service, const uint8_t *data, uint32_t len,
+                  nrf_tx_callback_t callback, void *context) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {
-    return -1;
+    return false;
   }
 
   if (len > NRF_MAX_TX_DATA_SIZE) {
-    return -1;
+    return false;
   }
 
   if (service > NRF_SERVICE_CNT) {
-    return -1;
+    return false;
   }
 
   if (!nrf_is_running()) {
-    return -1;
+    return false;
   }
 
   if (!drv->comm_running) {
-    return -1;
+    return false;
   }
 
   int32_t id = 0;
@@ -189,7 +189,7 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
   }
   irq_unlock(key);
 
-  return id;
+  return true;
 }
 
 bool nrf_abort_msg(int32_t id) {
