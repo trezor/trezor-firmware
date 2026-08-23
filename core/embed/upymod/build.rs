@@ -72,6 +72,10 @@ fn main() -> Result<()> {
             lib.add_define("USE_N4W1", Some("1"));
         }
 
+        if cfg!(feature = "nfc") {
+            lib.add_define("USE_NFC", Some("1"));
+        }
+
         lib.add_define(
             "MICROPY_ENABLE_SOURCE_LINE",
             Some(if cfg!(feature = "enable_source_lines") {
@@ -968,6 +972,7 @@ impl<'a> MpyBuilder<'a> {
         let touch_wakeup = py_bool(cfg!(feature = "touch_wakeup"));
         let tropic = py_bool(cfg!(feature = "tropic"));
         let scm_revision_xor2 = self.scm_revision_xor2;
+        let nfc = py_bool(cfg!(feature = "nfc"));
 
         let layout_bolt = py_bool(cfg!(feature = "layout_bolt"));
         let layout_caesar = py_bool(cfg!(feature = "layout_caesar"));
@@ -991,6 +996,7 @@ impl<'a> MpyBuilder<'a> {
             format!(r"s/utils\.USE_TOUCH_WAKEUP/{touch_wakeup}/g"), // must be before USE_TOUCH
             format!(r"s/utils\.USE_TOUCH/{touch}/g"),
             format!(r"s/utils\.USE_TROPIC/{tropic}/g"),
+            format!(r"s/utils\.USE_NFC/{nfc}/g"),
             format!(r"s/utils\.SCM_REVISION_XOR2/{scm_revision_xor2}/g"),
             format!(r#"s/utils\.UI_LAYOUT == "BOLT"/{layout_bolt}/g"#),
             format!(r#"s/utils\.UI_LAYOUT == "CAESAR"/{layout_caesar}/g"#),

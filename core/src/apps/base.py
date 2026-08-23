@@ -163,7 +163,7 @@ def get_features() -> Features:
     if utils.USE_BLE:
         f.capabilities.append(Capability.BLE)
 
-    if utils.INTERNAL_MODEL == "T3W1":  # TODO utils.USE_NFC
+    if utils.USE_NFC:
         f.capabilities.append(Capability.NFC)
 
     if utils.USE_N4W1:

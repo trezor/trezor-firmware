@@ -23,6 +23,7 @@ uses = [
     "layout_eckhart",
     "lockable_bootloader",
     "mcu_attestation",
+    "nfc",
     "nrf",
     "optiga",
     "power_manager",
