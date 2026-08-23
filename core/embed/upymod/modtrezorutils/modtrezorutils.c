@@ -814,6 +814,8 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Firmware version as a tuple (major, minor, patch, build)."""
 /// USE_BLE: bool
 /// """Whether the hardware supports BLE."""
+/// USE_NFC: bool
+/// """Whether the hardware supports NFC."""
 /// USE_SD_CARD: bool
 /// """Whether the hardware supports SD card."""
 /// USE_SERIAL_NUMBER: bool
@@ -1010,6 +1012,11 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_BLE), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_BLE), mp_const_false},
+#endif
+#ifdef USE_NFC
+    {MP_ROM_QSTR(MP_QSTR_USE_NFC), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_NFC), mp_const_false},
 #endif
 #ifdef USE_BACKLIGHT
     {MP_ROM_QSTR(MP_QSTR_USE_BACKLIGHT), mp_const_true},

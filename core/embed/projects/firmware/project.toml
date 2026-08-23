@@ -69,7 +69,7 @@ force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 frozen                        = { true = ["frozen"] }
 log-stack-usage               = { true = ["log_stack_usage"] }
 mem-perf                      = { true = ["memperf"] }
-n1w1                          = { true = ["n1w1"] }
+n1w1                          = { true = ["n1w1", "nfc"] }  # TODO: move back to `uses` section (after stabilization)
 perf-overlay                  = { true = ["ui_performance_overlay"] }
 production                    = { true = ["production"], false = ["dev_keys"] }
 pyopt                         = { true = ["pyopt"], false = ["debug", "optiga_testing", "ui_debug_overlay"] }
