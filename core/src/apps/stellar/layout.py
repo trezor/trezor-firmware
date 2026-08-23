@@ -8,7 +8,7 @@ from trezor.wire import DataError, ProcessError
 from apps.common.paths import address_n_to_str
 
 from . import consts
-from .helpers import resolve_sep41_token
+from .tokens import resolve_sep41_token
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
