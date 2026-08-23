@@ -564,7 +564,6 @@ if TYPE_CHECKING:
 
         multisig_account: Account
         rent_sysvar: Account
-        signer_accounts: Account
 
     class TokenProgramTransferInstruction(Instruction):
         amount: int
@@ -684,7 +683,6 @@ if TYPE_CHECKING:
 
         multisig_account: Account
         rent_sysvar: Account
-        signer_accounts: Account
 
     class Token2022ProgramTransferInstruction(Instruction):
         amount: int
@@ -2492,8 +2490,8 @@ def get_instruction(
                         (),
                     ),
                 ),
-                3,
-                ("multisig_account", "rent_sysvar", "signer_accounts"),
+                2,
+                ("multisig_account", "rent_sysvar"),
                 (
                     UIProperty(
                         None,
@@ -2505,12 +2503,6 @@ def get_instruction(
                         "number_of_signers",
                         None,
                         "Threshold",
-                        None,
-                    ),
-                    UIProperty(
-                        None,
-                        "signer_accounts",
-                        "Signers",
                         None,
                     ),
                 ),
@@ -3359,8 +3351,8 @@ def get_instruction(
                         (),
                     ),
                 ),
-                3,
-                ("multisig_account", "rent_sysvar", "signer_accounts"),
+                2,
+                ("multisig_account", "rent_sysvar"),
                 (
                     UIProperty(
                         None,
@@ -3372,12 +3364,6 @@ def get_instruction(
                         "number_of_signers",
                         None,
                         "Threshold",
-                        None,
-                    ),
-                    UIProperty(
-                        None,
-                        "signer_accounts",
-                        "Signers",
                         None,
                     ),
                 ),

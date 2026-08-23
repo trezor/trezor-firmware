@@ -199,7 +199,7 @@ The `programs.json` file serves as a structured configuration file in the Solana
   - `instructions`: An array of instructions associated with the Solana program.
     - `id`: A numeric identifier for the instruction derived from the Rust implementation of the corresponding program.
     - `name`: The name of the instruction, providing a human-readable label.
-    - `is_multisig`: A boolean indicating whether the instruction is a multisig instruction.
+    - `trailing_references`: A boolean indicating whether the instruction accepts additional account references beyond those listed in `references` (e.g. multisig signers for Token program instructions, or the accounts of a newly created multisig).
     - `is_deprecated_warning`: Optional, contains a warning message when the instruction is deprecated
     - `parameters`: Describes the parameters required for this instruction.
       - `name`: The parameter name.
