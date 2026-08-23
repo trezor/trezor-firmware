@@ -10,11 +10,11 @@ if not utils.BITCOIN_ONLY:
         NETWORK_PASSPHRASE_PUBLIC,
         NETWORK_PASSPHRASE_TESTNET,
     )
-    from apps.stellar.helpers import sac_address_from_asset
+    from apps.stellar.tokens import sac_address_from_asset
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestStellarHelpers(unittest.TestCase):
+class TestStellarTokens(unittest.TestCase):
     # Expected addresses cross-checked against stellar_sdk's
     # Asset.contract_id(); the PUBLIC USDC one is Circle's well-known SAC.
     def test_sac_address_from_asset(self):
