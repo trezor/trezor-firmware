@@ -42,7 +42,7 @@ def create_mock_instruction(
         is_program_supported=True,
         is_instruction_supported=True,
         is_ui_hidden=False,
-        supports_multisig=False,
+        supports_trailing_accounts=False,
         is_deprecated_warning=None,
     )
 

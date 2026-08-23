@@ -32,7 +32,7 @@
                 "token_mint": 0,
                 "destination_account": 0,
                 "owner": 0,
-                "multisig_signers": []
+                "trailing_accounts": []
               },
               "data": {
                 "instruction_id": 12,
@@ -83,7 +83,7 @@
                 "token_mint": 0,
                 "destination_account": 0,
                 "owner": 0,
-                "multisig_signers": []
+                "trailing_accounts": []
               },
               "data": {
                 "instruction_id": 12,
@@ -98,7 +98,7 @@
                 "token_mint": 0,
                 "destination_account": 0,
                 "owner": 0,
-                "multisig_signers": []
+                "trailing_accounts": []
               },
               "data": {
                 "instruction_id": 12,

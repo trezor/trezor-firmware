@@ -205,7 +205,7 @@
           "accounts": {
             "funding_account": 0,
             "recipient_account": 2,
-            "multisig_signers": [1]
+            "trailing_accounts": [1]
           },
           "data": {
             "instruction_id": 2,

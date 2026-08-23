@@ -239,7 +239,7 @@ async def try_confirm_predefined_transaction(
     instructions_count = len(instructions)
 
     for instruction in instructions:
-        if instruction.multisig_signers:
+        if instruction.trailing_accounts:
             return False
 
     if instructions_count == 1:

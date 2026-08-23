@@ -89,8 +89,8 @@ ${camelcase(program.name)}_${camelcase(instruction.name)} = Struct(
         % for reference in instruction.references[instruction.references_required:]:
         "${reference}" / Optional(Byte),
         % endfor
-        % if instruction.is_multisig:
-        "multisig_signers" / Optional(GreedyRange(Byte))
+        % if instruction.trailing_references:
+        "trailing_accounts" / Optional(GreedyRange(Byte))
         % endif
     ),
     "data" / CompactStruct(
