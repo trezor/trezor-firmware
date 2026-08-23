@@ -67,6 +67,19 @@ static inline bool probe_execute_access_opt(const void *addr) {
   return (addr == NULL) || probe_execute_access(addr);
 }
 
+// Variant for a buffer argument that may legitimately be empty. An empty
+// buffer arrives as NULL from both `mp_buffer_info_t` and Rust's `CSlice`,
+// which coerce a zero-length buffer to a NULL pointer. NULL is therefore
+// accepted, but only together with a zero length, so the implementation can
+// never be handed a NULL it would read from.
+
+static inline bool probe_read_access_or_empty(const void *addr, size_t len) {
+  if (addr == NULL) {
+    return len == 0;
+  }
+  return probe_read_access(addr, len);
+}
+
 // Handles access violation by exiting the current application task
 // with a fatal error and the message "Access violation".
 void handle_access_violation(const char *file, int line);

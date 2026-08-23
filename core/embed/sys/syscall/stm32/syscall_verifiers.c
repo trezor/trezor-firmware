@@ -149,7 +149,8 @@ access_violation:
 
 ssize_t syslog_write_chunk__verified(const char *text, size_t text_len,
                                      bool end_record) {
-  if (!probe_read_access(text, text_len)) {
+  // A record is terminated with an empty chunk, which arrives as NULL.
+  if (!probe_read_access_or_empty(text, text_len)) {
     goto access_violation;
   }
 
@@ -901,7 +902,9 @@ access_violation:
 
 int firmware_hash_start__verified(const uint8_t *challenge,
                                   size_t challenge_len) {
-  if (!probe_read_access(challenge, challenge_len)) {
+  // The challenge is optional; without one it arrives as an empty buffer,
+  // which `firmware_hash_start()` never reads from.
+  if (!probe_read_access_or_empty(challenge, challenge_len)) {
     goto access_violation;
   }
 
@@ -1088,6 +1091,53 @@ bool nrf_update__verified(const uint8_t *data, size_t len) {
 access_violation:
   apptask_access_violation();
   return false;
+}
+
+#endif
+
+// ---------------------------------------------------------------------
+
+#ifdef USE_NFC
+
+bool nfc_get_event__verified(nfc_event_t *event) {
+  if (!probe_write_access(event, sizeof(*event))) {
+    goto access_violation;
+  }
+
+  return nfc_get_event(event);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+ts_t nfc_get_device_info__verified(nfc_dev_info_t *dev_info) {
+  if (!probe_write_access(dev_info, sizeof(*dev_info))) {
+    goto access_violation;
+  }
+
+  return nfc_get_device_info(dev_info);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t nfc_transceive__verified(const nfc_apdu_message_t *cmd,
+                              nfc_apdu_message_t *resp) {
+  if (!probe_read_access(cmd, sizeof(*cmd))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(resp, sizeof(*resp))) {
+    goto access_violation;
+  }
+
+  return nfc_transceive(cmd, resp);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
 }
 
 #endif
