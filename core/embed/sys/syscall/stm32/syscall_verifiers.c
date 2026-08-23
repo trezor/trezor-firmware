@@ -1097,6 +1097,53 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_NFC
+
+bool nfc_get_event__verified(nfc_event_t *event) {
+  if (!probe_write_access(event, sizeof(*event))) {
+    goto access_violation;
+  }
+
+  return nfc_get_event(event);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+ts_t nfc_get_device_info__verified(nfc_dev_info_t *dev_info) {
+  if (!probe_write_access(dev_info, sizeof(*dev_info))) {
+    goto access_violation;
+  }
+
+  return nfc_get_device_info(dev_info);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t nfc_transceive__verified(const nfc_apdu_message_t *cmd,
+                              nfc_apdu_message_t *resp) {
+  if (!probe_read_access(cmd, sizeof(*cmd))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(resp, sizeof(*resp))) {
+    goto access_violation;
+  }
+
+  return nfc_transceive(cmd, resp);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+#endif
+
+// ---------------------------------------------------------------------
+
 #ifdef USE_POWER_MANAGER
 
 pm_status_t pm_get_state__verified(pm_state_t *status) {

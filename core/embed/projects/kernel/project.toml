@@ -16,6 +16,7 @@ uses = [
     "hw_jpeg_decoder",
     "lockable_bootloader",
     "mcu_attestation",
+    "nfc",
     "nrf",
     "nrf_auth",
     "optiga",
