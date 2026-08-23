@@ -3039,7 +3039,6 @@
     "solana__expected_fee": "Frais attendus",
     "solana__instruction_accounts_template": "L'instruction contient {0} comptes et ses données font {1} octets.",
     "solana__instruction_data": "Données d'instruction",
-    "solana__instruction_is_multisig": "L'instruction suivante est une instruction multisig.",
     "solana__is_provided_via_lookup_table_template": "{0} est fourni via une table de correspondance.",
     "solana__lookup_table_address": {
       "Bolt": "Adresse de table de correspondance",

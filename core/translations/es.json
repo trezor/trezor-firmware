@@ -2819,7 +2819,6 @@
     "solana__expected_fee": "Comisión esperada",
     "solana__instruction_accounts_template": "La instrucción contiene {0} cuentas y sus datos tienen {1} bytes.",
     "solana__instruction_data": "Datos de instrucción",
-    "solana__instruction_is_multisig": "La siguiente instrucción es una instrucción multifirma.",
     "solana__is_provided_via_lookup_table_template": "Se proporciona {0} a través de una tabla de consulta.",
     "solana__lookup_table_address": "Dirección de la tabla de consulta",
     "solana__max_fees_rent": "Comisiones máximas y renta",

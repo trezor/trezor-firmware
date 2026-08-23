@@ -902,7 +902,6 @@ class TR:
     solana__expected_fee: str = "Expected fee"
     solana__instruction_accounts_template: str = "Instruction contains {0} accounts and its data is {1} bytes long."
     solana__instruction_data: str = "Instruction data"
-    solana__instruction_is_multisig: str = "The following instruction is a multisig instruction."
     solana__is_provided_via_lookup_table_template: str = "{0} is provided via a lookup table."
     solana__lookup_table_address: str = "Lookup table address"
     solana__max_fees_rent: str = "Max fees and rent"

@@ -1471,7 +1471,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__expected_fee;
   MP_QSTR_solana__instruction_accounts_template;
   MP_QSTR_solana__instruction_data;
-  MP_QSTR_solana__instruction_is_multisig;
   MP_QSTR_solana__is_provided_via_lookup_table_template;
   MP_QSTR_solana__lookup_table_address;
   MP_QSTR_solana__max_fees_rent;

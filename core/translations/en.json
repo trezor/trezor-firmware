@@ -2839,7 +2839,6 @@
     "solana__expected_fee": "Expected fee",
     "solana__instruction_accounts_template": "Instruction contains {0} accounts and its data is {1} bytes long.",
     "solana__instruction_data": "Instruction data",
-    "solana__instruction_is_multisig": "The following instruction is a multisig instruction.",
     "solana__is_provided_via_lookup_table_template": "{0} is provided via a lookup table.",
     "solana__lookup_table_address": "Lookup table address",
     "solana__max_fees_rent": "Max fees and rent",

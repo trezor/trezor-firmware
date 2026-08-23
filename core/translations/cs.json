@@ -2809,7 +2809,6 @@
     "solana__expected_fee": "Očekávaný poplatek",
     "solana__instruction_accounts_template": "Pokyn obsahuje účty ({0}) a jeho data mají velikost {1} bajtů.",
     "solana__instruction_data": "Pokyny",
-    "solana__instruction_is_multisig": "Následující pokyn představuje pokyn multisig.",
     "solana__is_provided_via_lookup_table_template": "{0} pochází z vyhledávací tabulky.",
     "solana__lookup_table_address": "Adresa vyhledávací tabulky",
     "solana__max_fees_rent": "Maximalní poplatky a nájemné",
