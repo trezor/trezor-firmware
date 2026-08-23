@@ -173,7 +173,7 @@
                 "token_mint": 3,
                 "destination_account": 2,
                 "owner": 0,
-                "multisig_signers": []
+                "trailing_accounts": []
               },
               "data": {
                 "instruction_id": 12,
@@ -243,7 +243,7 @@
                 "token_mint": 3,
                 "destination_account": 2,
                 "owner": 0,
-                "multisig_signers": []
+                "trailing_accounts": []
               },
               "data": {
                 "instruction_id": 12,

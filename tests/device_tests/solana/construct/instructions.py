@@ -92,7 +92,7 @@ SystemProgram_Transfer = Struct(
     / CompactStruct(
         "funding_account" / Byte,
         "recipient_account" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -626,8 +626,7 @@ TokenProgram_InitializeMultisig = Struct(
     / CompactStruct(
         "multisig_account" / Byte,
         "rent_sysvar" / Byte,
-        "signer_accounts" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -643,7 +642,7 @@ TokenProgram_Transfer = Struct(
         "source_account" / Byte,
         "destination_account" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -659,7 +658,7 @@ TokenProgram_Approve = Struct(
         "source_account" / Byte,
         "delegate_account" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -674,7 +673,7 @@ TokenProgram_Revoke = Struct(
     / CompactStruct(
         "source_account" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -688,7 +687,7 @@ TokenProgram_SetAuthority = Struct(
     / CompactStruct(
         "mint_account" / Byte,
         "current_authority" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -705,7 +704,7 @@ TokenProgram_MintTo = Struct(
         "mint" / Byte,
         "account_to_mint" / Byte,
         "minting_authority" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -721,7 +720,7 @@ TokenProgram_Burn = Struct(
         "account_to_burn_from" / Byte,
         "token_mint" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -737,7 +736,7 @@ TokenProgram_CloseAccount = Struct(
         "account_to_close" / Byte,
         "destination_account" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -752,7 +751,7 @@ TokenProgram_FreezeAccount = Struct(
         "account_to_freeze" / Byte,
         "token_mint" / Byte,
         "freeze_authority" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -767,7 +766,7 @@ TokenProgram_ThawAccount = Struct(
         "account_to_freeze" / Byte,
         "token_mint" / Byte,
         "freeze_authority" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -783,7 +782,7 @@ TokenProgram_TransferChecked = Struct(
         "token_mint" / Byte,
         "destination_account" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -801,7 +800,7 @@ TokenProgram_ApproveChecked = Struct(
         "token_mint" / Byte,
         "delegate" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -818,7 +817,7 @@ TokenProgram_MintToChecked = Struct(
         "mint" / Byte,
         "account_to_mint" / Byte,
         "minting_authority" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -835,7 +834,7 @@ TokenProgram_BurnChecked = Struct(
         "account_to_burn_from" / Byte,
         "token_mint" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -969,8 +968,7 @@ Token2022Program_InitializeMultisig = Struct(
     / CompactStruct(
         "multisig_account" / Byte,
         "rent_sysvar" / Byte,
-        "signer_accounts" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -986,7 +984,7 @@ Token2022Program_Transfer = Struct(
         "source_account" / Byte,
         "destination_account" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1002,7 +1000,7 @@ Token2022Program_Approve = Struct(
         "source_account" / Byte,
         "delegate_account" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1017,7 +1015,7 @@ Token2022Program_Revoke = Struct(
     / CompactStruct(
         "source_account" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1031,7 +1029,7 @@ Token2022Program_SetAuthority = Struct(
     / CompactStruct(
         "mint_account" / Byte,
         "current_authority" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1048,7 +1046,7 @@ Token2022Program_MintTo = Struct(
         "mint" / Byte,
         "account_to_mint" / Byte,
         "minting_authority" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1064,7 +1062,7 @@ Token2022Program_Burn = Struct(
         "account_to_burn_from" / Byte,
         "token_mint" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1080,7 +1078,7 @@ Token2022Program_CloseAccount = Struct(
         "account_to_close" / Byte,
         "destination_account" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1095,7 +1093,7 @@ Token2022Program_FreezeAccount = Struct(
         "account_to_freeze" / Byte,
         "token_mint" / Byte,
         "freeze_authority" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1110,7 +1108,7 @@ Token2022Program_ThawAccount = Struct(
         "account_to_freeze" / Byte,
         "token_mint" / Byte,
         "freeze_authority" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1126,7 +1124,7 @@ Token2022Program_TransferChecked = Struct(
         "token_mint" / Byte,
         "destination_account" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1144,7 +1142,7 @@ Token2022Program_ApproveChecked = Struct(
         "token_mint" / Byte,
         "delegate" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1161,7 +1159,7 @@ Token2022Program_MintToChecked = Struct(
         "mint" / Byte,
         "account_to_mint" / Byte,
         "minting_authority" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -1178,7 +1176,7 @@ Token2022Program_BurnChecked = Struct(
         "account_to_burn_from" / Byte,
         "token_mint" / Byte,
         "owner" / Byte,
-        "multisig_signers" / Optional(GreedyRange(Byte)),
+        "trailing_accounts" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
