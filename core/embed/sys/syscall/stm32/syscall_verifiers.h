@@ -276,8 +276,22 @@ bool nrf_update_required__verified(const uint8_t *data, size_t len);
 bool nrf_update__verified(const uint8_t *data, size_t len);
 
 #endif
-// ---------------------------------------------------------------------
 
+// ---------------------------------------------------------------------
+#ifdef USE_NFC
+
+#include <io/nfc.h>
+
+bool nfc_get_event__verified(nfc_event_t *event);
+
+ts_t nfc_get_device_info__verified(nfc_dev_info_t *dev_info);
+
+ts_t nfc_transceive__verified(const nfc_apdu_message_t *cmd,
+                              nfc_apdu_message_t *resp);
+
+#endif
+
+// ---------------------------------------------------------------------
 #ifdef USE_POWER_MANAGER
 
 #include <io/power_manager.h>
