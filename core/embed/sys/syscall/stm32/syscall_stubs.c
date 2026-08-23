@@ -813,6 +813,38 @@ void nrf_reboot(void) { syscall_invoke0(SYSCALL_NRF_REBOOT); }
 
 #endif
 
+#ifdef USE_NFC
+
+#include <io/nfc.h>
+
+ts_t nfc_init(void) { return ts_make(syscall_invoke0(SYSCALL_NFC_INIT)); }
+
+void nfc_deinit(void) { syscall_invoke0(SYSCALL_NFC_DEINIT); }
+
+ts_t nfc_start_discovery(void) {
+  return ts_make(syscall_invoke0(SYSCALL_NFC_START_DISCOVERY));
+}
+
+ts_t nfc_stop_discovery(void) {
+  return ts_make(syscall_invoke0(SYSCALL_NFC_STOP_DISCOVERY));
+}
+
+bool nfc_get_event(nfc_event_t *event) {
+  return (bool)syscall_invoke1((uint32_t)event, SYSCALL_NFC_GET_EVENT);
+}
+
+ts_t nfc_get_device_info(nfc_dev_info_t *dev_info) {
+  return ts_make(
+      syscall_invoke1((uint32_t)dev_info, SYSCALL_NFC_GET_DEVICE_INFO));
+}
+
+ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp) {
+  return ts_make(
+      syscall_invoke2((uint32_t)cmd, (uint32_t)resp, SYSCALL_NFC_TRANSCEIVE));
+}
+
+#endif
+
 // =============================================================================
 // power_manager.h
 // =============================================================================

@@ -50,6 +50,10 @@
 #include <io/nrf.h>
 #endif
 
+#ifdef USE_NFC
+#include <io/nfc.h>
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
@@ -819,6 +823,35 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_NRF_REBOOT: {
       nrf_reboot();
+    } break;
+
+#endif
+
+#ifdef USE_NFC
+    case SYSCALL_NFC_INIT: {
+      args[0] = ts_code(nfc_init());
+    } break;
+    case SYSCALL_NFC_DEINIT: {
+      nfc_deinit();
+    } break;
+    case SYSCALL_NFC_START_DISCOVERY: {
+      args[0] = ts_code(nfc_start_discovery());
+    } break;
+    case SYSCALL_NFC_STOP_DISCOVERY: {
+      args[0] = ts_code(nfc_stop_discovery());
+    } break;
+    case SYSCALL_NFC_GET_EVENT: {
+      nfc_event_t *event = (nfc_event_t *)args[0];
+      args[0] = nfc_get_event__verified(event);
+    } break;
+    case SYSCALL_NFC_GET_DEVICE_INFO: {
+      nfc_dev_info_t *dev_info = (nfc_dev_info_t *)args[0];
+      args[0] = ts_code(nfc_get_device_info__verified(dev_info));
+    } break;
+    case SYSCALL_NFC_TRANSCEIVE: {
+      const nfc_apdu_message_t *cmd = (const nfc_apdu_message_t *)args[0];
+      nfc_apdu_message_t *resp = (nfc_apdu_message_t *)args[1];
+      args[0] = ts_code(nfc_transceive__verified(cmd, resp));
     } break;
 
 #endif
