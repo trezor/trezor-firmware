@@ -17,8 +17,9 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
     from typing import Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
-    from trezor.messages import StellarAsset
     from trezor.ui.layouts.menu import Details
+
+    from apps.stellar.tokens import StellarToken
 
     from ..common import ExceptionType, PropertyType, StrPropertyType
     from ..properties import AboveThreshold
@@ -1914,21 +1915,15 @@ if not utils.BITCOIN_ONLY:
         title: str,
         subtitle: str,
         amount: str,
-        asset: StellarAsset,
+        token: StellarToken,
         description: str | None = None,
         token_contract: str | None = None,
     ) -> None:
-        from trezor.enums import StellarAssetType
-
         info_items = []
-        if asset.type != StellarAssetType.NATIVE:
-            info_items = [
-                (
-                    TR.stellar__issuer_template.format(asset.code),
-                    asset.issuer or "",
-                    None,
-                )
-            ]
+        if token.issuer is not None:
+            info_items.append(
+                (TR.stellar__issuer_template.format(token.symbol), token.issuer, None)
+            )
         if token_contract:
             info_items.append((TR.stellar__token_contract, token_contract, None))
 
@@ -1950,7 +1945,7 @@ if not utils.BITCOIN_ONLY:
         address: str,
         amount: str,
         output_index: int,
-        asset: StellarAsset,
+        token: StellarToken,
         address_description: str | None = None,
         amount_description: str | None = None,
         token_contract: str | None = None,
@@ -1971,7 +1966,7 @@ if not utils.BITCOIN_ONLY:
             title=TR.words__send,
             subtitle=subtitle,
             amount=amount,
-            asset=asset,
+            token=token,
             description=amount_description or TR.words__amount,
             token_contract=token_contract,
         )

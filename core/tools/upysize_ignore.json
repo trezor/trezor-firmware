@@ -110,10 +110,6 @@
         "src/apps/nem/writers.py": [
             "write_bytes_with_len"
         ],
-        "src/apps/stellar/layout.py": [
-            "format_asset",
-            "format_amount"
-        ],
         "src/apps/common/address_type.py": [
             "tobytes",
             "check"
