@@ -35,6 +35,10 @@
 #include <io/touch.h>
 #endif
 
+#ifdef USE_NFC
+#include <io/nfc.h>
+#endif
+
 #include <io/usb.h>
 
 #define CHECK_PARAM_RANGE(value, minimum, maximum) \
@@ -71,7 +75,18 @@
 #include "modtrezorio-poll.h"
 
 /// package: trezorio.__init__
-/// from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc, app_cache, touch
+/// from . import (
+///     app_cache,
+///     ble,
+///     fatfs,
+///     haptic,
+///     ipc,
+///     nfc,
+///     pm,
+///     rgb_led,
+///     sdcard,
+///     touch,
+/// )
 
 /// POLL_READ: int  # wait until interface is readable and return read data
 /// POLL_WRITE: int  # wait until interface is writable
@@ -80,6 +95,8 @@
 /// BLE_EVENT: int # interface id for BLE events
 ///
 /// PM_EVENT: int  # interface id for power manager events
+///
+/// NFC_EVENT: int  # interface id for NFC events
 ///
 /// IPC2_EVENT: int  # interface id for IPC2 events
 ///
@@ -137,6 +154,9 @@ static const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 #ifdef USE_POWER_MANAGER
     {MP_ROM_QSTR(MP_QSTR_pm), MP_ROM_PTR(&mod_trezorio_pm_module)},
     {MP_ROM_QSTR(MP_QSTR_PM_EVENT), MP_ROM_INT(SYSHANDLE_POWER_MANAGER)},
+#endif
+#ifdef USE_NFC
+    {MP_ROM_QSTR(MP_QSTR_NFC_EVENT), MP_ROM_INT(SYSHANDLE_NFC)},
 #endif
 #ifdef USE_IPC
     {MP_ROM_QSTR(MP_QSTR_IPC2_EVENT), MP_ROM_INT(SYSHANDLE_IPC2)},
