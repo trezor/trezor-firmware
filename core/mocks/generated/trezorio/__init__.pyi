@@ -108,7 +108,18 @@ class USB:
         """
         Cleans up the USB stack.
         """
-from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc, app_cache, touch
+from . import (
+    app_cache,
+    ble,
+    fatfs,
+    haptic,
+    ipc,
+    nfc,
+    pm,
+    rgb_led,
+    sdcard,
+    touch,
+)
 POLL_READ: int  # wait until interface is readable and return read data
 POLL_WRITE: int  # wait until interface is writable
 
@@ -116,6 +127,8 @@ BLE: int  # interface id of the BLE events
 BLE_EVENT: int # interface id for BLE events
 
 PM_EVENT: int  # interface id for power manager events
+
+NFC_EVENT: int  # interface id for NFC events
 
 IPC2_EVENT: int  # interface id for IPC2 events
 
