@@ -154,7 +154,7 @@ bool nrf_send_msg(nrf_service_id_t service, const uint8_t *data, uint32_t len,
     return false;
   }
 
-  if (service > NRF_SERVICE_CNT) {
+  if (service >= NRF_SERVICE_CNT) {
     return false;
   }
 
