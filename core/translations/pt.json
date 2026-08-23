@@ -2909,7 +2909,6 @@
     "solana__expected_fee": "Taxa esperada",
     "solana__instruction_accounts_template": "A instrução contém {0} contas e seus dados têm {1} bytes.",
     "solana__instruction_data": "Dados da instrução",
-    "solana__instruction_is_multisig": "A instrução a seguir é uma instrução multiass.",
     "solana__is_provided_via_lookup_table_template": "{0} é fornecido por meio de uma tabela de consulta.",
     "solana__lookup_table_address": "Endereço da tabela de consulta",
     "solana__max_fees_rent": "Taxas e aluguel máximos",
