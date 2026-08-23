@@ -36,6 +36,10 @@
 #include <io/power_manager.h>
 #endif
 
+#ifdef USE_NFC
+#include <io/nfc.h>
+#endif
+
 #ifdef USE_IPC
 #include <sys/ipc.h>
 #endif
@@ -240,6 +244,17 @@ static mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       if (pm_get_events(&pm_event)) {
         ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_POWER_MANAGER);
         ret->items[1] = mp_obj_new_int_from_uint(pm_event.all);
+        return mp_const_true;
+      }
+    }
+#endif
+
+#ifdef USE_NFC
+    if (signalled.read_ready & (1 << SYSHANDLE_NFC)) {
+      nfc_event_t nfc_event = NFC_NO_EVENT;
+      if (nfc_get_event(&nfc_event)) {
+        ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_NFC);
+        ret->items[1] = MP_OBJ_NEW_SMALL_INT(nfc_event);
         return mp_const_true;
       }
     }

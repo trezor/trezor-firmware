@@ -395,6 +395,8 @@ class Layout(Generic[T]):
             yield self._handle_ble_events()
         if utils.USE_POWER_MANAGER:
             yield self._handle_power_manager()
+        if utils.USE_NFC:
+            yield self._handle_nfc_events()
 
     if utils.USE_BUTTON:
 
@@ -458,6 +460,18 @@ class Layout(Generic[T]):
                             ",".join(ble.connection_flags()),
                         )
                     self._event(self.layout.ble_event, *event)
+            except Shutdown:
+                return
+
+    if utils.USE_NFC:
+
+        async def _handle_nfc_events(self) -> None:
+            nfc = loop.wait(io.NFC_EVENT)
+            try:
+                while True:
+                    event = await nfc
+                    if __debug__:
+                        log.debug(__name__, "NFC event: %s", event)
             except Shutdown:
                 return
 
