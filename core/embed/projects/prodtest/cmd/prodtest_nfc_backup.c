@@ -200,15 +200,6 @@ static ts_t nfc_poll_start(cli_t *cli) {
     return status;
   }
 
-  // Clear leftover events
-  nfc_event_t event_flag;
-  sysevents_t awaited_events = {0};
-  sysevents_t signalled_events = {0};
-
-  nfc_get_event(&event_flag);
-  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
-  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
-
   return TS_OK;
 }
 
