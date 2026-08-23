@@ -26,7 +26,7 @@
 // maximum data size allowed to be sent
 #define NRF_MAX_TX_DATA_SIZE (251)
 
-typedef enum {
+typedef enum : uint8_t {
   NRF_SERVICE_BLE = 0,
   NRF_SERVICE_BLE_MANAGER = 1,
   NRF_SERVICE_MANAGEMENT = 2,
