@@ -2656,6 +2656,60 @@
         "signature": "V8/e+0SaCFgaEQCZRvPq3b++X4LtnMeDBicaZV7g5vnJfita3nMrdacP5nQ9Ikg3dfqku8qPE350/y+Z/+NRCw=="
       },
       "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-solvbtc-transfer",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAASwAAAAAAAALwgAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAABUJCNuWl5ffQp4UubCGGQlOf1oePWbkmkbFiwPwbj+lYAAAAIdHJhbnNmZXIAAAADAAAAEgAAAAAAAAAALyK5xi8It3Tz6+bdbn25PD7Cy94CeVYaPZxSJbjDIpIAAAASAAAAAAAAAABdVWQkZrGFuEMVLp4hkVHbxYkgJ+xAEBpRe+1coDDC4AAAAAoAAAAAAAAAAAAAAAAAvGFOAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Public Global Stellar Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 300,
+          "sequence_number": 3010,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_INVOKE_CONTRACT",
+              "invoke_contract": {
+                "contract_address": "CBIJBDNZNF4X35BJ4FFZWCDBSCKOP5NB4PLG4SNENRMLAPYG4P5FM6VN",
+                "function_name": "transfer",
+                "args": [
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                  },
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+                  },
+                  {
+                    "type": "SCV_I128",
+                    "i128": {
+                      "hi": 0,
+                      "lo": 12345678
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "k2dCGIudv63WKDpwBA5mzzw5R/93R5glH2ew7mdzryfqtKOkO2JLJweiKDldyc/hXGqAkE33eH1vzXsTQ7ohDw=="
+      },
+      "skip_models": ["t1b1"]
     }
   ]
 }

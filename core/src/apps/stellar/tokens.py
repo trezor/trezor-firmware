@@ -4,7 +4,7 @@ from trezor import strings
 from trezor.crypto.hashlib import sha256
 from trezor.wire import DataError
 
-from .consts import AMOUNT_DECIMALS
+from .consts import AMOUNT_DECIMALS, NETWORK_PASSPHRASE_PUBLIC
 from .helpers import STRKEY_CONTRACT, encode_strkey
 from .writers import write_asset, write_bytes_fixed, write_uint32
 
@@ -12,6 +12,20 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
     from trezor.messages import StellarAsset, StellarInvokeContractArgs
+
+
+# Trusted SEP-41 token contracts of the public network that are not Stellar
+# Asset Contracts, and so can never be recognized from a host-supplied asset
+# hint. Keyed by contract address, mapping to `(symbol, decimals)` as the
+# contract itself reports them.
+PUBLIC_TOKENS: dict[str, tuple[str, int]] = {
+    # SolvBTC
+    # https://stellar.expert/explorer/public/contract/CBIJBDNZNF4X35BJ4FFZWCDBSCKOP5NB4PLG4SNENRMLAPYG4P5FM6VN
+    "CBIJBDNZNF4X35BJ4FFZWCDBSCKOP5NB4PLG4SNENRMLAPYG4P5FM6VN": ("SolvBTC", 8),
+    # xSolvBTC
+    # https://stellar.expert/explorer/public/contract/CAUP7NFABXE5TJRL3FKTPMWRLC7IAXYDCTHQRFSCLR5TMGKHOOQO772J
+    "CAUP7NFABXE5TJRL3FKTPMWRLC7IAXYDCTHQRFSCLR5TMGKHOOQO772J": ("xSolvBTC", 8),
+}
 
 
 class StellarToken:
@@ -69,18 +83,27 @@ def resolve_sep41_token(
 ) -> StellarToken | None:
     """Resolve token metadata for the dedicated SEP-41 UI.
 
-    Currently, the host may identify a Stellar Asset Contract by supplying its
-    underlying asset. The hint is used only when its derived SAC address matches
-    the invoked contract; an absent, mismatched, or malformed hint leaves the
-    invocation to the generic contract UI.
+    A contract is recognized in two ways. The host may identify a Stellar Asset
+    Contract by supplying its underlying asset; the hint is used only when its
+    derived SAC address matches the invoked contract, so it cannot mislead the
+    user. Otherwise the contract may be one of the tokens hard-coded in the
+    firmware, which are vetted in advance and need no host cooperation at all.
+
+    A SAC match is cryptographically proven, so it takes precedence. Anything
+    left unrecognized goes to the generic contract UI.
     """
+    contract = args.contract_address
     asset = args.asset_hint
-    if asset is None:
-        return None
-    try:
-        sac_address = sac_address_from_asset(network_id, asset)
-    except DataError:
-        return None
-    if sac_address != args.contract_address:
-        return None
-    return StellarToken.from_asset(asset)
+    if asset is not None:
+        try:
+            if sac_address_from_asset(network_id, asset) == contract:
+                return StellarToken.from_asset(asset)
+        except DataError:
+            pass
+
+    if network_id == sha256(NETWORK_PASSPHRASE_PUBLIC.encode()).digest():
+        known = PUBLIC_TOKENS.get(contract)
+        if known is not None:
+            symbol, decimals = known
+            return StellarToken(symbol, decimals, issuer=None)
+    return None

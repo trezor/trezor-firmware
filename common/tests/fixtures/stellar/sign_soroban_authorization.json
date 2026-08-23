@@ -426,6 +426,53 @@
         "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
         "signature": "rUo5bk3oEMcnj7YDXiyBWU1XFoPBF2wbaVDg2jFj+cep/Lh+rIhxpoVRaA0uM327cRPJ3LF0AMZcAjI2idKqBQ=="
       }
+    },
+    {
+      "name": "StellarSorobanAuthorization-xsolvbtc-revoke",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAAAAAALyK5xi8It3Tz6+bdbn25PD7Cy94CeVYaPZxSJbjDIpIAAAAAGo7POgAKrmAAAAABAAAAAAAAAAEo/7SgDcnZpivZVTey0Vi+gF8DFM8IlkJcezYZR3Og7wAAAAdhcHByb3ZlAAAAAAQAAAASAAAAAAAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAABIAAAAAAAAAAJulaObuwWvqT+0PF7E0odaS6uGZpXi6b7RMDCRDG/20AAAACgAAAAAAAAAAAAAAAAAAAAAAAAADAAw1AAAAAAA=",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Public Global Stellar Network ; September 2015",
+        "authorization": {
+          "nonce": 445566778,
+          "signature_expiration_ledger": 700000,
+          "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "invocation": {
+            "function": {
+              "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+              "contract_fn": {
+                "contract_address": "CAUP7NFABXE5TJRL3FKTPMWRLC7IAXYDCTHQRFSCLR5TMGKHOOQO772J",
+                "function_name": "approve",
+                "args": [
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                  },
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "GCN2K2HG53AWX2SP5UHRPMJUUHLJF2XBTGSXROTPWRGAYJCDDP63J2U6"
+                  },
+                  {
+                    "type": "SCV_I128",
+                    "i128": {
+                      "hi": 0,
+                      "lo": 0
+                    }
+                  },
+                  {
+                    "type": "SCV_U32",
+                    "u32": 800000
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "1PEmWWVlw5F2e8DEFoj+ZxcTtFyi93coyaYhtfRg4uy5ZX/0bIUKF7bDMthCyD6NWSQ+uSbqStM/D4i++IglCA=="
+      }
     }
   ]
 }
