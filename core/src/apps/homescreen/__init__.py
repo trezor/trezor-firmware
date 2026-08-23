@@ -3,7 +3,7 @@ from typing import Coroutine
 import storage
 import storage.device
 import trezorui_api
-from trezor import config, utils, wire
+from trezor import config, io, utils, wire
 from trezor.enums import MessageType
 from trezor.ui.layouts.homescreen import run_busyscreen, run_homescreen, run_lockscreen
 from trezorui_api import NotificationLevel
@@ -73,7 +73,11 @@ async def homescreen() -> None:
         if res is trezorui_api.INFO:
             from .device_menu import handle_device_menu
 
-            return await handle_device_menu()
+            try:
+                io.nfc.start()
+                return await handle_device_menu()
+            finally:
+                io.nfc.stop()
     lock_device()
 
 
