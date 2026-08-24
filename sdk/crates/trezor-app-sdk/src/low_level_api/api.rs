@@ -15,7 +15,7 @@ pub const TREZOR_API_SUPPORTED_VERSION: u32 = 1;
 /// falls back to a halting loop on stable toolchains.
 #[cfg(feature = "nightly")]
 fn abort() -> ! {
-    abort();
+    core::intrinsics::abort()
 }
 
 #[cfg(not(feature = "nightly"))]
@@ -79,6 +79,46 @@ impl core::fmt::Display for ApiError {
 
 #[cfg(feature = "debug")]
 impl core::error::Error for ApiError {}
+
+/// Minimal local stand-in for `rtl::CSlice`'s null-safety guarantee.
+///
+/// A Rust empty slice's `.as_ptr()` is a non-null dangling pointer, but C
+/// code conventionally checks the pointer before trusting the length and
+/// treats NULL as "no data". This coerces an empty slice into a null
+/// pointer + zero length so that convention holds on the C side.
+///
+/// TODO: replace with `rtl::CSlice` once it's reachable from this crate
+/// (currently only available to `core/embed/rtl`, a separate workspace).
+struct CSlice<T> {
+    ptr: *const T,
+    len: usize,
+}
+
+impl<T> From<&[T]> for CSlice<T> {
+    fn from(s: &[T]) -> Self {
+        if s.is_empty() {
+            Self {
+                ptr: core::ptr::null(),
+                len: 0,
+            }
+        } else {
+            Self {
+                ptr: s.as_ptr(),
+                len: s.len(),
+            }
+        }
+    }
+}
+
+impl From<&str> for CSlice<core::ffi::c_char> {
+    fn from(s: &str) -> Self {
+        let bytes = CSlice::from(s.as_bytes());
+        Self {
+            ptr: bytes.ptr as *const core::ffi::c_char,
+            len: bytes.len,
+        }
+    }
+}
 
 /// Initialize the global API singleton from getter function pointer
 ///
@@ -164,8 +204,9 @@ pub fn ipc_unregister(remote: ffi::systask_id_t) {
 }
 
 pub fn ipc_send(remote: ffi::systask_id_t, fn_: u32, bytes: &[u8]) -> Result<(), ApiError> {
+    let bytes = CSlice::from(bytes);
     let result = unsafe {
-        unwrap!(get_or_die().ipc_send)(remote, fn_, bytes.as_ptr() as *const c_void, bytes.len())
+        unwrap!(get_or_die().ipc_send)(remote, fn_, bytes.ptr as *const c_void, bytes.len)
     };
     if result {
         Ok(())
@@ -201,22 +242,20 @@ pub fn systick_ms() -> u32 {
 }
 
 pub fn syslog_start_record(module_name: &[u8], log_level: u32) {
+    let module_name = CSlice::from(module_name);
     unsafe {
         let source = log_source_t {
-            name: module_name.as_ptr() as *const _,
-            name_len: module_name.len(),
+            name: module_name.ptr as *const _,
+            name_len: module_name.len,
         };
         unwrap!(get_or_die().syslog_start_record)(&source as *const _, log_level)
     };
 }
 
 pub fn syslog_write_chunk(data: &[u8], is_last_chunk: bool) {
+    let data = CSlice::from(data);
     unsafe {
-        unwrap!(get_or_die().syslog_write_chunk)(
-            data.as_ptr() as *const _,
-            data.len(),
-            is_last_chunk,
-        )
+        unwrap!(get_or_die().syslog_write_chunk)(data.ptr as *const _, data.len, is_last_chunk)
     };
 }
 
@@ -232,14 +271,17 @@ pub fn system_exit() -> ! {
 
 pub fn system_exit_error(title: &str, message: &str, footer: &str) -> ! {
     if let Some(api) = API.get() {
+        let title = CSlice::from(title);
+        let message = CSlice::from(message);
+        let footer = CSlice::from(footer);
         unsafe {
             unwrap!(api.system_exit_error_ex)(
-                title.as_ptr() as *const core::ffi::c_char,
-                title.len(),
-                message.as_ptr() as *const core::ffi::c_char,
-                message.len(),
-                footer.as_ptr() as *const core::ffi::c_char,
-                footer.len(),
+                title.ptr,
+                title.len,
+                message.ptr,
+                message.len,
+                footer.ptr,
+                footer.len,
             )
         };
     }
@@ -250,14 +292,10 @@ pub fn system_exit_error(title: &str, message: &str, footer: &str) -> ! {
 
 pub fn system_exit_fatal(message: &str, file: &str, line: i32) -> ! {
     if let Some(api) = API.get() {
+        let message = CSlice::from(message);
+        let file = CSlice::from(file);
         unsafe {
-            unwrap!(api.system_exit_fatal_ex)(
-                message.as_ptr() as *const core::ffi::c_char,
-                message.len(),
-                file.as_ptr() as *const core::ffi::c_char,
-                file.len(),
-                line,
-            )
+            unwrap!(api.system_exit_fatal_ex)(message.ptr, message.len, file.ptr, file.len, line)
         };
     }
     // If API is not initialized, or if `system_exit_fatal_ex` returns despite
@@ -288,10 +326,11 @@ pub(crate) fn ed25519_sign_open(
     signature: &[u8; 64],
     message: &[u8],
 ) -> i32 {
+    let message = CSlice::from(message);
     unsafe {
         unwrap!(get_crypto_or_die().ed25519_sign_open)(
-            message.as_ptr(),
-            message.len(),
+            message.ptr,
+            message.len,
             public_key.as_ptr() as *const _,
             signature.as_ptr() as *const _,
         )
@@ -302,11 +341,12 @@ pub(crate) fn ed25519_cosi_combine_publickeys(
     pks: &[ffi::ed25519_public_key],
     res: &mut [u8; 32],
 ) -> i32 {
-    let n = pks.len();
+    let pks = CSlice::from(pks);
+    let n = pks.len;
     unsafe {
         unwrap!(get_crypto_or_die().ed25519_cosi_combine_publickeys)(
             res.as_mut_ptr(),
-            pks.as_ptr() as *const _,
+            pks.ptr as *const _,
             n,
         )
     }
@@ -343,9 +383,8 @@ impl Sha256 {
 #[cfg(not(feature = "test"))]
 impl Hasher for Sha256 {
     fn update(&mut self, data: &[u8]) {
-        unsafe {
-            unwrap!(get_crypto_or_die().sha256_Update)(&mut self.ctx, data.as_ptr(), data.len())
-        };
+        let data = CSlice::from(data);
+        unsafe { unwrap!(get_crypto_or_die().sha256_Update)(&mut self.ctx, data.ptr, data.len) };
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
@@ -394,9 +433,8 @@ impl Keccak256 {
 #[cfg(not(feature = "test"))]
 impl Hasher for Keccak256 {
     fn update(&mut self, data: &[u8]) {
-        unsafe {
-            unwrap!(get_crypto_or_die().sha3_Update)(&mut self.ctx, data.as_ptr(), data.len())
-        };
+        let data = CSlice::from(data);
+        unsafe { unwrap!(get_crypto_or_die().sha3_Update)(&mut self.ctx, data.ptr, data.len) };
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
@@ -445,9 +483,8 @@ impl Sha3_256 {
 #[cfg(not(feature = "test"))]
 impl Hasher for Sha3_256 {
     fn update(&mut self, data: &[u8]) {
-        unsafe {
-            unwrap!(get_crypto_or_die().sha3_Update)(&mut self.ctx, data.as_ptr(), data.len())
-        };
+        let data = CSlice::from(data);
+        unsafe { unwrap!(get_crypto_or_die().sha3_Update)(&mut self.ctx, data.ptr, data.len) };
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
@@ -496,9 +533,8 @@ impl Keccak512 {
 #[cfg(not(feature = "test"))]
 impl Hasher for Keccak512 {
     fn update(&mut self, data: &[u8]) {
-        unsafe {
-            unwrap!(get_crypto_or_die().sha3_Update)(&mut self.ctx, data.as_ptr(), data.len())
-        };
+        let data = CSlice::from(data);
+        unsafe { unwrap!(get_crypto_or_die().sha3_Update)(&mut self.ctx, data.ptr, data.len) };
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
@@ -547,9 +583,8 @@ impl Sha3_512 {
 #[cfg(not(feature = "test"))]
 impl Hasher for Sha3_512 {
     fn update(&mut self, data: &[u8]) {
-        unsafe {
-            unwrap!(get_crypto_or_die().sha3_Update)(&mut self.ctx, data.as_ptr(), data.len())
-        };
+        let data = CSlice::from(data);
+        unsafe { unwrap!(get_crypto_or_die().sha3_Update)(&mut self.ctx, data.ptr, data.len) };
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
@@ -597,9 +632,8 @@ impl Sha512 {
 #[cfg(not(feature = "test"))]
 impl Hasher for Sha512 {
     fn update(&mut self, data: &[u8]) {
-        unsafe {
-            unwrap!(get_crypto_or_die().sha512_Update)(&mut self.ctx, data.as_ptr(), data.len())
-        };
+        let data = CSlice::from(data);
+        unsafe { unwrap!(get_crypto_or_die().sha512_Update)(&mut self.ctx, data.ptr, data.len) };
     }
 
     fn finalize(&mut self, output: &mut [u8]) {
@@ -633,12 +667,9 @@ impl HmacSha256 {
             },
         };
         let mut hasher = Self { ctx };
+        let key = CSlice::from(key);
         unsafe {
-            unwrap!(get_crypto_or_die().hmac_sha256_Init)(
-                &mut hasher.ctx,
-                key.as_ptr(),
-                key.len() as u32,
-            )
+            unwrap!(get_crypto_or_die().hmac_sha256_Init)(&mut hasher.ctx, key.ptr, key.len as u32)
         };
         if let Some(data) = data {
             Self::update(&mut hasher, data);
@@ -656,11 +687,12 @@ impl HmacSha256 {
 #[cfg(not(feature = "test"))]
 impl Hasher for HmacSha256 {
     fn update(&mut self, data: &[u8]) {
+        let data = CSlice::from(data);
         unsafe {
             unwrap!(get_crypto_or_die().hmac_sha256_Update)(
                 &mut self.ctx,
-                data.as_ptr(),
-                data.len() as u32,
+                data.ptr,
+                data.len as u32,
             )
         };
     }
@@ -698,12 +730,9 @@ impl HmacSha512 {
             },
         };
         let mut hasher = Self { ctx };
+        let key = CSlice::from(key);
         unsafe {
-            unwrap!(get_crypto_or_die().hmac_sha512_Init)(
-                &mut hasher.ctx,
-                key.as_ptr(),
-                key.len() as u32,
-            )
+            unwrap!(get_crypto_or_die().hmac_sha512_Init)(&mut hasher.ctx, key.ptr, key.len as u32)
         };
         if let Some(data) = data {
             Self::update(&mut hasher, data);
@@ -721,11 +750,12 @@ impl HmacSha512 {
 #[cfg(not(feature = "test"))]
 impl Hasher for HmacSha512 {
     fn update(&mut self, data: &[u8]) {
+        let data = CSlice::from(data);
         unsafe {
             unwrap!(get_crypto_or_die().hmac_sha512_Update)(
                 &mut self.ctx,
-                data.as_ptr(),
-                data.len() as u32,
+                data.ptr,
+                data.len as u32,
             )
         };
     }
