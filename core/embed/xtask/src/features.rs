@@ -143,6 +143,7 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
     cmd.args(["--features", &resolved.features.join(",")]);
     cmd.args(["--profile", args.cargo_profile_name()]);
     cmd.env("TREZOR_BOARD_HEADER", &resolved.board_header);
+    cmd.env("SCM_REVISION", helpers::git_revision()?);
 
     if args.cargo_profile_name() == "release" {
         // Required by panic-immediate-abort in the release profile

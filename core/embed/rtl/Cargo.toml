@@ -7,6 +7,7 @@ links = "rtl"
 [build-dependencies]
 bindgen.workspace = true
 color-eyre.workspace = true
+hex.workspace = true
 xbuild.workspace = true
 
 [dependencies]

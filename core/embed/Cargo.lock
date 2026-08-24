@@ -717,6 +717,7 @@ dependencies = [
  "bindgen",
  "color-eyre",
  "cty",
+ "hex",
  "models",
  "xbuild",
 ]
@@ -1102,6 +1103,7 @@ version = "0.0.0"
 dependencies = [
  "color-eyre",
  "crypto",
+ "hex",
  "io",
  "models",
  "rtl",
