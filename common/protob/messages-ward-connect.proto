@@ -10,8 +10,9 @@ import "messages-ward.proto";
 /*
  * WARD OVER THE ORDINARY CONNECTION.
  *
- * These messages exist only in a firmware that serves WARD over the same channel a wallet host
- * already uses. They are the ones a WARD service channel replaces rather than reuses:
+ * These messages exist only in a firmware that serves WARD over the same channel the WARD app is
+ * already talking on -- so on this build the app owns the replica as well as invoking the
+ * operations. They are the ones a WARD service channel replaces rather than reuses:
  *
  *   the device-initiated pull (WardEntryRequest) and the leaf-bearing acks a mutation returns,
  *   which a service build answers with its own request/response pair instead;

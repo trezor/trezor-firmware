@@ -2,9 +2,13 @@
 
 WHY A SECOND CHANNEL EXISTS AT ALL. A WARD read goes through `context.call()`, which reaches
 CURRENT_CONTEXT -- the workflow currently executing. On a connect build that makes WARD's store
-structurally Suite's store, and a read can only happen while Suite is answering. A daemon on its
-own interface can be asked at any point in any workflow, and can be asked by the device rather
-than only answer it.
+structurally the calling APP's store, and a read can only happen while that app is answering. A
+daemon on its own interface can be asked at any point in any workflow, and can be asked by the device
+rather than only answer it.
+
+WHO THE PARTIES ARE. The WARD app invokes the user-facing operations; this daemon owns the replica; a
+wallet may be connected at the same time and is part of neither exchange. See
+`docs/core/misc/ward-channels.md`.
 
 THE INVERSION. `WardServiceOpen` is the LAST host-initiated application message on this channel.
 Afterwards the device is the sole initiator: it writes a request and reads the reply. One message
@@ -30,7 +34,7 @@ if TYPE_CHECKING:
 
 
 # HOW LONG A REVERSE RPC MAY TAKE, END TO END. A daemon that stops answering must not hang the
-# wallet workflow that is waiting on it: WARD reads fail closed, and a hang is the one failure mode
+# workflow that is waiting on it: WARD reads fail closed, and a hang is the one failure mode
 # that does not. Generous, because the daemon may have to consult a database and build a proof.
 #
 # IT COVERS THE WRITE AS WELL AS THE READ, and that is not a detail. `Channel.write` waits for the

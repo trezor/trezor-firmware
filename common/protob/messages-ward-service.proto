@@ -36,9 +36,14 @@ import "messages-ward.proto";
  *   Attestation + Reconcile    three. The nonce no longer has to outlive two round trips, so it
  *                              stops being session state and becomes a local variable.
  *   WardLeafAck             -> WardPublish hands the mutation to the service, and
- *                              WardMutationApplied tells the wallet host it happened. A wallet
- *                              host on a service build is NOT given the leaf: it does not own the
- *                              replica, and a copy it kept would be stale from the next write on.
+ *                              WardMutationApplied tells the WARD APP it happened. The app on a
+ *                              service build is NOT given the leaf: it does not own the replica,
+ *                              and a copy it kept would be stale from the next write on.
+ *
+ * THE APP, NOT THE WALLET, and that is the boundary this channel exists to draw. The party that
+ * invokes WardGetEntry / WardSetEntry is the application the user is using WARD through; a wallet
+ * may be connected at the same time on the ordinary interface, is not part of this protocol, and
+ * proxies none of it. See `docs/core/misc/ward-channels.md`.
  */
 
 /**
@@ -200,14 +205,14 @@ message WardPublishConflict {
 }
 
 /**
- * Response: device -> wallet host, in place of WardLeafAck on a service build.
+ * Response: device -> the WARD app, in place of WardLeafAck on a service build.
  *
- * CARRIES NO LEAF, deliberately. On a service build the wallet host does not own the replica, so a
- * leaf it kept would be a second copy going stale from the next write onwards -- and a host that
- * stored it would gradually diverge from the service without either side noticing. A separate
- * message rather than a WardLeafAck with the fields left out, because the host's `apply` reads an
- * absent content body as a DELETION: an emptied ack would not merely be unhelpful, it would erase
- * the entry.
+ * CARRIES NO LEAF, deliberately. On a service build the app does not own the replica, so a leaf it
+ * kept would be a second copy going stale from the next write onwards -- and an app that stored it
+ * would gradually diverge from the service without either side noticing. A separate message rather
+ * than a WardLeafAck with the fields left out, because a replica owner's `apply` reads an absent
+ * content body as a DELETION: an emptied ack would not merely be unhelpful, it would erase the
+ * entry.
  * @end
  */
 message WardMutationApplied {
@@ -216,9 +221,9 @@ message WardMutationApplied {
 }
 
 /**
- * Response: device -> wallet host, in place of WardFlushQueueAck on a service build.
+ * Response: device -> the WARD app, in place of WardFlushQueueAck on a service build.
  *
- * Keeps `remaining`, which is not decoration: the host drains the queue by flushing while this is
+ * Keeps `remaining`, which is not decoration: the caller drains the queue by flushing while this is
  * non-zero, so dropping it would strand every queued change after the first.
  * @end
  */
@@ -229,7 +234,7 @@ message WardFlushQueueApplied {
 }
 
 /**
- * Request: WALLET host -> device, on the ordinary interface. Unbind the WARD service, so that
+ * Request: the WARD app -> device, on the ordinary interface. Unbind the WARD service, so that
  * another daemon may claim the role.
  *
  * THE ONE MESSAGE HERE THAT IS NOT PART OF THE INVERTED CONVERSATION, and it has to be: the daemon
@@ -255,7 +260,7 @@ message WardResetService {
 }
 
 /**
- * Response: device -> wallet host. The pin is retired; the next daemon to announce itself binds.
+ * Response: device -> the WARD app. The pin is retired; the next daemon to announce itself binds.
  *
  * `unresolved` is what was outstanding at the moment of the reset, and is reported rather than
  * cleared: nothing in WARD discards a record except the user saying so, so those changes stay

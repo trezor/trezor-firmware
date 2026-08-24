@@ -144,9 +144,9 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
         from .service import publish
 
         await publish(entry_key, identity, content, from_root, counter, new_root, step)
-        # NO LEAF GOES BACK. The wallet host does not own the replica here, and `WardLeafAck` is not
-        # merely unhelpful in its place -- a host's `apply` reads an absent content body as a
-        # deletion, so an emptied ack would erase the entry it just wrote.
+        # NO LEAF GOES BACK. The calling app does not own the replica here, and `WardLeafAck` is
+        # not merely unhelpful in its place -- a replica owner's `apply` reads an absent content body
+        # as a deletion, so an emptied ack would erase the entry it just wrote.
         return WardMutationApplied(entry_key=entry_key, counter=counter)
 
     return WardLeafAck(
