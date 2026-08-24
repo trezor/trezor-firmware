@@ -154,6 +154,18 @@ _EIP7702_ADDRESSES = {
         # https://etherscan.io/address/0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9
         ("4Cd241E8d1510e30b2076397afc7508Ae59C66c9", "Simple7702Account")
     ],
+    10: [ # Optimism
+        # https://explorer.optimism.io/address/0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9
+        ("4Cd241E8d1510e30b2076397afc7508Ae59C66c9", "Simple7702Account")
+    ],
+    56: [ # BNB
+        # https://bscscan.com/address/0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9
+        ("4Cd241E8d1510e30b2076397afc7508Ae59C66c9", "Simple7702Account")
+    ],
+    137: [ # Polygon
+        # https://polygonscan.com/address/0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9
+        ("4Cd241E8d1510e30b2076397afc7508Ae59C66c9", "Simple7702Account")
+    ],
     100: [  # Gnosis
         # https://gnosisscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
         ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
@@ -165,13 +177,17 @@ _EIP7702_ADDRESSES = {
         ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
         # https://basescan.org/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
         ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
+        # https://basescan.org/address/0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9
+        ("4Cd241E8d1510e30b2076397afc7508Ae59C66c9", "Simple7702Account")
     ],
     42161: [  # Arbitum
         # https://arbiscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
         ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
         # https://arbiscan.io/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
         ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
-    ]
+        # https://arbiscan.io/address/0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9
+        ("4Cd241E8d1510e30b2076397afc7508Ae59C66c9", "Simple7702Account")
+    ],
 }
 if 0 in _EIP7702_ADDRESSES:
     raise RuntimeError('"All chains" delegation is explicitly not supported')
