@@ -50,7 +50,12 @@ from trezorlib import ward
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutContent, TrezorTestContext
 
-from ...input_flows import InputFlowBase, InputFlowConfirmAllWarnings
+from ...input_flows import InputFlowConfirmAllWarnings
+# The role fixture, and the reject flow it lives beside: the device pins ONE app for WARD, on a held
+# confirmation, and none of the tests in this file are about that -- so the role is taken once,
+# before each test body, and the sequences below stay about what they were written for. See
+# `tests/ward_app.py`.
+from ...ward_app import reject_flow, ward_app_pinned  # noqa: F401  -- autouse fixture
 from ...ward_keys import derive_k_sig  # noqa: F401  -- asserted via ward_id below
 from ...ward_keys import (
     auth_commit,
@@ -2212,41 +2217,6 @@ def _pin(session: Session, store: WardTrie, identifier: bytes, br_name: str) -> 
     return res, rec
 
 
-class _RejectFlow(InputFlowBase):
-    """Walk a confirm screen to its final page and REFUSE it.
-
-    Mirrors `InputFlowConfirmAllWarnings` page by page and diverges only at the decision, so
-    the screens under test are reached the same way they are when confirmed -- a cancel that
-    bailed on page one would not prove the confirmation is the thing guarding the write.
-
-    The button-press direction is per layout: Bolt and Caesar have a No button, while Delizia
-    and Eckhart cancel through the menu (item 0), the same route
-    `InputFlowNewWipeCodeCancel` takes.
-    """
-
-    def input_flow_bolt(self):
-        yield
-        self.debug.press_no()
-
-    def input_flow_caesar(self):
-        yield
-        self.debug.press_no()
-
-    def input_flow_delizia(self):
-        yield
-        self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.synchronize_at("VerticalMenu")
-        self.debug.button_actions.navigate_to_menu_item(0)
-
-    def input_flow_eckhart(self):
-        yield
-        self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.synchronize_at("VerticalMenu")
-        self.debug.button_actions.navigate_to_menu_item(0)
-
-
-def _reject_flow(session: Session):
-    return _RejectFlow(session).get()
 
 
 def _offline_read(session: Session, identifier: bytes) -> "_Recorded":
@@ -2484,7 +2454,7 @@ def test_ward_cancelling_a_replacement_leaves_the_old_copy(session: Session):
     _seed(session, store, b"addr1", b"reject_this")
 
     with session.test_ctx as ctx:
-        ctx.set_input_flow(_reject_flow(session))
+        ctx.set_input_flow(reject_flow(session))
         with pytest.raises(exceptions.Cancelled):
             ward.pin_cached_entry(session, _APP, b"addr1", ward.store_provider(store))
 
@@ -2501,7 +2471,7 @@ def test_ward_erase_removes_the_copy_only_after_confirmation(session: Session):
 
     # cancelled: flash untouched
     with session.test_ctx as ctx:
-        ctx.set_input_flow(_reject_flow(session))
+        ctx.set_input_flow(reject_flow(session))
         with pytest.raises(exceptions.Cancelled):
             ward.erase_cached_entry(session, _APP, b"addr1")
 
