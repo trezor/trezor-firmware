@@ -1,6 +1,5 @@
 use heapless::Vec;
 
-use crate::error::Error;
 use crate::io::BinaryData;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
@@ -9,9 +8,8 @@ use crate::micropython::list::List;
 use crate::micropython::macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
-use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
-use crate::micropython::util;
+use crate::micropython::{util, Error, Obj};
 use crate::strutil::TString;
 use crate::trezorhal::model;
 use crate::ui::backlight::BACKLIGHT_LEVELS_OBJ;
@@ -32,7 +30,7 @@ use crate::ui::ModelUI;
 /// Dummy implementation so that we can use `Empty` in a return type of
 /// unimplemented trait function
 impl ComponentMsgObj for Empty {
-    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, crate::error::Error> {
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unimplemented!()
     }
 }
@@ -1312,9 +1310,7 @@ pub extern "C" fn upy_backlight_get() -> Obj {
         }
         #[cfg(not(feature = "backlight"))]
         {
-            Err(crate::error::Error::RuntimeError(
-                c"Backlight not supported",
-            ))
+            Err(Error::RuntimeError(c"Backlight not supported"))
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -1438,8 +1434,13 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     def get_transition_out(self) -> AttachType:
     ///         """Return the transition type."""
     ///
-    ///     def return_value(self) -> T:
-    ///         """Retrieve the return value of the layout object."""
+    ///     def return_value(self) -> T | None:
+    ///         """Take the return value of the layout object.
+    ///
+    ///         Not idempotent: after `return_value()` is called, subsequent calls will return None.
+    ///
+    ///         May raise in case there was an error when constructing the return value.
+    ///         """
     ///
     ///     # TODO: remove after https://github.com/trezor/trezor-firmware/issues/6811 is resolved.
     ///     def __del__(self) -> None:

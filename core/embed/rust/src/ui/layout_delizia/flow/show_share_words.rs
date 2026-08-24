@@ -4,7 +4,7 @@ use super::super::component::{
     Footer, Frame, Header, InternallySwipableContent, PromptScreen, ShareWords, SwipeContent,
 };
 use super::super::theme;
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::button_request::ButtonRequestCode;
@@ -75,7 +75,7 @@ pub fn new_show_share_words(
     text_footer: Option<TString<'static>>,
     text_confirm: TString<'static>,
     text_check: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let nwords = share_words_vec.len() as u16;
     let paragraphs_spacing = 8;
     let title = TR::reset__recovery_wallet_backup_title.into();
@@ -123,7 +123,7 @@ pub fn new_show_share_words(
     .with_swipeup_footer(None)
     .map(|_| Some(FlowMsg::Confirmed));
 
-    let mut res = SwipeFlow::new(&ShowShareWords::Instruction)?;
+    let mut res = SwipeFlow::new(&ShowShareWords::Instruction);
     res.add_page(&ShowShareWords::Instruction, content_instruction)?
         .add_page(&ShowShareWords::Words, content_words)?
         .add_page(&ShowShareWords::Confirm, content_confirm)?

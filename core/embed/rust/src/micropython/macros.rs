@@ -4,11 +4,13 @@ macro_rules! _obj_fn_make_fixed {
         unsafe {
             use $crate::micropython::ffi;
 
-            ffi::mp_obj_fun_builtin_fixed_t {
-                base: ffi::mp_obj_base_t {
-                    type_: &$crate::micropython::ffi::$type,
-                },
-                fun: ffi::_mp_obj_fun_builtin_fixed_t__bindgen_ty_1 { $member: Some($f) },
+            const {
+                ffi::mp_obj_fun_builtin_fixed_t {
+                    base: ffi::mp_obj_base_t {
+                        type_: &$crate::micropython::ffi::$type,
+                    },
+                    fun: ffi::_mp_obj_fun_builtin_fixed_t__bindgen_ty_1 { $member: Some($f) },
+                }
             }
         }
     }};
@@ -48,14 +50,16 @@ macro_rules! _obj_fn_make_var {
         unsafe {
             use $crate::micropython::ffi;
 
-            ffi::mp_obj_fun_builtin_var_t {
-                base: ffi::mp_obj_base_t {
-                    type_: &ffi::mp_type_fun_builtin_var,
-                },
-                sig: ($min << 17u32) | ($max << 1u32) | $takes_kw,
-                fun: ffi::_mp_obj_fun_builtin_var_t__bindgen_ty_1 {
-                    $var_or_kw: Some($f),
-                },
+            const {
+                ffi::mp_obj_fun_builtin_var_t {
+                    base: ffi::mp_obj_base_t {
+                        type_: &ffi::mp_type_fun_builtin_var,
+                    },
+                    sig: ($min << 17u32) | ($max << 1u32) | $takes_kw,
+                    fun: ffi::_mp_obj_fun_builtin_var_t__bindgen_ty_1 {
+                        $var_or_kw: Some($f),
+                    },
+                }
             }
         }
     }};
@@ -79,11 +83,9 @@ macro_rules! obj_fn_kw {
 /// Construct fixed static const `Map` from `key` => `val` pairs.
 macro_rules! obj_map {
     ($($key:expr => $val:expr),*) => ({
-        $crate::micropython::map::Map::from_fixed_static(&[
-            $(
-                $crate::micropython::map::Map::at($key, $val),
-            )*
-        ])
+        $crate::micropython::map::Map::from_fixed_static(const {
+            &[ $($crate::micropython::map::Map::at($key, $val),)* ]
+        })
     });
     ($($key:expr => $val:expr),* ,) => ({
         obj_map!($($key => $val),*)
@@ -97,11 +99,13 @@ macro_rules! obj_dict {
         unsafe {
             use $crate::micropython::ffi;
 
-            ffi::mp_obj_dict_t {
-                base: ffi::mp_obj_base_t {
-                    type_: &ffi::mp_type_dict,
-                },
-                map: $map,
+            const {
+                ffi::mp_obj_dict_t {
+                    base: ffi::mp_obj_base_t {
+                        type_: &ffi::mp_type_dict,
+                    },
+                    map: $map,
+                }
             }
         }
     }};
@@ -116,7 +120,7 @@ macro_rules! obj_type {
      $(attr_fn: $attr_fn:path,)?
      $(call_fn: $call_fn:path,)?
      $(print_fn: $print_fn:path,)?
-     $(parent: $parent:path,)?
+     $(parent: $parent:expr,)?
     ) => {{
         use $crate::micropython::ffi;
 
@@ -125,7 +129,7 @@ macro_rules! obj_type {
         #[allow(unused_mut)]
         #[allow(unused_assignments)]
         // SAFETY: micropython ffi
-        let mut base_type: &'static ffi::mp_obj_type_t = unsafe { &ffi::mp_type_type };
+        let mut base_type: &'static $crate::micropython::typ::Type = $crate::micropython::typ::TYPE_BASE;
         $(base_type = &$base;)?
 
         #[allow(unused_mut)]
@@ -229,11 +233,9 @@ macro_rules! obj_module {
                     /// SAFETY: Reasonable to assume the pointer stays valid.
                     type_: unsafe { &ffi::mp_type_dict },
                 },
-                map: Map::from_fixed_static(&[
-                    $(
-                        Map::at($key, $val),
-                    )*
-                ])
+                map: Map::from_fixed_static(const {
+                    &[ $( Map::at($key, $val), )* ]
+                })
             };
             ffi::mp_obj_module_t {
                 base: ffi::mp_obj_base_t {

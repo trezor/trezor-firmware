@@ -479,14 +479,13 @@ impl PageOffset {
 
         let layout = TextLayoutProxy::new(self, used);
 
-        let page_full: bool;
-        match fit {
+        let page_full = match fit {
             LayoutFit::Fitting { .. } => {
                 // Continue with start of next paragraph.
                 self.par += 1;
                 self.chr = 0;
                 // Handle hard break if requested for this paragraph.
-                page_full = paragraph.break_after;
+                paragraph.break_after
             }
             LayoutFit::OutOfBounds {
                 processed_chars, ..
@@ -494,9 +493,9 @@ impl PageOffset {
                 // Reached end of the page and not all content fits.
                 self.chr += processed_chars;
                 // Do not render more paragraphs.
-                page_full = true;
+                true
             }
-        }
+        };
 
         PageOffsetAdvance {
             offset: self,
@@ -762,8 +761,7 @@ impl<'a, T: ParagraphSource<'a>> crate::trace::Trace for Checklist<T> {
 
 #[cfg(feature = "micropython")]
 mod micropython {
-    use crate::error::Error;
-    use crate::micropython::obj::Obj;
+    use crate::micropython::{Error, Obj};
     use crate::ui::layout::obj::ComponentMsgObj;
     impl<'a, T: super::ParagraphSource<'a>> ComponentMsgObj for super::Checklist<T> {
         fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {

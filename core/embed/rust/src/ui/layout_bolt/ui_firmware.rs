@@ -8,14 +8,12 @@ use super::component::{
     Slip39Input,
 };
 use super::{fonts, theme, UIBolt};
-use crate::error::{value_error, Error};
 use crate::io::BinaryData;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
-use crate::micropython::obj::Obj;
-use crate::micropython::util;
+use crate::micropython::{util, Error, Obj};
 use crate::storage;
 use crate::strutil::TString;
 use crate::translations::TR;
@@ -161,7 +159,7 @@ impl FirmwareUI for UIBolt {
         }
 
         if !check_homescreen_format(image, false) {
-            return Err(value_error!(c"Invalid image."));
+            return Err(Error::ValueError(c"Invalid image."));
         };
 
         let buttons = Button::cancel_confirm_text(None, Some(TR::buttons__change.into()));

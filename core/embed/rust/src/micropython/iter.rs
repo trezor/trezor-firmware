@@ -1,14 +1,15 @@
 use core::ptr;
 
+use super::error::Error;
+use super::exception::Exception;
 use super::ffi;
+use super::obj::Obj;
 use super::runtime::catch_exception;
-use crate::error::Error;
-use crate::micropython::obj::Obj;
 
 pub struct IterBuf {
     iter_buf: ffi::mp_obj_iter_buf_t,
     error_checking: bool,
-    caught_exception: Obj,
+    caught_exception: Option<Exception>,
 }
 
 impl IterBuf {
@@ -21,7 +22,7 @@ impl IterBuf {
                 buf: [Obj::const_null(), Obj::const_null(), Obj::const_null()],
             },
             error_checking: false,
-            caught_exception: Obj::const_null(),
+            caught_exception: None,
         }
     }
 
@@ -35,12 +36,8 @@ impl IterBuf {
         Iter::try_from_obj_with_buf(o, self)
     }
 
-    pub fn error(&self) -> Option<Obj> {
-        if !self.error_checking || self.caught_exception.is_null() {
-            None
-        } else {
-            Some(self.caught_exception)
-        }
+    pub fn error(&self) -> Option<&Exception> {
+        self.caught_exception.as_ref()
     }
 }
 
@@ -84,8 +81,8 @@ impl<'a> Iterator for Iter<'a> {
         // EXCEPTION: Can raise from the underlying iterator.
         let item = catch_exception(|| unsafe { ffi::mp_iternext(self.iter) });
         match item {
-            Err(Error::CaughtException(exc)) if self.iter_buf.error_checking => {
-                self.iter_buf.caught_exception = exc;
+            Err(Error::Exception(exc)) if self.iter_buf.error_checking => {
+                self.iter_buf.caught_exception = Some(exc);
                 None
             }
             Err(_) => fatal_error!("Unexpected error"),

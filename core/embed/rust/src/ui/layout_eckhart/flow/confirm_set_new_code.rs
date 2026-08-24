@@ -5,7 +5,7 @@ use super::super::firmware::{
 };
 use super::super::theme::gradient::Gradient;
 use super::super::theme::{self};
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{
@@ -46,7 +46,7 @@ impl FlowController for SetNewCode {
     }
 }
 
-pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
+pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, Error> {
     let (title, description) = if is_wipe_code {
         (TR::wipe_code__title_settings, TR::wipe_code__info)
     } else {
@@ -112,7 +112,7 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
             _ => None,
         });
 
-    let mut res = SwipeFlow::new(&SetNewCode::Intro)?;
+    let mut res = SwipeFlow::new(&SetNewCode::Intro);
     res.add_page(&SetNewCode::Intro, content_intro)?
         .add_page(&SetNewCode::Menu, content_menu)?
         .add_page(&SetNewCode::Cancel, content_cancel)?;

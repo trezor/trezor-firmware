@@ -2,21 +2,19 @@ use core::slice;
 
 use heapless::Vec;
 
+use super::error::Error;
 use super::ffi;
 use super::iter::IterBuf;
 use super::map::{Map, MapElem};
 use super::obj::Obj;
 use super::qstr::Qstr;
-use super::runtime::{catch_exception, raise_exception};
-use crate::error::{value_error, Error};
+use super::runtime::catch_exception;
 
 /// Perform a call and convert errors into a raised MicroPython exception.
 /// Should only called when returning from Rust to C. See `raise_exception` for
 /// details.
 pub unsafe fn try_or_raise<T>(func: impl FnOnce() -> Result<T, Error>) -> T {
-    func().unwrap_or_else(|err| unsafe {
-        raise_exception(err);
-    })
+    func().unwrap_or_else(|err| unsafe { err.into_exception().raise() })
 }
 
 /// Extract kwargs from a C call and pass them into Rust. Raise exception if an
@@ -84,13 +82,6 @@ pub unsafe fn try_with_args_and_kwargs_inline(
     unsafe { try_or_raise(block) }
 }
 
-pub fn new_tuple(args: &[Obj]) -> Result<Obj, Error> {
-    // SAFETY: Safe.
-    // EXCEPTION: Raises if allocation fails, does not return NULL.
-    let obj = catch_exception(|| unsafe { ffi::mp_obj_new_tuple(args.len(), args.as_ptr()) })?;
-    Ok(obj)
-}
-
 /// Create a new "attrtuple", which is essentially a namedtuple / ad-hoc object.
 ///
 /// It is recommended to use the attr_tuple! macro instead of this function:
@@ -131,7 +122,7 @@ where
     let vec: Vec<T, N> = iter_into_vec(iterable)?;
     // Returns error if array.len() != N
     vec.into_array()
-        .map_err(|_| value_error!(c"Invalid iterable length"))
+        .map_err(|_| Error::ValueError(c"Invalid iterable length"))
 }
 
 pub fn iter_into_vec<T, E, const N: usize>(iterable: Obj) -> Result<Vec<T, N>, Error>
@@ -142,7 +133,7 @@ where
     let mut vec = Vec::<T, N>::new();
     for item in IterBuf::new().try_iterate(iterable)? {
         vec.push(item.try_into()?)
-            .map_err(|_| value_error!(c"Invalid iterable length"))?;
+            .map_err(|_| Error::ValueError(c"Invalid iterable length"))?;
     }
     Ok(vec)
 }

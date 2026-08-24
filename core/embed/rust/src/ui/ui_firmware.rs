@@ -2,12 +2,11 @@ use heapless::Vec;
 
 use super::layout::obj::{LayoutMaybeTrace, LayoutObj};
 use super::layout::util::RecoveryType;
-use crate::error::Error;
 use crate::io::BinaryData;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::list::List;
-use crate::micropython::obj::Obj;
+use crate::micropython::{Error, Obj};
 use crate::strutil::TString;
 use crate::ui::notification::Notification;
 

@@ -3,8 +3,8 @@ use heapless::Vec;
 use super::{
     theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos, Frame,
 };
-use crate::error::Error;
 use crate::micropython::buffer::StrBuffer;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{

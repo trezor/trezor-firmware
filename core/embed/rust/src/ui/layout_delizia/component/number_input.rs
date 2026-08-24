@@ -1,6 +1,6 @@
 use super::super::fonts::FONT_DEMIBOLD;
 use super::{theme, Button, ButtonMsg};
-use crate::error::Error;
+use crate::micropython::Error;
 use crate::strutil::{self, TString};
 use crate::ui::component::paginated::SinglePage;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};

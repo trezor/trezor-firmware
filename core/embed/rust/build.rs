@@ -52,6 +52,7 @@ fn generate_micropython_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_type("mp_obj_type_t")
             .allowlist_type("mp_obj_base_t")
             .allowlist_type("mp_obj_full_type_t")
+            .allowlist_type("mp_obj_empty_type_t")
             .allowlist_type("mp_attr_fun_t")
             .allowlist_type("mp_call_fun_t")
             .allowlist_type("mp_make_new_fun_t")
@@ -122,17 +123,7 @@ fn generate_micropython_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("mp_obj_exception_attr")
             .allowlist_function("mp_obj_exception_make_new")
             .allowlist_function("trezor_obj_call_protected")
-            .allowlist_var("mp_type_AttributeError")
-            .allowlist_var("mp_type_EOFError")
-            .allowlist_var("mp_type_Exception")
-            .allowlist_var("mp_type_IndexError")
-            .allowlist_var("mp_type_KeyError")
-            .allowlist_var("mp_type_MemoryError")
-            .allowlist_var("mp_type_OverflowError")
-            .allowlist_var("mp_type_ValueError")
-            .allowlist_var("mp_type_TypeError")
-            .allowlist_var("mp_type_RuntimeError")
-            .allowlist_var("mp_type_NotImplementedError")
+            .allowlist_type("mp_obj_exception_t")
             // time
             .allowlist_function("mp_hal_ticks_ms")
             .allowlist_function("mp_hal_delay_ms")
@@ -140,6 +131,9 @@ fn generate_micropython_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("mp_print_strn")
             .allowlist_function("str_modulo_format")
             .allowlist_var("mp_plat_print")
+            // tuple
+            .allowlist_var("mp_type_tuple")
+            .allowlist_var("mp_const_empty_tuple_obj")
             // typ
             .allowlist_var("mp_type_type")
             // module

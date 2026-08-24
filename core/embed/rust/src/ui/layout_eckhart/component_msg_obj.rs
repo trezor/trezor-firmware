@@ -7,9 +7,7 @@ use super::firmware::{
     SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
     TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
-use crate::error::Error;
-use crate::micropython::obj::Obj;
-use crate::micropython::util::new_tuple;
+use crate::micropython::{Error, Obj};
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
@@ -153,8 +151,6 @@ impl ComponentMsgObj for SetBrightnessScreen {
 
 impl ComponentMsgObj for DeviceMenuScreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        let action_obj = msg.id_to_obj();
-        let result_obj = msg.args_to_obj();
         let next_menu_id = self.next_menu_id(msg);
         let vertical_offset: u16 = match self.current_state() {
             // If the same menu will be displayed, reuse current menu offset.
@@ -164,11 +160,12 @@ impl ComponentMsgObj for DeviceMenuScreen {
             }
             _ => 0, // Otherwise, don't reapply current menu offset.
         };
-        new_tuple(&[
-            action_obj,
-            result_obj,
-            next_menu_id.to_u8().try_into()?,
-            vertical_offset.into(),
-        ])
+        (
+            msg.id_to_obj(),
+            msg.args_to_obj(),
+            next_menu_id.to_u8(),
+            vertical_offset,
+        )
+            .try_into()
     }
 }

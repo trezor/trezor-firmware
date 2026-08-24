@@ -4,7 +4,7 @@ use super::super::firmware::{
     VerticalMenuScreenMsg,
 };
 use super::super::{fonts, theme};
-use crate::error;
+use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::text::op::OpTextLayout;
@@ -45,7 +45,7 @@ pub fn new_show_thp_pairing_code(
     title: TString<'static>,
     description: TString<'static>,
     code: TString<'static>,
-) -> Result<SwipeFlow, error::Error> {
+) -> Result<SwipeFlow, Error> {
     let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
     ops.add_text_with_font(description, fonts::FONT_SATOSHI_REGULAR_38)
         .add_newline()
@@ -72,7 +72,7 @@ pub fn new_show_thp_pairing_code(
             _ => None,
         });
 
-    let mut flow = SwipeFlow::new(&ShowPairingCode::Main)?;
+    let mut flow = SwipeFlow::new(&ShowPairingCode::Main);
     flow.add_page(&ShowPairingCode::Main, main_content)?
         .add_page(&ShowPairingCode::Menu, menu_content)?;
 

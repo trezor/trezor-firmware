@@ -1,16 +1,23 @@
 use super::super::model;
 use super::*;
-use crate::error::Error;
 use crate::micropython::buffer::{get_buffer, get_buffer_mut, StrBuffer};
 use crate::micropython::list::List;
 use crate::micropython::macros::*;
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
-use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
 use crate::micropython::typ::FullType;
-use crate::micropython::util;
+use crate::micropython::{util, Error, Obj};
+
+impl From<BleError> for Error {
+    fn from(error: BleError) -> Self {
+        match error {
+            BleError::CommandFailed => Error::RuntimeError(c"BLE command failed"),
+            BleError::WriteFailed => Error::RuntimeError(c"BLE write failed"),
+        }
+    }
+}
 
 extern "C" fn py_erase_bonds() -> Obj {
     let block = || {
@@ -35,7 +42,7 @@ extern "C" fn py_unpair(obj: Obj) -> Obj {
             get_bonds(|bonds| -> Result<(), Error> {
                 for b in bonds {
                     if b.addr == bytes {
-                        return unpair(Some(b));
+                        return Ok(unpair(Some(b))?);
                     }
                 }
                 Err(Error::ValueError(c"Address not found among bonds"))
@@ -252,7 +259,7 @@ extern "C" fn py_iface_read(n_args: usize, args: *const Obj) -> Obj {
         if buf.len() < RX_PACKET_SIZE {
             return Err(Error::ValueError(c"Buffer too small"));
         }
-        let read_len = read(buf, RX_PACKET_SIZE)?;
+        let read_len = read(&mut buf[..RX_PACKET_SIZE])?;
         if read_len != RX_PACKET_SIZE {
             return Err(Error::ValueError(c"Unexpected read length"));
         }
