@@ -594,12 +594,7 @@
     "coinjoin__access_account": "Použít váš coinjoin účet?",
     "coinjoin__do_not_disconnect": "Neodpojujte svůj Trezor!",
     "coinjoin__max_coordinator_fee_pct": "Maximální poplatek koordinátoru",
-    "coinjoin__max_mining_fee": {
-      "Bolt": "Max. poplatek za těžbu",
-      "Caesar": "Maximální poplatek za těžbu",
-      "Delizia": "Maximální poplatek za těžbu",
-      "Eckhart": "Maximální poplatek za těžbu"
-    },
+    "coinjoin__max_mining_fee": "Maximální poplatek za těžbu",
     "coinjoin__max_rounds": "Maximum kol",
     "coinjoin__title": "Schválení coinjoinu",
     "coinjoin__title_progress": {
@@ -1123,7 +1118,7 @@
     "homescreen__title_backup_needed": "Je potřeba záloha",
     "homescreen__title_coinjoin_authorized": "Coinjoin schválen",
     "homescreen__title_experimental_mode": "Experimentální režim",
-    "homescreen__title_no_usb_connection": "Žádné USB připojení",
+    "homescreen__title_no_usb_connection": "Bez USB připojení",
     "homescreen__title_pin_not_set": "Není nastaven PIN",
     "homescreen__title_seedless": "Bez seedu",
     "homescreen__title_set": "Změna tapety",
@@ -1790,7 +1785,7 @@
       "Delizia": "Potvrzení passphrase",
       "Eckhart": "Potvrdit passphrase"
     },
-    "passphrase__title_enter": "Zadání passphrase",
+    "passphrase__title_enter": "Zadejte passphrase",
     "passphrase__title_hide": "Skrýt passphrase",
     "passphrase__title_passphrase": "Passphrase",
     "passphrase__title_settings": "Nastavení passphrase",
@@ -2731,7 +2726,7 @@
     "send__maximum_fee": "Maximální poplatek",
     "send__multisig_different_paths": "Použití různých cest pro různé XPUB.",
     "send__receiving_to_multisig": "Příjem na adresách multisig.",
-    "send__send_from": "Odeslat z",
+    "send__send_from": "Odeslání z",
     "send__send_in_the_app": {
       "Bolt": "",
       "Caesar": "",
@@ -2743,7 +2738,7 @@
     "send__title_confirm_sending": "Potvrdit odeslání",
     "send__title_joint_transaction": "Společná transakce",
     "send__title_receiving_to": {
-      "Bolt": "Příjem",
+      "Bolt": "Příjem na",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2853,7 +2848,7 @@
     "stellar__account_thresholds": "Prahové hodnoty účtu",
     "stellar__add_signer": "Přidání podepisujícího",
     "stellar__add_trust": "Přidání důvěry",
-    "stellar__all_will_be_sent_to": "Všechny XLM budou odeslány sem:",
+    "stellar__all_will_be_sent_to": "Všechny XLM budou odeslány sem",
     "stellar__allow_trust": "Povolení důvěry",
     "stellar__balance_id": "ID zůstatku",
     "stellar__bump_sequence": "Sekvence urychlení",
@@ -3470,7 +3465,7 @@
       "Eckhart": "ZAPNUTO"
     },
     "words__operation_cancelled": "Operace byla zrušena",
-    "words__outputs": "výstupy",
+    "words__outputs": "výstupů",
     "words__pay_attention": "Pozor",
     "words__please_check_again": {
       "Bolt": "Prosím, zkontrolujte zálohu znovu.",

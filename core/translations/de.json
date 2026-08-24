@@ -728,7 +728,7 @@
     "cardano__x_of_y_signatures_template": "Erfordert {0} von {1} Signaturen.",
     "coinjoin__access_account": "Auf CoinJoin-Konto zugreifen?",
     "coinjoin__do_not_disconnect": "Trenne deinen Trezor nicht!",
-    "coinjoin__max_coordinator_fee_pct": "",
+    "coinjoin__max_coordinator_fee_pct": "Maximale Koordinatorgebühr",
     "coinjoin__max_mining_fee": "Max. Mining-Gebühr",
     "coinjoin__max_rounds": "Max. Runden",
     "coinjoin__title": {
@@ -1054,7 +1054,7 @@
     "ethereum__delegating": "Delegieren",
     "ethereum__deposit_amount": "Einzahlungsbetrag",
     "ethereum__deposit_to": "Einzahlen auf",
-    "ethereum__eip_712_empty_domain": "",
+    "ethereum__eip_712_empty_domain": "dApp hat sich nicht identifiziert!",
     "ethereum__gas_limit": "Gas-Grenze",
     "ethereum__gas_price": "Gas-Preis",
     "ethereum__interaction_contract": "Interaktionsvertrag",
@@ -1111,7 +1111,7 @@
       "Eckhart": "Ganze zeigen"
     },
     "ethereum__sign_eip712": "EIP-712-Daten wirklich signieren?",
-    "ethereum__skip_to_hash": "",
+    "ethereum__skip_to_hash": "Überspringen und Hash anzeigen",
     "ethereum__smart_info": "Smart-Account-Contract-Informationen",
     "ethereum__staking_claim": "Einlösen",
     "ethereum__staking_claim_address": "Einlöse-Adresse",
@@ -1121,8 +1121,8 @@
     "ethereum__staking_stake_intro": "ETH auf Everstake staken?",
     "ethereum__staking_unstake": "Entstaken",
     "ethereum__staking_unstake_intro": "ETH von Everstake entstaken?",
-    "ethereum__subcall": "",
-    "ethereum__subcall_to": "",
+    "ethereum__subcall": "Unteraufruf",
+    "ethereum__subcall_to": "Unteraufruf an",
     "ethereum__subtitle_input_data_bytes": {
       "Bolt": "",
       "Caesar": "",
@@ -1175,7 +1175,7 @@
     "ethereum__vault_redeem_intro": "Prüfe die Details, um aus dem Vault einzulösen.",
     "ethereum__vault_redeem_to": "Einlösen auf",
     "ethereum__vault_withdraw_intro": "Prüfe die Details, um aus dem Vault abzuheben.",
-    "ethereum__view_data_and_hash": "",
+    "ethereum__view_data_and_hash": "Daten und Hash anschauen",
     "ethereum__withdraw": "Abheben",
     "ethereum__withdraw_amount": "Abhebungsbetrag",
     "ethereum__withdraw_from": "Abheben von",
@@ -1323,12 +1323,7 @@
       "Eckhart": "Coinjoin autorisiert"
     },
     "homescreen__title_experimental_mode": "Experimentiermodus",
-    "homescreen__title_no_usb_connection": {
-      "Bolt": "Kein USB-Anschluss",
-      "Caesar": "Kein USB-Anschluss",
-      "Delizia": "Kein USB-Anschluss",
-      "Eckhart": "Keine USB Verbindung"
-    },
+    "homescreen__title_no_usb_connection": "Keine USB-Verbindung",
     "homescreen__title_pin_not_set": {
       "Bolt": "PIN nicht vergeben",
       "Caesar": "PIN nicht vergeben",
@@ -2491,7 +2486,7 @@
     "reset__group_share_checked_successfully_template": {
       "Bolt": "Share {1} von Gruppe {0} erfolgreich geprüft.",
       "Caesar": "Share {1} von Gruppe {0} erfolgreich geprüft.",
-      "Delizia": "Share {1} von Gruppe {0} erledigt",
+      "Delizia": "Share {1} von Gruppe {0} OK",
       "Eckhart": "Share {1} von Gruppe {0} erfolgreich geprüft."
     },
     "reset__group_share_title_template": {
@@ -3243,12 +3238,7 @@
     "stellar__account_thresholds": "Kontoschwellen",
     "stellar__add_signer": "Signer hinzufügen",
     "stellar__add_trust": "Trust hinzufügen",
-    "stellar__all_will_be_sent_to": {
-      "Bolt": "Alle XLM werden gesendet an:",
-      "Caesar": "Alle XLM werden gesendet an",
-      "Delizia": "Alle XLM werden gesendet an:",
-      "Eckhart": "Alle XLM werden gesendet an:"
-    },
+    "stellar__all_will_be_sent_to": "Alle XLM werden gesendet an",
     "stellar__allow_trust": "Trust zulassen",
     "stellar__balance_id": "Guthaben-ID",
     "stellar__bump_sequence": "Bump-Sequenz",
@@ -3269,14 +3259,9 @@
     "stellar__delete_passive_offer": "Passives Angebot löschen",
     "stellar__delete_trust": "Trust löschen",
     "stellar__destination": "Ziel",
-    "stellar__exchanges_require_memo": {
-      "Bolt": "Memo nicht gesetzt.\nÜblicherweise für das Senden an Börsen erforderlich.",
-      "Caesar": "Memo nicht gesetzt.\nÜblicherweise für Senden an Börsen nötig.",
-      "Delizia": "Memo nicht gesetzt.\nÜblicherweise für das Senden an Börsen erforderlich.",
-      "Eckhart": "Memo nicht gesetzt.\nÜblicherweise für Senden an Börsen nötig."
-    },
-    "stellar__ext_auth": "",
-    "stellar__ext_auth_message": "",
+    "stellar__exchanges_require_memo": "Memo ist nicht festgelegt. Es wird normalerweise benötigt, wenn du an Börsen sendest.",
+    "stellar__ext_auth": "Externe Autorisierungen",
+    "stellar__ext_auth_message": "Die Transaktion enthält zusätzliche Aufrufe, die durch externe Mittel autorisiert wurden.",
     "stellar__final_confirm": "Letzte Bestätigung",
     "stellar__hash": "Hash",
     "stellar__high": "Hoch",
@@ -3287,7 +3272,7 @@
       "Eckhart": "Startdomain"
     },
     "stellar__inflation": "Inflation",
-    "stellar__invoke_contract": "",
+    "stellar__invoke_contract": "Vertrag aufrufen",
     "stellar__issuer_template": "{0} Aussteller",
     "stellar__key": "Key",
     "stellar__limit": "Grenze",
@@ -3303,7 +3288,7 @@
       "Eckhart": "Kein Memo festgelegt."
     },
     "stellar__no_restriction": "[keine Einschränkung]",
-    "stellar__on_behalf_of": "",
+    "stellar__on_behalf_of": "Im Auftrag von",
     "stellar__path_pay": "Path Pay",
     "stellar__path_pay_at_least": "Path Pay mindestens",
     "stellar__pay": "Zahlen",
@@ -3316,7 +3301,7 @@
     "stellar__set_data": "Daten festlegen",
     "stellar__set_flags": "Flags festlegen",
     "stellar__set_sequence_to_template": "Sequenz auf {0} setzen?",
-    "stellar__sign_authorization": "",
+    "stellar__sign_authorization": "Autorisierung signieren",
     "stellar__sign_with": {
       "Bolt": "Signieren mit",
       "Caesar": "Signieren mit",
@@ -3337,7 +3322,7 @@
     },
     "stellar__valid_from": "Gültig von (UTC)",
     "stellar__valid_to": "Gültig bis (UTC)",
-    "stellar__valid_until_ledger": "",
+    "stellar__valid_until_ledger": "Gültig bis Ledger",
     "stellar__value_sha256": "Wert (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Möchtest du den Wert-Key {0} löschen?",
     "storage_msg__processing": {
@@ -3807,11 +3792,11 @@
       "Delizia": "Bist du sicher?",
       "Eckhart": "Bist du dir sicher?"
     },
-    "words__arguments": "",
+    "words__arguments": "Argumente",
     "words__array_of": "Array von",
     "words__asset": "Asset",
     "words__assets": "Assets",
-    "words__authorization": "",
+    "words__authorization": "Autorisierung",
     "words__blockhash": "Blockhash",
     "words__bluetooth": {
       "Bolt": "",
@@ -3873,7 +3858,7 @@
       "Delizia": "von",
       "Eckhart": ""
     },
-    "words__function": "",
+    "words__function": "Funktion",
     "words__important": "Wichtig",
     "words__instructions": "Anweisungen",
     "words__intent": "Absicht",

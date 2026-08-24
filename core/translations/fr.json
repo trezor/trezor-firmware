@@ -523,7 +523,7 @@
     "buttons__format": "Formater",
     "buttons__go_back": "Retour",
     "buttons__hold_to_confirm": {
-      "Bolt": "Maintenir",
+      "Bolt": "Maintenez pour confirmer",
       "Caesar": "Maintenez pr conf.",
       "Delizia": "Maintenez pour confirmer",
       "Eckhart": "Maintenez pour confirmer"
@@ -708,7 +708,7 @@
     "cardano__x_of_y_signatures_template": "Nécessite {0} signatures sur {1}.",
     "coinjoin__access_account": "Accéder à votre compte Coinjoin ?",
     "coinjoin__do_not_disconnect": "Ne déconnectez pas votre Trezor !",
-    "coinjoin__max_coordinator_fee_pct": "",
+    "coinjoin__max_coordinator_fee_pct": "Frais max du coordinateur",
     "coinjoin__max_mining_fee": {
       "Bolt": "Frais max de minage",
       "Caesar": "Frais de minage max",
@@ -1049,7 +1049,7 @@
     "ethereum__delegating": "Déléguer",
     "ethereum__deposit_amount": "Montant du dépôt",
     "ethereum__deposit_to": "Déposer vers",
-    "ethereum__eip_712_empty_domain": "",
+    "ethereum__eip_712_empty_domain": "La dApp ne s'est pas identifiée !",
     "ethereum__gas_limit": "Limite de gas",
     "ethereum__gas_price": "Prix du gas",
     "ethereum__interaction_contract": "Contrat d'interaction",
@@ -1081,7 +1081,7 @@
     "ethereum__show_full_message": "Afficher le message complet",
     "ethereum__show_full_struct": "Afficher le struct complet",
     "ethereum__sign_eip712": "Signer ces données structurées EIP-712 ?",
-    "ethereum__skip_to_hash": "",
+    "ethereum__skip_to_hash": "Ignorer et voir le hash",
     "ethereum__smart_info": "Infos sur le contrat du compte intelligent",
     "ethereum__staking_claim": "Réclamer",
     "ethereum__staking_claim_address": "Adresse de réclamation",
@@ -1096,8 +1096,8 @@
       "Eckhart": "Retirer du staking"
     },
     "ethereum__staking_unstake_intro": "Retirer les ETH mis en staking sur Everstake ?",
-    "ethereum__subcall": "",
-    "ethereum__subcall_to": "",
+    "ethereum__subcall": "Sous-appel",
+    "ethereum__subcall_to": "Sous-appel vers",
     "ethereum__subtitle_input_data_bytes": {
       "Bolt": "",
       "Caesar": "",
@@ -1165,7 +1165,7 @@
       "Delizia": "Vérifiez pour retirer du coffre.",
       "Eckhart": "Vérifiez les détails pour retirer du coffre."
     },
-    "ethereum__view_data_and_hash": "",
+    "ethereum__view_data_and_hash": "Voir les données et hash",
     "ethereum__withdraw": "Retirer",
     "ethereum__withdraw_amount": "Montant du retrait",
     "ethereum__withdraw_from": "Retirer depuis",
@@ -2374,7 +2374,7 @@
       "Bolt": "Continuez avec le fragment suivant.",
       "Caesar": "Continuez avec le fragment suivant.",
       "Delizia": "Continuez avec le fragment suivant.",
-      "Eckhart": "Entrer le fragment suivant"
+      "Eckhart": "Saisir le fragment suivant"
     },
     "reset__continue_with_share_template": {
       "Bolt": "Passez au fragment {0}.",
@@ -2573,7 +2573,7 @@
     },
     "reset__select_word_x_of_y_template": {
       "Bolt": "Le mot {0} sur {1} est :",
-      "Caesar": "Le mot {0} sur {1} est :",
+      "Caesar": "Mot {0} sur {1} :",
       "Delizia": "Le mot {0} sur {1} est",
       "Eckhart": ""
     },
@@ -3109,15 +3109,15 @@
     "stellar__delete_passive_offer": "Supprimer l'offre passive",
     "stellar__delete_trust": "Supprimer le Trust",
     "stellar__destination": "Destination",
-    "stellar__exchanges_require_memo": "Mémo non défini.\nGénéralement requis pour un envoi vers une plateforme d'échange.",
-    "stellar__ext_auth": "",
-    "stellar__ext_auth_message": "",
+    "stellar__exchanges_require_memo": "Mémo non défini. Généralement requis pour un envoi vers une plateforme d'échange.",
+    "stellar__ext_auth": "Autorisations Externes",
+    "stellar__ext_auth_message": "La transaction contient des appels supplémentaires autorisés par des moyens externes.",
     "stellar__final_confirm": "Confirmation finale",
     "stellar__hash": "Hash",
     "stellar__high": "Élevé",
     "stellar__home_domain": "Domaine d'origine",
     "stellar__inflation": "Inflation",
-    "stellar__invoke_contract": "",
+    "stellar__invoke_contract": "Appeler le contrat",
     "stellar__issuer_template": "{0} émetteur",
     "stellar__key": "Clé",
     "stellar__limit": "Limite",
@@ -3128,7 +3128,7 @@
     "stellar__new_passive_offer": "Nouvelle offre passive",
     "stellar__no_memo_set": "Aucun mémo défini !",
     "stellar__no_restriction": "[aucune restriction]",
-    "stellar__on_behalf_of": "",
+    "stellar__on_behalf_of": "Au nom de",
     "stellar__path_pay": "Path Pay",
     "stellar__path_pay_at_least": "Path Pay d'au moins",
     "stellar__pay": "Payer",
@@ -3141,7 +3141,7 @@
     "stellar__set_data": "Définir les données",
     "stellar__set_flags": "Définir les flags",
     "stellar__set_sequence_to_template": "Déf. séquence sur {0} ?",
-    "stellar__sign_authorization": "",
+    "stellar__sign_authorization": "Signer l'autorisation",
     "stellar__sign_with": "Signer avec",
     "stellar__source_account": "Compte source",
     "stellar__timebounds": "Période de validité",
@@ -3152,7 +3152,7 @@
     "stellar__update": "Mettre à jour",
     "stellar__valid_from": "Valide à partir de (UTC)",
     "stellar__valid_to": "Valide jusqu'à (UTC)",
-    "stellar__valid_until_ledger": "",
+    "stellar__valid_until_ledger": "Valide jusqu'au ledger",
     "stellar__value_sha256": "Valeur (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Voulez-vous effacer la clé de valeur {0} ?",
     "storage_msg__processing": {
@@ -3597,11 +3597,11 @@
     "words__address": "Adresse",
     "words__amount": "Montant",
     "words__are_you_sure": "Êtes-vous sûr ?",
-    "words__arguments": "",
+    "words__arguments": "Arguments",
     "words__array_of": "Tableau de",
     "words__asset": "Actif",
     "words__assets": "Actifs",
-    "words__authorization": "",
+    "words__authorization": "Autorisation",
     "words__blockhash": "Hash du bloc",
     "words__bluetooth": {
       "Bolt": "",
@@ -3673,7 +3673,7 @@
       "Delizia": "du",
       "Eckhart": ""
     },
-    "words__function": "",
+    "words__function": "Fonction",
     "words__important": "Important",
     "words__instructions": "Instructions",
     "words__intent": "Intention",
