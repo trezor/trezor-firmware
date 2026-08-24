@@ -6,6 +6,7 @@ links = "upymod"
 
 [build-dependencies]
 color-eyre.workspace = true
+hex.workspace = true
 xbuild.workspace = true
 
 [dependencies]

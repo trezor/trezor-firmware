@@ -1,6 +1,4 @@
-use std::process::Command;
-
-use xbuild::{Result, WrapErr, ensure};
+use xbuild::{Result, scm_revision};
 
 fn main() -> Result<()> {
     xbuild::build(|lib| {
@@ -34,37 +32,14 @@ fn main() -> Result<()> {
     })
 }
 
-/// Extracts the first four bytes of the Git revision and formats them
+/// Extracts the first four bytes of SCM_REVISION and formats them
 /// as a C initializer list, e.g. {0x12, 0x34, 0x56, 0x78}.
 fn get_scm_revision_short() -> Result<String> {
-    let git_output = Command::new("git")
-        .args(["rev-parse", "HEAD"])
-        .output()
-        .context("Failed to execute git command")?;
+    let revision = scm_revision()?;
 
-    ensure!(
-        git_output.status.success(),
-        "Git command failed: {}",
-        String::from_utf8_lossy(&git_output.stderr)
-    );
-
-    let git_hash = String::from_utf8_lossy(&git_output.stdout);
-    let git_hash = git_hash.trim();
-
-    ensure!(
-        git_hash.len() >= 8 && git_hash.chars().all(|c| c.is_ascii_hexdigit()),
-        "Unexpected git hash format: {}",
-        git_hash
-    );
-
-    let init_val = git_hash.as_bytes()[..8]
-        .chunks(2)
-        .map(|chunk| {
-            format!(
-                "0x{},",
-                std::str::from_utf8(chunk).expect("git hash must be valid ASCII")
-            )
-        })
+    let init_val = hex::decode(&revision[..8])?
+        .iter()
+        .map(|byte| format!("0x{byte:02x},"))
         .collect::<String>();
 
     Ok(format!("{{{}}}", init_val))

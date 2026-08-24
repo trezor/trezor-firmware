@@ -44,6 +44,7 @@ pub fn test(args: TestArgs) -> Result<()> {
             .arg("--")
             .arg("--test-threads=1")
             .arg("--nocapture")
+            .env("SCM_REVISION", helpers::git_revision()?)
             .current_dir(helpers::workspace_dir()?);
 
         println!("xtask: Running test on `{}`", &package);

@@ -43,6 +43,29 @@ pub fn links_name() -> Result<String> {
     env::var("CARGO_MANIFEST_LINKS").context("Failed to get CARGO_MANIFEST_LINKS")
 }
 
+/// Returns the Git revision supplied by xtask through `SCM_REVISION`.
+///
+/// Emits Cargo's environment dependency directive and validates that the value
+/// is a full SHA-1 revision.
+pub fn scm_revision() -> Result<String> {
+    cargo_out::rerun_if_env_changed("SCM_REVISION");
+
+    let revision = env::var("SCM_REVISION")
+        .context("SCM_REVISION environment variable is not set")?
+        .trim()
+        .to_string();
+
+    if revision.len() != 40
+        || !revision
+            .chars()
+            .all(|character| character.is_ascii_hexdigit())
+    {
+        return Err(eyre!("Unexpected SCM_REVISION format: {revision}"));
+    }
+
+    Ok(revision)
+}
+
 /// Reads a `DEP_<CRATE>_PUBLIC_C_<KEY>` metadata variable exported by a
 /// dependency's build script.
 pub fn library_metadata(lib_name: &str, kind: &str) -> Result<String> {

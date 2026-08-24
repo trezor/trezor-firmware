@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use xbuild::{
     CLibrary, InputFiles, OutputType, Result, WrapErr, bail, bail_unsupported, current_model_id,
-    ensure, model_ids,
+    model_ids, scm_revision,
 };
 
 fn main() -> Result<()> {
@@ -312,27 +312,9 @@ fn main() -> Result<()> {
 /// Extracts the Git revision, obfuscates it, and defines
 /// SCM_REVISION_INIT together with two per-build XOR key bytes.
 fn define_scm_revision(lib: &mut CLibrary) -> Result<u8> {
-    let git_output = std::process::Command::new("git")
-        .args(["rev-parse", "HEAD"])
-        .output()
-        .context("Failed to execute git command")?;
+    let revision = scm_revision()?;
 
-    ensure!(
-        git_output.status.success(),
-        "Git command failed: {}",
-        String::from_utf8_lossy(&git_output.stderr)
-    );
-
-    let revision = String::from_utf8_lossy(&git_output.stdout);
-    let revision = revision.trim();
-
-    let mut revision = revision.as_bytes()[8..]
-        .chunks_exact(2)
-        .map(|chunk| {
-            let hex = std::str::from_utf8(chunk).expect("git hash must be ASCII hex");
-            u8::from_str_radix(hex, 16).expect("valid hex")
-        })
-        .collect::<Vec<u8>>();
+    let mut revision = hex::decode(&revision[8..])?;
 
     // Derive the XOR bytes from a standard FNV-1 hash of the whole revision.
     let fnv_hash = revision.iter().fold(0x811C9DC5u32, |hash, &byte| {
