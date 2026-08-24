@@ -167,6 +167,14 @@ async def confirm_instruction(
             raise ValueError  # Invalid ui property
 
     if instruction.trailing_accounts:
+        if instruction.trailing_accounts_warning is not None:
+            await confirm_metadata(
+                "confirm_trailing_accounts_warning",
+                instruction_full_title,
+                instruction.trailing_accounts_warning,
+                br_code=ButtonRequestType.Other,
+            )
+
         trailing_account_props: list[StrPropertyType] = []
         for i, trailing_account in enumerate(instruction.trailing_accounts, 1):
             trailing_account_props += _get_account_props(
