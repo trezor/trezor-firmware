@@ -25,6 +25,7 @@
     - [TrustZone](core/misc/trustzone.md)
     - [SLIP-39](core/misc/slip0039.md)
     - [WARD trie canonical form](core/misc/ward-trie.md)
+    - [WARD: who talks to whom](core/misc/ward-channels.md)
     - [Translation data format](core/misc/translations.md)
     - [UI Layout lifecycle](core/misc/layout-lifecycle.md)
     - [Optiga configuration](core/misc/optiga.md)
