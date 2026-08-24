@@ -872,6 +872,8 @@ class MessageType(IntEnum):
     WardFlushQueueApplied = 2340
     WardResetService = 2341
     WardResetServiceAck = 2342
+    WardResetApp = 2343
+    WardResetAppAck = 2344
     DisplayAddress = 2322
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
@@ -10467,6 +10469,24 @@ class WardFlushQueue(protobuf.MessageType):
     ) -> None:
         self.app_id = app_id
         self.identifier = identifier
+
+
+class WardResetApp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2343
+
+
+class WardResetAppAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2344
+    FIELDS = {
+        1: protobuf.Field("was_bound", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        was_bound: Optional["bool"] = None,
+    ) -> None:
+        self.was_bound = was_bound
 
 
 class WardEntryRequest(protobuf.MessageType):

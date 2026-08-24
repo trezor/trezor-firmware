@@ -8351,6 +8351,26 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardFlushQueue"]:
             return isinstance(msg, cls)
 
+    class WardResetApp(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardResetApp"]:
+            return isinstance(msg, cls)
+
+    class WardResetAppAck(protobuf.MessageType):
+        was_bound: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            was_bound: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardResetAppAck"]:
+            return isinstance(msg, cls)
+
     class WardEntryRequest(protobuf.MessageType):
         entry_key: "AnyBytes | None"
 

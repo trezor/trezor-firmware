@@ -807,6 +807,8 @@ if TYPE_CHECKING:
         WardFlushQueueApplied = 2340
         WardResetService = 2341
         WardResetServiceAck = 2342
+        WardResetApp = 2343
+        WardResetAppAck = 2344
         DisplayAddress = 2322
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
