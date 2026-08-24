@@ -154,9 +154,9 @@ async def pull_leaf_from_backend(entry_key: bytes):
     names ONLY the opaque path -- see `keys.entry_key_for`.
 
     "BACKEND", NOT "HOST", because which party that is depends on how this firmware was built. A
-    connect build asks the wallet host over the same channel it is answering on, which is why the
-    request only exists inside a workflow (the pattern
-    `apps/webauthn/list_resident_credentials.py` uses). A service build asks a daemon on a channel
+    connect build asks the WARD APP over the same channel it is answering on -- on that build the app
+    owns the replica as well as invoking the operation -- which is why the request only exists inside
+    a workflow (the pattern `apps/webauthn/list_resident_credentials.py` uses). A service build asks a daemon on a channel
     of its own, and asks a HEAD-AWARE question, which is a strictly better one: the daemon can say
     "you are out of sync" instead of serving a proof that cannot verify.
 
