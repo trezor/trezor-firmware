@@ -560,6 +560,18 @@ def boot() -> None:
     lock_manager.reload_settings_from_storage()
     if backup.repeated_backup_enabled():
         backup.activate_repeated_backup()
+
+    # WARD's user-facing messages are answered only for the app that holds the WARD role, and this
+    # is where that is arranged: a wire filter rather than a line in each of sixteen handlers, so a
+    # handler added later cannot quietly ship unguarded. See `apps.ward.app_role`.
+    #
+    # BEFORE THE PINLOCK FILTER BELOW, deliberately. Filters run last-appended-first, so the pinlock
+    # keeps triggering first and the device is unlocked before the role question is asked -- which is
+    # the right order, since granting the role is a flash write.
+    from apps.ward.app_role import ward_app_filter
+
+    filters.append(ward_app_filter)
+
     if not config.is_unlocked():
         # pinlocked handler should always be the last one
         # TODO: hide this inside lock_manager
