@@ -979,6 +979,7 @@ def test_claim_claimable_balance():
 SOROBAN_SOURCE = "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
 SOROBAN_CONTRACT = "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI"
 SOROBAN_DESTINATION = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+SOROBAN_DELEGATE = "GCRW4NZ45MPVTYRD6MV4EOT2WB4BIWLENHREU2BQLFF3DL4IPH36NBDL"
 
 # A real asset, so the address of its Stellar Asset Contract can be derived
 # (CAP-46-2) and asset hints matched against invocations of that contract.
@@ -1136,6 +1137,65 @@ def test_from_authorization_entry_ignores_signature():
     )
 
 
+def make_delegates_authorization_entry(
+    address, nonce, signature_expiration_ledger, delegates=()
+):
+    """A CAP-71-01 entry whose account delegates authentication to other addresses."""
+    return stellar_xdr.SorobanAuthorizationEntry(
+        credentials=stellar_xdr.SorobanCredentials(
+            type=stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES,
+            address_with_delegates=stellar_xdr.SorobanAddressCredentialsWithDelegates(
+                address_credentials=stellar_xdr.SorobanAddressCredentials(
+                    address=Address(address).to_xdr_sc_address(),
+                    nonce=stellar_xdr.Int64(nonce),
+                    signature_expiration_ledger=stellar_xdr.Uint32(
+                        signature_expiration_ledger
+                    ),
+                    signature=scval.to_void(),
+                ),
+                delegates=list(delegates),
+            ),
+        ),
+        root_invocation=make_soroban_invocation(),
+    )
+
+
+def make_delegate(address, signature=None, nested_delegates=()):
+    return stellar_xdr.SorobanDelegateSignature(
+        address=Address(address).to_xdr_sc_address(),
+        signature=signature if signature is not None else scval.to_void(),
+        nested_delegates=list(nested_delegates),
+    )
+
+
+@skip_if_no_protocol_27
+def test_from_authorization_entry_with_delegates():
+    # Under CAP-71-01 every delegated signer authenticates the same payload,
+    # bound to the entry's top-level address, so that is what the request
+    # carries.
+    entry = make_delegates_authorization_entry(
+        SOROBAN_CONTRACT,
+        123456789,
+        600000,
+        delegates=[
+            make_delegate(SOROBAN_SOURCE, scval.to_bytes(b"already signed")),
+            make_delegate(
+                SOROBAN_CONTRACT,
+                nested_delegates=[make_delegate(SOROBAN_DELEGATE)],
+            ),
+        ],
+    )
+
+    authorization = stellar.from_authorization_entry(entry)
+
+    assert authorization == messages.StellarSorobanAuthorizationWithAddress(
+        nonce=123456789,
+        signature_expiration_ledger=600000,
+        address=SOROBAN_CONTRACT,
+        invocation=expected_invocation("transfer", 500_111_000),
+    )
+
+
 @skip_if_no_protocol_27
 def test_from_authorization_entry_unsupported_credentials():
     entry = stellar_xdr.SorobanAuthorizationEntry(
@@ -1188,6 +1248,35 @@ def make_sac_transfer_tx(auth=()):
         auth=list(auth),
     )
     return make_default_tx().append_operation(op).build()
+
+
+@skip_if_no_protocol_27
+def test_from_envelope_delegates():
+    # The whole delegate tree reaches the device: it is part of the transaction
+    # the device signs.
+    entry = make_delegates_authorization_entry(
+        SOROBAN_CONTRACT,
+        123456789,
+        600000,
+        delegates=[
+            make_delegate(SOROBAN_SOURCE),
+            make_delegate(
+                SOROBAN_CONTRACT,
+                nested_delegates=[make_delegate(SOROBAN_DELEGATE)],
+            ),
+        ],
+    )
+
+    _, operations, _ = stellar.from_envelope(make_sac_transfer_tx(auth=[entry]))
+
+    credentials = operations[0].auth[0].credentials
+    assert (
+        credentials.type
+        == messages.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES
+    )
+    delegates = credentials.address_with_delegates.delegates
+    assert [d.address for d in delegates] == [SOROBAN_SOURCE, SOROBAN_CONTRACT]
+    assert [d.address for d in delegates[1].nested_delegates] == [SOROBAN_DELEGATE]
 
 
 def test_from_envelope_asset_hints():
