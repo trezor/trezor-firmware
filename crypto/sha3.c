@@ -54,6 +54,21 @@ static void keccak_Init(SHA3_CTX *ctx, unsigned bits)
 	assert(rate <= 1600 && (rate % 64) == 0);
 }
 
+/** Initialize a sha3/keccak context for given number of output bits.
+ *
+ * Returns false if the number of output bits is invalid, true otherwise.
+ * (with a valid number of bits, the initialization cannot fail).
+ */
+bool sha3_Init(SHA3_CTX *ctx, unsigned bits)
+{
+	if (bits != 224 && bits != 256 && bits != 384 && bits != 512) {
+		return false;
+	}
+
+	keccak_Init(ctx, bits);
+	return true;
+}
+
 /**
  * Initialize context before calculating hash.
  *
