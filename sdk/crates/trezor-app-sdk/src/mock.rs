@@ -228,14 +228,6 @@ pub static DUMMY_TREZOR_CRYPTO_V1: trezor_crypto_v1_t = trezor_crypto_v1_t {
 unsafe extern "C" fn dummy_system_exit(_exitcode: core::ffi::c_int) {}
 
 /// **Stub** — does nothing. No error screen is displayed.
-unsafe extern "C" fn dummy_system_exit_error(
-    _title: *const core::ffi::c_char,
-    _message: *const core::ffi::c_char,
-    _footer: *const core::ffi::c_char,
-) {
-}
-
-/// **Stub** — does nothing. No error screen is displayed.
 unsafe extern "C" fn dummy_system_exit_error_ex(
     _title: *const core::ffi::c_char,
     _title_len: usize,
@@ -331,9 +323,7 @@ unsafe extern "C" fn dummy_app_get_heap(
 
 pub static DUMMY_TREZOR_API_V1: trezor_api_v1_t = trezor_api_v1_t {
     system_exit: Some(dummy_system_exit),
-    system_exit_error: Some(dummy_system_exit_error),
     system_exit_error_ex: Some(dummy_system_exit_error_ex),
-    system_exit_fatal: Some(dummy_system_exit_fatal),
     system_exit_fatal_ex: Some(dummy_system_exit_fatal_ex),
     syslog_start_record: Some(dummy_syslog_start_record),
     syslog_write_chunk: Some(dummy_syslog_write_chunk),
