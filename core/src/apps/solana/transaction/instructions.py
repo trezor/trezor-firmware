@@ -945,6 +945,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_ASSIGN:
             return Instruction(
@@ -982,6 +983,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_TRANSFER:
@@ -1026,6 +1028,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED:
@@ -1111,6 +1114,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT:
             return Instruction(
@@ -1140,6 +1144,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT:
@@ -1197,6 +1202,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT:
             return Instruction(
@@ -1234,6 +1240,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT:
@@ -1279,6 +1286,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_ALLOCATE:
             return Instruction(
@@ -1316,6 +1324,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED:
@@ -1382,6 +1391,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED:
             return Instruction(
@@ -1433,6 +1443,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED:
@@ -1492,6 +1503,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT:
             return Instruction(
@@ -1515,6 +1527,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         return Instruction(
@@ -1622,6 +1635,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE:
             return Instruction(
@@ -1690,6 +1704,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_DELEGATE_STAKE:
             return Instruction(
@@ -1732,6 +1747,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_SPLIT:
@@ -1782,6 +1798,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_WITHDRAW:
@@ -1840,6 +1857,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_DEACTIVATE:
             return Instruction(
@@ -1869,6 +1887,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_SET_LOCKUP:
@@ -1940,6 +1959,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_MERGE:
             return Instruction(
@@ -1981,6 +2001,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED:
@@ -2064,6 +2085,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED:
             return Instruction(
@@ -2104,6 +2126,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED:
@@ -2166,6 +2189,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED:
@@ -2243,6 +2267,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED:
             return Instruction(
@@ -2310,6 +2335,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         return Instruction(
             instruction_data,
@@ -2358,6 +2384,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT:
             return Instruction(
@@ -2390,6 +2417,7 @@ def get_instruction(
                 True,
                 False,
                 None,
+                None,
             )
         if instruction_id == _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE:
             return Instruction(
@@ -2421,6 +2449,7 @@ def get_instruction(
                 True,
                 True,
                 False,
+                None,
                 None,
             )
         return Instruction(
@@ -2474,6 +2503,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
             return Instruction(
@@ -2511,6 +2541,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_TRANSFER:
@@ -2562,6 +2593,7 @@ def get_instruction(
                 False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_APPROVE:
             return Instruction(
@@ -2612,6 +2644,7 @@ def get_instruction(
                 False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_REVOKE:
             return Instruction(
@@ -2641,6 +2674,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_SET_AUTHORITY:
@@ -2699,6 +2733,7 @@ def get_instruction(
                 False,
                 True,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_MINT_TO:
             return Instruction(
@@ -2749,6 +2784,7 @@ def get_instruction(
                 False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_BURN:
             return Instruction(
@@ -2799,6 +2835,7 @@ def get_instruction(
                 False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT:
             return Instruction(
@@ -2834,6 +2871,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT:
@@ -2871,6 +2909,7 @@ def get_instruction(
                 False,
                 True,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT:
             return Instruction(
@@ -2906,6 +2945,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED:
@@ -2970,6 +3010,7 @@ def get_instruction(
                 False,
                 True,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED:
             return Instruction(
@@ -3033,6 +3074,7 @@ def get_instruction(
                 False,
                 True,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED:
             return Instruction(
@@ -3089,6 +3131,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_BURN_CHECKED:
@@ -3147,6 +3190,7 @@ def get_instruction(
                 False,
                 True,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2:
             return Instruction(
@@ -3191,6 +3235,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_SYNC_NATIVE:
             return Instruction(
@@ -3214,6 +3259,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3:
@@ -3259,6 +3305,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
             return Instruction(
@@ -3282,6 +3329,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         return Instruction(
@@ -3335,6 +3383,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
             return Instruction(
@@ -3372,6 +3421,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_TRANSFER:
@@ -3423,6 +3473,7 @@ def get_instruction(
                 False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_APPROVE:
             return Instruction(
@@ -3473,6 +3524,7 @@ def get_instruction(
                 False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_REVOKE:
             return Instruction(
@@ -3502,6 +3554,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY:
@@ -3560,6 +3613,7 @@ def get_instruction(
                 False,
                 True,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_MINT_TO:
             return Instruction(
@@ -3610,6 +3664,7 @@ def get_instruction(
                 False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_BURN:
             return Instruction(
@@ -3660,6 +3715,7 @@ def get_instruction(
                 False,
                 True,
                 "Warning: Instruction is deprecated. Token decimals unknown.",
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT:
             return Instruction(
@@ -3695,6 +3751,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT:
@@ -3732,6 +3789,7 @@ def get_instruction(
                 False,
                 True,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT:
             return Instruction(
@@ -3767,6 +3825,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED:
@@ -3831,6 +3890,7 @@ def get_instruction(
                 False,
                 True,
                 None,
+                "This transfer may invoke the token's transfer hook program. Additional restrictions or fees may apply.",
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED:
             return Instruction(
@@ -3894,6 +3954,7 @@ def get_instruction(
                 False,
                 True,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED:
             return Instruction(
@@ -3950,6 +4011,7 @@ def get_instruction(
                 True,
                 False,
                 True,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED:
@@ -4008,6 +4070,7 @@ def get_instruction(
                 False,
                 True,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2:
             return Instruction(
@@ -4052,6 +4115,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE:
             return Instruction(
@@ -4075,6 +4139,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3:
@@ -4120,6 +4185,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
             return Instruction(
@@ -4143,6 +4209,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         return Instruction(
@@ -4210,6 +4277,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT:
             return Instruction(
@@ -4259,6 +4327,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         if instruction_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED:
             return Instruction(
@@ -4302,6 +4371,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         return Instruction(
@@ -4357,6 +4427,7 @@ def get_instruction(
                 False,
                 False,
                 None,
+                None,
             )
         return Instruction(
             instruction_data,
@@ -4410,6 +4481,7 @@ def get_instruction(
                 True,
                 False,
                 False,
+                None,
                 None,
             )
         return Instruction(

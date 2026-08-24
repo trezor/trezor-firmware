@@ -57,6 +57,7 @@ def get_amount_and_destination(parameters, instruction):
     "solana/sign_tx.memo_program.json",
     "solana/sign_tx.compute_budget_program.json",
     "solana/sign_tx.token_program.json",
+    "solana/sign_tx.token_2022_program.json",
     "solana/sign_tx.unknown_instructions.json",
     "solana/sign_tx.predefined_transactions.json",
     "solana/sign_tx.staking_transactions.json",
