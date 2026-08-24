@@ -222,13 +222,6 @@ impl Default for trezor_crypto_v1_t {
 #[repr(C)]
 pub struct trezor_api_v1_t {
     pub system_exit: ::core::option::Option<unsafe extern "C" fn(exitcode: cty::c_int)>,
-    pub system_exit_error: ::core::option::Option<
-        unsafe extern "C" fn(
-            title: *const cty::c_char,
-            message: *const cty::c_char,
-            footer: *const cty::c_char,
-        ),
-    >,
     pub system_exit_error_ex: ::core::option::Option<
         unsafe extern "C" fn(
             title: *const cty::c_char,
@@ -237,13 +230,6 @@ pub struct trezor_api_v1_t {
             message_len: usize,
             footer: *const cty::c_char,
             footer_len: usize,
-        ),
-    >,
-    pub system_exit_fatal: ::core::option::Option<
-        unsafe extern "C" fn(
-            message: *const cty::c_char,
-            file: *const cty::c_char,
-            line: cty::c_int,
         ),
     >,
     pub system_exit_fatal_ex: ::core::option::Option<
