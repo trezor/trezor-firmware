@@ -6,7 +6,7 @@ use crate::strutil::TString;
 use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::geometry::{Insets, Rect};
 use crate::ui::shape::Renderer;
-use crate::ui::ui_firmware::MAX_MENU_ITEMS;
+use crate::ui::ui_firmware::{MenuItemIntent, MAX_MENU_ITEMS};
 
 /// Maximum number of buttons shown on the screen at once.
 /// TODO: pagination for menus with more items.
@@ -14,55 +14,47 @@ const MAX_VISIBLE_BUTTONS: usize = 3;
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SelectMenuMsg {
-    /// Menu item selected (index into `items`, excluding the cancel item).
+    /// Menu item selected (index into `items`).
     Selected(usize),
-    /// The cancel menu item was selected.
-    Cancelled,
     /// The menu was closed without selecting anything.
     Closed,
 }
 
-/// Simple vertical menu of buttons, with an optional cancel item at the
-/// bottom and a close button in the top-right corner.
+/// Simple vertical menu of buttons, with a close button in the top-right
+/// corner. An entry asking for `MenuItemIntent::Danger` is styled accordingly.
 pub struct SelectMenu {
     choice_buttons: Vec<Button, MAX_MENU_ITEMS>,
-    cancel_button: Option<Button>,
     close_button: Button,
 }
 
 impl SelectMenu {
     pub fn new(
-        items: Vec<TString<'static>, MAX_MENU_ITEMS>,
-        cancel: Option<TString<'static>>,
+        items: Vec<(TString<'static>, MenuItemIntent), MAX_MENU_ITEMS>,
     ) -> Result<Self, Error> {
-        if items.len() + cancel.map_or(0, |_| 1) > 3 {
+        if items.len() > MAX_VISIBLE_BUTTONS {
             return Err(Error::NotImplementedError);
         }
         let choice_buttons = items
             .into_iter()
-            .map(|text| Button::with_text(text).styled(theme::button_default()))
+            .map(|(text, intent)| {
+                Button::with_text(text).styled(match intent {
+                    MenuItemIntent::Danger => theme::button_cancel(),
+                    MenuItemIntent::Standard => theme::button_default(),
+                })
+            })
             .collect();
-        let cancel_button =
-            cancel.map(|text| Button::with_text(text).styled(theme::button_cancel()));
         let close_button =
             Button::with_icon(theme::ICON_CORNER_CANCEL).styled(theme::button_moreinfo());
 
         Ok(Self {
             choice_buttons,
-            cancel_button,
             close_button,
         })
     }
 
-    /// Number of choice buttons that fit on the screen. The cancel button is
-    /// always visible, so it reserves a slot for itself.
+    /// Number of choice buttons that fit on the screen.
     fn visible_choices(&self) -> usize {
-        let max = if self.cancel_button.is_some() {
-            MAX_VISIBLE_BUTTONS - 1
-        } else {
-            MAX_VISIBLE_BUTTONS
-        };
-        self.choice_buttons.len().min(max)
+        self.choice_buttons.len().min(MAX_VISIBLE_BUTTONS)
     }
 }
 
@@ -91,10 +83,6 @@ impl Component for SelectMenu {
             button.place(slot);
             slots = rest.inset(Insets::top(theme::BUTTON_SPACING));
         }
-        if let Some(cancel) = &mut self.cancel_button {
-            let (slot, _) = slots.split_top(theme::BUTTON_HEIGHT);
-            cancel.place(slot);
-        }
 
         bounds
     }
@@ -104,11 +92,6 @@ impl Component for SelectMenu {
         for (i, button) in self.choice_buttons.iter_mut().take(n_choices).enumerate() {
             if matches!(button.event(ctx, event), Some(ButtonMsg::Clicked)) {
                 return Some(SelectMenuMsg::Selected(i));
-            }
-        }
-        if let Some(cancel) = &mut self.cancel_button {
-            if matches!(cancel.event(ctx, event), Some(ButtonMsg::Clicked)) {
-                return Some(SelectMenuMsg::Cancelled);
             }
         }
         if matches!(
@@ -124,9 +107,6 @@ impl Component for SelectMenu {
         for button in self.choice_buttons.iter().take(self.visible_choices()) {
             button.render(target);
         }
-        if let Some(cancel) = &self.cancel_button {
-            cancel.render(target);
-        }
         self.close_button.render(target);
     }
 }
@@ -138,9 +118,6 @@ impl crate::trace::Trace for SelectMenu {
         t.in_list("buttons", &|button_list| {
             for button in self.choice_buttons.iter().take(self.visible_choices()) {
                 button_list.child(button);
-            }
-            if let Some(cancel) = &self.cancel_button {
-                button_list.child(cancel);
             }
         });
         t.child("close_button", &self.close_button);

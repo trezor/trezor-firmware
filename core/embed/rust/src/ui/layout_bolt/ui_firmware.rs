@@ -32,8 +32,8 @@ use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
-    MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, MenuItemIntent, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::{geometry, ModelUI};
 
@@ -719,11 +719,10 @@ impl FirmwareUI for UIBolt {
     }
 
     fn select_menu(
-        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        items: heapless::Vec<(TString<'static>, MenuItemIntent), MAX_MENU_ITEMS>,
         _current: usize,
-        cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout = RootComponent::new(SelectMenu::new(items, cancel)?);
+        let layout = RootComponent::new(SelectMenu::new(items)?);
         Ok(layout)
     }
 

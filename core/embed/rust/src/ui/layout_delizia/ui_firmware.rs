@@ -39,8 +39,8 @@ use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ContentType, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
-    MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, MenuItemIntent, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
 
@@ -718,34 +718,27 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn select_menu(
-        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
-        mut current: usize,
-        cancel: Option<TString<'static>>,
+        items: heapless::Vec<(TString<'static>, MenuItemIntent), MAX_MENU_ITEMS>,
+        current: usize,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut menu_items = VerticalMenuItems::new();
-        if let Some(text) = cancel {
-            unwrap!(menu_items.push(VerticalMenuItem::Cancel(text)));
-            current += 1;
-        }
-        for text in items {
-            unwrap!(menu_items.push(VerticalMenuItem::Item(text)));
+        for (text, intent) in items {
+            unwrap!(menu_items.push(match intent {
+                // TODO: mapping `Danger` onto the `Cancel` variant is temporary -
+                // the variant is named after what the entry did, not how it looks.
+                // `VerticalMenuItem` should carry the intent instead.
+                MenuItemIntent::Danger => VerticalMenuItem::Cancel(text),
+                MenuItemIntent::Standard => VerticalMenuItem::Item(text),
+            }));
         }
         let menu = ScrolledVerticalMenu::new(menu_items, current);
         let frame = Frame::with_header(
             Header::left_aligned(TString::empty()).with_cancel_button(),
             menu,
         );
-        let layout = MsgMap::new(frame, move |msg| {
-            let choice = match msg {
-                FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => i,
-                // `FlowMsg::Cancelled` should be sent only if `cancel` is not `None`
-                FrameMsg::Button(_) => return Some(FlowMsg::Confirmed),
-            };
-            Some(match (choice, cancel) {
-                (0, Some(_)) => FlowMsg::Cancelled,
-                (1.., Some(_)) => FlowMsg::Choice(choice - 1),
-                (_, None) => FlowMsg::Choice(choice),
-            })
+        let layout = MsgMap::new(frame, move |msg| match msg {
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+            FrameMsg::Button(_) => Some(FlowMsg::Confirmed),
         });
         flow::util::single_page(layout)
     }

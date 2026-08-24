@@ -8,6 +8,13 @@ use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::list::List;
 use crate::micropython::obj::Obj;
+#[cfg(feature = "micropython")]
+use crate::micropython::{
+    macros::{obj_dict, obj_map, obj_type},
+    qstr::Qstr,
+    simple_type::SimpleTypeObj,
+    typ::FullType,
+};
 use crate::strutil::TString;
 use crate::ui::notification::Notification;
 
@@ -17,6 +24,48 @@ pub const MAX_GROUP_SHARE_LINES: usize = 4;
 pub const MAX_MENU_ITEMS: usize = 5;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
+
+/// What a menu entry means, which each model renders in its own way.
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum MenuItemIntent {
+    /// An ordinary entry.
+    Standard = 0,
+    /// An entry with destructive consequences, e.g. cancelling a signature.
+    Danger = 1,
+}
+
+impl TryFrom<u8> for MenuItemIntent {
+    type Error = Error;
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(MenuItemIntent::Standard),
+            1 => Ok(MenuItemIntent::Danger),
+            _ => Err(Error::OutOfRange),
+        }
+    }
+}
+
+#[cfg(feature = "micropython")]
+impl TryFrom<Obj> for MenuItemIntent {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        Self::try_from(u8::try_from(obj)?)
+    }
+}
+
+#[cfg(feature = "micropython")]
+static MENU_ITEM_INTENT_TYPE: FullType = obj_type! {
+    name: Qstr::MP_QSTR_MenuItemIntent,
+    locals: &obj_dict!(obj_map! {
+        Qstr::MP_QSTR_STANDARD => Obj::small_int(MenuItemIntent::Standard as u16),
+        Qstr::MP_QSTR_DANGER => Obj::small_int(MenuItemIntent::Danger as u16),
+    }),
+};
+
+#[cfg(feature = "micropython")]
+pub static MENU_ITEM_INTENT_OBJ: SimpleTypeObj = SimpleTypeObj::new(&MENU_ITEM_INTENT_TYPE);
 
 pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
@@ -276,10 +325,10 @@ pub trait FirmwareUI {
         prefill: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    /// Each item is its label plus what the entry means.
     fn select_menu(
-        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        items: heapless::Vec<(TString<'static>, MenuItemIntent), MAX_MENU_ITEMS>,
         current: usize,
-        cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn select_word(

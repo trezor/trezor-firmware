@@ -27,6 +27,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_CONFIRMED;
   MP_QSTR_CheckBackup;
   MP_QSTR_Close;
+  MP_QSTR_DANGER;
   MP_QSTR_DIM;
   MP_QSTR_DONE;
   MP_QSTR_DeviceMenuResult;
@@ -47,6 +48,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_MESSAGE_READY;
   MP_QSTR_MESSAGE_READY_ACK;
   MP_QSTR_MESSAGE_WIRE_TYPE;
+  MP_QSTR_MenuItemIntent;
   MP_QSTR_MessageType;
   MP_QSTR_Msg;
   MP_QSTR_MsgDef;
@@ -63,6 +65,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_RemoveWipeCode;
   MP_QSTR_ReviewFailedBackup;
   MP_QSTR_SEND_BUFFER_OVERHEAD;
+  MP_QSTR_STANDARD;
   MP_QSTR_SUCCESS;
   MP_QSTR_SWIPE_DOWN;
   MP_QSTR_SWIPE_LEFT;
