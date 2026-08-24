@@ -35,6 +35,7 @@ if TYPE_CHECKING:
         StellarPaymentOp,
         StellarSetOptionsOp,
         StellarSorobanAuthorizationEntry,
+        StellarSorobanDelegateSignature,
     )
     from trezor.ui.layouts import PropertyType
 
@@ -544,14 +545,21 @@ async def _confirm_auth_entry(
     elif creds.type == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2:
         if creds.address_v2 is None:
             raise DataError("Stellar: missing address_v2 credentials")
-
         authorizing_address = creds.address_v2.address
-        await confirm_address(
-            f"{TR.words__authorization} #{position}",
-            authorizing_address,
-            description=TR.words__address,
-            br_name="op_auth_entry_address",
+        await _confirm_authorizing_address(
+            f"{TR.words__authorization} #{position}", authorizing_address
         )
+    elif (
+        creds.type
+        == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES
+    ):
+        if creds.address_with_delegates is None:
+            raise DataError("Stellar: missing address_with_delegates credentials")
+        with_delegates = creds.address_with_delegates
+        authorizing_address = with_delegates.address_credentials.address
+        title = f"{TR.words__authorization} #{position}"
+        await _confirm_authorizing_address(title, authorizing_address)
+        await _confirm_delegated_signers(with_delegates.delegates, title)
     else:
         raise ProcessError("Stellar: unsupported credentials type")
 
@@ -564,3 +572,35 @@ async def _confirm_auth_entry(
         authorizing_address,
         is_root=is_root,
     )
+
+
+async def _confirm_authorizing_address(title: str, address: str) -> None:
+    await confirm_address(
+        title,
+        address,
+        description=TR.words__address,
+        br_name="op_auth_entry_address",
+    )
+
+
+async def _confirm_delegated_signers(
+    delegates: list[StellarSorobanDelegateSignature],
+    title: str,
+    path: str = "",
+) -> None:
+    """Confirm the delegated signers of an authorization entry, recursively.
+
+    Every delegate is labeled by its dot-delimited position in the delegation
+    tree ("1", "1.2", ...), mirroring how sub-invocations are labeled.
+    """
+    for i, delegate in enumerate(delegates):
+        delegate_path = f"{path}{i + 1}"
+        await confirm_address(
+            title,
+            delegate.address,
+            description=f"{TR.stellar__delegated_signer} {delegate_path}",
+            br_name="op_auth_entry_delegate",
+        )
+        await _confirm_delegated_signers(
+            delegate.nested_delegates, title, f"{delegate_path}."
+        )

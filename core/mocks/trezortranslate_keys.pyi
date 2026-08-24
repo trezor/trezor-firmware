@@ -941,6 +941,7 @@ class TR:
     stellar__confirm_memo: str = "Confirm memo"
     stellar__confirm_operation: str = "Confirm operation"
     stellar__debited_amount: str = "Debited amount"
+    stellar__delegated_signer: str = "Delegated signer"
     stellar__delete: str = "Delete"
     stellar__delete_passive_offer: str = "Delete Passive Offer"
     stellar__delete_trust: str = "Delete trust"

@@ -473,6 +473,42 @@
         "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
         "signature": "1PEmWWVlw5F2e8DEFoj+ZxcTtFyi93coyaYhtfRg4uy5ZX/0bIUKF7bDMthCyD6NWSQ+uSbqStM/D4i++IglCA=="
       }
+    },
+    {
+      "name": "StellarSorobanAuthorization-delegated-signer",
+      "parameters": {
+        "xdr": "AAAAAgAAAAF2Hfi0Av/skrA7bgOWhO8UoU+bXCLtoNvDRQ93pgGDKm1j3nQzuGWpAEHKcAAAAAEAAAAAAAAAAcouvf+NHgHGJ8PF3HPp9RY2YMAfC6id/EUD9MjbolCgAAAACWluY3JlbWVudAAAAAAAAAIAAAASAAAAAXYd+LQC/+ySsDtuA5aE7xShT5tcIu2g28NFD3emAYMqAAAAAwAAAAEAAAAA",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "authorization": {
+          "nonce": 7882388363493795241,
+          "signature_expiration_ledger": 4311664,
+          "address": "CB3B36FUAL76ZEVQHNXAHFUE54KKCT43LQRO3IG3YNCQ655GAGBSU3CU",
+          "invocation": {
+            "function": {
+              "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+              "contract_fn": {
+                "contract_address": "CDFC5PP7RUPADRRHYPC5Y47J6ULDMYGAD4F2RHP4IUB7JSG3UJIKABCX",
+                "function_name": "increment",
+                "args": [
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "CB3B36FUAL76ZEVQHNXAHFUE54KKCT43LQRO3IG3YNCQ655GAGBSU3CU"
+                  },
+                  {
+                    "type": "SCV_U32",
+                    "u32": 1
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "usfUBqINaLrj4tmReP9wLiyicNgMguH4OeGwDNihPGZPsrIxTmEqEO0IuWJQ1bnmGD23Y2h5oa/OFHYuKh1eAA=="
+      }
     }
   ]
 }

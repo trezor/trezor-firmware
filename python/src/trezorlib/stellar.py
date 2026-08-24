@@ -184,22 +184,37 @@ def from_authorization_entry(
 
     The resulting message carries exactly the fields committed into the
     entry's authorization payload (the WITH_ADDRESS preimage of Protocol 27).
-    Only SOROBAN_CREDENTIALS_ADDRESS_V2 entries are supported.
+    Only SOROBAN_CREDENTIALS_ADDRESS_V2 and
+    SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES entries are supported.
+
+    For entries with delegates the payload is bound to the entry's top-level
+    address: under CAP-71-01 every delegated signer, however deeply nested,
+    authenticates that same payload and context, so one request serves the
+    top-level account's own signer and any of its delegates -- `address_n`
+    decides which key signs.
 
     See `from_envelope` for `asset_hints`. Matching them needs the network the
     entry is signed for, so `network_passphrase` is required alongside them.
     """
     if not HAVE_STELLAR_SDK:
         raise RuntimeError("Stellar SDK not available")
-    if not HAVE_STELLAR_SDK_PROTOCOL_27 or (
-        entry.credentials.type
-        != xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2
-    ):
+    credentials = None
+    if HAVE_STELLAR_SDK_PROTOCOL_27:
+        if (
+            entry.credentials.type
+            == xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2
+        ):
+            credentials = entry.credentials.address_v2
+        elif (
+            entry.credentials.type
+            == xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES
+        ):
+            assert entry.credentials.address_with_delegates is not None
+            credentials = entry.credentials.address_with_delegates.address_credentials
+    if credentials is None:
         raise ValueError(
             f"Unsupported SorobanCredentials type: {entry.credentials.type}"
         )
-    credentials = entry.credentials.address_v2
-    assert credentials is not None
 
     invocation = _read_authorized_invocation(entry.root_invocation)
     asset_hints = list(asset_hints)
@@ -671,6 +686,31 @@ def _read_address_credentials(
     )
 
 
+def _read_delegate_signature(
+    delegate: xdr.SorobanDelegateSignature,
+) -> messages.StellarSorobanDelegateSignature:
+    """Read SorobanDelegateSignature from XDR."""
+    return messages.StellarSorobanDelegateSignature(
+        address=_read_sc_address(delegate.address),
+        signature=_read_sc_val(delegate.signature),
+        nested_delegates=[
+            _read_delegate_signature(nested) for nested in delegate.nested_delegates
+        ],
+    )
+
+
+def _read_address_credentials_with_delegates(
+    credentials: xdr.SorobanAddressCredentialsWithDelegates,
+) -> messages.StellarSorobanAddressCredentialsWithDelegates:
+    """Read SorobanAddressCredentialsWithDelegates from XDR."""
+    return messages.StellarSorobanAddressCredentialsWithDelegates(
+        address_credentials=_read_address_credentials(credentials.address_credentials),
+        delegates=[
+            _read_delegate_signature(delegate) for delegate in credentials.delegates
+        ],
+    )
+
+
 def _read_credentials(
     credentials: xdr.SorobanCredentials,
 ) -> messages.StellarSorobanCredentials:
@@ -690,6 +730,18 @@ def _read_credentials(
         return messages.StellarSorobanCredentials(
             type=messages.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2,
             address_v2=_read_address_credentials(credentials.address_v2),
+        )
+    elif (
+        HAVE_STELLAR_SDK_PROTOCOL_27
+        and credentials.type
+        == xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES
+    ):
+        assert credentials.address_with_delegates is not None
+        return messages.StellarSorobanCredentials(
+            type=messages.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES,
+            address_with_delegates=_read_address_credentials_with_delegates(
+                credentials.address_with_delegates
+            ),
         )
     else:
         # The legacy, to-be-deprecated SOROBAN_CREDENTIALS_ADDRESS is

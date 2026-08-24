@@ -6753,15 +6753,51 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["StellarSorobanAddressCredentials"]:
             return isinstance(msg, cls)
 
+    class StellarSorobanDelegateSignature(protobuf.MessageType):
+        address: "str"
+        signature: "StellarSCVal"
+        nested_delegates: "list[StellarSorobanDelegateSignature]"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            signature: "StellarSCVal",
+            nested_delegates: "list[StellarSorobanDelegateSignature] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarSorobanDelegateSignature"]:
+            return isinstance(msg, cls)
+
+    class StellarSorobanAddressCredentialsWithDelegates(protobuf.MessageType):
+        address_credentials: "StellarSorobanAddressCredentials"
+        delegates: "list[StellarSorobanDelegateSignature]"
+
+        def __init__(
+            self,
+            *,
+            address_credentials: "StellarSorobanAddressCredentials",
+            delegates: "list[StellarSorobanDelegateSignature] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarSorobanAddressCredentialsWithDelegates"]:
+            return isinstance(msg, cls)
+
     class StellarSorobanCredentials(protobuf.MessageType):
         type: "StellarSorobanCredentialsType"
         address_v2: "StellarSorobanAddressCredentials | None"
+        address_with_delegates: "StellarSorobanAddressCredentialsWithDelegates | None"
 
         def __init__(
             self,
             *,
             type: "StellarSorobanCredentialsType",
             address_v2: "StellarSorobanAddressCredentials | None" = None,
+            address_with_delegates: "StellarSorobanAddressCredentialsWithDelegates | None" = None,
         ) -> None:
             pass
 
