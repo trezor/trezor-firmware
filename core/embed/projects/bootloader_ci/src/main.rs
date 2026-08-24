@@ -1,7 +1,5 @@
 #![no_std]
 #![no_main]
 
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
+// force pull in Rust generated symbols (incl. the panic handler)
+use sys as _;

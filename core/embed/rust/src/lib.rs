@@ -59,40 +59,6 @@ mod bootloader;
 #[macro_use]
 extern crate rtl;
 
-#[cfg(feature = "debug")]
-#[cfg(not(test))]
-#[panic_handler]
-/// More detailed panic handling. The difference against
-/// default `panic` below is that this "debug" version
-/// takes around 10 kB more space in the flash region.
-fn panic_debug(panic_info: &core::panic::PanicInfo) -> ! {
-    // Filling at least the file and line information, if available.
-    // TODO: find out how to display message from panic_info.message()
-    let msg = panic_info.message().as_str().unwrap_or("rs");
-    if let Some(location) = panic_info.location() {
-        rtl::system_exit_fatal(msg, location.file(), location.line());
-    } else {
-        rtl::system_exit_fatal(msg, "", 0);
-    }
-}
-
-#[cfg(not(feature = "debug"))]
-#[cfg(not(test))]
-#[cfg(any(not(feature = "test"), feature = "clippy"))]
-#[panic_handler]
-/// Default panic handling. Not showing any details - thus saving flash space.
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    // TODO: as of Rust 1.63 / nightly 2022-08, ignoring the `_info` parameter does
-    // not help with saving flash space -- the `fmt` machinery still gets
-    // compiled in. We can avoid that by using unstable Cargo arguments:
-    //   -Zbuild-std=core -Zbuild-std-features=panic_immediate_abort
-    // Doing that will compile every panic!() to a single udf instruction which
-    // raises a Hard Fault on hardware.
-    //
-    // Otherwise, use `unwrap!` macro from trezorhal.
-    fatal_error!("rs");
-}
-
 #[cfg(not(target_arch = "arm"))]
 #[cfg(not(test))]
 #[cfg(any(not(feature = "test"), feature = "clippy"))]
