@@ -92,14 +92,9 @@ typedef struct {
 typedef struct {
   void (*system_exit)(int exitcode);
 
-  void (*system_exit_error)(const char* title, const char* message,
-                            const char* footer);
-
   void (*system_exit_error_ex)(const char* title, size_t title_len,
                                const char* message, size_t message_len,
                                const char* footer, size_t footer_len);
-
-  void (*system_exit_fatal)(const char* message, const char* file, int line);
 
   void (*system_exit_fatal_ex)(const char* message, size_t message_len,
                                const char* file, size_t file_len, int line);

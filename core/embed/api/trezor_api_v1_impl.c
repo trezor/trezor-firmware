@@ -67,9 +67,7 @@ const trezor_crypto_v1_t trezor_crypto_v1 = {
 
 const trezor_api_v1_t trezor_api_v1 = {
     .system_exit = system_exit,
-    .system_exit_error = system_exit_error,
     .system_exit_error_ex = system_exit_error_ex,
-    .system_exit_fatal = system_exit_fatal,
     .system_exit_fatal_ex = system_exit_fatal_ex,
     .systick_ms = systick_ms,
     .sysevents_poll = sysevents_poll,
