@@ -38,6 +38,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 
 from ...input_flows import InputFlowConfirmAllWarnings
+from ...ward_app import ward_app_pinned  # noqa: F401  -- autouse fixture, see tests/ward_app.py
 from ...ward_service import DEFAULT_WARD_ID, bound_daemon
 from ...ward_trie import WardTrie
 from ...ward_wm import MockWM
