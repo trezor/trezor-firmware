@@ -34,6 +34,7 @@ typedef enum _optiga_result {
   OPTIGA_ERR_PROCESS,     // Processing error.
   OPTIGA_ERR_PARAM,       // Invalid command parameters.
   OPTIGA_ERR_CMD,         // Command error. See error code data object 0xF1C2.
+  OPTIGA_ERR_MEMORY,      // Insufficient memory to process the command.
 } optiga_result;
 
 typedef secbool (*optiga_ui_progress_t)(void);
