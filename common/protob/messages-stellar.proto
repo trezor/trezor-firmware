@@ -449,12 +449,40 @@ message StellarSorobanAddressCredentials {
 }
 
 /**
+ * A signer that an account delegates its authentication to, as introduced by
+ * CAP-71-01.
+ * Every signature in the delegate tree covers one and the same payload, bound
+ * to the entry's top-level address. The `address` field below is not part of
+ * that payload.
+ * https://github.com/stellar/stellar-protocol/blob/master/core/cap-0071-01.md
+ * https://github.com/stellar/stellar-xdr/blob/v27.0/Stellar-transaction.x#L572
+ * @embed
+ */
+message StellarSorobanDelegateSignature {
+    required string address = 1;          // the delegated signer's address
+    required StellarSCVal signature = 2;  // signature of the delegated signer, may be SCV_VOID
+    repeated StellarSorobanDelegateSignature nested_delegates = 3;  // signers the delegate itself delegates to
+}
+
+/**
+ * Address credentials together with the account's delegated signers (CAP-71-01).
+ * https://github.com/stellar/stellar-protocol/blob/master/core/cap-0071-01.md
+ * https://github.com/stellar/stellar-xdr/blob/v27.0/Stellar-transaction.x#L579
+ * @embed
+ */
+message StellarSorobanAddressCredentialsWithDelegates {
+    required StellarSorobanAddressCredentials address_credentials = 1;
+    repeated StellarSorobanDelegateSignature delegates = 2;
+}
+
+/**
  * https://github.com/stellar/stellar-xdr/blob/v27.0/Stellar-transaction.x#L593
  * @embed
  */
 message StellarSorobanCredentials {
     required StellarSorobanCredentialsType type = 1;
     optional StellarSorobanAddressCredentials address_v2 = 2;
+    optional StellarSorobanAddressCredentialsWithDelegates address_with_delegates = 3;
 
     enum StellarSorobanCredentialsType {
         SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0;
@@ -462,6 +490,7 @@ message StellarSorobanCredentials {
         // deprecated in Protocol 28 and is intentionally not supported
         reserved 1;
         SOROBAN_CREDENTIALS_ADDRESS_V2 = 2;
+        SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES = 3;
     };
 }
 
@@ -490,7 +519,8 @@ message StellarInvokeHostFunctionOp {
  * The device signs the HashIDPreimage variant selected by envelope_type.
  * Currently only ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS is supported
  * (Protocol 27, CAP-71): the payload signed for SOROBAN_CREDENTIALS_ADDRESS_V2
- * credentials, which binds the signature to the authorizing address.
+ * and SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES credentials, which binds the
+ * signature to the authorizing address.
  * @start
  * @next StellarSorobanAuthorizationSignature
  * @next Failure

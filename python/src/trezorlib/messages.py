@@ -474,6 +474,7 @@ class StellarHostFunctionType(IntEnum):
 class StellarSorobanCredentialsType(IntEnum):
     SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0
     SOROBAN_CREDENTIALS_ADDRESS_V2 = 2
+    SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES = 3
 
 
 class StellarSorobanAuthorizationEnvelopeType(IntEnum):
@@ -8672,11 +8673,49 @@ class StellarSorobanAddressCredentials(protobuf.MessageType):
         self.signature = signature
 
 
+class StellarSorobanDelegateSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("signature", "StellarSCVal", repeated=False, required=True),
+        3: protobuf.Field("nested_delegates", "StellarSorobanDelegateSignature", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        signature: "StellarSCVal",
+        nested_delegates: Optional[Sequence["StellarSorobanDelegateSignature"]] = None,
+    ) -> None:
+        self.nested_delegates: Sequence["StellarSorobanDelegateSignature"] = nested_delegates if nested_delegates is not None else []
+        self.address = address
+        self.signature = signature
+
+
+class StellarSorobanAddressCredentialsWithDelegates(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("address_credentials", "StellarSorobanAddressCredentials", repeated=False, required=True),
+        2: protobuf.Field("delegates", "StellarSorobanDelegateSignature", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_credentials: "StellarSorobanAddressCredentials",
+        delegates: Optional[Sequence["StellarSorobanDelegateSignature"]] = None,
+    ) -> None:
+        self.delegates: Sequence["StellarSorobanDelegateSignature"] = delegates if delegates is not None else []
+        self.address_credentials = address_credentials
+
+
 class StellarSorobanCredentials(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("type", "StellarSorobanCredentialsType", repeated=False, required=True),
         2: protobuf.Field("address_v2", "StellarSorobanAddressCredentials", repeated=False, required=False, default=None),
+        3: protobuf.Field("address_with_delegates", "StellarSorobanAddressCredentialsWithDelegates", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -8684,9 +8723,11 @@ class StellarSorobanCredentials(protobuf.MessageType):
         *,
         type: "StellarSorobanCredentialsType",
         address_v2: Optional["StellarSorobanAddressCredentials"] = None,
+        address_with_delegates: Optional["StellarSorobanAddressCredentialsWithDelegates"] = None,
     ) -> None:
         self.type = type
         self.address_v2 = address_v2
+        self.address_with_delegates = address_with_delegates
 
 
 class StellarSorobanAuthorizationEntry(protobuf.MessageType):

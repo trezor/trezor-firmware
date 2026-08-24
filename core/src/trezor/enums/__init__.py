@@ -417,6 +417,7 @@ if TYPE_CHECKING:
     class StellarSorobanCredentialsType(IntEnum):
         SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0
         SOROBAN_CREDENTIALS_ADDRESS_V2 = 2
+        SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES = 3
 
     class StellarSorobanAuthorizationEnvelopeType(IntEnum):
         ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS = 10

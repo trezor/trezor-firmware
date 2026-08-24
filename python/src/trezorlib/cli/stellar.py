@@ -181,10 +181,16 @@ def sign_soroban_authorization(
     """Sign a base64-encoded Soroban authorization entry.
 
     Takes an unsigned SorobanAuthorizationEntry XDR with
-    SOROBAN_CREDENTIALS_ADDRESS_V2 credentials (Protocol 27) and returns the
-    base64-encoded signature of its authorization payload. The signed payload
-    commits to the entry's signature_expiration_ledger; it must already be
-    set to the intended value, or overridden with --valid-until-ledger.
+    SOROBAN_CREDENTIALS_ADDRESS_V2 or SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES
+    credentials (Protocol 27) and returns the base64-encoded signature of its
+    authorization payload. The signed payload commits to the entry's
+    signature_expiration_ledger; it must already be set to the intended value,
+    or overridden with --valid-until-ledger.
+
+    For a given entry both credential types produce the same payload, bound to
+    its top-level address, so an ADDRESS_WITH_DELEGATES entry is signed the same
+    way whether the signature is to go into the top-level credentials or into
+    one of the delegate slots -- -n/--address only picks the signing key.
     """
     if not stellar.HAVE_STELLAR_SDK:
         click.echo("Stellar requirements not installed.")
@@ -207,14 +213,17 @@ def sign_soroban_authorization(
         )
         sys.exit(1)
 
-    if (
-        entry_xdr.credentials.type
-        != stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2
+    if entry_xdr.credentials.type not in (
+        stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2,
+        stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES,
     ):
         click.echo(
             f"Unsupported SorobanCredentials type: {entry_xdr.credentials.type}."
         )
-        click.echo("Only SOROBAN_CREDENTIALS_ADDRESS_V2 entries can be signed.")
+        click.echo(
+            "Only SOROBAN_CREDENTIALS_ADDRESS_V2 and "
+            "SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES entries can be signed."
+        )
         sys.exit(1)
 
     address_n = tools.parse_path(address)
