@@ -66,6 +66,7 @@ void bootargs_init(uint32_t r11_register);
 
 // Configures the boot command and associated arguments for the next reboot.
 // The arguments must adhere to the boot_args_t structure layout.
+// Args are optional, so NULL with size 0 is allowed.
 void bootargs_set(boot_command_t command, const void* args, size_t args_size);
 
 // Returns the last boot command saved during bootloader startup

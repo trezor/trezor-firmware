@@ -23,10 +23,13 @@
 #include <trezor_types.h>
 
 bool telemetry_get(telemetry_data_t* out) {
-  out->min_temp_c = 20.0f;
-  out->max_temp_c = 35.0f;
-  out->battery_errors.all = 0;
-  out->battery_cycles = 30.00f;
+  if (out != NULL) {
+    out->min_temp_c = 20.0f;
+    out->max_temp_c = 35.0f;
+    out->battery_errors.all = 0;
+    out->battery_cycles = 30.00f;
+  }
+
   return true;
 }
 
