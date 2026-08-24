@@ -220,7 +220,7 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> bool:
 # --- the pinned service host key ---------------------------------------------------
 #
 # A FOURTH KEY, in the gap between the root slots and the claim journal: roots at 1..MAX_WALLETS,
-# this at 0x10, claims at 0x20, records at 0x40.
+# this at 0x10, the app's pin at 0x11, claims at 0x20, records at 0x40.
 #
 # WHY IT IS PINNED AT ALL. Pairing already authenticates that a host holds a credential this device
 # issued, but every paired host passes that check, and Suite is one of them. The WARD service is
@@ -265,6 +265,50 @@ def clear_service_host_key() -> None:
     whether the migration is allowed at all.
     """
     common.delete(common.APP_WARD, _SERVICE_HOST_KEY)
+
+
+# --- the WARD app's pin -----------------------------------------------------------
+#
+# THE SAME ARGUMENT AS THE DAEMON'S PIN ABOVE, POINTED THE OTHER WAY. WARD's user-facing operations
+# belong to the WARD app; a wallet may be connected on the same interface and is not part of the
+# protocol at all. Pairing cannot tell the two apart -- both hold a credential this device issued --
+# so without a pin any paired host could read, write or queue WARD entries, and `app_id` would be
+# even weaker than it is (see the ACL gap in `apps.ward.common.require_key`).
+#
+# ONE APP, PINNED ON FIRST USE, and the confirmation the user holds for is what that first use costs.
+# Trust-on-first-use rather than an announce message, because there is no moment before the first
+# request at which an app could sensibly announce itself: the request IS the announcement, and
+# refusing every request until some earlier one had happened would only move the question.
+#
+# IN FLASH, for the reason the daemon's is: what it protects against is another host taking the role
+# over, and unplugging the device is the cheapest way to arrange that.
+#
+# THE UNPIN IS A SEPARATE DECISION -- `apps.ward.reset_app`, on a held confirmation, exactly as the
+# daemon's is. This layer only forgets the key.
+_APP_HOST_KEY = const(0x11)
+_APP_HOST_KEY_LEN = const(32)
+
+
+def get_app_host_key() -> bytes | None:
+    """The app this device has bound to for WARD, or None if none has claimed the role."""
+    return common.get(common.APP_WARD, _APP_HOST_KEY)
+
+
+def set_app_host_key(key: bytes) -> None:
+    """Pin the app. Refuses a wrong-width key rather than storing a truncated one."""
+    if len(key) != _APP_HOST_KEY_LEN:
+        raise ValueError("app host key must be 32 bytes")
+    common.set(common.APP_WARD, _APP_HOST_KEY, key)
+
+
+def clear_app_host_key() -> None:
+    """Retire the pin, so the next app to make a WARD request may claim the role.
+
+    TOUCHES NOTHING ELSE, as `clear_service_host_key`: the pin says which app may operate WARD, and
+    forgetting that is not a reason to discard a single record, root or claim. Whether the migration
+    is allowed at all is the caller's decision.
+    """
+    common.delete(common.APP_WARD, _APP_HOST_KEY)
 
 
 # --- the offline store ------------------------------------------------------------
