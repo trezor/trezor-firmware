@@ -15,7 +15,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_7;
   MP_QSTR_8;
   MP_QSTR_9;
-  MP_QSTR_;
   MP_QSTR_ACK;
   MP_QSTR_ALERT;
   MP_QSTR_APP_HEADER_LEN;
