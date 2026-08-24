@@ -1,6 +1,6 @@
 use heapless::Vec;
 
-use crate::error::Error;
+use crate::error::{value_error, Error};
 use crate::io::BinaryData;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
@@ -25,7 +25,8 @@ use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
 use crate::ui::notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ};
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, MenuItemIntent, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS, MENU_ITEM_INTENT_OBJ,
 };
 use crate::ui::ModelUI;
 
@@ -739,14 +740,16 @@ extern "C" fn new_request_string(n_args: usize, args: *const Obj, kwargs: *mut M
 extern "C" fn new_select_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let items_iterable: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
-        let items = util::iter_into_vec(items_iterable)?;
+        let mut items = Vec::<(TString, MenuItemIntent), MAX_MENU_ITEMS>::new();
+        for item in IterBuf::new().try_iterate(items_iterable)? {
+            let [text, intent]: [Obj; 2] = util::iter_into_array(item)?;
+            items
+                .push((text.try_into()?, intent.try_into()?))
+                .map_err(|_| value_error!(c"Too many menu items"))?;
+        }
         let current = kwargs.get(Qstr::MP_QSTR_current)?.try_into()?;
-        let cancel = kwargs
-            .get(Qstr::MP_QSTR_cancel)
-            .and_then(Obj::try_into_option)
-            .unwrap_or(None);
 
-        let layout = ModelUI::select_menu(items, current, cancel)?;
+        let layout = ModelUI::select_menu(items, current)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1868,11 +1871,11 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def select_menu(
     ///     *,
-    ///     items: Iterable[str],
+    ///     items: Iterable[tuple[str, int]],
     ///     current: int,
-    ///     cancel: str | None = None
-    /// ) -> LayoutContext[int]:
-    ///     """Select an item from a menu. Returns index in range `0..len(items)`."""
+    /// ) -> LayoutContext[int | UiResult]:
+    ///     """Select an item from a menu. Each item is its label and its
+    ///     `MenuItemIntent`. Returns index in range `0..len(items)`."""
     Qstr::MP_QSTR_select_menu => obj_fn_kw!(0, new_select_menu).as_obj(),
 
     /// def select_word(
@@ -2190,6 +2193,12 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     INFO: ClassVar[int]
     ///     SUCCESS: ClassVar[int]
     Qstr::MP_QSTR_NotificationLevel => NOTIFICATION_LEVEL_OBJ.as_obj(),
+
+    /// class MenuItemIntent:
+    ///     """What a menu entry means; each model renders it in its own way."""
+    ///     STANDARD: ClassVar[int]
+    ///     DANGER: ClassVar[int]
+    Qstr::MP_QSTR_MenuItemIntent => MENU_ITEM_INTENT_OBJ.as_obj(),
 
     /// class LayoutState:
     ///     """Layout state."""
