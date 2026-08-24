@@ -603,7 +603,7 @@
     "cardano__x_of_y_signatures_template": "Requiere {0} de {1} firmas.",
     "coinjoin__access_account": "¿Acceder a tu cuenta de CoinJoin?",
     "coinjoin__do_not_disconnect": "¡No desconectes tu Trezor!",
-    "coinjoin__max_coordinator_fee_pct": "",
+    "coinjoin__max_coordinator_fee_pct": "Comisión max. coordinador",
     "coinjoin__max_mining_fee": "Tasa máxima de minería",
     "coinjoin__max_rounds": {
       "Bolt": "Máx. de rondas",
@@ -919,7 +919,7 @@
     "ethereum__delegating": "Delegando",
     "ethereum__deposit_amount": "Importe del depósito",
     "ethereum__deposit_to": "Depositar a",
-    "ethereum__eip_712_empty_domain": "",
+    "ethereum__eip_712_empty_domain": "¡dApp no se identificó!",
     "ethereum__gas_limit": "Límite de gas",
     "ethereum__gas_price": "Precio de gas",
     "ethereum__interaction_contract": {
@@ -956,7 +956,7 @@
       "Eckhart": "Ver estruct. entera"
     },
     "ethereum__sign_eip712": "¿Quieres firmar los datos EIP-712?",
-    "ethereum__skip_to_hash": "",
+    "ethereum__skip_to_hash": "Omitir y ver el hash",
     "ethereum__smart_info": "Info. del contrato de la cuenta inteligente",
     "ethereum__staking_claim": "Reclamar",
     "ethereum__staking_claim_address": "Dir. de reclamo",
@@ -966,8 +966,8 @@
     "ethereum__staking_stake_intro": "¿Hacer stake de ETH en Everstake?",
     "ethereum__staking_unstake": "Retirar stake",
     "ethereum__staking_unstake_intro": "¿Retirar ETH de Everstake?",
-    "ethereum__subcall": "",
-    "ethereum__subcall_to": "",
+    "ethereum__subcall": "Subllamada",
+    "ethereum__subcall_to": "Subllamada a",
     "ethereum__subtitle_input_data_bytes": {
       "Bolt": "",
       "Caesar": "",
@@ -1020,7 +1020,7 @@
     "ethereum__vault_redeem_intro": "Verifica los detalles para redimir de la bóveda.",
     "ethereum__vault_redeem_to": "Redimir en",
     "ethereum__vault_withdraw_intro": "Verifica los detalles para retirar de la bóveda.",
-    "ethereum__view_data_and_hash": "",
+    "ethereum__view_data_and_hash": "Ver datos y hash",
     "ethereum__withdraw": "Retirar",
     "ethereum__withdraw_amount": "Cantidad a retirar",
     "ethereum__withdraw_from": "Retirar de",
@@ -2403,16 +2403,16 @@
       "Eckhart": "Número de partes: {0}"
     },
     "reset__slip39_checklist_set_num_groups": {
-      "Bolt": "Ajustar número de grupos",
+      "Bolt": "Definir número de grupos",
       "Caesar": "",
-      "Delizia": "Ajustar número de grupos",
-      "Eckhart": "Ajustar número de grupos"
+      "Delizia": "Definir número de grupos",
+      "Eckhart": "Definir número de grupos"
     },
     "reset__slip39_checklist_set_num_shares": {
-      "Bolt": "Definir núm. partes",
+      "Bolt": "Definir número de partes",
       "Caesar": "",
-      "Delizia": "Definir núm. partes",
-      "Eckhart": "Definir núm. partes"
+      "Delizia": "Definir número de partes",
+      "Eckhart": "Definir número de partes"
     },
     "reset__slip39_checklist_set_sizes": {
       "Bolt": "",
@@ -2491,16 +2491,16 @@
       "Eckhart": "Ajustar umbral g."
     },
     "reset__title_set_number_of_groups": {
-      "Bolt": "Ajustar núm. grupos",
+      "Bolt": "Definir número de grupos",
       "Caesar": "",
-      "Delizia": "Ajustar núm. grupos",
-      "Eckhart": "Ajustar núm. grupos"
+      "Delizia": "Definir número de grupos",
+      "Eckhart": "Definir número de grupos"
     },
     "reset__title_set_number_of_shares": {
-      "Bolt": "Definir núm. partes",
+      "Bolt": "Definir número de partes",
       "Caesar": "",
-      "Delizia": "Definir núm. partes",
-      "Eckhart": "Definir núm. partes"
+      "Delizia": "Definir número de partes",
+      "Eckhart": "Definir número de partes"
     },
     "reset__title_set_threshold": {
       "Bolt": "Ajustar umbral",
@@ -2843,7 +2843,7 @@
     "stellar__account_thresholds": "Umbrales de cuenta",
     "stellar__add_signer": "Añadir firmante",
     "stellar__add_trust": "Añadir Trust",
-    "stellar__all_will_be_sent_to": "Todos los XLM se enviarán a:",
+    "stellar__all_will_be_sent_to": "Todos los XLM se enviarán a",
     "stellar__allow_trust": "Permitir Trust",
     "stellar__balance_id": "ID saldo",
     "stellar__bump_sequence": "Incrementar secuencia",
@@ -2860,14 +2860,14 @@
     "stellar__delete_trust": "Eliminar Trust",
     "stellar__destination": "Destino",
     "stellar__exchanges_require_memo": "Memo no definido. Normalmente es necesario cuando envías a exchanges.",
-    "stellar__ext_auth": "",
-    "stellar__ext_auth_message": "",
+    "stellar__ext_auth": "Autorizaciones Externas",
+    "stellar__ext_auth_message": "La transacción contiene invocaciones adicionales autorizadas por métodos externos.",
     "stellar__final_confirm": "Confirmación final",
     "stellar__hash": "Hash",
     "stellar__high": "Alto",
     "stellar__home_domain": "Dominio de origen",
     "stellar__inflation": "Inflación",
-    "stellar__invoke_contract": "",
+    "stellar__invoke_contract": "Invocar Contrato",
     "stellar__issuer_template": "Emisor de {0}",
     "stellar__key": "Clave",
     "stellar__limit": "Límite",
@@ -2878,7 +2878,7 @@
     "stellar__new_passive_offer": "Nueva oferta pasiva",
     "stellar__no_memo_set": "¡No hay nota definida!",
     "stellar__no_restriction": "[sin restricciones]",
-    "stellar__on_behalf_of": "",
+    "stellar__on_behalf_of": "A nombre de",
     "stellar__path_pay": {
       "Bolt": "Path Pay",
       "Caesar": "Path Pay",
@@ -2896,7 +2896,7 @@
     "stellar__set_data": "Configurar datos",
     "stellar__set_flags": "Configurar indicadores",
     "stellar__set_sequence_to_template": "¿Definir secuencia como {0}?",
-    "stellar__sign_authorization": "",
+    "stellar__sign_authorization": "Firmar autorización",
     "stellar__sign_with": "Firmar con",
     "stellar__source_account": "Cuenta origen",
     "stellar__timebounds": "Ventana de tiempo",
@@ -2907,7 +2907,7 @@
     "stellar__update": "Actualizar",
     "stellar__valid_from": "Válido desde (UTC)",
     "stellar__valid_to": "Válido hasta (UTC)",
-    "stellar__valid_until_ledger": "",
+    "stellar__valid_until_ledger": "Válida hasta el ledger",
     "stellar__value_sha256": "Valor (SHA-256)",
     "stellar__wanna_clean_value_key_template": "¿Quieres borrar la clave de valor {0}?",
     "storage_msg__processing": {
@@ -3367,11 +3367,11 @@
     "words__address": "Dirección",
     "words__amount": "Importe",
     "words__are_you_sure": "¿Seguro?",
-    "words__arguments": "",
+    "words__arguments": "Argumentos",
     "words__array_of": "Arreglo de",
     "words__asset": "Activo",
     "words__assets": "Activos",
-    "words__authorization": "",
+    "words__authorization": "Autorización",
     "words__blockhash": "Hash del bloque",
     "words__bluetooth": {
       "Bolt": "",
@@ -3433,7 +3433,7 @@
       "Delizia": "del",
       "Eckhart": ""
     },
-    "words__function": "",
+    "words__function": "Función",
     "words__important": "Importante",
     "words__instructions": "Instrucciones",
     "words__intent": "Intención",
