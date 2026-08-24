@@ -37,6 +37,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 
 from ...input_flows import InputFlowConfirmAllWarnings
+from ...ward_app import reject_flow
 from .connect import prepare_channel_for_pairing
 
 pytestmark = [
@@ -58,6 +59,18 @@ def _offline_read(session: Session) -> m.WardQueueGetAck:
     is. It reaches the role check the same way every other WARD message does.
     """
     return ward.queue_get_entry(session, app_id=_APP, identifier=_IDENT)
+
+
+def _screens(ctx) -> list[str]:
+    """The ButtonRequest names raised so far in this block.
+
+    ASSERTED INSTEAD OF `set_expected_responses`, and for a reason worth keeping: a WARD request
+    raises its OWN screen too, so a fixed sequence here would be pinning `ward_queue_get_entry`
+    alongside the one screen these tests are about -- and `actual_responses` carries whatever the
+    session setup did before the block as well. Filtering to the names says exactly what is meant:
+    the role screen appeared, or it did not.
+    """
+    return [r.name for r in ctx.actual_responses if type(r).__name__ == "ButtonRequest"]
 
 
 def _rehandshake(test_ctx: Client, host_static_privkey: bytes) -> Session:
@@ -87,15 +100,17 @@ def test_the_first_app_to_ask_is_pinned_after_a_held_confirmation(
     session = _rehandshake(client, _KEY_A)
 
     with session.test_ctx as ctx:
-        ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_app_role"), m.WardQueueGetAck]
-        )
+        ctx.actual_responses.clear()
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         _offline_read(session)
+        # The role is asked about BEFORE the request is looked at, which is why it comes first.
+        assert _screens(ctx) == ["ward_app_role", "ward_queue_get_entry"]
 
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.WardQueueGetAck])
+        ctx.actual_responses.clear()
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         _offline_read(session)
+        assert _screens(ctx) == ["ward_queue_get_entry"]
 
 
 def test_another_app_is_refused(client: Client) -> None:
@@ -196,11 +211,10 @@ def test_reset_hands_the_role_to_whoever_asks_next(client: Client) -> None:
 
     # ...and now the ordinary first-use path, for the host that asked.
     with session_b.test_ctx as ctx:
-        ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_app_role"), m.WardQueueGetAck]
-        )
+        ctx.actual_responses.clear()
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session_b).get())
         _offline_read(session_b)
+        assert _screens(ctx) == ["ward_app_role", "ward_queue_get_entry"]
 
 
 def test_resetting_an_unclaimed_device_says_so(client: Client) -> None:
@@ -233,25 +247,16 @@ def test_a_refused_confirmation_grants_nothing(client: Client) -> None:
 
     with session.test_ctx as ctx:
         ctx.set_expected_responses([m.ButtonRequest(name="ward_app_role"), m.Failure])
-        ctx.set_input_flow(_decline(session))
-        with pytest.raises(exceptions.TrezorFailure):
+        ctx.set_input_flow(reject_flow(session))
+        # `Cancelled`, not `TrezorFailure`: the device answers Failure_ActionCancelled and trezorlib
+        # turns that one code into its own exception. Worth pinning rather than widening -- a refused
+        # screen and a refused ROLE are different answers, and only the second is a DataError.
+        with pytest.raises(exceptions.Cancelled):
             _offline_read(session)
 
     # Asked again, the device asks again -- which it would not if the refusal had pinned anything.
     with session.test_ctx as ctx:
-        ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_app_role"), m.WardQueueGetAck]
-        )
+        ctx.actual_responses.clear()
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         _offline_read(session)
-
-
-def _decline(session: Session):
-    """Reject the one screen this raises. Written out rather than reusing an input flow, because
-    every flow in `input_flows` confirms -- declining is the unusual case here."""
-
-    def flow():
-        yield
-        session.client.debug.press_no()
-
-    return flow()
+        assert _screens(ctx) == ["ward_app_role", "ward_queue_get_entry"]
