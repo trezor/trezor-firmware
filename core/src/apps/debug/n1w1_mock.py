@@ -68,7 +68,7 @@ class N1W1Context:
         """Show a layout waiting for N1W1 connection, allowing cancellation."""
 
         from trezor import TR
-        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+        from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
         from trezorui_api import show_info
 
         self_ctx: N1W1Context = self
@@ -98,7 +98,7 @@ class N1W1Context:
         ) as main:
             return await confirm_with_menu(
                 main,
-                Menu.root(cancel=TR.buttons__cancel),
+                Menu([cancel_leaf(TR.buttons__cancel)]),
                 br_name=br_name,
                 layout_type=_Connect,
             )

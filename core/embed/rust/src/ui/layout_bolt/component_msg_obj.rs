@@ -57,7 +57,6 @@ impl ComponentMsgObj for SelectMenu {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             SelectMenuMsg::Selected(i) => i.try_into(),
-            SelectMenuMsg::Cancelled => Ok(CANCELLED.as_obj()),
             // Closing the menu without a choice is a confirmation, not a
             // cancellation (same as on other layouts).
             SelectMenuMsg::Closed => Ok(CONFIRMED.as_obj()),

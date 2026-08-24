@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from apps.stellar.tokens import StellarToken
 
     from ..common import ExceptionType, PropertyType, StrPropertyType
-    from ..menu import Details
+    from ..menu import MenuLeaf
     from ..properties import AboveThreshold
     from ..slip24 import Refund, Trade
 
@@ -583,7 +583,9 @@ async def confirm_payment_request(
         menu_items = []
         if recipient_address is not None:
             menu_items.append(
-                create_details(TR.address__title_provider_address, recipient_address)
+                create_info_menu_leaf(
+                    TR.address__title_provider_address, recipient_address
+                )
             )
         for refund in refunds:
             refund_account_items: list[StrPropertyType] = [("", refund.address, None)]
@@ -594,13 +596,13 @@ async def confirm_payment_request(
                     (TR.address_details__derivation_path, refund.account_path, None)
                 )
             menu_items.append(
-                create_details(
+                create_info_menu_leaf(
                     TR.address__title_refund_address,
                     refund_account_items,
                 )
             )
         if menu_items:
-            menu = Menu.root(menu_items)
+            menu = Menu(menu_items)
 
             with trezorui_api.confirm_with_info(
                 title=title,
@@ -640,11 +642,11 @@ async def confirm_payment_request(
         )
 
         summary_menu_items = [
-            create_details(TR.confirm_total__title_fee, fee_info_items),
-            create_details(TR.address_details__account_info, account_items),
+            create_info_menu_leaf(TR.confirm_total__title_fee, fee_info_items),
+            create_info_menu_leaf(TR.address_details__account_info, account_items),
         ]
 
-        summary_menu = Menu.root(summary_menu_items)
+        summary_menu = Menu(summary_menu_items)
 
         with summary_ctx as summary_layout:
             await confirm_with_menu(
@@ -969,7 +971,7 @@ async def confirm_value(
                 br_code,
             )
 
-    from trezor.ui.layouts.menu import Details, Menu, confirm_with_menu
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu, leaf_from_layout
 
     if chunkify:
         main_ctx = trezorui_api.confirm_address(
@@ -1003,8 +1005,8 @@ async def confirm_value(
             chunkify=chunkify_info,
         )
 
-    menu = Menu.root(
-        Details.from_layout(name or "", item_factory(name or "", value or ""))
+    menu = Menu(
+        leaf_from_layout(name or "", item_factory(name or "", value or ""))
         for name, value, _is_data in info_items
     )
     with main_ctx as main:
@@ -1070,10 +1072,12 @@ async def confirm_trade(
         account_items.append(
             (TR.address_details__derivation_path, trade.account_path, None)
         )
-    menu_items = [create_details(TR.address__title_receive_address, account_items)]
+    menu_items = [
+        create_info_menu_leaf(TR.address__title_receive_address, account_items)
+    ]
     for k, v in extra_menu_items:
-        menu_items.append(create_details(k, v))
-    menu = Menu.root(menu_items)
+        menu_items.append(create_info_menu_leaf(k, v))
+    menu = Menu(menu_items)
 
     with trade_ctx as trade_layout:
         await confirm_with_menu(trade_layout, menu, "confirm_trade")
@@ -1479,7 +1483,7 @@ if not utils.BITCOIN_ONLY:
         account_path: str,
         nonce: int,
     ) -> None:
-        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+        from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
 
         with trezorui_api.show_warning(
             title=TR.words__warning,
@@ -1517,12 +1521,12 @@ if not utils.BITCOIN_ONLY:
                 )
             )
             children = [
-                create_details(TR.address_details__account_info, account_info),
-                create_details(TR.buttons__more_info, more_info),
+                create_info_menu_leaf(TR.address_details__account_info, account_info),
+                create_info_menu_leaf(TR.buttons__more_info, more_info),
             ]
             await confirm_with_menu(
                 layout,
-                Menu.root(children, cancel=TR.buttons__cancel),
+                Menu(children + [cancel_leaf(TR.buttons__cancel)]),
                 "ethereum/auth7702/details",
                 ButtonRequestType.SignTx,
             )
@@ -1533,7 +1537,7 @@ if not utils.BITCOIN_ONLY:
         account_path: str,
         nonce: int,
     ) -> None:
-        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+        from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
 
         account_info = with_colon(
             (
@@ -1541,13 +1545,13 @@ if not utils.BITCOIN_ONLY:
                 (TR.address_details__derivation_path, account_path, False),
             )
         )
-        menu = Menu.root(
+        menu = Menu(
             children=[
-                create_details(TR.address_details__account_info, account_info),
+                create_info_menu_leaf(TR.address_details__account_info, account_info),
                 # TODO: switch to non-Cardano specific string
-                create_details(TR.cardano__nonce, str(nonce)),
+                create_info_menu_leaf(TR.cardano__nonce, str(nonce)),
+                cancel_leaf(TR.buttons__cancel),
             ],
-            cancel=TR.buttons__cancel,
         )
 
         with trezorui_api.confirm_action(
@@ -1683,8 +1687,9 @@ if not utils.BITCOIN_ONLY:
             fee_label="",
             external_menu=True,
         )
-        menu = Menu.root(
-            create_details(name or "", value or "") for name, value, _is_data in items
+        menu = Menu(
+            create_info_menu_leaf(name or "", value or "")
+            for name, value, _is_data in items
         )
         with main_ctx as main:
             await confirm_with_menu(main, menu, br_name, br_code)
@@ -1706,7 +1711,7 @@ if not utils.BITCOIN_ONLY:
             (TR.confirm_total__title_fee, fee_details),
             (TR.address_details__account_info, account_details),
         ]
-        menu = Menu.root(create_details(name, props) for name, props in iter)
+        menu = Menu(create_info_menu_leaf(name, props) for name, props in iter)
         with main_ctx as main:
             await confirm_with_menu(main, menu, br_name, br_code)
 
@@ -2576,9 +2581,11 @@ async def confirm_firmware_update(description: str, fingerprint: str) -> None:
         )
 
 
-def create_details(name: str, value: Sequence[StrPropertyType] | str) -> Details:
-    from trezor.ui.layouts.menu import Details
+def create_info_menu_leaf(
+    name: str, value: Sequence[StrPropertyType] | str
+) -> MenuLeaf[None]:
+    from trezor.ui.layouts.menu import leaf_from_layout
 
-    return Details.from_layout(
+    return leaf_from_layout(
         name, lambda: trezorui_api.show_properties(title=name, value=value)
     )
