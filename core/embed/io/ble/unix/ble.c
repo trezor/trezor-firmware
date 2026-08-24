@@ -213,8 +213,22 @@ bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
   if (!drv->initialized) {
     return false;
   }
+
+  if (name_len > BLE_ADV_NAME_LEN) {
+    return false;
+  }
+
+  if (name == NULL && name_len > 0) {
+    return false;
+  }
+
   drv->mode_current = BLE_MODE_PAIRING;
-  memcpy(drv->adv_name, name, MIN(name_len, BLE_ADV_NAME_LEN));
+
+  if (name != NULL && name_len > 0) {
+    memset(drv->adv_name, 0, sizeof(drv->adv_name));
+    memcpy(drv->adv_name, name, name_len);
+  }
+
   return send_to_emu('p');
 }
 
@@ -360,6 +374,14 @@ void ble_get_state(ble_state_t *state) {
 
 void ble_set_name(const uint8_t *name, size_t len) {
   ble_driver_t *drv = &g_ble_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  if (len > BLE_ADV_NAME_LEN) {
+    return;
+  }
 
   memcpy(drv->adv_name, name, MIN(len, BLE_ADV_NAME_LEN));
 }

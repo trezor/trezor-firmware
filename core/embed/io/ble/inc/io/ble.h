@@ -203,6 +203,9 @@ bool ble_switch_on(void);
  *
  * @param name Advertising name to use
  * @param name_len Length of the advertising name
+ *
+ * If name is NULL and name_len is 0, the advertising name remains unchanged.
+ *
  * @return true if the command was successfully executed, false otherwise
  */
 bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len);

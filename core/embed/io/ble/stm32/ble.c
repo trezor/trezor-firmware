@@ -1012,6 +1012,10 @@ bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
     return false;
   }
 
+  if (name == NULL && name_len > 0) {
+    return false;
+  }
+
   irq_key_t key = irq_lock();
 
   if (name != NULL && name_len > 0) {

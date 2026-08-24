@@ -141,6 +141,10 @@ bool syslog_start_record__verified(const log_source_t *source,
     goto access_violation;
   }
 
+  if (!probe_read_access(source->name, source->name_len)) {
+    goto access_violation;
+  }
+
   return syslog_start_record(source, level);
 access_violation:
   apptask_access_violation();
@@ -149,7 +153,9 @@ access_violation:
 
 ssize_t syslog_write_chunk__verified(const char *text, size_t text_len,
                                      bool end_record) {
-  if (!probe_read_access(text, text_len)) {
+  // NULL text is allowed for a zero-length write, `syslog_write_chunk()`
+  // still processes it and may end the record
+  if (!probe_read_access_opt(text, text_len)) {
     goto access_violation;
   }
 
@@ -224,8 +230,8 @@ access_violation:
 
 bool ipc_send__verified(systask_id_t remote, uint32_t fn, const void *data,
                         size_t data_size) {
-  // NULL data is allowed for a zero-length message, `ipc_send()` rejects it
-  // for any other size
+  // NULL data is allowed for a zero-length message, `ipc_send()` accepts it and
+  // sends an empty message.
   if (!probe_read_access_opt(data, data_size)) {
     goto access_violation;
   }
@@ -296,34 +302,31 @@ void system_exit_error__verified(const char *title, size_t title_len,
   char message_copy[64] = {0};
   char footer_copy[64] = {0};
 
+  if (!probe_read_access_opt(title, title_len)) {
+    goto access_violation;
+  }
+
   if (title != NULL) {
-    if (!probe_read_access(title, title_len)) {
-      goto access_violation;
-    }
     title_len = MIN(title_len, sizeof(title_copy) - 1);
     title = strncpy(title_copy, title, title_len);
-  } else {
-    title_len = 0;
+  }
+
+  if (!probe_read_access_opt(message, message_len)) {
+    goto access_violation;
   }
 
   if (message != NULL) {
-    if (!probe_read_access(message, message_len)) {
-      goto access_violation;
-    }
     message_len = MIN(message_len, sizeof(message_copy) - 1);
     message = strncpy(message_copy, message, message_len);
-  } else {
-    message_len = 0;
+  }
+
+  if (!probe_read_access_opt(footer, footer_len)) {
+    goto access_violation;
   }
 
   if (footer != NULL) {
-    if (!probe_read_access(footer, footer_len)) {
-      goto access_violation;
-    }
     footer_len = MIN(footer_len, sizeof(footer_copy) - 1);
     footer = strncpy(footer_copy, footer, footer_len);
-  } else {
-    footer_len = 0;
   }
 
   systask_t *task = systask_active();
@@ -342,24 +345,22 @@ void system_exit_fatal__verified(const char *message, size_t message_len,
   char message_copy[64] = {0};
   char file_copy[64] = {0};
 
+  if (!probe_read_access_opt(message, message_len)) {
+    goto access_violation;
+  }
+
   if (message != NULL) {
-    if (!probe_read_access(message, message_len)) {
-      goto access_violation;
-    }
     message_len = MIN(message_len, sizeof(message_copy) - 1);
     message = strncpy(message_copy, message, message_len);
-  } else {
-    message_len = 0;
+  }
+
+  if (!probe_read_access_opt(file, file_len)) {
+    goto access_violation;
   }
 
   if (file != NULL) {
-    if (!probe_read_access(file, file_len)) {
-      goto access_violation;
-    }
     file_len = MIN(file_len, sizeof(file_copy) - 1);
     file = strncpy(file_copy, file, file_len);
-  } else {
-    file_len = 0;
   }
 
   systask_t *task = systask_active();
@@ -456,7 +457,7 @@ access_violation:
 
 secbool usb_start__verified(const usb_start_params_t *params) {
   // NULL params is allowed and keeps the settings from usb_init()
-  if (!probe_read_access_opt(params, sizeof(*params))) {
+  if (!probe_read_access_opt_const_size(params, sizeof(*params))) {
     goto access_violation;
   }
 
@@ -686,7 +687,7 @@ access_violation:
 #ifdef USE_TELEMETRY
 bool telemetry_get__verified(telemetry_data_t *out) {
   // NULL out is allowed and only queries whether telemetry is available
-  if (!probe_write_access_opt(out, sizeof(*out))) {
+  if (!probe_write_access_opt_const_size(out, sizeof(*out))) {
     goto access_violation;
   }
 
@@ -729,12 +730,13 @@ access_violation:
 storage_unlock_result_t storage_unlock__verified(const uint8_t *pin,
                                                  size_t pin_len,
                                                  const uint8_t *ext_salt) {
-  if (!probe_read_access(pin, pin_len)) {
+  // `storage_unlock()` accepts a NULL pin and returns an error code
+  if (!probe_read_access_opt(pin, pin_len)) {
     goto access_violation;
   }
 
   // NULL ext_salt is allowed and means no external salt is used
-  if (!probe_read_access_opt(ext_salt, EXTERNAL_SALT_SIZE)) {
+  if (!probe_read_access_opt_const_size(ext_salt, EXTERNAL_SALT_SIZE)) {
     goto access_violation;
   }
 
@@ -747,12 +749,13 @@ access_violation:
 
 storage_pin_change_result_t storage_change_pin__verified(
     const uint8_t *newpin, size_t newpin_len, const uint8_t *new_ext_salt) {
-  if (!probe_read_access(newpin, newpin_len)) {
+  // `storage_change_pin()` accepts a NULL newpin and returns an error code
+  if (!probe_read_access_opt(newpin, newpin_len)) {
     goto access_violation;
   }
 
   // NULL new_ext_salt is allowed and means no external salt is used
-  if (!probe_read_access_opt(new_ext_salt, EXTERNAL_SALT_SIZE)) {
+  if (!probe_read_access_opt_const_size(new_ext_salt, EXTERNAL_SALT_SIZE)) {
     goto access_violation;
   }
 
@@ -780,16 +783,18 @@ secbool storage_change_wipe_code__verified(const uint8_t *pin, size_t pin_len,
                                            const uint8_t *ext_salt,
                                            const uint8_t *wipe_code,
                                            size_t wipe_code_len) {
-  if (!probe_read_access(pin, pin_len)) {
+  // `storage_change_wipe_code()` accepts a NULL pin and returns secfalse
+  if (!probe_read_access_opt(pin, pin_len)) {
     goto access_violation;
   }
 
   // NULL ext_salt is allowed and means no external salt is used
-  if (!probe_read_access_opt(ext_salt, EXTERNAL_SALT_SIZE)) {
+  if (!probe_read_access_opt_const_size(ext_salt, EXTERNAL_SALT_SIZE)) {
     goto access_violation;
   }
 
-  if (!probe_read_access(wipe_code, wipe_code_len)) {
+  // `storage_change_wipe_code()` accepts a NULL wipe_code and returns secfalse
+  if (!probe_read_access_opt(wipe_code, wipe_code_len)) {
     goto access_violation;
   }
 
@@ -803,7 +808,7 @@ access_violation:
 
 secbool storage_get__verified(const uint16_t key, void *val,
                               const uint16_t max_len, uint16_t *len) {
-  // NULL val is allowed and queries the value length only
+  // NULL val and max_len 0 is allowed and queries the value length only
   if (!probe_write_access_opt(val, max_len)) {
     goto access_violation;
   }
@@ -901,7 +906,8 @@ access_violation:
 
 int firmware_hash_start__verified(const uint8_t *challenge,
                                   size_t challenge_len) {
-  if (!probe_read_access(challenge, challenge_len)) {
+  // challenge is optional, so we allow NULL with size 0
+  if (!probe_read_access_opt(challenge, challenge_len)) {
     goto access_violation;
   }
 
@@ -941,7 +947,8 @@ access_violation:
 #ifdef USE_BLE
 
 bool ble_enter_pairing_mode__verified(const uint8_t *name, size_t name_len) {
-  // NULL name is allowed and keeps the advertising name unchanged
+  // NULL name with name_len 0 is allowed and keeps the advertising name
+  // unchanged
   if (!probe_read_access_opt(name, name_len)) {
     goto access_violation;
   }
@@ -1030,7 +1037,7 @@ access_violation:
 
 bool ble_unpair__verified(const bt_le_addr_t *addr) {
   // NULL addr is allowed and unpairs the currently connected device
-  if (!probe_read_access_opt(addr, sizeof(*addr))) {
+  if (!probe_read_access_opt_const_size(addr, sizeof(*addr))) {
     goto access_violation;
   }
 
@@ -1130,7 +1137,8 @@ access_violation:
 
 pm_status_t pm_suspend__verified(wakeup_flags_t *wakeup_reason) {
   // NULL wakeup_reason is allowed and means the caller isn't interested
-  if (!probe_write_access_opt(wakeup_reason, sizeof(*wakeup_reason))) {
+  if (!probe_write_access_opt_const_size(wakeup_reason,
+                                         sizeof(*wakeup_reason))) {
     goto access_violation;
   }
 
