@@ -229,6 +229,7 @@ def get_instruction(
                 ${instruction.get("is_ui_hidden", False)},
                 ${instruction["trailing_references"]},
                 ${repr(instruction.get("is_deprecated_warning"))},
+                ${repr(instruction.get("trailing_accounts_warning"))},
             )
     % endfor
         return Instruction(

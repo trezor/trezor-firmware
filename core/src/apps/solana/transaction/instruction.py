@@ -32,6 +32,7 @@ class Instruction:
     trailing_accounts: list[Account]
 
     is_deprecated_warning: str | None = None
+    trailing_accounts_warning: str | None = None
 
     @staticmethod
     def parse_instruction_data(
@@ -90,6 +91,7 @@ class Instruction:
         is_ui_hidden: bool = False,
         supports_trailing_accounts: bool = False,
         is_deprecated_warning: str | None = None,
+        trailing_accounts_warning: str | None = None,
     ) -> None:
         self.program_id = program_id
         self.instruction_id = instruction_id
@@ -107,6 +109,7 @@ class Instruction:
         self.is_instruction_supported = is_instruction_supported
 
         self.is_deprecated_warning = is_deprecated_warning
+        self.trailing_accounts_warning = trailing_accounts_warning
 
         self.instruction_data = instruction_data
         self.accounts = accounts

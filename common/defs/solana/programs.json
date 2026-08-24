@@ -2118,6 +2118,7 @@
           "id": 12,
           "name": "Transfer Checked",
           "trailing_references": true,
+          "trailing_accounts_warning": "This transfer may invoke the token's transfer hook program. Additional restrictions or fees may apply.",
           "parameters": [
             {
               "name": "amount",
