@@ -692,14 +692,28 @@ def flush_queue(
     )
 
 
+def reset_app(session: "Session") -> messages.WardResetAppAck:
+    """Retire the pinned WARD app, so the next app to make a WARD request may claim the role.
+
+    THE ONE WARD REQUEST THAT DOES NOT NEED THE ROLE, and it cannot need it: the reason to send this
+    is that the app holding the role can no longer ask. The device holds to confirm, because the
+    request authenticates its sender only as "some paired host" -- which is the granularity the pin
+    exists to improve on.
+
+    Discards nothing: every entry, queued change, claim and root survives. `was_bound` on the ack
+    says whether a pin was actually retired, which success alone does not tell you.
+    """
+    return session.call(messages.WardResetApp(), expect=messages.WardResetAppAck)
+
+
 def reset_service(
     session: "Session", force: bool = False
 ) -> messages.WardResetServiceAck:
     """Unbind the WARD service, so another daemon may claim the role. Service builds only.
 
     ON THE ORDINARY SESSION, unlike everything else about the service channel. The daemon whose key
-    was lost is the one party that cannot ask for this, so the request comes from the wallet host
-    and the device holds to confirm.
+    was lost is the one party that cannot ask for this, so the request comes from the app that
+    operates WARD and the device holds to confirm.
 
     Refused while queued changes are unresolved -- publish them with the current service first.
     `force` overrides that and gets a screen naming how many may be lost; the changes themselves are

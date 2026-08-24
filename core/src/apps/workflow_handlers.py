@@ -184,6 +184,10 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ward.queue_delete_entry"
         if msg_type == MessageType.WardQueueGetEntry:
             return "apps.ward.queue_get_entry"
+        if msg_type == MessageType.WardResetApp:
+            # Registered for both builds, and deliberately NOT covered by the WARD app filter: it is
+            # the way back from a pinned app that can no longer ask. See `apps.ward.reset_app`.
+            return "apps.ward.reset_app"
 
         # display_address -- an on-device consumer of WARD labels, not part of WARD itself
         if msg_type == MessageType.DisplayAddress:

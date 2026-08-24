@@ -64,7 +64,7 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 /*
  * SPLIT ACROSS FILES, because WARD's transport is chosen at BUILD TIME: a firmware serves WARD
  * either over the ordinary connection or over a channel of its own, never both. This file holds
- * what both forms use -- the leaf types, the requests a wallet host sends, and the device's own
+ * what both forms use -- the leaf types, the requests the WARD app sends, and the device's own
  * offline queue. `messages-ward-connect.proto` holds the messages that exist only when WARD is
  * served over the ordinary connection.
  */
@@ -502,4 +502,46 @@ message WardEraseCachedEntry {
 message WardFlushQueue {
     optional string app_id     = 1;  // together with identifier: publish THIS queued change
     optional bytes  identifier = 2;
+}
+
+
+/**
+ * Request: host -> device, on the ordinary interface. Retire the pinned WARD app, so that the next
+ * app to make a WARD request may claim the role.
+ *
+ * THE ROLE THIS RETIRES. The first host to send a user-facing WARD message is pinned in flash, on a
+ * held confirmation, and every other host is refused from then on -- one party operates WARD on a
+ * device, chosen by the user, rather than every host that has ever paired. That pin is the whole of
+ * what this message is about.
+ *
+ * WHY IT CANNOT REQUIRE THE ROLE IT RESETS. Every other WARD request is refused unless it comes from
+ * the pinned app; this one must not be, because the reason to send it is that the pinned app cannot
+ * ask -- its key is gone, or its installation is. Requiring the role to retire the pin would make the
+ * pin unrecoverable, which is the one property it must not have.
+ *
+ * SO THE SCREEN IS THE ONLY GATE, and it holds. The request authenticates its sender as "some paired
+ * host", which is exactly the granularity the pin exists to improve on -- so it is treated as saying
+ * nothing, and the decision is the user's. This is the same argument WardResetService makes about the
+ * daemon's pin, and the two are deliberately the same shape.
+ *
+ * NOTHING IS DISCARDED. No entry, no queued change, no claim, no root: the pin names who may operate
+ * WARD, and forgetting that is not a reason to throw away what the user stored. The next app to ask
+ * gets the ordinary first-use confirmation.
+ * @start
+ * @next WardResetAppAck
+ * @next Failure
+ */
+message WardResetApp {
+}
+
+/**
+ * Response: device -> host. The pin is retired; the next app to make a WARD request may claim it.
+ *
+ * `was_bound` distinguishes "a pin was retired" from "there was none", which a caller cannot infer
+ * from success: a host that reset a device nobody had claimed would otherwise conclude it had taken
+ * something away from an app that was never there.
+ * @end
+ */
+message WardResetAppAck {
+    optional bool was_bound = 1;
 }

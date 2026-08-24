@@ -445,10 +445,15 @@ enum MessageType {
     MessageType_WardMutationApplied = 2339 [(wire_out) = true];
     MessageType_WardFlushQueueApplied = 2340 [(wire_out) = true];
 
-    // ...and the exception to the inversion above: this one arrives from the WALLET host, on the
-    // ordinary interface. The daemon whose key was lost is by definition not there to ask.
+    // ...and the exception to the inversion above: this one arrives on the ORDINARY interface, from
+    // the app that operates WARD. The daemon whose key was lost is by definition not there to ask.
     MessageType_WardResetService = 2341 [(wire_in) = true];
     MessageType_WardResetServiceAck = 2342 [(wire_out) = true];
+
+    // Retiring the pin on the APP side of the same argument. In messages-ward.proto rather than the
+    // service file: which app may operate WARD is a question both builds have.
+    MessageType_WardResetApp = 2343 [(wire_in) = true];
+    MessageType_WardResetAppAck = 2344 [(wire_out) = true];
 
     // Display address (an on-device consumer of WARD labels)
     MessageType_DisplayAddress = 2322 [(wire_in) = true];
