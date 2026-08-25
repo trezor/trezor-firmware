@@ -40,9 +40,29 @@ class Message:
         self,
         message_type: int,
         message_data: AnyBytes,
+        buffer_owner: Any | None = None,
     ) -> None:
         self.data = message_data
         self.type = message_type
+        # WHO GETS THE RECEIVE BUFFER BACK WHEN `data` HAS BEEN READ. `data` is a view INTO that
+        # buffer rather than a copy, so the lease has to outlive `Channel.read` and cannot be
+        # released there -- and the only thing that knows when the last read happens is whoever
+        # decodes it.
+        #
+        # Carried on the message rather than released at a syntactic point because a message can
+        # travel: `UnexpectedMessageException` hands one across the workflow loop to be decoded
+        # later. Tying the lease to the object makes that case correct without anyone handling it.
+        #
+        # None for transports with no lease to give back (the V1 codec), which is why `release` is
+        # safe to call unconditionally.
+        self._buffer_owner = buffer_owner
+
+    def release(self) -> None:
+        """Done reading `data`; give the receive buffer back. Idempotent."""
+        owner = self._buffer_owner
+        if owner is not None:
+            self._buffer_owner = None
+            owner.release()
 
 
 class Context:

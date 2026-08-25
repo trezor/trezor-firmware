@@ -50,6 +50,24 @@ def wrap_protobuf_load(
         raise DataError(f"Failed to decode {what}")
 
 
+def decode_message(
+    msg: Message, expected_type: type[LoadedMessageType]
+) -> LoadedMessageType:
+    """Decode a received message and give its receive buffer back.
+
+    `msg.data` is a view into the THP receive buffer, not a copy, and `protobuf.decode` is its last
+    reader -- so this pairing is where a receive lease ends. One function rather than a release
+    beside each `wrap_protobuf_load` call, because a decode that forgets to release turns
+    per-message buffer ownership back into per-channel ownership silently, and only under load.
+
+    Released even when decoding fails: a message we cannot read is one we are certainly done with.
+    """
+    try:
+        return wrap_protobuf_load(msg.data, expected_type)
+    finally:
+        msg.release()
+
+
 async def handle_single_message(ctx: Context, msg: Message) -> bool:
     """Handle a message that was loaded from a WireInterface by the caller.
 
@@ -110,7 +128,7 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
 
         # Try to decode the message according to schema from
         # `req_type`. Raises if the message is malformed.
-        req_msg = wrap_protobuf_load(msg.data, req_type)
+        req_msg = decode_message(msg, req_type)
 
         if __debug__ and utils.LOG_STACK_USAGE:
             utils.zero_unused_stack()

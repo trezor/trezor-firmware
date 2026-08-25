@@ -267,7 +267,7 @@ async def _rpc(
     see `_desynchronised` for why the operation alone is not enough.
     """
     from trezor import loop
-    from trezor.wire.message_handler import wrap_protobuf_load
+    from trezor.wire.message_handler import decode_message
 
     channel, session_id = _service_channel()
 
@@ -295,6 +295,7 @@ async def _rpc(
 
     reply_session_id, message = answer
     if reply_session_id != session_id:
+        message.release()
         raise _desynchronised(channel, "WARD service answered on another session")
 
     for expected_type in expected:
@@ -307,7 +308,7 @@ async def _rpc(
                     expected_type.MESSAGE_NAME,
                     iface=channel.iface,
                 )
-            return wrap_protobuf_load(message.data, expected_type)
+            return decode_message(message, expected_type)
 
     if __debug__:
         # THE WIRE TYPE, not a name: the whole problem is that this is not a message the device
@@ -322,6 +323,9 @@ async def _rpc(
             iface=channel.iface,
         )
 
+    # NOTHING WILL DECODE THIS ONE either -- releasing before tearing the channel down, so the
+    # shared buffer is not stranded by a daemon that answered wrongly.
+    message.release()
     raise _desynchronised(channel, "unexpected message from the WARD service")
 
 

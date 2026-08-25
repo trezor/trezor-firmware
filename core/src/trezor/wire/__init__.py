@@ -104,18 +104,40 @@ class Provider(Generic[T]):
 
 
 if utils.USE_THP:
-    from .thp.memory_manager import ThpBuffer
+    from .thp.memory_manager import (
+        _SMALL_BUFFER_SIZE,
+        BufferSource,
+        SharedBuffer,
+        ThpBuffer,
+    )
 
     # Allocate THP read/write buffers in more stable area of memory
-    THP_BUFFERS_PROVIDER = Provider((ThpBuffer(), ThpBuffer()))
+    #
+    # THE LARGE BUFFERS ARE SHARED BY EVERY CHANNEL and borrowed for the length of one message.
+    # What a channel needs for its whole life is small; 8.5 kB is needed only while a large message
+    # is actually in flight. Separate receive and send buffers, so a large message arriving on one
+    # interface does not block a large one being sent on another -- the two directions never
+    # contend with each other, only same-direction traffic on two channels does.
+    _SHARED_RECEIVE_BUFFER = SharedBuffer()
+    _SHARED_SEND_BUFFER = SharedBuffer()
+
+    def _buffer_sources() -> "tuple[BufferSource, BufferSource]":
+        """A (receive, send) pair: small buffers of its own, the large ones borrowed."""
+        return (
+            BufferSource(ThpBuffer(_SMALL_BUFFER_SIZE), _SHARED_RECEIVE_BUFFER),
+            BufferSource(ThpBuffer(_SMALL_BUFFER_SIZE), _SHARED_SEND_BUFFER),
+        )
+
+    THP_BUFFERS_PROVIDER = Provider(_buffer_sources())
 
     if utils.USE_WARD_SERVICE_CHANNEL:
         # A POOL OF ITS OWN, so the WARD service interface can hold a channel while a wallet
         # channel is live on another interface -- which is the entire point of giving the service
-        # its own interface. Sized like the default rather than smaller: the largest thing that
-        # crosses it is a mutation carrying a sealed leaf, and `ThpBuffer.get` refuses anything it
-        # cannot serve, so a smaller pool here is a cap on the protocol rather than a saving.
-        WARD_BUFFERS_PROVIDER = Provider((ThpBuffer(), ThpBuffer()))
+        # its own interface. What that costs is now a second SMALL pair rather than a second large
+        # one: the interfaces share the large buffers and take turns per message, which is what the
+        # WARD flow does anyway (the wallet request is decoded before the RPC begins and the wallet
+        # response encoded after it ends).
+        WARD_BUFFERS_PROVIDER = Provider(_buffer_sources())
 
     def is_ward_interface(iface: WireInterface) -> bool:
         """Whether this is the interface the WARD service is served on.

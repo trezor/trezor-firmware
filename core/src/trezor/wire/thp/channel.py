@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from trezor.wire import WireInterface
 
     from .interface_context import InterfaceContext
-    from .memory_manager import ThpBuffer
+    from .memory_manager import BufferSource
     from .pairing_context import PairingContext
     from .session_context import GenericSessionContext
 
@@ -45,7 +45,7 @@ class Channel:
         self,
         channel_id: int,
         iface_ctx: InterfaceContext,
-        buffers: tuple[ThpBuffer, ThpBuffer],
+        buffers: tuple[BufferSource, BufferSource],
     ) -> None:
         # Channel properties
         self.channel_id = channel_id
@@ -119,6 +119,7 @@ class Channel:
             self._log("closing channel")
         clear_sessions_with_channel_id(self.channel_id_bytes())
         trezorthp.channel_close(self.channel_id)
+        self.release_buffers()
         if exc is not None:
             self.kill(exc)
 
@@ -132,6 +133,23 @@ class Channel:
         self.expecting_ack = False
         self.incoming_box.put(exc, replace=True)
         self.ack_box.put(exc, replace=True)
+        self.release_buffers()
+
+    def release_buffers(self) -> None:
+        """Give back any shared buffer this channel's in-flight message was holding.
+
+        THE ONE LEAK PATH WITH NO OTHER OWNER. Every ordinary release happens where the message
+        ends -- after the ACK for a send, after the decode for a receive -- but a channel that is
+        torn down mid-message never reaches either, and the shared buffer would then be stranded
+        for the rest of the session with nothing to hand it back.
+
+        Safe to call on a channel holding nothing, and safe when another channel has since taken
+        the buffer: a source only ever releases a lease it actually holds.
+        """
+        self.receive_buffer = None
+        self.send_buffer = None
+        self.receive_buf_src.release()
+        self.send_buf_src.release()
 
     # ACCESS TO CHANNEL_DATA
 
@@ -217,9 +235,14 @@ class Channel:
             self.iface_ctx.request_write()
         if __debug__ and _TRACE:
             self._log("message is ready")
+        # THE LEASE GOES WITH THE MESSAGE, not with this call. `message_bytes` is a view into the
+        # receive buffer rather than a copy, so the buffer is still being read after we return --
+        # by whoever decodes the protobuf, which is the last consumer and therefore the one that
+        # releases it.
         message = Message(
             message_type,
             message_bytes,
+            self.receive_buf_src,
         )
         self.receive_buffer = None
         return (session_id, message)
@@ -249,7 +272,12 @@ class Channel:
 
         try:
             buffer_size = memory_manager.buffer_size(msg)
-            self.send_buffer = self.send_buf_src.get(buffer_size)
+            # WAITS RATHER THAN FAILS if the shared buffer is busy. By the time we are here the
+            # device has decided to send this message, so refusing would turn another channel's
+            # large message into this host's Failure. There is no timeout of our own: this whole
+            # call is already under the interface's write timeout, and a second one would decide
+            # the same thing twice, further from where it can be reported.
+            self.send_buffer = await self.send_buf_src.get_when_available(buffer_size)
             noise_payload_len = memory_manager.encode_into_buffer(
                 self.send_buffer, msg, session_id
             )
@@ -258,14 +286,31 @@ class Channel:
             # Might raise Timeout or ChannelPreemptedException.
             await self.ack_box
         finally:
+            # HELD UNTIL THE ACK, not until the last packet goes out. `message_retransmit` only
+            # resets the fragmenter and re-reads the ciphertext still sitting here, so releasing
+            # any earlier would let another channel overwrite a message we may have to resend.
             self.send_buffer = None
+            self.send_buf_src.release()
 
-    def read_packet(self, packet_buffer: AnyBytes, buffer_hint: int) -> None:
+    def read_packet(self, packet_buffer: AnyBytes, buffer_hint: int) -> bool:
         """
         Called by read_loop() to process incoming packet.
+
+        Returns False when this packet needs a buffer another channel currently holds. The caller
+        answers TRANSPORT_BUSY and the host retransmits -- nothing has been handed to the THP state
+        machine yet, so the packet is simply as though it had not arrived. Only ever the first
+        packet of a message: a continuation reuses the buffer the message already has.
         """
         if self.receive_buffer is None or buffer_hint > len(self.receive_buffer):
-            self.receive_buffer = self.receive_buf_src.get(buffer_hint)
+            receive_buffer = self.receive_buf_src.try_get(buffer_hint)
+            if receive_buffer is None:
+                if __debug__:
+                    self._log(
+                        f"no shared buffer for a {buffer_hint} byte message; reporting busy",
+                        logger=log.warning,
+                    )
+                return False
+            self.receive_buffer = receive_buffer
         result = trezorthp.packet_in_channel(
             self.channel_id, packet_buffer, self.receive_buffer
         )
@@ -282,6 +327,7 @@ class Channel:
         elif result == trezorthp.FAILED:
             # channel is closed now
             self.kill(trezorthp.ThpError("Channel failed"))
+        return True
 
     def write_packet(self, packet: AnyBuffer) -> bool:
         """

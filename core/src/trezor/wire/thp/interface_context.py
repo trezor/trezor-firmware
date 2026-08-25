@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from typing import Any, Generator
 
     from .. import Provider
-    from .memory_manager import ThpBuffer
+    from .memory_manager import BufferSource
 
 
 _TRACE = const(False)
@@ -180,7 +180,7 @@ class InterfaceContext:
         self,
         iface: WireInterface,
         thp_ctx: ThpContext,
-        buffers_provider: Provider[tuple[ThpBuffer, ThpBuffer]],
+        buffers_provider: Provider[tuple[BufferSource, BufferSource]],
     ) -> None:
         self._iface = iface
         # WHERE THIS INTERFACE GETS ITS CHANNEL BUFFERS, passed in rather than looked up, because
@@ -533,7 +533,15 @@ class InterfaceContext:
             return
 
         try:
-            self.active_channel.read_packet(packet_buffer, buffer_size)
+            if not self.active_channel.read_packet(packet_buffer, buffer_size):
+                # The message needs a buffer another channel is holding. Same refusal a second host
+                # gets, and for the same reason -- the resource is busy, not gone -- except this one
+                # clears in a moment rather than when a session ends. Deliberately NOT added to
+                # `inactive_channels`: that set is for channels this interface does not serve, and
+                # this one it does.
+                trezorthp.send_transport_busy(channel_id)
+                self.request_write()
+                return
         except Exception as exc:
             if __debug__:
                 log.exception(__name__, exc)
