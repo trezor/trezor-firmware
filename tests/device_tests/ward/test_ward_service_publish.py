@@ -38,7 +38,10 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 
 from ...input_flows import InputFlowConfirmAllWarnings
-from ...ward_app import ward_app_pinned  # noqa: F401  -- autouse fixture, see tests/ward_app.py
+from ...ward_app import (  # noqa: F401  -- ward_app_pinned is an autouse fixture
+    reveal_prefix,
+    ward_app_pinned,
+)
 from ...ward_service import DEFAULT_WARD_ID, bound_daemon
 from ...ward_trie import WardTrie
 from ...ward_wm import MockWM
@@ -83,7 +86,10 @@ def _delete(session: Session, identifier: bytes, expect_screen: bool = True):
 
 def _read(session: Session, identifier: bytes):
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.ButtonRequest(name="ward_get_entry"), m.Success])
+        ctx.set_expected_responses(
+            reveal_prefix(m.WardGetEntry)
+            + [m.ButtonRequest(name="ward_get_entry"), m.Success]
+        )
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         return ward.get_entry(session, _APP, identifier, _nothing_on_the_wire)
 
@@ -103,7 +109,8 @@ def _still_queued(session: Session, identifier: bytes) -> bool:
     """
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_queue_get_entry"), m.WardQueueGetAck]
+            reveal_prefix(m.WardQueueGetEntry)
+            + [m.ButtonRequest(name="ward_queue_get_entry"), m.WardQueueGetAck]
         )
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         ack = ward.queue_get_entry(session, _APP, identifier)
