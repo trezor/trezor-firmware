@@ -8,7 +8,8 @@ from trezor.wire.protocol_common import Message, WireError
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer, AnyBytes
     from trezorio import WireInterface
-    from typing import Callable
+
+    from .buffers import CodecBufferSource
 
 _REP_MARKER = const(63)  # ord('?')
 _REP_MAGIC = const(35)  # org('#')
@@ -21,9 +22,7 @@ class CodecError(WireError):
     pass
 
 
-async def read_message(
-    iface: WireInterface, buffer_getter: Callable[[], bytearray | None]
-) -> Message:
+async def read_message(iface: WireInterface, buffers: CodecBufferSource) -> Message:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
     report = bytearray(iface.RX_PACKET_LEN)
 
@@ -37,46 +36,60 @@ async def read_message(
     if magic1 != _REP_MAGIC or magic2 != _REP_MAGIC:
         raise CodecError("Invalid magic")
 
-    buffer = buffer_getter()  # will throw if other session is in progress
-    if buffer is None:
-        # The exception should be caught by and handled by `wire.handle_session()` task.
-        # It doesn't terminate the current session (to allow sending error responses).
-        raise WireError("Another session in progress")
-
     read_and_throw_away = False
+    mdata: AnyBuffer
+    # WHO GIVES THE RECEIVE BUFFER BACK, and None when nobody does -- the two tiers below the
+    # pool are private to this message and have nothing shared behind them.
+    owner: CodecBufferSource | None = None
 
-    if msize > len(buffer):
-        # allocate a new buffer to fit the message
+    if msize <= buffers.capacity():
+        buf = buffers.get(msize)
+        if buf is None:
+            # The shared buffer is held by another message in flight. The exception should be
+            # caught and handled by the session task: it does not terminate the current session,
+            # so an error response can still be sent.
+            raise WireError("Another session in progress")
+        mdata = buf
+        owner = buffers
+    else:
+        # TOO LARGE FOR THE POOL, which is not the same as too large to handle and never was.
+        # Allocate for it, and if even that fails, read the message off the wire and refuse it --
+        # leaving it half-read would desynchronise every message after it.
         try:
-            mdata: AnyBuffer = bytearray(msize)
+            mdata = bytearray(msize)
         except MemoryError:
             mdata = bytearray(iface.RX_PACKET_LEN)
             read_and_throw_away = True
-    else:
-        # reuse a part of the supplied buffer
-        mdata = memoryview(buffer)[:msize]
 
-    # buffer the initial data
-    nread = utils.memcpy(mdata, 0, report, _REP_INIT_DATA)
+    # THE LEASE OUTLIVES THIS FUNCTION ONLY IF THE MESSAGE DOES. Reassembly can still fail on a
+    # bad continuation report, and a lease left behind by a message nobody will ever decode is
+    # indistinguishable from the per-session ownership this replaced -- except that it never ends.
+    try:
+        # buffer the initial data
+        nread = utils.memcpy(mdata, 0, report, _REP_INIT_DATA)
 
-    while nread < msize:
-        # wait for continuation report
-        msg_len = await read
-        assert msg_len == len(report)
-        iface.read(report, 0)
-        if report[0] != _REP_MARKER:
-            raise CodecError("Invalid magic")
+        while nread < msize:
+            # wait for continuation report
+            msg_len = await read
+            assert msg_len == len(report)
+            iface.read(report, 0)
+            if report[0] != _REP_MARKER:
+                raise CodecError("Invalid magic")
 
-        # buffer the continuation data
+            # buffer the continuation data
+            if read_and_throw_away:
+                nread += len(report) - 1
+            else:
+                nread += utils.memcpy(mdata, nread, report, _REP_CONT_DATA)
+
         if read_and_throw_away:
-            nread += len(report) - 1
-        else:
-            nread += utils.memcpy(mdata, nread, report, _REP_CONT_DATA)
+            raise CodecError("Message too large")
+    except BaseException:
+        if owner is not None:
+            owner.release()
+        raise
 
-    if read_and_throw_away:
-        raise CodecError("Message too large")
-
-    return Message(mtype, mdata)
+    return Message(mtype, mdata, owner)
 
 
 async def write_message(iface: WireInterface, mtype: int, mdata: AnyBytes) -> None:

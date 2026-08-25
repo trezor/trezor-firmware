@@ -35,9 +35,10 @@ class TestCaseWithContext(unittest.TestCase):
 
             context.CURRENT_CONTEXT = create_context()
         else:
+            from trezor.wire.codec.buffers import private_source
             from trezor.wire.codec.codec_context import CodecContext
 
-            context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
+            context.CURRENT_CONTEXT = CodecContext(None, private_source(64))
 
     def tearDownClass(self):
         context.CURRENT_CONTEXT = None

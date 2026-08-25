@@ -517,11 +517,14 @@ if __debug__:
     async def handle_session(iface: WireInterface) -> None:
         from trezor import protobuf, wire
         from trezor.wire.codec import codec_v1
+        from trezor.wire.codec.buffers import private_source
         from trezor.wire.codec.codec_context import CodecContext
 
         global DEBUG_CONTEXT
 
-        DEBUG_CONTEXT = ctx = CodecContext(iface, wire.Provider(bytearray(1024)))
+        # A BUFFER OF ITS OWN, borrowing nothing. Debuglink must never be told "another session in
+        # progress" -- it is most needed exactly when the wire is busy.
+        DEBUG_CONTEXT = ctx = CodecContext(iface, private_source(1024))
 
         if storage.layout_watcher:
             try:
