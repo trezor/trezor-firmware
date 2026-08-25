@@ -275,12 +275,20 @@ def _check_change(
     # that spends exactly 0 coins to a random address.
     # See https://github.com/monero-project/monero/pull/1415
     if change_index is None and state.output_change.amount == 0 and len(outputs) == 2:
-        # The change address is not validated as ours on this path -- for a sweep it is
-        # the random address of the fake output. It must therefore never be the address
-        # of an output that actually carries money, otherwise that output would be keyed
-        # as change (a*R) in step 6 and nobody would be able to spend it.
+        # The sweep shape is exempt from change ownership validation because the declared
+        # change is normally the fake 0-amount output sent to a throwaway address.
+        # But the host controls this shape, so if a money-carrying output, including a
+        # recipient or one of our own subaddresses, reuses that unvalidated change
+        # address we must reject it. Honest sweeps are unaffected because their fake
+        # output carries amount 0. Our own primary address is the one safe exception,
+        # where step 6 derives the same one-time key either way (`a*R == r*A`).
+        my_addr = _get_primary_change_address(state)
         for out in outputs:
-            if out.amount and addr_eq(out.addr, change_addr):
+            if (
+                out.amount
+                and addr_eq(out.addr, change_addr)
+                and not addr_eq(change_addr, my_addr)
+            ):
                 raise signing.ChangeAddressError("Change address spends to a recipient")
         state.mem_trace("Sweep tsx" if __debug__ else None)
         return
