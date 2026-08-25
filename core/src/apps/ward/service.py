@@ -25,6 +25,9 @@ from typing import TYPE_CHECKING
 
 from trezor import utils
 
+if __debug__:
+    from trezor import log
+
 if TYPE_CHECKING:
     from trezor import protobuf
     from trezor.messages import WardEntryAck, WardServiceOpen, WardServiceOpenAck
@@ -182,6 +185,18 @@ async def service(msg: WardServiceOpen) -> WardServiceOpenAck:
     # awaiting its own reply would race for the same incoming message.
     channel.iface_ctx.release_dispatch()
 
+    if __debug__:
+        # NO "WARD" IN THE TEXT: `trezor.log` prefixes every line logged against this interface
+        # with it, so the messages here are written as if the subject were understood -- which it
+        # is, in a module that has no other one.
+        log.info(
+            __name__,
+            "service bound: cid %04x, session %d",
+            ctx.channel_id,
+            ctx.session_id,
+            iface=ctx.iface,
+        )
+
     return WardServiceOpenAck()
 
 
@@ -221,7 +236,23 @@ def _service_channel() -> tuple[Channel, int]:
     # Reached from the WALLET workflow, so the context here is Suite's channel -- borrowed only
     # for the `ThpContext` it hangs off, which is the one object that knows every interface.
     thp_ctx = context.get_context().channel.iface_ctx.thp_ctx
-    return thp_ctx.attach_existing_channel(iface_num, channel_id), session_id
+    channel = thp_ctx.attach_existing_channel(iface_num, channel_id)
+
+    if __debug__:
+        # LOGGED EVERY TIME, cheap and worth it: this line is the only place the identity of the
+        # channel an RPC is about to use is visible. A daemon that appears to hang is usually a
+        # binding naming a channel that is not the one the daemon is holding, and the id is what
+        # says so -- `attach_existing_channel` refuses outright when it can tell, and this covers
+        # the cases where it cannot.
+        log.debug(
+            __name__,
+            "channel %04x on iface %d attached for an RPC",
+            channel_id,
+            iface_num,
+            iface=channel.iface,
+        )
+
+    return channel, session_id
 
 
 async def _rpc(
@@ -248,6 +279,15 @@ async def _rpc(
         await channel.write(request, session_id)
         return await channel.read()
 
+    if __debug__:
+        log.info(
+            __name__,
+            "(cid: %04x) asking the service: %s",
+            channel.channel_id,
+            request.MESSAGE_NAME,
+            iface=channel.iface,
+        )
+
     # `loop.sleep` returns an int, the exchange a tuple -- which is how the race is decided.
     answer = await loop.race(exchange(), loop.sleep(RPC_TIMEOUT_MS))
     if not isinstance(answer, tuple):
@@ -259,7 +299,28 @@ async def _rpc(
 
     for expected_type in expected:
         if message.type == expected_type.MESSAGE_WIRE_TYPE:
+            if __debug__:
+                log.info(
+                    __name__,
+                    "(cid: %04x) service answered: %s",
+                    channel.channel_id,
+                    expected_type.MESSAGE_NAME,
+                    iface=channel.iface,
+                )
             return wrap_protobuf_load(message.data, expected_type)
+
+    if __debug__:
+        # THE WIRE TYPE, not a name: the whole problem is that this is not a message the device
+        # asked for, so there is no reason to believe it decodes as anything in particular. The
+        # number is what a daemon author needs, and looking it up cannot fail.
+        log.error(
+            __name__,
+            "(cid: %04x) service answered with wire type %d; expected one of %s",
+            channel.channel_id,
+            message.type,
+            ", ".join([str(e.MESSAGE_WIRE_TYPE) for e in expected]),
+            iface=channel.iface,
+        )
 
     raise _desynchronised(channel, "unexpected message from the WARD service")
 
@@ -288,6 +349,19 @@ def _desynchronised(channel: Channel, what: str) -> Exception:
     from trezor.wire import DataError
 
     exc = DataError(what)
+
+    if __debug__:
+        # ERROR, not debug. Every path into here loses the daemon's channel and the binding with
+        # it, so this is the line that explains a service which was working a moment ago and is
+        # now simply not bound -- the state the next operation reports, several messages later.
+        log.error(
+            __name__,
+            "(cid: %04x) tearing down the service channel: %s",
+            channel.channel_id,
+            what,
+            iface=channel.iface,
+        )
+
     clear_binding()
     channel.clear(exc)
     return exc
@@ -501,6 +575,16 @@ def close_bound_channel(reason: str) -> None:
         channel, _session_id = _service_channel()
     except DataError:
         return
+
+    if __debug__:
+        log.info(
+            __name__,
+            "(cid: %04x) closing the service channel: %s",
+            channel.channel_id,
+            reason,
+            iface=channel.iface,
+        )
+
     channel.clear(DataError(reason))
 
 

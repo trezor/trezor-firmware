@@ -363,7 +363,10 @@ class InterfaceContext:
                     # because the daemon initiates exactly one message: it reconnects, which
                     # allocates a channel, which re-arms this loop.
                     if __debug__:
-                        log.exception(__name__, exc)
+                        # `iface` so the line is tagged as WARD's like the rest of this
+                        # conversation: a dispatcher dying is one of the few ways the daemon's
+                        # channel stops being served without anything else saying so.
+                        log.exception(__name__, exc, iface=self._iface)
                     break
                 if self._dispatch_released:
                     break
@@ -455,6 +458,12 @@ class InterfaceContext:
         if last_write_ms is not None and last_write_ms <= _PREEMPT_TIMEOUT_MS:
             # In use. The newcomer is told the interface is busy and retransmits; if the incumbent
             # really is gone, the next attempt is past the window and gets in.
+            if __debug__:
+                log.debug(
+                    __name__,
+                    f"keeping channel {hex(channel.channel_id)}, written {last_write_ms} ms ago; {hex(channel_id)} gets TRANSPORT_BUSY",
+                    iface=self._iface,
+                )
             return
 
         try:
@@ -475,6 +484,17 @@ class InterfaceContext:
         # `end_pairing_and_replace` does for a service reconnect and for the same reason: a session
         # that outlived its transport would keep a readiness it can no longer vouch for.
         channel.clear(trezorthp.ThpError("displaced on the service interface"))
+
+        if __debug__:
+            # A DAEMON RECONNECT AS THE DEVICE SEES IT. It is the one event on this interface that
+            # destroys a channel without anything having gone wrong, and the binding it invalidates
+            # is read much later, on the wallet channel -- so this is where the two are still next
+            # to each other.
+            log.info(
+                __name__,
+                f"displaced channel {hex(channel.channel_id)} with {hex(channel_id)}",
+                iface=self._iface,
+            )
 
         self.active_channel = replacement
 

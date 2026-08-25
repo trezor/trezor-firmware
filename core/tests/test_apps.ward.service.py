@@ -23,14 +23,19 @@ def _as_message(msg):
 class _FakeChannel:
     """Records what was written and hands back a canned answer.
 
-    Only the two methods `_rpc` uses: the point of the exercise is the request it builds and the
-    answer it will accept, not THP itself.
+    Only what `_rpc` actually touches: the point of the exercise is the request it builds and the
+    answer it will accept, not THP itself. That does include the identity a real channel is logged
+    and torn down by -- `_desynchronised` closes the channel, and the RPC logs which one it used --
+    so those are here as well, cheaply.
     """
 
     def __init__(self, answer=None, answer_session_id=None):
         self.written = []
         self._answer = answer
         self._answer_session_id = answer_session_id
+        self.channel_id = 0x1234
+        self.iface = None
+        self.cleared = None
 
     async def write(self, msg, session_id=0):
         self.written.append((session_id, msg))
@@ -40,6 +45,9 @@ class _FakeChannel:
             raise AssertionError("read() called with no answer prepared")
         sid = self._answer_session_id
         return (sid, self._answer)
+
+    def clear(self, exc=None):
+        self.cleared = exc
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "WARD is not built in BTC-only firmware")
