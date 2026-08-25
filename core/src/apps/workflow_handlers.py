@@ -145,14 +145,28 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.management.get_next_u2f_counter"
 
         # ward
-        if utils.USE_WARD_SERVICE_CHANNEL and msg_type == MessageType.WardServiceOpen:
+        if (
+            utils.USE_THP
+            and utils.USE_WARD_SERVICE_CHANNEL
+            and msg_type == MessageType.WardServiceOpen
+        ):
             # The only host-initiated WARD message on the service interface, and the only one
             # registered here for it: everything else on that channel is opened by the device and
             # read back inside the workflow that asked, never dispatched.
+            #
+            # NOT REGISTERED ON A CODEC BUILD, where the service interface has a reader of its own
+            # and calls `apps.ward.service.bind_codec` directly. Going through the dispatcher there
+            # would mean `workflow.spawn`, which closes a live wallet workflow -- something a
+            # daemon announcing itself must not be able to do.
             return "apps.ward.service"
-        if utils.USE_WARD_SERVICE_CHANNEL and msg_type == MessageType.WardResetService:
+        if (
+            utils.USE_THP
+            and utils.USE_WARD_SERVICE_CHANNEL
+            and msg_type == MessageType.WardResetService
+        ):
             # Registered for the WALLET interface, unlike the message above it: the daemon whose
-            # key was lost is the one party that cannot ask for this.
+            # key was lost is the one party that cannot ask for this. THP only, because a codec
+            # service binding pins no key and so has nothing to migrate ownership of.
             return "apps.ward.reset_service"
         if msg_type == MessageType.WardGetEntry:
             return "apps.ward.get_entry"

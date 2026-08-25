@@ -29,11 +29,19 @@ if __debug__:
     from trezor import log
 
 if TYPE_CHECKING:
+    from trezorio import WireInterface
+
     from trezor import protobuf
     from trezor.messages import WardEntryAck, WardServiceOpen, WardServiceOpenAck
     from trezor.protobuf import MessageType as LoadedMessageType
+    from trezor.wire.codec.ward_context import WardCodecContext
     from trezor.wire.protocol_common import Message
     from trezor.wire.thp.channel import Channel
+
+    # WHAT AN RPC TALKS THROUGH. Both ends of the union carry `channel_id` and `iface`, which is
+    # every attribute this module wants from them -- so the logging and the teardown read the same
+    # on either transport instead of being written twice.
+    ServiceLink = Channel | WardCodecContext
 
 
 # HOW LONG A REVERSE RPC MAY TAKE, END TO END. A daemon that stops answering must not hang the
@@ -100,104 +108,150 @@ def clear_binding() -> None:
     get_sessionless_cache().delete(APP_WARD_SERVICE)
 
 
-async def service(msg: WardServiceOpen) -> WardServiceOpenAck:
-    """Bind this channel as the WARD service.
+if utils.USE_THP:
 
-    Deliberately does NOT require a pre-existing service session: an unknown session id arrives as
-    an ephemeral seedless context, and this handler is what allocates the real slot. And it does
-    not check which channel is currently dispatched, because this channel legitimately is -- that
-    is how this message got here.
-    """
-    from storage import cache_thp
-    from storage import ward as storage_ward
-    from trezor import wire
-    from trezor.messages import WardServiceOpenAck
-    from trezor.wire import context
+    async def service(msg: WardServiceOpen) -> WardServiceOpenAck:
+        """Bind this channel as the WARD service.
 
-    if not utils.USE_WARD_SERVICE_CHANNEL:
-        # Unreachable in a connect build, where the handler is not registered and this module is
-        # not frozen in. Stated anyway so the refusal does not depend on registration alone.
-        raise wire.DataError("this firmware does not serve WARD over a service channel")
+        Deliberately does NOT require a pre-existing service session: an unknown session id arrives as
+        an ephemeral seedless context, and this handler is what allocates the real slot. And it does
+        not check which channel is currently dispatched, because this channel legitimately is -- that
+        is how this message got here.
+        """
+        from storage import cache_thp
+        from storage import ward as storage_ward
+        from trezor import wire
+        from trezor.messages import WardServiceOpenAck
+        from trezor.wire import context
 
-    ctx = context.get_context()
+        if not utils.USE_WARD_SERVICE_CHANNEL:
+            # Unreachable in a connect build, where the handler is not registered and this module is
+            # not frozen in. Stated anyway so the refusal does not depend on registration alone.
+            raise wire.DataError("this firmware does not serve WARD over a service channel")
 
-    # THE INTERFACE IS THE AUTHORISATION BOUNDARY. Everything below trusts that this channel is
-    # the daemon's, and the only reason to believe that is which interface it arrived on -- a
-    # separate OS claim that Suite does not hold.
-    if not wire.is_ward_interface(ctx.iface):
-        raise wire.DataError("WARD service must be opened on the WARD interface")
+        ctx = context.get_context()
 
-    if msg.protocol_version != PROTOCOL_VERSION:
-        raise wire.DataError("unsupported WARD service protocol version")
+        # THE INTERFACE IS THE AUTHORISATION BOUNDARY. Everything below trusts that this channel is
+        # the daemon's, and the only reason to believe that is which interface it arrived on -- a
+        # separate OS claim that Suite does not hold.
+        if not wire.is_ward_interface(ctx.iface):
+            raise wire.DataError("WARD service must be opened on the WARD interface")
 
-    channel = ctx.channel
+        if msg.protocol_version != PROTOCOL_VERSION:
+            raise wire.DataError("unsupported WARD service protocol version")
 
-    # ONE DAEMON, PINNED. Pairing proves only that the host holds a credential this device issued,
-    # which every paired host does -- Suite included. Without this, any paired host could open the
-    # WARD interface and answer for the replica.
-    host_key = channel.get_host_static_public_key()
-    pinned = storage_ward.get_service_host_key()
-    if pinned is None:
-        # PINNING IS A FLASH WRITE, so a first bind needs the device unlocked. Said explicitly
-        # rather than left to fail inside `config.set`, which would surface as an opaque storage
-        # error at the point where the daemon is least able to interpret it. Re-binding an
-        # already-pinned daemon writes nothing and works while locked, which is the case that
-        # matters at boot: the daemon comes up before the user does.
-        from trezor import config
+        channel = ctx.channel
 
-        if not config.is_unlocked():
-            raise wire.DataError("unlock the device to bind the WARD service")
-        storage_ward.set_service_host_key(host_key)
-    elif pinned != host_key:
-        # Not repairable by connecting a different daemon: the pin is in flash precisely so that
-        # unplugging the device does not clear it. Recovering from a lost daemon key is an
-        # ownership migration, with a user decision in it, and belongs in its own path.
-        raise wire.DataError("another daemon is bound as the WARD service")
+        # ONE DAEMON, PINNED. Pairing proves only that the host holds a credential this device issued,
+        # which every paired host does -- Suite included. Without this, any paired host could open the
+        # WARD interface and answer for the replica.
+        host_key = channel.get_host_static_public_key()
+        pinned = storage_ward.get_service_host_key()
+        if pinned is None:
+            # PINNING IS A FLASH WRITE, so a first bind needs the device unlocked. Said explicitly
+            # rather than left to fail inside `config.set`, which would surface as an opaque storage
+            # error at the point where the daemon is least able to interpret it. Re-binding an
+            # already-pinned daemon writes nothing and works while locked, which is the case that
+            # matters at boot: the daemon comes up before the user does.
+            from trezor import config
 
-    # NEVER DISPLACE A LIVE SERVICE. The displaced binding is what some in-flight operation is
-    # holding, so replacing it would strand that operation on a channel nothing answers for.
-    #
-    # LIVE, not merely recorded. A daemon restart leaves a binding naming a channel that is gone,
-    # and refusing on that would lock the service out until the device rebooted -- so a recorded
-    # binding only counts while its channel is still open.
-    #
-    # NOT REACHABLE TODAY, and worth saying so rather than implying coverage. Two channels of one
-    # daemon cannot coexist: THP replaces a channel arriving with an already-known host static
-    # key, so the older one is closed. A channel with a different key fails the pin above. And a
-    # repeat open on the bound channel itself is never dispatched, because binding hands the
-    # channel to the device. Kept because all three of those are properties of other code, and a
-    # binding must not be displaced silently if any of them changes.
-    bound = get_binding()
-    if bound is not None:
-        from trezorthp import channel_is_open
+            if not config.is_unlocked():
+                raise wire.DataError("unlock the device to bind the WARD service")
+            storage_ward.set_service_host_key(host_key)
+        elif pinned != host_key:
+            # Not repairable by connecting a different daemon: the pin is in flash precisely so that
+            # unplugging the device does not clear it. Recovering from a lost daemon key is an
+            # ownership migration, with a user decision in it, and belongs in its own path.
+            raise wire.DataError("another daemon is bound as the WARD service")
 
-        if channel_is_open(bound[1]):
-            raise wire.DataError("a WARD service is already bound")
+        # NEVER DISPLACE A LIVE SERVICE. The displaced binding is what some in-flight operation is
+        # holding, so replacing it would strand that operation on a channel nothing answers for.
+        #
+        # LIVE, not merely recorded. A daemon restart leaves a binding naming a channel that is gone,
+        # and refusing on that would lock the service out until the device rebooted -- so a recorded
+        # binding only counts while its channel is still open.
+        #
+        # NOT REACHABLE TODAY, and worth saying so rather than implying coverage. Two channels of one
+        # daemon cannot coexist: THP replaces a channel arriving with an already-known host static
+        # key, so the older one is closed. A channel with a different key fails the pin above. And a
+        # repeat open on the bound channel itself is never dispatched, because binding hands the
+        # channel to the device. Kept because all three of those are properties of other code, and a
+        # binding must not be displaced silently if any of them changes.
+        bound = get_binding()
+        if bound is not None:
+            from trezorthp import channel_is_open
 
-    cache_thp.create_ward_service_session(
-        channel_id=channel.channel_id_bytes(),
-        session_id=ctx.session_id.to_bytes(1, "big"),
-    )
-    set_binding(ctx.iface.iface_num(), ctx.channel_id, ctx.session_id)
+            if channel_is_open(bound[1]):
+                raise wire.DataError("a WARD service is already bound")
 
-    # THE CONVERSATION INVERTS HERE. From now on the device asks and the daemon answers, so the
-    # interface's dispatcher must stop reading this channel -- otherwise it and the workflow
-    # awaiting its own reply would race for the same incoming message.
-    channel.iface_ctx.release_dispatch()
-
-    if __debug__:
-        # NO "WARD" IN THE TEXT: `trezor.log` prefixes every line logged against this interface
-        # with it, so the messages here are written as if the subject were understood -- which it
-        # is, in a module that has no other one.
-        log.info(
-            __name__,
-            "service bound: cid %04x, session %d",
-            ctx.channel_id,
-            ctx.session_id,
-            iface=ctx.iface,
+        cache_thp.create_ward_service_session(
+            channel_id=channel.channel_id_bytes(),
+            session_id=ctx.session_id.to_bytes(1, "big"),
         )
+        set_binding(ctx.iface.iface_num(), ctx.channel_id, ctx.session_id)
 
-    return WardServiceOpenAck()
+        # THE CONVERSATION INVERTS HERE. From now on the device asks and the daemon answers, so the
+        # interface's dispatcher must stop reading this channel -- otherwise it and the workflow
+        # awaiting its own reply would race for the same incoming message.
+        channel.iface_ctx.release_dispatch()
+
+        if __debug__:
+            # NO "WARD" IN THE TEXT: `trezor.log` prefixes every line logged against this interface
+            # with it, so the messages here are written as if the subject were understood -- which it
+            # is, in a module that has no other one.
+            log.info(
+                __name__,
+                "service bound: cid %04x, session %d",
+                ctx.channel_id,
+                ctx.session_id,
+                iface=ctx.iface,
+            )
+
+        return WardServiceOpenAck()
+
+else:
+
+    async def bind_codec(msg: WardServiceOpen, iface: WireInterface) -> WardServiceOpenAck:
+        """Bind this interface as the WARD service. The codec has no channel and no credential.
+
+        WHAT IS CHECKED IS THE INTERFACE, and that is the whole of it. A codec transport carries no
+        Noise identity to pin, so `WardServiceOpen` establishes only that a process is listening on
+        the interface the OS gave to `wardd` -- a separate claim from the wallet interface, and the
+        one this endpoint is authorised by.
+
+        NOTHING ELSE IS NEEDED, because nothing else is trusted. A hostile daemon can fail an
+        operation, answer wrongly or force an unnecessary sync; it cannot inject state. Leaf
+        authenticity, MPT proofs, the WM attestation and the device-minted nonce/counter/mac are
+        what accept an answer, and none of them ask who sent it.
+
+        REBINDING IS IDEMPOTENT and displaces nothing, which is right here and would not have been
+        under THP. There is no channel to strand: a daemon that restarts announces itself again,
+        the recorded interface is the same interface, and any RPC that was in flight fails on its
+        own deadline rather than on this.
+        """
+        from trezor import wire
+        from trezor.messages import WardServiceOpenAck
+
+        if not utils.USE_WARD_SERVICE_CHANNEL:
+            raise wire.DataError(
+                "this firmware does not serve WARD over a service channel"
+            )
+
+        # THE INTERFACE IS THE AUTHORISATION BOUNDARY. Restated here even though the only caller
+        # is the service interface's own reader, so the refusal does not depend on the routing in
+        # `wire.setup` being right.
+        if not wire.is_ward_interface(iface):
+            raise wire.DataError("WARD service must be opened on the WARD interface")
+
+        if msg.protocol_version != PROTOCOL_VERSION:
+            raise wire.DataError("unsupported WARD service protocol version")
+
+        set_binding(iface.iface_num(), 0, 0)
+
+        if __debug__:
+            log.info(__name__, "service bound", iface=iface)
+
+        return WardServiceOpenAck()
 
 
 # --- talking to the service ---------------------------------------------------------------
@@ -206,32 +260,49 @@ async def service(msg: WardServiceOpen) -> WardServiceOpenAck:
 # message stream with no request ids cannot carry two independent conversations: a reply and an
 # unrelated request are indistinguishable. Rather than add ids, the channel is inverted.
 #
-# WHAT ENFORCES IT IS STRUCTURAL, not a flag. Once bound, the interface's dispatcher releases the
-# channel (`InterfaceContext.release_dispatch`), so nothing is reading it except the workflow that
-# just wrote a request. An earlier design gated the receive boundary on an "RPC in flight" flag;
-# that would have had to be right about `expecting_message`, which `Channel.write` clears as its
-# first act, and about ACK piggybacking, which can deliver a valid fast response while
-# `expecting_ack` is still set. Having exactly one reader removes the question.
+# WHAT ENFORCES IT IS STRUCTURAL, not a flag, and on both transports the structure is "exactly one
+# reader". Under THP the interface's dispatcher releases the channel
+# (`InterfaceContext.release_dispatch`) and the waiting workflow is what reads. An earlier design
+# gated the receive boundary on an "RPC in flight" flag instead; that would have had to be right
+# about `expecting_message`, which `Channel.write` clears as its first act, and about ACK
+# piggybacking, which can deliver a valid fast response while `expecting_ack` is still set.
 #
-# An unsolicited message from the daemon therefore is not dispatched at all: it sits in the
-# channel until the next RPC reads it, fails the type check below, and fails that operation. That
-# is the fail-closed direction, and it costs the daemon its own conversation rather than the
-# device's integrity.
+# The codec cannot hand the interface over -- `loop.wait` wakes every task paused on it, so two
+# readers would race for the same bytes -- so its reader never lets go and routes an answer into
+# the mailbox the workflow is parked on instead. Still one reader; see
+# `trezor.wire.codec.ward_context`.
+#
+# An unsolicited message from the daemon therefore is not dispatched at all: it is read by whoever
+# owns the read, fails the type check below, and fails that operation. That is the fail-closed
+# direction, and it costs the daemon its own conversation rather than the device's integrity.
 
 
-def _service_channel() -> tuple[Channel, int]:
-    """The bound channel, reattached so it can be written to, and the session id to write on.
+def _service_link() -> "tuple[ServiceLink, int]":
+    """What an RPC talks through, and the session id to write on (0 where there is none).
 
-    REATTACHING IS NOT OPTIONAL. The Rust channel outlives MicroPython session restarts but the
-    `Channel` object does not, and a channel that is not its interface's `active_channel` cannot
-    be written at all -- `Channel.write` pokes a write loop that drains only that one.
+    UNDER THP, REATTACHING IS NOT OPTIONAL. The Rust channel outlives MicroPython session restarts
+    but the `Channel` object does not, and a channel that is not its interface's `active_channel`
+    cannot be written at all -- `Channel.write` pokes a write loop that drains only that one.
+
+    UNDER THE CODEC THERE IS NOTHING TO REATTACH, and that is the whole difference: the endpoint is
+    the interface's reader, which `wire.setup` spawns and respawns, so the binding names a fact
+    about the interface rather than a handle that can go stale. What can still be true is that the
+    reader is not running -- between a session restart and the next `wire.setup` -- and that is a
+    `DataError` on the operation, not a broken invariant.
     """
-    from trezor.wire import DataError, context
+    from trezor.wire import DataError
 
     bound = get_binding()
     if bound is None:
         raise DataError("no WARD service is bound")
     iface_num, channel_id, session_id = bound
+
+    if not utils.USE_THP:
+        from trezor.wire.codec.ward_context import service_link
+
+        return service_link(), 0
+
+    from trezor.wire import context
 
     # Reached from the WALLET workflow, so the context here is Suite's channel -- borrowed only
     # for the `ThpContext` it hangs off, which is the one object that knows every interface.
@@ -269,34 +340,51 @@ async def _rpc(
     from trezor import loop
     from trezor.wire.message_handler import decode_message
 
-    channel, session_id = _service_channel()
+    link, session_id = _service_link()
 
-    async def exchange() -> "tuple[int, Message]":
+    async def exchange() -> "tuple[int, Message] | str":
         # ONE DEADLINE OVER BOTH HALVES. Neither `write` nor `read` has one of its own, and the
-        # wait that actually strands a silent daemon is the FIRST: `write` returns when the ack
-        # arrives, so with nothing at the other end it sits there until THP exhausts its
-        # retransmissions. Racing them as one coroutine bounds the pair.
-        await channel.write(request, session_id)
-        return await channel.read()
+        # wait that actually strands a silent daemon is the FIRST: under THP `write` returns when
+        # the ack arrives, so with nothing at the other end it sits there until the retransmissions
+        # are exhausted; under the codec a write to an interface nobody drains parks just as
+        # thoroughly. Racing them as one coroutine bounds the pair.
+        if utils.USE_THP:
+            await link.write(request, session_id)
+            return await link.read()
+
+        from trezor.wire.codec import ward_context
+
+        try:
+            return (session_id, await ward_context.exchange(request))
+        except Exception as exc:
+            # A MANGLED FRAME IS AN ANSWER, just not one that can be read, so it gets a reason of
+            # its own rather than being reported as silence. Returned rather than raised so the
+            # single teardown below stays the only exit.
+            if __debug__:
+                log.exception(__name__, exc, iface=link.iface)
+            return "the WARD service link failed"
 
     if __debug__:
         log.info(
             __name__,
             "(cid: %04x) asking the service: %s",
-            channel.channel_id,
+            link.channel_id,
             request.MESSAGE_NAME,
-            iface=channel.iface,
+            iface=link.iface,
         )
 
     # `loop.sleep` returns an int, the exchange a tuple -- which is how the race is decided.
     answer = await loop.race(exchange(), loop.sleep(RPC_TIMEOUT_MS))
     if not isinstance(answer, tuple):
-        raise _desynchronised(channel, "the WARD service did not answer")
+        raise _desynchronised(
+            link,
+            answer if isinstance(answer, str) else "the WARD service did not answer",
+        )
 
     reply_session_id, message = answer
     if reply_session_id != session_id:
         message.release()
-        raise _desynchronised(channel, "WARD service answered on another session")
+        raise _desynchronised(link, "WARD service answered on another session")
 
     for expected_type in expected:
         if message.type == expected_type.MESSAGE_WIRE_TYPE:
@@ -304,9 +392,9 @@ async def _rpc(
                 log.info(
                     __name__,
                     "(cid: %04x) service answered: %s",
-                    channel.channel_id,
+                    link.channel_id,
                     expected_type.MESSAGE_NAME,
-                    iface=channel.iface,
+                    iface=link.iface,
                 )
             return decode_message(message, expected_type)
 
@@ -317,19 +405,19 @@ async def _rpc(
         log.error(
             __name__,
             "(cid: %04x) service answered with wire type %d; expected one of %s",
-            channel.channel_id,
+            link.channel_id,
             message.type,
             ", ".join([str(e.MESSAGE_WIRE_TYPE) for e in expected]),
-            iface=channel.iface,
+            iface=link.iface,
         )
 
     # NOTHING WILL DECODE THIS ONE either -- releasing before tearing the channel down, so the
     # shared buffer is not stranded by a daemon that answered wrongly.
     message.release()
-    raise _desynchronised(channel, "unexpected message from the WARD service")
+    raise _desynchronised(link, "unexpected message from the WARD service")
 
 
-def _desynchronised(channel: Channel, what: str) -> Exception:
+def _desynchronised(link: "ServiceLink", what: str) -> Exception:
     """Tear the service channel down, and return the error to raise for having done so.
 
     WHY THE CHANNEL GOES RATHER THAN JUST THE OPERATION. Each of these means the device no longer
@@ -339,9 +427,11 @@ def _desynchronised(channel: Channel, what: str) -> Exception:
     there is no host turn in which to notice. Closing the channel is the resynchronisation, and it
     costs the daemon a reconnect rather than costing the device its integrity.
 
-    A TIMED-OUT WRITE ALSO HAS TO GO. The abandoned message is still pending in the THP channel,
-    and the retransmission loop would keep re-sending it with no `send_buffer` behind it. Closing
-    discards it.
+    A TIMED-OUT WRITE ALSO HAS TO GO. Under THP the abandoned message is still pending in the
+    channel and the retransmission loop would keep re-sending it with no `send_buffer` behind it;
+    closing discards it. The codec retransmits nothing, so what has to go there is smaller -- the
+    RPC flag and any answer that arrived too late to be anyone's -- and the reader keeps reading,
+    so a daemon can announce itself again without waiting for anything to be torn down.
 
     THE PIN IS NOT TOUCHED. This says the transport went away, which is what a daemon restart looks
     like; it says nothing about WHICH daemon is entitled to the role. Erasing the pin here would
@@ -361,13 +451,18 @@ def _desynchronised(channel: Channel, what: str) -> Exception:
         log.error(
             __name__,
             "(cid: %04x) tearing down the service channel: %s",
-            channel.channel_id,
+            link.channel_id,
             what,
-            iface=channel.iface,
+            iface=link.iface,
         )
 
     clear_binding()
-    channel.clear(exc)
+    if utils.USE_THP:
+        link.clear(exc)
+    else:
+        from trezor.wire.codec import ward_context
+
+        ward_context.tear_down(what)
     return exc
 
 
@@ -552,44 +647,49 @@ async def become_ready() -> bool:
     return sync_round.is_online()
 
 
-def close_bound_channel(reason: str) -> None:
-    """Close the service's channel if it is still open, so the interface is free for the next one.
+if utils.USE_THP:
+    # ONLY THP HAS A CHANNEL TO CLOSE, and only THP has a reason to want one closed: this exists
+    # for `reset_service`, which is the recovery path for a pinned daemon key -- a thing the codec
+    # transport does not have and does not need. See `apps.ward.reset_service`.
 
-    NOT A TEARDOWN OF THE BINDING -- the caller decides that, and the two are not the same fact: a
-    daemon restart closes a channel and keeps its pin. This only ensures that no channel is left
-    occupying the interface, because it tracks one at a time and the next daemon would otherwise
-    meet a busy interface rather than a bind.
+    def close_bound_channel(reason: str) -> None:
+        """Close the service's channel if it is still open, so the interface is free for the next one.
 
-    Silent when there is nothing to close, or when what is recorded is no longer reachable. The
-    caller is on its way to forgetting the binding anyway, so making that depend on the state of the
-    channel it is discarding would be the wrong way round.
-    """
-    from trezor.wire import DataError
+        NOT A TEARDOWN OF THE BINDING -- the caller decides that, and the two are not the same fact: a
+        daemon restart closes a channel and keeps its pin. This only ensures that no channel is left
+        occupying the interface, because it tracks one at a time and the next daemon would otherwise
+        meet a busy interface rather than a bind.
 
-    bound = get_binding()
-    if bound is None:
-        return
+        Silent when there is nothing to close, or when what is recorded is no longer reachable. The
+        caller is on its way to forgetting the binding anyway, so making that depend on the state of the
+        channel it is discarding would be the wrong way round.
+        """
+        from trezor.wire import DataError
 
-    from trezorthp import channel_is_open
+        bound = get_binding()
+        if bound is None:
+            return
 
-    if not channel_is_open(bound[1]):
-        return
+        from trezorthp import channel_is_open
 
-    try:
-        channel, _session_id = _service_channel()
-    except DataError:
-        return
+        if not channel_is_open(bound[1]):
+            return
 
-    if __debug__:
-        log.info(
-            __name__,
-            "(cid: %04x) closing the service channel: %s",
-            channel.channel_id,
-            reason,
-            iface=channel.iface,
-        )
+        try:
+            channel, _session_id = _service_link()
+        except DataError:
+            return
 
-    channel.clear(DataError(reason))
+        if __debug__:
+            log.info(
+                __name__,
+                "(cid: %04x) closing the service channel: %s",
+                channel.channel_id,
+                reason,
+                iface=channel.iface,
+            )
+
+        channel.clear(DataError(reason))
 
 
 # --- publishing a mutation ----------------------------------------------------------------
