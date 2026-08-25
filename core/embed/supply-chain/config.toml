@@ -65,10 +65,6 @@ criteria = "safe-to-deploy"
 version = "1.2.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.cargo-platform]]
-version = "0.3.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.cargo_metadata]]
 version = "0.23.1"
 criteria = "safe-to-deploy"
@@ -137,10 +133,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.indenter]]
 version = "0.3.4"
-criteria = "safe-to-deploy"
-
-[[exemptions.indexmap]]
-version = "2.14.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.itertools]]
