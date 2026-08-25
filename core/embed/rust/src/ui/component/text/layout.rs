@@ -739,7 +739,13 @@ impl Span {
 
             // All chunkification logic goes here.
             if let Some(chunkify_config) = chunks {
-                let final_index = text.len().min(usize::from(chunkify_config.chunk_size));
+                let final_index = match text
+                    .char_indices()
+                    .nth(usize::from(chunkify_config.chunk_size))
+                {
+                    Some((index, _char)) => index,
+                    None => text.len(),
+                };
                 let chunk_width = text_font.text_width(&text[..final_index]);
                 if chunk_width <= max_width {
                     return Self {
@@ -845,14 +851,14 @@ mod tests {
 
     #[test]
     fn test_span() {
-        assert_eq!(spans_from("hello", 5), vec![("hello", false)]);
-        assert_eq!(spans_from("", 5), vec![("", false)]);
+        assert_eq!(spans_from("hello", 5, None), vec![("hello", false)]);
+        assert_eq!(spans_from("", 5, None), vec![("", false)]);
         assert_eq!(
-            spans_from("hello world", 5),
+            spans_from("hello world", 5, None),
             vec![("hello", false), ("world", false)]
         );
         assert_eq!(
-            spans_from("hello\nworld", 5),
+            spans_from("hello\nworld", 5, None),
             vec![("hello", false), ("world", false)]
         );
     }
@@ -861,7 +867,7 @@ mod tests {
     #[ignore]
     fn test_leading_trailing() {
         assert_eq!(
-            spans_from("\nhello\nworld\n", 5),
+            spans_from("\nhello\nworld\n", 5, None),
             vec![("", false), ("hello", false), ("world", false), ("", false)]
         );
     }
@@ -869,7 +875,7 @@ mod tests {
     #[test]
     fn test_long_word() {
         assert_eq!(
-            spans_from("Down with the establishment!", 5),
+            spans_from("Down with the establishment!", 5, None),
             vec![
                 ("Down", false),
                 ("with", false),
@@ -885,12 +891,16 @@ mod tests {
     #[test]
     fn test_char_boundary() {
         assert_eq!(
-            spans_from("+ěščřžýáíé", 5),
+            spans_from("+ěščřžýáíé", 5, None),
             vec![("+ěšč", true), ("řžýá", true), ("íé", false)]
+        );
+        assert_eq!(
+            spans_from("+ěščřžýáíé", 100, Some(Chunks::new(4, 0))),
+            vec![("+ěšč", false), ("řžýá", false), ("íé", false)]
         );
     }
 
-    fn spans_from(text: &str, max_width: i16) -> Vec<(&str, bool)> {
+    fn spans_from(text: &str, max_width: i16, chunks: Option<Chunks>) -> Vec<(&str, bool)> {
         let mut spans = vec![];
         let mut remaining_text = text;
         loop {
@@ -900,7 +910,7 @@ mod tests {
                 FIXED_FONT,
                 LineBreaking::BreakAtWhitespace,
                 0,
-                None,
+                chunks,
             );
             spans.push((
                 &remaining_text[..span.length],
