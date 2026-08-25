@@ -48,6 +48,9 @@ if TYPE_CHECKING:
 # BIP-45 for multisig: https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki
 PATTERN_BIP45 = "m/45'/[0-100]/change/address_index"
 
+# Export at m/45' path for Casa multisig
+PATTERN_BIP45_PURPOSE_XPUB = "m/45'/0/0"
+
 # BIP-48 for multisig: https://github.com/bitcoin/bips/blob/master/bip-0048.mediawiki
 # The raw script type is not part of the BIP (and Electrum, as a notable implementation,
 # does not use it), it is included here for completeness.
@@ -443,6 +446,15 @@ def address_n_to_name(
             require_segwit=False,
             require_bech32=True,
             require_taproot=True,
+            account_level=account_level,
+        ),
+        AccountType(
+            "Multisig",
+            PATTERN_BIP45_PURPOSE_XPUB,
+            InputScriptType.SPENDADDRESS,
+            require_segwit=False,
+            require_bech32=False,
+            require_taproot=False,
             account_level=account_level,
         ),
     )
