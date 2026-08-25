@@ -38,6 +38,13 @@ def get_user_data(index: int) -> bytes:
     """
     Return the user data stored at the given index.
     """
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-tropic.h
+def batch_id() -> bytes | None:
+    """
+    Returns the Tropic chip batch ID, or None if it is unavailable.
+    """
 DEVICE_CERT_INDEX: int
 DEVICE_KEY_SLOT: int
 FIDO_CERT_INDEX: int

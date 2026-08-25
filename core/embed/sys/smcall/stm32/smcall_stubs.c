@@ -369,6 +369,8 @@ int firmware_hash_continue(uint8_t *hash, size_t hash_len) {
 
 #ifdef USE_TROPIC
 
+#include <sec/tropic.h>
+
 bool tropic_ping(const uint8_t *msg_in, uint8_t *msg_out, uint16_t msg_len) {
   return (bool)smcall_invoke3((uint32_t)msg_in, (uint32_t)msg_out, msg_len,
                               SMCALL_TROPIC_PING);
@@ -388,6 +390,10 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
 bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
   return (bool)smcall_invoke3((uint32_t)udata_slot, (uint32_t)data,
                               (uint32_t)size, SMCALL_TROPIC_DATA_READ);
+}
+
+bool tropic_get_batch_id(uint8_t batch_id[TROPIC_BATCH_ID_SIZE]) {
+  return (bool)smcall_invoke1((uint32_t)batch_id, SMCALL_TROPIC_GET_BATCH_ID);
 }
 
 #endif

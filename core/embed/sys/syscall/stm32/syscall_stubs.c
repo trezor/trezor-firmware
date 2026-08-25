@@ -945,6 +945,8 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t *bb) {
 
 #ifdef USE_TROPIC
 
+#include <sec/tropic.h>
+
 bool tropic_ping(const uint8_t *msg_in, uint8_t *msg_out, uint16_t msg_len) {
   return (bool)syscall_invoke3((uint32_t)msg_in, (uint32_t)msg_out, msg_len,
                                SYSCALL_TROPIC_PING);
@@ -964,6 +966,10 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
 bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
   return (bool)syscall_invoke3((uint32_t)udata_slot, (uint32_t)data,
                                (uint32_t)size, SYSCALL_TROPIC_DATA_READ);
+}
+
+bool tropic_get_batch_id(uint8_t batch_id[TROPIC_BATCH_ID_SIZE]) {
+  return (bool)syscall_invoke1((uint32_t)batch_id, SYSCALL_TROPIC_GET_BATCH_ID);
 }
 
 #endif

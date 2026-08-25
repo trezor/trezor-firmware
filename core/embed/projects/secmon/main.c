@@ -116,6 +116,10 @@ static void drivers_init(void) {
   random_delays_start_rdi();
 #endif
 
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
+#endif
+
 #ifdef USE_OEM_KEYS_CHECK
   option_bytes_check_oem_keys();
 #endif
@@ -134,10 +138,6 @@ static void drivers_init(void) {
   ensure(tropic_ensure_configuration(), "Tropic configuration check failed");
 #endif  // USE_SECRET && LOCKABLE_BOOTLOADER
 #endif  // USE_TROPIC
-
-#ifdef USE_BACKUP_RAM
-  backup_ram_init();
-#endif
 
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();

@@ -66,6 +66,15 @@ def _language_version_matches() -> bool:
     return header.version[:3] == utils.VERSION[:3]
 
 
+def _get_tropic_batch_id() -> bytes | None:
+    if not utils.USE_TROPIC:
+        return None
+
+    from trezor.crypto import tropic
+
+    return tropic.batch_id()
+
+
 def get_features() -> Features:
     import storage.recovery as storage_recovery
     from trezor import translations
@@ -181,6 +190,10 @@ def get_features() -> Features:
         from trezor.crypto import optiga
 
         f.optiga_sec = optiga.get_sec()
+
+    tropic_batch_id = _get_tropic_batch_id()
+    if tropic_batch_id is not None:
+        f.tropic_batch_id = tropic_batch_id
 
     f.initialized = storage_device.is_initialized()
 

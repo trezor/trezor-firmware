@@ -3369,6 +3369,7 @@ class Features(protobuf.MessageType):
         59: protobuf.Field("usb_connected", "bool", repeated=False, required=False, default=None),
         60: protobuf.Field("wireless_connected", "bool", repeated=False, required=False, default=None),
         63: protobuf.Field("tap_to_wake", "bool", repeated=False, required=False, default=None),
+        64: protobuf.Field("tropic_batch_id", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3435,6 +3436,7 @@ class Features(protobuf.MessageType):
         usb_connected: Optional["bool"] = None,
         wireless_connected: Optional["bool"] = None,
         tap_to_wake: Optional["bool"] = None,
+        tropic_batch_id: Optional["bytes"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3497,6 +3499,7 @@ class Features(protobuf.MessageType):
         self.usb_connected = usb_connected
         self.wireless_connected = wireless_connected
         self.tap_to_wake = tap_to_wake
+        self.tropic_batch_id = tropic_batch_id
 
 
 class LockDevice(protobuf.MessageType):
@@ -8914,6 +8917,7 @@ class Telemetry(protobuf.MessageType):
         2: protobuf.Field("max_temp_c", "sint32", repeated=False, required=False, default=None),
         3: protobuf.Field("battery_errors", "uint32", repeated=False, required=False, default=None),
         4: protobuf.Field("battery_cycles", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("tropic_alarms", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -8923,11 +8927,13 @@ class Telemetry(protobuf.MessageType):
         max_temp_c: Optional["int"] = None,
         battery_errors: Optional["int"] = None,
         battery_cycles: Optional["int"] = None,
+        tropic_alarms: Optional["int"] = None,
     ) -> None:
         self.min_temp_c = min_temp_c
         self.max_temp_c = max_temp_c
         self.battery_errors = battery_errors
         self.battery_cycles = battery_cycles
+        self.tropic_alarms = tropic_alarms
 
 
 class TezosGetAddress(protobuf.MessageType):

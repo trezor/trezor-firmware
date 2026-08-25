@@ -25,17 +25,19 @@ from trezorlib._internal.prodtest_client import Cmd, ProdtestClient, ProdtestCom
 
 @pytest.mark.requires_command(Cmd.TELEMETRY_READ)
 def test_telemetry_read(client: ProdtestClient) -> None:
-    """telemetry-read returns 'min_temp max_temp battery_errors battery_cycles'.
+    """telemetry-read returns 'min_temp max_temp battery_errors battery_cycles tropic_alarms'.
 
-    Format is `%d %d 0x%02X %d`: the temperatures and cycle count are (possibly
-    negative) integers, and the battery-error field is a hex bitmask.
+    Format is `%d %d 0x%02X %d %u`: the temperatures and cycle count are
+    (possibly negative) integers, the battery-error field is a hex bitmask, and
+    the Tropic alarm count is an unsigned integer.
     """
     resp = client.command_ok(ProdtestCommand(Cmd.TELEMETRY_READ))
     fields = resp.args.split()
-    assert len(fields) == 4, f"unexpected telemetry format: {resp.args!r}"
+    assert len(fields) == 5, f"unexpected telemetry format: {resp.args!r}"
 
-    min_temp, max_temp, battery_errors, battery_cycles = fields
+    min_temp, max_temp, battery_errors, battery_cycles, tropic_alarms = fields
     int(min_temp)  # raises if not an integer
     int(max_temp)
     int(battery_cycles)
     assert re.fullmatch(r"0x[0-9A-Fa-f]+", battery_errors), battery_errors
+    assert int(tropic_alarms) >= 0

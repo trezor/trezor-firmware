@@ -139,6 +139,8 @@ pub struct Telemetry {
     pub battery_errors: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.telemetry.Telemetry.battery_cycles)
     pub battery_cycles: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.telemetry.Telemetry.tropic_alarms)
+    pub tropic_alarms: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.telemetry.Telemetry.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -231,8 +233,27 @@ impl Telemetry {
         self.battery_cycles = ::std::option::Option::Some(v);
     }
 
+    // optional uint32 tropic_alarms = 5;
+
+    pub fn tropic_alarms(&self) -> u32 {
+        self.tropic_alarms.unwrap_or(0)
+    }
+
+    pub fn clear_tropic_alarms(&mut self) {
+        self.tropic_alarms = ::std::option::Option::None;
+    }
+
+    pub fn has_tropic_alarms(&self) -> bool {
+        self.tropic_alarms.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_tropic_alarms(&mut self, v: u32) {
+        self.tropic_alarms = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(5);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "min_temp_c",
@@ -253,6 +274,11 @@ impl Telemetry {
             "battery_cycles",
             |m: &Telemetry| { &m.battery_cycles },
             |m: &mut Telemetry| { &mut m.battery_cycles },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "tropic_alarms",
+            |m: &Telemetry| { &m.tropic_alarms },
+            |m: &mut Telemetry| { &mut m.tropic_alarms },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Telemetry>(
             "Telemetry",
@@ -284,6 +310,9 @@ impl ::protobuf::Message for Telemetry {
                 32 => {
                     self.battery_cycles = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                40 => {
+                    self.tropic_alarms = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -308,6 +337,9 @@ impl ::protobuf::Message for Telemetry {
         if let Some(v) = self.battery_cycles {
             my_size += ::protobuf::rt::uint32_size(4, v);
         }
+        if let Some(v) = self.tropic_alarms {
+            my_size += ::protobuf::rt::uint32_size(5, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -325,6 +357,9 @@ impl ::protobuf::Message for Telemetry {
         }
         if let Some(v) = self.battery_cycles {
             os.write_uint32(4, v)?;
+        }
+        if let Some(v) = self.tropic_alarms {
+            os.write_uint32(5, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -347,6 +382,7 @@ impl ::protobuf::Message for Telemetry {
         self.max_temp_c = ::std::option::Option::None;
         self.battery_errors = ::std::option::Option::None;
         self.battery_cycles = ::std::option::Option::None;
+        self.tropic_alarms = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -356,6 +392,7 @@ impl ::protobuf::Message for Telemetry {
             max_temp_c: ::std::option::Option::None,
             battery_errors: ::std::option::Option::None,
             battery_cycles: ::std::option::Option::None,
+            tropic_alarms: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -381,12 +418,13 @@ impl ::protobuf::reflect::ProtobufValue for Telemetry {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x18messages-telemetry.proto\x12\x1chw.trezor.messages.telemetry\x1a\r\
-    options.proto\"\x0e\n\x0cTelemetryGet\"\x95\x01\n\tTelemetry\x12\x1c\n\n\
+    options.proto\"\x0e\n\x0cTelemetryGet\"\xba\x01\n\tTelemetry\x12\x1c\n\n\
     min_temp_c\x18\x01\x20\x01(\x11R\x08minTempC\x12\x1c\n\nmax_temp_c\x18\
     \x02\x20\x01(\x11R\x08maxTempC\x12%\n\x0ebattery_errors\x18\x03\x20\x01(\
     \rR\rbatteryErrors\x12%\n\x0ebattery_cycles\x18\x04\x20\x01(\rR\rbattery\
-    CyclesBA\n#com.satoshilabs.trezor.lib.protobufB\x16TrezorMessageTelemetr\
-    y\x80\xa6\x1d\x01\
+    Cycles\x12#\n\rtropic_alarms\x18\x05\x20\x01(\rR\x0ctropicAlarmsBA\n#com\
+    .satoshilabs.trezor.lib.protobufB\x16TrezorMessageTelemetry\x80\xa6\x1d\
+    \x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

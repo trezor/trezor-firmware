@@ -27,6 +27,7 @@ bool telemetry_get(telemetry_data_t* out) {
   out->max_temp_c = 35.0f;
   out->battery_errors.all = 0;
   out->battery_cycles = 30.00f;
+  out->tropic_alarms = 5;
   return true;
 }
 
@@ -35,6 +36,10 @@ void telemetry_reset(void) {
 }
 
 void telemetry_update_battery_errors(telemetry_batt_errors_t errors) {
+  // No-op for emulator
+}
+
+void telemetry_update_tropic_alarms(uint32_t tropic_alarms_add) {
   // No-op for emulator
 }
 

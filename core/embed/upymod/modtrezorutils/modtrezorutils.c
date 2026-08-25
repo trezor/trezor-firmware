@@ -72,11 +72,11 @@
 /// from trezor import utils
 
 #ifdef USE_TELEMETRY
-/// def telemetry_get() -> tuple[int, int, int, int] | None:
+/// def telemetry_get() -> tuple[int, int, int, int, int] | None:
 ///     """
 ///     Retrieves the stored telemetry data. Returns a tuple
-///     (min_temp_milli_c, max_temp_milli_c, battery_errors, battery_cycles)
-///     or None if telemetry is not available.
+///     (min_temp_milli_c, max_temp_milli_c, battery_errors, battery_cycles,
+///     tropic_alarms) or None if telemetry is not available.
 ///     """
 static mp_obj_t mod_trezorutils_telemetry_get(void) {
   telemetry_data_t data;
@@ -84,13 +84,14 @@ static mp_obj_t mod_trezorutils_telemetry_get(void) {
     return mp_const_none;
   }
 
-  mp_obj_t tuple[4];
+  mp_obj_t tuple[5];
   tuple[0] = mp_obj_new_int((int32_t)(data.min_temp_c * 1000.0f));
   tuple[1] = mp_obj_new_int((int32_t)(data.max_temp_c * 1000.0f));
   tuple[2] = mp_obj_new_int(data.battery_errors.all);
   tuple[3] = mp_obj_new_int((int32_t)(data.battery_cycles * 1000.0f));
+  tuple[4] = mp_obj_new_int(data.tropic_alarms);
 
-  return mp_obj_new_tuple(4, tuple);
+  return mp_obj_new_tuple(5, tuple);
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_telemetry_get_obj,
                                  mod_trezorutils_telemetry_get);

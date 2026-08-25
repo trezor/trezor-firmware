@@ -170,6 +170,20 @@ static mp_obj_t mod_trezorcrypto_tropic_get_user_data(mp_obj_t index) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_get_user_data_obj,
                                  mod_trezorcrypto_tropic_get_user_data);
 
+/// def batch_id() -> bytes | None:
+///     """
+///     Returns the Tropic chip batch ID, or None if it is unavailable.
+///     """
+static mp_obj_t mod_trezorcrypto_tropic_batch_id(void) {
+  uint8_t batch_id[TROPIC_BATCH_ID_SIZE] = {0};
+  if (!tropic_get_batch_id(batch_id)) {
+    return mp_const_none;
+  }
+  return mp_obj_new_bytes(batch_id, sizeof(batch_id));
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_tropic_batch_id_obj,
+                                 mod_trezorcrypto_tropic_batch_id);
+
 /// DEVICE_CERT_INDEX: int
 /// DEVICE_KEY_SLOT: int
 /// FIDO_CERT_INDEX: int
@@ -188,6 +202,8 @@ static const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_tropic_sign_obj)},
     {MP_ROM_QSTR(MP_QSTR_get_user_data),
      MP_ROM_PTR(&mod_trezorcrypto_tropic_get_user_data_obj)},
+    {MP_ROM_QSTR(MP_QSTR_batch_id),
+     MP_ROM_PTR(&mod_trezorcrypto_tropic_batch_id_obj)},
     {MP_ROM_QSTR(MP_QSTR_TropicError), MP_ROM_PTR(&mp_type_TropicError)}};
 static MP_DEFINE_CONST_DICT(mod_trezorcrypto_tropic_globals,
                             mod_trezorcrypto_tropic_globals_table);
