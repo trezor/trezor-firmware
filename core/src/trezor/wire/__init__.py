@@ -251,10 +251,30 @@ else:
 
         return iface is usb.iface_ward
 
+    # A PRIVATE BUFFER FOR UNSOLICITED TRAFFIC. Only `WardServiceOpen` is accepted while no RPC
+    # is in flight, and it is tiny; what this size really buys is that a daemon cannot take the
+    # shared buffer at a moment when a wallet workflow is about to need it.
+    _WARD_BOOTSTRAP_BUFFER_SIZE = 512
+
     def setup(*ifaces: WireInterface) -> None:
         """Initialize the wire stack on the provided interfaces."""
         for iface in ifaces:
-            loop.schedule(handle_session_codec(iface))
+            if is_ward_interface(iface):
+                # NOT `handle_session_codec`: the service interface is device-initiated after
+                # binding and must never reach the workflow dispatcher. See
+                # `trezor.wire.codec.ward_context`.
+                from .codec.buffers import private_source
+                from .codec.ward_context import handle_ward_codec_interface
+
+                loop.schedule(
+                    handle_ward_codec_interface(
+                        iface,
+                        private_source(_WARD_BOOTSTRAP_BUFFER_SIZE),
+                        _codec_buffers(),
+                    )
+                )
+            else:
+                loop.schedule(handle_session_codec(iface))
 
     async def handle_session_codec(iface: WireInterface) -> None:
         ctx = CodecContext(iface, _codec_buffers())
