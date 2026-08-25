@@ -235,6 +235,7 @@ pm_status_t pm_get_state(pm_state_t* state) {
   state->wireless_connected = drv->wireless_connected;
   state->ntc_connected = !drv->pmic_data.ntc_disconnected;
 
+#ifdef USE_CHARGER
   if (pm_is_charging()) {
     state->charging_status = PM_BATTERY_CHARGING;
   } else if (drv->pmic_data.ibat > 0.0f) {
@@ -276,6 +277,11 @@ pm_status_t pm_get_state(pm_state_t* state) {
     drv->charging_limited_start_ms = 0U;
     drv->charging_limited_latched = false;
   }
+#else
+  state->charging_status = PM_BATTERY_DISCHARGING;
+  drv->charging_limited_start_ms = 0U;
+  drv->charging_limited_latched = false;
+#endif /* USE_CHARGER */
 
   state->charging_limited = drv->charging_limited_latched;
   state->battery_connected = !drv->battery_disconnected;
@@ -455,6 +461,7 @@ pm_status_t pm_get_report(pm_report_t* report) {
 }
 
 pm_status_t pm_charging_enable(void) {
+#ifdef USE_CHARGER
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -465,11 +472,13 @@ pm_status_t pm_charging_enable(void) {
   drv->charging_enabled = true;
   pm_charging_controller(drv);
   irq_unlock(irq_key);
+#endif /* USE_CHARGER */
 
   return PM_OK;
 }
 
 pm_status_t pm_charging_disable(void) {
+#ifdef USE_CHARGER
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -480,11 +489,13 @@ pm_status_t pm_charging_disable(void) {
   drv->charging_enabled = false;
   pm_charging_controller(drv);
   irq_unlock(irq_key);
+#endif /* USE_CHARGER */
 
   return PM_OK;
 }
 
 pm_status_t pm_charging_set_max_current(uint16_t current_ma) {
+#ifdef USE_CHARGER
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -503,6 +514,7 @@ pm_status_t pm_charging_set_max_current(uint16_t current_ma) {
   drv->i_chg_max_limit_ma = current_ma;
   pm_charging_controller(drv);
   irq_unlock(irq_key);
+#endif /* USE_CHARGER */
 
   return PM_OK;
 }
@@ -591,6 +603,7 @@ static bool pm_load_recovery_data(pm_recovery_data_t* recovery) {
 }
 
 pm_status_t pm_set_soc_target(uint8_t target) {
+#ifdef USE_CHARGER
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -604,6 +617,7 @@ pm_status_t pm_set_soc_target(uint8_t target) {
   irq_key_t irq_key = irq_lock();
   drv->soc_target = target;
   irq_unlock(irq_key);
+#endif /* USE_CHARGER */
 
   return PM_OK;
 }
@@ -694,7 +708,7 @@ bool pm_is_charging(void) {
   }
 
   bool is_charging = false;
-
+#ifdef USE_CHARGER
   irq_key_t irq_key = irq_lock();
   if (drv->charging_enabled &&
       (!drv->fully_charged && !drv->soc_target_reached) &&
@@ -702,6 +716,7 @@ bool pm_is_charging(void) {
     is_charging = true;
   }
   irq_unlock(irq_key);
+#endif /* USE_CHARGER */
 
   return is_charging;
 }
@@ -713,10 +728,12 @@ bool pm_usb_is_connected(void) {
     return false;
   }
 
-  bool usb_connected;
+  bool usb_connected = false;
+#ifdef USE_CHARGER
   irq_key_t irq_key = irq_lock();
   usb_connected = drv->usb_connected;
   irq_unlock(irq_key);
+#endif /* USE_CHARGER */
 
   return usb_connected;
 }

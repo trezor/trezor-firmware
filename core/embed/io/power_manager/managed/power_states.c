@@ -31,15 +31,19 @@ static pm_power_status_t pm_handle_state_active(pm_driver_t* drv);
 static pm_power_status_t pm_handle_state_power_save(pm_driver_t* drv);
 static pm_power_status_t pm_handle_state_shutting_down(pm_driver_t* drv);
 static pm_power_status_t pm_handle_state_suspend(pm_driver_t* drv);
-static pm_power_status_t pm_handle_state_charging(pm_driver_t* drv);
 static pm_power_status_t pm_handle_state_hibernate(pm_driver_t* drv);
+#ifdef USE_CHARGER
+static pm_power_status_t pm_handle_state_charging(pm_driver_t* drv);
+#endif /* USE_CHARGER */
 
 static void pm_enter_hibernate(pm_driver_t* drv);
-static void pm_enter_charging(pm_driver_t* drv);
 static void pm_enter_shutting_down(pm_driver_t* drv);
 static void pm_enter_power_save(pm_driver_t* drv);
 static void pm_enter_active(pm_driver_t* drv);
 static void pm_exit_shutting_down(pm_driver_t* drv);
+#ifdef USE_CHARGER
+static void pm_enter_charging(pm_driver_t* drv);
+#endif /* USE_CHARGER */
 
 // State handler lookup table
 static const pm_state_handler_t state_handlers[] = {
@@ -67,12 +71,14 @@ static const pm_state_handler_t state_handlers[] = {
             .handle = pm_handle_state_suspend,
             .exit = NULL,
         },
+#ifdef USE_CHARGER
     [PM_STATE_CHARGING] =
         {
             .enter = pm_enter_charging,
             .handle = pm_handle_state_charging,
             .exit = NULL,
         },
+#endif /* USE_CHARGER */
     [PM_STATE_HIBERNATE] =
         {
             .enter = pm_enter_hibernate,
@@ -124,10 +130,12 @@ static pm_power_status_t pm_handle_state_hibernate(pm_driver_t* drv) {
     return PM_STATE_POWER_SAVE;
   }
 
+#ifdef USE_CHARGER
   // External power source, start charging
   if (drv->usb_connected || drv->wireless_connected) {
     return PM_STATE_CHARGING;
   }
+#endif /* USE_CHARGER */
 
   // Hibernate again
   if (drv->request_hibernate) {
@@ -141,6 +149,7 @@ static pm_power_status_t pm_handle_state_hibernate(pm_driver_t* drv) {
   return drv->state;
 }
 
+#ifdef USE_CHARGER
 static pm_power_status_t pm_handle_state_charging(pm_driver_t* drv) {
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
@@ -162,6 +171,7 @@ static pm_power_status_t pm_handle_state_charging(pm_driver_t* drv) {
 
   return drv->state;
 }
+#endif /* USE_CHARGER */
 
 static pm_power_status_t pm_handle_state_suspend(pm_driver_t* drv) {
   if (drv->request_hibernate) {
@@ -258,7 +268,9 @@ static void pm_enter_hibernate(pm_driver_t* drv) {
   reboot_to_off();
 }
 
+#ifdef USE_CHARGER
 static void pm_enter_charging(pm_driver_t* drv) {}
+#endif /* USE_CHARGER */
 
 static void pm_enter_shutting_down(pm_driver_t* drv) {
   // Set shutdown timer
