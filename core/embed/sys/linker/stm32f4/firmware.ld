@@ -38,6 +38,9 @@ SECTIONS {
     . = ALIGN(4);
     *frozen_mpy.o(.rodata*);
     . = ALIGN(4);
+    KEEP(*(.bootloader));
+    *(.bootloader*);
+    . = ALIGN(512);
   } >FLASH AT>FLASH
 
   .flash2 : ALIGN(512) {
@@ -46,9 +49,6 @@ SECTIONS {
     . = ALIGN(4);
     *(.rodata*);
     . = ALIGN(4);
-    KEEP(*(.bootloader));
-    *(.bootloader*);
-    . = ALIGN(512);
   } >FLASH2 AT>FLASH2
 
   .stack : ALIGN(8) {
