@@ -108,7 +108,23 @@ impl<'a> Shape<'a> for JpegImage<'a> {
         // Get temporary buffer for image decoding
         let buff = &mut unwrap!(cache.image_buff(), "No image buffer");
 
-        let mut jpegdec = unwrap!(JpegDecoder::new(self.jpeg));
+        // A malformed or unsupported format is rejected.
+        let Ok(mut jpegdec) = JpegDecoder::new(self.jpeg) else {
+            return;
+        };
+
+        // the hardware and software decoders must agree on the image size,
+        // otherwise we have a corrupted JPEG
+        let Ok(hw) = jpegdec.image() else {
+            return;
+        };
+        let Some(info) = JpegInfo::parse(self.jpeg) else {
+            return;
+        };
+        if hw.width != info.width() || hw.height != info.height() {
+            return;
+        }
+
         let _ = jpegdec.decode(&mut buff[..], &mut |slice_r, slice| {
             let slice = slice.with_downscale(self.scale);
             let slice_r = Rect {
@@ -157,12 +173,11 @@ impl<'a> Shape<'a> for JpegImage<'a> {
                 row_r.y1 < clip.y1
             };
 
-            unwrap!(
-                cache
-                    .jpeg()
-                    .decompress_row(self.jpeg, self.scale, clip.y0, draw_mcu),
-                "Invalid JPEG"
-            );
+            // As above: a stream the software decoder rejects must not be
+            // fatal, since it can come straight from the host.
+            let _ = cache
+                .jpeg()
+                .decompress_row(self.jpeg, self.scale, clip.y0, draw_mcu);
         } else {
             // Draw JPEG with blurring effect
             let jpeg_size = self.bounds().size();
