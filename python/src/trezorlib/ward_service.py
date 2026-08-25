@@ -16,6 +16,11 @@
 
 """The host side of the WARD service channel: announce yourself, then answer.
 
+TWO TRANSPORTS, ONE PROTOCOL. `WardServiceClient` speaks THP; `WardServiceClientV1` speaks the V1
+codec, for models that have no THP at all (Safe 5 and everything before it). What differs is only
+how bytes get across -- the inversion, the message set and the single-owner rule are identical, so
+`WardServiceServer` serves either one. Pick with `ward_service_client`.
+
 WHAT MAKES THIS DIFFERENT FROM EVERY OTHER trezorlib CLIENT is that the conversation inverts.
 Ordinarily the host asks and the device answers, and the whole client is built around that: sessions
 are opened by `ThpCreateNewSession`, reads happen in reply to something just written. Here the daemon
@@ -52,18 +57,22 @@ import logging
 import typing as t
 
 from . import client as _client
-from . import exceptions, messages
+from . import exceptions, messages, protocol_v1
 from .thp.channel import Channel
 from .thp.client import TrezorClientThp
 from .transport import Timeout
 from .transport.udp import UdpTransport
 
 if t.TYPE_CHECKING:
+    from .client import TrezorClient
+    from .mapping import ProtobufMapping
     from .models import TrezorModel
     from .protobuf import MessageType
     from .thp.client import ThpSession
     from .thp.credentials import Credential
     from .transport import Transport
+
+    AnyWardServiceClient = t.Union["WardServiceClient", "WardServiceClientV1"]
 
 LOG = logging.getLogger(__name__)
 
@@ -301,6 +310,14 @@ class WardServiceClient:
         """
         return self.session.call_raw(msg, timeout=timeout)
 
+    def read(self, timeout: float | None = None) -> MessageType:
+        """One device-initiated request. See `WardServiceServer`."""
+        return self.session.read(timeout=timeout)
+
+    def write(self, msg: MessageType) -> None:
+        """The answer to the request just read."""
+        self.session.write(msg)
+
     def announce(self, protocol_version: int | None = None) -> messages.WardServiceOpenAck:
         """Bind this channel as the WARD service. Raises if the device refuses.
 
@@ -349,15 +366,168 @@ class WardServiceClient:
         self.close()
 
 
+class WardServiceClientV1:
+    """The same daemon, on a device that speaks the V1 codec.
+
+    NO IDENTITY, AND NOTHING TO PERSIST. The codec carries no Noise handshake, so there is no static
+    key for the device to pin and no credential to store -- `WardServiceOpen` establishes only that
+    a process is listening on the dedicated interface. That is the whole of the transport-level
+    authentication, deliberately: WARD's own guarantees do not rest on it. Leaf authenticity, the
+    MPT proof, the WM attestation and the device-minted nonce/counter/mac are what accept an answer,
+    and none of them ask who sent it.
+
+    So a hostile process that can open this interface can fail an operation, answer wrongly or force
+    an unnecessary sync. It cannot inject state.
+
+    ONE OWNER OF THE TRANSPORT, same as THP and for a plainer reason: a UDP socket or a USB endpoint
+    has one reader, and a second one would consume the frame the first is waiting for.
+    """
+
+    def __init__(
+        self,
+        transport: Transport,
+        *,
+        mapping: ProtobufMapping | None = None,
+    ) -> None:
+        from .mapping import DEFAULT_MAPPING
+
+        self.transport = transport
+        self.mapping = mapping if mapping is not None else DEFAULT_MAPPING
+        self._open = False
+
+    # --- bringing the interface up ---------------------------------------------------------
+
+    def connect(self) -> None:
+        """Open the transport and hold it open. Idempotent.
+
+        HELD FOR THIS CLIENT'S LIFETIME, for the same reason as the THP client: `Transport` is
+        ref-counted, and the device may ask at any moment, so there is no later point at which
+        reopening would be the natural thing to do.
+        """
+        if self._open:
+            return
+        self.transport.open()
+        self._open = True
+
+    def pair(self, skip: bool = False) -> None:
+        """Nothing to pair. Present so a caller can drive either client the same way."""
+
+    # --- talking ---------------------------------------------------------------------------
+
+    def _send(self, msg: MessageType) -> None:
+        msg_type, msg_bytes = self.mapping.encode(msg)
+        protocol_v1.write(self.transport, msg_type, msg_bytes)
+
+    def _recv(self, timeout: float | None = None) -> MessageType:
+        msg_type, msg_bytes = protocol_v1.read(self.transport, timeout=timeout)
+        return self.mapping.decode(msg_type, msg_bytes)
+
+    def call(self, msg: MessageType, timeout: float | None = None) -> MessageType:
+        """One request, one raw response, with failures returned rather than raised.
+
+        Only useful before the conversation inverts -- in practice `WardServiceOpen` and nothing
+        else. Raw because a refusal is information a daemon acts on.
+        """
+        self.connect()
+        self._send(msg)
+        return self._recv(timeout=timeout)
+
+    def read(self, timeout: float | None = None) -> MessageType:
+        """One device-initiated request. See `WardServiceServer`."""
+        self.connect()
+        return self._recv(timeout=timeout)
+
+    def write(self, msg: MessageType) -> None:
+        """The answer to the request just read."""
+        self._send(msg)
+
+    def announce(
+        self, protocol_version: int | None = None
+    ) -> messages.WardServiceOpenAck:
+        """Bind this interface as the WARD service. Raises if the device refuses.
+
+        THE LAST THING THIS SIDE INITIATES. Afterwards the device asks and the daemon answers, and
+        a further host-initiated message is read by whichever RPC is in flight, fails its type check
+        and costs the daemon the conversation. With nothing in flight it is refused by name.
+        """
+        if protocol_version is None:
+            protocol_version = PROTOCOL_VERSION
+        answer = self.call(messages.WardServiceOpen(protocol_version=protocol_version))
+        if isinstance(answer, messages.Failure):
+            raise exceptions.TrezorFailure(answer)
+        if not isinstance(answer, messages.WardServiceOpenAck):
+            raise exceptions.TrezorException(
+                f"unexpected answer to WardServiceOpen: {type(answer).__name__}"
+            )
+        return answer
+
+    def open(
+        self, handler: WardServiceHandler, *, skip_pairing: bool = False
+    ) -> WardServiceServer:
+        """connect, announce -- and hand back the loop that serves from here on."""
+        self.connect()
+        self.announce()
+        return WardServiceServer(self, handler)
+
+    def close(self) -> None:
+        if self._open:
+            self.transport.close()
+            self._open = False
+
+    def __enter__(self) -> WardServiceClientV1:
+        self.connect()
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
+
+
+def ward_service_client(
+    client: TrezorClient,
+    *,
+    credential: Credential | None = None,
+    static_privkey: bytes | None = None,
+    app: _client.AppManifest | None = None,
+) -> AnyWardServiceClient:
+    """A daemon client for this device's WARD interface, of whichever kind it speaks.
+
+    DECIDED BY THE WIRE CLIENT, not by probing the service interface. Which protocol a device
+    speaks is a property of the device, already established by whatever opened the wire connection
+    -- asking the service interface again would be a second answer to a settled question, and one
+    that a silent daemon-less interface cannot give.
+
+    The identity arguments are THP's and are ignored on a codec device, which has no identity to
+    carry. That is not an oversight; see `WardServiceClientV1`.
+    """
+    from .protocol_v1 import TrezorClientV1
+
+    transport = ward_transport(client.transport)
+
+    if isinstance(client, TrezorClientV1):
+        return WardServiceClientV1(transport, mapping=client.mapping)
+
+    return WardServiceClient(
+        transport,
+        credential=credential,
+        static_privkey=static_privkey,
+        app=app,
+        model=client.model,
+    )
+
+
 class WardServiceServer:
-    """The loop that answers the device, once the channel is bound.
+    """The loop that answers the device, once the service endpoint is bound.
+
+    TRANSPORT-NEUTRAL, because the inversion is a property of the protocol and not of the wire. It
+    talks to the client through `read`/`write`, which both `WardServiceClient` (THP) and
+    `WardServiceClientV1` (codec) provide.
 
     A LOOP OF ONE MESSAGE, exposed as `serve_one`, because that is the whole protocol: the device
     writes a request and reads the reply, and there is no pipelining, no request ids and no second
     conversation. `serve_forever` is that one step repeated.
     """
 
-    def __init__(self, client: WardServiceClient, handler: WardServiceHandler) -> None:
+    def __init__(self, client: AnyWardServiceClient, handler: WardServiceHandler) -> None:
         self.client = client
         self.handler = handler
         # Every request answered, in order. A caller that wants to know how many round trips an
@@ -371,13 +541,13 @@ class WardServiceServer:
         only when a WARD operation needs something, so quiet is the normal state. `serve_forever`
         treats it as such.
         """
-        request = self.client.session.read(timeout=timeout)
+        request = self.client.read(timeout=timeout)
         name = type(request).__name__
         self.served.append(name)
 
         reply = self.handler(request)
         if reply is not None:
-            self.client.session.write(reply)
+            self.client.write(reply)
         else:
             LOG.info("handler answered nothing to %s", name)
         return name
