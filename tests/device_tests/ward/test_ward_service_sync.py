@@ -35,19 +35,12 @@ from ...ward_app import ward_app_pinned  # noqa: F401  -- autouse fixture, see t
 from ...ward_service import DEFAULT_WARD_ID, bound_daemon
 from ...ward_trie import WardTrie
 
-# GAP(ward): MARKED `protocol("thp")` FOR A REASON THAT IS NOT ABOUT THIS FILE.
-#
-# Nothing below is THP-specific -- syncing and publishing are protocol properties, and the codec
-# service endpoint carries them. What stops them running on a codec build is one layer up:
-# `apps.ward.app_role.require_ward_app` pins the WARD APP's THP static key and refuses any context
-# without a channel, so on a V1 device every host-facing WARD message is refused before the service
-# channel is reached at all. Protocol v1 has no host identity to pin, so that is a decision of its
-# own -- see `apps/ward/app_role.py:89` -- and deliberately not made here.
-#
-# Drop this marker when the app role has a v1 answer. Do not "fix" it by weakening the role: the
-# tests would pass and the property they are next to would be gone.
+# RUNS ON BOTH TRANSPORTS, which it did not until the app role grew a v1 answer: it used to pin the
+# WARD app's THP static key and refuse any context without a channel, so every host-facing WARD
+# message was refused on a V1 device before the service channel was reached at all. Protocol v1 has
+# no identity to pin, so the pin is replaced there by a per-operation confirmation -- see
+# `apps/ward/app_role.py`.
 pytestmark = [
-    pytest.mark.protocol("thp"),
     pytest.mark.models("core"),
     pytest.mark.ward_transport("service"),
 ]
