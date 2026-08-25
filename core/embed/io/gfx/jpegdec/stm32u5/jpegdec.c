@@ -161,18 +161,21 @@ static bool jpegdec_extract_header_info(jpegdec_t *dec) {
   int16_t mcu_width = 8;
   int16_t mcu_height = 8;
 
-  image.height = READ_REG_FIELD(JPEG->CONFR1, JPEG_CONFR1_YSIZE);
-  image.width = READ_REG_FIELD(JPEG->CONFR3, JPEG_CONFR3_XSIZE);
+  uint32_t width = READ_REG_FIELD(JPEG->CONFR3, JPEG_CONFR3_XSIZE);
+  uint32_t height = READ_REG_FIELD(JPEG->CONFR1, JPEG_CONFR1_YSIZE);
 
-  if (image.height == 0 || image.width == 0) {
+  if (width == 0 || height == 0) {
     // Image size is zero, invalid header
     return false;
   }
 
-  if (image.height > 32767 || image.width > 32767) {
+  if (width > INT16_MAX || height > INT16_MAX) {
     // Image is too large
     return false;
   }
+
+  image.width = (int16_t)width;
+  image.height = (int16_t)height;
 
   // Number of quantization tables
   int n_qt = 1 + READ_REG_FIELD(JPEG->CONFR1, JPEG_CONFR1_NF);
@@ -228,12 +231,24 @@ static bool jpegdec_start_dma_transfer(jpegdec_t *dec) {
   // Number of MCUs to decode in the current slice
   int mcu_count = MIN(MIN(n_ycbcr, n_rgb), n_row);
 
+  if (mcu_count <= 0) {
+    // Nothing to decode. A non-positive count must never reach the length
+    // computation below, where it would convert to an enormous unsigned value.
+    return false;
+  }
+
+  size_t transfer_size = dec->mcu_size * (size_t)mcu_count;
+
+  if (transfer_size > sizeof(dec->ycbcr_buffer)) {
+    // The transfer must never be able to write past the slice buffer.
+    return false;
+  }
+
   dec->slice_width = dec->mcu_width * mcu_count;
   dec->slice_height = dec->mcu_height;
 
   if (HAL_DMA_Start(&dec->hdma, (uint32_t)&JPEG->DOR,
-                    (uint32_t)dec->ycbcr_buffer,
-                    dec->mcu_size * mcu_count) != HAL_OK) {
+                    (uint32_t)dec->ycbcr_buffer, transfer_size) != HAL_OK) {
     return false;
   }
 
