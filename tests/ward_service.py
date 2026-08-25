@@ -41,7 +41,6 @@ from trezorlib.ward_service import (  # noqa: F401
     PROTOCOL_VERSION,
     WARD_PORT_OFFSET,
     WardServiceClient,
-    WardServiceClientV1,
     WardServiceServer,
     ward_service_client,
 )
@@ -216,11 +215,6 @@ class MockWardService:
         return self.server.served
 
     @property
-    def speaks_codec(self) -> bool:
-        """Whether this daemon talks to the device over the V1 codec rather than THP."""
-        return isinstance(self.service, WardServiceClientV1)
-
-    @property
     def host_static_privkey(self) -> bytes | None:
         """The identity the device pins. Recorded so a test can reconnect AS THE SAME daemon,
         which is what separates "a stranger" from "the same daemon twice".
@@ -229,7 +223,7 @@ class MockWardService:
         only that a process is listening on the dedicated interface. A test about pinning has
         nothing to talk about there and says so with a marker rather than by getting None here.
         """
-        if self.speaks_codec:
+        if not isinstance(self.service, WardServiceClient):
             return None
         return self.service.static_privkey
 
@@ -246,7 +240,7 @@ class MockWardService:
         which is what a real daemon that has lost its key would look like. A real daemon that has
         NOT lost it persists the same value, inside the credential it stores after pairing.
         """
-        if not self.speaks_codec:
+        if isinstance(self.service, WardServiceClient):
             self.service.static_privkey = host_static_privkey
         self.service.connect()
         self.service.pair(skip=True)
@@ -270,6 +264,9 @@ class MockWardService:
         THP only, and deliberately not faked for the codec: there is no channel there, which is
         most of why a daemon restart cannot lock the interface out.
         """
+        assert isinstance(
+            self.service, WardServiceClient
+        ), "there is no channel on a codec service endpoint"
         return self.service.channel
 
     def send(self, msg: MessageType) -> None:
@@ -277,10 +274,15 @@ class MockWardService:
 
         Deliberately absent from `trezorlib.ward_service`: after binding, the device is the sole
         initiator, so an unsolicited message from this side is not a supported operation but the
-        thing the inversion exists to rule out. It gets no reply and no THP ack -- the ack is a side
-        effect of the application reading -- so this raises `Timeout`, which is the assertion.
+        thing the inversion exists to rule out.
+
+        UNDER THP it gets no reply AND no ack -- the ack is a side effect of the application
+        reading -- so it raises `Timeout`, which is the assertion. On the codec the rule is the same
+        and the shape of the refusal differs: with an RPC in flight the message is read as that
+        RPC's answer, fails its type check and costs the daemon the conversation; with nothing in
+        flight it is refused by name.
         """
-        self.service.session.write(msg)
+        self.service.write(msg)
 
     def call(self, msg: MessageType, timeout: float | None = None) -> MessageType:
         return self.service.call(msg, timeout=timeout)
