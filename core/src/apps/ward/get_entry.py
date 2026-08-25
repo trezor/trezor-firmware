@@ -18,6 +18,12 @@ async def get_entry(msg: WardGetEntry) -> Success:
     get the cache. Here a verification failure has nowhere to go -- it is an error, full stop --
     and the offline read is a separate request the user's host had to choose.
 
+    THE SCREEN IS THE OUTPUT CHANNEL, and `confirm_properties` below carries the value among its
+    properties -- so by the time the user is asked, the secret is already on the display. That is
+    an acknowledgement, not a decision, and it is safe only because `apps.ward.app_role` has
+    already decided that exactly one application may trigger a read. On a transport with no app
+    role the filter asks first instead; see `app_role.require_ward_app`.
+
     GAP(ward): this SHOWS the value and returns only Success -- the plaintext never leaves
     the device. Handing it back to the calling application is a different security model, and
     it collides with unattended use: every read costs a confirmation today, which no
