@@ -64,10 +64,43 @@ Which of the two a firmware is cannot be asked over the wire, deliberately: a ho
 *told* could be lied to about it. Hosts that need to care are told by their operator (connect-cli's
 `--service` flag is exactly such an assertion, and it fails closed when it is wrong).
 
+### And what differs between the two transports
+
+A service build carries the dedicated interface whatever protocol the model speaks. THP models
+(T3W1, T3T2) reach it over a THP channel; every other model — Safe 5 and everything before it —
+reaches it over the V1 codec, since the interface is a USB descriptor and knows nothing about which
+protocol runs on it.
+
+| | THP service channel | codec service endpoint |
+|---|---|---|
+| what binding records | interface, channel id and session id | the interface, and nothing else |
+| daemon identity | the Noise static key, pinned in flash | **none** — see below |
+| what inverts the direction | the dispatcher lets go (`release_dispatch`), leaving the workflow the only reader | the reader keeps the interface and routes the answer into the workflow's mailbox |
+| a daemon restart | a new channel; the old binding counts only while its channel is open | just another announcement, answered again |
+| resetting the binding | `WardResetService`, a held confirmation | nothing to reset |
+| the large message buffer | shared with the wallet channel, leased per message | the same, leased for the length of one RPC |
+
+**The codec endpoint authenticates nobody, and that is the design.** A codec transport carries no
+handshake, so `WardServiceOpen` establishes only that a process is listening on the interface the
+operating system gave to `wardd`. The interface is the authorisation boundary — a separate OS claim
+from the wallet interface — and it is the whole of the transport-level check.
+
+Nothing rests on it. A hostile process that can open the interface can fail an operation, answer
+wrongly, or force an unnecessary synchronisation; it cannot inject state. What accepts an answer is
+leaf authenticity under device-derived keys, the MPT proof against the device-trusted root, the WM
+attestation, and a counter and mac the device computed itself — and none of those ask who sent the
+bytes.
+
+> **GAP(ward): WARD is not usable on a codec model yet**, for a reason above this layer.
+> `apps.ward.app_role.require_ward_app` pins the WARD *app's* THP static key and refuses any context
+> without a channel, so on a V1 device every host-facing WARD message is refused before the service
+> endpoint is reached. Protocol v1 has no host identity to pin, so what should take the pin's place
+> there is a decision of its own and has not been made.
+
 ## Which party a request came from
 
-**The daemon is pinned.** The first daemon to announce itself on the WARD interface has its static
-public key written to flash (`storage.ward.get_service_host_key`), and every other key is refused
+**The daemon is pinned, on a THP build.** The first daemon to announce itself on the WARD interface
+has its static public key written to flash (`storage.ward.get_service_host_key`), and every other key is refused
 from then on. Pairing alone would not do: it proves a host holds a credential this device issued, and
 every paired host holds one, so "some paired host" is the wrong granularity for the party the device
 asks for proofs. Recovering from a lost daemon key is an ownership migration with a user decision in

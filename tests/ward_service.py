@@ -37,11 +37,13 @@ import pytest
 from trezorlib import messages, ward
 from trezorlib.client import AppManifest
 from trezorlib.transport.udp import UdpTransport
-from trezorlib.ward_service import (
+from trezorlib.ward_service import (  # noqa: F401
     PROTOCOL_VERSION,
     WARD_PORT_OFFSET,
     WardServiceClient,
+    WardServiceClientV1,
     WardServiceServer,
+    ward_service_client,
 )
 from trezorlib.ward_service import ward_transport as _ward_interface_of
 
@@ -168,8 +170,11 @@ class MockWardService:
         # test that distinguishes one daemon from another would be talking about the wrong key. The
         # button callback is the one thing worth borrowing: pairing raises a `ButtonRequest`, and in
         # a test the answer is "press it over debuglink" rather than "wait for a person".
-        self.service = WardServiceClient(
-            _ward_interface_of(client.transport),
+        # WHICH CLIENT COMES FROM THE DEVICE, not from this file. `ward_service_client` decides
+        # from the wire client that is already connected, so the mock cannot end up speaking a
+        # transport the firmware does not.
+        self.service = ward_service_client(
+            client.client,
             app=AppManifest(
                 app_name="wardd-mock",
                 button_callback=client.client.app.button_callback,
@@ -211,9 +216,21 @@ class MockWardService:
         return self.server.served
 
     @property
+    def speaks_codec(self) -> bool:
+        """Whether this daemon talks to the device over the V1 codec rather than THP."""
+        return isinstance(self.service, WardServiceClientV1)
+
+    @property
     def host_static_privkey(self) -> bytes | None:
         """The identity the device pins. Recorded so a test can reconnect AS THE SAME daemon,
-        which is what separates "a stranger" from "the same daemon twice"."""
+        which is what separates "a stranger" from "the same daemon twice".
+
+        None on a codec build, where there is no identity at all: `WardServiceOpen` establishes
+        only that a process is listening on the dedicated interface. A test about pinning has
+        nothing to talk about there and says so with a marker rather than by getting None here.
+        """
+        if self.speaks_codec:
+            return None
         return self.service.static_privkey
 
     def connect(self, host_static_privkey: bytes | None = None) -> None:
@@ -229,7 +246,8 @@ class MockWardService:
         which is what a real daemon that has lost its key would look like. A real daemon that has
         NOT lost it persists the same value, inside the credential it stores after pairing.
         """
-        self.service.static_privkey = host_static_privkey
+        if not self.speaks_codec:
+            self.service.static_privkey = host_static_privkey
         self.service.connect()
         self.service.pair(skip=True)
 
@@ -247,7 +265,11 @@ class MockWardService:
 
     @property
     def channel(self):
-        """The THP channel, for tests that need to reach below the protocol."""
+        """The THP channel, for tests that need to reach below the protocol.
+
+        THP only, and deliberately not faked for the codec: there is no channel there, which is
+        most of why a daemon restart cannot lock the interface out.
+        """
         return self.service.channel
 
     def send(self, msg: MessageType) -> None:
