@@ -81,5 +81,48 @@ class TestWardHandlerWiring(unittest.TestCase):
         self.assertEqual(resolved, set(WARD_REQUESTS))
 
 
+class TestWardRevealPolicy(unittest.TestCase):
+    """Which WARD operations may put a value the device holds on screen.
+
+    WHY THIS IS A LIST AND NOT A PROPERTY OF THE HANDLER. On a transport with no app role the
+    confirmation for a reveal has to come BEFORE the handler runs -- the operation's own screen
+    carries the value among its properties, so answering it is an acknowledgement, not a decision.
+    That means the classification has to be made from the message type alone, in the wire filter,
+    and a list is what that looks like.
+
+    The cost of a list is that it can fall out of step with the handlers. These two assertions are
+    what make that loud rather than silent, and the second is the one that matters: a revealing
+    message the role filter never sees would be one that reveals with nothing asked first.
+    """
+
+    def test_every_revealing_message_reaches_the_filter(self):
+        from apps.ward.app_role import _revealing_messages, _ward_app_messages
+
+        missing = set(_revealing_messages()) - set(_ward_app_messages())
+        self.assertEqual(
+            missing,
+            set(),
+            "a revealing message the WARD app filter does not wrap reveals unasked",
+        )
+
+    def test_the_revealing_set_is_exactly_this_list(self):
+        """Pinned by name, so adding a handler that shows a stored value is a deliberate act.
+
+        The counterpart on the other side is `tests/device_tests/ward/test_ward_app_role_v1.py`,
+        which asserts the screen actually appears for these and not for the others.
+        """
+        from apps.ward.app_role import _revealing_messages
+
+        expected = {
+            MessageType.WardGetEntry,
+            MessageType.WardQueueGetEntry,
+            MessageType.WardQueueSetEntry,
+            MessageType.WardQueueDeleteEntry,
+            MessageType.WardPinCachedEntry,
+            MessageType.WardEraseCachedEntry,
+        }
+        self.assertEqual(set(_revealing_messages()), expected)
+
+
 if __name__ == "__main__":
     unittest.main()
