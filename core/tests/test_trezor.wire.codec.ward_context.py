@@ -1,0 +1,226 @@
+# flake8: noqa: F403,F405
+from common import *  # isort:skip
+
+from trezor import protobuf, utils
+from trezor.messages import WardEntryAck, WardServiceFetch
+from trezor.wire import DataError
+from trezor.wire.protocol_common import Message
+
+if not utils.USE_THP:
+    from mock_wire_interface import MockHID
+    from trezor.wire.buffers import SharedBuffer, WireBuffer
+    from trezor.wire.codec import ward_context as W
+    from trezor.wire.codec.buffers import CodecBufferSource, private_source
+
+
+def _encode(msg):
+    buffer = bytearray(protobuf.encoded_length(msg))
+    protobuf.encode(buffer, msg)
+    return bytes(buffer)
+
+
+def _as_message(msg):
+    return Message(msg.MESSAGE_WIRE_TYPE, _encode(msg))
+
+
+class _CountingSource:
+    """A `CodecBufferSource` that remembers whether anyone gave its lease back."""
+
+    def __init__(self, inner):
+        self._inner = inner
+        self.released = 0
+
+    def capacity(self):
+        return self._inner.capacity()
+
+    def get(self, length):
+        return self._inner.get(length)
+
+    def holds_shared(self):
+        return self._inner.holds_shared()
+
+    def release(self):
+        self.released += 1
+        self._inner.release()
+
+
+@unittest.skipUnless(
+    not utils.USE_THP, "the codec service endpoint exists only in a codec build"
+)
+class TestWardCodecContext(unittest.TestCase):
+    """The endpoint's own state: which memory a message lands in, and what it refuses to be."""
+
+    def _context(self):
+        shared = SharedBuffer(4096)
+        bootstrap = private_source(512)
+        pooled = CodecBufferSource(WireBuffer(256), shared)
+        return W.WardCodecContext(MockHID(), bootstrap, pooled), bootstrap, pooled
+
+    def test_unsolicited_traffic_never_reaches_the_shared_buffer(self):
+        """The reason there are two sources at all.
+
+        An RPC reply is read inside a wallet workflow, which is the moment the shared buffer is
+        free. Anything arriving with no RPC in flight has no such guarantee, so it must not be able
+        to take the buffer a live workflow is about to need.
+        """
+        ctx, bootstrap, pooled = self._context()
+
+        ctx.rpc_in_flight = False
+        ctx._select_buffers()
+        self.assertIs(ctx.buffers, bootstrap)
+
+        ctx.rpc_in_flight = True
+        ctx._select_buffers()
+        self.assertIs(ctx.buffers, pooled)
+
+    def test_the_endpoint_has_no_session(self):
+        """`wardd` must not create or activate a protocol-v1 wallet session.
+
+        Inherited silently, `CodecContext.cache` would hand out `storage.cache_codec`'s active
+        session -- which is the WALLET's. Every derivation a WARD operation needs happens in the
+        workflow that called the service, so there is nothing this end should be able to reach.
+        """
+        ctx, _bootstrap, _pooled = self._context()
+        with self.assertRaises(RuntimeError):
+            ctx.cache
+
+
+@unittest.skipUnless(
+    not utils.USE_THP, "the codec service endpoint exists only in a codec build"
+)
+class TestWardCodecExchange(unittest.TestCase):
+    """One question, one answer, and what happens to the answers nobody asked for."""
+
+    def setUp(self):
+        self._real = W._CONTEXT
+        shared = SharedBuffer(4096)
+        self.pooled = _CountingSource(CodecBufferSource(WireBuffer(256), shared))
+        self.ctx = W.WardCodecContext(MockHID(), private_source(512), self.pooled)
+        W._CONTEXT = self.ctx
+
+        self.written = []
+
+        async def _write(msg):
+            self.written.append(msg)
+
+        self.ctx.write = _write
+
+    def tearDown(self):
+        W._CONTEXT = self._real
+
+    def _park(self, request):
+        """Step an exchange to where it waits on the reader, the way the loop would.
+
+        `await_result` cannot do this: it drives a task to completion, and the whole point of the
+        mailbox is that the workflow STOPS here until the reader has something. And the answer
+        cannot simply be parked in advance either -- `exchange` drains the box first, precisely so
+        an answer to a question that already gave up cannot become this one's.
+        """
+        gen = W.exchange(request)
+        box = gen.send(None)
+        self.assertIs(box, self.ctx.reply)
+        # In flight for as long as it is parked, which is what tells the reader where to route.
+        self.assertTrue(self.ctx.rpc_in_flight)
+        return gen
+
+    def _finish(self, gen, value):
+        """Hand the parked exchange what the reader put in the box.
+
+        `loop._step` throws a value that is an exception and sends anything else; both are what a
+        real reader can produce, so both are driven the same way here.
+        """
+        try:
+            if isinstance(value, BaseException):
+                gen.throw(value)
+            else:
+                gen.send(value)
+        except StopIteration as e:
+            return e.value
+        raise AssertionError("the exchange did not finish")
+
+    def test_the_request_goes_out_and_the_answer_comes_back(self):
+        request = WardServiceFetch(entry_key=b"\x01" * 32)
+        gen = self._park(request)
+
+        answer = self._finish(gen, _as_message(WardEntryAck()))
+
+        self.assertEqual(self.written, [request])
+        self.assertEqual(answer.type, WardEntryAck.MESSAGE_WIRE_TYPE)
+        # ...and the endpoint is ready for the next question rather than still mid-conversation
+        self.assertFalse(self.ctx.rpc_in_flight)
+
+    def test_an_exception_in_the_mailbox_is_raised_at_the_caller(self):
+        """How a mangled frame fails the operation AT ONCE rather than at its deadline.
+
+        The reader cannot answer a request nobody made -- the device is the initiator here -- so it
+        puts what it caught where the workflow is already waiting.
+        """
+        gen = self._park(WardServiceFetch(entry_key=b"\x01" * 32))
+
+        with self.assertRaises(DataError):
+            self._finish(gen, DataError("bad frame"))
+
+        self.assertFalse(self.ctx.rpc_in_flight)
+
+    def test_a_second_question_in_flight_is_refused(self):
+        """One stream and no request ids: two questions would make the two answers
+        indistinguishable. A hard error rather than a queue, because queueing would be inventing a
+        protocol the daemon does not speak."""
+        self.ctx.rpc_in_flight = True
+
+        with self.assertRaises(DataError):
+            await_result(W.exchange(WardServiceFetch(entry_key=b"\x01" * 32)))
+
+    def test_the_flag_is_cleared_even_when_the_write_fails(self):
+        """Otherwise the reader would keep routing into a mailbox nobody reads, and the interface
+        would never bootstrap again -- a service that is gone with nothing to say so."""
+
+        async def _boom(msg):
+            raise DataError("no")
+
+        self.ctx.write = _boom
+
+        with self.assertRaises(DataError):
+            await_result(W.exchange(WardServiceFetch(entry_key=b"\x01" * 32)))
+
+        self.assertFalse(self.ctx.rpc_in_flight)
+
+    def test_a_stale_answer_is_dropped_and_its_lease_given_back(self):
+        """An answer to a question that already gave up must not become the NEXT question's.
+
+        The reader had read it and put it where nobody was waiting; it holds a receive lease, so
+        dropping it silently would strand the shared buffer as well as confuse the conversation.
+        """
+        self.ctx.reply.put(Message(WardEntryAck.MESSAGE_WIRE_TYPE, b"", self.pooled))
+
+        gen = self._park(WardServiceFetch(entry_key=b"\x01" * 32))
+        # Dropped on the way in, not left to be mistaken for this question's answer.
+        self.assertEqual(self.pooled.released, 1)
+
+        answer = self._finish(gen, _as_message(WardEntryAck()))
+        self.assertEqual(answer.type, WardEntryAck.MESSAGE_WIRE_TYPE)
+
+    def test_tearing_down_frees_the_endpoint_to_be_bound_again(self):
+        """No channel closes, and that is the point: the reader keeps reading, so a daemon that
+        restarts announces itself and is heard. What has to go is the RPC flag and any answer that
+        arrived too late to be anyone's."""
+        self.ctx.rpc_in_flight = True
+        self.ctx.reply.put(Message(WardEntryAck.MESSAGE_WIRE_TYPE, b"", self.pooled))
+
+        W.tear_down("a test said so")
+
+        self.assertFalse(self.ctx.rpc_in_flight)
+        self.assertTrue(self.ctx.reply.is_empty())
+        self.assertEqual(self.pooled.released, 1)
+
+    def test_without_a_reader_there_is_nothing_to_ask(self):
+        """Reachable for real: the reader is torn down and respawned on every MicroPython session
+        restart, so this is a state an operation can meet. It fails the operation, not the
+        firmware."""
+        W._CONTEXT = None
+        with self.assertRaises(DataError):
+            W.service_link()
+
+
+if __name__ == "__main__":
+    unittest.main()

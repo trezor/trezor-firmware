@@ -20,13 +20,17 @@ def _as_message(msg):
     return Message(msg.MESSAGE_WIRE_TYPE, _encode(msg))
 
 
-class _FakeChannel:
+class _FakeLink:
     """Records what was written and hands back a canned answer.
 
     Only what `_rpc` actually touches: the point of the exercise is the request it builds and the
-    answer it will accept, not THP itself. That does include the identity a real channel is logged
-    and torn down by -- `_desynchronised` closes the channel, and the RPC logs which one it used --
-    so those are here as well, cheaply.
+    answer it will accept, not the transport. That does include the identity a link is logged and
+    torn down by -- `_desynchronised` closes it, and the RPC logs which one it used -- so those are
+    here as well, cheaply.
+
+    ONE FAKE FOR BOTH TRANSPORTS, because `_rpc` is one function for both. The session id it is
+    written on is THP's and is asserted only there; on the codec `_install` routes the same
+    `write`/`read` through the stand-in for `ward_context.exchange`.
     """
 
     def __init__(self, answer=None, answer_session_id=None):
@@ -89,18 +93,39 @@ class TestWardServiceRpc(unittest.TestCase):
 
     def setUp(self):
         self._real_race = loop.race
-        self._real_channel = S._service_channel
+        self._real_link = S._service_link
         self._real_counter = R.get_counter
         self._real_root = R.get_root
+        self._real_exchange = None
+        if not utils.USE_THP:
+            from trezor.wire.codec import ward_context
+
+            self._real_exchange = ward_context.exchange
 
     def tearDown(self):
         loop.race = self._real_race
-        S._service_channel = self._real_channel
+        S._service_link = self._real_link
         R.get_counter = self._real_counter
         R.get_root = self._real_root
+        if self._real_exchange is not None:
+            from trezor.wire.codec import ward_context
 
-    def _install(self, channel, session_id=3, answered=True):
-        S._service_channel = lambda: (channel, session_id)
+            ward_context.exchange = self._real_exchange
+
+    def _install(self, link, session_id=3, answered=True):
+        S._service_link = lambda: (link, session_id)
+
+        if not utils.USE_THP:
+            # The codec `_rpc` goes through the endpoint rather than writing the link itself, so
+            # the stand-in has to be there instead. It answers with the message alone: there is no
+            # session id on this transport, which is why the check for one is THP-only below.
+            from trezor.wire.codec import ward_context
+
+            async def _exchange(request):
+                await link.write(request, session_id)
+                return (await link.read())[1]
+
+            ward_context.exchange = _exchange
 
         async def _race(read_task, sleep_task):
             if answered:
@@ -110,8 +135,8 @@ class TestWardServiceRpc(unittest.TestCase):
 
         loop.race = _race
 
-    def test_it_asks_on_the_service_session_and_returns_the_answer(self):
-        channel = _FakeChannel(_as_message(WardEntryAck()), answer_session_id=3)
+    def test_it_asks_the_service_and_returns_the_answer(self):
+        channel = _FakeLink(_as_message(WardEntryAck()), answer_session_id=3)
         self._install(channel)
 
         answer = await_result(S._rpc(WardServiceFetch(entry_key=b"\x01" * 32), WardEntryAck))
@@ -121,10 +146,11 @@ class TestWardServiceRpc(unittest.TestCase):
         # ...written on the service's own session, not session 0
         self.assertEqual(channel.written[0][0], 3)
 
+    @unittest.skipUnless(utils.USE_THP, "the codec carries no session id")
     def test_an_answer_on_another_session_is_refused(self):
         """A reply carrying someone else's session id is not this conversation's reply, and
         acting on it would mean acting on a message meant for something else."""
-        channel = _FakeChannel(_as_message(WardEntryAck()), answer_session_id=4)
+        channel = _FakeLink(_as_message(WardEntryAck()), answer_session_id=4)
         self._install(channel)
 
         with self.assertRaises(DataError):
@@ -133,7 +159,7 @@ class TestWardServiceRpc(unittest.TestCase):
     def test_an_unexpected_type_is_refused(self):
         """Not interpreted, not ignored: the daemon is the only party on this channel, so a
         surprise means the conversation has desynchronised."""
-        channel = _FakeChannel(_as_message(WardSyncRequired()), answer_session_id=3)
+        channel = _FakeLink(_as_message(WardSyncRequired()), answer_session_id=3)
         self._install(channel)
 
         with self.assertRaises(DataError):
@@ -142,7 +168,7 @@ class TestWardServiceRpc(unittest.TestCase):
     def test_no_answer_fails_closed(self):
         """A daemon that stops answering must not hang the workflow the user is waiting on.
         Hanging is the one failure mode a fail-closed read does not otherwise have."""
-        channel = _FakeChannel()
+        channel = _FakeLink()
         self._install(channel, answered=False)
 
         with self.assertRaises(DataError):
@@ -150,14 +176,15 @@ class TestWardServiceRpc(unittest.TestCase):
 
     def test_an_unbound_service_is_not_asked(self):
         S.clear_binding()
+        S._service_link = self._real_link
         with self.assertRaises(DataError):
-            S._service_channel()
+            S._service_link()
 
     def test_fetch_names_the_head_the_device_holds(self):
         """HEAD-AWARE, which is the whole difference from the connect-mode request. Both fields:
         several roots may share a counter across forks, so the counter alone does not name a head.
         """
-        channel = _FakeChannel(_as_message(WardEntryAck()), answer_session_id=3)
+        channel = _FakeLink(_as_message(WardEntryAck()), answer_session_id=3)
         self._install(channel)
 
         root = b"\x77" * 32
@@ -183,7 +210,7 @@ class TestWardServiceRpc(unittest.TestCase):
         """`WardSyncRequired` is an answer, not a failure -- but until a sync can be driven from
         here it has to fail the read. The direction matters: a read that fell back to anything
         else would be a way to force an old value onto the screen."""
-        channel = _FakeChannel(_as_message(WardSyncRequired()), answer_session_id=3)
+        channel = _FakeLink(_as_message(WardSyncRequired()), answer_session_id=3)
         self._install(channel)
 
         async def _counter():
