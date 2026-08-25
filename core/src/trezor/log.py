@@ -19,6 +19,41 @@ if utils.USE_DBG_CONSOLE:
     _min_level = 0  # can be used for manually disabling low-priority logging levels
     debug, info, warning, error = [_no_op] * _min_level + _levels[_min_level:]
     init(_min_level)  # initialize rust logging connector
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        import trezorio
+
+        # EVERY LINE ABOUT THE WARD SERVICE INTERFACE CARRIES THE WORD, so one grep collects the
+        # whole conversation. Done here rather than in each message because most of the lines that
+        # matter are not WARD's own: the interesting trace runs through `trezor.wire.thp.channel`,
+        # `received_message_handler` and `interface_context`, which log for whichever interface they
+        # are serving and cannot name this one.
+        #
+        # THE INTERFACE IS WHAT IS TESTED, not the module emitting the line, because that is the
+        # only thing that distinguishes the two conversations. It also cannot be read off the log
+        # otherwise: the iface prefix Rust prints is the interface TYPE's name, so the wallet
+        # interface and this one both appear as `[USBIF]`.
+        _WARD_IFACE_NUM = trezorio.USBIF_WARD
+
+        def _ward_tagged(log_fn: Any) -> Any:
+            def wrapper(
+                name: str,
+                msg: str,
+                *args: Any,
+                iface: WireInterface | None = None,
+            ) -> None:
+                if iface is not None and iface.iface_num() == _WARD_IFACE_NUM:
+                    msg = "WARD " + msg
+                log_fn(name, msg, *args, iface=iface)
+
+            return wrapper
+
+        # `_no_op` is wrapped too when a level is disabled, which costs a call and a comparison on
+        # a path that does nothing. Left alone deliberately: this whole block exists only in a
+        # debug build, and special-casing it would mean two ways for the levels to be assembled.
+        debug, info, warning, error = [
+            _ward_tagged(fn) for fn in (debug, info, warning, error)
+        ]
 else:
     debug = warning = info = error = _no_op
 
