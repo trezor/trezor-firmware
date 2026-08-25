@@ -110,10 +110,10 @@ secbool usb_hid_add(const usb_hid_info_t *info) {
   if (info->report_desc == NULL) {
     return secfalse;
   }
-  if (info->ep_in >= USBD_MAX_NUM_INTERFACES) {
+  if (info->ep_in >= USBD_MAX_NUM_ENDPOINTS) {
     return secfalse;
   }
-  if (info->ep_out >= USBD_MAX_NUM_INTERFACES) {
+  if (info->ep_out >= USBD_MAX_NUM_ENDPOINTS) {
     return secfalse;
   }
 

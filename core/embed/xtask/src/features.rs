@@ -3,6 +3,7 @@ use std::{env, io, process};
 
 use anyhow::{Result, bail};
 
+use crate::args::ConsoleType;
 use crate::options::ResolvedBuildArgs;
 use crate::{config, helpers};
 
@@ -42,6 +43,8 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
     if args.btc_only && args.ward_service_channel {
         bail!("ward_service_channel needs WARD, which is not built in bitcoin-only firmware");
     }
+
+    check_usb_endpoint_budget(args)?;
 
     let mut features: Vec<String> = vec![args.model.feature_name()];
 
@@ -222,6 +225,60 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
     Ok(())
 }
 
+/// Number of endpoint numbers the USB device core is brought up with, mirroring
+/// `USBD_MAX_NUM_ENDPOINTS` in `core/embed/io/usb/stm32/usbd_conf.h`. Endpoint 0 is the control
+/// endpoint, so `USB_MAX_ENDPOINTS - 1` data endpoint numbers are available.
+///
+/// Duplicated from C on purpose: the two cannot be shared, and the point of this check is to fail
+/// at build-option resolution -- with the offending options named -- rather than at link time or,
+/// worse, at runtime. Keep the two in step.
+const USB_MAX_ENDPOINTS: u32 = 6;
+
+/// Refuse a build whose USB configuration wants more endpoints than the device core has.
+///
+/// `usb_configure` (`core/embed/io/usb/usb_config.c`) hands out interface numbers in registration
+/// order and derives every endpoint number from one: `ep_in = ep_out = 0x01 + iface_num`, and vcp
+/// additionally `ep_cmd = 0x01 + iface_num + 1`. So the highest endpoint number a configuration
+/// uses is `interface count`, and the budget is exhausted at `USB_MAX_ENDPOINTS - 1`.
+///
+/// WHY THIS IS CHECKED HERE AND NOT ONLY IN C. The class-level guards do reject an out-of-range
+/// endpoint now, but they reject it at boot, on the device, by refusing to bring USB up at all --
+/// a build that flashes and then cannot talk. Naming the two options that collide, at the moment
+/// they are combined, is the answer that can actually be acted on.
+///
+/// Skipped for the emulator, which has no endpoints: interfaces there are UDP ports.
+fn check_usb_endpoint_budget(args: &ResolvedBuildArgs) -> Result<()> {
+    if args.emulator {
+        return Ok(());
+    }
+
+    // The wire interface is intrinsic rather than option-driven, so it is not read from args.
+    let mut interfaces = 1; // wire
+    if args.debug_link {
+        interfaces += 1;
+    }
+    if !args.btc_only {
+        interfaces += 1; // webauthn, via universal_fw
+    }
+    if args.dbg_console == ConsoleType::Vcp {
+        interfaces += 2; // vcp takes a control and a data interface
+    }
+    if args.ward_service_channel {
+        interfaces += 1;
+    }
+
+    if interfaces > USB_MAX_ENDPOINTS - 1 {
+        bail!(
+            "USB configuration needs {} endpoints but the device core has {}; \
+             drop one interface-bearing option (--dbg-console, --debug-link, --ward-service-channel)",
+            interfaces,
+            USB_MAX_ENDPOINTS - 1
+        );
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -261,6 +318,52 @@ mod tests {
 
         let error = resolve_features(&args).unwrap_err();
         assert!(error.to_string().contains("production"));
+    }
+
+    #[test]
+    fn rejects_a_usb_configuration_that_overruns_the_endpoint_budget() {
+        // wire(1) + debug(1) + webauthn(1) + vcp(2) + ward(1) = 6 interfaces, so the highest
+        // endpoint number is 6 and the core only has 0..5. This is the one combination the
+        // existing options can reach, and it used to build and then fail silently on the device.
+        let args = ResolvedBuildArgs {
+            debug_link: true,
+            dbg_console: ConsoleType::Vcp,
+            ward_service_channel: true,
+            ..ResolvedBuildArgs::default()
+        };
+
+        let error = resolve_features(&args).unwrap_err();
+        assert!(
+            error.to_string().contains("endpoints"),
+            "unexpected error: {error}"
+        );
+    }
+
+    #[test]
+    fn accepts_the_service_channel_without_a_vcp_console() {
+        // The same build minus the vcp console is 4 interfaces, which fits -- so the check must
+        // not turn into a blanket refusal of the service channel.
+        let args = ResolvedBuildArgs {
+            debug_link: true,
+            ward_service_channel: true,
+            ..ResolvedBuildArgs::default()
+        };
+
+        assert!(check_usb_endpoint_budget(&args).is_ok());
+    }
+
+    #[test]
+    fn ignores_the_endpoint_budget_for_the_emulator() {
+        // Emulator interfaces are UDP ports, so there is no budget to overrun.
+        let args = ResolvedBuildArgs {
+            emulator: true,
+            debug_link: true,
+            dbg_console: ConsoleType::Vcp,
+            ward_service_channel: true,
+            ..ResolvedBuildArgs::default()
+        };
+
+        assert!(check_usb_endpoint_budget(&args).is_ok());
     }
 
     #[test]

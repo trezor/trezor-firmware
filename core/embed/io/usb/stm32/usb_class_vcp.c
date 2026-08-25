@@ -201,13 +201,13 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   if (info->tx_packet == NULL) {
     return secfalse;
   }
-  if (info->ep_in >= USBD_MAX_NUM_INTERFACES) {
+  if (info->ep_in >= USBD_MAX_NUM_ENDPOINTS) {
     return secfalse;
   }
-  if (info->ep_out >= USBD_MAX_NUM_INTERFACES) {
+  if (info->ep_out >= USBD_MAX_NUM_ENDPOINTS) {
     return secfalse;
   }
-  if (info->ep_cmd >= USBD_MAX_NUM_INTERFACES) {
+  if (info->ep_cmd >= USBD_MAX_NUM_ENDPOINTS) {
     return secfalse;
   }
 
