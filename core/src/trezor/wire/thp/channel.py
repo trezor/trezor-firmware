@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from trezor.wire import WireInterface
 
     from .interface_context import InterfaceContext
-    from .memory_manager import BufferSource
+    from ..buffers import BufferSource
     from .pairing_context import PairingContext
     from .session_context import GenericSessionContext
 

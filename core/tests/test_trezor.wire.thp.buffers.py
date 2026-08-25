@@ -8,7 +8,7 @@ if utils.USE_THP:
     from trezor import wire
     from trezor.wire import Provider, buffers_provider_for
     from trezor.wire.thp.interface_context import ThpContext
-    from trezor.wire.thp.memory_manager import BufferSource, SharedBuffer, ThpBuffer
+    from trezor.wire.buffers import BufferSource, SharedBuffer, WireBuffer
 
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
@@ -45,14 +45,14 @@ class TestThpBufferPools(unittest.TestCase):
         self.assertIs(iface_ctx._buffers_provider, buffers_provider_for(iface))
 
     def test_one_pool_serves_one_channel(self):
-        shared = Provider((ThpBuffer(64), ThpBuffer(64)))
+        shared = Provider((WireBuffer(64), WireBuffer(64)))
         self.assertIsNotNone(shared.take())
         # ...and the interface that asks second gets nothing, which is what it reports as busy
         self.assertIsNone(shared.take())
 
     def test_separate_pools_serve_a_channel_each(self):
-        first = Provider((ThpBuffer(64), ThpBuffer(64)))
-        second = Provider((ThpBuffer(64), ThpBuffer(64)))
+        first = Provider((WireBuffer(64), WireBuffer(64)))
+        second = Provider((WireBuffer(64), WireBuffer(64)))
         self.assertIsNotNone(first.take())
         self.assertIsNotNone(second.take())
 
@@ -67,18 +67,18 @@ class TestThpBufferSize(unittest.TestCase):
     """
 
     def test_a_buffer_serves_up_to_its_size(self):
-        buf = ThpBuffer(128)
+        buf = WireBuffer(128)
         self.assertEqual(len(buf.get(0)), 0)
         self.assertEqual(len(buf.get(128)), 128)
 
     def test_a_buffer_refuses_more_than_its_size(self):
-        buf = ThpBuffer(128)
+        buf = WireBuffer(128)
         with self.assertRaises(wire.FirmwareError):
             buf.get(129)
 
     def test_the_default_size_is_unchanged(self):
         """The default pool must not shrink by accident: every ordinary message rides on it."""
-        self.assertEqual(len(ThpBuffer().buf), 8704)
+        self.assertEqual(len(WireBuffer().buf), 8704)
 
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
@@ -93,8 +93,8 @@ class TestSharedLargeBuffer(unittest.TestCase):
     def _pair(self, small=64, large=256):
         shared = SharedBuffer(large)
         return (
-            BufferSource(ThpBuffer(small), shared),
-            BufferSource(ThpBuffer(small), shared),
+            BufferSource(WireBuffer(small), shared),
+            BufferSource(WireBuffer(small), shared),
             shared,
         )
 

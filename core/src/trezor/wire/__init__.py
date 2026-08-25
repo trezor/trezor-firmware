@@ -104,12 +104,7 @@ class Provider(Generic[T]):
 
 
 if utils.USE_THP:
-    from .thp.memory_manager import (
-        _SMALL_BUFFER_SIZE,
-        BufferSource,
-        SharedBuffer,
-        ThpBuffer,
-    )
+    from .buffers import SMALL_BUFFER_SIZE, BufferSource, SharedBuffer, WireBuffer
 
     # Allocate THP read/write buffers in more stable area of memory
     #
@@ -124,8 +119,8 @@ if utils.USE_THP:
     def _buffer_sources() -> "tuple[BufferSource, BufferSource]":
         """A (receive, send) pair: small buffers of its own, the large ones borrowed."""
         return (
-            BufferSource(ThpBuffer(_SMALL_BUFFER_SIZE), _SHARED_RECEIVE_BUFFER),
-            BufferSource(ThpBuffer(_SMALL_BUFFER_SIZE), _SHARED_SEND_BUFFER),
+            BufferSource(WireBuffer(SMALL_BUFFER_SIZE), _SHARED_RECEIVE_BUFFER),
+            BufferSource(WireBuffer(SMALL_BUFFER_SIZE), _SHARED_SEND_BUFFER),
         )
 
     THP_BUFFERS_PROVIDER = Provider(_buffer_sources())

@@ -14,7 +14,7 @@ if utils.USE_THP:
     from trezor import wire as wire_mod
     from trezor.wire import Provider
     from trezor.wire.thp.interface_context import ThpContext
-    from trezor.wire.thp.memory_manager import ThpBuffer
+    from trezor.wire.buffers import WireBuffer
 
     class _Info:
         """What `trezorthp.channel_info` hands back, with only the fields the constructor reads.
@@ -99,7 +99,7 @@ class TestThpChannelInterfaceBinding(unittest.TestCase):
         return iface_ctx
 
     def _buffers(self):
-        return (ThpBuffer(), ThpBuffer())
+        return (WireBuffer(), WireBuffer())
 
     def test_a_matching_interface_is_accepted(self):
         iface_ctx = self._iface_ctx(7)
@@ -140,7 +140,7 @@ class TestThpAttachExistingChannel(unittest.TestCase):
         # it is meant to be checking. In production each session re-imports `wire`, so a session
         # always starts with a full pool -- the lifetime itself is covered in
         # test_trezor.wire.thp.buffers.py.
-        iface_ctx._buffers_provider = Provider((ThpBuffer(64), ThpBuffer(64)))
+        iface_ctx._buffers_provider = Provider((WireBuffer(64), WireBuffer(64)))
         return thp_ctx, iface_ctx
 
     def test_it_attaches_and_makes_the_channel_writable(self):
@@ -216,9 +216,9 @@ class TestThpServiceChannelReplacement(unittest.TestCase):
     def _channel(self, thp, iface_num: int) -> "Channel":
         thp_ctx = ThpContext(MockHID(iface_num))
         (iface_ctx,) = thp_ctx._iface_ctxs
-        iface_ctx._buffers_provider = Provider((ThpBuffer(64), ThpBuffer(64)))
+        iface_ctx._buffers_provider = Provider((WireBuffer(64), WireBuffer(64)))
         with patch(channel_mod, "trezorthp", thp):
-            return Channel(self._NEW_CID, iface_ctx, buffers=(ThpBuffer(64), ThpBuffer(64)))
+            return Channel(self._NEW_CID, iface_ctx, buffers=(WireBuffer(64), WireBuffer(64)))
 
     def test_a_wallet_host_takeover_migrates_and_closes_workflows(self):
         """Today's behaviour, unchanged: the conversation moved, so what was running is stale."""

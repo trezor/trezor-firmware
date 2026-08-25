@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from typing import Any, Generator
 
     from .. import Provider
-    from .memory_manager import BufferSource
+    from ..buffers import BufferSource
 
 
 _TRACE = const(False)
