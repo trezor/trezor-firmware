@@ -36,6 +36,7 @@ from ..input_flows import (
     FlowAdapter,
     InputFlowBip39Backup,
     InputFlowSlip39AdvancedBackup,
+    InputFlowSlip39AdvancedCustomBackup,
     InputFlowSlip39BasicBackup,
     InputFlowSlip39CustomBackup,
     normal,
@@ -237,6 +238,70 @@ def test_backup_slip39_custom(
     assert len(IF.mnemonics) == share_count
     assert (
         shamir.combine_mnemonics(IF.mnemonics[-share_threshold:]).hex()
+        == MNEMONIC_SLIP39_CUSTOM_SECRET
+    )
+
+
+SLIP39_ADVANCED_CUSTOM_PARAMS = [
+    (group_threshold, groups, adapt_flow)
+    for group_threshold, groups in (
+        (1, ((2, 3),)),
+        (2, ((2, 3), (1, 1))),
+    )
+    for adapt_flow in FLOW_ADAPTERS
+]
+SLIP39_ADVANCED_CUSTOM_IDS = [
+    f"{group_threshold}_of_{len(groups)}_groups_{adapt_flow.__name__}"
+    for group_threshold, groups, adapt_flow in SLIP39_ADVANCED_CUSTOM_PARAMS
+]
+
+
+@pytest.mark.models("core")
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_CUSTOM_1of1[0])
+@pytest.mark.parametrize(
+    "group_threshold,groups,adapt_flow",
+    SLIP39_ADVANCED_CUSTOM_PARAMS,
+    ids=SLIP39_ADVANCED_CUSTOM_IDS,
+)
+def test_backup_slip39_advanced_custom(
+    session: Session,
+    group_threshold: int,
+    groups: "list[tuple[int, int]]",
+    adapt_flow: "FlowAdapter",
+    backup_method: messages.BackupMethod,
+):
+    assert session.features.backup_availability == messages.BackupAvailability.Required
+
+    with session.test_ctx as client:
+        IF = InputFlowSlip39AdvancedCustomBackup(
+            session, groups, backup_method=backup_method
+        )
+        client.set_input_flow(adapt_flow(session, IF.get()))
+        device.backup(
+            session,
+            group_threshold=group_threshold,
+            groups=groups,
+            backup_method=backup_method,
+        )
+
+    session.refresh_features()
+    assert session.features.initialized is True
+    assert (
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+
+    assert len(IF.mnemonics) == sum(count for _threshold, count in groups)
+
+    selected_mnemonics: list[str] = []
+    offset = 0
+    for member_threshold, member_count in groups[:group_threshold]:
+        selected_mnemonics.extend(IF.mnemonics[offset : offset + member_threshold])
+        offset += member_count
+
+    assert (
+        shamir.combine_mnemonics(selected_mnemonics).hex()
         == MNEMONIC_SLIP39_CUSTOM_SECRET
     )
 

@@ -2030,6 +2030,42 @@ def load_N_shares(
     return mnemonics
 
 
+def load_N_groups(
+    debug: DebugLink,
+    groups: Sequence[tuple[int, int]],
+    method: messages.BackupMethod = messages.BackupMethod.Display,
+) -> Generator[None, "messages.ButtonRequest", list[str]]:
+    mnemonics: list[str] = []
+    expected_br_name = "success_share_confirm"
+    if debug.layout_type is LayoutType.Eckhart:
+        expected_br_name = "success_recovery"
+
+    for _member_threshold, member_count in groups:
+        for _share in range(member_count):
+            if method is messages.BackupMethod.Display:
+                # Phrase screen
+                mnemonic = yield from read_and_confirm_mnemonic(debug)
+                assert mnemonic is not None
+                mnemonics.append(mnemonic)
+
+                # Confirm continue to next
+                yield from swipe_if_necessary(debug, B.Success, expected_br_name)
+                debug.press_yes()
+
+            elif method is messages.BackupMethod.N4W1:
+                assert (yield).name == "backup_write"
+                mnemonics.append(n4w1_handle_write(debug).decode())
+            else:
+                raise RuntimeError
+
+    br = yield
+    assert br.code == B.Success
+    assert br.name == "success_backup"
+    debug.press_yes()
+
+    return mnemonics
+
+
 class InputFlowSlip39BasicBackup(InputFlowBase):
     def __init__(
         self,
@@ -2357,6 +2393,47 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
         # Mnemonic phrases
         self.mnemonics = yield from load_N_shares(
             self.debug, self.share_count, self.backup_method
+        )
+
+
+class InputFlowSlip39AdvancedCustomBackup(InputFlowBase):
+    def __init__(
+        self,
+        client: Client | DebugSession,
+        groups: Sequence[tuple[int, int]],
+        backup_method: messages.BackupMethod = messages.BackupMethod.Display,
+    ):
+        super().__init__(client)
+        self.mnemonics: list[str] = []
+        self.groups = groups
+        self.backup_method = backup_method
+
+    def input_flow_common(self) -> BRGeneratorType:
+        # 1. Confirm multi-group backup parameters
+        assert (yield).name in (
+            "warning_shamir_backup",
+            "warning_shamir_advanced_backup",
+        )
+        self.debug.press_yes()
+
+        if len(self.groups) > 1:
+            # 2. Confirm individual groups thresholds
+            assert (yield).name == "shamir_advanced_backup_groups"
+            layout = self.debug.read_layout()
+            for _i in range(layout.page_count() - 1):
+                self.debug.press_right()
+            self.debug.press_yes()
+
+        if self.backup_method is messages.BackupMethod.Display:
+            # 3. Never make digital copies
+            yield
+            self.debug.press_yes()
+        elif self.backup_method is not messages.BackupMethod.N4W1:
+            raise RuntimeError
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_N_groups(
+            self.debug, self.groups, self.backup_method
         )
 
 
