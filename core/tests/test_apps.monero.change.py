@@ -106,6 +106,13 @@ class TestMoneroCheckChange(unittest.TestCase):
         outputs = [self._dst(1000, self.recipient), self._dst(0, self.ours)]
         self._check(change, outputs)
 
+    def test_sweep_to_our_primary_address_is_accepted(self):
+        # If the fake sweep output aliases our own primary address, step 6 still derives
+        # the same one-time key for the paying output (`a*R == r*A`).
+        change = self._dst(0, self.ours)
+        outputs = [self._dst(1000, self.ours), self._dst(0, self.ours)]
+        self._check(change, outputs)
+
     # --- non-sweep shapes ----------------------------------------------------
 
     def test_no_change(self):
