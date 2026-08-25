@@ -64,6 +64,18 @@
 #define USB_PHY_FS_ID                         0
 #define USB_PHY_HS_ID                         1
 #define USBD_MAX_NUM_INTERFACES               8
+// HOW MANY ENDPOINT NUMBERS THE DEVICE CORE IS INITIALISED WITH, so 1..7 below are
+// USBD_MAX_NUM_ENDPOINTS-1 usable IN/OUT pairs beside the control endpoint 0. Kept beside the
+// interface limit because endpoint numbers are handed out FROM the interface number in
+// `usb_config.c` (`ep_in = 0x01 + iface_num`) and the two limits are therefore easy to confuse --
+// which is exactly what the class-level guards used to do, validating an endpoint against
+// USBD_MAX_NUM_INTERFACES and so letting an out-of-range endpoint reach `USBD_LL_OpenEP`, where it
+// fails silently and leaves a described interface with no endpoints behind it.
+//
+// `USBD_LL_Init` reads this for `Init.dev_endpoints` and for its TX-FIFO loops. The FIFO SIZES
+// there are separately chosen so that USBD_MAX_NUM_ENDPOINTS of them fit the peripheral's
+// dedicated RAM, so raising this number means re-deriving those too.
+#define USBD_MAX_NUM_ENDPOINTS                6
 #define USBD_MAX_NUM_CONFIGURATION            1
 #define USBD_SUPPORT_USER_STRING              1
 #define USBD_SELF_POWERED                     0

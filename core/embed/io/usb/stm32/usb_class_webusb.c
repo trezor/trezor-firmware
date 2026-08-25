@@ -83,10 +83,17 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
   if (info->rx_buffer == NULL) {
     return secfalse;
   }
-  if (info->ep_in >= USBD_MAX_NUM_INTERFACES) {
+  // AGAINST THE ENDPOINT LIMIT, NOT THE INTERFACE ONE. These two used to be checked against
+  // USBD_MAX_NUM_INTERFACES, which is larger, so an endpoint number past what the device core was
+  // initialised with passed validation here and then failed inside `USBD_LL_OpenEP` -- leaving a
+  // fully described interface whose endpoints were never opened, which is invisible until a host
+  // tries to talk to it. Endpoint numbers are derived from the interface number in `usb_config.c`
+  // (`ep_in = ep_out = 0x01 + iface_num`), so a configuration carrying one interface too many
+  // overruns the endpoint budget long before it overruns the interface table.
+  if (info->ep_in >= USBD_MAX_NUM_ENDPOINTS) {
     return secfalse;
   }
-  if (info->ep_out >= USBD_MAX_NUM_INTERFACES) {
+  if (info->ep_out >= USBD_MAX_NUM_ENDPOINTS) {
     return secfalse;
   }
 

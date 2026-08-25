@@ -501,7 +501,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
   if (pdev->id == USB_PHY_FS_ID) {
     /*Set LL Driver parameters */
     pcd_fs_handle.Instance = USB_OTG_FS;
-    pcd_fs_handle.Init.dev_endpoints = 6;
+    pcd_fs_handle.Init.dev_endpoints = USBD_MAX_NUM_ENDPOINTS;
     pcd_fs_handle.Init.use_dedicated_ep1 = 0;
     pcd_fs_handle.Init.ep0_mps = 0x40;
     pcd_fs_handle.Init.dma_enable = 0;
@@ -524,7 +524,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     const uint16_t transmit_fifo_size = 32; // 32 = 16 * 2 meaning that we give 2 packets of space for each transmit fifo
     const uint16_t receive_fifo_size = 128; // 128 = 320 - 6 * 32
     HAL_PCDEx_SetRxFiFo(&pcd_fs_handle, receive_fifo_size);
-    for (uint16_t i = 0; i < 6; i++) {
+    for (uint16_t i = 0; i < USBD_MAX_NUM_ENDPOINTS; i++) {
       HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, i, transmit_fifo_size);
     }
   }
@@ -534,7 +534,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
   if (pdev->id == USB_PHY_HS_ID) {
     /* Set LL Driver parameters */
           pcd_hs_handle.Instance = USB_OTG_HS;
-    pcd_hs_handle.Init.dev_endpoints = 6;
+    pcd_hs_handle.Init.dev_endpoints = USBD_MAX_NUM_ENDPOINTS;
     pcd_hs_handle.Init.use_dedicated_ep1 = 0;
     pcd_hs_handle.Init.ep0_mps = 0x40;
     pcd_hs_handle.Init.dma_enable = 0;
@@ -562,7 +562,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     const uint16_t transmit_fifo_size = 144; // 144 = 16 * 9 meaning that we give 9 packets of space for each transmit fifo
     const uint16_t receive_fifo_size = 160; // 160 = 1024 - 6 * 144 section 35.10.1 details what some of this is used for besides storing packets
     HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, receive_fifo_size);
-    for (uint16_t i = 0; i < 6; i++) {
+    for (uint16_t i = 0; i < USBD_MAX_NUM_ENDPOINTS; i++) {
       HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, i, transmit_fifo_size);
     }
   }
@@ -572,7 +572,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
   if (pdev->id == USB_PHY_HS_ID) {
     /* Set LL Driver parameters */
     pcd_hs_handle.Instance = USB_OTG_HS;
-    pcd_hs_handle.Init.dev_endpoints = 6;
+    pcd_hs_handle.Init.dev_endpoints = USBD_MAX_NUM_ENDPOINTS;
     pcd_hs_handle.Init.use_dedicated_ep1 = 0;
     pcd_hs_handle.Init.ep0_mps = 0x40;
     pcd_hs_handle.Init.dma_enable = 0;
@@ -600,7 +600,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     const uint16_t transmit_fifo_size = 144; // 144 = 16 * 9 meaning that we give 9 packets of space for each transmit fifo
     const uint16_t receive_fifo_size = 160; // 160 = 1024 - 6 * 144 section 35.10.1 details what some of this is used for besides storing packets
     HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, receive_fifo_size);
-    for (uint16_t i = 0; i < 6; i++) {
+    for (uint16_t i = 0; i < USBD_MAX_NUM_ENDPOINTS; i++) {
       HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, i, transmit_fifo_size);
     }
   }
