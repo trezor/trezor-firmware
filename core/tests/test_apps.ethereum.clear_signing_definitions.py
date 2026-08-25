@@ -21,25 +21,6 @@ _SOLIDITY_SIGNATURES = (
     # ERC-20
     b"approve(address,uint256)",
     b"transfer(address,uint256)",
-    # 1inch AggregationRouterV6
-    b"swap(address,(address,address,address,address,uint256,uint256,uint256),bytes)",
-    b"unoswap(uint256,uint256,uint256,uint256)",
-    b"unoswapTo(uint256,uint256,uint256,uint256,uint256)",
-    b"unoswap2(uint256,uint256,uint256,uint256,uint256)",
-    b"unoswap3(uint256,uint256,uint256,uint256,uint256,uint256)",
-    b"unoswapTo2(uint256,uint256,uint256,uint256,uint256,uint256)",
-    b"unoswapTo3(uint256,uint256,uint256,uint256,uint256,uint256,uint256)",
-    b"ethUnoswap(uint256,uint256)",
-    b"ethUnoswap2(uint256,uint256,uint256)",
-    b"ethUnoswap3(uint256,uint256,uint256,uint256)",
-    b"ethUnoswapTo(uint256,uint256,uint256)",
-    b"ethUnoswapTo2(uint256,uint256,uint256,uint256)",
-    b"ethUnoswapTo3(uint256,uint256,uint256,uint256,uint256)",
-    # Uniswap V3 Router 02
-    b"exactInput((bytes,address,uint256,uint256))",
-    b"exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
-    b"exactOutput((bytes,address,uint256,uint256))",
-    b"exactOutputSingle((address,address,uint24,address,uint256,uint256,uint160))",
     # ERC-4626 vaults + Merkl claim (apps.ethereum.yielding)
     b"deposit(uint256,address)",
     b"withdraw(uint256,address,address)",
