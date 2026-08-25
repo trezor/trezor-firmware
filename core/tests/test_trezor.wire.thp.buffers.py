@@ -8,7 +8,7 @@ if utils.USE_THP:
     from trezor import wire
     from trezor.wire import Provider, buffers_provider_for
     from trezor.wire.thp.interface_context import ThpContext
-    from trezor.wire.thp.memory_manager import ThpBuffer
+    from trezor.wire.thp.memory_manager import BufferSource, SharedBuffer, ThpBuffer
 
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
@@ -79,6 +79,87 @@ class TestThpBufferSize(unittest.TestCase):
     def test_the_default_size_is_unchanged(self):
         """The default pool must not shrink by accident: every ordinary message rides on it."""
         self.assertEqual(len(ThpBuffer().buf), 8704)
+
+
+@unittest.skipUnless(utils.USE_THP, "only needed for THP")
+class TestSharedLargeBuffer(unittest.TestCase):
+    """One large buffer, leased for the length of a message rather than of a channel.
+
+    Two live channels used to mean two large buffer pairs -- 17 kB of memory that is idle almost
+    all of the time, because a channel needs a large buffer only while a large message is actually
+    in flight. What each channel keeps for itself is small; the large one is borrowed.
+    """
+
+    def _pair(self, small=64, large=256):
+        shared = SharedBuffer(large)
+        return (
+            BufferSource(ThpBuffer(small), shared),
+            BufferSource(ThpBuffer(small), shared),
+            shared,
+        )
+
+    def test_a_small_message_never_touches_the_shared_buffer(self):
+        """The common case must not contend, or the sharing costs more than it saves."""
+        a, b, shared = self._pair()
+        self.assertIsNotNone(a.try_get(64))
+        self.assertFalse(a.holds_shared())
+        self.assertIsNone(shared.holder)
+        # ...and the other channel is entirely unaffected
+        self.assertIsNotNone(b.try_get(64))
+        self.assertFalse(b.holds_shared())
+
+    def test_a_large_message_borrows_and_gives_back(self):
+        a, _b, shared = self._pair()
+        self.assertEqual(len(a.try_get(200)), 200)
+        self.assertTrue(a.holds_shared())
+        self.assertIs(shared.holder, a)
+        a.release()
+        self.assertFalse(a.holds_shared())
+        self.assertIsNone(shared.holder)
+
+    def test_the_second_claimant_is_refused_not_given_the_same_memory(self):
+        """The refusal is the point. Handing both of them the buffer would corrupt both messages."""
+        a, b, _shared = self._pair()
+        self.assertIsNotNone(a.try_get(200))
+        self.assertIsNone(b.try_get(200))
+        # ...and once the holder is done, the loser gets it
+        a.release()
+        self.assertIsNotNone(b.try_get(200))
+
+    def test_the_holder_may_grow_its_own_lease(self):
+        """A message that grows twice must not refuse itself the buffer it already holds."""
+        a, _b, _shared = self._pair()
+        self.assertEqual(len(a.try_get(100)), 100)
+        self.assertEqual(len(a.try_get(200)), 200)
+
+    def test_growing_carries_the_prefix_across_the_move(self):
+        """The reassembler re-verifies the CRC over the whole buffer, so the prefix must survive.
+
+        Free when both tiers were slices of one bytearray; not free across two backing stores, and
+        the failure would be a CRC mismatch far from its cause.
+        """
+        a, _b, _shared = self._pair()
+        small = a.try_get(64)
+        for i in range(64):
+            small[i] = i
+        grown = a.try_get(200)
+        self.assertEqual(bytes(grown[:64]), bytes(range(64)))
+
+    def test_release_is_idempotent_and_safe_without_a_lease(self):
+        """Called from teardown paths that cannot know whether a message was in flight."""
+        a, b, shared = self._pair()
+        a.release()  # never borrowed
+        self.assertIsNotNone(b.try_get(200))
+        a.release()  # does not steal b's lease
+        self.assertIs(shared.holder, b)
+
+    def test_a_message_too_large_for_the_shared_buffer_leaves_no_lease(self):
+        """Refusing on size must not strand the buffer for everyone else."""
+        a, b, shared = self._pair()
+        with self.assertRaises(wire.FirmwareError):
+            a.try_get(1000)
+        self.assertIsNone(shared.holder)
+        self.assertIsNotNone(b.try_get(200))
 
 
 if __name__ == "__main__":
