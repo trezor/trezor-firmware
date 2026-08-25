@@ -67,6 +67,8 @@ class GenericSessionContext(Context):
             session_id, message = await self.channel.read()
             if session_id == self.session_id:
                 return message
+            # NOTHING WILL DECODE THIS ONE, so nothing else would give its receive buffer back.
+            message.release()
             if __debug__:
                 self.channel._log(
                     "Ignored message for unexpected session", logger=log.warning
@@ -106,7 +108,7 @@ class GenericSessionContext(Context):
                 self.message_type_enum_name, message.type
             )
 
-        return message_handler.wrap_protobuf_load(message.data, expected_type)
+        return message_handler.decode_message(message, expected_type)
 
     def write(self, msg: protobuf.MessageType) -> Awaitable[None]:
         return self.channel.write(msg, self.session_id)
