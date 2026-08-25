@@ -10,7 +10,7 @@ if utils.USE_THP:
     from trezor.wire import context
     from trezor.wire.thp.channel import Channel
     from trezor.wire.thp.interface_context import InterfaceContext, ThpContext
-    from trezor.wire.thp.memory_manager import ThpBuffer
+    from trezor.wire.buffers import WireBuffer
     from trezor.wire.thp.session_context import SessionContext
 
     if TYPE_CHECKING:
@@ -24,7 +24,7 @@ if utils.USE_THP:
             self,
             channel_id: int,
             iface_ctx: InterfaceContext,
-            buffers: tuple[ThpBuffer, ThpBuffer],
+            buffers: tuple[WireBuffer, WireBuffer],
         ) -> None:
             self.iface = iface_ctx
             self.channel_id = channel_id
@@ -48,7 +48,7 @@ if utils.USE_THP:
         thp_ctx = ThpContext(iface)
         (iface_ctx,) = thp_ctx._iface_ctxs
         NEXT_CHANNEL_ID += 1
-        return MockChannel(NEXT_CHANNEL_ID, iface_ctx, (ThpBuffer(), ThpBuffer()))
+        return MockChannel(NEXT_CHANNEL_ID, iface_ctx, (WireBuffer(), WireBuffer()))
 
     def _encrypt_patch() -> patch:
         return patch(Channel, "_encrypt", lambda self, buffer, noise_payload_len: None)
