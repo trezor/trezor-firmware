@@ -7,7 +7,7 @@ use ufmt::uwrite;
 
 use super::bootloader::welcome::Welcome;
 use super::component::bl_confirm::{Confirm, ConfirmTitle};
-use super::component::{Button, ResultScreen, WelcomeScreen};
+use super::component::{Button, ButtonContent, ResultScreen, WelcomeScreen};
 use super::cshape::{render_loader, LoaderRange};
 use super::theme::bootloader::{
     button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG,
@@ -40,6 +40,19 @@ const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
 
 const SCREEN: Rect = UIDelizia::SCREEN;
 const PROGRESS_TEXT_ORIGIN: Point = Point::new(2, 28);
+
+/// Concatenate parts into a bootloader string.
+///
+/// One shared panic site instead of one per `push_str`: each `unwrap!` carries
+/// its own location string, and these strings are either built whole or not at
+/// all.
+fn bld_string(parts: &[&str]) -> BootloaderString {
+    let mut s: BootloaderString = String::new();
+    for p in parts {
+        unwrap!(s.push_str(p));
+    }
+    s
+}
 
 impl UIDelizia {
     fn screen_progress(
@@ -186,11 +199,7 @@ impl BootloaderUI for UIDelizia {
         is_newinstall: bool,
         version_cmp: i32,
     ) -> u32 {
-        let mut version_str: BootloaderString = String::new();
-        unwrap!(version_str.push_str("Firmware version "));
-        unwrap!(version_str.push_str(version));
-        unwrap!(version_str.push_str("\nby "));
-        unwrap!(version_str.push_str(vendor));
+        let version_str = bld_string(&["Firmware version ", version, "\nby ", vendor]);
 
         let title_str = if is_newinstall {
             "INSTALL FW"
@@ -210,23 +219,24 @@ impl BootloaderUI for UIDelizia {
             TEXT_BOLD,
         ));
 
-        let (left, right) = if should_keep_seed {
-            let l = Button::with_text("CANCEL".into())
-                .styled(button_bld())
-                .with_text_align(Alignment::Center);
-            let r = Button::with_text("INSTALL".into())
-                .styled(button_confirm())
-                .with_text_align(Alignment::Center);
-            (l, r)
+        // Vary only the content: building the styling chain twice costs flash.
+        let (left_content, right_content) = if should_keep_seed {
+            (
+                ButtonContent::Text("CANCEL".into()),
+                ButtonContent::Text("INSTALL".into()),
+            )
         } else {
-            let l = Button::with_icon(Icon::new(X24))
-                .styled(button_bld())
-                .with_text_align(Alignment::Center);
-            let r = Button::with_icon(Icon::new(CHECK24))
-                .styled(button_confirm())
-                .with_text_align(Alignment::Center);
-            (l, r)
+            (
+                ButtonContent::Icon(Icon::new(X24)),
+                ButtonContent::Icon(Icon::new(CHECK24)),
+            )
         };
+        let left = Button::new(left_content)
+            .styled(button_bld())
+            .with_text_align(Alignment::Center);
+        let right = Button::new(right_content)
+            .styled(button_confirm())
+            .with_text_align(Alignment::Center);
 
         let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg)
             .with_info(
@@ -300,15 +310,9 @@ impl BootloaderUI for UIDelizia {
     }
 
     fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
-        let mut title_str: BootloaderString = String::new();
-        unwrap!(title_str.push_str("BOOTLOADER "));
-        unwrap!(title_str.push_str(bld_version));
+        let title_str = bld_string(&["BOOTLOADER ", bld_version]);
 
-        let mut version_str: BootloaderString = String::new();
-        unwrap!(version_str.push_str("Firmware version "));
-        unwrap!(version_str.push_str(version));
-        unwrap!(version_str.push_str("\nby "));
-        unwrap!(version_str.push_str(vendor));
+        let version_str = bld_string(&["Firmware version ", version, "\nby ", vendor]);
 
         let mut frame = Intro::new(
             title_str.as_str().into(),
