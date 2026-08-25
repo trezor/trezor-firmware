@@ -14,6 +14,7 @@
 [[defaults]]
 when = { emulator = true }
 dbg-console = "swo" # required by prodtest test
+debug = true
 source-lines = true # required by test coverage
 
 [[defaults]]
@@ -22,7 +23,6 @@ frozen = true
 pyopt = true
 
 [[test]]
-debug = true
 debug-link = true
 disable-animation = true
 frozen = true
@@ -34,11 +34,9 @@ storage-insecure-testing-mode = true
 disable-optiga = true
 disable-tropic = true
 
-
 [[dev]]
 when = { emulator = true }
 asan = true
-debug = true
 frozen = false
 pyopt = false
 source-lines = true
@@ -46,7 +44,6 @@ source-lines = true
 [[dev]]
 when = { emulator = false, project = ["firmware", "prodtest"] }
 dbg-console = "swo"
-debug = true
 pyopt = false
 
 # Example of a model- and project-specific fragment:
