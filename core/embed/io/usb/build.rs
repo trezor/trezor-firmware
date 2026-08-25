@@ -24,6 +24,12 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
     if cfg!(feature = "ward_service_channel") {
         lib.add_define("USE_WARD_SERVICE_CHANNEL", Some("1"));
+        // An interface beside the wire one needs a WinUSB compatible ID, so compile in the
+        // machinery that can advertise a second interface to Windows. Kept as its own define
+        // rather than reusing USE_WARD_SERVICE_CHANNEL inside the generic USB code: the
+        // capability is "one more interface needs WinUSB", not "WARD exists", and the bootloader
+        // -- which is within a few hundred bytes of its flash budget -- must not pay for it.
+        lib.add_define("USE_USB_WINUSB_EXTRA_IFACE", Some("1"));
     }
 
     if cfg!(feature = "emulator") {

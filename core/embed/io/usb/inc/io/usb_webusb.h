@@ -40,6 +40,19 @@ typedef struct {
   uint8_t protocol;          // usb_iface_protocol_t
   uint8_t polling_interval;  // In units of 1ms
   uint8_t max_packet_len;    // Length of the biggest report and of rx_buffer
+  // ADVERTISE THIS INTERFACE TO WINDOWS AS WINUSB-COMPATIBLE.
+  //
+  // A vendor-specific interface (class 0xFF) on a composite device becomes its own child device in
+  // Windows with no class driver to infer, so it sits there driverless -- Device Manager warning
+  // included -- and libusb cannot open it. Naming it in the Microsoft OS compatible-ID descriptor
+  // binds the in-box winusb.sys to it, with no INF and no kernel driver to ship.
+  //
+  // Set on the interface rather than passed to a separate call because the interface number is the
+  // thing the descriptor needs and this struct is where it is decided. The emulator ignores it:
+  // there are no descriptors there, only UDP ports.
+  //
+  // Interface 0 is always advertised regardless of this flag, which is what existing hosts rely on.
+  secbool winusb_compatible;
 } usb_webusb_info_t;
 
 secbool __wur usb_webusb_add(const usb_webusb_info_t *webusb_info);

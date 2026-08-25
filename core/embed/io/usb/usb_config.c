@@ -296,6 +296,16 @@ static secbool usb_ward_iface_init(uint8_t *iface_num) {
       .protocol = 0x01,
       .polling_interval = 1,
       .max_packet_len = sizeof(ward_iface_buffer),
+      // WITHOUT THIS, WINDOWS HAS NOTHING TO BIND. Class 0xFF on a composite device is its own
+      // child device with no class driver to infer from the descriptors, so it enumerates
+      // driverless -- a Device Manager warning, a driver-search prompt, and no way for libusb to
+      // open it. Naming the interface in the Microsoft OS compatible-ID descriptor points the
+      // in-box winusb.sys at it and needs neither an INF nor a driver of our own.
+      //
+      // The wire interface has always been advertised this way; this is the same treatment, not a
+      // new mechanism. Note it is the DESCRIPTOR identity above that hosts search by -- the
+      // compatible ID only decides who gets to answer.
+      .winusb_compatible = sectrue,
   };
 
   if (sectrue != usb_webusb_add(&ward_iface)) {
