@@ -149,6 +149,9 @@ async def _confirm_offer(
 ) -> None:
     from trezor.messages import StellarManageBuyOfferOp
 
+    if op.price_d == 0:
+        raise DataError("Stellar: invalid price denominator")
+
     buying_asset = op.buying_asset  # local_cache_attribute
     selling_asset = op.selling_asset  # local_cache_attribute
     buying_token = StellarToken.from_asset(buying_asset)
