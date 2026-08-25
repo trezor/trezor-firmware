@@ -73,6 +73,20 @@ class TestWardCodecContext(unittest.TestCase):
         ctx._select_buffers()
         self.assertIs(ctx.buffers, pooled)
 
+    def test_it_carries_what_a_service_link_is_read_for(self):
+        """`apps.ward.service._rpc` logs and tears down through these on EITHER transport.
+
+        Written after the fact, and worth saying why: the unit tests for `_rpc` stub the link with
+        a fake that defined `channel_id` because a THP `Channel` has one -- so the fake was more
+        capable than the real object, and the first thing to notice was a device test failing with
+        `'WardCodecContext' object has no attribute channel_id`. `Context` DECLARES `channel_id`
+        without defining it, so inheriting the base class is not enough to have one.
+        """
+        ctx, _bootstrap, _pooled = self._context()
+
+        self.assertEqual(ctx.channel_id, 0)
+        self.assertTrue(ctx.iface is not None)
+
     def test_the_endpoint_has_no_session(self):
         """`wardd` must not create or activate a protocol-v1 wallet session.
 

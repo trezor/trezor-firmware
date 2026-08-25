@@ -61,6 +61,11 @@ class WardCodecContext(CodecContext):
         pooled: CodecBufferSource,
     ) -> None:
         super().__init__(iface, bootstrap)
+        # WHAT `apps.ward.service` READS FROM A LINK. Its `ServiceLink` union logs and tears down
+        # through `channel_id` and `iface` on either transport, so this end has to carry both --
+        # and `Context` declares `channel_id` without defining it, so inheriting is not enough.
+        # Zero because there are no channels here to tell apart, not because this is channel zero.
+        self.channel_id = 0
         self._bootstrap = bootstrap
         self._pooled = pooled
         # Read by the reader loop to decide where a message goes, and by `_select_buffers` to
