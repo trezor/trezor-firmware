@@ -55,7 +55,12 @@ from ...input_flows import InputFlowConfirmAllWarnings
 # confirmation, and none of the tests in this file are about that -- so the role is taken once,
 # before each test body, and the sequences below stay about what they were written for. See
 # `tests/ward_app.py`.
-from ...ward_app import reject_flow, ward_app_pinned  # noqa: F401  -- autouse fixture
+from ...ward_app import (  # noqa: F401  -- ward_app_pinned is an autouse fixture
+    reject_flow,
+    reveal_prefix,
+    session_switch_prefix,
+    ward_app_pinned,
+)
 from ...ward_keys import derive_k_sig  # noqa: F401  -- asserted via ward_id below
 from ...ward_keys import (
     auth_commit,
@@ -157,21 +162,37 @@ class _Recorded:
         return "".join("".join(self._texts).split())
 
 
-def _expected(br_name: str, final=m.Success) -> list:
+def _expected(br_name: str, final=m.Success, reveals: type | None = None) -> list:
     """The full PULL round: the device asks for the entry, we answer, then it confirms.
 
     Pinning the sequence is what proves the pull happened at the protocol level; the
     screen assertions only prove what was rendered. A read ends in Success; a write or
     delete ends in WardLeafAck, because the host needs the leaf the device built.
+
+    A device with no app role asks before it reveals, and that screen comes FIRST -- the check runs
+    in the wire filter, so it is answered before the handler pulls anything. See `reveal_prefix`.
     """
-    return [m.WardEntryRequest, m.ButtonRequest(name=br_name), final]
+    return reveal_prefix(reveals) + [
+        m.WardEntryRequest,
+        m.ButtonRequest(name=br_name),
+        final,
+    ]
 
 
-def _write(session: Session, store: WardTrie, call, br_name: str) -> tuple:
-    """Run a write/delete, walking its screen, and return (result, recorder)."""
+def _write(
+    session: Session, store: WardTrie, call, br_name: str, switched: bool = False
+) -> tuple:
+    """Run a write/delete, walking its screen, and return (result, recorder).
+
+    `switched` when the caller has been using ANOTHER session since this one last spoke -- see
+    `session_switch_prefix`, which is about protocol v1 and not about WARD.
+    """
     rec = _Recorded()
     with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected(br_name, m.WardLeafAck))
+        ctx.set_expected_responses(
+            (session_switch_prefix() if switched else [])
+            + _expected(br_name, m.WardLeafAck)
+        )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
@@ -183,7 +204,7 @@ def _read(session: Session, store: WardTrie, call) -> tuple:
     """Run a read, walking its screen, and return (result, recorder)."""
     rec = _Recorded()
     with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_get_entry"))
+        ctx.set_expected_responses(_expected("ward_get_entry", reveals=m.WardGetEntry))
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
@@ -285,7 +306,7 @@ def test_ward_pull_names_only_the_opaque_key(session: Session):
 
     rec = _Recorded()
     with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_get_entry"))
+        ctx.set_expected_responses(_expected("ward_get_entry", reveals=m.WardGetEntry))
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
@@ -990,6 +1011,9 @@ def test_ward_root_survives_a_new_session(session: Session):
         store,
         lambda p: ward.set_entry(session, _APP, b"addr1", b"moved_on", p),
         "ward_set_entry",
+        # `fresh` has been speaking since this session last did; on v1 coming back costs an
+        # Initialize round trip.
+        switched=True,
     )
     ward.apply(store, res)
     _confirm(session, store)
@@ -2207,7 +2231,7 @@ def _pin(session: Session, store: WardTrie, identifier: bytes, br_name: str) -> 
     """Pin an entry, walking its screen. Returns (result, recorder)."""
     rec = _Recorded()
     with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected(br_name))
+        ctx.set_expected_responses(_expected(br_name, reveals=m.WardPinCachedEntry))
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
@@ -2232,7 +2256,8 @@ def _offline_read(session: Session, identifier: bytes) -> "_Recorded":
 
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_queue_get_entry"), m.WardQueueGetAck]
+            reveal_prefix(m.WardQueueGetEntry)
+            + [m.ButtonRequest(name="ward_queue_get_entry"), m.WardQueueGetAck]
         )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
@@ -2312,7 +2337,7 @@ def test_ward_pin_at_counter_zero_is_allowed(session: Session):
 
     rec = _Recorded()
     with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_pin_cached_entry"))
+        ctx.set_expected_responses(_expected("ward_pin_cached_entry", reveals=m.WardPinCachedEntry))
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
@@ -2413,14 +2438,23 @@ def test_ward_repinning_an_identical_value_neither_asks_nor_writes(session: Sess
 
     A confirmation on a no-op is worse than no confirmation: it is a hold that always means
     "nothing happened", which is the kind of screen that gets approved without being read.
+
+    THE REVEAL SCREEN IS NOT AN EXCEPTION TO THAT and is asked anyway on a device with no app role,
+    because it is answered before the device has looked and therefore before it can know this is a
+    no-op. It says something different in any case -- it is about being shown a stored value, not
+    about a change -- and the assertion that matters here survives either way: no
+    `ward_pin_cached_entry`, and no write.
     """
     store = WardTrie()
     _seed(session, store, b"addr1", b"same_value")
     _pin(session, store, b"addr1", "ward_pin_cached_entry")
 
     with session.test_ctx as ctx:
-        # No ButtonRequest at all -- the device pulls, sees identical bytes, and stops.
-        ctx.set_expected_responses([m.WardEntryRequest, m.Success])
+        # No ButtonRequest of the operation's own -- the device pulls, sees identical bytes, and
+        # stops. Only the reveal screen precedes it, and only where there is no app role.
+        ctx.set_expected_responses(
+            reveal_prefix(m.WardPinCachedEntry) + [m.WardEntryRequest, m.Success]
+        )
         ward.pin_cached_entry(session, _APP, b"addr1", ward.store_provider(store))
 
 
@@ -2482,7 +2516,10 @@ def test_ward_erase_removes_the_copy_only_after_confirmation(session: Session):
     erased = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_erase_cached_entry"), m.Success]
+            # The offline read above ran on a session of its own, so on v1 this pays to come back.
+            session_switch_prefix()
+            + reveal_prefix(m.WardEraseCachedEntry)
+            + [m.ButtonRequest(name="ward_erase_cached_entry"), m.Success]
         )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=erased.on_page).get()
@@ -2504,7 +2541,7 @@ def test_ward_erasing_something_not_kept_is_a_silent_no_op(session: Session):
     _seed(session, store, b"addr1", b"v")
 
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.Success])
+        ctx.set_expected_responses(reveal_prefix(m.WardEraseCachedEntry) + [m.Success])
         ward.erase_cached_entry(session, _APP, b"addr1")
 
 
@@ -2547,7 +2584,8 @@ def test_ward_offline_write_is_queued_not_applied(session: Session):
 
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_queue_entry"), m.WardQueueSetAck]
+            reveal_prefix(m.WardQueueSetEntry)
+            + [m.ButtonRequest(name="ward_queue_entry"), m.WardQueueSetAck]
         )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
@@ -2771,7 +2809,8 @@ def test_ward_discarding_a_queued_change_is_confirmed_and_says_what_it_is(
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_erase_cached_entry"), m.Success]
+            reveal_prefix(m.WardEraseCachedEntry)
+            + [m.ButtonRequest(name="ward_erase_cached_entry"), m.Success]
         )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
@@ -2829,7 +2868,8 @@ def test_ward_queue_delete_discards_a_queued_change(session: Session):
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_queue_delete_entry"), m.WardQueueDeleteAck]
+            reveal_prefix(m.WardQueueDeleteEntry)
+            + [m.ButtonRequest(name="ward_queue_delete_entry"), m.WardQueueDeleteAck]
         )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
@@ -2853,7 +2893,9 @@ def test_ward_queue_delete_of_nothing_is_reported_not_raised(session: Session):
     look like a fault. No screen either: a hold that always means "nothing happened" is one that
     gets approved without being read."""
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.WardQueueDeleteAck])
+        ctx.set_expected_responses(
+            reveal_prefix(m.WardQueueDeleteEntry) + [m.WardQueueDeleteAck]
+        )
         ack = ward.queue_delete_entry(session, _APP, b"never_queued")
 
     assert ack.missing is True
@@ -2872,7 +2914,9 @@ def test_ward_queue_delete_will_not_touch_a_pinned_copy(session: Session):
     _pin(session, store, b"addr1", "ward_pin_cached_entry")
 
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.WardQueueDeleteAck])
+        ctx.set_expected_responses(
+            reveal_prefix(m.WardQueueDeleteEntry) + [m.WardQueueDeleteAck]
+        )
         ack = ward.queue_delete_entry(session, _APP, b"addr1")
     assert ack.missing is True
 
@@ -2914,7 +2958,8 @@ def test_ward_a_queued_change_round_trips_through_a_backup(session: Session):
     fresh = session.test_ctx.get_session()
     with fresh.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_queue_restore_entry"), m.WardQueueSetAck]
+            reveal_prefix(m.WardQueueSetEntry)
+            + [m.ButtonRequest(name="ward_queue_restore_entry"), m.WardQueueSetAck]
         )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(fresh, on_page=rec.on_page).get()
@@ -2978,8 +3023,12 @@ def test_ward_a_tampered_backup_is_refused_before_any_screen(session: Session, c
     the path and the key space are not editable at all: the device derives both and MACs what it
     derived, so an app_id or identifier edit changes the derived path and fails on that. The
     refusal happens BEFORE the confirmation, which `set_expected_responses` asserts by expecting no
-    ButtonRequest: a screen for material that failed to authenticate teaches the user that the
-    screen means nothing.
+    `ward_queue_entry` ButtonRequest: a screen for material that failed to authenticate teaches the
+    user that the screen means nothing.
+
+    A device with no app role asks to reveal first and is still refused after -- see
+    `reveal_prefix`. That screen carries the request's own app_id and identifier and nothing from
+    the backup, so what it endorses is the read, not the material that failed to authenticate.
     """
     with session.test_ctx as ctx:
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
@@ -2996,7 +3045,7 @@ def test_ward_a_tampered_backup_is_refused_before_any_screen(session: Session, c
 
     fresh = session.test_ctx.get_session()
     with fresh.test_ctx as ctx:
-        ctx.set_expected_responses([m.Failure])
+        ctx.set_expected_responses(reveal_prefix(m.WardQueueSetEntry) + [m.Failure])
         with pytest.raises(exceptions.TrezorFailure, match="authenticated"):
             ward.queue_set_entry(
                 fresh,
@@ -3052,7 +3101,8 @@ def test_ward_restoring_over_a_pending_change_names_both(session: Session):
     fresh = session.test_ctx.get_session()
     with fresh.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_queue_restore_entry"), m.WardQueueSetAck]
+            reveal_prefix(m.WardQueueSetEntry)
+            + [m.ButtonRequest(name="ward_queue_restore_entry"), m.WardQueueSetAck]
         )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(fresh, on_page=rec.on_page).get()
@@ -3137,7 +3187,8 @@ def test_ward_queueing_a_longer_value_over_a_shorter_one(session: Session):
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_queue_entry"), m.WardQueueSetAck]
+            reveal_prefix(m.WardQueueSetEntry)
+            + [m.ButtonRequest(name="ward_queue_entry"), m.WardQueueSetAck]
         )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
@@ -3178,7 +3229,7 @@ def test_ward_a_value_past_the_cap_is_refused_and_the_old_one_survives(session: 
 
     # MAX_VALUE_LEN is 1024; this is one past it, so it is rejected before any screen is shown
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.Failure])
+        ctx.set_expected_responses(reveal_prefix(m.WardQueueSetEntry) + [m.Failure])
         with pytest.raises(exceptions.TrezorFailure, match="too large"):
             ward.queue_set_entry(session, _APP, b"addr1", b"x" * 1025)
 
@@ -3258,7 +3309,8 @@ def test_ward_a_compact_record_reads_and_backs_up_like_any_other(session: Sessio
     """
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_queue_entry"), m.WardQueueSetAck]
+            reveal_prefix(m.WardQueueSetEntry)
+            + [m.ButtonRequest(name="ward_queue_entry"), m.WardQueueSetAck]
         )
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         ward.queue_set_entry(session, _APP, b"addr1", b"compact_value", compact=True)
