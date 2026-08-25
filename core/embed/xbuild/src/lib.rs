@@ -18,7 +18,7 @@ pub use dep_tracking::{
 };
 pub use helpers::{
     cargo_target_dir, derive_output_path, diagnostics_color_flag, emit_rerun_if_changed,
-    is_rust_analyzer, trace_enabled,
+    is_rust_analyzer, path_from_env, trace_enabled,
 };
 pub use input_files::InputFiles;
 pub use parallel::{optimal_parallel_job_count, run_parallel};

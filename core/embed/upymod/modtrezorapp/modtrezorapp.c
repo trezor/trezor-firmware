@@ -17,130 +17,297 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef USE_APP_LOADING
+
 #include <trezor_rtl.h>
 
-#include <unistd.h>
+#include <io/app_arena.h>
+#include <io/app_header.h>
+#include <io/app_root.h>
 
 #include "py/mphal.h"
 #include "py/objstr.h"
 #include "py/runtime.h"
 
-#if MICROPY_PY_TREZORAPP
-
-#include <io/app_cache.h>
-#include <io/app_loader.h>
-
 #include "../trezorobj.h"
 
 #include "modtrezorapp-image.h"
-#include "modtrezorapp-task.h"
 
-/// package: trezorapp.__init__
+/// package: trezorapp
 
-/// def spawn_task(app_hash: bytes) -> AppTask:
+/// def create_image(header: AnyBytes, proof: AnyBytes) -> AppImage:
 ///     """
-///     Spawns an application task from the app cache.
+///     Create a new application image from header and proof.
+///     The returned handle can be used to load the rest of the
+///     image content and run it.
 ///     """
-static mp_obj_t mod_trezorapp_spawn_task(mp_obj_t app_hash_obj) {
-  mp_buffer_info_t hash = {0};
-  mp_get_buffer_raise(app_hash_obj, &hash, MP_BUFFER_READ);
+static mp_obj_t mod_trezorapp_create_image(mp_obj_t header_obj,
+                                           mp_obj_t proof_obj) {
+  app_image_handle_t handle = APP_IMAGE_HANDLE_INVALID;
 
-  if (hash.len != sizeof(app_hash_t)) {
-    mp_raise_ValueError(MP_ERROR_TEXT("Invalid app hash size"));
+  mp_buffer_info_t header_buf;
+  mp_get_buffer_raise(header_obj, &header_buf, MP_BUFFER_READ);
+
+  mp_buffer_info_t proof_buf;
+  mp_get_buffer_raise(proof_obj, &proof_buf, MP_BUFFER_READ);
+
+  ts_t status = app_arena_create_image(header_buf.buf, header_buf.len,
+                                       proof_buf.buf, proof_buf.len, &handle);
+
+  if (ts_eq(status, TS_ENOMEM)) {
+    mp_raise_type(&mp_type_AppImageMemoryError);
+  } else if (ts_eq(status, TS_EBADMSG)) {
+    mp_raise_type(&mp_type_AppImageVerificationError);
+  } else if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppImageError);
   }
 
-  const app_hash_t *hash_ptr = (const app_hash_t *)hash.buf;
-
-  systask_id_t task_id;
-  ts_t status = app_task_spawn(hash_ptr, &task_id);
-  if (ts_error(status)) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 MP_ERROR_TEXT("Failed to spawn app from app cache"));
-  }
-
-  mp_obj_AppTask_t *o =
-      mp_obj_malloc(mp_obj_AppTask_t, &mod_trezorapp_AppTask_type);
-  o->task_id = task_id;
-  return MP_OBJ_FROM_PTR(o);
-}
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_spawn_task_obj,
-                                 mod_trezorapp_spawn_task);
-
-/// def create_image(app_hash: bytes, size: int) -> AppImage:
-///     """
-///     Creates a new application image in the app cache.
-///     """
-static mp_obj_t mod_trezorapp_create_image(mp_obj_t app_hash_obj,
-                                           mp_obj_t size_obj) {
-  mp_buffer_info_t hash = {0};
-  mp_get_buffer_raise(app_hash_obj, &hash, MP_BUFFER_READ);
-
-  if (hash.len != sizeof(app_hash_t)) {
-    mp_raise_ValueError(MP_ERROR_TEXT("Invalid app hash size"));
-  }
-
-  const app_hash_t *hash_ptr = (const app_hash_t *)hash.buf;
-
-  size_t size = mp_obj_get_int(size_obj);
-
-  app_cache_handle_t image = app_cache_create_image(hash_ptr, size);
-
-  if (image == APP_CACHE_INVALID_HANDLE) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 MP_ERROR_TEXT("Failed to create app image in app cache"));
-  }
   mp_obj_AppImage_t *o =
       mp_obj_malloc(mp_obj_AppImage_t, &mod_trezorapp_AppImage_type);
-  o->image = image;
+  o->handle = handle;
   return MP_OBJ_FROM_PTR(o);
 }
 static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_create_image_obj,
                                  mod_trezorapp_create_image);
 
-#ifdef TREZOR_EMULATOR
-/// def load_file(app_hash: bytes, filename: Str) -> None:
-///     """
-///     Loads an application image from a file into the app cache.
-///     """
-static mp_obj_t mod_trezorapp_load_file(mp_obj_t app_hash_obj,
-                                        mp_obj_t filename_obj) {
-  mp_buffer_info_t hash = {0};
-  mp_get_buffer_raise(app_hash_obj, &hash, MP_BUFFER_READ);
+typedef struct {
+  mp_obj_base_t base;
+  size_t idx;
+} mp_obj_AppImageIter_t;
 
-  if (hash.len != sizeof(app_hash_t)) {
-    mp_raise_ValueError(MP_ERROR_TEXT("Invalid app hash size"));
+static mp_obj_t mod_trezorapp_images_iternext(mp_obj_t self_in) {
+  mp_obj_AppImageIter_t *self = MP_OBJ_TO_PTR(self_in);
+
+  app_image_handle_t handle = APP_IMAGE_HANDLE_INVALID;
+  ts_t status = app_arena_get_image_by_index(self->idx, &handle);
+  if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppArenaError);
   }
 
-  const app_hash_t *hash_ptr = (const app_hash_t *)hash.buf;
+  if (handle == APP_IMAGE_HANDLE_INVALID) {
+    return MP_OBJ_STOP_ITERATION;
+  }
 
-  const char *filename = mp_obj_str_get_str(filename_obj);
+  self->idx++;
+  mp_obj_AppImage_t *o =
+      mp_obj_malloc(mp_obj_AppImage_t, &mod_trezorapp_AppImage_type);
+  o->handle = handle;
+  return MP_OBJ_FROM_PTR(o);
+}
 
-  ts_t status = app_cache_load_file(hash_ptr, filename);
+// clang-format off
+static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorapp_AppImageIter_type,
+  MP_QSTR_AppImageIter, MP_TYPE_FLAG_ITER_IS_ITERNEXT,
+  iter, mod_trezorapp_images_iternext);
+// clang-format on
+
+/// def images() -> Iterator[AppImage]:
+///     """
+///     Return an iterator over all app images in the app arena.
+///     """
+static mp_obj_t mod_trezorapp_images(void) {
+  mp_obj_AppImageIter_t *o =
+      mp_obj_malloc(mp_obj_AppImageIter_t, &mod_trezorapp_AppImageIter_type);
+  o->idx = 0;
+  return MP_OBJ_FROM_PTR(o);
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_images_obj,
+                                 mod_trezorapp_images);
+
+/// def image_by_handle(handle: int) -> AppImage:
+///     """
+///     Return the application image with the specified handle.
+///     """
+static mp_obj_t mod_trezorapp_arena_image_by_handle(mp_obj_t handle_obj) {
+  app_image_handle_t handle = mp_obj_get_int(handle_obj);
+
+  app_image_info_t info;
+  ts_t status = app_image_get_info(handle, &info);
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_type(&mp_type_AppImageNotFoundError);
+  } else if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppImageError);
+  }
+
+  mp_obj_AppImage_t *o =
+      mp_obj_malloc(mp_obj_AppImage_t, &mod_trezorapp_AppImage_type);
+  o->handle = handle;
+  return MP_OBJ_FROM_PTR(o);
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_arena_image_by_handle_obj,
+                                 mod_trezorapp_arena_image_by_handle);
+
+/// def clear_event() -> None:
+///     """
+///     Clear the pending event on the app arena, if any.
+///     """
+static mp_obj_t mod_trezorapp_arena_clear_event(void) {
+  ts_t status = app_arena_clear_event();
   if (ts_error(status)) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 MP_ERROR_TEXT("Failed to load app image from file"));
+    mp_raise_type(&mp_type_AppArenaError);
+  }
+  return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_clear_event_obj,
+                                 mod_trezorapp_arena_clear_event);
+
+/// def image_count() -> int:
+///     """
+///     Return the number of application images currently
+///     loaded in the app arena.
+///     """
+static mp_obj_t mod_trezorapp_arena_image_count(void) {
+  app_arena_info_t info;
+  ts_t status = app_arena_get_info(&info);
+  if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppArenaError);
+  }
+
+  return mp_obj_new_int(info.image_count);
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_image_count_obj,
+                                 mod_trezorapp_arena_image_count);
+
+/// def mem_total() -> int:
+///     """
+///     Return the total memory available in the app arena.
+///     """
+static mp_obj_t mod_trezorapp_arena_mem_total(void) {
+  app_arena_info_t info;
+  ts_t status = app_arena_get_info(&info);
+  if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppArenaError);
+  }
+
+  return mp_obj_new_int(info.total_size);
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_mem_total_obj,
+                                 mod_trezorapp_arena_mem_total);
+
+/// def mem_free() -> int:
+///     """
+///     Return the free memory available in the app arena.
+///     """
+static mp_obj_t mod_trezorapp_arena_mem_free(void) {
+  app_arena_info_t info;
+  ts_t status = app_arena_get_info(&info);
+  if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppArenaError);
+  }
+
+  return mp_obj_new_int(info.free_size);
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_mem_free_obj,
+                                 mod_trezorapp_arena_mem_free);
+
+/// def root_update(root_packet: AnyBytes) -> None:
+///     """
+///     Update the root-of-trust storage with the provided root packet.
+///     The root packet is verified for integrity and validity before being
+///     stored. If the verification fails, an AppArenaError is raised.
+///     """
+static mp_obj_t mod_trezorapp_root_update(mp_obj_t root_packet_obj) {
+  mp_buffer_info_t root_packet_buf;
+  mp_get_buffer_raise(root_packet_obj, &root_packet_buf, MP_BUFFER_READ);
+
+  ts_t status = app_root_update(root_packet_buf.buf, root_packet_buf.len);
+  if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppArenaError);
   }
 
   return mp_const_none;
 }
-static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_load_file_obj,
-                                 mod_trezorapp_load_file);
-#endif  // TREZOR_EMULATOR
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_update_obj,
+                                 mod_trezorapp_root_update);
 
-static const mp_rom_map_elem_t mp_module_trezorapp_globals_table[] = {
+/// def root_is_loaded(ring: int) -> bool:
+///     """
+///     Return True if a root-of-trust is present for the specified ring,
+///     otherwise return False.
+///     """
+static mp_obj_t mod_trezorapp_root_is_loaded(mp_obj_t ring_obj) {
+  mp_int_t ring = mp_obj_get_int(ring_obj);
+  return mp_obj_new_bool(app_root_is_loaded(ring));
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_is_loaded_obj,
+                                 mod_trezorapp_root_is_loaded);
+
+/// def root_timestamp(ring: int) -> int:
+///     """
+///     Return the timestamp of the root-of-trust for the specified ring.
+///     """
+static mp_obj_t mod_trezorapp_root_timestamp(mp_obj_t ring_obj) {
+  mp_int_t ring = mp_obj_get_int(ring_obj);
+
+  uint32_t timestamp = 0;
+
+  ts_t status = app_root_get_timestamp(ring, &timestamp);
+  if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppArenaError);
+  }
+
+  return mp_obj_new_int(timestamp);
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_timestamp_obj,
+                                 mod_trezorapp_root_timestamp);
+
+/// def app_ring_from_header(header: AnyBytes) -> int:
+///     """
+///     Return the application privilege ring from the provided header.
+///     """
+static mp_obj_t mod_trezorapp_app_ring_from_header(mp_obj_t header_obj) {
+  mp_buffer_info_t header_buf;
+  mp_get_buffer_raise(header_obj, &header_buf, MP_BUFFER_READ);
+
+  uint8_t app_ring = 0;
+
+  ts_t status =
+      app_header_get_app_ring(header_buf.buf, header_buf.len, &app_ring);
+
+  if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppArenaError);
+  }
+
+  return mp_obj_new_int(app_ring);
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_app_ring_from_header_obj,
+                                 mod_trezorapp_app_ring_from_header);
+
+static const mp_rom_map_elem_t mod_module_trezorapp_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorapp)},
-
-    {MP_ROM_QSTR(MP_QSTR_spawn_task),
-     MP_ROM_PTR(&mod_trezorapp_spawn_task_obj)},
+    {MP_ROM_QSTR(MP_QSTR_AppError), MP_ROM_PTR(&mp_type_AppError)},
+    {MP_ROM_QSTR(MP_QSTR_AppImageError), MP_ROM_PTR(&mp_type_AppImageError)},
+    {MP_ROM_QSTR(MP_QSTR_AppImageNotFoundError),
+     MP_ROM_PTR(&mp_type_AppImageNotFoundError)},
+    {MP_ROM_QSTR(MP_QSTR_AppImageMemoryError),
+     MP_ROM_PTR(&mp_type_AppImageMemoryError)},
+    {MP_ROM_QSTR(MP_QSTR_AppImageVerificationError),
+     MP_ROM_PTR(&mp_type_AppImageVerificationError)},
+    {MP_ROM_QSTR(MP_QSTR_AppArenaError), MP_ROM_PTR(&mp_type_AppArenaError)},
     {MP_ROM_QSTR(MP_QSTR_create_image),
      MP_ROM_PTR(&mod_trezorapp_create_image_obj)},
-#ifdef TREZOR_EMULATOR
-    {MP_ROM_QSTR(MP_QSTR_load_file), MP_ROM_PTR(&mod_trezorapp_load_file_obj)},
-#endif
+    {MP_ROM_QSTR(MP_QSTR_images), MP_ROM_PTR(&mod_trezorapp_images_obj)},
+    {MP_ROM_QSTR(MP_QSTR_image_count),
+     MP_ROM_PTR(&mod_trezorapp_arena_image_count_obj)},
+    {MP_ROM_QSTR(MP_QSTR_image_by_handle),
+     MP_ROM_PTR(&mod_trezorapp_arena_image_by_handle_obj)},
+    {MP_ROM_QSTR(MP_QSTR_clear_event),
+     MP_ROM_PTR(&mod_trezorapp_arena_clear_event_obj)},
+    {MP_ROM_QSTR(MP_QSTR_mem_total),
+     MP_ROM_PTR(&mod_trezorapp_arena_mem_total_obj)},
+    {MP_ROM_QSTR(MP_QSTR_mem_free),
+     MP_ROM_PTR(&mod_trezorapp_arena_mem_free_obj)},
+    {MP_ROM_QSTR(MP_QSTR_root_update),
+     MP_ROM_PTR(&mod_trezorapp_root_update_obj)},
+    {MP_ROM_QSTR(MP_QSTR_root_is_loaded),
+     MP_ROM_PTR(&mod_trezorapp_root_is_loaded_obj)},
+    {MP_ROM_QSTR(MP_QSTR_root_timestamp),
+     MP_ROM_PTR(&mod_trezorapp_root_timestamp_obj)},
+    {MP_ROM_QSTR(MP_QSTR_app_ring_from_header),
+     MP_ROM_PTR(&mod_trezorapp_app_ring_from_header_obj)},
 };
-
 static MP_DEFINE_CONST_DICT(mp_module_trezorapp_globals,
-                            mp_module_trezorapp_globals_table);
+                            mod_module_trezorapp_globals_table);
 
 const mp_obj_module_t mp_module_trezorapp = {
     .base = {&mp_type_module},
@@ -149,4 +316,4 @@ const mp_obj_module_t mp_module_trezorapp = {
 
 MP_REGISTER_MODULE(MP_QSTR_trezorapp, mp_module_trezorapp);
 
-#endif  // MICROPY_PY_TREZORAPP
+#endif  // USE_APP_LOADING

@@ -31,7 +31,7 @@ from pathlib import Path
 
 from mnemonic import Mnemonic
 
-from . import client, mapping, messages, models, protobuf, protocol_v1
+from . import client, mapping, messages, models, protobuf, protocol_v1, trezorapp
 from .exceptions import DeviceLockedError, TrezorFailure
 from .log import DUMP_BYTES
 from .messages import DebugTouchEventType, DebugWaitType
@@ -1399,7 +1399,7 @@ class TrezorTestContext:
         self.transport.open(reopen=True)
 
         # debug-specific initialization
-        self.ui: DebugUI = DebugUI(self.debug)
+        self.ui: t.Any = DebugUI(self.debug)
         self.app.pin_callback = self.ui.get_pin
         self.app.button_callback = self.ui.button_request
         self.reset_debug_features()
@@ -1421,6 +1421,13 @@ class TrezorTestContext:
         self.expected_responses: list[MessageFilter] | None = None
         self.actual_responses: list[protobuf.MessageType] = []
         self.filters: dict[
+            type[protobuf.MessageType],
+            t.Callable[[protobuf.MessageType], protobuf.MessageType],
+        ] = {}
+        self.reset_resp_mappings()
+
+    def reset_resp_mappings(self) -> None:
+        self.resp_mappings: dict[
             type[protobuf.MessageType],
             t.Callable[[protobuf.MessageType], protobuf.MessageType],
         ] = {}
@@ -1615,9 +1622,38 @@ class TrezorTestContext:
         else:
             self.filters[message_type] = callback
 
+    def set_resp_mapping(
+        self,
+        message_type: t.Type[protobuf.MessageType],
+        callback: t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
+    ) -> None:
+        """Configure a mapping function for a specified message type.
+
+        The `callback` must be a function that accepts and returns a protobuf message of arbitrary type. Whenever a message
+        is sent or received that matches `message_type`, `callback` is invoked on the
+        message and its result is substituted for the original.
+
+        Useful for test scenarios with an active malicious actor on the wire.
+        """
+        if not self.in_with_statement:
+            raise RuntimeError("Must be called inside 'with' statement")
+
+        if callback is None:
+            del self.resp_mappings[message_type]
+        else:
+            self.resp_mappings[message_type] = callback
+
     def _filter_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
         message_type = msg.__class__
         callback = self.filters.get(message_type)
+        if callable(callback):
+            return callback(deepcopy(msg))
+        else:
+            return msg
+
+    def _map_resp_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
+        message_type = msg.__class__
+        callback = self.resp_mappings.get(message_type)
         if callable(callback):
             return callback(deepcopy(msg))
         else:
@@ -1653,11 +1689,11 @@ class TrezorTestContext:
             # Propagate the exception through the input flow, so that we see in
             # traceback where it is stuck.
             input_flow.throw(value)
+        self.reset_resp_mappings()
         self.actual_responses = []
 
-    @classmethod
     def _verify_responses(
-        cls,
+        self,
         expected: list[MessageFilter] | None,
         actual: list[protobuf.MessageType],
     ) -> None:
@@ -1668,7 +1704,7 @@ class TrezorTestContext:
 
         for i, (exp, act) in enumerate(zip_longest(expected, actual)):
             if exp is None:
-                output = cls._expectation_lines(expected, i)
+                output = self._expectation_lines(expected, i)
                 output.append("No more messages were expected, but we got:")
                 for resp in actual[i:]:
                     output.append(
@@ -1676,13 +1712,14 @@ class TrezorTestContext:
                     )
                 raise AssertionError("\n".join(output))
 
-            if act is None:
-                output = cls._expectation_lines(expected, i)
+            act_mapped = self._map_resp_message(act)
+            if act_mapped is None:
+                output = self._expectation_lines(expected, i)
                 output.append("This and the following message was not received.")
                 raise AssertionError("\n".join(output))
 
-            if not exp.match(act):
-                output = cls._expectation_lines(expected, i)
+            if not exp.match(act_mapped):
+                output = self._expectation_lines(expected, i)
                 output.append("Actually received:")
                 output.append(textwrap.indent(protobuf.format_message(act), "    "))
                 raise AssertionError("\n".join(output))
@@ -1809,6 +1846,34 @@ def load_device(
         expect=messages.Success,
     )
     session.refresh_features()
+
+
+def load_trezorapp(session: client.Session, binary: Path) -> int:
+    if not binary.is_file():
+        raise FileNotFoundError(f"App binary not found: {binary}")
+    app_binary = binary.read_bytes()
+
+    # The proof sits next to the app binary, sharing its name but with a .proof suffix.
+    proof_path = binary.with_suffix(".proof")
+    if not proof_path.is_file():
+        raise FileNotFoundError(f"App proof not found: {proof_path}")
+    proof = proof_path.read_bytes()
+
+    # Pick the root packet based on the app ring stored in the app header:
+    # ring 0 -> rootpacket_0, rings 1 and 2 -> rootpacket_12.
+    app_ring = trezorapp.AppImage.parse(app_binary).header.app_ring
+    root_packet_name = (
+        "rootpacket_0-timestamped-signed.tmr"
+        if app_ring == 0
+        else "rootpacket_12-timestamped-signed.tmr"
+    )
+    root_packet_path = binary.parent / root_packet_name
+    if not root_packet_path.is_file():
+        raise FileNotFoundError(f"Root packet not found: {root_packet_path}")
+    root_packet = root_packet_path.read_bytes()
+
+    instance_id = trezorapp.load(session, app_binary, proof, root_packet, None)
+    return instance_id
 
 
 # keep the old name for compatibility
