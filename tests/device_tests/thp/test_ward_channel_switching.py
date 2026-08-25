@@ -465,6 +465,66 @@ def test_service_reset_does_not_restart_or_break_wallet(client: Client) -> None:
     _wallet_channel_kept(client, channel_id)
 
 
+def test_large_messages_cross_the_seam_in_both_directions(client: Client) -> None:
+    """A value too big for a channel's own buffer, written and read back, repeatedly.
+
+    THE LARGE BUFFERS ARE SHARED AND BORROWED PER MESSAGE. A channel keeps a small buffer of its
+    own -- enough for the handshake and for ordinary wallet traffic -- and reaches for the one
+    shared 8.5 kB buffer only when a message does not fit. Every test above rides entirely in the
+    small buffers, so none of them touches that path at all.
+
+    WHAT THIS IS LOOKING FOR IS A LEASE THAT WAS NOT GIVEN BACK. That only shows up when the two
+    channels want the same buffer at the same time, and getting them to is the whole design of this
+    test -- because most WARD flows will not. A large message on its own proves nothing: a channel
+    is allowed to keep a buffer it already holds, and a MicroPython session restart wipes any lease
+    that was stranded, so a leak between workflows is invisible.
+
+    THE OVERWRITE IS THE LEVER. Writing a large value over a key that ALREADY HOLDS one puts both
+    large messages inside a single workflow, in the same direction, on different channels: the
+    wallet's `WardSetEntry` arrives large and is still held while the device asks the daemon for the
+    existing entry -- whose `WardEntryAck` comes back large too, on the service channel. Both want
+    the shared receive buffer, and the second one gets it only if the first gave it back.
+
+    A first write to a fresh key does not do this: the fetch that precedes it answers with nothing.
+    Which is why the loop below writes each key twice.
+    """
+    session = client.get_session()
+    store = WardTrie()
+    wardd = bound_daemon(client, store)
+
+    big = bytes(range(256)) * 8  # 2048 bytes, and not compressible into looking small
+    bigger = bytes(range(256)) * 9  # a second large value, so the overwrite really changes it
+
+    try:
+        with wardd.serving():
+            for i in range(2):
+                identifier = b"big-%d" % i
+                assert _write(session, identifier, big).counter == i * 2 + 1
+                # THE OVERWRITE, and the point of the test: a large request held on the wallet
+                # channel while a large answer arrives on the service channel.
+                assert _write(session, identifier, bigger).counter == i * 2 + 2
+                # A read, so the large leaf also crosses the service interface with no large wallet
+                # message in flight -- the ordinary case, and cheap to cover here.
+                assert _read(session, identifier).response.message == "WARD entry shown"
+                # ...and an ordinary small call, which is what would be refused or hang if any of
+                # the above had walked off with the buffer.
+                _wallet_round_trip(client)
+        assert store.counter == 4
+        # THE MESSAGES REALLY WERE LARGE, which is the premise the whole test rests on -- if the
+        # device had quietly stored something smaller, everything above would pass in the small
+        # buffers and assert nothing. A 2048-byte value packs to 2056 and seals into the 4096-byte
+        # AEAD bucket, four times a channel's own 1024-byte buffer.
+        assert all(
+            len(leaf.content.encrypted.ct) >= 4096 for leaf in store.blobs.values()
+        ), "the values that crossed the seam were not large after all"
+    finally:
+        wardd.close()
+
+    # The wallet channel is the same one throughout: a stranded lease kills a channel rather than
+    # failing a call, and trezorlib would reconnect over that silently.
+    _wallet_channel_kept(client, client.channel.channel_id)
+
+
 def test_the_interfaces_never_borrow_each_others_buffers(client: Client) -> None:
     """Daemons come and go; both interfaces can still allocate a channel afterwards.
 
