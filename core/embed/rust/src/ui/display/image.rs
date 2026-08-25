@@ -129,68 +129,134 @@ pub struct JpegInfo {
 }
 
 impl JpegInfo {
+    /// Parses a baseline JPEG header and returns the image geometry.
+    ///
+    /// This is the only validation a host-supplied homescreen gets before the
+    /// hardware decoder is pointed at the very same bytes, so the two must
+    /// agree on what the image is. A stream that this parser and the decoder
+    /// read differently is a crafted input, not a picture, and the strictness
+    /// here exists to deny that difference rather than to be permissive.
     pub fn parse(image: BinaryData) -> Option<Self> {
-        const M_SOI: u16 = 0xFFD8;
-        const M_SOF0: u16 = 0xFFC0;
-        const M_DRI: u16 = 0xFFDD;
-        const M_RST0: u16 = 0xFFD0;
-        const M_RST7: u16 = 0xFFD7;
-        const M_SOS: u16 = 0xFFDA;
-        const M_EOI: u16 = 0xFFD9;
+        // Second byte of each two-byte marker code.
+        const SOI: u8 = 0xD8;
+        const EOI: u8 = 0xD9;
+        const SOF0: u8 = 0xC0;
+        const SOS: u8 = 0xDA;
+        const DRI: u8 = 0xDD;
+        const DQT: u8 = 0xDB;
+        const DHT: u8 = 0xC4;
+        const COM: u8 = 0xFE;
+        const APP0: u8 = 0xE0;
+        const APP15: u8 = 0xEF;
+        const TEM: u8 = 0x01;
+        const RST0: u8 = 0xD0;
+        const RST7: u8 = 0xD7;
 
-        let mut result = None;
-        let mut ofs = 0;
-
-        while image.read_u16_be(ofs)? != M_SOI {
-            ofs += 1;
+        // A JPEG stream begins with SOI.
+        if image.read_u8(0)? != 0xFF || image.read_u8(1)? != SOI {
+            return None;
         }
 
-        loop {
-            let marker = image.read_u16_be(ofs)?;
+        let mut ofs: usize = 2;
+        let mut result: Option<Self> = None;
 
-            if (marker & 0xFF00) != 0xFF00 {
+        loop {
+            // A marker is an 0xFF byte followed by a code that is neither 0x00
+            // nor 0xFF.
+            //
+            // Rejecting fill bytes, since hardware cannot decode them.
+            let mut ff_run = 0;
+            while image.read_u8(ofs)? == 0xFF {
+                ff_run += 1;
+                ofs = ofs.checked_add(1)?;
+            }
+            if ff_run != 1 {
+                return None;
+            }
+            let code = image.read_u8(ofs)?;
+            // 0xFF00 is a stuffed data byte, never a marker.
+            if code == 0x00 {
+                return None;
+            }
+            ofs = ofs.checked_add(1)?;
+
+            match code {
+                SOS => break,
+
+                // Allowed markers
+                SOF0 | DQT | DHT | DRI | COM | APP0..=APP15 => (),
+
+                // Everything else is refused.
+                _ => return None,
+            }
+
+            let len = image.read_u16_be(ofs)? as usize;
+            if len < 2 {
                 return None;
             }
 
-            ofs += 2;
-
-            ofs += match marker {
-                M_SOI => 0,
-                M_SOF0 => {
-                    let h = image.read_u16_be(ofs + 3)? as i16;
-                    let w = image.read_u16_be(ofs + 5)? as i16;
-                    // Number of components
-                    let nc = image.read_u8(ofs + 7)?;
-                    if (nc != 1) && (nc != 3) {
+            match code {
+                SOF0 => {
+                    if result.is_some() {
+                        // A baseline image carries exactly one frame header.
                         return None;
                     }
-                    // Sampling factor of the first component
-                    let c1 = image.read_u8(ofs + 9)?;
-                    if (c1 != 0x11) && (c1 != 0x21) & (c1 != 0x22) {
-                        return None;
-                    };
-                    let mcu_height = i16::from(8 * (c1 & 15));
-
-                    // We now have all the information we need, but
-                    // we will not exit the loop yet until we find the
-                    // M_SOS marker. While this does not ensure absolute
-                    // correctness, it improves the verification slightly.
-                    result = Some(JpegInfo {
-                        size: Offset::new(w, h),
-                        mcu_height,
-                    });
-
-                    image.read_u16_be(ofs)?
+                    result = Some(Self::parse_frame_header(&image, ofs, len)?);
                 }
-                M_DRI => 4,
-                M_EOI => return None,
-                M_RST0..=M_RST7 => 0,
-                M_SOS => break,
-                _ => image.read_u16_be(ofs)?,
-            } as usize;
+                DRI if len != 4 => return None,
+                _ => (),
+            }
+
+            ofs = ofs.checked_add(len)?;
         }
 
         result
+    }
+
+    /// Parses a baseline frame header. `ofs` points at its length field.
+    fn parse_frame_header(image: &BinaryData, ofs: usize, len: usize) -> Option<Self> {
+        // Lf(2) P(1) Y(2) X(2) Nf(1), then Nf x (Ci(1) HiVi(1) Tqi(1)).
+        let precision = image.read_u8(ofs + 2)?;
+        let height = image.read_u16_be(ofs + 3)?;
+        let width = image.read_u16_be(ofs + 5)?;
+        let components = image.read_u8(ofs + 7)?;
+
+        // Baseline is 8-bit, greyscale or YCbCr.
+        if precision != 8 || (components != 1 && components != 3) {
+            return None;
+        }
+        if len != 8 + 3 * components as usize {
+            return None;
+        }
+        // Both this type and the hardware decoder hold dimensions as `i16`.
+        if width == 0 || height == 0 || width > i16::MAX as u16 || height > i16::MAX as u16 {
+            return None;
+        }
+
+        let mut mcu_height = 0;
+        for i in 0..components as usize {
+            let sampling = image.read_u8(ofs + 9 + i * 3)?;
+            if i == 0 {
+                // The decoders derive the whole MCU geometry from the first
+                // component and implement only these layouts. A greyscale
+                // image is assumed to use 8x8 MCUs, so it must say so.
+                mcu_height = match sampling {
+                    0x11 => 8,
+                    0x21 if components == 3 => 8,
+                    0x22 if components == 3 => 16,
+                    _ => return None,
+                };
+            } else if sampling != 0x11 {
+                // Chroma subsampled independently of luma yields a component
+                // layout no decoder here supports.
+                return None;
+            }
+        }
+
+        Some(Self {
+            size: Offset::new(width as i16, height as i16),
+            mcu_height,
+        })
     }
 
     pub fn size(&self) -> Offset {
