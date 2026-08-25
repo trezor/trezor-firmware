@@ -91,11 +91,8 @@ leaf authenticity under device-derived keys, the MPT proof against the device-tr
 attestation, and a counter and mac the device computed itself — and none of those ask who sent the
 bytes.
 
-> **GAP(ward): WARD is not usable on a codec model yet**, for a reason above this layer.
-> `apps.ward.app_role.require_ward_app` pins the WARD *app's* THP static key and refuses any context
-> without a channel, so on a V1 device every host-facing WARD message is refused before the service
-> endpoint is reached. Protocol v1 has no host identity to pin, so what should take the pin's place
-> there is a decision of its own and has not been made.
+The same question arises one layer up, about the WARD *app* rather than the daemon, and is answered
+the same way — see "Which party a request came from" below.
 
 ## Which party a request came from
 
@@ -106,10 +103,34 @@ every paired host holds one, so "some paired host" is the wrong granularity for 
 asks for proofs. Recovering from a lost daemon key is an ownership migration with a user decision in
 it — `WardResetService` — and it discards no data.
 
-**The WARD-capable host is pinned too, and there is exactly one of it.** The first host to send a
-user-facing WARD message on the wallet channel has its static public key written to flash
+**The WARD-capable host is pinned too, and there is exactly one of it — on THP.** The first host to
+send a user-facing WARD message on the wallet channel has its static public key written to flash
 (`storage.ward.get_app_host_key`) after the user holds to allow it, and every other key is refused
 from then on. `WardResetApp` retires that pin, on a held confirmation, and discards no data.
+
+**On protocol v1 there is no pin, because there is no identity.** A codec transport carries no
+handshake, so the device cannot tell one connected application from another by any means — not
+weakly, not at all. Failing closed there would leave WARD unavailable on every model without THP,
+including Safe 5, so the pin is replaced by what v1 has always used instead of identity: the user,
+per operation, on the device's own screen.
+
+WHAT WAS MISSING WAS ORDERING, not confirmations. Every user-facing WARD operation already confirms,
+and a read *displays* its value and returns only `Success` so the plaintext never reaches the host.
+But those screens carry the value among their properties, so the secret is on the display by the
+time the user is asked — an acknowledgement, not a decision. That is sound while a pin has already
+decided who may trigger it. With no pin, **triggering a read is the disclosure.**
+
+So on v1 the six operations that can put a stored value on screen — `WardGetEntry`,
+`WardQueueGetEntry`, `WardQueueSetEntry`, `WardQueueDeleteEntry`, `WardPinCachedEntry`,
+`WardEraseCachedEntry` — are preceded by a screen showing the domain and key alone, answered while
+the value is still unrevealed. It is asked in the wire filter, before the handler has looked at the
+request, which is the only place it can run and still be ahead of the disclosure; a consequence is
+that it is asked even when the operation turns out to be a no-op. The operations that show back only
+what the caller sent, and the replica plumbing that shows nothing, are not asked about.
+
+What this does not do is make `app_id` a permission. Any connected application may still *ask* to
+display any entry — it simply cannot do so without the user reading which one first. See the gap in
+`common.require_key`, which is the deeper problem the THP pin also only papers over.
 
 Note carefully what this is and is not. It is **not** a boundary between "the wallet" and "the WARD
 app" — they share the ordinary interface, and in production they are expected to be the same program.

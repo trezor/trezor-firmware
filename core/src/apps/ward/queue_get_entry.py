@@ -47,6 +47,12 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
 
     THE USER CONFIRMS THE EXPORT, because it is the only notice they get that a value the device
     was holding for itself is leaving.
+
+    AND THAT CONFIRMATION COMES TOO LATE TO BE THE ONLY ONE. It carries the value among its
+    properties, so by the time it is answered the secret is already on the display -- refusing then
+    stops the export but not the disclosure. Safe on a THP build, where `apps.ward.app_role` has
+    already decided that exactly one application may trigger this; on a transport with no app role
+    the filter asks first instead.
     """
     from trezor.messages import WardQueueGetAck
     from trezor.ui.layouts import confirm_properties

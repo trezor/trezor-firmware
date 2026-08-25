@@ -18,6 +18,34 @@ WHAT IT DOES NOT REACH. `app_id` still arrives on the wire, so the pinned host m
 entries; this narrows who can do that to one host rather than stopping it. See the gap recorded in
 `common.require_key`.
 
+AND WHAT IT CANNOT REACH AT ALL: THE V1 CODEC. There is no handshake there, so there is no host key
+to pin -- not a weaker one, none. A device speaking protocol v1 cannot tell one connected
+application from another by any means, so a role is not a thing it can hold.
+
+The answer is not to invent an identity, nor to fail closed and leave WARD unavailable on every
+model without THP. It is that v1 already has a security model and it is not identity: it is the
+user, per operation, on the device's own screen. Every user-facing WARD operation already confirms,
+and a read DISPLAYS its value and returns only `Success`, so the plaintext never reaches the host
+at all.
+
+WHAT WAS ACTUALLY MISSING IS ORDERING. Those confirmations carry the value among their properties,
+so the secret is on the display by the time the user is asked -- an acknowledgement, not a decision.
+On a THP build that is sound, because the pin has already decided that exactly one application may
+trigger any of it. With no pin, TRIGGERING A READ IS THE DISCLOSURE, and a screen that reveals
+first and asks second is not a control.
+
+So on v1 the pin is replaced by `_confirm_reveal` below: before any operation that can put a stored
+value on screen, the user is shown the domain and key alone and asked. Two screens rather than one,
+which is the honest price of a transport that cannot tell one application from another.
+
+WHY HERE AND NOT IN THE SIX HANDLERS. Same reason the role check is a filter: six call sites are six
+chances to forget, and the one that got forgotten would be a WARD operation that reveals a value
+with nothing asked first. The list below is the policy, exactly as `_ward_app_messages` is.
+
+WHAT IS STILL LOST, stated rather than glossed: `app_id` is a namespace and not a permission, so any
+connected application may ASK to display any entry. It simply cannot do so without the user reading
+which one first.
+
 TRUST ON FIRST USE, WITH A HELD CONFIRMATION. There is no useful moment before the first request at
 which an app could announce itself -- the request IS the announcement, and refusing until some
 earlier message had arrived would only move the question one message earlier. So the first WARD
@@ -31,6 +59,8 @@ with a user decision in it, and it lives in `apps.ward.reset_app`.
 """
 
 from typing import TYPE_CHECKING
+
+from trezor import utils
 
 if TYPE_CHECKING:
     from trezor import protobuf
@@ -63,7 +93,69 @@ def _app_label() -> str:
     return app_name or host_name or "an unnamed application"
 
 
-async def require_ward_app() -> None:
+# WHICH OPERATIONS CAN PUT A STORED VALUE ON SCREEN -- the ones whose confirmation shows something
+# the caller did not already supply. A `WardSetEntry` displays the value the caller sent and reveals
+# nothing; a `WardEraseCachedEntry` displays what is about to be discarded, which the caller may
+# never have seen.
+#
+# NOT INCLUDED, each for its own reason:
+#   WardFlushQueue                publishes a change the user already confirmed when queueing, and
+#                                 hands back sealed parts -- ciphertext, or on a service build no
+#                                 leaf at all. Nothing on screen, nothing revealed.
+#   WardSync / WardIngestAttestation / WardReconcile / WardVerifyChain
+#                                 replica plumbing. Every transition is verified against the
+#                                 device's own keys and the WM attestation, so the worst a caller
+#                                 gets is a failed or needless sync.
+#   WardRollback / WardRecoverCounter / WardResetService
+#                                 already hold to confirm, and show counters rather than values.
+_REVEALING: tuple[int, ...] | None = None
+
+
+def _revealing_messages() -> "tuple[int, ...]":
+    global _REVEALING
+    if _REVEALING is None:
+        from trezor.enums import MessageType as MT
+
+        _REVEALING = (
+            MT.WardGetEntry,
+            MT.WardQueueGetEntry,
+            MT.WardQueueSetEntry,
+            MT.WardQueueDeleteEntry,
+            MT.WardPinCachedEntry,
+            MT.WardEraseCachedEntry,
+        )
+    return _REVEALING
+
+
+async def _confirm_reveal(msg: "Msg") -> None:
+    """Ask before a stored value reaches the display. The domain and key, and nothing else.
+
+    DELIBERATELY WITHOUT THE VALUE, which is the entire point: this is the screen the user answers
+    while the secret is still unrevealed. The operation's own confirmation follows and shows it.
+    """
+    from trezor.ui.layouts import confirm_properties
+
+    from .common import display_bytes
+
+    app_id = getattr(msg, "app_id", None) or ""
+    identifier = getattr(msg, "identifier", None) or b""
+
+    await confirm_properties(
+        "ward_reveal_entry",
+        "Reveal entry?",
+        [
+            ("Domain", app_id, False),
+            ("Key", display_bytes(identifier), True),
+            (
+                "Reveals",
+                "A stored value will be shown on this screen.",
+                False,
+            ),
+        ],
+    )
+
+
+async def require_ward_app(msg_type: int, msg: "Msg") -> None:
     """Refuse unless this channel belongs to the app that holds the WARD role.
 
     RUN BEFORE THE HANDLER, from the wire filter below, and therefore before the request has been
@@ -79,13 +171,21 @@ async def require_ward_app() -> None:
     from trezor import wire
     from trezor.wire import context
 
+    if not utils.USE_THP:
+        # NO IDENTITY EXISTS ON THIS TRANSPORT, so there is no role to hold and nothing to compare.
+        # The user decides instead, per operation, before anything is revealed -- see the module
+        # docstring for why that is the whole of the answer and what it does not cover.
+        if msg_type in _revealing_messages():
+            await _confirm_reveal(msg)
+        return
+
     ctx = context.get_context()
     channel = getattr(ctx, "channel", None)
     if channel is None:
-        # NO CHANNEL, NO IDENTITY, NO WARD. A codec-protocol context has no static key at all, so
-        # there is nothing to pin and nothing to compare -- and "cannot identify the caller" must
-        # fail closed here, or the whole pin is optional for anyone able to reach the device over
-        # the older protocol.
+        # A THP BUILD WITH NO CHANNEL MUST STILL FAIL CLOSED. `CodecContext` survives in THP builds
+        # for DebugLink, and "cannot identify the caller" is not an answer this side may accept --
+        # the branch above is reached because the whole firmware has no identities, not because
+        # this one caller happens to lack one.
         raise wire.DataError("WARD needs a paired THP channel")
 
     host_key = channel.get_host_static_public_key()
@@ -205,7 +305,7 @@ def ward_app_filter(msg_type: int, prev_handler: "Handler[Msg]") -> "Handler[Msg
         return prev_handler
 
     async def wrapper(msg: "Msg") -> "protobuf.MessageType":
-        await require_ward_app()
+        await require_ward_app(msg_type, msg)
 
         return await prev_handler(msg)
 
