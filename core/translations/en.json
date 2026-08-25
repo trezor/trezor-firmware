@@ -2880,7 +2880,7 @@
     "stellar__destination": "Destination",
     "stellar__exchanges_require_memo": "Memo is not set. It's typically needed when sending to exchanges.",
     "stellar__ext_auth": "External Authorizations",
-    "stellar__ext_auth_message": "Transaction contains additional invocations authorized by external means.",
+    "stellar__ext_auth_message": "Transaction contains externally authorized invocations.",
     "stellar__final_confirm": "Final confirm",
     "stellar__from": "From",
     "stellar__hash": "Hash",
