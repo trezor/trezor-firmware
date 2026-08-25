@@ -137,6 +137,12 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
 
   usb_set_iface_class(info->iface_num, &usb_webusb_class);
 
+#ifdef USE_USB_WINUSB_EXTRA_IFACE
+  if (sectrue == info->winusb_compatible) {
+    usb_set_iface_winusb(info->iface_num);
+  }
+#endif
+
   return sectrue;
 }
 

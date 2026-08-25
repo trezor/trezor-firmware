@@ -117,6 +117,18 @@ void *usb_get_iface_state(uint8_t iface_num, const USBD_ClassTypeDef *class);
 // Assigns the concrete class to the slot `iface_num`.
 void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class);
 
+// Advertise `iface_num` to Windows as WinUSB-compatible, so the in-box winusb.sys binds to it
+// without an INF or a driver of our own. Interface 0 is always advertised; this names the ONE
+// additional interface that needs it, because the interface number is not a compile-time constant
+// -- which of debug, webauthn and vcp a build carries decides where anything after them lands.
+//
+// Called by a class driver from its `*_add` when the interface asked for it. Recording the number
+// rather than patching a descriptor here keeps the driver state the single source of truth; the
+// descriptors are assembled from it when Windows asks.
+#ifdef USE_USB_WINUSB_EXTRA_IFACE
+void usb_set_iface_winusb(uint8_t iface_num);
+#endif
+
 // Allocates the buffer for the class driver descriptors
 // (interface, endpoint, ...) inside the USB device structure.
 //

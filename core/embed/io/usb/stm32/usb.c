@@ -89,6 +89,19 @@ typedef struct {
   secbool usb21_enabled;
   secbool usb21_landing;
 
+#ifdef USE_USB_WINUSB_EXTRA_IFACE
+  // ONE EXTRA INTERFACE ADVERTISED AS WINUSB-COMPATIBLE, beside the always-advertised interface 0.
+  // Recorded when a class driver registers an interface asking for it, because the interface NUMBER
+  // is what the Microsoft OS descriptors carry and it is not knowable at compile time: which of
+  // debug, webauthn and vcp a build contains decides where anything after them lands.
+  //
+  // One is enough for now -- WARD is the only vendor-specific interface a host has to reach besides
+  // the wire -- and one avoids a second array in a struct that is memset on init. If a second ever
+  // needs it, this becomes a small list and `winusb_wcid` grows another section.
+  secbool winusb_extra_iface_set;
+  uint8_t winusb_extra_iface;
+#endif
+
   // Time (in ticks) when we've seen the USB ready last time
   uint32_t ready_time;
   // Set to `sectrue` if the USB stack was ready sinced the last start
@@ -401,6 +414,15 @@ void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class) {
   }
 }
 
+#ifdef USE_USB_WINUSB_EXTRA_IFACE
+void usb_set_iface_winusb(uint8_t iface_num) {
+  usb_driver_t *drv = &g_usb_driver;
+
+  drv->winusb_extra_iface = iface_num;
+  drv->winusb_extra_iface_set = sectrue;
+}
+#endif
+
 USBD_HandleTypeDef *usb_get_dev_handle(void) {
   usb_driver_t *drv = &g_usb_driver;
 
@@ -538,6 +560,10 @@ static const USBD_DescriptorsTypeDef usb_descriptors = {
   'M', 0x00, 'S', 0x00, 'F', 0x00, 'T', 0x00, '1', 0x00, '0', 0x00, '0', 0x00, \
       USB_WINUSB_VENDOR_CODE, 0x00  // MSFT100!
 #define USB_WINUSB_EXTRA_STRING_INDEX 0xEE
+// Layout of the Microsoft OS 1.0 compatible-ID feature descriptor: a 16-byte header followed by
+// one 24-byte section per advertised interface. Named because the reply is assembled from them.
+#define USB_WINUSB_WCID_HEADER_LEN 16
+#define USB_WINUSB_WCID_SECTION_LEN 24
 #define USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR 0x04
 #define USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR 0x05
 
@@ -627,6 +653,57 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
                  req->bRequest == USB_WINUSB_VENDOR_CODE) {
         if (req->wIndex ==
             USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR) {
+#ifdef USE_USB_WINUSB_EXTRA_IFACE
+          // clang-format off
+          // WRITABLE, AND ONE SECTION LONGER, only in a build that has a second interface needing
+          // WinUSB. The interface NUMBER cannot be a compile-time constant -- which of debug,
+          // webauthn and vcp a build carries decides where anything after them lands -- so the
+          // array has to be patched, and patching costs both flash for the initializer and RAM
+          // for the copy. The bootloader is within a few hundred bytes of its flash budget and has
+          // no such interface, so it keeps the const single-section array below.
+          static uint8_t winusb_wcid[] = {
+              // header
+              0x40, 0x00, 0x00, 0x00,                    // dwLength
+              0x00, 0x01,                                // bcdVersion
+              0x04, 0x00,                                // wIndex
+              0x02,                                      // bNumSections
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // reserved
+              // function: the wire interface, which every existing host expects here
+              0x00,  // bInterfaceNumber
+              0x01,  // reserved
+              'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00,  // compatibleId
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+              0x00,                                // subCompatibleId
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // reserved
+              // function: the extra interface. Trimmed off the reply until one registers, so this
+              // build sends byte-for-byte what it sent before the section existed.
+              0xFF,  // bInterfaceNumber - patched below
+              0x01,  // reserved
+              'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00,  // compatibleId
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+              0x00,                                // subCompatibleId
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // reserved
+          };
+          // clang-format on
+
+          // Patched at reply time rather than at registration, the way the BOS landing page is, so
+          // there is no ordering requirement between registering an interface and this array being
+          // correct -- the driver state stays the single source of truth.
+          uint8_t wcid_sections;
+          if (sectrue == drv->winusb_extra_iface_set) {
+            // bInterfaceNumber of the second section
+            winusb_wcid[USB_WINUSB_WCID_HEADER_LEN +
+                        USB_WINUSB_WCID_SECTION_LEN] = drv->winusb_extra_iface;
+            wcid_sections = 2;
+          } else {
+            wcid_sections = 1;
+          }
+          const uint16_t wcid_len = USB_WINUSB_WCID_HEADER_LEN +
+                                    wcid_sections * USB_WINUSB_WCID_SECTION_LEN;
+          winusb_wcid[0] = wcid_len & 0xFF;  // dwLength
+          winusb_wcid[1] = (wcid_len >> 8) & 0xFF;
+          winusb_wcid[8] = wcid_sections;  // bNumSections
+#else
           // clang-format off
           static const uint8_t winusb_wcid[] = {
               // header
@@ -636,8 +713,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
               0x01,                                      // bNumSections
               0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // reserved
               // functions
-              0x00,  // bInterfaceNumber - HACK: we present only interface 0 as
-                     // WinUSB
+              0x00,  // bInterfaceNumber - only interface 0 needs WinUSB in this build
               0x01,  // reserved
               'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00,  // compatibleId
               0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -645,9 +721,11 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
               0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // reserved
           };
           // clang-format on
+          const uint16_t wcid_len = sizeof(winusb_wcid);
+#endif
           wait_random();
           USBD_CtlSendData(dev, UNCONST(winusb_wcid),
-                           MIN_8bits(req->wLength, sizeof(winusb_wcid)));
+                           MIN_8bits(req->wLength, wcid_len));
           return USBD_OK;
         } else {
           wait_random();
@@ -660,10 +738,24 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
         USB_REQ_RECIPIENT_INTERFACE) {
       if (sectrue == drv->usb21_enabled &&
           req->bRequest == USB_WINUSB_VENDOR_CODE) {
+        // ANSWERED FOR EVERY INTERFACE WE ADVERTISE AS WINUSB, not just interface 0. Windows
+        // asks per interface, so an interface named in the compatible-ID descriptor but refused
+        // here binds winusb.sys and then has no DeviceInterfaceGUID for user space to open it by.
+        // The GUID is deliberately the same for both: hosts locate the ward interface by its
+        // descriptor identity (class/subclass/protocol FF/57/01), never by GUID, so a second one
+        // would be a value nothing reads.
+        const uint8_t req_iface = req->wValue & 0xFF;
+#ifdef USE_USB_WINUSB_EXTRA_IFACE
+        const bool winusb_iface =
+            req_iface == 0 || (sectrue == drv->winusb_extra_iface_set &&
+                               req_iface == drv->winusb_extra_iface);
+#else
+        const bool winusb_iface = req_iface == 0;
+#endif
         if (req->wIndex ==
                 USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR &&
-            (req->wValue & 0xFF) == 0) {  // reply only if interface is 0
-                                          // clang-format off
+            winusb_iface) {
+          // clang-format off
           static const uint8_t winusb_guid[] = {
               // header
               0x92, 0x00, 0x00, 0x00,  // dwLength
