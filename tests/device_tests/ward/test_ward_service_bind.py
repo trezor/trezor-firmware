@@ -24,13 +24,16 @@ from trezorlib.transport import Timeout
 
 from ...ward_service import MockWardService
 
+# NOT MARKED `protocol("thp")`, which is why this file left `device_tests/thp/`. Binding is a
+# property of the WARD service protocol, not of the transport under it, and both transports have to
+# satisfy the same statements. The three tests that ARE about THP -- everything that turns on the
+# pinned static key or on there being a channel object -- carry the marker individually.
 pytestmark = [
-    pytest.mark.protocol("thp"),
     # DECLARED, not inferred. These used to be skipped on a connect build as a side effect of
     # `MockWardService.__init__` reaching for the interface through a fixture that skipped when it
-    # was absent. Now that the mock builds a real `WardServiceClient`, which has no business
-    # skipping tests, the marker has to say so -- and saying so is better anyway: an implicit skip
-    # inside a constructor is invisible to anyone reading this file.
+    # was absent. Now that the mock builds a real service client, which has no business skipping
+    # tests, the marker has to say so -- and saying so is better anyway: an implicit skip inside a
+    # constructor is invisible to anyone reading this file.
     pytest.mark.ward_transport("service"),
 ]
 
@@ -38,10 +41,15 @@ pytestmark = [
 def test_a_daemon_binds_itself_as_the_service(client: Client) -> None:
     """WardServiceOpen with no ThpCreateNewSession before it, and no pre-existing service slot.
 
-    Both halves matter. `ThpCreateNewSession` is what derives and stores a wallet seed, and the
-    service must not have one -- so the bootstrap has to work without it. And the session slot the
-    service uses is allocated BY this handler: an unknown session id arrives as an ephemeral
-    seedless context, so requiring the slot to exist first would make the bootstrap impossible.
+    Both halves matter under THP. `ThpCreateNewSession` is what derives and stores a wallet seed,
+    and the service must not have one -- so the bootstrap has to work without it. And the session
+    slot the service uses is allocated BY this handler: an unknown session id arrives as an
+    ephemeral seedless context, so requiring the slot to exist first would make the bootstrap
+    impossible.
+
+    On the codec there is no session to speak of at either level, which is the same statement
+    arrived at from the other direction: `wardd` must not create or activate a protocol-v1 wallet
+    session, and the endpoint it talks to has no reachable cache.
     """
     with MockWardService(client) as wardd:
         assert isinstance(wardd.open_service(), messages.WardServiceOpenAck)
@@ -69,6 +77,7 @@ def test_an_unsupported_protocol_version_is_refused_by_name(client: Client) -> N
         assert isinstance(wardd.open_service(), messages.WardServiceOpenAck)
 
 
+@pytest.mark.protocol("thp")
 def test_the_pinned_daemon_rebinds_after_a_restart(client: Client) -> None:
     """The case that actually happens: wardd restarts and comes back on a new channel.
 
@@ -93,6 +102,7 @@ def test_the_pinned_daemon_rebinds_after_a_restart(client: Client) -> None:
         again.close()
 
 
+@pytest.mark.protocol("thp")
 def test_a_different_daemon_is_refused_once_pinned(client: Client) -> None:
     """Pairing is not enough. Every paired host passes the pairing check -- Suite included -- so
     without a pin any of them could open the WARD interface and answer for the replica.
@@ -120,6 +130,7 @@ def test_a_different_daemon_is_refused_once_pinned(client: Client) -> None:
         stranger.close()
 
 
+@pytest.mark.protocol("thp")
 def test_a_bound_channel_is_not_listening(client: Client) -> None:
     """Not "refused" -- NOT EVEN ACKNOWLEDGED. The device stops reading the channel once the
     conversation inverts, so a host-initiated message does not get a reply and does not get a
