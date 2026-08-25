@@ -220,9 +220,36 @@ if utils.USE_THP:
 
 else:
 
-    # Reallocated once per session and shared between all wire interfaces.
-    # Acquired by the first call to `CodecContext.read_from_wire()`.
-    WIRE_BUFFER_PROVIDER = Provider(bytearray(8192))
+    from .buffers import SharedBuffer, WireBuffer
+    from .codec.buffers import CodecBufferSource
+
+    # THE LARGE BUFFER IS BORROWED, NOT OWNED. It used to be handed to the first interface that
+    # read a valid header and never given back, which is fine while one interface is ever reading
+    # -- and impossible once the WARD service interface has to talk to the daemon in the middle of
+    # a wallet workflow. Now every interface has a small buffer of its own and takes a lease on
+    # this one for the length of a single message.
+    #
+    # Reallocated once per session, as before. 8192 rather than THP's 8704 because that is the
+    # size the V1 codec has always had.
+    _WIRE_BUFFER_SIZE = 8192
+    _SHARED_WIRE_BUFFER = SharedBuffer(_WIRE_BUFFER_SIZE)
+
+    # Big enough for the wallet traffic a device sends and receives by the thousand -- Features,
+    # Success, PublicKey, Address, the signing exchanges -- so the shared buffer is reached for by
+    # the rare large message and by nothing else.
+    _WALLET_SMALL_BUFFER_SIZE = 256
+
+    def _codec_buffers(small_size: int = _WALLET_SMALL_BUFFER_SIZE) -> CodecBufferSource:
+        return CodecBufferSource(WireBuffer(small_size), _SHARED_WIRE_BUFFER)
+
+    def is_ward_interface(iface: WireInterface) -> bool:
+        """Whether this is the interface the WARD service is served on."""
+        if not utils.USE_WARD_SERVICE_CHANNEL:
+            return False
+
+        import usb
+
+        return iface is usb.iface_ward
 
     def setup(*ifaces: WireInterface) -> None:
         """Initialize the wire stack on the provided interfaces."""
@@ -230,7 +257,7 @@ else:
             loop.schedule(handle_session_codec(iface))
 
     async def handle_session_codec(iface: WireInterface) -> None:
-        ctx = CodecContext(iface, WIRE_BUFFER_PROVIDER)
+        ctx = CodecContext(iface, _codec_buffers())
         next_msg: protocol_common.Message | None = None
 
         # Take a mark of modules that are imported at this point, so we can

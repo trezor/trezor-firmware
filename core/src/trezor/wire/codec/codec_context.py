@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Awaitable, Container
 from trezor import protobuf, utils
 from trezor.wire.codec import codec_v1
 from trezor.wire.context import UnexpectedMessageException
-from trezor.wire.message_handler import wrap_protobuf_load
+from trezor.wire.message_handler import decode_message
 from trezor.wire.protocol_common import Context, Message
 
 if __debug__:
@@ -13,9 +13,12 @@ if __debug__:
 if TYPE_CHECKING:
     from typing import TypeVar
 
+    from buffer_types import AnyBuffer
+
     from storage.cache_common import DataCache
 
-    from .. import Provider, WireInterface
+    from .. import WireInterface
+    from .buffers import CodecBufferSource
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
@@ -26,20 +29,18 @@ class CodecContext(Context):
     def __init__(
         self,
         iface: WireInterface,
-        buffer_provider: Provider[bytearray],
+        buffers: CodecBufferSource,
     ) -> None:
-        self.buffer_provider = buffer_provider
-        self._buffer = None
+        self.buffers = buffers
         super().__init__(iface)
 
-    def _get_buffer(self) -> bytearray | None:
-        if self._buffer is None:
-            self._buffer = self.buffer_provider.take()
-        return self._buffer
-
     def read_from_wire(self) -> Awaitable[Message]:
-        """Read a whole message from the wire without parsing it."""
-        return codec_v1.read_message(self.iface, self._get_buffer)
+        """Read a whole message from the wire without parsing it.
+
+        The returned `Message` carries the receive lease; whoever decodes it ends it. See
+        `message_handler.decode_message`.
+        """
+        return codec_v1.read_message(self.iface, self.buffers)
 
     async def read(
         self,
@@ -75,8 +76,8 @@ class CodecContext(Context):
                 iface=self.iface,
             )
 
-        # look up the protobuf class and parse the message
-        return wrap_protobuf_load(msg.data, expected_type)
+        # look up the protobuf class and parse the message, ending the receive lease
+        return decode_message(msg, expected_type)
 
     async def write(self, msg: protobuf.MessageType) -> None:
         if __debug__:
@@ -92,24 +93,38 @@ class CodecContext(Context):
 
         msg_size = protobuf.encoded_length(msg)
 
-        buffer = self._get_buffer()
+        # A READ STILL IN FLIGHT KEEPS ITS LEASE. `read` raises `UnexpectedMessageException`
+        # with the message undecoded, and the workflow loop then writes a response before that
+        # message is handled -- so a write that took the lease and gave it back would hand the
+        # shared buffer away while a `Message` still views into it.
+        held_for_a_read = self.buffers.holds_shared()
+
+        buffer: AnyBuffer | None = None
+        if msg_size <= self.buffers.capacity():
+            buffer = self.buffers.get(msg_size)
+        leased = buffer is not None and not held_for_a_read
+
         if buffer is None:
-            if msg_size > 128:
+            if msg_size > 128 and msg_size <= self.buffers.capacity():
+                # The shared buffer is held by another message in flight. Small responses are
+                # still allowed through on the heap, which is what lets a `Failure` explaining
+                # exactly that reach the host.
                 raise IOError
-            # allow sending small responses (for error reporting when another session is in progress)
+            # Too large for the pool, or a small response while the pool is busy.
             buffer = bytearray(msg_size)
 
-        # try to reuse reallocated buffer
-        if msg_size > len(buffer):
-            # message is too big, we need to allocate a new buffer
-            buffer = bytearray(msg_size)
-
-        msg_size = protobuf.encode(buffer, msg)
-        await codec_v1.write_message(
-            self.iface,
-            msg.MESSAGE_WIRE_TYPE,
-            memoryview(buffer)[:msg_size],
-        )
+        try:
+            msg_size = protobuf.encode(buffer, msg)
+            await codec_v1.write_message(
+                self.iface,
+                msg.MESSAGE_WIRE_TYPE,
+                memoryview(buffer)[:msg_size],
+            )
+        finally:
+            # THE SEND LEASE ENDS HERE, and it has to end even on a failed write: the message is
+            # gone either way, and a lease outliving it would strand the buffer for good.
+            if leased:
+                self.buffers.release()
 
     if not utils.USE_THP:
         # Note: we use the above CodecContext functionality for DebugLink on PYOPT=0 builds.

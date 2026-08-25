@@ -6,7 +6,9 @@ import struct
 from mock_wire_interface import MockHID
 from trezor import io
 from trezor.utils import chunks
+from trezor.wire.buffers import SharedBuffer, WireBuffer
 from trezor.wire.codec import codec_v1
+from trezor.wire.codec.buffers import CodecBufferSource, private_source
 from trezor.wire.protocol_common import WireError
 
 MESSAGE_TYPE = 0x4242
@@ -18,6 +20,12 @@ def make_header(mtype, length):
     return b"?##" + struct.pack(">HL", mtype, length)
 
 
+def make_source(size):
+    """A source with `size` bytes of its own and nothing shared, plus a view of that memory."""
+    small = WireBuffer(size)
+    return CodecBufferSource(small), small.buf
+
+
 class TestWireCodecV1(unittest.TestCase):
     def setUp(self):
         self.interface = MockHID()
@@ -25,9 +33,9 @@ class TestWireCodecV1(unittest.TestCase):
     def test_read_one_packet(self):
         # zero length message - just a header
         message_packet = make_header(mtype=MESSAGE_TYPE, length=0)
-        buffer = bytearray(64)
+        buffers, buffer = make_source(64)
 
-        gen = codec_v1.read_message(self.interface, lambda: buffer)
+        gen = codec_v1.read_message(self.interface, buffers)
 
         query = gen.send(None)
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
@@ -41,12 +49,22 @@ class TestWireCodecV1(unittest.TestCase):
         self.assertEqual(result.data, b"")
 
         # message should have been read into the buffer
-        self.assertEqual(buffer, b"\x00" * 64)
+        self.assertEqual(bytes(buffer), b"\x00" * 64)
 
-    def test_read_no_buffer(self):
-        # zero length message - just a header
-        message_packet = make_header(mtype=MESSAGE_TYPE, length=0)
-        gen = codec_v1.read_message(self.interface, lambda: None)
+    def test_read_while_the_shared_buffer_is_busy(self):
+        """The refusal that used to come from a spent `Provider`, now decided per message.
+
+        `WireError` rather than `CodecError` on purpose: it does not terminate the session, so the
+        interface can still answer with a `Failure` saying exactly this.
+        """
+        shared = SharedBuffer(64)
+        incumbent = CodecBufferSource(WireBuffer(0), shared)
+        self.assertIsNotNone(incumbent.get(32))
+
+        message_packet = make_header(mtype=MESSAGE_TYPE, length=32)
+        gen = codec_v1.read_message(
+            self.interface, CodecBufferSource(WireBuffer(0), shared)
+        )
 
         query = gen.send(None)
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
@@ -67,8 +85,8 @@ class TestWireCodecV1(unittest.TestCase):
             )
         ]
 
-        buffer = bytearray(256)
-        gen = codec_v1.read_message(self.interface, lambda: buffer)
+        buffers, buffer = make_source(256)
+        gen = codec_v1.read_message(self.interface, buffers)
         query = gen.send(None)
         for packet in packets[:-1]:
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
@@ -84,7 +102,7 @@ class TestWireCodecV1(unittest.TestCase):
         self.assertEqual(result.data, message)
 
         # message should have been read into the buffer
-        self.assertEqual(buffer, message)
+        self.assertEqual(bytes(buffer), message)
 
     def test_read_large_message(self):
         message = b"hello world"
@@ -94,10 +112,10 @@ class TestWireCodecV1(unittest.TestCase):
         # make sure we fit into one packet, to make this easier
         self.assertTrue(len(packet) <= MockHID.RX_PACKET_LEN)
 
-        buffer = bytearray(1)
+        buffers, buffer = make_source(1)
         self.assertTrue(len(buffer) <= len(packet))
 
-        gen = codec_v1.read_message(self.interface, lambda: buffer)
+        gen = codec_v1.read_message(self.interface, buffers)
         query = gen.send(None)
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
         with self.assertRaises(StopIteration) as e:
@@ -109,7 +127,9 @@ class TestWireCodecV1(unittest.TestCase):
         self.assertEqual(result.data, message)
 
         # read should have allocated its own buffer and not touch ours
-        self.assertEqual(buffer, b"\x00")
+        self.assertEqual(bytes(buffer), b"\x00")
+        # nothing was borrowed, so there is no lease to give back
+        self.assertIsNone(result._buffer_owner)
 
     def test_write_one_packet(self):
         gen = codec_v1.write_message(self.interface, MESSAGE_TYPE, b"")
@@ -164,8 +184,7 @@ class TestWireCodecV1(unittest.TestCase):
         for query in gen:
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_WRITE))
 
-        buffer = bytearray(1024)
-        gen = codec_v1.read_message(self.interface, lambda: buffer)
+        gen = codec_v1.read_message(self.interface, private_source(1024))
         query = gen.send(None)
         for packet in self.interface.data[:-1]:
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
@@ -188,8 +207,7 @@ class TestWireCodecV1(unittest.TestCase):
         header = make_header(mtype=MESSAGE_TYPE, length=message_size)
         packet = header + b"\x00" * HEADER_PAYLOAD_LENGTH
 
-        buffer = bytearray(65536)
-        gen = codec_v1.read_message(self.interface, lambda: buffer)
+        gen = codec_v1.read_message(self.interface, private_source(65536))
 
         query = gen.send(None)
         for _ in range(PACKET_COUNT - 1):
@@ -200,6 +218,68 @@ class TestWireCodecV1(unittest.TestCase):
             self.interface.mock_read(packet, gen)
 
         self.assertEqual(e.value.args[0], "Message too large")
+
+
+class TestCodecBufferSource(unittest.TestCase):
+    """The four tiers a codec message can land in, and which of them carry a lease.
+
+    The pool is what lets the WARD service interface talk to its daemon in the middle of a wallet
+    workflow. What sits above it -- the heap, and draining a message too big for even that -- is
+    older than the pool and must not be lost with it.
+    """
+
+    def test_a_small_message_never_borrows(self):
+        shared = SharedBuffer(1024)
+        source = CodecBufferSource(WireBuffer(64), shared)
+
+        self.assertIsNotNone(source.get(64))
+        self.assertFalse(source.holds_shared())
+        self.assertIsNone(shared.holder)
+
+    def test_a_larger_message_borrows_and_gives_back(self):
+        shared = SharedBuffer(1024)
+        source = CodecBufferSource(WireBuffer(64), shared)
+
+        buf = source.get(65)
+        self.assertEqual(len(buf), 65)
+        self.assertTrue(source.holds_shared())
+
+        source.release()
+        self.assertFalse(source.holds_shared())
+        self.assertIsNone(shared.holder)
+
+    def test_the_second_claimant_is_refused_rather_than_given_the_same_memory(self):
+        shared = SharedBuffer(1024)
+        first = CodecBufferSource(WireBuffer(0), shared)
+        second = CodecBufferSource(WireBuffer(0), shared)
+
+        self.assertIsNotNone(first.get(128))
+        self.assertIsNone(second.get(128))
+
+        first.release()
+        self.assertIsNotNone(second.get(128))
+
+    def test_capacity_is_the_shared_size_when_there_is_one(self):
+        self.assertEqual(
+            CodecBufferSource(WireBuffer(64), SharedBuffer(1024)).capacity(), 1024
+        )
+
+    def test_a_private_source_borrows_nothing(self):
+        source = private_source(64)
+
+        self.assertEqual(source.capacity(), 64)
+        self.assertIsNotNone(source.get(64))
+        self.assertFalse(source.holds_shared())
+        # never refused, which is why debuglink uses one
+        self.assertIsNotNone(private_source(64).get(64))
+
+    def test_release_is_idempotent_and_safe_without_a_lease(self):
+        source = CodecBufferSource(WireBuffer(64), SharedBuffer(1024))
+        source.release()
+        source.get(128)
+        source.release()
+        source.release()
+        self.assertFalse(source.holds_shared())
 
 
 if __name__ == "__main__":
