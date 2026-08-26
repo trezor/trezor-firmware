@@ -11,7 +11,6 @@ from . import CURVE, PATTERN, SLIP44_ID, consts, layout
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Tuple
 
     from trezor.messages import (
         TronRawContract,
@@ -384,7 +383,7 @@ async def _validate_tx_fields(msg: TronSignTx) -> None:
         )
 
 
-def get_token_info(token_address: AnyBytes) -> Tuple[int, str] | None:
+def get_token_info(token_address: AnyBytes) -> tuple[int, str] | None:
     for address, decimals, symbol in consts.token_iterator():
         if token_address == address:
             return decimals, symbol

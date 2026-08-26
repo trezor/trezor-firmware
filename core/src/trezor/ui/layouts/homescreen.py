@@ -6,7 +6,7 @@ from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
 from trezor import TR, ui, utils
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Iterator, ParamSpec, Tuple, TypeVar
+    from typing import Any, Callable, Iterator, ParamSpec, TypeVar
 
     from trezor import loop
 
@@ -97,7 +97,7 @@ class HomescreenBase:
 
 async def run_homescreen(
     label: str | None,
-    notification: Tuple[str, int, bool] | None,
+    notification: tuple[str, int, bool] | None,
     lockable: bool,
 ) -> ui.UiResult:
     class Homescreen(HomescreenBase):

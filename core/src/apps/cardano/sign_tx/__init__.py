@@ -3,8 +3,6 @@ from typing import TYPE_CHECKING
 from .. import seed
 
 if TYPE_CHECKING:
-    from typing import Type
-
     from trezor.messages import CardanoSignTxFinished, CardanoSignTxInit
 
     from apps.common.keychain import Keychain as Slip21Keychain
@@ -23,7 +21,7 @@ async def sign_tx(
 
     signing_mode = msg.signing_mode  # local_cache_attribute
 
-    signer_type: Type[Signer]
+    signer_type: type[Signer]
     if signing_mode == CardanoTxSigningMode.ORDINARY_TRANSACTION:
         from .ordinary_signer import OrdinarySigner
 
