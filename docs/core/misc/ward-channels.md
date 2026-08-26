@@ -94,6 +94,20 @@ describes it so the choice stays reviewable.
 | the large message buffer | shared with the wallet channel, leased per message | the same, leased for the length of one RPC |
 | the size a message may claim | THP's own framing bounds it | bounded explicitly: 512 B unbound or idle, `PROTOBUF_BUFFER_SIZE` during an RPC, above which it is drained and refused without allocating |
 | which THP channel tables it uses | the shared ones, `MAX_INTERFACES` counts it | none: the interface is never handed to `ThpContext` |
+| what bounds a half-read message | nothing directly — reassembly state sits in Rust until the peer is preempted for having gone quiet, or the channel is retransmitted to death | 500 ms between continuation reports, and the read is abandoned at its next report once the operation that wanted it has given up |
+
+**A header is a promise of more, and the service endpoint holds its peer to it.** Every other
+refusal in the codec is deferred until the message has been drained, so the wire is left at a frame
+boundary and the next read starts on a real header. That is right for a message that arrives and is
+exactly what would strand the reader on one that does not, so a message already in progress is
+abandoned when either the gap between its reports exceeds 500 ms or the conversation it belongs to
+is given up on — whichever comes first. The two are not redundant: the timeout bounds a peer that
+goes quiet, and a peer that instead trickles reports just inside it is bounded by the second.
+
+What that protects is not the framing, which cannot be resynchronised in a protocol with no sync
+marks, but the RECEIVE BUFFER: the lease is taken when the header is parsed, so a frame that never
+ends holds it forever, and on a THP build that buffer is the wallet's too. A stray continuation
+report arriving after the frame was abandoned fails the magic check and is refused on its own.
 
 **The codec endpoint authenticates nobody, and that is the design.** A codec transport carries no
 handshake, so `WardServiceOpen` establishes only that a process is listening on the interface the

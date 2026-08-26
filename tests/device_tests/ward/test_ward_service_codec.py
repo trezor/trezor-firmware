@@ -22,6 +22,8 @@ them. What is here is the handful of behaviours that only exist because the code
 there is nothing to displace, nothing to pin, and one reader that never lets go of the interface.
 """
 
+import struct
+
 import pytest
 
 from trezorlib import messages
@@ -113,6 +115,37 @@ def test_a_refusal_does_not_stop_the_endpoint_serving(client: Client) -> None:
         assert isinstance(
             wardd.call(messages.WardServiceOpen(protocol_version=99)), messages.Failure
         )
+        assert isinstance(wardd.open_service(), messages.WardServiceOpenAck)
+
+
+def test_a_half_sent_message_does_not_take_the_endpoint_with_it(client: Client) -> None:
+    """A header is a promise of more, and a peer that breaks it must not cost the interface.
+
+    EVERY OTHER REFUSAL IS DEFERRED UNTIL THE MESSAGE HAS BEEN DRAINED, so that the wire is left at
+    a frame boundary and the next read starts on a real header. That is right for a message that
+    arrives, and it is exactly what strands the reader on one that does not: it waited inside the
+    frame for continuation reports that were never coming, and every later message queued behind
+    one it would never finish.
+
+    Worse when it happens mid-RPC, which is not what this test can reach but is what the bound
+    exists for: the frame took the shared receive buffer before the loop began, and on a THP build
+    that buffer is the wallet's too. The unit tests assert the lease directly; this asserts the
+    part only real firmware can show -- that the interface comes back.
+    """
+    with MockWardService(client) as wardd:
+        # A header promising far more than an unbound endpoint will ever accept, and then silence.
+        header = struct.pack(
+            ">3sHL", b"?##", messages.WardServiceOpen.MESSAGE_WIRE_TYPE, 4096
+        )
+        transport = wardd.service.transport
+        assert isinstance(transport, UdpTransport)
+        transport.write_chunk(header + b"\x00" * (UdpTransport.CHUNK_SIZE - len(header)))
+
+        # The frame is given up on, and the daemon is told so rather than left guessing.
+        abandoned = wardd.service.read(timeout=5)
+        assert isinstance(abandoned, messages.Failure), abandoned
+
+        # And the endpoint is still there to be bound, which is the whole point.
         assert isinstance(wardd.open_service(), messages.WardServiceOpenAck)
 
 

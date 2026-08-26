@@ -222,6 +222,52 @@ class TestWardCodecReaderSurvives(unittest.TestCase):
 
         gen.close()
 
+    def test_a_teardown_reaches_a_read_already_in_progress(self):
+        """The hole this pair of mechanisms exists to close.
+
+        A daemon that sends a header and then trickles keeps the reader inside that frame -- and
+        the frame took the POOLED tier, because it began while an RPC was in flight. `tear_down`
+        clears the flag and drops the mailbox, and before this could reach neither the reader nor
+        the lease: the buffer stayed held until the next MicroPython session restart, and on a THP
+        build it is the wallet's buffer too.
+        """
+        iface = MockHID()
+        shared = SharedBuffer(4096)
+        pooled = CodecBufferSource(WireBuffer(256), shared, 4096)
+
+        gen = W.handle_ward_codec_interface(
+            iface, private_source(512, 512), pooled
+        )
+        gen.send(None)
+        ctx = W._CONTEXT
+        assert ctx is not None
+
+        # An RPC is in flight, so the frame below reads into the shared tier.
+        ctx.rpc_in_flight = True
+        # Bigger than the pooled tier's own small buffer, so it must borrow the shared one --
+        # which is the buffer this whole test is about.
+        big = 1024
+        header = b"?##" + struct.pack(">HL", MessageType.WardEntryAck, big)
+        iface.mock_read(header + b"\x00" * (64 - 9), gen)
+        self.assertTrue(pooled.holds_shared())
+
+        # The operation gives up. The daemon is still sending.
+        W.tear_down("the WARD service did not answer")
+        self.assertTrue(ctx._cancelled)
+
+        iface.mock_read(b"?" + b"\x00" * 63, gen)
+
+        # The lease is back, the reader is still serving, and the endpoint is still there.
+        self.assertFalse(pooled.holds_shared())
+        self.assertIsNotNone(W._CONTEXT)
+        self.assertIsNotNone(CodecBufferSource(WireBuffer(0), shared).get(2048))
+
+        # And the abandoned frame is not resumed: the flag was cleared for the next read, so the
+        # reader is waiting for a header rather than for the rest of a message nobody wants.
+        self.assertFalse(ctx._cancelled)
+
+        gen.close()
+
 
 @unittest.skipUnless(
     not utils.USE_THP, "the codec service endpoint exists only in a codec build"
