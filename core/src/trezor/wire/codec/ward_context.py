@@ -27,7 +27,7 @@ ordinary refusal; what it cannot do is take the buffer a live wallet workflow is
 from typing import TYPE_CHECKING
 
 from trezor import loop, protobuf
-from trezor.wire import protocol_common
+from trezor.wire.codec.buffers import CodecBufferSource
 from trezor.wire.codec.codec_context import CodecContext
 from trezor.wire.message_handler import decode_message, failure
 from trezor.wire.protocol_common import Message
@@ -36,12 +36,63 @@ if __debug__:
     from trezor import log
 
 if TYPE_CHECKING:
-    from typing import Awaitable
+    from typing import Callable
 
+    from buffer_types import AnyBuffer
     from storage.cache_common import DataCache
     from trezorio import WireInterface
 
-    from .buffers import CodecBufferSource
+
+class WardBufferSource(CodecBufferSource):
+    """Two sources behind one, chosen per MESSAGE rather than per read.
+
+    WHY NOT A FLAG THE READER CONSULTS BEFORE IT WAITS, which is what this replaced. The service
+    reader spends its life parked in `read_from_wire`, so a source picked on the way in is picked
+    while the endpoint is idle and stays picked for whatever arrives -- including the reply to an
+    RPC that started later. The first large answer then missed the pool entirely, and the reverse
+    race let the reader re-arm with the pooled source after a reply landed but before the RPC
+    flag was cleared, which is unsolicited traffic reaching the wallet's shared buffer.
+
+    `codec_v1.read_message` asks `max_message_size()`, `capacity()` and `get()` SYNCHRONOUSLY,
+    immediately after parsing the header and before any further await. That is the moment at which
+    "is this the answer to a question we asked?" has a correct answer, so it is the moment the
+    question is asked. There is nothing to cancel and nothing to re-arm.
+
+    Deliberately does not call `CodecBufferSource.__init__`: every public method is overridden, and
+    holding a half-initialised copy of the base state would be one more thing to keep in step.
+    """
+
+    def __init__(
+        self,
+        bootstrap: CodecBufferSource,
+        pooled: CodecBufferSource,
+        in_rpc: "Callable[[], bool]",
+    ) -> None:
+        self._bootstrap = bootstrap
+        self._pooled = pooled
+        self._in_rpc = in_rpc
+
+    def _active(self) -> CodecBufferSource:
+        return self._pooled if self._in_rpc() else self._bootstrap
+
+    def capacity(self) -> int:
+        return self._active().capacity()
+
+    def max_message_size(self) -> int:
+        return self._active().max_message_size()
+
+    def get(self, length: int) -> "AnyBuffer | None":
+        return self._active().get(length)
+
+    def holds_shared(self) -> bool:
+        # THE POOLED SOURCE, NOT THE ACTIVE ONE. A lease is taken during an RPC and given back
+        # after it, by which time `_active()` has swung back to the bootstrap source -- asking the
+        # active one would strand the shared buffer at exactly the moment it must be returned.
+        # Harmless to ask unconditionally: the bootstrap source borrows nothing.
+        return self._pooled.holds_shared()
+
+    def release(self) -> None:
+        self._pooled.release()
 
 
 class WardCodecContext(CodecContext):
@@ -60,30 +111,21 @@ class WardCodecContext(CodecContext):
         bootstrap: CodecBufferSource,
         pooled: CodecBufferSource,
     ) -> None:
-        super().__init__(iface, bootstrap)
+        # SET BEFORE THE SOURCE THAT READS IT. `WardBufferSource` asks this question once per
+        # message rather than once per read, which is the whole point of it -- see its docstring.
+        # Read by the reader loop too, to decide where a message goes; both questions have the
+        # same answer, which is why there is one flag rather than two.
+        self.rpc_in_flight = False
+        super().__init__(iface, WardBufferSource(bootstrap, pooled, self._is_in_rpc))
         # WHAT `apps.ward.service` READS FROM A LINK. Its `ServiceLink` union logs and tears down
         # through `channel_id` and `iface` on either transport, so this end has to carry both --
         # and `Context` declares `channel_id` without defining it, so inheriting is not enough.
         # Zero because there are no channels here to tell apart, not because this is channel zero.
         self.channel_id = 0
-        self._bootstrap = bootstrap
-        self._pooled = pooled
-        # Read by the reader loop to decide where a message goes, and by `_select_buffers` to
-        # decide which memory it lands in. Both questions have the same answer, which is why there
-        # is one flag rather than two.
-        self.rpc_in_flight = False
         self.reply: loop.mailbox[Message | BaseException] = loop.mailbox()
 
-    def _select_buffers(self) -> None:
-        self.buffers = self._pooled if self.rpc_in_flight else self._bootstrap
-
-    def read_from_wire(self) -> Awaitable[Message]:
-        self._select_buffers()
-        return super().read_from_wire()
-
-    async def write(self, msg: protobuf.MessageType) -> None:
-        self._select_buffers()
-        await super().write(msg)
+    def _is_in_rpc(self) -> bool:
+        return self.rpc_in_flight
 
     def release(self) -> None:
         pass
@@ -171,9 +213,11 @@ def tear_down(reason: str) -> None:
             reason,
             iface=_CONTEXT.iface,
         )
+    # ORDER MATTERS: clearing the flag is what swings the buffer source back to the bootstrap
+    # tier, and dropping the pending answer is what returns the lease the pooled tier may still
+    # be holding. Doing it the other way round would release a buffer a live `Message` views.
     _CONTEXT.rpc_in_flight = False
     _drop_pending(_CONTEXT)
-    _CONTEXT.buffers = _CONTEXT._bootstrap
 
 
 async def _handle_bootstrap(ctx: WardCodecContext, msg: Message) -> None:
@@ -230,7 +274,16 @@ async def handle_ward_codec_interface(
         while True:
             try:
                 msg = await ctx.read_from_wire()
-            except protocol_common.WireError as exc:
+            except loop.TaskClosed:
+                # The only thing that legitimately ends this loop. Everything else is the daemon's
+                # problem, not the endpoint's.
+                raise
+            except Exception as exc:
+                # WIDER THAN `WireError`, WHICH IS WHAT THIS USED TO CATCH. A `FirmwareError` from
+                # the buffer layer or a `MemoryError` from a large allocation would otherwise
+                # escape, run the `finally` below, and clear `_CONTEXT` -- and then every WARD
+                # operation fails at `service_link()` until the next MicroPython session restart.
+                # A daemon must not be able to retire the endpoint by sending one bad message.
                 if __debug__:
                     log.exception(__name__, exc, iface=iface)
                 if ctx.rpc_in_flight:
@@ -240,7 +293,16 @@ async def handle_ward_codec_interface(
                     # sitting out its full deadline.
                     ctx.reply.put(exc, replace=True)
                 else:
-                    await ctx.write(failure(exc))
+                    # A REFUSAL THAT CANNOT BE SENT IS STILL A REFUSAL. The write has its own ways
+                    # to fail -- a busy pool answers `IOError` -- and none of them are a reason to
+                    # stop reading.
+                    try:
+                        await ctx.write(failure(exc))
+                    except loop.TaskClosed:
+                        raise
+                    except Exception as write_exc:
+                        if __debug__:
+                            log.exception(__name__, write_exc, iface=iface)
                 continue
 
             if ctx.rpc_in_flight:
@@ -248,7 +310,17 @@ async def handle_ward_codec_interface(
                 ctx.reply.put(msg)
                 continue
 
-            await _handle_bootstrap(ctx, msg)
+            try:
+                await _handle_bootstrap(ctx, msg)
+            except loop.TaskClosed:
+                raise
+            except Exception as exc:
+                # Same rule on the bootstrap side. `_handle_bootstrap` writes outside its own
+                # `try`, so a failed write lands here; the lease goes back whether or not the
+                # message was ever decoded, because `release` is idempotent.
+                if __debug__:
+                    log.exception(__name__, exc, iface=iface)
+                msg.release()
     finally:
         if __debug__:
             log.debug(__name__, "stopped serving the service interface", iface=iface)
