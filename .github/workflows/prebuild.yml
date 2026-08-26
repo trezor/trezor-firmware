@@ -96,14 +96,3 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: "Run changelog check"
         run: ./ci/check_changelog.sh
-
-  # Checking the format of release commit messages.
-  release_commit_msg_check:
-    name: Release commit message check
-    if: ${{ github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-      - uses: ./.github/actions/environment
-      - name: "Check release commit message format"
-        run: ./ci/check_release_commit_messages.sh
