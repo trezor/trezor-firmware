@@ -40,9 +40,6 @@ pub enum DeviceMenuMsg {
     ToggleHaptics,
     ToggleLed,
     WipeDevice,
-
-    // Misc
-    RefreshMenu,
 }
 
 impl DeviceMenuMsg {
@@ -71,7 +68,6 @@ impl DeviceMenuMsg {
             Self::ToggleHaptics => Qstr::MP_QSTR_ToggleHaptics,
             Self::ToggleLed => Qstr::MP_QSTR_ToggleLed,
             Self::WipeDevice => Qstr::MP_QSTR_WipeDevice,
-            Self::RefreshMenu => Qstr::MP_QSTR_RefreshMenu,
         }
         .to_obj()
     }
@@ -111,7 +107,6 @@ static DEVICE_MENU_RESULT_TYPE: FullType = obj_type! {
         Qstr::MP_QSTR_ToggleHaptics => Qstr::MP_QSTR_ToggleHaptics.to_obj(),
         Qstr::MP_QSTR_ToggleLed => Qstr::MP_QSTR_ToggleLed.to_obj(),
         Qstr::MP_QSTR_WipeDevice => Qstr::MP_QSTR_WipeDevice.to_obj(),
-        Qstr::MP_QSTR_RefreshMenu => Qstr::MP_QSTR_RefreshMenu.to_obj(),
     }),
 };
 

@@ -311,6 +311,48 @@ pub enum AttachType {
     Swipe(Direction),
 }
 
+/// Fresh construction parameters handed to a layout by the application layer,
+/// in response to a `EventCtx::request_params()` request.
+///
+/// Opaque on purpose: the concrete shape of the parameters is known only to the
+/// component that asked for them, which unpacks the wrapped MicroPython object
+/// itself.
+///
+/// Ownership stays with the caller. The object belongs to the application layer
+/// that passed it to `LayoutObj.update_params`, which keeps it alive for the
+/// duration of that call and no longer. A handler may read the parameters and
+/// copy what it needs out of them; it must not retain the object past the event
+/// pass, and must not mutate it - the object is the caller's, and writing to it
+/// would change what the application layer still holds.
+#[cfg(feature = "micropython")]
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct ParamsObj(crate::micropython::obj::Obj);
+
+#[cfg(feature = "micropython")]
+impl ParamsObj {
+    /// Crate-private: the only legitimate source of parameters is
+    /// `LayoutObj::obj_update_params`, so components can receive and read them
+    /// but nothing outside can mint them from an arbitrary object.
+    pub(crate) fn new(obj: crate::micropython::obj::Obj) -> Self {
+        Self(obj)
+    }
+
+    /// The wrapped object, to be unpacked within this event pass.
+    pub fn obj(&self) -> crate::micropython::obj::Obj {
+        self.0
+    }
+}
+
+#[cfg(all(feature = "micropython", feature = "debug"))]
+impl ufmt::uDebug for ParamsObj {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.write_str("ParamsObj")
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum Event {
@@ -336,6 +378,11 @@ pub enum Event {
     /// prepare for painting and/or start their timers.
     /// This event is sent once before any other events.
     Attach(AttachType),
+    /// The application layer supplies fresh construction parameters, previously
+    /// asked for via `EventCtx::request_params()`. Components that request
+    /// params are responsible for unpacking and applying them.
+    #[cfg(feature = "micropython")]
+    UpdateParams(ParamsObj),
     /// Internally-handled event to inform all `Child` wrappers in a sub-tree to
     /// get scheduled for painting.
     RequestPaint,
@@ -471,6 +518,7 @@ pub struct EventCtx {
     root_repaint_requested: bool,
     swipe_disable_req: bool,
     swipe_enable_req: bool,
+    params_requested: bool,
 }
 
 impl EventCtx {
@@ -494,6 +542,7 @@ impl EventCtx {
             root_repaint_requested: false,
             swipe_disable_req: false,
             swipe_enable_req: false,
+            params_requested: false,
         }
     }
 
@@ -562,6 +611,22 @@ impl EventCtx {
 
     pub fn button_request(&mut self) -> Option<ButtonRequest> {
         self.button_request.take()
+    }
+
+    /// Ask the application layer for fresh construction parameters. The layout
+    /// keeps running; the params arrive later as an `Event::UpdateParams`.
+    ///
+    /// Use this instead of returning a "please restart me" message when only
+    /// the layout's inputs went stale -- it avoids tearing the layout down and
+    /// redrawing it from scratch.
+    pub fn request_params(&mut self) {
+        self.params_requested = true;
+    }
+
+    /// Returns `true` if a component asked for fresh construction parameters
+    /// during this event pass.
+    pub fn params_requested(&self) -> bool {
+        self.params_requested
     }
 
     pub fn pop_timer(&mut self) -> Option<(TimerToken, Duration)> {
