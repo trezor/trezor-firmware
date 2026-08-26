@@ -23,6 +23,9 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         if cfg!(feature = "pmic_npm1300") {
             drivers.push(("pmic_npm1300", "power_manager/pmic/npm1300/npm1300.c"));
         }
+        if cfg!(feature = "pmic_npm2100") {
+            drivers.push(("pmic_npm2100", "power_manager/pmic/npm2100/npm2100.c"));
+        }
         if cfg!(feature = "pmic_power_latch") {
             drivers.push((
                 "pmic_power_latch",
@@ -33,7 +36,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         ensure!(
             drivers.len() == 1,
             "power_manager: exactly one PMIC driver must be selected \
-             (pmic_npm1300 | pmic_power_latch), found {}: {:?}",
+             (pmic_npm1300 | pmic_npm2100 | pmic_power_latch), found {}: {:?}",
             drivers.len(),
             drivers.iter().map(|(f, _)| *f).collect::<Vec<_>>()
         );
