@@ -103,8 +103,63 @@ class Provider(Generic[T]):
         return obj
 
 
+from .buffers import PROTOBUF_BUFFER_SIZE, SharedBuffer, WireBuffer
+
+if utils.USE_WARD_SERVICE_CHANNEL:
+    # A PRIVATE BUFFER FOR UNSOLICITED TRAFFIC. Only `WardServiceOpen` is accepted while no RPC
+    # is in flight, and it is tiny; what this size really buys is that a daemon cannot take the
+    # shared buffer at a moment when a wallet workflow is about to need it.
+    _WARD_BOOTSTRAP_BUFFER_SIZE = 512
+
+    # Big enough for the requests the device sends -- a fetch, a sync, a publish header -- so the
+    # shared buffer is reached for by a large chain response and by nothing else.
+    _WARD_RPC_SMALL_BUFFER_SIZE = 256
+
+    # AND HARD CEILINGS, WHICH ARE NOT THE SAME AS BUFFER SIZES. Above `capacity()` the codec has
+    # always fallen back to the heap, so without these an unauthenticated endpoint could turn an
+    # advertised uint32 into an allocation attempt. `PROTOBUF_BUFFER_SIZE` is the real protocol
+    # bound -- what a chain fold has to fit in.
+    _WARD_BOOTSTRAP_MAX_MESSAGE = _WARD_BOOTSTRAP_BUFFER_SIZE
+    _WARD_RPC_MAX_MESSAGE = PROTOBUF_BUFFER_SIZE
+
+    def _schedule_ward_codec_endpoint(
+        iface: WireInterface, shared: SharedBuffer
+    ) -> None:
+        """The WARD service endpoint, on EITHER kind of build.
+
+        THE SERVICE INTERFACE SPEAKS CODEC V1 EVEN WHEN THE WALLET INTERFACE SPEAKS THP. WARD's
+        own cryptography is what makes a WARD state trustworthy -- leaf sealing, the trie proof,
+        the WM-attested head -- so a transport that authenticates the daemon buys no property the
+        protocol does not already have, while a THP service channel costs a private dispatcher,
+        channel reattachment, replacement semantics, a persistent daemon pin, and a channel table
+        shared with the wallet interface. All of that is kept behind `USE_WARD_SERVICE_THP` rather
+        than deleted; none of it is built by default.
+
+        The `shared` buffer is the build's own large one, so the endpoint CONTENDS with wallet
+        traffic rather than duplicating 8.5 kB. That is the intended model and what the
+        per-message leasing exists for: it is a distinct `BufferSource`, so it is refused while
+        the wallet holds the lease rather than handed memory the wallet is using.
+        """
+        from .codec.buffers import CodecBufferSource, private_source
+        from .codec.ward_context import handle_ward_codec_interface
+
+        loop.schedule(
+            handle_ward_codec_interface(
+                iface,
+                private_source(
+                    _WARD_BOOTSTRAP_BUFFER_SIZE, _WARD_BOOTSTRAP_MAX_MESSAGE
+                ),
+                CodecBufferSource(
+                    WireBuffer(_WARD_RPC_SMALL_BUFFER_SIZE),
+                    shared,
+                    _WARD_RPC_MAX_MESSAGE,
+                ),
+            )
+        )
+
+
 if utils.USE_THP:
-    from .buffers import SMALL_BUFFER_SIZE, BufferSource, SharedBuffer, WireBuffer
+    from .buffers import SMALL_BUFFER_SIZE, BufferSource
 
     # Allocate THP read/write buffers in more stable area of memory
     #
@@ -125,7 +180,7 @@ if utils.USE_THP:
 
     THP_BUFFERS_PROVIDER = Provider(_buffer_sources())
 
-    if utils.USE_WARD_SERVICE_CHANNEL:
+    if utils.USE_WARD_SERVICE_THP:
         # A POOL OF ITS OWN, so the WARD service interface can hold a channel while a wallet
         # channel is live on another interface -- which is the entire point of giving the service
         # its own interface. What that costs is now a second SMALL pair rather than a second large
@@ -162,7 +217,7 @@ if utils.USE_THP:
         interface to receive a packet" would hand a private pool to whichever of USB or BLE
         happened to be second, silently changing how a second host is refused today.
         """
-        if is_ward_interface(iface):
+        if utils.USE_WARD_SERVICE_THP and is_ward_interface(iface):
             return WARD_BUFFERS_PROVIDER
 
         return THP_BUFFERS_PROVIDER
@@ -182,8 +237,22 @@ if utils.USE_THP:
             return None
 
     def setup(*ifaces: WireInterface) -> None:
-        """Initialize the wire stack on the provided interfaces."""
-        loop.schedule(handle_session_thp(*ifaces))
+        """Initialize the wire stack on the provided interfaces.
+
+        The WARD service interface is served by its own codec-v1 reader and is NOT handed to the
+        THP stack -- see `_schedule_ward_codec_endpoint`. It is therefore absent from
+        `ThpContext`, which is what keeps service traffic out of the THP channel tables, the
+        dispatch channel and the retransmission scheduler entirely, rather than out of them by
+        agreement.
+        """
+        thp_ifaces = []
+        for iface in ifaces:
+            if utils.USE_WARD_SERVICE_CHANNEL and is_ward_interface(iface):
+                if not utils.USE_WARD_SERVICE_THP:
+                    _schedule_ward_codec_endpoint(iface, _SHARED_RECEIVE_BUFFER)
+                    continue
+            thp_ifaces.append(iface)
+        loop.schedule(handle_session_thp(*thp_ifaces))
 
     async def handle_session_thp(*ifaces: WireInterface) -> None:
         ctx = ThpContext(*ifaces)
@@ -220,7 +289,6 @@ if utils.USE_THP:
 
 else:
 
-    from .buffers import SharedBuffer, WireBuffer
     from .codec.buffers import CodecBufferSource
 
     # THE LARGE BUFFER IS BORROWED, NOT OWNED. It used to be handed to the first interface that
@@ -229,9 +297,11 @@ else:
     # a wallet workflow. Now every interface has a small buffer of its own and takes a lease on
     # this one for the length of a single message.
     #
-    # Reallocated once per session, as before. 8192 rather than THP's 8704 because that is the
-    # size the V1 codec has always had.
-    _WIRE_BUFFER_SIZE = 8192
+    # Reallocated once per session, as before. Now `PROTOBUF_BUFFER_SIZE` rather than the V1
+    # codec's historical 8192: the two transports share `SharedBuffer`/`BufferSource` and the
+    # WARD chain fold is capped by whichever of them a build happens to have, so two sizes meant
+    # the same protocol bound differed by transport for no reason anyone could state.
+    _WIRE_BUFFER_SIZE = PROTOBUF_BUFFER_SIZE
     _SHARED_WIRE_BUFFER = SharedBuffer(_WIRE_BUFFER_SIZE)
 
     # Big enough for the wallet traffic a device sends and receives by the thousand -- Features,
@@ -251,28 +321,14 @@ else:
 
         return iface is usb.iface_ward
 
-    # A PRIVATE BUFFER FOR UNSOLICITED TRAFFIC. Only `WardServiceOpen` is accepted while no RPC
-    # is in flight, and it is tiny; what this size really buys is that a daemon cannot take the
-    # shared buffer at a moment when a wallet workflow is about to need it.
-    _WARD_BOOTSTRAP_BUFFER_SIZE = 512
-
     def setup(*ifaces: WireInterface) -> None:
         """Initialize the wire stack on the provided interfaces."""
         for iface in ifaces:
-            if is_ward_interface(iface):
+            if utils.USE_WARD_SERVICE_CHANNEL and is_ward_interface(iface):
                 # NOT `handle_session_codec`: the service interface is device-initiated after
                 # binding and must never reach the workflow dispatcher. See
                 # `trezor.wire.codec.ward_context`.
-                from .codec.buffers import private_source
-                from .codec.ward_context import handle_ward_codec_interface
-
-                loop.schedule(
-                    handle_ward_codec_interface(
-                        iface,
-                        private_source(_WARD_BOOTSTRAP_BUFFER_SIZE),
-                        _codec_buffers(),
-                    )
-                )
+                _schedule_ward_codec_endpoint(iface, _SHARED_WIRE_BUFFER)
             else:
                 loop.schedule(handle_session_codec(iface))
 

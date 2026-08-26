@@ -146,7 +146,7 @@ def _find_message_handler_module(msg_type: int) -> str:
 
         # ward
         if (
-            utils.USE_THP
+            utils.USE_WARD_SERVICE_THP
             and utils.USE_WARD_SERVICE_CHANNEL
             and msg_type == MessageType.WardServiceOpen
         ):
@@ -160,7 +160,7 @@ def _find_message_handler_module(msg_type: int) -> str:
             # daemon announcing itself must not be able to do.
             return "apps.ward.service"
         if (
-            utils.USE_THP
+            utils.USE_WARD_SERVICE_THP
             and utils.USE_WARD_SERVICE_CHANNEL
             and msg_type == MessageType.WardResetService
         ):

@@ -108,7 +108,7 @@ def clear_binding() -> None:
     get_sessionless_cache().delete(APP_WARD_SERVICE)
 
 
-if utils.USE_THP:
+if utils.USE_WARD_SERVICE_THP:
 
     async def service(msg: WardServiceOpen) -> WardServiceOpenAck:
         """Bind this channel as the WARD service.
@@ -297,7 +297,7 @@ def _service_link() -> "tuple[ServiceLink, int]":
         raise DataError("no WARD service is bound")
     iface_num, channel_id, session_id = bound
 
-    if not utils.USE_THP:
+    if not utils.USE_WARD_SERVICE_THP:
         from trezor.wire.codec.ward_context import service_link
 
         return service_link(), 0
@@ -348,7 +348,7 @@ async def _rpc(
         # the ack arrives, so with nothing at the other end it sits there until the retransmissions
         # are exhausted; under the codec a write to an interface nobody drains parks just as
         # thoroughly. Racing them as one coroutine bounds the pair.
-        if utils.USE_THP:
+        if utils.USE_WARD_SERVICE_THP:
             await link.write(request, session_id)
             return await link.read()
 
@@ -457,7 +457,7 @@ def _desynchronised(link: "ServiceLink", what: str) -> Exception:
         )
 
     clear_binding()
-    if utils.USE_THP:
+    if utils.USE_WARD_SERVICE_THP:
         link.clear(exc)
     else:
         from trezor.wire.codec import ward_context
@@ -647,7 +647,7 @@ async def become_ready() -> bool:
     return sync_round.is_online()
 
 
-if utils.USE_THP:
+if utils.USE_WARD_SERVICE_THP:
     # ONLY THP HAS A CHANNEL TO CLOSE, and only THP has a reason to want one closed: this exists
     # for `reset_service`, which is the recovery path for a pinned daemon key -- a thing the codec
     # transport does not have and does not need. See `apps.ward.reset_service`.

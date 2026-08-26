@@ -66,12 +66,25 @@ Which of the two a firmware is cannot be asked over the wire, deliberately: a ho
 
 ### And what differs between the two transports
 
-A service build carries the dedicated interface whatever protocol the model speaks. THP models
-(T3W1, T3T2) reach it over a THP channel; every other model — Safe 5 and everything before it —
-reaches it over the V1 codec, since the interface is a USB descriptor and knows nothing about which
-protocol runs on it.
+A service build carries the dedicated interface whatever protocol the model speaks, and **the
+interface speaks the V1 codec on every model, including THP ones.** The interface is a USB
+descriptor and knows nothing about which protocol runs on the wallet interface, so the two are
+independent — a T3W1 has a THP wallet channel and a codec service endpoint.
 
-| | THP service channel | codec service endpoint |
+That is a deliberate choice rather than a limitation. WARD's own cryptography is what makes a WARD
+state trustworthy — leaf sealing under device-derived keys, the MPT proof against the device-trusted
+root, the WM attestation, a counter and mac the device computed itself — so a transport that
+authenticates the daemon buys no property the protocol does not already have. What a THP service
+channel does buy is cost: a private dispatcher, channel reattachment, replacement semantics, a
+persistent daemon pin whose first bind can be denied by anyone who reaches the interface first, and
+a channel table shared with the wallet interface and evicted by a global LRU. None of that is built
+by default.
+
+The THP service path is kept compiling behind `--ward-service-thp`, which requires
+`--ward-service-channel`. It is not built for any shipping configuration; the column below
+describes it so the choice stays reviewable.
+
+| | THP service channel (`--ward-service-thp`) | codec service endpoint (default) |
 |---|---|---|
 | what binding records | interface, channel id and session id | the interface, and nothing else |
 | daemon identity | the Noise static key, pinned in flash | **none** — see below |
@@ -79,6 +92,8 @@ protocol runs on it.
 | a daemon restart | a new channel; the old binding counts only while its channel is open | just another announcement, answered again |
 | resetting the binding | `WardResetService`, a held confirmation | nothing to reset |
 | the large message buffer | shared with the wallet channel, leased per message | the same, leased for the length of one RPC |
+| the size a message may claim | THP's own framing bounds it | bounded explicitly: 512 B unbound or idle, `PROTOBUF_BUFFER_SIZE` during an RPC, above which it is drained and refused without allocating |
+| which THP channel tables it uses | the shared ones, `MAX_INTERFACES` counts it | none: the interface is never handed to `ThpContext` |
 
 **The codec endpoint authenticates nobody, and that is the design.** A codec transport carries no
 handshake, so `WardServiceOpen` establishes only that a process is listening on the interface the
@@ -96,7 +111,9 @@ the same way — see "Which party a request came from" below.
 
 ## Which party a request came from
 
-**The daemon is pinned, on a THP build.** The first daemon to announce itself on the WARD interface
+**The daemon is pinned only on a `--ward-service-thp` build, which nothing ships.** By default the
+service endpoint pins nobody, exactly as the codec column above says, and the paragraph below
+describes the gated path. The first daemon to announce itself on the WARD interface
 has its static public key written to flash (`storage.ward.get_service_host_key`), and every other key is refused
 from then on. Pairing alone would not do: it proves a host holds a credential this device issued, and
 every paired host holds one, so "some paired host" is the wrong granularity for the party the device

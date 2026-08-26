@@ -101,7 +101,7 @@ def _permitted_on_service_channel(channel: Channel, message: Message) -> bool:
     from trezor import wire
     from trezor.enums import MessageType
 
-    if not wire.is_ward_interface(channel.iface):
+    if not utils.USE_WARD_SERVICE_THP or not wire.is_ward_interface(channel.iface):
         return True
 
     return message.type == MessageType.WardServiceOpen

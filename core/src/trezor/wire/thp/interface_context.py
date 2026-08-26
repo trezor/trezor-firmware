@@ -206,7 +206,9 @@ class InterfaceContext:
         # the session's host and must not have to wait for it.
         from .. import is_ward_interface
 
-        self._serves_own_dispatch: bool = is_ward_interface(iface)
+        self._serves_own_dispatch: bool = utils.USE_WARD_SERVICE_THP and is_ward_interface(
+            iface
+        )
         self._dispatch_box: loop.mailbox[None] = loop.mailbox()
         # Set by a handler that has taken ownership of the conversation -- see `release_dispatch`.
         self._dispatch_released: bool = False

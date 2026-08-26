@@ -42,9 +42,14 @@ type PubKey = [u8; PUBKEY_LEN];
 /// anything a host can provoke.
 ///
 /// Tests get the BLE slot unconditionally so multi-interface paths stay exercisable.
+/// The WARD service interface counts only when it is SERVED BY THP. By default it speaks codec
+/// v1 and is never handed to `ThpContext` at all (`wire.setup`), so it needs no interface slot --
+/// and, more to the point, service traffic then cannot reach the channel tables below, which are
+/// shared across interfaces and evicted by a global LRU. That isolation is structural rather than
+/// agreed: there is nothing on that interface for this module to see.
 const MAX_INTERFACES: usize = 1
     + cfg!(any(test, feature = "ble")) as usize
-    + cfg!(feature = "ward_service_channel") as usize;
+    + cfg!(feature = "ward_service_thp") as usize;
 
 // Channel limits, shared across interfaces.
 const MAX_CHANNELS_OPENING: usize = 4;
