@@ -150,6 +150,9 @@ class Layout(Generic[T]):
         self.transition_out: AttachType | None = None
         self.backlight_level = BacklightLevels.NORMAL
         self.context: Context | None = None
+        # Supplies fresh construction parameters when the Rust layout asks for them.
+        # Layouts that never call `EventCtx::request_params()` leave this as None.
+        self.params_provider: Callable[[], dict[str, Any]] | None = None
 
         # Indicates whether we should use Resume attach style when launching.
         # Homescreen layouts can override this.
@@ -304,6 +307,10 @@ class Layout(Generic[T]):
 
         first_paint = False
         state = event_call(*args)
+        if state is None:
+            # The layout may have asked for fresh parameters instead of finishing.
+            # Feed them in right away, so it can update itself in place.
+            state = self._refresh_params()
         self.transition_out = self.layout.get_transition_out()
 
         if state is LayoutState.DONE:
@@ -325,6 +332,21 @@ class Layout(Generic[T]):
             self._first_paint()
         else:
             self._paint()
+
+    def _refresh_params(self) -> LayoutState | None:
+        """Hand the layout fresh construction parameters, if it asked for them.
+
+        Returns the state of the resulting update pass, or None if no refresh
+        was requested. Lets a layout react to changed inputs without being torn
+        down and redrawn from scratch.
+        """
+        if not self.layout.needs_params_refresh():
+            return None
+        if self.params_provider is None:
+            if __debug__:
+                log.error(__name__, "layout asked for params but none are provided")
+            return None
+        return self.layout.update_params(self.params_provider())
 
     def put_button_request(self, msg: ButtonRequestMsg | None) -> bool:
         if self.button_request_handler is None or msg is None:
