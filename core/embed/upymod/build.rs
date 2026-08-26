@@ -1069,7 +1069,12 @@ impl<'a> MpyBuilder<'a> {
             files.add(src.join("trezor/wire/thp"), "*.py")?;
         }
 
-        if cfg!(not(feature = "thp")) || cfg!(not(feature = "pyopt")) {
+        // WARD's service interface speaks codec v1 on every build, so the codec modules are
+        // needed even on a THP pyopt build.
+        if cfg!(not(feature = "thp"))
+            || cfg!(not(feature = "pyopt"))
+            || cfg!(feature = "ward_service_channel")
+        {
             files.add(src.join("trezor/wire/codec"), "*.py")?;
         }
 
@@ -1193,6 +1198,9 @@ impl<'a> MpyBuilder<'a> {
         if cfg!(not(feature = "optiga")) {
             files.remove(src, "apps/evolu/sign_registration_request.py");
         }
+
+        files.add(src, "apps/ward/*.py")?;
+        files.add(src, "apps/display_address/*.py")?;
 
         if cfg!(feature = "benchmark") {
             files.add(src, "apps/benchmark/*.py")?;

@@ -23,10 +23,7 @@ The ORDER of the remaining steps is load-bearing rather than incidental, which i
 and `adopt` are separate: reconcile has a check that must run between them.
 """
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from typing import Any
+from typing import Any
 
 
 async def verify_round_attestation(msg: Any) -> "tuple[int, bytes]":

@@ -19,10 +19,7 @@ K_data(key_type) at [b"ward", b"K_ident"/b"K_data", key_type], which seal the tw
 parts once leaves stop being plaintext.
 """
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from typing import Sequence
+from typing import Sequence
 
 ENTRY_TYPE_ADDRESS = "address"
 
