@@ -2034,19 +2034,20 @@ def load_N_groups(
     debug: DebugLink,
     groups: Sequence[tuple[int, int]],
     method: messages.BackupMethod = messages.BackupMethod.Display,
-) -> Generator[None, "messages.ButtonRequest", list[str]]:
-    mnemonics: list[str] = []
+) -> Generator[None, "messages.ButtonRequest", list[list[str]]]:
+    mnemonics: list[list[str]] = []
     expected_br_name = "success_share_confirm"
     if debug.layout_type is LayoutType.Eckhart:
         expected_br_name = "success_recovery"
 
     for _member_threshold, member_count in groups:
+        group_mnemonics: list[str] = []
         for _share in range(member_count):
             if method is messages.BackupMethod.Display:
                 # Phrase screen
                 mnemonic = yield from read_and_confirm_mnemonic(debug)
                 assert mnemonic is not None
-                mnemonics.append(mnemonic)
+                group_mnemonics.append(mnemonic)
 
                 # Confirm continue to next
                 yield from swipe_if_necessary(debug, B.Success, expected_br_name)
@@ -2054,9 +2055,10 @@ def load_N_groups(
 
             elif method is messages.BackupMethod.N1W1:
                 assert (yield).name == "backup_write"
-                mnemonics.append(n1w1_handle_write(debug).decode())
+                group_mnemonics.append(n1w1_handle_write(debug).decode())
             else:
                 raise RuntimeError
+        mnemonics.append(group_mnemonics)
 
     br = yield
     assert br.code == B.Success
@@ -2404,7 +2406,7 @@ class InputFlowSlip39AdvancedCustomBackup(InputFlowBase):
         backup_method: messages.BackupMethod = messages.BackupMethod.Display,
     ):
         super().__init__(client)
-        self.mnemonics: list[str] = []
+        self.mnemonics: list[list[str]] = []
         self.groups = groups
         self.backup_method = backup_method
 

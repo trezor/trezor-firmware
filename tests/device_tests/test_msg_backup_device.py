@@ -292,13 +292,15 @@ def test_backup_slip39_advanced_custom(
     assert session.features.unfinished_backup is False
     assert session.features.no_backup is False
 
-    assert len(IF.mnemonics) == sum(count for _threshold, count in groups)
+    assert [len(group) for group in IF.mnemonics] == [
+        count for _threshold, count in groups
+    ]
 
     selected_mnemonics: list[str] = []
-    offset = 0
-    for member_threshold, member_count in groups[:group_threshold]:
-        selected_mnemonics.extend(IF.mnemonics[offset : offset + member_threshold])
-        offset += member_count
+    for (member_threshold, _member_count), group_mnemonics in zip(
+        groups[:group_threshold], IF.mnemonics
+    ):
+        selected_mnemonics.extend(group_mnemonics[:member_threshold])
 
     assert (
         shamir.combine_mnemonics(selected_mnemonics).hex()
