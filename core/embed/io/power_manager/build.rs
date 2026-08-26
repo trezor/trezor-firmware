@@ -115,6 +115,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         // selection is a clear build error.
         let selected = [
             cfg!(feature = "fuel_gauge_lifepo4"),
+            cfg!(feature = "fuel_gauge_alkaline"),
             cfg!(feature = "fuel_gauge_mock"),
         ]
         .iter()
@@ -132,6 +133,12 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
                 "power_manager/fuel_gauge/lifepo4/fuel_gauge.c",
                 "power_manager/fuel_gauge/lifepo4/battery_model.c",
             ]);
+        } else if cfg!(feature = "fuel_gauge_alkaline") {
+            // lib.add_sources([
+            //     "power_manager/fuel_gauge/alkaline/battery.c",
+            //     "power_manager/fuel_gauge/alkaline/fuel_gauge.c",
+            //     "power_manager/fuel_gauge/alkaline/battery_model.c",
+            // ]);
         } else {
             lib.add_source("power_manager/fuel_gauge/mock/battery.c");
         }
