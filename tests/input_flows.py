@@ -12,7 +12,7 @@ input flow details.
 from __future__ import annotations
 
 import time
-from typing import Callable, Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 
 import pytest
 

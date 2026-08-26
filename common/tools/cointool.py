@@ -10,9 +10,10 @@ import os
 import re
 import sys
 from collections import defaultdict
+from collections.abc import Callable, Iterator
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Callable, Iterator, TextIO, cast
+from typing import Any, TextIO, cast
 
 import click
 

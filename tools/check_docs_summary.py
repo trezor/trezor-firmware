@@ -8,8 +8,8 @@ Running the script:
 
 import re
 import sys
+from collections.abc import Generator, Iterable
 from pathlib import Path
-from typing import Generator, Iterable, Set
 
 DOCS_DIR = "docs/"
 SUMMARY_FILENAME = "SUMMARY.md"
@@ -44,7 +44,7 @@ def gen_skip(inputs: Iterable[str], what: str) -> Generator[str, None, None]:
 
 
 def difference(g1: Iterable[str], g2: Iterable[str]) -> Generator[str, None, None]:
-    set_g2: Set[str] = set(g2)
+    set_g2: set[str] = set(g2)
     for item in g1:
         if item not in set_g2:
             yield item

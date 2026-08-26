@@ -1,6 +1,5 @@
 import os
 from hashlib import sha256
-from typing import List
 
 from ecdsa import NIST256p, SigningKey
 
@@ -19,7 +18,7 @@ TEST_host_static_public_key = curve25519.get_public_key(TEST_host_static_private
 def get_proof(
     client: Client,
     header: bytes,
-    arguments: List[bytes],
+    arguments: list[bytes],
     rotation_index: int | None = None,
 ) -> bytes:
     private_key = get_delegated_identity_key(client, rotation_index).private_key
@@ -34,7 +33,7 @@ def get_proof(
     return signing_key.sign_digest(ctx.digest())
 
 
-def get_invalid_proof(client: Client, header: bytes, arguments: List[bytes]) -> bytes:
+def get_invalid_proof(client: Client, header: bytes, arguments: list[bytes]) -> bytes:
     valid_proof = get_proof(client, header, arguments)
     # tamper with the proof to make it invalid
     invalid_proof = (

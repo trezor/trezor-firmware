@@ -5,8 +5,9 @@ import json
 import logging
 import re
 from collections import OrderedDict, defaultdict
+from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator, Literal, TypedDict, cast
+from typing import Any, Literal, TypedDict, cast
 
 try:
     import requests

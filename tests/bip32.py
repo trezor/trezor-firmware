@@ -18,7 +18,7 @@ import hashlib
 import hmac
 import struct
 from copy import copy
-from typing import Any, List, Tuple
+from typing import Any
 
 from ecdsa.curves import SECP256k1
 from ecdsa.ecdsa import generator_secp256k1
@@ -37,14 +37,14 @@ def point_to_pubkey(point: Point) -> bytes:
     return struct.pack("B", (vk[63] & 1) + 2) + vk[0:32]  # To compressed key
 
 
-def sec_to_public_pair(pubkey: bytes) -> Tuple[int, Any]:
+def sec_to_public_pair(pubkey: bytes) -> tuple[int, Any]:
     """Convert a public key in sec binary format to a public pair."""
     x = string_to_number(pubkey[1:33])
     sec0 = pubkey[:1]
     if sec0 not in (b"\2", b"\3"):
         raise ValueError("Compressed pubkey expected")
 
-    def public_pair_for_x(generator, x: int, is_even: bool) -> Tuple[int, Any]:
+    def public_pair_for_x(generator, x: int, is_even: bool) -> tuple[int, Any]:
         curve = generator.curve()
         p = curve.p()
         alpha = (pow(x, 3, p) + curve.a() * x + curve.b()) % p
@@ -64,7 +64,7 @@ def get_address(public_node: messages.HDNodeType, address_type: int) -> str:
     return tools.public_key_to_bc_address(public_node.public_key, address_type)
 
 
-def public_ckd(public_node: messages.HDNodeType, n: List[int]):
+def public_ckd(public_node: messages.HDNodeType, n: list[int]):
     if not isinstance(n, list):
         raise ValueError("Parameter must be a list")
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
-from typing import Iterable
+from collections.abc import Iterable
 
 import click
 

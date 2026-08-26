@@ -98,19 +98,14 @@ extra_standard_library = [
 known_first_party = ["trezorlib", "apps", "coin_info", "marketcap", "ui_tests"]
 known_third_party = ["trezor", "storage"]
 
-# Ruff is used as a PEP 585 linter
+# Ruff is used as a PEP 585 linter only; all other Python style checks are
+# handled by flake8 / isort / black / pylint.  The set of files to lint is not
+# configured here -- the Makefiles pass it in, so that ruff covers exactly what
+# every other style tool covers (tools/style.py.include, python/Makefile).
 [tool.ruff]
 target-version = "py310"
+# `python` is a published library that still supports 3.9 (see python/pyproject.toml)
 per-file-target-version = { "python/**/*.py" = "py39" }
-include = [
-  "core/**/*.py",
-  "python/**/*.py",
-]
-force-exclude = true
-extend-exclude = [
-  "core/translations",
-  "vendor",
-]
 
 [tool.ruff.lint]
 select = [

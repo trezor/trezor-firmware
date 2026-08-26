@@ -69,7 +69,7 @@ pystyle_check: ## run code style check on application sources and tests
 	@echo [BLACK]
 	@black --check $(BLACK_FLAGS) $(PY_FILES)
 	@echo [RUFF - PEP 585]
-	@ruff check
+	@ruff check $(PY_FILES)
 	@echo [PYLINT]
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
@@ -86,7 +86,7 @@ pystyle: ## apply code style on application sources and tests
 	@echo [BLACK]
 	@black $(BLACK_FLAGS) $(PY_FILES)
 	@echo [RUFF - PEP 585]
-	@ruff check --fix
+	@ruff check --fix $(PY_FILES)
 	@echo [TYPECHECK]
 	@make -C core typecheck
 	@echo [TYPECHECK - COMMON and TOOLS]

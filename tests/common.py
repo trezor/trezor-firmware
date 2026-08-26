@@ -19,8 +19,9 @@ from __future__ import annotations
 import json
 import re
 import time
+from collections.abc import Generator
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator, Optional
+from typing import TYPE_CHECKING, Any, Optional
 from unittest import mock
 
 import pytest

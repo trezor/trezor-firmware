@@ -17,7 +17,6 @@
 import os
 import re
 from pathlib import Path
-from typing import List, Tuple
 
 import pytest
 from _pytest.mark.structures import MarkDecorator
@@ -135,10 +134,10 @@ def version_from_tag(tag: str | None) -> tuple | None:
 
 def for_all(
     *args: str,
-    t1b1_minimum_version: Tuple[int, int, int] = (1, 0, 0),
-    t2t1_minimum_version: Tuple[int, int, int] = (2, 0, 0),
+    t1b1_minimum_version: tuple[int, int, int] = (1, 0, 0),
+    t2t1_minimum_version: tuple[int, int, int] = (2, 0, 0),
     # Intentionally starts at 2.9.3 for T3W1 upgrade coverage.
-    t3w1_minimum_version: Tuple[int, int, int] = (2, 9, 3),
+    t3w1_minimum_version: tuple[int, int, int] = (2, 9, 3),
 ) -> "MarkDecorator":
     """Parametrizing decorator for test cases.
 
@@ -205,7 +204,7 @@ def for_all(
     return pytest.mark.parametrize("tag, model", sorted(all_params))
 
 
-def for_tags(*args: Tuple[str, List[str]]) -> "MarkDecorator":
+def for_tags(*args: tuple[str, list[str]]) -> "MarkDecorator":
     """Parametrizing decorator for tests that need specific version tags.
 
     Usage: @for_tags(("T1B1", ["v1.7.0", "v1.8.0"]))
