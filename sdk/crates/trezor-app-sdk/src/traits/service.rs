@@ -1,5 +1,5 @@
 use stabby::boxed::Box;
-use stabby::slice::Slice;
+use stabby::slice::{Slice, SliceMut};
 
 use super::util::FastResult;
 
@@ -54,7 +54,12 @@ pub trait Message {
     extern "C" fn data<'a>(&'a self) -> Slice<'a, u8>;
 }
 
-pub type BoxedMessage<'a> = stabby::dynptr!(Box<dyn Message + 'a>);
+pub type MessageVtable = stabby::vtable!(Message);
+/// A borrowed reference to a received [`Message`] — never owning, since Core
+/// never allocates: the message data is borrowed straight from the app's own
+/// IPC inbox buffer (see `IpcRemote::register_inbox`). Valid only until the
+/// next `receive`/`call`, which reuses the same buffer slot.
+pub type MessageRef<'a> = stabby::DynRef<'a, MessageVtable>;
 
 /// Errors that can occur during IPC communication.
 #[stabby::stabby]
@@ -65,9 +70,9 @@ pub enum IpcError<'a> {
     /// The message could not be sent to the remote task.
     FailedToSend,
     /// A response was received from an unexpected service ID.
-    UnexpectedService(BoxedMessage<'a>),
+    UnexpectedService(MessageRef<'a>),
     /// A response with an unexpected format or content was received.
-    UnexpectedResponse(BoxedMessage<'a>),
+    UnexpectedResponse(MessageRef<'a>),
 }
 
 impl IpcError<'_> {
@@ -84,6 +89,15 @@ impl IpcError<'_> {
 
 #[stabby::stabby(checked)]
 pub trait IpcRemote {
+    /// Registers `buffer` as this app's own inbox for messages from Core.
+    ///
+    /// Must be called exactly once, before the first `receive`/`call`. Core
+    /// never allocates memory of its own for IPC — `buffer` must be
+    /// allocated by the app (out of its own heap) and stay valid for as
+    /// long as the app is running; Core only ever holds a reference into
+    /// it, never a copy.
+    extern "C" fn register_inbox<'remote, 'local>(&'remote self, buffer: SliceMut<'local, usize>);
+
     /// Waits for and returns the next incoming [`Message`].
     ///
     /// Blocks until a message is available or `timeout` expires.
@@ -91,7 +105,7 @@ pub trait IpcRemote {
     extern "C" fn receive<'remote>(
         &'remote self,
         timeout_ms: u32,
-    ) -> FastResult<BoxedMessage<'remote>, IpcError<'remote>>;
+    ) -> FastResult<MessageRef<'remote>, IpcError<'remote>>;
 
     /// Sends a message to the remote service.
     ///
@@ -125,8 +139,9 @@ pub trait IpcRemote {
         id: u16,
         message: Slice<'local, u8>,
         timeout_ms: u32,
-    ) -> FastResult<BoxedMessage<'remote>, IpcError<'remote>>;
+    ) -> FastResult<MessageRef<'remote>, IpcError<'remote>>;
 }
 
 pub type BoxedIpcRemote = stabby::dynptr!(Box<dyn IpcRemote + Send + Sync>);
-pub type IpcRemoteRef<'a> = stabby::dynptr!(&'a (dyn IpcRemote + Send + Sync));
+pub type IpcRemoteVtable = stabby::vtable!(IpcRemote + Send + Sync);
+pub type IpcRemoteRef<'a> = stabby::DynRef<'a, IpcRemoteVtable>;

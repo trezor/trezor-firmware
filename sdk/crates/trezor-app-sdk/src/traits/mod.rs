@@ -1,6 +1,6 @@
 pub mod allocator;
 pub mod crypto;
-//pub mod service;
+pub mod service;
 pub mod syslog;
 pub mod trezor_v1;
 pub mod util;

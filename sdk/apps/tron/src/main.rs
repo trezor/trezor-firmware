@@ -9,8 +9,8 @@ extern crate alloc;
 
 use prost::Message;
 use trezor_app_sdk::{
-    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_handler, wire_receive_wire_start,
-    wire_request_raw,
+    Error, Result, ResultExt, WireDecode, WireEncode, debug, error, wire_handler,
+    wire_receive_wire_start, wire_request_raw,
 };
 
 // Include generated code
@@ -82,6 +82,7 @@ wire_handler!(
 #[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
     loop {
+        debug!("Waiting for wire message");
         let (id, data) = wire_receive_wire_start().c()?;
         handle_wire_message(id as i32, &data).c()?;
     }
@@ -109,13 +110,11 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
 #[cfg(test)]
 pub(crate) mod test_init {
     use std::sync::Once;
-    use trezor_app_sdk::mock::{dummy_trezor_api_getter_t, sdk_init};
+    use trezor_app_sdk::mock::sdk_init;
     pub static INIT: Once = Once::new();
 
     pub fn init_sdk() {
-        INIT.call_once(|| unsafe {
-            sdk_init(Some(dummy_trezor_api_getter_t));
-        });
+        INIT.call_once(sdk_init);
     }
 }
 

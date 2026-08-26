@@ -4,7 +4,6 @@
 #![no_main]
 
 use core::hint::black_box;
-use core::pin::Pin;
 
 #[cfg(feature = "aes_gcm")]
 pub mod aesgcm;

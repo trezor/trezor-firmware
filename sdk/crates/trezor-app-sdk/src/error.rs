@@ -1,76 +1,226 @@
-#[cfg(feature = "debug")]
-use alloc::vec::Vec;
-use core::ops::Deref;
+#[cfg(all(feature = "debug", feature = "app"))]
+use crate::alloc_types::Box;
+#[cfg(feature = "app")]
+use crate::traits::service::IpcError;
+#[cfg(feature = "app")]
+use crate::traits::util::FastResult;
 
-#[derive(Clone)]
-pub struct ErrorTrace<E> {
-    pub error: E,
-    #[cfg(feature = "debug")]
-    pub trace: Vec<&'static str>,
+/// A wrapper which aligns its inner value to 8 bytes.
+#[doc(hidden)]
+#[repr(C, align(8))]
+pub struct Align<T>(pub T);
+
+pub type Result<T> = core::result::Result<T, Error>;
+
+#[cfg_attr(any(feature = "debug", feature = "test"), derive(Debug))]
+pub enum Error {
+    ServiceError,
+    DataError(&'static str),
+    Cancelled,
+    InvalidFunction,
+    InvalidMessage,
+    InvalidArgument,
+    ValueError(&'static str),
+    #[cfg(all(feature = "debug", feature = "app"))]
+    Context {
+        file: &'static str,
+        line: u32,
+        source: Box<Error>,
+    },
 }
 
-impl<E> ErrorTrace<E> {
-    pub fn new(error: E) -> Self {
-        Self {
-            error,
-            #[cfg(feature = "debug")]
-            trace: Vec::new(),
+impl Error {
+    pub fn code(&self) -> u16 {
+        match self {
+            Self::ServiceError => 2,
+            Self::DataError(_) => 3,
+            Self::Cancelled => 4,
+            Self::InvalidFunction => 5,
+            Self::InvalidMessage => 6,
+            Self::InvalidArgument => 7,
+            Self::ValueError(_) => 8,
+            #[cfg(all(feature = "debug", feature = "app"))]
+            Self::Context { source, .. } => source.code(),
         }
     }
 
-    #[allow(unused_variables)]
-    pub fn trace(&mut self, context: &'static str) {
-        #[cfg(feature = "debug")]
-        self.trace.push(context);
+    pub fn message(&self) -> &'static str {
+        match self {
+            Self::ServiceError => "",
+            Self::InvalidFunction => "",
+            Self::InvalidMessage => "",
+            Self::InvalidArgument => "",
+            Self::DataError(msg) => msg,
+            Self::ValueError(msg) => msg,
+            Self::Cancelled => "",
+            #[cfg(all(feature = "debug", feature = "app"))]
+            Self::Context { source, .. } => source.message(),
+        }
     }
 
-    pub fn into_inner(self) -> E {
-        self.error
+    pub fn error_type(&self) -> &'static str {
+        match self {
+            Self::ServiceError => "ServiceError",
+            Self::DataError(_) => "DataError",
+            Self::Cancelled => "Cancelled",
+            Self::InvalidFunction => "InvalidFunction",
+            Self::InvalidMessage => "InvalidMessage",
+            Self::InvalidArgument => "InvalidArgument",
+            Self::ValueError(_) => "ValueError",
+            #[cfg(all(feature = "debug", feature = "app"))]
+            Self::Context { source, .. } => source.error_type(),
+        }
+    }
+
+    #[cfg(all(feature = "debug", feature = "app"))]
+    pub fn c_at(self, loc: &'static core::panic::Location<'static>) -> Self {
+        Error::Context {
+            file: loc.file(),
+            line: loc.line(),
+            source: Box::new(self),
+        }
+    }
+
+    #[cfg(all(feature = "debug", feature = "app"))]
+    pub fn source(&self) -> Option<&Error> {
+        match self {
+            Error::Context { source, .. } => Some(&*source),
+            _ => None,
+        }
     }
 }
 
-impl<E> From<E> for ErrorTrace<E> {
-    fn from(error: E) -> Self {
-        Self::new(error)
+#[cfg(feature = "app")]
+impl From<IpcError<'_>> for Error {
+    fn from(error: IpcError<'_>) -> Self {
+        Error::DataError(error.message())
     }
 }
 
-impl<E> Deref for ErrorTrace<E> {
-    type Target = E;
+/// Converts the stable-ABI [`FastResult`] an [`IpcRemote`](crate::traits::service::IpcRemote)
+/// call returns into this crate's own [`Result`] — every IPC call site was
+/// hand-rolling `.into_result().map_err(Into::into)` for this.
+#[cfg(feature = "app")]
+pub trait IntoAppResult<T> {
+    fn into_app_result(self) -> Result<T>;
+}
 
-    fn deref(&self) -> &Self::Target {
-        &self.error
+#[cfg(feature = "app")]
+impl<T> IntoAppResult<T> for FastResult<T, IpcError<'_>> {
+    fn into_app_result(self) -> Result<T> {
+        self.into_result().map_err(Into::into)
     }
 }
 
-#[cfg(feature = "debug")]
-impl<E: ufmt::uDebug> ufmt::uDebug for ErrorTrace<E> {
-    fn fmt<W>(&self, w: &mut ufmt::Formatter<'_, W>) -> core::result::Result<(), W::Error>
+#[cfg(all(feature = "debug", feature = "app"))]
+impl ufmt::uDisplay for Error {
+    fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> core::result::Result<(), W::Error>
     where
-        W: ufmt::uWrite + ?Sized,
+        W: ufmt::uWrite,
     {
-        self.error.fmt(w)?;
-        w.write_str("\nCaused by:\n")?;
-        for context in self.trace.iter().rev() {
-            w.write_str("  ")?;
-            w.write_str(context)?;
-            w.write_str("\n")?;
+        match self {
+            Error::Context { file, line, .. } => {
+                ufmt::uwrite!(f, "Context Error at\nLocation: {}:{}", file, line)?;
+            }
+            _ => {
+                ufmt::uwrite!(f, "{}: {}", self.error_type(), self.message())?;
+            }
         }
+        let mut source = self.source();
+        while let Some(err) = source {
+            match err {
+                Error::Context { file, line, .. } => {
+                    ufmt::uwrite!(f, "\nLocation: {}:{}", file, line)?;
+                }
+                _ => {
+                    ufmt::uwrite!(f, "\nCaused by: {}: {}", err.error_type(), err.message())?;
+                }
+            }
+            source = err.source();
+        }
+
         Ok(())
     }
 }
 
-pub type Result<T, E> = core::result::Result<T, ErrorTrace<E>>;
-
-pub trait ResultExt<T, E> {
-    fn context(self, context: &'static str) -> Result<T, E>;
+#[cfg(not(all(feature = "debug", feature = "app")))]
+impl ufmt::uDisplay for Error {
+    fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> core::result::Result<(), W::Error>
+    where
+        W: ufmt::uWrite,
+    {
+        ufmt::uwrite!(f, "{}: {}", self.error_type(), self.message())?;
+        Ok(())
+    }
 }
 
-impl<T, E> ResultExt<T, E> for Result<T, E> {
-    fn context(self, context: &'static str) -> Result<T, E> {
-        self.map_err(|mut e| {
-            e.trace(context);
-            e
-        })
+/// Extension trait for attaching call-site context to an [`Error`] as it
+/// propagates up through `?`.
+pub trait ResultExt<T> {
+    /// Records the caller's file and line on `Err`, if the `debug` feature
+    /// is enabled; otherwise a no-op.
+    ///
+    /// Call it right after any fallible expression you want to be locatable
+    /// in a `debug` build, typically as `foo().c()?`:
+    ///
+    /// ```rust,no_run
+    /// # use trezor_app_sdk::{Error, Result, ResultExt};
+    /// fn inner() -> Result<()> {
+    ///     Err(Error::InvalidArgument)
+    /// }
+    ///
+    /// fn outer() -> Result<()> {
+    ///     inner().c()?; // records this line when `debug` is enabled
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// # `debug` builds
+    ///
+    /// Wraps the error in [`Error::Context`], capturing the file and line of
+    /// the `.c()` call itself via `#[track_caller]`. Every further `.c()`
+    /// applied on the way back up the call stack adds one more location, so
+    /// a chain of `.c()` calls builds a manual backtrace. Printing the final
+    /// error (via its [`ufmt::uDisplay`] impl) walks that chain, e.g.:
+    ///
+    /// ```text
+    /// Context Error at
+    /// Location: outer.rs:8
+    /// Location: main.rs:3
+    /// Caused by: InvalidArgument:
+    /// ```
+    ///
+    /// # Release builds
+    ///
+    /// Without the `debug` feature, `c()` just returns `self` unchanged —
+    /// zero cost, so it's safe to sprinkle on every fallible expression
+    /// regardless of build profile.
+    ///
+    /// # Gaps in the trace
+    ///
+    /// Each `.c()` call contributes exactly one location. If some function
+    /// forwards an error without calling it (e.g. `foo()?` instead of
+    /// `foo().c()?`), that hop simply contributes nothing — callers further
+    /// up and callees further down that *do* call `.c()` still show up
+    /// unaffected. In practice this matters most near the origin: since the
+    /// error itself carries no location until something wraps it, if the
+    /// call site closest to the failure skips `.c()`, the trace won't
+    /// contain anything below the next ancestor that does call it — the
+    /// backtrace effectively starts there. Call `.c()` consistently at every
+    /// `?` in a chain to avoid these blind spots.
+    fn c(self) -> Self;
+}
+
+impl<T> ResultExt<T> for Result<T> {
+    #[cfg(all(feature = "debug", feature = "app"))]
+    #[track_caller]
+    fn c(self) -> Self {
+        let loc = core::panic::Location::caller();
+        self.map_err(|e| e.c_at(loc))
+    }
+
+    #[cfg(not(all(feature = "debug", feature = "app")))]
+    fn c(self) -> Self {
+        self
     }
 }

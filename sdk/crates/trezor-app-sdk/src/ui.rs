@@ -15,37 +15,49 @@ use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::{Archived, to_bytes};
 
+use crate::app_runtime2::get_ipc_or_die;
 pub use crate::structs::{
     ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
     ConfirmValueIntro, ConfirmWithInfo, Property, RequestNumber, SelectMenu, ShowAddress,
     ShowDanger, ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess,
     ShowWarning, StrExt, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
 };
-use crate::traits::service::{CoreIpcService, MessageDyn as _};
+use crate::traits::service::{CoreIpcService, IpcRemoteDyn as _, MessageDyn as _};
 use crate::util::Timeout;
-use crate::{Error, core_services, unwrap};
+use crate::{Error, IntoAppResult, Result, ResultExt};
 
-// pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
-// pub type ArchivedTrezorUiEnum<'a> = Archived<TrezorUiEnum<'a>>;
+pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
+pub type ArchivedTrezorUiEnum<'a> = Archived<TrezorUiEnum<'a>>;
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
-type Result<T> = core::result::Result<T, Error>;
 pub type UiResult = Result<TrezorUiResult>;
 
 fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
-    let bytes = to_bytes::<Failure>(value).map_err(|_| Error::ServiceError)?;
+    let bytes = to_bytes::<Failure>(value)
+        .map_err(|_| Error::ServiceError)
+        .c()?;
 
-    let result = core_services::call(CoreIpcService::Ui, 0, bytes.as_ref(), Timeout::max())?;
+    let result = get_ipc_or_die()
+        .call(
+            CoreIpcService::Ui.into(),
+            0,
+            bytes.as_ref().into(),
+            Timeout::max().as_ms(),
+        )
+        .into_app_result()
+        .c()?;
 
     // Safe validation using bytecheck before accessing archived data
-    let archived = unwrap!(rkyv::access::<Archived<TrezorUiResult>, Failure>(
-        result.data().into()
-    ));
+    let archived = rkyv::access::<Archived<TrezorUiResult>, Failure>(result.data().into())
+        .map_err(|_| Error::ServiceError)
+        .c()?;
 
-    let deserialized = unwrap!(deserialize::<TrezorUiResult, Failure>(archived));
+    let deserialized = deserialize::<TrezorUiResult, Failure>(archived)
+        .map_err(|_| Error::ServiceError)
+        .c()?;
     Ok(deserialized)
 }
 
@@ -65,14 +77,19 @@ fn ipc_ui_call_void(value: &TrezorUiEnum) -> Result<()> {
 }
 
 fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<()> {
-    let bytes = to_bytes::<Failure>(value).map_err(|_| Error::ServiceError)?;
+    let bytes = to_bytes::<Failure>(value)
+        .map_err(|_| Error::ServiceError)
+        .c()?;
 
-    core_services::call(
-        CoreIpcService::Progress,
-        value.id() as _,
-        bytes.as_ref(),
-        Timeout::max(),
-    )?;
+    get_ipc_or_die()
+        .call(
+            CoreIpcService::Progress.into(),
+            value.id() as _,
+            bytes.as_ref().into(),
+            Timeout::max().as_ms(),
+        )
+        .into_app_result()
+        .c()?;
     Ok(())
 }
 
@@ -204,11 +221,11 @@ pub fn confirm_linear_flow(confirm_factories: &[&dyn Fn() -> UiResult]) -> UiRes
 /// )?;
 /// # Ok::<(), trezor_app_sdk::Error>(())
 /// ```
-pub fn error_if_not_confirmed(result: TrezorUiResult) -> core::result::Result<(), crate::Error> {
+pub fn error_if_not_confirmed(result: TrezorUiResult) -> Result<()> {
     if matches!(result, TrezorUiResult::Confirmed) {
         Ok(())
     } else {
-        Err(crate::Error::Cancelled)
+        Err(Error::Cancelled)
     }
 }
 

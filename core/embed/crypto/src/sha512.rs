@@ -3,36 +3,62 @@ use core::ops::DerefMut;
 use rtl::CSlice;
 
 use super::ffi;
-use super::memory::{Memory, init_ctx};
 use super::secret::{HazardGuard, SecretContext, SecretContextLock, ZeroableMemory};
-use crate::hasher::{PinnedHasher, RawHasher};
 
 pub const BLOCK_SIZE: usize = ffi::SHA512_BLOCK_LENGTH as usize;
 pub const DIGEST_SIZE: usize = ffi::SHA512_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-type Sha512Ctx = ffi::SHA512_CTX;
+pub type Sha512Ctx = SecretContext<ffi::SHA512_CTX>;
 
-unsafe impl ZeroableMemory for Sha512Ctx {}
+// SAFETY: SHA512_CTX is valid when zeroed
+unsafe impl ZeroableMemory for ffi::SHA512_CTX {}
 
 impl ffi::SHA512_CTX {
     /// Initialize the SHA512 context.
     ///
     /// Called by [`Sha512::new`]. Call again when reusing the context after
-    /// [`HazardGuard::finalize`].
+    /// [`Self::hazard_finalize`] / [`HazardGuard::finalize`].
+    ///
+    /// # Copy hazard
+    ///
+    /// None because a "freshly initialized context" is public information.
     pub fn init(&mut self) {
         // SAFETY: ffi
         unsafe { ffi::sha512_Init(self) };
+    }
+
+    /// # Copy hazard
+    ///
+    /// The caller must not move or copy `self` for as long as it keeps
+    /// using it via [`Self::hazard_update`] / [`Self::hazard_finalize`].
+    /// Prefer [`Sha512`] which enforces this via pinning; this raw API only
+    /// exists for callers that cannot use a pinned context (e.g. because
+    /// they must own the hasher by value, as required by some external
+    /// trait).
+    pub fn hazard_update(&mut self, data: &[u8]) {
+        let data_slice = CSlice::from(data);
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::sha512_Update(self, data_slice.ptr(), data_slice.len()) };
+    }
+
+    /// # Copy hazard
+    ///
+    /// See [`Self::hazard_update`].
+    pub fn hazard_finalize(&mut self) -> Digest {
+        let mut digest = [0u8; DIGEST_SIZE];
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::sha512_Final(self, digest.as_mut_ptr()) };
+        digest
     }
 }
 
 impl HazardGuard<'_, ffi::SHA512_CTX> {
     /// Update the SHA512 context with the given data.
     pub fn update(&mut self, data: &[u8]) {
-        let data_slice = CSlice::from(data);
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::sha512_Update(self.hazard_mut(), data_slice.ptr(), data_slice.len()) };
+        self.hazard_mut().hazard_update(data);
     }
 
     /// Finalize the SHA512 context and return the digest.
@@ -41,15 +67,32 @@ impl HazardGuard<'_, ffi::SHA512_CTX> {
     /// reusing it, the caller must call [`ffi::SHA512_CTX::init`] to
     /// reinitialize it.
     pub fn finalize(&mut self) -> Digest {
-        let mut digest = [0u8; DIGEST_SIZE];
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::sha512_Final(self.hazard_mut(), digest.as_mut_ptr()) };
-        digest
+        self.hazard_mut().hazard_finalize()
     }
 }
 
-pub type Sha512<'a> = PinnedHasher<&'a mut Memory<Sha512Ctx>>;
+impl Sha512Ctx {
+    /// Initialize the SHA512 context.
+    pub fn init(&mut self) {
+        self.hazard_mut().init();
+    }
+
+    /// # Copy hazard
+    ///
+    /// See [`ffi::SHA512_CTX::hazard_update`].
+    pub fn hazard_update(&mut self, data: &[u8]) {
+        self.hazard_mut().hazard_update(data);
+    }
+
+    /// # Copy hazard
+    ///
+    /// See [`ffi::SHA512_CTX::hazard_update`].
+    pub fn hazard_finalize(&mut self) -> Digest {
+        self.hazard_mut().hazard_finalize()
+    }
+}
+
+pub struct Sha512<D: DerefMut<Target = Sha512Ctx>>(SecretContextLock<D>);
 
 impl<D: DerefMut<Target = Sha512Ctx>> Sha512<D> {
     /// Construct a new SHA512 hasher.
@@ -73,9 +116,10 @@ impl<D: DerefMut<Target = Sha512Ctx>> Sha512<D> {
 }
 
 pub fn digest_into(data: &[u8], out: &mut Digest) {
-    init_ctx!(Sha512, ctx);
-    ctx.update(data);
-    ctx.finalize(out);
+    let mut ctx = Sha512Ctx::default();
+    let mut sha = Sha512::new(&mut ctx);
+    sha.update(data);
+    *out = sha.finalize();
 }
 
 pub fn digest(data: &[u8]) -> Digest {
@@ -106,17 +150,14 @@ mod test {
     ];
 
     fn hexdigest(data: &[u8]) -> String {
-        hex::encode(Sha512::digest(data))
+        hex::encode(digest(data))
     }
 
     #[test]
     fn test_empty_ctx() {
-        let mut out = [0u8; DIGEST_SIZE];
-
-        init_ctx!(Sha512, ctx);
-        ctx.finalize(&mut out);
-
-        let out_hex = hex::encode(out);
+        let mut ctx = Sha512Ctx::default();
+        let sha = Sha512::new(&mut ctx);
+        let out_hex = hex::encode(sha.finalize());
         assert_eq!(out_hex, SHA512_EMPTY);
     }
 
