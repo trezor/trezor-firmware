@@ -13,7 +13,6 @@ from .tx_info import OriginalTxInfo
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Optional
 
     from trezor.crypto import bip32
     from trezor.messages import PaymentRequest, SignTx, TxInput, TxOutput
@@ -145,7 +144,7 @@ class Approver:
         self,
         tx_info: TxInfo,
         orig_txs: list[OriginalTxInfo],
-        signer: Optional[Bitcoin],
+        signer: Bitcoin | None,
     ) -> None:
         self.finish_payment_request()
 
@@ -327,7 +326,7 @@ class BasicApprover(Approver):
         self,
         tx_info: TxInfo,
         orig_txs: list[OriginalTxInfo],
-        signer: Optional[Bitcoin],
+        signer: Bitcoin | None,
     ) -> None:
         from trezor.wire import NotEnoughFunds
 
@@ -513,7 +512,7 @@ class CoinJoinApprover(Approver):
         self,
         tx_info: TxInfo,
         orig_txs: list[OriginalTxInfo],
-        signer: Optional[Bitcoin],
+        signer: Bitcoin | None,
     ) -> None:
         from ..authorization import FEE_RATE_DECIMALS
 
