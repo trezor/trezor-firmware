@@ -27,6 +27,7 @@ ordinary refusal; what it cannot do is take the buffer a live wallet workflow is
 from typing import TYPE_CHECKING
 
 from trezor import loop, protobuf
+from trezor.wire import protocol_common
 from trezor.wire.codec.buffers import CodecBufferSource
 from trezor.wire.codec.codec_context import CodecContext
 from trezor.wire.message_handler import decode_message, failure
@@ -95,6 +96,15 @@ class WardBufferSource(CodecBufferSource):
         self._pooled.release()
 
 
+# HOW LONG A HALF-READ SERVICE MESSAGE MAY STAY HALF-READ.
+#
+# `apps.webauthn.fido2` calls 500 ms "maximum interval between CTAP HID continuation frames" over
+# this same USB transport, which is the closest thing to a measured answer anyone here has; a real
+# daemon's reports arrive back to back, so the margin is enormous. What it bounds is a peer that
+# sends a header and then stops -- see `codec_v1.read_message`.
+_CONTINUATION_TIMEOUT_MS = 500
+
+
 class WardCodecContext(CodecContext):
     """Codec framing for the service interface, and nothing else.
 
@@ -123,9 +133,36 @@ class WardCodecContext(CodecContext):
         # Zero because there are no channels here to tell apart, not because this is channel zero.
         self.channel_id = 0
         self.reply: loop.mailbox[Message | BaseException] = loop.mailbox()
+        # HOW A GIVEN-UP CONVERSATION REACHES A READ ALREADY IN PROGRESS, which nothing else here
+        # can do. Set by `tear_down`, cleared by the reader before each read, and consulted by
+        # `codec_v1.read_message` after every continuation report -- see `_is_abandoned`.
+        self._cancelled = False
+        # A DEVICE-INITIATED INTERFACE HOLDS ITS PEER TO A DEADLINE, unlike the wallet's -- see
+        # `CodecContext.continuation_timeout_ms`. A daemon that sends a header and stops would
+        # otherwise park this reader inside that frame for good, holding the receive buffer it had
+        # already taken; on a THP build that buffer is the wallet's too.
+        self.continuation_timeout_ms = _CONTINUATION_TIMEOUT_MS
+        self.abandon_read = self._is_abandoned
 
     def _is_in_rpc(self) -> bool:
         return self.rpc_in_flight
+
+    def _is_abandoned(self) -> bool:
+        """Whether the conversation this read belongs to has already been given up on.
+
+        WHY A TIMEOUT IS NOT ENOUGH ON ITS OWN. `continuation_timeout_ms` bounds the GAP between
+        reports, and a peer defeats that by trickling one just inside it -- indefinitely, while
+        the RPC that wanted the answer gave up long ago and the receive lease is still held. Asked
+        after every report rather than only on a timeout, so a peer that keeps talking is
+        abandoned at its next report instead of never.
+
+        WHY A FLAG AND NOT A `loop.race` AGAINST A MAILBOX, which is the obvious shape and was
+        tried first: a reader that yields a `race` has its children scheduled on the real loop, so
+        it can no longer be driven a step at a time -- and stepping it is what caught the reader
+        dying on an unexpected exception. The flag costs at most one report interval of latency,
+        which against a 30 s RPC deadline is nothing, and keeps the loop testable.
+        """
+        return self._cancelled
 
     def release(self) -> None:
         pass
@@ -219,6 +256,15 @@ def tear_down(reason: str) -> None:
     _CONTEXT.rpc_in_flight = False
     _drop_pending(_CONTEXT)
 
+    # AND LAST, A READ ALREADY IN PROGRESS, which none of the above can reach. Everything before
+    # this line tidies state the reader is not looking at; if it is halfway through reassembling a
+    # frame, it stays there -- holding the receive buffer that frame already took, and appending
+    # whatever eventually arrives to a message nobody will ever read.
+    #
+    # Set after the tidying so the read gives up into the state it would next serve from, and
+    # harmless when the reader is idle: the next read clears it before it begins.
+    _CONTEXT._cancelled = True
+
 
 async def _handle_bootstrap(ctx: WardCodecContext, msg: Message) -> None:
     """The one message an unbound service interface accepts, and the refusal for everything else.
@@ -272,12 +318,24 @@ async def handle_ward_codec_interface(
 
     try:
         while True:
+            # CLEARED HERE, WHERE THE NEXT READ BEGINS. A teardown that landed while nothing was
+            # being read has no frame to abandon, so it must not abandon the next one.
+            ctx._cancelled = False
             try:
                 msg = await ctx.read_from_wire()
             except loop.TaskClosed:
                 # The only thing that legitimately ends this loop. Everything else is the daemon's
                 # problem, not the endpoint's.
                 raise
+            except protocol_common.ReadCancelled as exc:
+                # NOT ANSWERED, because nothing asked. `tear_down` has already given up on the
+                # conversation and told whoever was waiting; a `Failure` here would be a reply to
+                # a request that was never made, sent to a daemon that is no longer bound.
+                # `read_message` released the abandoned frame's lease on its way out, so there is
+                # nothing left to tidy -- and the next iteration clears the flag and reads again.
+                if __debug__:
+                    log.debug(__name__, "read abandoned: %s", str(exc), iface=iface)
+                continue
             except Exception as exc:
                 # WIDER THAN `WireError`, WHICH IS WHAT THIS USED TO CATCH. A `FirmwareError` from
                 # the buffer layer or a `MemoryError` from a large allocation would otherwise
