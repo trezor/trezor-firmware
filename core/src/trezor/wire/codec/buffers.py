@@ -13,12 +13,18 @@ fails, drain the message off the wire and refuse it. Those two tiers carry no le
 is nothing shared to give back.
 """
 
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.wire.buffers import BufferSource, SharedBuffer, WireBuffer
 
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer
+
+# NO BOUND, spelled as the largest number the framing can carry. `msize` is a uint32 on the wire
+# (`codec_v1._REP_INIT`), so a source that returns this refuses nothing on size alone -- which is
+# what every host-driven wallet interface has always done and must keep doing.
+UNBOUNDED_MESSAGE_SIZE = const(0xFFFF_FFFF)
 
 
 class CodecBufferSource:
@@ -30,10 +36,16 @@ class CodecBufferSource:
     is most needed.
     """
 
-    def __init__(self, small: WireBuffer, shared: SharedBuffer | None = None) -> None:
+    def __init__(
+        self,
+        small: WireBuffer,
+        shared: SharedBuffer | None = None,
+        max_size: int | None = None,
+    ) -> None:
         self._small = small
         self._shared = shared
         self._source = BufferSource(small, shared) if shared is not None else None
+        self._max_size = UNBOUNDED_MESSAGE_SIZE if max_size is None else max_size
 
     def capacity(self) -> int:
         """The largest message this can serve. Above it the caller is on its own -- see the module
@@ -41,6 +53,18 @@ class CodecBufferSource:
         if self._shared is None:
             return len(self._small.buf)
         return len(self._shared.buf)
+
+    def max_message_size(self) -> int:
+        """The largest message this source will take off the wire at all.
+
+        DISTINCT FROM `capacity()`, which is only the largest one the POOL can serve: above
+        capacity the codec has always fallen back to the heap, and for a wallet interface it still
+        does. This is the harder limit above which a message is drained and refused without
+        allocating anything, and the base source deliberately does not impose one -- the interface
+        that needs it is the permanently listening, unauthenticated service endpoint, which
+        overrides this.
+        """
+        return self._max_size
 
     def get(self, length: int) -> "AnyBuffer | None":
         """A buffer of `length`, or None if the shared one is held by someone else.
@@ -64,6 +88,6 @@ class CodecBufferSource:
             self._source.release()
 
 
-def private_source(size: int) -> CodecBufferSource:
+def private_source(size: int, max_size: int | None = None) -> CodecBufferSource:
     """A source that borrows nothing, for an interface that must never contend."""
-    return CodecBufferSource(WireBuffer(size))
+    return CodecBufferSource(WireBuffer(size), max_size=max_size)

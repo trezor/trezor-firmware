@@ -72,6 +72,80 @@ class TestWireCodecV1(unittest.TestCase):
         with self.assertRaises(WireError):
             self.interface.mock_read(message_packet, gen)
 
+    def _packets_for(self, message):
+        header = make_header(mtype=MESSAGE_TYPE, length=len(message))
+        return [header + message[:HEADER_PAYLOAD_LENGTH]] + [
+            b"?" + chunk
+            for chunk in chunks(
+                message[HEADER_PAYLOAD_LENGTH:], MockHID.RX_PACKET_LEN - 1
+            )
+        ]
+
+    def test_a_refused_message_is_drained_before_the_refusal(self):
+        """The refusal above, made on a message that does not fit in one packet.
+
+        THE SINGLE-PACKET TEST COULD NOT SEE THIS. The initial report is consumed before the
+        buffer is asked for, so refusing there left this message's continuation reports on the
+        wire -- and the next read parsed one of them as a header, failed `Invalid magic`, and did
+        it again for every packet. The oversize path had always drained for exactly this reason.
+        """
+        shared = SharedBuffer(1024)
+        incumbent = CodecBufferSource(WireBuffer(0), shared)
+        self.assertIsNotNone(incumbent.get(32))
+
+        message = bytes(range(256))
+        packets = self._packets_for(message)
+        self.assertTrue(len(packets) > 1)
+
+        gen = codec_v1.read_message(
+            self.interface, CodecBufferSource(WireBuffer(0), shared)
+        )
+        query = gen.send(None)
+        # Every continuation report is consumed, and the refusal waits for the last one.
+        for packet in packets[:-1]:
+            self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
+            query = self.interface.mock_read(packet, gen)
+
+        with self.assertRaises(WireError):
+            self.interface.mock_read(packets[-1], gen)
+
+        # The wire is back at a message boundary, so the NEXT message reads cleanly rather than
+        # being parsed out of the leftovers of this one.
+        incumbent.release()
+        buffers, _buffer = make_source(256)
+        gen = codec_v1.read_message(self.interface, buffers)
+        gen.send(None)
+        for packet in packets[:-1]:
+            self.interface.mock_read(packet, gen)
+        with self.assertRaises(StopIteration) as e:
+            self.interface.mock_read(packets[-1], gen)
+        self.assertEqual(e.value.value.data, message)
+
+    def test_a_message_above_the_hard_bound_is_drained_and_never_allocated(self):
+        """`max_message_size` is not `capacity`.
+
+        Above capacity the codec has always fallen back to the heap, which is right for a wallet
+        interface and wrong for a permanently listening, unauthenticated one: `msize` is an
+        unvalidated uint32, so an advertised length would become an allocation attempt. Above the
+        hard bound nothing is allocated at all -- the message is read off the wire and refused.
+        """
+        small = WireBuffer(512)
+        buffers = CodecBufferSource(small, max_size=128)
+
+        message = bytes(range(256))
+        packets = self._packets_for(message)
+
+        gen = codec_v1.read_message(self.interface, buffers)
+        gen.send(None)
+        for packet in packets[:-1]:
+            self.interface.mock_read(packet, gen)
+
+        with self.assertRaises(codec_v1.CodecError):
+            self.interface.mock_read(packets[-1], gen)
+
+        # Nothing was written anywhere: the message never reached a buffer of its own.
+        self.assertEqual(bytes(small.buf), b"\x00" * 512)
+
     def test_read_many_packets(self):
         message = bytes(range(256))
 
