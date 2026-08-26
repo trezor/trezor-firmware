@@ -752,8 +752,8 @@ async def confirm_blob(
     chunkify: bool = False,
     prompt_screen: bool = True,
 ) -> None:
-    if description and ":" not in description:
-        description += ":"
+    if description:
+        description = with_colon(description)
 
     verb = verb or TR.buttons__confirm  # def_arg
     with trezorui_api.confirm_value(
@@ -869,7 +869,7 @@ async def confirm_value(
     """General confirmation dialog, used by many other confirm_* functions."""
 
     if description and value:
-        description += ":"
+        description = with_colon(description)
 
     info_ctx = trezorui_api.show_info_with_cancel(
         title=info_title if info_title else TR.words__title_information,
