@@ -12,6 +12,7 @@ from trezorui_api import DeviceMenuResult
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from typing import Any
 
     from trezor.messages import ThpPairedCacheEntry
 
@@ -67,126 +68,146 @@ def ble_enable(enable: bool) -> None:
     storage_device.set_ble(enable)
 
 
+def _menu_params(
+    init_submenu_idx: int | None = None,
+    init_submenu_offset: int = 0,
+) -> dict[str, Any]:
+    """Collect everything the device menu is built from.
+
+    Called both to open the menu and to refresh it in place, so it must reflect
+    the current device state every time.
+
+    `init_submenu_idx` of None means "leave the menu where it is" on a refresh,
+    and "open at the root" when constructing.
+    """
+    from trezor.wire.thp import paired_cache
+
+    is_initialized = storage_device.is_initialized()
+    led_configurable = is_initialized and utils.USE_RGB_LED
+    haptic_configurable = is_initialized and utils.USE_HAPTIC
+    tap_to_wake_configurable = is_initialized and utils.USE_TOUCH_WAKEUP
+    backup_failed = is_initialized and storage_device.unfinished_backup()
+    backup_needed = is_initialized and storage_device.needs_backup()
+    backup_finished = (
+        is_initialized
+        and not storage_device.needs_backup()
+        and not storage_device.unfinished_backup()
+        and not storage_device.no_backup()
+    )
+
+    bonds = ble.get_bonds()
+    if __debug__:
+        log.debug(__name__, "bonds: %s", bonds)
+    ble_enabled = ble.get_enabled()
+    connected_addr = ble.connected_addr()
+    connected_idx = _find_device(connected_addr, bonds) if ble_enabled else None
+    if __debug__:
+        log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
+    hostname_map = {e.mac_addr: e for e in paired_cache.load()}
+    paired_devices = [_get_hostinfo(bond, hostname_map) for bond in bonds]
+
+    # versions used in "About" screen, emulator uses dummy versions for fixtures
+    if utils.EMULATOR or not utils.USE_NRF:
+        bluetooth_version = "0.0.0.0"
+    else:
+        nrf_version = utils.nrf_get_version()
+        bluetooth_version = (
+            f"{nrf_version[0]}.{nrf_version[1]}.{nrf_version[2]}.{nrf_version[3]}"
+        )
+    if utils.EMULATOR:
+        firmware_version = "0.0.0.0"
+    else:
+        firmware_version = ".".join(map(str, utils.VERSION))
+
+    firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
+    production_year = _get_production_year()
+
+    try:
+        serial_no = utils.serial_number() if utils.USE_SERIAL_NUMBER else None
+    except RuntimeError:
+        # Unprovisioned devices might not have a serial number
+        serial_no = "N/A"
+
+    about_items: list[tuple[str | None, str | None, bool]] = [
+        (TR.homescreen__firmware_version, firmware_version, False),
+        (TR.homescreen__firmware_type, firmware_type, False),
+        (TR.ble__version, bluetooth_version, False),
+    ]
+    if serial_no is not None:
+        about_items.append((TR.sn__title, serial_no, True))
+    about_items.append((TR.words__made_in, "Ostrava, Czechia", False))
+
+    return {
+        "init_submenu_idx": init_submenu_idx,
+        "init_submenu_offset": init_submenu_offset,
+        "backup_failed": backup_failed,
+        "backup_needed": backup_needed,
+        "ble_enabled": ble_enabled,
+        "paired_devices": paired_devices,
+        "connected_idx": connected_idx,
+        "pin_enabled": config.has_pin() if is_initialized else None,
+        "auto_lock": get_auto_lock_delay(),
+        "wipe_code_enabled": (
+            config.has_wipe_code() if (is_initialized and config.has_pin()) else None
+        ),
+        "backup_check_allowed": backup_finished,
+        "device_name": (
+            (storage_device.get_label() or utils.MODEL_FULL_NAME)
+            if is_initialized
+            else None
+        ),
+        "brightness": TR.brightness__title if is_initialized else None,
+        "tap_to_wake_enabled": (
+            storage_device.get_tap_to_wake() if tap_to_wake_configurable else None
+        ),
+        "haptics_enabled": (
+            storage_device.get_haptic_feedback() if haptic_configurable else None
+        ),
+        "led_enabled": (storage_device.get_rgb_led() if led_configurable else None),
+        "about_items": about_items,
+        "production_year": production_year,
+    }
+
+
 async def handle_device_menu() -> None:
 
     assert utils.USE_THP and utils.USE_BLE
 
-    from trezor.wire.thp import paired_cache
-
-    init_submenu_idx = None
-    init_submenu_offset = 0
-
-    # Remain in the device loop until the menu is explicitly closed
-    while True:
-        is_initialized = storage_device.is_initialized()
-        led_configurable = is_initialized and utils.USE_RGB_LED
-        haptic_configurable = is_initialized and utils.USE_HAPTIC
-        tap_to_wake_configurable = is_initialized and utils.USE_TOUCH_WAKEUP
-        backup_failed = is_initialized and storage_device.unfinished_backup()
-        backup_needed = is_initialized and storage_device.needs_backup()
-        backup_finished = (
-            is_initialized
-            and not storage_device.needs_backup()
-            and not storage_device.unfinished_backup()
-            and not storage_device.no_backup()
-        )
-
-        bonds = ble.get_bonds()
-        if __debug__:
-            log.debug(__name__, "bonds: %s", bonds)
-        ble_enabled = ble.get_enabled()
-        connected_addr = ble.connected_addr()
-        connected_idx = _find_device(connected_addr, bonds) if ble_enabled else None
-        if __debug__:
-            log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
-        hostname_map = {e.mac_addr: e for e in paired_cache.load()}
-        paired_devices = [_get_hostinfo(bond, hostname_map) for bond in bonds]
-
-        # versions used in "About" screen, emulator uses dummy versions for fixtures
-        if utils.EMULATOR or not utils.USE_NRF:
-            bluetooth_version = "0.0.0.0"
-        else:
-            nrf_version = utils.nrf_get_version()
-            bluetooth_version = (
-                f"{nrf_version[0]}.{nrf_version[1]}.{nrf_version[2]}.{nrf_version[3]}"
-            )
-        if utils.EMULATOR:
-            firmware_version = "0.0.0.0"
-        else:
-            firmware_version = ".".join(map(str, utils.VERSION))
-
-        firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
-        production_year = _get_production_year()
-
-        try:
-            serial_no = utils.serial_number() if utils.USE_SERIAL_NUMBER else None
-        except RuntimeError:
-            # Unprovisioned devices might not have a serial number
-            serial_no = "N/A"
-
-        about_items: list[tuple[str | None, str | None, bool]] = [
-            (TR.homescreen__firmware_version, firmware_version, False),
-            (TR.homescreen__firmware_type, firmware_type, False),
-            (TR.ble__version, bluetooth_version, False),
-        ]
-        if serial_no is not None:
-            about_items.append((TR.sn__title, serial_no, True))
-        about_items.append((TR.words__made_in, "Ostrava, Czechia", False))
-
-        with trezorui_api.show_device_menu(
-            init_submenu_idx=init_submenu_idx,
-            init_submenu_offset=init_submenu_offset,
-            backup_failed=backup_failed,
-            backup_needed=backup_needed,
-            ble_enabled=ble_enabled,
-            paired_devices=paired_devices,
-            connected_idx=connected_idx,
-            pin_enabled=config.has_pin() if is_initialized else None,
-            auto_lock=get_auto_lock_delay(),
-            wipe_code_enabled=(
-                config.has_wipe_code()
-                if (is_initialized and config.has_pin())
-                else None
-            ),
-            backup_check_allowed=backup_finished,
-            device_name=(
-                (storage_device.get_label() or utils.MODEL_FULL_NAME)
-                if is_initialized
-                else None
-            ),
-            brightness=TR.brightness__title if is_initialized else None,
-            tap_to_wake_enabled=(
-                storage_device.get_tap_to_wake() if tap_to_wake_configurable else None
-            ),
-            haptics_enabled=(
-                storage_device.get_haptic_feedback() if haptic_configurable else None
-            ),
-            led_enabled=(storage_device.get_rgb_led() if led_configurable else None),
-            about_items=about_items,
-            production_year=production_year,
-        ) as layout:
+    # Remain in the device loop until the menu is explicitly closed. The layout is
+    # built once and refreshed in place; it is never rebuilt from scratch.
+    with trezorui_api.show_device_menu(**_menu_params()) as layout:
+        while True:
             menu_result = await interact(
-                layout, br_name=None, layout_type=UsbAwareLayout
+                layout,
+                br_name=None,
+                layout_type=UsbAwareLayout,
+                # Connection status changes make the menu ask for these while it
+                # is running. No submenu index -- the user stays where they are.
+                params_provider=_menu_params,
             )
 
-        if not isinstance(menu_result, tuple) or len(menu_result) != 4:
-            raise RuntimeError(f"Unknown menu {menu_result}")
+            if not isinstance(menu_result, tuple) or len(menu_result) != 4:
+                raise RuntimeError(f"Unknown menu {menu_result}")
 
-        action, arg, init_submenu_idx, init_submenu_offset = menu_result
-        handler = _MENU_HANDLERS.get(action)
-        if not handler:
-            raise RuntimeError(f"Unknown menu {menu_result}")
+            action, arg, next_submenu_idx, next_submenu_offset = menu_result
+            handler = _MENU_HANDLERS.get(action)
+            if not handler:
+                raise RuntimeError(f"Unknown menu {menu_result}")
 
-        try:
-            if arg is None:
-                await handler()
-            else:
-                await handler(arg)
-        except ExitDeviceMenu:
-            break
-        except (ActionCancelled, PinCancelled):
-            # return to the submenu if handler was cancelled / succeeded
-            continue
+            try:
+                if arg is None:
+                    await handler()
+                else:
+                    await handler(arg)
+            except ExitDeviceMenu:
+                break
+            except (ActionCancelled, PinCancelled):
+                # return to the submenu if handler was cancelled / succeeded
+                pass
+
+            # The handler may have changed what the menu displays. Refresh it
+            # before it is shown again, so it never paints stale contents.
+            layout.update_params(_menu_params(next_submenu_idx, next_submenu_offset))
 
 
 async def handle_Close() -> None:
@@ -487,10 +508,6 @@ async def handle_RebootToBootloader() -> None:
     raise RuntimeError
 
 
-async def handle_RefreshMenu() -> None:
-    pass
-
-
 _MENU_HANDLERS = {
     DeviceMenuResult.Close: handle_Close,
     DeviceMenuResult.ReviewFailedBackup: handle_ReviewFailedBackup,
@@ -515,5 +532,4 @@ _MENU_HANDLERS = {
     DeviceMenuResult.TurnOff: handle_TurnOff,
     DeviceMenuResult.Reboot: handle_Reboot,
     DeviceMenuResult.RebootToBootloader: handle_RebootToBootloader,
-    DeviceMenuResult.RefreshMenu: handle_RefreshMenu,
 }

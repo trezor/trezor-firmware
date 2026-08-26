@@ -5,9 +5,14 @@ use super::layout::util::RecoveryType;
 use crate::error::Error;
 use crate::io::BinaryData;
 use crate::micropython::buffer::StrBuffer;
+use crate::micropython::dict::Dict;
 use crate::micropython::gc::Gc;
+use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
+use crate::micropython::map::Map;
 use crate::micropython::obj::Obj;
+use crate::micropython::qstr::Qstr;
+use crate::micropython::util;
 use crate::strutil::TString;
 use crate::ui::notification::Notification;
 
@@ -17,6 +22,100 @@ pub const MAX_GROUP_SHARE_LINES: usize = 4;
 pub const MAX_MENU_ITEMS: usize = 5;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
+
+/// Everything `show_device_menu` needs to build (or rebuild) the device menu.
+///
+/// Bundled into a struct rather than passed as eighteen positional arguments so
+/// that the same set can be handed to a live layout again, via
+/// `LayoutObj.update_params`, without repeating the parsing.
+pub struct DeviceMenuParams {
+    pub init_submenu_idx: Option<u8>,
+    pub init_submenu_offset: i16,
+    pub backup_failed: bool,
+    pub backup_needed: bool,
+    pub ble_enabled: bool,
+    pub paired_devices: Vec<(TString<'static>, Option<[TString<'static>; 2]>), MAX_PAIRED_DEVICES>,
+    pub connected_idx: Option<u8>,
+    pub pin_enabled: Option<bool>,
+    pub auto_lock: Option<[TString<'static>; 2]>,
+    pub wipe_code_enabled: Option<bool>,
+    pub backup_check_allowed: bool,
+    pub device_name: Option<TString<'static>>,
+    pub brightness: Option<TString<'static>>,
+    pub tap_to_wake_enabled: Option<bool>,
+    pub haptics_enabled: Option<bool>,
+    pub led_enabled: Option<bool>,
+    pub about_items: Obj,
+    pub production_year: Option<TString<'static>>,
+}
+
+impl TryFrom<&Map> for DeviceMenuParams {
+    type Error = Error;
+
+    fn try_from(kwargs: &Map) -> Result<Self, Error> {
+        let paired_obj: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
+        let mut paired_devices: Vec<(TString<'static>, Option<[TString; 2]>), MAX_PAIRED_DEVICES> =
+            Vec::new();
+        for device in IterBuf::new().try_iterate(paired_obj)? {
+            let [mac, host_info]: [Obj; 2] = util::iter_into_array(device)?;
+            let mac: TString<'static> = mac.try_into()?;
+            let host_info: Option<[TString<'static>; 2]> = host_info
+                .try_into_option()?
+                .map(util::iter_into_array)
+                .transpose()?;
+
+            if paired_devices.push((mac, host_info)).is_err() {
+                return Err(Error::OutOfRange);
+            }
+        }
+
+        Ok(Self {
+            init_submenu_idx: kwargs
+                .get(Qstr::MP_QSTR_init_submenu_idx)?
+                .try_into_option()?,
+            init_submenu_offset: kwargs.get(Qstr::MP_QSTR_init_submenu_offset)?.try_into()?,
+            backup_failed: kwargs.get(Qstr::MP_QSTR_backup_failed)?.try_into()?,
+            backup_needed: kwargs.get(Qstr::MP_QSTR_backup_needed)?.try_into()?,
+            ble_enabled: kwargs.get(Qstr::MP_QSTR_ble_enabled)?.try_into()?,
+            paired_devices,
+            connected_idx: kwargs.get(Qstr::MP_QSTR_connected_idx)?.try_into_option()?,
+            pin_enabled: kwargs.get(Qstr::MP_QSTR_pin_enabled)?.try_into_option()?,
+            auto_lock: kwargs
+                .get(Qstr::MP_QSTR_auto_lock)?
+                .try_into_option()?
+                .map(util::iter_into_array)
+                .transpose()?,
+            wipe_code_enabled: kwargs
+                .get(Qstr::MP_QSTR_wipe_code_enabled)?
+                .try_into_option()?,
+            backup_check_allowed: kwargs.get(Qstr::MP_QSTR_backup_check_allowed)?.try_into()?,
+            device_name: kwargs.get(Qstr::MP_QSTR_device_name)?.try_into_option()?,
+            brightness: kwargs.get(Qstr::MP_QSTR_brightness)?.try_into_option()?,
+            tap_to_wake_enabled: kwargs
+                .get(Qstr::MP_QSTR_tap_to_wake_enabled)?
+                .try_into_option()?,
+            haptics_enabled: kwargs
+                .get(Qstr::MP_QSTR_haptics_enabled)?
+                .try_into_option()?,
+            led_enabled: kwargs.get(Qstr::MP_QSTR_led_enabled)?.try_into_option()?,
+            about_items: kwargs.get(Qstr::MP_QSTR_about_items)?,
+            production_year: kwargs
+                .get(Qstr::MP_QSTR_production_year)?
+                .try_into_option()?,
+        })
+    }
+}
+
+impl TryFrom<Obj> for DeviceMenuParams {
+    type Error = Error;
+
+    /// Parse the params out of a MicroPython `dict`, as handed over by
+    /// `LayoutObj.update_params`.
+    fn try_from(params: Obj) -> Result<Self, Error> {
+        let dict: Gc<Dict> = params.try_into()?;
+        dict.map().try_into()
+    }
+}
 
 pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
@@ -335,30 +434,7 @@ pub trait FirmwareUI {
         lockable: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
-    #[allow(clippy::too_many_arguments)]
-    fn show_device_menu(
-        init_submenu_idx: Option<u8>,
-        init_submenu_offset: i16,
-        backup_failed: bool,
-        backup_needed: bool,
-        ble_enabled: bool,
-        paired_devices: heapless::Vec<
-            (TString<'static>, Option<[TString<'static>; 2]>),
-            MAX_PAIRED_DEVICES,
-        >,
-        connected_idx: Option<u8>,
-        pin_enabled: Option<bool>,
-        auto_lock: Option<[TString<'static>; 2]>,
-        wipe_code_enabled: Option<bool>,
-        backup_check_allowed: bool,
-        device_name: Option<TString<'static>>,
-        brightness: Option<TString<'static>>,
-        tap_to_wake_enabled: Option<bool>,
-        haptics_enabled: Option<bool>,
-        led_enabled: Option<bool>,
-        about_items: Obj,
-        production_year: Option<TString<'static>>,
-    ) -> Result<impl LayoutMaybeTrace, Error>;
+    fn show_device_menu(params: DeviceMenuParams) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_pairing_device_name(
         description: StrBuffer,

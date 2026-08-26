@@ -41,7 +41,7 @@ use crate::ui::layout::util::{
 };
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
+    DeviceMenuParams, FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
     MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
@@ -1093,49 +1093,8 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
-    fn show_device_menu(
-        init_submenu_idx: Option<u8>,
-        init_submenu_offset: i16,
-        backup_failed: bool,
-        backup_needed: bool,
-        ble_enabled: bool,
-        paired_devices: heapless::Vec<
-            (TString<'static>, Option<[TString<'static>; 2]>),
-            MAX_PAIRED_DEVICES,
-        >,
-        connected_idx: Option<u8>,
-        pin_enabled: Option<bool>,
-        auto_lock: Option<[TString<'static>; 2]>,
-        wipe_code_enabled: Option<bool>,
-        backup_check_allowed: bool,
-        device_name: Option<TString<'static>>,
-        brightness: Option<TString<'static>>,
-        tap_to_wake_enabled: Option<bool>,
-        haptics_enabled: Option<bool>,
-        led_enabled: Option<bool>,
-        about_items: Obj,
-        production_year: Option<TString<'static>>,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout = RootComponent::new(DeviceMenuScreen::new(
-            init_submenu_idx,
-            init_submenu_offset,
-            backup_failed,
-            backup_needed,
-            ble_enabled,
-            paired_devices,
-            connected_idx,
-            pin_enabled,
-            auto_lock,
-            wipe_code_enabled,
-            backup_check_allowed,
-            device_name,
-            brightness,
-            tap_to_wake_enabled,
-            haptics_enabled,
-            led_enabled,
-            about_items,
-            production_year,
-        )?);
+    fn show_device_menu(params: DeviceMenuParams) -> Result<impl LayoutMaybeTrace, Error> {
+        let layout = RootComponent::new(DeviceMenuScreen::new(params)?);
         Ok(layout)
     }
 

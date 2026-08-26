@@ -4,7 +4,6 @@ use crate::error::Error;
 use crate::io::BinaryData;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
-use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
 use crate::micropython::macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module};
 use crate::micropython::map::Map;
@@ -25,7 +24,7 @@ use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
 use crate::ui::notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ};
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
 
@@ -909,79 +908,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let init_submenu_idx: Option<u8> = kwargs
-            .get(Qstr::MP_QSTR_init_submenu_idx)?
-            .try_into_option()?;
-        let init_submenu_offset: i16 = kwargs.get(Qstr::MP_QSTR_init_submenu_offset)?.try_into()?;
-        let backup_failed: bool = kwargs.get(Qstr::MP_QSTR_backup_failed)?.try_into()?;
-        let backup_needed: bool = kwargs.get(Qstr::MP_QSTR_backup_needed)?.try_into()?;
-        let ble_enabled: bool = kwargs.get(Qstr::MP_QSTR_ble_enabled)?.try_into()?;
-        let paired_obj: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
-        let mut paired_devices: heapless::Vec<
-            (TString<'static>, Option<[TString; 2]>),
-            MAX_PAIRED_DEVICES,
-        > = heapless::Vec::new();
-        for device in IterBuf::new().try_iterate(paired_obj)? {
-            let [mac, host_info]: [Obj; 2] = util::iter_into_array(device)?;
-            let mac: TString<'static> = mac.try_into()?;
-            let host_info: Option<[TString<'static>; 2]> = host_info
-                .try_into_option()?
-                .map(util::iter_into_array)
-                .transpose()?;
-
-            if paired_devices.push((mac, host_info)).is_err() {
-                return Err(Error::OutOfRange);
-            }
-        }
-        let connected_idx: Option<u8> =
-            kwargs.get(Qstr::MP_QSTR_connected_idx)?.try_into_option()?;
-        let pin_enabled: Option<bool> = kwargs.get(Qstr::MP_QSTR_pin_enabled)?.try_into_option()?;
-        let auto_lock: Option<[TString; 2]> = kwargs
-            .get(Qstr::MP_QSTR_auto_lock)?
-            .try_into_option()?
-            .map(util::iter_into_array)
-            .transpose()?;
-        let wipe_code_enabled: Option<bool> = kwargs
-            .get(Qstr::MP_QSTR_wipe_code_enabled)?
-            .try_into_option()?;
-        let backup_check_allowed: bool =
-            kwargs.get(Qstr::MP_QSTR_backup_check_allowed)?.try_into()?;
-        let device_name: Option<TString> =
-            kwargs.get(Qstr::MP_QSTR_device_name)?.try_into_option()?;
-        let brightness: Option<TString> =
-            kwargs.get(Qstr::MP_QSTR_brightness)?.try_into_option()?;
-        let tap_to_wake_enabled: Option<bool> = kwargs
-            .get(Qstr::MP_QSTR_tap_to_wake_enabled)?
-            .try_into_option()?;
-        let haptics_enabled: Option<bool> = kwargs
-            .get(Qstr::MP_QSTR_haptics_enabled)?
-            .try_into_option()?;
-        let led_enabled: Option<bool> = kwargs.get(Qstr::MP_QSTR_led_enabled)?.try_into_option()?;
-        let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
-        let production_year: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_production_year)?
-            .try_into_option()?;
-        let layout = ModelUI::show_device_menu(
-            init_submenu_idx,
-            init_submenu_offset,
-            backup_failed,
-            backup_needed,
-            ble_enabled,
-            paired_devices,
-            connected_idx,
-            pin_enabled,
-            auto_lock,
-            wipe_code_enabled,
-            backup_check_allowed,
-            device_name,
-            brightness,
-            tap_to_wake_enabled,
-            haptics_enabled,
-            led_enabled,
-            about_items,
-            production_year,
-        )?;
-
+        let layout = ModelUI::show_device_menu(kwargs.try_into()?)?;
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
     };
@@ -1434,6 +1361,20 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///
     ///     def button_request(self) -> tuple[ButtonRequestType, str] | None:
     ///         """Return (code, type) of button request made during the last event or timer pass."""
+    ///
+    ///     def needs_params_refresh(self) -> bool:
+    ///         """Return True if the layout asked for fresh construction parameters
+    ///         during the last event or timer pass.
+    ///
+    ///         Clears the request, so a second call returns False.
+    ///         """
+    ///
+    ///     def update_params(self, params: dict[str, Any]) -> LayoutState | None:
+    ///         """Hand fresh construction parameters to the layout.
+    ///
+    ///         `params` takes the same keys the layout was constructed with. The
+    ///         layout updates itself in place, without being restarted.
+    ///         """
     ///
     ///     def get_transition_out(self) -> AttachType:
     ///         """Return the transition type."""
@@ -2224,6 +2165,5 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     Reboot: ClassVar[str]
     ///     RebootToBootloader: ClassVar[str]
     ///     TurnOff: ClassVar[str]
-    ///     RefreshMenu: ClassVar[str]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

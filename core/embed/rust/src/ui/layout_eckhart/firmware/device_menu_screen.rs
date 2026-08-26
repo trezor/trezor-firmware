@@ -16,6 +16,7 @@ use crate::micropython::obj::Obj;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::trezorhal::usb;
+use crate::ui::component::base::ParamsObj;
 use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
 };
@@ -26,7 +27,7 @@ use crate::ui::geometry::{LinearPlacement, Rect};
 pub use crate::ui::layout::device_menu_result::DeviceMenuMsg;
 use crate::ui::layout::util::PropsList;
 use crate::ui::shape::Renderer;
-use crate::ui::ui_firmware::MAX_PAIRED_DEVICES;
+use crate::ui::ui_firmware::{DeviceMenuParams, MAX_PAIRED_DEVICES};
 #[cfg(feature = "ble")]
 use crate::{trezorhal::ble, ui::event::BLEEvent};
 
@@ -88,13 +89,19 @@ impl DeviceMenuScreen {
             DeviceMenuMsg::ToggleHaptics => DeviceMenuId::Device,
             DeviceMenuMsg::ToggleLed => DeviceMenuId::Device,
             DeviceMenuMsg::WipeDevice => DeviceMenuId::Device,
-            DeviceMenuMsg::RefreshMenu => match self.active_screen.deref() {
-                ActiveScreen::Menu(_, id) => *id,
-                ActiveScreen::Device(_) => DeviceMenuId::PairAndConnect,
-                ActiveScreen::Regulatory(_) | ActiveScreen::About(_) => DeviceMenuId::Device,
-                ActiveScreen::Empty | ActiveScreen::BackupInfo(_) => DeviceMenuId::Root,
-                ActiveScreen::HostInfo(_) => DeviceMenuId::PairAndConnect,
-            },
+        }
+    }
+
+    /// The submenu the user is effectively in right now. For screens that are
+    /// not menus themselves (about, regulatory, ...), this is the submenu they
+    /// were reached from.
+    fn active_menu_id(&self) -> DeviceMenuId {
+        match self.active_screen.deref() {
+            ActiveScreen::Menu(_, id) => *id,
+            ActiveScreen::Device(_) => DeviceMenuId::PairAndConnect,
+            ActiveScreen::Regulatory(_) | ActiveScreen::About(_) => DeviceMenuId::Device,
+            ActiveScreen::Empty | ActiveScreen::BackupInfo(_) => DeviceMenuId::Root,
+            ActiveScreen::HostInfo(_) => DeviceMenuId::PairAndConnect,
         }
     }
 }
@@ -275,27 +282,28 @@ pub struct DeviceMenuScreen {
 }
 
 impl DeviceMenuScreen {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        init_submenu_idx: Option<u8>,
-        init_submenu_offset: i16,
-        backup_failed: bool,
-        backup_needed: bool,
-        ble_enabled: bool,
-        paired_devices: Vec<(TString<'static>, Option<[TString<'static>; 2]>), MAX_PAIRED_DEVICES>,
-        connected_idx: Option<u8>,
-        pin_enabled: Option<bool>,
-        auto_lock: Option<[TString<'static>; 2]>,
-        wipe_code_enabled: Option<bool>,
-        backup_check_allowed: bool,
-        device_name: Option<TString<'static>>,
-        brightness: Option<TString<'static>>,
-        tap_to_wake_enabled: Option<bool>,
-        haptics_enabled: Option<bool>,
-        led_enabled: Option<bool>,
-        about_items: Obj,
-        production_year: Option<TString<'static>>,
-    ) -> Result<Self, Error> {
+    pub fn new(params: DeviceMenuParams) -> Result<Self, Error> {
+        let DeviceMenuParams {
+            init_submenu_idx,
+            init_submenu_offset,
+            backup_failed,
+            backup_needed,
+            ble_enabled,
+            paired_devices,
+            connected_idx,
+            pin_enabled,
+            auto_lock,
+            wipe_code_enabled,
+            backup_check_allowed,
+            device_name,
+            brightness,
+            tap_to_wake_enabled,
+            haptics_enabled,
+            led_enabled,
+            about_items,
+            production_year,
+        } = params;
+
         let mut screen = Self {
             bounds: Rect::zero(),
             about_items,
@@ -786,6 +794,31 @@ impl DeviceMenuScreen {
         }
     }
 
+    /// Rebuild the whole menu from fresh parameters, without the layout being
+    /// restarted.
+    ///
+    /// Unlike at construction time, a missing `init_submenu_idx` means "stay
+    /// where the user is" rather than "open the root menu" -- a refresh should
+    /// not move the user around. Pass an explicit index to navigate.
+    fn update_params(&mut self, ctx: &mut EventCtx, params: ParamsObj) -> Result<(), Error> {
+        let mut params = DeviceMenuParams::try_from(params.0)?;
+
+        if params.init_submenu_idx.is_none() {
+            params.init_submenu_idx = self.active_menu_id().to_u8();
+            params.init_submenu_offset = self.current_state().map_or(0, |(_, offset)| offset);
+        }
+
+        let bounds = self.bounds;
+        *self = Self::new(params)?;
+        self.place(bounds);
+        if let ActiveScreen::Menu(screen, ..) = self.active_screen.deref_mut() {
+            screen.initialize_screen(ctx);
+        }
+        ctx.request_repaint_root();
+
+        Ok(())
+    }
+
     /// Used to avoid flickering on menu refresh.
     pub fn current_state(&self) -> Option<(DeviceMenuId, i16)> {
         match self.active_screen.deref() {
@@ -1029,16 +1062,28 @@ impl Component for DeviceMenuScreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Refresh this layout after reloading connection status
         match event {
+            // The connection status we display went stale -- ask the application
+            // layer to hand us fresh parameters. The layout keeps running.
             Event::USB(USBEvent::Configured | USBEvent::Deconfigured) => {
-                return Some(DeviceMenuMsg::RefreshMenu)
+                ctx.request_params();
+                return None;
             }
 
             #[cfg(feature = "ble")]
             Event::BLE(
                 BLEEvent::Connected | BLEEvent::Disconnected | BLEEvent::ConnectionChanged,
-            ) => return Some(DeviceMenuMsg::RefreshMenu),
+            ) => {
+                ctx.request_params();
+                return None;
+            }
+
+            Event::UpdateParams(params) => {
+                // Malformed params mean the application layer and this screen
+                // disagree on the parameter set, which is a firmware bug.
+                unwrap!(self.update_params(ctx, params), "bad device menu params");
+                return None;
+            }
 
             _ => (),
         };

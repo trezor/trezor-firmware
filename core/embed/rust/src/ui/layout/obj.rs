@@ -23,7 +23,7 @@ use crate::micropython::simple_type::SimpleTypeObj;
 use crate::micropython::typ::{FullType, Type};
 use crate::micropython::util;
 use crate::ui::button_request::ButtonRequest;
-use crate::ui::component::base::{AttachType, TimerToken};
+use crate::ui::component::base::{AttachType, ParamsObj, TimerToken};
 use crate::ui::component::{Component, Event, EventCtx, Never};
 use crate::ui::display::{self, Color};
 #[cfg(feature = "ble")]
@@ -198,6 +198,7 @@ struct LayoutObjInner {
     repaint: Repaint,
     transition_out: AttachType,
     button_request: Option<ButtonRequest>,
+    params_requested: bool,
 }
 
 const NO_LAYOUT: Error = Error::RuntimeError(c"No layout");
@@ -216,6 +217,7 @@ impl LayoutObjInner {
             repaint: Repaint::Full,
             transition_out: AttachType::Initial,
             button_request: None,
+            params_requested: false,
         };
 
         // invoke the initial placement
@@ -310,6 +312,12 @@ impl LayoutObjInner {
             self.page_count = count;
         }
 
+        // Remember a request for fresh construction parameters, to be picked up by
+        // the application layer after this event pass.
+        if self.event_ctx.params_requested() {
+            self.params_requested = true;
+        }
+
         msg.try_into()
     }
 
@@ -359,6 +367,16 @@ impl LayoutObjInner {
             None => Ok(Obj::const_none()),
             Some(ButtonRequest { code, name }) => (code.num().into(), name.try_into()?).try_into(),
         }
+    }
+
+    fn obj_needs_params_refresh(&mut self) -> Obj {
+        let requested = self.params_requested;
+        self.params_requested = false;
+        requested.into()
+    }
+
+    fn obj_update_params(&mut self, params: Obj) -> Result<Obj, Error> {
+        self.obj_event(Event::UpdateParams(ParamsObj(params)))
     }
 
     fn obj_get_transition_out(&self) -> Obj {
@@ -412,6 +430,8 @@ impl LayoutObj {
                 Qstr::MP_QSTR___del__ => obj_fn_1!(ui_layout_delete).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
                 Qstr::MP_QSTR_button_request => obj_fn_1!(ui_layout_button_request).as_obj(),
+                Qstr::MP_QSTR_needs_params_refresh => obj_fn_1!(ui_layout_needs_params_refresh).as_obj(),
+                Qstr::MP_QSTR_update_params => obj_fn_2!(ui_layout_update_params).as_obj(),
                 Qstr::MP_QSTR_get_transition_out => obj_fn_1!(ui_layout_get_transition_out).as_obj(),
                 Qstr::MP_QSTR_return_value => obj_fn_1!(ui_layout_return_value).as_obj(),
 
@@ -662,6 +682,24 @@ extern "C" fn ui_layout_button_request(this: Obj) -> Obj {
         let this: Gc<LayoutObj> = this.try_into()?;
         let button_request = this.inner_mut().obj_button_request();
         button_request
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_needs_params_refresh(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        let requested = this.inner_mut().obj_needs_params_refresh();
+        Ok(requested)
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_update_params(this: Obj, params: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        let msg = this.inner_mut().obj_update_params(params);
+        msg
     };
     unsafe { util::try_or_raise(block) }
 }

@@ -312,6 +312,26 @@ pub enum AttachType {
     Swipe(Direction),
 }
 
+/// Fresh construction parameters handed to a layout by the application layer,
+/// in response to a `EventCtx::request_params()` request.
+///
+/// Opaque on purpose: the concrete shape of the parameters is known only to the
+/// component that asked for them, which unpacks the wrapped MicroPython object
+/// itself.
+#[cfg(feature = "micropython")]
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct ParamsObj(pub crate::micropython::obj::Obj);
+
+#[cfg(all(feature = "micropython", feature = "debug"))]
+impl ufmt::uDebug for ParamsObj {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.write_str("ParamsObj")
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum Event {
@@ -337,6 +357,11 @@ pub enum Event {
     /// prepare for painting and/or start their timers.
     /// This event is sent once before any other events.
     Attach(AttachType),
+    /// The application layer supplies fresh construction parameters, previously
+    /// asked for via `EventCtx::request_params()`. Components that request
+    /// params are responsible for unpacking and applying them.
+    #[cfg(feature = "micropython")]
+    UpdateParams(ParamsObj),
     /// Internally-handled event to inform all `Child` wrappers in a sub-tree to
     /// get scheduled for painting.
     RequestPaint,
@@ -472,6 +497,7 @@ pub struct EventCtx {
     root_repaint_requested: bool,
     swipe_disable_req: bool,
     swipe_enable_req: bool,
+    params_requested: bool,
 }
 
 impl EventCtx {
@@ -495,6 +521,7 @@ impl EventCtx {
             root_repaint_requested: false,
             swipe_disable_req: false,
             swipe_enable_req: false,
+            params_requested: false,
         }
     }
 
@@ -563,6 +590,22 @@ impl EventCtx {
 
     pub fn button_request(&mut self) -> Option<ButtonRequest> {
         self.button_request.take()
+    }
+
+    /// Ask the application layer for fresh construction parameters. The layout
+    /// keeps running; the params arrive later as an `Event::UpdateParams`.
+    ///
+    /// Use this instead of returning a "please restart me" message when only
+    /// the layout's inputs went stale -- it avoids tearing the layout down and
+    /// redrawing it from scratch.
+    pub fn request_params(&mut self) {
+        self.params_requested = true;
+    }
+
+    /// Returns `true` if a component asked for fresh construction parameters
+    /// during this event pass.
+    pub fn params_requested(&self) -> bool {
+        self.params_requested
     }
 
     pub fn pop_timer(&mut self) -> Option<(TimerToken, Duration)> {
