@@ -1,9 +1,12 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
+import struct
+
 from trezor import protobuf, utils
+from trezor.enums import MessageType
 from trezor.messages import WardEntryAck, WardServiceFetch
-from trezor.wire import DataError
+from trezor.wire import DataError, FirmwareError
 from trezor.wire.protocol_common import Message
 
 if not utils.USE_THP:
@@ -52,8 +55,8 @@ class TestWardCodecContext(unittest.TestCase):
 
     def _context(self):
         shared = SharedBuffer(4096)
-        bootstrap = private_source(512)
-        pooled = CodecBufferSource(WireBuffer(256), shared)
+        bootstrap = private_source(512, 512)
+        pooled = CodecBufferSource(WireBuffer(256), shared, 4096)
         return W.WardCodecContext(MockHID(), bootstrap, pooled), bootstrap, pooled
 
     def test_unsolicited_traffic_never_reaches_the_shared_buffer(self):
@@ -63,15 +66,59 @@ class TestWardCodecContext(unittest.TestCase):
         free. Anything arriving with no RPC in flight has no such guarantee, so it must not be able
         to take the buffer a live workflow is about to need.
         """
-        ctx, bootstrap, pooled = self._context()
+        ctx, _bootstrap, pooled = self._context()
 
         ctx.rpc_in_flight = False
-        ctx._select_buffers()
-        self.assertIs(ctx.buffers, bootstrap)
+        # Larger than the pooled tier's own small buffer, so it WOULD have been promoted to the
+        # shared one had the bootstrap tier not been the one answering.
+        self.assertIsNot(ctx.buffers.get(300), None)
+        self.assertFalse(pooled.holds_shared())
+
+    def test_the_tier_is_chosen_when_the_message_arrives_not_when_the_read_starts(self):
+        """The race that a flag consulted before the wait could not win.
+
+        The reader spends its life parked in `read_from_wire`, holding whatever source it was
+        given on the way in. So the object it holds has to be the one that changes its mind --
+        the first RPC reply lands on a read that STARTED while the endpoint was idle, and
+        unsolicited traffic can arrive after a reply is delivered but before the flag is cleared.
+        Both directions are one question asked at the right moment.
+        """
+        ctx, bootstrap, pooled = self._context()
+
+        # Exactly what a parked `read_from_wire` is holding.
+        parked = ctx.buffers
+
+        ctx.rpc_in_flight = False
+        self.assertEqual(parked.capacity(), bootstrap.capacity())
+        self.assertEqual(parked.max_message_size(), bootstrap.max_message_size())
+
+        # The RPC starts. Nothing re-arms the read; the source answers differently.
+        ctx.rpc_in_flight = True
+        self.assertEqual(parked.capacity(), pooled.capacity())
+        self.assertEqual(parked.max_message_size(), pooled.max_message_size())
+
+        # And back, without having handed the reader a different object at any point.
+        ctx.rpc_in_flight = False
+        self.assertEqual(parked.capacity(), bootstrap.capacity())
+        self.assertIs(ctx.buffers, parked)
+
+    def test_a_lease_taken_during_an_rpc_goes_back_after_it(self):
+        """`holds_shared`/`release` must follow the POOLED tier, not the active one.
+
+        The lease is taken while the flag is set and given back after the answer has been
+        decoded, by which time the flag is clear -- so a source that asked the ACTIVE tier would
+        be asking the bootstrap tier, which borrows nothing, and would strand the shared buffer.
+        """
+        ctx, _bootstrap, pooled = self._context()
 
         ctx.rpc_in_flight = True
-        ctx._select_buffers()
-        self.assertIs(ctx.buffers, pooled)
+        self.assertIsNot(ctx.buffers.get(2000), None)
+        self.assertTrue(ctx.buffers.holds_shared())
+
+        ctx.rpc_in_flight = False
+        self.assertTrue(ctx.buffers.holds_shared())
+        ctx.buffers.release()
+        self.assertFalse(pooled.holds_shared())
 
     def test_it_carries_what_a_service_link_is_read_for(self):
         """`apps.ward.service._rpc` logs and tears down through these on EITHER transport.
@@ -97,6 +144,83 @@ class TestWardCodecContext(unittest.TestCase):
         ctx, _bootstrap, _pooled = self._context()
         with self.assertRaises(RuntimeError):
             ctx.cache
+
+
+class _ExplodingSource:
+    """A source that throws something the reader was never taught to expect, once."""
+
+    def __init__(self, inner, exc):
+        self._inner = inner
+        self._exc = exc
+        self.armed = True
+
+    def capacity(self):
+        return self._inner.capacity()
+
+    def max_message_size(self):
+        return self._inner.max_message_size()
+
+    def get(self, length):
+        if self.armed:
+            self.armed = False
+            raise self._exc
+        return self._inner.get(length)
+
+    def holds_shared(self):
+        return self._inner.holds_shared()
+
+    def release(self):
+        self._inner.release()
+
+
+@unittest.skipUnless(
+    not utils.USE_THP, "the codec service endpoint exists only in a codec build"
+)
+class TestWardCodecReaderSurvives(unittest.TestCase):
+    """One bad message must not retire the endpoint for the rest of the session."""
+
+    def setUp(self):
+        self._real = W._CONTEXT
+
+    def tearDown(self):
+        W._CONTEXT = self._real
+
+    def test_an_unexpected_exception_does_not_stop_the_reader(self):
+        """`FirmwareError` and `MemoryError` are not `WireError`, and used to escape.
+
+        The loop's `finally` clears `_CONTEXT`, so what looked like one refused message was in
+        fact the end of the service interface: every WARD operation afterwards fails at
+        `service_link()` until the next MicroPython session restart. A daemon must not be able to
+        buy that by sending one message.
+        """
+        iface = MockHID()
+        bootstrap = _ExplodingSource(
+            private_source(512, 512), FirmwareError("no buffer for you")
+        )
+        pooled = CodecBufferSource(WireBuffer(256), SharedBuffer(4096), 4096)
+
+        gen = W.handle_ward_codec_interface(iface, bootstrap, pooled)
+        gen.send(None)  # parks on the first read
+        self.assertIsNotNone(W._CONTEXT)
+
+        # A header is enough: the source explodes as soon as the message asks for memory.
+        header = b"?##" + struct.pack(">HL", MessageType.WardServiceOpen, 0)
+        try:
+            # Absorbed, and a refusal is queued: the reader is now parked on the write.
+            iface.mock_read(header, gen)
+            # One packet is enough for a `Failure`. After it the loop goes back to reading.
+            gen.send(iface.TX_PACKET_LEN)
+        except StopIteration:
+            self.fail("the reader stopped on an exception it should have absorbed")
+        except Exception as exc:
+            self.fail("the exception escaped the reader: %s" % exc)
+
+        self.assertIsNotNone(W._CONTEXT)
+        self.assertFalse(bootstrap.armed)
+        # It answered rather than going quiet.
+        self.assertEqual(len(iface.data), 1)
+
+        gen.close()
 
 
 @unittest.skipUnless(
