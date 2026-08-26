@@ -160,6 +160,9 @@ def ward_service_transport(client: TrezorTestContext) -> str | None:
                 _IS_SERVICE_BUILD = "codec" if speaks_codec else "thp"
             finally:
                 ward_iface.close()
+
+    # Narrowed for the typechecker: the branch above leaves the sentinel behind or raises.
+    assert not isinstance(_IS_SERVICE_BUILD, _Unprobed)
     return _IS_SERVICE_BUILD
 
 
