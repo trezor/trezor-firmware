@@ -11,7 +11,7 @@ if __debug__:
 
 
 if TYPE_CHECKING:
-    from typing import TypeVar
+    from typing import Callable, TypeVar
 
     from buffer_types import AnyBuffer
 
@@ -25,6 +25,17 @@ if TYPE_CHECKING:
 
 class CodecContext(Context):
     """ "Wire context" for `protocol_v1`."""
+
+    # HOW LONG A MESSAGE MAY STAY HALF-READ, or None for as long as it likes. A host-driven wallet
+    # interface has always had no bound and keeps none: the host is the one waiting for an answer,
+    # so a message it never finishes costs only itself. An interface the DEVICE initiates on is a
+    # different matter -- see `WardCodecContext`.
+    continuation_timeout_ms: int | None = None
+
+    # WHETHER A READ IN PROGRESS IS STILL WANTED, asked after each continuation report, or None to
+    # never ask. Only an interface the device initiates on has an answer worth giving: a wallet
+    # read is wanted by definition, because a host is waiting for what follows it.
+    abandon_read: "Callable[[], bool] | None" = None
 
     def __init__(
         self,
@@ -40,7 +51,9 @@ class CodecContext(Context):
         The returned `Message` carries the receive lease; whoever decodes it ends it. See
         `message_handler.decode_message`.
         """
-        return codec_v1.read_message(self.iface, self.buffers)
+        return codec_v1.read_message(
+            self.iface, self.buffers, self.continuation_timeout_ms, self.abandon_read
+        )
 
     async def read(
         self,

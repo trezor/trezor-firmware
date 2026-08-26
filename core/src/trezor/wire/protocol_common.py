@@ -352,6 +352,16 @@ class WireError(Exception):
     pass
 
 
+class ReadCancelled(WireError):
+    """A read was abandoned from outside rather than failing on its own.
+
+    Not an error on the wire and not something to answer. It means the conversation the read
+    belonged to has already been given up on, so the reader is being told to stop waiting for a
+    message nobody is going to want -- and, more to the point, to let go of the receive buffer that
+    message had already taken.
+    """
+
+
 class ChannelPreemptedException(Exception):
     """THP uses this exception to free up resources taken by potentially stuck channel.
     Raising this exception should restart the event loop."""
