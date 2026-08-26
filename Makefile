@@ -55,6 +55,7 @@ pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
 	isort --version | awk '/VERSION/{print $$2}'
 	black --version
+	ruff --version
 	pylint --version
 	pyright --version
 	@echo [TYPECHECK]
@@ -67,6 +68,8 @@ pystyle_check: ## run code style check on application sources and tests
 	@isort --check-only $(PY_FILES)
 	@echo [BLACK]
 	@black --check $(BLACK_FLAGS) $(PY_FILES)
+	@echo [RUFF - PEP 585]
+	@ruff check
 	@echo [PYLINT]
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
@@ -82,6 +85,8 @@ pystyle: ## apply code style on application sources and tests
 	@isort $(PY_FILES)
 	@echo [BLACK]
 	@black $(BLACK_FLAGS) $(PY_FILES)
+	@echo [RUFF - PEP 585]
+	@ruff check --fix
 	@echo [TYPECHECK]
 	@make -C core typecheck
 	@echo [TYPECHECK - COMMON and TOOLS]
