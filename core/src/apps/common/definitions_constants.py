@@ -2,7 +2,7 @@
 # (by running `make templates` in `core`)
 # do not edit manually!
 
-MIN_DATA_VERSION = 1783520408
+MIN_DATA_VERSION = 1785520878
 FORMAT_VERSION = b"trzd1"
 
 # The public keys and signature threshold for definitions verification
