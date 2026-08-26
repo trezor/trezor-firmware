@@ -1,8 +1,7 @@
 use core::ops::DerefMut;
 use core::pin::Pin;
 
-use crate::memory::Memory;
-use crate::secret::ZeroableMemory;
+use crate::memory::{Memory, ZeroableMemory};
 
 pub trait RawHasher: ZeroableMemory {
     type Digest;

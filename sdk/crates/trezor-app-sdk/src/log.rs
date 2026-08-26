@@ -69,7 +69,7 @@ macro_rules! log {
             feature = "log_level_debug",
         ))]
         {
-            $crate::print::log($level, |writer| ufmt::uwrite!(writer, $($args)*));
+            $crate::print::log($level, |mut writer| ufmt::uwrite!(writer, $($args)*));
         }
     }
 }
@@ -195,7 +195,7 @@ macro_rules! info {
         ))]
         {
             $crate::log::log!(
-                $crate::log::Level::Info,
+                $crate::traits::syslog::LogLevel::Info,
                 $($arg)*
             );
         }
@@ -236,7 +236,7 @@ macro_rules! debug {
         )]
         {
             $crate::log::log!(
-                $crate::log::Level::Debug,
+                $crate::traits::syslog::LogLevel::Debug,
                 $($arg)*
             );
         }

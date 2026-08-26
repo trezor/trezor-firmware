@@ -26,6 +26,7 @@
 #ifdef KERNEL_MODE
 
 #include <rtl/sizedefs.h>
+#include <sys/dbg_console.h>
 #include <sys/sysevent_source.h>
 #include <sys/systask.h>
 
@@ -278,7 +279,8 @@ static bool on_check_read_ready(void *context, systask_id_t task_id,
   UNUSED(param);
 
   ipc_queue_t *queue = ipc_queue(task_id, origin);
-  return (queue != NULL && queue->rptr < queue->wptr);
+  bool ready = (queue != NULL && queue->rptr < queue->wptr);
+  return ready;
 }
 
 static const syshandle_vmt_t g_ipc_handle_vmt = {

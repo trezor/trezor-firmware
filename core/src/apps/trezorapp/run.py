@@ -100,7 +100,10 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
 
     try:
         if __debug__:
-            log.debug(__name__, f"Sending wire start IPC message: {request.message_id}")
+            log.debug(
+                __name__,
+                f"Sending wire start IPC message: {request.message_id} to task_id: {task_id}",
+            )
         io.ipc_send(
             task_id,
             fn_id(_SERVICE_WIRE_START, request.message_id),
@@ -110,6 +113,8 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
         if __debug__:
             log.error(__name__, "Failed to send IPC message")
         die(DataError(f"Failed to send IPC message: {e}"))
+
+    log.debug(__name__, "Starting main loop for Trezor app")
 
     progress_obj: ProgressLayout | None = None
 
@@ -124,6 +129,7 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
         if not image.is_running():
             raise DataError(f"Task stopped: {request.instance_id}")
         try:
+            log.debug(__name__, "Waiting for IPC message")
             msg: IpcMessage = await loop.wait(
                 io.IPC2_EVENT | io.POLL_READ, timeout_ms=1000
             )

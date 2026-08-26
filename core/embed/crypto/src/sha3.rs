@@ -14,7 +14,7 @@ impl ffi::SHA3_CTX {
     /// # Copy hazard
     ///
     /// None because a "freshly initialized context" is public information.
-    fn init(&mut self, bit_size: u32) -> Result<(), Error> {
+    pub fn init(&mut self, bit_size: u32) -> Result<(), Error> {
         // SAFETY: ffi
         // COPY HAZARD: no sensitive data is encoded into the state
         if unsafe { ffi::sha3_Init(self, bit_size) } {
@@ -23,29 +23,91 @@ impl ffi::SHA3_CTX {
             Err(Error::InvalidParams)
         }
     }
+
+    /// # Copy hazard
+    ///
+    /// The caller must not move or copy `self` for as long as it keeps
+    /// using it via [`Self::hazard_update`] / [`Self::hazard_sha3_finalize`]
+    /// / [`Self::hazard_keccak_finalize`]. Prefer [`Sha3_256`] & co, which
+    /// enforce this via pinning; this raw API only exists for callers that
+    /// cannot use a pinned context (e.g. because they must own the hasher by
+    /// value, as required by some external trait).
+    pub fn hazard_update(&mut self, data: &[u8]) {
+        let ptr = CSlice::from(data);
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::sha3_Update(self, ptr.ptr(), ptr.len()) };
+    }
+
+    /// Finalize as SHA-3 into `buffer`.
+    ///
+    /// # Copy hazard
+    ///
+    /// See [`Self::hazard_update`].
+    pub fn hazard_sha3_finalize(&mut self, buffer: &mut [u8]) {
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::sha3_Final(self, buffer.as_mut_ptr()) };
+    }
+
+    /// Finalize as Keccak into `buffer`.
+    ///
+    /// # Copy hazard
+    ///
+    /// See [`Self::hazard_update`].
+    pub fn hazard_keccak_finalize(&mut self, buffer: &mut [u8]) {
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::keccak_Final(self, buffer.as_mut_ptr()) };
+    }
 }
 
 impl HazardGuard<'_, ffi::SHA3_CTX> {
     /// Update the SHA3/Keccak context with the given data.
     fn update(&mut self, data: &[u8]) {
-        let ptr = CSlice::from(data);
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::sha3_Update(self.hazard_mut(), ptr.ptr(), ptr.len()) };
+        self.hazard_mut().hazard_update(data);
     }
 
     /// Finalize as SHA-3 into `buffer`.
     fn sha3_finalize(&mut self, buffer: &mut [u8]) {
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::sha3_Final(self.hazard_mut(), buffer.as_mut_ptr()) };
+        self.hazard_mut().hazard_sha3_finalize(buffer);
     }
 
     /// Finalize as Keccak into `buffer`.
     fn keccak_finalize(&mut self, buffer: &mut [u8]) {
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::keccak_Final(self.hazard_mut(), buffer.as_mut_ptr()) };
+        self.hazard_mut().hazard_keccak_finalize(buffer);
+    }
+}
+
+impl Sha3Ctx {
+    /// Initialize the SHA3/Keccak context for the given digest bit size.
+    pub fn init(&mut self, bit_size: u32) -> Result<(), Error> {
+        self.hazard_mut().init(bit_size)
+    }
+
+    /// # Copy hazard
+    ///
+    /// See [`ffi::SHA3_CTX::hazard_update`].
+    pub fn hazard_update(&mut self, data: &[u8]) {
+        self.hazard_mut().hazard_update(data);
+    }
+
+    /// Finalize as SHA-3 into `buffer`.
+    ///
+    /// # Copy hazard
+    ///
+    /// See [`ffi::SHA3_CTX::hazard_update`].
+    pub fn hazard_sha3_finalize(&mut self, buffer: &mut [u8]) {
+        self.hazard_mut().hazard_sha3_finalize(buffer);
+    }
+
+    /// Finalize as Keccak into `buffer`.
+    ///
+    /// # Copy hazard
+    ///
+    /// See [`ffi::SHA3_CTX::hazard_update`].
+    pub fn hazard_keccak_finalize(&mut self, buffer: &mut [u8]) {
+        self.hazard_mut().hazard_keccak_finalize(buffer);
     }
 }
 

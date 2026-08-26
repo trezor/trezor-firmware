@@ -1,3 +1,6 @@
+use stabby::str::Str;
+
+use crate::debug;
 use crate::traits::ApiVariant as ApiVersion;
 use crate::traits::crypto::StaticCryptoV1;
 use crate::traits::syslog::StaticSyslogV1;
@@ -9,6 +12,30 @@ static API: spin::Once<&'static TrezorApiV1Struct> = spin::Once::new();
 
 const API_VERSION: u32 = 1;
 
+#[cfg(not(feature = "test"))]
+unsafe extern "Rust" {
+    unsafe fn app() -> crate::error::Result<()>;
+}
+
+/// Words for this app's own IPC inbox buffer, registered with Core once at
+/// startup (see [`register_inbox`]). 8192 `usize` words is 64 KiB on a
+/// 32-bit target, matching the kernel's `IPC_MAX_BUFFER_SIZE`.
+const INBOX_WORDS: usize = 8192;
+
+/// Allocates this app's IPC inbox buffer out of its own heap and hands it to
+/// Core. Core never allocates memory of its own for IPC — it only ever
+/// borrows a buffer the app itself allocated, matching the per-app-heap
+/// model apps already get everything else (`AllocatorProxy`) through.
+fn register_inbox(api: &TrezorApiV1Struct) {
+    use stabby::slice::SliceMut;
+
+    use crate::traits::service::IpcRemoteDyn as _;
+
+    let buffer: &'static mut [usize] =
+        alloc::boxed::Box::leak(alloc::vec![0usize; INBOX_WORDS].into_boxed_slice());
+    api.ipc.register_inbox(SliceMut::from(buffer));
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core::ffi::c_int {
     match api_get(API_VERSION) {
@@ -16,6 +43,33 @@ pub unsafe extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core:
             API.call_once(|| api);
         }
     }
+
+    debug!(
+        "Applet main entry point called, API version: {}",
+        API_VERSION
+    );
+
+    #[cfg(not(feature = "test"))]
+    {
+        // `init` must run before anything that might allocate (including
+        // `register_inbox`, right below): it's what gives this app's own
+        // heap region to `AllocatorProxy` in the first place.
+        get_api_or_die().api.init();
+        register_inbox(get_api_or_die());
+
+        match unsafe { app() } {
+            Ok(()) => system_exit(),
+            Err(e) => {
+                let mut error_buf = [0u8; 256];
+                let mut writer = crate::util::SliceWriter::new(&mut error_buf);
+                _ = ufmt::uwrite!(writer, "{}", e);
+                crate::error!("{}", writer.as_ref());
+                system_exit_error("Error", writer.as_ref(), "");
+            }
+        }
+    }
+
+    #[cfg(feature = "test")]
     0
 }
 
@@ -37,4 +91,60 @@ pub(crate) fn try_get_syslog() -> Option<StaticSyslogV1> {
 
 pub(crate) fn get_crypto_or_die() -> StaticCryptoV1 {
     get_api_or_die().crypto
+}
+
+// Returns a reference (rather than the `IpcRemoteRef<'static>` by value, as
+// `get_crypto_or_die`/`try_get_syslog` do) because `IpcRemote`'s methods tie
+// their return lifetime to `&self`: calling them on an owned temporary would
+// tie `IpcError`/`MessageRef` to that temporary's scope instead of
+// `'static`. Borrowing the field directly out of the `'static` API struct
+// keeps that lifetime `'static` all the way through.
+pub(crate) fn get_ipc_or_die() -> &'static crate::traits::service::IpcRemoteRef<'static> {
+    &get_api_or_die().ipc
+}
+
+/// Terminates the app normally.
+pub(crate) fn system_exit() -> ! {
+    get_api_or_die().api.system_exit()
+}
+
+/// Terminates the app, showing an error screen with `title`/`message`/`footer`.
+pub(crate) fn system_exit_error(title: &str, message: &str, footer: &str) -> ! {
+    get_api_or_die()
+        .api
+        .system_exit_error(Str::from(title), Str::from(message), Str::from(footer))
+}
+
+/// Terminates the app after an unrecoverable (e.g. panic) failure.
+pub(crate) fn system_exit_fatal(message: &str, file: &str, line: u32) -> ! {
+    get_api_or_die()
+        .api
+        .system_exit_fatal(Str::from(message), Str::from(file), line)
+}
+
+#[cfg(all(feature = "debug", not(feature = "test"), feature = "nightly"))]
+#[lang = "eh_personality"]
+fn eh_personality() -> ! {
+    loop {}
+}
+
+#[cfg(all(feature = "debug", not(feature = "test"), feature = "nightly"))]
+#[unsafe(no_mangle)]
+unsafe extern "C" fn _Unwind_Resume() {
+    unsafe { core::intrinsics::unreachable() };
+}
+
+#[cfg(all(feature = "debug", not(feature = "test")))]
+#[panic_handler]
+fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
+    let msg = info.message().as_str().unwrap_or("PANIC");
+    let (file, line) = info
+        .location()
+        .map(|loc| {
+            let file = loc.file();
+            let file_short = file.rsplit('/').next().unwrap_or(file);
+            (file_short, loc.line())
+        })
+        .unwrap_or(("<unknown>", 0));
+    system_exit_fatal(msg, file, line);
 }

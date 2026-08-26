@@ -1,50 +1,100 @@
 use core::ops::DerefMut;
-use core::pin::Pin;
 
 use rtl::CSlice;
 
 use super::ffi;
-use super::memory::{Memory, init_ctx};
 use super::secret::{HazardGuard, SecretContext, SecretContextLock, ZeroableMemory};
-use crate::hasher::{PinnedHasher, RawHasher};
 
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-type HmacSha256Ctx = ffi::HMAC_SHA256_CTX;
+pub type HmacSha256Ctx = SecretContext<ffi::HMAC_SHA256_CTX>;
 
-unsafe impl ZeroableMemory for HmacSha256Ctx {}
+// SAFETY: HMAC_SHA256_CTX is valid when zeroed
+unsafe impl ZeroableMemory for ffi::HMAC_SHA256_CTX {}
+
+impl ffi::HMAC_SHA256_CTX {
+    /// Initializes the context with `key` in place.
+    ///
+    /// Called by [`HmacSha256::new`]. Call again when reusing the context
+    /// after [`Self::hazard_finalize`] / [`HazardGuard::finalize`].
+    ///
+    /// # Copy hazard
+    ///
+    /// None because a "freshly initialized context" is public information.
+    pub fn init(&mut self, key: &[u8]) {
+        // SAFETY: ffi
+        unsafe { ffi::hmac_sha256_Init(self, key.as_ptr(), key.len() as u32) };
+    }
+
+    /// # Copy hazard
+    ///
+    /// The caller must not move or copy `self` for as long as it keeps
+    /// using it via [`Self::hazard_update`] / [`Self::hazard_finalize`].
+    /// Prefer [`HmacSha256`] which enforces this via pinning; this raw API
+    /// only exists for callers that cannot use a pinned context (e.g.
+    /// because they must own the hasher by value, as required by some
+    /// external trait).
+    pub fn hazard_update(&mut self, data: &[u8]) {
+        let ptr = CSlice::from(data);
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::hmac_sha256_Update(self, ptr.ptr(), ptr.len() as u32) };
+    }
+
+    /// # Copy hazard
+    ///
+    /// See [`Self::hazard_update`].
+    pub fn hazard_finalize(&mut self) -> Digest {
+        let mut digest = [0u8; DIGEST_SIZE];
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::hmac_sha256_Final(self, digest.as_mut_ptr()) };
+        digest
+    }
+}
 
 impl HazardGuard<'_, ffi::HMAC_SHA256_CTX> {
     /// Initialize the HMAC context with the given key.
     ///
     /// Called by [`HmacSha256::new`].
     fn init(&mut self, key: &[u8]) {
-        let ptr = CSlice::from(key);
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::hmac_sha256_Init(self.hazard_mut(), ptr.ptr(), ptr.len() as u32) };
+        self.hazard_mut().init(key);
     }
 
     /// Update the HMAC context with the given data.
     fn update(&mut self, data: &[u8]) {
-        let ptr = CSlice::from(data);
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::hmac_sha256_Update(self.hazard_mut(), ptr.ptr(), ptr.len() as u32) };
+        self.hazard_mut().hazard_update(data);
     }
 
     /// Finalize the HMAC context and return the digest.
     fn finalize(&mut self) -> Digest {
-        let mut digest = [0u8; DIGEST_SIZE];
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::hmac_sha256_Final(self.hazard_mut(), digest.as_mut_ptr()) };
-        digest
+        self.hazard_mut().hazard_finalize()
     }
 }
 
-pub type HmacSha256<'a> = PinnedHasher<&'a mut Memory<HmacSha256Ctx>>;
+impl HmacSha256Ctx {
+    /// Initializes the context with `key` in place.
+    pub fn init(&mut self, key: &[u8]) {
+        self.hazard_mut().init(key);
+    }
+
+    /// # Copy hazard
+    ///
+    /// See [`ffi::HMAC_SHA256_CTX::hazard_update`].
+    pub fn hazard_update(&mut self, data: &[u8]) {
+        self.hazard_mut().hazard_update(data);
+    }
+
+    /// # Copy hazard
+    ///
+    /// See [`ffi::HMAC_SHA256_CTX::hazard_update`].
+    pub fn hazard_finalize(&mut self) -> Digest {
+        self.hazard_mut().hazard_finalize()
+    }
+}
+
+pub struct HmacSha256<D: DerefMut<Target = HmacSha256Ctx>>(SecretContextLock<D>);
 
 impl<D: DerefMut<Target = HmacSha256Ctx>> HmacSha256<D> {
     /// Construct a new HMAC-SHA256 hasher keyed by `key`.
@@ -128,9 +178,7 @@ mod test {
 
     #[test]
     fn test_empty_ctx() {
-        let mut ctx = HmacSha256Ctx::default();
-        let hmac = HmacSha256::new(&mut ctx, b"");
-        let out = hmac.finalize();
+        let out = HmacSha256::digest(b"", b"");
         let out_hex = hex::encode(out);
 
         assert_eq!(out_hex, HMAC_SHA256_EMPTY);

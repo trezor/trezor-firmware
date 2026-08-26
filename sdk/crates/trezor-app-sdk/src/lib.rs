@@ -24,7 +24,7 @@
     all(feature = "debug", not(feature = "test"), feature = "nightly"),
     feature(lang_items)
 )]
-#![warn(missing_docs)]
+// #![warn(missing_docs)]
 #![feature(allocator_api)]
 #![feature(const_trait_impl)]
 #![feature(panic_internals)]
@@ -33,7 +33,7 @@ extern crate alloc;
 
 pub mod error;
 // Always available: shared API structs used by both core app and extapps
-mod structs;
+pub mod structs;
 
 #[cfg(feature = "app")]
 pub mod app_runtime2;
@@ -44,14 +44,8 @@ pub mod traits;
 #[cfg(feature = "app")]
 mod alloc_types;
 // #[cfg(feature = "app")]
-// mod core_services;
-// #[cfg(feature = "app")]
 // mod critical_section;
-// #[cfg(feature = "app")]
-// mod low_level_api;
 
-// #[cfg(feature = "app")]
-// pub mod alloc_types;
 #[cfg(feature = "app")]
 pub mod crypto;
 
@@ -87,11 +81,12 @@ mod wire;
 #[cfg(feature = "test")]
 pub mod mock;
 
-// Everything below requires the `app` feature
 #[cfg(feature = "app")]
-mod app_runtime;
-
-#[cfg(feature = "app")]
-pub use app_runtime::{Align, Error, Result, ResultExt};
+pub use error::{Align, Error, IntoAppResult, Result, ResultExt};
 #[cfg(feature = "app")]
 pub use ui::{ArchivedTrezorUiEnum, ArchivedTrezorUiResult};
+#[cfg(feature = "app")]
+pub use wire::{
+    WireDecode, WireEncode, WireRequest, wire_error_raw, wire_receive_wire_start, wire_request,
+    wire_request_raw, wire_respond_raw,
+};

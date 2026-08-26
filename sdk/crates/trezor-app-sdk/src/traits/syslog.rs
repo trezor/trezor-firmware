@@ -32,3 +32,4 @@ pub trait SyslogV1: Send + Sync {
 
 pub type SyslogV1Vtable = stabby::vtable!(SyslogV1 + Send + Sync);
 pub type SyslogV1Ref<'a> = stabby::DynRef<'a, SyslogV1Vtable>;
+pub type StaticSyslogV1 = SyslogV1Ref<'static>;
