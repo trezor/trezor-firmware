@@ -25,7 +25,7 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	BleUnpair PaymentNotification Evolu \
 	GetSerialNumber SerialNumber \
 	TelemetryGet, Telemetry \
-	Ward
+	Ward DisplayAddress
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum NEM Stellar
