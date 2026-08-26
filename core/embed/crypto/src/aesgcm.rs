@@ -24,6 +24,8 @@ enum State {
 
 unsafe impl ZeroableMemory for ffi::gcm_ctx {}
 
+pub type AesGcmContext = SecretContext<ffi::gcm_ctx>;
+
 struct AesGcmInner<'a> {
     ctx: SecretContextLock<&'a mut AesGcmContext>,
     state: State,

@@ -77,11 +77,20 @@ fn syslog() -> StaticSyslogV1 {
     if let Some(syslog) = app_runtime2::try_get_syslog() {
         return syslog;
     }
-    if cfg!(not(target_os = "none")) {
-        (&unix_ffi::UnixLogger).into()
-    } else {
-        (&NoOutput).into()
-    }
+    fallback_syslog()
+}
+
+// `unix_ffi` only exists off-target (see its `#[cfg]` above), so the choice
+// between it and `NoOutput` has to be a real `#[cfg]` on two functions rather
+// than a runtime `if cfg!(...)` — the latter still type-checks both branches.
+#[cfg(not(target_os = "none"))]
+fn fallback_syslog() -> StaticSyslogV1 {
+    (&unix_ffi::UnixLogger).into()
+}
+
+#[cfg(target_os = "none")]
+fn fallback_syslog() -> StaticSyslogV1 {
+    (&NoOutput).into()
 }
 
 pub fn log_simple(level: LogLevel, message: &str) {

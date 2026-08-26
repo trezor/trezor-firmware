@@ -1,5 +1,5 @@
 use stabby::alloc::string::String;
-use stabby::boxed::{Box, BoxedSlice};
+use stabby::boxed::BoxedSlice;
 use stabby::slice::Slice;
 use stabby::str::Str;
 
@@ -13,13 +13,20 @@ pub enum CryptoError {
     InvalidEncoding,
 }
 
-#[stabby::stabby(checked)]
-pub trait Hasher {
-    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>);
-    extern "C" fn finalize(&mut self) -> BoxedSlice<u8>;
-}
-
-pub type BoxedHasher = stabby::dynptr!(Box<dyn Hasher>);
+/// Opaque handle to a streaming hash in progress.
+///
+/// `get_hasher`/`get_hmac_hasher` heap-allocate the hash context and hand
+/// back a pointer to it, pinned at that heap address for the hasher's
+/// lifetime — any number of hashers, of any mix of algorithms, can be in
+/// flight at once. Core owns and interprets the pointee; the app must treat
+/// this as opaque, and pass it to `hasher_update` any number of times
+/// before passing it to `hasher_finalize` exactly once, which consumes it
+/// and frees the underlying allocation. A handle that is never finalized
+/// leaks.
+#[stabby::stabby]
+#[repr(transparent)]
+#[derive(Clone, Copy)]
+pub struct BoxedHasher(pub *mut u8);
 
 #[stabby::stabby]
 #[repr(u8)]
@@ -28,7 +35,6 @@ pub enum HashingAlgorithm {
     Sha3_256,
     Sha512,
     Keccak256,
-    HmacSha256,
 }
 
 #[stabby::stabby]
@@ -39,27 +45,16 @@ pub enum EcCurve {
     Ed25519,
 }
 
-#[stabby::stabby]
-pub struct Xpub {
-    pub version: [u8; 4],
-    pub depth: u8,
-    pub fingerprint: [u8; 4],
-    pub child_number_bytes: [u8; 4],
-    pub chain_code: [u8; 32],
-    pub key: [u8; 33],
-}
-
-impl Xpub {
-    pub fn child_number(&self) -> u32 {
-        u32::from_be_bytes(self.child_number_bytes)
-    }
-}
-
-pub type DerivationPath<'a> = Slice<'a, u32>;
-
 #[stabby::stabby(checked)]
 pub trait CryptoV1: Send + Sync {
     extern "C" fn get_hasher(&self, algorithm: HashingAlgorithm) -> BoxedHasher;
+    /// Starts an HMAC-SHA256 computation under `key`. `key` is only read
+    /// during this call (copied into the HMAC context's internal state);
+    /// Core never retains it afterward.
+    extern "C" fn get_hmac_hasher<'a>(&self, key: Slice<'a, u8>) -> BoxedHasher;
+    extern "C" fn hasher_update<'a>(&self, hasher: BoxedHasher, input: Slice<'a, u8>);
+    extern "C" fn hasher_finalize(&self, hasher: BoxedHasher) -> BoxedSlice<u8>;
+
     extern "C" fn ec_verify_recover<'a>(
         &self,
         curve: EcCurve,
@@ -75,25 +70,6 @@ pub trait CryptoV1: Send + Sync {
         digest: Slice<'a, u8>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError>;
 
-    extern "C" fn ec_sign<'a>(
-        &self,
-        curve: EcCurve,
-        derivation_path: DerivationPath<'a>,
-        message: Slice<'a, u8>,
-    ) -> FastResult<BoxedSlice<u8>, CryptoError>;
-    extern "C" fn ec_sign_digest<'a>(
-        &self,
-        curve: EcCurve,
-        derivation_path: DerivationPath<'a>,
-        digest: Slice<'a, u8>,
-    ) -> FastResult<BoxedSlice<u8>, CryptoError>;
-
-    extern "C" fn get_xpub<'a>(
-        &self,
-        curve: EcCurve,
-        derivation_path: DerivationPath<'a>,
-    ) -> FastResult<Xpub, CryptoError>;
-
     extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String;
     extern "C" fn base58_decode<'a>(
         &self,
@@ -108,3 +84,4 @@ pub trait CryptoV1: Send + Sync {
 
 pub type CryptoV1Vtable = stabby::vtable!(CryptoV1 + Send + Sync);
 pub type CryptoV1Ref<'a> = stabby::DynRef<'a, CryptoV1Vtable>;
+pub type StaticCryptoV1 = CryptoV1Ref<'static>;

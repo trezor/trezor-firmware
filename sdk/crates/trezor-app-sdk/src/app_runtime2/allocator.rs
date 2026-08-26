@@ -2,6 +2,12 @@ use core::alloc::{GlobalAlloc, Layout};
 
 use crate::traits::allocator::{GlobalAllocatorV1Dyn as _, GlobalAllocatorV1Ref};
 
+// Under `test`, this crate is a normal `std` build running as one of many
+// independent unit tests in a shared process — most of them never call
+// `applet_main`/`mock::sdk_init` at all, so routing every allocation through
+// `get_api_or_die()` would panic on the very first allocation the test
+// harness itself makes. Let `std`'s default allocator handle test binaries.
+#[cfg(not(feature = "test"))]
 #[global_allocator]
 static REMOTE_ALLOCATOR: RedirAllocator = RedirAllocator;
 

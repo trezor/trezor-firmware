@@ -10,7 +10,7 @@ use rkyv::{
     Archived,
 };
 #[cfg(feature = "app_loading")]
-use trezor_app_sdk::crypto::{Slice, TrezorCryptoEnum, TrezorCryptoResultRef};
+use trezor_app_sdk::structs::{Slice, TrezorCryptoEnum, TrezorCryptoResultRef};
 
 #[cfg(feature = "app_loading")]
 use crate::micropython::gc::Gc;

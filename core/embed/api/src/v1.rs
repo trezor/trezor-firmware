@@ -1,6 +1,7 @@
 use stabby::str::Str;
 use trezor_app_sdk::traits::allocator::GlobalAllocatorV1Vtable;
 use trezor_app_sdk::traits::crypto::CryptoV1Vtable;
+use trezor_app_sdk::traits::service::IpcRemoteVtable;
 use trezor_app_sdk::traits::syslog::SyslogV1Vtable;
 use trezor_app_sdk::traits::trezor_v1::TrezorApiV1Vtable;
 use trezor_app_sdk::traits::{TrezorApiV1, TrezorApiV1Struct};
@@ -8,17 +9,23 @@ use trezor_app_sdk::traits::{TrezorApiV1, TrezorApiV1Struct};
 use crate::allocator::AllocatorProxy;
 use crate::crypto::TrezorCryptoV1Impl;
 use crate::syslog::TrezorSyslogV1Impl;
+use crate::wire::IpcRemoteImpl;
 
 pub static TREZOR_API_V1: TrezorApiV1Struct = TrezorApiV1Struct {
     api: stabby::dynref_static!(TrezorApiV1Impl as TrezorApiV1Vtable),
     allocator: stabby::dynref_static!(AllocatorProxy as GlobalAllocatorV1Vtable),
     crypto: stabby::dynref_static!(TrezorCryptoV1Impl as CryptoV1Vtable),
     syslog: stabby::dynref_static!(TrezorSyslogV1Impl as SyslogV1Vtable),
+    ipc: stabby::dynref_static!(IpcRemoteImpl as IpcRemoteVtable),
 };
 
 struct TrezorApiV1Impl;
 
 impl TrezorApiV1 for TrezorApiV1Impl {
+    extern "C" fn init(&self) {
+        crate::allocator::init();
+    }
+
     extern "C" fn system_exit(&self) -> ! {
         rtl::sysexit::system_exit()
     }
@@ -45,6 +52,7 @@ impl TrezorApiV1 for TrezorApiV1Impl {
     }
 
     extern "C" fn sleep(&self, timeout_ms: u32) {
-        todo!()
+        let deadline = sys::time::ticks_ms().wrapping_add(timeout_ms);
+        sys::sysevent::sleep_until(deadline);
     }
 }

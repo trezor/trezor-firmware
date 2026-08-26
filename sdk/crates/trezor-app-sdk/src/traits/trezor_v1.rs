@@ -2,10 +2,17 @@ use stabby::str::Str;
 
 use super::allocator::GlobalAllocatorV1Ref;
 use super::crypto::CryptoV1Ref;
+use super::service::IpcRemoteRef;
 use super::syslog::SyslogV1Ref;
 
 #[stabby::stabby(checked)]
 pub trait TrezorApiV1: Send + Sync {
+    /// Prepares Core's per-app-launch state for the app currently calling
+    /// in — right now, that's (re)claiming this app's heap region for
+    /// `AllocatorProxy`. Must be called exactly once, before any other API
+    /// call that might allocate (including `IpcRemote::register_inbox`).
+    extern "C" fn init(&self);
+
     extern "C" fn system_exit(&self) -> !;
     extern "C" fn system_exit_error<'a>(
         &self,
@@ -28,4 +35,5 @@ pub struct TrezorApiV1Struct {
     pub allocator: GlobalAllocatorV1Ref<'static>,
     pub crypto: CryptoV1Ref<'static>,
     pub syslog: SyslogV1Ref<'static>,
+    pub ipc: IpcRemoteRef<'static>,
 }
