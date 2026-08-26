@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.12.5] (16th September 2026)
+
+### Added
+- Tron: Support for Resource delegation.  [#7100]
+- Stellar: Show SEP-41 `transfer` and `approve` invocations of Stellar Asset Contracts as token operations.  [#7310]
+- Stellar: Show SEP-41 `transfer` and `approve` invocations of trusted token contracts as token operations.  [#7652]
+
+### Fixed
+- Show "not registered" message instead of a registration prompt when Firefox sends its dummy U2F register request.  [#3331]
+- Ethereum: Fix SLIP-24 payment request for ERC-20 tokens.  [#7140]
+- Don't fail FIDO interaction if keepalive message is blocked.  [#7487]
+- Monero: fix change address validation being skipped on sweep transactions.  [#7544]
+- Ethereum: Add derivation path to public key layout.  [#7582]
+- Show the group threshold and individual groups thresholds in Advanced Shamir backup.  [#7678]
+
+### Security
+- Ethereum: Native token transfer blocked for SLIP-24 swaps.
+- Ethereum: Native token transfer blocked for staking operations.
+- Solana: Ask user for confirmation of stake lockup settings, which were previously hidden.
+- Solana: Fixed token transfer showing the lookup-table address for ALT-referenced mint and owner accounts.
+- Stellar: allow viewing network in signing flows.
+- Stellar: display signer weight when confirming Set options operation.
+
 ## [2.12.4] (19th August 2026)
 
 ### Added
@@ -195,6 +218,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Exit pairing screen when already paired host connects.  [#5897]
 
 [#69]: https://github.com/trezor/trezor-firmware/pull/69
+[#3331]: https://github.com/trezor/trezor-firmware/pull/3331
 [#3446]: https://github.com/trezor/trezor-firmware/pull/3446
 [#3471]: https://github.com/trezor/trezor-firmware/pull/3471
 [#5358]: https://github.com/trezor/trezor-firmware/pull/5358
@@ -275,9 +299,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#7053]: https://github.com/trezor/trezor-firmware/pull/7053
 [#7065]: https://github.com/trezor/trezor-firmware/pull/7065
 [#7083]: https://github.com/trezor/trezor-firmware/pull/7083
+[#7100]: https://github.com/trezor/trezor-firmware/pull/7100
 [#7101]: https://github.com/trezor/trezor-firmware/pull/7101
+[#7140]: https://github.com/trezor/trezor-firmware/pull/7140
 [#7202]: https://github.com/trezor/trezor-firmware/pull/7202
 [#7252]: https://github.com/trezor/trezor-firmware/pull/7252
+[#7310]: https://github.com/trezor/trezor-firmware/pull/7310
 [#7312]: https://github.com/trezor/trezor-firmware/pull/7312
 [#7315]: https://github.com/trezor/trezor-firmware/pull/7315
 [#7388]: https://github.com/trezor/trezor-firmware/pull/7388
+[#7487]: https://github.com/trezor/trezor-firmware/pull/7487
+[#7544]: https://github.com/trezor/trezor-firmware/pull/7544
+[#7582]: https://github.com/trezor/trezor-firmware/pull/7582
+[#7652]: https://github.com/trezor/trezor-firmware/pull/7652
+[#7678]: https://github.com/trezor/trezor-firmware/pull/7678
