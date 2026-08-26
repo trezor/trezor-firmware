@@ -73,6 +73,9 @@ endif
 ifeq ($(WARD_SERVICE_CHANNEL),1)
 XTASK_BUILD_OPTS += --ward-service-channel
 endif
+ifeq ($(WARD_SERVICE_THP),1)
+XTASK_BUILD_OPTS += --ward-service-thp
+endif
 ifeq ($(PRODUCTION),1)
 XTASK_BUILD_OPTS += --production
 endif

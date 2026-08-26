@@ -113,6 +113,12 @@ ward_service_channel = [
     "upymod/ward_service_channel",
     "trezor_lib/ward_service_channel",
 ]
+ward_service_thp = [
+    "ward_service_channel",
+    "io/ward_service_thp",
+    "upymod/ward_service_thp",
+    "trezor_lib/ward_service_thp",
+]
 boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
 button = ["io/button", "upymod/button", "trezor_lib/button"]
 consumption_mask = ["sec/consumption_mask"]

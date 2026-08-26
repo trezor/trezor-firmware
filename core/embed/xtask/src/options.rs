@@ -206,6 +206,10 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map ward_service_channel: bool,
 
+    /// Serve the WARD service interface over THP instead of codec v1
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    map ward_service_thp: bool,
+
     /// Disable UI animations
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map disable_animation: bool,

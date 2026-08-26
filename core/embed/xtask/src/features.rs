@@ -44,6 +44,14 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
         bail!("ward_service_channel needs WARD, which is not built in bitcoin-only firmware");
     }
 
+    // WHICH TRANSPORT THE INTERFACE SPEAKS IS A SEPARATE QUESTION FROM WHETHER IT EXISTS, and the
+    // default answer is codec v1 on every build. The THP service path is kept compiling behind
+    // this option rather than deleted, so the choice can be revisited without recovering the work
+    // from history -- but it cannot be selected without an interface to serve.
+    if args.ward_service_thp && !args.ward_service_channel {
+        bail!("ward_service_thp needs --ward-service-channel: there is no interface to serve");
+    }
+
     check_usb_endpoint_budget(args)?;
 
     let mut features: Vec<String> = vec![args.model.feature_name()];
@@ -337,6 +345,34 @@ mod tests {
             error.to_string().contains("endpoints"),
             "unexpected error: {error}"
         );
+    }
+
+    #[test]
+    fn rejects_a_thp_service_transport_without_a_service_interface() {
+        // The transport option says WHAT the interface speaks, so it needs one to speak on.
+        let args = ResolvedBuildArgs {
+            ward_service_thp: true,
+            ..ResolvedBuildArgs::default()
+        };
+
+        let error = resolve_features(&args).unwrap_err();
+        assert!(
+            error.to_string().contains("ward_service_thp"),
+            "unexpected error: {error}"
+        );
+    }
+
+    #[test]
+    fn accepts_the_service_channel_speaking_thp_when_asked_for() {
+        // The default is codec v1 on the service interface; this is the opt-in that keeps the THP
+        // service path buildable, and it must remain selectable.
+        let args = ResolvedBuildArgs {
+            ward_service_channel: true,
+            ward_service_thp: true,
+            ..ResolvedBuildArgs::default()
+        };
+
+        assert!(resolve_features(&args).is_ok());
     }
 
     #[test]

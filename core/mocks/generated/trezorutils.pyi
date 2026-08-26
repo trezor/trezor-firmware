@@ -311,7 +311,9 @@ UI_LAYOUT: str
 USE_THP: bool
 """Whether the firmware supports Trezor-Host Protocol (version 2)."""
 USE_WARD_SERVICE_CHANNEL: bool
-"""Whether WARD is served over its own THP interface rather than the ordinary connection."""
+"""Whether WARD is served over its own interface rather than the ordinary connection."""
+USE_WARD_SERVICE_THP: bool
+"""Whether that interface speaks THP. It speaks codec v1 when this is false."""
 NOTIFY_BOOT: int
 """Notification event: boot completed."""
 NOTIFY_UNLOCK: int
