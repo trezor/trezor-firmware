@@ -147,6 +147,93 @@ def test_invalid_path(session: Session, coin_name, path):
         btc.get_public_node(session, path, coin_name=coin_name)
 
 
+VECTORS_MULTISIG = (  # path, script_type, xpub
+    # BIP-45 and Casa purpose-level sharing root
+    (
+        parse_path("m/45h"),
+        messages.InputScriptType.SPENDADDRESS,
+        "xpub68Zyu13qjcQxGzRBCqdFghtKtQppWvKoaZiVUdNKutNRuBQpL2rtpFYrEL8kDMKymKZdGLquD76mMhLeaAyRwKPv6FMVrFseXQG2nTkfejB",
+    ),
+    (
+        parse_path("m/45h"),
+        messages.InputScriptType.SPENDP2SHWITNESS,
+        "ypub6TQFCfiktHxS8HcJ3CQstnyq4NyGTYKJVgEiG2GDHtkJxHE3ah2TSKCzFY6LDFyuAxgS1pSTfmTKEyxDHsPSjZ5Wxb3vSAh8o8KgB2xfRj2",
+    ),
+    # Casa account level
+    (
+        parse_path("m/45h/0/0"),
+        messages.InputScriptType.SPENDP2SHWITNESS,
+        "ypub6WcontRG1iDDFhyB6bYdWAjSLV46JpWYtw2YZiudcDhatMRtL3TZLmqXhn2GZt9LKcaLrKxZ7Rh1cQDH6Yp27PMsALg9xCnMH7GvB6JUqRF",
+    ),
+    # Unchained account level
+    (
+        parse_path("m/45h/0h/0h"),
+        messages.InputScriptType.SPENDADDRESS,
+        "xpub6DL6rwpkGKGqmrGguSjWpukvK9WS6gagmAYsAPtkmaL1w3VhuKs9KDQ4jqYRAFRrmSvXRRbibM4sG4XBNbEDTRyFaQBaW86W7ihbJ9z2jU1",
+    ),
+    # BIP-48 script-type level
+    (
+        parse_path("m/48h/0h/0h/1h"),
+        messages.InputScriptType.SPENDP2SHWITNESS,
+        "ypub6ZWXbQHqxcWqqGcJG77eBGLCR2jnGbCwDhoePVEWDVkzgite1fhb2qCWgVUysKWKm7sGfo2jSw7FJrvSQMD6y8urRWQUBpvf2dsuZU2HF7U",
+    ),
+    (
+        parse_path("m/48h/0h/0h/2h"),
+        messages.InputScriptType.SPENDWITNESS,
+        "zpub6tLnu4xm7J4KkNhNgjZQgZruWzJWBmjYFrvVT84YUNjghsvHPBPeFmjqyrcmDztrp5De8ynKfWwJtgdhG7c5TuuXLSbqZy5aenhmvJJ8Kxs",
+    ),
+)
+
+
+@pytest.mark.models("core")
+@pytest.mark.parametrize("path, script_type, xpub", VECTORS_MULTISIG)
+def test_get_public_node_multisig_no_warning(session: Session, path, script_type, xpub):
+    # Sharing roots and account levels of supported multisig schemes are shown
+    # without the unknown derivation path warning.
+    with session.test_ctx as client:
+        IF = InputFlowShowXpubQRCode(session)
+        client.set_input_flow(IF.get())
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.PublicKey),
+                messages.PublicKey,
+            ]
+        )
+        res = btc.get_public_node(
+            session,
+            path,
+            coin_name="Bitcoin",
+            script_type=script_type,
+            show_display=True,
+        )
+        assert res.xpub == xpub
+
+
+@pytest.mark.models("core")
+def test_get_public_node_multisig_warning(session: Session):
+    # A path between the export points of a multisig scheme still shows the
+    # unknown derivation path warning.
+    with session.test_ctx as client:
+        IF = InputFlowShowXpubQRCode(session)
+        client.set_input_flow(IF.get())
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(
+                    code=messages.ButtonRequestType.UnknownDerivationPath
+                ),
+                messages.ButtonRequest(code=messages.ButtonRequestType.PublicKey),
+                messages.PublicKey,
+            ]
+        )
+        btc.get_public_node(
+            session,
+            parse_path("m/45h/0"),
+            coin_name="Bitcoin",
+            script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+            show_display=True,
+        )
+
+
 @pytest.mark.models("legacy")
 @pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
 def test_get_public_node_show_legacy(

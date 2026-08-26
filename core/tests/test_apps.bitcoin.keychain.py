@@ -188,5 +188,89 @@ class TestAltcoinKeychains(TestCaseWithContext):
             self.assertRaises(wire.DataError, keychain.derive, addr)
 
 
+class TestValidateXpubPath(unittest.TestCase):
+    def test_bitcoin(self):
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import validate_xpub_path_against_script_type
+
+        coin = _get_coin_by_name("Bitcoin")
+
+        valid_paths = (
+            # BIP-44 account
+            ([H_(44), H_(0), H_(0)], InputScriptType.SPENDADDRESS),
+            # BIP-45 and Casa purpose-level sharing root
+            ([H_(45)], InputScriptType.SPENDADDRESS),
+            ([H_(45)], InputScriptType.SPENDP2SHWITNESS),
+            # Casa account
+            ([H_(45), 0, 0], InputScriptType.SPENDP2SHWITNESS),
+            # Unchained account
+            ([H_(45), H_(0), H_(0)], InputScriptType.SPENDADDRESS),
+            ([H_(45), H_(0), H_(0)], InputScriptType.SPENDMULTISIG),
+            # BIP-48 script-type level
+            ([H_(48), H_(0), H_(0), H_(0)], InputScriptType.SPENDADDRESS),
+            ([H_(48), H_(0), H_(0), H_(1)], InputScriptType.SPENDP2SHWITNESS),
+            ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDWITNESS),
+            # BIP-49, BIP-84, BIP-86 accounts
+            ([H_(49), H_(0), H_(0)], InputScriptType.SPENDP2SHWITNESS),
+            ([H_(84), H_(0), H_(0)], InputScriptType.SPENDWITNESS),
+            ([H_(86), H_(0), H_(0)], InputScriptType.SPENDTAPROOT),
+            # SLIP-25 coinjoin account
+            ([H_(10025), H_(0), H_(0), H_(1)], InputScriptType.SPENDTAPROOT),
+        )
+        invalid_paths = (
+            # depths between or beyond the export points
+            ([H_(44), H_(0)], InputScriptType.SPENDADDRESS),
+            ([H_(44), H_(0), H_(0), 0], InputScriptType.SPENDADDRESS),
+            ([H_(45), 0], InputScriptType.SPENDP2SHWITNESS),
+            ([H_(48), H_(0), H_(0)], InputScriptType.SPENDWITNESS),
+            # script type mismatch
+            ([H_(44), H_(0), H_(0)], InputScriptType.SPENDP2SHWITNESS),
+            ([H_(49), H_(0), H_(0)], InputScriptType.SPENDADDRESS),
+            ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDP2SHWITNESS),
+            # coin type mismatch
+            ([H_(44), H_(1), H_(0)], InputScriptType.SPENDADDRESS),
+            # GreenAddress patterns have no hardened level, must not allow
+            # exporting the root xpub or their unhardened nodes
+            ([], InputScriptType.SPENDADDRESS),
+            ([1], InputScriptType.SPENDADDRESS),
+        )
+
+        for path, script_type in valid_paths:
+            self.assertTrue(
+                validate_xpub_path_against_script_type(coin, path, script_type)
+            )
+
+        for path, script_type in invalid_paths:
+            self.assertFalse(
+                validate_xpub_path_against_script_type(coin, path, script_type)
+            )
+
+    def test_litecoin(self):
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import validate_xpub_path_against_script_type
+
+        coin = _get_coin_by_name("Litecoin")
+
+        self.assertTrue(
+            validate_xpub_path_against_script_type(
+                coin, [H_(49), H_(2), H_(0)], InputScriptType.SPENDP2SHWITNESS
+            )
+        )
+        # BIP-45 is Bitcoin-only
+        self.assertFalse(
+            validate_xpub_path_against_script_type(
+                coin, [H_(45)], InputScriptType.SPENDADDRESS
+            )
+        )
+        # Casa applies to all segwit coins, like in address validation
+        self.assertTrue(
+            validate_xpub_path_against_script_type(
+                coin, [H_(45)], InputScriptType.SPENDP2SHWITNESS
+            )
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -92,15 +92,20 @@ async def get_public_key(
 
         from apps.common.paths import address_n_to_str
 
-        from .keychain import address_n_to_name
+        from .keychain import address_n_to_name, validate_xpub_path_against_script_type
 
         path = address_n_to_str(address_n)
         account_name = address_n_to_name(
             coin, address_n, script_type, account_level=True
         )
+        path_warning = (
+            account_name is None
+            and not validate_xpub_path_against_script_type(coin, address_n, script_type)
+        )
+        if path_warning:
+            await confirm_path_warning(path)
         if account_name is None:
             account = None
-            await confirm_path_warning(path)
         elif account_name == "":
             account = coin.coin_shortcut
         else:
@@ -114,9 +119,7 @@ async def get_public_key(
             account=account,
             path=path,
             mismatch_title=TR.addr_mismatch__xpub_mismatch,
-            warning=(
-                TR.addr_mismatch__wrong_derivation_path if account is None else None
-            ),
+            warning=(TR.addr_mismatch__wrong_derivation_path if path_warning else None),
             br_name="show_xpub",
         )
 
