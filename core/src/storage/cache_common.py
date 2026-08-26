@@ -93,9 +93,6 @@ class DataCache:
     def set_int(self, key: int, value: int) -> None:
         length = self._get_length(key)
         encoded = value.to_bytes(length, "big")
-
-        # Ensure that the value fits within the length. Micropython's int.to_bytes()
-        # doesn't raise OverflowError.
         assert int.from_bytes(encoded, "big") == value
 
         self.set(key, encoded)
