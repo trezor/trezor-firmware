@@ -189,7 +189,7 @@ class Channel:
 
             replaced_cid = replaced_channel_id.to_bytes(2, "big")
 
-            if is_ward_interface(self.iface):
+            if utils.USE_WARD_SERVICE_THP and is_ward_interface(self.iface):
                 # A SERVICE RECONNECT, NOT A HOST TAKING OVER, and the two need opposite handling.
                 #
                 # Do not close other workflows. Replacement fires whenever a host reconnects with
