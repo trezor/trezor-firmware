@@ -93,24 +93,32 @@ class CodecContext(Context):
 
         msg_size = protobuf.encoded_length(msg)
 
-        # A READ STILL IN FLIGHT KEEPS ITS LEASE. `read` raises `UnexpectedMessageException`
-        # with the message undecoded, and the workflow loop then writes a response before that
-        # message is handled -- so a write that took the lease and gave it back would hand the
-        # shared buffer away while a `Message` still views into it.
+        # A READ STILL IN FLIGHT KEEPS ITS LEASE, AND ITS MEMORY. `read` raises
+        # `UnexpectedMessageException` with the message undecoded, and the workflow loop then
+        # writes a response before that message is handled -- so a write that took the lease and
+        # gave it back would hand the shared buffer away while a `Message` still views into it.
+        #
+        # NOT ENOUGH TO KEEP THE LEASE, which is what this used to do. `SharedBuffer.acquire`
+        # returns True for the holder that already owns it, so `get()` would hand back the very
+        # bytes the pending `Message.data` points at and the response would be encoded over the
+        # request. Skip the pool entirely instead: what is written from under a held read lease is
+        # a `Failure` or a short answer, so the heap costs nothing.
         held_for_a_read = self.buffers.holds_shared()
 
         buffer: AnyBuffer | None = None
-        if msg_size <= self.buffers.capacity():
+        if not held_for_a_read and msg_size <= self.buffers.capacity():
             buffer = self.buffers.get(msg_size)
-        leased = buffer is not None and not held_for_a_read
+        leased = buffer is not None
 
         if buffer is None:
-            if msg_size > 128 and msg_size <= self.buffers.capacity():
+            if not held_for_a_read and 128 < msg_size <= self.buffers.capacity():
                 # The shared buffer is held by another message in flight. Small responses are
                 # still allowed through on the heap, which is what lets a `Failure` explaining
-                # exactly that reach the host.
+                # exactly that reach the host. Not reachable when WE are the holder -- that is
+                # not contention, and the heap below is the answer rather than a refusal.
                 raise IOError
-            # Too large for the pool, or a small response while the pool is busy.
+            # Too large for the pool, a small response while the pool is busy, or a response
+            # written while this connection's own read still views the shared buffer.
             buffer = bytearray(msg_size)
 
         try:

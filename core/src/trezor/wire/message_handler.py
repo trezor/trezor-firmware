@@ -113,6 +113,13 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
     except Error as exc:
         # Handlers are allowed to exception out. In that case, we can skip decoding
         # and return the error.
+        #
+        # RELEASED BEFORE THE WRITE, and released at all. This is the one exit that never reaches
+        # `decode_message`, so it is the one that has to end the receive lease itself -- an
+        # unregistered wire type or a filter rejection would otherwise hold the shared buffer for
+        # the rest of the session, and the buffer is shared across interfaces. Before rather than
+        # after, because `write` encodes into that same buffer while the lease is held.
+        msg.release()
         await ctx.write(failure(exc))
         return True
 
@@ -180,6 +187,11 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
         # - the message was not valid protobuf
         # - workflow raised some kind of an exception while running
         # - something canceled the workflow from the outside
+        #
+        # Idempotent, and usually a no-op: `decode_message` ends the lease, so the only exit
+        # reaching here with one still held is a `type_for_wire` that raised before it. Same
+        # ordering rule as above -- the `failure` is written further down, so end the lease first.
+        msg.release()
         if __debug__:
             if isinstance(exc, ActionCancelled):
                 log.debug(__name__, "cancelled: %s", exc.message, iface=ctx.iface)
