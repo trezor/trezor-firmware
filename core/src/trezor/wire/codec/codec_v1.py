@@ -36,21 +36,34 @@ async def read_message(iface: WireInterface, buffers: CodecBufferSource) -> Mess
     if magic1 != _REP_MAGIC or magic2 != _REP_MAGIC:
         raise CodecError("Invalid magic")
 
-    read_and_throw_away = False
     mdata: AnyBuffer
     # WHO GIVES THE RECEIVE BUFFER BACK, and None when nobody does -- the two tiers below the
     # pool are private to this message and have nothing shared behind them.
     owner: CodecBufferSource | None = None
+    # EVERY REFUSAL IS DEFERRED UNTIL THE MESSAGE HAS BEEN DRAINED, and this is what remembers
+    # which one to raise. Refusing early is what the caller sees as a desynchronised interface:
+    # the initial report has already been consumed above, so returning now would leave this
+    # message's continuation reports on the wire and the next read would parse one of them as a
+    # header. The oversize path below has always drained for exactly that reason; contention and
+    # the hard size bound have to do the same.
+    refusal: WireError | None = None
 
-    if msize <= buffers.capacity():
+    if msize > buffers.max_message_size():
+        # ABOVE WHAT THIS INTERFACE WILL EVER ACCEPT. Not a pool question -- nothing is allocated
+        # for it, so an unauthenticated endpoint cannot turn an advertised length into memory.
+        mdata = bytearray(iface.RX_PACKET_LEN)
+        refusal = CodecError("Message too large")
+    elif msize <= buffers.capacity():
         buf = buffers.get(msize)
         if buf is None:
             # The shared buffer is held by another message in flight. The exception should be
             # caught and handled by the session task: it does not terminate the current session,
             # so an error response can still be sent.
-            raise WireError("Another session in progress")
-        mdata = buf
-        owner = buffers
+            mdata = bytearray(iface.RX_PACKET_LEN)
+            refusal = WireError("Another session in progress")
+        else:
+            mdata = buf
+            owner = buffers
     else:
         # TOO LARGE FOR THE POOL, which is not the same as too large to handle and never was.
         # Allocate for it, and if even that fails, read the message off the wire and refuse it --
@@ -59,7 +72,7 @@ async def read_message(iface: WireInterface, buffers: CodecBufferSource) -> Mess
             mdata = bytearray(msize)
         except MemoryError:
             mdata = bytearray(iface.RX_PACKET_LEN)
-            read_and_throw_away = True
+            refusal = CodecError("Message too large")
 
     # THE LEASE OUTLIVES THIS FUNCTION ONLY IF THE MESSAGE DOES. Reassembly can still fail on a
     # bad continuation report, and a lease left behind by a message nobody will ever decode is
@@ -77,13 +90,15 @@ async def read_message(iface: WireInterface, buffers: CodecBufferSource) -> Mess
                 raise CodecError("Invalid magic")
 
             # buffer the continuation data
-            if read_and_throw_away:
+            if refusal is not None:
                 nread += len(report) - 1
             else:
                 nread += utils.memcpy(mdata, nread, report, _REP_CONT_DATA)
 
-        if read_and_throw_away:
-            raise CodecError("Message too large")
+        if refusal is not None:
+            # Drained, so the wire is back at a message boundary and the next read starts on a
+            # real header. Only now is it safe to tell the caller.
+            raise refusal
     except BaseException:
         if owner is not None:
             owner.release()
