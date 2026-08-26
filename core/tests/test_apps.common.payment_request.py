@@ -20,7 +20,8 @@ from apps.common.paths import AlwaysMatchingSchema
 from apps.common.payment_request import PaymentRequestVerifier
 
 if TYPE_CHECKING:
-    from typing import Callable, ParamSpec
+    from collections.abc import Callable
+    from typing import ParamSpec
 
     P = ParamSpec("P")
 

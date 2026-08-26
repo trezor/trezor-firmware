@@ -3,8 +3,9 @@ from typing import TYPE_CHECKING
 from .definitions import Definitions
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from enum import IntEnum
-    from typing import Any, Callable, Generic, TypeVar
+    from typing import Any, Generic, TypeVar
 
     from trezor.messages import SolanaTxAdditionalInfo, SolanaTxTokenAccountInfo
     from trezor.utils import BufferReader

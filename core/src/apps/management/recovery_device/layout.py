@@ -18,7 +18,8 @@ from apps.common import backup_types
 from .recover import RecoveryAborted, load_slip39_state
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Protocol
+    from collections.abc import Awaitable
+    from typing import Protocol
 
     from trezor.enums import BackupMethod, BackupType, RecoveryType
 

@@ -11,7 +11,7 @@ from .tokens import NATIVE_TOKEN, StellarToken, resolve_sep41_token
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Iterable
+    from collections.abc import Iterable
 
     from trezor.enums import StellarMemoType
     from trezor.messages import (

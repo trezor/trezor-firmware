@@ -8,17 +8,9 @@ if __debug__:
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from collections.abc import Awaitable, Callable, Container
     from trezorio import WireInterface
-    from typing import (
-        Any,
-        Awaitable,
-        Callable,
-        Container,
-        Literal,
-        NoReturn,
-        TypeVar,
-        overload,
-    )
+    from typing import Any, Literal, NoReturn, TypeVar, overload
 
     from storage.cache_common import DataCache
     from trezor.messages import ButtonRequest

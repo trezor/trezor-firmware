@@ -3,11 +3,12 @@ import sys
 import vfs
 from io import open
 from os import getenv
-from typing import TYPE_CHECKING, Any, Callable, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import coveragedata
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from types import FrameType
 
     TraceFunction: TypeAlias = Callable[[FrameType, str, Any], "TraceFunction"]

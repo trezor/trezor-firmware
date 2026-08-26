@@ -20,7 +20,7 @@ from .helpers import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Awaitable, Iterable, Sequence
+    from collections.abc import Awaitable, Iterable, Sequence
 
     from trezor.messages import (
         EthereumFieldType,

@@ -11,7 +11,7 @@ from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Sequence
+    from collections.abc import Sequence
 
     from trezor.messages import EthereumSignTx
     from trezor.ui.layouts import StrPropertyType

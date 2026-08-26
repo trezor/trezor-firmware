@@ -18,7 +18,8 @@ from .credential import Credential, Fido2Credential
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Awaitable, Callable, Coroutine, Iterable, Iterator
+    from collections.abc import Awaitable, Callable, Coroutine, Iterable, Iterator
+    from typing import Any
 
     from .credential import U2fCredential
 

@@ -1,4 +1,4 @@
-from typing import Awaitable, Callable, Sequence
+from typing import TYPE_CHECKING
 
 import trezorui_api
 from trezor import TR, ui
@@ -7,6 +7,9 @@ from trezor.wire import ActionCancelled
 
 from ..common import interact
 from . import raise_if_not_confirmed, show_success
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Sequence
 
 CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 

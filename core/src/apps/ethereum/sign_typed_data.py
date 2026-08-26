@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from trezor.enums import EthereumDataType
 from trezor.wire import DataError
@@ -10,6 +10,7 @@ from .layout import should_show_struct
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from collections.abc import Callable
 
     from trezor.messages import (
         EthereumFieldType,

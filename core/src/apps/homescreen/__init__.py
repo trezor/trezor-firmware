@@ -1,4 +1,4 @@
-from typing import Coroutine
+from typing import TYPE_CHECKING
 
 import storage
 import storage.device
@@ -11,6 +11,9 @@ from trezorui_api import NotificationLevel
 from apps.base import busy_expiry_ms
 from apps.common.authorization import is_set_any_session
 from apps.common.lock_manager import can_lock_device, lock_device
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
 
 
 async def busyscreen() -> None:

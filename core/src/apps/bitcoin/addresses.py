@@ -14,7 +14,7 @@ from .scripts import output_script_native_segwit, write_output_script_multisig
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Sequence
+    from collections.abc import Sequence
 
     from trezor.crypto import bip32
     from trezor.messages import MultisigRedeemScriptType

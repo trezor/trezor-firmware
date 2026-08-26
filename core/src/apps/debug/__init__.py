@@ -17,7 +17,8 @@ if __debug__:
     from trezor.messages import Success
 
     if TYPE_CHECKING:
-        from typing import Any, Awaitable, Callable, NoReturn
+        from collections.abc import Awaitable, Callable
+        from typing import Any, NoReturn
 
         from trezor.enums import DebugButton, DebugPhysicalButton, DebugSwipeDirection
         from trezor.messages import (

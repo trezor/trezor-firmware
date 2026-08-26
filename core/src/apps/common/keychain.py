@@ -6,7 +6,8 @@ from trezor.wire import DataError
 from . import paths, safety_checks
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Callable, Iterable, TypeVar
+    from collections.abc import Awaitable, Callable, Iterable
+    from typing import Any, TypeVar
 
     from trezor.protobuf import MessageType
     from typing_extensions import Protocol

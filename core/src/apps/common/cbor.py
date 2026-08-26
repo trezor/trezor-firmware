@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING
 from trezor import log
 
 if TYPE_CHECKING:
-    from typing import Any, Generic, Iterator, TypeVar
+    from collections.abc import Iterator
+    from typing import Any, Generic, TypeVar
 
     from trezor.utils import BufferReader
 

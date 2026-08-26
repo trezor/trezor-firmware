@@ -6,7 +6,7 @@ from . import networks
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Awaitable, Callable, Sequence
+    from collections.abc import Awaitable, Callable, Sequence
 
     from trezor.messages import EthereumFieldType, EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType

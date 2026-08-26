@@ -21,7 +21,7 @@ from .tx_info import OriginalTxInfo
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Sequence
+    from collections.abc import Sequence
 
     from trezor.crypto import bip32
     from trezor.messages import PrevInput, PrevOutput, PrevTx, SignTx, TxInput, TxOutput

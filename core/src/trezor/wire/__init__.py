@@ -48,9 +48,10 @@ if __debug__:
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from collections.abc import Callable, Coroutine
     from trezorio import WireInterface
     from types import TracebackType
-    from typing import Any, Callable, Coroutine, Generic, TypeVar
+    from typing import Any, Generic, TypeVar
 
     from trezor.wire.thp.channel import Channel
     from trezor.wire.thp.interface_context import InterfaceContext

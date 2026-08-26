@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 from storage.cache_common import (
     APP_COMMON_AUTHORIZATION_DATA,
@@ -7,6 +7,9 @@ from storage.cache_common import (
 from trezor import protobuf
 from trezor.enums import MessageType
 from trezor.wire import context
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 WIRE_TYPES: dict[int, tuple[int, ...]] = {
     MessageType.AuthorizeCoinJoin: (MessageType.SignTx, MessageType.GetOwnershipProof),

@@ -15,7 +15,8 @@ from ..common import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
-    from typing import Awaitable, Iterable, NoReturn, Sequence, TypeVar
+    from collections.abc import Awaitable, Iterable, Sequence
+    from typing import NoReturn, TypeVar
 
     from apps.stellar.tokens import StellarToken
 

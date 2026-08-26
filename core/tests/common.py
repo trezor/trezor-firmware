@@ -1,10 +1,13 @@
 import unittest  # noqa: F401
-from typing import Any, Awaitable
+from typing import TYPE_CHECKING, Any
 
 from trezor import utils  # noqa: F401
 from trezor.wire import context
 
 from apps.common.paths import HARDENED
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
 
 
 def H_(x: int) -> int:

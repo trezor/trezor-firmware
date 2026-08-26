@@ -3,7 +3,8 @@ from typing import TYPE_CHECKING
 from trezor import translations, utils
 
 if TYPE_CHECKING:
-    from typing import Iterable, overload
+    from collections.abc import Iterable
+    from typing import overload
 
     from .common import StrPropertyType
 

@@ -6,7 +6,8 @@ from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Callable, Coroutine, Literal, TypeVar, overload
+    from collections.abc import Awaitable, Callable, Coroutine
+    from typing import Any, Literal, TypeVar, overload
 
     from trezorui_api import PropertyType, StrPropertyType  # noqa: F401
 

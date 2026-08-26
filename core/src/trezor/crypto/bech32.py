@@ -28,8 +28,9 @@ bech32_decode = bech32.decode  # reexported
 
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from enum import IntEnum
-    from typing import Sequence, TypeVar
+    from typing import TypeVar
 
     A = TypeVar("A")
     B = TypeVar("B")

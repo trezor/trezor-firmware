@@ -6,7 +6,8 @@ from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
 from trezor import TR, ui, utils
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Iterator, ParamSpec, TypeVar
+    from collections.abc import Callable, Iterator
+    from typing import Any, ParamSpec, TypeVar
 
     from trezor import loop
 

@@ -7,7 +7,8 @@ from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Coroutine, Iterable
+    from collections.abc import Coroutine, Iterable
+    from typing import Any
 
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType

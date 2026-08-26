@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Awaitable
+from typing import TYPE_CHECKING
 
 import trezorui_api
 from trezor.enums import ButtonRequestType
@@ -7,7 +7,8 @@ from trezor.ui.layouts.common import interact
 from trezor.wire import ActionCancelled
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, TypeVar
+    from collections.abc import Awaitable, Callable, Iterable, Sequence
+    from typing import TypeVar
 
     from typing_extensions import Self
 

@@ -15,7 +15,8 @@ from apps.common.seed import get_seed
 from .helpers.paths import BYRON_ROOT, MINTING_ROOT, MULTISIG_ROOT, SHELLEY_ROOT
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable, TypeVar
+    from collections.abc import Awaitable, Callable
+    from typing import TypeVar
 
     from trezor import messages
     from trezor.crypto import bip32
@@ -37,7 +38,7 @@ if TYPE_CHECKING:
     MsgIn = TypeVar("MsgIn", bound=CardanoMessages)
 
     HandlerWithKeychain = Callable[
-        [MsgIn, "Keychain", "Slip21Keychain"], Awaitable[MsgOut]
+        [MsgIn, "Keychain", Slip21Keychain], Awaitable[MsgOut]
     ]
 
 

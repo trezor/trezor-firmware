@@ -15,7 +15,8 @@ if utils.USE_BLE:
     import trezorble as ble
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable, ParamSpec, TypeVar
+    from collections.abc import Awaitable, Callable
+    from typing import ParamSpec, TypeVar
 
     from trezor import protobuf
     from trezor.wire import Handler, Msg

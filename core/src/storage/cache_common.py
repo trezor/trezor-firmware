@@ -25,7 +25,8 @@ APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Sequence, TypeVar, overload
+    from collections.abc import Sequence
+    from typing import TypeVar, overload
 
     T = TypeVar("T")
 

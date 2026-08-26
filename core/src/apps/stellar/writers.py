@@ -13,7 +13,8 @@ write_uint64 = writers.write_uint64_be
 
 if TYPE_CHECKING:
     from buffer_types import StrOrBytes
-    from typing import Callable, TypeVar
+    from collections.abc import Callable
+    from typing import TypeVar
 
     from trezor.enums import StellarAssetType
     from trezor.messages import (

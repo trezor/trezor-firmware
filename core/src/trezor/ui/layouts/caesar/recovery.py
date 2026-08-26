@@ -10,7 +10,7 @@ from ..common import interact
 from . import show_warning
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Iterable
+    from collections.abc import Awaitable, Iterable
 
     from apps.management.recovery_device.layout import RemainingSharesInfo
 

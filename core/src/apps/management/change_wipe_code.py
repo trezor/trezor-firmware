@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from trezor import TR
 
 if TYPE_CHECKING:
-    from typing import Awaitable
+    from collections.abc import Awaitable
 
     from trezor.messages import ChangeWipeCode, Success
 

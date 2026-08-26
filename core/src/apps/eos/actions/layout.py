@@ -7,7 +7,7 @@ from trezor.ui.layouts import confirm_properties
 from ..helpers import eos_asset_to_string, eos_name_to_string
 
 if TYPE_CHECKING:
-    from typing import Iterable
+    from collections.abc import Iterable
 
     from trezor.messages import (
         EosActionBuyRam,

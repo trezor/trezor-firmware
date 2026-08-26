@@ -4,7 +4,7 @@ from trezor.crypto.curve import ed25519
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Sequence
+    from collections.abc import Sequence
 
 
 commit = ed25519.cosi_commit

@@ -6,8 +6,8 @@ Grouping symbols in binary into coherent categories.
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from binsize import BinarySize, DataRow, StatisticsPlugin, set_root_dir
 

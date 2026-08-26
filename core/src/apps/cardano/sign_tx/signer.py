@@ -27,8 +27,9 @@ from ..helpers.utils import derive_public_key
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from collections.abc import Awaitable
     from enum import IntEnum
-    from typing import Any, Awaitable
+    from typing import Any
 
     from trezor.enums import CardanoAddressType
 

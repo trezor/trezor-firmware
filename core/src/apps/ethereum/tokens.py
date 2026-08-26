@@ -14,10 +14,13 @@
 # of it has enough collision-resistance.)
 # (In the if-tree approach the address length did not have any effect whatsoever.)
 
-from typing import Iterator
+from typing import TYPE_CHECKING
 
 from trezor import utils
 from trezor.messages import EthereumTokenInfo
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 UNKNOWN_TOKEN = EthereumTokenInfo(
     symbol="Wei UNKN",

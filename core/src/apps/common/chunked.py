@@ -7,7 +7,7 @@ from trezor.wire.context import call
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Callable
+    from collections.abc import Callable
 
 _CHUNK_SIZE = const(1024)
 

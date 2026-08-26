@@ -10,7 +10,8 @@ from ..properties import with_colon
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
-    from typing import Awaitable, Callable, Iterable, NoReturn, Sequence
+    from collections.abc import Awaitable, Callable, Iterable, Sequence
+    from typing import NoReturn
 
     from apps.stellar.tokens import StellarToken
 

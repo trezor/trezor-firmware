@@ -11,7 +11,8 @@ from .protocol_common import Context, Message
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Callable, Container
+    from collections.abc import Callable, Container
+    from typing import Any
 
     from trezor.wire import Handler, LoadedMessageType, WireInterface
 

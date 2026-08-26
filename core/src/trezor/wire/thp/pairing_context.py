@@ -14,7 +14,7 @@ from trezor.wire.thp import ChannelState, get_enabled_pairing_methods, ui
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Awaitable, Container
+    from collections.abc import Awaitable, Container
 
     from trezor.enums import ThpPairingMethod
     from trezorui_api import UiResult

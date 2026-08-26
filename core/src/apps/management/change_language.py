@@ -4,7 +4,7 @@ from trezor import TR, translations
 from trezor.wire import DataError, high_speed
 
 if TYPE_CHECKING:
-    from typing import Callable
+    from collections.abc import Callable
 
     from trezor.messages import ChangeLanguage, Success
     from trezor.ui import ProgressLayout

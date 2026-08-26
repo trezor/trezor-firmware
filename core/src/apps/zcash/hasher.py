@@ -21,7 +21,7 @@ from apps.bitcoin.writers import (
 )
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from collections.abc import Sequence
 
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
     from trezor.utils import HashWriter, Writer

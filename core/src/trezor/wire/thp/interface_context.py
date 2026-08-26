@@ -20,8 +20,9 @@ if utils.USE_BLE:
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from collections.abc import Generator
     from trezorio import WireInterface
-    from typing import Any, Generator
+    from typing import Any
 
 
 _TRACE = const(False)
