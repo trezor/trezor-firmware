@@ -17,6 +17,7 @@ pytestmark = [pytest.mark.protocol("thp")]
 # skip exactly the regression test that matters most to a connect build.
 
 
+@pytest.mark.ward_transport("service-thp")
 def test_the_ward_interface_carries_its_own_channel(client: Client) -> None:
     """A channel on the WARD interface, allocated while the wire interface holds one of its own.
 
@@ -40,6 +41,7 @@ def test_the_ward_interface_carries_its_own_channel(client: Client) -> None:
         ward.close()
 
 
+@pytest.mark.ward_transport("service-thp")
 def test_the_ward_interface_completes_a_handshake(client: Client) -> None:
     """It is a full THP interface, not merely a socket that answers.
 
@@ -57,7 +59,7 @@ def test_the_ward_interface_completes_a_handshake(client: Client) -> None:
         ward.close()
 
 
-@pytest.mark.ward_transport("service")
+@pytest.mark.ward_transport("service-thp")
 def test_it_answers_while_the_wire_interface_holds_a_channel(client: Client) -> None:
     """A message arriving here is HANDLED, not merely reassembled.
 

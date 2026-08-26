@@ -524,10 +524,21 @@ def _check_ward_transport(
     if not marker:
         return
 
-    from .ward_service import serves_ward_over_a_service_channel
+    from .ward_service import ward_service_transport
 
-    actual = "service" if serves_ward_over_a_service_channel(client) else "connect"
-    if actual not in marker.args:
+    service = ward_service_transport(client)
+    if service is None:
+        actual = "connect"
+        applicable = {"connect"}
+    else:
+        # TWO NAMES FOR A SERVICE BUILD, because "service" stopped implying a transport. The
+        # service interface speaks codec v1 on every build by default and THP only behind
+        # `USE_WARD_SERVICE_THP`, so a test about BINDING or SYNCING wants either ("service")
+        # while a test about channel displacement or the daemon pin wants one of them by name.
+        actual = f"service-{service}"
+        applicable = {"service", actual}
+
+    if not applicable.intersection(marker.args):
         pytest.skip(f"Test does not apply to a '{actual}' WARD build.")
 
 

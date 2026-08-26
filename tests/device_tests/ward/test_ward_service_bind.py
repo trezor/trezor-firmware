@@ -77,7 +77,7 @@ def test_an_unsupported_protocol_version_is_refused_by_name(client: Client) -> N
         assert isinstance(wardd.open_service(), messages.WardServiceOpenAck)
 
 
-@pytest.mark.protocol("thp")
+@pytest.mark.ward_transport("service-thp")
 def test_the_pinned_daemon_rebinds_after_a_restart(client: Client) -> None:
     """The case that actually happens: wardd restarts and comes back on a new channel.
 
@@ -102,7 +102,7 @@ def test_the_pinned_daemon_rebinds_after_a_restart(client: Client) -> None:
         again.close()
 
 
-@pytest.mark.protocol("thp")
+@pytest.mark.ward_transport("service-thp")
 def test_a_different_daemon_is_refused_once_pinned(client: Client) -> None:
     """Pairing is not enough. Every paired host passes the pairing check -- Suite included -- so
     without a pin any of them could open the WARD interface and answer for the replica.
@@ -130,7 +130,7 @@ def test_a_different_daemon_is_refused_once_pinned(client: Client) -> None:
         stranger.close()
 
 
-@pytest.mark.protocol("thp")
+@pytest.mark.ward_transport("service-thp")
 def test_a_bound_channel_is_not_listening(client: Client) -> None:
     """Not "refused" -- NOT EVEN ACKNOWLEDGED. The device stops reading the channel once the
     conversation inverts, so a host-initiated message does not get a reply and does not get a

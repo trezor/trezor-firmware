@@ -30,10 +30,13 @@ from trezorlib.transport.udp import UdpTransport
 
 from ...ward_service import MockWardService
 
+# NOT `protocol("v1")` ANY MORE. That marker describes the WALLET transport, and the codec
+# service endpoint is no longer tied to it: the service interface speaks codec v1 on every build,
+# including one whose wallet interface speaks THP. What these tests need is a codec SERVICE
+# endpoint, which is what the marker below asks for.
 pytestmark = [
-    pytest.mark.protocol("v1"),
     pytest.mark.models("core"),
-    pytest.mark.ward_transport("service"),
+    pytest.mark.ward_transport("service-codec"),
 ]
 
 
