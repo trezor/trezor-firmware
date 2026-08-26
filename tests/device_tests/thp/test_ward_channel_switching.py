@@ -21,12 +21,19 @@ does with the answer. This one is about the SEAM between them -- the wallet host
 daemon's channel being live at the same time, on separate interfaces, with the device driving one
 from inside a workflow running on the other.
 
-WHAT THE SEAM IS MADE OF. `ThpContext.dispatch_channel` is global and holds exactly one channel --
-whichever received a packet first -- and that channel's messages are what the main loop dispatches.
-`InterfaceContext.active_channel` is PER INTERFACE and is what that interface's write loop drains.
-The WARD interface has a dispatcher of its own (`InterfaceContext.dispatch_loop`) and a buffer pool
-of its own (`wire.buffers_provider_for`), because it must be able to hold a channel while another
-interface holds one.
+WHAT THE SEAM IS MADE OF, ON A THP SERVICE CHANNEL. `ThpContext.dispatch_channel` is global and
+holds exactly one channel -- whichever received a packet first -- and that channel's messages are
+what the main loop dispatches. `InterfaceContext.active_channel` is PER INTERFACE and is what that
+interface's write loop drains. The WARD interface has a dispatcher of its own
+(`InterfaceContext.dispatch_loop`) and a buffer pool of its own (`wire.buffers_provider_for`),
+because it must be able to hold a channel while another interface holds one.
+
+AND ON A CODEC ONE, which is what every build serves by default. There is no channel, no dispatcher
+and no pool of its own: one reader owns the interface, never lets go of it, and routes what it reads
+into the mailbox the workflow is parked on. The seam is still a seam -- the WALLET side is THP
+either way, and the device still drives one conversation from inside a workflow running on the other
+-- so these tests run on both, and the handful that assert a THP MECHANISM rather than a property
+say so individually.
 
 So the properties worth a test are the ones that live in the gaps between those objects:
 
@@ -42,6 +49,7 @@ TRANSPORT_BUSY, a wallet channel that dies during someone else's error path -- s
 here rather than left to be noticed in a log.
 """
 
+import contextlib
 import time
 
 import pytest
@@ -64,12 +72,14 @@ from ...ward_trie import WardTrie
 pytestmark = [
     pytest.mark.protocol("thp"),
     pytest.mark.models("core"),
-    # PINNED TO THE THP SERVICE PATH, which is what it was written against: reattachment,
-    # displacement and the private dispatcher are mechanisms a codec endpoint does not have.
-    # The INVARIANTS here outlive the mechanism and still need codec equivalents -- a service
-    # timeout, a malformed reply or unsolicited traffic must not damage the wallet channel on
-    # either transport. Those are not written yet; see the plan.
-    pytest.mark.ward_transport("service-thp"),
+    # BOTH SERVICE TRANSPORTS, because the seam is not one of them. The WALLET side of it is THP
+    # either way -- that is what `protocol("thp")` above pins -- and what changes underneath is only
+    # how the device reaches its daemon. The invariants are about what a daemon failure is allowed
+    # to do to the wallet channel, and they hold, or should, on both.
+    #
+    # The handful that genuinely test a THP-service MECHANISM -- reattachment, channel displacement,
+    # the daemon pin and the reset that migrates it -- say so individually.
+    pytest.mark.ward_transport("service"),
 ]
 
 _APP = "TEST"
@@ -124,6 +134,70 @@ def _reset_service(session: Session, force: bool = False):
         )
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         return ward.reset_service(session, force=force)
+
+
+@contextlib.contextmanager
+def _desync_seen_from_the_daemon(wardd):
+    """What losing the conversation looks like from the far side, which is not the same thing twice.
+
+    UNDER THP the device CLOSES the channel, because a channel is the only place the conversation
+    lives and a desynchronised one can never be resynchronised -- so the daemon's next read finds
+    its channel gone and `serving()` re-raises that. Asserting it here is what says the conversation
+    was destroyed rather than merely failed.
+
+    ON THE CODEC there is nothing to close, and that is deliberate rather than a gap: the endpoint
+    is the interface's reader and the binding names a fact about the interface, so the device drops
+    the conversation without touching the transport and a daemon that comes back is simply heard
+    again. The daemon therefore sees nothing at all, and the assertion is that it survives.
+    """
+    from trezorlib.ward_service import WardServiceClient
+
+    if isinstance(wardd.service, WardServiceClient):
+        with pytest.raises(AssertionError, match="UNALLOCATED_CHANNEL"):
+            yield
+    else:
+        yield
+
+
+def _same_daemon_key(wardd) -> bytes | None:
+    """The key that makes a reconnecting daemon the SAME daemon, or None where there is no such
+    thing.
+
+    Only a THP service channel has an identity for the device to pin, so on the codec there is
+    nothing to carry across a reconnect -- and nothing that would make the reconnect a DIFFERENT
+    daemon either. Asked through this rather than `wardd.host_static_privkey` directly, because
+    that property asserts THP on purpose and should keep doing so.
+    """
+    from trezorlib.ward_service import WardServiceClient
+
+    if isinstance(wardd.service, WardServiceClient):
+        return wardd.host_static_privkey
+    return None
+
+
+def _speak_out_of_turn(wardd) -> None:
+    """Say something the device did not ask for, and get nowhere with it.
+
+    THE RULE IS THE SAME ON BOTH TRANSPORTS -- after binding the device is the sole initiator --
+    and only the shape of the refusal differs, which is why this is a helper rather than two tests.
+
+    UNDER THP the ack is a side effect of the application READING, and nothing is listening once
+    the conversation inverts, so no ack ever comes and the send itself gives up. ON THE CODEC there
+    is no ack to withhold: the write lands, the reader refuses it by name, and the refusal sits
+    unread until the next RPC mistakes it for its own answer. Either way it reaches no dispatcher,
+    and the daemon pays for it on its next turn.
+    """
+    from trezorlib.ward_service import WardServiceClient
+
+    if isinstance(wardd.service, WardServiceClient):
+        assert wardd.channel is not None
+        # Otherwise the send retries with backoff for a long time before giving up; what is being
+        # asserted is that no ack ever comes, not how patient trezorlib is.
+        wardd.channel.BUSY_RETRIES = 0
+        with pytest.raises(Timeout):
+            wardd.send(m.GetFeatures())
+    else:
+        wardd.send(m.GetFeatures())
 
 
 def _wallet_round_trip(client: Client) -> None:
@@ -208,10 +282,16 @@ def test_repeated_wallet_ward_wallet_switching(client: Client) -> None:
 def test_wallet_session_restart_reattaches_service_channel(client: Client) -> None:
     """The daemon binds ONCE and stays bound across every session restart the wallet causes.
 
-    A `Channel` object does not survive a restart; the Rust channel behind it does. So the service
-    channel has to be REATTACHED -- `ThpContext.attach_existing_channel` -- before the device can
-    write to it, because a channel that is not its interface's `active_channel` cannot be written at
-    all: `Channel.write` pokes a write loop that drains only that one.
+    UNDER THP a `Channel` object does not survive a restart; the Rust channel behind it does. So the
+    service channel has to be REATTACHED -- `ThpContext.attach_existing_channel` -- before the
+    device can write to it, because a channel that is not its interface's `active_channel` cannot be
+    written at all: `Channel.write` pokes a write loop that drains only that one.
+
+    ON THE CODEC there is nothing to reattach, and the property outlives the mechanism: the binding
+    names a fact about the INTERFACE rather than a handle that can go stale, and the reader is
+    respawned by `wire.setup` on the next session. Same assertion either way, which is what makes it
+    worth running on both -- it is stated from the daemon's side, in what it was asked, and never
+    mentions how the device got there.
 
     Asserted through the daemon's own view: it announces itself once, and every WARD operation
     afterwards is served without another `WardServiceOpen`. A reattach that failed would not be
@@ -370,11 +450,8 @@ def test_malformed_service_reply_does_not_damage_wallet_channel(client: Client) 
         wardd.service, lambda _request: m.Success(message="not what was asked")
     )
     try:
-        # THE OUTER RAISE IS THE DAEMON'S OWN VIEW OF THE TEARDOWN. `serving()` re-raises whatever
-        # killed the responder thread, and what kills it here is the device closing the channel out
-        # from under its next read -- so this asserts, from the far side, that the desynchronised
-        # conversation really was destroyed and not merely failed.
-        with pytest.raises(AssertionError, match="UNALLOCATED_CHANNEL"):
+        # THE DAEMON'S OWN VIEW OF THE TEARDOWN, which differs by transport -- see the helper.
+        with _desync_seen_from_the_daemon(wardd):
             with wardd.serving():
                 with pytest.raises(exceptions.TrezorFailure):
                     ward.get_entry(session, _APP, b"anything", _nothing_on_the_wire)
@@ -387,7 +464,7 @@ def test_malformed_service_reply_does_not_damage_wallet_channel(client: Client) 
     # Which is the right pair of facts -- a wrong answer says the transport is confused, and says
     # nothing about which daemon is entitled to the role, so erasing the pin here would turn every
     # desynchronised reply into an ownership migration.
-    again = bound_daemon(client, WardTrie(), host_static_privkey=wardd.host_static_privkey)
+    again = bound_daemon(client, WardTrie(), host_static_privkey=_same_daemon_key(wardd))
     try:
         with again.serving():
             assert _read(client.get_session(), b"absent").leaf is None
@@ -412,12 +489,7 @@ def test_unsolicited_service_message_cannot_enter_wallet_dispatch(client: Client
     channel_id = client.channel.channel_id
     wardd = bound_daemon(client, WardTrie())
     try:
-        assert wardd.channel is not None
-        # Otherwise the send retries with backoff for a long time before giving up; what is being
-        # asserted is that no ack ever comes, not how patient trezorlib is.
-        wardd.channel.BUSY_RETRIES = 0
-        with pytest.raises(Timeout):
-            wardd.send(m.GetFeatures())
+        _speak_out_of_turn(wardd)
 
         # The wallet channel is untouched -- and it is answering its OWN messages, which is what
         # rules out the unsolicited one having been dispatched here.
@@ -433,6 +505,7 @@ def test_unsolicited_service_message_cannot_enter_wallet_dispatch(client: Client
     _wallet_channel_kept(client, channel_id)
 
 
+@pytest.mark.ward_transport("service-thp")
 def test_service_reset_does_not_restart_or_break_wallet(client: Client) -> None:
     """Retiring the binding is a WARD operation, not a device event.
 
@@ -530,6 +603,7 @@ def test_large_messages_cross_the_seam_in_both_directions(client: Client) -> Non
     _wallet_channel_kept(client, client.channel.channel_id)
 
 
+@pytest.mark.ward_transport("service-thp")
 def test_the_interfaces_never_borrow_each_others_buffers(client: Client) -> None:
     """Daemons come and go; both interfaces can still allocate a channel afterwards.
 
