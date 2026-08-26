@@ -53,6 +53,7 @@ fn main() -> Result<()> {
             "-Wno-type-limits",
             "-Wfloat-conversion",
             "-Wdouble-promotion",
+            "-Wredundant-decls",
             "-fno-common",
             "-fdata-sections",
             "-ffunction-sections",
