@@ -777,8 +777,8 @@ async def confirm_blob(
     chunkify: bool = False,
     prompt_screen: bool = True,
 ) -> None:
-    if description and ":" not in description:
-        description += ":"
+    if description:
+        description = with_colon(description)
 
     with trezorui_api.confirm_value(
         title=title,
@@ -883,7 +883,7 @@ def confirm_text(
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     if description and data:
-        description += ":"
+        description = with_colon(description)
 
     return _placeholder_confirm(
         br_name,
@@ -967,7 +967,7 @@ async def confirm_value(
     """General confirmation dialog, used by many other confirm_* functions."""
 
     if description and value:
-        description += ":"
+        description = with_colon(description)
 
     if not info_items:
         with trezorui_api.confirm_value(
@@ -1822,7 +1822,7 @@ if not utils.BITCOIN_ONLY:
             amount=None,
             amount_label=None,
             fee=fee,
-            fee_label=TR.send__maximum_fee,
+            fee_label=with_colon(TR.send__maximum_fee),
             account_items=with_colon(
                 (
                     (TR.words__account, account_name, None),
