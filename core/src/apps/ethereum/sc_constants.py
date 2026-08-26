@@ -3,7 +3,10 @@
 # do not edit manually!
 # fmt: off
 
-from typing import Iterator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 def lookup_known_address(chain_id: int, address: bytes) -> str | None:

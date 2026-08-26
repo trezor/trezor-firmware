@@ -1,5 +1,5 @@
 from micropython import const
-from typing import TYPE_CHECKING, Iterable, Protocol, Sequence
+from typing import TYPE_CHECKING, Protocol
 
 from trezor import utils
 from trezor.ui.layouts.reset import (  # noqa: F401
@@ -12,6 +12,8 @@ from trezor.ui.layouts.reset import (  # noqa: F401
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
     from trezor.messages import BackupMethod
 
 _NUM_OF_CHOICES = const(3)

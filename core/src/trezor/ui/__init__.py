@@ -20,7 +20,8 @@ if utils.USE_POWER_MANAGER:
     from trezor.power_management.autodim import autodim_clear
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
+    from collections.abc import Callable, Generator, Iterator
+    from typing import Any, Generic, TypeVar
 
     from trezor.enums import ButtonRequestType
     from trezorui_api import LayoutContext, LayoutObj, UiResult  # noqa: F401

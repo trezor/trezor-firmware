@@ -4,7 +4,7 @@ from trezor.enums import MessageType
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Iterator
+    from collections.abc import Iterator
 
 TYPE_URL_TEMPLATE = "type.googleapis.com/protocol."
 

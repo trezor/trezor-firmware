@@ -5,9 +5,8 @@ from __future__ import annotations
 
 import json
 import sys
-from typing import Any, Iterator, Optional
-
-from typing_extensions import TypeGuard
+from collections.abc import Iterator
+from typing import Any, Optional, TypeGuard
 
 if len(sys.argv) < 2:
     print("""\

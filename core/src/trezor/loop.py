@@ -14,7 +14,8 @@ from typing import TYPE_CHECKING
 from trezor import io, log
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Callable, Coroutine, Generator, Generic, TypeVar
+    from collections.abc import Awaitable, Callable, Coroutine, Generator
+    from typing import Any, Generic, TypeVar
 
     from .loop import wait
 

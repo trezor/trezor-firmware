@@ -14,7 +14,7 @@ from .helpers import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Callable, Iterable, Sequence
+    from collections.abc import Callable, Iterable, Sequence
 
     from trezor.messages import (
         EthereumABIValueInfo,

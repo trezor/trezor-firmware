@@ -4,7 +4,7 @@ from trezor.wire import DataError
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Sequence
+    from collections.abc import Sequence
 
     from apps.common.coininfo import CoinInfo
 

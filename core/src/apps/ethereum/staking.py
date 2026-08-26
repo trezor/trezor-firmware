@@ -4,7 +4,8 @@ from trezor.utils import BufferReader
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
-    from typing import Any, Coroutine, Iterable
+    from collections.abc import Coroutine, Iterable
+    from typing import Any
 
     from trezor.messages import EthereumNetworkInfo
     from trezor.ui.layouts import StrPropertyType

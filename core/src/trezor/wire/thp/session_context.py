@@ -12,7 +12,7 @@ from ..protocol_common import Context, Message
 from . import SessionState
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Container
+    from collections.abc import Awaitable, Container
 
     from storage.cache_common import DataCache
 

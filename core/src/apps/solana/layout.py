@@ -20,7 +20,7 @@ from apps.common.paths import address_n_to_str
 from .types import AddressType, is_address_reference
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from collections.abc import Sequence
 
     from trezor.messages import PaymentRequest, SolanaOffchainMessageV1, SolanaTokenInfo
     from trezor.ui.layouts import StrPropertyType

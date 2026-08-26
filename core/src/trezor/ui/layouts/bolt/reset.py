@@ -1,10 +1,13 @@
-from typing import Awaitable, Callable, Sequence
+from typing import TYPE_CHECKING
 
 import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType
 
 from ..common import interact, raise_if_not_confirmed
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Sequence
 
 CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 

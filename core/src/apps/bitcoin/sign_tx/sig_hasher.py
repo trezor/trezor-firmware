@@ -12,7 +12,8 @@ from ..writers import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Protocol, Sequence
+    from collections.abc import Sequence
+    from typing import Protocol
 
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
 

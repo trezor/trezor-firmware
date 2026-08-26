@@ -9,7 +9,8 @@ from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b_into
 
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer, AnyBytes
-    from typing import Generic, Iterator, TypeVar
+    from collections.abc import Iterator
+    from typing import Generic, TypeVar
 
     from .serialize_messages.tx_rsig_bulletproof import BulletproofPlus
 

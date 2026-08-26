@@ -38,7 +38,7 @@ from trezor.crypto import random
 from trezor.errors import MnemonicError
 
 if TYPE_CHECKING:
-    from typing import Callable, Collection, Iterable
+    from collections.abc import Callable, Collection, Iterable
 
     Indices = tuple[int, ...]
     MnemonicGroups = dict[int, tuple[int, set[tuple[int, bytes]]]]

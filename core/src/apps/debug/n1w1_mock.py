@@ -6,7 +6,8 @@ from trezor.ui import Layout
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Iterator
+    from collections.abc import Iterator
+    from typing import Any
 
     from trezor.wire.context import Context
     from typing_extensions import Self

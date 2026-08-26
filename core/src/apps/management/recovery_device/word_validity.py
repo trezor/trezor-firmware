@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable
+    from collections.abc import Awaitable, Callable
 
     from trezor.enums import BackupType
 

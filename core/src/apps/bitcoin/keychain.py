@@ -10,7 +10,8 @@ from . import authorization
 from .common import BIP32_WALLET_DEPTH, BITCOIN_NAMES
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable, Iterable, TypeVar
+    from collections.abc import Awaitable, Callable, Iterable
+    from typing import TypeVar
 
     from trezor.messages import (
         GetAddress,

@@ -11,7 +11,7 @@ from trezor import utils
 from trezor.messages import EthereumNetworkInfo
 
 if TYPE_CHECKING:
-    from typing import Iterator
+    from collections.abc import Iterator
 
     # Removing the necessity to construct object to save space
     # fmt: off

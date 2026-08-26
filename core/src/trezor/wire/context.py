@@ -19,7 +19,8 @@ from .protocol_common import Context, Message
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Callable, Coroutine, Generator, TypeVar, overload
+    from collections.abc import Callable, Coroutine, Generator
+    from typing import Any, TypeVar, overload
 
     from storage.cache_common import DataCache
 

@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import TYPE_CHECKING
 
 from .clear_signing import (
     AddressNameFormatter,
@@ -10,6 +10,9 @@ from .clear_signing import (
     parse_address,
     parse_uint256,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 # https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/ercs/calldata-erc20-tokens.json#L27
 

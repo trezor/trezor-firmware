@@ -7,7 +7,8 @@ from trezor.sdcard import with_filesystem
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Callable, TypeVar
+    from collections.abc import Callable
+    from typing import TypeVar
 
     T = TypeVar("T", bound=Callable)
 

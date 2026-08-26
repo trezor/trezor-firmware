@@ -45,7 +45,8 @@ if __debug__:
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Callable, Concatenate, ParamSpec
+    from collections.abc import Callable
+    from typing import Any, Concatenate, ParamSpec
 
     from trezorui_api import UiResult
 

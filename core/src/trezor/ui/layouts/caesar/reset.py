@@ -10,7 +10,7 @@ from . import confirm_action, show_success, show_warning
 CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Sequence
+    from collections.abc import Awaitable, Sequence
 
     pass
 

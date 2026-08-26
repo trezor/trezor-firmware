@@ -3,7 +3,8 @@ from typing import TYPE_CHECKING
 from trezor.wire import context
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable, ParamSpec
+    from collections.abc import Awaitable, Callable
+    from typing import ParamSpec
 
     P = ParamSpec("P")
     ByteFunc = Callable[P, bytes]

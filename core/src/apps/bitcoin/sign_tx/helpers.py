@@ -19,7 +19,8 @@ from . import layout
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Awaitable
+    from collections.abc import Awaitable
+    from typing import Any
 
     from trezor.enums import AmountUnit
     from trezor.messages import (

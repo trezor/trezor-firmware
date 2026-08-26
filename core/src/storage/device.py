@@ -6,9 +6,9 @@ from trezor import utils
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from typing import Literal
 
     from trezor.enums import BackupType, DisplayRotation
-    from typing_extensions import Literal
 
 # Namespace:
 _NAMESPACE = common.APP_DEVICE

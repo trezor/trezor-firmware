@@ -1,10 +1,11 @@
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from trezor.messages import BenchmarkResult
 
 from .common import format_float, maximum_used_memory_in_bytes, random_bytes
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from typing import Protocol
 
     class HashCtx(Protocol):

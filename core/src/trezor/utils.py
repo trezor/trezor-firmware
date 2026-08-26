@@ -104,7 +104,8 @@ else:
 
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer, AnyBytes
-    from typing import Any, Iterator, Protocol, Sequence, TypeVar
+    from collections.abc import Iterator, Sequence
+    from typing import Any, Protocol, TypeVar
 
     from trezor.protobuf import MessageType
 

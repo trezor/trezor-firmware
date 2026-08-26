@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Awaitable, Container
+from typing import TYPE_CHECKING
 
 from trezor import protobuf, utils
 from trezor.wire.codec import codec_v1
@@ -11,6 +11,7 @@ if __debug__:
 
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Container
     from typing import TypeVar
 
     from storage.cache_common import DataCache

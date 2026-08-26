@@ -5,9 +5,12 @@
 # NOTE: not supplying the kwargs saves 120 bytes of code size
 # `networks` needs kwarg as `levy` above is optional
 
-from typing import Iterator
+from typing import TYPE_CHECKING
 
 from trezor.enums import NEMMosaicLevy
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class MosaicLevy:

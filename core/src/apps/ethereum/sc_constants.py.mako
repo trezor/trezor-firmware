@@ -3,7 +3,10 @@
 # do not edit manually!
 # fmt: off
 
-from typing import Iterator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 <%
 def fmt_addr(addr_hex: str) -> str:
     data = "".join(f'\\x{b:02x}' for b in bytes.fromhex(addr_hex))

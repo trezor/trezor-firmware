@@ -6,7 +6,8 @@ from trezor import log, loop, utils
 from trezor.enums import MessageType
 
 if TYPE_CHECKING:
-    from typing import Callable, TypeVar
+    from collections.abc import Callable
+    from typing import TypeVar
 
     IdleCallback = Callable[[], None]
     T = TypeVar("T")

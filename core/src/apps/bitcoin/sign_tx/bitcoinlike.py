@@ -5,7 +5,7 @@ from . import helpers
 from .bitcoin import Bitcoin
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from collections.abc import Sequence
 
     from trezor.messages import PrevTx, SignTx, TxInput
 

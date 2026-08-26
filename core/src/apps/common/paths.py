@@ -6,7 +6,8 @@ SLIP25_PURPOSE = const(10025 | HARDENED)
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Callable, Collection, Container, Iterable, Sequence, TypeVar
+    from collections.abc import Callable, Collection, Container, Iterable, Sequence
+    from typing import Any, TypeVar
 
     from typing_extensions import Protocol
 

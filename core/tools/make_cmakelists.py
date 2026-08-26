@@ -1,5 +1,5 @@
 import argparse
-from typing import Iterable
+from collections.abc import Iterable
 
 
 def gen(sources: Iterable[str], dirs: Iterable[str], defs: Iterable[str]) -> None:

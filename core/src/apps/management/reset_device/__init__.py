@@ -1,5 +1,5 @@
 from micropython import const
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING
 
 import storage
 import storage.device as storage_device
@@ -19,6 +19,7 @@ if __debug__:
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from collections.abc import Sequence
 
     from trezor.messages import ResetDevice, Success
     from trezor.ui.layouts import PropertyType

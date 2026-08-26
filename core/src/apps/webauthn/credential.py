@@ -22,7 +22,7 @@ from .common import COSE_ALG_EDDSA, COSE_ALG_ES256, COSE_CURVE_ED25519, COSE_CUR
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Iterable
+    from collections.abc import Iterable
 
     from trezor.crypto import bip32
 

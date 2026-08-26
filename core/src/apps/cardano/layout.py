@@ -27,7 +27,8 @@ from .helpers.utils import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Callable, Iterable, Literal
+    from collections.abc import Callable, Iterable
+    from typing import Literal
 
     from trezor import messages
     from trezor.enums import CardanoNativeScriptHashDisplayFormat

@@ -7,8 +7,8 @@ from trezor.wire.protocol_common import Message, WireError
 
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer, AnyBytes
+    from collections.abc import Callable
     from trezorio import WireInterface
-    from typing import Callable
 
 _REP_MARKER = const(63)  # ord('?')
 _REP_MAGIC = const(35)  # org('#')

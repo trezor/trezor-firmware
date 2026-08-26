@@ -4,7 +4,7 @@ import storage.device as storage_device
 from trezor.enums import BackupType
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from collections.abc import Sequence
 
     from trezor.messages import BackupDevice, BackupMethod, Success
 
