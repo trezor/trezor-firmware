@@ -29,7 +29,8 @@ import importlib.metadata
 import json
 import os
 import sys
-from typing import TYPE_CHECKING, Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import trezorlib
 import trezorlib.misc

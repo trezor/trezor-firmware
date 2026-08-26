@@ -68,7 +68,7 @@ class DefinitionPayload(Struct):
 
 class Definition(Struct):
     payload: DefinitionPayload = subcon(DefinitionPayload)
-    proof: t.List[bytes]
+    proof: list[bytes]
     sigmask: int
     signature: bytes
 

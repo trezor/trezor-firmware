@@ -38,7 +38,7 @@ https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules
 """.strip()
 
 
-MessagePayload = t.Tuple[int, bytes]
+MessagePayload = tuple[int, bytes]
 
 
 class TransportException(TrezorException):

@@ -154,7 +154,7 @@ def format_container(
     return pformat(pb, indent)
 
 
-def _format_version(version: t.Tuple[int, ...]) -> str:
+def _format_version(version: tuple[int, ...]) -> str:
     return ".".join(str(i) for i in version)
 
 
@@ -616,7 +616,7 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
     def public_keys(
         self, dev_keys: bool = False, signature_version: int = 3
     ) -> t.Sequence[bytes]:
-        keymap: t.Dict[t.Tuple[int, bool], fw_models.ModelKeys] = {
+        keymap: dict[tuple[int, bool], fw_models.ModelKeys] = {
             (3, False): fw_models.LEGACY_V3,
             (3, True): fw_models.LEGACY_V3_DEV,
             (2, False): fw_models.LEGACY_V1V2,

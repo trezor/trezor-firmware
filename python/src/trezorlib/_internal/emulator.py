@@ -24,8 +24,9 @@ import signal
 import socket
 import subprocess
 import time
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, TextIO, Union, cast
+from typing import Any, Optional, TextIO, Union, cast
 
 from ..debuglink import DebugLinkNotFound, TrezorTestContext
 from ..transport import Transport
@@ -217,10 +218,10 @@ class Emulator:
             raise RuntimeError
         return self._client
 
-    def make_args(self) -> List[str]:
+    def make_args(self) -> list[str]:
         return []
 
-    def make_env(self) -> Dict[str, str]:
+    def make_env(self) -> dict[str, str]:
         return os.environ.copy()
 
     def _get_transport(self) -> UdpTransport:
@@ -393,7 +394,7 @@ class CoreEmulator(Emulator):
         self.heap_size = heap_size
         self.display_scale = display_scale
 
-    def make_env(self) -> Dict[str, str]:
+    def make_env(self) -> dict[str, str]:
         env = super().make_env()
         env.update(
             TREZOR_PROFILE_DIR=str(self.profile_dir),
@@ -411,7 +412,7 @@ class CoreEmulator(Emulator):
 
         return env
 
-    def make_args(self) -> List[str]:
+    def make_args(self) -> list[str]:
         pyopt = "-O0" if self.debug else "-O1"
         return (
             [pyopt, "-X", f"heapsize={self.heap_size}"]
@@ -463,7 +464,7 @@ class CoreEmulator(Emulator):
 class LegacyEmulator(Emulator):
     STORAGE_FILENAME = "emulator.img"
 
-    def make_env(self) -> Dict[str, str]:
+    def make_env(self) -> dict[str, str]:
         env = super().make_env()
         if self.headless:
             env["SDL_VIDEODRIVER"] = "dummy"

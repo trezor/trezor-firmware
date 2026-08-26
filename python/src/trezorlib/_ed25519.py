@@ -32,9 +32,9 @@ arithmetic, so we cannot handle secrets without risking their disclosure.
 """
 
 import hashlib
-from typing import List, NewType, Tuple
+from typing import NewType
 
-Point = NewType("Point", Tuple[int, int, int, int])
+Point = NewType("Point", tuple[int, int, int, int])
 
 
 __version__ = "1.0.dev1"
@@ -154,7 +154,7 @@ def scalarmult(P: Point, e: int) -> Point:
 
 
 # Bpow[i] == scalarmult(B, 2**i)
-Bpow: List[Point] = []
+Bpow: list[Point] = []
 
 
 def make_Bpow() -> None:

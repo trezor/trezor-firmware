@@ -17,17 +17,8 @@
 import os
 import sys
 import time
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    BinaryIO,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, BinaryIO, Optional, Union
 from urllib.parse import urlparse
 
 import click
@@ -54,7 +45,7 @@ MODEL_CHOICE = ChoiceType(
 )
 
 
-def _print_version(version: Tuple[int, int, int, int]) -> None:
+def _print_version(version: tuple[int, int, int, int]) -> None:
     major, minor, patch, build = version
     click.echo(f"Firmware version {major}.{minor}.{patch} build {build}")
 
@@ -201,7 +192,7 @@ def check_device_match(
 
 def get_all_firmware_releases(
     model: TrezorModel, bitcoin_only: bool
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get sorted list of all releases suitable for inputted parameters"""
     url = f"https://data.trezor.io/firmware/{model.internal_name.lower()}/releases.json"
     req = requests.get(url)
@@ -221,7 +212,7 @@ def get_all_firmware_releases(
 def get_url_and_fingerprint_from_release(
     release: dict,
     bitcoin_only: bool,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Get appropriate url and fingerprint from release dictionary."""
     if bitcoin_only:
         url = release["url_bitcoinonly"]
@@ -243,7 +234,7 @@ def find_specified_firmware_version(
     model: TrezorModel,
     version: str,
     bitcoin_only: bool,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Get the url from which to download the firmware and its expected fingerprint.
 
     If the specified version is not found, exits with a failure.
@@ -276,7 +267,7 @@ def find_best_firmware_version(
     client: "TrezorClient",
     version: Optional[str],
     bitcoin_only: Optional[bool],
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Get the url from which to download the firmware and its expected fingerprint.
 
     When the version (X.Y.Z) is specified, checks for that specific release.

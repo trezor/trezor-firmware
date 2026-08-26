@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 import click
 
@@ -66,7 +66,7 @@ def get_address(
 @with_session
 def get_watch_key(
     session: "Session", address: str, network_type: messages.MoneroNetworkType
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Get Monero watch key for specified path."""
     address_n = tools.parse_path(address)
     res = monero.get_watch_key(session, address_n, network_type)

@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Generator, Optional
+from collections.abc import Generator
+from typing import TYPE_CHECKING, Optional
 
 from .. import messages
 from ..debuglink import LayoutType

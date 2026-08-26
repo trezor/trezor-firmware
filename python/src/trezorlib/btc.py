@@ -17,9 +17,10 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
 from copy import copy
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, AnyStr, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, AnyStr, Optional
 
 # TypedDict is not available in typing for python < 3.8
 from typing_extensions import Protocol, TypedDict
@@ -40,7 +41,7 @@ if TYPE_CHECKING:
         hex: str
         type: str
         reqSigs: int
-        addresses: List[str]
+        addresses: list[str]
 
     class Vin(TypedDict):
         txid: str
@@ -48,7 +49,7 @@ if TYPE_CHECKING:
         sequence: int
         coinbase: str
         scriptSig: "ScriptSig"
-        txinwitness: List[str]
+        txinwitness: list[str]
 
     class Vout(TypedDict):
         value: float
@@ -63,8 +64,8 @@ if TYPE_CHECKING:
         vsize: int
         weight: int
         locktime: int
-        vin: List[Vin]
-        vout: List[Vout]
+        vin: list[Vin]
+        vout: list[Vout]
 
     class TxCacheType(Protocol):
         def __getitem__(self, __key: bytes) -> messages.TransactionType: ...
@@ -113,7 +114,7 @@ def get_public_node(
     coin_name: Optional[str] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     ignore_xpub_magic: bool = False,
-    unlock_path: Optional[List[int]] = None,
+    unlock_path: Optional[list[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
 ) -> messages.PublicKey:
     if unlock_path:
@@ -148,7 +149,7 @@ def get_authenticated_address(
     multisig: Optional[messages.MultisigRedeemScriptType] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     ignore_xpub_magic: bool = False,
-    unlock_path: Optional[List[int]] = None,
+    unlock_path: Optional[list[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
     chunkify: bool = False,
 ) -> messages.Address:
@@ -199,10 +200,10 @@ def get_ownership_proof(
     multisig: Optional[messages.MultisigRedeemScriptType] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     user_confirmation: bool = False,
-    ownership_ids: Optional[List[bytes]] = None,
+    ownership_ids: Optional[list[bytes]] = None,
     commitment_data: Optional[bytes] = None,
     preauthorized: bool = False,
-) -> Tuple[bytes, bytes]:
+) -> tuple[bytes, bytes]:
     if preauthorized:
         session.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
 
@@ -279,10 +280,10 @@ def sign_tx(
     prev_txes: Optional["TxCacheType"] = None,
     payment_reqs: Sequence[messages.PaymentRequest] = (),
     preauthorized: bool = False,
-    unlock_path: Optional[List[int]] = None,
+    unlock_path: Optional[list[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
     **kwargs: Any,
-) -> Tuple[Sequence[Optional[bytes]], bytes]:
+) -> tuple[Sequence[Optional[bytes]], bytes]:
     """Sign a Bitcoin-like transaction.
 
     Returns a list of signatures (one for each provided input) and the
@@ -329,7 +330,7 @@ def sign_tx(
     res = session.call(signtx, expect=messages.TxRequest)
 
     # Prepare structure for signatures
-    signatures: List[Optional[bytes]] = [None] * len(inputs)
+    signatures: list[Optional[bytes]] = [None] * len(inputs)
     serialized_tx = b""
 
     def copy_tx_meta(tx: messages.TransactionType) -> messages.TransactionType:

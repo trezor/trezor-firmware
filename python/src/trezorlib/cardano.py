@@ -14,22 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from collections.abc import Iterable, Iterator, Sequence
 from ipaddress import ip_address
 from itertools import chain
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
 from . import messages as m
 from . import tools
@@ -71,14 +59,14 @@ INCOMPLETE_OUTPUT_ERROR_MESSAGE = "The output is missing some fields"
 INVALID_OUTPUT_TOKEN_BUNDLE_ENTRY = "The output's token_bundle entry is invalid"
 INVALID_MINT_TOKEN_BUNDLE_ENTRY = "The mint token_bundle entry is invalid"
 
-InputWithPath = Tuple[m.CardanoTxInput, List[int]]
-CollateralInputWithPath = Tuple[m.CardanoTxCollateralInput, List[int]]
-AssetGroupWithTokens = Tuple[m.CardanoAssetGroup, List[m.CardanoToken]]
-OutputWithData = Tuple[
+InputWithPath = tuple[m.CardanoTxInput, list[int]]
+CollateralInputWithPath = tuple[m.CardanoTxCollateralInput, list[int]]
+AssetGroupWithTokens = tuple[m.CardanoAssetGroup, list[m.CardanoToken]]
+OutputWithData = tuple[
     m.CardanoTxOutput,
-    List[AssetGroupWithTokens],
-    List[m.CardanoTxInlineDatumChunk],
-    List[m.CardanoTxReferenceScriptChunk],
+    list[AssetGroupWithTokens],
+    list[m.CardanoTxInlineDatumChunk],
+    list[m.CardanoTxReferenceScriptChunk],
 ]
 OutputItem = Union[
     m.CardanoTxOutput,
@@ -93,16 +81,16 @@ CertificateItem = Union[
     m.CardanoPoolRelayParameters,
 ]
 MintItem = Union[m.CardanoTxMint, m.CardanoAssetGroup, m.CardanoToken]
-PoolOwnersAndRelays = Tuple[
-    List[m.CardanoPoolOwner], List[m.CardanoPoolRelayParameters]
+PoolOwnersAndRelays = tuple[
+    list[m.CardanoPoolOwner], list[m.CardanoPoolRelayParameters]
 ]
-CertificateWithPoolOwnersAndRelays = Tuple[
+CertificateWithPoolOwnersAndRelays = tuple[
     m.CardanoTxCertificate, Optional[PoolOwnersAndRelays]
 ]
-Path = List[int]
-Witness = Tuple[Path, bytes]
-AuxiliaryDataSupplement = Dict[str, Union[int, bytes]]
-SignTxResponse = Dict[str, Union[bytes, List[Witness], AuxiliaryDataSupplement]]
+Path = list[int]
+Witness = tuple[Path, bytes]
+AuxiliaryDataSupplement = dict[str, Union[int, bytes]]
+SignTxResponse = dict[str, Union[bytes, list[Witness], AuxiliaryDataSupplement]]
 Chunk = TypeVar(
     "Chunk",
     bound=Union[
@@ -122,8 +110,8 @@ def parse_optional_int(value: Optional[str]) -> Optional[int]:
 
 def create_address_parameters(
     address_type: m.CardanoAddressType,
-    address_n: List[int],
-    address_n_staking: Optional[List[int]] = None,
+    address_n: list[int],
+    address_n_staking: Optional[list[int]] = None,
     staking_key_hash: Optional[bytes] = None,
     block_index: Optional[int] = None,
     tx_index: Optional[int] = None,
@@ -235,7 +223,7 @@ def parse_output(output: dict) -> OutputWithData:
 
 def _parse_token_bundle(
     token_bundle: Iterable[dict], is_mint: bool
-) -> List[AssetGroupWithTokens]:
+) -> list[AssetGroupWithTokens]:
     error_message: str
     if is_mint:
         error_message = INVALID_MINT_TOKEN_BUNDLE_ENTRY
@@ -262,7 +250,7 @@ def _parse_token_bundle(
     return result
 
 
-def _parse_tokens(tokens: Iterable[dict], is_mint: bool) -> List[m.CardanoToken]:
+def _parse_tokens(tokens: Iterable[dict], is_mint: bool) -> list[m.CardanoToken]:
     error_message: str
     if is_mint:
         error_message = INVALID_MINT_TOKEN_BUNDLE_ENTRY
@@ -344,8 +332,8 @@ def parse_optional_address_parameters(
 
 
 def _parse_chunkable_data(
-    data: Optional[bytes], chunk_type: Type[Chunk]
-) -> Tuple[int, List[Chunk]]:
+    data: Optional[bytes], chunk_type: type[Chunk]
+) -> tuple[int, list[Chunk]]:
     if data is None:
         return 0, []
     data_size = len(data)
@@ -530,7 +518,7 @@ def parse_certificate(certificate: dict) -> CertificateWithPoolOwnersAndRelays:
 
 def _parse_credential(
     obj: dict, error: ValueError
-) -> Tuple[List[int], Optional[bytes], Optional[bytes]]:
+) -> tuple[list[int], Optional[bytes], Optional[bytes]]:
     if not any(k in obj for k in ("path", "script_hash", "key_hash")):
         raise error
 
@@ -673,7 +661,7 @@ def parse_auxiliary_data(
     )
 
 
-def parse_mint(mint: Iterable[dict]) -> List[AssetGroupWithTokens]:
+def parse_mint(mint: Iterable[dict]) -> list[AssetGroupWithTokens]:
     return _parse_token_bundle(mint, is_mint=True)
 
 
@@ -731,7 +719,7 @@ def _get_witness_requests(
     required_signers: Sequence[m.CardanoTxRequiredSigner],
     additional_witness_requests: Sequence[Path],
     signing_mode: m.CardanoTxSigningMode,
-) -> List[m.CardanoTxWitnessRequest]:
+) -> list[m.CardanoTxWitnessRequest]:
     paths = set()
 
     # don't gather paths from tx elements in MULTISIG_TRANSACTION signing mode
@@ -781,12 +769,12 @@ def _get_witness_requests(
     return [m.CardanoTxWitnessRequest(path=path) for path in sorted_paths]
 
 
-def _get_inputs_items(inputs: List[InputWithPath]) -> Iterator[m.CardanoTxInput]:
+def _get_inputs_items(inputs: list[InputWithPath]) -> Iterator[m.CardanoTxInput]:
     for input, _ in inputs:
         yield input
 
 
-def _get_outputs_items(outputs: List[OutputWithData]) -> Iterator[OutputItem]:
+def _get_outputs_items(outputs: list[OutputWithData]) -> Iterator[OutputItem]:
     for output_with_data in outputs:
         yield from _get_output_items(output_with_data)
 
@@ -866,7 +854,7 @@ def get_authenticated_address(
 @tools.workflow(capability=m.Capability.Cardano)
 def get_public_key(
     session: "Session",
-    address_n: List[int],
+    address_n: list[int],
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     show_display: bool = False,
 ) -> m.CardanoPublicKey:
@@ -901,8 +889,8 @@ def get_native_script_hash(
 def sign_tx(
     session: "Session",
     signing_mode: m.CardanoTxSigningMode,
-    inputs: List[InputWithPath],
-    outputs: List[OutputWithData],
+    inputs: list[InputWithPath],
+    outputs: list[OutputWithData],
     fee: int,
     ttl: Optional[int],
     validity_interval_start: Optional[int],
@@ -924,7 +912,7 @@ def sign_tx(
     chunkify: bool = False,
     tag_cbor_sets: bool = False,
     payment_req: Optional[m.PaymentRequest] = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     witness_requests = _get_witness_requests(
         inputs,
         certificates,
@@ -973,7 +961,7 @@ def sign_tx(
     ):
         response = session.call(tx_item, expect=m.CardanoTxItemAck)
 
-    sign_tx_response: Dict[str, Any] = {}
+    sign_tx_response: dict[str, Any] = {}
 
     if auxiliary_data is not None:
         auxiliary_data_supplement = session.call(

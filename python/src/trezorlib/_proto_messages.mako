@@ -2,8 +2,9 @@
 # fmt: off
 # isort:skip_file
 
+from collections.abc import Sequence
 from enum import IntEnum
-from typing import Sequence, Optional
+from typing import Optional
 
 from . import protobuf
 % for enum in enums:

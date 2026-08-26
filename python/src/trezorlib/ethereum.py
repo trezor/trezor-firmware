@@ -16,8 +16,9 @@
 
 import re
 import warnings
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, AnyStr, Optional, Union
 
 from typing_extensions import Self
 
@@ -352,7 +353,7 @@ def sign_tx_eip1559(
     chain_id: int,
     max_gas_fee: int,
     max_priority_fee: int,
-    access_list: Optional[List[messages.EthereumAccessList]] = None,
+    access_list: Optional[list[messages.EthereumAccessList]] = None,
     definitions: Optional[messages.EthereumDefinitions] = None,
     chunkify: bool = False,
     payment_req: Optional[messages.PaymentRequest] = None,
@@ -407,7 +408,7 @@ def sign_message(
 def sign_typed_data(
     session: "Session",
     n: "Address",
-    data: Dict[str, Any],
+    data: dict[str, Any],
     *,
     metamask_v4_compat: bool = True,
     definitions: Optional[messages.EthereumDefinitions] = None,
@@ -430,7 +431,7 @@ def sign_typed_data(
     while isinstance(response, messages.EthereumTypedDataStructRequest):
         struct_name = response.name
 
-        members: List["messages.EthereumStructMember"] = []
+        members: list["messages.EthereumStructMember"] = []
         for field in types[struct_name]:
             field_type = get_field_type(field["type"], types)
             struct_member = messages.EthereumStructMember(

@@ -98,10 +98,14 @@ extra_standard_library = [
 known_first_party = ["trezorlib", "apps", "coin_info", "marketcap", "ui_tests"]
 known_third_party = ["trezor", "storage"]
 
-# Ruff is used as a PEP 585 linter for `core` only
+# Ruff is used as a PEP 585 linter
 [tool.ruff]
 target-version = "py310"
-include = ["core/**/*.py"]
+per-file-target-version = { "python/**/*.py" = "py39" }
+include = [
+  "core/**/*.py",
+  "python/**/*.py",
+]
 force-exclude = true
 extend-exclude = [
   "core/translations",

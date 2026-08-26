@@ -20,7 +20,8 @@ import logging
 import socket
 import time
 from collections import deque
-from typing import TYPE_CHECKING, Deque, Iterable, Tuple
+from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from ..log import DUMP_PACKETS
 from . import Timeout, Transport, TransportException
@@ -37,7 +38,7 @@ class _SendRateLimiter:
     def __init__(self, max_events: int, window: float) -> None:
         self.max_events = max_events
         self.window = window
-        self._events: Deque[float] = deque()
+        self._events: deque[float] = deque()
 
     def wait(self) -> None:
         now = time.monotonic()
@@ -71,7 +72,7 @@ class UdpTransport(Transport):
             devparts = device.split(":")
             host = devparts[0]
             port = int(devparts[1]) if len(devparts) > 1 else UdpTransport.DEFAULT_PORT
-        self.device: Tuple[str, int] = (host, port)
+        self.device: tuple[str, int] = (host, port)
 
         self.socket: socket.socket | None = None
         self._send_limiter = _SendRateLimiter(

@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 
 import click
 
@@ -61,7 +61,7 @@ def encrypt_keyvalue(
     address: str,
     key: str,
     value: str,
-    prompt: Tuple[bool, bool],
+    prompt: tuple[bool, bool],
 ) -> str:
     """Encrypt value by given key and path.
 
@@ -97,7 +97,7 @@ def decrypt_keyvalue(
     address: str,
     key: str,
     value: str,
-    prompt: Tuple[bool, bool],
+    prompt: tuple[bool, bool],
 ) -> bytes:
     """Decrypt value by given key and path.
 

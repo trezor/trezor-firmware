@@ -20,7 +20,6 @@ import hashlib
 import hmac
 import json
 import os
-from typing import Tuple
 from urllib.parse import urlparse
 
 from cryptography.hazmat.backends import default_backend
@@ -46,7 +45,7 @@ def getMasterKey(session: Session) -> str:
 
 
 # Deriving file name and encryption key
-def getFileEncKey(key: str) -> Tuple[str, str, str]:
+def getFileEncKey(key: str) -> tuple[str, str, str]:
     filekey, enckey = key[: len(key) // 2], key[len(key) // 2 :]
     FILENAME_MESS = b"5f91add3fa1c3c76e90c90a3bd0999e2bd7833d06a483fe884ee60397aca277a"
     digest = hmac.new(str.encode(filekey), FILENAME_MESS, hashlib.sha256).hexdigest()

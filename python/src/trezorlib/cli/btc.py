@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import base64
 import json
-from typing import TYPE_CHECKING, Dict, List, Optional, TextIO, Tuple
+from typing import TYPE_CHECKING, Optional, TextIO
 
 import click
 import construct as c
@@ -101,7 +101,7 @@ XpubStruct = c.Struct(
 )
 
 
-def xpub_deserialize(xpubstr: str) -> Tuple[str, messages.HDNodeType]:
+def xpub_deserialize(xpubstr: str) -> tuple[str, messages.HDNodeType]:
     xpub_bytes = tools.b58check_decode(xpubstr)
     data = XpubStruct.parse(xpub_bytes)
     if data.key[0] == 0:
@@ -123,7 +123,7 @@ def xpub_deserialize(xpubstr: str) -> Tuple[str, messages.HDNodeType]:
     return data.version, node
 
 
-def guess_script_type_from_path(address_n: List[int]) -> messages.InputScriptType:
+def guess_script_type_from_path(address_n: list[int]) -> messages.InputScriptType:
     if len(address_n) < 1 or not tools.is_hardened(address_n[0]):
         return messages.InputScriptType.SPENDADDRESS
 
@@ -139,7 +139,7 @@ def guess_script_type_from_path(address_n: List[int]) -> messages.InputScriptTyp
     return messages.InputScriptType.SPENDADDRESS
 
 
-def get_unlock_path(address_n: List[int]) -> Optional[List[int]]:
+def get_unlock_path(address_n: list[int]) -> Optional[list[int]]:
     if address_n and address_n[0] == tools.H_(10025):
         return address_n[:1]
     return None
@@ -183,7 +183,7 @@ def get_address(
     address: str,
     script_type: messages.InputScriptType | None,
     show_display: bool,
-    multisig_xpub: List[str],
+    multisig_xpub: list[str],
     multisig_threshold: int | None,
     multisig_suffix_length: int,
     multisig_sort_pubkeys: bool,
@@ -461,7 +461,7 @@ def sign_message(
     script_type: Optional[messages.InputScriptType],
     electrum_compat: bool,
     chunkify: bool,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Sign message using address of given path."""
     address_n = tools.parse_path(address)
     if script_type is None:

@@ -96,9 +96,9 @@ def test_node(node: t.Union[Node, Leaf], expected_hash: str) -> None:
 
 @pytest.mark.parametrize("values, root_hash, proofs", MERKLE_TREE_VECTORS)
 def test_tree(
-    values: t.List[bytes],
+    values: list[bytes],
     root_hash: bytes,
-    proofs: t.Dict[bytes, t.List[bytes]],
+    proofs: dict[bytes, list[bytes]],
 ) -> None:
     mt = MerkleTree(values)
     assert mt.get_root_hash() == root_hash

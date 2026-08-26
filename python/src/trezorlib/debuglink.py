@@ -51,8 +51,8 @@ if t.TYPE_CHECKING:
     ExpectedResponse = t.Union[ExpectedMessage, tuple[bool, ExpectedMessage]]
     ExpectedResponses = t.Sequence[ExpectedResponse]
 
-    AnyDict = t.Dict[str, t.Any]
-    Coords = t.Tuple[int, int]
+    AnyDict = dict[str, t.Any]
+    Coords = tuple[int, int]
 
     class InputFunc(Protocol):
 
@@ -747,7 +747,7 @@ class DebugLink:
 
         return "".join([str(matrix.index(p) + 1) for p in pin])
 
-    def read_recovery_word(self) -> t.Tuple[str | None, int | None]:
+    def read_recovery_word(self) -> tuple[str | None, int | None]:
         state = self.state()
         return (state.recovery_fake_word, state.recovery_word_pos)
 
@@ -841,7 +841,7 @@ class DebugLink:
 
     def click(
         self,
-        click: t.Tuple[int, int],
+        click: tuple[int, int],
         hold_ms: int | None = None,
         wait: bool | None = None,
     ) -> None:
@@ -1222,10 +1222,10 @@ class DebugUI:
 
 class MessageFilter:
     def __init__(
-        self, message_type: t.Type[protobuf.MessageType], **fields: t.Any
+        self, message_type: type[protobuf.MessageType], **fields: t.Any
     ) -> None:
         self.message_type = message_type
-        self.fields: t.Dict[str, t.Any] = {}
+        self.fields: dict[str, t.Any] = {}
         self.update_fields(**fields)
 
     def update_fields(self, **fields: t.Any) -> "MessageFilter":
@@ -1276,7 +1276,7 @@ class MessageFilter:
         return True
 
     def to_string(self, maxwidth: int = 80) -> str:
-        fields: list[t.Tuple[str, str]] = []
+        fields: list[tuple[str, str]] = []
         for field in self.message_type.FIELDS.values():
             if field.name not in self.fields:
                 continue
@@ -1595,7 +1595,7 @@ class TrezorTestContext:
 
     def set_filter(
         self,
-        message_type: t.Type[protobuf.MessageType],
+        message_type: type[protobuf.MessageType],
         callback: t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
     ) -> None:
         """Configure a filter function for a specified message type.
@@ -2210,13 +2210,13 @@ class ButtonActions:
         else:
             return PASSPHRASE_SPECIAL
 
-    def passphrase(self, char: str) -> t.Tuple[Coords, int]:
+    def passphrase(self, char: str) -> tuple[Coords, int]:
         choices = self._passphrase_choices(char)
         idx = next(i for i, letters in enumerate(choices) if char in letters)
         click_amount = choices[idx].index(char) + 1
         return self.debuglink.screen_buttons.pin_passphrase_index(idx), click_amount
 
-    def label(self, char: str) -> t.Tuple[Coords, int]:
+    def label(self, char: str) -> tuple[Coords, int]:
         choices = self._label_choices(char)
         idx = next(i for i, letters in enumerate(choices) if char in letters)
         click_amount = choices[idx].index(char) + 1
@@ -2248,7 +2248,7 @@ class ButtonActions:
             for _ in range(amount):
                 yield coords
 
-    def _letter_coords_and_amount(self, letter: str) -> t.Tuple[Coords, int]:
+    def _letter_coords_and_amount(self, letter: str) -> tuple[Coords, int]:
         idx = next(
             i for i, letters in enumerate(BUTTON_LETTERS_BIP39) if letter in letters
         )
