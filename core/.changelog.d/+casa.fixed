@@ -1,0 +1,1 @@
+Don't show unknown derivation path warning when exporting xpubs for supported multisig schemes (BIP-45, BIP-48, Casa, Unchained).
