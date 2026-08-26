@@ -43,7 +43,9 @@
 #define POLL_READ (0x0000)
 #define POLL_WRITE (0x0100)
 
-extern uint32_t last_touch_sample_time;
+#ifdef USE_TOUCH
+static uint32_t last_touch_sample_time = 0;
+#endif
 
 #ifdef USE_BLE
 

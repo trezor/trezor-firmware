@@ -305,7 +305,6 @@ typedef struct _mp_obj_closure_t {
   mp_obj_t closed[];
 } mp_obj_closure_t;
 
-extern const mp_obj_type_t mp_type_bound_meth;
 extern const mp_obj_type_t mp_type_closure;
 extern const mp_obj_type_t mp_type_cell;
 extern const mp_obj_type_t mod_trezorio_USB_type;

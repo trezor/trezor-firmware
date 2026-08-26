@@ -18,5 +18,3 @@
  */
 
 #include "shared/runtime/interrupt_char.h"
-
-static inline mp_uint_t mp_hal_ticks_cpu(void) { return 0; }

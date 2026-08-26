@@ -23,8 +23,6 @@
 #include "consteq.h"
 #include "memzero.h"
 
-extern const mp_obj_type_t mp_type_AuthenticationError;
-
 /// package: trezorcrypto.__init__
 
 /// class aesgcm_encrypt:
