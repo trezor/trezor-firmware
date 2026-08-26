@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from typing import Any, BinaryIO, List, Tuple
+from typing import Any, BinaryIO
 
 import click
 
@@ -11,7 +11,7 @@ from trezorlib._internal import firmware_headers
 # =========================== signing =========================
 
 
-def parse_privkey_args(privkey_data: List[str]) -> Tuple[int, List[bytes]]:
+def parse_privkey_args(privkey_data: list[str]) -> tuple[int, list[bytes]]:
     privkeys = []
     sigmask = 0
     for key in privkey_data:

@@ -16,7 +16,6 @@ from .transaction.instructions import (
 from .types import is_address_reference
 
 if TYPE_CHECKING:
-    from typing import Type
 
     from trezor.messages import PaymentRequest
 
@@ -288,7 +287,7 @@ async def try_confirm_staking_transaction(
     if not instructions:
         return False
 
-    def _match_instructions(*expected_types: Type[Instruction]) -> bool:
+    def _match_instructions(*expected_types: type[Instruction]) -> bool:
         if len(instructions) != len(expected_types):
             return False
         return all(

@@ -22,7 +22,7 @@ from .instruction import Instruction
 from .parse import parse_byte, parse_memo, parse_pubkey, parse_string
 
 if TYPE_CHECKING:
-    from typing import Any, Type, TypeGuard
+    from typing import Any, TypeGuard
 
     from ..types import Account, InstructionData, InstructionId
 
@@ -141,7 +141,7 @@ def is_atap_account_creation(instruction: Instruction) -> bool:
     )
 
 
-def __getattr__(name: str) -> Type[Instruction]:
+def __getattr__(name: str) -> type[Instruction]:
     def get_id(name: str) -> tuple[str, InstructionId]:
         if name == "SystemProgramCreateAccountInstruction":
             return (_SYSTEM_PROGRAM_ID, _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT)

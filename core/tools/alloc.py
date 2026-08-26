@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Dict, Protocol, TextIO, TypedDict
+from typing import TYPE_CHECKING, Protocol, TextIO, TypedDict
 
 import click
 from dominate import document
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         avg_allocs: float
 
     # {filename:{lineno:LineAllocData}}
-    alloc_data_dict = Dict[str, Dict[int, LineAllocData]]
+    alloc_data_dict = dict[str, dict[int, LineAllocData]]
 
     class SharedObject(Protocol):
         data: alloc_data_dict
