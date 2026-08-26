@@ -1,4 +1,12 @@
 
+## 0.3.9 [16th September 2026]
+
+### Added
+- Add `ble-monitor` command for monitoring BLE connect/disconnect/pairing events, with interactive pairing confirmation and runtime advertising-mode switching.
+
+### Changed
+- Update `tropic-update-fw` to RISC-V FW 2.1.0 and SPECT FW 1.3.0. The bundled firmware targets ACAB silicon, or ABAB when built with `TROPIC_SILICON_REVISION=ABAB`.  [#7625]
+
 ## 0.3.8 [22nd July 2026]
 
 ### Added
@@ -231,3 +239,4 @@
 [#6621]: https://github.com/trezor/trezor-firmware/pull/6621
 [#6829]: https://github.com/trezor/trezor-firmware/pull/6829
 [#7161]: https://github.com/trezor/trezor-firmware/pull/7161
+[#7625]: https://github.com/trezor/trezor-firmware/pull/7625
