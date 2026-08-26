@@ -1,6 +1,5 @@
 {
   "glyphs": {
-    "º": "0e0e10011e0000c7fe9d010000c2ffffff5e0000feffffffff0480ffef78fcff0df0ff1e00a0ff5ff3ff060010ff8ff5ff030000febff5ff030000febff3ff060010ff8ff0ff1e00a0ff5f90ffef77fcff0d00feffffffff0400c2ffffff5e000000c7ff9d0100",
     "Á": "1e261e00260000000000000000f5ffef010000000000000000000010feff2f0000000000000000000000a0ffff050000000000000000000000f5ff7f000000000000000000000010feff0a0000000000000000000000a0ffcf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d0ffffff7f00000000000000000000f3ffffffcf00000000000000000000f9ffffffff02000000000000000000feffffffff08000000000000000040ffffffffff0e0000000000000000a0ffffdfffff3f0000000000000000f0ffff0affff9f0000000000000000f6ffff04fbffef0000000000000000fbffff00f5ffff0500000000000010ffff9f00f0ffff0a00000000000070ffff4f00a0ffff1f000000000000d0ffff0e0050ffff6f000000000000f2ffff090000ffffcf000000000000f8ffff030000faffff020000000000feffef000000f4ffff070000000040ffff8f000000e0ffff0d00000000a0ffff3f00000090ffff3f00000000f0ffff0d00000040ffff9f00000000f5ffffffffffffffffffef00000000fbffffffffffffffffffff04000010ffffffffffffffffffffff0a000060ffffffffffffffffffffff0f0000c0ffffefddddddddddedffff5f0000f2ffff0c000000000030ffffbf0000f8ffff06000000000000fdffff0100fdffff01000000000000f7ffff0730ffffbf00000000000000f1ffff0d90ffff5f00000000000000b0ffff2fe0ffff0f0000000000000060ffff8f",
     "É": "1426190326000000000080ffff0c000000000000f3ffef01000000000000fdff2f00000000000080ffff05000000000000f3ff7f00000000000000fdff0a000000000000000000000000000000000000000000000000000000000000000000feffffffffffffffffcffeffffffffffffffffcffeffffffffffffffffcffeffffffffffffffffcffeffffffffffffffffcffeff8f00000000000000feff8f00000000000000feff8f00000000000000feff8f00000000000000feff8f00000000000000feff8f00000000000000feff8f00000000000000feffffffffffffffff0ffeffffffffffffffff0ffeffffffffffffffff0ffeffffffffffffffff0ffeffffdddddddddddd0dfeff8f00000000000000feff8f00000000000000feff8f00000000000000feff8f00000000000000feff8f00000000000000feff8f00000000000000feff8f00000000000000feffffffffffffffffcffeffffffffffffffffcffeffffffffffffffffcffeffffffffffffffffcffeffffffffffffffffcf",
     "Í": "0a260c03260000fcff7f0070ffff0a00f2ffcf0000fcff1e0070ffff0300f2ff5f0000000000000000000000000000000000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000feff8f0000",
@@ -19,126 +18,6 @@
     "¡": "061e0c0315fcffcffcffcffcffcffcffcffcffcfa8aa8a000000000000707707f0ff1ff2ff2ff3ff3ff4ff5ff6ff6ff7ff7ff8ff8ffaffaffbffbffbffbffbffbffbffbffbffbffbffbffbffbffbffbffbffbffbffbffbffbffbffbf646646"
   },
   "kernings": [
-    [
-      "º",
-      "Á",
-      -3
-    ],
-    [
-      "º",
-      "í",
-      1
-    ],
-    [
-      "º",
-      "1",
-      2
-    ],
-    [
-      "º",
-      "4",
-      -2
-    ],
-    [
-      "º",
-      "6",
-      -1
-    ],
-    [
-      "º",
-      "7",
-      2
-    ],
-    [
-      "º",
-      "A",
-      -3
-    ],
-    [
-      "º",
-      "J",
-      -3
-    ],
-    [
-      "º",
-      "T",
-      1
-    ],
-    [
-      "º",
-      "V",
-      1
-    ],
-    [
-      "º",
-      "W",
-      1
-    ],
-    [
-      "º",
-      "b",
-      1
-    ],
-    [
-      "º",
-      "f",
-      1
-    ],
-    [
-      "º",
-      "h",
-      1
-    ],
-    [
-      "º",
-      "i",
-      1
-    ],
-    [
-      "º",
-      "j",
-      1
-    ],
-    [
-      "º",
-      "k",
-      1
-    ],
-    [
-      "º",
-      "l",
-      1
-    ],
-    [
-      "º",
-      "t",
-      2
-    ],
-    [
-      "º",
-      "v",
-      1
-    ],
-    [
-      "º",
-      "w",
-      1
-    ],
-    [
-      "º",
-      "y",
-      1
-    ],
-    [
-      "º",
-      "z",
-      1
-    ],
-    [
-      "Á",
-      "º",
-      -3
-    ],
     [
       "Á",
       "Ó",
@@ -321,11 +200,6 @@
     ],
     [
       "í",
-      "º",
-      1
-    ],
-    [
-      "í",
       "\"",
       1
     ],
@@ -405,26 +279,6 @@
       1
     ],
     [
-      "1",
-      "º",
-      1
-    ],
-    [
-      "6",
-      "º",
-      -2
-    ],
-    [
-      "7",
-      "º",
-      2
-    ],
-    [
-      "A",
-      "º",
-      -3
-    ],
-    [
       "A",
       "Ó",
       -1
@@ -458,11 +312,6 @@
       "D",
       "Á",
       -1
-    ],
-    [
-      "F",
-      "º",
-      1
     ],
     [
       "F",
@@ -506,11 +355,6 @@
     ],
     [
       "L",
-      "º",
-      -3
-    ],
-    [
-      "L",
       "Ó",
       -2
     ],
@@ -551,11 +395,6 @@
     ],
     [
       "P",
-      "º",
-      1
-    ],
-    [
-      "P",
       "Á",
       -3
     ],
@@ -591,11 +430,6 @@
     ],
     [
       "R",
-      "º",
-      1
-    ],
-    [
-      "R",
       "Á",
       -1
     ],
@@ -623,11 +457,6 @@
       "R",
       "ü",
       -1
-    ],
-    [
-      "T",
-      "º",
-      1
     ],
     [
       "T",
@@ -676,11 +505,6 @@
     ],
     [
       "V",
-      "º",
-      1
-    ],
-    [
-      "V",
       "Á",
       -2
     ],
@@ -718,11 +542,6 @@
       "V",
       "ü",
       -2
-    ],
-    [
-      "W",
-      "º",
-      1
     ],
     [
       "W",
@@ -870,16 +689,6 @@
       1
     ],
     [
-      "d",
-      "º",
-      1
-    ],
-    [
-      "f",
-      "º",
-      2
-    ],
-    [
       "f",
       "á",
       -1
@@ -893,36 +702,6 @@
       "f",
       "ó",
       -1
-    ],
-    [
-      "g",
-      "º",
-      1
-    ],
-    [
-      "i",
-      "º",
-      1
-    ],
-    [
-      "j",
-      "º",
-      1
-    ],
-    [
-      "l",
-      "º",
-      1
-    ],
-    [
-      "r",
-      "º",
-      1
-    ],
-    [
-      "t",
-      "º",
-      1
     ],
     [
       "t",
@@ -940,16 +719,6 @@
       -1
     ],
     [
-      "v",
-      "º",
-      1
-    ],
-    [
-      "w",
-      "º",
-      1
-    ],
-    [
       "x",
       "é",
       -1
@@ -958,16 +727,6 @@
       "x",
       "ó",
       -1
-    ],
-    [
-      "y",
-      "º",
-      1
-    ],
-    [
-      "z",
-      "º",
-      1
     ],
     [
       "{",

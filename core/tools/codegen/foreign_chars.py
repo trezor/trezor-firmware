@@ -69,7 +69,6 @@ french_chars = (
 )
 
 spanish_chars = (
-    "º",
     "Á",
     "É",
     "Í",
