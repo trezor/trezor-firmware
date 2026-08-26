@@ -19,8 +19,9 @@ from __future__ import annotations
 import logging
 import socket
 import time
+from collections.abc import Iterable
 from enum import Enum
-from typing import TYPE_CHECKING, Iterable, Tuple
+from typing import TYPE_CHECKING
 
 import construct as c
 from construct_classes import Struct
@@ -132,7 +133,7 @@ class EmuBleTransport(Transport):
             port = (
                 int(devparts[1]) if len(devparts) > 1 else EmuBleTransport.DEFAULT_PORT
             )
-        self.device: Tuple[str, int] = (host, port)
+        self.device: tuple[str, int] = (host, port)
 
         self.data_socket: socket.socket | None = None
         self.event_socket: socket.socket | None = None

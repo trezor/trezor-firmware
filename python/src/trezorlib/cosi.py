@@ -14,8 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from collections.abc import Iterable, Sequence
 from functools import reduce
-from typing import Iterable, Sequence, Tuple
 
 from . import _ed25519
 
@@ -45,7 +45,7 @@ def combine_sig(
 
 def get_nonce(
     sk: Ed25519PrivateKey, data: bytes, ctr: int = 0
-) -> Tuple[int, Ed25519PublicPoint]:
+) -> tuple[int, Ed25519PublicPoint]:
     """Calculate CoSi nonces for given data.
     These differ from Ed25519 deterministic nonces in that there is a counter appended at end.
 

@@ -57,7 +57,7 @@ class SanityCheckedStruct(Struct):
 
     @classmethod
     def parse(
-        cls: t.Type[Self], data: bytes, *, strict: bool = STRICT_SANITY_CHECK_DEFAULT
+        cls: type[Self], data: bytes, *, strict: bool = STRICT_SANITY_CHECK_DEFAULT
     ) -> Self:
         parsed_image = super().parse(data)
         try:

@@ -18,7 +18,7 @@
 
 import decimal
 import json
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import click
 import requests
@@ -48,7 +48,7 @@ def prompt(*args: Any, **kwargs: Any):
     return click.prompt(*args, err=True, **kwargs)
 
 
-def _default_script_type(address_n: Optional[List[int]], script_types: Any) -> str:
+def _default_script_type(address_n: Optional[list[int]], script_types: Any) -> str:
     script_type = "address"
 
     if address_n is None:
@@ -62,16 +62,16 @@ def _default_script_type(address_n: Optional[List[int]], script_types: Any) -> s
     # return script_types[script_type]
 
 
-def parse_vin(s: str) -> Tuple[bytes, int]:
+def parse_vin(s: str) -> tuple[bytes, int]:
     txid, vout = s.split(":")
     return bytes.fromhex(txid), int(vout)
 
 
 def _get_inputs_interactive(
     blockbook_url: str,
-) -> Tuple[List[messages.TxInputType], Dict[str, messages.TransactionType]]:
-    inputs: List[messages.TxInputType] = []
-    txes: Dict[str, messages.TransactionType] = {}
+) -> tuple[list[messages.TxInputType], dict[str, messages.TransactionType]]:
+    inputs: list[messages.TxInputType] = []
+    txes: dict[str, messages.TransactionType] = {}
     while True:
         echo()
         prev = prompt(
@@ -139,8 +139,8 @@ def _get_inputs_interactive(
     return inputs, txes
 
 
-def _get_outputs_interactive() -> List[messages.TxOutputType]:
-    outputs: List[messages.TxOutputType] = []
+def _get_outputs_interactive() -> list[messages.TxOutputType]:
+    outputs: list[messages.TxOutputType] = []
     while True:
         echo()
         address = prompt("Output address for non-change output", default="")

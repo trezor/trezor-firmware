@@ -20,7 +20,7 @@ import atexit
 import logging
 import sys
 import time
-from typing import Iterable, List
+from collections.abc import Iterable
 
 from ..log import DUMP_PACKETS
 from ..models import ALL_MODELS, TrezorModel
@@ -82,7 +82,7 @@ class WebUsbTransport(Transport):
         if models is None:
             models = ALL_MODELS
         usb_ids = [id for model in models for id in model.usb_ids]
-        devices: List["WebUsbTransport"] = []
+        devices: list["WebUsbTransport"] = []
         for dev in cls.context.getDeviceIterator(skip_on_error=True):
             usb_id = (dev.getVendorID(), dev.getProductID())
             if usb_id not in usb_ids:

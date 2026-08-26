@@ -54,9 +54,7 @@ if t.TYPE_CHECKING:
 
 class ChoiceType(click.Choice):
 
-    def __init__(
-        self, typemap: t.Dict[str, t.Any], case_sensitive: bool = True
-    ) -> None:
+    def __init__(self, typemap: dict[str, t.Any], case_sensitive: bool = True) -> None:
         super().__init__(list(typemap.keys()))
         self.case_sensitive = case_sensitive
         if case_sensitive:
@@ -622,7 +620,7 @@ class AliasedGroup(click.Group):
 
     def __init__(
         self,
-        aliases: t.Dict[str, click.Command] | None = None,
+        aliases: dict[str, click.Command] | None = None,
         *args: t.Any,
         **kwargs: t.Any,
     ) -> None:

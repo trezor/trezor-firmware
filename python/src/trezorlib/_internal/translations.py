@@ -45,9 +45,9 @@ ALIGN_SUBCON = c.Padding(
     lambda ctx: (ALIGNMENT - (ctx._io.tell() % ALIGNMENT)) % ALIGNMENT
 )
 
-JsonFontInfo = t.Dict[str, str]
-Order = t.Dict[int, str]
-VersionTuple = t.Tuple[int, int, int, int]
+JsonFontInfo = dict[str, str]
+Order = dict[int, str]
+VersionTuple = tuple[int, int, int, int]
 
 
 class JsonHeader(TypedDict):

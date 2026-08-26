@@ -54,7 +54,7 @@ class Leaf:
 
     def __init__(self, value: bytes) -> None:
         self.tree_hash = leaf_hash(value)
-        self.proof: t.List[bytes] = []
+        self.proof: list[bytes] = []
 
     def add_to_proof_list(self, proof_entry: bytes) -> None:
         self.proof.append(proof_entry)
@@ -113,7 +113,7 @@ class MerkleTree:
     verifier does not need to distinguish between left and right subtree.
     """
 
-    entries: t.Dict[bytes, Leaf]
+    entries: dict[bytes, Leaf]
     """Map of leaf hash -> leaf node.
 
     Use `leaf_hash` to calculate the hash of a value, or use `get_proof(value)`
@@ -163,7 +163,7 @@ class MerkleTree:
     def get_root_hash(self) -> bytes:
         return self.root.tree_hash
 
-    def get_proof(self, value: bytes) -> t.List[bytes]:
+    def get_proof(self, value: bytes) -> list[bytes]:
         """Get the proof for a given value."""
         try:
             return self.entries[leaf_hash(value)].proof
@@ -171,7 +171,7 @@ class MerkleTree:
             raise KeyError("Value not found in Merkle tree") from None
 
 
-def evaluate_proof(value: bytes, proof: t.List[bytes]) -> bytes:
+def evaluate_proof(value: bytes, proof: list[bytes]) -> bytes:
     """Evaluate the provided proof of membership.
 
     Reconstructs the Merkle root hash for a tree that contains `value` as a leaf node,

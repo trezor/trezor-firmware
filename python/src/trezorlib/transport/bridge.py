@@ -59,7 +59,7 @@ def call_bridge(
     return r
 
 
-def get_bridge_version() -> t.Tuple[int, ...]:
+def get_bridge_version() -> tuple[int, ...]:
     config = call_bridge("configure").json()
     return tuple(map(int, config["version"].split(".")))
 

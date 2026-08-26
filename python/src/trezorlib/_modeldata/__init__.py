@@ -43,10 +43,10 @@ in ``core/embed/models`` today and would need a ``[trezorlib]`` block in
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 
-def keys(*hexes: str) -> Tuple[bytes, ...]:
+def keys(*hexes: str) -> tuple[bytes, ...]:
     """Helper: turn hex strings into a tuple of key bytes."""
     return tuple(bytes.fromhex(h) for h in hexes)
 
@@ -79,15 +79,15 @@ class KeySet:
     and the dev keys that discovery boards reuse, are not production)."""
 
     production: bool = False
-    boardloader_keys: Tuple[bytes, ...] = ()
+    boardloader_keys: tuple[bytes, ...] = ()
     boardloader_sigs_needed: int = -1
-    bootloader_keys: Tuple[bytes, ...] = ()
+    bootloader_keys: tuple[bytes, ...] = ()
     bootloader_sigs_needed: int = -1
-    firmware_keys: Tuple[bytes, ...] = ()
+    firmware_keys: tuple[bytes, ...] = ()
     firmware_sigs_needed: int = -1
-    secmon_keys: Tuple[bytes, ...] = ()
+    secmon_keys: tuple[bytes, ...] = ()
     secmon_sigs_needed: int = -1
-    nrf_keys: Tuple[bytes, ...] = ()
+    nrf_keys: tuple[bytes, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -107,8 +107,8 @@ class ModelData:
     name: str
     hw_model: bytes
     # --- release / protocol metadata (sidecar: not in firmware files) ---
-    minimum_version: Tuple[int, int, int]
-    aliases: Tuple[str, ...] = ()
+    minimum_version: tuple[int, int, int]
+    aliases: tuple[str, ...] = ()
     # --- hardware / UI (source: model.toml features) ---
     model_class: ModelClass = ModelClass.CORE
     layout: Layout = Layout.BOLT

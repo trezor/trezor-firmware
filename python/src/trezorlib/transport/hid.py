@@ -36,7 +36,7 @@ except Exception as e:
     HID_IMPORTED = False
 
 
-HidDevice = t.Dict[str, t.Any]
+HidDevice = dict[str, t.Any]
 HidDeviceHandle = t.Any
 
 
@@ -67,7 +67,7 @@ class HidTransport(Transport):
             models = {TREZOR_ONE}
         usb_ids = [id for model in models for id in model.usb_ids]
 
-        devices: t.List["HidTransport"] = []
+        devices: list["HidTransport"] = []
         for dev in hid.enumerate(0, 0):
             usb_id = (dev["vendor_id"], dev["product_id"])
             if usb_id not in usb_ids:

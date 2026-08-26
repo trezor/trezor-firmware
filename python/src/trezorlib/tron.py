@@ -1,5 +1,5 @@
 import io
-from typing import TYPE_CHECKING, Any, Tuple, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from . import messages
 from .protobuf import load_message
@@ -25,7 +25,7 @@ DEFAULT_BIP32_PATH = "m/44h/195h/0h/0/0"
 
 def from_raw_data(
     raw_data: bytes,
-) -> Tuple[messages.TronSignTx, "TronMessageType"]:
+) -> tuple[messages.TronSignTx, "TronMessageType"]:
     raw_tx = load_message(io.BytesIO(raw_data), messages.TronRawTransaction)
     tx = messages.TronSignTx(
         ref_block_bytes=raw_tx.ref_block_bytes,

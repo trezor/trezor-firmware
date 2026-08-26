@@ -20,7 +20,6 @@ import argparse
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import List
 
 import click
 
@@ -38,7 +37,7 @@ args = parser.parse_args()
 current = OPTIONS_RST.read_text()
 output = StringIO()
 
-lead_in: List[str] = []
+lead_in: list[str] = []
 
 for line in current.splitlines(keepends=True):
     lead_in.append(line)

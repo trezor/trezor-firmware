@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from fnmatch import fnmatch
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 import click
 
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from ..client import Session
 
 
-def list_names_patern(session: "Session", pattern: Optional[str] = None) -> List[str]:
+def list_names_patern(session: "Session", pattern: Optional[str] = None) -> list[str]:
     names = list(benchmark.list_names(session).names)
     if pattern is None:
         return names

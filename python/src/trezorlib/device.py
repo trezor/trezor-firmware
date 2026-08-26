@@ -23,15 +23,8 @@ import random
 import secrets
 import time
 import warnings
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Iterable,
-    Optional,
-    Sequence,
-    Tuple,
-    overload,
-)
+from collections.abc import Iterable, Sequence
+from typing import TYPE_CHECKING, Callable, Optional, overload
 
 from slip10 import SLIP10
 
@@ -344,7 +337,7 @@ def setup(
     entropy_check_count: Optional[int] = None,
     paths: Iterable[Address] = [],
     _get_entropy: Callable[[], bytes] = _get_external_entropy,
-) -> Iterable[Tuple[Address, str]]:
+) -> Iterable[tuple[Address, str]]:
     """Create a new wallet on device.
 
     On supporting devices, automatically performs the entropy check: for N rounds, ask

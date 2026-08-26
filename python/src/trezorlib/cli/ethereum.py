@@ -20,17 +20,7 @@ import sys
 import tarfile
 from decimal import Decimal
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    AnyStr,
-    Dict,
-    List,
-    NoReturn,
-    Optional,
-    TextIO,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, AnyStr, NoReturn, Optional, TextIO, cast
 
 import click
 
@@ -115,7 +105,7 @@ def _amount_to_int(
 
 def _parse_access_list(
     ctx: click.Context, param: Any, value: str
-) -> List[EthereumAccessList]:
+) -> list[EthereumAccessList]:
     try:
         return [_parse_access_list_item(val) for val in value]
 
@@ -163,7 +153,7 @@ def _erc20_contract(
 
 
 def _format_access_list(
-    access_list: List[EthereumAccessList],
+    access_list: list[EthereumAccessList],
 ) -> "_rlp.RLPItem":
     return [
         (ethereum.decode_hex(item.address), item.storage_keys) for item in access_list
@@ -396,7 +386,7 @@ def sign_tx(
     token: Optional[str],
     max_gas_fee: Optional[int],
     max_priority_fee: Optional[int],
-    access_list: List[EthereumAccessList],
+    access_list: list[EthereumAccessList],
     eip2718_type: Optional[int],
     chunkify: bool,
 ) -> str:
@@ -571,7 +561,7 @@ def sign_tx(
 @with_session
 def sign_message(
     session: "Session", address: str, message: str, chunkify: bool
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Sign message with Ethereum address."""
     address_n = tools.parse_path(address)
     network = _network_def_from_address_n(address_n)
@@ -595,7 +585,7 @@ def sign_message(
 @with_session
 def sign_typed_data(
     session: "Session", address: str, metamask_v4_compat: bool, file: TextIO
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Sign typed data (EIP-712) with Ethereum address.
 
     Currently NOT supported:
@@ -647,7 +637,7 @@ def verify_message(
 @with_session
 def sign_typed_data_hash(
     session: "Session", address: str, domain_hash_hex: str, message_hash_hex: str
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Sign hash of typed data (EIP-712) with Ethereum address.
 

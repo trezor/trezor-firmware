@@ -32,12 +32,12 @@ class ProtobufMapping:
     """Mapping of protobuf classes to Python classes"""
 
     def __init__(self) -> None:
-        self.type_to_class: t.Dict[int, t.Type[protobuf.MessageType]] = {}
-        self.class_to_type_override: t.Dict[t.Type[protobuf.MessageType], int] = {}
+        self.type_to_class: dict[int, type[protobuf.MessageType]] = {}
+        self.class_to_type_override: dict[type[protobuf.MessageType], int] = {}
 
     def register(
         self,
-        msg_class: t.Type[protobuf.MessageType],
+        msg_class: type[protobuf.MessageType],
         msg_wire_type: int | None = None,
     ) -> None:
         """Register a Python class as a protobuf type.

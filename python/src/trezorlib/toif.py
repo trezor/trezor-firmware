@@ -16,9 +16,9 @@
 
 import struct
 import zlib
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Sequence, Tuple
 
 import construct as c
 from typing_extensions import Literal
@@ -35,7 +35,7 @@ except ImportError:
     PIL_AVAILABLE = False
 
 
-RGBPixel = Tuple[int, int, int]
+RGBPixel = tuple[int, int, int]
 
 
 class ToifMode(Enum):
@@ -117,7 +117,7 @@ def _from_pil_grayscale(
 
 
 def _from_pil_grayscale_alpha(
-    pixels: Sequence[Tuple[int, int]], right_hi: bool, width: int, height: int
+    pixels: Sequence[tuple[int, int]], right_hi: bool, width: int, height: int
 ) -> bytes:
     data = bytearray()
     for y in range(0, height):
@@ -161,7 +161,7 @@ def _to_grayscale(data: bytes, right_hi: bool) -> bytes:
 @dataclass
 class Toif:
     mode: ToifMode
-    size: Tuple[int, int]
+    size: tuple[int, int]
     data: bytes
 
     def __post_init__(self) -> None:
@@ -230,7 +230,7 @@ def load(filename: str) -> Toif:
 
 def from_image(
     image: "Image.Image",
-    background: Tuple[int, int, int, int] = (0, 0, 0, 255),
+    background: tuple[int, int, int, int] = (0, 0, 0, 255),
     legacy_format: bool = False,
 ) -> Toif:
     if not PIL_AVAILABLE:

@@ -19,7 +19,7 @@
 import glob
 import os
 import sys
-from typing import List, TextIO
+from typing import TextIO
 
 LICENSE_NOTICE = """\
 # This file is part of the Trezor project.
@@ -80,7 +80,7 @@ def one_file(fp: TextIO) -> None:
     fp.truncate()
 
 
-def main(paths: List[str]) -> None:
+def main(paths: list[str]) -> None:
     for path in paths:
         for fn in glob.glob(f"{path}/**/*.py", recursive=True):
             if any(exclude in fn for exclude in EXCLUDE_DIRS):
