@@ -44,7 +44,8 @@ from ...ward_trie import WardTrie
 pytestmark = [
     pytest.mark.protocol("thp"),
     pytest.mark.models("core"),
-    pytest.mark.ward_transport("service"),
+    # THE RESET MIGRATES A DAEMON PIN, and only a THP service channel has one to migrate.
+    pytest.mark.ward_transport("service-thp"),
 ]
 
 _APP = "TEST"

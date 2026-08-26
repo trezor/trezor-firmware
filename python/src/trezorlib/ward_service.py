@@ -92,6 +92,107 @@ WARD_PORT_OFFSET = 7
 WARD_USB_SUBCLASS = 0x57
 WARD_USB_PROTOCOL = 0x01
 
+# WHICH TRANSPORT THE SERVICE ENDPOINT SPEAKS, probed rather than assumed.
+#
+# The wire interface's protocol no longer settles it: the service interface speaks codec v1 on
+# every build by default and THP only behind `USE_WARD_SERVICE_THP`, so a THP wallet device
+# normally has a CODEC service endpoint. There is no feature flag to ask for -- the device
+# deliberately reports nothing about this -- so the endpoint is asked a question whose answer only
+# one of the two can give.
+#
+# THE FRAMING OF THE ANSWER IS NOT THE ANSWER, which is the trap here. A THP device replies to
+# protocol-v1 framing with a protocol-v1 `Failure(InvalidProtocol)` on purpose -- that is how it
+# tells a V1 host it speaks THP -- so "it answered with `?##`" is true of both endpoints. What
+# separates them is WHICH failure: a codec service endpoint refuses an unknown wire type from
+# `_handle_bootstrap` with a `DataError`, having touched no binding, while a THP one says
+# `InvalidProtocol` before any WARD code is reached.
+_CODEC_PROBE_WIRE_TYPE = 0xFEFE
+_CODEC_REPORT_LEN = 64
+_CODEC_MAGIC = b"?##"
+_CODEC_HEADER_LEN = 9
+_CODEC_PROBE_TIMEOUT_S = 1.0
+
+# ASKED MORE THAN ONCE, because the socket may not be empty when we get here. `Transport.is_ready`
+# pings with an 8-byte PINGPING and reads an 8-byte PONGPONG, and an attempt that timed out can
+# leave its reply queued -- which `read_chunk` then rejects as a wrong-sized frame. One stale
+# reply must not be allowed to decide which half of a test suite runs.
+_CODEC_PROBE_ATTEMPTS = 3
+
+
+def _codec_probe_report() -> bytes:
+    import struct
+
+    header = _CODEC_MAGIC + struct.pack(">HL", _CODEC_PROBE_WIRE_TYPE, 0)
+    return header + b"\x00" * (_CODEC_REPORT_LEN - len(header))
+
+
+def _failure_code(reply: bytes) -> int | None:
+    """The `code` of a codec-framed `Failure`, or None if that is not what this is.
+
+    Parsed by hand rather than through the protobuf mapping, because the whole point of this
+    exchange is that we do not yet know what is on the other end and must not need a session,
+    a model or a mapping to find out. A `Failure` puts `code` in field 1, so the payload of the
+    one we asked for begins with the varint key 0x08 and fits in a single report.
+    """
+    import struct
+
+    from . import messages
+
+    if len(reply) < _CODEC_HEADER_LEN or reply[: len(_CODEC_MAGIC)] != _CODEC_MAGIC:
+        return None
+    mtype, msize = struct.unpack(">HL", reply[len(_CODEC_MAGIC) : _CODEC_HEADER_LEN])
+    if mtype != messages.Failure.MESSAGE_WIRE_TYPE:
+        return None
+    payload = reply[_CODEC_HEADER_LEN : _CODEC_HEADER_LEN + msize]
+    if not payload or payload[0] != 0x08:
+        return None
+
+    code = 0
+    for shift, byte in enumerate(payload[1:]):
+        code |= (byte & 0x7F) << (7 * shift)
+        if not byte & 0x80:
+            return code
+    return None
+
+
+def service_speaks_codec(ward: Transport) -> bool | None:
+    """Whether the WARD service endpoint on `ward` speaks codec v1 rather than THP.
+
+    Takes an ALREADY OPEN transport for the WARD interface. Side-effect free on both kinds of
+    build: on a codec endpoint this is an unbound-and-unknown message, refused without touching
+    the binding; on a THP one it never reaches WARD code at all.
+
+    THREE ANSWERS, NOT TWO. True and False are what the endpoint said; None means it said nothing
+    that could be read as either, and the caller has to decide what to do about that. Returning a
+    bool for the inconclusive case is what a probe must not do here -- guessing wrong silently
+    runs the wrong half of a suite, or points a daemon at a transport the device is not serving.
+    """
+    import time
+
+    from . import messages
+
+    for _attempt in range(_CODEC_PROBE_ATTEMPTS):
+        try:
+            ward.write_chunk(_codec_probe_report())
+        except Exception:
+            return None
+
+        deadline = time.time() + _CODEC_PROBE_TIMEOUT_S
+        while time.time() < deadline:
+            try:
+                reply = ward.read_chunk(timeout=_CODEC_PROBE_TIMEOUT_S)
+            except Exception:
+                # Either nothing came (this attempt is spent) or a frame of the wrong size did
+                # -- a stale ping reply. Both are handled by asking again.
+                break
+            code = _failure_code(reply)
+            if code is None:
+                continue
+            return code != messages.FailureType.InvalidProtocol
+
+    return None
+
+
 WardServiceHandler = t.Callable[["MessageType"], "MessageType | None"]
 """What a daemon is: a function from one device request to one reply.
 
@@ -488,22 +589,34 @@ def ward_service_client(
     credential: Credential | None = None,
     static_privkey: bytes | None = None,
     app: _client.AppManifest | None = None,
+    speaks_codec: bool | None = None,
 ) -> AnyWardServiceClient:
     """A daemon client for this device's WARD interface, of whichever kind it speaks.
 
-    DECIDED BY THE WIRE CLIENT, not by probing the service interface. Which protocol a device
-    speaks is a property of the device, already established by whatever opened the wire connection
-    -- asking the service interface again would be a second answer to a settled question, and one
-    that a silent daemon-less interface cannot give.
+    DECIDED BY THE SERVICE INTERFACE, not by the wire client. It used to be the latter, on the
+    grounds that a device speaks one protocol and the wire connection had already established
+    which -- and that stopped being true when the service interface became codec v1 on every
+    build, including one whose wallet interface speaks THP. The two are now independent, so the
+    question is put to the endpoint that has to answer it. Pass `speaks_codec` to skip the probe
+    when the caller already knows.
 
     The identity arguments are THP's and are ignored on a codec device, which has no identity to
     carry. That is not an oversight; see `WardServiceClientV1`.
     """
-    from .protocol_v1 import TrezorClientV1
-
     transport = ward_transport(client.transport)
 
-    if isinstance(client, TrezorClientV1):
+    if speaks_codec is None:
+        transport.open()
+        try:
+            probed = service_speaks_codec(transport)
+        finally:
+            transport.close()
+        # AN INCONCLUSIVE PROBE MEANS CODEC, because that is what every build serves unless it was
+        # deliberately built otherwise. A daemon that knows better passes `speaks_codec` and does
+        # not come through here at all.
+        speaks_codec = True if probed is None else probed
+
+    if speaks_codec:
         return WardServiceClientV1(transport, mapping=client.mapping)
 
     return WardServiceClient(

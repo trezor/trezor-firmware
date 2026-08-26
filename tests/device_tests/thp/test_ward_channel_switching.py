@@ -64,7 +64,12 @@ from ...ward_trie import WardTrie
 pytestmark = [
     pytest.mark.protocol("thp"),
     pytest.mark.models("core"),
-    pytest.mark.ward_transport("service"),
+    # PINNED TO THE THP SERVICE PATH, which is what it was written against: reattachment,
+    # displacement and the private dispatcher are mechanisms a codec endpoint does not have.
+    # The INVARIANTS here outlive the mechanism and still need codec equivalents -- a service
+    # timeout, a malformed reply or unsolicited traffic must not damage the wallet channel on
+    # either transport. Those are not written yet; see the plan.
+    pytest.mark.ward_transport("service-thp"),
 ]
 
 _APP = "TEST"

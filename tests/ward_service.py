@@ -44,6 +44,7 @@ from trezorlib.ward_service import (  # noqa: F401
     WardServiceServer,
     ward_service_client,
 )
+from trezorlib.ward_service import service_speaks_codec
 from trezorlib.ward_service import ward_transport as _ward_interface_of
 
 from .ward_keys import EMPTY_ROOT, bip39_seed, derive_k_mac, derive_ward_id, root_mac
@@ -74,8 +75,15 @@ DEFAULT_SEED = bip39_seed(" ".join(["all"] * 12))
 DEFAULT_K_MAC = derive_k_mac(DEFAULT_SEED)
 DEFAULT_WARD_ID = derive_ward_id(DEFAULT_SEED)
 
-# Answered once per session by `serves_ward_over_a_service_channel`.
-_IS_SERVICE_BUILD: bool | None = None
+# Answered once per session by `ward_service_transport`.
+
+
+class _Unprobed:
+    """Distinct from None, which is a real answer here: "there is no service interface"."""
+
+
+_UNPROBED = _Unprobed()
+_IS_SERVICE_BUILD: "str | None | _Unprobed" = _UNPROBED
 
 
 def _root_or_empty(root: bytes | None) -> bytes:
@@ -126,13 +134,32 @@ def serves_ward_over_a_service_channel(client: TrezorTestContext) -> bool:
     Cached for the session rather than per test because it cannot change under us -- it is a
     property of the binary the emulator is running.
     """
+    return ward_service_transport(client) is not None
+
+
+def ward_service_transport(client: TrezorTestContext) -> str | None:
+    """`"codec"`, `"thp"`, or None when this build has no service interface at all. Cached."""
     global _IS_SERVICE_BUILD
 
-    if _IS_SERVICE_BUILD is None:
+    if _IS_SERVICE_BUILD is _UNPROBED:
         ward_iface = _open_ward_transport(client)
-        _IS_SERVICE_BUILD = ward_iface is not None
-        if ward_iface is not None:
-            ward_iface.close()
+        if ward_iface is None:
+            _IS_SERVICE_BUILD = None
+        else:
+            try:
+                # ASKED THROUGH `trezorlib`, like the interface's location, so a real daemon
+                # and this suite cannot end up disagreeing about which transport a build serves.
+                speaks_codec = service_speaks_codec(ward_iface)
+                if speaks_codec is None:
+                    # RAISED, NOT GUESSED. This decides which half of the WARD suite runs, and
+                    # both wrong guesses look like a dozen unrelated failures a long way from
+                    # their cause -- which is exactly what happened when it defaulted.
+                    raise RuntimeError(
+                        "could not tell which transport the WARD service interface speaks"
+                    )
+                _IS_SERVICE_BUILD = "codec" if speaks_codec else "thp"
+            finally:
+                ward_iface.close()
     return _IS_SERVICE_BUILD
 
 
