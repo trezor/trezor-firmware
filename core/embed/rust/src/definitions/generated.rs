@@ -3,6 +3,6 @@
 // do not edit manually!
 
 /// v1 definitions older than this data version are rejected.
-pub const MIN_DATA_VERSION_V1: u32 = 1783520408;
+pub const MIN_DATA_VERSION_V1: u32 = 1785520878;
 /// v2 definitions older than this data version are rejected.
 pub const MIN_DATA_VERSION_V2: u32 = 1788178059;
