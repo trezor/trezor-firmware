@@ -68,7 +68,7 @@ pystyle_check: ## run code style check on application sources and tests
 	@isort --check-only $(PY_FILES)
 	@echo [BLACK]
 	@black --check $(BLACK_FLAGS) $(PY_FILES)
-	@echo [RUFF - PEP 585]
+	@echo [RUFF]
 	@ruff check $(PY_FILES)
 	@echo [PYLINT]
 	@pylint $(PY_FILES)
@@ -85,7 +85,7 @@ pystyle: ## apply code style on application sources and tests
 	@isort $(PY_FILES)
 	@echo [BLACK]
 	@black $(BLACK_FLAGS) $(PY_FILES)
-	@echo [RUFF - PEP 585]
+	@echo [RUFF]
 	@ruff check --fix $(PY_FILES)
 	@echo [TYPECHECK]
 	@make -C core typecheck

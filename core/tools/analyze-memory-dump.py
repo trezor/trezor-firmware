@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterator
-from typing import Any, Optional, TypeGuard
+from typing import Any, TypeGuard
 
 if len(sys.argv) < 2:
     print("""\
@@ -126,7 +126,7 @@ class Item:
     def find_modules(self) -> list["Item"]:
         return [it for it in self.backlinks if it.type == "module"]
 
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         if "__name__" in self.dict:
             return self.dict["__name__"]
 

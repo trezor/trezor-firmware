@@ -109,6 +109,15 @@ per-file-target-version = { "python/**/*.py" = "py39" }
 
 [tool.ruff.lint]
 select = [
+  # PEP 585
   "UP006",  # non-pep585-annotation: typing.Tuple -> tuple, typing.Type -> type, ...
   "UP035",  # deprecated-import: typing.Sequence -> collections.abc.Sequence, ...
+
+  # PEP 604 (used in /core only)
+  "UP007",  # non-pep604-annotation-union: Union[int, str] -> int | str
+  "UP045",  # non-pep604-annotation-optional: Optional[str] -> str | None
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# PEP 604 syntax needs Python 3.10 - cannot be enforced e.g. in /python as it still supports Python 3.9.
+"!core/**/*.py" = ["UP007", "UP045"]
