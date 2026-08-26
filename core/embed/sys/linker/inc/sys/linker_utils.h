@@ -28,6 +28,8 @@
 // symbols defined in the linker script
 extern uint8_t _stack_section_start;
 extern uint8_t _stack_section_end;
+extern uint8_t _bootargs_ram_start;
+extern uint8_t _bootargs_ram_end;
 
 // Initialize linker script-defined sections (.bss, .data, etc.)
 //
@@ -177,14 +179,10 @@ void memregion_fill(memregion_t* region, uint32_t value);
 
 #define MEMREGION_ADD_SECTION(region, section_name)                          \
   {                                                                          \
-    extern uint8_t section_name##_start;                                     \
-    extern uint8_t section_name##_end;                                       \
     memregion_add_range(region, &section_name##_start, &section_name##_end); \
   }
 
 #define MEMREGION_DEL_SECTION(region, section_name)                          \
   {                                                                          \
-    extern uint8_t section_name##_start;                                     \
-    extern uint8_t section_name##_end;                                       \
     memregion_del_range(region, &section_name##_start, &section_name##_end); \
   }

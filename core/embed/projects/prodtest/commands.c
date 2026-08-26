@@ -29,15 +29,15 @@ void register_cli_command(const cli_command_t *cmd) {
   _cmd_list[_cmd_count++] = *cmd;
 }
 
+#else
+extern cli_command_t _prodtest_cli_cmd_section_start;
+extern cli_command_t _prodtest_cli_cmd_section_end;
 #endif
 
 const cli_command_t *commands_get_ptr(void) {
 #ifdef TREZOR_EMULATOR
   return _cmd_list;
-
 #else
-  extern cli_command_t _prodtest_cli_cmd_section_start;
-
   return &_prodtest_cli_cmd_section_start;
 #endif
 }
@@ -45,11 +45,7 @@ const cli_command_t *commands_get_ptr(void) {
 size_t commands_count(void) {
 #ifdef TREZOR_EMULATOR
   return _cmd_count;
-
 #else
-  extern cli_command_t _prodtest_cli_cmd_section_start;
-  extern cli_command_t _prodtest_cli_cmd_section_end;
-
   return &_prodtest_cli_cmd_section_end - &_prodtest_cli_cmd_section_start;
 #endif
 }

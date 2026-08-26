@@ -19,6 +19,8 @@
 
 #include <trezor_rtl.h>
 
+#include <assert.h>
+
 #ifndef TREZOR_EMULATOR
 // Stack check guard value set in startup code.
 // This is used if stack protection is enabled.
@@ -97,4 +99,8 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
   size_t msg_len = msg != NULL ? strlen(msg) : 0;
   size_t file_len = file != NULL ? strlen(file) : 0;
   system_exit_fatal_ex(msg, msg_len, file, file_len, line);
+}
+
+void __attribute__((noreturn)) __assert_impl(const char *file, int line) {
+  __fatal_error("Assert", file, line);
 }

@@ -37,8 +37,6 @@
 
 #include <io/usb.h>
 
-uint32_t last_touch_sample_time = 0;
-
 #define CHECK_PARAM_RANGE(value, minimum, maximum) \
   if (value < minimum || value > maximum) {        \
     const char *msg = (#value " is out of range"); \

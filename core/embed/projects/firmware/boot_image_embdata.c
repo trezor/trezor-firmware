@@ -37,7 +37,6 @@
 // symbols from bootloader.bin => bootloader.o
 extern const void bootloader_start;
 extern const void bootloader_size;
-extern const void bootloader_size;
 
 static const boot_image_t g_bootloader_image = {
     .image_ptr = (const void *)&bootloader_start,

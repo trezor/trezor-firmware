@@ -32,14 +32,6 @@
 #endif
 
 /**
- * @brief Switches the CPU to STOP2 low-power mode.
- *
- * This function blocks until an interrupt wakes the CPU.
- * Upon wake-up, it restores the system clock so the CPU can run at full speed.
- */
-void suspend_cpu(void);
-
-/**
  * @brief State of the drivers before entering a low-power mode
  *        used to restore them after wake-up.
  */
@@ -88,20 +80,3 @@ void suspend_drivers_phase2(void);
  *                      drivers before entering low-power mode.
  */
 void resume_drivers(const power_save_wakeup_params_t *wakeup_params);
-
-/**
- * @brief Suspends secure peripherals.
- *
- * This function is called before the device enters a low-power state.
- * It suspends secure peripherals to reduce power consumption.
- */
-void suspend_secure_drivers(void);
-
-/**
- * @brief Resumes secure peripherals.
- *
- * This function is called when the device exits a low-power state.
- * It resumes secure peripherals that were suspended before entering
- * the low-power state.
- */
-void resume_secure_drivers(void);

@@ -1,4 +1,4 @@
-use xbuild::{CLibrary, Result, bail_unsupported};
+use xbuild::{CLibrary, CompileAttrs, Result, bail_unsupported};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("bsp/inc");
@@ -122,8 +122,6 @@ fn add_stm32f4_bsp(lib: &mut CLibrary) -> Result<()> {
             "stm32f4xx_hal_cortex.c",
             "stm32f4xx_hal_dma.c",
             "stm32f4xx_hal_dma2d.c",
-            "stm32f4xx_hal_flash.c",
-            "stm32f4xx_hal_flash_ex.c",
             "stm32f4xx_hal_gpio.c",
             "stm32f4xx_hal_i2c.c",
             "stm32f4xx_hal_ltdc.c",
@@ -142,6 +140,12 @@ fn add_stm32f4_bsp(lib: &mut CLibrary) -> Result<()> {
             "stm32f4xx_ll_sdmmc.c",
             "stm32f4xx_ll_usb.c",
         ],
+    );
+
+    lib.add_sources_in_dir_with_attrs(
+        "../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/",
+        ["stm32f4xx_hal_flash.c", "stm32f4xx_hal_flash_ex.c"],
+        Some(CompileAttrs::new().with_flag("-Wno-redundant-decls")),
     );
 
     Ok(())

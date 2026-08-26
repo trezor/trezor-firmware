@@ -72,7 +72,6 @@ typedef struct {
 #ifdef TREZOR_EMULATOR
 #define PRODTEST_CLI_CMD(...) PRODTEST_CLI_CMD_IMPL(__COUNTER__, __VA_ARGS__)
 #define PRODTEST_CLI_CMD_IMPL(cnt, ...)                                     \
-  extern void register_cli_command(const cli_command_t* cmd);               \
   static const cli_command_t CONCAT(_cli_cmd_handler, cnt) = {__VA_ARGS__}; \
   __attribute__((constructor)) static void CONCAT(                          \
       __register, CONCAT(_cli_cmd_handler, cnt))(void) {                    \
@@ -272,3 +271,7 @@ void cli_disable_crc(cli_t* cli);
  * Returns true if CRC check is enabled.
  */
 bool cli_crc_enabled(cli_t* cli);
+
+#ifdef TREZOR_EMULATOR
+void register_cli_command(const cli_command_t* cmd);
+#endif

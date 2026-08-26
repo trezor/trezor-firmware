@@ -26,5 +26,3 @@
 #define PRINTF_USE_DOUBLE_INTERNALLY 0
 #define PRINTF_INTEGER_BUFFER_SIZE 32
 #define PRINTF_DECIMAL_BUFFER_SIZE 0
-
-static inline void putchar_(char c) {}

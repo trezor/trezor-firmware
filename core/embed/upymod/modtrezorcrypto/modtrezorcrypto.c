@@ -32,6 +32,8 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
   }
 }
 
+extern const mp_obj_type_t mp_type_AuthenticationError;
+
 #include "modtrezorcrypto-aes.h"
 #ifdef USE_AES_GCM
 #include "modtrezorcrypto-aesgcm.h"
