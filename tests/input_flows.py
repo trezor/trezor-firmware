@@ -2052,9 +2052,9 @@ def load_N_groups(
                 yield from swipe_if_necessary(debug, B.Success, expected_br_name)
                 debug.press_yes()
 
-            elif method is messages.BackupMethod.N4W1:
+            elif method is messages.BackupMethod.N1W1:
                 assert (yield).name == "backup_write"
-                mnemonics.append(n4w1_handle_write(debug).decode())
+                mnemonics.append(n1w1_handle_write(debug).decode())
             else:
                 raise RuntimeError
 
@@ -2428,7 +2428,7 @@ class InputFlowSlip39AdvancedCustomBackup(InputFlowBase):
             # 3. Never make digital copies
             yield
             self.debug.press_yes()
-        elif self.backup_method is not messages.BackupMethod.N4W1:
+        elif self.backup_method is not messages.BackupMethod.N1W1:
             raise RuntimeError
 
         # Mnemonic phrases
