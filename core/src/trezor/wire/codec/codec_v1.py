@@ -3,9 +3,11 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import io, loop, utils
-from trezor.wire.protocol_common import Message, WireError
+from trezor.wire.protocol_common import Message, ReadCancelled, WireError
 
 if TYPE_CHECKING:
+    from typing import Callable
+
     from buffer_types import AnyBuffer, AnyBytes
     from trezorio import WireInterface
 
@@ -22,7 +24,12 @@ class CodecError(WireError):
     pass
 
 
-async def read_message(iface: WireInterface, buffers: CodecBufferSource) -> Message:
+async def read_message(
+    iface: WireInterface,
+    buffers: CodecBufferSource,
+    continuation_timeout_ms: int | None = None,
+    abandon_if: "Callable[[], bool] | None" = None,
+) -> Message:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
     report = bytearray(iface.RX_PACKET_LEN)
 
@@ -81,13 +88,38 @@ async def read_message(iface: WireInterface, buffers: CodecBufferSource) -> Mess
         # buffer the initial data
         nread = utils.memcpy(mdata, 0, report, _REP_INIT_DATA)
 
+        # A HEADER IS A PROMISE OF MORE, AND THIS IS HOW LONG THE PEER IS HELD TO IT. Only from
+        # here: waiting for a message to BEGIN is what an idle interface does all day and must stay
+        # unbounded, while waiting for the rest of one already in progress is a peer failing to
+        # finish what it started. The same split, for the same reason, as `apps.webauthn.fido2`,
+        # which leaves its initial read unbounded and sets `timeout_ms` once it has a header.
+        #
+        # `None` means no bound, which is what every host-driven wallet interface has always had.
+        if continuation_timeout_ms is not None:
+            read.timeout_ms = continuation_timeout_ms
+
         while nread < msize:
             # wait for continuation report
-            msg_len = await read
+            try:
+                msg_len = await read
+            except loop.Timeout:
+                # ABANDONED, NOT DRAINED, and the difference matters. Everything else in this
+                # function refuses a message it has read to the end, so the wire is left at a
+                # boundary; there is nothing to drain here, because the rest never came. The next
+                # read starts on whatever arrives next, and a stray continuation report from this
+                # message fails the magic check above rather than being mistaken for a header.
+                raise CodecError("Message abandoned mid-frame")
             assert msg_len == len(report)
             iface.read(report, 0)
             if report[0] != _REP_MARKER:
                 raise CodecError("Invalid magic")
+
+            # ASKED AFTER EVERY REPORT, not only when one fails to arrive. The timeout above
+            # bounds a peer that goes quiet; this bounds one that keeps talking after whoever
+            # wanted this message has given up on it. Without it a trickle just inside the
+            # timeout holds the receive buffer for as long as the peer cares to.
+            if abandon_if is not None and abandon_if():
+                raise ReadCancelled("Message abandoned by the reader")
 
             # buffer the continuation data
             if refusal is not None:

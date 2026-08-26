@@ -4,12 +4,12 @@ from common import *  # isort:skip
 import struct
 
 from mock_wire_interface import MockHID
-from trezor import io
+from trezor import io, loop
 from trezor.utils import chunks
 from trezor.wire.buffers import SharedBuffer, WireBuffer
 from trezor.wire.codec import codec_v1
 from trezor.wire.codec.buffers import CodecBufferSource, private_source
-from trezor.wire.protocol_common import WireError
+from trezor.wire.protocol_common import ReadCancelled, WireError
 
 MESSAGE_TYPE = 0x4242
 
@@ -145,6 +145,78 @@ class TestWireCodecV1(unittest.TestCase):
 
         # Nothing was written anywhere: the message never reached a buffer of its own.
         self.assertEqual(bytes(small.buf), b"\x00" * 512)
+
+    def test_the_header_wait_is_unbounded_and_the_continuation_wait_is_not(self):
+        """Waiting for a message to BEGIN is what an idle interface does all day.
+
+        Waiting for the REST of one is a peer failing to finish what it started, and only that one
+        is bounded. Same split as `apps.webauthn.fido2`, and the reason the wallet interface can
+        keep its unbounded reads while the service interface does not.
+        """
+        buffers, _buffer = make_source(256)
+        message = bytes(range(256))
+        packets = self._packets_for(message)
+
+        gen = codec_v1.read_message(self.interface, buffers, continuation_timeout_ms=500)
+        header_wait = gen.send(None)
+        self.assertIsNone(header_wait.timeout_ms)
+
+        continuation_wait = self.interface.mock_read(packets[0], gen)
+        self.assertEqual(continuation_wait.timeout_ms, 500)
+        gen.close()
+
+    def test_a_frame_abandoned_on_a_timeout_leaves_no_lease(self):
+        """The property that actually matters, and the one nothing bounded before.
+
+        The lease is taken before the reassembly loop, so a peer that sends a header and stops
+        used to hold the shared buffer until the next MicroPython session restart -- and on a THP
+        build that buffer is the wallet's too.
+        """
+        shared = SharedBuffer(1024)
+        source = CodecBufferSource(WireBuffer(0), shared)
+
+        packets = self._packets_for(bytes(range(256)))
+        gen = codec_v1.read_message(self.interface, source, continuation_timeout_ms=500)
+        gen.send(None)
+        self.interface.mock_read(packets[0], gen)
+        self.assertTrue(source.holds_shared())
+
+        with self.assertRaises(codec_v1.CodecError):
+            gen.throw(loop.Timeout())
+
+        self.assertFalse(source.holds_shared())
+        # And the buffer is genuinely free, not merely marked so.
+        self.assertIsNotNone(CodecBufferSource(WireBuffer(0), shared).get(512))
+
+    def test_a_frame_nobody_wants_any_more_is_abandoned_at_the_next_report(self):
+        """A peer that keeps talking must not outlast the operation that wanted its answer.
+
+        The timeout above bounds a peer that goes QUIET. This bounds one that trickles reports
+        just inside it, which would otherwise hold the receive buffer for as long as it liked.
+        """
+        shared = SharedBuffer(1024)
+        source = CodecBufferSource(WireBuffer(0), shared)
+        wanted = [True]
+
+        packets = self._packets_for(bytes(range(256)))
+        gen = codec_v1.read_message(
+            self.interface,
+            source,
+            continuation_timeout_ms=500,
+            abandon_if=lambda: not wanted[0],
+        )
+        gen.send(None)
+        self.interface.mock_read(packets[0], gen)
+        # Still wanted: reports keep being accepted.
+        self.interface.mock_read(packets[1], gen)
+        self.assertTrue(source.holds_shared())
+
+        # The operation gives up. The peer is still sending.
+        wanted[0] = False
+        with self.assertRaises(ReadCancelled):
+            self.interface.mock_read(packets[2], gen)
+
+        self.assertFalse(source.holds_shared())
 
     def test_read_many_packets(self):
         message = bytes(range(256))
