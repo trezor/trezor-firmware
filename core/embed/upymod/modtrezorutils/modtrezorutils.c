@@ -869,7 +869,9 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// USE_THP: bool
 /// """Whether the firmware supports Trezor-Host Protocol (version 2)."""
 /// USE_WARD_SERVICE_CHANNEL: bool
-/// """Whether WARD is served over its own THP interface rather than the ordinary connection."""
+/// """Whether WARD is served over its own interface rather than the ordinary connection."""
+/// USE_WARD_SERVICE_THP: bool
+/// """Whether that interface speaks THP. It speaks codec v1 when this is false."""
 /// NOTIFY_BOOT: int
 /// """Notification event: boot completed."""
 /// NOTIFY_UNLOCK: int
@@ -1108,6 +1110,11 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_WARD_SERVICE_CHANNEL), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_WARD_SERVICE_CHANNEL), mp_const_false},
+#endif
+#ifdef USE_WARD_SERVICE_THP
+    {MP_ROM_QSTR(MP_QSTR_USE_WARD_SERVICE_THP), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_WARD_SERVICE_THP), mp_const_false},
 #endif
 #ifdef UI_LAYOUT_BOLT
     {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_BOLT)},

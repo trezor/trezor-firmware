@@ -56,6 +56,13 @@ fn main() -> Result<()> {
             lib.add_define("USE_WARD_SERVICE_CHANNEL", None);
         }
 
+        if cfg!(feature = "ward_service_thp") {
+            if !cfg!(feature = "thp") {
+                panic!("ward_service_thp needs thp: there is no THP stack to serve the interface");
+            }
+            lib.add_define("USE_WARD_SERVICE_THP", None);
+        }
+
         if cfg!(feature = "serial_number") {
             lib.add_define("USE_SERIAL_NUMBER", Some("1"));
         }
@@ -951,6 +958,7 @@ impl<'a> MpyBuilder<'a> {
         let telemetry = py_bool(cfg!(feature = "telemetry"));
         let thp = py_bool(cfg!(feature = "thp"));
         let ward_service_channel = py_bool(cfg!(feature = "ward_service_channel"));
+        let ward_service_thp = py_bool(cfg!(feature = "ward_service_thp"));
         let touch = py_bool(cfg!(feature = "touch"));
         let touch_wakeup = py_bool(cfg!(feature = "touch_wakeup"));
         let tropic = py_bool(cfg!(feature = "tropic"));
@@ -976,6 +984,7 @@ impl<'a> MpyBuilder<'a> {
             format!(r"s/utils\.USE_TELEMETRY/{telemetry}/g"),
             format!(r"s/utils\.USE_THP/{thp}/g"),
             format!(r"s/utils\.USE_WARD_SERVICE_CHANNEL/{ward_service_channel}/g"),
+            format!(r"s/utils\.USE_WARD_SERVICE_THP/{ward_service_thp}/g"),
             format!(r"s/utils\.USE_TOUCH_WAKEUP/{touch_wakeup}/g"), // must be before USE_TOUCH
             format!(r"s/utils\.USE_TOUCH/{touch}/g"),
             format!(r"s/utils\.USE_TROPIC/{tropic}/g"),

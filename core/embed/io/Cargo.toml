@@ -74,6 +74,7 @@ usb_iface_vcp = ["usb"]
 usb_iface_webauthn = ["usb"]
 usb_iface_wire = ["usb"]
 ward_service_channel = ["usb"]
+ward_service_thp = ["ward_service_channel"]
 wireless_stwlc38 = ["sys/i2c_bus"]
 
 # --------------------------------------------------------------------------
