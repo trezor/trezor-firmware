@@ -1,6 +1,6 @@
 import os
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Sequence, Tuple
 
 import bitcoin
 import requests
@@ -92,8 +92,8 @@ def assert_tx_matches(serialized_tx: bytes, hash_link: str, tx_hex: str = None) 
 
 
 def forge_prevtx(
-    vouts: Sequence[Tuple[str, int]], network: str = "mainnet"
-) -> Tuple[bytes, messages.TransactionType]:
+    vouts: Sequence[tuple[str, int]], network: str = "mainnet"
+) -> tuple[bytes, messages.TransactionType]:
     """
     Forge a transaction with the given vouts.
     """

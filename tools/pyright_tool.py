@@ -44,26 +44,24 @@ import re
 import subprocess
 import sys
 import tempfile
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict  # for python38 support, must be used in type aliases
-from typing import List  # for python38 support, must be used in type aliases
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any, Final
 
 import click
 from typing_extensions import (  # for python37 support, is not present in typing there
-    Final,
     TypedDict,
 )
 
 if TYPE_CHECKING:
-    LineIgnores = List["LineIgnore"]
+    LineIgnores = list["LineIgnore"]
 
-    FileIgnores = Dict[str, LineIgnores]
-    FileSpecificIgnores = Dict[str, List["FileSpecificIgnore"]]
+    FileIgnores = dict[str, LineIgnores]
+    FileSpecificIgnores = dict[str, list["FileSpecificIgnore"]]
 
-    PyrightOffIgnores = List["PyrightOffIgnore"]
-    FilePyrightOffIgnores = Dict[str, PyrightOffIgnores]
+    PyrightOffIgnores = list["PyrightOffIgnore"]
+    FilePyrightOffIgnores = dict[str, PyrightOffIgnores]
 
 
 class RangeDetail(TypedDict):

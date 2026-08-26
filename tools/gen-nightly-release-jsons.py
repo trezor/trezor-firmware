@@ -11,9 +11,10 @@ import datetime
 import json
 import re
 from collections import defaultdict
+from collections.abc import Sequence
 from enum import StrEnum, auto
 from pathlib import Path
-from typing import Any, Dict, Sequence
+from typing import Any
 
 import click
 
@@ -117,7 +118,7 @@ def collect_firmware_files(
     root: Path, version: list[int], deploy_type: DeployType
 ) -> dict:
     """Collect all firmware files for the given version."""
-    firmware_files: Dict[str, Any] = defaultdict(
+    firmware_files: dict[str, Any] = defaultdict(
         lambda: {
             DeployType.NIGHTLY: {},
             "translations": {

@@ -44,12 +44,14 @@ style:
 	black $(BLACK_FLAGS) $(STYLE_TARGETS)
 	isort $(STYLE_TARGETS)
 	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS)
+	ruff check --fix $(STYLE_TARGETS)
 	flake8
 	make pyright
 
 style_check:
 	black --check $(BLACK_FLAGS) $(STYLE_TARGETS)
 	isort --check-only $(STYLE_TARGETS)
+	ruff check $(STYLE_TARGETS)
 	flake8
 	make pyright
 

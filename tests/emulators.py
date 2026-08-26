@@ -19,8 +19,8 @@ import logging
 import os
 import tempfile
 from collections import defaultdict
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence, Tuple
 
 from trezorlib._internal.emulator import CoreEmulator, Emulator, LegacyEmulator
 from trezorlib.models import CORE_MODELS, LEGACY_MODELS
@@ -67,7 +67,7 @@ def gen_from_model(model_internal_name: str) -> str:
     raise ValueError(f"Unknown model: {model_internal_name}")
 
 
-def check_version(tag: str, version_tuple: Tuple[int, int, int]) -> None:
+def check_version(tag: str, version_tuple: tuple[int, int, int]) -> None:
     if tag is not None and tag.startswith("v") and len(tag.split(".")) == 3:
         version = ".".join(str(i) for i in version_tuple)
         if tag[1:] != version:

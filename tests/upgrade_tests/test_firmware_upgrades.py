@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import dataclasses
 import functools
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 import pytest
 from shamir_mnemonic import shamir
@@ -193,7 +193,7 @@ def test_upgrade_load_pin(
 )
 @lower_models_minimum_version
 def test_storage_upgrade_progressive(
-    tags: List[str], model: str, shared_profile_dir: str
+    tags: list[str], model: str, shared_profile_dir: str
 ):
     PIN = "1234"
 

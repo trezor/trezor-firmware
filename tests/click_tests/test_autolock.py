@@ -16,7 +16,7 @@
 
 import math
 import time
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -53,14 +53,14 @@ TXHASH_d5f65e = bytes.fromhex(
 PIN4 = "1234"
 
 
-def _passphrase_j(debug: DebugLink) -> Tuple[int, int]:
+def _passphrase_j(debug: DebugLink) -> tuple[int, int]:
     if debug.layout_type is LayoutType.Bolt:
         return debug.screen_buttons.pin_passphrase_grid(1, 1)
     else:
         return debug.screen_buttons.pin_passphrase_grid(0, 1)
 
 
-def _center_button(debug: DebugLink) -> Tuple[int, int]:
+def _center_button(debug: DebugLink) -> tuple[int, int]:
     return debug.screen_buttons.pin_passphrase_grid(1, 1)
 
 

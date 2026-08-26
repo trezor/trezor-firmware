@@ -6,7 +6,7 @@ Find out which functions are unused in the Monero app - based on
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any
 
 CURRENT_DIR = Path(__file__).resolve().parent
 ROOT_DIR = CURRENT_DIR.parent.parent
@@ -15,11 +15,11 @@ HELPER_FILE = ROOT_DIR / "core/src/apps/monero/xmr/crypto_helpers.py"
 MOCK_FILE = ROOT_DIR / "core/mocks/generated/trezorcrypto/monero.pyi"
 
 
-def generate_function_mapping() -> Dict[str, List[str]]:
+def generate_function_mapping() -> dict[str, list[str]]:
     """Look at all Monero functions and generate a mapping of their usage"""
 
     # Load all the function names in .pyi file
-    pyi_functions: Set[str] = set()
+    pyi_functions: set[str] = set()
     with open(MOCK_FILE, "r") as f:
         lines = f.readlines()
         for line in lines:
@@ -28,7 +28,7 @@ def generate_function_mapping() -> Dict[str, List[str]]:
                 pyi_functions.add(f_name)
 
     # Load definitions of helper functions
-    helper_func_defs: Dict[str, str] = {}
+    helper_func_defs: dict[str, str] = {}
     with open(HELPER_FILE, "r") as f:
         lines = f.readlines()
         current_func = ""
@@ -42,7 +42,7 @@ def generate_function_mapping() -> Dict[str, List[str]]:
                 helper_func_defs[current_func] += line
 
     # Try to connect function names with helper definitions
-    func_mapping: Dict[str, List[str]] = {}
+    func_mapping: dict[str, list[str]] = {}
     for func_name in pyi_functions:
         func_mapping[func_name] = []
         for func_def_name, func_code in helper_func_defs.items():
@@ -56,14 +56,14 @@ def generate_function_mapping() -> Dict[str, List[str]]:
     return func_mapping
 
 
-def check_usage_of_functions(func_mapping: Dict[str, List[str]]) -> None:
+def check_usage_of_functions(func_mapping: dict[str, list[str]]) -> None:
     """Go through all the functions and check if they are used in the Monero app.
 
     Generates a report and exits with an appropriate exit code.
     """
 
     # Include boolean field to know what is used
-    is_used_mappings: Dict[str, Dict[str, Any]] = {}
+    is_used_mappings: dict[str, dict[str, Any]] = {}
     for func_name, mapping in func_mapping.items():
         is_used_mappings[func_name] = {"mapping": mapping, "is_used": False}
 

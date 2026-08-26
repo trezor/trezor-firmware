@@ -6,9 +6,10 @@ Allowing for interaction with the test results, e.g. with UI tests.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any
 
 import requests
 

@@ -4,12 +4,10 @@
 
 from __future__ import annotations
 
-from typing import Tuple
-
-from typing_extensions import Literal
+from typing import Literal
 
 Bit = Literal[0, 1]
-Point = Tuple[int, int]
+Point = tuple[int, int]
 
 
 def magnify_glyph_by_two(width: int, height: int, bytes_data: list[int]) -> list[int]:

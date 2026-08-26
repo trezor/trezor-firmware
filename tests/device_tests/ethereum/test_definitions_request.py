@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from binascii import hexlify
-from typing import Callable
+from collections.abc import Callable
 from unittest.mock import Mock
 
 import pytest

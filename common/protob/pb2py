@@ -12,7 +12,7 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import click
 import construct as c
@@ -238,7 +238,7 @@ class ProtoMessage:
     orig: object
     extensions: dict
 
-    fields: List[ProtoField]
+    fields: list[ProtoField]
 
     @classmethod
     def from_message(cls, descriptor: "Descriptor", message):
