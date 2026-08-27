@@ -250,6 +250,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__back_up;
   MP_QSTR_buttons__cancel;
   MP_QSTR_buttons__cancel_and_exit;
+  MP_QSTR_buttons__cancel_sign;
   MP_QSTR_buttons__change;
   MP_QSTR_buttons__check;
   MP_QSTR_buttons__check_again;
