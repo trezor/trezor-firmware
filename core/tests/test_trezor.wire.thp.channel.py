@@ -241,6 +241,9 @@ class TestThpServiceChannelReplacement(unittest.TestCase):
             cache_thp.get_allocated_session(self._NEW_CID.to_bytes(2, "big"), b"\x01")
         )
 
+    @unittest.skipUnless(
+        utils.USE_WARD_SERVICE_THP, "the service branch needs the THP service path"
+    )
     def test_a_service_reconnect_leaves_other_workflows_alone(self):
         """THE POINT. Replacement fires on an ordinary daemon restart, and the workflows running
         then belong to a wallet host on another interface -- letting a service restart cancel a
@@ -256,6 +259,9 @@ class TestThpServiceChannelReplacement(unittest.TestCase):
 
         self.assertEqual(spy.close_others_calls, 0)
 
+    @unittest.skipUnless(
+        utils.USE_WARD_SERVICE_THP, "the service branch needs the THP service path"
+    )
     def test_a_service_reconnect_clears_rather_than_migrates(self):
         """`migrate_sessions` only repoints CHANNEL_ID, so a migrated service session would keep
         its readiness state across a transport it cannot vouch for. Clearing makes the new channel
