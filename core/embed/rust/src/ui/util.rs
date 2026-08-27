@@ -71,7 +71,7 @@ pub fn split_two_lines(text: &str, text_font: Font, available_width: i16) -> (&s
 /// Returns text to be fit on one line of a given length.
 /// When the text is too long to fit, it is truncated with ellipsis
 /// on the left side.
-/// This assumes no lines are longer than 50 chars (ShortString limit)
+/// This assumes no lines are longer than 128 bytes (ShortString limit)
 pub fn long_line_content_with_ellipsis(
     text: &str,
     ellipsis: &str,
