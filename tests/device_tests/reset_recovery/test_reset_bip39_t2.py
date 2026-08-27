@@ -35,6 +35,22 @@ from ...input_flows import (
 
 pytestmark = pytest.mark.models("core")
 
+# Internal entropy of the final ResetDevice round, per model, after
+# random.reseed(MOCK_SEED).
+# Generated with:
+#   tools/gen_rng_mock_vectors.py --model MODEL --seed 3735928559 --mcu-offset 6
+# Unrelated firmware code consumes 48 words of plain RNG between the reseed and
+# the final round. If the vectors fail unexpectedly, that consumption probably
+# changed, shifting the stream; regenerate with the matching --mcu-offset.
+MOCK_SEED = 0xDEADBEEF
+MOCK_INTERNAL_ENTROPY = {
+    "T2T1": "3f23f500a7890ccce4d155d762b32f1945cdf3341917f444c0fbbe553a6bb618",
+    "T2B1": "ab347f0f69415b32f942f5bbe3884800e87025a70ab99c7fc910d91b20524b5c",
+    "T3B1": "ab347f0f69415b32f942f5bbe3884800e87025a70ab99c7fc910d91b20524b5c",
+    "T3T1": "ab347f0f69415b32f942f5bbe3884800e87025a70ab99c7fc910d91b20524b5c",
+    "T3W1": "c548d5685b1996e777094285b4ae74a50fc3a83be0a5424e483e13c65f626c2a",
+}
+
 FLOW_ADAPTERS = [
     normal,
     try_to_cancel(
@@ -186,6 +202,53 @@ def test_reset_entropy_check(test_ctx: TrezorTestContext):
     for path, xpub in path_xpubs:
         res = get_public_node(session, path)
         assert res.xpub == xpub
+
+
+@pytest.mark.emulator
+@pytest.mark.setup_client(uninitialized=True)
+def test_reset_entropy_mock_streams(session: Session):
+    """Verify that the seed's internal entropy is exactly what the model's
+    deterministic emulator entropy sources produce together, proving on the
+    running firmware that every source contributed at every byte position. A
+    dropped source, a lost strong=True, a truncated buffer each give a
+    different value."""
+    STRENGTH = 128
+    MOCK_ENTROPY_CHECK_COUNT = 1
+    debug = session.debug
+    model = session.features.internal_model
+    calls = 0
+
+    def get_entropy() -> bytes:
+        nonlocal calls
+        calls += 1
+        if calls == MOCK_ENTROPY_CHECK_COUNT:
+            debug.reseed(MOCK_SEED)
+        return EXTERNAL_ENTROPY
+
+    with session.test_ctx as client:
+        IF = InputFlowBip39ResetBackup(session)
+        client.set_input_flow(IF.get())
+        device.setup(
+            session,
+            strength=STRENGTH,
+            passphrase_protection=False,
+            pin_protection=False,
+            label="test",
+            entropy_check_count=MOCK_ENTROPY_CHECK_COUNT,
+            backup_type=messages.BackupType.Bip39,
+            _get_entropy=get_entropy,
+        )
+
+    assert calls == MOCK_ENTROPY_CHECK_COUNT + 1
+
+    internal_entropy = debug.state().reset_entropy
+    assert internal_entropy is not None
+
+    expected = MOCK_INTERNAL_ENTROPY.get(model)
+    assert internal_entropy.hex() == expected
+
+    entropy = generate_entropy(STRENGTH, internal_entropy, EXTERNAL_ENTROPY)
+    assert IF.mnemonic == Mnemonic("english").to_mnemonic(entropy)
 
 
 @pytest.mark.setup_client(uninitialized=True)
