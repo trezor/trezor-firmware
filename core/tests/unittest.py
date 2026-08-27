@@ -133,6 +133,26 @@ class TestCase:
             msg = f"Expected {repr(x)} to be in {repr(y)}"
         ensure(x in y, msg)
 
+    def assertLess(self, x, y, msg=""):
+        if not msg:
+            msg = f"Expected {repr(x)} to be less than {repr(y)}"
+        ensure(x < y, msg)
+
+    def assertLessEqual(self, x, y, msg=""):
+        if not msg:
+            msg = f"Expected {repr(x)} to be less than or equal to {repr(y)}"
+        ensure(x <= y, msg)
+
+    def assertGreater(self, x, y, msg=""):
+        if not msg:
+            msg = f"Expected {repr(x)} to be greater than {repr(y)}"
+        ensure(x > y, msg)
+
+    def assertGreaterEqual(self, x, y, msg=""):
+        if not msg:
+            msg = f"Expected {repr(x)} to be greater than or equal to {repr(y)}"
+        ensure(x >= y, msg)
+
     def assertIsInstance(self, x, y, msg=""):
         ensure(isinstance(x, y), msg)
 
