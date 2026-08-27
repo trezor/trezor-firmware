@@ -30,12 +30,11 @@ model_t2t1 = ["models/model_t2t1"]
 # Selectable features
 # --------------------------------------------------------------------------
 
-emulator = ["models/emulator", "insecure_prng"]
+emulator = ["models/emulator"]
 
 aes_gcm = []
 ed25519_no_precomp = []
 eos = []
-insecure_prng = []
 mldsa = []
 nem = []
 noise = ["aes_gcm"]
@@ -48,7 +47,6 @@ universal_fw = []
 test = [
     "aes_gcm",
     "emulator",
-    "insecure_prng",
     "mldsa",
     "models/mcu_stm32u5g",
     "models/model_t3w1",

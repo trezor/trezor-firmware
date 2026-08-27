@@ -19,10 +19,9 @@
 
 #include <trezor_rtl.h>
 
-#include <sys/rng.h>
 #include <sys/rng_mock.h>
 
-#include "rand.h"
+#include "sha2.h"
 
 // Guard against this file ever being compiled into a bare-metal build.
 // These checks are intentionally duplicated across all mock RNGs to prevent
@@ -45,17 +44,28 @@ _Static_assert(sizeof(void*) == 8,
 
 #ifdef USE_INSECURE_PRNG
 
-// Deterministic, MCU-unique random stream.
-static rng_mock_stream_t random_stream = {.tag = "<PRNG-MCU>"};
-
-void rng_reseed(uint32_t seed) { rng_mock_reseed(&random_stream, seed); }
-
-void rng_fill_buffer(void* buffer, size_t buffer_size) {
-  rng_mock_fill(&random_stream, (uint8_t*)buffer, buffer_size);
+void rng_mock_reseed(rng_mock_stream_t* stream, uint32_t seed) {
+  stream->seed = seed;
+  stream->counter = 0;
 }
 
-// Implements random_buffer() function declared in crypto/rand.h
-// as a wrapper for rng_fill_buffer().
-void random_buffer(uint8_t* buf, size_t len) { rng_fill_buffer(buf, len); }
+void rng_mock_fill(rng_mock_stream_t* stream, uint8_t* dest, size_t size) {
+  while (size > 0) {
+    uint8_t block[SHA256_DIGEST_LENGTH] = {0};
+    SHA256_CTX ctx = {0};
+    sha256_Init(&ctx);
+    sha256_Update(&ctx, (const uint8_t*)stream->tag, strlen(stream->tag));
+    sha256_Update(&ctx, (const uint8_t*)&stream->seed, sizeof(stream->seed));
+    sha256_Update(&ctx, (const uint8_t*)&stream->counter,
+                  sizeof(stream->counter));
+    sha256_Final(&ctx, block);
+    stream->counter++;
+
+    size_t chunk = MIN(size, sizeof(block));
+    memcpy(dest, block, chunk);
+    dest += chunk;
+    size -= chunk;
+  }
+}
 
 #endif  // USE_INSECURE_PRNG

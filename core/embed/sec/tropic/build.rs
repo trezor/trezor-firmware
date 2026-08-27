@@ -11,7 +11,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     let tropic_dir = PathBuf::from("../../vendor/libtropic");
 
     if cfg!(feature = "emulator") {
-        lib.add_sources(["tropic/unix/tropic01.c"]);
+        lib.add_sources(["tropic/unix/tropic01.c", "tropic/unix/tropic_mock.c"]);
 
         lib.add_sources_in_dir(&tropic_dir, ["hal/posix/tcp/libtropic_port_posix_tcp.c"]);
     } else if cfg!(feature = "mcu_stm32u5") {

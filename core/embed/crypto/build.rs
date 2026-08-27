@@ -1,6 +1,4 @@
-use std::path::PathBuf;
-
-use xbuild::{CLibrary, CompileAttrs, Result, bail};
+use xbuild::{CLibrary, CompileAttrs, Result};
 
 const CRYPTO_PATH: &str = "../../vendor/trezor-crypto";
 const SECP256K1_PATH: &str = "../../vendor/secp256k1-zkp";
@@ -18,10 +16,6 @@ fn main() -> Result<()> {
             .with_flag("-ffreestanding");
 
         add_crypto_base(lib, &attrs)?;
-
-        if cfg!(feature = "insecure_prng") {
-            add_insecure_prng(lib)?;
-        }
 
         if cfg!(feature = "aes_gcm") {
             add_aes_gcm(lib, &attrs)?;
@@ -191,18 +185,6 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
             .allowlist_function("sha512_Update")
             .allowlist_function("sha512_Final"))
     })?;
-
-    Ok(())
-}
-
-fn add_insecure_prng(lib: &mut CLibrary) -> Result<()> {
-    if cfg!(feature = "production") {
-        if !xbuild::is_rust_analyzer() {
-            bail!("insecure_prng cannot be enabled in production builds");
-        }
-    }
-    lib.add_define("USE_INSECURE_PRNG", Some("1"));
-    lib.add_source(PathBuf::from(CRYPTO_PATH).join("rand_insecure.c"));
 
     Ok(())
 }

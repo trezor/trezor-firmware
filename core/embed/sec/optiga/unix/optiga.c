@@ -22,7 +22,6 @@
 #include <sec/optiga.h>
 #include <sec/optiga_common.h>
 #include <sec/storage.h>
-#include <sys/rng.h>
 
 #include "ecdsa.h"
 #include "nist256p1.h"
@@ -115,11 +114,6 @@ void optiga_pin_stretch_cmac_ecdh_time(
 
 uint32_t optiga_estimate_time_ms(storage_pin_op_t op, uint8_t slot_index) {
   return 0;
-}
-
-bool optiga_random_buffer(uint8_t *dest, size_t size) {
-  rng_fill_buffer(dest, size);
-  return true;
 }
 
 void optiga_random_buffer_time(uint32_t *time_ms) {}

@@ -15,6 +15,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_sources([
             "optiga/unix/optiga_commands.c",
             "optiga/unix/optiga_hal.c",
+            "optiga/unix/optiga_mock.c",
             "optiga/unix/optiga_transport.c",
             "optiga/unix/optiga.c",
         ]);

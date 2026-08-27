@@ -154,6 +154,11 @@ bool tropic_random_buffer(void* buffer, size_t length);
 
 void tropic_random_buffer_time(uint32_t* time_ms);
 
+#ifdef TREZOR_EMULATOR
+void tropic_random_reseed(uint32_t seed);
+bool tropic_session_start(void);
+#endif
+
 #ifdef USE_STORAGE
 void tropic_session_start_time(uint32_t* time_ms);
 
