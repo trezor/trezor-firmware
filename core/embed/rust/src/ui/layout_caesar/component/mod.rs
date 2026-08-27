@@ -11,6 +11,7 @@ mod welcome_screen;
 use super::{common_messages, constant, theme};
 pub use button::{
     Button, ButtonAction, ButtonActions, ButtonContent, ButtonDetails, ButtonLayout, ButtonPos,
+    MIDDLE_ARROW_GLYPH,
 };
 pub use button_controller::{
     record_button_msg, AutomaticMover, ButtonController, ButtonControllerMsg,

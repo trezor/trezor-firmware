@@ -462,9 +462,9 @@ async def show_nav_tutorial(
     menu_restart: str = "Restart\ntutorial",
     menu_complete: str = "Complete\ntutorial",
     menu_back: str = "Back",
-    # "V" puts the down-arrow glyph on the middle button instead of a word
-    # (figma 426:1958); resolved in `ButtonLayout::arrow_armed_arrow`.
-    menu_confirm: str = "V",
+    # None keeps the layout's own default, which is the down-arrow glyph shared
+    # by every caesar menu (see `select_menu` in ui_firmware.rs).
+    menu_confirm: str | None = None,
     menu_info_title: str = "MENU",
     menu_info_text: str = (
         "The menu provides context information. We will cover this later."

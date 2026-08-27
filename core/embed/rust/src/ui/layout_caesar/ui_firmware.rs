@@ -39,6 +39,7 @@ use super::{
         ChoiceControls, NAV_SUBPAGE_STRIDE,
         CoinJoinProgress, ConfirmHomescreen, ExternalMenuLeft, Flow, FlowPages, Frame, Homescreen,
         Lockscreen, NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame,
+        MIDDLE_ARROW_GLYPH,
         ShareWords, ShowMore, SimpleChoice, WordlistEntry, WordlistType,
     },
     constant, fonts, theme, UICaesar,
@@ -959,7 +960,10 @@ impl FirmwareUI for UICaesar {
         let choice = SimpleChoice::new(
             all_items,
             ChoiceControls::Cancellable,
-            confirm.unwrap_or_else(|| TR::buttons__view.into()),
+            // The menu navigation pattern puts the arrow glyph on the middle
+            // button rather than a word, so every caesar menu reached through
+            // `show_menu` - the receive flow among them - gets it by default.
+            confirm.unwrap_or_else(|| MIDDLE_ARROW_GLYPH.into()),
         )
         .with_initial_page_counter(current)
         .with_show_incomplete()
@@ -1413,7 +1417,7 @@ impl FirmwareUI for UICaesar {
                     s.title,
                     s.body,
                     TString::empty(),
-                    ButtonLayout::none_armed_none("VIEW".into()),
+                    ButtonLayout::none_armed_hint_none("VIEW".into()),
                     ButtonActions::none_next_none(),
                 ),
                 // The Shift exercise (figma 426:1693 / 426:1720). Two sub-pages:
@@ -1548,9 +1552,10 @@ impl FirmwareUI for UICaesar {
         }
 
         // Opened from a context menu, this uses the action-bar navigation: the
-        // left button closes the screen on a short press and engages Shift when
-        // held, so the right button scrolls back up. Callers that are not part
-        // of the new navigation keep the classic ✕ / `<` / `>` paging.
+        // left button closes the screen, and the right one pages down and then
+        // back up again, so a two-page screen needs no Shift at all. Callers
+        // that are not part of the new navigation keep the classic
+        // ✕ / `<` / `>` paging.
         let page = if external_menu {
             ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
                 .with_external_menu_nav(ExternalMenuLeft::Close)

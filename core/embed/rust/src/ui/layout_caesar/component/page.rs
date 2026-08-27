@@ -185,14 +185,14 @@ where
             // While "Shift" is held: left = filled "Shift" label, right = the
             // secondary "back" button - scrolling up, or leaving the screen
             // when there is nothing above and the caller allows going back.
-            let btn_right = self.back_available().then(ButtonDetails::back_secondary_icon);
+            let btn_right = self.shift_offered().then(ButtonDetails::back_secondary_icon);
             return ButtonLayout::new(Some(ButtonDetails::shift_text()), None, btn_right);
         }
 
         // The left glyph shows the shift brackets only when the secondary
         // ("Shift") action would do something; otherwise the plain glyph is used
         // and the long press does nothing.
-        let btn_left = Some(match (self.external_nav, self.back_available()) {
+        let btn_left = Some(match (self.external_nav, self.shift_offered()) {
             (Some(ExternalMenuLeft::Close), true) => ButtonDetails::cancel_shift_icon(),
             (Some(ExternalMenuLeft::Close), false) => ButtonDetails::cancel_icon(),
             (_, true) => ButtonDetails::menu_shift_icon(),
@@ -217,6 +217,31 @@ where
         self.pager().has_prev() || self.back_on_first_page
     }
 
+    /// Whether the right button already scrolls back up: the wide up arrow on
+    /// the last page of a screen with no confirm action does exactly what
+    /// Shift + right would.
+    fn right_btn_scrolls_back(&self) -> bool {
+        !self.pager().has_next() && self.confirm_btn_details.is_none() && self.pager().has_prev()
+    }
+
+    /// Whether to offer "Shift" at all.
+    ///
+    /// On a two-page screen the last page's up arrow already returns to the
+    /// first, so Shift would only duplicate a single press.
+    ///
+    /// A longer screen keeps it, because plain presses alone cannot get back
+    /// past the last page: from the final page the up arrow reaches the one
+    /// before it, but there the arrow points down again, so the user would
+    /// oscillate between the last two pages. Shift, being repeatable while
+    /// held, is the only way back to the first.
+    fn shift_offered(&self) -> bool {
+        if !self.back_available() {
+            return false;
+        }
+        const MAX_PAGES_WITHOUT_SHIFT: u16 = 2;
+        !(self.right_btn_scrolls_back() && self.pager().total() <= MAX_PAGES_WITHOUT_SHIFT)
+    }
+
     /// Log the sub-page and whether Shift is on offer, but only on change.
     /// Recording availability explicitly means the decoder never has to infer
     /// whether a hold could have done anything on this screen.
@@ -227,9 +252,9 @@ where
             nav_telemetry::record(nav_telemetry::EV_SUBPAGE, subpage as u8);
             self.logged_subpage = Some(subpage);
         }
-        // Shift is offered only in action-bar mode, once there is a previous
-        // sub-page to scroll back to.
-        let shift_avail = self.external_nav.is_some() && self.back_available();
+        // Report what the screen actually offers, so a hold is not scored as a
+        // Shift attempt on a screen that never advertised the gesture.
+        let shift_avail = self.external_nav.is_some() && self.shift_offered();
         if self.logged_shift_avail != Some(shift_avail) {
             nav_telemetry::record(nav_telemetry::EV_SHIFT_AVAIL, shift_avail as u8);
             self.logged_shift_avail = Some(shift_avail);
@@ -293,14 +318,21 @@ where
                         buttons.highlight_button(ctx, ButtonPos::Left);
                     });
                 }
-                // Primary action: next page, or confirm/close on the last page.
+                // Primary action: next page, confirm, or - on the last page of
+                // a screen with nothing to confirm - scroll back up, which is
+                // what the wide up arrow there depicts. Leaving such a screen is
+                // the left glyph's job.
                 ButtonControllerMsg::Triggered(ButtonPos::Right, _) => {
                     if self.pager().has_next() {
                         self.next_page();
                         self.change_page(ctx);
                     } else if self.confirm_btn_details.is_some() {
                         return Some(PageMsg::Confirmed);
+                    } else if self.pager().has_prev() {
+                        self.prev_page();
+                        self.change_page(ctx);
                     } else {
+                        // Single page, so there is nothing above: close.
                         return Some(PageMsg::Cancelled);
                     }
                 }

@@ -73,6 +73,13 @@ pub const MONO_CHUNKS: Chunks = Chunks::new(4, 4);
 // Firmware icons
 include_icon!(ICON_ARM_LEFT, "layout_caesar/res/arm_left.toif"); // 10*6
 include_icon!(ICON_ARM_RIGHT, "layout_caesar/res/arm_right.toif"); // 10*6
+// Dotted twins of the arms, shown on the side whose button is being held on
+// its own, so a lone press reads as incomplete (figma 472:6839 / 472:6891).
+include_icon!(ICON_ARM_LEFT_DOTTED, "layout_caesar/res/arm_left_dotted.toif"); // 10*6
+include_icon!(
+    ICON_ARM_RIGHT_DOTTED,
+    "layout_caesar/res/arm_right_dotted.toif"
+); // 10*6
 include_icon!(ICON_ARROW_LEFT, "layout_caesar/res/arrow_left.toif"); // 4*7
 include_icon!(ICON_ARROW_LEFT_BIG, "layout_caesar/res/arrow_left_big.toif"); // 8*7
 include_icon!(ICON_ARROW_RIGHT, "layout_caesar/res/arrow_right.toif"); // 4*7

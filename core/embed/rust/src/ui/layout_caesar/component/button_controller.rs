@@ -51,6 +51,11 @@ pub fn record_button_msg(msg: &ButtonControllerMsg) {
     nav_telemetry::record(code, arg);
 }
 
+/// How long one button may be held on its own before the middle button hints
+/// that a second press is missing. Matches the Shift hold, so the two gestures
+/// declare themselves at the same moment.
+const LONE_PRESS_HINT_MS: u32 = 250;
+
 /// All possible states buttons (left and right) can be at.
 #[derive(Copy, Clone, PartialEq, Eq)]
 enum ButtonState {
@@ -272,6 +277,20 @@ impl ButtonContainer {
         self.long_pressed_timer.expire(event)
     }
 
+    /// Whether this button asks for the lone-press hint on its arms.
+    pub fn wants_lone_press_hint(&self) -> bool {
+        matches!(&self.button_type, Some(ButtonType::Button(b)) if b.wants_lone_press_hint())
+    }
+
+    /// Draw one of the button's arms dotted; `None` restores both to solid.
+    pub fn set_dotted_arm(&mut self, ctx: &mut EventCtx, arm: Option<ButtonPos>) {
+        if let Some(ButtonType::Button(b)) = &mut self.button_type {
+            if b.wants_lone_press_hint() && b.set_dotted_arm(arm) {
+                ctx.request_paint();
+            }
+        }
+    }
+
     /// Forward a hold lifecycle event (started/ended/canceled) to the
     /// hold-to-confirm component, if any.
     pub fn forward_hold(&mut self, ctx: &mut EventCtx, event: ButtonEvent) {
@@ -319,6 +338,9 @@ pub struct ButtonController {
     /// only becomes available once this is true, so a quick tap of the left
     /// button opens the menu instead of shifting.
     left_long_pressed: bool,
+    /// Fires once a single button has been held on its own for long enough
+    /// that the user probably does not realise both are needed.
+    lone_press_timer: Timer,
 }
 
 impl ButtonController {
@@ -335,6 +357,7 @@ impl ButtonController {
             handle_middle_button,
             left_shift: false,
             left_long_pressed: false,
+            lone_press_timer: Timer::new(),
         }
     }
 
@@ -446,10 +469,27 @@ impl ButtonController {
         None
     }
 
+    /// Arm the countdown that marks a button held on its own. Only the middle
+    /// button can ask for this, since only it draws the arms.
+    fn start_lone_press_timer(&mut self, ctx: &mut EventCtx) {
+        if self.middle_btn.wants_lone_press_hint() {
+            self.lone_press_timer
+                .start(ctx, Duration::from_millis(LONE_PRESS_HINT_MS));
+        }
+    }
+
+    /// Take the hint away: either the press completed into a both-buttons
+    /// press, or it ended.
+    fn clear_lone_press_hint(&mut self, ctx: &mut EventCtx) {
+        self.lone_press_timer.stop();
+        self.middle_btn.set_dotted_arm(ctx, None);
+    }
+
     /// Resetting the state of the controller.
     pub fn reset_state(&mut self, ctx: &mut EventCtx) {
         self.state = ButtonState::Nothing;
         self.left_long_pressed = false;
+        self.clear_lone_press_hint(ctx);
         self.reset_button_presses();
         self.set_pressed(ctx, false, false, false);
         if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
@@ -493,6 +533,9 @@ impl Component for ButtonController {
                             if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
                                 ignore_btn_delay.handle_button_press(ctx, which);
                             }
+                            // Start counting towards "this one is being held on
+                            // its own".
+                            self.start_lone_press_timer(ctx);
                             (
                                 ButtonState::OneDown(which),
                                 match which {
@@ -727,6 +770,11 @@ impl Component for ButtonController {
                     }
                 };
 
+                // The hint belongs to a single button being down on its own,
+                // so any other state - both down, or nothing - retires it.
+                if !matches!(new_state, ButtonState::OneDown(_)) {
+                    self.clear_lone_press_hint(ctx);
+                }
                 self.state = new_state;
                 event
             }
@@ -734,6 +782,19 @@ impl Component for ButtonController {
             Event::Timer(_) => {
                 if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
                     ignore_btn_delay.handle_timers(event);
+                }
+                if self.lone_press_timer.expire(event) {
+                    // Still only one button down after the delay: show it as
+                    // held but incomplete (figma 472:6839 / 472:6891).
+                    if let ButtonState::OneDown(which) = self.state {
+                        let arm = match which {
+                            PhysicalButton::Left => Some(ButtonPos::Left),
+                            PhysicalButton::Right => Some(ButtonPos::Right),
+                            _ => None,
+                        };
+                        self.middle_btn.set_dotted_arm(ctx, arm);
+                    }
+                    return None;
                 }
                 if let Some(pos) = self.handle_long_press_timers(event) {
                     if matches!(pos, ButtonPos::Left) {

@@ -17,6 +17,12 @@ use super::{super::fonts, loader::DEFAULT_DURATION_MS, theme};
 
 const HALF_SCREEN_BUTTON_WIDTH: i16 = constant::WIDTH / 2 - 1;
 
+/// Sentinel a caller puts in a button's text to get the down-arrow glyph
+/// instead of a word. Used for the middle (both-buttons) button of the menu
+/// navigation pattern, whose glyph replaces a label like "VIEW" (figma
+/// 472:1803). `from_text_possible_icon` and `arrow_armed_arrow` resolve it.
+pub const MIDDLE_ARROW_GLYPH: &str = "V";
+
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum ButtonPos {
     Left,
@@ -47,6 +53,11 @@ pub struct Button {
     /// An inert button. It never takes on the pressed look, because there is
     /// nothing behind it to acknowledge - the feedback belongs elsewhere.
     disabled: bool,
+    /// Which of the two arms is currently drawn dotted, marking the side whose
+    /// physical button is being held on its own.
+    dotted_arm: Option<ButtonPos>,
+    /// Whether this button wants that hint at all.
+    lone_press_hint: bool,
 }
 
 impl Button {
@@ -62,7 +73,22 @@ impl Button {
             bounds: Rect::zero(),
             state: State::Released,
             disabled: btn_details.disabled,
+            dotted_arm: None,
+            lone_press_hint: btn_details.lone_press_hint,
         }
+    }
+
+    /// Whether this button asks for the lone-press hint on its arms.
+    pub fn wants_lone_press_hint(&self) -> bool {
+        self.lone_press_hint
+    }
+
+    /// Draw one arm dotted (or neither, with `None`). Returns whether anything
+    /// changed, so the caller can avoid a needless repaint.
+    pub fn set_dotted_arm(&mut self, arm: Option<ButtonPos>) -> bool {
+        let changed = self.dotted_arm != arm;
+        self.dotted_arm = arm;
+        changed
     }
 
     pub fn content(&self) -> &ButtonContent {
@@ -245,12 +271,19 @@ impl Component for Button {
         // Optionally display "arms" at both sides of content - always in FG and BG
         // colors (they are not inverted).
         if matches!(self.decoration, Some(Decoration::Arms)) {
-            shape::ToifImage::new(area.left_center(), theme::ICON_ARM_LEFT.toif)
+            // The held side goes dotted; the other keeps its solid line
+            // (figma 472:6839 / 472:6891).
+            let (arm_left, arm_right) = match self.dotted_arm {
+                Some(ButtonPos::Left) => (theme::ICON_ARM_LEFT_DOTTED, theme::ICON_ARM_RIGHT),
+                Some(ButtonPos::Right) => (theme::ICON_ARM_LEFT, theme::ICON_ARM_RIGHT_DOTTED),
+                _ => (theme::ICON_ARM_LEFT, theme::ICON_ARM_RIGHT),
+            };
+            shape::ToifImage::new(area.left_center(), arm_left.toif)
                 .with_align(Alignment2D::TOP_RIGHT)
                 .with_fg(theme::FG)
                 .render(target);
 
-            shape::ToifImage::new(area.right_center(), theme::ICON_ARM_RIGHT.toif)
+            shape::ToifImage::new(area.right_center(), arm_right.toif)
                 .with_align(Alignment2D::TOP_LEFT)
                 .with_fg(theme::FG)
                 .render(target);
@@ -350,6 +383,9 @@ pub struct ButtonDetails {
     /// owning component is expected to skip its action. Used for the tutorial's
     /// dead-end button, which exists only to be pressed in vain.
     pub disabled: bool,
+    /// Ask the controller to dot the arm on whichever side is held on its own,
+    /// so a half-done both-buttons press is visible as such.
+    pub lone_press_hint: bool,
 }
 
 impl ButtonDetails {
@@ -366,6 +402,7 @@ impl ButtonDetails {
             send_long_press: false,
             long_press_ms: None,
             disabled: false,
+            lone_press_hint: false,
         }
     }
 
@@ -382,6 +419,7 @@ impl ButtonDetails {
             send_long_press: false,
             long_press_ms: None,
             disabled: false,
+            lone_press_hint: false,
         }
     }
 
@@ -391,7 +429,7 @@ impl ButtonDetails {
             "" => Self::cancel_icon(),
             "<" => Self::left_arrow_icon(),
             "^" => Self::up_arrow_icon(),
-            "V" => Self::down_arrow_icon(),
+            MIDDLE_ARROW_GLYPH => Self::down_arrow_icon(),
             "i" => Self::info_icon(),
             _ => Self::text(text),
         })
@@ -520,6 +558,12 @@ impl ButtonDetails {
         self
     }
 
+    /// Dot the arm on whichever side is being held alone (figma 472:6839).
+    pub fn with_lone_press_hint(mut self) -> Self {
+        self.lone_press_hint = true;
+        self
+    }
+
     /// Mark the button as inert; the owning component skips its action.
     pub fn with_disabled(mut self) -> Self {
         self.disabled = true;
@@ -630,7 +674,7 @@ impl ButtonLayout {
             // is what holds the arms apart, giving the glyph room to breathe.
             Some(
                 text.map(|t| match t {
-                    "V" => ButtonDetails::icon(theme::ICON_ARROW_DOWN_SOLID)
+                    MIDDLE_ARROW_GLYPH => ButtonDetails::icon(theme::ICON_ARROW_DOWN_SOLID)
                         .with_fixed_width(theme::ARMED_ICON_WIDTH),
                     _ => ButtonDetails::text(text),
                 })
@@ -856,6 +900,16 @@ impl ButtonLayout {
             Some(ButtonDetails::left_arrow_icon()),
             None,
             Some(ButtonDetails::text(text).with_default_duration()),
+        )
+    }
+
+    /// Armed text that also dots the arm of a button held on its own, so the
+    /// tutorial's both-buttons step can show a half-done press.
+    pub fn none_armed_hint_none(text: TString<'static>) -> Self {
+        Self::new(
+            None,
+            Some(ButtonDetails::armed_text(text).with_lone_press_hint()),
+            None,
         )
     }
 
