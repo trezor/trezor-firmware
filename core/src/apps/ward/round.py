@@ -45,6 +45,19 @@ def get() -> "tuple[int, bytes, int, bytes] | None":
     return raw[0], nonce, counter, mac
 
 
+def get_attested() -> "tuple[int, bytes] | None":
+    """(counter, mac) if this round reached ATTESTED, else None.
+
+    The state constants are `const()`-folded and therefore absent from the module at runtime, so
+    the ATTESTED test has to live here rather than in the caller.
+    """
+    ctx = get()
+    if ctx is None or ctx[0] != _ATTESTED:
+        return None
+    _state, _nonce, counter, mac = ctx
+    return counter, mac
+
+
 def set_attested(counter: int, mac: bytes) -> None:
     """Record what the WM attested, keeping the round's nonce."""
     from storage.cache_common import APP_WARD_SYNC
