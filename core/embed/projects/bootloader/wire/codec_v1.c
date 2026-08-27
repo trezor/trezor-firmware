@@ -111,8 +111,7 @@ secbool codec_send_msg(wire_iface_t *iface, uint16_t msg_id,
   pb_ostream_t sizestream = {.callback = NULL,
                              .state = NULL,
                              .max_size = SIZE_MAX,
-                             .bytes_written = 0,
-                             .errmsg = NULL};
+                             .bytes_written = 0};
   if (!pb_encode(&sizestream, fields, msg)) {
     return secfalse;
   }
@@ -138,8 +137,7 @@ secbool codec_send_msg(wire_iface_t *iface, uint16_t msg_id,
   pb_ostream_t stream = {.callback = &write,
                          .state = &state,
                          .max_size = SIZE_MAX,
-                         .bytes_written = 0,
-                         .errmsg = NULL};
+                         .bytes_written = 0};
 
   if (!pb_encode(&stream, fields, msg)) {
     return secfalse;
@@ -209,10 +207,8 @@ secbool codec_recv_message(wire_iface_t *iface, uint32_t msg_size, uint8_t *buf,
   packet_read_state_t state = {
       .iface = iface, .packet_pos = MSG_HEADER1_LEN, .buf = buf};
 
-  pb_istream_t stream = {.callback = &read,
-                         .state = &state,
-                         .bytes_left = msg_size,
-                         .errmsg = NULL};
+  pb_istream_t stream = {
+      .callback = &read, .state = &state, .bytes_left = msg_size};
 
   if (!pb_decode_noinit(&stream, fields, msg)) {
     return secfalse;
