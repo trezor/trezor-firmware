@@ -16,6 +16,9 @@ fn main() -> Result<()> {
             ("PB_FIELD_16BIT", Some("1")),
             ("PB_ENCODE_ARRAYS_UNPACKED", Some("1")),
             ("PB_VALIDATE_UTF8", Some("1")),
+            // Drops nanopb's error message strings (~1 kB of flash). Nothing
+            // in the bootloader reads `pb_(i|o)stream_t::errmsg`.
+            ("PB_NO_ERRMSG", Some("1")),
         ]);
 
         lib.add_sources([
