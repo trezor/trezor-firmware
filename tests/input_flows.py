@@ -3309,7 +3309,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             # hi priority warning
             hi_prio = (
                 TR.buttons__cancel_and_exit,
-                TR.send__cancel_sign,
+                TR.buttons__cancel_sign,
                 TR.send__cancel_transaction,
             )
             if any(needle.lower() in text for needle in hi_prio):
@@ -3344,7 +3344,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             # hi priority warning
             hi_prio = (
                 TR.buttons__cancel_and_exit,
-                TR.send__cancel_sign,
+                TR.buttons__cancel_sign,
                 TR.send__cancel_transaction,
             )
             if any(needle.lower() in text for needle in hi_prio):

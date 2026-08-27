@@ -380,6 +380,7 @@
     "buttons__back_up": "Back up",
     "buttons__cancel": "Cancel",
     "buttons__cancel_and_exit": "Cancel and exit",
+    "buttons__cancel_sign": "Cancel sign",
     "buttons__change": "Change",
     "buttons__check": "Check",
     "buttons__check_again": {
@@ -2710,7 +2711,7 @@
       "Delizia": "Wrong SD card.",
       "Eckhart": ""
     },
-    "send__cancel_sign": "Cancel sign",
+    "send__cancel_sign": "Cancel sign.",
     "send__cancel_transaction": "Cancel transaction",
     "send__confirm_sending": "Sending amount",
     "send__from_multiple_accounts": "Sending from multiple accounts.",

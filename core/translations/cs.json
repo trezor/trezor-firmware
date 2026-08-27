@@ -397,6 +397,7 @@
     "buttons__back_up": "Zálohovat",
     "buttons__cancel": "Zrušit",
     "buttons__cancel_and_exit": "Zrušit a ukončit",
+    "buttons__cancel_sign": "Zrušit podpis",
     "buttons__change": "Změnit",
     "buttons__check": "Zkontrolovat",
     "buttons__check_again": {
@@ -2686,7 +2687,7 @@
       "Delizia": "Nesprávná SD karta.",
       "Eckhart": ""
     },
-    "send__cancel_sign": "Zrušit podpis",
+    "send__cancel_sign": "Zrušení podpisu.",
     "send__cancel_transaction": "Zrušit transakci",
     "send__confirm_sending": "Odesílání částky",
     "send__from_multiple_accounts": "Odesílání z více účtů.",

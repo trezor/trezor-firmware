@@ -248,7 +248,7 @@ class DataChunkConfirmer:
                 value=chunk,
                 subtitle=TR.ethereum__data_size_template.format(self.total_len),
                 verb=TR.buttons__confirm,
-                verb_cancel=TR.send__cancel_sign,
+                verb_cancel=TR.buttons__cancel_sign,
                 verb_view_all=TR.ethereum__view_data_and_hash,
                 br_name="confirm_data",
                 br_code=ButtonRequestType.SignTx,
