@@ -3022,7 +3022,12 @@
       "Delizia": "Falsche SD-Karte.",
       "Eckhart": ""
     },
-    "send__cancel_sign": "Signieren abbrechen.",
+    "send__cancel_sign": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Signieren abbrechen",
+      "Eckhart": "Signieren abbrechen."
+    },
     "send__cancel_transaction": "Transaktion abbrechen",
     "send__confirm_sending": "Betrag senden",
     "send__from_multiple_accounts": {

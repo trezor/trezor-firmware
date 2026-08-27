@@ -2687,7 +2687,12 @@
       "Delizia": "Tarjeta SD incorrecta.",
       "Eckhart": ""
     },
-    "send__cancel_sign": "Cancelar firma.",
+    "send__cancel_sign": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Cancelar firma",
+      "Eckhart": "Cancelar firma."
+    },
     "send__cancel_transaction": "Cancelar transacción",
     "send__confirm_sending": "Enviando importe",
     "send__from_multiple_accounts": "Enviando desde varias cuentas.",

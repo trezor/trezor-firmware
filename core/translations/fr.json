@@ -2927,7 +2927,12 @@
       "Delizia": "Mauvaise carte SD.",
       "Eckhart": ""
     },
-    "send__cancel_sign": "Annuler la signature.",
+    "send__cancel_sign": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Annuler la signature",
+      "Eckhart": "Annuler la signature."
+    },
     "send__cancel_transaction": "Annuler la transaction",
     "send__confirm_sending": "Montant de l'envoi",
     "send__from_multiple_accounts": "Envoi depuis plusieurs comptes.",
