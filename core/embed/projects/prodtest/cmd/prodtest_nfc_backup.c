@@ -674,6 +674,11 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
   status = nfc_transceive(&cmd, &rsp);
   TSH_CHECK_OK(status);
 
+  TSH_CHECK(rsp.data_len >= 2U, TS_EINVAL);
+  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
+                rsp.data[rsp.data_len - 1] == 0x00U,
+            TS_EINVAL);
+
   uint8_t card_public_key[NOISE_XXPSK3_DHLEN] = {0};
 
   uint8_t certificate[512] = {0};
@@ -703,6 +708,11 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
 
   status = nfc_transceive(&cmd, &rsp);
   TSH_CHECK_OK(status);
+
+  TSH_CHECK(rsp.data_len >= 2U, TS_EINVAL);
+  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
+                rsp.data[rsp.data_len - 1] == 0x00U,
+            TS_EINVAL);
 
   uint8_t plain_text[256] = {0};
   size_t plain_text_size = 0;
