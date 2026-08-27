@@ -108,6 +108,7 @@ stdenvNoCC.mkDerivation ({
     protobuf_31  # version needs to be <= than the one in pyproject.toml
     pyright
     python3
+    ruff
     (mkBinOnlyWrapper rustNightly)
     s5cmd
     sccache
