@@ -21,6 +21,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <assert.h>
+
 #include "rand.h"
 
 uint32_t random_uniform(uint32_t n) {
@@ -30,7 +32,11 @@ uint32_t random_uniform(uint32_t n) {
 }
 
 void random_permute(char *str, size_t len) {
-  for (int i = len - 1; i >= 1; i--) {
+  assert(len <= UINT32_MAX);
+  if (len < 2) {
+    return;
+  }
+  for (size_t i = len - 1; i >= 1; i--) {
     uint32_t j = random_uniform(i + 1);
     char t = str[j];
     str[j] = str[i];
