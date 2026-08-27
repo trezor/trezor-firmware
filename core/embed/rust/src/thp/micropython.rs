@@ -189,7 +189,7 @@ extern "C" fn thp_channel_info(channel_id: Obj) -> Obj {
             Qstr::MP_QSTR_handshake_hash => hash.try_into()?,
             Qstr::MP_QSTR_host_static_public_key => remote_static_pubkey.try_into()?,
             Qstr::MP_QSTR_credential => credential,
-            Qstr::MP_QSTR_iface_num => iface_num.try_into()?,
+            Qstr::MP_QSTR_iface_num => iface_num.into(),
         }
     };
 
