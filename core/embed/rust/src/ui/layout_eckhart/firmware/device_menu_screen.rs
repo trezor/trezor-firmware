@@ -710,7 +710,7 @@ impl DeviceMenuScreen {
                 TR::homescreen__title_backup_failed.into(),
                 DeviceMenuMsg::ReviewFailedBackup,
             )
-            .with_subtext(Some((TR::words__review.into(), None)))
+            .with_subtext(Some((TR::buttons__review.into(), None)))
             .error();
             items.add(item);
         }
@@ -719,7 +719,7 @@ impl DeviceMenuScreen {
             let backup_idx = self.add_subscreen(Subscreen::BackupInfoScreen);
             let item =
                 MenuItem::go_to_subscreen(TR::homescreen__title_backup_needed.into(), backup_idx)
-                    .with_subtext(Some((TR::words__review.into(), None)))
+                    .with_subtext(Some((TR::buttons__review.into(), None)))
                     .light_warn();
             items.add(item);
         }
