@@ -207,9 +207,10 @@ class TestWardServiceRpc(unittest.TestCase):
         self.assertEqual(request.current_root, root)
 
     def test_fetch_refuses_rather_than_serving_an_unverifiable_proof(self):
-        """`WardSyncRequired` is an answer, not a failure -- but until a sync can be driven from
-        here it has to fail the read. The direction matters: a read that fell back to anything
-        else would be a way to force an old value onto the screen."""
+        """`WardSyncRequired` is an answer, not a failure -- but it is not a VALUE either, and the
+        direction matters: a read that fell back to anything else would be a way to force an old
+        value onto the screen. Asserted with the retry off, so what fails here is the read itself
+        rather than the sync it would otherwise drive -- that is the test below."""
         channel = _FakeLink(_as_message(WardSyncRequired()), answer_session_id=3)
         self._install(channel)
 
@@ -223,7 +224,40 @@ class TestWardServiceRpc(unittest.TestCase):
         R.get_root = _root
 
         with self.assertRaises(DataError):
-            await_result(S.fetch(b"\x02" * 32))
+            await_result(S.fetch(b"\x02" * 32, retry=False))
+
+    def test_fetch_syncs_once_and_then_gives_up(self):
+        """ONE SYNC AND ONE RETRY. A daemon that still reports "out of sync" about the head the
+        device just adopted from that same daemon is disagreeing with itself; asking again cannot
+        resolve it, it can only spin in front of the user. So the sync happens exactly once and the
+        read then fails closed."""
+        channel = _FakeLink(_as_message(WardSyncRequired()), answer_session_id=3)
+        self._install(channel)
+
+        async def _counter():
+            return 0
+
+        async def _root():
+            return None
+
+        R.get_counter = _counter
+        R.get_root = _root
+
+        # The real `sync` needs a seed and a WM; what this asserts is how many times it is called.
+        syncs = []
+        real_sync = S.sync
+
+        async def _sync():
+            syncs.append(1)
+
+        S.sync = _sync
+        try:
+            with self.assertRaises(DataError):
+                await_result(S.fetch(b"\x02" * 32))
+        finally:
+            S.sync = real_sync
+
+        self.assertEqual(len(syncs), 1)
 
 
 if __name__ == "__main__":

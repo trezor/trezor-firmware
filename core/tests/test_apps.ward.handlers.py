@@ -26,6 +26,9 @@ WARD_REQUESTS = (
     "WardQueueSetEntry",
     "WardQueueDeleteEntry",
     "WardQueueGetEntry",
+    # Dispatched on both builds and deliberately outside the WARD app filter: it is the way
+    # back from a pinned app that can no longer ask. See `apps.ward.reset_app`.
+    "WardResetApp",
 )
 
 

@@ -36,11 +36,15 @@ class TestLabelCapability(unittest.TestCase):
         try:
             await_result(resolve_label("no_such_app", b"addr1"))
         except DataError as e:
-            # The MESSAGE is asserted, not just the type. `require_initialized` raises
-            # from the very next line and on some builds raises a DataError too, so a
-            # bare type check would pass whether the gate ran or not -- which is the one
-            # thing this test exists to establish.
-            self.assertTrue("not authorized" in str(e), str(e))
+            # The MESSAGE is asserted, not just the type, because `require_initialized`
+            # raises from the very next line -- a bare type check would pass whether the
+            # gate ran or not, which is the one thing this test exists to establish.
+            #
+            # READ OFF `.message`, never `str(e)`. `trezor.wire.errors.Error` calls
+            # `Exception.__init__()` with no arguments and keeps the text in an attribute,
+            # so `str(e)` is the empty string for every one of these and asserting on it
+            # passes nothing and fails everything.
+            self.assertTrue("not authorized" in e.message, e.message)
         else:
             self.fail("an unlisted principal was allowed to resolve a label")
 
