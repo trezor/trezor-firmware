@@ -31,6 +31,8 @@ jobs:
   param:
     name: Determine pipeline parameters
     runs-on: ubuntu-latest
+    # No scheduled runs on forks.
+    if: github.repository == 'trezor/trezor-firmware' || github.event_name != 'schedule'
     outputs:
       core_models: ${{ steps.set_vars.outputs.core_models }}
       run_legacy: ${{ steps.set_vars.outputs.run_legacy }}
