@@ -2106,6 +2106,7 @@ if TYPE_CHECKING:
         usb_connected: "bool | None"
         wireless_connected: "bool | None"
         tap_to_wake: "bool | None"
+        max_passphrase_len: "int"
 
         def __init__(
             self,
@@ -2170,6 +2171,7 @@ if TYPE_CHECKING:
             usb_connected: "bool | None" = None,
             wireless_connected: "bool | None" = None,
             tap_to_wake: "bool | None" = None,
+            max_passphrase_len: "int | None" = None,
         ) -> None:
             pass
 

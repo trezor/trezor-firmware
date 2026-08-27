@@ -485,6 +485,8 @@ pub struct Features {
     pub wireless_connected: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.tap_to_wake)
     pub tap_to_wake: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.max_passphrase_len)
+    pub max_passphrase_len: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.Features.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1832,8 +1834,27 @@ impl Features {
         self.tap_to_wake = ::std::option::Option::Some(v);
     }
 
+    // optional uint32 max_passphrase_len = 64;
+
+    pub fn max_passphrase_len(&self) -> u32 {
+        self.max_passphrase_len.unwrap_or(50u32)
+    }
+
+    pub fn clear_max_passphrase_len(&mut self) {
+        self.max_passphrase_len = ::std::option::Option::None;
+    }
+
+    pub fn has_max_passphrase_len(&self) -> bool {
+        self.max_passphrase_len.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_max_passphrase_len(&mut self, v: u32) {
+        self.max_passphrase_len = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(61);
+        let mut fields = ::std::vec::Vec::with_capacity(62);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "vendor",
@@ -2140,6 +2161,11 @@ impl Features {
             |m: &Features| { &m.tap_to_wake },
             |m: &mut Features| { &mut m.tap_to_wake },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "max_passphrase_len",
+            |m: &Features| { &m.max_passphrase_len },
+            |m: &mut Features| { &mut m.max_passphrase_len },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Features>(
             "Features",
             fields,
@@ -2353,6 +2379,9 @@ impl ::protobuf::Message for Features {
                 504 => {
                     self.tap_to_wake = ::std::option::Option::Some(is.read_bool()?);
                 },
+                512 => {
+                    self.max_passphrase_len = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2548,6 +2577,9 @@ impl ::protobuf::Message for Features {
         if let Some(v) = self.tap_to_wake {
             my_size += 2 + 1;
         }
+        if let Some(v) = self.max_passphrase_len {
+            my_size += ::protobuf::rt::uint32_size(64, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2737,6 +2769,9 @@ impl ::protobuf::Message for Features {
         if let Some(v) = self.tap_to_wake {
             os.write_bool(63, v)?;
         }
+        if let Some(v) = self.max_passphrase_len {
+            os.write_uint32(64, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2815,6 +2850,7 @@ impl ::protobuf::Message for Features {
         self.usb_connected = ::std::option::Option::None;
         self.wireless_connected = ::std::option::Option::None;
         self.tap_to_wake = ::std::option::Option::None;
+        self.max_passphrase_len = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2881,6 +2917,7 @@ impl ::protobuf::Message for Features {
             usb_connected: ::std::option::Option::None,
             wireless_connected: ::std::option::Option::None,
             tap_to_wake: ::std::option::Option::None,
+            max_passphrase_len: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -13407,7 +13444,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \roptions.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xf6\x1b\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xa8\x1c\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
@@ -13465,10 +13502,11 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x16autoLockDelayBatteryMs\x12\x10\n\x03led\x18:\x20\x01(\x08R\x03led\
     \x12#\n\rusb_connected\x18;\x20\x01(\x08R\x0cusbConnected\x12-\n\x12wire\
     less_connected\x18<\x20\x01(\x08R\x11wirelessConnected\x12\x1e\n\x0btap_\
-    to_wake\x18?\x20\x01(\x08R\ttapToWake\"C\n\x12BackupAvailability\x12\x10\
-    \n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\x12\r\n\tAvailabl\
-    e\x10\x02\"7\n\x0eRecoveryStatus\x12\x0b\n\x07Nothing\x10\0\x12\x0c\n\
-    \x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\xef\x05\n\nCapability\
+    to_wake\x18?\x20\x01(\x08R\ttapToWake\x120\n\x12max_passphrase_len\x18@\
+    \x20\x01(\r:\x0250R\x10maxPassphraseLen\"C\n\x12BackupAvailability\x12\
+    \x10\n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\x12\r\n\tAvai\
+    lable\x10\x02\"7\n\x0eRecoveryStatus\x12\x0b\n\x07Nothing\x10\0\x12\x0c\
+    \n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\xef\x05\n\nCapability\
     \x12\x1c\n\x12Capability_Bitcoin\x10\x01\x1a\x04\x80\xa6\x1d\x01\x12\x1b\
     \n\x17Capability_Bitcoin_like\x10\x02\x12\x16\n\x12Capability_Binance\
     \x10\x03\x12\x16\n\x12Capability_Cardano\x10\x04\x12\x1b\n\x11Capability\

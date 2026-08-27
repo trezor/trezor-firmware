@@ -146,6 +146,7 @@ message Features {
     optional bool usb_connected = 59;                              // USB connected
     optional bool wireless_connected = 60;                         // Wireless charger connected
     optional bool tap_to_wake = 63;                                // tap to wake is enabled (None = not supported)
+    optional uint32 max_passphrase_len = 64 [default = 50];        // maximal passphrase length (in bytes)
 
     enum BackupAvailability {
         /// Device is already backed up, or a previous backup has failed.
