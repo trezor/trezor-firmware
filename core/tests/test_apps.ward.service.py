@@ -97,7 +97,11 @@ class TestWardServiceRpc(unittest.TestCase):
         self._real_counter = R.get_counter
         self._real_root = R.get_root
         self._real_exchange = None
-        if not utils.USE_THP:
+        # WHICH TRANSPORT `_rpc` USES IS `USE_WARD_SERVICE_THP`, NOT `USE_THP`. They are separate
+        # features: a THP build still speaks codec v1 to the daemon unless the THP service path is
+        # enabled, so gating on the wallet transport stubbed nothing on a THP build and the tests
+        # reached the real endpoint.
+        if not utils.USE_WARD_SERVICE_THP:
             from trezor.wire.codec import ward_context
 
             self._real_exchange = ward_context.exchange
@@ -115,7 +119,7 @@ class TestWardServiceRpc(unittest.TestCase):
     def _install(self, link, session_id=3, answered=True):
         S._service_link = lambda: (link, session_id)
 
-        if not utils.USE_THP:
+        if not utils.USE_WARD_SERVICE_THP:
             # The codec `_rpc` goes through the endpoint rather than writing the link itself, so
             # the stand-in has to be there instead. It answers with the message alone: there is no
             # session id on this transport, which is why the check for one is THP-only below.
@@ -146,7 +150,9 @@ class TestWardServiceRpc(unittest.TestCase):
         # ...written on the service's own session, not session 0
         self.assertEqual(channel.written[0][0], 3)
 
-    @unittest.skipUnless(utils.USE_THP, "the codec carries no session id")
+    @unittest.skipUnless(
+        utils.USE_WARD_SERVICE_THP, "the codec carries no session id"
+    )
     def test_an_answer_on_another_session_is_refused(self):
         """A reply carrying someone else's session id is not this conversation's reply, and
         acting on it would mean acting on a message meant for something else."""

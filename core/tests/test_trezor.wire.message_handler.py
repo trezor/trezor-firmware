@@ -40,6 +40,7 @@ class _RecordingContext:
         self.written.append(msg)
 
 
+@unittest.skipUnless(not utils.USE_THP, "the codec buffer source exists only in a codec build")
 class TestHandleSingleMessageLease(unittest.TestCase):
     """Every exit that does not reach `decode_message` has to end the receive lease itself.
 
@@ -100,6 +101,7 @@ class TestHandleSingleMessageLease(unittest.TestCase):
         self.assertIsNotNone(other.get(512))
 
 
+@unittest.skipUnless(not utils.USE_THP, "the codec buffer source exists only in a codec build")
 class TestWriteUnderAHeldReadLease(unittest.TestCase):
     """A response must not be encoded over the request it is answering."""
 
