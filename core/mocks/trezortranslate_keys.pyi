@@ -144,6 +144,7 @@ class TR:
     buttons__quit: str = "Quit"
     buttons__restart: str = "Restart"
     buttons__retry: str = "Retry"
+    buttons__review: str = "Review"
     buttons__select: str = "Select"
     buttons__set: str = "Set"
     buttons__show_all: str = "Show all"

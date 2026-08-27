@@ -1683,6 +1683,7 @@ pub enum TranslatedString {
     words__delegate = 1291,  // "Delegate"
     words__from_title = 1292,  // "From"
     words__undelegate = 1293,  // "Undelegate"
+    buttons__review = 1294,  // "Review"
 }
 
 impl TranslatedString {
@@ -2984,6 +2985,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4283,6 +4285,7 @@ impl TranslatedString {
                 19118,
                 19122,
                 19132,
+                19138,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5581,6 +5584,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6880,6 +6884,7 @@ impl TranslatedString {
                 19118,
                 19122,
                 19132,
+                19138,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8178,6 +8183,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9477,6 +9483,7 @@ impl TranslatedString {
                 19118,
                 19122,
                 19132,
+                19138,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10775,6 +10782,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12074,6 +12082,7 @@ impl TranslatedString {
                 19118,
                 19122,
                 19132,
+                19138,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13373,6 +13382,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14672,6 +14682,7 @@ impl TranslatedString {
                 16977,
                 16981,
                 16991,
+                16997,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15970,6 +15981,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17269,6 +17281,7 @@ impl TranslatedString {
                 16977,
                 16981,
                 16991,
+                16997,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18567,6 +18580,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19866,6 +19880,7 @@ impl TranslatedString {
                 16977,
                 16981,
                 16991,
+                16997,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21164,6 +21179,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22463,6 +22479,7 @@ impl TranslatedString {
                 16977,
                 16981,
                 16991,
+                16997,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23762,6 +23779,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25061,6 +25079,7 @@ impl TranslatedString {
                 19056,
                 19060,
                 19070,
+                19076,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26359,6 +26378,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27658,6 +27678,7 @@ impl TranslatedString {
                 19056,
                 19060,
                 19070,
+                19076,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28956,6 +28977,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30255,6 +30277,7 @@ impl TranslatedString {
                 19056,
                 19060,
                 19070,
+                19076,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31553,6 +31576,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32852,6 +32876,7 @@ impl TranslatedString {
                 19056,
                 19060,
                 19070,
+                19076,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34151,6 +34176,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -35450,6 +35476,7 @@ impl TranslatedString {
                 20485,
                 20489,
                 20499,
+                20505,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36748,6 +36775,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38047,6 +38075,7 @@ impl TranslatedString {
                 20485,
                 20489,
                 20499,
+                20505,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39345,6 +39374,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -40644,6 +40674,7 @@ impl TranslatedString {
                 20485,
                 20489,
                 20499,
+                20505,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41942,6 +41973,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
+                "Review",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43241,6 +43273,7 @@ impl TranslatedString {
                 20485,
                 20489,
                 20499,
+                20505,
             ];
 
         }
@@ -43392,6 +43425,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_buttons__quit, Self::buttons__quit),
         (Qstr::MP_QSTR_buttons__restart, Self::buttons__restart),
         (Qstr::MP_QSTR_buttons__retry, Self::buttons__retry),
+        (Qstr::MP_QSTR_buttons__review, Self::buttons__review),
         (Qstr::MP_QSTR_buttons__select, Self::buttons__select),
         (Qstr::MP_QSTR_buttons__set, Self::buttons__set),
         (Qstr::MP_QSTR_buttons__show_all, Self::buttons__show_all),

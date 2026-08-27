@@ -276,6 +276,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__quit;
   MP_QSTR_buttons__restart;
   MP_QSTR_buttons__retry;
+  MP_QSTR_buttons__review;
   MP_QSTR_buttons__select;
   MP_QSTR_buttons__set;
   MP_QSTR_buttons__show_all;
