@@ -2687,7 +2687,12 @@
       "Delizia": "Nesprávná SD karta.",
       "Eckhart": ""
     },
-    "send__cancel_sign": "Zrušení podpisu.",
+    "send__cancel_sign": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Zrušení podpisu",
+      "Eckhart": "Zrušení podpisu."
+    },
     "send__cancel_transaction": "Zrušit transakci",
     "send__confirm_sending": "Odesílání částky",
     "send__from_multiple_accounts": "Odesílání z více účtů.",
