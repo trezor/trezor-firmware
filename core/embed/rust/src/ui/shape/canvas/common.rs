@@ -600,8 +600,15 @@ pub trait Canvas: BasicCanvas {
             return;
         }
 
+        let full_turn = end - start >= 360.0;
+
         start = (360.0 + start % 360.0) % 360.0;
         end = (360.0 + end % 360.0) % 360.0;
+
+        if full_turn {
+            start = 0.0;
+            end = 360.0;
+        }
 
         let alpha = 255;
         let alpha_mul = |a: u8| -> u8 { ((u16::from(a) * u16::from(alpha)) / 255) as u8 };
