@@ -568,9 +568,14 @@ def boot() -> None:
     # BEFORE THE PINLOCK FILTER BELOW, deliberately. Filters run last-appended-first, so the pinlock
     # keeps triggering first and the device is unlocked before the role question is asked -- which is
     # the right order, since granting the role is a flash write.
-    from apps.ward.app_role import ward_app_filter
+    # NOT ON A BTC-ONLY BUILD, where no WARD handler is registered (see
+    # `workflow_handlers.find_message_handler`) and the WARD message types are absent from
+    # `MessageType` altogether -- the filter builds its list from that enum, so installing it there
+    # raises on the FIRST message of any kind, WARD or not.
+    if not utils.BITCOIN_ONLY:
+        from apps.ward.app_role import ward_app_filter
 
-    filters.append(ward_app_filter)
+        filters.append(ward_app_filter)
 
     if not config.is_unlocked():
         # pinlocked handler should always be the last one
