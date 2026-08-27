@@ -47,11 +47,12 @@ them is standing in for a wallet. What avoids it is everything behind them.
 
 ## What differs between the two builds
 
-WARD's transport is chosen at **build time** and a firmware serves it one way only. The service
-channel is the default; a connect build is the opt-out. Bitcoin-only firmware registers no WARD
-handlers at all, so the option resolves off there silently rather than being refused.
+WARD's transport is chosen at **build time** and a firmware serves it one way only. The connect
+build is the default; a service build is the opt-in (`--enable-ward-service-channel`). Bitcoin-only
+firmware registers no WARD handlers at all, so asking for the channel there is refused rather than
+silently dropped.
 
-| | connect build (`--disable-ward-service-channel`) | service build (default) |
+| | connect build (default) | service build (`--enable-ward-service-channel`) |
 |---|---|---|
 | who owns the replica | the calling app, on the wallet channel | the WARD host app + wardd, behind the service channel |
 | how the device reads a leaf | `WardEntryRequest` on the wallet channel, answered by the caller inside the workflow it interrupted | `WardServiceFetch` on the service channel |
@@ -80,19 +81,19 @@ authenticates the daemon buys no property the protocol does not already have. Wh
 channel does buy is cost: a private dispatcher, channel reattachment, replacement semantics, a
 persistent daemon pin whose first bind can be denied by anyone who reaches the interface first, and
 a channel table shared with the wallet interface and evicted by a global LRU. None of that is built
-by default.
+even when the service channel is.
 
-WHICH BUILD THE TESTS RUN AGAINST. The default emulator is a service build, so the connect-mode
-request set is covered by the `ward: connect` legs in `.github/workflows/core.yml`, which build with
-`WARD_SERVICE_CHANNEL=0` and run `-m ward_transport`. Deleting those legs deletes that coverage:
+WHICH BUILD THE TESTS RUN AGAINST. The default emulator is a connect build, so the service request
+set is covered by the `ward: service` legs in `.github/workflows/core.yml`, which build with
+`WARD_SERVICE_CHANNEL=1` and run `-m ward_transport`. Deleting those legs deletes that coverage:
 `tests/conftest.py` probes the device and skips the inapplicable half silently, so the loss would
 not show up as a failure.
 
-The THP service path is kept compiling behind `--ward-service-thp`, which requires the service
-channel and so cannot be combined with `--disable-ward-service-channel`. It is not built for any
-shipping configuration; the column below describes it so the choice stays reviewable.
+The THP service path is kept compiling behind `--ward-service-thp`, which requires
+`--enable-ward-service-channel`: there is otherwise no interface for it to speak on. It is not built
+for any shipping configuration; the column below describes it so the choice stays reviewable.
 
-| | THP service channel (`--ward-service-thp`) | codec service endpoint (default) |
+| | THP service channel (`--ward-service-thp`) | codec service endpoint (default transport of a service build) |
 |---|---|---|
 | what binding records | interface, channel id and session id | the interface, and nothing else |
 | daemon identity | the Noise static key, pinned in flash | **none** — see below |

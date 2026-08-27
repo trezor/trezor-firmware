@@ -50,7 +50,7 @@ bootloader-devel              = { true = ["bootloader_devel"] }
 btc-only                      = { false = ["universal_fw"] }
 dbg-console                   = { vcp = ["dbg_console_vcp"], swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 debug-link                    = { true = ["debuglink"] }
-disable-ward-service-channel  = { false = ["ward_service_channel"] }
+enable-ward-service-channel   = { true = ["ward_service_channel"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 production                    = { true = ["production"] }
 pyopt                         = { false = ["optiga_testing"] }

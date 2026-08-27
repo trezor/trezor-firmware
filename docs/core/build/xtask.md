@@ -76,13 +76,13 @@ cannot be used bare:
 - `--debug-link` — enable debug link (on by default when `pyopt` is off).
 - `--dbg-console <none|vcp|swo|system-view>` — debug console backend.
 - `--disable-animation` — disable UI animations.
-- `--disable-ward-service-channel` — do not build WARD's own dedicated interface.
-  The interface is built by default; without it the firmware serves WARD over the
-  ordinary connection. Implied by `--btc-only`, which carries no WARD to serve.
-  Needed on hardware debug builds that also want `--dbg-console vcp --debug-link`:
-  that configuration is one USB endpoint over budget with the interface on.
+- `--enable-ward-service-channel` — build WARD's own dedicated interface. Off by
+  default; without it the firmware serves WARD over the ordinary connection.
+  Refused with `--btc-only`, which carries no WARD to serve, and refused on a
+  hardware build that also wants `--dbg-console vcp --debug-link`: that
+  configuration is already at the USB endpoint budget and the interface is one over.
 - `--ward-service-thp` — serve the WARD service interface over THP instead of
-  codec v1. Cannot be combined with `--disable-ward-service-channel`.
+  codec v1. Requires `--enable-ward-service-channel`.
 - `--bootloader-devel` — use development bootloader.
 - `--force-bootloader-upgrade` — force bootloader upgrade on next boot.
 - `--asan` — enable AddressSanitizer.

@@ -75,8 +75,9 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       N1W1: ${{ matrix.n1w1 && '1' || '0' }}
-      # A debuglink build takes the vcp console and the debug link, which together with the WARD
-      # service interface is one USB endpoint over what the device core has.
+      # OPTED IN so the WARD interface keeps being compiled for the device target. Not on the
+      # debuglink legs: those take the vcp console and the debug link, which together with the
+      # interface is one USB endpoint over what the device core has.
       WARD_SERVICE_CHANNEL: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       PRODUCTION: ${{ matrix.type == 'production' && '1' || '0' }}
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T3W1' && '1' || '0' }}
@@ -129,29 +130,29 @@ jobs:
             type: debuglink
             asan: noasan
             n1w1: true  # currently N1W1 is not supported for normal builds
-          # CONNECT-MODE WARD BUILDS. The service channel is built by default, which makes every
-          # other emulator here a service build -- so the connect-mode request set
-          # (`WardEntryRequest`, `WardSync`, ...) needs a build with the channel turned off. One
-          # codec-wallet model and one THP model: those messages travel on the WALLET channel,
-          # whose protocol differs between the two.
+          # SERVICE-MODE WARD BUILDS. The service channel is opt-in, which makes every other
+          # emulator here a connect build -- so the service request set (`WardServiceFetch`,
+          # `WardServicePublish`, ...) needs a build with the channel turned on. One codec-wallet
+          # model and one THP model: the user-facing half of the suite travels on the WALLET
+          # channel, whose protocol differs between the two.
           - model: T3T1
             coins: universal
             type: debuglink
             asan: noasan
             n1w1: false
-            ward: connect
+            ward: service
           - model: T3W1
             coins: universal
             type: debuglink
             asan: noasan
             n1w1: false
-            ward: connect
+            ward: service
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       N1W1: ${{ matrix.n1w1 && '1' || '0' }}
-      WARD_SERVICE_CHANNEL: ${{ matrix.ward == 'connect' && '0' || '1' }}
+      WARD_SERVICE_CHANNEL: ${{ matrix.ward == 'service' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
@@ -345,22 +346,23 @@ jobs:
             asan: noasan
             lang: en
             n1w1: true
-          # THE CONNECT-MODE HALF OF THE WARD SUITE, against the emulators built with the service
-          # channel turned off. Filtered to `-m ward_transport`, because that is all these legs
-          # add: every other test already runs on the default builds above. btconly cannot serve
-          # here -- `tests/conftest.py` skips the whole `ward` marker on a bitcoin-only build.
+          # THE SERVICE-MODE HALF OF THE WARD SUITE, against the emulators built with the service
+          # channel turned on. Filtered to `-m ward_transport`, because that is all these legs
+          # add: every other test already runs on the default builds above, which are connect
+          # builds. btconly cannot serve here -- `tests/conftest.py` skips the whole `ward` marker
+          # on a bitcoin-only build.
           - model: T3T1
             coins: universal
             asan: noasan
             lang: en
             n1w1: false
-            ward: connect
+            ward: service
           - model: T3W1
             coins: universal
             asan: noasan
             lang: en
             n1w1: false
-            ward: connect
+            ward: service
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       TREZOR_MODEL: ${{ matrix.model }}
