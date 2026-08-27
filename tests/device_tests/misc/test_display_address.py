@@ -112,6 +112,7 @@ def test_display_address_shows_the_label_wards_holds(session: Session):
 
 
 @pytest.mark.models("core")
+@pytest.mark.ward_transport("connect")
 def test_display_address_says_so_when_there_is_no_label(session: Session):
     """An address with no entry is the ordinary case, and it is STATED.
 
@@ -129,6 +130,7 @@ def test_display_address_says_so_when_there_is_no_label(session: Session):
 
 
 @pytest.mark.models("core")
+@pytest.mark.ward_transport("connect")
 def test_display_address_label_is_domain_separated(session: Session):
     """A label written by one app does not surface under another's domain.
 
@@ -146,6 +148,7 @@ def test_display_address_label_is_domain_separated(session: Session):
 
 
 @pytest.mark.models("core")
+@pytest.mark.ward_transport("connect")
 def test_display_address_offline_serves_the_kept_label(session: Session):
     """A host that never syncs is still served -- from the device's own store, and said so.
 
@@ -165,6 +168,7 @@ def test_display_address_offline_serves_the_kept_label(session: Session):
 
 
 @pytest.mark.models("core")
+@pytest.mark.ward_transport("connect")
 def test_display_address_offline_without_a_kept_label_still_shows_the_address(
     session: Session,
 ):
