@@ -894,25 +894,6 @@ def confirm_text(
     )
 
 
-def confirm_amount(
-    title: str,
-    amount: str,
-    description: str | None = None,
-    br_name: str = "confirm_amount",
-    br_code: ButtonRequestType = BR_CODE_OTHER,
-) -> Awaitable[None]:
-    from ..properties import with_colon
-
-    description = description or with_colon(TR.words__amount)  # def_arg
-    return confirm_blob(
-        br_name,
-        title,
-        amount,
-        description,
-        br_code=br_code,
-    )
-
-
 async def confirm_properties(
     br_name: str,
     title: str,

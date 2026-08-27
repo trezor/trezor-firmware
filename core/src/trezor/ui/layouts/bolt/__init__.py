@@ -830,24 +830,6 @@ def confirm_text(
     )
 
 
-def confirm_amount(
-    title: str,
-    amount: str,
-    description: str | None = None,
-    br_name: str = "confirm_amount",
-    br_code: ButtonRequestType = BR_CODE_OTHER,
-) -> Awaitable[None]:
-    description = description or with_colon(TR.words__amount)  # def_arg
-    return confirm_value(
-        title,
-        amount,
-        description,
-        br_name,
-        br_code,
-        verb=TR.buttons__confirm,
-    )
-
-
 async def confirm_value(
     title: str,
     value: str,
