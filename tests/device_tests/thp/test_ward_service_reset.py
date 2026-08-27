@@ -42,6 +42,7 @@ from ...ward_service import MockWardService, bound_daemon
 from ...ward_trie import WardTrie
 
 pytestmark = [
+    pytest.mark.ward,
     pytest.mark.protocol("thp"),
     pytest.mark.models("core"),
     # THE RESET MIGRATES A DAEMON PIN, and only a THP service channel has one to migrate.

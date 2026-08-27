@@ -29,6 +29,7 @@ from ...ward_service import MockWardService
 # satisfy the same statements. The three tests that ARE about THP -- everything that turns on the
 # pinned static key or on there being a channel object -- carry the marker individually.
 pytestmark = [
+    pytest.mark.ward,
     # DECLARED, not inferred. These used to be skipped on a connect build as a side effect of
     # `MockWardService.__init__` reaching for the interface through a fixture that skipped when it
     # was absent. Now that the mock builds a real service client, which has no business skipping

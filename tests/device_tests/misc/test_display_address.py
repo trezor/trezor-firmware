@@ -44,6 +44,10 @@ from ...input_flows import InputFlowConfirmAllWarnings
 from ...ward_trie import WardTrie
 from .test_ward import _APP, _go_online, _pin, _Recorded, _seed
 
+# `DisplayAddress` is registered behind the same `BITCOIN_ONLY` guard as WARD itself, so a
+# BTC-only build has no handler for it and no such message type at all.
+pytestmark = pytest.mark.ward
+
 # A label the layouts render verbatim: lowercase, no spaces. `_Recorded.title` lowercases
 # (titles are ours to spell, so case there is noise), and a value long enough to wrap gets a
 # space inserted mid-token -- see `_Recorded.squashed`.

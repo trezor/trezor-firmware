@@ -70,6 +70,7 @@ from ...ward_service import bound_daemon
 from ...ward_trie import WardTrie
 
 pytestmark = [
+    pytest.mark.ward,
     pytest.mark.protocol("thp"),
     pytest.mark.models("core"),
     # BOTH SERVICE TRANSPORTS, because the seam is not one of them. The WALLET side of it is THP

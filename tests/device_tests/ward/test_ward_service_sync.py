@@ -44,6 +44,7 @@ from ...ward_trie import WardTrie
 # no identity to pin, so the pin is replaced there by a per-operation confirmation -- see
 # `apps/ward/app_role.py`.
 pytestmark = [
+    pytest.mark.ward,
     pytest.mark.models("core"),
     pytest.mark.ward_transport("service"),
 ]

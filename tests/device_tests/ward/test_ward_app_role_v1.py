@@ -41,6 +41,7 @@ from ...input_flows import InputFlowConfirmAllWarnings
 from ...ward_app import REVEAL_BR, reject_flow
 
 pytestmark = [
+    pytest.mark.ward,
     pytest.mark.protocol("v1"),
     pytest.mark.models("core"),
 ]

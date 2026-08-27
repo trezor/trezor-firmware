@@ -398,6 +398,14 @@ def _prepared_test_ctx(
     if request.node.get_closest_marker("altcoin") and is_btc_only:
         pytest.skip("Skipping altcoin test")
 
+    # WARD -- and `display_address`, its only on-device consumer -- is registered behind the
+    # same `BITCOIN_ONLY` guard in `workflow_handlers.find_message_handler`, and its message
+    # types are absent from `MessageType` on such a build. A BTC-only device answers every one
+    # of them with `UnexpectedMessage`, so these tests are inapplicable there rather than
+    # failing.
+    if request.node.get_closest_marker("ward") and is_btc_only:
+        pytest.skip("Skipping WARD test on a Bitcoin-only build")
+
     if (
         request.node.get_closest_marker("xfail_if_no_optiga")
         and not _raw_test_ctx.has_optiga
