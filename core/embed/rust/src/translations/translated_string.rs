@@ -50,19 +50,6 @@ impl TranslatedString {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::TranslatedString;
-
-//     #[test]
-//     fn test_soundness() {
-//         let tr = TranslatedString::address__public_key;
-//         let mut opt: Option<&str> = None;
-//         tr.map_translated(|s| opt = Some(s));
-//         assert!(matches!(opt, Some("Address / Public key")));
-//     }
-// }
-
 #[cfg(test)]
 mod test {
     use super::*;
