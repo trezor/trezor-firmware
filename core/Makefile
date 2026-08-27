@@ -70,8 +70,10 @@ endif
 ifeq ($(N1W1),1)
 XTASK_BUILD_OPTS += --n1w1
 endif
-ifeq ($(WARD_SERVICE_CHANNEL),1)
-XTASK_BUILD_OPTS += --ward-service-channel
+# ON BY DEFAULT, so only the opt-out needs a knob here; `WARD_SERVICE_CHANNEL=1` is a no-op and
+# deliberately has no arm.
+ifeq ($(WARD_SERVICE_CHANNEL),0)
+XTASK_BUILD_OPTS += --disable-ward-service-channel
 endif
 ifeq ($(WARD_SERVICE_THP),1)
 XTASK_BUILD_OPTS += --ward-service-thp

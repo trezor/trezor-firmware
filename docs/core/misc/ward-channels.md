@@ -47,9 +47,11 @@ them is standing in for a wallet. What avoids it is everything behind them.
 
 ## What differs between the two builds
 
-WARD's transport is chosen at **build time** and a firmware serves it one way only.
+WARD's transport is chosen at **build time** and a firmware serves it one way only. The service
+channel is the default; a connect build is the opt-out. Bitcoin-only firmware registers no WARD
+handlers at all, so the option resolves off there silently rather than being refused.
 
-| | connect build | service build (`--ward-service-channel`) |
+| | connect build (`--disable-ward-service-channel`) | service build (default) |
 |---|---|---|
 | who owns the replica | the calling app, on the wallet channel | the WARD host app + wardd, behind the service channel |
 | how the device reads a leaf | `WardEntryRequest` on the wallet channel, answered by the caller inside the workflow it interrupted | `WardServiceFetch` on the service channel |
@@ -80,9 +82,15 @@ persistent daemon pin whose first bind can be denied by anyone who reaches the i
 a channel table shared with the wallet interface and evicted by a global LRU. None of that is built
 by default.
 
-The THP service path is kept compiling behind `--ward-service-thp`, which requires
-`--ward-service-channel`. It is not built for any shipping configuration; the column below
-describes it so the choice stays reviewable.
+WHICH BUILD THE TESTS RUN AGAINST. The default emulator is a service build, so the connect-mode
+request set is covered by the `ward: connect` legs in `.github/workflows/core.yml`, which build with
+`WARD_SERVICE_CHANNEL=0` and run `-m ward_transport`. Deleting those legs deletes that coverage:
+`tests/conftest.py` probes the device and skips the inapplicable half silently, so the loss would
+not show up as a failure.
+
+The THP service path is kept compiling behind `--ward-service-thp`, which requires the service
+channel and so cannot be combined with `--disable-ward-service-channel`. It is not built for any
+shipping configuration; the column below describes it so the choice stays reviewable.
 
 | | THP service channel (`--ward-service-thp`) | codec service endpoint (default) |
 |---|---|---|

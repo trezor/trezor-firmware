@@ -35,24 +35,18 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
         }
     }
 
-    // The WARD service channel and coin support are independent options, but not every
-    // combination means anything: WARD's message handlers are registered only when the firmware
-    // is not bitcoin-only, so a bitcoin-only build with the service channel would carry a
-    // dedicated interface with nothing behind it to serve. Rejected here rather than coupled to
-    // `universal_fw`, which would make the service channel un-selectable on its own.
-    if args.btc_only && args.ward_service_channel {
-        bail!("ward_service_channel needs WARD, which is not built in bitcoin-only firmware");
-    }
-
     // WHICH TRANSPORT THE INTERFACE SPEAKS IS A SEPARATE QUESTION FROM WHETHER IT EXISTS, and the
     // default answer is codec v1 on every build. The THP service path is kept compiling behind
     // this option rather than deleted, so the choice can be revisited without recovering the work
-    // from history -- but it cannot be selected without an interface to serve.
-    if args.ward_service_thp && !args.ward_service_channel {
-        bail!("ward_service_thp needs --ward-service-channel: there is no interface to serve");
+    // from history -- but it cannot be selected without an interface to serve. The channel can be
+    // missing for either of two reasons, so the message names both.
+    if args.ward_service_thp && args.disable_ward_service_channel {
+        bail!(
+            "ward_service_thp needs the WARD service channel, which this build does not have: \
+             either --disable-ward-service-channel was given, or this is a bitcoin-only build, \
+             which has no WARD to serve"
+        );
     }
-
-    check_usb_endpoint_budget(args)?;
 
     let mut features: Vec<String> = vec![args.model.feature_name()];
 
@@ -68,6 +62,18 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
     // features so an unsupported option fails here with the option named,
     // instead of as a cargo error.
     let project_config = config::ProjectConfig::load(args.project)?;
+
+    // Checked once the project is known: whether a build pays for the WARD interface depends on
+    // whether THIS project registers it. The bootloader, prodtest and secmon do not map the
+    // option at all and must not be charged an endpoint for an interface they never bring up.
+    check_usb_endpoint_budget(
+        args,
+        project_config
+            .options
+            .disable_ward_service_channel
+            .is_some(),
+    )?;
+
     let package = args.project.package_name(args.emulator);
     let package_features = config::package_features(package)?;
     for activated in project_config.options.resolve(args) {
@@ -255,7 +261,10 @@ const USB_MAX_ENDPOINTS: u32 = 6;
 /// they are combined, is the answer that can actually be acted on.
 ///
 /// Skipped for the emulator, which has no endpoints: interfaces there are UDP ports.
-fn check_usb_endpoint_budget(args: &ResolvedBuildArgs) -> Result<()> {
+fn check_usb_endpoint_budget(
+    args: &ResolvedBuildArgs,
+    project_maps_ward_channel: bool,
+) -> Result<()> {
     if args.emulator {
         return Ok(());
     }
@@ -271,14 +280,17 @@ fn check_usb_endpoint_budget(args: &ResolvedBuildArgs) -> Result<()> {
     if args.dbg_console == ConsoleType::Vcp {
         interfaces += 2; // vcp takes a control and a data interface
     }
-    if args.ward_service_channel {
+    if project_maps_ward_channel && !args.disable_ward_service_channel {
         interfaces += 1;
     }
 
     if interfaces > USB_MAX_ENDPOINTS - 1 {
         bail!(
-            "USB configuration needs {} endpoints but the device core has {}; \
-             drop one interface-bearing option (--dbg-console, --debug-link, --ward-service-channel)",
+            "USB configuration needs {} endpoints but the device core has {}; drop one \
+             interface-bearing option. THE WARD SERVICE CHANNEL IS BUILT BY DEFAULT and is the \
+             one that can be dropped without losing a debugging facility: pass \
+             --disable-ward-service-channel. Otherwise drop --dbg-console vcp (two interfaces) \
+             or --debug-link.",
             interfaces,
             USB_MAX_ENDPOINTS - 1
         );
@@ -331,12 +343,12 @@ mod tests {
     #[test]
     fn rejects_a_usb_configuration_that_overruns_the_endpoint_budget() {
         // wire(1) + debug(1) + webauthn(1) + vcp(2) + ward(1) = 6 interfaces, so the highest
-        // endpoint number is 6 and the core only has 0..5. This is the one combination the
-        // existing options can reach, and it used to build and then fail silently on the device.
+        // endpoint number is 6 and the core only has 0..5. THE WARD INTERFACE IS NOT ASKED FOR
+        // HERE -- it is built by default, which is what makes this combination reachable by
+        // `PYOPT=0` alone. It used to build and then fail silently on the device.
         let args = ResolvedBuildArgs {
             debug_link: true,
             dbg_console: ConsoleType::Vcp,
-            ward_service_channel: true,
             ..ResolvedBuildArgs::default()
         };
 
@@ -352,6 +364,7 @@ mod tests {
         // The transport option says WHAT the interface speaks, so it needs one to speak on.
         let args = ResolvedBuildArgs {
             ward_service_thp: true,
+            disable_ward_service_channel: true,
             ..ResolvedBuildArgs::default()
         };
 
@@ -367,7 +380,6 @@ mod tests {
         // The default is codec v1 on the service interface; this is the opt-in that keeps the THP
         // service path buildable, and it must remain selectable.
         let args = ResolvedBuildArgs {
-            ward_service_channel: true,
             ward_service_thp: true,
             ..ResolvedBuildArgs::default()
         };
@@ -381,11 +393,10 @@ mod tests {
         // not turn into a blanket refusal of the service channel.
         let args = ResolvedBuildArgs {
             debug_link: true,
-            ward_service_channel: true,
             ..ResolvedBuildArgs::default()
         };
 
-        assert!(check_usb_endpoint_budget(&args).is_ok());
+        assert!(check_usb_endpoint_budget(&args, true).is_ok());
     }
 
     #[test]
@@ -395,11 +406,71 @@ mod tests {
             emulator: true,
             debug_link: true,
             dbg_console: ConsoleType::Vcp,
-            ward_service_channel: true,
             ..ResolvedBuildArgs::default()
         };
 
-        assert!(check_usb_endpoint_budget(&args).is_ok());
+        assert!(check_usb_endpoint_budget(&args, true).is_ok());
+    }
+
+    #[test]
+    fn builds_the_ward_service_channel_unless_it_is_turned_off() {
+        // THE DEFAULT IS ON, and it comes from the ordinary "an option nobody sets resolves to
+        // false" rule applied to a NEGATIVE option -- so this is what stops the polarity being
+        // flipped back by accident.
+        let features = resolve_features(&ResolvedBuildArgs::default())
+            .unwrap()
+            .features;
+        assert!(features.contains(&"ward_service_channel".to_string()));
+
+        let args = ResolvedBuildArgs {
+            disable_ward_service_channel: true,
+            ..ResolvedBuildArgs::default()
+        };
+        let features = resolve_features(&args).unwrap().features;
+        assert!(!features.contains(&"ward_service_channel".to_string()));
+    }
+
+    #[test]
+    fn the_kernel_maps_the_service_channel_too() {
+        // Two project.toml tables have to agree, and the default model has a secure monitor, so
+        // its firmware really is built through both.
+        let args = ResolvedBuildArgs {
+            project: Project::Kernel,
+            ..ResolvedBuildArgs::default()
+        };
+
+        let features = resolve_features(&args).unwrap().features;
+        assert!(features.contains(&"ward_service_channel".to_string()));
+    }
+
+    #[test]
+    fn a_bitcoin_only_build_drops_the_service_channel_without_an_error() {
+        // SILENTLY, replacing a bail. WARD's handlers are registered only on a universal build,
+        // so the interface would carry nothing -- and the channel being on by default means a
+        // refusal here would break every default bitcoin-only build.
+        let mut args = ResolvedBuildArgs {
+            btc_only: true,
+            ..ResolvedBuildArgs::default()
+        };
+        args.resolve_cross_option_rules(); // what `from_build_args` does
+
+        let features = resolve_features(&args).unwrap().features;
+        assert!(!features.contains(&"ward_service_channel".to_string()));
+    }
+
+    #[test]
+    fn a_project_that_never_registers_the_interface_is_not_charged_for_it() {
+        // The bootloader maps neither the option nor the interface, and already sits at exactly
+        // the budget with vcp + debug-link. Charging it for WARD would break `PYOPT=0` builds of
+        // a project that cannot serve WARD at all.
+        let args = ResolvedBuildArgs {
+            project: Project::Bootloader,
+            debug_link: true,
+            dbg_console: ConsoleType::Vcp,
+            ..ResolvedBuildArgs::default()
+        };
+
+        assert!(check_usb_endpoint_budget(&args, false).is_ok());
     }
 
     #[test]
