@@ -77,11 +77,10 @@ def require_attested_round(what: str) -> "tuple[int, bytes]":
 
     from . import round as sync_round
 
-    ctx = sync_round.get()
-    if ctx is None or ctx[0] != sync_round._ATTESTED:
+    attested = sync_round.get_attested()
+    if attested is None:
         raise DataError("no attested sync round to " + what)
-    _state, _nonce, counter, mac = ctx
-    return counter, mac
+    return attested
 
 
 async def verify_head_mac(
