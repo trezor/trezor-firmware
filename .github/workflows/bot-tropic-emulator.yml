@@ -57,7 +57,7 @@ jobs:
   issue_open:
     name: Open an issue for trezor-user-env
     runs-on: ubuntu-latest
-    if: github.event.action == 'closed' && github.event.merged == true
+    if: github.event.action == 'closed' && github.event.merged == true && github.repository == 'trezor/trezor-firmware'
     env:
       URL: ${{ github.event.pull_request.html_url }}
     steps:
