@@ -166,14 +166,18 @@ class TestWardStore(unittest.TestCase):
         )
         self.assertEqual(ward_store.store_get(_WALLET_A, _full(keys[0])), replacement)
 
-    def test_an_unknown_version_is_still_findable_and_erasable(self):
-        """The frozen-prefix contract, which is what makes "report, do not wipe" possible.
+    def test_an_unknown_version_is_not_findable_by_identity(self):
+        """The frozen-prefix contract, and the boundary between its two lookups.
 
-        A record written by a newer firmware cannot be parsed here, and the erase rule forbids
-        deleting what the user has not agreed to lose. So this build must still be able to FIND
-        it -- to name it on a confirmation screen -- and to remove it once they do. If the
-        prefix were not frozen, the only options left would be to strand the record forever or
-        to wipe blind.
+        A record written by a newer firmware cannot be parsed here: the version byte is what says
+        which key the bytes after the header are, so matching it by identity would mean reading an
+        unknown layout as if it were this one. `store_find` therefore takes the version as part of
+        the match and does not see such a record at all.
+
+        That is not the same as stranding it. The erase rule forbids deleting what the user has not
+        agreed to lose, so this build must still be able to FIND the record -- to name it on a
+        confirmation screen -- and to remove it once they do, and it does that by SLOT: see
+        `test_an_unreadable_record_is_findable_by_slot_and_removable`.
         """
         rec = bytearray(_record(_WALLET_A, _ID_1))
         rec[0] = 0x7F  # a version this build knows nothing about
@@ -184,11 +188,12 @@ class TestWardStore(unittest.TestCase):
 
         common.set(common.APP_WARD, 0x40, rec)
 
-        self.assertEqual(ward_store.store_find(_WALLET_A, _full(_ID_1)), 0)
-        self.assertEqual(ward_store.store_get(_WALLET_A, _full(_ID_1)), rec)
-
-        ward_store.store_delete(_WALLET_A, _full(_ID_1))
+        self.assertIsNone(ward_store.store_find(_WALLET_A, _full(_ID_1)))
         self.assertIsNone(ward_store.store_get(_WALLET_A, _full(_ID_1)))
+
+        # ...while the by-slot path both sees it and hands back the bytes untouched
+        self.assertEqual(ward_store.store_find_unreadable(_WALLET_A), 0)
+        self.assertEqual(ward_store.store_read_slot(0), rec)
 
     def test_deleting_frees_the_slot_and_leaves_neighbours_alone(self):
         rec1 = _record(_WALLET_A, _ID_1, b"one")
@@ -510,7 +515,9 @@ class TestWardStore(unittest.TestCase):
         app_id and identifier have their own framing, so a long enough pair would blow the budget
         while every individual field looked legal -- and "20 records fit" would stop being true.
         """
-        huge = _record(_WALLET_A, _identity(b"x" * 200), b"v")
+        # A legal value at its own maximum, and a legal identifier -- 200 bytes is well inside the
+        # 0xFFFF the framing allows. Only their SUM is past the record cap, which is the point.
+        huge = _record(_WALLET_A, _identity(b"x" * 200), b"v" * ward_store.MAX_VALUE_LEN)
         self.assertGreater(len(huge), ward_store.MAX_RECORD_LEN)
         with self.assertRaises(ValueError):
             ward_store.store_put(
