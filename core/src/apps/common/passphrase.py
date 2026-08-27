@@ -5,7 +5,7 @@ import storage.device as storage_device
 from trezor import utils
 from trezor.wire import DataError
 
-_MAX_PASSPHRASE_LEN = const(50)
+MAX_PASSPHRASE_LEN = const(128)
 
 if TYPE_CHECKING:
     from trezor.messages import ThpCreateNewSession
@@ -42,8 +42,8 @@ async def get_passphrase(msg: ThpCreateNewSession) -> str:
         if passphrase:
             await _handle_displaying_passphrase_from_host(passphrase)
 
-    if len(passphrase.encode()) > _MAX_PASSPHRASE_LEN:
-        raise DataError(f"Maximum passphrase length is {_MAX_PASSPHRASE_LEN} bytes")
+    if len(passphrase.encode()) > MAX_PASSPHRASE_LEN:
+        raise DataError(f"Maximum passphrase length is {MAX_PASSPHRASE_LEN} bytes")
 
     return passphrase
 
@@ -53,7 +53,7 @@ async def _get_on_device() -> str:
     from trezor.ui.layouts import request_passphrase_on_device
 
     workflow.close_others()  # request exclusive UI access
-    passphrase = await request_passphrase_on_device(_MAX_PASSPHRASE_LEN)
+    passphrase = await request_passphrase_on_device(MAX_PASSPHRASE_LEN)
 
     return passphrase
 
@@ -83,12 +83,12 @@ if not utils.USE_THP:
             if storage_device.get_passphrase_always_on_device():
                 from trezor.ui.layouts import request_passphrase_on_device
 
-                passphrase = await request_passphrase_on_device(_MAX_PASSPHRASE_LEN)
+                passphrase = await request_passphrase_on_device(MAX_PASSPHRASE_LEN)
             else:
                 passphrase = await _request_on_host()
-            if len(passphrase.encode()) > _MAX_PASSPHRASE_LEN:
+            if len(passphrase.encode()) > MAX_PASSPHRASE_LEN:
                 raise DataError(
-                    f"Maximum passphrase length is {_MAX_PASSPHRASE_LEN} bytes"
+                    f"Maximum passphrase length is {MAX_PASSPHRASE_LEN} bytes"
                 )
 
             return passphrase
@@ -117,7 +117,7 @@ if not utils.USE_THP:
 
             if passphrase is not None:
                 raise DataError("Passphrase provided when it should not be")
-            return await request_passphrase_on_device(_MAX_PASSPHRASE_LEN)
+            return await request_passphrase_on_device(MAX_PASSPHRASE_LEN)
 
         if passphrase is None:
             raise DataError(

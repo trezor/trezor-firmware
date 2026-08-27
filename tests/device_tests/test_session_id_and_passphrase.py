@@ -400,14 +400,16 @@ def test_passphrase_length(test_ctx: TrezorTestContext):
             assert expected_result is False, "Call should have succeeded"
             assert e.code == FailureType.DataError
 
-    # 50 is ok
-    call(passphrase="A" * 50, expected_result=True)
-    # 51 is not
-    call(passphrase="A" * 51, expected_result=False)
-    # "š" has two bytes - 48x A and "š" should be fine (50 bytes)
-    call(passphrase="A" * 48 + "š", expected_result=True)
-    # "š" has two bytes - 49x A and "š" should not (51 bytes)
-    call(passphrase="A" * 49 + "š", expected_result=False)
+    max_size = test_ctx.features.max_passphrase_len
+
+    # the exact limit (N) should work
+    call(passphrase="A" * max_size, expected_result=True)
+    # (N+1) should fail
+    call(passphrase="A" * (max_size + 1), expected_result=False)
+    # "š" has two bytes - (N-2) x A and "š" should be fine (N bytes)
+    call(passphrase="A" * (max_size - 2) + "š", expected_result=True)
+    # "š" has two bytes - (N-1) x A and "š" should not (N+1 bytes)
+    call(passphrase="A" * (max_size - 1) + "š", expected_result=False)
 
 
 @pytest.mark.models("core")

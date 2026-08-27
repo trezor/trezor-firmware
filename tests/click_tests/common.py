@@ -26,6 +26,20 @@ class CommonPass:
 
     EMPTY_ADDRESS = "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
 
+    AAA_LIMIT = 128 * "a"
+    AAA_LIMIT_ADDRESS = "mmAeEYhe4kRjzDdjUWiCNsaQ4G7VLR97QG"
+
+    AAA_SHORTER = AAA_LIMIT[:-1]
+    AAA_SHORTER_ADDRESS = "mws5kLVC5LKYyWr67XrgD8yZBW6tgKMrvq"
+
+    AAA_LONGER = AAA_LIMIT + "a"
+
+
+assert len(CommonPass.AAA_LIMIT) == 128
+assert len(CommonPass.AAA_SHORTER) == 127
+assert len(CommonPass.AAA_LONGER) == 129
+assert CommonPass.AAA_SHORTER_ADDRESS != CommonPass.AAA_LIMIT_ADDRESS
+
 
 # Passphrase/Label keyboard layouts
 class KeyboardCategory(Enum):
