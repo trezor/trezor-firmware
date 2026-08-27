@@ -41,6 +41,7 @@ from ...ward_app import reject_flow
 from .connect import prepare_channel_for_pairing
 
 pytestmark = [
+    pytest.mark.ward,
     pytest.mark.protocol("thp"),
     pytest.mark.models("core"),
 ]

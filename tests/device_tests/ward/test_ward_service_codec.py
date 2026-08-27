@@ -37,6 +37,7 @@ from ...ward_service import MockWardService
 # including one whose wallet interface speaks THP. What these tests need is a codec SERVICE
 # endpoint, which is what the marker below asks for.
 pytestmark = [
+    pytest.mark.ward,
     pytest.mark.models("core"),
     pytest.mark.ward_transport("service-codec"),
 ]

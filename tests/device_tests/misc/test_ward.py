@@ -91,7 +91,7 @@ from ...ward_wm import MockWM
 # `WardReconcile`, `WardVerifyChain`. Those messages do not exist in a firmware that serves WARD
 # over its own channel: the two transports are mutually exclusive by build, with no runtime
 # fallback, so on such a build these tests are inapplicable rather than failing.
-pytestmark = pytest.mark.ward_transport("connect")
+pytestmark = [pytest.mark.ward, pytest.mark.ward_transport("connect")]
 
 _APP = "TEST"
 

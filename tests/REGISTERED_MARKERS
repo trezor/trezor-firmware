@@ -18,6 +18,7 @@ solana
 stellar
 tezos
 tron
+ward
 ward_transport
 xfail_if_no_optiga
 zcash
