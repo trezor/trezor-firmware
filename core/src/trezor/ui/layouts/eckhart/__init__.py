@@ -501,7 +501,7 @@ async def confirm_payment_request(
                 refund_account_info,
             )
         )
-    menu = Menu.root(menu_items, TR.send__cancel_sign)
+    menu = Menu.root(menu_items, TR.buttons__cancel_sign)
 
     with main_ctx as main_layout:
         while True:
@@ -990,7 +990,7 @@ async def confirm_trade(
     menu_items = [create_details(TR.address__title_receive_address, account_info)]
     for k, v in extra_menu_items:
         menu_items.append(create_details(k, v))
-    menu = Menu.root(menu_items, TR.send__cancel_sign)
+    menu = Menu.root(menu_items, TR.buttons__cancel_sign)
 
     with trade_ctx as trade_layout:
         return await interact_with_menu(trade_layout, menu, "confirm_trade")
@@ -1059,14 +1059,14 @@ if not utils.BITCOIN_ONLY:
             f"{TR.ethereum__unknown_contract_address} {TR.words__know_what_your_doing}",
             title=TR.words__important,
             menu_title=title,
-            verb_cancel=TR.send__cancel_sign,
+            verb_cancel=TR.buttons__cancel_sign,
         )
 
     def confirm_solana_unknown_token_warning() -> Awaitable[None]:
         return show_danger(
             "unknown_token_warning",
             content=f"{TR.solana__unknown_token_address} {TR.words__know_what_your_doing}",
-            verb_cancel=TR.send__cancel_sign,
+            verb_cancel=TR.buttons__cancel_sign,
         )
 
     async def confirm_ethereum_tx(
@@ -1124,7 +1124,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu.root(menu_items, TR.send__cancel_sign),
+                    Menu.root(menu_items, TR.buttons__cancel_sign),
                     "confirm_output",
                     br_code,
                 )
@@ -1361,7 +1361,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu.root(menu_items, TR.send__cancel_sign),
+                    Menu.root(menu_items, TR.buttons__cancel_sign),
                     f"{br_name}/intro",
                     br_code,
                 )
@@ -1375,7 +1375,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu.root(menu_items, TR.send__cancel_sign),
+                    Menu.root(menu_items, TR.buttons__cancel_sign),
                     f"{br_name}/vault_name",
                     br_code,
                 )
@@ -1392,7 +1392,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu.root(menu_items, TR.send__cancel_sign),
+                    Menu.root(menu_items, TR.buttons__cancel_sign),
                     f"{br_name}/amount",
                     br_code,
                 )
@@ -1410,7 +1410,7 @@ if not utils.BITCOIN_ONLY:
                 ) as layout:
                     return await interact_with_menu(
                         layout,
-                        Menu.root(menu_items, TR.send__cancel_sign),
+                        Menu.root(menu_items, TR.buttons__cancel_sign),
                         f"{br_name}/extra_data",
                         br_code,
                     )
@@ -1430,7 +1430,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu.root(menu_items, TR.send__cancel_sign),
+                    Menu.root(menu_items, TR.buttons__cancel_sign),
                     f"{br_name}/summary",
                     br_code,
                 )
@@ -1475,7 +1475,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu.root(menu_items, TR.send__cancel_sign),
+                    Menu.root(menu_items, TR.buttons__cancel_sign),
                     f"{br_name}/intro",
                     br_code,
                 )
@@ -1491,7 +1491,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu.root(menu_items, TR.send__cancel_sign),
+                    Menu.root(menu_items, TR.buttons__cancel_sign),
                     f"{br_name}/tokens",
                     br_code,
                 )
@@ -1509,7 +1509,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu.root(menu_items, TR.send__cancel_sign),
+                    Menu.root(menu_items, TR.buttons__cancel_sign),
                     f"{br_name}/summary",
                     br_code,
                 )
@@ -1663,7 +1663,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu.root(menu_items, TR.send__cancel_sign),
+                    Menu.root(menu_items, TR.buttons__cancel_sign),
                     br_name,
                     ButtonRequestType.SignTx,
                 )
@@ -1793,7 +1793,7 @@ if not utils.BITCOIN_ONLY:
             with ctx as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu.root(menu_items, TR.send__cancel_sign),
+                    Menu.root(menu_items, TR.buttons__cancel_sign),
                     br_name,
                     br_code,
                 )
@@ -1984,7 +1984,7 @@ if not utils.BITCOIN_ONLY:
         ) as layout:
             await interact_with_menu(
                 layout,
-                Menu.root(menu_items, TR.send__cancel_sign),
+                Menu.root(menu_items, TR.buttons__cancel_sign),
                 br_name,
                 br_code,
             )

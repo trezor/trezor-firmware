@@ -482,6 +482,7 @@
     },
     "buttons__cancel": "Annuler",
     "buttons__cancel_and_exit": "Annuler et quitter",
+    "buttons__cancel_sign": "Annuler la signature",
     "buttons__change": "Changer",
     "buttons__check": "Vérifier",
     "buttons__check_again": {
@@ -2926,7 +2927,7 @@
       "Delizia": "Mauvaise carte SD.",
       "Eckhart": ""
     },
-    "send__cancel_sign": "Annuler la signature",
+    "send__cancel_sign": "Annuler la signature.",
     "send__cancel_transaction": "Annuler la transaction",
     "send__confirm_sending": "Montant de l'envoi",
     "send__from_multiple_accounts": "Envoi depuis plusieurs comptes.",

@@ -97,7 +97,7 @@ async def confirm_unknown_smart_contract(
         contract.data,
         chunkify=False,
         verb=TR.buttons__confirm,
-        verb_cancel=TR.send__cancel_sign,
+        verb_cancel=TR.buttons__cancel_sign,
         br_code=ButtonRequestType.SignTx,
         ask_pagination=True,
     )

@@ -402,6 +402,7 @@
     "buttons__back_up": "Sichern",
     "buttons__cancel": "Abbrechen",
     "buttons__cancel_and_exit": "Abbrechen und schließen",
+    "buttons__cancel_sign": "Signieren abbrechen",
     "buttons__change": "Ändern",
     "buttons__check": "Prüfen",
     "buttons__check_again": {
@@ -3021,7 +3022,7 @@
       "Delizia": "Falsche SD-Karte.",
       "Eckhart": ""
     },
-    "send__cancel_sign": "Signieren abbrechen",
+    "send__cancel_sign": "Signieren abbrechen.",
     "send__cancel_transaction": "Transaktion abbrechen",
     "send__confirm_sending": "Betrag senden",
     "send__from_multiple_accounts": {

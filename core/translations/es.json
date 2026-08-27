@@ -397,6 +397,7 @@
     "buttons__back_up": "C. seg.",
     "buttons__cancel": "Cancelar",
     "buttons__cancel_and_exit": "Cancelar y salir",
+    "buttons__cancel_sign": "Cancelar firma",
     "buttons__change": "Cambiar",
     "buttons__check": "Verificar",
     "buttons__check_again": {
@@ -2686,7 +2687,7 @@
       "Delizia": "Tarjeta SD incorrecta.",
       "Eckhart": ""
     },
-    "send__cancel_sign": "Cancelar firma",
+    "send__cancel_sign": "Cancelar firma.",
     "send__cancel_transaction": "Cancelar transacción",
     "send__confirm_sending": "Enviando importe",
     "send__from_multiple_accounts": "Enviando desde varias cuentas.",

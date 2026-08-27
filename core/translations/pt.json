@@ -412,6 +412,7 @@
     },
     "buttons__cancel": "Cancelar",
     "buttons__cancel_and_exit": "Cancelar e sair",
+    "buttons__cancel_sign": "Cancelar assinatura",
     "buttons__change": "Alterar",
     "buttons__check": "Verificar",
     "buttons__check_again": {
@@ -2796,7 +2797,7 @@
       "Delizia": "Cartão SD incorreto.",
       "Eckhart": ""
     },
-    "send__cancel_sign": "Cancelar assinatura",
+    "send__cancel_sign": "Cancelar assinatura.",
     "send__cancel_transaction": "Cancelar transação",
     "send__confirm_sending": "Quantia de envio",
     "send__from_multiple_accounts": "Enviando de múltiplas contas.",
