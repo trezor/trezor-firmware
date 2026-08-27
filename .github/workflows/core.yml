@@ -63,6 +63,9 @@ jobs:
           - model: T2B1
             coins: universal
             type: normal
+          - model: T2B1
+            coins: btconly
+            type: normal
           - model: T3W1
             coins: universal
             type: debuglink
