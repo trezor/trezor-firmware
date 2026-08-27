@@ -1162,6 +1162,11 @@ void tropic_get_factory_privkey(curve25519_key privkey) {
   memcpy(privkey, factory_private, sizeof(curve25519_key));
 }
 
+// Gated on the same condition as the mock that replaces it, so the two halves
+// of the choice cannot drift apart: with TREZOR_EMULATOR the deterministic
+// stream in tropic/unix/tropic_mock.c provides this function instead.
+#ifndef TREZOR_EMULATOR
+
 bool tropic_random_buffer(void *buffer, size_t length) {
   tropic_driver_t *drv = &g_tropic_driver;
 
@@ -1184,6 +1189,8 @@ bool tropic_random_buffer(void *buffer, size_t length) {
 
   return true;
 }
+
+#endif  // TREZOR_EMULATOR
 
 void tropic_random_buffer_time(uint32_t *time_ms) {
   // Assuming the data size is 32 bytes

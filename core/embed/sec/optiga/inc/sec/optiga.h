@@ -63,6 +63,10 @@ bool __wur optiga_random_buffer(uint8_t *dest, size_t size);
 
 void optiga_random_buffer_time(uint32_t *time_ms);
 
+#ifdef TREZOR_EMULATOR
+void optiga_random_reseed(uint32_t seed);
+#endif
+
 bool __wur optiga_pin_init(optiga_ui_progress_t ui_progress);
 
 void optiga_pin_init_time(uint32_t *time_ms);
