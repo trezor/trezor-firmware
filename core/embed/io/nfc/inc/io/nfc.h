@@ -100,9 +100,10 @@ ts_t nfc_start_discovery(void);
 ts_t nfc_stop_discovery(void);
 
 /**
- * @brief Get current events of NFC device.
- * @param event [out] Pointer to store new event.
- * @return TS_OK when the function pass, otherwise an error.
+ * processing NFC operations. Poll SYSHANDLE_NFC with sysevents_poll() to
+ * progress NFC operations.
+ *
+ * `@return` true when an event is reported, otherwise false.
  */
 bool nfc_get_event(nfc_event_t *event);
 
