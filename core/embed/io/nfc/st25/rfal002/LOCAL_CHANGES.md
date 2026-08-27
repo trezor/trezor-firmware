@@ -10,8 +10,8 @@ RFAL middleware updated to version 4.2.0 from  https://www.st.com/en/embedded-so
 
 # Local changes
 
-1. rfalIsoDepInfo structure defined in include/rfal_isoDep.h and rfalNfcDepInfo include/rfal_nfcDep.h contains variable DSI which colide with the DSI macro in
-STM32 HAL drivers. To resolve this,  variale in RFAL library was refactored to DSI_ID.
+1. rfalIsoDepInfo structure defined in include/rfal_isoDep.h and rfalNfcDepInfo include/rfal_nfcDep.h contains variable DSI which collide with the DSI macro in
+STM32 HAL drivers. To resolve this, variable in RFAL library was refactored to DSI_ID.
 
 2. Add rfalISO14443ATransceiveCustomFrame() function to support ISO14443-3 customized messages with NFC backup card.
 
