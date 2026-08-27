@@ -1054,8 +1054,7 @@ void tropic_deinit(void) {
   memset(drv, 0, sizeof(*drv));
 }
 
-#ifdef TREZOR_PRODTEST
-static lt_handle_t *tropic_get_handle(void) {
+lt_handle_t *tropic_get_handle(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
@@ -1065,6 +1064,7 @@ static lt_handle_t *tropic_get_handle(void) {
   return &drv->handle;
 }
 
+#ifdef TREZOR_PRODTEST
 lt_handle_t *tropic_prodtest_init_and_get_handle(cli_t *cli) {
   if (tropic_init(cli) != LT_OK) {
     return NULL;

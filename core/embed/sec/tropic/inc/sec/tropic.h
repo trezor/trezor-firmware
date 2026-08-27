@@ -78,6 +78,8 @@ void tropic_deinit(void);
 void tropic_set_log_sink(cli_t* cli);
 #endif  // USE_TROPIC_LOGGING
 
+lt_handle_t* tropic_get_handle(void);
+
 typedef struct {
   uint32_t distribution_version;
   const lt_config_t* i_config;
