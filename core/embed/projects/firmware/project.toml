@@ -64,7 +64,7 @@ btc-only                      = { false = ["universal_fw"] }
 dbg-console                   = { vcp = ["dbg_console"], swo = ["dbg_console"], system-view = ["dbg_console"] }
 debug-link                    = { true = ["debuglink", "ui_debug"] }
 disable-animation             = { true = ["disable_animation"] }
-disable-ward-service-channel  = { false = ["ward_service_channel"] }
+enable-ward-service-channel   = { true = ["ward_service_channel"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 frozen                        = { true = ["frozen"] }
 log-stack-usage               = { true = ["log_stack_usage"] }

@@ -108,19 +108,22 @@ macro_rules! build_options {
 
                 // `pyopt = false` is the historical "test/debug emulator" shape, and those
                 // builds need DebugLink unless the caller deliberately disables it.
+                //
+                // A RULE THAT READS TWO OPTIONS HAS NOWHERE ELSE TO LIVE: a presets.toml `when`
+                // filter sees only model, project and emulator
+                // ([`crate::presets::PresetFilter`]), and a project.toml `[build-options]` entry
+                // is a lookup on one option's own value -- neither can say "unless some other
+                // option".
                 if o.pyopt == Some(false) && o.debug_link.is_none() {
                     o.debug_link = Some(true);
                 }
 
-                let mut resolved = Self {
+                Ok(Self {
                     project: args.project,
                     model: args.model,
                     emulator: args.emulator,
                     $($name: <$ty as ResolveValue>::resolve(o.$name),)+
-                };
-                resolved.resolve_cross_option_rules();
-
-                Ok(resolved)
+                })
             }
         }
 
@@ -210,16 +213,11 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map n1w1: bool,
 
-    /// Do not build the WARD service channel (its own dedicated interface).
-    /// The channel is built by default; without it the firmware serves WARD over
-    /// the ordinary connection. Implied by --btc-only, which has no WARD to serve.
-    #[arg(
-        long,
-        num_args = 0..=1,
-        default_missing_value = "true",
-        overrides_with = "disable_ward_service_channel"
-    )]
-    map disable_ward_service_channel: bool,
+    /// Build the WARD service channel (its own dedicated interface).
+    /// Off by default: without it the firmware serves WARD over the ordinary
+    /// connection. Cannot be combined with --btc-only, which has no WARD to serve.
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    map enable_ward_service_channel: bool,
 
     /// Serve the WARD service interface over THP instead of codec v1
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
@@ -290,28 +288,6 @@ build_options! {
 }
 
 impl ResolvedBuildArgs {
-    /// Rules that read MORE THAN ONE OPTION, applied once after the defaults,
-    /// preset and CLI layers have been folded together -- so every consumer of
-    /// [`ResolvedBuildArgs`] sees the same answer, including the clones the
-    /// dependency builds make.
-    ///
-    /// There is nowhere else they can live. A presets.toml `when` filter sees only
-    /// model, project and emulator ([`crate::presets::PresetFilter`]), and a
-    /// project.toml `[build-options]` entry is a lookup on one option's own value --
-    /// neither can say "unless some other option". Nor can this sit in
-    /// `resolve_features`: the `[build-options]` maps read these fields, so the
-    /// fields have to be right before the maps are consulted.
-    pub(crate) fn resolve_cross_option_rules(&mut self) {
-        // BITCOIN-ONLY FIRMWARE HAS NO WARD TO SERVE. WARD's message handlers are
-        // registered only on a universal build, so the dedicated interface would
-        // carry nothing behind it. Resolved off SILENTLY rather than refused: the
-        // channel is built by default, so a refusal would turn every default
-        // bitcoin-only build into an error.
-        if self.btc_only {
-            self.disable_ward_service_channel = true;
-        }
-    }
-
     /// Determines the Cargo profile to use
     pub fn cargo_profile_name(&self) -> &'static str {
         if self.debug {
@@ -406,7 +382,7 @@ mod tests {
             r#"
                 production  = { true = ["production"], false = ["dev_keys"] }
                 btc-only    = { false = ["universal_fw"] }
-                disable-ward-service-channel = { false = ["ward_service_channel"] }
+                enable-ward-service-channel = { true = ["ward_service_channel"] }
                 debug-link  = { true = ["debuglink", "ui_debug"] }
                 dbg-console = { vcp = ["dbg_console_vcp"], system-view = ["dbg_console_system_view"] }
             "#,
@@ -421,32 +397,18 @@ mod tests {
             ["dbg_console_system_view"]
         );
         assert!(map.dbg_console.as_ref().unwrap().swo.is_empty());
-        // The WARD channel maps on its OFF arm, being spelled as an opt-out.
+        // The WARD channel maps on its ON arm, being spelled as an opt-in.
         assert_eq!(
-            map.disable_ward_service_channel.as_ref().unwrap().off,
+            map.enable_ward_service_channel.as_ref().unwrap().on,
             ["ward_service_channel"]
         );
         assert!(
-            map.disable_ward_service_channel
+            map.enable_ward_service_channel
                 .as_ref()
                 .unwrap()
-                .on
+                .off
                 .is_empty()
         );
-    }
-
-    #[test]
-    fn a_bitcoin_only_build_implies_the_ward_service_channel_opt_out() {
-        // Bitcoin-only firmware registers no WARD handlers, so the interface would serve nothing.
-        // Applied here rather than refused in `resolve_features`, because the channel is built by
-        // default and a refusal would break every default bitcoin-only build.
-        let mut args = ResolvedBuildArgs {
-            btc_only: true,
-            ..ResolvedBuildArgs::default()
-        };
-        args.resolve_cross_option_rules();
-
-        assert!(args.disable_ward_service_channel);
     }
 
     #[test]

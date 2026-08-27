@@ -70,10 +70,11 @@ endif
 ifeq ($(N1W1),1)
 XTASK_BUILD_OPTS += --n1w1
 endif
-# ON BY DEFAULT, so only the opt-out needs a knob here; `WARD_SERVICE_CHANNEL=1` is a no-op and
-# deliberately has no arm.
-ifeq ($(WARD_SERVICE_CHANNEL),0)
-XTASK_BUILD_OPTS += --disable-ward-service-channel
+# OFF BY DEFAULT, so only the opt-in needs a knob here; `WARD_SERVICE_CHANNEL=0` is the default
+# and deliberately has no arm. `WARD_SERVICE_THP=1` implies it: the transport option says WHAT the
+# interface speaks, so it needs one to speak on, and xtask refuses it without the channel.
+ifneq ($(filter 1,$(WARD_SERVICE_CHANNEL) $(WARD_SERVICE_THP)),)
+XTASK_BUILD_OPTS += --enable-ward-service-channel
 endif
 ifeq ($(WARD_SERVICE_THP),1)
 XTASK_BUILD_OPTS += --ward-service-thp
