@@ -74,6 +74,7 @@ def get_features() -> Features:
     from trezor.ui import HEIGHT, WIDTH
 
     from apps.common import backup, mnemonic, safety_checks
+    from apps.common.passphrase import MAX_PASSPHRASE_LEN
 
     v_major, v_minor, v_patch, v_build = utils.VERSION
 
@@ -100,6 +101,7 @@ def get_features() -> Features:
         unit_btconly=utils.unit_btconly(),
         unit_packaging=utils.unit_packaging(),
         bootloader_locked=utils.bootloader_locked(),
+        max_passphrase_len=MAX_PASSPHRASE_LEN,
     )
 
     if (
