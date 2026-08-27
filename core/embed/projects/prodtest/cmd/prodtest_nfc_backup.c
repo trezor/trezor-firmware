@@ -29,6 +29,7 @@
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 
+#include "memzero.h"
 #include "prodtest_error_codes.h"
 
 #define NFC_BACKUP_MAX_PIN_TRIALS 10
@@ -256,7 +257,7 @@ static ts_t nfc_wait_for_tap(cli_t *cli, on_tap_callback_t callback) {
         cli_error(cli, PRODTEST_ERR_NFC_BACKUP_UNEXPECTED_CARD_TYPE,
                   "Unexpected card type (%d). Expected Type A NFC backup card.",
                   dev_info.type);
-        goto cleanup;
+        TSH_CHECK(false, TS_EINVAL);
       }
 
       // Call ON-TAP callback function
@@ -287,14 +288,9 @@ static ts_t nfc_backup_tap(cli_t *cli, on_tap_callback_t callback) {
   }
 
   status = nfc_wait_for_tap(cli, callback);
-
-  if (ts_error(status)) {
-    nfc_poll_stop();
-    return status;
-  }
-
+  memzero(&intr, sizeof(intr));
   nfc_poll_stop();
-  return TS_OK;
+  return status;
 }
 
 #define REGISTER_NFC_BACKUP_CMD(handler_name, tap_fn, err_code, err_msg) \
@@ -727,7 +723,7 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
   ts_t status = TS_OK;
 
   // Clear the initiator structure
-  memset(&intr, 0, sizeof(intr));
+  memzero(&intr, sizeof(intr));
 
   cli_trace(cli, "Handshake: start");
   cli_trace(cli, "Handshake step 1/4: selecting backup applet.");
@@ -739,6 +735,7 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
   nfc_apdu_message_t resp = {0};
 
   status = nfc_transceive(&cmd, &resp);
+  TSH_CHECK_OK(status);
 
   TSH_CHECK(resp.data_len == 2U, TS_EINVAL);
   TSH_CHECK(resp.data[0] == 0x90U && resp.data[1] == 0x00U, TS_EINVAL);
@@ -757,8 +754,8 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
   if (ts_error(status) || picc_psk_len != sizeof(picc_psk)) {
     cli_error(cli, PRODTEST_ERR_NFC_BACKUP_PSK_EXCHANGE_FAILED,
               "NFC PSK exchange failed");
-    goto cleanup;
   }
+  TSH_CHECK_OK(status);
 
   // Combine both share into PSK
   uint8_t psk[32] = {0};
@@ -773,14 +770,14 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
   if (ts_error(status)) {
     cli_error(cli, PRODTEST_ERR_NFC_BACKUP_NOISE_FAILED,
               "NFC noise handshake failed");
-    goto cleanup;
   }
+  TSH_CHECK_OK(status);
 
   cli_trace(cli, "Handshake step 4/4: secure channel established.");
   cli_trace(cli, "Handshake: completed");
 
 cleanup:
-  return status;
+  TSH_RETURN;
 }
 
 static ts_t api_authenticate(cli_t *cli, const char *pin, size_t pin_len) {
