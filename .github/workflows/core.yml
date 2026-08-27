@@ -75,6 +75,9 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       N1W1: ${{ matrix.n1w1 && '1' || '0' }}
+      # A debuglink build takes the vcp console and the debug link, which together with the WARD
+      # service interface is one USB endpoint over what the device core has.
+      WARD_SERVICE_CHANNEL: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       PRODUCTION: ${{ matrix.type == 'production' && '1' || '0' }}
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T3W1' && '1' || '0' }}
     steps:
@@ -105,7 +108,7 @@ jobs:
           retention-days: 7
 
   core_emu:
-    name: Build emu (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}, ${{ matrix.asan }}${{matrix.n1w1 && ', n1w1' || '' }})
+    name: Build emu (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}, ${{ matrix.asan }}${{matrix.n1w1 && ', n1w1' || '' }}${{ matrix.ward && format(', ward-{0}', matrix.ward) || '' }})
     runs-on: ubuntu-latest
     needs: param
     strategy:
@@ -126,11 +129,29 @@ jobs:
             type: debuglink
             asan: noasan
             n1w1: true  # currently N1W1 is not supported for normal builds
+          # CONNECT-MODE WARD BUILDS. The service channel is built by default, which makes every
+          # other emulator here a service build -- so the connect-mode request set
+          # (`WardEntryRequest`, `WardSync`, ...) needs a build with the channel turned off. One
+          # codec-wallet model and one THP model: those messages travel on the WALLET channel,
+          # whose protocol differs between the two.
+          - model: T3T1
+            coins: universal
+            type: debuglink
+            asan: noasan
+            n1w1: false
+            ward: connect
+          - model: T3W1
+            coins: universal
+            type: debuglink
+            asan: noasan
+            n1w1: false
+            ward: connect
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       N1W1: ${{ matrix.n1w1 && '1' || '0' }}
+      WARD_SERVICE_CHANNEL: ${{ matrix.ward == 'connect' && '0' || '1' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
@@ -142,10 +163,10 @@ jobs:
         if: matrix.coins == 'universal' && matrix.asan == 'noasan'
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
       - run: nix-shell --run "uv run make -C core test_emu_sanity"
-      - run: cp core/build-xtask/artifacts/latest/firmware-emu core/build-xtask/artifacts/latest/firmware-emu-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.n1w1 && '-n1w1' || '' }}
+      - run: cp core/build-xtask/artifacts/latest/firmware-emu core/build-xtask/artifacts/latest/firmware-emu-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.n1w1 && '-n1w1' || '' }}${{ matrix.ward && format('-{0}', matrix.ward) || '' }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
-          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}${{ matrix.n1w1 && '-n1w1' || '' }}
+          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}${{ matrix.n1w1 && '-n1w1' || '' }}${{ matrix.ward && format('-{0}', matrix.ward) || '' }}
           path: |
             core/build-xtask/artifacts/latest/firmware-emu*
             core/build-xtask/artifacts/latest/bootloader-emu
@@ -305,7 +326,7 @@ jobs:
   # See artifacts for a comprehensive report of UI.
   # See [docs/tests/ui-tests](../tests/ui-tests.md) for more info.
   core_device_test:
-    name: Device tests (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.asan }}, ${{ matrix.lang }}${{ matrix.n1w1 && ', n1w1' || '' }})
+    name: Device tests (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.asan }}, ${{ matrix.lang }}${{ matrix.n1w1 && ', n1w1' || '' }}${{ matrix.ward && format(', ward-{0}', matrix.ward) || '' }})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -324,14 +345,30 @@ jobs:
             asan: noasan
             lang: en
             n1w1: true
+          # THE CONNECT-MODE HALF OF THE WARD SUITE, against the emulators built with the service
+          # channel turned off. Filtered to `-m ward_transport`, because that is all these legs
+          # add: every other test already runs on the default builds above. btconly cannot serve
+          # here -- `tests/conftest.py` skips the whole `ward` marker on a bitcoin-only build.
+          - model: T3T1
+            coins: universal
+            asan: noasan
+            lang: en
+            n1w1: false
+            ward: connect
+          - model: T3W1
+            coins: universal
+            asan: noasan
+            lang: en
+            n1w1: false
+            ward: connect
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       TREZOR_MODEL: ${{ matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       PYTEST_TIMEOUT: ${{ matrix.asan == 'asan' && 600 || 400 }}
-      ACTIONS_DO_UI_TEST: ${{ matrix.coins == 'universal' && matrix.asan == 'noasan' }}
+      ACTIONS_DO_UI_TEST: ${{ matrix.coins == 'universal' && matrix.asan == 'noasan' && !matrix.ward }}
       TEST_LANG: ${{ matrix.lang }}
-      TESTOPTS: "--durations 10 --session-timeout ${{ matrix.model == 'T3W1' && '3000' || '1800' }}"  # pytest global timeout
+      TESTOPTS: "--durations 10 --session-timeout ${{ matrix.model == 'T3W1' && '3000' || '1800' }}${{ matrix.ward && ' -m ward_transport' || '' }}"  # pytest global timeout
     timeout-minutes: ${{ matrix.model == 'T3W1' && 60 || 40 }}  # CI job timeout
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
@@ -339,7 +376,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
-          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}${{ matrix.n1w1 && '-n1w1' || '' }}
+          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}${{ matrix.n1w1 && '-n1w1' || '' }}${{ matrix.ward && format('-{0}', matrix.ward) || '' }}
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
@@ -353,7 +390,7 @@ jobs:
         if: failure()
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
-          name: core-test-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.lang }}-${{ matrix.asan }}${{ matrix.n1w1 && '-n1w1' || '' }}
+          name: core-test-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.lang }}-${{ matrix.asan }}${{ matrix.n1w1 && '-n1w1' || '' }}${{ matrix.ward && format('-{0}', matrix.ward) || '' }}
           path: tests/trezor*.log
           retention-days: 7
         if: always()
@@ -365,7 +402,7 @@ jobs:
         if: ${{ always() && env.ACTIONS_DO_UI_TEST == 'true' && !matrix.n1w1 }}
         continue-on-error: true
       - uses: ./.github/actions/upload-coverage
-        if: ${{ !matrix.n1w1 }}
+        if: ${{ !matrix.n1w1 && !matrix.ward }}  # a `-m`-filtered run would dilute the report
 
   # Click tests - UI.
   # See [docs/tests/click-tests](../tests/click-tests.md) for more info.

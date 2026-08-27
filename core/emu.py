@@ -329,7 +329,12 @@ def cli(
         else:
             label = "Emulator"
 
-        assert emulator.client is not None
+        if emulator._client is None:
+            raise click.ClickException(
+                "This emulator build does not expose DebugLink, so it cannot initialize "
+                "a mnemonic. Rebuild with --debug-link, or use --pyopt false which "
+                "enables DebugLink by default."
+            )
         emulator.client.wipe_device()
         trezorlib.debuglink.load_device(
             emulator.client.get_session(passphrase=None),

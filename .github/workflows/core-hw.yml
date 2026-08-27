@@ -67,6 +67,8 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       PYTEST_TIMEOUT: 600  # 10m single test timeout
       PYOPT: 0
+      # vcp + debug link + the WARD service interface is one USB endpoint over budget.
+      WARD_SERVICE_CHANNEL: 0
       DISABLE_OPTIGA: 1
       DISABLE_TROPIC: 1
       STORAGE_INSECURE_TESTING_MODE: 1
@@ -125,6 +127,8 @@ jobs:
       TREZOR_MODEL: ${{ matrix.model }}
       PYTEST_TIMEOUT: 1200
       PYOPT: 0
+      # vcp + debug link + the WARD service interface is one USB endpoint over budget.
+      WARD_SERVICE_CHANNEL: 0
       DISABLE_OPTIGA: 1
       DISABLE_TROPIC: 1
       STORAGE_INSECURE_TESTING_MODE: 1

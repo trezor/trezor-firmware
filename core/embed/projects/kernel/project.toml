@@ -50,10 +50,10 @@ bootloader-devel              = { true = ["bootloader_devel"] }
 btc-only                      = { false = ["universal_fw"] }
 dbg-console                   = { vcp = ["dbg_console_vcp"], swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 debug-link                    = { true = ["debuglink"] }
+disable-ward-service-channel  = { false = ["ward_service_channel"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 production                    = { true = ["production"] }
 pyopt                         = { false = ["optiga_testing"] }
 storage-insecure-testing-mode = { true = ["storage_insecure_testing_mode"] }
 unsafe-fw                     = { true = ["unsafe_fw"] }
-ward-service-channel          = { true = ["ward_service_channel"] }
 ward-service-thp              = { true = ["ward_service_thp"] }

@@ -121,21 +121,21 @@ def get_tropic_model_port(worker_id: int) -> int:
         # was not configurable before 2.9.4, use the default value for singlecore upgrade tests
         return 28992
     else:
-        return 20000 + worker_id * 7 + 6
+        return 20000 + worker_id * 8 + 6
 
 
 def _get_port(worker_id: int) -> int:
     """Get a unique port for this worker process on which it can run.
 
     Guarantees to be unique because each worker has a unique ID.
-    #0=>20000, #1=>20007, #2=>20014, etc.
+    #0=>20000, #1=>20008, #2=>20016, etc.
     """
-    # One emulator instance occupies 7 consecutive ports:
+    # One emulator instance occupies 8 consecutive ports:
     # 1. normal link, 2. debug link and 3. webauthn fake interface
     # 4. USB serial 5. ble-emulator-data 6. ble-emulator-events
-    # 7. tropic model
+    # 7. tropic model 8. WARD service interface
     # See: *_PORT_OFFSET constants in core sources
-    return 20000 + worker_id * 7
+    return 20000 + worker_id * 8
 
 
 class EmulatorWrapper:
