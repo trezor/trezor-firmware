@@ -71,9 +71,8 @@
 // + round-trips but coarser early-reject. See fwt_on_chunk / fwt_on_headers.
 #define FW_TRANSPORT_BLOCK_TARGET (64 * 1024)
 
-// The boot header is received into the upload engine's chunk_buffer, whose
-// contents are only valid until the first stream starts (see chunk_buffer in
-// wf_image_upload.h). BOOT_HEADER_MAXSIZE bounds the receive, so the borrowed
+// The boot header is received into the upload engine's chunk_buffer (see
+// fw_begin_preamble). BOOT_HEADER_MAXSIZE bounds the receive, so the borrowed
 // buffer must be at least that large.
 #if BOOT_HEADER_MAXSIZE > IMAGE_CHUNK_SIZE
 #error "IMAGE_CHUNK_SIZE too small to receive a boot header"
@@ -157,13 +156,38 @@ static workflow_result_t fw_begin_fail(protob_io_t *iface,
   return WF_ERROR;
 }
 
-workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
-  // --- Preamble: boot header (reuse the big chunk_buffer as scratch) + the
-  //     firmware manifest ("firmware directory") blob. ---
+// Everything phase 1 still needs once the boot header has been staged.
+// Extracted BY VALUE on purpose: `fw_begin_preamble` receives the header into
+// the upload engine's chunk_buffer, which the bootloader-code / nRF streams
+// below then reuse, so no pointer into that buffer (bh_buf, hdr, manifest) may
+// outlive the preamble. Returning a struct makes that the compiler's job
+// instead of a reviewer's.
+typedef struct {
+  merkle_proof_node_t firmware_root;  // copied out of the new boot header
+  uint32_t header_size;               // staged header size (stream offset)
+  bool full_bootloader;               // the bootloader CODE must be streamed
+} fw_begin_staged_t;
+
+// Phase-1 preamble: receive FirmwareBegin (boot header + manifest region + the
+// optional nRF fields), validate and authenticate both, confirm with the user,
+// erase the seed on a storage-domain change, and stage the boot header.
+//
+// Returns WF_OK to continue; any other result is terminal and already rendered
+// its own UI (see fw_begin_fail). `msg` and `nrf_arg` are filled by the receive
+// and outlive this call -- they must NOT point into chunk_buffer. `out` is
+// written only on WF_OK.
+static workflow_result_t fw_begin_preamble(protob_io_t *iface,
+                                           FirmwareBegin *msg,
+                                           firmware_begin_nrf_t *nrf_arg,
+                                           fw_begin_staged_t *out) {
   // Receive buffer for the manifest region (manifest + firmware Merkle proof)
   // -- the same object phase 2 stores in fwt_upload_handler_t.manifest_buf, so
   // it is bounded by the canonical FW_MANIFEST_REGION, not an ad-hoc size.
   static uint8_t module_headers[FW_MANIFEST_REGION];
+  // Boot header scratch, borrowed from the upload engine (see chunk_buffer in
+  // wf_image_upload.h). The receive is bounded by BOOT_HEADER_MAXSIZE, not by
+  // the buffer's own size, and the contents are valid only until the caller
+  // starts streaming -- which is what fw_begin_staged_t exists to respect.
   uint8_t *bh_buf = (uint8_t *)chunk_buffer;
   size_t bh_len = 0;
   size_t mh_len = 0;
@@ -172,25 +196,7 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   // (mh_len) and cryptographically authenticated (firmware_root), so this only
   // guarantees any stale attacker bytes from a prior call read back as zero.
   memset(module_headers, 0, sizeof(module_headers));
-  // nRF OTA fields (optional). Their own STABLE static buffers -- NOT
-  // chunk_buffer (bh_buf), which the bootloader-code / nRF streams reuse -- so
-  // the co-path + hash survive until the nRF push below.
-#ifdef USE_SMP
-  static uint8_t
-      nrf_co_path[MODEL_TREE_MAX_PROOF_NODES * sizeof(merkle_proof_node_t)];
-  static uint8_t nrf_image_hash[SHA256_DIGEST_LENGTH];
-  memset(nrf_co_path, 0, sizeof(nrf_co_path));
-  memset(nrf_image_hash, 0, sizeof(nrf_image_hash));
-  firmware_begin_nrf_t nrf_out = {.co_path_buf = nrf_co_path,
-                                  .co_path_size = sizeof(nrf_co_path),
-                                  .image_hash_buf = nrf_image_hash,
-                                  .image_hash_size = sizeof(nrf_image_hash)};
-  firmware_begin_nrf_t *nrf_arg = &nrf_out;
-#else
-  firmware_begin_nrf_t *nrf_arg = NULL;
-#endif
-  FirmwareBegin msg = {0};
-  if (sectrue != recv_msg_firmware_begin(iface, &msg, bh_buf,
+  if (sectrue != recv_msg_firmware_begin(iface, msg, bh_buf,
                                          BOOT_HEADER_MAXSIZE, &bh_len,
                                          module_headers, sizeof(module_headers),
                                          &mh_len, nrf_arg)) {
@@ -239,7 +245,7 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   boot_header_calc_merkle_root(hdr, BOOTLOADER_START + hdr->header_size, &root);
   const bool code_conforms =
       (sectrue == boot_header_check_signature(hdr, &root));
-  const bool have_code = msg.has_code_length && msg.code_length > 0;
+  const bool have_code = msg->has_code_length && msg->code_length > 0;
   const bool full_bootloader = !code_conforms;
 
   if (full_bootloader && !have_code) {
@@ -408,6 +414,45 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
     return fw_begin_fail(iface, "Staging failed");
   }
 
+  // Hand back only values -- every pointer into chunk_buffer dies here.
+  out->firmware_root = firmware_root;
+  out->header_size = header_size;
+  out->full_bootloader = full_bootloader;
+  return WF_OK;
+}
+
+workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
+  // nRF OTA fields (optional). Their own STABLE static buffers -- NOT
+  // chunk_buffer, which fw_begin_preamble borrows for the boot header and the
+  // bootloader-code / nRF streams then reuse -- so the co-path + hash survive
+  // until the nRF push below.
+#ifdef USE_SMP
+  static uint8_t
+      nrf_co_path[MODEL_TREE_MAX_PROOF_NODES * sizeof(merkle_proof_node_t)];
+  static uint8_t nrf_image_hash[SHA256_DIGEST_LENGTH];
+  memset(nrf_co_path, 0, sizeof(nrf_co_path));
+  memset(nrf_image_hash, 0, sizeof(nrf_image_hash));
+  firmware_begin_nrf_t nrf_out = {.co_path_buf = nrf_co_path,
+                                  .co_path_size = sizeof(nrf_co_path),
+                                  .image_hash_buf = nrf_image_hash,
+                                  .image_hash_size = sizeof(nrf_image_hash)};
+  firmware_begin_nrf_t *nrf_arg = &nrf_out;
+#else
+  firmware_begin_nrf_t *nrf_arg = NULL;
+#endif
+  FirmwareBegin msg = {0};
+
+  fw_begin_staged_t staged = {0};
+  const workflow_result_t preamble =
+      fw_begin_preamble(iface, &msg, nrf_arg, &staged);
+  if (preamble != WF_OK) {
+    return preamble;
+  }
+  // chunk_buffer is now free for the streams below.
+  const merkle_proof_node_t firmware_root = staged.firmware_root;
+  const uint32_t header_size = staged.header_size;
+  const bool full_bootloader = staged.full_bootloader;
+
   // --- Stage the new bootloader (streaming the code only if it changed) and
   //     capture the signature-verified modelRoot the new header commits to.
   //     model_root is valid for BOTH paths (header-only folds over the current
@@ -416,10 +461,10 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   merkle_proof_node_t model_root;
   if (full_bootloader) {
     // Stream the new bootloader code into the staging area after the staged
-    // header. NOTE: run_image_upload reuses chunk_buffer (== bh_buf), so the
-    // header/module data there must not be needed past this point --
-    // firmware_root is already copied out, the header is staged in flash. The
-    // stream suppresses its own Success (the single terminal one is below).
+    // header. This is the point where chunk_buffer stops holding the received
+    // boot header; fw_begin_preamble already handed back everything still
+    // needed (by value) and staged the header into flash. The stream suppresses
+    // its own Success (the single terminal one is below).
     image_upload_handler_t handler = {
         .target_area = &STAGING_AREA,
         .target_offset = header_size,
