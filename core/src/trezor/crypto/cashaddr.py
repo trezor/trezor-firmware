@@ -27,6 +27,7 @@ from .bech32 import convertbits
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 ADDRESS_TYPE_P2KH = const(0)
 ADDRESS_TYPE_P2SH = const(8)
+CASHADDR_CHECKSUM_SIZE = const(8)
 
 
 def cashaddr_polymod(values: list[int]) -> int:
@@ -51,10 +52,12 @@ def prefix_expand(prefix: str) -> list[int]:
 
 
 def _calculate_checksum(prefix: str, payload: list[int]) -> list[int]:
-    poly = cashaddr_polymod(prefix_expand(prefix) + payload + [0, 0, 0, 0, 0, 0, 0, 0])
+    poly = cashaddr_polymod(
+        prefix_expand(prefix) + payload + [0] * CASHADDR_CHECKSUM_SIZE
+    )
     out = []
-    for i in range(8):
-        out.append((poly >> 5 * (7 - i)) & 0x1F)
+    for i in range(CASHADDR_CHECKSUM_SIZE):
+        out.append((poly >> 5 * (CASHADDR_CHECKSUM_SIZE - 1 - i)) & 0x1F)
     return out
 
 
@@ -83,10 +86,16 @@ def decode(prefix: str, addr: str) -> tuple[int, bytes]:
     addr = addr.lower()
     decoded = _b32decode(addr)
 
+    # Payload must include the 8-symbol checksum.
+    if len(decoded) < CASHADDR_CHECKSUM_SIZE:
+        raise ValueError  # Cashaddr payload too short
+
     # verify_checksum
     checksum_verified = cashaddr_polymod(prefix_expand(prefix) + decoded) == 0
     if not checksum_verified:
-        raise ValueError("Bad cashaddr checksum")
+        raise ValueError  # Bad cashaddr checksum
 
-    data = bytes(convertbits(decoded, 5, 8))
-    return data[0], data[1:-6]
+    data = bytes(convertbits(decoded[:-CASHADDR_CHECKSUM_SIZE], 5, 8, False))
+    if not data:
+        raise ValueError  # Empty cashaddr payload
+    return data[0], data[1:]

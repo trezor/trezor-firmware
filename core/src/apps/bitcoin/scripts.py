@@ -91,8 +91,11 @@ def output_derive_script(address: str, coin: CoinInfo) -> AnyBytes:
         and coin.cashaddr_prefix is not None
         and address.startswith(coin.cashaddr_prefix + ":")
     ):
-        prefix, addr = address.split(":")
-        version, data = cashaddr.decode(prefix, addr)
+        try:
+            prefix, addr = address.split(":")
+            version, data = cashaddr.decode(prefix, addr)
+        except ValueError:
+            raise DataError("Invalid cashaddr address")
         if version == cashaddr.ADDRESS_TYPE_P2KH:
             version = coin.address_type
         elif version == cashaddr.ADDRESS_TYPE_P2SH:
