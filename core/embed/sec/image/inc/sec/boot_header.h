@@ -426,6 +426,71 @@ void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
                                   uint32_t code_address,
                                   merkle_proof_node_t* root);
 
+/** Size in bytes of a boot header Merkle proof (fixed part + nodes). Inline so
+ *  boot_header.c and boot_header_merkle.c share ONE definition of the layout
+ *  fact -- both derive the auth/proof/unauth boundaries from it. */
+static inline size_t boot_header_merkle_proof_size(
+    const boot_header_merkle_proof_t* proof) {
+  return sizeof(boot_header_merkle_proof_t) +
+         (size_t)proof->node_count * sizeof(proof->nodes[0]);
+}
+
+/**
+ * @brief Extent of the digest-relevant boot header PREFIX: the authenticated
+ *        part plus the Merkle proof, excluding the unauthenticated part.
+ *
+ * Validates just enough of `data` to locate that boundary: the TRZQ magic, that
+ * `auth_size` is sane and inside `len`, and that the proof's `node_count` is
+ * bounded and its nodes fit. Deliberately does NOT require the unauthenticated
+ * part to be present -- firmware is handed only the prefix, because the
+ * signatures it holds are ~15.8 KB and firmware cannot verify them anyway (that
+ * needs the new bootloader CODE, which only the bootloader ever sees).
+ *
+ * @param data Start of a boot header, or of a prefix of one
+ * @param len Bytes available at `data`
+ * @param out_extent Receives auth_size + proof size
+ * @return secbool -- sectrue iff the prefix is well-formed within `len`
+ */
+secbool boot_header_prefix_extent(const uint8_t* data, size_t len,
+                                  size_t* out_extent);
+
+/**
+ * @brief Digest identifying the exact release an interaction-less upgrade was
+ *        confirmed for.
+ *
+ * `H(header prefix || firmware manifest)`, where the prefix is the extent
+ * `boot_header_prefix_extent` reports. Firmware computes it over what it showed
+ * the user; the bootloader recomputes it over what the host actually delivered
+ * and refuses to install without user interaction unless the two agree. Both
+ * sides call THIS function, so the two can never drift apart.
+ *
+ * What each half pins:
+ *   - the AUTH part: bootloader version, `monotonic_version`, `code_size` and
+ *     `firmware_root` -- hence which release;
+ *   - the Merkle PROOF: modelRoot, hence which nRF image is admissible (the nRF
+ *     leaf is a sibling of the bootloader leaf, not a descendant, so
+ *     `firmware_root` alone does not cover it);
+ *   - the MANIFEST: the variant, `firmware_version` and every module
+ *     `code_hash` -- including a CUSTOM variant's app hash, which the
+ *     founder-signed variant leaf deliberately zeroes.
+ *
+ * The UNAUTHENTICATED part is deliberately excluded. It holds the signatures (a
+ * confirmation must identify the payload, not which of several valid signatures
+ * accompanied it) and `firmware_type`, which the bootloader REWRITES while
+ * staging -- including it would make the digest unreproducible from an already
+ * installed header.
+ *
+ * @param prefix Boot header prefix (auth part + Merkle proof)
+ * @param prefix_len Its length, from `boot_header_prefix_extent`
+ * @param manifest Firmware manifest bytes as received
+ * @param manifest_len Manifest length (`firmware_manifest_size`)
+ * @param out Receives the digest
+ * @return secbool -- sectrue on success
+ */
+secbool boot_header_consent_digest(const uint8_t* prefix, size_t prefix_len,
+                                   const uint8_t* manifest, size_t manifest_len,
+                                   merkle_proof_node_t* out);
+
 /**
  * Header-only manifest authenticity: variant leaf == firmware_root (via proof).
  *
@@ -595,6 +660,17 @@ void firmware_module_chain_step(const uint8_t* h_prev, const uint8_t* data,
  * authenticated manifest variant, never taken from an untrusted input. Storage
  * entropy / wipe-on-change key off this value.
  */
+/**
+ * @brief Display identity for a firmware_type byte.
+ *
+ * "Trezor", "Trezor Bitcoin-only", or an UNSAFE marker for the custom /
+ * factory-test / unknown cases. ONE definition shared by every binary that must
+ * name a firmware -- the secmon for the INSTALLED image, the coreapp for an
+ * OFFERED one -- so the string the user confirms before rebooting is the string
+ * the device reports afterwards. Never returns NULL.
+ */
+const char* firmware_vendor_str(uint8_t firmware_type);
+
 uint8_t firmware_type_compose(uint32_t variant);
 
 /** Extracts the variant (fw_variant_t) from a firmware_type byte. */
