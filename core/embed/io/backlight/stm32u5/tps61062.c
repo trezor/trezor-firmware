@@ -53,8 +53,8 @@
 // Rs (1 steps ~15.6mV)
 #define MAX_STEPS 31
 
-// DAC value after reset
-#define DEFAULT_STEP 16
+// DAC value after reset ((250mV - 15.6mV) / 15.6mV = 15)
+#define DEFAULT_STEP 15
 
 // Approximated default level after reset
 #define DEFAULT_LEVEL ((DEFAULT_STEP) * (BACKLIGHT_MAX_LEVEL) / (MAX_STEPS))
