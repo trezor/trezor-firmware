@@ -122,12 +122,6 @@ secbool boot_header_check_signature(const boot_header_auth_t* hdr,
   return sectrue;
 }
 
-static size_t boot_header_merkle_proof_size(
-    const boot_header_merkle_proof_t* proof) {
-  return sizeof(boot_header_merkle_proof_t) +
-         proof->node_count * sizeof(proof->nodes[0]);
-}
-
 static const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
     const boot_header_auth_t* hdr) {
   // Check if the merkle_proof.path_len field is within the header

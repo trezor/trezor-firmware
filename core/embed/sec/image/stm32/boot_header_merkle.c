@@ -27,12 +27,18 @@
  * boot_header_merkle_internal.h.
  */
 
-/* The whole file is secure-mode only on device, exactly as boot_header.c is.
- * The cross-validation harness compiles it too, against shimmed types and a
- * host SHA-256, which is what makes it cross-validation rather than a
- * reimplementation
- * -- hence the second arm. */
-#if defined(SECURE_MODE) || defined(BOOT_HEADER_MERKLE_SHIMMED)
+/* Deliberately NOT secure-mode gated, unlike boot_header.c. Everything here is
+ * pure layout + hash math over a caller-supplied buffer -- no keys, no flash,
+ * no MPU-gated regions -- so it is equally valid unprivileged. The coreapp
+ * needs it to derive the interaction-less upgrade consent digest from a
+ * preamble the host sent (check_firmware_header), and doing that parse
+ * unprivileged is the SAFER placement: a wrong digest can only get the install
+ * refused by the bootloader, which recomputes it independently. gc-sections
+ * drops whatever a given binary does not call.
+ *
+ * The cross-validation harness compiles this file too, against shimmed types
+ * and a host SHA-256, which is what makes it cross-validation rather than a
+ * reimplementation. */
 
 /* Under the harness these come from its shim header, forced in on the command
  * line; on device from the real ones. */
@@ -376,4 +382,89 @@ secbool firmware_type_is_official(uint8_t firmware_type) {
   }
 }
 
-#endif  // SECURE_MODE || shimmed
+// Display identity for a firmware_type byte. ONE definition shared by every
+// binary that has to name a firmware: the secmon for the INSTALLED image
+// (firmware_get_vendor), the coreapp for an OFFERED one
+// (check_firmware_header). So the string the user confirms before rebooting is
+// the string the device reports afterwards.
+//
+// FIH: assume UNSAFE. Only a POSITIVE custom == secfalse AND a known official
+// variant name a trusted vendor; a glitch or an unknown variant stays UNSAFE.
+const char* firmware_vendor_str(uint8_t firmware_type) {
+  if (firmware_type_is_custom(firmware_type) != secfalse) {
+    return "UNSAFE, DO NOT USE!";
+  }
+  switch (firmware_type_variant(firmware_type)) {
+    case FW_VARIANT_PRODTEST:
+      // Founder-signed but factory-only -- must never be used in the field.
+      return "UNSAFE, FACTORY TEST ONLY";
+    case FW_VARIANT_BITCOIN_ONLY:
+      return "Trezor Bitcoin-only";
+    case FW_VARIANT_UNIVERSAL:
+      return "Trezor";
+    default:
+      return "UNSAFE, DO NOT USE!";
+  }
+}
+
+// --- Interaction-less upgrade consent -------------------------------------
+// Lives here rather than in boot_header.c because it is pure layout + hash math
+// (no keys, no flash), and because BOTH sides of the consent handshake -- the
+// bootloader from a full header, firmware from just the prefix -- must compute
+// bit-identical results. That is exactly what this file's cross-validation
+// harness exists to prove.
+
+secbool boot_header_prefix_extent(const uint8_t* data, size_t len,
+                                  size_t* out_extent) {
+  if (data == NULL || out_extent == NULL) {
+    return secfalse;
+  }
+  if (len < sizeof(boot_header_auth_t)) {
+    return secfalse;
+  }
+
+  const boot_header_auth_t* hdr = (const boot_header_auth_t*)data;
+  if (hdr->magic != BOOT_HEADER_MAGIC_TRZQ) {
+    return secfalse;
+  }
+  // Same floor boot_header_auth_get enforces: the authenticated part must cover
+  // at least the struct this build knows about.
+  if (hdr->auth_size < sizeof(boot_header_auth_t)) {
+    return secfalse;
+  }
+  if (hdr->auth_size > len ||
+      len - hdr->auth_size < sizeof(boot_header_merkle_proof_t)) {
+    return secfalse;
+  }
+
+  // The Merkle proof sits immediately after the authenticated part.
+  const boot_header_merkle_proof_t* proof =
+      (const boot_header_merkle_proof_t*)(data + hdr->auth_size);
+  if (proof->node_count > BOOT_HEADER_MERKLE_PROOF_MAXLEN) {
+    return secfalse;
+  }
+  const size_t proof_size = boot_header_merkle_proof_size(proof);
+  if (len - hdr->auth_size < proof_size) {
+    return secfalse;
+  }
+
+  *out_extent = (size_t)hdr->auth_size + proof_size;
+  return sectrue;
+}
+
+secbool boot_header_consent_digest(const uint8_t* prefix, size_t prefix_len,
+                                   const uint8_t* manifest, size_t manifest_len,
+                                   merkle_proof_node_t* out) {
+  if (prefix == NULL || prefix_len == 0 || manifest == NULL ||
+      manifest_len == 0 || out == NULL) {
+    return secfalse;
+  }
+
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  IMAGE_HASH_UPDATE(&ctx, prefix, prefix_len);
+  IMAGE_HASH_UPDATE(&ctx, manifest, manifest_len);
+  IMAGE_HASH_FINAL(&ctx, out->bytes);
+
+  return sectrue;
+}
