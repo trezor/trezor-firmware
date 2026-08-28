@@ -61,9 +61,16 @@ typedef enum {
   UPLOAD_ERR_SECMON_TOO_BIG = -22,
 } upload_status_t;
 
-// Single staging buffer shared by the upload engine (one IMAGE_CHUNK_SIZE
-// chunk). Exposed so a pre-upload step can reuse it as scratch before any
-// streaming starts.
+// Single staging buffer shared by the upload engine: one IMAGE_CHUNK_SIZE chunk
+// is received here, verified by the handler, then written to flash.
+//
+// Exposed so a pre-upload step may borrow it as scratch BEFORE any streaming
+// starts (pq phase 1 receives the boot header into it). The borrow is one-way:
+// the first run_image_upload() overwrites the whole buffer, so nothing a
+// pre-upload step left here -- and no pointer into it -- may be read
+// afterwards. Anything that must survive the streams needs its own storage (as
+// the pq manifest and nRF co-path buffers do). Bound your receive by the
+// object's own maximum size, not by IMAGE_CHUNK_SIZE.
 extern uint32_t chunk_buffer[];
 
 typedef struct image_upload_handler image_upload_handler_t;

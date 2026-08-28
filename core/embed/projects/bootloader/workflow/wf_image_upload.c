@@ -62,7 +62,9 @@
 #define FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT 2
 
 // Single staging buffer shared by the upload engine. One IMAGE_CHUNK_SIZE chunk
-// is received here, verified by the handler, and then written to flash.
+// is received here, verified by the handler, and then written to flash. Also
+// lent out as pre-upload scratch -- see the declaration in wf_image_upload.h
+// for the lifetime rules that borrow carries.
 #ifndef TREZOR_EMULATOR
 __attribute__((section(".buf")))
 #endif
