@@ -163,9 +163,12 @@ static workflow_result_t fw_begin_fail(protob_io_t *iface,
 // outlive the preamble. Returning a struct makes that the compiler's job
 // instead of a reviewer's.
 typedef struct {
-  merkle_proof_node_t firmware_root;  // copied out of the new boot header
-  uint32_t header_size;               // staged header size (stream offset)
-  bool full_bootloader;               // the bootloader CODE must be streamed
+  uint32_t header_size;  // staged header size (stream offset)
+  bool full_bootloader;  // the bootloader CODE must be streamed
+  // Identifies the release just confirmed (boot_header_consent_digest). Handed
+  // to reboot_and_upgrade so phase 2 continues under the SAME identity the user
+  // agreed to -- and so a repeated FirmwareBegin re-authorizes itself.
+  merkle_proof_node_t consent;
 } fw_begin_staged_t;
 
 // Phase-1 preamble: receive FirmwareBegin (boot header + manifest region + the
@@ -286,6 +289,36 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
     return fw_begin_fail(iface, "Firmware manifest not authentic");
   }
 
+  // --- Interaction-less upgrade: was THIS release confirmed in firmware? ---
+  //     The digest covers the boot header's authenticated part + Merkle proof
+  //     (bootloader version, monotonic_version, firmware_root, modelRoot -- so
+  //     the nRF image too) and the manifest as received (variant,
+  //     firmware_version, every module code_hash). Recomputing it over what the
+  //     host actually delivered and comparing against the value firmware stored
+  //     in bootargs is what lets the confirm screen be skipped -- but only
+  //     together with an unchanged storage domain, see `skip_confirm` below.
+  //     FIH: `ilu` only ever flips on a POSITIVE match, so a skipped/glitched
+  //     check leaves the confirm shown. ---
+  merkle_proof_node_t consent = {0};
+  size_t prefix_len = 0;
+  if (sectrue != boot_header_prefix_extent((const uint8_t *)hdr,
+                                           hdr->header_size, &prefix_len) ||
+      sectrue != boot_header_consent_digest((const uint8_t *)hdr, prefix_len,
+                                            module_headers, manifest_len,
+                                            &consent)) {
+    return fw_begin_fail(iface, "Invalid boot header");
+  }
+  secbool ilu = secfalse;
+  if (bootargs_get_command() == BOOT_COMMAND_INSTALL_UPGRADE) {
+    boot_args_t args = {0};
+    bootargs_get_args(&args);
+    if (memcmp(args.hash, consent.bytes, sizeof(consent.bytes)) != 0) {
+      // Confirmed one release, delivered another.
+      return fw_begin_fail(iface, "Firmware mismatch");
+    }
+    ilu = sectrue;
+  }
+
   // --- Validate the module layout NOW, before confirming + rebooting. ---
   //     The same check runs in phase 2 (fwt_on_headers), but doing it here
   //     means a malformed / hostile manifest (notably a CUSTOM variant's
@@ -375,7 +408,17 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
                               ((uint32_t)manifest->firmware_version[1] << 8) |
                               ((uint32_t)manifest->firmware_version[2] << 16) |
                               ((uint32_t)manifest->firmware_version[3] << 24);
-  if (sectrue != empty_device &&
+  // An interaction-less install skips the confirm ONLY when the storage domain
+  // is unchanged. Crossing it erases the seed, and the warning the user must
+  // see for that ("SEED WILL BE ERASED!") lives on THIS screen -- the
+  // bootloader cannot verify that firmware's own confirm carried it. So a
+  // domain-changing interaction-less upgrade falls back to asking here rather
+  // than wiping silently. Legacy takes the same position, refusing an
+  // interaction-less update that changes vendor. FIH: both halves must be
+  // POSITIVELY true.
+  const secbool skip_confirm =
+      (ilu == sectrue && keep_seed == sectrue) ? sectrue : secfalse;
+  if (sectrue != empty_device && sectrue != skip_confirm &&
       CONFIRM != ui_screen_install_confirm_bootloader(
                      fw_version, firmware_root.bytes, keep_seed,
                      /*is_newvendor=*/keep_seed == sectrue ? secfalse : sectrue,
@@ -415,9 +458,9 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   }
 
   // Hand back only values -- every pointer into chunk_buffer dies here.
-  out->firmware_root = firmware_root;
   out->header_size = header_size;
   out->full_bootloader = full_bootloader;
+  out->consent = consent;
   return WF_OK;
 }
 
@@ -449,7 +492,6 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
     return preamble;
   }
   // chunk_buffer is now free for the streams below.
-  const merkle_proof_node_t firmware_root = staged.firmware_root;
   const uint32_t header_size = staged.header_size;
   const bool full_bootloader = staged.full_bootloader;
 
@@ -552,9 +594,11 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   // Reboot into the auto-update that installs the firmware modules (phase 2).
   // reboot_and_upgrade sets BOOT_COMMAND_INSTALL_UPGRADE atomically as part of
   // the reset (a plain reboot_device would overwrite it with
-  // BOOT_COMMAND_REBOOT via its own bootargs_set), carrying firmware_root as
-  // the pre-confirmed identity. Noreturn.
-  reboot_and_upgrade(firmware_root.bytes);
+  // BOOT_COMMAND_REBOOT via its own bootargs_set), carrying the consent digest
+  // of the release just confirmed -- the same value firmware would have
+  // supplied for an interaction-less upgrade, so a re-sent FirmwareBegin
+  // re-authorizes itself rather than re-prompting. Noreturn.
+  reboot_and_upgrade(staged.consent.bytes);
 }
 
 // ---------------------------------------------------------------------------
@@ -636,6 +680,28 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Invalid firmware manifest");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
+  }
+
+  // --- Bind the install to the VARIANT the user confirmed. ---
+  //     firmware_root is the root over EVERY variant of the release, so the
+  //     fold above admits any of them -- bitcoin-only in place of full, say.
+  //     Phase 1 resolved the confirmed variant into the boot header's
+  //     firmware_type before staging, and the boardloader has since installed
+  //     that header, so the installed firmware_type IS the confirmed variant
+  //     (it is trustworthy because the boot-header region is write-protected
+  //     from firmware). Phase 2 runs unattended, so this is the only thing
+  //     standing between an authenticated manifest and a variant swap. ---
+  const boot_header_unauth_t *bl_unauth = boot_header_unauth_get(bl);
+  if (bl_unauth == NULL) {
+    send_msg_failure(iface, FailureType_Failure_ProcessError,
+                     "Invalid boot header");
+    return UPLOAD_ERR_INVALID_IMAGE_HEADER;
+  }
+  if (manifest->firmware_variant !=
+      firmware_type_variant(bl_unauth->firmware_type)) {
+    send_msg_failure(iface, FailureType_Failure_ProcessError,
+                     "Firmware variant mismatch");
+    return UPLOAD_ERR_INVALID_IMAGE_HEADER;
   }
 
   // Keep the authenticated manifest and arm the streaming per-chunk verify.
