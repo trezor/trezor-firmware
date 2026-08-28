@@ -441,11 +441,30 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["PublicKey"]:
             return isinstance(msg, cls)
 
+    class MiniscriptDescriptor(protobuf.MessageType):
+        name: "str"
+        descriptor: "str"
+        coin_name: "str"
+
+        def __init__(
+            self,
+            *,
+            name: "str",
+            descriptor: "str",
+            coin_name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptDescriptor"]:
+            return isinstance(msg, cls)
+
     class GetAddress(protobuf.MessageType):
         address_n: "list[int]"
         coin_name: "str"
         show_display: "bool | None"
         multisig: "MultisigRedeemScriptType | None"
+        miniscript: "MiniscriptDescriptor | None"
         script_type: "InputScriptType"
         ignore_xpub_magic: "bool | None"
         chunkify: "bool | None"
@@ -457,6 +476,7 @@ if TYPE_CHECKING:
             coin_name: "str | None" = None,
             show_display: "bool | None" = None,
             multisig: "MultisigRedeemScriptType | None" = None,
+            miniscript: "MiniscriptDescriptor | None" = None,
             script_type: "InputScriptType | None" = None,
             ignore_xpub_magic: "bool | None" = None,
             chunkify: "bool | None" = None,
@@ -645,6 +665,7 @@ if TYPE_CHECKING:
         sequence: "int"
         script_type: "InputScriptType"
         multisig: "MultisigRedeemScriptType | None"
+        miniscript: "MiniscriptDescriptor | None"
         amount: "int"
         decred_tree: "int | None"
         witness: "AnyBytes | None"
@@ -667,6 +688,7 @@ if TYPE_CHECKING:
             sequence: "int | None" = None,
             script_type: "InputScriptType | None" = None,
             multisig: "MultisigRedeemScriptType | None" = None,
+            miniscript: "MiniscriptDescriptor | None" = None,
             decred_tree: "int | None" = None,
             witness: "AnyBytes | None" = None,
             ownership_proof: "AnyBytes | None" = None,

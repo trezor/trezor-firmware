@@ -97,6 +97,7 @@ EvoluGetDelegatedIdentityKey = 2104
 EvoluDelegatedIdentityKey = 2105
 EvoluIndexManagement = 2106
 EvoluIndexManagementResponse = 2107
+MiniscriptDescriptor = 2301
 BenchmarkListNames = 9100
 BenchmarkNames = 9101
 BenchmarkRun = 9102
