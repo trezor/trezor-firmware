@@ -289,6 +289,9 @@ build_pq: ## [prototype] build + sign a multi-variant PQ (pq_secure_boot) bundle
 	# flash / ready-to-OTA bundle in build-xtask/tree/$(TREZOR_MODEL)/.
 	# Override variants/target via TREE_OPTS, e.g.
 	#   make build_pq TREE_OPTS="--variant universal --flash-target universal"
+	# Debug console (boot log + MicroPython traceback over SWO/ITM port 0; pair with
+	# the "U5 - Firmware" launch config, output lands in the SWO: ITM channel):
+	#   make build_pq TREE_OPTS="--dbg-console swo"
 	python tools/trezor_core_tools/build_firmware_pq.py --model $(TREZOR_MODEL) $(TREE_OPTS)
 
 upload_pq: ## [prototype] OTA-upload a variant from the build_pq bundle zip
