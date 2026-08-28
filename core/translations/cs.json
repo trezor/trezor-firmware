@@ -2691,7 +2691,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Zrušení podpisu",
-      "Eckhart": "Zrušení podpisu."
+      "Eckhart": "Zrušit podpis?"
     },
     "send__cancel_transaction": "Zrušit transakci",
     "send__confirm_sending": "Odesílání částky",
