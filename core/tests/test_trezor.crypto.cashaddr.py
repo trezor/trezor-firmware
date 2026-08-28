@@ -34,6 +34,36 @@ VALID_CHECKSUM = [
     "bchreg:555555555555555555555555555555555555555555555udxmlmrz",
 ]
 
+INVALID_ADDRESS = [
+    "prefix:x32nx6hz",
+    "prEfix:x64nx6hz",
+    "prefix:x64nx6Hz",
+    "pref1x:6m8cxv73",
+    "prefix:x64nx6hz",
+    "prefix:",
+    ":u9wsx07j",
+    "bchreg:555555555555555555x55555555555555555555555555udxmlmrz",
+    "bchreg:555555555555555555555555555555551555555555555udxmlmrz",
+    "pre:fix:x32nx6hz",
+    "prefixx64nx6hz",
+    "",
+    ":",
+    "p",
+    "p:",
+    "p:g",
+    "p:gp",
+    "p:gpf",
+    "p:gpf8",
+    "p:gpf8m",
+    "p:gpf8m4",
+    "p:gpf8m4h",
+    "p:gpf8m4h7",
+    "rpzrrzpr:",
+    "rqiqkqiqr:",
+    "c:qvdy2z3",
+    "ecash:q9mcgrsqm",
+]
+
 VALID_ADDRESS = [
     (
         "1BpEi6DfDAUFd7GtittLSdBeYJvcoaVggu",
@@ -66,12 +96,30 @@ class TestCryptoCashAddr(unittest.TestCase):
     def test_valid_checksum(self):
         for test in VALID_CHECKSUM:
             prefix, addr = test.split(":")
-            cashaddr.decode(prefix, addr)
+            decoded = cashaddr._b32decode(addr.lower())
+            self.assertEqual(
+                cashaddr.cashaddr_polymod(cashaddr.prefix_expand(prefix) + decoded),
+                0,
+            )
 
     def test_invalid_checksum(self):
         for test in VALID_CHECKSUM:
             test += "xxx"
             prefix, addr = test.split(":")
+            decoded = cashaddr._b32decode(addr.lower())
+            self.assertNotEqual(
+                cashaddr.cashaddr_polymod(cashaddr.prefix_expand(prefix) + decoded),
+                0,
+            )
+            with self.assertRaises(ValueError):
+                cashaddr.decode(prefix, addr)
+
+    def test_invalid_address(self):
+        for test in INVALID_ADDRESS:
+            if ":" in test:
+                prefix, addr = test.split(":", 1)
+            else:
+                prefix, addr = "", test
             with self.assertRaises(ValueError):
                 cashaddr.decode(prefix, addr)
 
