@@ -101,6 +101,8 @@ trezor_message_impl! {
     ThpCreateNewSession => MessageType_ThpCreateNewSession,
     ThpCredentialRequest => MessageType_ThpCredentialRequest,
     ThpCredentialResponse => MessageType_ThpCredentialResponse,
+    MiniscriptRegisterPolicy => MessageType_MiniscriptRegisterPolicy,
+    MiniscriptGetAddress => MessageType_MiniscriptGetAddress,
     BenchmarkListNames => MessageType_BenchmarkListNames,
     BenchmarkNames => MessageType_BenchmarkNames,
     BenchmarkRun => MessageType_BenchmarkRun,

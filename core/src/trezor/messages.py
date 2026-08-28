@@ -463,6 +463,128 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["PublicKey"]:
             return isinstance(msg, cls)
 
+    class MiniscriptRegisterPolicy(protobuf.MessageType):
+        policy: "MiniscriptPolicy"
+        name: "str"
+        coin_name: "str"
+
+        def __init__(
+            self,
+            *,
+            policy: "MiniscriptPolicy",
+            name: "str",
+            coin_name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptRegisterPolicy"]:
+            return isinstance(msg, cls)
+
+    class MiniscriptRegisteredEntry(protobuf.MessageType):
+        policy_digest: "AnyBytes"
+        name: "str"
+
+        def __init__(
+            self,
+            *,
+            policy_digest: "AnyBytes",
+            name: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptRegisteredEntry"]:
+            return isinstance(msg, cls)
+
+    class MiniscriptDerivation(protobuf.MessageType):
+        internal: "bool"
+        index: "int"
+
+        def __init__(
+            self,
+            *,
+            internal: "bool",
+            index: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptDerivation"]:
+            return isinstance(msg, cls)
+
+    class MiniscriptRedeemPolicyType(protobuf.MessageType):
+        policy_index: "int"
+        derivation: "MiniscriptDerivation"
+
+        def __init__(
+            self,
+            *,
+            policy_index: "int",
+            derivation: "MiniscriptDerivation",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptRedeemPolicyType"]:
+            return isinstance(msg, cls)
+
+    class MiniscriptPolicy(protobuf.MessageType):
+        descriptor: "str"
+        keys: "list[MiniscriptKey]"
+
+        def __init__(
+            self,
+            *,
+            descriptor: "str",
+            keys: "list[MiniscriptKey] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptPolicy"]:
+            return isinstance(msg, cls)
+
+    class MiniscriptKey(protobuf.MessageType):
+        node: "HDNodeType"
+        derivation_path: "list[int]"
+        root_fingerprint: "int"
+
+        def __init__(
+            self,
+            *,
+            node: "HDNodeType",
+            root_fingerprint: "int",
+            derivation_path: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptKey"]:
+            return isinstance(msg, cls)
+
+    class MiniscriptGetAddress(protobuf.MessageType):
+        policy: "MiniscriptPolicy"
+        derivation: "MiniscriptDerivation"
+        coin_name: "str"
+        show_display: "bool | None"
+        chunkify: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            policy: "MiniscriptPolicy",
+            derivation: "MiniscriptDerivation",
+            coin_name: "str | None" = None,
+            show_display: "bool | None" = None,
+            chunkify: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptGetAddress"]:
+            return isinstance(msg, cls)
+
     class GetAddress(protobuf.MessageType):
         address_n: "list[int]"
         coin_name: "str"
@@ -616,12 +738,14 @@ if TYPE_CHECKING:
         serialize: "bool"
         coinjoin_request: "CoinJoinRequest | None"
         chunkify: "bool | None"
+        policies: "list[MiniscriptPolicy]"
 
         def __init__(
             self,
             *,
             outputs_count: "int",
             inputs_count: "int",
+            policies: "list[MiniscriptPolicy] | None" = None,
             coin_name: "str | None" = None,
             version: "int | None" = None,
             lock_time: "int | None" = None,
@@ -667,6 +791,7 @@ if TYPE_CHECKING:
         sequence: "int"
         script_type: "InputScriptType"
         multisig: "MultisigRedeemScriptType | None"
+        miniscript: "MiniscriptRedeemPolicyType | None"
         amount: "int"
         decred_tree: "int | None"
         witness: "AnyBytes | None"
@@ -689,6 +814,7 @@ if TYPE_CHECKING:
             sequence: "int | None" = None,
             script_type: "InputScriptType | None" = None,
             multisig: "MultisigRedeemScriptType | None" = None,
+            miniscript: "MiniscriptRedeemPolicyType | None" = None,
             decred_tree: "int | None" = None,
             witness: "AnyBytes | None" = None,
             ownership_proof: "AnyBytes | None" = None,
@@ -711,6 +837,7 @@ if TYPE_CHECKING:
         amount: "int"
         script_type: "OutputScriptType"
         multisig: "MultisigRedeemScriptType | None"
+        miniscript: "MiniscriptRedeemPolicyType | None"
         op_return_data: "AnyBytes | None"
         orig_hash: "AnyBytes | None"
         orig_index: "int | None"
@@ -724,6 +851,7 @@ if TYPE_CHECKING:
             address: "str | None" = None,
             script_type: "OutputScriptType | None" = None,
             multisig: "MultisigRedeemScriptType | None" = None,
+            miniscript: "MiniscriptRedeemPolicyType | None" = None,
             op_return_data: "AnyBytes | None" = None,
             orig_hash: "AnyBytes | None" = None,
             orig_index: "int | None" = None,

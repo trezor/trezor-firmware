@@ -108,7 +108,73 @@ message PublicKey {
 }
 
 /**
+ * Request: Ask device to register Miniscript policy below.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message MiniscriptRegisterPolicy {
+    option (experimental_message) = true;
+
+    required MiniscriptPolicy policy = 1;                 // policy to register
+    required string name = 2;                             // human-readable name
+    optional string coin_name = 3 [default = 'Bitcoin'];  // coin to use
+}
+
+message MiniscriptRegisteredEntry {
+    option (experimental_message) = true;
+
+    required bytes policy_digest = 1;
+    required string name = 2;
+}
+
+message MiniscriptDerivation {
+    required bool internal = 1;  // true = internal (change), false = external (receive)
+    required uint32 index = 2;   // last derivation step
+}
+
+message MiniscriptRedeemPolicyType {
+    option (experimental_message) = true;
+
+    required uint32 policy_index = 1;              // policy to use (position in SignTx.policies)
+    required MiniscriptDerivation derivation = 2;  // derivation info (external/internal & index)
+}
+
+message MiniscriptPolicy {
+    option (experimental_message) = true;
+
+    required string descriptor = 1;   // BIP-388 wallet policy template (multipath descriptor)
+    repeated MiniscriptKey keys = 2;  // list of key expressions used in the miniscript policy
+}
+
+message MiniscriptKey {
+    option (experimental_message) = true;
+
+    required common.HDNodeType node = 1;   // BIP-32 public node
+    repeated uint32 derivation_path = 2;   // BIP-32 path to derive the key from master node
+    required uint32 root_fingerprint = 3;  // master root node fingerprint
+}
+
+/**
+ * Request: Ask device for address derived from a registered Miniscript policy
+ * @start
+ * @next Address
+ * @next Failure
+ */
+message MiniscriptGetAddress {
+    option (experimental_message) = true;
+
+    required MiniscriptPolicy policy = 1;                 // policy to use (must be registered)
+    required MiniscriptDerivation derivation = 2;         // derivation info (external/internal & index)
+
+    optional string coin_name = 3 [default = 'Bitcoin'];  // coin to use
+    optional bool show_display = 4;                       // optionally show on display before sending the result
+    optional bool chunkify = 5;                           // display the address in chunks of 4 characters
+}
+
+/**
  * Request: Ask device for address corresponding to address_n path
+ * For Miniscript, use MiniscriptGetAddress instead.
  * @start
  * @next Address
  * @next Failure
@@ -117,6 +183,7 @@ message GetAddress {
     repeated uint32 address_n = 1;                        // BIP-32 path to derive the key from master node
     optional string coin_name = 2 [default = 'Bitcoin'];  // coin to use
     optional bool show_display = 3;                       // optionally show on display before sending the result
+
     optional MultisigRedeemScriptType multisig = 4;       // filled if we are showing a multisig address
     optional InputScriptType script_type = 5
         [default = SPENDADDRESS];  // used to distinguish between various address formats (non-segwit, segwit, etc.)
@@ -219,6 +286,8 @@ message SignTx {
         [default = true];  // serialize the full transaction, as opposed to only outputting the signatures
     optional CoinJoinRequest coinjoin_request = 14;  // only for preauthorized CoinJoins
     optional bool chunkify = 15;                     // display the address in chunks of 4 characters
+
+    repeated MiniscriptPolicy policies = 16 [(experimental_field) = true];  // only for Miniscript
 
     /**
      * Signing request for a CoinJoin transaction.
@@ -329,6 +398,7 @@ message TxAck {
             optional uint32 sequence = 5 [default = 4294967295];                // sequence (default=0xffffffff)
             optional InputScriptType script_type = 6 [default = SPENDADDRESS];  // defines template of input script
             optional MultisigRedeemScriptType multisig = 7;  // Filled if input is going to spend multisig output
+            optional MiniscriptRedeemPolicyType miniscript = 21 [(experimental_field) = true];
             optional uint64 amount = 8;                      // amount of previous transaction output (for segwit only)
             optional uint32 decred_tree = 9;                 // only for Decred, 0 is a normal transaction
                                                              // while 1 is a stake transaction
@@ -367,6 +437,7 @@ message TxAck {
             optional OutputScriptType script_type = 4 [default = PAYTOADDRESS];  // output script type
             optional MultisigRedeemScriptType multisig = 5;  // defines multisig address; script_type must be
                                                              // PAYTOMULTISIG
+            optional MiniscriptRedeemPolicyType miniscript = 13 [(experimental_field) = true];
             optional bytes op_return_data = 6;  // defines op_return data; script_type must be PAYTOOPRETURN,
                                                 // amount must be 0
             // optional uint32 decred_script_version = 7;   // only for Decred  // deprecated -> only 0 is supported
@@ -395,6 +466,7 @@ message TxInput {
     optional uint32 sequence = 5 [default = 0xffffffff];  // sequence
     optional InputScriptType script_type = 6 [default = SPENDADDRESS];  // defines template of input script
     optional MultisigRedeemScriptType multisig = 7;  // Filled if input is going to spend multisig output
+    optional MiniscriptRedeemPolicyType miniscript = 21 [(experimental_field) = true];
     required uint64 amount = 8;                      // amount of previous transaction output
     optional uint32 decred_tree = 9;      // only for Decred, 0 is a normal transaction while 1 is a stake transaction
     reserved 10, 11, 12;                  // fields which are in use, or have been in the past, in TxInputType
@@ -421,6 +493,7 @@ message TxOutput {
     required uint64 amount = 3;     // amount to spend in satoshis
     optional OutputScriptType script_type = 4 [default = PAYTOADDRESS];  // output script type
     optional MultisigRedeemScriptType multisig = 5;  // defines multisig address; script_type must be PAYTOMULTISIG
+    optional MiniscriptRedeemPolicyType miniscript = 13 [(experimental_field) = true];
     optional bytes op_return_data = 6;  // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
     reserved 7, 8, 9;                   // fields which are in use, or have been in the past, in TxOutputType
     optional bytes orig_hash = 10;      // tx_hash of the original transaction where this output was
