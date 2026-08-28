@@ -219,7 +219,8 @@ impl Trezor {
         use_passphrase: Option<bool>,
         homescreen: Option<Vec<u8>>,
         auto_lock_delay_ms: Option<usize>,
-    ) -> Result<TrezorResponse<'_, (), protos::Success>> {
+        experimental_features: Option<bool>,
+    ) -> Result<()> {
         let mut req = protos::ApplySettings::new();
         if let Some(label) = label {
             req.set_label(label);
@@ -233,7 +234,10 @@ impl Trezor {
         if let Some(auto_lock_delay_ms) = auto_lock_delay_ms {
             req.set_auto_lock_delay_ms(auto_lock_delay_ms as u32);
         }
-        self.call(req, Box::new(|_, _| Ok(())))
+        if let Some(experimental_features) = experimental_features {
+            req.set_experimental_features(experimental_features);
+        }
+        self.call(req, Box::new(|_, _m: protos::Success| Ok(())))?.interact()
     }
 
     pub fn sign_identity(
