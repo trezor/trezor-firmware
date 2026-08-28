@@ -25,7 +25,7 @@ pub mod types;
 #[cfg(feature = "recovery")]
 pub mod recovery;
 
-use core::{slice, ptr};
+use core::ptr;
 use core::ptr::NonNull;
 use types::*;
 
