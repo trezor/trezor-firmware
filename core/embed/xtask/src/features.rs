@@ -208,7 +208,6 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
         cmd.arg("--verbose");
     }
 
-
     if rebuild_std || args.miniscript {
         let mut build_std = "-Zbuild-std=core".to_owned();
         if args.miniscript {

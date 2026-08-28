@@ -6,17 +6,17 @@
 
 extern crate alloc;
 
-use miniscript::{
-    bitcoin::secp256k1::Secp256k1,
-    descriptor::Wsh,
-    expression::{FromTree, Tree},
-    Descriptor, DescriptorPublicKey,
-};
+use miniscript::bitcoin::secp256k1::Secp256k1;
+use miniscript::descriptor::Wsh;
+use miniscript::expression::{FromTree, Tree};
+use miniscript::{Descriptor, DescriptorPublicKey};
 
-use crate::{
-    error::Error,
-    micropython::{buffer::StrBuffer, module::Module, obj::Obj, qstr::Qstr, util},
-};
+use crate::error::Error;
+use crate::micropython::buffer::StrBuffer;
+use crate::micropython::module::Module;
+use crate::micropython::obj::Obj;
+use crate::micropython::qstr::Qstr;
+use crate::micropython::util;
 
 #[global_allocator]
 static MINISCRIPT_ALLOCATOR: emballoc::Allocator<{ 40 << 10 }> = emballoc::Allocator::new();

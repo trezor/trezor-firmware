@@ -159,10 +159,6 @@ fn main() -> Result<()> {
             lib.add_define("TREZOR_EMULATOR", None);
         }
 
-        if cfg!(feature = "miniscript") {
-            lib.add_define("MINISCRIPT", None);
-        }
-
         if cfg!(feature = "model_t2t1") {
             define_model_t2t1(lib, &board_header)?;
         } else if cfg!(feature = "model_t2b1") {
