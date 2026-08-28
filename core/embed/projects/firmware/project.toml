@@ -68,6 +68,7 @@ force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 frozen                        = { true = ["frozen"] }
 log-stack-usage               = { true = ["log_stack_usage"] }
 mem-perf                      = { true = ["memperf"] }
+miniscript                    = { true = ["miniscript"] }
 n1w1                          = { true = ["n1w1"] }
 perf-overlay                  = { true = ["ui_performance_overlay"] }
 production                    = { true = ["production"], false = ["dev_keys"] }

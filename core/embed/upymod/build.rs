@@ -68,6 +68,10 @@ fn main() -> Result<()> {
             lib.add_define("MICROPY_TREZOR_MEMPERF", Some("1"));
         }
 
+        if cfg!(feature = "miniscript") {
+            lib.add_define("USE_MINISCRIPT", Some("1"));
+        }
+
         if cfg!(feature = "n1w1") {
             lib.add_define("USE_N1W1", Some("1"));
         }
@@ -940,6 +944,7 @@ impl<'a> MpyBuilder<'a> {
         let emulator = py_bool(cfg!(feature = "emulator"));
         let haptic = py_bool(cfg!(feature = "haptic"));
         let mcu_attestation = py_bool(cfg!(feature = "mcu_attestation"));
+        let miniscript = py_bool(cfg!(feature = "miniscript"));
         let n1w1 = py_bool(cfg!(feature = "n1w1"));
         let optiga = py_bool(cfg!(feature = "optiga"));
         let power_manager = py_bool(cfg!(feature = "power_manager"));
@@ -964,6 +969,7 @@ impl<'a> MpyBuilder<'a> {
             format!(r"s/utils\.USE_BUTTON/{button}/g"),
             format!(r"s/utils\.USE_HAPTIC/{haptic}/g"),
             format!(r"s/utils\.USE_N1W1/{n1w1}/g"),
+            format!(r"s/utils\.USE_MINISCRIPT/{miniscript}/g"),
             format!(r"s/utils\.USE_MCU_ATTESTATION/{mcu_attestation}/g"),
             format!(r"s/utils\.USE_OPTIGA/{optiga}/g"),
             format!(r"s/utils\.USE_POWER_MANAGER/{power_manager}/g"),
