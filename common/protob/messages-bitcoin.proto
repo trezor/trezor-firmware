@@ -21,6 +21,7 @@ enum InputScriptType {
     SPENDWITNESS = 3;      // native SegWit
     SPENDP2SHWITNESS = 4;  // SegWit over P2SH (backward compatible)
     SPENDTAPROOT = 5;      // Taproot
+    SPENDMINISCRIPT = 6;
 }
 
 /**
@@ -34,6 +35,7 @@ enum OutputScriptType {
     PAYTOWITNESS = 4;      // only for change output
     PAYTOP2SHWITNESS = 5;  // only for change output
     PAYTOTAPROOT = 6;      // only for change output
+    PAYTOMINISCRIPT = 7;   // only for change output
 }
 
 /**
@@ -108,6 +110,28 @@ message PublicKey {
 }
 
 /**
+ * Request: Ask device to register Miniscript descriptor below.
+ * @start
+ * @next RegisteredPolicy
+ * @next Failure
+ */
+message Policy {
+    required string name = 1;                             // human-readable name
+    required string template = 2;                         // BIP-388 wallet policy
+    repeated string xpubs = 3;
+    optional string coin_name = 4 [default = 'Bitcoin'];  // coin to use
+}
+
+/**
+ * Response: Contains the registration result, which can be used for GetAddress and SignTx.
+ * @end
+ */
+message RegisteredPolicy {
+    required Policy policy = 1;  // See above.
+    required bytes mac = 2;      // Policy authentication code.
+}
+
+/**
  * Request: Ask device for address corresponding to address_n path
  * @start
  * @next Address
@@ -122,6 +146,7 @@ message GetAddress {
         [default = SPENDADDRESS];  // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional bool ignore_xpub_magic = 6;  // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
     optional bool chunkify = 7;           // display the address in chunks of 4 characters
+    optional RegisteredPolicy registered = 8;  // `multisig` must be unset.
 }
 
 /**
@@ -347,6 +372,8 @@ message TxAck {
             optional bytes script_pubkey = 19;                  // scriptPubKey of the previous output spent by this
                                                                 // input, only set of EXTERNAL inputs
             optional uint32 coinjoin_flags = 20 [default = 0];  // bit field of CoinJoin-specific flags
+
+            optional RegisteredPolicy registered = 21;          // Registered miniscript policy for this input
         }
         /**
          * Structure representing compiled transaction output
@@ -410,6 +437,8 @@ message TxInput {
     optional bytes script_pubkey =
         19;  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
     optional uint32 coinjoin_flags = 20 [default = 0];  // bit field of CoinJoin-specific flags
+
+    optional RegisteredPolicy registered = 21;          // Registered miniscript policy for this input
 }
 
 /** Data type for transaction output to be signed.
