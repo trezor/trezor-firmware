@@ -71,6 +71,14 @@
 // + round-trips but coarser early-reject. See fwt_on_chunk / fwt_on_headers.
 #define FW_TRANSPORT_BLOCK_TARGET (64 * 1024)
 
+// The boot header is received into the upload engine's chunk_buffer, whose
+// contents are only valid until the first stream starts (see chunk_buffer in
+// wf_image_upload.h). BOOT_HEADER_MAXSIZE bounds the receive, so the borrowed
+// buffer must be at least that large.
+#if BOOT_HEADER_MAXSIZE > IMAGE_CHUNK_SIZE
+#error "IMAGE_CHUNK_SIZE too small to receive a boot header"
+#endif
+
 // --- Phase-1 new-bootloader-code streaming (full bootloader update) ----------
 // When FirmwareBegin carries a new bootloader code_length, the code is
 // streamed into the staging area right after the already-staged boot header
@@ -182,10 +190,10 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   firmware_begin_nrf_t *nrf_arg = NULL;
 #endif
   FirmwareBegin msg = {0};
-  if (sectrue != recv_msg_firmware_begin(iface, &msg, bh_buf, IMAGE_CHUNK_SIZE,
-                                         &bh_len, module_headers,
-                                         sizeof(module_headers), &mh_len,
-                                         nrf_arg)) {
+  if (sectrue != recv_msg_firmware_begin(iface, &msg, bh_buf,
+                                         BOOT_HEADER_MAXSIZE, &bh_len,
+                                         module_headers, sizeof(module_headers),
+                                         &mh_len, nrf_arg)) {
     ui_screen_fail();  // recv already failed (no wire Failure to send); see
                        // main.c
     return WF_ERROR;
