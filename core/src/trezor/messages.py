@@ -441,6 +441,42 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["PublicKey"]:
             return isinstance(msg, cls)
 
+    class Policy(protobuf.MessageType):
+        name: "str"
+        template: "str"
+        xpubs: "list[str]"
+        coin_name: "str"
+
+        def __init__(
+            self,
+            *,
+            name: "str",
+            template: "str",
+            xpubs: "list[str] | None" = None,
+            coin_name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["Policy"]:
+            return isinstance(msg, cls)
+
+    class RegisteredPolicy(protobuf.MessageType):
+        policy: "Policy"
+        mac: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            policy: "Policy",
+            mac: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["RegisteredPolicy"]:
+            return isinstance(msg, cls)
+
     class GetAddress(protobuf.MessageType):
         address_n: "list[int]"
         coin_name: "str"
@@ -449,6 +485,7 @@ if TYPE_CHECKING:
         script_type: "InputScriptType"
         ignore_xpub_magic: "bool | None"
         chunkify: "bool | None"
+        registered: "RegisteredPolicy | None"
 
         def __init__(
             self,
@@ -460,6 +497,7 @@ if TYPE_CHECKING:
             script_type: "InputScriptType | None" = None,
             ignore_xpub_magic: "bool | None" = None,
             chunkify: "bool | None" = None,
+            registered: "RegisteredPolicy | None" = None,
         ) -> None:
             pass
 
@@ -655,6 +693,7 @@ if TYPE_CHECKING:
         decred_staking_spend: "DecredStakingSpendType | None"
         script_pubkey: "AnyBytes | None"
         coinjoin_flags: "int"
+        registered: "RegisteredPolicy | None"
 
         def __init__(
             self,
@@ -676,6 +715,7 @@ if TYPE_CHECKING:
             decred_staking_spend: "DecredStakingSpendType | None" = None,
             script_pubkey: "AnyBytes | None" = None,
             coinjoin_flags: "int | None" = None,
+            registered: "RegisteredPolicy | None" = None,
         ) -> None:
             pass
 
