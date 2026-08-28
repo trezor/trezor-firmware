@@ -10,16 +10,13 @@ fn main() {
     let mut trezor = trezor_client::unique(false).unwrap();
     trezor.init_device(None).unwrap();
 
-    let pubkey = handle_interaction(
-        trezor
-            .get_public_key(
-                &DerivationPath::from_str("m/44h/1h/0h/0/0").unwrap(),
-                Network::Testnet,
-                true,
-            )
-            .unwrap(),
-    )
-    .unwrap();
+    let pubkey = trezor
+        .get_public_key(
+            &DerivationPath::from_str("m/44h/1h/0h/0/0").unwrap(),
+            Network::Testnet,
+            true,
+        )
+        .unwrap();
     let addr = Address::p2pkh(pubkey.to_pub(), Network::Testnet);
     println!("address: {}", addr);
 
