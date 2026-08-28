@@ -193,8 +193,8 @@ VECTORS = (  # passphrase, address
     (CommonPass.SHORT, CommonPass.SHORT_ADDRESS),
     (CommonPass.WITH_SPACE, CommonPass.WITH_SPACE_ADDRESS),
     (CommonPass.RANDOM_25, CommonPass.RANDOM_25_ADDRESS),
-    (CommonPass.AAA_SHORTER, CommonPass.AAA_SHORTER_ADDRESS),
-    (CommonPass.AAA_LIMIT, CommonPass.AAA_LIMIT_ADDRESS),
+    (CommonPass.WWW_SHORTER, CommonPass.WWW_SHORTER_ADDRESS),
+    (CommonPass.WWW_LIMIT, CommonPass.WWW_LIMIT_ADDRESS),
 )
 
 
@@ -212,22 +212,22 @@ def test_passphrase_input(
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_input_over_limit(device_handler: "BackgroundDeviceHandler"):
     with prepare_passphrase_dialogue(
-        device_handler, CommonPass.AAA_LIMIT_ADDRESS
+        device_handler, CommonPass.WWW_LIMIT_ADDRESS
     ) as debug:  # type: ignore
-        # First `len(CommonPass.AAA_LIMIT)` chars
-        input_passphrase(debug, CommonPass.AAA_LONGER[:-1])
+        # First `len(CommonPass.WWW_LIMIT)` chars
+        input_passphrase(debug, CommonPass.WWW_LONGER[:-1])
         layout = debug.read_layout()
-        assert CommonPass.AAA_LONGER[:-1] == layout.passphrase()
+        assert CommonPass.WWW_LONGER[:-1] == layout.passphrase()
 
         show_passphrase(debug)
 
         # Over-limit character
-        press_char(debug, CommonPass.AAA_LONGER[-1])
+        press_char(debug, CommonPass.WWW_LONGER[-1])
 
         # No change
         layout = debug.read_layout()
-        assert CommonPass.AAA_LONGER[:-1] == layout.passphrase()
-        assert CommonPass.AAA_LONGER != layout.passphrase()
+        assert CommonPass.WWW_LONGER[:-1] == layout.passphrase()
+        assert CommonPass.WWW_LONGER != layout.passphrase()
 
         show_passphrase(debug)
         enter_passphrase(debug)

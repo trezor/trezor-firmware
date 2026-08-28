@@ -26,19 +26,20 @@ class CommonPass:
 
     EMPTY_ADDRESS = "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
 
-    AAA_LIMIT = 128 * "a"
-    AAA_LIMIT_ADDRESS = "mmAeEYhe4kRjzDdjUWiCNsaQ4G7VLR97QG"
+    # use "W" since it's the widest character.
+    WWW_LIMIT = 128 * "W"
+    WWW_LIMIT_ADDRESS = "n2bv39bhmi6yUJzC8W1Dz8xzYGbqBMqN2v"
 
-    AAA_SHORTER = AAA_LIMIT[:-1]
-    AAA_SHORTER_ADDRESS = "mws5kLVC5LKYyWr67XrgD8yZBW6tgKMrvq"
+    WWW_SHORTER = WWW_LIMIT[:-1]
+    WWW_SHORTER_ADDRESS = "mmrU5B11nheuzhErtnKMK8R1EpDJqsfqoS"
 
-    AAA_LONGER = AAA_LIMIT + "a"
+    WWW_LONGER = WWW_LIMIT + "W"
 
 
-assert len(CommonPass.AAA_LIMIT) == 128
-assert len(CommonPass.AAA_SHORTER) == 127
-assert len(CommonPass.AAA_LONGER) == 129
-assert CommonPass.AAA_SHORTER_ADDRESS != CommonPass.AAA_LIMIT_ADDRESS
+assert len(CommonPass.WWW_LIMIT) == 128
+assert len(CommonPass.WWW_SHORTER) == 127
+assert len(CommonPass.WWW_LONGER) == 129
+assert CommonPass.WWW_SHORTER_ADDRESS != CommonPass.WWW_LIMIT_ADDRESS
 
 
 # Passphrase/Label keyboard layouts
