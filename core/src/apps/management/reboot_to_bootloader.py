@@ -17,16 +17,29 @@ async def install_upgrade(firmware_header: AnyBytes) -> AnyBytes:
     from trezor.ui.layouts import confirm_firmware_update
 
     # check and parse received firmware header
+    #
+    # The payload is layout-specific -- a vendor+image header pair on the legacy
+    # scheme, the boot header prefix plus the firmware manifest on the Merkle-tree
+    # one -- but check_firmware_header normalises both to the same four fields, so
+    # everything below is scheme-agnostic. In particular `hdr.hash` is whatever
+    # the bootloader will recompute and compare before installing without asking
+    # again, and `hdr.vendor` is the identity that must not change (a change would
+    # cross a storage domain and erase the seed, so we refuse it here rather than
+    # let the bootloader fall back to prompting).
     try:
         hdr = utils.check_firmware_header(firmware_header)
     except Exception:
         raise wire.DataError("Invalid firmware header.")
 
-    # vendor must be the same
+    # A vendor (variant) change crosses a storage domain, so it would erase the
+    # seed. Refusing here keeps that decision on the bootloader's confirm screen,
+    # which is the only place the "SEED WILL BE ERASED!" warning is shown.
     if hdr.vendor != utils.firmware_vendor():
         raise wire.DataError("Different firmware vendor.")
 
-    # firmware must be newer
+    # Not an upgrade. The authoritative anti-rollback axis is the boot header's
+    # monotonic_version, enforced by the bootloader and the boardloader; this is
+    # the friendlier early rejection.
     if hdr.version <= utils.VERSION:
         raise wire.DataError("Not a firmware upgrade.")
 
@@ -58,12 +71,22 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     # Any UNSAFE-prefixed vendor ("UNSAFE, DO NOT USE!" for custom images,
     # "UNSAFE, FACTORY TEST ONLY" for prodtest) is not a field-official image.
     is_official = not utils.firmware_vendor().startswith("UNSAFE")
+    # The two image layouts identify a release differently, so they travel in
+    # separate fields: `firmware_preamble` (Merkle tree) or `firmware_header`
+    # (legacy). Take whichever the host sent -- check_firmware_header parses only
+    # the layout this build actually uses, so a host that sends the wrong one gets
+    # a clean "Invalid firmware header." rather than a confusing install failure.
+    offered = (
+        msg.firmware_preamble
+        if msg.firmware_preamble is not None
+        else msg.firmware_header
+    )
     if (
         msg.boot_command == BootCommand.INSTALL_UPGRADE
-        and msg.firmware_header is not None
+        and offered is not None
         and is_official
     ):
-        fw_hash = await install_upgrade(msg.firmware_header)
+        fw_hash = await install_upgrade(offered)
 
     else:
         await confirm_action(

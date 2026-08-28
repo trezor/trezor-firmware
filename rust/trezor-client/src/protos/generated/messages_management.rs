@@ -11542,6 +11542,8 @@ pub struct RebootToBootloader {
     pub boot_command: ::std::option::Option<::protobuf::EnumOrUnknown<reboot_to_bootloader::BootCommand>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.firmware_header)
     pub firmware_header: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.firmware_preamble)
+    pub firmware_preamble: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.RebootToBootloader.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -11616,8 +11618,44 @@ impl RebootToBootloader {
         self.firmware_header.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes firmware_preamble = 4;
+
+    pub fn firmware_preamble(&self) -> &[u8] {
+        match self.firmware_preamble.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_firmware_preamble(&mut self) {
+        self.firmware_preamble = ::std::option::Option::None;
+    }
+
+    pub fn has_firmware_preamble(&self) -> bool {
+        self.firmware_preamble.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_firmware_preamble(&mut self, v: ::std::vec::Vec<u8>) {
+        self.firmware_preamble = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_firmware_preamble(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.firmware_preamble.is_none() {
+            self.firmware_preamble = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.firmware_preamble.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_firmware_preamble(&mut self) -> ::std::vec::Vec<u8> {
+        self.firmware_preamble.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "boot_command",
@@ -11628,6 +11666,11 @@ impl RebootToBootloader {
             "firmware_header",
             |m: &RebootToBootloader| { &m.firmware_header },
             |m: &mut RebootToBootloader| { &mut m.firmware_header },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "firmware_preamble",
+            |m: &RebootToBootloader| { &m.firmware_preamble },
+            |m: &mut RebootToBootloader| { &mut m.firmware_preamble },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RebootToBootloader>(
             "RebootToBootloader",
@@ -11653,6 +11696,9 @@ impl ::protobuf::Message for RebootToBootloader {
                 18 => {
                     self.firmware_header = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                34 => {
+                    self.firmware_preamble = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -11671,6 +11717,9 @@ impl ::protobuf::Message for RebootToBootloader {
         if let Some(v) = self.firmware_header.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.firmware_preamble.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -11682,6 +11731,9 @@ impl ::protobuf::Message for RebootToBootloader {
         }
         if let Some(v) = self.firmware_header.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.firmware_preamble.as_ref() {
+            os.write_bytes(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -11702,6 +11754,7 @@ impl ::protobuf::Message for RebootToBootloader {
     fn clear(&mut self) {
         self.boot_command = ::std::option::Option::None;
         self.firmware_header = ::std::option::Option::None;
+        self.firmware_preamble = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -11709,6 +11762,7 @@ impl ::protobuf::Message for RebootToBootloader {
         static instance: RebootToBootloader = RebootToBootloader {
             boot_command: ::std::option::Option::None,
             firmware_header: ::std::option::Option::None,
+            firmware_preamble: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -13636,31 +13690,32 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNextU2FCounter\"1\n\x0eNextU2FCou\
     nter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x11\n\
     \x0fDoPreauthorized\"\x16\n\x14PreauthorizedRequest\"\x15\n\x13CancelAut\
-    horization\"\xeb\x01\n\x12RebootToBootloader\x12o\n\x0cboot_command\x18\
+    horization\"\x98\x02\n\x12RebootToBootloader\x12o\n\x0cboot_command\x18\
     \x01\x20\x01(\x0e2=.hw.trezor.messages.management.RebootToBootloader.Boo\
     tCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\n\x0ffirmware_header\x18\
-    \x02\x20\x01(\x0cR\x0efirmwareHeader\"5\n\x0bBootCommand\x12\x11\n\rSTOP\
-    _AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01J\x04\x08\x03\x10\
-    \x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonce\x12\x14\n\x05nonce\x18\x01\x20\
-    \x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\x1b\n\taddress_n\x18\x01\x20\
-    \x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"'\n\
-    \x13UnlockedPathRequest\x12\x10\n\x03mac\x18\x01\x20\x02(\x0cR\x03mac\"\
-    \x14\n\x12ShowDeviceTutorial\"\x12\n\x10UnlockBootloader\"%\n\rSetBright\
-    ness\x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05value\"\x11\n\x0fGetSeria\
-    lNumber\"3\n\x0cSerialNumber\x12#\n\rserial_number\x18\x01\x20\x02(\tR\
-    \x0cserialNumber*\x99\x01\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\
-    \x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02\x12\x1c\n\
-    \x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Slip39_Basic_Extendabl\
-    e\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\x10\x05*%\n\x0cBackupM\
-    ethod\x12\x0b\n\x07Display\x10\0\x12\x08\n\x04N1W1\x10\x01*G\n\x10Safety\
-    CheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\
-    \x15\n\x11PromptTemporarily\x10\x02*=\n\x0fDisplayRotation\x12\t\n\x05No\
-    rth\x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\x10\xb4\x01\x12\t\n\
-    \x04West\x10\x8e\x02*0\n\x10HomescreenFormat\x12\x08\n\x04Toif\x10\x01\
-    \x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03*H\n\x0cRecoveryType\
-    \x12\x12\n\x0eNormalRecovery\x10\0\x12\n\n\x06DryRun\x10\x01\x12\x18\n\
-    \x14UnlockRepeatedBackup\x10\x02BB\n#com.satoshilabs.trezor.lib.protobuf\
-    B\x17TrezorMessageManagement\x80\xa6\x1d\x01\
+    \x02\x20\x01(\x0cR\x0efirmwareHeader\x12+\n\x11firmware_preamble\x18\x04\
+    \x20\x01(\x0cR\x10firmwarePreamble\"5\n\x0bBootCommand\x12\x11\n\rSTOP_A\
+    ND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01J\x04\x08\x03\x10\x04\
+    \"\n\n\x08GetNonce\"\x1d\n\x05Nonce\x12\x14\n\x05nonce\x18\x01\x20\x02(\
+    \x0cR\x05nonce\";\n\nUnlockPath\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
+    \x08addressN\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"'\n\x13Unloc\
+    kedPathRequest\x12\x10\n\x03mac\x18\x01\x20\x02(\x0cR\x03mac\"\x14\n\x12\
+    ShowDeviceTutorial\"\x12\n\x10UnlockBootloader\"%\n\rSetBrightness\x12\
+    \x14\n\x05value\x18\x01\x20\x01(\rR\x05value\"\x11\n\x0fGetSerialNumber\
+    \"3\n\x0cSerialNumber\x12#\n\rserial_number\x18\x01\x20\x02(\tR\x0cseria\
+    lNumber*\x99\x01\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip3\
+    9_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02\x12\x1c\n\x18Slip39\
+    _Single_Extendable\x10\x03\x12\x1b\n\x17Slip39_Basic_Extendable\x10\x04\
+    \x12\x1e\n\x1aSlip39_Advanced_Extendable\x10\x05*%\n\x0cBackupMethod\x12\
+    \x0b\n\x07Display\x10\0\x12\x08\n\x04N1W1\x10\x01*G\n\x10SafetyCheckLeve\
+    l\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\x15\n\
+    \x11PromptTemporarily\x10\x02*=\n\x0fDisplayRotation\x12\t\n\x05North\
+    \x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\x10\xb4\x01\x12\t\n\x04We\
+    st\x10\x8e\x02*0\n\x10HomescreenFormat\x12\x08\n\x04Toif\x10\x01\x12\x08\
+    \n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03*H\n\x0cRecoveryType\x12\x12\
+    \n\x0eNormalRecovery\x10\0\x12\n\n\x06DryRun\x10\x01\x12\x18\n\x14Unlock\
+    RepeatedBackup\x10\x02BB\n#com.satoshilabs.trezor.lib.protobufB\x17Trezo\
+    rMessageManagement\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
