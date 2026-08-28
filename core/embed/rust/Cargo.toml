@@ -37,6 +37,10 @@ unsize.workspace = true
 without-alloc.workspace = true
 zeroize = { workspace = true, optional = true }
 
+emballoc = { version = "0.3.0", default-features = false, optional = true }
+miniscript = { version = "13.0.0", default-features = false, optional = true }
+
+
 # crates in embed/ directory
 crypto.workspace = true
 io.workspace = true
@@ -76,6 +80,7 @@ layout_caesar = []
 layout_delizia = []
 layout_eckhart = []
 micropython = ["dep:upymod"]
+miniscript = ["dep:miniscript", "dep:emballoc"]
 n1w1 = []
 nrf = []
 optiga = []

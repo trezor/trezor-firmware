@@ -44,6 +44,10 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
         }
     }
 
+    if args.miniscript {
+        features.push("miniscript".into());
+    }
+
     // Option-mapped features, validated against the target package's declared
     // features so an unsupported option fails here with the option named,
     // instead of as a cargo error.
@@ -204,8 +208,13 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
         cmd.arg("--verbose");
     }
 
-    if rebuild_std {
-        cmd.arg("-Zbuild-std=core");
+
+    if rebuild_std || args.miniscript {
+        let mut build_std = "-Zbuild-std=core".to_owned();
+        if args.miniscript {
+            build_std += ",alloc";
+        }
+        cmd.arg(build_std);
     }
 
     forward_color_choice(cmd);

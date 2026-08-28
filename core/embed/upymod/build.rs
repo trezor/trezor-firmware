@@ -68,6 +68,10 @@ fn main() -> Result<()> {
             lib.add_define("MICROPY_TREZOR_MEMPERF", Some("1"));
         }
 
+        if cfg!(feature = "miniscript") {
+            lib.add_define("USE_MINISCRIPT", Some("1"));
+        }        
+
         if cfg!(feature = "n1w1") {
             lib.add_define("USE_N1W1", Some("1"));
         }

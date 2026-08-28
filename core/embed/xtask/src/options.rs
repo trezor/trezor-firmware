@@ -253,6 +253,10 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     opt emit_memory_analysis: bool,
 
+    /// Experimental miniscript support.
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    opt miniscript: bool,
+
     /// Output cargo timings
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     opt timings: bool,
