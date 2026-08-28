@@ -1191,7 +1191,7 @@ pub enum TranslatedString {
     pin__cancel_description = 870,  // {"Bolt": "", "Caesar": "", "Delizia": "Continue without PIN", "Eckhart": ""}
     pin__cancel_info = 871,  // {"Bolt": "", "Caesar": "", "Delizia": "Without a PIN, anyone can access this device.", "Eckhart": "Without a PIN, anyone can access this device."}
     pin__cancel_setup = 872,  // {"Bolt": "", "Caesar": "", "Delizia": "Cancel PIN setup", "Eckhart": "Cancel PIN setup?"}
-    send__cancel_sign = 873,  // {"Bolt": "", "Caesar": "", "Delizia": "Cancel sign", "Eckhart": "Cancel sign."}
+    send__cancel_sign = 873,  // {"Bolt": "", "Caesar": "", "Delizia": "Cancel sign", "Eckhart": "Cancel sign?"}
     send__send_from = 874,  // "Send from"
     instructions__hold_to_sign = 875,  // {"Bolt": "", "Caesar": "", "Delizia": "Hold to sign", "Eckhart": "Hold to sign"}
     confirm_total__fee_rate = 876,  // "Fee rate"
@@ -33780,7 +33780,7 @@ impl TranslatedString {
                 "",
                 "Without a PIN, anyone can access this device.",
                 "Cancel PIN setup?",
-                "Cancel sign.",
+                "Cancel sign?",
                 "Send from",
                 "Hold to sign",
                 "Fee rate",
@@ -36381,7 +36381,7 @@ impl TranslatedString {
                 "",
                 "Without a PIN, anyone can access this device.",
                 "Cancel PIN setup?",
-                "Cancel sign.",
+                "Cancel sign?",
                 "Send from",
                 "Hold to sign",
                 "Fee rate",
@@ -38982,7 +38982,7 @@ impl TranslatedString {
                 "",
                 "Without a PIN, anyone can access this device.",
                 "Cancel PIN setup?",
-                "Cancel sign.",
+                "Cancel sign?",
                 "Send from",
                 "Hold to sign",
                 "Fee rate",
@@ -41583,7 +41583,7 @@ impl TranslatedString {
                 "",
                 "Without a PIN, anyone can access this device.",
                 "Cancel PIN setup?",
-                "Cancel sign.",
+                "Cancel sign?",
                 "Send from",
                 "Hold to sign",
                 "Fee rate",
