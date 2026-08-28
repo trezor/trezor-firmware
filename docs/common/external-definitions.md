@@ -119,7 +119,7 @@ A Merkle tree is constructed from all binary definitions (see below) and its roo
 signed by the CoSi algorithm.
 
 The format version is bumped on backward incompatible change.
-For versions 1 and 2, the data structure is identical.
+For versions 1 and 2, the data structure is identical but the number of necessary signatures is changed from 2 to 1.
 
 The full format of the definition is as follows:
 

@@ -3,6 +3,7 @@ use crypto::ed25519;
 // Definition format versions, encoded on the wire as ASCII digit bytes.
 pub enum DefsVersion {
     V1,
+    V2,
 }
 
 impl DefsVersion {
@@ -10,12 +11,14 @@ impl DefsVersion {
     pub const fn threshold(self) -> u8 {
         match self {
             DefsVersion::V1 => 2,
+            DefsVersion::V2 => 1,
         }
     }
 
     pub const fn from_byte(byte: u8) -> Option<Self> {
         match byte {
             b'1' => Some(DefsVersion::V1),
+            b'2' => Some(DefsVersion::V2),
             _ => None,
         }
     }

@@ -7,7 +7,7 @@ MAGIC = b"trzd"
 
 # Supported format versions of the definitions, encoded on the wire as
 # ASCII digit bytes ('1' = 0x31, '2' = 0x32, etc.).
-SUPPORTED_FORMAT_VERSIONS = (b"1",)
+SUPPORTED_FORMAT_VERSIONS = (b"1", b"2")
 
 # The public keys and signature thresholds for definitions verification
 # live in Rust (core/embed/rust/src/definitions/constants.rs).
