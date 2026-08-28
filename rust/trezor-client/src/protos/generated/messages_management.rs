@@ -11499,6 +11499,8 @@ pub struct RebootToBootloader {
     pub boot_command: ::std::option::Option<::protobuf::EnumOrUnknown<reboot_to_bootloader::BootCommand>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.firmware_header)
     pub firmware_header: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.firmware_preamble)
+    pub firmware_preamble: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.RebootToBootloader.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -11573,8 +11575,44 @@ impl RebootToBootloader {
         self.firmware_header.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes firmware_preamble = 4;
+
+    pub fn firmware_preamble(&self) -> &[u8] {
+        match self.firmware_preamble.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_firmware_preamble(&mut self) {
+        self.firmware_preamble = ::std::option::Option::None;
+    }
+
+    pub fn has_firmware_preamble(&self) -> bool {
+        self.firmware_preamble.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_firmware_preamble(&mut self, v: ::std::vec::Vec<u8>) {
+        self.firmware_preamble = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_firmware_preamble(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.firmware_preamble.is_none() {
+            self.firmware_preamble = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.firmware_preamble.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_firmware_preamble(&mut self) -> ::std::vec::Vec<u8> {
+        self.firmware_preamble.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "boot_command",
@@ -11585,6 +11623,11 @@ impl RebootToBootloader {
             "firmware_header",
             |m: &RebootToBootloader| { &m.firmware_header },
             |m: &mut RebootToBootloader| { &mut m.firmware_header },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "firmware_preamble",
+            |m: &RebootToBootloader| { &m.firmware_preamble },
+            |m: &mut RebootToBootloader| { &mut m.firmware_preamble },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RebootToBootloader>(
             "RebootToBootloader",
@@ -11610,6 +11653,9 @@ impl ::protobuf::Message for RebootToBootloader {
                 18 => {
                     self.firmware_header = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                34 => {
+                    self.firmware_preamble = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -11628,6 +11674,9 @@ impl ::protobuf::Message for RebootToBootloader {
         if let Some(v) = self.firmware_header.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.firmware_preamble.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -11639,6 +11688,9 @@ impl ::protobuf::Message for RebootToBootloader {
         }
         if let Some(v) = self.firmware_header.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.firmware_preamble.as_ref() {
+            os.write_bytes(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -11659,6 +11711,7 @@ impl ::protobuf::Message for RebootToBootloader {
     fn clear(&mut self) {
         self.boot_command = ::std::option::Option::None;
         self.firmware_header = ::std::option::Option::None;
+        self.firmware_preamble = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -11666,6 +11719,7 @@ impl ::protobuf::Message for RebootToBootloader {
         static instance: RebootToBootloader = RebootToBootloader {
             boot_command: ::std::option::Option::None,
             firmware_header: ::std::option::Option::None,
+            firmware_preamble: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -13591,11 +13645,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     u2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNextU2FCounter\
     \"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2\
     fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14PreauthorizedRequest\"\
-    \x15\n\x13CancelAuthorization\"\xeb\x01\n\x12RebootToBootloader\x12o\n\
+    \x15\n\x13CancelAuthorization\"\x98\x02\n\x12RebootToBootloader\x12o\n\
     \x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.messages.management.Re\
     bootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\n\x0ff\
-    irmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeader\"5\n\x0bBootComma\
-    nd\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01J\
+    irmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeader\x12+\n\x11firmwar\
+    e_preamble\x18\x04\x20\x01(\x0cR\x10firmwarePreamble\"5\n\x0bBootCommand\
+    \x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01J\
     \x04\x08\x03\x10\x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonce\x12\x14\n\x05non\
     ce\x18\x01\x20\x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\x1b\n\taddress_n\
     \x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\
