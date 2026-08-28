@@ -99,6 +99,7 @@ def build(
     output: Path,
     production: bool,
     bootloader_devel: bool,
+    dbg_console: str | None = None,
 ) -> None:
     output.mkdir(parents=True, exist_ok=True)
 
@@ -112,11 +113,19 @@ def build(
     # (committed/stale) secmon than the one prefixed into firmware.bin, so its
     # secure-gateway veneer is offset and the kernel SecureFaults the instant it
     # runs. Bootloader + firmware must therefore share the same flags.
+    #   --dbg-console     : debug console backend, for the boot/Python log output.
+    #                       Forwarded to every build so the bootloader, the
+    #                       variants AND the secmon each get the same backend --
+    #                       the secmon is where the privileged side of
+    #                       dbg_console_write lives, so a firmware built without
+    #                       it logs into a no-op.
     flags: list[str] = []
     if production:
         flags.append("--production")
     if bootloader_devel:
         flags.append("--bootloader-devel")
+    if dbg_console:
+        flags += ["--dbg-console", dbg_console]
 
     # Bootloader (firmware_root is a 0 placeholder until we sign).
     print(f"building bootloader ({model}) ...")
@@ -274,7 +283,12 @@ def warn_if_nrf_stale(committed: Path) -> None:
     already cost a debugging session, hence this check.
     """
     built = (
-        CORE.parent / "nordic" / "trezor" / "build" / "trezor-ble" / "zephyr"
+        CORE.parent
+        / "nordic"
+        / "trezor"
+        / "build"
+        / "trezor-ble"
+        / "zephyr"
         / "zephyr.trz.bin"
     )
     try:
@@ -415,6 +429,17 @@ def main() -> None:
         default=True,
         help="use dev keys + dev bootloader/secmon (default: on)",
     )
+    # Only the backends EVERY project in this bundle supports: prodtest and secmon
+    # declare swo/system-view but not vcp (see their project.toml), and the flag is
+    # forwarded to all of them.
+    ap.add_argument(
+        "--dbg-console",
+        choices=["swo", "system-view"],
+        default=None,
+        help="enable the debug console on this backend (default: off). 'swo' "
+        "prints over SWO/ITM port 0 -- the coreapp boot log and, unfiltered, the "
+        "MicroPython traceback",
+    )
     ap.add_argument(
         "--skip-build",
         action="store_true",
@@ -466,6 +491,7 @@ def main() -> None:
                 output,
                 args.production,
                 args.bootloader_devel,
+                args.dbg_console,
             )
         if nrf_src is not None:
             nrf_name = nrf_src.name
