@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
     from trezor.crypto import bip32
+    from trezor.enums import InputScriptType
     from trezor.messages import PaymentRequest, SignTx, TxInput, TxOutput
 
     from apps.common.coininfo import CoinInfo
@@ -156,13 +157,17 @@ class BasicApprover(Approver):
     def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         super().__init__(tx, coin)
         self.change_count = 0  # the number of change-outputs
-        self.foreign_address_confirmed = False
+        self.foreign_addresses_confirmed: set[
+            tuple[tuple[int, ...], InputScriptType]
+        ] = set()
         self.chunkify = bool(tx.chunkify)
 
     async def add_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         if not validate_path_against_script_type(self.coin, txi):
             await layout.confirm_foreign_address(txi.address_n)
-            self.foreign_address_confirmed = True
+            self.foreign_addresses_confirmed.add(
+                (tuple(txi.address_n), txi.script_type)
+            )
 
         await super().add_internal_input(txi, node)
 
@@ -173,7 +178,8 @@ class BasicApprover(Approver):
         # went through a warning screen before we sign the input.
         if (
             not validate_path_against_script_type(self.coin, txi)
-            and not self.foreign_address_confirmed
+            and (tuple(txi.address_n), txi.script_type)
+            not in self.foreign_addresses_confirmed
         ):
             raise ProcessError("Transaction has changed during signing")
 
