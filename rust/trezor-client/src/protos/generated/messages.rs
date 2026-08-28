@@ -575,6 +575,10 @@ pub enum MessageType {
     MessageType_TronUnDelegateResourceContract = 2212,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronWithdrawBalance)
     MessageType_TronWithdrawBalance = 2213,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_MiniscriptRegisterPolicy)
+    MessageType_MiniscriptRegisterPolicy = 2301,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_MiniscriptGetAddress)
+    MessageType_MiniscriptGetAddress = 2302,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -892,6 +896,8 @@ impl ::protobuf::Enum for MessageType {
             2211 => ::std::option::Option::Some(MessageType::MessageType_TronDelegateResourceContract),
             2212 => ::std::option::Option::Some(MessageType::MessageType_TronUnDelegateResourceContract),
             2213 => ::std::option::Option::Some(MessageType::MessageType_TronWithdrawBalance),
+            2301 => ::std::option::Option::Some(MessageType::MessageType_MiniscriptRegisterPolicy),
+            2302 => ::std::option::Option::Some(MessageType::MessageType_MiniscriptGetAddress),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1188,6 +1194,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_TronDelegateResourceContract" => ::std::option::Option::Some(MessageType::MessageType_TronDelegateResourceContract),
             "MessageType_TronUnDelegateResourceContract" => ::std::option::Option::Some(MessageType::MessageType_TronUnDelegateResourceContract),
             "MessageType_TronWithdrawBalance" => ::std::option::Option::Some(MessageType::MessageType_TronWithdrawBalance),
+            "MessageType_MiniscriptRegisterPolicy" => ::std::option::Option::Some(MessageType::MessageType_MiniscriptRegisterPolicy),
+            "MessageType_MiniscriptGetAddress" => ::std::option::Option::Some(MessageType::MessageType_MiniscriptGetAddress),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1483,6 +1491,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_TronDelegateResourceContract,
         MessageType::MessageType_TronUnDelegateResourceContract,
         MessageType::MessageType_TronWithdrawBalance,
+        MessageType::MessageType_MiniscriptRegisterPolicy,
+        MessageType::MessageType_MiniscriptGetAddress,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
@@ -1784,22 +1794,24 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_TronDelegateResourceContract => 271,
             MessageType::MessageType_TronUnDelegateResourceContract => 272,
             MessageType::MessageType_TronWithdrawBalance => 273,
-            MessageType::MessageType_BenchmarkListNames => 274,
-            MessageType::MessageType_BenchmarkNames => 275,
-            MessageType::MessageType_BenchmarkRun => 276,
-            MessageType::MessageType_BenchmarkResult => 277,
-            MessageType::MessageType_TelemetryGet => 278,
-            MessageType::MessageType_Telemetry => 279,
-            MessageType::MessageType_ExtAppLoad => 280,
-            MessageType::MessageType_ExtAppLoaded => 281,
-            MessageType::MessageType_ExtAppHeaderRequest => 282,
-            MessageType::MessageType_ExtAppHeaderAck => 283,
-            MessageType::MessageType_ExtAppRootPacketRequest => 284,
-            MessageType::MessageType_ExtAppRootPacketAck => 285,
-            MessageType::MessageType_ExtAppDataChunkRequest => 286,
-            MessageType::MessageType_ExtAppDataChunkAck => 287,
-            MessageType::MessageType_ExtAppMessage => 288,
-            MessageType::MessageType_ExtAppResponse => 289,
+            MessageType::MessageType_MiniscriptRegisterPolicy => 274,
+            MessageType::MessageType_MiniscriptGetAddress => 275,
+            MessageType::MessageType_BenchmarkListNames => 276,
+            MessageType::MessageType_BenchmarkNames => 277,
+            MessageType::MessageType_BenchmarkRun => 278,
+            MessageType::MessageType_BenchmarkResult => 279,
+            MessageType::MessageType_TelemetryGet => 280,
+            MessageType::MessageType_Telemetry => 281,
+            MessageType::MessageType_ExtAppLoad => 282,
+            MessageType::MessageType_ExtAppLoaded => 283,
+            MessageType::MessageType_ExtAppHeaderRequest => 284,
+            MessageType::MessageType_ExtAppHeaderAck => 285,
+            MessageType::MessageType_ExtAppRootPacketRequest => 286,
+            MessageType::MessageType_ExtAppRootPacketAck => 287,
+            MessageType::MessageType_ExtAppDataChunkRequest => 288,
+            MessageType::MessageType_ExtAppDataChunkAck => 289,
+            MessageType::MessageType_ExtAppMessage => 290,
+            MessageType::MessageType_ExtAppResponse => 291,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1818,7 +1830,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xf3g\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xd9h\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2136,36 +2148,38 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x11\x1a\x04\x90\xb5\x18\x01\x123\n(MessageType_TronDelegateResourceCont\
     ract\x10\xa3\x11\x1a\x04\x90\xb5\x18\x01\x125\n*MessageType_TronUnDelega\
     teResourceContract\x10\xa4\x11\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessage\
-    Type_TronWithdrawBalance\x10\xa5\x11\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eM\
-    essageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\
-    \x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\
-    \x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1b\
-    MessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18M\
-    essageType_TelemetryGet\x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
-    \x01\x12$\n\x15MessageType_Telemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\
-    \x98\xb5\x18\x01\x12!\n\x16MessageType_ExtAppLoad\x10\xf0G\x1a\x04\x90\
-    \xb5\x18\x01\x12#\n\x18MessageType_ExtAppLoaded\x10\xf1G\x1a\x04\x98\xb5\
-    \x18\x01\x12*\n\x1fMessageType_ExtAppHeaderRequest\x10\xf2G\x1a\x04\x98\
-    \xb5\x18\x01\x12&\n\x1bMessageType_ExtAppHeaderAck\x10\xf3G\x1a\x04\x90\
-    \xb5\x18\x01\x12.\n#MessageType_ExtAppRootPacketRequest\x10\xf4G\x1a\x04\
-    \x98\xb5\x18\x01\x12*\n\x1fMessageType_ExtAppRootPacketAck\x10\xf5G\x1a\
-    \x04\x90\xb5\x18\x01\x12-\n\"MessageType_ExtAppDataChunkRequest\x10\xf6G\
-    \x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_ExtAppDataChunkAck\x10\
-    \xf7G\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_ExtAppMessage\x10\
-    \xf8G\x1a\x04\x90\xb5\x18\x01\x12%\n\x1aMessageType_ExtAppResponse\x10\
-    \xf9G\x1a\x04\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\
-    \x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10J\"\x06\x08\xd9\x03\x10\
-    \xda\x03\"\x04\x08C\x10F\"\x04\x08K\x10L\"\x04\x08r\x10z\"\x05\x08{\x10\
-    \x95\x01\"\x06\x08\x96\x01\x10\x9b\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\
-    \x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\x06\x08\xe3\
-    \x01\x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\x01\x10\xe5\
-    \x01\"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\x01\"\x06\
-    \x08\xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\x08\xec\x01\
-    \x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\x10\xb0\x02\
-    \"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xd8\x04\x10\xdd\x04\"\x06\x08\
-    \xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\
-    \xcb\x08B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\
-    \x1d\x01\
+    Type_TronWithdrawBalance\x10\xa5\x11\x1a\x04\x90\xb5\x18\x01\x123\n$Mess\
+    ageType_MiniscriptRegisterPolicy\x10\xfd\x11\x1a\x08\x80\xa6\x1d\x01\x90\
+    \xb5\x18\x01\x12/\n\x20MessageType_MiniscriptGetAddress\x10\xfe\x11\x1a\
+    \x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkList\
+    Names\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNa\
+    mes\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\
+    \x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\
+    \x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\x10\
+    \xcc\x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_T\
+    elemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12!\n\x16M\
+    essageType_ExtAppLoad\x10\xf0G\x1a\x04\x90\xb5\x18\x01\x12#\n\x18Message\
+    Type_ExtAppLoaded\x10\xf1G\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessageType\
+    _ExtAppHeaderRequest\x10\xf2G\x1a\x04\x98\xb5\x18\x01\x12&\n\x1bMessageT\
+    ype_ExtAppHeaderAck\x10\xf3G\x1a\x04\x90\xb5\x18\x01\x12.\n#MessageType_\
+    ExtAppRootPacketRequest\x10\xf4G\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessa\
+    geType_ExtAppRootPacketAck\x10\xf5G\x1a\x04\x90\xb5\x18\x01\x12-\n\"Mess\
+    ageType_ExtAppDataChunkRequest\x10\xf6G\x1a\x04\x98\xb5\x18\x01\x12)\n\
+    \x1eMessageType_ExtAppDataChunkAck\x10\xf7G\x1a\x04\x90\xb5\x18\x01\x12$\
+    \n\x19MessageType_ExtAppMessage\x10\xf8G\x1a\x04\x90\xb5\x18\x01\x12%\n\
+    \x1aMessageType_ExtAppResponse\x10\xf9G\x1a\x04\x98\xb5\x18\x01\x1a\x08\
+    \xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\
+    \x08G\x10J\"\x06\x08\xd9\x03\x10\xda\x03\"\x04\x08C\x10F\"\x04\x08K\x10L\
+    \"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\x96\x01\x10\x9b\x01\"\
+    \x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\
+    \x01\x10\xe2\x01\"\x06\x08\xe3\x01\x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\
+    \x01\"\x06\x08\xe5\x01\x10\xe5\x01\"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\
+    \x08\xe8\x01\x10\xe8\x01\"\x06\x08\xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\
+    \x10\xea\x01\"\x06\x08\xec\x01\x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\
+    \"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\
+    \xd8\x04\x10\xdd\x04\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\
+    \xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.pr\
+    otobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
