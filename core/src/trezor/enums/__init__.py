@@ -777,6 +777,7 @@ if TYPE_CHECKING:
         TronDelegateResourceContract = 2211
         TronUnDelegateResourceContract = 2212
         TronWithdrawBalance = 2213
+        MiniscriptRegisterPolicy = 2301
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

@@ -443,11 +443,44 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["PublicKey"]:
             return isinstance(msg, cls)
 
+    class MiniscriptRegisterPolicy(protobuf.MessageType):
+        policy: "MiniscriptPolicy"
+        name: "str"
+        coin_name: "str"
+
+        def __init__(
+            self,
+            *,
+            policy: "MiniscriptPolicy",
+            name: "str",
+            coin_name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptRegisterPolicy"]:
+            return isinstance(msg, cls)
+
+    class MiniscriptPolicy(protobuf.MessageType):
+        descriptor: "str"
+
+        def __init__(
+            self,
+            *,
+            descriptor: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptPolicy"]:
+            return isinstance(msg, cls)
+
     class GetAddress(protobuf.MessageType):
         address_n: "list[int]"
         coin_name: "str"
         show_display: "bool | None"
         multisig: "MultisigRedeemScriptType | None"
+        policy: "MiniscriptPolicy | None"
         script_type: "InputScriptType"
         ignore_xpub_magic: "bool | None"
         chunkify: "bool | None"
@@ -459,6 +492,7 @@ if TYPE_CHECKING:
             coin_name: "str | None" = None,
             show_display: "bool | None" = None,
             multisig: "MultisigRedeemScriptType | None" = None,
+            policy: "MiniscriptPolicy | None" = None,
             script_type: "InputScriptType | None" = None,
             ignore_xpub_magic: "bool | None" = None,
             chunkify: "bool | None" = None,
@@ -647,6 +681,7 @@ if TYPE_CHECKING:
         sequence: "int"
         script_type: "InputScriptType"
         multisig: "MultisigRedeemScriptType | None"
+        policy: "MiniscriptPolicy | None"
         amount: "int"
         decred_tree: "int | None"
         witness: "AnyBytes | None"
@@ -669,6 +704,7 @@ if TYPE_CHECKING:
             sequence: "int | None" = None,
             script_type: "InputScriptType | None" = None,
             multisig: "MultisigRedeemScriptType | None" = None,
+            policy: "MiniscriptPolicy | None" = None,
             decred_tree: "int | None" = None,
             witness: "AnyBytes | None" = None,
             ownership_proof: "AnyBytes | None" = None,
@@ -691,6 +727,7 @@ if TYPE_CHECKING:
         amount: "int"
         script_type: "OutputScriptType"
         multisig: "MultisigRedeemScriptType | None"
+        policy: "MiniscriptPolicy | None"
         op_return_data: "AnyBytes | None"
         orig_hash: "AnyBytes | None"
         orig_index: "int | None"
@@ -704,6 +741,7 @@ if TYPE_CHECKING:
             address: "str | None" = None,
             script_type: "OutputScriptType | None" = None,
             multisig: "MultisigRedeemScriptType | None" = None,
+            policy: "MiniscriptPolicy | None" = None,
             op_return_data: "AnyBytes | None" = None,
             orig_hash: "AnyBytes | None" = None,
             orig_index: "int | None" = None,
