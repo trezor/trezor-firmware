@@ -108,6 +108,18 @@ message PublicKey {
 }
 
 /**
+ * Request: Ask device to register Miniscript descriptor below.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message MiniscriptDescriptor {
+    required string name = 1;                             // human-readable name
+    required string descriptor = 2;                       // BIP-389 miniscript multipath descriptor
+    optional string coin_name = 3 [default = 'Bitcoin'];  // coin to use
+}
+
+/**
  * Request: Ask device for address corresponding to address_n path
  * @start
  * @next Address
@@ -117,7 +129,11 @@ message GetAddress {
     repeated uint32 address_n = 1;                        // BIP-32 path to derive the key from master node
     optional string coin_name = 2 [default = 'Bitcoin'];  // coin to use
     optional bool show_display = 3;                       // optionally show on display before sending the result
-    optional MultisigRedeemScriptType multisig = 4;       // filled if we are showing a multisig address
+
+    optional MultisigRedeemScriptType multisig = 4;  // filled if we are showing a multisig (non-miniscript) address
+    optional MiniscriptDescriptor miniscript = 8
+        [(experimental_field) = true];               // filled if we are showing a miniscript-derived address.
+
     optional InputScriptType script_type = 5
         [default = SPENDADDRESS];  // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional bool ignore_xpub_magic = 6;  // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
@@ -328,10 +344,15 @@ message TxAck {
             optional bytes script_sig = 4;   // script signature, unset for tx to sign
             optional uint32 sequence = 5 [default = 4294967295];                // sequence (default=0xffffffff)
             optional InputScriptType script_type = 6 [default = SPENDADDRESS];  // defines template of input script
-            optional MultisigRedeemScriptType multisig = 7;  // Filled if input is going to spend multisig tx
-            optional uint64 amount = 8;                      // amount of previous transaction output (for segwit only)
-            optional uint32 decred_tree = 9;                 // only for Decred, 0 is a normal transaction
-                                                             // while 1 is a stake transaction
+
+            optional MultisigRedeemScriptType multisig =
+                7;                              // Filled if input is going to spend multisig (non-miniscript) output
+            optional MiniscriptDescriptor miniscript = 21
+                [(experimental_field) = true];  // Filled if input is going to spend miniscript output
+
+            optional uint64 amount = 8;         // amount of previous transaction output (for segwit only)
+            optional uint32 decred_tree = 9;    // only for Decred, 0 is a normal transaction
+                                                // while 1 is a stake transaction
             // optional uint32 decred_script_version = 10;   // only for  Decred  // deprecated -> only 0 is supported
             // optional bytes prev_block_hash_bip115 = 11;   // BIP-115 support dropped
             // optional uint32 prev_block_height_bip115 = 12;// BIP-115 support dropped
@@ -394,8 +415,12 @@ message TxInput {
     optional bytes script_sig = 4;                        // script signature, only set for EXTERNAL inputs
     optional uint32 sequence = 5 [default = 0xffffffff];  // sequence
     optional InputScriptType script_type = 6 [default = SPENDADDRESS];  // defines template of input script
-    optional MultisigRedeemScriptType multisig = 7;                     // Filled if input is going to spend multisig tx
-    required uint64 amount = 8;                                         // amount of previous transaction output
+
+    optional MultisigRedeemScriptType multisig = 7;  // Filled if input is going to spend multisig (non-miniscript) tx
+    optional MiniscriptDescriptor miniscript = 21
+        [(experimental_field) = true];               // Filled if input is going to spend miniscript tx
+
+    required uint64 amount = 8;                      // amount of previous transaction output
     optional uint32 decred_tree = 9;      // only for Decred, 0 is a normal transaction while 1 is a stake transaction
     reserved 10, 11, 12;                  // fields which are in use, or have been in the past, in TxInputType
     optional bytes witness = 13;          // witness data, only set for EXTERNAL inputs

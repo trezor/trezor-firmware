@@ -1076,6 +1076,278 @@ impl ::protobuf::reflect::ProtobufValue for PublicKey {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.bitcoin.MiniscriptDescriptor)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct MiniscriptDescriptor {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.MiniscriptDescriptor.name)
+    pub name: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.MiniscriptDescriptor.descriptor)
+    pub descriptor: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.MiniscriptDescriptor.coin_name)
+    pub coin_name: ::std::option::Option<::std::string::String>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.MiniscriptDescriptor.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a MiniscriptDescriptor {
+    fn default() -> &'a MiniscriptDescriptor {
+        <MiniscriptDescriptor as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl MiniscriptDescriptor {
+    pub fn new() -> MiniscriptDescriptor {
+        ::std::default::Default::default()
+    }
+
+    // required string name = 1;
+
+    pub fn name(&self) -> &str {
+        match self.name.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_name(&mut self) {
+        self.name = ::std::option::Option::None;
+    }
+
+    pub fn has_name(&self) -> bool {
+        self.name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_name(&mut self, v: ::std::string::String) {
+        self.name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_name(&mut self) -> &mut ::std::string::String {
+        if self.name.is_none() {
+            self.name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_name(&mut self) -> ::std::string::String {
+        self.name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string descriptor = 2;
+
+    pub fn descriptor(&self) -> &str {
+        match self.descriptor.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_descriptor(&mut self) {
+        self.descriptor = ::std::option::Option::None;
+    }
+
+    pub fn has_descriptor(&self) -> bool {
+        self.descriptor.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_descriptor(&mut self, v: ::std::string::String) {
+        self.descriptor = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_descriptor(&mut self) -> &mut ::std::string::String {
+        if self.descriptor.is_none() {
+            self.descriptor = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.descriptor.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_descriptor(&mut self) -> ::std::string::String {
+        self.descriptor.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional string coin_name = 3;
+
+    pub fn coin_name(&self) -> &str {
+        match self.coin_name.as_ref() {
+            Some(v) => v,
+            None => "Bitcoin",
+        }
+    }
+
+    pub fn clear_coin_name(&mut self) {
+        self.coin_name = ::std::option::Option::None;
+    }
+
+    pub fn has_coin_name(&self) -> bool {
+        self.coin_name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_coin_name(&mut self, v: ::std::string::String) {
+        self.coin_name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_coin_name(&mut self) -> &mut ::std::string::String {
+        if self.coin_name.is_none() {
+            self.coin_name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.coin_name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_coin_name(&mut self) -> ::std::string::String {
+        self.coin_name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "name",
+            |m: &MiniscriptDescriptor| { &m.name },
+            |m: &mut MiniscriptDescriptor| { &mut m.name },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "descriptor",
+            |m: &MiniscriptDescriptor| { &m.descriptor },
+            |m: &mut MiniscriptDescriptor| { &mut m.descriptor },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "coin_name",
+            |m: &MiniscriptDescriptor| { &m.coin_name },
+            |m: &mut MiniscriptDescriptor| { &mut m.coin_name },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<MiniscriptDescriptor>(
+            "MiniscriptDescriptor",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for MiniscriptDescriptor {
+    const NAME: &'static str = "MiniscriptDescriptor";
+
+    fn is_initialized(&self) -> bool {
+        if self.name.is_none() {
+            return false;
+        }
+        if self.descriptor.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.name = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.descriptor = ::std::option::Option::Some(is.read_string()?);
+                },
+                26 => {
+                    self.coin_name = ::std::option::Option::Some(is.read_string()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.name.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.descriptor.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        if let Some(v) = self.coin_name.as_ref() {
+            my_size += ::protobuf::rt::string_size(3, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.name.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.descriptor.as_ref() {
+            os.write_string(2, v)?;
+        }
+        if let Some(v) = self.coin_name.as_ref() {
+            os.write_string(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> MiniscriptDescriptor {
+        MiniscriptDescriptor::new()
+    }
+
+    fn clear(&mut self) {
+        self.name = ::std::option::Option::None;
+        self.descriptor = ::std::option::Option::None;
+        self.coin_name = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static MiniscriptDescriptor {
+        static instance: MiniscriptDescriptor = MiniscriptDescriptor {
+            name: ::std::option::Option::None,
+            descriptor: ::std::option::Option::None,
+            coin_name: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for MiniscriptDescriptor {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("MiniscriptDescriptor").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for MiniscriptDescriptor {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for MiniscriptDescriptor {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.bitcoin.GetAddress)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct GetAddress {
@@ -1088,6 +1360,8 @@ pub struct GetAddress {
     pub show_display: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetAddress.multisig)
     pub multisig: ::protobuf::MessageField<MultisigRedeemScriptType>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetAddress.miniscript)
+    pub miniscript: ::protobuf::MessageField<MiniscriptDescriptor>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetAddress.script_type)
     pub script_type: ::std::option::Option<::protobuf::EnumOrUnknown<InputScriptType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetAddress.ignore_xpub_magic)
@@ -1226,7 +1500,7 @@ impl GetAddress {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut fields = ::std::vec::Vec::with_capacity(8);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -1247,6 +1521,11 @@ impl GetAddress {
             "multisig",
             |m: &GetAddress| { &m.multisig },
             |m: &mut GetAddress| { &mut m.multisig },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, MiniscriptDescriptor>(
+            "miniscript",
+            |m: &GetAddress| { &m.miniscript },
+            |m: &mut GetAddress| { &mut m.miniscript },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "script_type",
@@ -1280,6 +1559,11 @@ impl ::protobuf::Message for GetAddress {
                 return false;
             }
         };
+        for v in &self.miniscript {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -1300,6 +1584,9 @@ impl ::protobuf::Message for GetAddress {
                 },
                 34 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.multisig)?;
+                },
+                66 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.miniscript)?;
                 },
                 40 => {
                     self.script_type = ::std::option::Option::Some(is.read_enum_or_unknown()?);
@@ -1335,6 +1622,10 @@ impl ::protobuf::Message for GetAddress {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.miniscript.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         if let Some(v) = self.script_type {
             my_size += ::protobuf::rt::int32_size(5, v.value());
         }
@@ -1361,6 +1652,9 @@ impl ::protobuf::Message for GetAddress {
         }
         if let Some(v) = self.multisig.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
+        }
+        if let Some(v) = self.miniscript.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(8, v, os)?;
         }
         if let Some(v) = self.script_type {
             os.write_enum(5, ::protobuf::EnumOrUnknown::value(&v))?;
@@ -1392,6 +1686,7 @@ impl ::protobuf::Message for GetAddress {
         self.coin_name = ::std::option::Option::None;
         self.show_display = ::std::option::Option::None;
         self.multisig.clear();
+        self.miniscript.clear();
         self.script_type = ::std::option::Option::None;
         self.ignore_xpub_magic = ::std::option::Option::None;
         self.chunkify = ::std::option::Option::None;
@@ -1404,6 +1699,7 @@ impl ::protobuf::Message for GetAddress {
             coin_name: ::std::option::Option::None,
             show_display: ::std::option::Option::None,
             multisig: ::protobuf::MessageField::none(),
+            miniscript: ::protobuf::MessageField::none(),
             script_type: ::std::option::Option::None,
             ignore_xpub_magic: ::std::option::Option::None,
             chunkify: ::std::option::Option::None,
@@ -5535,6 +5831,8 @@ pub mod tx_ack {
             pub script_type: ::std::option::Option<::protobuf::EnumOrUnknown<super::super::InputScriptType>>,
             // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxAck.TransactionType.TxInputType.multisig)
             pub multisig: ::protobuf::MessageField<super::super::MultisigRedeemScriptType>,
+            // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxAck.TransactionType.TxInputType.miniscript)
+            pub miniscript: ::protobuf::MessageField<super::super::MiniscriptDescriptor>,
             // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxAck.TransactionType.TxInputType.amount)
             pub amount: ::std::option::Option<u64>,
             // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxAck.TransactionType.TxInputType.decred_tree)
@@ -5982,7 +6280,7 @@ pub mod tx_ack {
             }
 
             pub(in super::super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-                let mut fields = ::std::vec::Vec::with_capacity(17);
+                let mut fields = ::std::vec::Vec::with_capacity(18);
                 let mut oneofs = ::std::vec::Vec::with_capacity(0);
                 fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
                     "address_n",
@@ -6018,6 +6316,11 @@ pub mod tx_ack {
                     "multisig",
                     |m: &TxInputType| { &m.multisig },
                     |m: &mut TxInputType| { &mut m.multisig },
+                ));
+                fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::super::MiniscriptDescriptor>(
+                    "miniscript",
+                    |m: &TxInputType| { &m.miniscript },
+                    |m: &mut TxInputType| { &mut m.miniscript },
                 ));
                 fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
                     "amount",
@@ -6092,6 +6395,11 @@ pub mod tx_ack {
                         return false;
                     }
                 };
+                for v in &self.miniscript {
+                    if !v.is_initialized() {
+                        return false;
+                    }
+                };
                 true
             }
 
@@ -6121,6 +6429,9 @@ pub mod tx_ack {
                         },
                         58 => {
                             ::protobuf::rt::read_singular_message_into_field(is, &mut self.multisig)?;
+                        },
+                        170 => {
+                            ::protobuf::rt::read_singular_message_into_field(is, &mut self.miniscript)?;
                         },
                         64 => {
                             self.amount = ::std::option::Option::Some(is.read_uint64()?);
@@ -6186,6 +6497,10 @@ pub mod tx_ack {
                     let len = v.compute_size();
                     my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
                 }
+                if let Some(v) = self.miniscript.as_ref() {
+                    let len = v.compute_size();
+                    my_size += 2 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                }
                 if let Some(v) = self.amount {
                     my_size += ::protobuf::rt::uint64_size(8, v);
                 }
@@ -6243,6 +6558,9 @@ pub mod tx_ack {
                 if let Some(v) = self.multisig.as_ref() {
                     ::protobuf::rt::write_message_field_with_cached_size(7, v, os)?;
                 }
+                if let Some(v) = self.miniscript.as_ref() {
+                    ::protobuf::rt::write_message_field_with_cached_size(21, v, os)?;
+                }
                 if let Some(v) = self.amount {
                     os.write_uint64(8, v)?;
                 }
@@ -6297,6 +6615,7 @@ pub mod tx_ack {
                 self.sequence = ::std::option::Option::None;
                 self.script_type = ::std::option::Option::None;
                 self.multisig.clear();
+                self.miniscript.clear();
                 self.amount = ::std::option::Option::None;
                 self.decred_tree = ::std::option::Option::None;
                 self.witness = ::std::option::Option::None;
@@ -6319,6 +6638,7 @@ pub mod tx_ack {
                     sequence: ::std::option::Option::None,
                     script_type: ::std::option::Option::None,
                     multisig: ::protobuf::MessageField::none(),
+                    miniscript: ::protobuf::MessageField::none(),
                     amount: ::std::option::Option::None,
                     decred_tree: ::std::option::Option::None,
                     witness: ::std::option::Option::None,
@@ -7075,6 +7395,8 @@ pub struct TxInput {
     pub script_type: ::std::option::Option<::protobuf::EnumOrUnknown<InputScriptType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxInput.multisig)
     pub multisig: ::protobuf::MessageField<MultisigRedeemScriptType>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxInput.miniscript)
+    pub miniscript: ::protobuf::MessageField<MiniscriptDescriptor>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxInput.amount)
     pub amount: ::std::option::Option<u64>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxInput.decred_tree)
@@ -7522,7 +7844,7 @@ impl TxInput {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(17);
+        let mut fields = ::std::vec::Vec::with_capacity(18);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -7558,6 +7880,11 @@ impl TxInput {
             "multisig",
             |m: &TxInput| { &m.multisig },
             |m: &mut TxInput| { &mut m.multisig },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, MiniscriptDescriptor>(
+            "miniscript",
+            |m: &TxInput| { &m.miniscript },
+            |m: &mut TxInput| { &mut m.miniscript },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "amount",
@@ -7635,6 +7962,11 @@ impl ::protobuf::Message for TxInput {
                 return false;
             }
         };
+        for v in &self.miniscript {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -7664,6 +7996,9 @@ impl ::protobuf::Message for TxInput {
                 },
                 58 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.multisig)?;
+                },
+                170 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.miniscript)?;
                 },
                 64 => {
                     self.amount = ::std::option::Option::Some(is.read_uint64()?);
@@ -7729,6 +8064,10 @@ impl ::protobuf::Message for TxInput {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.miniscript.as_ref() {
+            let len = v.compute_size();
+            my_size += 2 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         if let Some(v) = self.amount {
             my_size += ::protobuf::rt::uint64_size(8, v);
         }
@@ -7786,6 +8125,9 @@ impl ::protobuf::Message for TxInput {
         if let Some(v) = self.multisig.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(7, v, os)?;
         }
+        if let Some(v) = self.miniscript.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(21, v, os)?;
+        }
         if let Some(v) = self.amount {
             os.write_uint64(8, v)?;
         }
@@ -7840,6 +8182,7 @@ impl ::protobuf::Message for TxInput {
         self.sequence = ::std::option::Option::None;
         self.script_type = ::std::option::Option::None;
         self.multisig.clear();
+        self.miniscript.clear();
         self.amount = ::std::option::Option::None;
         self.decred_tree = ::std::option::Option::None;
         self.witness = ::std::option::Option::None;
@@ -7862,6 +8205,7 @@ impl ::protobuf::Message for TxInput {
             sequence: ::std::option::Option::None,
             script_type: ::std::option::Option::None,
             multisig: ::protobuf::MessageField::none(),
+            miniscript: ::protobuf::MessageField::none(),
             amount: ::std::option::Option::None,
             decred_tree: ::std::option::Option::None,
             witness: ::std::option::Option::None,
@@ -12261,213 +12605,221 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x02(\x0b2%.hw.trezor.messages.common.HDNodeTypeR\x04node\x12\x12\n\
     \x04xpub\x18\x02\x20\x02(\tR\x04xpub\x12)\n\x10root_fingerprint\x18\x03\
     \x20\x01(\rR\x0frootFingerprint\x12\x1e\n\ndescriptor\x18\x04\x20\x01(\t\
-    R\ndescriptor\"\xe8\x02\n\nGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\
-    \x03(\rR\x08addressN\x12$\n\tcoin_name\x18\x02\x20\x01(\t:\x07BitcoinR\
-    \x08coinName\x12!\n\x0cshow_display\x18\x03\x20\x01(\x08R\x0bshowDisplay\
-    \x12P\n\x08multisig\x18\x04\x20\x01(\x0b24.hw.trezor.messages.bitcoin.Mu\
-    ltisigRedeemScriptTypeR\x08multisig\x12Z\n\x0bscript_type\x18\x05\x20\
-    \x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\
-    \nscriptType\x12*\n\x11ignore_xpub_magic\x18\x06\x20\x01(\x08R\x0fignore\
-    XpubMagic\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\"5\n\
-    \x07Address\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x10\
-    \n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\x81\x02\n\x0eGetOwnershipId\x12\
-    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12$\n\tcoin_name\x18\
-    \x02\x20\x01(\t:\x07BitcoinR\x08coinName\x12P\n\x08multisig\x18\x03\x20\
-    \x01(\x0b24.hw.trezor.messages.bitcoin.MultisigRedeemScriptTypeR\x08mult\
-    isig\x12Z\n\x0bscript_type\x18\x04\x20\x01(\x0e2+.hw.trezor.messages.bit\
-    coin.InputScriptType:\x0cSPENDADDRESSR\nscriptType\"0\n\x0bOwnershipId\
-    \x12!\n\x0cownership_id\x18\x01\x20\x02(\x0cR\x0bownershipId\"\x88\x02\n\
-    \x0bSignMessage\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\
-    \x18\n\x07message\x18\x02\x20\x02(\x0cR\x07message\x12$\n\tcoin_name\x18\
-    \x03\x20\x01(\t:\x07BitcoinR\x08coinName\x12Z\n\x0bscript_type\x18\x04\
-    \x20\x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDR\
-    ESSR\nscriptType\x12$\n\x0eno_script_type\x18\x05\x20\x01(\x08R\x0cnoScr\
-    iptType\x12\x1a\n\x08chunkify\x18\x06\x20\x01(\x08R\x08chunkify\"J\n\x10\
-    MessageSignature\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\
-    \x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\xa3\x01\n\rVerifyMe\
-    ssage\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x1c\n\tsig\
-    nature\x18\x02\x20\x02(\x0cR\tsignature\x12\x18\n\x07message\x18\x03\x20\
-    \x02(\x0cR\x07message\x12$\n\tcoin_name\x18\x04\x20\x01(\t:\x07BitcoinR\
-    \x08coinName\x12\x1a\n\x08chunkify\x18\x05\x20\x01(\x08R\x08chunkify\"\
-    \xd9\x06\n\x06SignTx\x12#\n\routputs_count\x18\x01\x20\x02(\rR\x0coutput\
-    sCount\x12!\n\x0cinputs_count\x18\x02\x20\x02(\rR\x0binputsCount\x12$\n\
-    \tcoin_name\x18\x03\x20\x01(\t:\x07BitcoinR\x08coinName\x12\x1b\n\x07ver\
-    sion\x18\x04\x20\x01(\r:\x011R\x07version\x12\x1e\n\tlock_time\x18\x05\
-    \x20\x01(\r:\x010R\x08lockTime\x12\x16\n\x06expiry\x18\x06\x20\x01(\rR\
-    \x06expiry\x12&\n\x0coverwintered\x18\x07\x20\x01(\x08R\x0coverwinteredB\
-    \x02\x18\x01\x12(\n\x10version_group_id\x18\x08\x20\x01(\rR\x0eversionGr\
-    oupId\x12\x1c\n\ttimestamp\x18\t\x20\x01(\rR\ttimestamp\x12\x1b\n\tbranc\
-    h_id\x18\n\x20\x01(\rR\x08branchId\x12P\n\x0bamount_unit\x18\x0b\x20\x01\
-    (\x0e2&.hw.trezor.messages.bitcoin.AmountUnit:\x07BITCOINR\namountUnit\
-    \x129\n\x15decred_staking_ticket\x18\x0c\x20\x01(\x08:\x05falseR\x13decr\
-    edStakingTicket\x12\"\n\tserialize\x18\r\x20\x01(\x08:\x04trueR\tseriali\
-    ze\x12]\n\x10coinjoin_request\x18\x0e\x20\x01(\x0b22.hw.trezor.messages.\
-    bitcoin.SignTx.CoinJoinRequestR\x0fcoinjoinRequest\x12\x1a\n\x08chunkify\
-    \x18\x0f\x20\x01(\x08R\x08chunkify\x1a\xd2\x01\n\x0fCoinJoinRequest\x12\
-    \x19\n\x08fee_rate\x18\x01\x20\x02(\rR\x07feeRate\x12(\n\x10no_fee_thres\
-    hold\x18\x02\x20\x02(\x04R\x0enoFeeThreshold\x124\n\x16min_registrable_a\
-    mount\x18\x03\x20\x02(\x04R\x14minRegistrableAmount\x12&\n\x0fmask_publi\
-    c_key\x18\x04\x20\x01(\x0cR\rmaskPublicKey\x12\x1c\n\tsignature\x18\x05\
-    \x20\x01(\x0cR\tsignature\"\xd4\x05\n\tTxRequest\x12T\n\x0crequest_type\
-    \x18\x01\x20\x01(\x0e21.hw.trezor.messages.bitcoin.TxRequest.RequestType\
-    R\x0brequestType\x12T\n\x07details\x18\x02\x20\x01(\x0b2:.hw.trezor.mess\
-    ages.bitcoin.TxRequest.TxRequestDetailsTypeR\x07details\x12]\n\nserializ\
-    ed\x18\x03\x20\x01(\x0b2=.hw.trezor.messages.bitcoin.TxRequest.TxRequest\
-    SerializedTypeR\nserialized\x1a\xa6\x01\n\x14TxRequestDetailsType\x12#\n\
-    \rrequest_index\x18\x01\x20\x01(\rR\x0crequestIndex\x12\x17\n\x07tx_hash\
-    \x18\x02\x20\x01(\x0cR\x06txHash\x12$\n\x0eextra_data_len\x18\x03\x20\
-    \x01(\rR\x0cextraDataLen\x12*\n\x11extra_data_offset\x18\x04\x20\x01(\rR\
-    \x0fextraDataOffset\x1a\x85\x01\n\x17TxRequestSerializedType\x12'\n\x0fs\
-    ignature_index\x18\x01\x20\x01(\rR\x0esignatureIndex\x12\x1c\n\tsignatur\
-    e\x18\x02\x20\x01(\x0cR\tsignature\x12#\n\rserialized_tx\x18\x03\x20\x01\
-    (\x0cR\x0cserializedTx\"\x8a\x01\n\x0bRequestType\x12\x0b\n\x07TXINPUT\
-    \x10\0\x12\x0c\n\x08TXOUTPUT\x10\x01\x12\n\n\x06TXMETA\x10\x02\x12\x0e\n\
-    \nTXFINISHED\x10\x03\x12\x0f\n\x0bTXEXTRADATA\x10\x04\x12\x0f\n\x0bTXORI\
-    GINPUT\x10\x05\x12\x10\n\x0cTXORIGOUTPUT\x10\x06\x12\x10\n\x0cTXPAYMENTR\
-    EQ\x10\x07\"\xee\x0f\n\x05TxAck\x12A\n\x02tx\x18\x01\x20\x01(\x0b21.hw.t\
-    rezor.messages.bitcoin.TxAck.TransactionTypeR\x02tx\x1a\x9d\x0f\n\x0fTra\
-    nsactionType\x12\x18\n\x07version\x18\x01\x20\x01(\rR\x07version\x12U\n\
-    \x06inputs\x18\x02\x20\x03(\x0b2=.hw.trezor.messages.bitcoin.TxAck.Trans\
-    actionType.TxInputTypeR\x06inputs\x12b\n\x0bbin_outputs\x18\x03\x20\x03(\
-    \x0b2A.hw.trezor.messages.bitcoin.TxAck.TransactionType.TxOutputBinTypeR\
-    \nbinOutputs\x12\x1b\n\tlock_time\x18\x04\x20\x01(\rR\x08lockTime\x12X\n\
-    \x07outputs\x18\x05\x20\x03(\x0b2>.hw.trezor.messages.bitcoin.TxAck.Tran\
-    sactionType.TxOutputTypeR\x07outputs\x12\x1d\n\ninputs_cnt\x18\x06\x20\
-    \x01(\rR\tinputsCnt\x12\x1f\n\x0boutputs_cnt\x18\x07\x20\x01(\rR\noutput\
-    sCnt\x12\x1d\n\nextra_data\x18\x08\x20\x01(\x0cR\textraData\x12$\n\x0eex\
-    tra_data_len\x18\t\x20\x01(\rR\x0cextraDataLen\x12\x16\n\x06expiry\x18\n\
-    \x20\x01(\rR\x06expiry\x12&\n\x0coverwintered\x18\x0b\x20\x01(\x08R\x0co\
-    verwinteredB\x02\x18\x01\x12(\n\x10version_group_id\x18\x0c\x20\x01(\rR\
-    \x0eversionGroupId\x12\x1c\n\ttimestamp\x18\r\x20\x01(\rR\ttimestamp\x12\
-    \x1b\n\tbranch_id\x18\x0e\x20\x01(\rR\x08branchId\x1a\xf1\x05\n\x0bTxInp\
-    utType\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x1b\n\tp\
-    rev_hash\x18\x02\x20\x02(\x0cR\x08prevHash\x12\x1d\n\nprev_index\x18\x03\
-    \x20\x02(\rR\tprevIndex\x12\x1d\n\nscript_sig\x18\x04\x20\x01(\x0cR\tscr\
-    iptSig\x12&\n\x08sequence\x18\x05\x20\x01(\r:\n4294967295R\x08sequence\
-    \x12Z\n\x0bscript_type\x18\x06\x20\x01(\x0e2+.hw.trezor.messages.bitcoin\
-    .InputScriptType:\x0cSPENDADDRESSR\nscriptType\x12P\n\x08multisig\x18\
-    \x07\x20\x01(\x0b24.hw.trezor.messages.bitcoin.MultisigRedeemScriptTypeR\
-    \x08multisig\x12\x16\n\x06amount\x18\x08\x20\x01(\x04R\x06amount\x12\x1f\
-    \n\x0bdecred_tree\x18\t\x20\x01(\rR\ndecredTree\x12\x18\n\x07witness\x18\
-    \r\x20\x01(\x0cR\x07witness\x12'\n\x0fownership_proof\x18\x0e\x20\x01(\
-    \x0cR\x0eownershipProof\x12'\n\x0fcommitment_data\x18\x0f\x20\x01(\x0cR\
-    \x0ecommitmentData\x12\x1b\n\torig_hash\x18\x10\x20\x01(\x0cR\x08origHas\
-    h\x12\x1d\n\norig_index\x18\x11\x20\x01(\rR\torigIndex\x12d\n\x14decred_\
-    staking_spend\x18\x12\x20\x01(\x0e22.hw.trezor.messages.bitcoin.DecredSt\
-    akingSpendTypeR\x12decredStakingSpend\x12#\n\rscript_pubkey\x18\x13\x20\
-    \x01(\x0cR\x0cscriptPubkey\x12(\n\x0ecoinjoin_flags\x18\x14\x20\x01(\r:\
-    \x010R\rcoinjoinFlags\x1a\x82\x01\n\x0fTxOutputBinType\x12\x16\n\x06amou\
-    nt\x18\x01\x20\x02(\x04R\x06amount\x12#\n\rscript_pubkey\x18\x02\x20\x02\
-    (\x0cR\x0cscriptPubkey\x122\n\x15decred_script_version\x18\x03\x20\x01(\
-    \rR\x13decredScriptVersion\x1a\x9a\x03\n\x0cTxOutputType\x12\x18\n\x07ad\
-    dress\x18\x01\x20\x01(\tR\x07address\x12\x1b\n\taddress_n\x18\x02\x20\
-    \x03(\rR\x08addressN\x12\x16\n\x06amount\x18\x03\x20\x02(\x04R\x06amount\
-    \x12[\n\x0bscript_type\x18\x04\x20\x01(\x0e2,.hw.trezor.messages.bitcoin\
-    .OutputScriptType:\x0cPAYTOADDRESSR\nscriptType\x12P\n\x08multisig\x18\
-    \x05\x20\x01(\x0b24.hw.trezor.messages.bitcoin.MultisigRedeemScriptTypeR\
-    \x08multisig\x12$\n\x0eop_return_data\x18\x06\x20\x01(\x0cR\x0copReturnD\
-    ata\x12\x1b\n\torig_hash\x18\n\x20\x01(\x0cR\x08origHash\x12\x1d\n\norig\
-    _index\x18\x0b\x20\x01(\rR\torigIndex\x12*\n\x11payment_req_index\x18\
-    \x0c\x20\x01(\rR\x0fpaymentReqIndex:\x02\x18\x01\"\xff\x05\n\x07TxInput\
-    \x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x1b\n\tprev_ha\
-    sh\x18\x02\x20\x02(\x0cR\x08prevHash\x12\x1d\n\nprev_index\x18\x03\x20\
-    \x02(\rR\tprevIndex\x12\x1d\n\nscript_sig\x18\x04\x20\x01(\x0cR\tscriptS\
-    ig\x12&\n\x08sequence\x18\x05\x20\x01(\r:\n4294967295R\x08sequence\x12Z\
-    \n\x0bscript_type\x18\x06\x20\x01(\x0e2+.hw.trezor.messages.bitcoin.Inpu\
-    tScriptType:\x0cSPENDADDRESSR\nscriptType\x12P\n\x08multisig\x18\x07\x20\
-    \x01(\x0b24.hw.trezor.messages.bitcoin.MultisigRedeemScriptTypeR\x08mult\
-    isig\x12\x16\n\x06amount\x18\x08\x20\x02(\x04R\x06amount\x12\x1f\n\x0bde\
-    cred_tree\x18\t\x20\x01(\rR\ndecredTree\x12\x18\n\x07witness\x18\r\x20\
-    \x01(\x0cR\x07witness\x12'\n\x0fownership_proof\x18\x0e\x20\x01(\x0cR\
-    \x0eownershipProof\x12'\n\x0fcommitment_data\x18\x0f\x20\x01(\x0cR\x0eco\
-    mmitmentData\x12\x1b\n\torig_hash\x18\x10\x20\x01(\x0cR\x08origHash\x12\
-    \x1d\n\norig_index\x18\x11\x20\x01(\rR\torigIndex\x12d\n\x14decred_staki\
-    ng_spend\x18\x12\x20\x01(\x0e22.hw.trezor.messages.bitcoin.DecredStaking\
-    SpendTypeR\x12decredStakingSpend\x12#\n\rscript_pubkey\x18\x13\x20\x01(\
-    \x0cR\x0cscriptPubkey\x12(\n\x0ecoinjoin_flags\x18\x14\x20\x01(\r:\x010R\
-    \rcoinjoinFlagsJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0cJ\x04\x08\x0c\x10\
-    \r\"\xa8\x03\n\x08TxOutput\x12\x18\n\x07address\x18\x01\x20\x01(\tR\x07a\
-    ddress\x12\x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08addressN\x12\x16\n\
-    \x06amount\x18\x03\x20\x02(\x04R\x06amount\x12[\n\x0bscript_type\x18\x04\
-    \x20\x01(\x0e2,.hw.trezor.messages.bitcoin.OutputScriptType:\x0cPAYTOADD\
-    RESSR\nscriptType\x12P\n\x08multisig\x18\x05\x20\x01(\x0b24.hw.trezor.me\
-    ssages.bitcoin.MultisigRedeemScriptTypeR\x08multisig\x12$\n\x0eop_return\
-    _data\x18\x06\x20\x01(\x0cR\x0copReturnData\x12\x1b\n\torig_hash\x18\n\
-    \x20\x01(\x0cR\x08origHash\x12\x1d\n\norig_index\x18\x0b\x20\x01(\rR\tor\
-    igIndex\x12*\n\x11payment_req_index\x18\x0c\x20\x01(\rR\x0fpaymentReqInd\
-    exJ\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\t\x10\n\"\xcb\x02\n\
-    \x06PrevTx\x12\x18\n\x07version\x18\x01\x20\x02(\rR\x07version\x12\x1b\n\
-    \tlock_time\x18\x04\x20\x02(\rR\x08lockTime\x12!\n\x0cinputs_count\x18\
-    \x06\x20\x02(\rR\x0binputsCount\x12#\n\routputs_count\x18\x07\x20\x02(\r\
-    R\x0coutputsCount\x12'\n\x0eextra_data_len\x18\t\x20\x01(\r:\x010R\x0cex\
-    traDataLen\x12\x16\n\x06expiry\x18\n\x20\x01(\rR\x06expiry\x12(\n\x10ver\
-    sion_group_id\x18\x0c\x20\x01(\rR\x0eversionGroupId\x12\x1c\n\ttimestamp\
-    \x18\r\x20\x01(\rR\ttimestamp\x12\x1b\n\tbranch_id\x18\x0e\x20\x01(\rR\
-    \x08branchIdJ\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x05\x10\
-    \x06J\x04\x08\x08\x10\tJ\x04\x08\x0b\x10\x0c\"\xf7\x01\n\tPrevInput\x12\
-    \x1b\n\tprev_hash\x18\x02\x20\x02(\x0cR\x08prevHash\x12\x1d\n\nprev_inde\
-    x\x18\x03\x20\x02(\rR\tprevIndex\x12\x1d\n\nscript_sig\x18\x04\x20\x02(\
-    \x0cR\tscriptSig\x12\x1a\n\x08sequence\x18\x05\x20\x02(\rR\x08sequence\
-    \x12\x1f\n\x0bdecred_tree\x18\t\x20\x01(\rR\ndecredTreeJ\x04\x08\x01\x10\
-    \x02J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\
-    \x08\n\x10\x0bJ\x04\x08\x0b\x10\x0cJ\x04\x08\x0c\x10\rJ\x04\x08\r\x10\
-    \x0eJ\x04\x08\x0e\x10\x0fJ\x04\x08\x0f\x10\x10J\x04\x08\x10\x10\x11J\x04\
-    \x08\x11\x10\x12J\x04\x08\x12\x10\x13J\x04\x08\x13\x10\x14\"}\n\nPrevOut\
-    put\x12\x16\n\x06amount\x18\x01\x20\x02(\x04R\x06amount\x12#\n\rscript_p\
-    ubkey\x18\x02\x20\x02(\x0cR\x0cscriptPubkey\x122\n\x15decred_script_vers\
-    ion\x18\x03\x20\x01(\rR\x13decredScriptVersion\"\xac\x01\n\nTxAckInput\
-    \x12H\n\x02tx\x18\x01\x20\x02(\x0b28.hw.trezor.messages.bitcoin.TxAckInp\
-    ut.TxAckInputWrapperR\x02tx\x1aN\n\x11TxAckInputWrapper\x129\n\x05input\
-    \x18\x02\x20\x02(\x0b2#.hw.trezor.messages.bitcoin.TxInputR\x05input:\
-    \x04\x90\xb2\x19\x16\"\xb3\x01\n\x0bTxAckOutput\x12J\n\x02tx\x18\x01\x20\
-    \x02(\x0b2:.hw.trezor.messages.bitcoin.TxAckOutput.TxAckOutputWrapperR\
-    \x02tx\x1aR\n\x12TxAckOutputWrapper\x12<\n\x06output\x18\x05\x20\x02(\
-    \x0b2$.hw.trezor.messages.bitcoin.TxOutputR\x06output:\x04\x90\xb2\x19\
-    \x16\"I\n\rTxAckPrevMeta\x122\n\x02tx\x18\x01\x20\x02(\x0b2\".hw.trezor.\
-    messages.bitcoin.PrevTxR\x02tx:\x04\x90\xb2\x19\x16\"\xbe\x01\n\x0eTxAck\
-    PrevInput\x12P\n\x02tx\x18\x01\x20\x02(\x0b2@.hw.trezor.messages.bitcoin\
-    .TxAckPrevInput.TxAckPrevInputWrapperR\x02tx\x1aT\n\x15TxAckPrevInputWra\
-    pper\x12;\n\x05input\x18\x02\x20\x02(\x0b2%.hw.trezor.messages.bitcoin.P\
-    revInputR\x05input:\x04\x90\xb2\x19\x16\"\xc5\x01\n\x0fTxAckPrevOutput\
-    \x12R\n\x02tx\x18\x01\x20\x02(\x0b2B.hw.trezor.messages.bitcoin.TxAckPre\
-    vOutput.TxAckPrevOutputWrapperR\x02tx\x1aX\n\x16TxAckPrevOutputWrapper\
-    \x12>\n\x06output\x18\x03\x20\x02(\x0b2&.hw.trezor.messages.bitcoin.Prev\
-    OutputR\x06output:\x04\x90\xb2\x19\x16\"\xbb\x01\n\x12TxAckPrevExtraData\
-    \x12X\n\x02tx\x18\x01\x20\x02(\x0b2H.hw.trezor.messages.bitcoin.TxAckPre\
-    vExtraData.TxAckPrevExtraDataWrapperR\x02tx\x1aE\n\x19TxAckPrevExtraData\
-    Wrapper\x12(\n\x10extra_data_chunk\x18\x08\x20\x02(\x0cR\x0eextraDataChu\
-    nk:\x04\x90\xb2\x19\x16\"\x88\x03\n\x11GetOwnershipProof\x12\x1b\n\taddr\
-    ess_n\x18\x01\x20\x03(\rR\x08addressN\x12$\n\tcoin_name\x18\x02\x20\x01(\
-    \t:\x07BitcoinR\x08coinName\x12Z\n\x0bscript_type\x18\x03\x20\x01(\x0e2+\
-    .hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDWITNESSR\nscriptTyp\
-    e\x12P\n\x08multisig\x18\x04\x20\x01(\x0b24.hw.trezor.messages.bitcoin.M\
-    ultisigRedeemScriptTypeR\x08multisig\x122\n\x11user_confirmation\x18\x05\
-    \x20\x01(\x08:\x05falseR\x10userConfirmation\x12#\n\rownership_ids\x18\
-    \x06\x20\x03(\x0cR\x0cownershipIds\x12)\n\x0fcommitment_data\x18\x07\x20\
-    \x01(\x0c:\0R\x0ecommitmentData\"W\n\x0eOwnershipProof\x12'\n\x0fownersh\
-    ip_proof\x18\x01\x20\x02(\x0cR\x0eownershipProof\x12\x1c\n\tsignature\
-    \x18\x02\x20\x02(\x0cR\tsignature\"\xab\x03\n\x11AuthorizeCoinJoin\x12\
-    \x20\n\x0bcoordinator\x18\x01\x20\x02(\tR\x0bcoordinator\x12\x1d\n\nmax_\
-    rounds\x18\x02\x20\x02(\x04R\tmaxRounds\x127\n\x18max_coordinator_fee_ra\
-    te\x18\x03\x20\x02(\rR\x15maxCoordinatorFeeRate\x12+\n\x12max_fee_per_kv\
-    byte\x18\x04\x20\x02(\rR\x0fmaxFeePerKvbyte\x12\x1b\n\taddress_n\x18\x05\
-    \x20\x03(\rR\x08addressN\x12$\n\tcoin_name\x18\x06\x20\x01(\t:\x07Bitcoi\
-    nR\x08coinName\x12Z\n\x0bscript_type\x18\x07\x20\x01(\x0e2+.hw.trezor.me\
-    ssages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptType\x12P\n\x0ba\
-    mount_unit\x18\x08\x20\x01(\x0e2&.hw.trezor.messages.bitcoin.AmountUnit:\
-    \x07BITCOINR\namountUnit*~\n\x0fInputScriptType\x12\x10\n\x0cSPENDADDRES\
-    S\x10\0\x12\x11\n\rSPENDMULTISIG\x10\x01\x12\x0c\n\x08EXTERNAL\x10\x02\
-    \x12\x10\n\x0cSPENDWITNESS\x10\x03\x12\x14\n\x10SPENDP2SHWITNESS\x10\x04\
-    \x12\x10\n\x0cSPENDTAPROOT\x10\x05*\x99\x01\n\x10OutputScriptType\x12\
-    \x10\n\x0cPAYTOADDRESS\x10\0\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01\x12\
-    \x11\n\rPAYTOMULTISIG\x10\x02\x12\x11\n\rPAYTOOPRETURN\x10\x03\x12\x10\n\
-    \x0cPAYTOWITNESS\x10\x04\x12\x14\n\x10PAYTOP2SHWITNESS\x10\x05\x12\x10\n\
-    \x0cPAYTOTAPROOT\x10\x06*.\n\x16DecredStakingSpendType\x12\t\n\x05SSGen\
-    \x10\0\x12\t\n\x05SSRTX\x10\x01*J\n\nAmountUnit\x12\x0b\n\x07BITCOIN\x10\
-    \0\x12\x10\n\x0cMILLIBITCOIN\x10\x01\x12\x10\n\x0cMICROBITCOIN\x10\x02\
-    \x12\x0b\n\x07SATOSHI\x10\x03*8\n\x14MultisigPubkeysOrder\x12\r\n\tPRESE\
-    RVED\x10\0\x12\x11\n\rLEXICOGRAPHIC\x10\x01B?\n#com.satoshilabs.trezor.l\
-    ib.protobufB\x14TrezorMessageBitcoin\x80\xa6\x1d\x01\
+    R\ndescriptor\"p\n\x14MiniscriptDescriptor\x12\x12\n\x04name\x18\x01\x20\
+    \x02(\tR\x04name\x12\x1e\n\ndescriptor\x18\x02\x20\x02(\tR\ndescriptor\
+    \x12$\n\tcoin_name\x18\x03\x20\x01(\t:\x07BitcoinR\x08coinName\"\xc0\x03\
+    \n\nGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12$\
+    \n\tcoin_name\x18\x02\x20\x01(\t:\x07BitcoinR\x08coinName\x12!\n\x0cshow\
+    _display\x18\x03\x20\x01(\x08R\x0bshowDisplay\x12P\n\x08multisig\x18\x04\
+    \x20\x01(\x0b24.hw.trezor.messages.bitcoin.MultisigRedeemScriptTypeR\x08\
+    multisig\x12V\n\nminiscript\x18\x08\x20\x01(\x0b20.hw.trezor.messages.bi\
+    tcoin.MiniscriptDescriptorR\nminiscriptB\x04\xc8\xf0\x19\x01\x12Z\n\x0bs\
+    cript_type\x18\x05\x20\x01(\x0e2+.hw.trezor.messages.bitcoin.InputScript\
+    Type:\x0cSPENDADDRESSR\nscriptType\x12*\n\x11ignore_xpub_magic\x18\x06\
+    \x20\x01(\x08R\x0fignoreXpubMagic\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\
+    \x08R\x08chunkify\"5\n\x07Address\x12\x18\n\x07address\x18\x01\x20\x02(\
+    \tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\x81\x02\n\
+    \x0eGetOwnershipId\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
+    \x12$\n\tcoin_name\x18\x02\x20\x01(\t:\x07BitcoinR\x08coinName\x12P\n\
+    \x08multisig\x18\x03\x20\x01(\x0b24.hw.trezor.messages.bitcoin.MultisigR\
+    edeemScriptTypeR\x08multisig\x12Z\n\x0bscript_type\x18\x04\x20\x01(\x0e2\
+    +.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptTy\
+    pe\"0\n\x0bOwnershipId\x12!\n\x0cownership_id\x18\x01\x20\x02(\x0cR\x0bo\
+    wnershipId\"\x88\x02\n\x0bSignMessage\x12\x1b\n\taddress_n\x18\x01\x20\
+    \x03(\rR\x08addressN\x12\x18\n\x07message\x18\x02\x20\x02(\x0cR\x07messa\
+    ge\x12$\n\tcoin_name\x18\x03\x20\x01(\t:\x07BitcoinR\x08coinName\x12Z\n\
+    \x0bscript_type\x18\x04\x20\x01(\x0e2+.hw.trezor.messages.bitcoin.InputS\
+    criptType:\x0cSPENDADDRESSR\nscriptType\x12$\n\x0eno_script_type\x18\x05\
+    \x20\x01(\x08R\x0cnoScriptType\x12\x1a\n\x08chunkify\x18\x06\x20\x01(\
+    \x08R\x08chunkify\"J\n\x10MessageSignature\x12\x18\n\x07address\x18\x01\
+    \x20\x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsign\
+    ature\"\xa3\x01\n\rVerifyMessage\x12\x18\n\x07address\x18\x01\x20\x02(\t\
+    R\x07address\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\x12\
+    \x18\n\x07message\x18\x03\x20\x02(\x0cR\x07message\x12$\n\tcoin_name\x18\
+    \x04\x20\x01(\t:\x07BitcoinR\x08coinName\x12\x1a\n\x08chunkify\x18\x05\
+    \x20\x01(\x08R\x08chunkify\"\xd9\x06\n\x06SignTx\x12#\n\routputs_count\
+    \x18\x01\x20\x02(\rR\x0coutputsCount\x12!\n\x0cinputs_count\x18\x02\x20\
+    \x02(\rR\x0binputsCount\x12$\n\tcoin_name\x18\x03\x20\x01(\t:\x07Bitcoin\
+    R\x08coinName\x12\x1b\n\x07version\x18\x04\x20\x01(\r:\x011R\x07version\
+    \x12\x1e\n\tlock_time\x18\x05\x20\x01(\r:\x010R\x08lockTime\x12\x16\n\
+    \x06expiry\x18\x06\x20\x01(\rR\x06expiry\x12&\n\x0coverwintered\x18\x07\
+    \x20\x01(\x08R\x0coverwinteredB\x02\x18\x01\x12(\n\x10version_group_id\
+    \x18\x08\x20\x01(\rR\x0eversionGroupId\x12\x1c\n\ttimestamp\x18\t\x20\
+    \x01(\rR\ttimestamp\x12\x1b\n\tbranch_id\x18\n\x20\x01(\rR\x08branchId\
+    \x12P\n\x0bamount_unit\x18\x0b\x20\x01(\x0e2&.hw.trezor.messages.bitcoin\
+    .AmountUnit:\x07BITCOINR\namountUnit\x129\n\x15decred_staking_ticket\x18\
+    \x0c\x20\x01(\x08:\x05falseR\x13decredStakingTicket\x12\"\n\tserialize\
+    \x18\r\x20\x01(\x08:\x04trueR\tserialize\x12]\n\x10coinjoin_request\x18\
+    \x0e\x20\x01(\x0b22.hw.trezor.messages.bitcoin.SignTx.CoinJoinRequestR\
+    \x0fcoinjoinRequest\x12\x1a\n\x08chunkify\x18\x0f\x20\x01(\x08R\x08chunk\
+    ify\x1a\xd2\x01\n\x0fCoinJoinRequest\x12\x19\n\x08fee_rate\x18\x01\x20\
+    \x02(\rR\x07feeRate\x12(\n\x10no_fee_threshold\x18\x02\x20\x02(\x04R\x0e\
+    noFeeThreshold\x124\n\x16min_registrable_amount\x18\x03\x20\x02(\x04R\
+    \x14minRegistrableAmount\x12&\n\x0fmask_public_key\x18\x04\x20\x01(\x0cR\
+    \rmaskPublicKey\x12\x1c\n\tsignature\x18\x05\x20\x01(\x0cR\tsignature\"\
+    \xd4\x05\n\tTxRequest\x12T\n\x0crequest_type\x18\x01\x20\x01(\x0e21.hw.t\
+    rezor.messages.bitcoin.TxRequest.RequestTypeR\x0brequestType\x12T\n\x07d\
+    etails\x18\x02\x20\x01(\x0b2:.hw.trezor.messages.bitcoin.TxRequest.TxReq\
+    uestDetailsTypeR\x07details\x12]\n\nserialized\x18\x03\x20\x01(\x0b2=.hw\
+    .trezor.messages.bitcoin.TxRequest.TxRequestSerializedTypeR\nserialized\
+    \x1a\xa6\x01\n\x14TxRequestDetailsType\x12#\n\rrequest_index\x18\x01\x20\
+    \x01(\rR\x0crequestIndex\x12\x17\n\x07tx_hash\x18\x02\x20\x01(\x0cR\x06t\
+    xHash\x12$\n\x0eextra_data_len\x18\x03\x20\x01(\rR\x0cextraDataLen\x12*\
+    \n\x11extra_data_offset\x18\x04\x20\x01(\rR\x0fextraDataOffset\x1a\x85\
+    \x01\n\x17TxRequestSerializedType\x12'\n\x0fsignature_index\x18\x01\x20\
+    \x01(\rR\x0esignatureIndex\x12\x1c\n\tsignature\x18\x02\x20\x01(\x0cR\ts\
+    ignature\x12#\n\rserialized_tx\x18\x03\x20\x01(\x0cR\x0cserializedTx\"\
+    \x8a\x01\n\x0bRequestType\x12\x0b\n\x07TXINPUT\x10\0\x12\x0c\n\x08TXOUTP\
+    UT\x10\x01\x12\n\n\x06TXMETA\x10\x02\x12\x0e\n\nTXFINISHED\x10\x03\x12\
+    \x0f\n\x0bTXEXTRADATA\x10\x04\x12\x0f\n\x0bTXORIGINPUT\x10\x05\x12\x10\n\
+    \x0cTXORIGOUTPUT\x10\x06\x12\x10\n\x0cTXPAYMENTREQ\x10\x07\"\xc6\x10\n\
+    \x05TxAck\x12A\n\x02tx\x18\x01\x20\x01(\x0b21.hw.trezor.messages.bitcoin\
+    .TxAck.TransactionTypeR\x02tx\x1a\xf5\x0f\n\x0fTransactionType\x12\x18\n\
+    \x07version\x18\x01\x20\x01(\rR\x07version\x12U\n\x06inputs\x18\x02\x20\
+    \x03(\x0b2=.hw.trezor.messages.bitcoin.TxAck.TransactionType.TxInputType\
+    R\x06inputs\x12b\n\x0bbin_outputs\x18\x03\x20\x03(\x0b2A.hw.trezor.messa\
+    ges.bitcoin.TxAck.TransactionType.TxOutputBinTypeR\nbinOutputs\x12\x1b\n\
+    \tlock_time\x18\x04\x20\x01(\rR\x08lockTime\x12X\n\x07outputs\x18\x05\
+    \x20\x03(\x0b2>.hw.trezor.messages.bitcoin.TxAck.TransactionType.TxOutpu\
+    tTypeR\x07outputs\x12\x1d\n\ninputs_cnt\x18\x06\x20\x01(\rR\tinputsCnt\
+    \x12\x1f\n\x0boutputs_cnt\x18\x07\x20\x01(\rR\noutputsCnt\x12\x1d\n\next\
+    ra_data\x18\x08\x20\x01(\x0cR\textraData\x12$\n\x0eextra_data_len\x18\t\
+    \x20\x01(\rR\x0cextraDataLen\x12\x16\n\x06expiry\x18\n\x20\x01(\rR\x06ex\
+    piry\x12&\n\x0coverwintered\x18\x0b\x20\x01(\x08R\x0coverwinteredB\x02\
+    \x18\x01\x12(\n\x10version_group_id\x18\x0c\x20\x01(\rR\x0eversionGroupI\
+    d\x12\x1c\n\ttimestamp\x18\r\x20\x01(\rR\ttimestamp\x12\x1b\n\tbranch_id\
+    \x18\x0e\x20\x01(\rR\x08branchId\x1a\xc9\x06\n\x0bTxInputType\x12\x1b\n\
+    \taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x1b\n\tprev_hash\x18\x02\
+    \x20\x02(\x0cR\x08prevHash\x12\x1d\n\nprev_index\x18\x03\x20\x02(\rR\tpr\
+    evIndex\x12\x1d\n\nscript_sig\x18\x04\x20\x01(\x0cR\tscriptSig\x12&\n\
+    \x08sequence\x18\x05\x20\x01(\r:\n4294967295R\x08sequence\x12Z\n\x0bscri\
+    pt_type\x18\x06\x20\x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptTyp\
+    e:\x0cSPENDADDRESSR\nscriptType\x12P\n\x08multisig\x18\x07\x20\x01(\x0b2\
+    4.hw.trezor.messages.bitcoin.MultisigRedeemScriptTypeR\x08multisig\x12V\
+    \n\nminiscript\x18\x15\x20\x01(\x0b20.hw.trezor.messages.bitcoin.Miniscr\
+    iptDescriptorR\nminiscriptB\x04\xc8\xf0\x19\x01\x12\x16\n\x06amount\x18\
+    \x08\x20\x01(\x04R\x06amount\x12\x1f\n\x0bdecred_tree\x18\t\x20\x01(\rR\
+    \ndecredTree\x12\x18\n\x07witness\x18\r\x20\x01(\x0cR\x07witness\x12'\n\
+    \x0fownership_proof\x18\x0e\x20\x01(\x0cR\x0eownershipProof\x12'\n\x0fco\
+    mmitment_data\x18\x0f\x20\x01(\x0cR\x0ecommitmentData\x12\x1b\n\torig_ha\
+    sh\x18\x10\x20\x01(\x0cR\x08origHash\x12\x1d\n\norig_index\x18\x11\x20\
+    \x01(\rR\torigIndex\x12d\n\x14decred_staking_spend\x18\x12\x20\x01(\x0e2\
+    2.hw.trezor.messages.bitcoin.DecredStakingSpendTypeR\x12decredStakingSpe\
+    nd\x12#\n\rscript_pubkey\x18\x13\x20\x01(\x0cR\x0cscriptPubkey\x12(\n\
+    \x0ecoinjoin_flags\x18\x14\x20\x01(\r:\x010R\rcoinjoinFlags\x1a\x82\x01\
+    \n\x0fTxOutputBinType\x12\x16\n\x06amount\x18\x01\x20\x02(\x04R\x06amoun\
+    t\x12#\n\rscript_pubkey\x18\x02\x20\x02(\x0cR\x0cscriptPubkey\x122\n\x15\
+    decred_script_version\x18\x03\x20\x01(\rR\x13decredScriptVersion\x1a\x9a\
+    \x03\n\x0cTxOutputType\x12\x18\n\x07address\x18\x01\x20\x01(\tR\x07addre\
+    ss\x12\x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08addressN\x12\x16\n\x06amo\
+    unt\x18\x03\x20\x02(\x04R\x06amount\x12[\n\x0bscript_type\x18\x04\x20\
+    \x01(\x0e2,.hw.trezor.messages.bitcoin.OutputScriptType:\x0cPAYTOADDRESS\
+    R\nscriptType\x12P\n\x08multisig\x18\x05\x20\x01(\x0b24.hw.trezor.messag\
+    es.bitcoin.MultisigRedeemScriptTypeR\x08multisig\x12$\n\x0eop_return_dat\
+    a\x18\x06\x20\x01(\x0cR\x0copReturnData\x12\x1b\n\torig_hash\x18\n\x20\
+    \x01(\x0cR\x08origHash\x12\x1d\n\norig_index\x18\x0b\x20\x01(\rR\torigIn\
+    dex\x12*\n\x11payment_req_index\x18\x0c\x20\x01(\rR\x0fpaymentReqIndex:\
+    \x02\x18\x01\"\xd7\x06\n\x07TxInput\x12\x1b\n\taddress_n\x18\x01\x20\x03\
+    (\rR\x08addressN\x12\x1b\n\tprev_hash\x18\x02\x20\x02(\x0cR\x08prevHash\
+    \x12\x1d\n\nprev_index\x18\x03\x20\x02(\rR\tprevIndex\x12\x1d\n\nscript_\
+    sig\x18\x04\x20\x01(\x0cR\tscriptSig\x12&\n\x08sequence\x18\x05\x20\x01(\
+    \r:\n4294967295R\x08sequence\x12Z\n\x0bscript_type\x18\x06\x20\x01(\x0e2\
+    +.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptTy\
+    pe\x12P\n\x08multisig\x18\x07\x20\x01(\x0b24.hw.trezor.messages.bitcoin.\
+    MultisigRedeemScriptTypeR\x08multisig\x12V\n\nminiscript\x18\x15\x20\x01\
+    (\x0b20.hw.trezor.messages.bitcoin.MiniscriptDescriptorR\nminiscriptB\
+    \x04\xc8\xf0\x19\x01\x12\x16\n\x06amount\x18\x08\x20\x02(\x04R\x06amount\
+    \x12\x1f\n\x0bdecred_tree\x18\t\x20\x01(\rR\ndecredTree\x12\x18\n\x07wit\
+    ness\x18\r\x20\x01(\x0cR\x07witness\x12'\n\x0fownership_proof\x18\x0e\
+    \x20\x01(\x0cR\x0eownershipProof\x12'\n\x0fcommitment_data\x18\x0f\x20\
+    \x01(\x0cR\x0ecommitmentData\x12\x1b\n\torig_hash\x18\x10\x20\x01(\x0cR\
+    \x08origHash\x12\x1d\n\norig_index\x18\x11\x20\x01(\rR\torigIndex\x12d\n\
+    \x14decred_staking_spend\x18\x12\x20\x01(\x0e22.hw.trezor.messages.bitco\
+    in.DecredStakingSpendTypeR\x12decredStakingSpend\x12#\n\rscript_pubkey\
+    \x18\x13\x20\x01(\x0cR\x0cscriptPubkey\x12(\n\x0ecoinjoin_flags\x18\x14\
+    \x20\x01(\r:\x010R\rcoinjoinFlagsJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\
+    \x0cJ\x04\x08\x0c\x10\r\"\xa8\x03\n\x08TxOutput\x12\x18\n\x07address\x18\
+    \x01\x20\x01(\tR\x07address\x12\x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08\
+    addressN\x12\x16\n\x06amount\x18\x03\x20\x02(\x04R\x06amount\x12[\n\x0bs\
+    cript_type\x18\x04\x20\x01(\x0e2,.hw.trezor.messages.bitcoin.OutputScrip\
+    tType:\x0cPAYTOADDRESSR\nscriptType\x12P\n\x08multisig\x18\x05\x20\x01(\
+    \x0b24.hw.trezor.messages.bitcoin.MultisigRedeemScriptTypeR\x08multisig\
+    \x12$\n\x0eop_return_data\x18\x06\x20\x01(\x0cR\x0copReturnData\x12\x1b\
+    \n\torig_hash\x18\n\x20\x01(\x0cR\x08origHash\x12\x1d\n\norig_index\x18\
+    \x0b\x20\x01(\rR\torigIndex\x12*\n\x11payment_req_index\x18\x0c\x20\x01(\
+    \rR\x0fpaymentReqIndexJ\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\
+    \t\x10\n\"\xcb\x02\n\x06PrevTx\x12\x18\n\x07version\x18\x01\x20\x02(\rR\
+    \x07version\x12\x1b\n\tlock_time\x18\x04\x20\x02(\rR\x08lockTime\x12!\n\
+    \x0cinputs_count\x18\x06\x20\x02(\rR\x0binputsCount\x12#\n\routputs_coun\
+    t\x18\x07\x20\x02(\rR\x0coutputsCount\x12'\n\x0eextra_data_len\x18\t\x20\
+    \x01(\r:\x010R\x0cextraDataLen\x12\x16\n\x06expiry\x18\n\x20\x01(\rR\x06\
+    expiry\x12(\n\x10version_group_id\x18\x0c\x20\x01(\rR\x0eversionGroupId\
+    \x12\x1c\n\ttimestamp\x18\r\x20\x01(\rR\ttimestamp\x12\x1b\n\tbranch_id\
+    \x18\x0e\x20\x01(\rR\x08branchIdJ\x04\x08\x02\x10\x03J\x04\x08\x03\x10\
+    \x04J\x04\x08\x05\x10\x06J\x04\x08\x08\x10\tJ\x04\x08\x0b\x10\x0c\"\xf7\
+    \x01\n\tPrevInput\x12\x1b\n\tprev_hash\x18\x02\x20\x02(\x0cR\x08prevHash\
+    \x12\x1d\n\nprev_index\x18\x03\x20\x02(\rR\tprevIndex\x12\x1d\n\nscript_\
+    sig\x18\x04\x20\x02(\x0cR\tscriptSig\x12\x1a\n\x08sequence\x18\x05\x20\
+    \x02(\rR\x08sequence\x12\x1f\n\x0bdecred_tree\x18\t\x20\x01(\rR\ndecredT\
+    reeJ\x04\x08\x01\x10\x02J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\
+    \x08\x08\x10\tJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0cJ\x04\x08\x0c\x10\
+    \rJ\x04\x08\r\x10\x0eJ\x04\x08\x0e\x10\x0fJ\x04\x08\x0f\x10\x10J\x04\x08\
+    \x10\x10\x11J\x04\x08\x11\x10\x12J\x04\x08\x12\x10\x13J\x04\x08\x13\x10\
+    \x14\"}\n\nPrevOutput\x12\x16\n\x06amount\x18\x01\x20\x02(\x04R\x06amoun\
+    t\x12#\n\rscript_pubkey\x18\x02\x20\x02(\x0cR\x0cscriptPubkey\x122\n\x15\
+    decred_script_version\x18\x03\x20\x01(\rR\x13decredScriptVersion\"\xac\
+    \x01\n\nTxAckInput\x12H\n\x02tx\x18\x01\x20\x02(\x0b28.hw.trezor.message\
+    s.bitcoin.TxAckInput.TxAckInputWrapperR\x02tx\x1aN\n\x11TxAckInputWrappe\
+    r\x129\n\x05input\x18\x02\x20\x02(\x0b2#.hw.trezor.messages.bitcoin.TxIn\
+    putR\x05input:\x04\x90\xb2\x19\x16\"\xb3\x01\n\x0bTxAckOutput\x12J\n\x02\
+    tx\x18\x01\x20\x02(\x0b2:.hw.trezor.messages.bitcoin.TxAckOutput.TxAckOu\
+    tputWrapperR\x02tx\x1aR\n\x12TxAckOutputWrapper\x12<\n\x06output\x18\x05\
+    \x20\x02(\x0b2$.hw.trezor.messages.bitcoin.TxOutputR\x06output:\x04\x90\
+    \xb2\x19\x16\"I\n\rTxAckPrevMeta\x122\n\x02tx\x18\x01\x20\x02(\x0b2\".hw\
+    .trezor.messages.bitcoin.PrevTxR\x02tx:\x04\x90\xb2\x19\x16\"\xbe\x01\n\
+    \x0eTxAckPrevInput\x12P\n\x02tx\x18\x01\x20\x02(\x0b2@.hw.trezor.message\
+    s.bitcoin.TxAckPrevInput.TxAckPrevInputWrapperR\x02tx\x1aT\n\x15TxAckPre\
+    vInputWrapper\x12;\n\x05input\x18\x02\x20\x02(\x0b2%.hw.trezor.messages.\
+    bitcoin.PrevInputR\x05input:\x04\x90\xb2\x19\x16\"\xc5\x01\n\x0fTxAckPre\
+    vOutput\x12R\n\x02tx\x18\x01\x20\x02(\x0b2B.hw.trezor.messages.bitcoin.T\
+    xAckPrevOutput.TxAckPrevOutputWrapperR\x02tx\x1aX\n\x16TxAckPrevOutputWr\
+    apper\x12>\n\x06output\x18\x03\x20\x02(\x0b2&.hw.trezor.messages.bitcoin\
+    .PrevOutputR\x06output:\x04\x90\xb2\x19\x16\"\xbb\x01\n\x12TxAckPrevExtr\
+    aData\x12X\n\x02tx\x18\x01\x20\x02(\x0b2H.hw.trezor.messages.bitcoin.TxA\
+    ckPrevExtraData.TxAckPrevExtraDataWrapperR\x02tx\x1aE\n\x19TxAckPrevExtr\
+    aDataWrapper\x12(\n\x10extra_data_chunk\x18\x08\x20\x02(\x0cR\x0eextraDa\
+    taChunk:\x04\x90\xb2\x19\x16\"\x88\x03\n\x11GetOwnershipProof\x12\x1b\n\
+    \taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12$\n\tcoin_name\x18\x02\
+    \x20\x01(\t:\x07BitcoinR\x08coinName\x12Z\n\x0bscript_type\x18\x03\x20\
+    \x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDWITNESSR\
+    \nscriptType\x12P\n\x08multisig\x18\x04\x20\x01(\x0b24.hw.trezor.message\
+    s.bitcoin.MultisigRedeemScriptTypeR\x08multisig\x122\n\x11user_confirmat\
+    ion\x18\x05\x20\x01(\x08:\x05falseR\x10userConfirmation\x12#\n\rownershi\
+    p_ids\x18\x06\x20\x03(\x0cR\x0cownershipIds\x12)\n\x0fcommitment_data\
+    \x18\x07\x20\x01(\x0c:\0R\x0ecommitmentData\"W\n\x0eOwnershipProof\x12'\
+    \n\x0fownership_proof\x18\x01\x20\x02(\x0cR\x0eownershipProof\x12\x1c\n\
+    \tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\xab\x03\n\x11AuthorizeCoi\
+    nJoin\x12\x20\n\x0bcoordinator\x18\x01\x20\x02(\tR\x0bcoordinator\x12\
+    \x1d\n\nmax_rounds\x18\x02\x20\x02(\x04R\tmaxRounds\x127\n\x18max_coordi\
+    nator_fee_rate\x18\x03\x20\x02(\rR\x15maxCoordinatorFeeRate\x12+\n\x12ma\
+    x_fee_per_kvbyte\x18\x04\x20\x02(\rR\x0fmaxFeePerKvbyte\x12\x1b\n\taddre\
+    ss_n\x18\x05\x20\x03(\rR\x08addressN\x12$\n\tcoin_name\x18\x06\x20\x01(\
+    \t:\x07BitcoinR\x08coinName\x12Z\n\x0bscript_type\x18\x07\x20\x01(\x0e2+\
+    .hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptTyp\
+    e\x12P\n\x0bamount_unit\x18\x08\x20\x01(\x0e2&.hw.trezor.messages.bitcoi\
+    n.AmountUnit:\x07BITCOINR\namountUnit*~\n\x0fInputScriptType\x12\x10\n\
+    \x0cSPENDADDRESS\x10\0\x12\x11\n\rSPENDMULTISIG\x10\x01\x12\x0c\n\x08EXT\
+    ERNAL\x10\x02\x12\x10\n\x0cSPENDWITNESS\x10\x03\x12\x14\n\x10SPENDP2SHWI\
+    TNESS\x10\x04\x12\x10\n\x0cSPENDTAPROOT\x10\x05*\x99\x01\n\x10OutputScri\
+    ptType\x12\x10\n\x0cPAYTOADDRESS\x10\0\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\
+    \x01\x12\x11\n\rPAYTOMULTISIG\x10\x02\x12\x11\n\rPAYTOOPRETURN\x10\x03\
+    \x12\x10\n\x0cPAYTOWITNESS\x10\x04\x12\x14\n\x10PAYTOP2SHWITNESS\x10\x05\
+    \x12\x10\n\x0cPAYTOTAPROOT\x10\x06*.\n\x16DecredStakingSpendType\x12\t\n\
+    \x05SSGen\x10\0\x12\t\n\x05SSRTX\x10\x01*J\n\nAmountUnit\x12\x0b\n\x07BI\
+    TCOIN\x10\0\x12\x10\n\x0cMILLIBITCOIN\x10\x01\x12\x10\n\x0cMICROBITCOIN\
+    \x10\x02\x12\x0b\n\x07SATOSHI\x10\x03*8\n\x14MultisigPubkeysOrder\x12\r\
+    \n\tPRESERVED\x10\0\x12\x11\n\rLEXICOGRAPHIC\x10\x01B?\n#com.satoshilabs\
+    .trezor.lib.protobufB\x14TrezorMessageBitcoin\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -12487,10 +12839,11 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             let mut deps = ::std::vec::Vec::with_capacity(2);
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(40);
+            let mut messages = ::std::vec::Vec::with_capacity(41);
             messages.push(MultisigRedeemScriptType::generated_message_descriptor_data());
             messages.push(GetPublicKey::generated_message_descriptor_data());
             messages.push(PublicKey::generated_message_descriptor_data());
+            messages.push(MiniscriptDescriptor::generated_message_descriptor_data());
             messages.push(GetAddress::generated_message_descriptor_data());
             messages.push(Address::generated_message_descriptor_data());
             messages.push(GetOwnershipId::generated_message_descriptor_data());
