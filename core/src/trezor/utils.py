@@ -28,6 +28,7 @@ from trezorutils import (  # noqa: F401
     USE_DBG_CONSOLE,
     USE_HAPTIC,
     USE_MCU_ATTESTATION,
+    USE_MINISCRIPT,
     USE_N1W1,
     USE_NFC,
     USE_NRF,

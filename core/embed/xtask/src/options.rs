@@ -202,6 +202,10 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map n1w1: bool,
 
+    /// Experimental miniscript support.
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    map miniscript: bool,
+
     /// Disable UI animations
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map disable_animation: bool,
