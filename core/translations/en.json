@@ -2853,7 +2853,6 @@
     "stellar__confirm_memo": "Confirm memo",
     "stellar__confirm_operation": "Confirm operation",
     "stellar__debited_amount": "Debited amount",
-    "stellar__delegated_signer": "Delegated signer",
     "stellar__delete": "Delete",
     "stellar__delete_passive_offer": "Delete Passive Offer",
     "stellar__delete_trust": "Delete trust",

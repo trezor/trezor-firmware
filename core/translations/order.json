@@ -1292,6 +1292,5 @@
   "1290": "tron__undelegate_resource",
   "1291": "words__delegate",
   "1292": "words__from_title",
-  "1293": "words__undelegate",
-  "1294": "stellar__delegated_signer"
+  "1293": "words__undelegate"
 }

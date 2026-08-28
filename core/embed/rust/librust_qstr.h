@@ -1502,7 +1502,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__confirm_memo;
   MP_QSTR_stellar__confirm_operation;
   MP_QSTR_stellar__debited_amount;
-  MP_QSTR_stellar__delegated_signer;
   MP_QSTR_stellar__delete;
   MP_QSTR_stellar__delete_passive_offer;
   MP_QSTR_stellar__delete_trust;
