@@ -22,6 +22,7 @@
 
 #include "ed25519-donna/ed25519.h"
 
+#include <sec/boot_header.h>
 #include <sec/image.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
@@ -491,8 +492,117 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
 }
 #endif  // KERNEL_MODE
 
+// The Merkle-tree layout exists only where the boot-header / UCB machinery does
+// (boot_header_merkle.c is compiled under the same condition -- see
+// sec/image/build.rs). A legacy-only model never sees a tree preamble.
+#ifdef USE_BOOT_UCB
+
+// Merkle-tree layout: `header` is a boot header PREFIX (authenticated part +
+// Merkle proof, WITHOUT the ~15.8 KB of signatures) immediately followed by the
+// firmware manifest region. It is exactly the preimage of the interaction-less
+// upgrade consent digest, so the host sends only a few hundred bytes.
+//
+// Runs UNPRIVILEGED, over host-supplied bytes, and that is deliberate: it holds
+// no secrets and reads no flash. The boot header SIGNATURE is NOT checked --
+// verifying it needs the new bootloader CODE, which only the bootloader ever
+// receives. So this is self-consistency (does this manifest belong to the
+// offered release?), not authenticity. A forged prefix+manifest pair is
+// displayed and then rejected by the bootloader, which recomputes the digest
+// itself; the cost is a wasted confirmation, never a bad install.
+static secbool check_tree_preamble(const uint8_t *preamble, size_t len,
+                                   firmware_header_info_t *info) {
+  // The prefix is self-describing (auth_size, then the proof's node_count), so
+  // it locates the manifest that follows without a length being transmitted --
+  // and it locates it the SAME way the bootloader will, so the two digests
+  // agree.
+  size_t prefix_len = 0;
+  if (sectrue != boot_header_prefix_extent(preamble, len, &prefix_len)) {
+    return secfalse;
+  }
+  if (prefix_len >= len) {
+    // Nothing left for a manifest.
+    return secfalse;
+  }
+
+  const boot_header_auth_t *hdr = (const boot_header_auth_t *)preamble;
+  if (hdr->hw_model != HW_MODEL || hdr->hw_revision != HW_REVISION) {
+    return secfalse;
+  }
+
+  const uint8_t *mh = preamble + prefix_len;
+  const size_t mh_len = len - prefix_len;
+  const firmware_manifest_t *manifest = (const firmware_manifest_t *)mh;
+  if (mh_len < sizeof(firmware_manifest_t) ||
+      manifest->magic != FW_MANIFEST_MAGIC) {
+    return secfalse;
+  }
+  const size_t manifest_len = firmware_manifest_size(manifest);
+  if (manifest_len > mh_len) {
+    return secfalse;
+  }
+
+  // Fold the variant leaf through the embedded co-path and require the prefix's
+  // own firmware_root. Reads no module code, so the bodies need not be present.
+  merkle_proof_node_t root;
+  memcpy(root.bytes, hdr->firmware_root.bytes, sizeof(root.bytes));
+  const merkle_proof_node_t *proof = NULL;
+  size_t proof_count = 0;
+  if (sectrue != firmware_manifest_read_proof(manifest, mh_len, &proof,
+                                              &proof_count) ||
+      sectrue != firmware_manifest_authentic(manifest, manifest_len, proof,
+                                             proof_count, &root)) {
+    return secfalse;
+  }
+
+  // Only the manifest itself is hashed, NOT its trailing proof -- the same
+  // extent the bootloader uses.
+  merkle_proof_node_t consent;
+  if (sectrue != boot_header_consent_digest(preamble, prefix_len, mh,
+                                            manifest_len, &consent)) {
+    return secfalse;
+  }
+
+  // The variant is authenticated (it is inside the folded manifest), so the
+  // string shown names the release's real identity.
+  const char *vendor =
+      firmware_vendor_str(firmware_type_compose(manifest->firmware_variant));
+  info->vstr_len = MIN(sizeof(info->vstr), strlen(vendor));
+  memcpy(info->vstr, vendor, info->vstr_len);
+
+  info->ver_major = manifest->firmware_version[0];
+  info->ver_minor = manifest->firmware_version[1];
+  info->ver_patch = manifest->firmware_version[2];
+  info->ver_build = manifest->firmware_version[3];
+
+  // fingerprint: the release identity shown to the user (the bootloader's own
+  // confirm screen shows the same firmware_root). hash: the consent digest to
+  // hand to reboot_and_upgrade.
+  memcpy(info->fingerprint, root.bytes, sizeof(info->fingerprint));
+  memcpy(info->hash, consent.bytes, sizeof(info->hash));
+
+  return sectrue;
+}
+
+#endif  // USE_BOOT_UCB
+
 secbool check_firmware_header(const uint8_t *header, size_t header_size,
                               firmware_header_info_t *info) {
+  if (header == NULL || info == NULL) {
+    return secfalse;
+  }
+  memset(info, 0, sizeof(*info));
+
+  // The two image layouts are told apart by the blob itself rather than by a
+  // build flag, so a device given the wrong kind fails cleanly instead of
+  // misparsing it. A Merkle-tree preamble opens with the boot header's TRZQ
+  // magic; the legacy layout opens with a vendor header.
+#ifdef USE_BOOT_UCB
+  if (header_size >= sizeof(uint32_t) &&
+      *(const uint32_t *)(const void *)header == BOOT_HEADER_MAGIC_TRZQ) {
+    return check_tree_preamble(header, header_size, info);
+  }
+#endif
+
   // parse and check vendor header
   vendor_header vhdr;
   if (sectrue != read_vendor_header(header, header_size, &vhdr)) {

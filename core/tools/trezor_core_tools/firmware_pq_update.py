@@ -32,7 +32,7 @@ from pathlib import Path
 
 from trezor_core_tools import firmware_module
 
-from trezorlib import exceptions, firmware, messages
+from trezorlib import device, exceptions, firmware, messages
 from trezorlib.client import Session, TrezorClient, get_default_client
 
 # TEST-ONLY fault injections -> expected device Failure substring. Phase-1 faults
@@ -85,8 +85,61 @@ def boot_header_bytes(bootloader_bin: bytes) -> bytes:
     return bootloader_bin[:header_size]
 
 
+# auth_size is the uint32 right after header_size (see the offsets above).
+_AUTH_SIZE_OFFSET = _HEADER_SIZE_OFFSET + 4
+
+
+def boot_header_prefix(boot_header: bytes) -> bytes:
+    """The digest-relevant boot header prefix: authenticated part + Merkle proof.
+
+    Stops before the unauthenticated part, which is ~15.8 KB of signatures plus
+    the firmware_type byte the bootloader itself rewrites while staging. Mirrors
+    boot_header_prefix_extent (sec/image/stm32/boot_header_merkle.c) -- the device
+    recomputes this same boundary from the content, so the two must agree.
+    """
+    (auth_size,) = struct.unpack_from("<I", boot_header, _AUTH_SIZE_OFFSET)
+    if auth_size == 0 or auth_size + 4 > len(boot_header):
+        raise SystemExit(f"bad boot header auth_size: {auth_size}")
+    # The Merkle proof follows the authenticated part: uint32 node_count, nodes.
+    (node_count,) = struct.unpack_from("<I", boot_header, auth_size)
+    prefix_len = auth_size + 4 + node_count * 32
+    if prefix_len > len(boot_header):
+        raise SystemExit(
+            f"boot header prefix ({prefix_len} B) runs past the header "
+            f"({len(boot_header)} B); node_count={node_count}"
+        )
+    return boot_header[:prefix_len]
+
+
+def consent_preamble(boot_header: bytes, manifest_region: bytes) -> bytes:
+    """RebootToBootloader.firmware_preamble for the Merkle-tree layout.
+
+    The boot header prefix immediately followed by the firmware manifest region.
+    This is exactly the preimage of the consent digest: firmware hashes it to
+    identify the release the user confirms, the bootloader recomputes the same
+    digest over what is actually delivered in phase 1, and installs without
+    asking again only if they match.
+    """
+    return boot_header_prefix(boot_header) + manifest_region
+
+
 def _button_callback(br: "messages.ButtonRequest") -> None:
     print("  -> confirm the action on the device")
+
+
+def _code_entry_callback() -> str:
+    """THP pairing code prompt.
+
+    Needed only for the FIRMWARE-mode connect: running firmware requires a paired
+    channel, whereas the bootloader does not -- so this is asked once, before the
+    interaction-less handoff, and not again on the reconnects afterwards.
+    """
+    while True:
+        raw = input("  -> enter the pairing code shown on the device: ")
+        code = "".join(c for c in raw if c.isdigit())
+        if len(code) == 6:
+            return code
+        print("     the code is 6 digits")
 
 
 def connect(retries: int = 1, delay: float = 1.0) -> tuple[TrezorClient, Session]:
@@ -95,7 +148,9 @@ def connect(retries: int = 1, delay: float = 1.0) -> tuple[TrezorClient, Session
     for _ in range(retries):
         try:
             client = get_default_client(
-                "firmware_pq_update", button_callback=_button_callback
+                "firmware_pq_update",
+                button_callback=_button_callback,
+                code_entry_callback=_code_entry_callback,
             )
             return client, client.get_session(passphrase=None)
         except Exception as e:  # noqa: BLE001
@@ -333,11 +388,35 @@ def main() -> None:
         )
 
     def _run() -> None:
+        _client, session = connect()
+
+        # --- Interaction-less handoff (only when starting from firmware mode) ---
+        #     The user confirms the release in the FIRMWARE UI; firmware hashes the
+        #     preamble into the consent digest and hands it to the bootloader in the
+        #     boot command. Phase 1 below then recomputes that digest over what we
+        #     actually deliver and skips its own confirm screen iff they match. A
+        #     device already in bootloader mode skips this and confirms on-device.
+        if session.features.bootloader_mode is not True:
+            preamble = consent_preamble(boot_header, module_headers)
+            print(
+                "device is in firmware mode; asking it to confirm the upgrade "
+                f"({len(preamble)} B preamble = "
+                f"{len(boot_header_prefix(boot_header))} B boot header prefix + "
+                f"{len(module_headers)} B manifest region) ..."
+            )
+            device.reboot_to_bootloader(
+                session,
+                boot_command=messages.BootCommand.INSTALL_UPGRADE,
+                firmware_preamble=preamble,
+            )
+            time.sleep(3)
+            _client, session = connect(retries=args.reconnect_retries)
+            if session.features.bootloader_mode is not True:
+                raise SystemExit("device did not enter bootloader mode")
+            print("reconnected in bootloader mode; consent carried in the boot command")
+
         # --- Phase 1 ---
         print(f"phase 1: FirmwareBegin ({mode}) ...")
-        _client, session = connect()
-        if session.features.bootloader_mode is not True:
-            raise SystemExit("device must be in bootloader mode")
         served = firmware.firmware_begin(
             session,
             boot_header,

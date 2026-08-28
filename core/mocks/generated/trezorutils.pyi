@@ -218,7 +218,24 @@ class FirmwareHeaderInfo(NamedTuple):
 
 # upymod/modtrezorutils/modtrezorutils.c
 def check_firmware_header(header : AnyBytes) -> FirmwareHeaderInfo:
-    """Parses incoming firmware header and returns information about it."""
+    """Parses an incoming firmware header and returns information about it.
+
+    What `header` holds, and what the fields mean, depends on the image
+    layout this build uses.
+
+    Legacy: a vendor header followed by an image header. `vendor` is the
+    vendor string, `fingerprint` the image fingerprint, `hash` the hash of
+    both headers.
+
+    Merkle tree: the boot header PREFIX (authenticated part + Merkle proof,
+    WITHOUT the ~15.8 KB of signatures) followed by the firmware manifest
+    region. `vendor` is the offered variant's display name, `fingerprint` is
+    the release's firmware_root, and `hash` is the consent digest -- the
+    value to pass to `reboot_and_upgrade`, which the bootloader recomputes
+    over what the host actually delivers.
+
+    Either way `hash` is what binds the confirmation to this exact release.
+    """
 
 
 # upymod/modtrezorutils/modtrezorutils.c

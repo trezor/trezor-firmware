@@ -683,10 +683,27 @@ message CancelAuthorization {}
 message RebootToBootloader {
     // Action to be performed after rebooting to bootloader
     optional BootCommand boot_command = 1 [default = STOP_AND_WAIT];
-    // Firmware header to be flashed after rebooting to bootloader
+    // Firmware header to be flashed after rebooting to bootloader.
+    // Legacy image layout only: vendor header followed by image header.
     optional bytes firmware_header = 2;
     // Deprecated (length of language blob to be installed before upgrading firmware)
     reserved 3;
+    // Merkle-tree image layout: identifies the release the user is being asked to
+    // confirm, so the bootloader can install it afterwards without asking again.
+    //
+    // The boot header PREFIX -- its authenticated part followed by its Merkle
+    // proof -- immediately followed by the firmware manifest region (manifest +
+    // per-variant Merkle proof). This is exactly the preimage of the consent
+    // digest the device hands to the bootloader, and the device derives the
+    // boundary between the two parts from the content itself (auth_size, then the
+    // proof's node_count), so no length is transmitted for it.
+    //
+    // The boot header's SIGNATURES are deliberately excluded: they are ~15.8 KB of
+    // the header's ~16 KB, and firmware cannot verify them anyway (that needs the
+    // new bootloader code, which only the bootloader receives). Unlike
+    // FirmwareBegin.boot_header -- which IS the full signed header -- this field
+    // is therefore only a few hundred bytes.
+    optional bytes firmware_preamble = 4;
 
     enum BootCommand {
         // Go to bootloader menu
