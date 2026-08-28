@@ -1683,7 +1683,7 @@ pub enum TranslatedString {
     words__delegate = 1291,  // "Delegate"
     words__from_title = 1292,  // "From"
     words__undelegate = 1293,  // "Undelegate"
-    buttons__review = 1294,  // "Review"
+    buttons__review = 1294,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Review"}
 }
 
 impl TranslatedString {
@@ -2985,7 +2985,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4285,7 +4285,7 @@ impl TranslatedString {
                 19118,
                 19122,
                 19132,
-                19138,
+                19132,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5584,7 +5584,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6884,7 +6884,7 @@ impl TranslatedString {
                 19118,
                 19122,
                 19132,
-                19138,
+                19132,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8183,7 +8183,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9483,7 +9483,7 @@ impl TranslatedString {
                 19118,
                 19122,
                 19132,
-                19138,
+                19132,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10782,7 +10782,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12082,7 +12082,7 @@ impl TranslatedString {
                 19118,
                 19122,
                 19132,
-                19138,
+                19132,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13382,7 +13382,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14682,7 +14682,7 @@ impl TranslatedString {
                 16977,
                 16981,
                 16991,
-                16997,
+                16991,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15981,7 +15981,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17281,7 +17281,7 @@ impl TranslatedString {
                 16977,
                 16981,
                 16991,
-                16997,
+                16991,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18580,7 +18580,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19880,7 +19880,7 @@ impl TranslatedString {
                 16977,
                 16981,
                 16991,
-                16997,
+                16991,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21179,7 +21179,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22479,7 +22479,7 @@ impl TranslatedString {
                 16977,
                 16981,
                 16991,
-                16997,
+                16991,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23779,7 +23779,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25079,7 +25079,7 @@ impl TranslatedString {
                 19056,
                 19060,
                 19070,
-                19076,
+                19070,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26378,7 +26378,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27678,7 +27678,7 @@ impl TranslatedString {
                 19056,
                 19060,
                 19070,
-                19076,
+                19070,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28977,7 +28977,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30277,7 +30277,7 @@ impl TranslatedString {
                 19056,
                 19060,
                 19070,
-                19076,
+                19070,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31576,7 +31576,7 @@ impl TranslatedString {
                 "Delegate",
                 "From",
                 "Undelegate",
-                "Review",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32876,7 +32876,7 @@ impl TranslatedString {
                 19056,
                 19060,
                 19070,
-                19076,
+                19070,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {

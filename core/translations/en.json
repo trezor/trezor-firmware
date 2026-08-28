@@ -431,7 +431,12 @@
     "buttons__quit": "Quit",
     "buttons__restart": "Restart",
     "buttons__retry": "Retry",
-    "buttons__review": "Review",
+    "buttons__review": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Review"
+    },
     "buttons__select": "Select",
     "buttons__set": "Set",
     "buttons__show_all": "Show all",
