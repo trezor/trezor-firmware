@@ -52,8 +52,9 @@ bitcoin = { version = "0.32", optional = true }
 unicode-normalization = { version = "0.1.22", optional = true }
 
 [dev-dependencies]
-tracing-subscriber = "0.3"
+base64 = "0.22"
 serial_test = "3"
+tracing-subscriber = "0.3"
 
 [features]
 default = ["bitcoin", "ethereum", "solana"]
