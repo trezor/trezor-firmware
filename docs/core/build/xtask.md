@@ -93,6 +93,7 @@ cannot be used bare:
 - `--xbuild-trace` — log build script progress (executed commands and timings).
 - `--apps` — enable external app loading.
 - `--n1w1` — enable N1W1 support.
+- `--miniscript` — enable experimental Miniscript support.
 - `--unsafe-fw` — enable unsafe firmware features.
 - `--storage-insecure-testing-mode` — insecure storage test mode (forbidden with
   `--production`).

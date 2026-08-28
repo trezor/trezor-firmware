@@ -161,6 +161,13 @@ options:
     when: component(firmware)
     type: checkbox
 
+  - id: miniscript
+    name: Miniscript Support
+    description: Enables experimental Miniscript support.
+    group: Features
+    when: component(firmware)
+    type: checkbox
+
   - id: debug
     name: Debug Build
     description: Enables debug symbols and disables some optimizations.

@@ -25,6 +25,9 @@ pub mod util;
 pub use error::Error;
 pub use obj::Obj;
 
+#[cfg(feature = "miniscript")]
+mod miniscript;
+
 #[cfg(feature = "dbg_console")]
 pub mod logging;
 
