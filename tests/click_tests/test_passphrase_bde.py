@@ -74,7 +74,9 @@ def prepare_passphrase_dialogue(
         assert result == address
 
 
-def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) -> None:
+def input_passphrase(
+    debug: "DebugLink", passphrase: str, check: bool = True, reveal: bool = False
+) -> None:
     """Input a passphrase with validation it got added"""
     if check:
         before = debug.read_layout().passphrase()
@@ -83,6 +85,11 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
     if check:
         after = debug.read_layout().passphrase()
         assert after == before + passphrase
+
+    if reveal:
+        # wait for auto-hide and then reveal the passphrase
+        time.sleep(1.1)  # > LAST_DIGIT_TIMEOUT
+        debug.click(debug.screen_buttons.mnemonic_grid(-3))
 
 
 def enter_passphrase(debug: "DebugLink") -> None:
@@ -97,8 +104,8 @@ VECTORS = (  # passphrase, address
     (CommonPass.SHORT, CommonPass.SHORT_ADDRESS),
     (CommonPass.WITH_SPACE, CommonPass.WITH_SPACE_ADDRESS),
     (CommonPass.RANDOM_25, CommonPass.RANDOM_25_ADDRESS),
-    (CommonPass.AAA_SHORTER, CommonPass.AAA_SHORTER_ADDRESS),
-    (CommonPass.AAA_LIMIT, CommonPass.AAA_LIMIT_ADDRESS),
+    (CommonPass.WWW_SHORTER, CommonPass.WWW_SHORTER_ADDRESS),
+    (CommonPass.WWW_LIMIT, CommonPass.WWW_LIMIT_ADDRESS),
 )
 
 
@@ -108,17 +115,17 @@ def test_passphrase_input(
     device_handler: "BackgroundDeviceHandler", passphrase: str, address: str
 ):
     with prepare_passphrase_dialogue(device_handler, address) as debug:
-        input_passphrase(debug, passphrase)
+        input_passphrase(debug, passphrase, reveal=True)
         enter_passphrase(debug)
 
 
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_input_over_limit(device_handler: "BackgroundDeviceHandler"):
     with prepare_passphrase_dialogue(
-        device_handler, CommonPass.AAA_LIMIT_ADDRESS
+        device_handler, CommonPass.WWW_LIMIT_ADDRESS
     ) as debug:  # type: ignore
-        input_passphrase(debug, CommonPass.AAA_LONGER, check=False)
-        assert debug.read_layout().passphrase() == CommonPass.AAA_LIMIT
+        input_passphrase(debug, CommonPass.WWW_LONGER, check=False, reveal=True)
+        assert debug.read_layout().passphrase() == CommonPass.WWW_LIMIT
         enter_passphrase(debug)
 
 
@@ -240,6 +247,6 @@ def test_cycle_through_last_character(
     # (was a bug previously)
     with prepare_passphrase_dialogue(device_handler) as debug:
         # for i we need to cycle through "ghi" three times
-        passphrase = CommonPass.AAA_SHORTER + "i"
+        passphrase = CommonPass.WWW_SHORTER + "i"
         input_passphrase(debug, passphrase)
         enter_passphrase(debug)
