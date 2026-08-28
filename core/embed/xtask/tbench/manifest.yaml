@@ -269,3 +269,10 @@ options:
     group: Debugging
     when: component(firmware)
     type: checkbox
+
+  - id: miniscript
+    name: Miniscript Support
+    description: Enables Miniscript support.
+    group: Testing
+    when: component(firmware)
+    type: checkbox
