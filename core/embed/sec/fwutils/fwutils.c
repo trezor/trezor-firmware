@@ -134,21 +134,7 @@ secbool firmware_get_vendor(char* buff, size_t buff_size) {
   uint8_t fw_type = (unauth != NULL) ? unauth->firmware_type : 0;
   mpu_restore(mpu_mode);
 
-  // FIH: assume UNSAFE. Only a POSITIVE custom == secfalse AND a known official
-  // variant name a trusted vendor; a glitch, a missing header or an unknown
-  // variant stays UNSAFE.
-  const char* vendor = "UNSAFE, DO NOT USE!";
-  if (firmware_type_is_custom(fw_type) == secfalse) {
-    uint32_t variant = firmware_type_variant(fw_type);
-    if (variant == FW_VARIANT_PRODTEST) {
-      // Founder-signed but factory-only -- must never be used in the field.
-      vendor = "UNSAFE, FACTORY TEST ONLY";
-    } else if (variant == FW_VARIANT_BITCOIN_ONLY) {
-      vendor = "Trezor Bitcoin-only";
-    } else if (variant == FW_VARIANT_UNIVERSAL) {
-      vendor = "Trezor";
-    }
-  }
+  const char* vendor = firmware_vendor_str(fw_type);
 
   size_t len = strlen(vendor);
   if (buff_size < len + 1) {
