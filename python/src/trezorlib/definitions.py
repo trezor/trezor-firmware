@@ -40,8 +40,10 @@ DEFINITIONS_DEV_PUBLIC_KEYS = [
 
 # Number of CoSi signatures required by definition format version.
 # Version 1 requires 2 signatures.
+# Version 2 requires 1 signature.
 DEFINITIONS_SIGS_REQUIRED = {
     b"1": 2,
+    b"2": 1,
 }
 DEFINITIONS_PUBLIC_KEYS = [
     bytes.fromhex(key)

@@ -57,6 +57,14 @@ class TestDecodeDefinition(unittest.TestCase):
         proof, signature = sign_payload(payload, [], threshold=1)
         self.assertFailed(payload + proof + signature)
 
+    def test_v2_single_signature(self):
+        payload = make_payload(format_version=b"2")
+        proof, signature = sign_payload(payload, [], threshold=1)
+        self.assertEqual(
+            decode_definition(payload + proof + signature, EthereumNetworkInfo),
+            make_eth_network(),
+        )
+
     def test_missing_signature(self):
         payload = make_payload()
         proof, _ = sign_payload(payload, [])
