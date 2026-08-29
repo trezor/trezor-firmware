@@ -1,5 +1,13 @@
 use xbuild::Result;
 
+/// Configures and links the bootloader library with its sources, dependencies, and feature-specific options.
+///
+/// # Examples
+///
+/// ```
+/// let result = main();
+/// assert!(result.is_ok());
+/// ```
 fn main() -> Result<()> {
     xbuild::build_and_link("bootloader", |lib| {
         lib.import_lib("io")?;

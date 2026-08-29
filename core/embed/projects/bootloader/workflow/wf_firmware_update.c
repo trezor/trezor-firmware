@@ -67,6 +67,12 @@ typedef struct {
 #endif
 } fw_upload_handler_t;
 
+/**
+ * Compares two packed four-byte firmware versions byte by byte.
+ * @param vera First packed version.
+ * @param verb Second packed version.
+ * @return The difference between the first differing byte, or zero if the versions are equal.
+ */
 static int version_compare(uint32_t vera, uint32_t verb) {
   /* Explicit casts so that we control how compiler does the unsigned shift
    * and correctly then promote uint8_t to int without possibility of
@@ -88,6 +94,18 @@ static int version_compare(uint32_t vera, uint32_t verb) {
   return a - b;
 }
 
+/**
+ * Classifies the incoming firmware relative to the installed firmware.
+ *
+ * @param current_vhdr Installed firmware vendor header.
+ * @param current_hdr Installed firmware image header.
+ * @param new_vhdr Incoming firmware vendor header.
+ * @param new_hdr Incoming firmware image header.
+ * @param is_new Set to true when the installed firmware is invalid.
+ * @param keep_seed Set to true when the existing seed can be retained.
+ * @param is_newvendor Set to true when the incoming firmware has a different vendor.
+ * @param is_upgrade Set to true when the incoming firmware has a newer version.
+ */
 static void detect_installation(const vendor_header *current_vhdr,
                                 const image_header *current_hdr,
                                 const vendor_header *const new_vhdr,
@@ -133,6 +151,16 @@ static void detect_installation(const vendor_header *current_vhdr,
   *keep_seed = sectrue;
 }
 
+/**
+ * Validates the uploaded vendor, firmware, and optional Secure Monitor headers,
+ * determines the installation type, and obtains confirmation before installation.
+ *
+ * @param base Upload handler containing firmware installation state.
+ * @param iface Interface used to report validation failures and installation status.
+ * @param buf Buffer containing the uploaded headers.
+ * @param len Length of the uploaded header buffer.
+ * @return Upload status indicating whether header processing permits the upload.
+ */
 static upload_status_t fw_on_headers(image_upload_handler_t *base,
                                      protob_io_t *iface, const uint8_t *buf,
                                      size_t len) {
@@ -357,6 +385,11 @@ static upload_status_t fw_on_headers(image_upload_handler_t *base,
   return UPLOAD_OK;
 }
 
+/**
+ * Validates a firmware chunk and, when enabled, verifies the Secure Monitor code hash.
+ * @param block_idx Index of the firmware chunk.
+ * @returns `UPLOAD_OK` when the chunk is valid, or an upload error status otherwise.
+ */
 static upload_status_t fw_on_chunk(image_upload_handler_t *base,
                                    protob_io_t *iface, uint32_t block_idx,
                                    const uint8_t *data, size_t len) {
@@ -411,6 +444,11 @@ static upload_status_t fw_on_chunk(image_upload_handler_t *base,
   return UPLOAD_OK;
 }
 
+/**
+ * Completes the firmware upload after the image has been written to the firmware area.
+ *
+ * @return UPLOAD_OK indicating successful completion.
+ */
 static upload_status_t fw_on_finish(image_upload_handler_t *base,
                                     protob_io_t *iface) {
   (void)base;
@@ -423,6 +461,10 @@ static void fw_ui_progress(int permille, bool wireless) {
   ui_screen_install_progress_upload(permille, wireless);
 }
 
+/**
+ * Displays firmware installation completion progress and the completion screens.
+ * @param wireless Whether the installation uses a wireless connection.
+ */
 static void fw_ui_success(bool wireless) {
   ui_screen_install_progress_upload(1000, wireless);
   ui_screen_done(4, sectrue);
@@ -434,6 +476,11 @@ static void fw_ui_success(bool wireless) {
   systick_delay_ms(1000);
 }
 
+/**
+ * Displays the appropriate firmware installation failure screen.
+ *
+ * @param status Upload status that determines which failure screen to display.
+ */
 static void fw_ui_fail(upload_status_t status) {
   if (status == UPLOAD_ERR_BOOTLOADER_LOCKED) {
     // This function does not return
@@ -449,6 +496,12 @@ static const image_upload_ui_t fw_upload_ui = {
     .fail = fw_ui_fail,
 };
 
+/**
+ * Processes a firmware erase request and runs the firmware upload workflow.
+ *
+ * @param iface Protocol interface used to receive the request and firmware data.
+ * @returns The result of the firmware installation workflow.
+ */
 workflow_result_t workflow_firmware_update(protob_io_t *iface) {
   FirmwareErase msg;
   if (sectrue != recv_msg_firmware_erase(iface, &msg)) {

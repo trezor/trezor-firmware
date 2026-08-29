@@ -58,6 +58,12 @@ typedef struct {
   image_upload_handler_t *handler;  // active image-type handler
 } upload_engine_t;
 
+/**
+ * Updates upload progress as image data is received.
+ *
+ * @param len Number of bytes received.
+ * @param ctx Upload engine receiving the data.
+ */
 static void upload_data_received(size_t len, void *ctx) {
   upload_engine_t *e = (upload_engine_t *)ctx;
 
@@ -71,6 +77,14 @@ static void upload_data_received(size_t len, void *ctx) {
   }
 }
 
+/**
+ * Processes a received firmware image chunk, validating its contents and writing it to the target flash area.
+ *
+ * @param iface Communication interface used to receive the chunk and send upload status messages.
+ * @param handler Image handler used to validate headers and chunk integrity and finalize the upload.
+ * @param e Upload engine state for tracking chunk progress, retries, and flash operations.
+ * @return The resulting upload status.
+ */
 static upload_status_t process_upload_chunk(protob_io_t *iface,
                                             image_upload_handler_t *handler,
                                             upload_engine_t *e) {
@@ -245,6 +259,13 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
   return UPLOAD_OK;
 }
 
+/**
+ * Runs the firmware image upload workflow.
+ *
+ * @param handler Handler that validates the image and reports upload status.
+ * @param image_size Size of the image in bytes.
+ * @return The workflow result indicating success, cancellation, or failure.
+ */
 workflow_result_t run_image_upload(protob_io_t *iface,
                                    image_upload_handler_t *handler,
                                    uint32_t image_size) {
