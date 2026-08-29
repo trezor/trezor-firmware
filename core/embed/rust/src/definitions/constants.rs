@@ -1,6 +1,10 @@
 use crypto::ed25519;
 
+// Magic string at the beginning of every definition blob.
+pub const MAGIC: &[u8; 4] = b"trzd";
+
 // Definition format versions, encoded on the wire as ASCII digit bytes.
+#[derive(Clone, Copy)]
 pub enum DefsVersion {
     V1,
     V2,
