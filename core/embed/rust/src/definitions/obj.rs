@@ -30,7 +30,7 @@ extern "C" fn decode(n_args: usize, args: *const Obj) -> Obj {
         // decode the payload into the expected message type
         let mut stream = InputStream::new(payload);
         let decoder = Decoder {
-            enable_experimental: true,
+            enable_experimental: false,
         };
         decoder
             .message_from_stream(&mut stream, msg_def.msg())
