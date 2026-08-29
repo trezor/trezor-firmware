@@ -308,6 +308,62 @@ def test_backup_slip39_advanced_custom(
     )
 
 
+SLIP39_INVALID_GROUPS_PARAMS = [
+    (((0, 3),), "Invalid group 0"),
+    (
+        ((5, 3),),
+        "Invalid group 0",
+    ),
+    (
+        ((2, 3), (1, 0)),
+        "Invalid group 1",
+    ),
+    (
+        ((1, 1), (0, 2)),
+        "Invalid group 1",
+    ),
+    (((1, 2),), "Invalid group 0"),
+    (((2, 20),), "Invalid group 0"),
+    (((1, 1),) * 17, "Too many groups provided, max is 16"),
+]
+SLIP39_INVALID_GROUPS_IDS = [
+    "zero_member_threshold",
+    "insufficient_shares_group_0",
+    "insufficient_shares_group_1",
+    "zero_member_threshold_group_1",
+    "member_threshold_1_multiple_shares",
+    "too_many_shares_group_0",
+    "too_many_groups",
+]
+
+
+@pytest.mark.models("core")
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_CUSTOM_1of1[0])
+@pytest.mark.parametrize(
+    "groups,error_message",
+    SLIP39_INVALID_GROUPS_PARAMS,
+    ids=SLIP39_INVALID_GROUPS_IDS,
+)
+def test_backup_slip39_advanced_invalid_groups(
+    session: Session,
+    groups: "list[tuple[int, int]]",
+    error_message: str,
+):
+    # the parameters are validated before any UI is shown, so no input flow is needed
+    with pytest.raises(
+        TrezorFailure,
+        match=".*" + error_message,
+    ) as exc_info:
+        device.backup(session, group_threshold=1, groups=groups)
+
+    assert exc_info.value.code == messages.FailureType.DataError
+
+    # the device must not get into the "unfinished backup" state
+    session.refresh_features()
+    assert session.features.backup_availability == messages.BackupAvailability.Required
+    assert session.features.unfinished_backup is False
+
+
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(no_backup=True)
 def test_no_backup_fails(session: Session, backup_method: messages.BackupMethod):
