@@ -53,7 +53,7 @@ class SignatureFile(t.TypedDict):
 
 
 def _version_from_version_h() -> VersionTuple:
-    defines: t.Dict[str, int] = {}
+    defines: dict[str, int] = {}
     with open(VERSION_H) as f:
         for line in f:
             try:
@@ -438,7 +438,7 @@ def _dict_merge(a: dict, b: dict) -> None:
 
 @cli.command()
 @click.argument("update_json", type=click.File("r"), nargs=-1)
-def merge(update_json: t.Tuple[t.TextIO, ...]) -> None:
+def merge(update_json: tuple[t.TextIO, ...]) -> None:
     """Update translations from JSON files."""
     tdir = TranslationsDir()
     for f in update_json:
