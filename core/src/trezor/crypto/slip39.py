@@ -211,13 +211,8 @@ def split_ems(
             f"The requested group threshold ({group_threshold}) must not exceed the number of groups ({len(groups)})."
         )
 
-    if any(
-        member_threshold == 1 and member_count > 1
-        for member_threshold, member_count in groups
-    ):
-        raise ValueError(
-            "Creating multiple member shares with member threshold 1 is not allowed. Use 1-of-1 member sharing instead."
-        )
+    for member_threshold, member_count in groups:
+        check_member_parameters(member_threshold, member_count)
 
     # Split the Encrypted Master Secret on the group level.
     group_shares = _split_secret(group_threshold, len(groups), encrypted_master_secret)
@@ -534,6 +529,15 @@ def _check_parameters(threshold: int, share_count: int) -> None:
     if share_count > MAX_SHARE_COUNT:
         raise ValueError(
             f"The requested number of shares ({share_count}) must not exceed {MAX_SHARE_COUNT}."
+        )
+
+
+def check_member_parameters(member_threshold: int, member_count: int) -> None:
+    _check_parameters(member_threshold, member_count)
+
+    if member_threshold == 1 and member_count > 1:
+        raise ValueError(
+            "Creating multiple member shares with member threshold 1 is not allowed. Use 1-of-1 member sharing instead."
         )
 
 

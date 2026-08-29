@@ -89,6 +89,7 @@ async def perform_backup(
 
 async def backup_device(msg: BackupDevice) -> Success:
     from trezor import wire
+    from trezor.crypto import slip39
     from trezor.messages import Success
 
     from apps.common import backup, mnemonic
@@ -113,8 +114,19 @@ async def backup_device(msg: BackupDevice) -> Success:
             raise wire.DataError("group_threshold must be a positive integer")
         if len(groups) < group_threshold:
             raise wire.DataError("Not enough groups provided for group_threshold")
+        if len(groups) > slip39.MAX_GROUP_COUNT:
+            raise wire.DataError(
+                f"Too many groups provided, max is {slip39.MAX_GROUP_COUNT}"
+            )
         if mnemonic.is_bip39():
             raise wire.ProcessError("Expected SLIP39 backup")
+
+        for n, (member_threshold, member_count) in enumerate(groups):
+            try:
+                slip39.check_member_parameters(member_threshold, member_count)
+            except ValueError:
+                raise wire.DataError(f"Invalid group {n}")
+
     elif len(groups) > 0:
         raise wire.DataError("group_threshold is missing")
 
