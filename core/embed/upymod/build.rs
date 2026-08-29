@@ -1116,7 +1116,6 @@ impl<'a> MpyBuilder<'a> {
         files.add(src, "apps/common/*.py")?;
 
         files.remove(src, "apps/common/definitions.py");
-        files.remove(src, "apps/common/definitions_constants.py");
 
         if cfg!(not(feature = "sd_card")) {
             files.remove(src, "apps/common/sdcard.py");
@@ -1189,7 +1188,6 @@ impl<'a> MpyBuilder<'a> {
 
         if cfg!(feature = "universal_fw") {
             files.add(src, "apps/common/definitions.py")?;
-            files.add(src, "apps/common/definitions_constants.py")?;
             files.add(src, "trezor/enums/DefinitionType.py")?;
 
             files.add(src, "apps/cardano/*.py")?;
