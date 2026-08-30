@@ -5,7 +5,7 @@ use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
-use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
 use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -61,8 +61,9 @@ pub fn new_show_danger(
     .into_paragraphs();
     let content_message = Frame::with_header(
         Header::left_aligned(title).with_menu_button().with_danger(),
-        SwipeContent::new(paragraphs),
+        SwipeContent::new(SwipePage::vertical(paragraphs)),
     )
+    .with_vertical_pages()
     .with_tap_footer(Some(verb_cancel))
     .map_to_button_msg();
     // .one_button_request(ButtonRequestCode::Warning, br_name);

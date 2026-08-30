@@ -294,6 +294,7 @@ impl<'a> FooterContent<'a> {
             )
             .with_fg(Footer::STYLE_DESCRIPTION.text_color)
             .with_align(Alignment::Center)
+            .with_max_width(area_description.width())
             .render(target)
         });
     }
@@ -318,6 +319,7 @@ impl<'a> FooterContent<'a> {
             )
             .with_fg(Footer::STYLE_INSTRUCTION.text_color)
             .with_align(Alignment::Center)
+            .with_max_width(area_instruction.width())
             .render(target)
         });
     }

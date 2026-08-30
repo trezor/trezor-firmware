@@ -2,9 +2,10 @@ use super::theme;
 use crate::strutil::TString;
 use crate::ui::component::paginated::SinglePage;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
-use crate::ui::component::{Component, Event, EventCtx, Never};
+use crate::ui::component::{Component, Event, EventCtx, Never, Paginate};
 use crate::ui::geometry::Rect;
 use crate::ui::shape::Renderer;
+use crate::ui::util::assert_single_page;
 
 pub struct UpdatableMoreInfo<F>
 where
@@ -31,6 +32,9 @@ where
     fn update_text(&mut self, ctx: &mut EventCtx) {
         let text = (self.info_func)();
         self.paragraphs.update(text);
+        // Re-run the place pass so that the single-page check in `place()`
+        // evaluates the updated text.
+        ctx.request_place();
         ctx.request_paint();
     }
 }
@@ -43,6 +47,9 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.paragraphs.place(bounds);
+        // This component does not paginate; fail loudly in ui_debug when the
+        // text does not fit.
+        assert_single_page(self.paragraphs.pager());
         bounds
     }
 
