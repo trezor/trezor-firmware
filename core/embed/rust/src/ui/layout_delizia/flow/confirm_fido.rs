@@ -96,11 +96,14 @@ pub fn new_confirm_fido(
     let header = Header::left_aligned(title).with_menu_button();
     let content_intro = Frame::with_header(
         header,
-        SwipeContent::new(Paragraphs::new(Paragraph::new::<TString>(
+        SwipeContent::new(SwipePage::vertical(Paragraphs::new(Paragraph::new::<
+            TString,
+        >(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::fido__select_intro.into(),
-        ))),
+        )))),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
