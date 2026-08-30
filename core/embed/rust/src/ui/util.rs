@@ -247,6 +247,17 @@ impl Default for Pager {
     }
 }
 
+/// Assert (in `ui_debug` builds) that the given pager has a single page.
+/// Intended for components that are single-page by design, to detect
+/// content (e.g. overlong translations) that would otherwise be silently
+/// clipped.
+pub fn assert_single_page(#[allow(unused)] pager: Pager) {
+    #[cfg(feature = "ui_debug")]
+    if !pager.is_single() {
+        fatal_error!("Content overflows a single-page screen");
+    }
+}
+
 /// `DisplayStyle` is used to determine whether the text is fully hidden, fully
 /// shown, or partially visible.
 #[derive(PartialEq, Debug, Copy, Clone)]
