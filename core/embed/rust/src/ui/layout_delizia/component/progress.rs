@@ -1,14 +1,15 @@
 use core::mem;
 
 use super::super::cshape::{render_loader, LoaderRange};
-use super::super::{constant, fonts, theme};
+use super::super::{constant, theme};
 use crate::strutil::TString;
+use crate::ui::component::text::layout::TextLayout;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
-use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad, Paginate};
 use crate::ui::display::LOADER_MAX;
-use crate::ui::geometry::{Insets, Offset, Rect};
+use crate::ui::geometry::{Alignment, Insets, Offset, Rect};
 use crate::ui::shape::Renderer;
-use crate::ui::util::animation_disabled;
+use crate::ui::util::{animation_disabled, assert_single_page};
 
 pub struct Progress {
     title: Label<'static>,
@@ -44,18 +45,24 @@ impl Component for Progress {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
-        let description_lines = 1 + self
-            .description
-            .inner()
-            .content()
-            .map(|t| t.chars().filter(|c| *c == '\n').count() as i16);
         let (title, rest) = Self::AREA.split_top(self.title.max_size().y);
-        let (loader, description) =
-            rest.split_bottom(fonts::FONT_DEMIBOLD.line_height() * description_lines);
+        // Compute the height the description actually needs, taking possible
+        // line wrapping of long translations into account.
+        let description_height = self.description.content().map(|t| {
+            TextLayout::new(theme::TEXT_NORMAL)
+                .with_align(Alignment::Center)
+                .with_bounds(Rect::from_size(Offset::new(rest.width(), rest.height())))
+                .fit_text(t)
+                .height()
+        });
+        let (loader, description) = rest.split_bottom(description_height);
         let loader = loader.inset(Insets::top(theme::CONTENT_BORDER));
         self.title.place(title);
         self.loader_y_offset = loader.center().y - constant::screen().center().y;
         self.description.place(description);
+        // The progress screen cannot paginate; fail loudly in ui_debug when
+        // the description does not fit.
+        assert_single_page(self.description.pager());
         self.description_pad.place(description);
         Self::AREA
     }
@@ -68,6 +75,9 @@ impl Component for Progress {
                 }
                 if self.description.content() != &new_description {
                     self.description.update(new_description);
+                    // The new description may need a different amount of
+                    // space, re-run the place pass.
+                    ctx.request_place();
                     ctx.request_paint();
                     self.description_pad.clear();
                 }

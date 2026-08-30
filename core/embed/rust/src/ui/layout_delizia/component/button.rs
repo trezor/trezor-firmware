@@ -230,6 +230,7 @@ impl Button {
                         .with_fg(style.text_color)
                         .with_align(self.text_align)
                         .with_alpha(alpha)
+                        .with_max_width(self.area.width() - 2 * Self::BASELINE_OFFSET.x)
                         .render(target);
                 });
             }
@@ -450,6 +451,7 @@ impl IconText {
             shape::Text::new(text_pos, text, style.font)
                 .with_fg(style.text_color)
                 .with_alpha(alpha)
+                .with_max_width(rect.width() - Self::ICON_SPACE - Self::TEXT_MARGIN)
                 .render(target)
         };
 

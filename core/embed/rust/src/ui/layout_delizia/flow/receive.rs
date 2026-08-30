@@ -156,11 +156,12 @@ pub fn new_receive(
     // Cancel
     let content_cancel_info = Frame::with_header(
         Header::left_aligned(cancel_title.into()).with_cancel_button(),
-        SwipeContent::new(Paragraphs::new(Paragraph::new(
+        SwipeContent::new(SwipePage::vertical(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             cancel_content,
-        ))),
+        )))),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(None)
     .map_to_button_msg();
 

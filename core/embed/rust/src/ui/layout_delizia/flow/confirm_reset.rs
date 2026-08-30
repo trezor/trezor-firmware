@@ -8,7 +8,7 @@ use crate::ui::component::swipe_detect::SwipeSettings;
 use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort};
 use crate::ui::component::ButtonRequestExt;
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
-use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
 use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -97,8 +97,9 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
     .into_paragraphs();
     let content_intro = Frame::with_header(
         Header::left_aligned(title).with_menu_button(),
-        SwipeContent::new(paragraphs),
+        SwipeContent::new(SwipePage::vertical(paragraphs)),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(None)
     .map_to_button_msg()
     .one_button_request(br);

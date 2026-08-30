@@ -6,7 +6,7 @@ use crate::translations::TR;
 use crate::ui::component::swipe_detect::SwipeSettings;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
-use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
 use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -53,8 +53,9 @@ pub fn new_confirm_firmware_update(
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
     let content_intro = Frame::with_header(
         Header::left_aligned(TR::firmware_update__title.into()).with_menu_button(),
-        SwipeContent::new(paragraphs),
+        SwipeContent::new(SwipePage::vertical(paragraphs)),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
@@ -73,8 +74,9 @@ pub fn new_confirm_firmware_update(
         Paragraphs::new(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, fingerprint));
     let content_fingerprint = Frame::with_header(
         Header::left_aligned(TR::firmware_update__title_fingerprint.into()).with_cancel_button(),
-        SwipeContent::new(paragraphs_fingerprint),
+        SwipeContent::new(SwipePage::vertical(paragraphs_fingerprint)),
     )
+    .with_vertical_pages()
     .map_to_button_msg();
 
     let content_confirm = Frame::with_header(

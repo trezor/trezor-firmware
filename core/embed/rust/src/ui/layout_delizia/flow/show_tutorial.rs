@@ -5,7 +5,7 @@ use crate::translations::TR;
 use crate::ui::component::swipe_detect::SwipeSettings;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
-use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
 use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -67,21 +67,23 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
 
     let content_step_begin = Frame::with_header(
         Header::left_aligned(TR::tutorial__title_lets_begin.into()),
-        SwipeContent::new(Paragraphs::new(Paragraph::new(
+        SwipeContent::new(SwipePage::vertical(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::tutorial__lets_begin,
-        ))),
+        )))),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
     let content_step_navigation = Frame::with_header(
         Header::left_aligned(TR::tutorial__title_easy_navigation.into()),
-        SwipeContent::new(Paragraphs::new(Paragraph::new(
+        SwipeContent::new(SwipePage::vertical(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::tutorial__swipe_up_and_down,
-        ))),
+        )))),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map_to_button_msg();
@@ -90,11 +92,12 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         Header::left_aligned(TR::tutorial__title_handy_menu.into())
             .with_menu_button()
             .button_styled(theme::button_warning_low()),
-        SwipeContent::new(Paragraphs::new(Paragraph::new(
+        SwipeContent::new(SwipePage::vertical(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::tutorial__menu,
-        ))),
+        )))),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map_to_button_msg();
@@ -109,11 +112,12 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
 
     let content_step_done = Frame::with_header(
         Header::left_aligned(TR::tutorial__title_well_done.into()),
-        SwipeContent::new(Paragraphs::new(Paragraph::new(
+        SwipeContent::new(SwipePage::vertical(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::tutorial__ready_to_use_safe5,
-        ))),
+        )))),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
@@ -128,11 +132,12 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
 
     let content_did_you_know = Frame::with_header(
         Header::left_aligned("".into()).with_cancel_button(),
-        SwipeContent::new(Paragraphs::new(Paragraph::new(
+        SwipeContent::new(SwipePage::vertical(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::tutorial__first_wallet,
-        ))),
+        )))),
     )
+    .with_vertical_pages()
     .map_to_button_msg();
 
     let content_hold_to_exit = Frame::with_header(
