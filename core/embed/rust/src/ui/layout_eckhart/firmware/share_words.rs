@@ -314,6 +314,7 @@ impl<'a> Component for ShareWords<'a> {
         word.map(|w| {
             Text::new(word_baseline, w, font)
                 .with_align(Alignment::Center)
+                .with_max_width(self.area.width())
                 .render(target);
         });
     }
