@@ -133,7 +133,23 @@ def set_language(session: DebugSession, lang: str, *, force: bool = False) -> No
         language = session.features.language
         if language is None or not language.startswith(lang) or force:
             device.change_language(session, language_data)
-    _CURRENT_TRANSLATION.LAYOUT = session.layout_type
+    set_layout_type_and_lang(session.layout_type, lang)
+
+
+def set_layout_type_and_lang(layout_type: LayoutType, lang: str) -> None:
+    """
+    Sync the current thread's layout type and language translation table used
+    for TR.translate() lookups, without touching the device's language setting.
+
+    Needed by test fixtures that talk to the emulator without going through
+    `set_language`/`check_language` (e.g. `core_emulator`), since TR.translate()
+    otherwise falls back to the module-level default layout/language (Bolt/en).
+
+    Args:
+        layout_type: The device's actual layout type (e.g. `debug.layout_type`).
+        lang: Language code (e.g., 'en', 'cs').
+    """
+    _CURRENT_TRANSLATION.LAYOUT = layout_type
     _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
 
@@ -155,8 +171,7 @@ def check_language(session: DebugSession, lang: str) -> None:
             raise RuntimeError(
                 f"Incompatible language on device: expected '{lang}', got '{language}'"
             )
-    _CURRENT_TRANSLATION.LAYOUT = session.layout_type
-    _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
+    set_layout_type_and_lang(session.layout_type, lang)
 
 
 def get_language() -> str:
@@ -303,8 +318,7 @@ class Translation:
 
 
 TRANSLATIONS = {lang: Translation(lang) for lang in LANGUAGES}
-_CURRENT_TRANSLATION.TR = TRANSLATIONS["en"]
-_CURRENT_TRANSLATION.LAYOUT = LayoutType.Bolt
+set_layout_type_and_lang(LayoutType.Bolt, "en")
 
 
 def translate(key: str, _stacklevel: int = 0) -> str:
