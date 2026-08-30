@@ -146,7 +146,7 @@ def set_layout_type_and_lang(layout_type: LayoutType, lang: str) -> None:
     otherwise falls back to the module-level default layout/language (Bolt/en).
 
     Args:
-        layout_type: The device's actual layout type (e.g. `debug.layout_type`).
+        layout_type: The device's layout type (e.g. `Bolt`, `Eckhart`).
         lang: Language code (e.g., 'en', 'cs').
     """
     _CURRENT_TRANSLATION.LAYOUT = layout_type
