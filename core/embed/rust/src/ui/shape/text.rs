@@ -67,7 +67,14 @@ impl<'a> Text<'a> {
     pub fn render<'r>(mut self, renderer: &mut impl Renderer<'r>) {
         #[cfg(feature = "ui_debug")]
         if let Some(max_width) = self.max_width {
-            if self.font.text_width(self.text) > max_width {
+            // `text_width` includes the bearing of the first character, which
+            // is not drawn, so allow for that extra slack.
+            let first_bearing = self
+                .text
+                .chars()
+                .next()
+                .map_or(0, |c| self.font.start_x_bearing(&self.text[..c.len_utf8()]));
+            if self.font.text_width(self.text) - first_bearing > max_width {
                 renderer.raise_overflow_exception();
             }
         }
