@@ -200,7 +200,12 @@
     "bitcoin__locktime_no_effect": "Locktime is set but will have no effect.",
     "bitcoin__locktime_set_to": "Locktime set to",
     "bitcoin__locktime_set_to_blockheight": "Locktime set to blockheight",
-    "bitcoin__lot_of_change_outputs": "A lot of change-outputs.",
+    "bitcoin__lot_of_change_outputs": {
+      "Bolt": "A lot of change-outputs",
+      "Caesar": "A lot of change-outputs",
+      "Delizia": "A lot of change-outputs.",
+      "Eckhart": "A lot of change-outputs."
+    },
     "bitcoin__multiple_accounts": "Multiple accounts",
     "bitcoin__new_fee_rate": "New fee rate",
     "bitcoin__simple_send_of": "Simple send of",
@@ -2022,7 +2027,7 @@
     "recovery__unlock_repeated_backup": "Create additional backup?",
     "recovery__unlock_repeated_backup_verb": "Create backup",
     "recovery__wallet_recovered": {
-      "Bolt": "Wallet recovery completed",
+      "Bolt": "Wallet recovery completed.",
       "Caesar": "Wallet recovery completed",
       "Delizia": "Wallet recovery completed.",
       "Eckhart": "Wallet recovery completed."
@@ -2337,7 +2342,7 @@
     },
     "reset__select_word_x_of_y_template": {
       "Bolt": "Select word {0} of {1}:",
-      "Caesar": "Select word {0} of {1}:",
+      "Caesar": "Word {0} of {1}",
       "Delizia": "Select word {0} of {1}",
       "Eckhart": ""
     },
