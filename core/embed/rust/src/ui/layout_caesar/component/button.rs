@@ -210,13 +210,16 @@ impl Component for Button {
                 // The text must fit into the button area, respecting the
                 // padding defined by the current style.
                 let max_width = area.width() - (baseline.x - area.x0);
+                #[cfg(feature = "ui_debug")]
+                if self.font.visible_text_width(t) > max_width {
+                    target.raise_overflow_exception();
+                }
                 shape::Text::new(
                     baseline - Offset::x(self.font.start_x_bearing(t)),
                     t,
                     self.font,
                 )
                 .with_fg(fg_color)
-                .with_max_width(max_width)
                 .render(target);
             }),
             ButtonContent::Icon(icon) => {
