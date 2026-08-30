@@ -119,9 +119,13 @@ where
         let back_area = grid.row_col(0, 0);
         let input_area = grid.row_col(0, 1).union(grid.row_col(0, 3));
 
-        let prompt_center = grid.row_col(0, 0).union(grid.row_col(0, 3)).center();
+        let prompt_row = grid.row_col(0, 0).union(grid.row_col(0, 3));
+        let prompt_center = prompt_row.center();
         let prompt_size = self.prompt.inner().inner().max_size();
-        let prompt_area = Rect::snap(prompt_center, prompt_size, Alignment2D::CENTER);
+        // Clamp the area to the prompt row so that an overlong prompt does
+        // not silently overflow and the Label's fit check stays effective.
+        let prompt_area =
+            Rect::snap(prompt_center, prompt_size, Alignment2D::CENTER).clamp(prompt_row);
 
         self.swipe.place(bounds);
         self.prompt.place(prompt_area);
