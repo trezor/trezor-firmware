@@ -282,6 +282,10 @@ def test_apply_homescreen_jpeg_single_message(session: Session):
             session.call(messages.ApplySettings(homescreen=img))
             client.refresh_features()
 
+            client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+            session.call(messages.ApplySettings(homescreen_length=0))
+            client.refresh_features()
+
 
 @pytest.mark.models(skip=["legacy", "safe3"])
 def test_apply_homescreen_jpeg_progressive(session: Session):
