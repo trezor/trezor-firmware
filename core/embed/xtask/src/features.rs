@@ -154,22 +154,6 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
         cmd.args(["--target", triple]);
     }
 
-    if args.emit_memory_analysis {
-        // See https://nnethercote.github.io/perf-book/type-sizes.html#measuring-type-sizes for more details
-        // Also adds an ELF section with Rust functions' stack sizes. See:
-        // - https://doc.rust-lang.org/nightly/unstable-book/compiler-flags/emit-stack-sizes.html
-        // - https://blog.japaric.io/stack-analysis/
-        // - https://github.com/japaric/stack-sizes/
-        //
-        // Use --config instead of RUSTFLAGS env so that rustflags in .cargo/config.toml
-        // are not overridden (RUSTFLAGS env has higher precedence and replaces
-        // them entirely).
-        cmd.args([
-            "--config",
-            "build.rustflags=[\"-Zprint-type-sizes\", \"-Zemit-stack-sizes\"]",
-        ]);
-    }
-
     if args.emulator && args.asan {
         // -Zsanitizer=address is a rustc flag passed via RUSTFLAGS.
         //

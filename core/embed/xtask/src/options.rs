@@ -249,10 +249,6 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map storage_insecure_testing_mode: bool,
 
-    /// Emits memory analysis output (type sizes and stack sizes)
-    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    opt emit_memory_analysis: bool,
-
     /// Output cargo timings
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     opt timings: bool,
