@@ -339,6 +339,7 @@ impl BootloaderUI for UICaesar {
                 shape::Text::new(pos, text, fonts::FONT_NORMAL)
                     .with_align(Alignment::Center)
                     .with_fg(BLD_FG) //COLOR_BL_BG
+                    .with_max_width(constant::WIDTH)
                     .render(target);
 
                 let pos = Point::new(constant::WIDTH / 2, 46);
