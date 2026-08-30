@@ -429,7 +429,8 @@ access_violation:
 
 secbool storage_set__verified(const uint16_t key, const void *val,
                               const uint16_t len) {
-  if (!probe_read_access(val, len)) {
+  // NULL is allowed for a zero-length value.
+  if (!probe_read_access_opt(val, len)) {
     goto access_violation;
   }
 
