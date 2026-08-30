@@ -79,7 +79,9 @@ impl Choice for ChoiceItem {
     /// Painting the item as the main choice in the middle.
     /// Showing both the icon and text, if the icon is available.
     fn render_center<'s>(&self, target: &mut impl Renderer<'s>, area: Rect, inverse: bool) {
-        let text_area = Rect::from_center_and_size(area.center(), self.size_center());
+        // Clamping to the area so that tall texts do not paint over
+        // components below (e.g. the button strip).
+        let text_area = Rect::from_center_and_size(area.center(), self.size_center()).clamp(area);
 
         render_rounded_highlight(target, text_area, inverse);
         render_text_icon(
@@ -165,7 +167,14 @@ impl<'s> TextRows<'s> {
         let mut size = Offset::zero();
         let mut first = true;
         for line in Lines::split(text, max_width, font) {
-            unwrap!(rows.push(line));
+            if rows.push(line).is_err() {
+                // The text needs more rows than we can display - truncating
+                // the rest of it.
+                #[cfg(feature = "ui_debug")]
+                fatal_error!("Choice text does not fit into the maximum number of rows");
+                #[cfg(not(feature = "ui_debug"))]
+                break;
+            }
             size.x = size.x.max(font.visible_text_width(line));
             size.y += row_height + if first { 0 } else { style.line_spacing };
             first = false;
@@ -221,6 +230,14 @@ fn render_text_icon<'s>(
         let text_rows = TextRows::new(text, MAX_TEXT_WIDTH, style);
         for row in text_rows.rows {
             baseline = baseline + Offset::y(row_height);
+            // Not rendering rows that would exceed the area, so they cannot
+            // paint over other components.
+            if baseline.y > area.y1 {
+                #[cfg(feature = "ui_debug")]
+                fatal_error!("Choice text does not fit its area vertically");
+                #[cfg(not(feature = "ui_debug"))]
+                break;
+            }
             // Possibly shifting the baseline left, when there is a text bearing.
             // This is to center the text properly.
             let center_offset = Offset::x(

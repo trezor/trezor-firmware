@@ -109,6 +109,7 @@ impl Homescreen {
             TR::homescreen__title_no_usb_connection.map_translated(|t| {
                 shape::Text::new(baseline, t, NOTIFICATION_FONT)
                     .with_align(Alignment::Center)
+                    .with_max_width(AREA.width())
                     .render(target)
             });
         } else if let Some(notification) = &self.notification {
@@ -119,6 +120,7 @@ impl Homescreen {
             notification.text.map(|c| {
                 shape::Text::new(baseline, c, NOTIFICATION_FONT)
                     .with_align(Alignment::Center)
+                    .with_max_width(AREA.width())
                     .render(target)
             });
 

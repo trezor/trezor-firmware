@@ -61,7 +61,7 @@ impl<'a> ShareWords<'a> {
     /// Display the final page with user confirmation.
     fn render_final_page<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let final_text = self.get_final_text();
-        text_multiline(
+        let rest = text_multiline(
             target,
             self.area.split_top(INFO_TOP_OFFSET).1,
             final_text.as_str().into(),
@@ -70,6 +70,11 @@ impl<'a> ShareWords<'a> {
             theme::BG,
             Alignment::Start,
         );
+        // The final page text is security-critical, it must not be cut.
+        #[cfg(feature = "ui_debug")]
+        if rest.is_none() {
+            fatal_error!("ShareWords final text does not fit the screen");
+        }
     }
 
     /// Display current set of recovery words.
@@ -90,10 +95,12 @@ impl<'a> ShareWords<'a> {
             let ordinal_txt = uformat!("{}.", ordinal);
             shape::Text::new(base + Offset::x(NUMBER_X_OFFSET), &ordinal_txt, NUMBER_FONT)
                 .with_fg(theme::FG)
+                .with_max_width(WORD_X_OFFSET - NUMBER_X_OFFSET)
                 .render(target);
             word.map(|w| {
                 shape::Text::new(base + Offset::x(WORD_X_OFFSET), w, WORD_FONT)
                     .with_fg(theme::FG)
+                    .with_max_width(self.area.width() - WORD_X_OFFSET)
                     .render(target);
             });
         }
