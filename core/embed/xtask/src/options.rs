@@ -260,6 +260,10 @@ build_options! {
     /// Log build script progress (executed commands and timings)
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     opt xbuild_trace: bool,
+
+    /// Redirect `print-type-size` output into this file (if set).
+    #[arg(long, num_args = 0..=1, default_missing_value = "")]
+    opt rust_types_file: String,
 }
 
 impl ResolvedBuildArgs {

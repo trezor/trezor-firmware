@@ -28,6 +28,10 @@ rustflags = [
     # - https://github.com/japaric/stack-sizes/
     "-Z",
     "emit-stack-sizes",
+    # Print all types' sizes to stdout (prefixed with `print-type-size `).
+    # See https://nnethercote.github.io/perf-book/type-sizes.html#measuring-type-sizes for more details
+    "-Z",
+    "print-type-sizes",
 ]
 
 [target.thumbv8m.main-none-eabihf]
@@ -45,4 +49,6 @@ rustflags = [
     "link-arg=-mfpu=fpv5-sp-d16",
     "-Z",
     "emit-stack-sizes",
+    "-Z",
+    "print-type-sizes",
 ]

@@ -1,4 +1,6 @@
-use std::process;
+use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::process::Stdio;
+use std::{println, process};
 
 use anyhow::{Context, Result, ensure};
 use owo_colors::OwoColorize;
@@ -182,9 +184,29 @@ fn run_cargo_subcommand(subcommand: &str, args: &ResolvedBuildArgs) -> Result<()
     println!("xtask: Running {} on `{}`", subcommand, project_name);
     println!("{}", command_args_to_string(&cmd).bold().dimmed());
 
-    let status = cmd
-        .status()
+    let rust_types_file: Box<dyn Write> = if let Some(path) = args.rust_types_file.as_ref() {
+        println!("xtask: rust type sizes: {}", path.bold().dimmed());
+        Box::new(std::fs::File::create(path)?)
+    } else {
+        Box::new(std::io::stdout())
+    };
+    let mut rust_types_file = BufWriter::new(rust_types_file);
+
+    let mut child = cmd
+        .stdout(Stdio::piped())
+        .spawn()
         .context(format!("Failed to spawn `cargo {}`", subcommand))?;
+
+    let stdout = child.stdout.take().expect("stdout is piped");
+    for line in BufReader::new(stdout).lines() {
+        let line = line?;
+        if line.starts_with("print-type-size ") {
+            writeln!(rust_types_file, "{}", line)?;
+            continue;
+        }
+        println!("{}", line);
+    }
+    let status = child.wait()?;
 
     ensure!(
         status.success(),
