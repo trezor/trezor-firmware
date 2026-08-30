@@ -8,7 +8,7 @@ use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
 };
-use crate::ui::component::{Component, Event, EventCtx, Paginate, Qr};
+use crate::ui::component::{CheckSinglePage, Component, Event, EventCtx, Paginate, Qr};
 use crate::ui::geometry::Rect;
 use crate::ui::layout::util::MAX_XPUBS;
 use crate::ui::shape::Renderer;
@@ -16,7 +16,9 @@ use crate::ui::util::Pager;
 
 pub struct AddressDetails {
     qr_code: Frame<Qr>,
-    details: Frame<Paragraphs<ParagraphVecShort<'static>>>,
+    // The details page is never paginated by the outer component, so it must
+    // fit on a single page.
+    details: Frame<CheckSinglePage<Paragraphs<ParagraphVecShort<'static>>>>,
     xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
     xpubs: Vec<(StrBuffer, StrBuffer), MAX_XPUBS>,
     xpub_page_count: Vec<u8, MAX_XPUBS>,
@@ -60,7 +62,7 @@ impl AddressDetails {
             details: Frame::left_aligned(
                 theme::label_title(),
                 details_title,
-                para.into_paragraphs(),
+                CheckSinglePage::new(para.into_paragraphs()),
             )
             .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),

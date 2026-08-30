@@ -26,7 +26,7 @@ use crate::ui::component::text::paragraphs::{
 };
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
-    Border, ComponentExt, Empty, FormattedText, Jpeg, Label, Never, Timeout,
+    Border, CheckSinglePage, ComponentExt, Empty, FormattedText, Jpeg, Label, Never, Timeout,
 };
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
@@ -437,7 +437,7 @@ impl FirmwareUI for UIBolt {
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            Dialog::new(paragraphs, buttons),
+            Dialog::new(CheckSinglePage::new(paragraphs), buttons),
         ));
         Ok(layout)
     }
@@ -522,14 +522,14 @@ impl FirmwareUI for UIBolt {
             LayoutObj::new(Frame::left_aligned(
                 theme::label_title(),
                 title,
-                Dialog::new(paragraphs.into_paragraphs(), buttons),
+                Dialog::new(CheckSinglePage::new(paragraphs.into_paragraphs()), buttons),
             ))
         } else {
             let buttons = Button::cancel_confirm_text(None, Some(verb));
             LayoutObj::new(Frame::left_aligned(
                 theme::label_title(),
                 title,
-                Dialog::new(paragraphs.into_paragraphs(), buttons),
+                Dialog::new(CheckSinglePage::new(paragraphs.into_paragraphs()), buttons),
             ))
         }
     }
@@ -565,7 +565,7 @@ impl FirmwareUI for UIBolt {
                 theme::label_title(),
                 notification,
                 Dialog::new(
-                    paragraphs,
+                    CheckSinglePage::new(paragraphs),
                     Button::cancel_info_confirm(
                         Button::with_text(TR::buttons__continue.into())
                             .styled(theme::button_confirm()),
@@ -577,7 +577,10 @@ impl FirmwareUI for UIBolt {
             LayoutObj::new(Frame::left_aligned(
                 theme::label_title(),
                 notification,
-                Dialog::new(paragraphs, Button::cancel_confirm_text(None, button)),
+                Dialog::new(
+                    CheckSinglePage::new(paragraphs),
+                    Button::cancel_confirm_text(None, button),
+                ),
             ))
         }
     }
@@ -736,7 +739,7 @@ impl FirmwareUI for UIBolt {
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            Dialog::new(paragraphs, Button::select_word(words)),
+            Dialog::new(CheckSinglePage::new(paragraphs), Button::select_word(words)),
         ));
         Ok(layout)
     }
@@ -763,7 +766,7 @@ impl FirmwareUI for UIBolt {
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            Dialog::new(paragraphs, selector),
+            Dialog::new(CheckSinglePage::new(paragraphs), selector),
         ));
         Ok(layout)
     }
@@ -1205,7 +1208,10 @@ impl FirmwareUI for UIBolt {
                 theme::label_title(),
                 t,
                 Dialog::new(
-                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, text)]),
+                    CheckSinglePage::new(Paragraphs::new([Paragraph::new(
+                        &theme::TEXT_NORMAL,
+                        text,
+                    )])),
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                     })),
@@ -1215,7 +1221,10 @@ impl FirmwareUI for UIBolt {
             LayoutObj::new(Border::new(
                 theme::borders(),
                 Dialog::new(
-                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, text)]),
+                    CheckSinglePage::new(Paragraphs::new([Paragraph::new(
+                        &theme::TEXT_NORMAL,
+                        text,
+                    )])),
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                     })),
@@ -1225,7 +1234,11 @@ impl FirmwareUI for UIBolt {
             LayoutObj::new(Border::new(
                 theme::borders(),
                 Dialog::new(
-                    Paragraphs::new([Paragraph::new(&theme::TEXT_DEMIBOLD, text).centered()]),
+                    CheckSinglePage::new(Paragraphs::new([Paragraph::new(
+                        &theme::TEXT_DEMIBOLD,
+                        text,
+                    )
+                    .centered()])),
                     Empty,
                 ),
             ))
