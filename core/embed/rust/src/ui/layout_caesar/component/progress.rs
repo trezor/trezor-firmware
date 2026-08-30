@@ -77,21 +77,39 @@ impl Component for Progress {
             .content()
             .map(|t| t.chars().filter(|c| *c == '\n').count() as i16);
 
-        let no_title_case = (Rect::zero(), Self::AREA, LOADER_Y_OFFSET_NO_TITLE);
-        let (title, rest, loader_y_offset) = if let Some(self_title) = &self.title {
+        let no_title_case = (Rect::zero(), Self::AREA);
+        let (title, rest, single_line_title) = if let Some(self_title) = &self.title {
             if !self_title.inner().text().is_empty() {
-                let (title, rest) = Self::AREA.split_top(self_title.inner().max_size().y);
-                (title, rest, LOADER_Y_OFFSET_TITLE)
+                // Give the title as much height as it needs when wrapped to
+                // the screen width, so that longer translations do not
+                // overflow the (otherwise single-line) title area.
+                let title_height = self_title.inner().text_height(Self::AREA.width());
+                let (title, rest) = Self::AREA.split_top(title_height);
+                let single_line = title_height <= self_title.inner().max_size().y;
+                (title, rest, single_line)
             } else {
-                no_title_case
+                let (title, rest) = no_title_case;
+                (title, rest, false)
             }
         } else {
-            no_title_case
+            let (title, rest) = no_title_case;
+            (title, rest, false)
         };
 
-        let (_loader, description) = rest.split_bottom(
+        let (loader, description) = rest.split_bottom(
             BOTTOM_DESCRIPTION_MARGIN + fonts::FONT_NORMAL.line_height() * description_lines,
         );
+        let loader_y_offset = if single_line_title {
+            LOADER_Y_OFFSET_TITLE
+        } else if !title.is_empty() {
+            // The title wraps to multiple lines, so the tuned fixed offset
+            // would place the loader too close to the title. Center the
+            // loader in the space between the title and the description
+            // instead.
+            loader.center().y - Self::AREA.center().y
+        } else {
+            LOADER_Y_OFFSET_NO_TITLE
+        };
         self.title.place(title);
         self.loader_y_offset = loader_y_offset;
         self.description.place(description);
