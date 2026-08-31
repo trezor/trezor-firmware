@@ -577,8 +577,9 @@ bool nrf_authenticate(void) {
   uint32_t timeout = ticks_timeout(5000);
 
   // check that nRF communication is running prior to auth check
+  nrf_info_t info = {0};
   while (!ticks_expired(timeout)) {
-    if (nrf_get_info(&drv->info)) {
+    if (nrf_get_info(&info)) {
       break;
     }
   }
