@@ -165,7 +165,7 @@ static void send_info(void) {
 }
 
 static void mgmt_process_challenge(uint8_t *data, uint16_t len) {
-  uint8_t response[1 + SHA256_BLOCK_LENGTH];
+  uint8_t response[1 + SHA256_DIGEST_LENGTH];
   const uint8_t *key = prodtest_get_pairing_key();
 
   hmac_sha256(key, PAIRING_SECRET_SIZE, data, len, &response[1]);
