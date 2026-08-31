@@ -254,7 +254,12 @@ impl Default for Pager {
 pub fn assert_single_page(#[allow(unused)] pager: Pager) {
     #[cfg(feature = "ui_debug")]
     if !pager.is_single() {
-        fatal_error!("Content overflows a single-page screen");
+        use crate::micropython::runtime::raise_exception;
+
+        unsafe {
+            use crate::error::Error;
+            raise_exception(Error::TypeError)
+        };
     }
 }
 
