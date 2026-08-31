@@ -305,11 +305,26 @@ impl SmpReceiver {
 
                 let received_len = self.rx_msg_len + len;
 
+                if received_len < MSG_HEADER_SIZE {
+                    self.rx_msg_len = 0;
+                    return;
+                }
+
                 // the first two bytes of rx_msg are the length field
-                let msg_len = (u16::from(self.rx_msg[0]) << 8) | u16::from(self.rx_msg[1]);
+                let msg_len = usize::from(u16::from_be_bytes([self.rx_msg[0], self.rx_msg[1]]));
+
+                // The length field is attacker-controlled and `rx_msg` is a
+                // fixed buffer, so a message that claims more than we can hold
+                // is dropped rather than tracked. Without this the offset below
+                // walks past the end of `rx_msg`, because it advances by the
+                // full decoded length while the copy above is clamped.
+                if msg_len + MSG_HEADER_SIZE > self.rx_msg.len() {
+                    self.rx_msg_len = 0;
+                    return;
+                }
 
                 // too long? (received_len - 2) > msg_len
-                if received_len.saturating_sub(2) > msg_len as usize {
+                if received_len.saturating_sub(MSG_HEADER_SIZE) > msg_len {
                     self.rx_msg_len = 0;
                     return;
                 }
@@ -318,10 +333,10 @@ impl SmpReceiver {
                 self.rx_msg_len = received_len;
 
                 // complete?
-                if received_len.saturating_sub(2) == msg_len as usize {
+                if received_len.saturating_sub(MSG_HEADER_SIZE) == msg_len {
                     // TODO: CRC check here
 
-                    self.process_msg(msg_len as _);
+                    self.process_msg(msg_len);
                 }
             }
         }
