@@ -12,7 +12,7 @@ use core::convert::Infallible;
 use base64::{base64_decode, base64_encode};
 use crc16::crc16_itu_t;
 use minicbor::encode::write::Write;
-use rtl::error::{fatal_error, unwrap};
+use rtl::error::unwrap;
 use sys::irq::{irq_lock, irq_unlock};
 use sys::time::{Duration, Instant};
 
@@ -446,17 +446,24 @@ unsafe fn received_read_msg(buf: &mut [u8]) -> Result<usize, SmpError> {
         unwrap!(opt_ref.as_ref(), "Receiver is not initialized")
     };
 
-    if receiver_ref.rx_msg_len == 0 {
+    let data_start = MSG_HEADER_SIZE + SMP_HEADER_SIZE;
+
+    // A response can claim a length that leaves no room for the payload the
+    // layout below assumes - `process_msg()` only requires the SMP header, and
+    // the footer is subtracted here. Reject instead of slicing an inverted or
+    // underflowing range.
+    if receiver_ref.rx_msg_len < data_start + MSG_FOOTER_SIZE {
         return Err(SmpError::WrongMessage);
     }
 
-    let data_start = MSG_HEADER_SIZE + SMP_HEADER_SIZE;
     let data_end = receiver_ref.rx_msg_len - MSG_FOOTER_SIZE;
     let data = &receiver_ref.rx_msg[data_start..data_end];
     let data_len = data.len();
 
+    // The response length is chosen by the peer, so a payload that does not
+    // fit the caller's buffer is its problem to report, not a reason to abort.
     if data_len > buf.len() {
-        fatal_error!("Buffer too small");
+        return Err(SmpError::WrongMessage);
     }
 
     buf[..data_len].copy_from_slice(data);
@@ -483,12 +490,14 @@ pub fn wait_for_response(
 
             let key = irq_lock();
             // SAFETY: IRQ locked, safe to read and clear receiver
-            let len = unsafe { unwrap!(received_read_msg(buf)) };
+            let result = unsafe { received_read_msg(buf) };
             irq_unlock(key);
 
             receiver_release();
 
-            return Ok(len);
+            // a malformed response is the peer's problem, not ours: report it
+            // rather than unwrapping into a panic
+            return result;
         }
 
         if Instant::now().checked_duration_since(start) > Some(timeout) {
