@@ -105,14 +105,27 @@ void nrf_management_rx_cb(const uint8_t *data, uint32_t len) {
     return;
   }
 
+  if (len < 1) {
+    // insufficient data length
+    return;
+  }
+
   switch (data[0]) {
     case MGMT_RESP_INFO:
+      if (len < 1 + sizeof(nrf_info_t)) {
+        // insufficient data length
+        break;
+      }
+      memcpy(&drv->info, &data[1], sizeof(nrf_info_t));
       drv->info_valid = true;
-      memcpy(&drv->info, &data[1], MIN(len - 1, sizeof(nrf_info_t)));
       break;
     case MGMT_RESP_AUTH_RESPONSE:
+      if (len < 1 + sizeof(drv->auth_data)) {
+        // insufficient data length
+        break;
+      }
+      memcpy(&drv->auth_data, &data[1], sizeof(drv->auth_data));
       drv->auth_data_valid = true;
-      memcpy(&drv->auth_data, &data[1], MIN(len - 1, sizeof(drv->auth_data)));
       break;
     default:
       break;
