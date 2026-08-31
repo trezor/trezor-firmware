@@ -507,3 +507,124 @@ pub fn wait_for_response(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Feed one wire frame: [hdr0, hdr1] + base64(chunk) + '\n'
+    fn feed_frame(r: &mut SmpReceiver, chunk: &[u8], init: bool) {
+        let mut enc = [0u8; 256];
+        let n = base64_encode(chunk, &mut enc).unwrap();
+        if init {
+            r.process_byte(START_INIT_FRAME_BYTE_0);
+            r.process_byte(START_INIT_FRAME_BYTE_1);
+        } else {
+            r.process_byte(START_CONT_FRAME_BYTE_0);
+            r.process_byte(START_CONT_FRAME_BYTE_1);
+        }
+        for b in &enc[..n] {
+            r.process_byte(*b);
+        }
+        r.process_byte(b'\n');
+    }
+
+    /// A message body: two-byte length field followed by `payload`.
+    fn body(claimed_len: u16, payload: &[u8]) -> Vec<u8> {
+        let mut v = Vec::new();
+        v.extend_from_slice(&claimed_len.to_be_bytes());
+        v.extend_from_slice(payload);
+        v
+    }
+
+    /// A frame shorter than the two-byte frame header must not be inspected
+    /// as though it had one.
+    #[test]
+    fn short_frame_is_dropped() {
+        let mut r = SmpReceiver::new();
+        r.process_byte(START_INIT_FRAME_BYTE_0);
+        r.process_byte(b'\n');
+        assert!(r.msg_type.is_none());
+        assert_eq!(r.rx_msg_len, 0);
+    }
+
+    /// An init frame carrying only one byte leaves the length field half
+    /// written; it must be dropped rather than parsed against a stale byte.
+    #[test]
+    fn init_frame_without_full_length_field_is_dropped() {
+        let mut r = SmpReceiver::new();
+        // leave a stale low byte behind from a dropped message
+        feed_frame(&mut r, &body(0xFF10, &[0xAA; 91]), true);
+        assert_eq!(r.rx_msg[1], 0x10);
+
+        // one byte alone would have claimed 0x0110 with that stale byte
+        feed_frame(&mut r, &[0x01], true);
+        assert_eq!(r.rx_msg_len, 0);
+        assert!(r.msg_type.is_none());
+
+        // a continuation must not resurrect it
+        feed_frame(&mut r, &[0xBB; 16], false);
+        assert_eq!(r.rx_msg_len, 0);
+        assert!(r.msg_type.is_none());
+    }
+
+    /// The offset advances by the full decoded length while the copy is
+    /// clamped, so a message claiming more than `rx_msg` holds must be
+    /// dropped up front.
+    #[test]
+    fn message_longer_than_buffer_is_dropped() {
+        let mut r = SmpReceiver::new();
+        feed_frame(&mut r, &body(0xFFFF, &[0xAA; 91]), true);
+        for _ in 0..8 {
+            feed_frame(&mut r, &[0xBB; 93], false);
+        }
+        assert!(r.msg_type.is_none());
+        assert_eq!(r.rx_msg_len, 0);
+    }
+
+    /// Same, for a claimed length that would complete exactly one frame past
+    /// the end of the buffer.
+    #[test]
+    fn message_completing_past_buffer_is_dropped() {
+        let mut r = SmpReceiver::new();
+        feed_frame(&mut r, &body(600, &[0xAA; 91]), true);
+        for _ in 0..4 {
+            feed_frame(&mut r, &[0xBB; 93], false);
+        }
+        feed_frame(&mut r, &[0xBB; 44], false);
+        feed_frame(&mut r, &[0xBB; 93], false);
+        assert!(r.msg_type.is_none());
+    }
+
+    /// A response whose length field leaves no room for the payload the
+    /// layout assumes must be reported, not sliced.
+    #[test]
+    fn response_without_payload_room_is_rejected() {
+        let mut r = SmpReceiver::new();
+        let hdr = [SMP_OP_READ_RSP, 0, 0, 0, 0, 0, 0, 0]; // group 0, cmd 0 = echo
+        feed_frame(&mut r, &body(8, &hdr), true);
+
+        // the parser accepts it as complete, so the guard has to be downstream
+        assert!(r.msg_type.is_some());
+        assert_eq!(r.rx_msg_len, 10);
+
+        let data_start = MSG_HEADER_SIZE + SMP_HEADER_SIZE;
+        assert!(r.rx_msg_len < data_start + MSG_FOOTER_SIZE);
+    }
+
+    /// A well-formed echo response is still accepted and located correctly.
+    #[test]
+    fn well_formed_response_is_accepted() {
+        let mut r = SmpReceiver::new();
+        let mut payload = Vec::new();
+        payload.extend_from_slice(&[SMP_OP_READ_RSP, 0, 0, 0, 0, 0, 0, 0]);
+        payload.extend_from_slice(b"hi");
+        payload.extend_from_slice(&[0, 0]); // CRC placeholder
+        feed_frame(&mut r, &body(payload.len() as u16, &payload), true);
+
+        assert!(matches!(r.msg_type, Some(MsgType::Echo)));
+        let data_start = MSG_HEADER_SIZE + SMP_HEADER_SIZE;
+        let data_end = r.rx_msg_len - MSG_FOOTER_SIZE;
+        assert_eq!(&r.rx_msg[data_start..data_end], b"hi");
+    }
+}
