@@ -234,8 +234,16 @@ impl Decoder {
         }
         let num = stream.read_uvarint()?;
         match field.get_type() {
-            FieldType::UVarInt => Ok(num.try_into()?),
-            FieldType::SVarInt => {
+            FieldType::UVarInt32 => {
+                let num = u32::try_from(num)?;
+                Ok(num.try_into()?)
+            }
+            FieldType::SVarInt32 => {
+                let signed_int = i32::try_from(zigzag::to_signed(num))?;
+                Ok(signed_int.try_into()?)
+            }
+            FieldType::UVarInt64 => Ok(num.try_into()?),
+            FieldType::SVarInt64 => {
                 let signed_int = zigzag::to_signed(num);
                 Ok(signed_int.try_into()?)
             }
