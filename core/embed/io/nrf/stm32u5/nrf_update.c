@@ -62,8 +62,17 @@ static bool read_image_sha256(const uint8_t *binary_ptr, size_t binary_size,
   uint32_t hdr_size = hdr->ih_hdr_size;
   uint32_t tvl1_size = hdr->ih_protect_tlv_size;
 
+  /* The header fields are untrusted, and a wrapped offset would pass the
+     bounds checks below as a small one. An image claiming more bytes than the
+     buffer holds is invalid anyway, and rejecting it also bounds the sum: the
+     other two fields come from 16-bit header entries, so `off` can exceed
+     `binary_size` by at most 0x20002. */
+  if (img_size > binary_size) {
+    return false;
+  }
+
   /* Compute start of TLV trailer */
-  off_t off = 0 + hdr_size + img_size + tvl1_size + 4;
+  uint32_t off = hdr_size + img_size + tvl1_size + 4;
 
   /* Scan TLVs until we find the SHA-256 entry */
   while (true) {
