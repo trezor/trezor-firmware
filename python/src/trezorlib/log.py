@@ -27,6 +27,9 @@ OMITTED_MESSAGES: set[type[protobuf.MessageType]] = set()
 DUMP_BYTES = 5
 DUMP_PACKETS = 4
 
+# Used by transport/ble.py to re-setup logging from forked process.
+_STDERR_VERBOSITY: int | None = None
+
 logging.addLevelName(DUMP_BYTES, "BYTES")
 logging.addLevelName(DUMP_PACKETS, "PACKETS")
 
@@ -65,6 +68,8 @@ def enable_debug_output(
 ) -> None:
     if handler is None:
         handler = logging.StreamHandler()
+        global _STDERR_VERBOSITY
+        _STDERR_VERBOSITY = verbosity
 
     formatter = PrettyProtobufFormatter()
     handler.setFormatter(formatter)
