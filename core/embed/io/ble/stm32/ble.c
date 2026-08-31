@@ -477,8 +477,12 @@ static void ble_process_rx_msg_bond_list(const uint8_t *data, uint32_t len) {
   }
 
   drv->bonds_ready = true;
-  drv->bond_count = data[1];
-  memcpy(&drv->bonds, &data[2], MIN(len - 2, sizeof(drv->bonds)));
+  // the nRF is not trusted to report a count that fits `bonds`, nor one that
+  // matches the number of records it actually sent
+  drv->bond_count =
+      MIN(data[1], MIN((len - 2) / sizeof(drv->bonds[0]), BLE_MAX_BONDS));
+  memset(&drv->bonds, 0, sizeof(drv->bonds));
+  memcpy(&drv->bonds, &data[2], drv->bond_count * sizeof(drv->bonds[0]));
 }
 
 static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
