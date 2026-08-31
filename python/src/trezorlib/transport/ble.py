@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 
+from .. import log
 from ..log import DUMP_PACKETS
 from . import Timeout, Transport, TransportException
 
@@ -147,7 +148,9 @@ class BleProxy:
 
         parent_pipe, child_pipe = Pipe()
         self.pipe = parent_pipe
-        self.process = Process(target=BleAsync, args=(child_pipe,), daemon=True)
+        self.process = Process(
+            target=BleAsync, args=(child_pipe, log._STDERR_VERBOSITY), daemon=True
+        )
         self.process.start()
 
         atexit.register(self._shutdown)
@@ -191,7 +194,10 @@ class BleAsync:
     class Shutdown(Exception):
         pass
 
-    def __init__(self, pipe: Connection) -> None:
+    def __init__(self, pipe: Connection, log_verbosity: int | None) -> None:
+        # Logging disabled in the new process, try re-setup if stderr.
+        if log_verbosity is not None:
+            log.enable_debug_output(log_verbosity)
         asyncio.run(self.main(pipe))
 
     async def main(self, pipe: Connection) -> None:
