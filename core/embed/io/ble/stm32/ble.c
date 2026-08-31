@@ -921,6 +921,11 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
     return 0;
   }
 
+  if (max_len < BLE_RX_PACKET_SIZE) {
+    // the packet would not fit; leave it in the queue rather than drop it
+    return 0;
+  }
+
   irq_key_t key = irq_lock();
 
   tsqueue_t *queue = &drv->rx_queue;
@@ -931,8 +936,7 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
 
   tsqueue_dequeue(queue, rx_data, sizeof(rx_data), &read_len, NULL);
 
-  if (read_len != BLE_DATA_SIZE ||
-      max_len < (read_len - BLE_DATA_HEADER_SIZE)) {
+  if (read_len != BLE_DATA_SIZE) {
     irq_unlock(key);
     return 0;
   }
