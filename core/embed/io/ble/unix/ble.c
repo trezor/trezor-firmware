@@ -448,11 +448,13 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
 
   if (!drv->connected) {
     LOG_ERR("ble_read while disconnected");
-    return false;
+    return 0;
   }
 
-  uint8_t buf[max_len] = {};
-  ssize_t r = sock_recvfrom(&drv->data_sock, buf, sizeof(buf));
+  // A packet is the most the hardware driver ever returns, so cap the read
+  // there instead of letting `max_len` size a stack allocation.
+  uint8_t buf[BLE_RX_PACKET_SIZE] = {0};
+  ssize_t r = sock_recvfrom(&drv->data_sock, buf, MIN(max_len, sizeof(buf)));
   if (r <= 0) {
     return 0;
   }
