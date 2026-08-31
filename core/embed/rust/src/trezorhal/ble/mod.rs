@@ -208,8 +208,11 @@ pub fn write(bytes: &[u8]) -> Result<(), Error> {
     }
 }
 
-pub fn read(buf: &mut [u8], max_len: usize) -> Result<usize, Error> {
-    let len: u16 = max_len.try_into()?;
+pub fn read(buf: &mut [u8]) -> Result<usize, Error> {
+    // Derived from `buf` so the two cannot disagree. `ble_read` writes a
+    // fixed-size packet and uses this only to check the buffer is big enough,
+    // so saturating a larger buffer to u16::MAX changes nothing.
+    let len = buf.len().min(u16::MAX as usize) as u16;
     let read_len = unsafe { super::ffi::ble_read(buf.as_mut_ptr(), len) };
     Ok(read_len.try_into()?)
 }
