@@ -4,7 +4,7 @@ use crate::strutil::TString;
 use crate::ui::animation::Animation;
 use crate::ui::component::{Component, Event, EventCtx, Never, Timer};
 use crate::ui::display::{Color, Font};
-use crate::ui::geometry::{Offset, Rect};
+use crate::ui::geometry::{Alignment, Offset, Rect};
 use crate::ui::shape::{self, Renderer};
 use crate::ui::util::animation_disabled;
 
@@ -24,11 +24,13 @@ pub struct Marquee {
     pause_timer: Timer,
     min_offset: i16,
     max_offset: i16,
+    aligned_offset: i16,
     state: State,
     text: TString<'static>,
     font: Font,
     fg: Color,
     bg: Color,
+    alignment: Alignment,
     duration: Duration,
     pause: Duration,
 }
@@ -40,18 +42,25 @@ impl Marquee {
             pause_timer: Timer::new(),
             min_offset: 0,
             max_offset: 0,
+            aligned_offset: 0,
             state: State::Initial,
             text,
             font,
             fg,
             bg,
+            alignment: Alignment::Start,
             duration: Duration::from_millis(ANIMATION_DURATION_MS),
             pause: Duration::from_millis(PAUSE_DURATION_MS),
         }
     }
 
+    pub const fn with_alignment(self, alignment: Alignment) -> Self {
+        Self { alignment, ..self }
+    }
+
     pub fn set_text(&mut self, text: TString<'static>) {
         self.text = text;
+        self.aligned_offset = self.compute_aligned_offset();
     }
 
     pub fn start(&mut self, ctx: &mut EventCtx, now: Instant) {
@@ -121,6 +130,23 @@ impl Marquee {
         self.animation().is_some()
     }
 
+    /// X offset for rendering the text when it is not scrolling, according to
+    /// `self.alignment`. When the text does not fit into the area, it is
+    /// aligned to the start, matching the scrolling animation.
+    fn compute_aligned_offset(&self) -> i16 {
+        let text_width = self.text.map(|t| self.font.text_width(t));
+        let slack = self.area.width() - text_width;
+        if slack <= 0 {
+            0
+        } else {
+            match self.alignment {
+                Alignment::Start => 0,
+                Alignment::Center => slack / 2,
+                Alignment::End => slack,
+            }
+        }
+    }
+
     pub fn render_anim<'s>(&'s self, target: &mut impl Renderer<'s>, offset: i16) {
         target.in_clip(self.area, &|target| {
             let text_height = self.font.text_height();
@@ -139,6 +165,7 @@ impl Component for Marquee {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
+        self.aligned_offset = self.compute_aligned_offset();
         self.area
     }
 
@@ -199,7 +226,7 @@ impl Component for Marquee {
 
         match self.state {
             State::Initial => {
-                self.render_anim(target, 0);
+                self.render_anim(target, self.aligned_offset);
             }
             State::PauseRight => {
                 self.render_anim(target, self.min_offset);
@@ -212,7 +239,7 @@ impl Component for Marquee {
                 if let Some(done) = progress {
                     self.render_anim(target, done);
                 } else {
-                    self.render_anim(target, 0);
+                    self.render_anim(target, self.aligned_offset);
                 }
             }
         }
