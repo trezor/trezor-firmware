@@ -26,6 +26,13 @@ pub fn upload_image(
         }
     };
 
+    // An image shorter than one chunk cannot be a real nRF image. Refuse it
+    // here rather than push it; reachable from the prodtest CLI and the
+    // nrf_update syscall, both of which take the buffer from the caller.
+    if image_data.len() < CHUNK_SIZE {
+        return false;
+    }
+
     let mut cbor_data = [0u8; MAX_PACKET_SIZE];
     let mut data = [0u8; MAX_PACKET_SIZE];
     let mut buffer = [0u8; MAX_PACKET_SIZE];
