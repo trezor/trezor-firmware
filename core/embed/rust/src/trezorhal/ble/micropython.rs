@@ -252,7 +252,7 @@ extern "C" fn py_iface_read(n_args: usize, args: *const Obj) -> Obj {
         if buf.len() < RX_PACKET_SIZE {
             return Err(Error::ValueError(c"Buffer too small"));
         }
-        let read_len = read(buf, RX_PACKET_SIZE)?;
+        let read_len = read(buf)?;
         if read_len != RX_PACKET_SIZE {
             return Err(Error::ValueError(c"Unexpected read length"));
         }
