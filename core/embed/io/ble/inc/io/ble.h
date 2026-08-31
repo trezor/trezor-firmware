@@ -36,7 +36,7 @@
 #define BLE_ADV_NAME_LEN 20U
 #define BLE_PAIRING_CODE_LEN 6
 
-#define BLE_MAX_BONDS 8
+#define BLE_MAX_BONDS 8U
 
 /**
  * @brief BLE operating modes
