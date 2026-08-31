@@ -75,6 +75,12 @@ class TestProtobuf(unittest.TestCase):
             self.assertEqual(load_uvarint(b"\xff\x01"), 0xFF)
             self.assertEqual(load_uvarint(b"\xc0\xc4\x07"), 123456)
 
+    def test_reject_malformed_field_key(self):
+        with self.assertRaises(OverflowError):
+            load_message(ApplySettings, b"\x80" * 9 + b"\x02")
+        with self.assertRaises(EOFError):
+            load_message(ApplySettings, b"\x80")
+
     def test_validate_enum(self):
         # ok message:
         msg = Failure(code=7)

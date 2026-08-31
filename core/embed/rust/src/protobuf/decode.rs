@@ -105,9 +105,9 @@ impl Decoder {
         depth: u8,
         map: &mut Map,
     ) -> Result<(), Error> {
-        // Loop, trying to read the field key that contains the tag and primitive value
-        // type. If we fail to read the key, we are at the end of the stream.
-        while let Ok(field_key) = stream.read_uvarint() {
+        // Decode field keys until the stream is exhausted
+        while stream.remaining() > 0 {
+            let field_key = stream.read_uvarint()?;
             let field_tag = u8::try_from(field_key >> 3)?;
             let prim_type = u8::try_from(field_key & 7)?;
 
