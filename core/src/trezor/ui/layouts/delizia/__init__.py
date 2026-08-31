@@ -531,7 +531,7 @@ async def confirm_payment_request(
                 refund_account_items,
             )
         )
-    menu = Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)])
+    menu = Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items)
 
     with main_ctx as main_layout:
         await confirm_with_menu(main_layout, menu, "confirm_payment_request")
@@ -857,13 +857,13 @@ async def confirm_value(
     for name, p, page_title in info_items or []:
         menu_items.append(create_info_menu_leaf(name, p, page_title))
     menu = Menu(
-        menu_items
-        + [
+        [
             cancel_leaf(
                 cancel_text or TR.buttons__cancel,
                 confirm=trezorui_api.confirm_cancel,
             )
         ]
+        + menu_items
     )
     with main_ctx as main_layout:
         return await interact_with_menu(main_layout, menu, br_name, br_code)
@@ -989,7 +989,7 @@ async def confirm_trade(
     ]
     for k, v in extra_menu_items:
         menu_items.append(create_info_menu_leaf(k, v))
-    menu = Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)])
+    menu = Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items)
 
     with trade_ctx as trade_layout:
         await confirm_with_menu(trade_layout, menu, "confirm_trade")
@@ -1371,7 +1371,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
                     f"{br_name}/intro",
                     ButtonRequestType.SignTx,
                 )
@@ -1386,7 +1386,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
                     f"{br_name}/vault_name",
                 )
 
@@ -1402,7 +1402,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
                     f"{br_name}/amount",
                     br_code,
                 )
@@ -1420,7 +1420,7 @@ if not utils.BITCOIN_ONLY:
                 ) as layout:
                     return await interact_with_menu(
                         layout,
-                        Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                        Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
                         f"{br_name}/extra_data",
                         br_code,
                     )
@@ -1440,7 +1440,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
                     f"{br_name}/summary",
                     br_code,
                 )
@@ -1484,7 +1484,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
                     f"{br_name}/intro",
                     br_code,
                 )
@@ -1500,7 +1500,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
                     f"{br_name}/tokens",
                     br_code,
                 )
@@ -1518,7 +1518,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
                     f"{br_name}/summary",
                     br_code,
                 )
@@ -1568,7 +1568,7 @@ if not utils.BITCOIN_ONLY:
             ]
             await confirm_with_menu(
                 layout,
-                Menu(children + [cancel_leaf(TR.buttons__cancel)]),
+                Menu([cancel_leaf(TR.buttons__cancel)] + children),
                 "ethereum/auth7702/details",
                 ButtonRequestType.SignTx,
             )
@@ -1587,9 +1587,9 @@ if not utils.BITCOIN_ONLY:
         ]
         menu = Menu(
             children=[
+                cancel_leaf(TR.buttons__cancel),
                 create_info_menu_leaf(TR.address_details__account_info, account_info),
                 create_info_menu_leaf(TR.cardano__nonce, str(nonce)),
-                cancel_leaf(TR.buttons__cancel),
             ],
         )
 
@@ -1879,7 +1879,7 @@ if not utils.BITCOIN_ONLY:
         ) as layout:
             await interact_with_menu(
                 layout,
-                Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
                 br_name,
                 br_code,
             )
@@ -2248,8 +2248,7 @@ async def confirm_signverify(
     )
 
     menu = Menu(
-        items
-        + [
+        [
             cancel_leaf(
                 TR.buttons__cancel,
                 confirm=lambda: trezorui_api.show_mismatch(
@@ -2257,6 +2256,7 @@ async def confirm_signverify(
                 ),
             )
         ]
+        + items
     )
 
     with address_ctx as address_layout:

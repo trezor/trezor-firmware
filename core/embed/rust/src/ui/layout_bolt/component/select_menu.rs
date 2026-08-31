@@ -5,8 +5,9 @@ use crate::error::Error;
 use crate::strutil::TString;
 use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::geometry::{Insets, Rect};
+use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::shape::Renderer;
-use crate::ui::ui_firmware::{MenuItemIntent, MAX_MENU_ITEMS};
+use crate::ui::ui_firmware::MAX_MENU_ITEMS;
 
 /// Maximum number of buttons shown on the screen at once.
 /// TODO: pagination for menus with more items.
