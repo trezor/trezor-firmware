@@ -138,6 +138,11 @@ void service_send_busy(void) {
     memset(buf->data, 0, sizeof(buf->data));
     memcpy(buf->data, busy_packet, sizeof(busy_packet));
     buf->len = BLE_TX_PACKET_SIZE;
-    service_send(conn, buf);
+
+    int err = service_send(conn, buf);
+    if (err != 0) {
+      // `on_sent` only runs once the notification is accepted
+      k_free(buf);
+    }
   }
 }
