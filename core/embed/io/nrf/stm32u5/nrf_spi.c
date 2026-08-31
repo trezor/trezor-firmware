@@ -312,7 +312,9 @@ void nrf_spi_transfer_complete(SPI_HandleTypeDef *hspi) {
   uint8_t crc = crc8((uint8_t *)&packet, MAX_SPI_DATA_SIZE + SPI_HEADER_SIZE,
                      0x07, 0x00, false);
 
-  if (nrf_is_valid_startbyte(packet.service_id) && packet.crc == crc) {
+  // `msg_len` is a full byte, so it can claim more than `data` holds
+  if (nrf_is_valid_startbyte(packet.service_id) && packet.crc == crc &&
+      packet.msg_len <= MAX_SPI_DATA_SIZE) {
     nrf_process_msg(drv, packet.data, packet.msg_len, packet.service_id & 0x0F);
   }
 }
