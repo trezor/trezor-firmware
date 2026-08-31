@@ -28,12 +28,13 @@ use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
     Component, ComponentExt, Empty, FormattedText, Label, LineBreaking, Paginate, Timeout,
 };
+use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MenuItemIntent, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
-    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
+    MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::{geometry, ModelUI};
 
@@ -916,10 +917,8 @@ impl FirmwareUI for UICaesar {
         current: usize,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // the entry's intent is not rendered on this model
-        let mut labels = heapless::Vec::<TString<'static>, MAX_MENU_ITEMS>::new();
-        for (text, _intent) in items {
-            unwrap!(labels.push(text));
-        }
+        let labels: heapless::Vec<TString<'static>, MAX_MENU_ITEMS> =
+            items.into_iter().map(|(text, _intent)| text).collect();
         // Returning the index of the selected menu item
         let layout = RootComponent::new(
             SimpleChoice::new(
