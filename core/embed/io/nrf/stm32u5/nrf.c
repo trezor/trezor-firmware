@@ -485,7 +485,9 @@ bool nrf_get_info(nrf_info_t *info) {
     return false;
   }
 
+  irq_key_t key = irq_lock();
   drv->info_valid = false;
+  irq_unlock(key);
 
   uint8_t data[1] = {MGMT_CMD_INFO};
   if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
@@ -495,10 +497,13 @@ bool nrf_get_info(nrf_info_t *info) {
   uint32_t timeout = ticks_timeout(100);
 
   while (!ticks_expired(timeout)) {
+    key = irq_lock();
     if (drv->info_valid) {
       memcpy(info, &drv->info, sizeof(nrf_info_t));
+      irq_unlock(key);
       return true;
     }
+    irq_unlock(key);
   }
 
   return false;
@@ -510,7 +515,9 @@ uint32_t nrf_get_version(void) {
     return 0;
   }
 
+  irq_key_t key = irq_lock();
   drv->info_valid = false;
+  irq_unlock(key);
 
   uint8_t data[1] = {MGMT_CMD_INFO};
   if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
@@ -520,14 +527,17 @@ uint32_t nrf_get_version(void) {
   uint32_t timeout = ticks_timeout(100);
 
   while (!ticks_expired(timeout)) {
+    key = irq_lock();
     if (drv->info_valid) {
       uint32_t version = 0;
       version |= drv->info.version_major << 24;
       version |= drv->info.version_minor << 16;
       version |= drv->info.version_patch << 8;
       version |= drv->info.version_tweak;
+      irq_unlock(key);
       return version;
     }
+    irq_unlock(key);
   }
 
   return 0;
@@ -584,8 +594,12 @@ bool nrf_authenticate(void) {
 
   memcpy(data + 1, challenge, sizeof(challenge));
 
+  // clear under lock: the callback must not land between the two stores, and
+  // neither store may be reordered past the send below
+  irq_key_t key = irq_lock();
   drv->auth_data_valid = false;
   memset(drv->auth_data, 0, sizeof(drv->auth_data));
+  irq_unlock(key);
 
   if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data), NULL, NULL)) {
     return false;
@@ -594,10 +608,20 @@ bool nrf_authenticate(void) {
   timeout = ticks_timeout(100);
 
   while (!ticks_expired(timeout)) {
-    if (drv->auth_data_valid) {
+    uint8_t auth_data[SHA256_DIGEST_LENGTH] = {0};
+
+    // copy under lock: the callback may overwrite `auth_data` mid-read
+    key = irq_lock();
+    bool auth_data_valid = drv->auth_data_valid;
+    if (auth_data_valid) {
+      memcpy(auth_data, drv->auth_data, sizeof(auth_data));
+    }
+    irq_unlock(key);
+
+    if (auth_data_valid) {
       secbool auth =
           secret_validate_nrf_pairing((uint8_t *)challenge, sizeof(challenge),
-                                      drv->auth_data, SHA256_DIGEST_LENGTH);
+                                      auth_data, sizeof(auth_data));
       return sectrue == auth;
     }
   }
