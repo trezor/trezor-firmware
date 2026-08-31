@@ -99,6 +99,10 @@ int service_notify(struct bt_conn *conn, uint8_t *data, size_t len) {
   const struct bt_gatt_attr *attr = &trz_svc.attrs[4];
 
   uint8_t *buf = k_malloc(len);
+  if (buf == NULL) {
+    LOG_WRN("Not able to allocate notification buffer");
+    return -ENOMEM;
+  }
   memcpy(buf, data, len);
 
   params.attr = attr;
