@@ -69,7 +69,7 @@ def assert_hexdata(response: ProdtestResponse, num_bytes: int | None = None) -> 
     except ValueError:
         raise AssertionError(f"response is not valid hex data: {args!r}")
     if num_bytes is not None:
-        assert (
-            len(data) == num_bytes
-        ), f"expected {num_bytes} bytes of hex data, got {len(data)}: {args!r}"
+        assert len(data) == num_bytes, (
+            f"expected {num_bytes} bytes of hex data, got {len(data)}: {args!r}"
+        )
     return data

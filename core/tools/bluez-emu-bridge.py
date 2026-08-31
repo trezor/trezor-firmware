@@ -19,8 +19,13 @@ import subprocess
 from pathlib import Path
 
 import click
-from bluez_emu_bridge import MessageBus  # normally lives in dbus_fast.aio
-from bluez_emu_bridge import Adapter1, Device1, GattCharacteristic1, GattService1
+from bluez_emu_bridge import (
+    Adapter1,
+    Device1,
+    GattCharacteristic1,
+    GattService1,
+    MessageBus,  # normally lives in dbus_fast.aio
+)
 from typing_extensions import Self
 
 from trezorlib._internal.emu_ble import Event
@@ -86,7 +91,6 @@ class TrezorUDP(asyncio.DatagramProtocol):
 
 
 class TrezorEmulator:
-
     def __init__(
         self,
         data_transport: asyncio.DatagramTransport,

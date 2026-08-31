@@ -5,7 +5,6 @@ from trezor.crypto import base32
 
 
 class TestCryptoBase32(unittest.TestCase):
-
     # test vectors from:
     # https://tools.ietf.org/html/rfc4648
     # https://github.com/emn178/hi-base32/blob/master/tests/test.js

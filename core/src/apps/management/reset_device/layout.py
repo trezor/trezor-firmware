@@ -167,7 +167,6 @@ async def slip39_advanced_show_and_confirm_shares(
 
 
 class _DisplayBackup:
-
     async def intro(self, num_of_words: int | None = None) -> None:
         from trezor.ui.layouts.reset import show_intro_backup
 
@@ -223,7 +222,6 @@ async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
 
 
 if utils.USE_N1W1:
-
     from trezor import TR
 
     if TYPE_CHECKING:
@@ -236,7 +234,6 @@ if utils.USE_N1W1:
             self.msg = msg
 
     class _N1W1Backup:
-
         async def intro(self, num_of_words: int | None = None) -> None:
             # TODO(N1W1): design/copy
             pass

@@ -14,7 +14,6 @@ if not utils.USE_THP:
 
 
 class TestAuthorization(TestCaseWithContext):
-
     coin = coins.by_name("Bitcoin")
 
     def setUp(self):

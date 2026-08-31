@@ -74,7 +74,6 @@ class N1W1Context:
         self_ctx: N1W1Context = self
 
         class _Connect(Layout):
-
             def create_tasks(self) -> Iterator[loop.Task[None]]:
                 from trezor.ui import Shutdown
                 from trezorui_api import CONFIRMED

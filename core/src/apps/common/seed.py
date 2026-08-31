@@ -121,7 +121,6 @@ if utils.USE_THP:
                 derive_and_store_secrets(ctx, passphrase)
 
 else:  # v1 protocol
-
     if utils.BITCOIN_ONLY:
         # === Bitcoin-only variant ===
         # We use the simple version of `get_seed` that never needs to derive anything else.

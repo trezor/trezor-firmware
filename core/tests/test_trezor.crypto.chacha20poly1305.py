@@ -9,7 +9,6 @@ from trezor.crypto import (
 
 
 class TestCryptoChaCha20Poly1305(unittest.TestCase):
-
     vectors = [
         # from https://github.com/wg/c20p1305/blob/master/rfc7539_test.c
         (

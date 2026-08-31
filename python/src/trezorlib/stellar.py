@@ -45,9 +45,8 @@ if t.TYPE_CHECKING:
     ]
 
 try:
-    from stellar_sdk import AccountMerge
-    from stellar_sdk import Address as StellarAddress
     from stellar_sdk import (
+        AccountMerge,
         AllowTrust,
         Asset,
         BumpSequence,
@@ -76,6 +75,7 @@ try:
         TrustLineEntryFlag,
         xdr,
     )
+    from stellar_sdk import Address as StellarAddress
 
     HAVE_STELLAR_SDK = True
     # Protocol 27 XDR (SOROBAN_CREDENTIALS_ADDRESS_V2 etc.) is only available

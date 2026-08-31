@@ -19,7 +19,12 @@ from ..format import (
 )
 from ..types import PropertyTemplate, UIProperty
 from .instruction import Instruction
-from .parse import parse_byte, parse_memo, parse_pubkey, parse_string
+from .parse import (
+    parse_byte,
+    parse_memo,
+    parse_pubkey,
+    parse_string,
+)
 
 if TYPE_CHECKING:
     from typing import Any, TypeGuard
@@ -368,7 +373,6 @@ if TYPE_CHECKING:
         base_account: Account | None
 
     class SystemProgramAdvanceNonceAccountInstruction(Instruction):
-
         nonce_account: Account
         recent_blockhashes_sysvar: Account
         nonce_authority: Account
@@ -427,7 +431,6 @@ if TYPE_CHECKING:
         recipient_account: Account
 
     class SystemProgramUpgradeNonceAccountInstruction(Instruction):
-
         nonce_account: Account
 
     class StakeProgramInitializeInstruction(Instruction):
@@ -450,7 +453,6 @@ if TYPE_CHECKING:
         lockup_authority: Account | None
 
     class StakeProgramDelegateStakeInstruction(Instruction):
-
         initialized_stake_account: Account
         vote_account: Account
         clock_sysvar: Account
@@ -476,7 +478,6 @@ if TYPE_CHECKING:
         lockup_authority: Account | None
 
     class StakeProgramDeactivateInstruction(Instruction):
-
         delegated_stake_account: Account
         clock_sysvar: Account
         stake_authority: Account
@@ -490,7 +491,6 @@ if TYPE_CHECKING:
         lockup_or_withdraw_authority: Account
 
     class StakeProgramMergeInstruction(Instruction):
-
         destination_stake_account: Account
         source_stake_account: Account
         clock_sysvar: Account
@@ -509,7 +509,6 @@ if TYPE_CHECKING:
         lockup_authority: Account | None
 
     class StakeProgramInitializeCheckedInstruction(Instruction):
-
         uninitialized_stake_account: Account
         rent_sysvar: Account
         stake_authority: Account
@@ -555,7 +554,6 @@ if TYPE_CHECKING:
         lamports: int
 
     class TokenProgramInitializeAccountInstruction(Instruction):
-
         account_to_initialize: Account
         mint_account: Account
         owner: Account
@@ -583,7 +581,6 @@ if TYPE_CHECKING:
         owner: Account
 
     class TokenProgramRevokeInstruction(Instruction):
-
         source_account: Account
         owner: Account
 
@@ -609,19 +606,16 @@ if TYPE_CHECKING:
         owner: Account
 
     class TokenProgramCloseAccountInstruction(Instruction):
-
         account_to_close: Account
         destination_account: Account
         owner: Account
 
     class TokenProgramFreezeAccountInstruction(Instruction):
-
         account_to_freeze: Account
         token_mint: Account
         freeze_authority: Account
 
     class TokenProgramThawAccountInstruction(Instruction):
-
         account_to_freeze: Account
         token_mint: Account
         freeze_authority: Account
@@ -668,7 +662,6 @@ if TYPE_CHECKING:
         rent_sysvar: Account
 
     class TokenProgramSyncNativeInstruction(Instruction):
-
         token_account: Account
 
     class TokenProgramInitializeAccount3Instruction(Instruction):
@@ -678,11 +671,9 @@ if TYPE_CHECKING:
         mint_account: Account
 
     class TokenProgramInitializeImmutableOwnerInstruction(Instruction):
-
         account_to_initialize: Account
 
     class Token2022ProgramInitializeAccountInstruction(Instruction):
-
         account_to_initialize: Account
         mint_account: Account
         owner: Account
@@ -710,7 +701,6 @@ if TYPE_CHECKING:
         owner: Account
 
     class Token2022ProgramRevokeInstruction(Instruction):
-
         source_account: Account
         owner: Account
 
@@ -736,19 +726,16 @@ if TYPE_CHECKING:
         owner: Account
 
     class Token2022ProgramCloseAccountInstruction(Instruction):
-
         account_to_close: Account
         destination_account: Account
         owner: Account
 
     class Token2022ProgramFreezeAccountInstruction(Instruction):
-
         account_to_freeze: Account
         token_mint: Account
         freeze_authority: Account
 
     class Token2022ProgramThawAccountInstruction(Instruction):
-
         account_to_freeze: Account
         token_mint: Account
         freeze_authority: Account
@@ -795,7 +782,6 @@ if TYPE_CHECKING:
         rent_sysvar: Account
 
     class Token2022ProgramSyncNativeInstruction(Instruction):
-
         token_account: Account
 
     class Token2022ProgramInitializeAccount3Instruction(Instruction):
@@ -805,11 +791,9 @@ if TYPE_CHECKING:
         mint_account: Account
 
     class Token2022ProgramInitializeImmutableOwnerInstruction(Instruction):
-
         account_to_initialize: Account
 
     class AssociatedTokenAccountProgramCreateInstruction(Instruction):
-
         funding_account: Account
         associated_token_account: Account
         wallet_address: Account
@@ -819,7 +803,6 @@ if TYPE_CHECKING:
         rent_sysvar: Account | None
 
     class AssociatedTokenAccountProgramCreateIdempotentInstruction(Instruction):
-
         funding_account: Account
         associated_token_account: Account
         wallet_addr: Account
@@ -828,7 +811,6 @@ if TYPE_CHECKING:
         spl_token: Account
 
     class AssociatedTokenAccountProgramRecoverNestedInstruction(Instruction):
-
         nested_account: Account
         token_mint_nested: Account
         associated_token_account: Account

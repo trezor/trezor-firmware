@@ -65,9 +65,7 @@ class DataCache:
     def get_bool(self, key: int) -> bool:  # noqa: F811
         return self.get(key) is not None
 
-    def get_int(
-        self, key: int, default: T | None = None
-    ) -> int | T | None:  # noqa: F811
+    def get_int(self, key: int, default: T | None = None) -> int | T | None:  # noqa: F811
         encoded = self.get(key)
         if encoded is None:
             return default
@@ -136,9 +134,7 @@ class SessionlessCache(DataCache):
     def get_bool(self, key: int) -> bool:  # noqa: F811
         return super().get_bool(key & ~SESSIONLESS_FLAG)
 
-    def get_int(
-        self, key: int, default: T | None = None
-    ) -> int | T | None:  # noqa: F811
+    def get_int(self, key: int, default: T | None = None) -> int | T | None:  # noqa: F811
         return super().get_int(key & ~SESSIONLESS_FLAG, default)
 
     def is_set(self, key: int) -> bool:

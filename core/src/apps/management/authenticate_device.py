@@ -127,7 +127,6 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof | Su
         }
 
         while req.proof_type is not None:
-
             if req.index is None:
                 blob = all_signatures[req.proof_type]
                 if blob is None:

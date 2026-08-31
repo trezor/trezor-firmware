@@ -24,17 +24,17 @@ from trezorlib._internal.prodtest_client import Cmd, ProdtestClient, ProdtestCom
 def test_prodtest_version_format(client: ProdtestClient) -> None:
     """prodtest-version should return a version in major.minor.patch.build format."""
     resp = client.command_ok(ProdtestCommand(Cmd.PRODTEST_VERSION))
-    assert re.fullmatch(
-        r"\d+\.\d+\.\d+\.\d+", resp.args
-    ), f"Unexpected version format: {resp.args}"
+    assert re.fullmatch(r"\d+\.\d+\.\d+\.\d+", resp.args), (
+        f"Unexpected version format: {resp.args}"
+    )
 
 
 def test_boardloader_version_format(client: ProdtestClient) -> None:
     """boardloader-version should return a version in major.minor.patch format."""
     resp = client.command_ok(ProdtestCommand(Cmd.BOARDLOADER_VERSION))
-    assert re.fullmatch(
-        r"\d+\.\d+\.\d+", resp.args
-    ), f"Unexpected version format: {resp.args}"
+    assert re.fullmatch(r"\d+\.\d+\.\d+", resp.args), (
+        f"Unexpected version format: {resp.args}"
+    )
 
 
 def test_prodtest_model(client: ProdtestClient) -> None:

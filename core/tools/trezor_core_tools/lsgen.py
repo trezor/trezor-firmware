@@ -29,7 +29,6 @@ def main(check: bool) -> None:
     models = [model for model in models if model.is_dir()]
 
     for model, split in itertools.product(models, [False, True]):
-
         path = get_layout_for_model(model.name, split)
         if not path.exists():
             continue

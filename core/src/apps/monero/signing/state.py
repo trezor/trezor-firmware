@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 
 class State:
-
     STEP_INIT = 0
     STEP_INP = 100
     STEP_VINI = 300

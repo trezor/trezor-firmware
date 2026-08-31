@@ -15,7 +15,6 @@ if not utils.BITCOIN_ONLY:
 # test vectors inspired from https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0243.py
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestZcashZip243(unittest.TestCase):
-
     VECTORS = [
         {
             "expiry": 71895707,

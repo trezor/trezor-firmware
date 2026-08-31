@@ -6,7 +6,6 @@ def gen(sources: Iterable[str], dirs: Iterable[str], defs: Iterable[str]) -> Non
     target = "CMakeLists.txt"
 
     with open(target, "w") as f:
-
         f.write("cmake_minimum_required(VERSION 3.20)\n")
         f.write("project(core)\n")
         f.write("\n")

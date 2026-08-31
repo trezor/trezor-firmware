@@ -4,7 +4,6 @@ from common import *  # isort:skip
 from trezor import wire
 
 if not utils.BITCOIN_ONLY:
-
     from ethereum_common import *
     from trezor.enums import DefinitionType
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo, SolanaTokenInfo

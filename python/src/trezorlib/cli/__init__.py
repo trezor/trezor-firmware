@@ -53,7 +53,6 @@ if t.TYPE_CHECKING:
 
 
 class ChoiceType(click.Choice):
-
     def __init__(self, typemap: dict[str, t.Any], case_sensitive: bool = True) -> None:
         super().__init__(list(typemap.keys()))
         self.case_sensitive = case_sensitive

@@ -16,7 +16,6 @@ from .transaction.instructions import (
 from .types import is_address_reference
 
 if TYPE_CHECKING:
-
     from trezor.messages import PaymentRequest
 
     from .transaction import Fee

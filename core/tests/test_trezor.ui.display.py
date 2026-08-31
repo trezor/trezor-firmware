@@ -6,7 +6,6 @@ from trezorui_api import backlight_set
 
 
 class TestDisplay(unittest.TestCase):
-
     def test_orientation(self):
         for o in [0, 90, 180, 270]:
             display.orientation(o)

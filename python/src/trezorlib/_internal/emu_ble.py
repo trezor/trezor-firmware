@@ -116,7 +116,6 @@ class Command(Struct):
 # You should probably use bluez-emu-bridge instead of this transport directly
 # as it does not implement any BLE connection management logic.
 class EmuBleTransport(Transport):
-
     DEFAULT_HOST = "127.0.0.1"
     DEFAULT_PORT = 21328
     PATH_PREFIX = "emuble"

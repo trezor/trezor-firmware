@@ -4,9 +4,6 @@ UV=uv
 EXCLUDES=.vscode
 STYLE_TARGETS=src tests tools helper-scripts
 
-# suppress black's warning
-BLACK_FLAGS ?=--fast
-
 dist: doc clean
 	$(UV) build
 
@@ -41,23 +38,21 @@ git-clean:
 	git clean -dfx -e $(EXCLUDES)
 
 style:
-	black $(BLACK_FLAGS) $(STYLE_TARGETS)
-	isort $(STYLE_TARGETS)
-	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS)
 	ruff check --fix $(STYLE_TARGETS)
+	ruff format $(STYLE_TARGETS)
+	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS)
 	flake8
 	make pyright
 
 style_check:
-	black --check $(BLACK_FLAGS) $(STYLE_TARGETS)
-	isort --check-only $(STYLE_TARGETS)
 	ruff check $(STYLE_TARGETS)
+	ruff format --check $(STYLE_TARGETS)
 	flake8
 	make pyright
 
 style_quick_check:
-	black --check $(BLACK_FLAGS) $(STYLE_TARGETS)
-	isort --check-only $(STYLE_TARGETS)
+	ruff format --check $(STYLE_TARGETS)
+	ruff check --select I $(STYLE_TARGETS)
 
 .PHONY: all build install clean doc doc_check style style_check git-clean clean-build clean-pyc clean-test
 

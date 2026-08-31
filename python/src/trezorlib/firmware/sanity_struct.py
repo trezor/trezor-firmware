@@ -54,7 +54,6 @@ class SanityCheckError(Exception):
 
 
 class SanityCheckedStruct(Struct):
-
     @classmethod
     def parse(
         cls: type[Self], data: bytes, *, strict: bool = STRICT_SANITY_CHECK_DEFAULT
@@ -104,7 +103,6 @@ class SanityCheckedStruct(Struct):
 
         is_ok = True
         for name, value in subcon_fields:
-
             # Skip private fields
             if name[0] == "_":
                 continue

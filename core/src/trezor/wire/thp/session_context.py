@@ -28,7 +28,6 @@ if __debug__:
 
 
 class GenericSessionContext(Context):
-
     def __init__(self, channel: Channel, session_id: int) -> None:
         super().__init__(channel.iface, channel.channel_id)
         self.channel: Channel = channel
@@ -115,7 +114,6 @@ class GenericSessionContext(Context):
 
 
 class SeedlessSessionContext(GenericSessionContext):
-
     def __init__(self, channel_ctx: Channel, session_id: int) -> None:
         super().__init__(channel_ctx, session_id)
 
@@ -128,7 +126,6 @@ class SeedlessSessionContext(GenericSessionContext):
 
 
 class SessionContext(GenericSessionContext):
-
     def __init__(self, channel_ctx: Channel, session_cache: SessionThpCache) -> None:
         if channel_ctx.channel_id_bytes() != session_cache.channel_id:
             raise Exception(

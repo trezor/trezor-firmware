@@ -78,7 +78,6 @@ async def handle_device_menu() -> None:
 
     # Remain in the device loop until the menu is explicitly closed
     while True:
-
         is_initialized = storage_device.is_initialized()
         led_configurable = is_initialized and utils.USE_RGB_LED
         haptic_configurable = is_initialized and utils.USE_HAPTIC

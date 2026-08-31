@@ -5,7 +5,6 @@ from trezor.crypto import pbkdf2
 
 
 class TestCryptoPbkdf2(unittest.TestCase):
-
     # vectors from https://stackoverflow.com/questions/5130513/pbkdf2-hmac-sha2-test-vectors
 
     def test_pbkdf2_hmac_sha256(self):

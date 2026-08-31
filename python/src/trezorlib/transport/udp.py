@@ -55,7 +55,6 @@ class _SendRateLimiter:
 
 
 class UdpTransport(Transport):
-
     DEFAULT_HOST = "127.0.0.1"
     DEFAULT_PORT = 21324
     PATH_PREFIX = "udp"

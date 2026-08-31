@@ -5,7 +5,6 @@ from trezor.crypto import hashlib
 
 
 class TestCryptoBlake256(unittest.TestCase):
-
     # vectors from https://raw.githubusercontent.com/monero-project/monero/master/tests/hash/tests-extra-blake.txt
 
     vectors = [

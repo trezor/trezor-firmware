@@ -92,7 +92,6 @@ async def bootscreen() -> None:
 
     while True:
         try:
-
             if lock_manager.can_lock_device():
                 enforce_welcome_screen_duration()
                 if utils.INTERNAL_MODEL == "T2T1":

@@ -57,21 +57,25 @@ at top level. The style for doing that are as follows:
 
 ### Tools
 
-Configurations of specific Python style tools (`isort`, `flake8`, `pylint`) can be found
-in root [`setup.cfg`].
+Configuration of the Python style tools can be found in root [`pyproject.toml`]
+(ruff) and [`setup.cfg`] (flake8, pylint).
 
 [`setup.cfg`]: https://github.com/trezor/trezor-firmware/blob/master/setup.cfg
+[`pyproject.toml`]: https://github.com/trezor/trezor-firmware/blob/master/pyproject.toml
+
+We use [ruff](https://docs.astral.sh/ruff/) to organize imports, to auto-format
+code, and to enforce PEP 585/604 annotation style.
 
 #### Formatting
 
-We are auto-formatting code with `black` and use the [`black` code
+Code is auto-formatted with `ruff format`, which follows the [`black` code
 style](https://black.readthedocs.io/en/stable/the_black_code_style/index.html).
 
-We use `isort` to organize imports.
+Import sections are organized by ruff's isort rules (`I`).
 
 #### Linting
 
-We use `flake8` lints, disabling only those that conflict with `black` code style.
+We use `flake8` lints, disabling only those that conflict with the formatter.
 
 We use a select subset of `pylint` checks that are hard-enforced.
 

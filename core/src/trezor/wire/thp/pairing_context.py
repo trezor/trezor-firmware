@@ -29,7 +29,6 @@ if __debug__:
 
 
 class PairingContext(Context):
-
     def __init__(self, channel_ctx: Channel) -> None:
         super().__init__(channel_ctx.iface, channel_ctx.channel_id, "ThpMessageType")
         self.channel_ctx: Channel = channel_ctx
@@ -78,7 +77,6 @@ class PairingContext(Context):
                         log.exception(__name__, exc, iface=self.iface)
                 finally:
                     if next_message is None:
-
                         # Shut down the loop if there is no next message waiting.
                         return  # pylint: disable=lost-exception
 

@@ -69,7 +69,6 @@ class Transport(metaclass=ABCMeta):
     @classmethod
     def find_by_path(cls, path: str, prefix_search: bool = False) -> tx.Self:
         for device in cls.enumerate():
-
             if device.get_path() == path:
                 return device
 

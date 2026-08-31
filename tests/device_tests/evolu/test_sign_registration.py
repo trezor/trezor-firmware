@@ -15,7 +15,9 @@ pytestmark = pytest.mark.models("core")
 def signing_buffer(
     private_key: bytes, challenge: bytes, size: int, rotation_index: int | None = None
 ) -> bytes:
-    public_key: VerifyingKey = SigningKey.from_string(private_key, curve=NIST256p).get_verifying_key()  # type: ignore
+    public_key: VerifyingKey = SigningKey.from_string(
+        private_key, curve=NIST256p
+    ).get_verifying_key()  # type: ignore
     components = [
         b"EvoluSignRegistrationRequestV2:",
         public_key.to_string("uncompressed"),

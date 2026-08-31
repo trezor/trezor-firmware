@@ -245,9 +245,9 @@ def test_tropic_lock(tropic_prodtest: TropicProdtest) -> None:
         for key in baseline.r_config.keys() | locked.r_config.keys()
         if baseline.r_config.get(key) != locked.r_config.get(key)
     }
-    assert (
-        set(r_config_diff) == _LOCK_CHANGED_R_CONFIG_KEYS
-    ), f"unexpected r_config changes: {r_config_diff}"
+    assert set(r_config_diff) == _LOCK_CHANGED_R_CONFIG_KEYS, (
+        f"unexpected r_config changes: {r_config_diff}"
+    )
 
     assert locked.i_config == baseline.i_config
 

@@ -62,7 +62,9 @@ if __debug__:
         layout = ui.CURRENT_LAYOUT
         return isinstance(layout, ui.Layout) and layout.is_layout_attached()
 
-    def wait_until_layout_is_running(timeout: int | None = _DEADLOCK_SLEEP_MS) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
+    def wait_until_layout_is_running(
+        timeout: int | None = _DEADLOCK_SLEEP_MS,
+    ) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
         start = utime.ticks_ms()
         layout_change_box.clear()
         while not layout_is_ready():

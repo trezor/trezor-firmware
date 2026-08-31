@@ -5,7 +5,6 @@ from trezor.crypto import hashlib
 
 
 class TestCryptoGroestl512(unittest.TestCase):
-
     # vectors from www.groestl.info/Groestl.zip #/KAT_MCT/*
     vectors = [
         (

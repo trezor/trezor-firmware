@@ -617,8 +617,8 @@ def cli(colors: bool) -> None:
     USE_COLORS = colors
 
 
-@cli.command()
 # fmt: off
+@cli.command()
 @click.option("--backend/--no-backend", "-b", default=False, help="Check blockbook/bitcore responses")
 @click.option("--icons/--no-icons", default=True, help="Check icon files")
 # fmt: on
@@ -714,8 +714,8 @@ type_choice = click.Choice(["bitcoin", "eth", "erc20", "nem", "misc"])
 device_choice = click.Choice(["connect", "suite", "T1B1", "T2T1", "T2B1"])
 
 
-@cli.command()
 # fmt: off
+@cli.command()
 @click.option("-o", "--outfile", type=click.File(mode="w"), default="-")
 @click.option("-s/-S", "--support/--no-support", default=True, help="Include support data for each coin")
 @click.option("-p", "--pretty", is_flag=True, help="Generate nicely formatted JSON")
@@ -862,8 +862,8 @@ def dump(
         outfile.write("\n")
 
 
-@cli.command()
 # fmt: off
+@cli.command()
 @click.argument("paths", type=click.Path(path_type=Path), metavar="[path]...", nargs=-1)
 @click.option("-o", "--outfile", type=click.Path(dir_okay=False, writable=True, path_type=Path), help="Alternate output file")
 @click.option("-v", "--verbose", is_flag=True, help="Print rendered file names")
@@ -945,8 +945,8 @@ def render(
             do_render(file, file.parent / file.stem)
 
 
-@cli.command()
 # fmt: off
+@cli.command()
 @click.option("-v", "--verbose", is_flag=True, help="Print timestamp and merkle root")
 # fmt: on
 def new_definitions(verbose: bool) -> None:

@@ -94,7 +94,7 @@ class AllocCounter:
         self.count_last_line(allocs_per_last_line)
         with open(filename, "w") as f:
             for key, val in self.data.items():
-                f.write(f'{key} {val["total_allocs"]} {val["calls"]}\n')
+                f.write(f"{key} {val['total_allocs']} {val['calls']}\n")
 
     def write_data(self) -> None:
         self.dump_data("alloc_data.txt")

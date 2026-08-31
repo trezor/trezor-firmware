@@ -371,7 +371,6 @@ def cancel_recovery(debug: "DebugLink", recovery_type: str = "dry_run") -> None:
         for _ in range(layout.page_count()):
             debug.press_right()
     elif debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
-
         TR.translate(f"recovery__cancel_{recovery_type}")
 
         # go to menu

@@ -72,7 +72,6 @@ async def confirm_action(
         prompt_title=prompt_title or title,
         external_menu=not (prompt_screen or hold),
     ) as flow:
-
         if prompt_screen or hold:
             # Note: multi-step confirm (prompt_screen/hold)
             # can't work with external menus yet
@@ -2269,7 +2268,6 @@ async def confirm_signverify(
         info=False,
         verb=TR.buttons__confirm,
     ) as message_layout:
-
         if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
             await interact(message_layout, br_name, BR_CODE_OTHER)
         else:

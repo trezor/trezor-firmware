@@ -5,7 +5,6 @@ from trezor.crypto import der
 
 
 class TestCryptoDer(unittest.TestCase):
-
     vectors_sig = (
         (
             (

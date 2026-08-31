@@ -10,7 +10,6 @@ def digestfunc_graphene(x):
 
 
 class TestCryptoBase58(unittest.TestCase):
-
     # vectors from https://github.com/bitcoin/bitcoin/blob/master/src/test/data/base58_keys_valid.json
     vectors = [
         (

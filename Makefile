@@ -38,23 +38,12 @@ C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.inclu
 PROTO_FILES = $(shell find common core -type f -name '*.proto')
 RUST_CRATES = $(shell find core -type f -name Cargo.toml -printf "%h\n")
 
-# suppress black's warning - remove when using Python 3.14
-BLACK_FAST ?= 1
-
-ifeq ($(BLACK_FAST),1)
-BLACK_FLAGS=--fast
-else
-BLACK_FLAGS=
-endif
-
 style_check: pystyle_check ruststyle_check cstyle_check protostyle_check changelog_check translations_style_check yaml_check docs_summary_check editor_check ## run all style checks
 
 style: pystyle ruststyle cstyle protostyle changelog_style translations_style ## apply all code styles (Python+Rust+C+protobuf+changelog+translation JSON)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
-	isort --version | awk '/VERSION/{print $$2}'
-	black --version
 	ruff --version
 	pylint --version
 	pyright --version
@@ -64,29 +53,23 @@ pystyle_check: ## run code style check on application sources and tests
 	@make typecheck
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
-	@echo [ISORT]
-	@isort --check-only $(PY_FILES)
-	@echo [BLACK]
-	@black --check $(BLACK_FLAGS) $(PY_FILES)
 	@echo [RUFF]
 	@ruff check $(PY_FILES)
+	@ruff format --check $(PY_FILES)
 	@echo [PYLINT]
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
-	make -C python style_check BLACK_FLAGS=$(BLACK_FLAGS)
+	make -C python style_check
 
 pystyle_quick_check: ## run the basic style checks, suitable for a quick git hook
-	@isort --check-only $(PY_FILES)
-	@black --check $(BLACK_FLAGS) $(PY_FILES)
-	make -C python style_quick_check BLACK_FLAGS=$(BLACK_FLAGS)
+	@ruff format --check $(PY_FILES)
+	@ruff check --select I $(PY_FILES)
+	make -C python style_quick_check
 
 pystyle: ## apply code style on application sources and tests
-	@echo [ISORT]
-	@isort $(PY_FILES)
-	@echo [BLACK]
-	@black $(BLACK_FLAGS) $(PY_FILES)
 	@echo [RUFF]
 	@ruff check --fix $(PY_FILES)
+	@ruff format $(PY_FILES)
 	@echo [TYPECHECK]
 	@make -C core typecheck
 	@echo [TYPECHECK - COMMON and TOOLS]
@@ -96,7 +79,7 @@ pystyle: ## apply code style on application sources and tests
 	@echo [PYLINT]
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
-	make -C python style BLACK_FLAGS=$(BLACK_FLAGS)
+	make -C python style
 
 changelog_check: ## check changelog format
 	@echo [CHANGELOG-CHECK]

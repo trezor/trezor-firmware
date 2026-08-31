@@ -229,7 +229,6 @@ class TestSuite:
 
 
 class TestRunner:
-
     def __init__(self):
         if __debug__ and DISABLE_LOG:
             from trezor.utils import USE_DBG_CONSOLE

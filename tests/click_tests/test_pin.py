@@ -103,13 +103,19 @@ def prepare(
     # Setup according to the wanted situation
     if situation == Situation.PIN_INPUT:
         # Any action triggering the PIN dialogue
-        device_handler.run_with_session(lambda session: session.client.ping("pin_input", False))  # type: ignore
+        device_handler.run_with_session(
+            lambda session: session.client.ping("pin_input", False)
+        )  # type: ignore
     elif situation == Situation.PIN_INPUT_CANCEL:
         # Any action triggering the PIN dialogue
-        device_handler.run_with_session(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
+        device_handler.run_with_session(
+            device.apply_settings, auto_lock_delay_ms=300_000
+        )  # type: ignore
     elif situation == Situation.PIN_SETUP:
         # Set new PIN
-        device_handler.run_with_provided_session(device_handler.client.get_seedless_session(), device.change_pin)  # type: ignore
+        device_handler.run_with_provided_session(
+            device_handler.client.get_seedless_session(), device.change_pin
+        )  # type: ignore
         pin_turn_on = debug.synchronize_at(
             [TR.pin__turn_on, TR.pin__info, TR.pin__title_settings]
         )
@@ -129,7 +135,9 @@ def prepare(
             raise RuntimeError("Unknown model")
     elif situation == Situation.PIN_CHANGE:
         # Change PIN
-        device_handler.run_with_provided_session(device_handler.client.get_seedless_session(), device.change_pin)  # type: ignore
+        device_handler.run_with_provided_session(
+            device_handler.client.get_seedless_session(), device.change_pin
+        )  # type: ignore
         _assert_pin_entry(debug)
         _input_see_confirm(debug, old_pin)
         debug.synchronize_at(TR.pin__change_question)
@@ -137,7 +145,9 @@ def prepare(
         _input_see_confirm(debug, old_pin)
     elif situation == Situation.WIPE_CODE_SETUP:
         # Set wipe code
-        device_handler.run_with_provided_session(device_handler.client.get_seedless_session(), device.change_wipe_code)  # type: ignore
+        device_handler.run_with_provided_session(
+            device_handler.client.get_seedless_session(), device.change_wipe_code
+        )  # type: ignore
         if old_pin:
             _assert_pin_entry(debug)
             _input_see_confirm(debug, old_pin)
@@ -197,7 +207,6 @@ def _input_code(debug: "DebugLink", pin: str, check: bool = False) -> None:
 def _see_code(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
-
         with debug.hold_touch(debug.screen_buttons.pin_passphrase_input()):
             layout = debug.read_layout()
             if layout.pin():
@@ -454,7 +463,6 @@ def test_show_pin_issue5328(device_handler: "BackgroundDeviceHandler"):
 @pytest.mark.setup_client(pin=PIN4)
 def test_long_press_digit(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
-
         # Input the PIN except the last digit
         _input_code(debug, PIN4[:-1])
 

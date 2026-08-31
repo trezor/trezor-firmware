@@ -60,8 +60,8 @@ def setup_logging(verbose):
     root.addHandler(handler)
 
 
-@click.command()
 # fmt: off
+@click.command()
 @click.argument("filename", nargs=-1, type=click.Path(writable=True))
 @click.option("-m", "--cost", type=float, default=10.0, show_default=True, help="Maximum transaction fee in USD")
 @click.option("-s", "--txsize", type=int, default=250, show_default=True, help="Transaction size in bytes")

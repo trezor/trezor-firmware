@@ -2395,7 +2395,6 @@ async def confirm_signverify(
         info=False,
         cancel=True,
     ) as message_layout:
-
         if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
             await interact(message_layout, br_name, BR_CODE_OTHER)
         else:

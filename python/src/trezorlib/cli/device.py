@@ -529,8 +529,7 @@ def authenticate(
             allowlist = authentication.AllowList(req.json())
         except Exception as e:
             raise click.ClickException(
-                f"Failed to download allow list: {e}"
-                "\nUse --offline to skip the check."
+                f"Failed to download allow list: {e}\nUse --offline to skip the check."
             ) from e
 
     try:

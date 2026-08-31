@@ -486,8 +486,8 @@ def cli() -> None:
     """Firmware commands."""
 
 
-@cli.command()
 # fmt: off
+@cli.command()
 @click.argument("filename", type=click.File("rb"))
 @click.option("-c", "--check-device", is_flag=True, help="Validate device compatibility")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
@@ -527,8 +527,8 @@ def verify(
     )
 
 
-@cli.command()
 # fmt: off
+@cli.command()
 @click.option("-o", "--output", type=click.File("wb"), help="Output file to save firmware data to")
 @click.option("-v", "--version", help="Which version to download")
 @click.option("-m", "--model", type=MODEL_CHOICE, help="Which model to download firmware for")
@@ -586,8 +586,8 @@ def download(
     click.echo(f"Firmware saved under {output.name}.")
 
 
-@cli.command()
 # fmt: off
+@cli.command()
 @click.option("-f", "--filename", type=click.File("rb"), help="File containing firmware data")
 @click.option("-u", "--url", help="Where to get the firmware from - full link")
 @click.option("-v", "--version", help="Which version to download")

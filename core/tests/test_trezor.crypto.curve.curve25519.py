@@ -5,7 +5,6 @@ from trezor.crypto.curve import curve25519
 
 
 class TestCryptoCurve25519(unittest.TestCase):
-
     vectors = [
         (
             "38c9d9b17911de26ed812f5cc19c0029e8d016bcbc6078bc9db2af33f1761e4a",

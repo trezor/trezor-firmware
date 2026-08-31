@@ -6,7 +6,6 @@ from trezor.crypto.curve import ed25519
 
 
 class TestCryptoEd25519(unittest.TestCase):
-
     # vectors from https://github.com/torproject/tor/blob/master/src/test/ed25519_vectors.inc
     vectors = [
         (

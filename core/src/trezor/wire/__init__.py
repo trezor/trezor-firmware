@@ -162,7 +162,6 @@ if utils.USE_THP:
             loop.clear()
 
 else:
-
     # Reallocated once per session and shared between all wire interfaces.
     # Acquired by the first call to `CodecContext.read_from_wire()`.
     WIRE_BUFFER_PROVIDER = Provider(bytearray(8192))

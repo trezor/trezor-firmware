@@ -26,7 +26,7 @@ jobs:
         uses: 13rac1/block-fixup-merge-action@bd5504fb9ca0253e109d98eb86b7debc01970cdc  # 13rac1/block-fixup-merge-action@v2.0.0
 
   # Check the code for style correctness and perform some static code analysis.
-  # Biggest part is the python one - using `flake8`, `isort`, `black`, `pylint` and `pyright`,
+  # Biggest part is the python one - using `ruff`, `flake8`, `pylint` and `pyright`,
   # also checking Rust files by `rustfmt` and C files by `clang-format`.
   # Changelogs formats are checked.
   style_check:
@@ -41,7 +41,7 @@ jobs:
         run: git submodule update --init --recursive vendor/QR-Code-generator
       - uses: ./.github/actions/environment
       - name: "Run style check"
-        run: nix-shell --run "uv run make style_check BLACK_FAST=0"
+        run: nix-shell --run "uv run make style_check"
       - name: "Run .editorconfig check"
         run: nix-shell --run "uv run make editor_check"
 

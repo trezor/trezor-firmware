@@ -115,7 +115,6 @@ async def process_contract(
     is_different_owner = owner_address is not None and owner_address != signer_address
 
     if messages.TronTransferContract.is_type_of(contract):
-
         # Contract specific validation
         if contract.amount > _INT64_MAX:
             raise DataError("Tron: invalid transfer amount")
@@ -190,7 +189,6 @@ async def process_contract(
         )
 
     elif messages.TronVoteWitnessContract.is_type_of(contract):
-
         # Contract specific validation
         if len(contract.votes) > 9:
             raise DataError("Tron: too many votes")
@@ -199,7 +197,6 @@ async def process_contract(
         await layout.confirm_votes(contract)
 
     elif messages.TronDelegateResourceContract.is_type_of(contract):
-
         raw_lock_period = contract.lock_period  # local_cache_attribute
         lock = contract.lock  # local_cache_attribute
 

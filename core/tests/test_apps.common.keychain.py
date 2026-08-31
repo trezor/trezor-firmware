@@ -17,7 +17,6 @@ if not utils.USE_THP:
 
 
 class TestKeychain(TestCaseWithContext):
-
     if not utils.USE_THP:
 
         def setUp(self):

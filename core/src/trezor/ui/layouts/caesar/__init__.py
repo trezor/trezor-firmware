@@ -789,7 +789,6 @@ async def confirm_blob(
         hold=hold,
         chunkify=chunkify,
     ) as layout:
-
         if ask_pagination and layout.page_count() > 1:
             assert not hold
             return await _confirm_ask_pagination(
@@ -819,7 +818,6 @@ async def _confirm_ask_pagination(
         button=TR.buttons__confirm,
         items=[(description, False), (data, True)],
     ) as confirm_more_layout:
-
         while True:
             if not await should_show_more(
                 title,
@@ -1763,7 +1761,6 @@ if not utils.BITCOIN_ONLY:
             extra_title=TR.confirm_total__title_fee,
             verb_cancel="^",
         ) as summary_layout:
-
             if is_send:
                 title = TR.words__recipient
             else:
@@ -1965,11 +1962,13 @@ if not utils.BITCOIN_ONLY:
             display_amount, display_amount_label = None, None
             display_fee, display_fee_label = fee, TR.words__fee_limit
         else:
-            display_amount, display_amount_label = amount or "", (
-                TR.words__amount if amount else ""
+            display_amount, display_amount_label = (
+                amount or "",
+                (TR.words__amount if amount else ""),
             )
-            display_fee, display_fee_label = fee or "", (
-                TR.words__fee_limit if fee else ""
+            display_fee, display_fee_label = (
+                fee or "",
+                (TR.words__fee_limit if fee else ""),
             )
         with trezorui_api.confirm_summary(
             title=title or TR.words__title_summary,
@@ -2215,7 +2214,6 @@ async def confirm_modify_output(
     )
 
     with address_ctx as address_layout, modify_ctx as modify_layout:
-
         send_button_request = True
         while True:
             await raise_if_not_confirmed(
@@ -2305,7 +2303,6 @@ async def confirm_signverify(
         hold=not verify,
         chunkify=chunkify,
     ) as message_layout:
-
         # Allowing to go back from the second screen
         while True:
             await confirm_blob(

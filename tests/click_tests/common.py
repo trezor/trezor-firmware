@@ -189,9 +189,9 @@ def get_category(debug: "DebugLink") -> KeyboardCategory:
     category = debug.read_layout().find_unique_value_by_key(
         "active_layout", default="", only_type=str
     )
-    assert (
-        category in KeyboardCategory.__members__
-    ), f"Unknown layout name from debug: {category}"
+    assert category in KeyboardCategory.__members__, (
+        f"Unknown layout name from debug: {category}"
+    )
     return KeyboardCategory[category]
 
 
