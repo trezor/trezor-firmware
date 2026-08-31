@@ -451,10 +451,15 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
     return 0;
   }
 
-  // A packet is the most the hardware driver ever returns, so cap the read
-  // there instead of letting `max_len` size a stack allocation.
+  // A datagram is consumed whole, so a caller that cannot take a full packet
+  // has to be refused before the read - otherwise the remainder is discarded.
+  // The hardware driver rejects these for the same reason.
+  if (max_len < BLE_RX_PACKET_SIZE) {
+    return 0;
+  }
+
   uint8_t buf[BLE_RX_PACKET_SIZE] = {0};
-  ssize_t r = sock_recvfrom(&drv->data_sock, buf, MIN(max_len, sizeof(buf)));
+  ssize_t r = sock_recvfrom(&drv->data_sock, buf, sizeof(buf));
   if (r <= 0) {
     return 0;
   }
