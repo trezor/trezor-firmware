@@ -453,6 +453,11 @@ static void ble_process_rx_msg_mac(const uint8_t *data, uint32_t len) {
     return;
   }
 
+  if (len < 1 + sizeof(drv->mac.addr)) {
+    // insufficient data length
+    return;
+  }
+
   drv->mac_ready = true;
   drv->mac.type = 0;
   memcpy(&drv->mac.addr, &data[1], sizeof(drv->mac.addr));
