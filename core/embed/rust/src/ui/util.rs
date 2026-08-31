@@ -252,7 +252,7 @@ impl Default for Pager {
 /// content (e.g. overlong translations) that would otherwise be silently
 /// clipped.
 pub fn assert_single_page(#[allow(unused)] pager: Pager) {
-    #[cfg(feature = "ui_debug")]
+    #[cfg(all(feature = "ui_debug", feature = "micropython"))]
     if !pager.is_single() {
         use crate::micropython::runtime::raise_exception;
 
