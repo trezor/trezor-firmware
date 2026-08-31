@@ -116,6 +116,7 @@
 #define USB_HS_MAX_PACKET_SIZE                            512
 #define USB_FS_MAX_PACKET_SIZE                            64
 #define USB_MAX_EP0_SIZE                                  64
+#define USBD_MAX_NUM_EP                                   16
 
 /*  Device Status */
 #define USBD_STATE_UNINITIALIZED                          0
@@ -233,8 +234,8 @@ typedef struct _USBD_HandleTypeDef
   uint32_t                dev_default_config;
   uint32_t                dev_config_status;
   USBD_SpeedTypeDef       dev_speed;
-  USBD_EndpointTypeDef    ep_in[15];
-  USBD_EndpointTypeDef    ep_out[15];
+  USBD_EndpointTypeDef    ep_in[USBD_MAX_NUM_EP];
+  USBD_EndpointTypeDef    ep_out[USBD_MAX_NUM_EP];
   uint32_t                ep0_state;
   uint32_t                ep0_data_len;
   uint8_t                 dev_state;
@@ -274,6 +275,23 @@ typedef struct _USBD_HandleTypeDef
 #endif
 
 #define UNCONST(X) ((uint8_t *)(X))
+
+/**
+* @brief Check that an endpoint address is safe to index the ep_in[]/ep_out[]
+*
+* @param  ep_addr: endpoint address (bit 7 = direction, bits 3..0 = number)
+* @retval true if the address is valid, false otherwise
+*/
+static inline bool USBD_IsValidEpAddr (uint8_t ep_addr)
+{
+  /* Bits 6..4 of an endpoint address are reserved (USB 2.0, 9.6.6) */
+  if ((ep_addr & 0x70) != 0)
+  {
+    return false;
+  }
+
+  return (ep_addr & 0x0F) < USBD_MAX_NUM_EP;
+}
 
 #if  defined ( __GNUC__ )
   #ifndef __weak

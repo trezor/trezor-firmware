@@ -683,6 +683,38 @@ USBD_StatusTypeDef USBD_LL_FlushEP(USBD_HandleTypeDef *pdev, uint8_t ep_addr)
 }
 
 /**
+  * @brief  Checks that an endpoint address is in usable bounds.
+  *
+  * @param  pdev: Device handle
+  * @param  ep_addr: Endpoint address (bit 7 = direction, bits 3..0 = number)
+  * @retval true if the address is valid, false otherwise
+  */
+static bool USBD_LL_IsValidEP(USBD_HandleTypeDef *pdev, uint8_t ep_addr)
+{
+  PCD_HandleTypeDef *hpcd = pdev->pData;
+  uint8_t ep_num = ep_addr & 0x0F;
+
+  if (!USBD_IsValidEpAddr(ep_addr))
+  {
+    return false;
+  }
+
+  if (ep_num >= ARRAY_LENGTH(hpcd->IN_ep) || ep_num >= ARRAY_LENGTH(hpcd->OUT_ep))
+  {
+    return false;
+  }
+
+  /* Endpoints beyond the configured hardware count are not backed by any
+     peripheral state, matching the bound HAL_PCD_EP_ClrStall() applies */
+  if (ep_num >= hpcd->Init.dev_endpoints)
+  {
+    return false;
+  }
+
+  return true;
+}
+
+/**
   * @brief  Sets a Stall condition on an endpoint of the Low Level Driver.
   * @param  pdev: Device handle
   * @param  ep_addr: Endpoint Number
@@ -690,6 +722,11 @@ USBD_StatusTypeDef USBD_LL_FlushEP(USBD_HandleTypeDef *pdev, uint8_t ep_addr)
   */
 USBD_StatusTypeDef USBD_LL_StallEP(USBD_HandleTypeDef *pdev, uint8_t ep_addr)
 {
+  if (!USBD_LL_IsValidEP(pdev, ep_addr))
+  {
+    return USBD_FAIL;
+  }
+
   HAL_PCD_EP_SetStall(pdev->pData, ep_addr);
   return USBD_OK;
 }
@@ -702,6 +739,11 @@ USBD_StatusTypeDef USBD_LL_StallEP(USBD_HandleTypeDef *pdev, uint8_t ep_addr)
   */
 USBD_StatusTypeDef USBD_LL_ClearStallEP(USBD_HandleTypeDef *pdev, uint8_t ep_addr)
 {
+  if (!USBD_LL_IsValidEP(pdev, ep_addr))
+  {
+    return USBD_FAIL;
+  }
+
   HAL_PCD_EP_ClrStall(pdev->pData, ep_addr);
   return USBD_OK;
 }
@@ -716,13 +758,18 @@ uint8_t USBD_LL_IsStallEP(USBD_HandleTypeDef *pdev, uint8_t ep_addr)
 {
   PCD_HandleTypeDef *hpcd = pdev->pData;
 
+  if (!USBD_LL_IsValidEP(pdev, ep_addr))
+  {
+    return 0;
+  }
+
   if((ep_addr & 0x80) == 0x80)
   {
-    return hpcd->IN_ep[ep_addr & 0x7F].is_stall;
+    return hpcd->IN_ep[ep_addr & 0x0F].is_stall;
   }
   else
   {
-    return hpcd->OUT_ep[ep_addr & 0x7F].is_stall;
+    return hpcd->OUT_ep[ep_addr & 0x0F].is_stall;
   }
 }
 
