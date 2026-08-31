@@ -180,6 +180,7 @@ void ble_write_thread(void) {
       continue;
     }
 
+    memset(data_to_send, 0, sizeof(*data_to_send));
     data_to_send->len = buf->len - BLE_RX_ADDR_PREFIX_SIZE;
     memcpy(data_to_send->data, &buf->data[BLE_RX_ADDR_PREFIX_SIZE],
            data_to_send->len);

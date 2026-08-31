@@ -132,6 +132,10 @@ void service_send_busy(void) {
       0x65, 0x64, 0x20, 0x6f, 0x72, 0x20, 0x62, 0x75, 0x73, 0x79};
 
   if (buf) {
+    // The notification is a whole packet, so everything past the message is
+    // padding, and it has to be padding we chose rather than whatever the
+    // heap block last held.
+    memset(buf->data, 0, sizeof(buf->data));
     memcpy(buf->data, busy_packet, sizeof(busy_packet));
     buf->len = BLE_TX_PACKET_SIZE;
     service_send(conn, buf);
