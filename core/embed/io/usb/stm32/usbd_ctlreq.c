@@ -179,7 +179,7 @@ USBD_StatusTypeDef  USBD_StdItfReq (USBD_HandleTypeDef *pdev , USBD_SetupReqType
   {
   case USBD_STATE_CONFIGURED:
 
-    if (LOBYTE(req->wIndex) <= USBD_MAX_NUM_INTERFACES)
+    if (LOBYTE(req->wIndex) < USBD_MAX_NUM_INTERFACES)
     {
       pdev->pClass->Setup (pdev, req);
 
@@ -222,6 +222,12 @@ USBD_StatusTypeDef  USBD_StdEPReq (USBD_HandleTypeDef *pdev , USBD_SetupReqTyped
     pdev->pClass->Setup (pdev, req);
 
     return USBD_OK;
+  }
+
+  if (!USBD_IsValidEpAddr(ep_addr))
+  {
+    USBD_CtlError(pdev , req);
+    return USBD_FAIL;
   }
 
   switch (req->bRequest)
