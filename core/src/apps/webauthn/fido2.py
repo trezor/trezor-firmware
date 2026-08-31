@@ -1902,23 +1902,22 @@ def cbor_get_assertion_sign(
         flags |= _AUTH_FLAG_ED
         encoded_extensions = cbor.encode(extensions)
 
-    ctr = cred.next_signature_counter()
-
-    authenticator_data = (
-        rp_id_hash + bytes([flags]) + ctr.to_bytes(4, "big") + encoded_extensions
-    )
+    def _build_auth_data(ctr: int) -> bytes:
+        return rp_id_hash + bytes([flags]) + ctr.to_bytes(4, "big") + encoded_extensions
 
     # Sign the authenticator data and the client data hash.
     if user_presence:
-        sig = cred.sign((authenticator_data, client_data_hash))
+        auth_data = _build_auth_data(ctr=cred.next_signature_counter())
+        sig = cred.sign((auth_data, client_data_hash))
     else:
-        # Spec deviation: Use a bogus signature during silent authentication.
+        # Spec deviation: Use a bogus signature and a static counter during silent authentication.
+        auth_data = _build_auth_data(ctr=0)
         sig = cred.bogus_signature()
 
     # Encode the authenticatorGetAssertion response data.
     response = {
         _GETASSERT_RESP_CREDENTIAL: {"type": "public-key", "id": cred.id},
-        _GETASSERT_RESP_AUTH_DATA: authenticator_data,
+        _GETASSERT_RESP_AUTH_DATA: auth_data,
         _GETASSERT_RESP_SIGNATURE: sig,
     }
 
