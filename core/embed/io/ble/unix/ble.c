@@ -417,6 +417,11 @@ bool ble_write(const uint8_t *data, uint16_t len) {
     return false;
   }
 
+  if (len > BLE_TX_PACKET_SIZE) {
+    // the hardware driver rejects these, do not let the emulator diverge
+    return false;
+  }
+
   if (!drv->connected) {
     LOG_ERR("ble_write while disconnected");
     return false;

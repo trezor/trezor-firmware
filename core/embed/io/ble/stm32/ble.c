@@ -55,6 +55,9 @@
 #define BLE_DATA_HEADER_SIZE 7
 #define BLE_DATA_SIZE (BLE_RX_PACKET_SIZE + BLE_DATA_HEADER_SIZE)
 
+_Static_assert(BLE_TX_PACKET_SIZE + BLE_DATA_HEADER_SIZE <= BLE_DATA_SIZE,
+               "BLE_DATA_SIZE must fit a TX packet, not just an RX packet");
+
 typedef struct {
   uint8_t version;
   bool enabled;
@@ -863,6 +866,11 @@ bool ble_write(const uint8_t *data, uint16_t len) {
     return false;
   }
 
+  if (len > BLE_TX_PACKET_SIZE) {
+    // `len` is sent on unclamped below, `tx_buf` is not that long
+    return false;
+  }
+
   irq_key_t key = irq_lock();
 
   if (!drv->connected || !drv->accept_msgs || !drv->enabled) {
@@ -874,8 +882,7 @@ bool ble_write(const uint8_t *data, uint16_t len) {
   tx_buf[0] = drv->connected_addr.type;
   memcpy(&tx_buf[1], drv->connected_addr.addr,
          sizeof(drv->connected_addr.addr));
-  memcpy(&tx_buf[BLE_DATA_HEADER_SIZE], data,
-         MIN(len, BLE_DATA_SIZE - BLE_DATA_HEADER_SIZE));
+  memcpy(&tx_buf[BLE_DATA_HEADER_SIZE], data, len);
 
   bool sent = nrf_send_msg(NRF_SERVICE_BLE, tx_buf, len + BLE_DATA_HEADER_SIZE,
                            NULL, NULL);
