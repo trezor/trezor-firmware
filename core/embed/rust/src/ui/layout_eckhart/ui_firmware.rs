@@ -35,14 +35,15 @@ use crate::ui::component::{BLEHandler, BLEHandlerMode};
 use crate::ui::component::{ComponentExt as _, Empty, FormattedText, Timeout};
 use crate::ui::flow::FlowMsg;
 use crate::ui::geometry::{Alignment, LinearPlacement, Offset};
+use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{
     ConfirmValueParams, ContentType, PropsList, RecoveryType, StrOrBytes,
 };
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MenuItemIntent, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
-    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
+    MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
 use crate::util::interpolate;
