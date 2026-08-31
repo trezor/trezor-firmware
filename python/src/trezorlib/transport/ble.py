@@ -230,6 +230,9 @@ class BleAsync:
     async def scan(self) -> list[tuple[str, str]]:
         LOG.debug("scanning BLE")
 
+        # NOTE: filtering by UUIDs may not work on some systems/environments:
+        #       https://github.com/trezor/trezor-suite/pull/21093
+        # NOTE: filtering by UUIDs make bluez-5.87 crash
         devices = await BleakScanner.discover(
             timeout=SCAN_INTERVAL_SECONDS,
             return_adv=True,
