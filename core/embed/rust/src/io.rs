@@ -62,7 +62,11 @@ impl<'a> InputStream<'a> {
         let mut shift = 0;
         loop {
             let byte = self.read_byte()?;
-            uint += (u64::from(byte) & 0x7F) << shift;
+            let bits = u64::from(byte) & 0x7F;
+            if shift >= 64 || shift > bits.leading_zeros() {
+                return Err(Error::OutOfRange);
+            }
+            uint += bits << shift;
             shift += 7;
             if byte & 0x80 == 0 {
                 break;
@@ -174,5 +178,69 @@ impl TryFrom<Obj> for BinaryData<'static> {
 impl<'a> From<&'a [u8]> for BinaryData<'a> {
     fn from(data: &'a [u8]) -> Self {
         Self::Slice(data)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn read_uvarint_basic() {
+        assert_eq!(unwrap!(InputStream::new(&[0x00]).read_uvarint()), 0);
+        assert_eq!(unwrap!(InputStream::new(&[0x7F]).read_uvarint()), 127);
+        assert_eq!(unwrap!(InputStream::new(&[0x80, 0x01]).read_uvarint()), 128);
+        assert_eq!(unwrap!(InputStream::new(&[0xAC, 0x02]).read_uvarint()), 300);
+    }
+
+    #[test]
+    fn read_uvarint_max() {
+        // u64::MAX is the largest value that fits: 10 bytes, last byte 0x01.
+        let buf = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01];
+        assert_eq!(unwrap!(InputStream::new(&buf).read_uvarint()), u64::MAX);
+    }
+
+    #[test]
+    fn read_uvarint_overflow() {
+        // 2^64: 10 bytes, last byte 0x02.
+        let buf = [0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x02];
+        assert!(matches!(
+            InputStream::new(&buf).read_uvarint(),
+            Err(Error::OutOfRange)
+        ));
+
+        // u64::MAX + 1 (would wrap to 0 without the overflow check).
+        let buf = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x02];
+        assert!(matches!(
+            InputStream::new(&buf).read_uvarint(),
+            Err(Error::OutOfRange)
+        ));
+
+        // Encoding longer than 10 bytes (would shift past 64 bits).
+        let mut buf = [0x80; 11];
+        buf[10] = 0x01;
+        assert!(matches!(
+            InputStream::new(&buf).read_uvarint(),
+            Err(Error::OutOfRange)
+        ));
+
+        // Zero-padded 11-byte encoding: the 11th byte carries no bits, but
+        // the loop must still stop before the shift amount reaches 64.
+        let buf = [
+            0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00,
+        ];
+        assert!(matches!(
+            InputStream::new(&buf).read_uvarint(),
+            Err(Error::OutOfRange)
+        ));
+    }
+
+    #[test]
+    fn read_uvarint_eof() {
+        // Truncated stream: continuation bit set but no more bytes.
+        assert!(matches!(
+            InputStream::new(&[0x80]).read_uvarint(),
+            Err(Error::EOFError)
+        ));
     }
 }
