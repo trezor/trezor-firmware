@@ -78,16 +78,17 @@ pub fn get_version_numbers() -> Option<AppVersion> {
     }
 
     let mut cbor_payload = [0u8; 256];
-    let res = wait_for_response(
+    let payload_len = match wait_for_response(
         MsgType::ImageStateResponse,
         &mut cbor_payload,
         Duration::from_millis(2000),
-    );
-    if res.is_err() {
-        return None;
-    }
+    ) {
+        Ok(len) => len,
+        Err(_) => return None,
+    };
 
-    extract_version_numbers_from_cbor(&cbor_payload).ok()
+    // decode only what was received, not the untouched tail of the buffer
+    extract_version_numbers_from_cbor(&cbor_payload[..payload_len]).ok()
 }
 
 // Walk CBOR: { "images": [ { "version": "x.y.z[.t]" , ... } , ... ], ... }
