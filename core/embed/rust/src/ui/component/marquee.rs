@@ -63,6 +63,10 @@ impl Marquee {
         self.aligned_offset = self.compute_aligned_offset();
     }
 
+    pub fn text(&self) -> TString<'static> {
+        self.text
+    }
+
     pub fn start(&mut self, ctx: &mut EventCtx, now: Instant) {
         // Not starting if animations are disabled.
         if animation_disabled() {
