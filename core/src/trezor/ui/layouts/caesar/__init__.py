@@ -1483,7 +1483,7 @@ if not utils.BITCOIN_ONLY:
         account_path: str,
         nonce: int,
     ) -> None:
-        from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
         with trezorui_api.show_warning(
             title=TR.words__warning,
@@ -1526,7 +1526,8 @@ if not utils.BITCOIN_ONLY:
             ]
             await confirm_with_menu(
                 layout,
-                Menu(children + [cancel_leaf(TR.buttons__cancel)]),
+                # no cancel entry: this model cancels with the hardware button
+                Menu(children),
                 "ethereum/auth7702/details",
                 ButtonRequestType.SignTx,
             )
@@ -1537,7 +1538,7 @@ if not utils.BITCOIN_ONLY:
         account_path: str,
         nonce: int,
     ) -> None:
-        from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
         account_info = with_colon(
             (
@@ -1545,12 +1546,12 @@ if not utils.BITCOIN_ONLY:
                 (TR.address_details__derivation_path, account_path, False),
             )
         )
+        # no cancel entry: this model cancels with the hardware button
         menu = Menu(
             children=[
                 create_info_menu_leaf(TR.address_details__account_info, account_info),
                 # TODO: switch to non-Cardano specific string
                 create_info_menu_leaf(TR.cardano__nonce, str(nonce)),
-                cancel_leaf(TR.buttons__cancel),
             ],
         )
 

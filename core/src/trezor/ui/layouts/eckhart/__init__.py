@@ -884,9 +884,9 @@ async def confirm_properties(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
 ) -> None:
-    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+    from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
 
-    menu = Menu.root(cancel=TR.buttons__cancel)
+    menu = Menu([cancel_leaf(TR.buttons__cancel)])
 
     with trezorui_api.confirm_properties(
         title=title,

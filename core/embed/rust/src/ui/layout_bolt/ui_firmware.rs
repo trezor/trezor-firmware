@@ -28,12 +28,13 @@ use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
     Border, ComponentExt, Empty, FormattedText, Jpeg, Label, Never, Timeout,
 };
+use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MenuItemIntent, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
-    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
+    MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::{geometry, ModelUI};
 

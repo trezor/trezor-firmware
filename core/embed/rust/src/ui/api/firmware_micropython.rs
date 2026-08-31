@@ -1,6 +1,6 @@
 use heapless::Vec;
 
-use crate::error::{value_error, Error};
+use crate::error::Error;
 use crate::io::BinaryData;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
@@ -20,13 +20,14 @@ use crate::ui::component::Empty;
 use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
 use crate::ui::layout::base::LAYOUT_STATE;
 use crate::ui::layout::device_menu_result::DEVICE_MENU_RESULT;
+use crate::ui::layout::menu_item_intent::{MenuItemIntent, MENU_ITEM_INTENT_OBJ};
 use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
 use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
 use crate::ui::notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ};
 use crate::ui::ui_firmware::{
-    FirmwareUI, MenuItemIntent, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
-    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS, MENU_ITEM_INTENT_OBJ,
+    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
+    MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
 
@@ -745,7 +746,7 @@ extern "C" fn new_select_menu(n_args: usize, args: *const Obj, kwargs: *mut Map)
             let [text, intent]: [Obj; 2] = util::iter_into_array(item)?;
             items
                 .push((text.try_into()?, intent.try_into()?))
-                .map_err(|_| value_error!(c"Too many menu items"))?;
+                .map_err(|_| Error::OutOfRange)?;
         }
         let current = kwargs.get(Qstr::MP_QSTR_current)?.try_into()?;
 
