@@ -263,7 +263,7 @@ impl SmpReceiver {
 
         if byte == b'\n' {
             // end of a frame
-            if self.rx_frame_len > 0 {
+            if self.rx_frame_len >= FRAME_HEADER_SIZE {
                 let frame = &self.rx_frame[..self.rx_frame_len];
 
                 // init or continuation?
