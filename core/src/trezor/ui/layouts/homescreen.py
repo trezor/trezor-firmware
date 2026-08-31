@@ -76,7 +76,6 @@ class HomescreenLayout(UsbAwareLayout):
 
 
 class HomescreenBase:
-
     RENDER_INDICATOR: object | None = None
 
     def __init__(self, ctx: trezorui_api.LayoutContext[trezorui_api.UiResult]) -> None:

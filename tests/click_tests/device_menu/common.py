@@ -190,7 +190,6 @@ class Menu(Enum):
 
         def auto_lock_content():
             if initialized and has_pin:
-
                 auto_lock_batt = (
                     features.auto_lock_delay_battery_ms
                     or AUTOLOCK_DELAY_BATT_DEFAULT_MS

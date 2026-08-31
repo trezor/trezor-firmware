@@ -55,7 +55,6 @@ SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
 
 
 class BleTransport(Transport):
-
     ENABLED = BLEAK_IMPORTED
     PATH_PREFIX = "ble"
     CHUNK_SIZE = 244

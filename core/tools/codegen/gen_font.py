@@ -329,7 +329,6 @@ class Glyph:
 
 
 class FaceProcessor:
-
     def __init__(
         self,
         name: str,
@@ -409,7 +408,6 @@ class FaceProcessor:
 
     def write_foreign_json(self, upper_cased: bool = False) -> None:
         for lang, language_chars in all_languages.items():
-
             fontdata = {"glyphs": {}, "kernings": []}
 
             for item in language_chars:
@@ -443,7 +441,6 @@ class FaceProcessor:
                 ]
 
                 for left_char in all_lang_chars:
-
                     left_c = _normalize(left_char)
 
                     if not self._char_supported(left_c):
@@ -455,7 +452,6 @@ class FaceProcessor:
                         continue
 
                     for right_char in all_lang_chars:
-
                         right_c = _normalize(right_char)
                         if right_c.islower() and upper_cased and right_c != "ß":
                             right_c = right_c.upper()
@@ -470,7 +466,6 @@ class FaceProcessor:
 
                         kern_val = self._get_kerning(ord(left_c), ord(right_c))
                         if kern_val != 0:
-
                             fontdata["kernings"].append(
                                 (left_char, right_char, kern_val)
                             )

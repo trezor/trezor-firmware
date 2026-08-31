@@ -79,7 +79,6 @@ def deref_or_shortval(maybe_ptr: Any) -> Any:
 
 
 class Item:
-
     def __init__(self, item: Any) -> None:
         self.item = item
         self.backlinks = []

@@ -5,7 +5,6 @@ from trezor.crypto import hashlib
 
 
 class TestCryptoBlake2b(unittest.TestCase):
-
     # vectors from https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2b-kat.txt
     vectors = [
         (

@@ -12,7 +12,6 @@ try:
     ble.set_enabled(enable)
     ble.start_comm()
     if enable:
-
         start_ms = utime.ticks_ms()
 
         while utime.ticks_diff(utime.ticks_ms(), start_ms) < 5000:

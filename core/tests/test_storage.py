@@ -6,7 +6,6 @@ from trezor import config
 
 
 class TestConfig(unittest.TestCase):
-
     def setUp(self):
         config.init()
         config.wipe()

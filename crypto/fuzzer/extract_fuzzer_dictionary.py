@@ -215,7 +215,6 @@ def detect_and_convert_hex(data):
     global counter_wycheproof_hex_reconstruction
     match_result1 = regex_hex_character_input_complete.search(data)
     if match_result1:
-
         match_result2 = regex_hex_character_input_inner.search(match_result1.string)
         isolated_substring = match_result2.group(0)
         if len(isolated_substring) % 2 == 1:

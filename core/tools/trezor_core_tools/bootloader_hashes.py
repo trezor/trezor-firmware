@@ -105,11 +105,9 @@ def main(check: bool) -> None:
     models = [model for model in models if model.is_dir()]
 
     for model in models:
-
         path = model / "bootloaders"
 
         if path.is_dir():
-
             header_file = path / "bootloader_hashes.h"
 
             patterns = []

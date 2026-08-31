@@ -343,7 +343,6 @@ def failed(result: TestResult) -> Path:
         script(type="text/javascript", src="../testreport.js")
 
     with doc:
-
         _header(result, "failed")
 
         with div(id="markbox", _class="script-hidden"):

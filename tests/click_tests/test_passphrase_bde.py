@@ -114,7 +114,9 @@ def test_passphrase_input(
 
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_input_over_limit(device_handler: "BackgroundDeviceHandler"):
-    with prepare_passphrase_dialogue(device_handler, CommonPass.AAA_LIMIT_ADDRESS) as debug:  # type: ignore
+    with prepare_passphrase_dialogue(
+        device_handler, CommonPass.AAA_LIMIT_ADDRESS
+    ) as debug:  # type: ignore
         input_passphrase(debug, CommonPass.AAA_LONGER, check=False)
         assert debug.read_layout().passphrase() == CommonPass.AAA_LIMIT
         enter_passphrase(debug)

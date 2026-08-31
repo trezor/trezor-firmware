@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from trezor.crypto import base58
 
 if TYPE_CHECKING:
-
     from buffer_types import AnyBytes
 
 

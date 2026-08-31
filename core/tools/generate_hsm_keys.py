@@ -22,7 +22,7 @@ ROOT_KEYS_DEST = ROOT / "python" / "src" / "trezorlib" / "_root_keys.py"
 def c_bytes(hex_str: str) -> str:
     return (
         "{"
-        + ", ".join(f"0x{hex_str[i:i + 2]}" for i in range(0, len(hex_str), 2))
+        + ", ".join(f"0x{hex_str[i : i + 2]}" for i in range(0, len(hex_str), 2))
         + "}"
     )
 

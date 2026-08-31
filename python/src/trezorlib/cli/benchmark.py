@@ -23,7 +23,6 @@ from .. import benchmark
 from . import with_session
 
 if TYPE_CHECKING:
-
     from ..client import Session
 
 

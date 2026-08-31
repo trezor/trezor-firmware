@@ -5,7 +5,6 @@ from trezor.crypto import hmac
 
 
 class TestCryptoHmac(unittest.TestCase):
-
     # vectors from https://tools.ietf.org/html/rfc4231
 
     def test_digest(self):

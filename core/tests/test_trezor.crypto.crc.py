@@ -5,7 +5,6 @@ from trezor.crypto import crc
 
 
 class TestCryptoCrc(unittest.TestCase):
-
     vectors_crc32 = [
         ("123456789", 0xCBF43926),
         (

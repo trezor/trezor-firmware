@@ -294,7 +294,6 @@ if not utils.USE_N1W1:
         return _DisplayHandler
 
 else:
-
     if TYPE_CHECKING:
         from .recover import Slip39State
 

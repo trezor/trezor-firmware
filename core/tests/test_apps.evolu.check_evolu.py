@@ -4,7 +4,6 @@ from common import *  # isort:skip
 
 @unittest.skipUnless(utils.USE_OPTIGA, "only needed with Optiga")
 class TestCheckEvoluCommandsRegistrationRequest(unittest.TestCase):
-
     def test_proof_sign_registration_request(self):
         from trezorutils import delegated_identity
 

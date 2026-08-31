@@ -5,7 +5,6 @@ from trezor.crypto import hashlib
 
 
 class TestCryptoRipemd160(unittest.TestCase):
-
     # vectors from http://homes.esat.kuleuven.be/~bosselae/ripemd160.html
     vectors = [
         (b"", "9c1185a5c5e9fc54612808977ee8f548b2258d31"),

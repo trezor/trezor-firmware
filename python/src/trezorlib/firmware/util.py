@@ -35,7 +35,6 @@ class Unsigned(FirmwareIntegrityError):
 
 
 class DigestCalculator(Protocol):
-
     def update(self, __data: bytes) -> None: ...
 
     def digest(self) -> bytes: ...

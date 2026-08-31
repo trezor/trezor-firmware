@@ -1,7 +1,7 @@
 import pytest
+from c.storage import Storage as StorageC
 from c0.storage import Storage as StorageC0
 from c3.storage import Storage as StorageC3
-from c.storage import Storage as StorageC
 
 from python.src.norcow import NorcowBitwise
 from python.src.storage import Storage as StoragePy

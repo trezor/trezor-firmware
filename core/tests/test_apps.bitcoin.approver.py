@@ -21,7 +21,6 @@ from apps.common import coins
 
 
 class TestApprover(TestCaseWithContext):
-
     def setUp(self):
         self.coin = coins.by_name("Bitcoin")
         self.fee_rate_percent = 0.3

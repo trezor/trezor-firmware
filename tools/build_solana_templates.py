@@ -28,8 +28,8 @@ def _silent_call(*args: Any) -> None:
 
 
 def format(file: Path) -> None:
-    _silent_call("isort", file)
-    _silent_call("black", file)
+    _silent_call("ruff", "check", "--fix", file)
+    _silent_call("ruff", "format", file)
     _silent_call("flake8", file, "--config", ROOT / "setup.cfg")
 
 

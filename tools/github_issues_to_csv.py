@@ -121,13 +121,13 @@ def get_issues(name: str) -> None:
 
 
 parser = argparse.ArgumentParser(
-    description="Write GitHub repository issues " "to CSV file."
+    description="Write GitHub repository issues to CSV file."
 )
 parser.add_argument(
-    "repositories", nargs="+", help="Repository names, " "formatted as 'username/repo'"
+    "repositories", nargs="+", help="Repository names, formatted as 'username/repo'"
 )
 parser.add_argument(
-    "--all", action="store_true", help="Returns both open " "and closed issues."
+    "--all", action="store_true", help="Returns both open and closed issues."
 )
 args = parser.parse_args()
 

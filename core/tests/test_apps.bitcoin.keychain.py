@@ -13,7 +13,6 @@ if not utils.USE_THP:
 
 
 class TestBitcoinKeychain(TestCaseWithContext):
-
     if utils.USE_THP:
 
         def setUp(self):

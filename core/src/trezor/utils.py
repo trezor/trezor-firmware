@@ -77,11 +77,11 @@ if USE_SERIAL_NUMBER:
 from typing import TYPE_CHECKING
 
 if __debug__:
-    from trezorutils import get_gc_info  # noqa: F401
-    from trezorutils import (
+    from trezorutils import (  # noqa: F401
         LOG_STACK_USAGE,
         check_heap_fragmentation,
         clear_gc_info,
+        get_gc_info,
         update_gc_info,
     )
 

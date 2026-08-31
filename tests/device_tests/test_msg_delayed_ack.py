@@ -102,7 +102,6 @@ def test_setup_no_acks(session: Session):
 
     words = ""
     with session.test_ctx as client:
-
         setup_success: int = {
             LayoutType.Bolt: False,
             LayoutType.Caesar: False,

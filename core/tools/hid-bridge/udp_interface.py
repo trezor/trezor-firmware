@@ -5,7 +5,6 @@ import logger
 
 
 class UDPInterface:
-
     def __init__(self, destination_port: int) -> None:
         self.bind_ip = "127.0.0.1"
         self.bind_port = 21423

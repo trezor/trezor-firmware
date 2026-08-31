@@ -44,7 +44,6 @@ TEST_VECTORS = [
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestMessageV1(unittest.TestCase):
-
     def serialize(self, signers=None, message=MSG):
         msg = SolanaOffchainMessageV1(
             message=message,

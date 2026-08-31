@@ -24,9 +24,7 @@ dependencies = [
     "fido2>=0.8.0,<0.9",
     "python-bitcoinlib>=0.11.0,<0.12",
     "typing-extensions>=4.7.1",
-    "isort>=5,<6",
     "flake8>=7",
-    "black>=24.2",
     "mako>=1.3.10,<2",
     "munch>=4,<5",
     "autoflake",
@@ -54,12 +52,12 @@ dependencies = [
     "toiftool ; python_version >= '3.8'",
     "trezor-pylint-plugin",
     "trezor-core-tools",
-    "flake8-annotations>=3.1.1,<4",
     "pyelftools>=0.32,<0.33",
     "pytest-retry>=1.7.0,<2",
     "slh-dsa>=0.1.3,<0.2",
     "bleak>=1.1.0",
     "construct-typing>=0.7.0",
+    "flake8-annotations>=3.1.1,<4",
 ]
 
 [dependency-groups]
@@ -80,9 +78,32 @@ toiftool = { path = "./python/tools/toiftool", editable = true }
 trezor-pylint-plugin = { path = "./tools/trezor-pylint-plugin", editable = true }
 trezor-core-tools = { path = "./core/tools", editable = true }
 
-[tool.isort]
-profile = "black"
-extra_standard_library = [
+# Ruff replaces `isort` and `black` (import sorting, formatting) and enforces
+# the PEP 585/604 annotation style. All other Python style checks are still
+# handled by flake8 / pylint -- see setup.cfg and .pylintrc.
+# The set of files to lint is not configured here -- the Makefiles pass it in,
+# so that ruff covers exactly what every other style tool covers
+# (tools/style.py.include, python/Makefile).
+[tool.ruff]
+target-version = "py310"
+# `python` is a published library that still supports 3.9 (see python/pyproject.toml)
+per-file-target-version = { "python/**/*.py" = "py39" }
+
+[tool.ruff.lint]
+select = [
+    # isort
+    "I",
+    # PEP 585
+    "UP006",  # non-pep585-annotation: typing.Tuple -> tuple, typing.Type -> type, ...
+    "UP035",  # deprecated-import: typing.Sequence -> collections.abc.Sequence, ...
+
+    # PEP 604 (used in /core only)
+    "UP007",  # non-pep604-annotation-union: Union[int, str] -> int | str
+    "UP045",  # non-pep604-annotation-optional: Optional[str] -> str | None
+]
+
+[tool.ruff.lint.isort]
+extra-standard-library = [
   "buffer_types",
   "micropython",
   "uctypes",
@@ -95,28 +116,9 @@ extra_standard_library = [
   "trezorcrypto",
   "vfs",
 ]
-known_first_party = ["trezorlib", "apps", "coin_info", "marketcap", "ui_tests"]
-known_third_party = ["trezor", "storage"]
-
-# Ruff is used as a PEP 585 linter only; all other Python style checks are
-# handled by flake8 / isort / black / pylint.  The set of files to lint is not
-# configured here -- the Makefiles pass it in, so that ruff covers exactly what
-# every other style tool covers (tools/style.py.include, python/Makefile).
-[tool.ruff]
-target-version = "py310"
-# `python` is a published library that still supports 3.9 (see python/pyproject.toml)
-per-file-target-version = { "python/**/*.py" = "py39" }
-
-[tool.ruff.lint]
-select = [
-  # PEP 585
-  "UP006",  # non-pep585-annotation: typing.Tuple -> tuple, typing.Type -> type, ...
-  "UP035",  # deprecated-import: typing.Sequence -> collections.abc.Sequence, ...
-
-  # PEP 604 (used in /core only)
-  "UP007",  # non-pep604-annotation-union: Union[int, str] -> int | str
-  "UP045",  # non-pep604-annotation-optional: Optional[str] -> str | None
-]
+# `python` is needed for `from python.src.storage import ...` in storage tests
+known-first-party = ["trezorlib", "apps", "coin_info", "marketcap", "ui_tests", "python"]
+known-third-party = ["trezor", "storage"]
 
 [tool.ruff.lint.per-file-ignores]
 # PEP 604 syntax needs Python 3.10 - cannot be enforced e.g. in /python as it still supports Python 3.9.

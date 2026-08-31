@@ -324,7 +324,6 @@ class KerningList(Struct):
 
 
 class KerningTable(BlobTable):
-
     @classmethod
     def from_dir(cls, model_fonts: dict[str, str], font_dir: Path) -> "KerningTable":
         """Example structure of the font dict:

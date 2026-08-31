@@ -175,8 +175,8 @@ def fix(dry_run):
         write_support_info()
 
 
-@cli.command()
 # fmt: off
+@cli.command()
 @click.option("-m", "--ignore-missing", is_flag=True, help="Do not fail on missing supportinfo")
 # fmt: on
 def check(ignore_missing):
@@ -218,8 +218,8 @@ def check(ignore_missing):
         sys.exit(1)
 
 
-@cli.command()
 # fmt: off
+@cli.command()
 @click.option("-r", '--releases', multiple=True, type=str, help='Key-value pairs of model and version. E.g. "T2B1=2.6.1"')
 @click.option("-n", "--dry-run", is_flag=True, help="Do not write changes")
 @click.option("-f", "--force", is_flag=True, help="Proceed even with bad version/device info")
@@ -336,8 +336,8 @@ def show(keyword):
             print_support(coin)
 
 
-@cli.command(name="set")
 # fmt: off
+@cli.command(name="set")
 @click.argument("key", required=True)
 @click.argument("entries", nargs=-1, required=True, metavar="entry=value [entry=value]...")
 @click.option("-r", "--reason", help="Reason for not supporting")

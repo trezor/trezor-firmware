@@ -23,9 +23,8 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoDerivationType
     from trezor.wire.protocol_common import Context
 
-    from apps.common.keychain import Handler
+    from apps.common.keychain import Handler, MsgOut
     from apps.common.keychain import Keychain as Slip21Keychain
-    from apps.common.keychain import MsgOut
     from apps.common.paths import Bip32Path
 
     CardanoMessages = (

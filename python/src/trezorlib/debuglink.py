@@ -55,7 +55,6 @@ if t.TYPE_CHECKING:
     Coords = tuple[int, int]
 
     class InputFunc(Protocol):
-
         def __call__(
             self,
             hold_ms: int | None = None,

@@ -22,9 +22,8 @@ from slip10 import SLIP10
 
 from trezorlib import device, messages
 from trezorlib.btc import get_public_node
-from trezorlib.debuglink import DebugLink
+from trezorlib.debuglink import DebugLink, TrezorTestContext
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.debuglink import TrezorTestContext
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.testing.common import BRGeneratorType
 from trezorlib.tools import parse_path

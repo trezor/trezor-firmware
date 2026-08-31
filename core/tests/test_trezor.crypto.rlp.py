@@ -5,7 +5,6 @@ from trezor.crypto import rlp
 
 
 class TestCryptoRlp(unittest.TestCase):
-
     # from https://raw.githubusercontent.com/ethereum/pyrlp/develop/tests/rlptest.json
     vectors = [
         (b"", "80"),

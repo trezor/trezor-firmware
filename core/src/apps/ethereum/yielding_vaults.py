@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+
     from trezor.messages import EthereumNetworkInfo
 
     from .keychain import MsgInSignTx

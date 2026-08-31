@@ -5,7 +5,6 @@ from .. import messages
 from ..debuglink import LayoutType
 
 if TYPE_CHECKING:
-
     from ..debuglink import DebugLink
 
 

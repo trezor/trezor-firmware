@@ -2,7 +2,6 @@
 from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
-
     from trezor import wire
     from trezor.enums import CardanoCertificateType, CardanoDRepType
     from trezor.messages import (

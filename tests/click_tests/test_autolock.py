@@ -71,7 +71,9 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
     debug.input("1234")
     session = device_handler.result()
 
-    device_handler.run_with_provided_session(session, device.apply_settings, auto_lock_delay_ms=delay_ms)  # type: ignore
+    device_handler.run_with_provided_session(
+        session, device.apply_settings, auto_lock_delay_ms=delay_ms
+    )  # type: ignore
 
     debug.synchronize_at(TR.auto_lock__title)
     assert TR.regexp("auto_lock__change_template").match(
@@ -108,7 +110,9 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    device_handler.run_with_provided_session(session, btc.sign_tx, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)  # type: ignore
+    device_handler.run_with_provided_session(
+        session, btc.sign_tx, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET
+    )  # type: ignore
 
     debug.synchronize_at([TR.words__send, TR.words__address, TR.words__recipient])
     assert (

@@ -139,7 +139,6 @@ def _get_port(worker_id: int) -> int:
 
 
 class EmulatorWrapper:
-
     def __init__(
         self,
         model: str | None,

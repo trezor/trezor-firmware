@@ -5,7 +5,6 @@ from trezor.crypto import aes
 
 
 class TestCryptoAes(unittest.TestCase):
-
     # test vectors from NIST Special Publication 800-38A (Appendix F)
     # https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-38a.pdf
 

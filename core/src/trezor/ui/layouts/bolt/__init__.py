@@ -766,7 +766,6 @@ async def confirm_blob(
         verb_cancel=None,
         chunkify=chunkify,
     ) as layout:
-
         if ask_pagination and layout.page_count() > 1:
             return await _confirm_ask_pagination(
                 br_name,
@@ -1028,7 +1027,6 @@ async def confirm_trade(
 
 
 if not utils.BITCOIN_ONLY:
-
     _INFO_DATA_ROWS = const(3)
     _INFO_DATA_WIDTH_BYTES = const(9)
 
@@ -2258,7 +2256,6 @@ async def confirm_signverify(
         hold=not verify,
         verb=TR.buttons__confirm,
     ) as message_layout:
-
         while True:
             if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
                 result = await interact(message_layout, br_name, BR_CODE_OTHER)

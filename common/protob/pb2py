@@ -742,8 +742,8 @@ WritableFile = click.Path(dir_okay=False, writable=True)
 WritableDirectory = click.Path(exists=True, file_okay=False, writable=True)
 
 
-@click.command()
 # fmt: off
+@click.command()
 @click.argument("proto", nargs=-1, type=ReadableFile, required=True)
 @click.option("--python-outdir", type=WritableDirectory, help="Output directory for Python classes (contents will be deleted)")
 @click.option("--python-extension", default="py", help="Use .pyi to generate type stubs")

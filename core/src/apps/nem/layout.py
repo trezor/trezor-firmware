@@ -8,7 +8,6 @@ from trezor.ui.layouts import confirm_metadata
 from .helpers import NEM_MAX_DIVISIBILITY
 
 if TYPE_CHECKING:
-
     from trezor.ui.layouts import PropertyType
 
 

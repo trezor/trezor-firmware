@@ -228,7 +228,8 @@ def test_norcow_get_item_qw_long():
     assert value == b"1231231231231"
     assert (
         n._dump()[0][:128].hex()
-        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "0000000000000000"
+        == consts.NORCOW_MAGIC_AND_VERSION.hex()
+        + "0000000000000000"
         "01000d00000000000000000000000000"
         "31323331323331323331323331ffffff"
         "02000d00000000000000000000000000"
@@ -244,7 +245,8 @@ def test_norcow_get_item_qw_long():
     assert value == b"7897897897897"
     assert (
         n._dump()[0][:128].hex()
-        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "0000000000000000"
+        == consts.NORCOW_MAGIC_AND_VERSION.hex()
+        + "0000000000000000"
         "01000d00000000000000000000000000"
         "31323331323331323331323331ffffff"
         "02000d00000000000000000000000000"
@@ -260,7 +262,8 @@ def test_norcow_get_item_qw_long():
     assert value == b"7887887887887"
     assert (
         n._dump()[0][:160].hex()
-        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "0000000000000000"
+        == consts.NORCOW_MAGIC_AND_VERSION.hex()
+        + "0000000000000000"
         "01000d00000000000000000000000000"
         "31323331323331323331323331ffffff"
         "02000d00000000000000000000000000"
@@ -278,7 +281,8 @@ def test_norcow_get_item_qw_long():
     assert value == b"7877877877877"
     assert (
         n._dump()[0][:192].hex()
-        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "0000000000000000"
+        == consts.NORCOW_MAGIC_AND_VERSION.hex()
+        + "0000000000000000"
         "01000d00000000000000000000000000"
         "31323331323331323331323331ffffff"
         "02000d00000000000000000000000000"

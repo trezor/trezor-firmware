@@ -4,7 +4,6 @@ from common import *  # isort:skip
 import unittest
 
 if not utils.BITCOIN_ONLY:
-
     from ethereum_common import *
     from trezor.enums import EthereumERC7730FieldFormatterType as FT
     from trezor.messages import (

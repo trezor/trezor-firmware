@@ -60,7 +60,6 @@ class Context:
         self.button_request_handler = ButtonRequestHandler(self)
 
     if TYPE_CHECKING:
-
         # When `expected_types` is None, any received message is treated as unexpected
         # and an exception is raised after the message is received.
         @overload

@@ -25,25 +25,21 @@ def _categories_func(row: DataRow) -> str | None:
     # Defined inside the function so it can be seen in the function definition
     # (which is optionally printed)
     CATEGORIES: dict[str, Callable[[DataRow], bool]] = {
-        "UI": lambda row: (
-            row.source_definition.startswith(
-                ("src/trezor/ui/", "embed/upymod/modtrezorui/")
+        "UI": lambda row: row.source_definition.startswith(
+            ("src/trezor/ui/", "embed/upymod/modtrezorui/")
+        ),
+        "Crypto": lambda row: row.source_definition.startswith(
+            (
+                "vendor/trezor-crypto/",
+                "src/trezor/crypto/",
+                "embed/upymod/modtrezorcrypto/",
             )
         ),
-        "Crypto": lambda row: (
-            row.source_definition.startswith(
-                (
-                    "vendor/trezor-crypto/",
-                    "src/trezor/crypto/",
-                    "embed/upymod/modtrezorcrypto/",
-                )
-            )
+        "Secp256": lambda row: row.source_definition.startswith(
+            "vendor/secp256k1-zkp/"
         ),
-        "Secp256": lambda row: (
-            row.source_definition.startswith("vendor/secp256k1-zkp/")
-        ),
-        "Storage": lambda row: (
-            row.source_definition.startswith(("src/storage/", "vendor/trezor-storage/"))
+        "Storage": lambda row: row.source_definition.startswith(
+            ("src/storage/", "vendor/trezor-storage/")
         ),
         "Micropython": lambda row: row.source_definition.startswith(
             "vendor/micropython/"
@@ -65,17 +61,15 @@ def _categories_func(row: DataRow) -> str | None:
         "Webauthn app": lambda row: row.source_definition.startswith(
             "src/apps/webauthn/"
         ),
-        "Altcoin apps": lambda row: (
-            row.source_definition.startswith(
-                (
-                    "src/apps/nem/",
-                    "src/apps/stellar/",
-                    "src/apps/eos/",
-                    "src/apps/tezos/",
-                    "src/apps/tron/",
-                    "src/apps/ripple/",
-                    "src/apps/zcash/",
-                )
+        "Altcoin apps": lambda row: row.source_definition.startswith(
+            (
+                "src/apps/nem/",
+                "src/apps/stellar/",
+                "src/apps/eos/",
+                "src/apps/tezos/",
+                "src/apps/tron/",
+                "src/apps/ripple/",
+                "src/apps/zcash/",
             )
         ),
         "Other apps": lambda row: row.source_definition.startswith("src/apps/"),

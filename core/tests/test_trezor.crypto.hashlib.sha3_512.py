@@ -5,7 +5,6 @@ from trezor.crypto import hashlib
 
 
 class TestCryptoSha3_512(unittest.TestCase):
-
     # vectors from https://www.di-mgt.com.au/sha_testvectors.html
     vectors = [
         (

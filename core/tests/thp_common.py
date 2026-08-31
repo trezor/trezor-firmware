@@ -54,7 +54,6 @@ if utils.USE_THP:
         return patch(Channel, "_encrypt", lambda self, buffer, noise_payload_len: None)
 
     class PatchedChannel:
-
         def __init__(self) -> None:
             self.inner_channel = context.get_channel_context()
             self.original_write = self.inner_channel.write

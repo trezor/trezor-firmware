@@ -2,7 +2,6 @@ from trezor.loop import wait
 
 
 class MockHID:
-
     TX_PACKET_LEN = 64
     RX_PACKET_LEN = 64
 

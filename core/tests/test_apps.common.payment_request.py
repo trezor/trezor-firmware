@@ -158,7 +158,6 @@ def _get_coin_swap_request(include_nonce=b"DEBUG NONCE") -> PaymentRequest:
 
 
 class TestPaymentRequestVerfier(unittest.TestCase):
-
     @patch_prod
     def test_payment_requests_unsupported_in_prod_without_memos(self):
 

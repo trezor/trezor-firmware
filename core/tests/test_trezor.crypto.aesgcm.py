@@ -5,7 +5,6 @@ from trezor.crypto import AuthenticationError, aesgcm_decrypt, aesgcm_encrypt
 
 
 class TestCryptoAes(unittest.TestCase):
-
     # test vectors from
     # https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
 

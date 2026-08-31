@@ -6,7 +6,6 @@ from trezor.crypto.curve import nist256p1
 
 
 class TestCryptoNist256p1(unittest.TestCase):
-
     # vectors from http://point-at-infinity.org/ecc/nisttv
     vectors = [
         (

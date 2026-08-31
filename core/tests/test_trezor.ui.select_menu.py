@@ -26,7 +26,6 @@ CLOSE_BUTTON_Y = 28
 
 @unittest.skipUnless(utils.UI_LAYOUT == "BOLT", "Bolt layout only")
 class TestSelectMenu(unittest.TestCase):
-
     ITEMS = ["Alpha", "Beta"]
 
     def make_menu(self, items=None, cancel="Cancel"):

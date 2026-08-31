@@ -18,9 +18,14 @@ import pytest
 
 from trezorlib import messages
 from trezorlib.client import Session
-from trezorlib.debuglink import DebugLink, DebugSession, LayoutContent, LayoutType
+from trezorlib.debuglink import (
+    DebugLink,
+    DebugSession,
+    LayoutContent,
+    LayoutType,
+    multipage_content,
+)
 from trezorlib.debuglink import TrezorTestContext as Client
-from trezorlib.debuglink import multipage_content
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.testing import translations as TR
 from trezorlib.testing.common import (
@@ -194,7 +199,6 @@ class InputFlowNewCodeMismatch(InputFlowBase):
 
 
 class InputFlowCodeChangeFail(InputFlowBase):
-
     def __init__(
         self, session: DebugSession, current_pin: str, new_pin_1: str, new_pin_2: str
     ):
@@ -858,7 +862,6 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
 
 class InputFlowShowXpubQRCode(InputFlowBase):
-
     def __init__(
         self, client: Client | DebugSession, passphrase_request_expected: bool = False
     ):
@@ -2774,7 +2777,6 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
 
 
 class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
-
     def __init__(self, session: DebugSession):
         super().__init__(session)
         self.invalid_mnemonic = ["stick"] * 12
@@ -2896,7 +2898,6 @@ class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecoveryThresholdReached(InputFlowBase):
-
     def __init__(
         self,
         session: DebugSession,
@@ -2922,7 +2923,6 @@ class InputFlowSlip39AdvancedRecoveryThresholdReached(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(InputFlowBase):
-
     def __init__(
         self,
         session: DebugSession,
@@ -3085,7 +3085,6 @@ class InputFlowSlip39BasicRecoveryAbortOnMnemonic(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryShareInfoBetweenShares(InputFlowBase):
-
     def __init__(self, session: DebugSession, shares: list[str]):
         super().__init__(session)
         self.first_share = shares[0].split(" ")
@@ -3139,7 +3138,6 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryInvalidFirstShare(InputFlowBase):
-
     def __init__(self, session: DebugSession):
         super().__init__(session)
         self.first_invalid = ["slush"] * 20
@@ -3160,7 +3158,6 @@ class InputFlowSlip39BasicRecoveryInvalidFirstShare(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryInvalidSecondShare(InputFlowBase):
-
     def __init__(self, session: DebugSession, shares: list[str]):
         super().__init__(session)
         self.shares = shares
@@ -3184,7 +3181,6 @@ class InputFlowSlip39BasicRecoveryInvalidSecondShare(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryWrongNthWord(InputFlowBase):
-
     def __init__(self, session: DebugSession, share: list[str], nth_word: int):
         super().__init__(session)
         self.share = share
@@ -3206,7 +3202,6 @@ class InputFlowSlip39BasicRecoveryWrongNthWord(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoverySameShare(InputFlowBase):
-
     def __init__(self, session: DebugSession, share: list[str]):
         super().__init__(session)
         self.share = share
@@ -3382,7 +3377,6 @@ class InputFlowFidoConfirm(InputFlowBase):
 
 
 class InputFlowSetBrightness(InputFlowBase):
-
     def input_flow_bolt(self):
         return self.client.ui.default_input_flow()
 

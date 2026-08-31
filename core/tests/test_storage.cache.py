@@ -36,7 +36,6 @@ else:
 
 
 class TestStorageCache(TestCaseWithContext):
-
     if utils.USE_THP:
 
         def setUp(self):
