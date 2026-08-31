@@ -60,6 +60,10 @@ impl Marquee {
         self.text = text;
     }
 
+    pub fn text(&self) -> TString<'static> {
+        self.text
+    }
+
     pub fn start(&mut self, ctx: &mut EventCtx, now: Instant) {
         // Not starting if animations are disabled.
         if animation_disabled() {
