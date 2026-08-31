@@ -658,7 +658,7 @@ class TR:
     pin__tries_left: str = "tries left"
     pin__turn_off: str = "Are you sure you want to turn off PIN protection?"
     pin__turn_on: str = "Turn on PIN protection?"
-    pin__wipe_code_exists_description: str = "Wipe code must be turned off before turning off PIN protection."
+    pin__wipe_code_exists_description: str = "Wipe code must be turned off before turning off PIN."
     pin__wipe_code_exists_title: str = "Wipe code set"
     pin__wrong_pin: str = "Wrong PIN"
     plurals__contains_x_keys: str = "key|keys"
