@@ -129,6 +129,4 @@ void nrf_uart_send(uint8_t data);
 uint8_t nrf_uart_get_received(void);
 void nrf_set_dfu_mode(bool set);
 bool nrf_is_dfu_mode(void);
-void nrf_dfu_comm_send(const uint8_t *data, uint32_t len);
-uint32_t nrf_dfu_comm_receive(uint8_t *data, uint32_t len);
 #endif

@@ -268,36 +268,4 @@ bool nrf_is_dfu_mode(void) {
   return drv->dfu_mode;
 }
 
-void nrf_dfu_comm_send(const uint8_t *data, uint32_t len) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (!drv->initialized) {
-    return;
-  }
-
-  HAL_UART_Transmit(&drv->urt, (uint8_t *)data, len, 30);
-}
-
-uint32_t nrf_dfu_comm_receive(uint8_t *data, uint32_t len) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (!drv->initialized) {
-    return 0;
-  }
-
-  if (__HAL_UART_GET_FLAG(&drv->urt, UART_FLAG_RXNE)) {
-    HAL_StatusTypeDef result = HAL_UART_Receive(&drv->urt, data, len, 30);
-
-    if (result == HAL_OK) {
-      return len;
-    }
-
-    if (drv->urt.RxXferCount == len) {
-      return 0;
-    }
-
-    return len - drv->urt.RxXferCount - 1;
-  }
-
-  return 0;
-}
-
 #endif
