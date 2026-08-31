@@ -83,10 +83,10 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
   if (info->rx_buffer == NULL) {
     return secfalse;
   }
-  if (info->ep_in >= USBD_MAX_NUM_INTERFACES) {
+  if (info->ep_in >= USBD_MAX_NUM_EP) {
     return secfalse;
   }
-  if (info->ep_out >= USBD_MAX_NUM_INTERFACES) {
+  if (info->ep_out >= USBD_MAX_NUM_EP) {
     return secfalse;
   }
 
