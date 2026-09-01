@@ -167,17 +167,17 @@ async def confirm_path_warning(path: str, path_type: str | None = None) -> None:
         if not path_type
         else f"{TR.words__unknown} {path_type.lower()}."
     )
-    with trezorui_api.show_warning(
-        title=title,
-        value=path,
+    # The path is host-supplied and can be long, so it is shown in a paginated
+    # layout (confirm_action/ButtonPage) instead of the non-paginated warning
+    # modal (IconDialog), which would clip it.
+    return await confirm_action(
+        "path_warning",
+        title,
+        action=path,
         description=TR.words__continue_anyway_question,
-        button=TR.buttons__continue,
-    ) as layout:
-        return await raise_if_not_confirmed(
-            layout,
-            "path_warning",
-            br_code=ButtonRequestType.UnknownDerivationPath,
-        )
+        verb=TR.buttons__continue,
+        br_code=ButtonRequestType.UnknownDerivationPath,
+    )
 
 
 def confirm_multisig_warning() -> Awaitable[None]:
