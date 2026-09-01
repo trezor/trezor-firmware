@@ -403,6 +403,10 @@ def _prepared_test_ctx(
     if request.node.get_closest_marker("altcoin") and is_btc_only:
         pytest.skip("Skipping altcoin test")
 
+    if (capabilities := request.node.get_closest_marker("capabilities")) is not None:
+        if missing := set(capabilities.args) - set(_raw_test_ctx.capabilities):
+            pytest.skip(f"Skipping test - missing {missing}")
+
     if (
         request.node.get_closest_marker("xfail_if_no_optiga")
         and not _raw_test_ctx.has_optiga
