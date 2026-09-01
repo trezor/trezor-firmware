@@ -1090,7 +1090,14 @@ if not utils.BITCOIN_ONLY:
         chunkify: bool = False,
         native_amount: str | None = None,
     ) -> None:
-        from trezor.ui.layouts.menu import Menu, cancel_leaf, interact_with_menu
+        from trezor.ui.layouts.menu import (
+            Menu,
+            MenuLeaf,
+            MenuResult,
+            cancel_leaf,
+            interact_with_menu,
+            leaf_from_layout,
+        )
 
         if native_amount is not None:
             # A non-zero native ETH value carried alongside a token transfer;
@@ -1117,6 +1124,48 @@ if not utils.BITCOIN_ONLY:
         else:
             menu_items = []
 
+        # DEMO (temporary, not for merge): two leaves producing values of
+        # different types, hung off the first page of the Ethereum sign flow.
+        demo_words = ("alpha", "beta", "gamma")
+
+        async def _demo_confirm() -> str | None:
+            """A leaf that is a whole interaction, not just a single layout."""
+            with trezorui_api.confirm_action(
+                title="Demo",
+                action="Confirm the demo item",
+                description=None,
+                prompt_screen=False,
+            ) as confirm:
+                res = await interact(confirm, br_name=None, raise_on_cancel=None)
+            if res is not trezorui_api.CONFIRMED:
+                return None  # back to the menu, as if the leaf did nothing
+            return "confirmed"
+
+        # a leaf built straight from a layout - the layout's result is the value
+        pick_leaf = leaf_from_layout(
+            "Demo: pick a value",
+            lambda: trezorui_api.select_word(
+                title="Demo",
+                description="pick a value",
+                words=demo_words,
+            ),
+            return_result=True,
+        )
+        # DANGER here is not semantic - the leaf destroys nothing. It is set so
+        # the demo shows a red entry that returns a value instead of aborting,
+        # the combination `cancel_leaf()` alone cannot express.
+        confirm_leaf = MenuLeaf(
+            "Demo: confirm something",
+            _demo_confirm,
+            intent=trezorui_api.MenuItemIntent.DANGER,
+        )
+
+        # `None` is in the union only so the info leaves (which produce no value)
+        # can sit in the same tree; `show_menu()` never reports it as a value.
+        demo_menu: "Menu[int | str | None]" = Menu(
+            menu_items + [pick_leaf, confirm_leaf, cancel_leaf(TR.buttons__cancel_sign)]
+        )
+
         async def _step1() -> trezorui_api.UiResult:
             with trezorui_api.confirm_value(
                 title=title,
@@ -1130,12 +1179,27 @@ if not utils.BITCOIN_ONLY:
                 chunkify=chunkify if recipient else False,
                 external_menu=True,
             ) as layout:
-                return await interact_with_menu(
-                    layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
-                    "confirm_output",
-                    br_code,
-                )
+                br: str | None = "confirm_output"
+                while True:
+                    result = await interact_with_menu(layout, demo_menu, br, br_code)
+                    br = None  # ButtonRequest is sent once (for the main layout)
+                    if not isinstance(result, MenuResult):
+                        return result  # the main layout's own result
+                    # DEMO: match on which leaf produced the value, then its type.
+                    if result.leaf is pick_leaf:
+                        assert isinstance(result.value, int)
+                        demo_text = f"word {result.value}: {demo_words[result.value]}"
+                    else:
+                        assert result.leaf is confirm_leaf
+                        assert isinstance(result.value, str)
+                        demo_text = f"confirmation: {result.value}"
+                    with trezorui_api.show_info(
+                        title="Menu returned",
+                        description=demo_text,
+                        button=(TR.buttons__close, True),
+                    ) as info:
+                        await interact(info, br_name=None, raise_on_cancel=None)
+                    # back to the main layout - the detour must not confirm
 
         async def _step2() -> trezorui_api.UiResult:
             with trezorui_api.confirm_summary(
