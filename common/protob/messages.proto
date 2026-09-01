@@ -125,6 +125,8 @@ enum MessageType {
     // dropped: CosiCommit, CosiCommitment, CosiSign, CosiSignature
     MessageType_PaymentNotification = 52 [(bitcoin_only) = true, (wire_in) = true];
     reserved 71 to 74;
+    MessageType_GetBip85Entropy = 1200 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_Bip85Entropy = 1201 [(bitcoin_only) = true, (wire_out) = true];
 
     // Debug
     MessageType_DebugLinkDecision = 100

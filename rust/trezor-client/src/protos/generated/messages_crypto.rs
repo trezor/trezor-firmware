@@ -2150,6 +2150,417 @@ impl ::protobuf::reflect::ProtobufValue for PaymentNotification {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.crypto.GetBip85Entropy)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct GetBip85Entropy {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.crypto.GetBip85Entropy.address_n)
+    pub address_n: ::std::vec::Vec<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.crypto.GetBip85Entropy.show_display)
+    pub show_display: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.crypto.GetBip85Entropy.on_device_only)
+    pub on_device_only: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.crypto.GetBip85Entropy.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a GetBip85Entropy {
+    fn default() -> &'a GetBip85Entropy {
+        <GetBip85Entropy as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl GetBip85Entropy {
+    pub fn new() -> GetBip85Entropy {
+        ::std::default::Default::default()
+    }
+
+    // optional bool show_display = 2;
+
+    pub fn show_display(&self) -> bool {
+        self.show_display.unwrap_or(false)
+    }
+
+    pub fn clear_show_display(&mut self) {
+        self.show_display = ::std::option::Option::None;
+    }
+
+    pub fn has_show_display(&self) -> bool {
+        self.show_display.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_show_display(&mut self, v: bool) {
+        self.show_display = ::std::option::Option::Some(v);
+    }
+
+    // optional bool on_device_only = 3;
+
+    pub fn on_device_only(&self) -> bool {
+        self.on_device_only.unwrap_or(false)
+    }
+
+    pub fn clear_on_device_only(&mut self) {
+        self.on_device_only = ::std::option::Option::None;
+    }
+
+    pub fn has_on_device_only(&self) -> bool {
+        self.on_device_only.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_on_device_only(&mut self, v: bool) {
+        self.on_device_only = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "address_n",
+            |m: &GetBip85Entropy| { &m.address_n },
+            |m: &mut GetBip85Entropy| { &mut m.address_n },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "show_display",
+            |m: &GetBip85Entropy| { &m.show_display },
+            |m: &mut GetBip85Entropy| { &mut m.show_display },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "on_device_only",
+            |m: &GetBip85Entropy| { &m.on_device_only },
+            |m: &mut GetBip85Entropy| { &mut m.on_device_only },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<GetBip85Entropy>(
+            "GetBip85Entropy",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for GetBip85Entropy {
+    const NAME: &'static str = "GetBip85Entropy";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    is.read_repeated_packed_uint32_into(&mut self.address_n)?;
+                },
+                8 => {
+                    self.address_n.push(is.read_uint32()?);
+                },
+                16 => {
+                    self.show_display = ::std::option::Option::Some(is.read_bool()?);
+                },
+                24 => {
+                    self.on_device_only = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.address_n {
+            my_size += ::protobuf::rt::uint32_size(1, *value);
+        };
+        if let Some(v) = self.show_display {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.on_device_only {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.address_n {
+            os.write_uint32(1, *v)?;
+        };
+        if let Some(v) = self.show_display {
+            os.write_bool(2, v)?;
+        }
+        if let Some(v) = self.on_device_only {
+            os.write_bool(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> GetBip85Entropy {
+        GetBip85Entropy::new()
+    }
+
+    fn clear(&mut self) {
+        self.address_n.clear();
+        self.show_display = ::std::option::Option::None;
+        self.on_device_only = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static GetBip85Entropy {
+        static instance: GetBip85Entropy = GetBip85Entropy {
+            address_n: ::std::vec::Vec::new(),
+            show_display: ::std::option::Option::None,
+            on_device_only: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for GetBip85Entropy {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("GetBip85Entropy").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for GetBip85Entropy {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for GetBip85Entropy {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.crypto.Bip85Entropy)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct Bip85Entropy {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.crypto.Bip85Entropy.entropy)
+    pub entropy: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.crypto.Bip85Entropy.secret)
+    pub secret: ::std::option::Option<::std::string::String>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.crypto.Bip85Entropy.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a Bip85Entropy {
+    fn default() -> &'a Bip85Entropy {
+        <Bip85Entropy as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Bip85Entropy {
+    pub fn new() -> Bip85Entropy {
+        ::std::default::Default::default()
+    }
+
+    // optional bytes entropy = 1;
+
+    pub fn entropy(&self) -> &[u8] {
+        match self.entropy.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_entropy(&mut self) {
+        self.entropy = ::std::option::Option::None;
+    }
+
+    pub fn has_entropy(&self) -> bool {
+        self.entropy.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_entropy(&mut self, v: ::std::vec::Vec<u8>) {
+        self.entropy = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_entropy(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.entropy.is_none() {
+            self.entropy = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.entropy.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_entropy(&mut self) -> ::std::vec::Vec<u8> {
+        self.entropy.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional string secret = 2;
+
+    pub fn secret(&self) -> &str {
+        match self.secret.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_secret(&mut self) {
+        self.secret = ::std::option::Option::None;
+    }
+
+    pub fn has_secret(&self) -> bool {
+        self.secret.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_secret(&mut self, v: ::std::string::String) {
+        self.secret = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_secret(&mut self) -> &mut ::std::string::String {
+        if self.secret.is_none() {
+            self.secret = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.secret.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_secret(&mut self) -> ::std::string::String {
+        self.secret.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "entropy",
+            |m: &Bip85Entropy| { &m.entropy },
+            |m: &mut Bip85Entropy| { &mut m.entropy },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "secret",
+            |m: &Bip85Entropy| { &m.secret },
+            |m: &mut Bip85Entropy| { &mut m.secret },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Bip85Entropy>(
+            "Bip85Entropy",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for Bip85Entropy {
+    const NAME: &'static str = "Bip85Entropy";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.entropy = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    self.secret = ::std::option::Option::Some(is.read_string()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.entropy.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.secret.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.entropy.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.secret.as_ref() {
+            os.write_string(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> Bip85Entropy {
+        Bip85Entropy::new()
+    }
+
+    fn clear(&mut self) {
+        self.entropy = ::std::option::Option::None;
+        self.secret = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static Bip85Entropy {
+        static instance: Bip85Entropy = Bip85Entropy {
+            entropy: ::std::option::Option::None,
+            secret: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for Bip85Entropy {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("Bip85Entropy").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for Bip85Entropy {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Bip85Entropy {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x15messages-crypto.proto\x12\x19hw.trezor.messages.crypto\x1a\x15mess\
     ages-common.proto\x1a\roptions.proto\"\xcb\x01\n\x0eCipherKeyValue\x12\
@@ -2178,8 +2589,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x01\x20\x02(\x0cR\nsessionKey\x12\x1d\n\npublic_key\x18\x02\x20\x01\
     (\x0cR\tpublicKey\"a\n\x13PaymentNotification\x12J\n\x0bpayment_req\x18\
     \x01\x20\x01(\x0b2).hw.trezor.messages.common.PaymentRequestR\npaymentRe\
-    qB>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCrypto\x80\
-    \xa6\x1d\x01\
+    q\"w\n\x0fGetBip85Entropy\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08ad\
+    dressN\x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12$\
+    \n\x0eon_device_only\x18\x03\x20\x01(\x08R\x0conDeviceOnly\"@\n\x0cBip85\
+    Entropy\x12\x18\n\x07entropy\x18\x01\x20\x01(\x0cR\x07entropy\x12\x16\n\
+    \x06secret\x18\x02\x20\x01(\tR\x06secretB>\n#com.satoshilabs.trezor.lib.\
+    protobufB\x13TrezorMessageCrypto\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -2199,7 +2614,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             let mut deps = ::std::vec::Vec::with_capacity(2);
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(8);
+            let mut messages = ::std::vec::Vec::with_capacity(10);
             messages.push(CipherKeyValue::generated_message_descriptor_data());
             messages.push(CipheredKeyValue::generated_message_descriptor_data());
             messages.push(IdentityType::generated_message_descriptor_data());
@@ -2208,6 +2623,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(GetECDHSessionKey::generated_message_descriptor_data());
             messages.push(ECDHSessionKey::generated_message_descriptor_data());
             messages.push(PaymentNotification::generated_message_descriptor_data());
+            messages.push(GetBip85Entropy::generated_message_descriptor_data());
+            messages.push(Bip85Entropy::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),

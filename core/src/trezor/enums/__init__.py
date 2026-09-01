@@ -562,6 +562,8 @@ if TYPE_CHECKING:
         GetECDHSessionKey = 61
         ECDHSessionKey = 62
         PaymentNotification = 52
+        GetBip85Entropy = 1200
+        Bip85Entropy = 1201
         DebugLinkDecision = 100
         DebugLinkGetState = 101
         DebugLinkState = 102

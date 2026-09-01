@@ -100,3 +100,24 @@ message ECDHSessionKey {
 message PaymentNotification {
     optional common.PaymentRequest payment_req = 1;  // SLIP-24 payment request
 }
+
+/**
+ * Request: Ask device to derive deterministic entropy according to BIP-85
+ * @start
+ * @next Bip85Entropy
+ * @next Failure
+ */
+message GetBip85Entropy {
+    repeated uint32 address_n = 1;     // BIP-85 derivation path, e.g. m/83696968'/39'/0'/12'/0'
+    optional bool show_display = 2;    // show the derived secret on the device display
+    optional bool on_device_only = 3;  // only show the secret on the device, do not send it to the host
+}
+
+/**
+ * Response: Device provides the derived BIP-85 entropy
+ * @end
+ */
+message Bip85Entropy {
+    optional bytes entropy = 1;  // derived entropy, truncated according to the application
+    optional string secret = 2;  // human-readable secret (BIP-39 mnemonic, WIF, xprv or password)
+}

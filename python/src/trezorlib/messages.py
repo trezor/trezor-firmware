@@ -628,6 +628,8 @@ class MessageType(IntEnum):
     GetECDHSessionKey = 61
     ECDHSessionKey = 62
     PaymentNotification = 52
+    GetBip85Entropy = 1200
+    Bip85Entropy = 1201
     DebugLinkDecision = 100
     DebugLinkGetState = 101
     DebugLinkState = 102
@@ -3284,6 +3286,43 @@ class PaymentNotification(protobuf.MessageType):
         payment_req: Optional["PaymentRequest"] = None,
     ) -> None:
         self.payment_req = payment_req
+
+
+class GetBip85Entropy(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1200
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+        3: protobuf.Field("on_device_only", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[Sequence["int"]] = None,
+        show_display: Optional["bool"] = None,
+        on_device_only: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.show_display = show_display
+        self.on_device_only = on_device_only
+
+
+class Bip85Entropy(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1201
+    FIELDS = {
+        1: protobuf.Field("entropy", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("secret", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entropy: Optional["bytes"] = None,
+        secret: Optional["str"] = None,
+    ) -> None:
+        self.entropy = entropy
+        self.secret = secret
 
 
 class Initialize(protobuf.MessageType):
