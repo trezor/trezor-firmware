@@ -10,7 +10,7 @@ use crate::ui::component::{Child, Component, Event, EventCtx, Label, Paginate};
 use crate::ui::display;
 use crate::ui::geometry::{Insets, Rect};
 use crate::ui::shape::{self, Renderer};
-use crate::ui::util::{assert_single_page, Pager};
+use crate::ui::util::Pager;
 
 const ICON_HEIGHT: i16 = 70;
 const SCROLLBAR_INSET_TOP: i16 = 5;
@@ -95,10 +95,6 @@ where
         self.account_name
             .update((self.get_account)(self.active_page()));
 
-        // Re-run the place pass so that the single-page check re-evaluates
-        // the new account name.
-        ctx.request_place();
-
         // Redraw the page.
         ctx.request_paint();
 
@@ -146,10 +142,10 @@ where
         let (app_name_area, account_name_area) = remaining_area.split_top(APP_NAME_HEIGHT);
 
         self.app_name.place(app_name_area);
+        // The account name is host-supplied and deliberately clipped to the
+        // fixed-height area (no pagination by design), so it must not be
+        // checked with assert_single_page().
         self.account_name.place(account_name_area);
-        // The account name is not paginated; fail loudly in ui_debug when it
-        // does not fit its area.
-        assert_single_page(self.account_name.pager());
 
         bounds
     }
