@@ -320,6 +320,7 @@ pub const VERTICAL_MENU_ITEMS: usize = 6;
 /// `MAX_MENU_ITEMS`, pushing with `unwrap!`, which panics on overflow rather
 /// than returning an error. Keep the capacity at or above that bound so raising
 /// `MAX_MENU_ITEMS` alone cannot turn a rejected menu into a fatal error.
+#[cfg(feature = "micropython")]
 const _: () = assert!(VERTICAL_MENU_ITEMS >= crate::ui::ui_firmware::MAX_MENU_ITEMS);
 
 pub type VerticalMenuItems = Vec<VerticalMenuItem, VERTICAL_MENU_ITEMS>;

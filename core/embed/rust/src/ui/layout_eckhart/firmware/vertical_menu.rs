@@ -21,6 +21,7 @@ pub const SHORT_MENU_ITEMS: usize = 6;
 /// `MAX_MENU_ITEMS`, and `MenuItems::push` panics on overflow rather than
 /// returning an error. Keep the capacity at or above that bound so raising
 /// `MAX_MENU_ITEMS` alone cannot turn a rejected menu into a fatal error.
+#[cfg(feature = "micropython")]
 const _: () = assert!(SHORT_MENU_ITEMS >= crate::ui::ui_firmware::MAX_MENU_ITEMS);
 
 pub type LongMenuGc = GcBox<Vec<Button, LONG_MENU_ITEMS>>;
