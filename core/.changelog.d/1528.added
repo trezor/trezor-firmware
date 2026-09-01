@@ -1,0 +1,1 @@
+Add support for BIP-85 deterministic entropy derivation (GetBip85Entropy).

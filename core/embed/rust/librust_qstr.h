@@ -178,6 +178,17 @@ static void _librust_qstrs(void) {
   MP_QSTR_backup_check_allowed;
   MP_QSTR_backup_failed;
   MP_QSTR_backup_needed;
+  MP_QSTR_bip85__app_bip39_template;
+  MP_QSTR_bip85__app_hex_template;
+  MP_QSTR_bip85__app_pwd_base64_template;
+  MP_QSTR_bip85__app_pwd_base85_template;
+  MP_QSTR_bip85__app_unknown_template;
+  MP_QSTR_bip85__app_wif;
+  MP_QSTR_bip85__app_xprv;
+  MP_QSTR_bip85__application;
+  MP_QSTR_bip85__derived_secret;
+  MP_QSTR_bip85__send_to_host;
+  MP_QSTR_bip85__title;
   MP_QSTR_bitcoin__commitment_data;
   MP_QSTR_bitcoin__confirm_locktime;
   MP_QSTR_bitcoin__create_proof_of_ownership;

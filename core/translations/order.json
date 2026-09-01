@@ -1294,5 +1294,16 @@
   "1292": "words__from_title",
   "1293": "words__undelegate",
   "1294": "buttons__review",
-  "1295": "buttons__cancel_sign"
+  "1295": "buttons__cancel_sign",
+  "1296": "bip85__app_bip39_template",
+  "1297": "bip85__app_hex_template",
+  "1298": "bip85__app_pwd_base64_template",
+  "1299": "bip85__app_pwd_base85_template",
+  "1300": "bip85__app_unknown_template",
+  "1301": "bip85__app_wif",
+  "1302": "bip85__app_xprv",
+  "1303": "bip85__application",
+  "1304": "bip85__derived_secret",
+  "1305": "bip85__send_to_host",
+  "1306": "bip85__title"
 }

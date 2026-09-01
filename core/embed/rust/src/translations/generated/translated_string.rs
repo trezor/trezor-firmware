@@ -1685,6 +1685,17 @@ pub enum TranslatedString {
     words__undelegate = 1293,  // "Undelegate"
     buttons__review = 1294,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Review"}
     buttons__cancel_sign = 1295,  // "Cancel sign"
+    bip85__app_bip39_template = 1296,  // "BIP-39 mnemonic ({0} words)"
+    bip85__app_hex_template = 1297,  // "Raw entropy ({0} bytes)"
+    bip85__app_pwd_base64_template = 1298,  // "Base64 password ({0} characters)"
+    bip85__app_pwd_base85_template = 1299,  // "Base85 password ({0} characters)"
+    bip85__app_unknown_template = 1300,  // "Unknown application ({0})"
+    bip85__app_wif = 1301,  // "HD-Seed WIF"
+    bip85__app_xprv = 1302,  // "Extended private key (xprv)"
+    bip85__application = 1303,  // "Application"
+    bip85__derived_secret = 1304,  // "Derived secret"
+    bip85__send_to_host = 1305,  // "Send the derived secret to the connected app?"
+    bip85__title = 1306,  // "BIP-85 entropy"
 }
 
 impl TranslatedString {
@@ -2988,6 +2999,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4289,6 +4311,17 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19159,
+                19182,
+                19214,
+                19246,
+                19271,
+                19282,
+                19309,
+                19320,
+                19334,
+                19379,
+                19393,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5589,6 +5622,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6890,6 +6934,17 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19159,
+                19182,
+                19214,
+                19246,
+                19271,
+                19282,
+                19309,
+                19320,
+                19334,
+                19379,
+                19393,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8190,6 +8245,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9491,6 +9557,17 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19159,
+                19182,
+                19214,
+                19246,
+                19271,
+                19282,
+                19309,
+                19320,
+                19334,
+                19379,
+                19393,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10791,6 +10868,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12092,6 +12180,17 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19159,
+                19182,
+                19214,
+                19246,
+                19271,
+                19282,
+                19309,
+                19320,
+                19334,
+                19379,
+                19393,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13393,6 +13492,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14694,6 +14804,17 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                17009,
+                17032,
+                17064,
+                17096,
+                17121,
+                17132,
+                17159,
+                17170,
+                17184,
+                17229,
+                17243,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15994,6 +16115,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17295,6 +17427,17 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                17009,
+                17032,
+                17064,
+                17096,
+                17121,
+                17132,
+                17159,
+                17170,
+                17184,
+                17229,
+                17243,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18595,6 +18738,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19896,6 +20050,17 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                17009,
+                17032,
+                17064,
+                17096,
+                17121,
+                17132,
+                17159,
+                17170,
+                17184,
+                17229,
+                17243,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21196,6 +21361,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22497,6 +22673,17 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                17009,
+                17032,
+                17064,
+                17096,
+                17121,
+                17132,
+                17159,
+                17170,
+                17184,
+                17229,
+                17243,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23798,6 +23985,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25099,6 +25297,17 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19108,
+                19131,
+                19163,
+                19195,
+                19220,
+                19231,
+                19258,
+                19269,
+                19283,
+                19328,
+                19342,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26399,6 +26608,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27700,6 +27920,17 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19108,
+                19131,
+                19163,
+                19195,
+                19220,
+                19231,
+                19258,
+                19269,
+                19283,
+                19328,
+                19342,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29000,6 +29231,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30301,6 +30543,17 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19108,
+                19131,
+                19163,
+                19195,
+                19220,
+                19231,
+                19258,
+                19269,
+                19283,
+                19328,
+                19342,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31601,6 +31854,17 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32902,6 +33166,17 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19108,
+                19131,
+                19163,
+                19195,
+                19220,
+                19231,
+                19258,
+                19269,
+                19283,
+                19328,
+                19342,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34203,6 +34478,17 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -35504,6 +35790,17 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20544,
+                20567,
+                20599,
+                20631,
+                20656,
+                20667,
+                20694,
+                20705,
+                20719,
+                20764,
+                20778,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36804,6 +37101,17 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38105,6 +38413,17 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20544,
+                20567,
+                20599,
+                20631,
+                20656,
+                20667,
+                20694,
+                20705,
+                20719,
+                20764,
+                20778,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39405,6 +39724,17 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -40706,6 +41036,17 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20544,
+                20567,
+                20599,
+                20631,
+                20656,
+                20667,
+                20694,
+                20705,
+                20719,
+                20764,
+                20778,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42006,6 +42347,17 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "BIP-39 mnemonic ({0} words)",
+                "Raw entropy ({0} bytes)",
+                "Base64 password ({0} characters)",
+                "Base85 password ({0} characters)",
+                "Unknown application ({0})",
+                "HD-Seed WIF",
+                "Extended private key (xprv)",
+                "Application",
+                "Derived secret",
+                "Send the derived secret to the connected app?",
+                "BIP-85 entropy",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43307,6 +43659,17 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20544,
+                20567,
+                20599,
+                20631,
+                20656,
+                20667,
+                20694,
+                20705,
+                20719,
+                20764,
+                20778,
             ];
 
         }
@@ -43370,6 +43733,17 @@ impl TranslatedString {
         (Qstr::MP_QSTR_backup__type_n1w1, Self::backup__type_n1w1),
         (Qstr::MP_QSTR_backup__type_wordlist, Self::backup__type_wordlist),
         (Qstr::MP_QSTR_backup__want_to_skip, Self::backup__want_to_skip),
+        (Qstr::MP_QSTR_bip85__app_bip39_template, Self::bip85__app_bip39_template),
+        (Qstr::MP_QSTR_bip85__app_hex_template, Self::bip85__app_hex_template),
+        (Qstr::MP_QSTR_bip85__app_pwd_base64_template, Self::bip85__app_pwd_base64_template),
+        (Qstr::MP_QSTR_bip85__app_pwd_base85_template, Self::bip85__app_pwd_base85_template),
+        (Qstr::MP_QSTR_bip85__app_unknown_template, Self::bip85__app_unknown_template),
+        (Qstr::MP_QSTR_bip85__app_wif, Self::bip85__app_wif),
+        (Qstr::MP_QSTR_bip85__app_xprv, Self::bip85__app_xprv),
+        (Qstr::MP_QSTR_bip85__application, Self::bip85__application),
+        (Qstr::MP_QSTR_bip85__derived_secret, Self::bip85__derived_secret),
+        (Qstr::MP_QSTR_bip85__send_to_host, Self::bip85__send_to_host),
+        (Qstr::MP_QSTR_bip85__title, Self::bip85__title),
         (Qstr::MP_QSTR_bitcoin__commitment_data, Self::bitcoin__commitment_data),
         (Qstr::MP_QSTR_bitcoin__confirm_locktime, Self::bitcoin__confirm_locktime),
         (Qstr::MP_QSTR_bitcoin__create_proof_of_ownership, Self::bitcoin__create_proof_of_ownership),

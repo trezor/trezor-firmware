@@ -237,6 +237,40 @@ The application has to pad the blocks itself and ensure safety; for
 example, by using PKCS7. See
 <https://github.com/satoshilabs/slips/blob/master/slip-0011.md>.
 
+## GetBip85Entropy
+
+GetBip85Entropy derives deterministic entropy from the device's BIP-32
+keychain according to [BIP-85](https://github.com/bitcoin/bips/blob/master/bip-0085.mediawiki).
+The message carries the full BIP-85 derivation path, e.g.
+`m/83696968'/39'/0'/12'/0'`, which selects the application and its parameters.
+All path components must be hardened. The device derives the private key at the
+given path, computes `HMAC-SHA512(key="bip-entropy-from-k", msg=private_key)`
+and post-processes the 64 bytes of entropy according to the application:
+
+- `39'` BIP-39 mnemonic (`m/83696968'/39'/{language}'/{words}'/{index}'`): the entropy
+  is truncated to 16, 20, 24, 28 or 32 bytes for 12, 15, 18, 21 or 24 words and the
+  English mnemonic is returned as `secret`. Only the English wordlist (`0'`) is
+  supported.
+- `2'` HD-Seed WIF (`m/83696968'/2'/{index}'`): the first 32 bytes are returned and
+  encoded as a compressed mainnet WIF in `secret`.
+- `32'` XPRV (`m/83696968'/32'/{index}'`): the first 32 bytes are used as the chain
+  code and the last 32 bytes as the private key of a mainnet `xprv` returned in
+  `secret`.
+- `128169'` HEX (`m/83696968'/128169'/{num_bytes}'/{index}'`): the entropy is
+  truncated to `num_bytes` (16 to 64).
+- `707764'` and `707785'` PWD (`m/83696968'/{app}'/{pwd_len}'/{index}'`): the entropy
+  is base64 (20 to 86 characters) or base85 (10 to 80 characters) encoded and
+  truncated to `pwd_len` characters in `secret`.
+- Any other application: the raw 64 bytes of entropy are returned.
+
+The user has to confirm the application and derivation path on the device. Unless
+`on_device_only` is set, the user also has to confirm sending the secret to the host.
+With `show_display` the derived secret is shown on the device (a BIP-39 mnemonic is
+shown the same way as a wallet backup). With `on_device_only` the secret is only
+shown on the device and the response is empty. The response is `Bip85Entropy`
+containing the (truncated) `entropy` and, if the application defines one, the
+human-readable `secret`.
+
 ## ResetDevice
 
 The ResetDevice message performs Trezor device
