@@ -1,0 +1,1 @@
+Add support for BIP-85 deterministic entropy derivation (`trezorctl crypto get-bip85-entropy`).
