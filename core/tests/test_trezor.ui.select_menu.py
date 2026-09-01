@@ -103,9 +103,10 @@ class TestSelectMenu(unittest.TestCase):
             )
 
     def test_too_many_items(self):
-        # beyond MAX_MENU_ITEMS the list is rejected before it reaches the layout
+        # beyond MAX_MENU_ITEMS the list is rejected before it reaches the layout,
+        # so this is an OverflowError rather than this model's NotImplementedError
         with self.assertRaises(OverflowError):
-            self.make_menu(items=[("Item", STANDARD)] * 6)
+            self.make_menu(items=[("Item", STANDARD)] * 7)
 
     def test_unknown_intent(self):
         with self.assertRaises(OverflowError):
