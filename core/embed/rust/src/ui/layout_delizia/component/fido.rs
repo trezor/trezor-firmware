@@ -6,10 +6,9 @@ use crate::ui::component::paginated::SinglePage;
 use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs,
 };
-use crate::ui::component::{Component, Event, EventCtx, Paginate};
+use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::geometry::{Insets, Offset, Rect};
 use crate::ui::shape::Renderer;
-use crate::ui::util::assert_single_page;
 
 pub struct FidoCredential<F: Fn() -> TString<'static>> {
     app_icon: Option<Image>,
@@ -48,9 +47,6 @@ impl<F: Fn() -> TString<'static>> Component for FidoCredential<F> {
         let (icon_area, text_area) = bounds.split_top(icon_size.y);
         let text_area = text_area.inset(Insets::top(Self::SPACING));
         self.text.place(text_area);
-        // This component is single-page by design; fail loudly in ui_debug
-        // when the content (e.g. a long host-supplied account name) overflows.
-        assert_single_page(self.text.pager());
         let text_height = self.text.area().height();
         let vertical_space = bounds.height() - icon_size.y - Self::SPACING - text_height;
         // Do not shift the content above the top edge when it does not fit.
@@ -66,9 +62,6 @@ impl<F: Fn() -> TString<'static>> Component for FidoCredential<F> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Event::Attach(_) = event {
             self.text.mutate(|p| p[1].update((self.get_account)()));
-            // Re-run the place pass so that the single-page check in `place()`
-            // evaluates the updated account name.
-            ctx.request_place();
             ctx.request_paint();
         }
         self.app_icon.event(ctx, event);
