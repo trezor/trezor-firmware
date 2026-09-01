@@ -80,11 +80,13 @@ class TestProtobuf(unittest.TestCase):
 
         self.assertEqual(load_uvarint32(b"\xff\xff\xff\xff\x0f"), 0xFFFFFFFF)
         self.assertEqual(
-            load_uvarint64(b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01"), 0xFFFFFFFFFFFFFFFF
+            load_uvarint64(b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01"),
+            0xFFFFFFFFFFFFFFFF,
         )
 
         with self.assertRaises(OverflowError):
             load_uvarint32(b"\xff\xff\xff\xff\x10")
+        with self.assertRaises(OverflowError):
             load_uvarint64(b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x02")
 
     def test_reject_malformed_field_key(self):
