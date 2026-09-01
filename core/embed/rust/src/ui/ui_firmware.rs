@@ -15,7 +15,7 @@ use crate::ui::notification::Notification;
 pub const MAX_CHECKLIST_ITEMS: usize = 3;
 pub const MAX_WORD_QUIZ_ITEMS: usize = 3;
 pub const MAX_GROUP_SHARE_LINES: usize = 4;
-pub const MAX_MENU_ITEMS: usize = 5;
+pub const MAX_MENU_ITEMS: usize = 6;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
 
