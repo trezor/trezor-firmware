@@ -23,6 +23,7 @@ pub mod binary;
 pub mod cargo;
 pub mod device_tests;
 pub mod helpers;
+pub mod linker;
 pub mod metadata;
 pub mod postbuild;
 pub mod pystyle;

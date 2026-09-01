@@ -1,6 +1,6 @@
 //! CLI argument types for `xtask modular <cmd>`, parsed with `clap`.
 
-use anyhow::{Result, ensure};
+use anyhow::{Context, Result, ensure};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 use std::process;
@@ -272,11 +272,11 @@ impl BuildArgs {
         }
 
         if !self.emulator {
-            let linker_script = if helpers::is_workspace()? {
-                format!("{}/memory.x", self.project)
-            } else {
-                "memory.x".into()
-            };
+            // A single script shared by every app in the workspace (or, for
+            // a standalone app, its own root-level `memory.x`) -- see
+            // `configure_cargo_linked` for the build that actually links
+            // against it.
+            let linker_script = helpers::root_dir()?.join("memory.x");
             cmd.args(["--target", self.model.target_triple()]);
             cmd.env(
                 "RUSTFLAGS",
@@ -286,7 +286,84 @@ impl BuildArgs {
                      -C link-arg=-z \
                      -C link-arg=max-page-size=0x20 \
                      -C link-arg=--no-dynamic-linker",
-                    linker_script
+                    linker_script.display()
+                ),
+            );
+        }
+
+        if self.verbose {
+            cmd.arg("--verbose");
+        }
+
+        Ok(())
+    }
+
+    /// Like [`Self::configure_cargo`], but targets the generated linker
+    /// package (see [`crate::linker`]) that actually produces this app's
+    /// linked ELF/`.so`, instead of the app package itself -- which, in a
+    /// workspace, builds only as a library and has no `[[bin]]` target to
+    /// build/link at all.
+    ///
+    /// The linker package has none of the app's own cargo features, so
+    /// this invocation's resolved features are forwarded through via
+    /// `<project>/<feature>` syntax. Its emulator-build shared-library link
+    /// flags come from its own generated `build.rs` (see
+    /// [`crate::linker::generate`]), *not* `RUSTFLAGS` here: with no
+    /// `--target` set (the emulator case builds for the host), a global
+    /// `RUSTFLAGS` applies to every build-script/proc-macro binary compiled
+    /// along the way too, not just the final artifact -- `-C
+    /// link-arg=-shared` on those corrupts them.
+    pub fn configure_cargo_linked(
+        &self,
+        cmd: &mut process::Command,
+        linker_package: &str,
+        linker_manifest_path: &std::path::Path,
+    ) -> Result<()> {
+        ensure!(
+            !self.project.is_empty(),
+            "Project name must be specified when linking in a workspace"
+        );
+        // The linker package is its own workspace root (see
+        // `crate::linker`'s docs), so it's not reachable via `-p` from the
+        // app workspace's own `cargo` invocations -- point straight at its
+        // manifest instead, and force its output into the app workspace's
+        // own target directory so `helpers::elf_path` still finds it.
+        cmd.arg("--manifest-path").arg(linker_manifest_path);
+        cmd.arg("-p").arg(linker_package);
+        cmd.arg("--target-dir").arg(helpers::build_dir()?);
+
+        let features: Vec<String> = self
+            .resolve_features()?
+            .into_iter()
+            .map(|feature| format!("{}/{feature}", self.project))
+            .collect();
+        cmd.args(["--features", &features.join(",")]);
+
+        if self.debug {
+            cmd.arg("--profile").arg("debug-fw");
+        } else {
+            cmd.arg("--profile")
+                .arg("release-fw")
+                .arg("-Zbuild-std=core,alloc");
+        }
+
+        if !self.emulator {
+            // Generated alongside the linker manifest itself -- see
+            // `crate::linker::generate` -- not a file in the app workspace.
+            let linker_script = linker_manifest_path
+                .parent()
+                .context("Linker manifest path has no parent directory")?
+                .join("memory.x");
+            cmd.args(["--target", self.model.target_triple()]);
+            cmd.env(
+                "RUSTFLAGS",
+                format!(
+                    "-C link-arg=-T{} \
+                     -C link-arg=--emit-relocs \
+                     -C link-arg=-z \
+                     -C link-arg=max-page-size=0x20 \
+                     -C link-arg=--no-dynamic-linker",
+                    linker_script.display()
                 ),
             );
         }

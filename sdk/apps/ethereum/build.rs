@@ -64,7 +64,6 @@ impl Model {
 fn main() {
     build_protobufs();
     build_translations();
-    link();
 }
 
 fn build_protobufs() {
@@ -125,33 +124,3 @@ fn build_translations() {
     fs::write(out_dir.join("translations.rs"), out).unwrap();
 }
 
-fn is_linux() -> bool {
-    env::var("CARGO_CFG_UNIX").is_ok()
-        || env::var("CARGO_CFG_TARGET_OS")
-            .map(|os| os == "linux")
-            .unwrap_or(false)
-}
-
-fn is_macos() -> bool {
-    env::var("CARGO_CFG_TARGET_OS")
-        .map(|os| os == "macos")
-        .unwrap_or(false)
-}
-
-fn is_unit_test() -> bool {
-    env::var("CARGO_FEATURE_TEST").is_ok()
-}
-
-fn link() {
-    if !is_unit_test() {
-        if is_macos() {
-            // On macOS, link to System framework to get memcpy, memset, etc.
-            println!("cargo:rustc-link-lib=System");
-            println!("cargo:rustc-link-arg=-Wl,-export_dynamic");
-        } else if is_linux() {
-            // On Linux, link to C library to get __libc_start_main, memcpy, etc.
-            println!("cargo:rustc-link-lib=c");
-            println!("cargo:rustc-link-arg=-shared");
-        }
-    }
-}
