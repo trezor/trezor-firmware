@@ -57,7 +57,7 @@ pub use input_methods::{
     number_input::NumberInput,
     passphrase::PassphraseEntry,
     pin::PinEntry,
-    simple_choice::SimpleChoice,
+    simple_choice::{SimpleChoice, MAX_LENGTH as SIMPLE_CHOICE_MAX_LENGTH},
     wordlist::{WordlistEntry, WordlistType},
 };
 #[cfg(feature = "translations")]

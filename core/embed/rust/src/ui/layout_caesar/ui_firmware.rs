@@ -6,7 +6,7 @@ use super::component::{
     AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, ChoiceControls,
     CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen,
     NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords, ShowMore,
-    SimpleChoice, WordlistEntry, WordlistType,
+    SimpleChoice, WordlistEntry, WordlistType, SIMPLE_CHOICE_MAX_LENGTH,
 };
 use super::{constant, fonts, theme, UICaesar};
 use crate::error::Error;
@@ -939,7 +939,7 @@ impl FirmwareUI for UICaesar {
         description: TString<'static>,
         words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let words: Vec<TString<'static>, 5> = Vec::from_iter(words);
+        let words: Vec<TString<'static>, SIMPLE_CHOICE_MAX_LENGTH> = Vec::from_iter(words);
         // Returning the index of the selected word, not the word itself
         let layout = RootComponent::new(
             Frame::new(
@@ -955,7 +955,7 @@ impl FirmwareUI for UICaesar {
 
     fn select_word_count(recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error> {
         let title: TString = TR::word_count__title.into();
-        let choices: Vec<TString<'static>, 5> = {
+        let choices: Vec<TString<'static>, SIMPLE_CHOICE_MAX_LENGTH> = {
             let nums: &[&str] = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
                 &["20", "33"]
             } else {
