@@ -127,6 +127,7 @@ def get_features() -> Features:
             Capability.Cardano,
             Capability.Crypto,
             Capability.Ethereum,
+            Capability.Ethereum_EIP7702,
             Capability.Monero,
             Capability.Ripple,
             Capability.Stellar,

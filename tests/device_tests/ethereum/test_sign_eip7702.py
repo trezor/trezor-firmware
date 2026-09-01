@@ -21,7 +21,7 @@ from trezorlib._rlp import encode
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.ethereum import decode_hex
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.messages import EthereumAuth7702, PaymentRequest
+from trezorlib.messages import Capability, EthereumAuth7702, PaymentRequest
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -30,7 +30,7 @@ from .test_signtx import make_defs
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.ethereum,
-    pytest.mark.models("core", reason="T1 does not support EIP 7702"),
+    pytest.mark.capabilities(Capability.Ethereum_EIP7702),
 ]
 
 
