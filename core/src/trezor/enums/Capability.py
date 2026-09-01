@@ -30,3 +30,4 @@ if not utils.BITCOIN_ONLY:
     U2F = 14
     Solana = 18
     Tron = 24
+    Ethereum_EIP7702 = 28

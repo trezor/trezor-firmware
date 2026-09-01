@@ -272,6 +272,7 @@ class Capability(IntEnum):
     Tron = 24
     N1W1 = 25
     TouchWakeup = 26
+    Ethereum_EIP7702 = 28
 
 
 class SdProtectOperationType(IntEnum):
