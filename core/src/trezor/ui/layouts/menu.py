@@ -64,6 +64,7 @@ def leaf_from_layout(
     layout_factory: Callable[[], trezorui_api.LayoutContext[R]],
     *,
     return_result: bool = False,
+    intent: int = trezorui_api.MenuItemIntent.STANDARD,
     br_name: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     raise_on_cancel: ExceptionType | None = None,
@@ -73,6 +74,9 @@ def leaf_from_layout(
     Unless `return_result` is set, the layout's result is discarded and the menu
     tree is resumed. Otherwise the result is returned by `show_menu()`, so
     `layout_factory()` must produce a layout whose result type matches the tree's.
+
+    `intent` is independent of what the leaf does: an entry may look dangerous
+    and still produce a value rather than abort, as `cancel_leaf()` does.
     """
 
     async def _interact() -> "R | None":
@@ -81,7 +85,7 @@ def leaf_from_layout(
             result = await interact(obj, br_name, br_code, raise_on_cancel)
         return result if return_result else None
 
-    return MenuLeaf(name, _interact)
+    return MenuLeaf(name, _interact, intent=intent)
 
 
 def cancel_leaf(
