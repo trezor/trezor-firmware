@@ -114,6 +114,29 @@ def decrypt_keyvalue(
 
 
 @workflow(capability=messages.Capability.Crypto)
+def get_bip85_entropy(
+    session: "Session",
+    n: "Address",
+    show_display: bool = False,
+    on_device_only: bool = False,
+) -> messages.Bip85Entropy:
+    """Derive deterministic entropy according to BIP-85.
+
+    `n` is the full BIP-85 derivation path, e.g. m/83696968'/39'/0'/12'/0' for a
+    12-word English BIP-39 mnemonic. If `on_device_only` is set, the derived secret
+    is only shown on the device and the returned message is empty.
+    """
+    return session.call(
+        messages.GetBip85Entropy(
+            address_n=n,
+            show_display=show_display,
+            on_device_only=on_device_only,
+        ),
+        expect=messages.Bip85Entropy,
+    )
+
+
+@workflow(capability=messages.Capability.Crypto)
 def get_nonce(session: "Session") -> bytes:
     return session.call(messages.GetNonce(), expect=messages.Nonce).nonce
 
