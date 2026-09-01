@@ -45,13 +45,20 @@ uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
 // Transport-level state of an in-progress upload. Everything here is
 // image-type-agnostic; type-specific state lives in the handler.
 typedef struct {
-  uint32_t remaining;        // remaining bytes to upload
-  uint32_t block;            // index of currently processed block
-  uint32_t chunk_requested;  // requested chunk size
-  uint32_t erase_offset;     // offset of flash memory to erase
-  int32_t chunk_retry;       // retry counter
-  size_t read_offset;        // offset of the next read data in the chunk buffer
-  uint32_t chunk_size;       // size of already received chunk data
+  uint32_t remaining;  // remaining bytes to upload
+  uint32_t block;      // index of currently processed block
+  // Bytes still owed on `remaining` for the block in flight. NOT the request
+  // size: block 0 is fetched in two parts (headers first), so after the header
+  // prefetch this holds only the remainder, the part not yet subtracted.
+  uint32_t chunk_requested;
+  // Bytes the buffer must hold before the chunk is complete. Separate from
+  // chunk_requested because a retry re-fetches the WHOLE block while the
+  // accounting above must stay as it was.
+  uint32_t chunk_expected;
+  uint32_t erase_offset;    // offset of flash memory to erase
+  int32_t chunk_retry;      // retry counter
+  size_t read_offset;       // offset of the next read data in the chunk buffer
+  uint32_t chunk_size;      // size of already received chunk data
   bool headers_parsed;      // true once the first chunk's headers are validated
   bool confirmed;           // true once the upload is confirmed by the user
   bool wireless_transport;  // whether the transport is over BLE
@@ -81,7 +88,7 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
                                &((uint8_t *)chunk_buffer)[e->read_offset],
                                sizeof(chunk_buffer) - e->read_offset);
 
-  if (sectrue != r || e->chunk_size != (e->chunk_requested + e->read_offset)) {
+  if (sectrue != r || e->chunk_size != e->chunk_expected) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Invalid chunk size");
     return UPLOAD_ERR_INVALID_CHUNK_SIZE;
@@ -107,6 +114,8 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
       uint32_t chunk_limit =
           (e->remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : e->remaining;
       e->chunk_requested = chunk_limit - e->read_offset;
+      // The buffer is complete only once the whole block is in it.
+      e->chunk_expected = chunk_limit;
 
       if (sectrue != send_msg_request_firmware(iface, e->read_offset,
                                                e->chunk_requested)) {
@@ -144,10 +153,15 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
       // clear chunk buffer
       memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
       e->chunk_size = 0;
+      // Re-fetch the whole block from its start, not just whatever the last
+      // request covered: for block 0 chunk_requested is only the post-header
+      // remainder, and asking for that from offset 0 would hand on_chunk a
+      // truncated block that still passes the size check above.
+      e->read_offset = 0;
 
       if (sectrue != send_msg_request_firmware(iface,
                                                e->block * IMAGE_CHUNK_SIZE,
-                                               e->chunk_requested)) {
+                                               e->chunk_expected)) {
         return UPLOAD_ERR_COMMUNICATION;
       }
       if (e->remaining > 0) {
@@ -222,6 +236,8 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
   if (e->remaining > 0) {
     e->chunk_requested =
         (e->remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : e->remaining;
+    // Every block but the first is requested whole.
+    e->chunk_expected = e->chunk_requested;
 
     // clear chunk buffer
     e->chunk_size = 0;
@@ -269,6 +285,7 @@ workflow_result_t run_image_upload(protob_io_t *iface,
     e.chunk_requested = (e.remaining > IMAGE_INIT_CHUNK_SIZE)
                             ? IMAGE_INIT_CHUNK_SIZE
                             : e.remaining;
+    e.chunk_expected = e.chunk_requested;
     if (sectrue != send_msg_request_firmware(iface, 0, e.chunk_requested)) {
       handler->ui->fail(UPLOAD_ERR_COMMUNICATION);
       return WF_ERROR;
