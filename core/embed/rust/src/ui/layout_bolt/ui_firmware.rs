@@ -522,14 +522,17 @@ impl FirmwareUI for UIBolt {
             LayoutObj::new(Frame::left_aligned(
                 theme::label_title(),
                 title,
-                Dialog::new(CheckSinglePage::new(paragraphs.into_paragraphs()), buttons),
+                // Not CheckSinglePage: the dialog shows a deliberately truncated
+                // preview (TEXT_MONO_WITH_CLASSIC_ELLIPSIS); the info button
+                // leads to full pagination, so multi-page content is expected.
+                Dialog::new(paragraphs.into_paragraphs(), buttons),
             ))
         } else {
             let buttons = Button::cancel_confirm_text(None, Some(verb));
             LayoutObj::new(Frame::left_aligned(
                 theme::label_title(),
                 title,
-                Dialog::new(CheckSinglePage::new(paragraphs.into_paragraphs()), buttons),
+                Dialog::new(paragraphs.into_paragraphs(), buttons),
             ))
         }
     }
