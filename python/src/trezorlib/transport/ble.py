@@ -19,6 +19,7 @@ import asyncio
 import atexit
 import logging
 import sys
+import time
 import typing as t
 from dataclasses import dataclass
 from multiprocessing import Pipe, Process
@@ -49,7 +50,7 @@ TREZOR_CHARACTERISTIC_RX = "8c000002-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_TX = "8c000003-a59b-4d58-a9ad-073df69fa1b1"
 
 SCAN_INTERVAL_SECONDS = 5
-CONNECT_TIMEOUT_SECONDS = 20
+CONNECT_TIMEOUT_SECONDS = 30
 SHUTDOWN_TIMEOUT_SECONDS = 10
 
 SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
@@ -181,12 +182,19 @@ class BleProxy:
 class Peripheral:
     device: BLEDevice
     adv_data: AdvertisementData
+    last_adv: float = 0.0
     client: BleakClient | None = None
     queue: asyncio.Queue | None = None
 
     @property
     def address(self) -> str:
         return self.device.address
+
+    def update_timestamp(self) -> None:
+        self.last_adv = time.monotonic()
+
+    def havent_seen_at_least(self, seconds: float) -> bool:
+        return (time.monotonic() - self.last_adv) > seconds
 
 
 class BleAsync:
@@ -202,11 +210,14 @@ class BleAsync:
     async def main(self, pipe: Connection) -> None:
         self.devices: dict[str, Peripheral] = {}
         self.did_scan = False
+        self.scanner: BleakScanner | None = None
+        self.scan_event = asyncio.Event()
         LOG.debug("async BLE process started")
 
         try:
             await self._main_loop(pipe)
         finally:
+            await self._stop_scan()
             for address in self.devices.keys():
                 await self.disconnect(address)
 
@@ -231,35 +242,83 @@ class BleAsync:
                 await ready(pipe, write=True)
                 pipe.send(result)
 
+    async def _start_scan(self) -> BleakScanner:
+        if self.scanner is not None:
+            return self.scanner
+
+        # TODO: clear event_seen?
+        # TODO: clear devices?
+
+        async def detection_callback(
+            device: BLEDevice, adv_data: AdvertisementData
+        ) -> None:
+            if TREZOR_SERVICE_UUID not in adv_data.service_uuids:
+                return
+
+            periph = self.devices.setdefault(
+                device.address, Peripheral(device, adv_data)
+            )
+            periph.device = device
+            periph.adv_data = adv_data
+
+            if periph.havent_seen_at_least(0.6):
+                md = ", ".join(
+                    f"{hex(k)}: {v.hex()}"
+                    for k, v in adv_data.manufacturer_data.items()
+                )
+                LOG.debug(
+                    f"scan: {device.address}: {device.name} rssi={adv_data.rssi} manufacturer_data=<{md}>"
+                )
+            periph.update_timestamp()
+            self.scan_event.set()
+
+        # NOTE: filtering by UUIDs may not work on some systems/environments:
+        #       https://github.com/trezor/trezor-suite/pull/21093
+        # NOTE: filtering by UUIDs makes bluez-5.87 crash
+        self.scanner = BleakScanner(
+            detection_callback=detection_callback,
+            # service_uuids=[TREZOR_SERVICE_UUID],
+            # bluez={"filters": {"DuplicateData": True}},
+        )
+        await self.scanner.start()
+        LOG.info("BLE discovery enabled")
+        # TODO: schedule _stop_scan after XY seconds so that enumerate() without connect() doesn't keep it running?
+        return self.scanner
+
+    async def _stop_scan(self) -> None:
+        if self.scanner is None:
+            return
+
+        # TODO: clear unconnected self.devices?
+
+        await self.scanner.stop()
+        LOG.info("BLE discovery disabled")
+        self.scanner = None
+
     # throws exception when no adapters found
     async def scan(self) -> list[tuple[str, str]]:
         LOG.debug("scanning BLE")
 
-        # NOTE: filtering by UUIDs may not work on some systems/environments:
-        #       https://github.com/trezor/trezor-suite/pull/21093
-        # NOTE: filtering by UUIDs make bluez-5.87 crash
-        devices = await BleakScanner.discover(
-            timeout=SCAN_INTERVAL_SECONDS,
-            return_adv=True,
-            service_uuids=[TREZOR_SERVICE_UUID],
-        )
+        await self._start_scan()
+        await asyncio.sleep(SCAN_INTERVAL_SECONDS)
 
-        # throw away non connected peripherals
-        self.devices = {
-            addr: periph for addr, periph in self.devices.items() if periph.client
-        }
-        for address, (dev, adv_data) in devices.items():
-            if TREZOR_SERVICE_UUID not in adv_data.service_uuids:
-                continue
-            LOG.debug(
-                f"scan: {dev.address}: {dev.name} rssi={adv_data.rssi} manufacturer_data={adv_data.manufacturer_data}"
-            )
-            if address in self.devices:
-                self.devices[address].device = dev
-                self.devices[address].adv_data = adv_data
-            else:
-                self.devices[address] = Peripheral(dev, adv_data)
-        self.did_scan = True
+        LOG.debug(f"scan: {len(self.devices)} devices")
+        if False:
+            for periph in self.devices.values():
+                dev = periph.device
+                ad = periph.adv_data
+                LOG.debug(f"{dev}")
+                items = list(ad._asdict().items())
+                for k, v in items:
+                    if not v or k in ("rssi", "tx_power", "platform_data"):
+                        continue
+                    LOG.debug(f"  {k}: {v}")
+                path, kvs = ad.platform_data
+                for k, v in kvs.items():
+                    if k in ("ServicesResolved", "AdvertisingFlags", "Bonded"):
+                        LOG.debug(f"  {k}: {v}")
+            LOG.debug("--- --- ---")
+
         return [
             (periph.address, periph.device.name)
             for periph in self.devices.values()
@@ -267,28 +326,41 @@ class BleAsync:
         ]
 
     async def connect(self, address: str) -> None:
-        if not self.did_scan:
-            await self.scan()
+        LOG.debug(f"Waiting for {address}")
 
-        periph = self.devices.get(address)
-        if not periph:
+        # For some reason discovery must be running when connecting
+        # https://github.com/bluez/bluez/issues/2503
+        await self._start_scan()
+
+        async def wait_for_address() -> Peripheral:
+            while True:
+                periph = self.devices.get(address)
+                if periph is not None:
+                    return periph
+                await self.scan_event.wait()
+                self.scan_event.clear()
+
+        try:
+            periph = await asyncio.wait_for(wait_for_address(), SCAN_INTERVAL_SECONDS)
+        except TimeoutError:
             raise RuntimeError(f"Device not found: {address}")
 
         if periph.client:
-            LOG.debug(f"Already connected to {periph.address}")
+            LOG.warning(f"Already connected to {periph.address}")
             return
 
         async def disconnect_callback(client: BleakClient) -> None:
-            LOG.error(f"Got disconnected from {periph.address}")
+            LOG.error(f"Got disconnected from {address}")
             self.devices[address].client = None
             self.devices[address].queue = None
 
         LOG.debug(f"Connecting to {address}...")
         client = BleakClient(
-            periph.device,
-            services=[TREZOR_SERVICE_UUID],
+            self.devices[address].device,
+            # services=[TREZOR_SERVICE_UUID],
             timeout=CONNECT_TIMEOUT_SECONDS,
             disconnect_callback=disconnect_callback,
+            # pair=(sys.platform != "darwin"),
         )
         await client.connect()
 
@@ -311,6 +383,10 @@ class BleAsync:
                 LOG.warning(
                     "Failed to initiate pairing. You may need to pair the device manually."
                 )
+                raise
+
+        # Don't keep the discovery running. Not sure what will this do when connecting to multiple devices.
+        await self._stop_scan()
 
         queue = asyncio.Queue()
 
