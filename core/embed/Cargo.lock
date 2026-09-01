@@ -654,8 +654,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "qrcodegen"
-version = "1.8.0"
+name = "qrcodegen-no-heap"
+version = "1.8.1"
 
 [[package]]
 name = "quote"
@@ -1022,7 +1022,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "pareen",
- "qrcodegen",
+ "qrcodegen-no-heap",
  "rtl",
  "sec",
  "serde_json",
