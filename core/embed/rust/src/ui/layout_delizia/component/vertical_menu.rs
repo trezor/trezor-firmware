@@ -314,7 +314,15 @@ impl crate::trace::Trace for VerticalMenu {
     }
 }
 
-pub type VerticalMenuItems = Vec<VerticalMenuItem, 6>;
+pub const VERTICAL_MENU_ITEMS: usize = 6;
+
+/// `select_menu()` builds these out of a list already bounded by
+/// `MAX_MENU_ITEMS`, pushing with `unwrap!`, which panics on overflow rather
+/// than returning an error. Keep the capacity at or above that bound so raising
+/// `MAX_MENU_ITEMS` alone cannot turn a rejected menu into a fatal error.
+const _: () = assert!(VERTICAL_MENU_ITEMS >= crate::ui::ui_firmware::MAX_MENU_ITEMS);
+
+pub type VerticalMenuItems = Vec<VerticalMenuItem, VERTICAL_MENU_ITEMS>;
 
 pub enum VerticalMenuItem {
     Item(TString<'static>),

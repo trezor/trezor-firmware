@@ -15,7 +15,13 @@ use crate::ui::util::animation_disabled;
 /// Presently, VerticalMenu holds only fixed number of buttons.
 pub const LONG_MENU_ITEMS: usize = 100;
 pub const MEDIUM_MENU_ITEMS: usize = 10;
-pub const SHORT_MENU_ITEMS: usize = 5;
+pub const SHORT_MENU_ITEMS: usize = 6;
+
+/// `select_menu()` builds a `ShortMenuVec` out of a list already bounded by
+/// `MAX_MENU_ITEMS`, and `MenuItems::push` panics on overflow rather than
+/// returning an error. Keep the capacity at or above that bound so raising
+/// `MAX_MENU_ITEMS` alone cannot turn a rejected menu into a fatal error.
+const _: () = assert!(SHORT_MENU_ITEMS >= crate::ui::ui_firmware::MAX_MENU_ITEMS);
 
 pub type LongMenuGc = GcBox<Vec<Button, LONG_MENU_ITEMS>>;
 pub type ShortMenuVec = Vec<Button, SHORT_MENU_ITEMS>;
