@@ -60,7 +60,8 @@ Makefiles if in doubt; this file only captures what is non-obvious.
   - The emulator stays in the foreground — use a second terminal, or detach it with
     `setsid nohup ./core/emu.py -a >/tmp/emu.log 2>&1 </dev/null &` (plain `nohup ... &` gets killed with
     the spawning shell's process group). Stop it with `pkill -f "[f]irmware-emu"` (the bracket avoids
-    matching your own shell's command line).
+    matching your own shell's command line). This kills **all** emulators machine-wide — do not use it
+    when other agents/worktrees may be running their own; see "Parallel agents / worktrees" below.
   - `TESTOPTS="-x -v -k test_msg_backup_device.py" make -C core test_emu` for Makefile-driven runs.
   - `INTERACT=1 pytest ...` to press buttons yourself. `PYTEST_TIMEOUT=<sec>` per-test timeout.
   - Tests are randomized via pytest-random-order; the seed is printed in the header.
@@ -93,6 +94,34 @@ Makefiles if in doubt; this file only captures what is non-obvious.
 - Crypto lib: `make -C crypto` then run `crypto/tests/test_check` etc.
 - Storage: `make -C storage/tests build && make -C storage/tests tests_all`.
 - Coverage threshold on CI is 85%. Generate locally: `make -C core coverage` (needs a frozen build with `.i` files).
+
+## Parallel agents / worktrees
+
+Multiple emulators can coexist only if each has its own UDP port block and profile dir.
+Each emulator occupies **7 consecutive ports** from its base (default 21324): wirelink,
+debuglink, FIDO2, VCP, BLE ×2, tropic. Colliding ports or the default `/var/tmp/trezor.*`
+profile = cross-talk between agents.
+
+- Start your emulator with a unique base port and profile:
+  `./core/emu.py -a -P <port> -p <name>` (profile in `~/.trezoremu/<name>`) or `-t` for a
+  throwaway temp profile. Pick ports above 30000, spaced ≥8 apart; leave 21324 unused.
+- `make -C core test_emu*` (single-core) already wraps pytest in `emu.py -t -c`; isolate it
+  with `TREZOR_UDP_PORT=<port> make -C core test_emu`.
+- When running pytest or `trezorctl` against an already-running emulator, export
+  `TREZOR_PATH=udp:127.0.0.1:<port>` — otherwise they probe default port 21324 and may
+  attach to **another agent's emulator**.
+- Kill only your own emulator: `kill "$(cat "$TREZOR_PROFILE_DIR/trezor.pid")"`.
+  Never `pkill -f firmware-emu` or `pkill -f model_server` when other agents may be running.
+- Unit tests (`make -C core test`) bind no ports but share the default profile — set
+  `TREZOR_PROFILE_DIR=<unique existing dir>` if another agent may run them concurrently.
+
+Machine-wide singletons (one at a time, coordinate with other agents):
+- **T3W1 emulator**: `emu.py` hardcodes the Tropic model server to TCP 28992 — run other
+  models (T3T1/T2T1) in the other worktree, or take turns.
+- pytest runs that spawn their own emulators (`--control-emulators`: `test_emu_multicore`,
+  `test_emu_ui*_multicore`, `test_emu_click_ui_multicore`, `test_emu_persistence*`,
+  `test_emu_upgrade`) and `test_emu_prodtest` — worker port numbering restarts per
+  invocation (base 20000), so concurrent invocations collide.
 
 ## Style, types, lint
 
