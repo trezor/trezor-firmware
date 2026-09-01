@@ -1,5 +1,5 @@
 use heapless::String;
-use qrcodegen::{QrCode, QrCodeEcc, Version};
+use qrcodegen_no_heap::{QrCode, QrCodeEcc, Version};
 
 use super::paginated::SinglePage;
 use crate::error::Error;

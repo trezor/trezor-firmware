@@ -1,4 +1,4 @@
-use qrcodegen::QrCode;
+use qrcodegen_no_heap::QrCode;
 use without_alloc::alloc::LocalAllocLeakExt;
 
 use super::utils::line_points;
