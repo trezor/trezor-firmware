@@ -611,7 +611,7 @@ async def confirm_output(
         menu_items
         + [
             cancel_leaf(
-                TR.buttons__cancel,
+                cancel_text or TR.buttons__cancel,
                 confirm=trezorui_api.confirm_cancel,
             )
         ]
