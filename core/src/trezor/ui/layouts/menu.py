@@ -8,9 +8,9 @@ from trezor.wire import ActionCancelled
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Iterable, Sequence
-    from typing import Generic, overload
+    from typing import Generic, TypeAlias, overload
 
-    from typing_extensions import Never, TypeAlias, TypeVar
+    from typing_extensions import Never, TypeVar
 
     from .common import ExceptionType
 
