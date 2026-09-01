@@ -48,7 +48,7 @@ TREZOR_SERVICE_UUID = "8c000001-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_RX = "8c000002-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_TX = "8c000003-a59b-4d58-a9ad-073df69fa1b1"
 
-SCAN_INTERVAL_SECONDS = 5
+SCAN_INTERVAL_SECONDS = 3
 CONNECT_TIMEOUT_SECONDS = 20
 SHUTDOWN_TIMEOUT_SECONDS = 10
 
@@ -242,8 +242,23 @@ class BleAsync:
         devices = await BleakScanner.discover(
             timeout=SCAN_INTERVAL_SECONDS,
             return_adv=True,
-            service_uuids=[TREZOR_SERVICE_UUID],
+            # service_uuids=[TREZOR_SERVICE_UUID],
+            # this does nothing? # bluez={"DuplicateData": True},
+            # untested # bluez={"filters": {"DuplicateData": True}},
         )
+        LOG.debug(f"scan: {len(devices)}")
+        for did, (dev, ad) in devices.items():
+            LOG.debug(f"{dev}")
+            items = list(ad._asdict().items())
+            for k, v in items:
+                if not v or k in ("rssi", "tx_power", "platform_data"):
+                    continue
+                LOG.debug(f"  {k}: {v}")
+            path, kvs = ad.platform_data
+            for k, v in kvs.items():
+                if k in ("ServicesResolved", "AdvertisingFlags", "Bonded"):
+                    LOG.debug(f"  {k}: {v}")
+        LOG.debug("--- --- ---")
 
         # throw away non connected peripherals
         self.devices = {
@@ -287,12 +302,14 @@ class BleAsync:
         LOG.debug(f"Connecting to {address}...")
         client = BleakClient(
             periph.device,
-            services=[TREZOR_SERVICE_UUID],
+            # services=[TREZOR_SERVICE_UUID], # doesn't work with DuplicateData
             timeout=CONNECT_TIMEOUT_SECONDS,
             disconnect_callback=disconnect_callback,
+            pair=False,
         )
         await client.connect()
 
+        LOG.debug("done connect")
         # here we should set up the pairing agent
         # https://github.com/hbldh/bleak/pull/1100
         # or do what Suite does and try to launch some native gui
@@ -301,17 +318,18 @@ class BleAsync:
 
         # if there is no pairing agent we get (on linux)
         # bleak.exc.BleakDBusError: [org.bluez.Error.AuthenticationFailed] Authentication Failed
-        try:
-            await client.pair()
-        except BleakError:
-            LOG.error("BLE pairing failed - make sure to open system pairing dialog")
-            raise
-        except NotImplementedError:
-            # expected on macOS
-            if sys.platform != "darwin":
-                LOG.warning(
-                    "Failed to initiate pairing. You may need to pair the device manually."
-                )
+        if False:
+            try:
+                await client.pair()
+            except BleakError:
+                LOG.error("BLE pairing failed - make sure to open system pairing dialog")
+                raise
+            except NotImplementedError:
+                # expected on macOS
+                if sys.platform != "darwin":
+                    LOG.warning(
+                        "Failed to initiate pairing. You may need to pair the device manually."
+                    )
 
         queue = asyncio.Queue()
 
