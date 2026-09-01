@@ -9,8 +9,15 @@ use crate::ui::geometry::Rect;
 use crate::ui::shape::Renderer;
 
 // So that there is only one implementation, and not multiple generic ones
-// as would be via `const N: usize` generics.
-const MAX_LENGTH: usize = 5;
+// as would be via `const N: usize` generics. Callers must size their `Vec`
+// with this constant rather than repeating the literal.
+pub const MAX_LENGTH: usize = 6;
+
+/// `select_menu()` renders through `SimpleChoice`, handing it a list already
+/// bounded by `MAX_MENU_ITEMS`. Keep the capacity at or above that bound so
+/// raising `MAX_MENU_ITEMS` alone cannot stop this model from building.
+#[cfg(feature = "micropython")]
+const _: () = assert!(MAX_LENGTH >= crate::ui::ui_firmware::MAX_MENU_ITEMS);
 
 struct ChoiceFactorySimple {
     choices: Vec<TString<'static>, MAX_LENGTH>,
