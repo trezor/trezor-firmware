@@ -54,6 +54,7 @@ function help_and_die() {
   echo "  --repository path/to/repo - checkout the repository from the given path/url"
   echo "  --no-init - do not recreate docker environments"
   echo "  --init-only - set up the docker environment and exit without building"
+  echo "  --non-reproducible - allow non-reproducible builds on aarch64"
   echo "  --models - comma-separated list of models. default: --models T1B1,T2B1,T2T1,T3T1,T3W1"
   echo "  --targets - comma-separated list of targets for core build. default: --targets boardloader,bootloader,secmon,firmware"
   echo "  --nrf - build nRF bootloader and firmware (for bluetooth devices, i.e. T3W1)"
@@ -72,6 +73,7 @@ OPT_BUILD_NRF=0
 OPT_ADD_TRANSLATIONS=1
 INIT=1
 INIT_ONLY=0
+OPT_NON_REPRODUCIBLE=0
 MODELS=(T1B1 T2B1 T2T1 T3T1 T3W1)
 CORE_TARGETS=(boardloader bootloader secmon firmware)
 
@@ -106,6 +108,10 @@ while true; do
       INIT_ONLY=1
       shift
       ;;
+    --non-reproducible)
+      OPT_NON_REPRODUCIBLE=1
+      shift
+      ;;
     --models)
       # take comma-separated next argument and turn it into an array
       IFS=',' read -r -a MODELS <<< "$2"
@@ -128,6 +134,12 @@ done
 
 if [ -z "$1" ]; then
   help_and_die
+fi
+
+if [ "$ALPINE_ARCH" = "aarch64" ] && [ "$OPT_NON_REPRODUCIBLE" -eq 0 ]; then
+  echo "Reproducible builds are not supported on aarch64."
+  echo "Pass --non-reproducible to allow a non-reproducible build."
+  exit 1
 fi
 
 ################## Variant selection ##################
