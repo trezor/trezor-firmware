@@ -26,8 +26,6 @@
 #include <trezor-storage/flash_area.h>
 #include <trezor-storage/flash_ll.h>
 
-#include "../norcow_config.h"
-
 void flash_init(void);
 
 void flash_deinit(void);
@@ -38,6 +36,10 @@ extern const flash_area_t BHK_AREA;
 extern const flash_area_t ASSETS_AREA;
 extern const flash_area_t BOOTLOADER_AREA;
 extern const flash_area_t UNUSED_AREA;
+
+// Number of flash areas holding the storage
+#define STORAGE_AREAS_COUNT 2
+extern const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT];
 
 #ifdef SECMON
 extern flash_area_t FIRMWARE_AREA;

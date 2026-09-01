@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <io/display.h>

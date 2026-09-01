@@ -17,6 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// This header provides the norcow configuration required by the storage
+// module, which includes it by this exact name. It intentionally stays flat
+// rather than under `inc/sec/` for that reason.
+//
+// Do not include this header or add dependencies to it unless required by
+// storage.
+
 #ifndef __NORCOW_CONFIG_H__
 #define __NORCOW_CONFIG_H__
 
@@ -26,10 +33,9 @@
 #include <sys/flash.h>
 
 #define NORCOW_HEADER_LEN 0
-#define NORCOW_SECTOR_COUNT 2
 
-#define STORAGE_AREAS_COUNT NORCOW_SECTOR_COUNT
-extern const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT];
+// Norcow uses all the storage areas provided by the flash layout
+#define NORCOW_SECTOR_COUNT STORAGE_AREAS_COUNT
 
 /*
  * Current storage version.
