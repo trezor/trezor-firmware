@@ -102,7 +102,6 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
             "hmac.c",
             "hmac_drbg.c",
             "memzero.c",
-            "nem.c",
             "nist256p1.c",
             "pbkdf2.c",
             "rand.c",
@@ -127,11 +126,6 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
         ("USE_MONERO", val),
         ("USE_CARDANO", val),
     ]);
-
-    let nem = cfg!(feature = "universal_fw") && cfg!(feature = "nem");
-    lib.add_define("USE_NEM", Some(if nem { "1" } else { "0" }));
-    let eos = cfg!(feature = "universal_fw") && cfg!(feature = "eos");
-    lib.add_define("USE_EOS", Some(if eos { "1" } else { "0" }));
 
     if cfg!(feature = "universal_fw") {
         lib.add_sources_in_dir_with_attrs(

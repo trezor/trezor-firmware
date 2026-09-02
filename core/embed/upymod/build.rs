@@ -1093,10 +1093,8 @@ impl<'a> MpyBuilder<'a> {
         files.remove(enums, "Cardano*.py");
         files.remove(enums, "DebugMonero*.py");
         files.remove(enums, "DefinitionType.py");
-        files.remove(enums, "Eos*.py");
         files.remove(enums, "Ethereum*.py");
         files.remove(enums, "Monero*.py");
-        files.remove(enums, "NEM*.py");
         files.remove(enums, "Ripple*.py");
         files.remove(enums, "Solana*.py");
         files.remove(enums, "Stellar*.py");
@@ -1196,12 +1194,6 @@ impl<'a> MpyBuilder<'a> {
             files.add(src, "apps/cardano/*/*.py")?;
             files.add(src, "trezor/enums/Cardano*.py")?;
 
-            if cfg!(feature = "eos") {
-                files.add(src, "apps/eos/*.py")?;
-                files.add(src, "apps/eos/*/*.py")?;
-                files.add(src, "trezor/enums/Eos*.py")?;
-            }
-
             files.add(src, "apps/ethereum/*.py")?;
             files.add(src, "trezor/enums/Ethereum*.py")?;
 
@@ -1210,12 +1202,6 @@ impl<'a> MpyBuilder<'a> {
             files.add(src, "apps/monero/*/*/*.py")?;
             files.add(src, "trezor/enums/DebugMonero*.py")?;
             files.add(src, "trezor/enums/Monero*.py")?;
-
-            if cfg!(feature = "nem") {
-                files.add(src, "apps/nem/*.py")?;
-                files.add(src, "apps/nem/*/*.py")?;
-                files.add(src, "trezor/enums/NEM*.py")?;
-            }
 
             if cfg!(not(feature = "pyopt")) {
                 files.add(src, "apps/nostr/*.py")?;

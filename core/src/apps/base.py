@@ -141,15 +141,6 @@ def get_features() -> Features:
             Capability.Translations,
         ]
 
-        # We don't support some currencies on later models (see #2793)
-        if utils.INTERNAL_MODEL == "T2T1":
-            f.capabilities.extend(
-                [
-                    Capability.NEM,
-                    Capability.EOS,
-                ]
-            )
-
     if utils.USE_HAPTIC:
         f.haptic_feedback = storage_device.get_haptic_feedback()
         f.capabilities.append(Capability.Haptic)

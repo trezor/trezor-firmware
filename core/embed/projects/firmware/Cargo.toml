@@ -144,8 +144,6 @@ tropic = ["sec/tropic", "upymod/tropic", "trezor_lib/tropic"]
 
 # Legacy coin support (T2T1 only)
 decred = ["upymod/decred"]
-eos = ["crypto/eos", "upymod/eos"]
-nem = ["crypto/nem", "upymod/nem"]
 
 # --------------------------------------------------------------------------
 # Automatically derived features (do not enable from outside)

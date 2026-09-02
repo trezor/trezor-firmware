@@ -20,10 +20,8 @@ if not utils.BITCOIN_ONLY:
     Bitcoin_like = 2
     Binance = 3
     Cardano = 4
-    EOS = 6
     Ethereum = 7
     Monero = 9
-    NEM = 10
     Ripple = 11
     Stellar = 12
     Tezos = 13

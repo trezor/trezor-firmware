@@ -165,16 +165,6 @@ trezor_message_impl! {
     CardanoMessageSignature => MessageType_CardanoMessageSignature,
 }
 
-#[cfg(feature = "eos")]
-trezor_message_impl! {
-    EosGetPublicKey => MessageType_EosGetPublicKey,
-    EosPublicKey => MessageType_EosPublicKey,
-    EosSignTx => MessageType_EosSignTx,
-    EosTxActionRequest => MessageType_EosTxActionRequest,
-    EosTxActionAck => MessageType_EosTxActionAck,
-    EosSignedTx => MessageType_EosSignedTx,
-}
-
 #[cfg(feature = "ethereum")]
 trezor_message_impl! {
     EthereumGetPublicKey => MessageType_EthereumGetPublicKey,
@@ -249,16 +239,6 @@ trezor_message_impl! {
     MoneroLiveRefreshStepAck => MessageType_MoneroLiveRefreshStepAck,
     MoneroLiveRefreshFinalRequest => MessageType_MoneroLiveRefreshFinalRequest,
     MoneroLiveRefreshFinalAck => MessageType_MoneroLiveRefreshFinalAck,
-}
-
-#[cfg(feature = "nem")]
-trezor_message_impl! {
-    NEMGetAddress => MessageType_NEMGetAddress,
-    NEMAddress => MessageType_NEMAddress,
-    NEMSignTx => MessageType_NEMSignTx,
-    NEMSignedTx => MessageType_NEMSignedTx,
-    NEMDecryptMessage => MessageType_NEMDecryptMessage,
-    NEMDecryptedMessage => MessageType_NEMDecryptedMessage,
 }
 
 #[cfg(feature = "nostr")]
