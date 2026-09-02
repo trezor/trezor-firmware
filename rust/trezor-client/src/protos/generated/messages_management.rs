@@ -3090,16 +3090,12 @@ pub mod features {
         Capability_Cardano = 4,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Crypto)
         Capability_Crypto = 5,
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_EOS)
-        Capability_EOS = 6,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Ethereum)
         Capability_Ethereum = 7,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Lisk)
         Capability_Lisk = 8,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Monero)
         Capability_Monero = 9,
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_NEM)
-        Capability_NEM = 10,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Ripple)
         Capability_Ripple = 11,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Stellar)
@@ -3152,11 +3148,9 @@ pub mod features {
                 3 => ::std::option::Option::Some(Capability::Capability_Binance),
                 4 => ::std::option::Option::Some(Capability::Capability_Cardano),
                 5 => ::std::option::Option::Some(Capability::Capability_Crypto),
-                6 => ::std::option::Option::Some(Capability::Capability_EOS),
                 7 => ::std::option::Option::Some(Capability::Capability_Ethereum),
                 8 => ::std::option::Option::Some(Capability::Capability_Lisk),
                 9 => ::std::option::Option::Some(Capability::Capability_Monero),
-                10 => ::std::option::Option::Some(Capability::Capability_NEM),
                 11 => ::std::option::Option::Some(Capability::Capability_Ripple),
                 12 => ::std::option::Option::Some(Capability::Capability_Stellar),
                 13 => ::std::option::Option::Some(Capability::Capability_Tezos),
@@ -3186,11 +3180,9 @@ pub mod features {
                 "Capability_Binance" => ::std::option::Option::Some(Capability::Capability_Binance),
                 "Capability_Cardano" => ::std::option::Option::Some(Capability::Capability_Cardano),
                 "Capability_Crypto" => ::std::option::Option::Some(Capability::Capability_Crypto),
-                "Capability_EOS" => ::std::option::Option::Some(Capability::Capability_EOS),
                 "Capability_Ethereum" => ::std::option::Option::Some(Capability::Capability_Ethereum),
                 "Capability_Lisk" => ::std::option::Option::Some(Capability::Capability_Lisk),
                 "Capability_Monero" => ::std::option::Option::Some(Capability::Capability_Monero),
-                "Capability_NEM" => ::std::option::Option::Some(Capability::Capability_NEM),
                 "Capability_Ripple" => ::std::option::Option::Some(Capability::Capability_Ripple),
                 "Capability_Stellar" => ::std::option::Option::Some(Capability::Capability_Stellar),
                 "Capability_Tezos" => ::std::option::Option::Some(Capability::Capability_Tezos),
@@ -3219,11 +3211,9 @@ pub mod features {
             Capability::Capability_Binance,
             Capability::Capability_Cardano,
             Capability::Capability_Crypto,
-            Capability::Capability_EOS,
             Capability::Capability_Ethereum,
             Capability::Capability_Lisk,
             Capability::Capability_Monero,
-            Capability::Capability_NEM,
             Capability::Capability_Ripple,
             Capability::Capability_Stellar,
             Capability::Capability_Tezos,
@@ -3258,29 +3248,27 @@ pub mod features {
                 Capability::Capability_Binance => 2,
                 Capability::Capability_Cardano => 3,
                 Capability::Capability_Crypto => 4,
-                Capability::Capability_EOS => 5,
-                Capability::Capability_Ethereum => 6,
-                Capability::Capability_Lisk => 7,
-                Capability::Capability_Monero => 8,
-                Capability::Capability_NEM => 9,
-                Capability::Capability_Ripple => 10,
-                Capability::Capability_Stellar => 11,
-                Capability::Capability_Tezos => 12,
-                Capability::Capability_U2F => 13,
-                Capability::Capability_Shamir => 14,
-                Capability::Capability_ShamirGroups => 15,
-                Capability::Capability_PassphraseEntry => 16,
-                Capability::Capability_Solana => 17,
-                Capability::Capability_Translations => 18,
-                Capability::Capability_Brightness => 19,
-                Capability::Capability_Haptic => 20,
-                Capability::Capability_BLE => 21,
-                Capability::Capability_NFC => 22,
-                Capability::Capability_Tron => 23,
-                Capability::Capability_N1W1 => 24,
-                Capability::Capability_TouchWakeup => 25,
-                Capability::Capability_Ethereum_EIP7702 => 26,
-                Capability::Capability_Miniscript => 27,
+                Capability::Capability_Ethereum => 5,
+                Capability::Capability_Lisk => 6,
+                Capability::Capability_Monero => 7,
+                Capability::Capability_Ripple => 8,
+                Capability::Capability_Stellar => 9,
+                Capability::Capability_Tezos => 10,
+                Capability::Capability_U2F => 11,
+                Capability::Capability_Shamir => 12,
+                Capability::Capability_ShamirGroups => 13,
+                Capability::Capability_PassphraseEntry => 14,
+                Capability::Capability_Solana => 15,
+                Capability::Capability_Translations => 16,
+                Capability::Capability_Brightness => 17,
+                Capability::Capability_Haptic => 18,
+                Capability::Capability_BLE => 19,
+                Capability::Capability_NFC => 20,
+                Capability::Capability_Tron => 21,
+                Capability::Capability_N1W1 => 22,
+                Capability::Capability_TouchWakeup => 23,
+                Capability::Capability_Ethereum_EIP7702 => 24,
+                Capability::Capability_Miniscript => 25,
             };
             Self::enum_descriptor().value_by_index(index)
         }
@@ -13450,7 +13438,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \roptions.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xc9\x1c\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xa1\x1c\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
@@ -13512,14 +13500,13 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\r:\x0250R\x10maxPassphraseLen\"C\n\x12BackupAvailability\x12\
     \x10\n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\x12\r\n\tAvai\
     lable\x10\x02\"7\n\x0eRecoveryStatus\x12\x0b\n\x07Nothing\x10\0\x12\x0c\
-    \n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\x90\x06\n\nCapability\
+    \n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\xe8\x05\n\nCapability\
     \x12\x1c\n\x12Capability_Bitcoin\x10\x01\x1a\x04\x80\xa6\x1d\x01\x12\x1b\
     \n\x17Capability_Bitcoin_like\x10\x02\x12\x16\n\x12Capability_Binance\
     \x10\x03\x12\x16\n\x12Capability_Cardano\x10\x04\x12\x1b\n\x11Capability\
-    _Crypto\x10\x05\x1a\x04\x80\xa6\x1d\x01\x12\x12\n\x0eCapability_EOS\x10\
-    \x06\x12\x17\n\x13Capability_Ethereum\x10\x07\x12\x17\n\x0fCapability_Li\
-    sk\x10\x08\x1a\x02\x08\x01\x12\x15\n\x11Capability_Monero\x10\t\x12\x12\
-    \n\x0eCapability_NEM\x10\n\x12\x15\n\x11Capability_Ripple\x10\x0b\x12\
+    _Crypto\x10\x05\x1a\x04\x80\xa6\x1d\x01\x12\x17\n\x13Capability_Ethereum\
+    \x10\x07\x12\x17\n\x0fCapability_Lisk\x10\x08\x1a\x02\x08\x01\x12\x15\n\
+    \x11Capability_Monero\x10\t\x12\x15\n\x11Capability_Ripple\x10\x0b\x12\
     \x16\n\x12Capability_Stellar\x10\x0c\x12\x14\n\x10Capability_Tezos\x10\r\
     \x12\x12\n\x0eCapability_U2F\x10\x0e\x12\x1b\n\x11Capability_Shamir\x10\
     \x0f\x1a\x04\x80\xa6\x1d\x01\x12!\n\x17Capability_ShamirGroups\x10\x10\

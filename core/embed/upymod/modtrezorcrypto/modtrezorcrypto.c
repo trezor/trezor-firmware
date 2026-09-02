@@ -79,7 +79,6 @@ extern const mp_obj_type_t mp_type_AuthenticationError;
 #if !BITCOIN_ONLY
 #include "modtrezorcrypto-cardano.h"
 #include "modtrezorcrypto-monero.h"
-#include "modtrezorcrypto-nem.h"
 #endif
 
 MP_DEFINE_EXCEPTION(AuthenticationError, Exception)
@@ -127,9 +126,6 @@ static const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_groestl512),
      MP_ROM_PTR(&mod_trezorcrypto_Groestl512_type)},
     {MP_ROM_QSTR(MP_QSTR_hmac), MP_ROM_PTR(&mod_trezorcrypto_Hmac_type)},
-#if !BITCOIN_ONLY
-    {MP_ROM_QSTR(MP_QSTR_nem), MP_ROM_PTR(&mod_trezorcrypto_nem_module)},
-#endif
     {MP_ROM_QSTR(MP_QSTR_pbkdf2), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_type)},
     {MP_ROM_QSTR(MP_QSTR_random), MP_ROM_PTR(&mod_trezorcrypto_random_module)},
     {MP_ROM_QSTR(MP_QSTR_ripemd160),
