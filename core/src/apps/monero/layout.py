@@ -144,7 +144,7 @@ async def require_confirm_transaction(
     for idx, dst in enumerate(outputs):
         if _is_hidden_output(outputs, change_idx, idx):
             continue
-        cur_payment = payment_id if idx in integrated_indices else None
+        cur_payment = payment_id if payment_id and idx in integrated_indices else None
         if cur_payment:
             payment_id_shown = True
         await _require_confirm_output(
