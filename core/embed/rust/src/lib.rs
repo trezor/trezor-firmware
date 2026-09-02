@@ -8,11 +8,18 @@
 // Allowing dead code not to cause a lot of warnings when building for a specific target
 // (when building for TR, a lot of code only used in TT would get marked as unused).
 #![allow(dead_code)]
-#![feature(lang_items)]
-#![feature(trait_alias)]
 #![feature(custom_test_frameworks)]
 #![no_main]
 #![reexport_test_harness_main = "test_main"]
+#![cfg_attr(
+    all(
+        not(target_arch = "arm"),
+        not(test),
+        any(not(feature = "test"), feature = "clippy")
+    ),
+    feature(lang_items)
+)]
+#![cfg_attr(all(feature = "ui", feature = "layout_bolt"), feature(trait_alias))]
 
 #[macro_use]
 extern crate num_derive;
