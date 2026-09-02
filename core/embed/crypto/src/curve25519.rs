@@ -142,24 +142,8 @@ impl Point {
 
 #[cfg(test)]
 mod test {
-    use std::sync::{LazyLock, Mutex};
-
-    use rand::prelude::*;
-    use rand::rngs::SmallRng;
-
     use super::*;
-
-    static INSECURE_RNG: LazyLock<Mutex<SmallRng>> = LazyLock::new(|| {
-        let time_seed = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos() as u64;
-        Mutex::new(SmallRng::seed_from_u64(time_seed))
-    });
-
-    fn fill_random_bytes(bytes: &mut [u8]) {
-        INSECURE_RNG.lock().unwrap().fill_bytes(bytes);
-    }
+    use crate::testutil::fill_random_bytes;
 
     fn generate_scalar() -> Scalar {
         let mut bytes = [0u8; CURVE25519_KEY_SIZE];
