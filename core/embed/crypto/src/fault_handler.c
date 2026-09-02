@@ -26,3 +26,15 @@
 void tc_fault_handler(const char *message) {
   system_exit_error(NULL, message, NULL);
 }
+
+#ifdef USE_SECP256K1_ZKP
+void secp256k1_default_illegal_callback_fn(const char *str, void *data) {
+  (void)data;
+  system_exit_error(NULL, str, NULL);
+}
+
+void secp256k1_default_error_callback_fn(const char *str, void *data) {
+  (void)data;
+  system_exit_error(NULL, str, NULL);
+}
+#endif

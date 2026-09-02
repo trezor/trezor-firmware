@@ -1,4 +1,7 @@
 #![cfg_attr(not(test), no_std)]
+#![feature(custom_test_frameworks)]
+#![reexport_test_harness_main = "test_main"]
+#![no_main]
 
 use core::hint::black_box;
 
@@ -16,6 +19,9 @@ pub mod secret;
 pub mod sha256;
 pub mod sha3;
 pub mod sha512;
+
+#[cfg(test)]
+mod testutil;
 
 /// Error returned by cryptographic operations in this crate.
 #[cfg_attr(feature = "test", derive(core::fmt::Debug))]
