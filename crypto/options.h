@@ -82,11 +82,6 @@
 #define USE_ETHEREUM 0
 #endif
 
-// support NEM operations
-#ifndef USE_NEM
-#define USE_NEM 0
-#endif
-
 // support MONERO operations
 #ifndef USE_MONERO
 #define USE_MONERO 0

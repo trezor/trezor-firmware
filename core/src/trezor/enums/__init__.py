@@ -358,22 +358,6 @@ if TYPE_CHECKING:
         STAGENET = 2
         FAKECHAIN = 3
 
-    class NEMMosaicLevy(IntEnum):
-        MosaicLevy_Absolute = 1
-        MosaicLevy_Percentile = 2
-
-    class NEMSupplyChangeType(IntEnum):
-        SupplyChange_Increase = 1
-        SupplyChange_Decrease = 2
-
-    class NEMModificationType(IntEnum):
-        CosignatoryModification_Add = 1
-        CosignatoryModification_Delete = 2
-
-    class NEMImportanceTransferMode(IntEnum):
-        ImportanceTransfer_Activate = 1
-        ImportanceTransfer_Deactivate = 2
-
     class StellarAssetType(IntEnum):
         NATIVE = 0
         ALPHANUM4 = 1
@@ -620,12 +604,6 @@ if TYPE_CHECKING:
         EthereumSignTypedHash = 470
         EthereumDefinitionRequest = 471
         EthereumDefinitionAck = 472
-        NEMGetAddress = 67
-        NEMAddress = 68
-        NEMSignTx = 69
-        NEMSignedTx = 70
-        NEMDecryptMessage = 75
-        NEMDecryptedMessage = 76
         TezosGetAddress = 150
         TezosAddress = 151
         TezosSignTx = 152
@@ -729,12 +707,6 @@ if TYPE_CHECKING:
         MoneroLiveRefreshStepAck = 555
         MoneroLiveRefreshFinalRequest = 556
         MoneroLiveRefreshFinalAck = 557
-        EosGetPublicKey = 600
-        EosPublicKey = 601
-        EosSignTx = 602
-        EosTxActionRequest = 603
-        EosTxActionAck = 604
-        EosSignedTx = 605
         WebAuthnListResidentCredentials = 800
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802

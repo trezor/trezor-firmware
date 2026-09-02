@@ -55,7 +55,7 @@ ranges as they appear in the individual file headers.
       appears in the source.
 
   Copyright (c) 2017 Saleem Rashid
-      base32.c, base32.h, hasher.c, hasher.h, nem.c, nem.h, rc4.c, rc4.h
+      base32.c, base32.h, hasher.c, hasher.h, rc4.c, rc4.h
 
   Dusan Klinec (2018)
       monero/monero.h, monero/serialize.c, monero/serialize.h, monero/xmr.c,

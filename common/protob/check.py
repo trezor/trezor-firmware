@@ -27,9 +27,7 @@ for fn in sorted(glob(os.path.join(MYDIR, "messages-*.proto"))):
         prefix = filename.group(1).capitalize()
         if prefix in WITHOUT_PREFIX:
             continue
-        if prefix == "Nem":
-            prefix = "NEM"
-        elif prefix == "Webauthn":
+        if prefix == "Webauthn":
             prefix = "WebAuthn"
         elif prefix == "Extapp":
             prefix = "ExtApp"

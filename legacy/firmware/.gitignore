@@ -1,5 +1,4 @@
 coin_info.[ch]
-nem_mosaics.[ch]
 ethereum_definitions_constants.h
 ethereum_networks.c
 ethereum_tokens.c
