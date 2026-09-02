@@ -279,6 +279,13 @@ pm_status_t pm_get_state(pm_state_t* state) {
   state->soc = drv->soc_ceiled;
   state->battery_temp = drv->pmic_data.ntc_temp;
   state->battery_ocv = drv->battery_ocv;
+#ifdef PM_ENABLE_TEMP_CONTROL
+  state->temp_control_active = drv->temp_control_active;
+#else
+  // No thermal controller in this build, so it is never active. Assigned
+  // explicitly because pm_get_state() does not zero the caller's struct.
+  state->temp_control_active = false;
+#endif
 
   irq_unlock(irq_key);
 
