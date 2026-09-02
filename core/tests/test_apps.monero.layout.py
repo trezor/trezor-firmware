@@ -124,6 +124,13 @@ class TestMoneroLayout(unittest.TestCase):
         self.assertEqual(self.shown_payment_ids, [])
         self.assertEqual(self.shown_outputs[0][1], PAYMENT_ID)
 
+    def test_empty_payment_id_is_no_payment_id(self):
+        # an empty field must not reach the output as an integrated address,
+        # nor raise a standalone screen of its own
+        self._with_change(b"", [0])
+        self.assertEqual(self.shown_payment_ids, [])
+        self.assertIsNone(self.shown_outputs[0][1])
+
     # --- honest flows must be unaffected -------------------------------------
 
     def test_integrated_address_shows_id_with_output(self):
@@ -146,6 +153,13 @@ class TestMoneroLayout(unittest.TestCase):
         # the uniformity dummy id carries no information and stays hidden
         self._with_change(layout.DUMMY_PAYMENT_ID, [])
         self.assertEqual(self.shown_payment_ids, [])
+
+    def test_long_payment_id_gets_its_own_screen(self):
+        # 32 bytes is the plaintext form
+        long_id = bytes(range(32))
+        self._with_change(long_id, [])
+        self.assertEqual(self.shown_payment_ids, [long_id])
+        self.assertIsNone(self.shown_outputs[0][1])
 
 
 if __name__ == "__main__":

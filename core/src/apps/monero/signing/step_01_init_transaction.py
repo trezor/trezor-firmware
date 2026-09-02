@@ -57,6 +57,10 @@ async def init_transaction(
     state.progress_total = 4 + 3 * state.input_count + state.output_count
     state.progress_cur = 0
 
+    # Reject a payment id that cannot go into a transaction before the
+    # confirmation renders it into an integrated address
+    _check_payment_id(tsx_data)
+
     # Ask for confirmation
     assert state.creds.network_type is not None
     await layout.require_confirm_transaction(
@@ -324,6 +328,33 @@ def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData) -> None:
     )
     state.key_hmac = crypto_helpers.keccak_2hash(b"hmac" + master_key)
     state.key_enc = crypto_helpers.keccak_2hash(b"enc" + master_key)
+
+
+def _check_payment_id(tsx_data: MoneroTransactionData) -> None:
+    """
+    Reject a payment id that cannot go into a transaction.
+
+    _process_payment_id enforces the same sizes, but it runs after the user has
+    confirmed, and encode_addr appends whatever length it is given -- so unless
+    the id is checked up front, a wrong-length one reaches the trusted display
+    as a malformed integrated address before anything rejects it.
+    """
+    payment_id = tsx_data.payment_id  # local_cache_attribute
+
+    # An empty id is no id at all -- _process_payment_id writes nothing for it,
+    # so it must not be rejected here either
+    if not payment_id:
+        return
+
+    # 8 bytes encrypted, or 32 bytes plaintext
+    if len(payment_id) not in (8, 32):
+        raise ValueError("Payment ID size invalid")
+
+    # An integrated address carries the 8-byte form only -- Monero's
+    # get_account_integrated_address_as_str takes a crypto::hash8, there is no
+    # 32-byte integrated address -- so a long id cannot be embedded in one.
+    if tsx_data.integrated_indices and len(payment_id) != 8:
+        raise ValueError("Integrated payment ID must be 8 bytes")
 
 
 def _process_payment_id(state: State, tsx_data: MoneroTransactionData) -> None:
