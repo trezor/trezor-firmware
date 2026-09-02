@@ -101,8 +101,7 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
 
   // Load the dynamic library from the temporary file
   applet->handle = dlopen(filename, RTLD_NOW);
-  unlink(filename);
-  rmdir(directory);
+
   if (applet->handle == NULL) {
     LOG_ERR("dlopen failed: %s", dlerror());
   }
@@ -120,10 +119,10 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
   ok = systask_push_call(&applet->task, entrypoint, api_getter, 0, 0);
   TSH_CHECK(ok, TS_ENOMEM);
 
-  TSH_RETURN;
-
 cleanup:
-  applet_unload(applet);
+  if (ts_error(TSH_STATUS)) {
+    applet_unload(applet);
+  }
 
   if (filename != NULL) {
     unlink(filename);
