@@ -23,7 +23,10 @@
 
 #include <io/pmic.h>
 #include <io/power_manager.h>
+#ifdef USE_RTC
+// Only for rtc_event_id_t below; every RTC user in this module is USE_RTC-only.
 #include <sys/rtc_scheduler.h>
+#endif
 #include <sys/systimer.h>
 
 #include "../wireless/stwlc38/stwlc38.h"
@@ -148,7 +151,9 @@ typedef struct {
   uint32_t suspend_timestamp;
   uint32_t last_active_timestamp;
   uint32_t time_in_suspend_s;
+#ifdef USE_RTC
   rtc_event_id_t autohibernate_event_id;
+#endif
 
 } pm_driver_t;
 
@@ -181,7 +186,9 @@ void pm_charging_controller(pm_driver_t* drv);
 // Store power manager data to backup RAM
 pm_status_t pm_store_data_to_backup_ram(void);
 
+#ifdef USE_RTC
 // Schedule the RTC wakeup when going into suspend mode.
 // Return false if the driver was not initialized or the RTC timestamp is
 // not available.
 bool pm_schedule_rtc_wakeup(void);
+#endif
