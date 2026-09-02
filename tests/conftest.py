@@ -36,6 +36,7 @@ from trezorlib.debuglink import TrezorTestContext
 from trezorlib.device import apply_settings
 from trezorlib.transport import enumerate_devices, get_transport
 from trezorlib.transport.ble import BleTransport
+from trezorlib.transport.webusb import WebUsbTransport
 
 # register rewrites before importing from local package
 # so that we see details of failed asserts from this module
@@ -62,6 +63,7 @@ if t.TYPE_CHECKING:
 
     from trezorlib._internal.emulator import Emulator
     from trezorlib.client import Session
+    from trezorlib.transport import Transport
 
 
 HERE = Path(__file__).resolve().parent
@@ -200,7 +202,8 @@ def _raw_test_ctx(request: pytest.FixtureRequest) -> TrezorTestContext:
         emu_fixture = request.getfixturevalue("emulator")
         test_ctx = emu_fixture.client
     else:
-        if os.environ.get("TREZOR_BLE") != "1":
+        ble = request.session.config.getoption("ble")
+        if not (os.environ.get("TREZOR_BLE") == "1" or ble):
             BleTransport.ENABLED = False
 
         interact = os.environ.get("INTERACT") == "1"
@@ -209,6 +212,8 @@ def _raw_test_ctx(request: pytest.FixtureRequest) -> TrezorTestContext:
             client_module._DEFAULT_READ_TIMEOUT = 50.0
 
         path = os.environ.get("TREZOR_PATH")
+        if not path and ble:
+            path = "ble:"
         try:
             if path:
                 test_ctx = _test_ctx_from_path(path, interact)
@@ -218,12 +223,34 @@ def _raw_test_ctx(request: pytest.FixtureRequest) -> TrezorTestContext:
             request.session.shouldstop = "Failed to communicate with Trezor"
             raise
 
+        assert not ble or isinstance(test_ctx.transport, BleTransport)
+
     return test_ctx
 
 
-def _test_ctx_from_path(path: str | None, interact: bool) -> TrezorTestContext:
-    transport = get_transport(path)
-    return TrezorTestContext(transport, auto_interact=not interact, force_wipe=True)
+# If the transport is BLE and there is exactly one USB transport, use its DebugLink.
+# Putting it here as I'm not sure if this logic wouldn't cause problems in BleTransport.find_debug.
+def _find_debug_ble(transport: Transport, interact: bool) -> Transport | None:
+    if not isinstance(transport, BleTransport) or interact:
+        return None
+
+    LOG.debug("Using WebUSB DebugLink for BLE device")
+    usb_devices = list(WebUsbTransport.enumerate())
+    if len(usb_devices) != 1:
+        LOG.error(f"Found {len(usb_devices)} USB devices, DebugLink disabled")
+        return None
+    return usb_devices[0].find_debug()
+
+
+def _test_ctx_from_path(path: str, interact: bool) -> TrezorTestContext:
+    prefix_search = path.endswith(":")  # support paths like "ble:"
+    transport = get_transport(path, prefix_search=prefix_search)
+    return TrezorTestContext(
+        transport,
+        auto_interact=not interact,
+        debug_transport=_find_debug_ble(transport, interact),
+        force_wipe=True,
+    )
 
 
 def _find_test_ctx(interact: bool) -> TrezorTestContext:
@@ -423,6 +450,16 @@ def _prepared_test_ctx(
             "  pytest -m 'not sd_card' <test path>"
         )
 
+    ble_marker = request.node.get_closest_marker("ble")
+    if ble_marker and isinstance(_raw_test_ctx.transport, BleTransport):
+        if reason := ble_marker.kwargs.get("skip", False):
+            if not isinstance(reason, str):
+                reason = "no reason"
+            pytest.skip(f"Test not supported over BLE: {reason}")
+
+        if ble_marker.kwargs.get("wipe", False):
+            pytest.skip("Wipe over BLE not implemented yet")
+
     fail_on_gc_leak = not request.config.getoption("ignore_gc_leak")
 
     # First, make sure the device is responsive:
@@ -615,6 +652,12 @@ def pytest_addoption(parser: "Parser") -> None:
         action="store_true",
         default=False,
         help="Issue a warning when GC leak detected (otherwise, fail the test)",
+    )
+    parser.addoption(
+        "--ble",
+        action="store_true",
+        default=False,
+        help="Force tests over BLE transport (with DebugLink over USB)",
     )
 
 

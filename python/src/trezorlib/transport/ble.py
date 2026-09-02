@@ -24,9 +24,9 @@ from dataclasses import dataclass
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 
+from .. import log
 from ..log import DUMP_PACKETS
 from . import Timeout, Transport, TransportException
-from .udp import UdpTransport
 
 if t.TYPE_CHECKING:
     from ..models import TrezorModel
@@ -48,10 +48,16 @@ TREZOR_SERVICE_UUID = "8c000001-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_RX = "8c000002-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_TX = "8c000003-a59b-4d58-a9ad-073df69fa1b1"
 
-SCAN_INTERVAL_SECONDS = 3
+SCAN_INTERVAL_SECONDS = 5
+CONNECT_TIMEOUT_SECONDS = 20
 SHUTDOWN_TIMEOUT_SECONDS = 10
 
 SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
+
+if sys.platform == "darwin":
+    _FULL_LEN = len("ble:00000000-0000-0000-0000-000000000000")
+else:
+    _FULL_LEN = len("ble:00:00:00:00:00:00")
 
 
 class BleTransport(Transport):
@@ -69,8 +75,13 @@ class BleTransport(Transport):
     def get_path(self) -> str:
         return "{}:{}".format(self.PATH_PREFIX, self.device)
 
-    def find_debug(self) -> UdpTransport:
-        return UdpTransport("127.0.0.1:27315")
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> "BleTransport":
+        # short circuit non-prefix search
+        # full-len path should probably avoid scanning and use BleakScanner.find_device_by_address
+        if not prefix_search and len(path) != _FULL_LEN:
+            raise TransportException(f"BLE device not found: {path}")
+        return super().find_by_path(path, prefix_search)
 
     @classmethod
     def enumerate(
@@ -91,16 +102,6 @@ class BleTransport(Transport):
         if len(devices) == 0:
             raise TransportException(f"No BLE device: {path}")
         return devices[0]
-
-    @classmethod
-    def find_by_path(cls, path: str, prefix_search: bool = False) -> BleTransport:
-        if not prefix_search:
-            raise TransportException
-
-        if prefix_search:
-            return super().find_by_path(path, prefix_search)
-        else:
-            raise TransportException(f"No BLE device: {path}")
 
     def _open(self) -> None:
         self.ble_proxy().connect(self.device)
@@ -147,7 +148,9 @@ class BleProxy:
 
         parent_pipe, child_pipe = Pipe()
         self.pipe = parent_pipe
-        self.process = Process(target=BleAsync, args=(child_pipe,), daemon=True)
+        self.process = Process(
+            target=BleAsync, args=(child_pipe, log._STDERR_VERBOSITY), daemon=True
+        )
         self.process.start()
 
         atexit.register(self._shutdown)
@@ -191,7 +194,10 @@ class BleAsync:
     class Shutdown(Exception):
         pass
 
-    def __init__(self, pipe: Connection) -> None:
+    def __init__(self, pipe: Connection, log_verbosity: int | None) -> None:
+        # Logging disabled in the new process, try re-setup if stderr.
+        if log_verbosity is not None:
+            log.enable_debug_output(log_verbosity)
         asyncio.run(self.main(pipe))
 
     async def main(self, pipe: Connection) -> None:
@@ -230,12 +236,13 @@ class BleAsync:
     async def scan(self) -> list[tuple[str, str]]:
         LOG.debug("scanning BLE")
 
-        # NOTE BleakScanner.discover(service_uuids=[TREZOR_SERVICE_UUID]) is broken
-        # problem possibly on the bluez side
-
+        # NOTE: filtering by UUIDs may not work on some systems/environments:
+        #       https://github.com/trezor/trezor-suite/pull/21093
+        # NOTE: filtering by UUIDs make bluez-5.87 crash
         devices = await BleakScanner.discover(
             timeout=SCAN_INTERVAL_SECONDS,
             return_adv=True,
+            service_uuids=[TREZOR_SERVICE_UUID],
         )
 
         # throw away non connected peripherals
@@ -281,7 +288,7 @@ class BleAsync:
         client = BleakClient(
             periph.device,
             services=[TREZOR_SERVICE_UUID],
-            timeout=SCAN_INTERVAL_SECONDS,
+            timeout=CONNECT_TIMEOUT_SECONDS,
             disconnect_callback=disconnect_callback,
         )
         await client.connect()
