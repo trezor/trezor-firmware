@@ -147,7 +147,7 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
     }
 
     lib.add_rust_bindings(|builder| {
-        Ok(builder
+        let mut builder = builder
             .header(format!("{CRYPTO_PATH}/ecdsa.h"))
             .header(format!("{CRYPTO_PATH}/ed25519-donna/ed25519.h"))
             .header(format!("{CRYPTO_PATH}/elligator2.h"))
@@ -155,7 +155,12 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
             .header(format!("{CRYPTO_PATH}/nist256p1.h"))
             .header(format!("{CRYPTO_PATH}/secp256k1.h"))
             .header(format!("{CRYPTO_PATH}/sha2.h"))
-            .header(format!("{CRYPTO_PATH}/sha3.h"))
+            .header(format!("{CRYPTO_PATH}/sha3.h"));
+
+        if cfg!(feature = "secp256k1_zkp") {
+            builder = builder.header(format!("{CRYPTO_PATH}/zkp_context.h"));
+        }
+        Ok(builder
             // curve25519
             .allowlist_function("curve25519_scalarmult")
             .allowlist_function("curve25519_scalarmult_basepoint")
@@ -170,6 +175,7 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
             .allowlist_var("nist256p1")
             .allowlist_function("ecdsa_verify_digest")
             .allowlist_function("ecdsa_recover_pub_from_sig")
+            .allowlist_function("zkp_context_init")
             // ed25519
             .allowlist_type("ed25519_signature")
             .allowlist_type("ed25519_public_key")
