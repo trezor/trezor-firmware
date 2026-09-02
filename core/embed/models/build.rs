@@ -1,4 +1,4 @@
-use xbuild::{CLibrary, Result, bail_unsupported, cargo_out};
+use xbuild::{CLibrary, Result, bail, bail_unsupported, cargo_out};
 
 fn main() -> Result<()> {
     // Emit model identity for dependent build scripts (readable as
@@ -90,6 +90,10 @@ fn main() -> Result<()> {
                 lib.add_flag("-fstack-protector-strong");
             } else {
                 lib.add_flag("-fstack-protector-all");
+            }
+
+            if cfg!(feature = "asan") {
+                bail!("ASAN is not supported in non-emulator build");
             }
 
             if cfg!(feature = "mcu_stm32f4") {

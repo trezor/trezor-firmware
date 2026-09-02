@@ -23,6 +23,7 @@ elf_sections = [".vector_table", ".text", ".data", ".rodata", ".capabilities"]
 # Build options mapped to the cargo features they activate on this project.
 # vcp is intentionally unmapped: the boardloader has no VCP console.
 [build-options]
+asan             = { true = ["asan"] }
 production       = { true = ["production"] }
 bootloader-devel = { true = ["bootloader_devel"] }
 dbg-console      = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }

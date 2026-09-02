@@ -56,6 +56,7 @@ split_part2_sections = [".flash2"]
 
 # xtask build options mapped to the cargo features
 [build-options]
+asan                          = { true = ["asan"] }
 apps                          = { true = ["app_loading"] }
 benchmark                     = { true = ["benchmark"] }
 block-on-vcp                  = { true = ["block_on_vcp"] }
