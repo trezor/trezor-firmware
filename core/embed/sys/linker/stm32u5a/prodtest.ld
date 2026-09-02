@@ -71,7 +71,7 @@ SECTIONS {
   } >AUX1_RAM
 
   /* D003 has no AUX2_RAM, so .buf shares AUX1_RAM with .data/.bss. */
-  .buf : ALIGN(4) {
+  .buf (NOLOAD) : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
     *(.no_dma_buffers*);

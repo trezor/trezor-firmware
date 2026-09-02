@@ -80,7 +80,6 @@ SECTIONS {
   _image_flash_end = LOADADDR(.data) + SIZEOF(.data);
 
   .bss : ALIGN(4) {
-    *(.no_dma_buffers*);
     *(.bss*);
     . = ALIGN(4);
   } >AUX1_RAM
@@ -95,7 +94,9 @@ SECTIONS {
     . = ALIGN(4);
   } >FB2_RAM
 
-  .buf : ALIGN(4) {
+  .buf (NOLOAD) : ALIGN(4) {
+    *(.no_dma_buffers*);
+    . = ALIGN(4);
     *(.buf*);
     . = ALIGN(4);
   } >AUX1_RAM

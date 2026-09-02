@@ -64,9 +64,14 @@ SECTIONS {
   }
 
   .bss : ALIGN(4) {
-    *(.no_dma_buffers*);
-    *(.buf*);
     *(.bss*);
+    . = ALIGN(4);
+  } >MAIN_RAM
+
+  .buf (NOLOAD): ALIGN(4) {
+    *(.no_dma_buffers*);
+    . = ALIGN(4);
+    *(.buf*);
     . = ALIGN(4);
   } >MAIN_RAM
 

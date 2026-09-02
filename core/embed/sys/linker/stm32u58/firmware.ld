@@ -64,8 +64,12 @@ SECTIONS {
   } > AUX1_RAM
 
   .bss : ALIGN(4) {
-    *(.no_dma_buffers*);
     *(.bss*);
+    . = ALIGN(4);
+  } >AUX1_RAM
+
+  .no_dma_buffers (NOLOAD): ALIGN(4) {
+    *(.no_dma_buffers*);
     . = ALIGN(4);
   } >AUX1_RAM
 
@@ -73,7 +77,7 @@ SECTIONS {
     . += 32K; /* Overflow causes UsageFault */
   } >AUX2_RAM
 
-  .buf : ALIGN(4) {
+  .buf (NOLOAD): ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
   } >AUX2_RAM
