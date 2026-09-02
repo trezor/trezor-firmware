@@ -332,9 +332,8 @@ impl PinInput {
 
     /// Adds spaces between characters. Output length is capped at 99 since
     /// PIN_MAX_LEN is 50. Example: "12345" becomes "1 2 3 4 5"
-    /// TODO: Switch to ShortString if and when we can increase its size PR#4531
-    fn space_out_pin(pin: &str) -> String<99> {
-        let mut spaced_out_pin: String<99> = String::new();
+    fn space_out_pin(pin: &str) -> ShortString {
+        let mut spaced_out_pin = ShortString::new();
         for (i, c) in pin.chars().enumerate() {
             unwrap!(spaced_out_pin.push(c));
             if i < pin.len() - 1 {
