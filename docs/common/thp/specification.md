@@ -1302,6 +1302,12 @@ The behavior of the host in the state **HC2** is defined as follows:
 - When the message ThpEndResponse() is received, take the following actions:
     1. Transition to the transport state.
 
+### Notes
+
+The *host_static_pubkey* used in the credential can be different from the one used in the handshake. This is a deliberate choice, as it gives more flexibility to the host.
+
+Example usage: the host uses a randomly generated key to pair with an unknown device, but the static keys used for credentials (known devices) are chosen, e.g., a single key used for all known Trezors, or keys derived from a key hierarchy.
+
 # Other features
 
 ## Channel replacement

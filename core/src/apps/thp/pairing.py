@@ -434,6 +434,14 @@ async def _handle_credential_request(
         app_name=ctx.app_name,
         autoconnect=autoconnect,
     )
+
+    # The `host_static_public_key` used in the credential can be different from the
+    # one used in the handshake. This is a deliberate choice, as it gives more
+    # flexibility to the host.
+    # Example usage: the host uses a randomly generated key to pair with an unknown
+    # device, but the static keys used for credentials (known devices) are chosen,
+    # e.g., a single key used for all known Trezors, or keys derived from a key
+    # hierarchy.
     credential = issue_credential(message.host_static_public_key, credential_metadata)
 
     return await ctx.call_any(
