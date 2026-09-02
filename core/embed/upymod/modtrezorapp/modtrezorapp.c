@@ -218,24 +218,24 @@ static mp_obj_t mod_trezorapp_root_update(mp_obj_t root_packet_obj) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_update_obj,
                                  mod_trezorapp_root_update);
 
-/// def root_is_loaded(ring: int) -> bool:
+/// def root_is_loaded(ring: uint) -> bool:
 ///     """
 ///     Return True if a root-of-trust is present for the specified ring,
 ///     otherwise return False.
 ///     """
 static mp_obj_t mod_trezorapp_root_is_loaded(mp_obj_t ring_obj) {
-  mp_int_t ring = mp_obj_get_int(ring_obj);
+  mp_uint_t ring = mp_obj_get_uint(ring_obj);
   return mp_obj_new_bool(app_root_is_loaded(ring));
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_is_loaded_obj,
                                  mod_trezorapp_root_is_loaded);
 
-/// def root_timestamp(ring: int) -> int:
+/// def root_timestamp(ring: uint) -> int:
 ///     """
 ///     Return the timestamp of the root-of-trust for the specified ring.
 ///     """
 static mp_obj_t mod_trezorapp_root_timestamp(mp_obj_t ring_obj) {
-  mp_int_t ring = mp_obj_get_int(ring_obj);
+  mp_uint_t ring = mp_obj_get_uint(ring_obj);
 
   uint32_t timestamp = 0;
 
@@ -249,7 +249,7 @@ static mp_obj_t mod_trezorapp_root_timestamp(mp_obj_t ring_obj) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_timestamp_obj,
                                  mod_trezorapp_root_timestamp);
 
-/// def app_ring_from_header(header: AnyBytes) -> int:
+/// def app_ring_from_header(header: AnyBytes) -> uint:
 ///     """
 ///     Return the application privilege ring from the provided header.
 ///     """
