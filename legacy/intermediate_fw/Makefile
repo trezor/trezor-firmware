@@ -34,11 +34,9 @@ CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"
 CFLAGS += -DUSE_MONERO=0
 ifneq ($(BITCOIN_ONLY),1)
 CFLAGS += -DUSE_ETHEREUM=1
-CFLAGS += -DUSE_NEM=1
 MAKO_RENDER_FLAG =
 else
 CFLAGS += -DUSE_ETHEREUM=0
-CFLAGS += -DUSE_NEM=0
 MAKO_RENDER_FLAG = --bitcoin-only
 endif
 

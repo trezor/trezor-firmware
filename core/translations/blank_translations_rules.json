@@ -50,16 +50,6 @@
     "description": "Only Delizia and Eckhart have haptic feedback"
   },
   {
-    "prefix": "eos__",
-    "allowedLayouts": [ "Bolt" ],
-    "description": "Only Bolt has EOS support"
-  },
-  {
-    "prefix": "nem__",
-    "allowedLayouts": [ "Bolt" ],
-    "description": "Only Bolt has NEM support"
-  },
-  {
     "prefix": "inputs__",
     "allowedLayouts": [ "Caesar" ],
     "description": "These are used only in Caesar input keyboard methods"

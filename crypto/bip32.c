@@ -43,9 +43,6 @@
 #if USE_KECCAK
 #include "ed25519-donna/ed25519-keccak.h"
 #endif
-#if USE_NEM
-#include "nem.h"
-#endif
 #include "memzero.h"
 
 const curve_info ed25519_info = {
@@ -520,120 +517,6 @@ int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash) {
   memcpy(pubkeyhash, buf + 12, 20);
 
   return 1;
-}
-#endif
-
-#if USE_NEM
-int hdnode_get_nem_address(HDNode *node, uint8_t version, char *address) {
-  if (node->curve != &ed25519_keccak_info) {
-    return 0;
-  }
-
-  if (hdnode_fill_public_key(node) != 0) {
-    return 0;
-  }
-
-  return nem_get_address(&node->public_key[1], version, address);
-}
-
-int hdnode_get_nem_shared_key(const HDNode *node,
-                              const ed25519_public_key peer_public_key,
-                              const uint8_t *salt, ed25519_public_key mul,
-                              uint8_t *shared_key) {
-  if (node->curve != &ed25519_keccak_info) {
-    return 0;
-  }
-
-  // sizeof(ed25519_public_key) == SHA3_256_DIGEST_LENGTH
-  if (mul == NULL) mul = shared_key;
-
-  if (ed25519_scalarmult_keccak(mul, node->private_key, peer_public_key)) {
-    return 0;
-  }
-
-  for (size_t i = 0; i < 32; i++) {
-    shared_key[i] = mul[i] ^ salt[i];
-  }
-
-  keccak_256(shared_key, 32, shared_key);
-  return 1;
-}
-
-int hdnode_nem_encrypt(const HDNode *node, const ed25519_public_key public_key,
-                       const uint8_t *iv_immut, const uint8_t *salt,
-                       const uint8_t *payload, size_t size, uint8_t *buffer) {
-  uint8_t last_block[AES_BLOCK_SIZE] = {0};
-  uint8_t remainder = size % AES_BLOCK_SIZE;
-
-  // Round down to last whole block
-  size -= remainder;
-  // Copy old last block
-  memcpy(last_block, &payload[size], remainder);
-  // Pad new last block with number of missing bytes
-  memset(&last_block[remainder], AES_BLOCK_SIZE - remainder,
-         AES_BLOCK_SIZE - remainder);
-
-  // the IV gets mutated, so we make a copy not to touch the original
-  uint8_t iv[AES_BLOCK_SIZE] = {0};
-  memcpy(iv, iv_immut, AES_BLOCK_SIZE);
-
-  uint8_t shared_key[SHA3_256_DIGEST_LENGTH] = {0};
-  if (!hdnode_get_nem_shared_key(node, public_key, salt, NULL, shared_key)) {
-    return 0;
-  }
-
-  aes_encrypt_ctx ctx = {0};
-
-  int succ = 0;
-  int ret = aes_encrypt_key256(shared_key, &ctx);
-  memzero(shared_key, sizeof(shared_key));
-
-  if (ret != EXIT_SUCCESS) {
-    goto cleanup;
-  }
-
-  if (aes_cbc_encrypt(payload, buffer, size, iv, &ctx) != EXIT_SUCCESS) {
-    goto cleanup;
-  }
-
-  if (aes_cbc_encrypt(last_block, &buffer[size], sizeof(last_block), iv,
-                      &ctx) != EXIT_SUCCESS) {
-    goto cleanup;
-  }
-
-  succ = 1;
-cleanup:
-  memzero(&ctx, sizeof(ctx));
-  return succ;
-}
-
-int hdnode_nem_decrypt(const HDNode *node, const ed25519_public_key public_key,
-                       uint8_t *iv, const uint8_t *salt, const uint8_t *payload,
-                       size_t size, uint8_t *buffer) {
-  uint8_t shared_key[SHA3_256_DIGEST_LENGTH] = {0};
-
-  if (!hdnode_get_nem_shared_key(node, public_key, salt, NULL, shared_key)) {
-    return 0;
-  }
-
-  aes_decrypt_ctx ctx = {0};
-
-  int succ = 0;
-  int ret = aes_decrypt_key256(shared_key, &ctx);
-  memzero(shared_key, sizeof(shared_key));
-
-  if (ret != EXIT_SUCCESS) {
-    goto cleanup;
-  }
-
-  if (aes_cbc_decrypt(payload, buffer, size, iv, &ctx) != EXIT_SUCCESS) {
-    goto cleanup;
-  }
-
-  succ = 1;
-cleanup:
-  memzero(&ctx, sizeof(ctx));
-  return succ;
 }
 #endif
 

@@ -50,13 +50,9 @@ network or token is included in the external definitions. A good place to start 
 to the [tokens](https://github.com/ethereum-lists/tokens) repository, or your EVM chain to the
 [chains](https://github.com/ethereum-lists/chains) repository.
 
-#### `nem`
-
-The file [`nem/nem_mosaics.json`](nem/nem_mosaics.json) describes NEM mosaics.
-
 #### `misc`
 
-Supported coins that are not derived from Bitcoin, Ethereum or NEM are currently grouped
+Supported coins that are not derived from Bitcoin or Ethereum are currently grouped
 and listed in separate file [`misc/misc.json`](misc/misc.json). Each coin must also have
 an icon in `misc/<short>.png`, where `short` is lowercased `shortcut` field from the JSON.
 
@@ -68,7 +64,6 @@ generated from the coin's type and shortcut:
 * for Bitcoin-likes, key is `bitcoin:<shortcut>`
 * for Ethereum networks, key is `eth:<shortcut>:<chain_id>`
 * for ERC20 tokens, key is `erc20:<chain_symbol>:<token_shortcut>`
-* for NEM mosaic, key is `nem:<shortcut>`
 * for others, key is `misc:<shortcut>`
 
 If a token shortcut has a suffix, such as `CAT (BlockCat)`, the whole thing is part

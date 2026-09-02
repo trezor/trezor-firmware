@@ -18,10 +18,8 @@ PATTERNS = (
 
 ALTCOINS = (
     "cardano",
-    "eos",
     "ethereum",
     "monero",
-    "nem",
     "ripple",
     "solana",
     "stellar",

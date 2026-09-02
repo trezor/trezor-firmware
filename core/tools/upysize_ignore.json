@@ -29,15 +29,6 @@
         "src/apps/cardano/helpers/utils.py": [
             "derive_public_key"
         ],
-        "src/apps/eos/helpers.py": [
-            "base58_encode"
-        ],
-        "src/apps/eos/writers.py": [
-            "write_action_undelegate",
-            "write_action_deleteauth",
-            "write_action_unlinkauth",
-            "write_bytes_prefixed"
-        ],
         "src/apps/ethereum/helpers.py": [
             "address_from_bytes",
             "get_type_name"
@@ -100,12 +91,6 @@
         ],
         "src/apps/monero/signing/offloading_keys.py": [
             "hmac_key_txin"
-        ],
-        "src/apps/nem/validators.py": [
-            "validate_network"
-        ],
-        "src/apps/nem/writers.py": [
-            "write_bytes_with_len"
         ],
         "src/apps/common/address_type.py": [
             "tobytes",

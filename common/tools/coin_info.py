@@ -86,9 +86,6 @@ class Coin(TypedDict):
     address_bytes: bytes
     dup_key_nontoken: bool
 
-    # Special NEM fields
-    ticker: str
-
     # Fields that are being created
     unsupported: bool
     duplicate: bool
@@ -145,7 +142,6 @@ class CoinsInfo(dict[str, Coins]):
     `bitcoin` for btc-like coins,
     `eth` for ethereum networks,
     `erc20` for ERC20 tokens,
-    `nem` for NEM mosaics,
     `misc` for other networks.
 
     Accessible as a dict or by attribute: `info["misc"] == info.misc`
@@ -376,19 +372,6 @@ def _load_builtin_erc20_tokens() -> Coins:
     return all_tokens
 
 
-def _load_nem_mosaics() -> Coins:
-    """Loads NEM mosaics from `nem/nem_mosaics.json`"""
-    mosaics: Coins = load_json("nem/nem_mosaics.json")
-    for mosaic in mosaics:
-        shortcut = mosaic["ticker"].strip()
-        mosaic.update(
-            shortcut=shortcut,
-            key=f"nem:{shortcut}",
-            is_testnet=False,
-        )
-    return mosaics
-
-
 def _load_misc() -> Coins:
     """Loads miscellaneous networks from `misc/misc.json`"""
     others: Coins = load_json("misc/misc.json")
@@ -595,14 +578,12 @@ def collect_coin_info() -> CoinsInfo:
     `coins` for btc-like coins,
     `eth` for ethereum networks,
     `erc20` for ERC20 tokens,
-    `nem` for NEM mosaics,
     `misc` for other networks.
     """
     all_coins = CoinsInfo(
         bitcoin=_load_btc_coins(),
         eth=_load_builtin_ethereum_networks(),
         erc20=_load_builtin_erc20_tokens(),
-        nem=_load_nem_mosaics(),
         misc=_load_misc(),
     )
 
@@ -618,9 +599,6 @@ def sort_coin_infos(all_coins: CoinsInfo) -> None:
     for k, coins in all_coins.items():
         if k == "bitcoin":
             coins.sort(key=_btc_sort_key)
-        elif k == "nem":
-            # do not sort nem
-            pass
         elif k == "eth":
             # sort ethereum networks by chain_id
             coins.sort(key=lambda c: c["chain_id"])

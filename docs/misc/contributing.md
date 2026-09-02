@@ -33,8 +33,6 @@ on the type of the asset to be added:
     [ethereum-lists/chains][]
 -   **Ethereum tokens** should be added to the [ethereum-lists/tokens][]
     repository
--   **NEM mosaics** should be added to the
-    [common/defs/nem/nem_mosaics.json][] file
 
 ### Other
 
@@ -50,5 +48,4 @@ cryptocurrencies.**
   [common/defs/bitcoin]: https://github.com/trezor/trezor-firmware/tree/main/common/defs/bitcoin
   [ethereum-lists/chains]: https://github.com/ethereum-lists/chains
   [ethereum-lists/tokens]: https://github.com/ethereum-lists/tokens
-  [common/defs/nem/nem_mosaics.json]: https://github.com/trezor/trezor-firmware/tree/main/common/defs/nem/nem_mosaics.json
   [common/defs/misc/misc.json]: https://github.com/trezor/trezor-firmware/tree/main/common/defs/misc/misc.json

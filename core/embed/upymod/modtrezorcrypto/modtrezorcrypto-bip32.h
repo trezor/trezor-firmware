@@ -26,9 +26,6 @@
 #include "bip39.h"
 #include "curves.h"
 #include "memzero.h"
-#if !BITCOIN_ONLY
-#include "nem.h"
-#endif
 
 /// package: trezorcrypto.bip32
 
@@ -369,81 +366,6 @@ static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_address_obj,
 
 #if !BITCOIN_ONLY
 
-#if USE_NEM
-/// def nem_address(self, network: int) -> str:
-///     """
-///     Compute a NEM address string from the HD node.
-///     """
-static mp_obj_t mod_trezorcrypto_HDNode_nem_address(mp_obj_t self,
-                                                    mp_obj_t network) {
-  mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-
-  uint8_t n = trezor_obj_get_uint8(network);
-
-  vstr_t address = {0};
-  vstr_init_len(&address, NEM_ADDRESS_SIZE);
-  if (!hdnode_get_nem_address(&o->hdnode, n, address.buf)) {
-    vstr_clear(&address);
-    mp_raise_ValueError(MP_ERROR_TEXT("Failed to compute a NEM address"));
-  }
-  address.len = strlen(address.buf);
-  return mp_obj_new_str_from_vstr(&address);
-}
-static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_nem_address_obj,
-                                 mod_trezorcrypto_HDNode_nem_address);
-
-/// def nem_encrypt(
-///     self,
-///     transfer_public_key: AnyBytes,
-///     iv: AnyBytes,
-///     salt: AnyBytes,
-///     payload: AnyBytes,
-/// ) -> bytes:
-///     """
-///     Encrypts payload using the transfer's public key
-///     """
-static mp_obj_t mod_trezorcrypto_HDNode_nem_encrypt(size_t n_args,
-                                                    const mp_obj_t *args) {
-  mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(args[0]);
-
-  mp_buffer_info_t transfer_pk = {0};
-  mp_get_buffer_raise(args[1], &transfer_pk, MP_BUFFER_READ);
-  if (transfer_pk.len != 32) {
-    mp_raise_ValueError(
-        MP_ERROR_TEXT("transfer_public_key has invalid length"));
-  }
-
-  mp_buffer_info_t iv = {0};
-  mp_get_buffer_raise(args[2], &iv, MP_BUFFER_READ);
-  if (iv.len != 16) {
-    mp_raise_ValueError(MP_ERROR_TEXT("iv has invalid length"));
-  }
-  mp_buffer_info_t salt = {0};
-  mp_get_buffer_raise(args[3], &salt, MP_BUFFER_READ);
-  if (salt.len != NEM_SALT_SIZE) {
-    mp_raise_ValueError(MP_ERROR_TEXT("salt has invalid length"));
-  }
-  mp_buffer_info_t payload = {0};
-  mp_get_buffer_raise(args[4], &payload, MP_BUFFER_READ);
-  if (payload.len == 0) {
-    mp_raise_ValueError(MP_ERROR_TEXT("payload is empty"));
-  }
-
-  vstr_t vstr = {0};
-  vstr_init_len(&vstr, NEM_ENCRYPTED_SIZE(payload.len));
-  if (!hdnode_nem_encrypt(
-          &o->hdnode, *(const ed25519_public_key *)transfer_pk.buf, iv.buf,
-          salt.buf, payload.buf, payload.len, (uint8_t *)vstr.buf)) {
-    mp_raise_ValueError(MP_ERROR_TEXT("HDNode nem encrypt failed"));
-  }
-  return mp_obj_new_bytes_from_vstr(&vstr);
-}
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
-    mod_trezorcrypto_HDNode_nem_encrypt_obj, 5, 5,
-    mod_trezorcrypto_HDNode_nem_encrypt);
-
-#endif
-
 /// def ethereum_pubkeyhash(self) -> bytes:
 ///     """
 ///     Compute an Ethereum pubkeyhash (aka address) from the HD node.
@@ -503,12 +425,6 @@ static const mp_rom_map_elem_t mod_trezorcrypto_HDNode_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_address),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_address_obj)},
 #if !BITCOIN_ONLY
-#if USE_NEM
-    {MP_ROM_QSTR(MP_QSTR_nem_address),
-     MP_ROM_PTR(&mod_trezorcrypto_HDNode_nem_address_obj)},
-    {MP_ROM_QSTR(MP_QSTR_nem_encrypt),
-     MP_ROM_PTR(&mod_trezorcrypto_HDNode_nem_encrypt_obj)},
-#endif
     {MP_ROM_QSTR(MP_QSTR_ethereum_pubkeyhash),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj)},
 #endif
