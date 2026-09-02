@@ -104,6 +104,20 @@ async def require_confirm_tx_key(export_key: bool = False) -> None:
     )
 
 
+def _is_hidden_output(
+    outputs: list[MoneroTransactionDestinationEntry],
+    change_idx: int | None,
+    idx: int,
+) -> bool:
+    """
+    Outputs that are not confirmed by the user: the change output, and the
+    zero-amount dummy added to sweep transactions.
+    """
+    if change_idx is not None and idx == change_idx:
+        return True
+    return change_idx is None and outputs[idx].amount == 0 and len(outputs) == 2
+
+
 async def require_confirm_transaction(
     state: State,
     tsx_data: MoneroTransactionData,
@@ -122,20 +136,17 @@ async def require_confirm_transaction(
     if tsx_data.unlock_time is not None and tsx_data.unlock_time != 0:
         await _require_confirm_unlock_time(tsx_data.unlock_time)
 
+    # `or ()` because a locally built message can carry None here
+    integrated_indices = tsx_data.integrated_indices or ()
+
     payment_id_shown = False
 
     for idx, dst in enumerate(outputs):
-        is_change = change_idx is not None and idx == change_idx
-        if is_change:
-            continue  # Change output does not need confirmation
-        is_dummy = change_idx is None and dst.amount == 0 and len(outputs) == 2
-        if is_dummy:
-            continue  # Dummy output does not need confirmation
-        if tsx_data.integrated_indices and idx in tsx_data.integrated_indices:
-            cur_payment = payment_id
-            payment_id_shown = bool(payment_id)
-        else:
-            cur_payment = None
+        if _is_hidden_output(outputs, change_idx, idx):
+            continue
+        cur_payment = payment_id if idx in integrated_indices else None
+        if cur_payment:
+            payment_id_shown = True
         await _require_confirm_output(
             dst, network_type, cur_payment, chunkify=bool(tsx_data.chunkify)
         )

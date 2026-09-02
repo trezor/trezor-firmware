@@ -93,7 +93,9 @@ class TestMoneroLayout(unittest.TestCase):
 
     def _with_dummy(self, payment_id, integrated_indices):
         """One real output at index 0, zero-amount dummy at index 1, no change."""
-        self._confirm([_dst(10, 100), _dst(20, 0)], None, payment_id, integrated_indices)
+        self._confirm(
+            [_dst(10, 100), _dst(20, 0)], None, payment_id, integrated_indices
+        )
 
     # --- the reported bypass -------------------------------------------------
 
