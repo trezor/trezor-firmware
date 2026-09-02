@@ -22,6 +22,7 @@ trezor_lib.workspace = true
 # Build options
 # --------------------------------------------------------------------------
 
+asan = ["models/asan"]
 bootloader_devel = ["sec/bootloader_devel"]
 clippy = ["trezor_lib/clippy"]
 dbg_console_swo = ["dbg_console", "sys/dbg_console_swo"]
