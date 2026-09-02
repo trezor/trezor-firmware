@@ -23,7 +23,7 @@ The charger is a capability flag rather than a fifth directory, because a PMIC w
 
 ## 2. Directory layout
 
-```
+```text
 power_manager/
   inc/io/                   public headers: power_manager.h, pmic.h
   power_manager_poll.{c,h}  shared poll/event plumbing
@@ -53,7 +53,7 @@ wireless   = "io/wireless_stwlc38"
 
 Each value is a crate-qualified Cargo feature; the keys are only labels. The features reach every project whose `uses` list includes `power_manager`.
 
-For each selectable axis, `build.rs` collects the enabled implementations into a table and requires exactly one. A missing, mistyped, or duplicated selection is therefore a build error that names the axis, instead of a silent fallback or a duplicate-symbol link failure. Each table entry carries its own source list, so a half-wired implementation cannot fall through to another one.
+PMIC and fuel gauge are *required* axes: for each, `build.rs` collects the enabled implementations into a table and requires exactly one, so a missing, mistyped, or duplicated selection is a build error that names the axis instead of a silent fallback or a duplicate-symbol link failure. Each table entry carries its own source list, so a half-wired implementation cannot fall through to another one. Wireless is *optional* — zero or one — so a board that omits the `wireless` key simply leaves `USE_WIRELESS_CHARGER` unset.
 
 The module exposes its configuration to C through these defines:
 
