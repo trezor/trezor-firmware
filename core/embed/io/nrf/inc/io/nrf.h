@@ -187,12 +187,14 @@ bool nrf_update_required(const uint8_t *image_ptr, size_t image_len);
  */
 bool nrf_update(const uint8_t *image_ptr, size_t image_len);
 
+#ifdef USE_NRF_AUTH
 /**
  * @brief Authenticate pairing of nRF chip with Trezor
  *
  * @return true if nrf chip is properly paired
  */
 bool nrf_authenticate(void);
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // TEST-only functions

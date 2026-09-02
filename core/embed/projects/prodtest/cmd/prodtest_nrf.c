@@ -82,6 +82,7 @@ static void prodtest_nrf_update(cli_t* cli) {
   binary_update(cli, prodtest_nrf_update_finalize);
 }
 
+#ifdef USE_NRF_AUTH
 static void prodtest_nrf_pair(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -120,6 +121,7 @@ static void prodtest_nrf_verify_pairing(cli_t* cli) {
               "Pairing verification failed.");
   }
 }
+#endif  // USE_NRF_AUTH
 
 // clang-format off
 
@@ -144,6 +146,8 @@ PRODTEST_CLI_CMD(
   .args = "<phase> <hex-data>"
   );
 
+#ifdef USE_NRF_AUTH
+
 PRODTEST_CLI_CMD(
   .name = "nrf-pair",
   .func = prodtest_nrf_pair,
@@ -157,5 +161,7 @@ PRODTEST_CLI_CMD(
   .info = "Verify nRF pairing",
   .args = ""
 );
+
+#endif  // USE_NRF_AUTH
 
 #endif

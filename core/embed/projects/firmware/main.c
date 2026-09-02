@@ -112,7 +112,7 @@ int main_func(uint32_t cmd, void *arg) {
   }
 #endif
 
-#ifdef USE_NRF
+#ifdef USE_NRF_AUTH
 #if PRODUCTION
   if (!nrf_authenticate()) {
     error_shutdown("Bluetooth authentication failed");

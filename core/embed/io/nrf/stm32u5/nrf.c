@@ -545,6 +545,7 @@ bool nrf_system_off(void) {
   return true;
 }
 
+#ifdef USE_NRF_AUTH
 bool nrf_authenticate(void) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {
@@ -591,5 +592,6 @@ bool nrf_authenticate(void) {
 
   return false;
 }
+#endif  // USE_NRF_AUTH
 
 #endif

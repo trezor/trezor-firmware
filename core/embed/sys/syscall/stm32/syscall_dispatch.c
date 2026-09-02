@@ -813,9 +813,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = nrf_get_version();
     } break;
 
+#ifdef USE_NRF_AUTH
     case SYSCALL_NRF_AUTHENTICATE: {
       args[0] = nrf_authenticate();
     } break;
+#endif
 
     case SYSCALL_NRF_REBOOT: {
       nrf_reboot();
