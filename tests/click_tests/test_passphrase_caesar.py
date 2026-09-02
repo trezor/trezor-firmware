@@ -215,7 +215,7 @@ def test_passphrase_input_over_limit(device_handler: "BackgroundDeviceHandler"):
         # First `len(CommonPass.AAA_LIMIT)` chars
         input_passphrase(debug, CommonPass.AAA_LONGER[:-1])
         layout = debug.read_layout()
-        assert CommonPass.AAA_LONGER[:-1] in layout.passphrase()
+        assert CommonPass.AAA_LONGER[:-1] == layout.passphrase()
 
         show_passphrase(debug)
 
@@ -224,8 +224,8 @@ def test_passphrase_input_over_limit(device_handler: "BackgroundDeviceHandler"):
 
         # No change
         layout = debug.read_layout()
-        assert CommonPass.AAA_LONGER[:-1] in layout.passphrase()
-        assert CommonPass.AAA_LONGER not in layout.passphrase()
+        assert CommonPass.AAA_LONGER[:-1] == layout.passphrase()
+        assert CommonPass.AAA_LONGER != layout.passphrase()
 
         show_passphrase(debug)
         enter_passphrase(debug)
