@@ -195,14 +195,9 @@ static secbool boot_sequence(void) {
 
   boot_command_t cmd = bootargs_get_command();
 
-  bool turn_on =
-      (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
-       cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_WIPE ||
-       cmd == BOOT_COMMAND_STOP_AND_WAIT);
-
-  if (cmd != BOOT_COMMAND_POWER_OFF) {
-    turn_on = true;
-  }
+  // Turns on unless the command is power off or unless the power button is
+  // held down.
+  bool turn_on = (cmd != BOOT_COMMAND_POWER_OFF);
 
   if (button_is_down(BTN_POWER)) {
     turn_on = false;
