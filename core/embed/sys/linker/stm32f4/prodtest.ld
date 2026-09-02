@@ -74,6 +74,13 @@ SECTIONS {
     . = ALIGN(4);
   } >AUX1_RAM
 
+  .buf (NOLOAD) : ALIGN(4) {
+    *(.no_dma_buffers*);
+    . = ALIGN(4);
+    *(.buf*);
+    . = ALIGN(4);
+  } >AUX1_RAM
+
   .fb : ALIGN(4) {
     *(.fb1*);
     . = ALIGN(4);

@@ -75,7 +75,7 @@ SECTIONS {
     . = ABSOLUTE(ORIGIN(AUX1_RAM) + LENGTH(AUX1_RAM)); /* this explicitly sets the end of the heap */
   } >AUX1_RAM
 
-  .data_ccm : ALIGN(4) {
+  .data_ccm (NOLOAD) : ALIGN(4) {
     *(.no_dma_buffers*);
     . = ALIGN(4);
   } >AUX2_RAM

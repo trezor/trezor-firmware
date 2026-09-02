@@ -53,7 +53,7 @@ SECTIONS {
     . = ALIGN(4);
   } >MAIN_RAM
 
-  .buf : ALIGN(4) {
+  .buf (NOLOAD): ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
   } >AUX1_RAM
