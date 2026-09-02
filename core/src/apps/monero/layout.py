@@ -122,6 +122,8 @@ async def require_confirm_transaction(
     if tsx_data.unlock_time is not None and tsx_data.unlock_time != 0:
         await _require_confirm_unlock_time(tsx_data.unlock_time)
 
+    payment_id_shown = False
+
     for idx, dst in enumerate(outputs):
         is_change = change_idx is not None and idx == change_idx
         if is_change:
@@ -131,17 +133,14 @@ async def require_confirm_transaction(
             continue  # Dummy output does not need confirmation
         if tsx_data.integrated_indices and idx in tsx_data.integrated_indices:
             cur_payment = payment_id
+            payment_id_shown = bool(payment_id)
         else:
             cur_payment = None
         await _require_confirm_output(
             dst, network_type, cur_payment, chunkify=bool(tsx_data.chunkify)
         )
 
-    if (
-        payment_id
-        and not tsx_data.integrated_indices
-        and payment_id != DUMMY_PAYMENT_ID
-    ):
+    if payment_id and not payment_id_shown and payment_id != DUMMY_PAYMENT_ID:
         await _require_confirm_payment_id(payment_id)
 
     assert tsx_data.fee is not None
