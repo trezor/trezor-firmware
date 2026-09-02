@@ -276,7 +276,7 @@ cleanup:
 
 // Callback invoked when applet is unloaded
 static void unload_cb(applet_t* applet) {
-  mpu_set_active_applet(&applet->layout);
+  mpu_set_active_applet(&applet->layout, false);
 
   // Clear RW segment, stack and the heap to remove any sensitive information
   // before freeing the memory
@@ -501,7 +501,7 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
   };
 
   // Enable access to applet memory regions
-  mpu_set_active_applet(&applet->layout);
+  mpu_set_active_applet(&applet->layout, false);
 
   // Initialize the applet task
   bool ok = systask_init(&applet->task, map.stack_p_addr, map.stack_size,

@@ -30,7 +30,10 @@ typedef struct applet applet_t;
 
 /** Applet privileges */
 typedef struct {
-  bool assets_area_access;
+  // Applet is allowed to access the active framebuffer
+  bool framebuffer_access;
+  // Applet is allowed to use any syscall
+  bool unlimited_syscalls;
 } applet_privileges_t;
 
 /** Callback called when an applet is unloaded */
@@ -120,5 +123,15 @@ void applet_set_heap(applet_t* applet, void* heap_ptr, size_t heap_size);
  * @return TS_OK on success, or an error code on failure.
  */
 ts_t applet_get_heap(applet_t* applet, void** heap_ptr, size_t* heap_size);
+
+/**
+ * @brief Terminates the applet task with a fatal error message
+ * @param applet Pointer to the applet to terminate.
+ * @param message Error message to display.
+ * @param file Source file where the error occurred.
+ * @param line Line number in the source file where the error occurred.
+ */
+void applet_exit_fatal(applet_t* applet, const char* message, const char* file,
+                       int line);
 
 #endif  // USE_APPLETS

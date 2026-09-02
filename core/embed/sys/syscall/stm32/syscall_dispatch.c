@@ -94,10 +94,50 @@
 #include "syscall_internal.h"
 #include "syscall_verifiers.h"
 
+static inline bool syscall_is_allowed(const applet_t *applet,
+                                      uint32_t syscall) {
+  if (applet == NULL) {
+    return false;
+  }
+
+  if (applet->privileges.unlimited_syscalls) {
+    return true;
+  }
+
+  // Applets without the `unlimited_syscalls` privilege may only
+  // invoke the syscalls listed below - the subset exposed through
+  // `trezor_api_v1_t`. Keep this list in sync with trezor_api_v1.h.
+  switch (syscall) {
+    case SYSCALL_SYSTEM_EXIT:
+    case SYSCALL_SYSTEM_EXIT_ERROR:
+    case SYSCALL_SYSTEM_EXIT_FATAL:
+    case SYSCALL_SYSTICK_MS:
+    case SYSCALL_SYSEVENTS_POLL:
+    case SYSCALL_SYSLOG_START_RECORD:
+    case SYSCALL_SYSLOG_WRITE_CHUNK:
+    case SYSCALL_IPC_REGISTER:
+    case SYSCALL_IPC_UNREGISTER:
+    case SYSCALL_IPC_TRY_RECEIVE:
+    case SYSCALL_IPC_FREE_MESSAGE:
+    case SYSCALL_IPC_SEND:
+    case SYSCALL_APP_GET_HEAP:
+      return true;
+  }
+
+  return false;
+}
+
 __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
                                                        uint32_t syscall,
-                                                       void *applet) {
-  syscall_set_context((applet_t *)applet);
+                                                       void *applet_ptr) {
+  applet_t *applet = (applet_t *)applet_ptr;
+
+  syscall_set_context(applet);
+
+  if (!syscall_is_allowed(applet, syscall)) {
+    applet_exit_fatal(applet, "Forbidden syscall", __FILE_NAME__, __LINE__);
+    return;
+  }
 
   switch (syscall) {
     case SYSCALL_RETURN_FROM_CALLBACK: {
@@ -1076,7 +1116,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
     default:
-      system_exit_fatal("Invalid syscall", __FILE_NAME__, __LINE__);
+      applet_exit_fatal(applet, "Invalid syscall", __FILE_NAME__, __LINE__);
       break;
   }
 }
