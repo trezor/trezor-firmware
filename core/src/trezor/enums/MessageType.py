@@ -158,12 +158,6 @@ if not utils.BITCOIN_ONLY:
     EthereumSignTypedHash = 470
     EthereumDefinitionRequest = 471
     EthereumDefinitionAck = 472
-    NEMGetAddress = 67
-    NEMAddress = 68
-    NEMSignTx = 69
-    NEMSignedTx = 70
-    NEMDecryptMessage = 75
-    NEMDecryptedMessage = 76
     TezosGetAddress = 150
     TezosAddress = 151
     TezosSignTx = 152
@@ -267,12 +261,6 @@ if not utils.BITCOIN_ONLY:
     MoneroLiveRefreshStepAck = 555
     MoneroLiveRefreshFinalRequest = 556
     MoneroLiveRefreshFinalAck = 557
-    EosGetPublicKey = 600
-    EosPublicKey = 601
-    EosSignTx = 602
-    EosTxActionRequest = 603
-    EosTxActionAck = 604
-    EosSignedTx = 605
     WebAuthnListResidentCredentials = 800
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802

@@ -26,7 +26,6 @@
 #include "messages-debug.pb.h"
 #include "messages-ethereum.pb.h"
 #include "messages-management.pb.h"
-#include "messages-nem.pb.h"
 #include "messages-stellar.pb.h"
 #include "messages.pb.h"
 
@@ -115,14 +114,6 @@ void fsm_msgEthereumTxAck(const EthereumTxAck *msg);
 void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg);
 void fsm_msgEthereumVerifyMessage(const EthereumVerifyMessage *msg);
 void fsm_msgEthereumSignTypedHash(const EthereumSignTypedHash *msg);
-
-// nem
-void fsm_msgNEMGetAddress(
-    NEMGetAddress *msg);  // not const because we mutate msg->network
-void fsm_msgNEMSignTx(
-    NEMSignTx *msg);  // not const because we mutate msg->network
-void fsm_msgNEMDecryptMessage(
-    NEMDecryptMessage *msg);  // not const because we mutate msg->payload
 
 // stellar
 void fsm_msgStellarGetAddress(const StellarGetAddress *msg);

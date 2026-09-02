@@ -57,10 +57,8 @@ ethereum = []
 
 # Just bindings to the Trezor protobufs
 cardano = []
-eos = []
 evolu = []
 monero = []
-nem = []
 nostr = []
 ripple = []
 solana = []

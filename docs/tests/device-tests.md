@@ -41,8 +41,8 @@ The tests are randomized using the [pytest-random-order] plugin. The random seed
 If you only want to run a particular test, pick it with `-k <keyword>` or `-m <marker>`:
 
 ```sh
-pytest -k nem      # only runs tests that have "nem" in the name
-pytest -k "nem or stellar"  # only runs tests that have "nem" or "stellar" in the name
+pytest -k ripple   # only runs tests that have "ripple" in the name
+pytest -k "ripple or stellar"  # only runs tests that have "ripple" or "stellar" in the name
 pytest -m stellar  # only runs tests marked with @pytest.mark.stellar
 ```
 

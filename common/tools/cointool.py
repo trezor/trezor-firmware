@@ -147,11 +147,9 @@ MAKO_FILTERS = {
 
 ALTCOIN_PREFIXES = (
     "cardano",
-    "eos",
     "ethereum",
     "fido",
     "monero",
-    "nem",
     "nostr",
     "ripple",
     "solana",
@@ -646,8 +644,7 @@ def check(backend: bool, icons: bool) -> None:
     missing or invalid icons, backend responses, and uniform key information --
     i.e., that all coins of the same type have the same fields in their JSON data.
 
-    Uniformity check ignores NEM mosaics and ERC20 tokens, where non-uniformity is
-    expected.
+    Uniformity check ignores ERC20 tokens, where non-uniformity is expected.
 
     All shortcut collisions are shown, including colliding ERC20 tokens.
 
@@ -711,7 +708,7 @@ def check(backend: bool, icons: bool) -> None:
 
     print("Checking key uniformity...")
     for cointype, coinlist in defs.items():
-        if cointype in ("erc20", "nem"):
+        if cointype == "erc20":
             continue
         if not check_key_uniformity(coinlist):
             all_checks_passed = False
@@ -727,7 +724,7 @@ def check(backend: bool, icons: bool) -> None:
         print("Everything is OK.")
 
 
-type_choice = click.Choice(["bitcoin", "eth", "erc20", "nem", "misc"])
+type_choice = click.Choice(["bitcoin", "eth", "erc20", "misc"])
 device_choice = click.Choice(["connect", "suite", "T1B1", "T2T1", "T2B1"])
 
 
@@ -740,7 +737,7 @@ device_choice = click.Choice(["connect", "suite", "T1B1", "T2T1", "T2B1"])
 @click.option("-i", "--include", metavar="FIELD", multiple=True, help="Include only these fields (-i shortcut -i name)")
 @click.option("-e", "--exclude", metavar="FIELD", multiple=True, help="Exclude these fields (-e blockchain_link)")
 @click.option("-I", "--include-type", metavar="TYPE", multiple=True, type=type_choice, help="Include only these categories (-I bitcoin -I erc20)")
-@click.option("-E", "--exclude-type", metavar="TYPE", multiple=True, type=type_choice, help="Exclude these categories (-E nem -E misc)")
+@click.option("-E", "--exclude-type", metavar="TYPE", multiple=True, type=type_choice, help="Exclude these categories (-E erc20 -E misc)")
 @click.option("-f", "--filter", metavar="FIELD=FILTER", multiple=True, help="Include only coins that match a filter (-f taproot=true -f maintainer='*stick*')")
 @click.option("-F", "--filter-exclude", metavar="FIELD=FILTER", multiple=True, help="Exclude coins that match a filter (-F 'blockbook=[]' -F 'slip44=*')")
 @click.option("-t", "--exclude-tokens", is_flag=True, help="Exclude ERC20 tokens. Equivalent to '-E erc20'")
@@ -767,7 +764,7 @@ def dump(
     By default prints to stdout, specify an output file with '-o file.json'.
 
     This file is structured the same as the internal data. That is, top-level object
-    is a dict with keys: 'bitcoin', 'eth', 'erc20', 'nem' and 'misc'. Value for each
+    is a dict with keys: 'bitcoin', 'eth', 'erc20' and 'misc'. Value for each
     key is a list of dicts, each describing a known coin.
 
     If '--list' is specified, the top-level object is instead a flat list of coins.
