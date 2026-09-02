@@ -139,7 +139,7 @@ unsafe extern "C" fn screen_boot(
         warning,
         vendor_str.as_ascii_str(),
         version,
-        vendor_img.as_slice().unwrap_or_default(),
+        vendor_img.as_slice(),
         wait,
     )
 }
