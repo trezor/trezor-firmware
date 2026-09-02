@@ -64,10 +64,7 @@ unsafe extern "C" fn smp_upload_app_image(
     let data = unsafe { CSlice::from_ptr_and_len(data, len) };
     let image_hash = unsafe { CSlice::from_ptr_and_len(image_hash, image_hash_len) };
 
-    upload::upload_image(
-        data.as_slice().unwrap_or_default(),
-        image_hash.as_slice().unwrap_or_default(),
-    )
+    upload::upload_image(data.as_slice(), image_hash.as_slice())
 }
 
 #[unsafe(no_mangle)]
