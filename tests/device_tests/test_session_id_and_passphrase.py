@@ -20,7 +20,7 @@ import random
 
 import pytest
 
-from trezorlib import device, exceptions, messages
+from trezorlib import device, exceptions, messages, models
 from trezorlib.debuglink import LayoutType, TrezorTestContext
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import FailureType, SafetyCheckLevel
@@ -401,6 +401,7 @@ def test_passphrase_length(test_ctx: TrezorTestContext):
             assert e.code == FailureType.DataError
 
     max_size = test_ctx.features.max_passphrase_len
+    assert max_size == (50 if test_ctx.model in models.LEGACY_MODELS else 128)
 
     # the exact limit (N) should work
     call(passphrase="A" * max_size, expected_result=True)
