@@ -9,7 +9,7 @@
 #define PWR_ON_PIN GPIO_PIN_12
 #define PWR_ON_CLK_EN __HAL_RCC_GPIOD_CLK_ENABLE
 
-// Power button (active-low, internal pull-up). 
+// Power button (active-low, internal pull-up).
 #define BTN_POWER_PORT GPIOA
 #define BTN_POWER_PIN GPIO_PIN_0
 #define BTN_POWER_CLK_ENA __HAL_RCC_GPIOA_CLK_ENABLE
