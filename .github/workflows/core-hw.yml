@@ -98,7 +98,7 @@ jobs:
       - run: |
           nix-shell --run "uv run trezorctl list"
           nix-shell --run "uv run trezorctl get-features"
-        if: matrix.model != 'T3W1'  # gets stuck on models with THP
+        if: matrix.model != 'T3W1' && matrix.model != 'T3T1'  # gets stuck on models with THP
       - run: |
           nix-shell --arg hardwareTest true --run "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
           nix-shell --run "uv run pytest -v --verbose-log-file pytest.log tests/device_tests $TESTOPTS"
