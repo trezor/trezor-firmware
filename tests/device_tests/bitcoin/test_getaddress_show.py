@@ -29,25 +29,29 @@ from ...input_flows import (
 )
 
 VECTORS = (  # path, script_type, address
-    (
+    pytest.param(
         "m/44h/0h/12h/0/0",
         messages.InputScriptType.SPENDADDRESS,
         "1FM6Kz3oT3GoGv65jNpU8AFFun8nHAXrPk",
+        id="m/44h/0h/12h/0/0",
     ),
-    (
+    pytest.param(
         "m/49h/0h/12h/0/0",
         messages.InputScriptType.SPENDP2SHWITNESS,
         "3HfEUkuwmtZ87XzowkiD5nMp5Q3hqKXZ2i",
+        id="m/49h/0h/12h/0/0",
     ),
-    (
+    pytest.param(
         "m/84h/0h/12h/0/0",
         messages.InputScriptType.SPENDWITNESS,
         "bc1qduvap743hcl7twn8u6f9l0u8y7x83965xy0raj",
+        id="m/84h/0h/12h/0/0",
     ),
-    (
+    pytest.param(
         "m/86h/0h/12h/0/0",
         messages.InputScriptType.SPENDTAPROOT,
         "bc1pnzsh9t0n0vjanwgkuf9cyrp6j6lhfe63xaekuu7qxkse93vkyvgqxn4hff",
+        id="m/86h/0h/12h/0/0",
     ),
 )
 
@@ -175,7 +179,7 @@ def test_show_multisig_3(session: Session):
 
 
 VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_magic
-    (
+    pytest.param(
         messages.InputScriptType.SPENDMULTISIG,
         0,
         "33TU5DyVi2kFSGQUfmZxNHgPDPqruwdesY",
@@ -185,8 +189,9 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
             "xpub6F6Tq7sVLDrhuV3SpvsVKrKofF6Hx7oKxWLFkN6dbepuMhuYueKUnQo7E972GJyeRHqPKu44V1C9zBL6KW47GXjuprhbNrPQahWAFKoL2rN",
         ],
         False,
+        id="SPENDMULTISIG-bip48_0h-native_xpub_magic",
     ),
-    (
+    pytest.param(
         messages.InputScriptType.SPENDMULTISIG,
         0,
         "33TU5DyVi2kFSGQUfmZxNHgPDPqruwdesY",
@@ -196,8 +201,9 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
             "xpub6F6Tq7sVLDrhuV3SpvsVKrKofF6Hx7oKxWLFkN6dbepuMhuYueKUnQo7E972GJyeRHqPKu44V1C9zBL6KW47GXjuprhbNrPQahWAFKoL2rN",
         ],
         True,
+        id="SPENDMULTISIG-bip48_0h-ignore_xpub_magic",
     ),
-    (
+    pytest.param(
         messages.InputScriptType.SPENDP2SHWITNESS,
         1,
         "3PwoNRb1v7HxofcH6xfiq52nFrDarsn1ap",
@@ -207,8 +213,9 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
             "Ypub6kppG2Gr3rxZChPFhkMdPdLChewkPwLybPirJGBcJW1mRXeWdWvXLRP7xUcjJgTiGEQcJPKu8PTQMTtLXeiEjP7N2KGpamQnGUvBikJZvvP",
         ],
         False,
+        id="SPENDP2SHWITNESS-bip48_1h-native_xpub_magic",
     ),
-    (
+    pytest.param(
         messages.InputScriptType.SPENDP2SHWITNESS,
         1,
         "3PwoNRb1v7HxofcH6xfiq52nFrDarsn1ap",
@@ -218,8 +225,9 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
             "xpub6F6Tq7sVLDrhvq2kvj72MTttotm3ExftN1Yxbc2BYioUkFGNcTNgdEs48ZhfkLatd8DpgKjDnWiMM1f1Wj9GnfK6KWTzbT8J72afkGf7Y9T",
         ],
         True,
+        id="SPENDP2SHWITNESS-bip48_1h-ignore_xpub_magic",
     ),
-    (
+    pytest.param(
         messages.InputScriptType.SPENDWITNESS,
         2,
         "bc1qqn9s63wly66rhzyz36hwzsa83augj5lve3ucqk5cpt5yvvze5ctsdfcg88",
@@ -229,8 +237,9 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
             "Zpub75f5ZgwmCYW37REirFNaE8DBg9qKJznqD498DsTAbX89Lk6tA98huCGM29mHAhwYTo1PSbWLQHXvsmMhDB8W9dFt3Eb2o6hT7HLDrcPebM5",
         ],
         False,
+        id="SPENDWITNESS-bip48_2h-native_xpub_magic",
     ),
-    (
+    pytest.param(
         messages.InputScriptType.SPENDWITNESS,
         2,
         "bc1qqn9s63wly66rhzyz36hwzsa83augj5lve3ucqk5cpt5yvvze5ctsdfcg88",
@@ -240,6 +249,7 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
             "xpub6F6Tq7sVLDrhzFh7EsLLysgNcRWADQ8F4ZT1jpPrTjXycMuWtRRJZx69B2tdcTQoR3ho54K6bkSKz2WoUZ9XQfn1U65nDsbUg6w4VZ5HWdA",
         ],
         True,
+        id="SPENDWITNESS-bip48_2h-ignore_xpub_magic",
     ),
 )
 

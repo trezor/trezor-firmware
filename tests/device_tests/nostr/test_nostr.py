@@ -43,10 +43,12 @@ VECTORS = [
     pytest.param(
         LEAD_MONKEY_PUBKEY_HEX,
         marks=pytest.mark.setup_client(mnemonic=LEAD_MONKEY_MNEMONIC),
+        id="lead_monkey",
     ),
     pytest.param(
         WHAT_BLEAK_PUBKEY_HEX,
         marks=pytest.mark.setup_client(mnemonic=WHAT_BLEAK_MNEMONIC),
+        id="what_bleak",
     ),
 ]
 
@@ -123,7 +125,7 @@ def test_get_pubkey(session: Session, pubkey_hex: str):
 
 
 @pytest.mark.parametrize("pubkey_hex", VECTORS)
-@pytest.mark.parametrize("event", TEST_EVENTS)
+@pytest.mark.parametrize("event", TEST_EVENTS, ids=("ascii", "unicode_and_escapes"))
 def test_sign_event(session: Session, pubkey_hex: str, event: dict):
     response = nostr.sign_event(session, event_to_pb(event))
 

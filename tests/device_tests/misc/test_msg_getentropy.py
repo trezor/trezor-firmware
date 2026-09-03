@@ -22,8 +22,8 @@ from trezorlib import messages as m
 from trezorlib import misc
 from trezorlib.debuglink import DebugSession as Session
 
-ENTROPY_LENGTHS_POW2 = [2**l for l in range(10)]
-ENTROPY_LENGTHS_POW2_1 = [2**l + 1 for l in range(10)]
+ENTROPY_LENGTHS_POW2 = [pytest.param(2**l, id=f"2^{l}") for l in range(10)]
+ENTROPY_LENGTHS_POW2_1 = [pytest.param(2**l + 1, id=f"2^{l}+1") for l in range(10)]
 
 ENTROPY_LENGTHS = ENTROPY_LENGTHS_POW2 + ENTROPY_LENGTHS_POW2_1
 

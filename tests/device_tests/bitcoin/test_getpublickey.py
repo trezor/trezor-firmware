@@ -25,47 +25,54 @@ from ... import bip32
 from ...input_flows import InputFlowShowXpubQRCode
 
 VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
-    (
+    pytest.param(
         "Bitcoin",
         0x0488B21E,
         parse_path("m/44h/0h/0h"),
         "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy",
+        id="Bitcoin-m/44h/0h/0h",
     ),
-    (
+    pytest.param(
         "Bitcoin",
         0x0488B21E,
         parse_path("m/44h/0h/10h"),
         "xpub6BiVtCpG9fQQR6cSuFeDaSvCDgNvNme499JUGX4RHDiZVWwZy9NwNieWKXHLe8XRbdrEmY87aqztBCbRJkXWV7VJB96XBT5cpkqYMHwvLWB",
+        id="Bitcoin-m/44h/0h/10h",
     ),
-    (
+    pytest.param(
         "Bitcoin",
         0x0488B21E,
         parse_path("m/44h/0h/0h/0/0"),
         "xpub6FVDRC1jiWNTuT3embehwSZ1buxRDyZGbTakVCkBr6w2LwpERmYqXyvtrLeJX9hqzLaucS3qJXGekeFsSVCELkbgepp7FVGeH5BYekEgT9x",
+        id="Bitcoin-m/44h/0h/0h/0/0",
     ),
-    (
+    pytest.param(
         "Bitcoin",
         0x0488B21E,
         parse_path("m/44h/0h/10h/1/100"),
         "xpub6GhTNegKCjTqjYS4HNkPhXHXHNZV2cPC38N7HbpUKexXXuTkjKPnijqKTB7yXidP4JtTUWTuWPTt6P55xi91NPgUp51BnqYzYdNhho4y5j8",
+        id="Bitcoin-m/44h/0h/10h/1/100",
     ),
-    (
+    pytest.param(
         "Testnet",
         0x043587CF,
         parse_path("m/44h/1h/0h"),
         "tpubDDKn3FtHc74CaRrRbi1WFdJNaaenZkDWqq9NsEhcafnDZ4VuKeuLG2aKHm5SuwuLgAhRkkfHqcCxpnVNSrs5kJYZXwa6Ud431VnevzzzK3U",
+        id="Testnet-m/44h/1h/0h",
     ),
-    (
+    pytest.param(
         "Testnet",
         0x043587CF,
         parse_path("m/44h/1h/0h/0/0"),
         "tpubDGwNSs8z8jZU2EcUiubR4frGvKqddvLBqCDNknnWhmoUd6EHrRWrqXmDaWBNddWzM5Yqh4e4TUYFK9hGCEnSrMKgV6cthRhArfZpwzihdw7",
+        id="Testnet-m/44h/1h/0h/0/0",
     ),
-    (  # PSBT master fingerprint retrieval
+    pytest.param(  # PSBT master fingerprint retrieval
         "Bitcoin",
         0x0488B21E,
         parse_path("m/0h"),
         "xpub68Zyu13qjcQvJXTsnmhH2h2TyPiXAama5bTU8u9iRXyYtS9X9yWvSKij6YGt7JJ2nr5rSGi4KLUW5Z8bTKHqXhbLwqb7smG3Y8j2wy4rmf3",
+        id="Bitcoin-m/0h",
     ),
     pytest.param(
         "Litecoin",
@@ -73,6 +80,7 @@ VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
         parse_path("m/44h/2h/0h"),
         "Ltub2Y8PyEMWQVgiX4L4gVzU8PakBTQ2WBxFdS6tJARQeasUUfXmBut2jGShnQyD3jgyBf7mmvs5jPNgmgXad5J6M8a8FiZK78dbT21fYtTAC9a",
         marks=pytest.mark.altcoin,
+        id="Litecoin-m/44h/2h/0h",
     ),
     pytest.param(
         "Litecoin",
@@ -80,6 +88,7 @@ VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
         parse_path("m/44h/2h/10h"),
         "Ltub2Y8PyEMWQVgiy8Zio1XrKWkGL6ZmCZB9W5ShbvbzZ14irCrAb62YEoMafTAM5a2A6x6XNcyDdCNW7NVgES9jtQqyUZcBUFTimS7VVJ8tbpE",
         marks=pytest.mark.altcoin,
+        id="Litecoin-m/44h/2h/10h",
     ),
     pytest.param(
         "Litecoin",
@@ -87,6 +96,7 @@ VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
         parse_path("m/44h/2h/0h/0/0"),
         "Ltub2dTvwC4v7GNeR6UEaywQ6j72wHi4dwRo3oDDzvXAwb4CrXVQEUTbxC4hEfULiKByiUMEmYLhuMo1YMYmBBjKJ8kyk9ia5gZaVNWq5rVLom4",
         marks=pytest.mark.altcoin,
+        id="Litecoin-m/44h/2h/0h/0/0",
     ),
     pytest.param(
         "Litecoin",
@@ -94,18 +104,33 @@ VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
         parse_path("m/44h/2h/10h/1/100"),
         "Ltub2dcb6Nghj3kwaC2g3TtPgFzMSm7LXfe4mijFYsvEtxXu18vicTB4kYc9z6jGVMpdYhMScNhVY1naQYALnM2x4fvaGzAAGgcuZ89nFyyLhiK",
         marks=pytest.mark.altcoin,
+        id="Litecoin-m/44h/2h/10h/1/100",
     ),
 )
 
 VECTORS_INVALID = (  # coin_name, path
-    ("Bitcoin", parse_path("m/44h/1h/0h")),  # Testnet path on Bitcoin
-    ("Testnet", parse_path("m/44h/0h/0h")),  # Bitcoin path on Testnet
-    ("Bitcoin", parse_path("m/40h/0h/0h")),  # Unknown purpose
-    ("Bitcoin", parse_path("m/13h/0h/0h")),  # SLIP-13 path
+    # Testnet path on Bitcoin
+    pytest.param("Bitcoin", parse_path("m/44h/1h/0h"), id="testnet_path_on_bitcoin"),
+    # Bitcoin path on Testnet
+    pytest.param("Testnet", parse_path("m/44h/0h/0h"), id="bitcoin_path_on_testnet"),
+    # Unknown purpose
+    pytest.param("Bitcoin", parse_path("m/40h/0h/0h"), id="unknown_purpose"),
+    # SLIP-13 path
+    pytest.param("Bitcoin", parse_path("m/13h/0h/0h"), id="slip13_path"),
     # Bitcoin path on Litecoin
-    pytest.param("Litecoin", parse_path("m/44h/0h/0h"), marks=pytest.mark.altcoin),
+    pytest.param(
+        "Litecoin",
+        parse_path("m/44h/0h/0h"),
+        marks=pytest.mark.altcoin,
+        id="bitcoin_path_on_litecoin",
+    ),
     # Segwit path on Bitcoin Cash
-    pytest.param("Bcash", parse_path("m/84h/145h/0h"), marks=pytest.mark.altcoin),
+    pytest.param(
+        "Bcash",
+        parse_path("m/84h/145h/0h"),
+        marks=pytest.mark.altcoin,
+        id="segwit_path_on_bcash",
+    ),
 )
 
 
@@ -193,25 +218,29 @@ def test_slip25_path(session: Session):
 
 
 VECTORS_SCRIPT_TYPES = (  # script_type, xpub, xpub_ignored_magic
-    (
+    pytest.param(
         None,
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
+        id="no_script_type",
     ),
-    (
+    pytest.param(
         messages.InputScriptType.SPENDADDRESS,
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
+        id="SPENDADDRESS",
     ),
-    (
+    pytest.param(
         messages.InputScriptType.SPENDP2SHWITNESS,
         "ypub6WYmBsV2xgQueQwhduAUQTFzUuXzQ2HEidmRpwKzX7ox8dsG8RCRD23zYcTkJiHhXDeb2nEGSiPbSaqGhBQu5jkgNvaiEiMxmZyMXEvfNco",
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
+        id="SPENDP2SHWITNESS",
     ),
-    (
+    pytest.param(
         messages.InputScriptType.SPENDWITNESS,
         "zpub6qP2VY9x7MxPVi8pUFx6cYMVesgSLeGjdkHecLDsu8BqBjgVP5Myq5i8ZpRLJcwcvrmPnFppuNk9KsSqQspusySHFGH8pdBT3J2zujqcVuz",
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
+        id="SPENDWITNESS",
     ),
 )
 

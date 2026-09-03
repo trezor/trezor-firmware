@@ -182,7 +182,14 @@ def test_set_pin_to_wipe_code(session: Session):
     assert isinstance(resp, messages.Address)
 
 
-@pytest.mark.parametrize("invalid_wipe_code", ("1204", "", WIPE_CODE_TOO_LONG))
+@pytest.mark.parametrize(
+    "invalid_wipe_code",
+    (
+        pytest.param("1204", id="invalid_digit"),
+        pytest.param("", id="empty"),
+        pytest.param(WIPE_CODE_TOO_LONG, id="too_long"),
+    ),
+)
 def test_set_wipe_code_invalid(session: Session, invalid_wipe_code: str):
     # Let's set the wipe code
     ret = session.call_raw(messages.ChangeWipeCode())
