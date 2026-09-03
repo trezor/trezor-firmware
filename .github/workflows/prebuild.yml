@@ -20,6 +20,7 @@ jobs:
     name: Block fixup
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
       - name: Block Fixup Commit Merge
@@ -32,6 +33,7 @@ jobs:
   style_check:
     name: Style check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
       - name: Initialize and update ts-tvl
@@ -49,6 +51,7 @@ jobs:
   defs_check:
     name: Defs check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -61,6 +64,7 @@ jobs:
   gen_check:
     name: Gen check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -73,6 +77,7 @@ jobs:
   uvlock_check:
     name: uv.lock check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -89,6 +94,7 @@ jobs:
     name: Changelog check
     if: ${{ github.ref != 'main' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:

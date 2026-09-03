@@ -23,6 +23,7 @@ jobs:
   crypto_build:
     name: Crypto library
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       CC: gcc
       ADDRESS_SANITIZER: 1
@@ -50,6 +51,7 @@ jobs:
     name: Crypto test
     needs: [crypto_build]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       ASAN_OPTIONS: "verify_asan_link_order=0"
       CK_TIMEOUT_MULTIPLIER: 5
@@ -72,6 +74,7 @@ jobs:
   python_test:
     name: Python test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
@@ -86,6 +89,7 @@ jobs:
   rust_test:
     name: Rust crates test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -97,6 +101,7 @@ jobs:
     name: Storage test
     # TODO: only for changes in storage/
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -109,6 +114,7 @@ jobs:
   docs_build:
     name: Docs build
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
       - uses: ./.github/actions/environment
@@ -130,6 +136,7 @@ jobs:
     # scheduled, manual runs, push to release branches
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:

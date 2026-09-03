@@ -18,6 +18,7 @@ jobs:
   core_context_tests:
     name: Context tests (${{ matrix.model }}, universal, noasan, ${{ matrix.language }})
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -60,6 +61,7 @@ jobs:
   core_ui_comment:
     name: Comment with UI flows
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:

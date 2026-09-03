@@ -34,6 +34,7 @@ jobs:
   param:
     name: Determine pipeline parameters
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       test_lang: ${{ steps.set_vars.outputs.test_lang }}
       asan: ${{ steps.set_vars.outputs.asan }}
@@ -49,6 +50,7 @@ jobs:
   core_firmware:
     name: Build firmware (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}${{matrix.n1w1 && ', n1w1' || '' }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -114,6 +116,7 @@ jobs:
   core_emu:
     name: Build emu (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}, ${{ matrix.asan }}${{matrix.n1w1 && ', n1w1' || '' }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: param
     strategy:
       fail-fast: false
@@ -164,6 +167,7 @@ jobs:
     if: github.event_name == 'schedule'
     name: Build emu ARM (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}, ${{ matrix.asan }}${{matrix.n1w1 && ', n1w1' || '' }})
     runs-on: ubuntu-latest-arm64
+    timeout-minutes: 15
     needs: param
     strategy:
       fail-fast: false
@@ -237,6 +241,7 @@ jobs:
   core_unit_python_test:
     name: Python unit tests (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: param
     strategy:
       fail-fast: false
@@ -265,6 +270,7 @@ jobs:
   core_unit_rust_test:
     name: Rust unit tests (${{ matrix.model }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs:
       - param
       - core_emu
@@ -291,6 +297,7 @@ jobs:
   core_rust_client_test:
     name: Rust trezor-client tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: core_emu
     strategy:
       fail-fast: false
@@ -523,6 +530,7 @@ jobs:
     if: false  # XXX currently failing
     continue-on-error: true
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     needs: core_emu
     strategy:
       fail-fast: false
@@ -552,6 +560,7 @@ jobs:
     name: Memory allocation report
     if: false  # NOTE manual job, comment out to run
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     env:
       TREZOR_MODEL: T2T1
       TREZOR_MEMPERF: 1
@@ -582,6 +591,7 @@ jobs:
   core_flash_size_check:
     name: Flash size check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: core_firmware
     strategy:
       fail-fast: false
@@ -602,6 +612,7 @@ jobs:
   core_monero_test:
     name: Monero test (${{ matrix.model }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs:
       - param
       - core_emu
@@ -641,6 +652,7 @@ jobs:
   core_u2f_test:
     name: U2F test (${{ matrix.model }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs:
       - param
       - core_emu
@@ -676,6 +688,7 @@ jobs:
   core_fido2_test:
     name: FIDO2 test (${{ matrix.model }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs:
       - param
       - core_emu
@@ -710,6 +723,7 @@ jobs:
   core_coverage_report:
     name: Coverage report
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs:
       - core_emu
       - core_click_test
@@ -754,6 +768,7 @@ jobs:
   binaries_size_report:
     name: Binaries' size report
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs:
       - core_firmware
     steps:
@@ -776,6 +791,7 @@ jobs:
     # run UI comment job only for 'trezor/trezor-firmware' scheduled workflows and internal PRs (see #5381)
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.repository == 'trezor/trezor-firmware'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs:
       - param
     steps:
@@ -806,6 +822,7 @@ jobs:
     name: Upload emulator binaries
     if: github.event_name == 'schedule' && github.repository == 'trezor/trezor-firmware'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs:
       - core_emu
       - core_emu_arm
@@ -838,6 +855,7 @@ jobs:
     # Not building it for nightly CI
     if: github.event_name != 'schedule' && github.repository == 'trezor/trezor-firmware'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs:
       # Do not include ARM, they are only built on nightly
       - core_emu
@@ -873,6 +891,7 @@ jobs:
   rust_deps_check:
     name: Rust dependencies check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -885,6 +904,7 @@ jobs:
     name: Unsigned firmware archive  # for release QA purposes
     if: github.event_name == 'push'  # release branches only, only those currently trigger push
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     needs: core_firmware
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
@@ -916,6 +936,7 @@ jobs:
     name: Upload nightly firmware
     if: github.event_name == 'schedule'  # scheduled nightly runs only
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: core_firmware
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2

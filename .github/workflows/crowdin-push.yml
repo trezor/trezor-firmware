@@ -15,6 +15,7 @@ jobs:
     name: Split and upload sources
     if: github.ref_name == 'main'  # run only when dispatched from main
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment: crowdin
     steps:
       - name: Checkout

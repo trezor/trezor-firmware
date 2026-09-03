@@ -18,6 +18,7 @@ jobs:
     # run only in public repositories - fuzzer will fail in private forks (missing auth)
     if: github.event.repository.private == false
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
