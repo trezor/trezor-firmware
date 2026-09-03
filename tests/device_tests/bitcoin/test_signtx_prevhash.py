@@ -73,7 +73,13 @@ def _check_error_message(value: bytes, model: models.TrezorModel, message: str):
 
 
 with_bad_prevhashes = pytest.mark.parametrize(
-    "prev_hash", (b"", b"x", b"hello world", b"x" * 33)
+    "prev_hash",
+    (
+        pytest.param(b"", id="empty"),
+        pytest.param(b"x", id="1_byte"),
+        pytest.param(b"hello world", id="11_bytes"),
+        pytest.param(b"x" * 33, id="33_bytes"),
+    ),
 )
 
 

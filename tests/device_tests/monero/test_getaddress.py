@@ -24,17 +24,20 @@ from ...common import MNEMONIC12
 from ...input_flows import InputFlowShowAddressQRCode
 
 TEST_VECTORS = [
-    (
+    pytest.param(
         "m/44h/128h/0h",
         b"4Ahp23WfMrMFK3wYL2hLWQFGt87ZTeRkufS6JoQZu6MEFDokAQeGWmu9MA3GFq1yVLSJQbKJqVAn9F9DLYGpRzRAEXqAXKM",
+        id="m/44h/128h/0h",
     ),
-    (
+    pytest.param(
         "m/44h/128h/1h",
         b"44iAazhoAkv5a5RqLNVyh82a1n3ceNggmN4Ho7bUBJ14WkEVR8uFTe9f7v5rNnJ2kEbVXxfXiRzsD5Jtc6NvBi4D6WNHPie",
+        id="m/44h/128h/1h",
     ),
-    (
+    pytest.param(
         "m/44h/128h/2h",
         b"47ejhmbZ4wHUhXaqA4b7PN667oPMkokf4ZkNdWrMSPy9TNaLVr7vLqVUQHh2MnmaAEiyrvLsX8xUf99q3j1iAeMV8YvSFcH",
+        id="m/44h/128h/2h",
     ),
 ]
 

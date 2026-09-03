@@ -22,53 +22,61 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 VECTORS = (  # coin, path, script_type, address
-    (
+    pytest.param(
         "Testnet",
         "m/84h/1h/0h/0/0",
         messages.InputScriptType.SPENDWITNESS,
         "tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9",
+        id="Testnet-m/84h/1h/0h/0/0",
     ),
-    (
+    pytest.param(
         "Testnet",
         "m/84h/1h/0h/1/0",
         messages.InputScriptType.SPENDWITNESS,
         "tb1qejqxwzfld7zr6mf7ygqy5s5se5xq7vmt96jk9x",
+        id="Testnet-m/84h/1h/0h/1/0",
     ),
-    (
+    pytest.param(
         "Bitcoin",
         "m/84h/0h/0h/0/0",
         messages.InputScriptType.SPENDWITNESS,
         "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
+        id="Bitcoin-m/84h/0h/0h/0/0",
     ),
-    (
+    pytest.param(
         "Bitcoin",
         "m/84h/0h/0h/1/0",
         messages.InputScriptType.SPENDWITNESS,
         "bc1qktmhrsmsenepnnfst8x6j27l0uqv7ggrg8x38q",
+        id="Bitcoin-m/84h/0h/0h/1/0",
     ),
-    (
+    pytest.param(
         "Testnet",
         "m/86h/1h/0h/0/0",
         messages.InputScriptType.SPENDTAPROOT,
         "tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u",
+        id="Testnet-m/86h/1h/0h/0/0",
     ),
-    (
+    pytest.param(
         "Testnet",
         "m/86h/1h/0h/1/0",
         messages.InputScriptType.SPENDTAPROOT,
         "tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c",
+        id="Testnet-m/86h/1h/0h/1/0",
     ),
-    (
+    pytest.param(
         "Bitcoin",
         "m/86h/0h/0h/0/0",
         messages.InputScriptType.SPENDTAPROOT,
         "bc1ptxs597p3fnpd8gwut5p467ulsydae3rp9z75hd99w8k3ljr9g9rqx6ynaw",
+        id="Bitcoin-m/86h/0h/0h/0/0",
     ),
-    (
+    pytest.param(
         "Bitcoin",
         "m/86h/0h/0h/1/0",
         messages.InputScriptType.SPENDTAPROOT,
         "bc1pgypgja2hmcx2l6s2ssq75k6ev68ved6nujcspt47dgvkp8euc70s6uegk6",
+        id="Bitcoin-m/86h/0h/0h/1/0",
     ),
     pytest.param(
         "Groestlcoin Testnet",
@@ -76,6 +84,7 @@ VECTORS = (  # coin, path, script_type, address
         messages.InputScriptType.SPENDWITNESS,
         "tgrs1qkvwu9g3k2pdxewfqr7syz89r3gj557l3ued7ja",
         marks=pytest.mark.altcoin,
+        id="Groestlcoin_Testnet-m/84h/1h/0h/0/0",
     ),
     pytest.param(
         "Groestlcoin Testnet",
@@ -83,6 +92,7 @@ VECTORS = (  # coin, path, script_type, address
         messages.InputScriptType.SPENDWITNESS,
         "tgrs1qejqxwzfld7zr6mf7ygqy5s5se5xq7vmt9lkd57",
         marks=pytest.mark.altcoin,
+        id="Groestlcoin_Testnet-m/84h/1h/0h/1/0",
     ),
     pytest.param(
         "Groestlcoin",
@@ -90,6 +100,7 @@ VECTORS = (  # coin, path, script_type, address
         messages.InputScriptType.SPENDWITNESS,
         "grs1qw4teyraux2s77nhjdwh9ar8rl9dt7zww8r6lne",
         marks=pytest.mark.altcoin,
+        id="Groestlcoin-m/84h/17h/0h/0/0",
     ),
     pytest.param(
         "Groestlcoin",
@@ -97,6 +108,7 @@ VECTORS = (  # coin, path, script_type, address
         messages.InputScriptType.SPENDWITNESS,
         "grs1qzfpwn55tvkxcw0xwfa0g8k2gtlzlgkcq3z000e",
         marks=pytest.mark.altcoin,
+        id="Groestlcoin-m/84h/17h/0h/1/0",
     ),
     pytest.param(
         "Groestlcoin Testnet",
@@ -104,6 +116,7 @@ VECTORS = (  # coin, path, script_type, address
         messages.InputScriptType.SPENDTAPROOT,
         "tgrs1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq5v2q7z",
         marks=pytest.mark.altcoin,
+        id="Groestlcoin_Testnet-m/86h/1h/0h/0/0",
     ),
     pytest.param(
         "Groestlcoin",
@@ -111,6 +124,7 @@ VECTORS = (  # coin, path, script_type, address
         messages.InputScriptType.SPENDTAPROOT,
         "grs1pnacleslusvh6gdjd3j2y5kv3drq09038sww2zx4za68jssndmu6qkm698g",
         marks=pytest.mark.altcoin,
+        id="Groestlcoin-m/86h/17h/0h/0/0",
     ),
     pytest.param(
         "Elements",
@@ -118,22 +132,26 @@ VECTORS = (  # coin, path, script_type, address
         messages.InputScriptType.SPENDWITNESS,
         "ert1qkvwu9g3k2pdxewfqr7syz89r3gj557l3xp9k2v",
         marks=pytest.mark.altcoin,
+        id="Elements-m/84h/1h/0h/0/0",
     ),
 )
 
 
 BIP86_VECTORS = (  # path, address for "abandon ... abandon about" seed
-    (
+    pytest.param(
         "m/86h/0h/0h/0/0",
         "bc1p5cyxnuxmeuwuvkwfem96lqzszd02n6xdcjrs20cac6yqjjwudpxqkedrcr",
+        id="m/86h/0h/0h/0/0",
     ),
-    (
+    pytest.param(
         "m/86h/0h/0h/0/1",
         "bc1p4qhjn9zdvkux4e44uhx8tc55attvtyu358kutcqkudyccelu0was9fqzwh",
+        id="m/86h/0h/0h/0/1",
     ),
-    (
+    pytest.param(
         "m/86h/0h/0h/1/0",
         "bc1p3qkhfews2uk44qtvauqyr2ttdsw7svhkl9nkm9s9c3x4ax5h60wqwruhk7",
+        id="m/86h/0h/0h/1/0",
     ),
 )
 
