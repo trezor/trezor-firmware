@@ -1,13 +1,5 @@
 from typing import *
 from buffer_types import *
-
-
-# upymod/modtrezorutils/modtrezorutils-meminfo.h
-def meminfo(filename: str | None) -> None:
-    """
-    Dumps map of micropython GC arena to a file.
-    The JSON file can be decoded by analyze-memory-dump.py
-    """
 from trezor import utils
 
 
@@ -251,6 +243,14 @@ def set_log_filter(filter: str) -> None:
 def get_scm_revision(xor2: int) -> bytes:
     """
     Returns SCM revision of the firmware.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def meminfo(filename: str | None) -> None:
+    """
+    Dumps map of micropython GC arena to a file.
+    The JSON file can be decoded by analyze-memory-dump.py
     """
 VERSION: VersionTuple
 """Firmware version as a tuple (major, minor, patch, build)."""

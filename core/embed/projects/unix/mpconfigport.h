@@ -216,16 +216,18 @@ extern const struct _mp_print_t mp_stderr_print;
 
 // extern const struct _mp_print_t mp_stderr_print;
 
-#define MICROPY_PY_TREZORCONFIG      (1)
-#define MICROPY_PY_TREZORCRYPTO      (1)
-#define MICROPY_PY_TREZORDEFINITIONS (!BITCOIN_ONLY)
-#define MICROPY_PY_TREZORIO          (1)
-#define MICROPY_PY_TREZORUI          (1)
-#define MICROPY_PY_TREZORUTILS       (1)
-#define MICROPY_PY_TREZORPROTO       (1)
-#define MICROPY_PY_TREZORTRANSLATE   (1)
-#define MICROPY_PY_TREZORUI_API      (1)
-#define MICROPY_PY_TREZORAPP         (USE_APP_LOADING)
+#define MICROPY_PY_TREZORCONFIG         (1)
+#define MICROPY_PY_TREZORCRYPTO         (1)
+#define MICROPY_PY_TREZORDEFINITIONS    (!BITCOIN_ONLY)
+#define MICROPY_PY_TREZORIO             (1)
+#define MICROPY_PY_TREZORUI             (1)
+#define MICROPY_PY_TREZORUTILS          (1)
+// exclude on optimized emulator
+#define MICROPY_PY_TREZORUTILS_MEMINFO  (!PYOPT)
+#define MICROPY_PY_TREZORPROTO          (1)
+#define MICROPY_PY_TREZORTRANSLATE      (1)
+#define MICROPY_PY_TREZORUI_API         (1)
+#define MICROPY_PY_TREZORAPP            (USE_APP_LOADING)
 
 #define MP_STATE_PORT MP_STATE_VM
 
