@@ -27,6 +27,9 @@ pub const fn define_exception(name: Qstr, parent: &Type) -> FullType {
     }
 }
 
+pub static ExternalDataError: FullType =
+    define_exception(Qstr::MP_QSTR_ExternalDataError, ValueError);
+
 /// Create an exception instance. The result of this
 /// call should only be used to immediately raise the exception, because the
 /// object is not guaranteed to remain intact. MicroPython might reuse the

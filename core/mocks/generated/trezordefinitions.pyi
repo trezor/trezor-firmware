@@ -2,6 +2,7 @@ from typing import *
 from buffer_types import *
 from trezorproto import MessageType
 T = TypeVar("T", bound=MessageType)
+ExternalDataError: type[ValueError]
 
 
 # rust/src/definitions/obj.rs

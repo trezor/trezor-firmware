@@ -11,7 +11,7 @@ use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
 use crate::micropython::typ::FullType;
-use crate::micropython::{ffi, util};
+use crate::micropython::{exception, ffi, util};
 use crate::trezorhal::translations;
 
 // SAFETY: Caller is supposed to be MicroPython, or copy MicroPython contracts
@@ -172,6 +172,9 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     /// from trezortranslate_keys import TR as TR  # noqa: F401
     /// """Translation object with attributes."""
     Qstr::MP_QSTR_TR => TR_OBJ.as_obj(),
+
+    /// ExternalDataError: type[ValueError]
+    Qstr::MP_QSTR_ExternalDataError => exception::ExternalDataError.as_type().as_obj(),
 
     /// def area_bytesize() -> int:
     ///     """Maximum size of the translation blob that can be stored."""

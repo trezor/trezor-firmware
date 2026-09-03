@@ -1,5 +1,5 @@
 use super::blob;
-use crate::error::{value_error, Error};
+use crate::error::Error;
 use crate::io::InputStream;
 use crate::micropython::buffer::get_buffer;
 use crate::micropython::gc::Gc;
@@ -8,7 +8,7 @@ use crate::micropython::map::Map;
 use crate::micropython::module::Module;
 use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
-use crate::micropython::util;
+use crate::micropython::{exception, util};
 use crate::protobuf::decode::Decoder;
 use crate::protobuf::obj::MsgDefObj;
 
@@ -34,7 +34,7 @@ extern "C" fn decode(n_args: usize, args: *const Obj) -> Obj {
         };
         decoder
             .message_from_stream(&mut stream, msg_def.msg())
-            .map_err(|_| value_error!(c"Invalid definition"))
+            .map_err(|_| Error::ExternalDataError(c"Invalid definition"))
     };
 
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
@@ -47,6 +47,9 @@ pub static mp_module_trezordefinitions: Module = obj_module! {
     ///
     /// mock:global
     /// T = TypeVar("T", bound=MessageType)
+    ///
+    /// ExternalDataError: type[ValueError]
+    Qstr::MP_QSTR_ExternalDataError => exception::ExternalDataError.as_type().as_obj(),
     ///
     /// def decode(
     ///     definition: AnyBytes,
