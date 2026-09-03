@@ -501,7 +501,8 @@ async def confirm_payment_request(
                 refund_account_info,
             )
         )
-    menu = Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)])
+    menu_items.append(cancel_leaf(TR.buttons__cancel_sign))
+    menu = Menu(menu_items)
 
     with main_ctx as main_layout:
         while True:
@@ -852,7 +853,8 @@ async def confirm_value(
         if info_items
         else []
     )
-    menu = Menu(menu_items + [cancel_leaf(TR.buttons__cancel)])
+    menu_items.append(cancel_leaf(TR.buttons__cancel))
+    menu = Menu(menu_items)
 
     with trezorui_api.confirm_value(
         title=title,
@@ -998,7 +1000,8 @@ async def confirm_trade(
     ]
     for k, v in extra_menu_items:
         menu_items.append(create_info_menu_leaf(k, v))
-    menu = Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)])
+    menu_items.append(cancel_leaf(TR.buttons__cancel_sign))
+    menu = Menu(menu_items)
 
     with trade_ctx as trade_layout:
         return await interact_with_menu(trade_layout, menu, "confirm_trade")
@@ -1116,6 +1119,7 @@ if not utils.BITCOIN_ONLY:
             ]
         else:
             menu_items = []
+        menu_items.append(cancel_leaf(TR.buttons__cancel_sign))
 
         async def _step1() -> trezorui_api.UiResult:
             with trezorui_api.confirm_value(
@@ -1132,7 +1136,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu(menu_items),
                     "confirm_output",
                     br_code,
                 )
@@ -1358,6 +1362,7 @@ if not utils.BITCOIN_ONLY:
                     subtitle=TR.send__send_from,
                 )
             )
+        menu_items.append(cancel_leaf(TR.buttons__cancel_sign))
 
         async def _step1() -> trezorui_api.UiResult:
             with trezorui_api.confirm_action(
@@ -1369,7 +1374,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu(menu_items),
                     f"{br_name}/intro",
                     br_code,
                 )
@@ -1383,7 +1388,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu(menu_items),
                     f"{br_name}/vault_name",
                     br_code,
                 )
@@ -1400,7 +1405,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu(menu_items),
                     f"{br_name}/amount",
                     br_code,
                 )
@@ -1418,7 +1423,7 @@ if not utils.BITCOIN_ONLY:
                 ) as layout:
                     return await interact_with_menu(
                         layout,
-                        Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                        Menu(menu_items),
                         f"{br_name}/extra_data",
                         br_code,
                     )
@@ -1438,7 +1443,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu(menu_items),
                     f"{br_name}/summary",
                     br_code,
                 )
@@ -1472,6 +1477,7 @@ if not utils.BITCOIN_ONLY:
                     subtitle=TR.send__send_from,
                 )
             )
+        menu_items.append(cancel_leaf(TR.buttons__cancel_sign))
 
         async def _step1() -> trezorui_api.UiResult:
             with trezorui_api.confirm_action(
@@ -1483,7 +1489,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu(menu_items),
                     f"{br_name}/intro",
                     br_code,
                 )
@@ -1499,7 +1505,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu(menu_items),
                     f"{br_name}/tokens",
                     br_code,
                 )
@@ -1517,7 +1523,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu(menu_items),
                     f"{br_name}/summary",
                     br_code,
                 )
@@ -1566,10 +1572,11 @@ if not utils.BITCOIN_ONLY:
             children = [
                 create_info_menu_leaf(TR.address_details__account_info, account_info),
                 create_info_menu_leaf(TR.buttons__more_info, more_info),
+                cancel_leaf(TR.buttons__cancel),
             ]
             await confirm_with_menu(
                 layout,
-                Menu(children + [cancel_leaf(TR.buttons__cancel)]),
+                Menu(children),
                 "ethereum/auth7702/details",
                 ButtonRequestType.SignTx,
             )
@@ -1653,6 +1660,7 @@ if not utils.BITCOIN_ONLY:
                     subtitle=TR.send__send_from,
                 )
             )
+        menu_items.append(cancel_leaf(TR.buttons__cancel_sign))
 
         amount, amount_label = (
             total_amount,
@@ -1671,7 +1679,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu(menu_items),
                     br_name,
                     ButtonRequestType.SignTx,
                 )
@@ -1774,6 +1782,9 @@ if not utils.BITCOIN_ONLY:
             create_info_menu_leaf(TR.confirm_total__title_fee, list(fee_details), None),
         ]
 
+        menu_items.append(cancel_leaf(TR.buttons__cancel_sign))
+        summary_menu_items.append(cancel_leaf(TR.buttons__cancel))
+
         extra = TR.words__provider if vote_account else ""
 
         async def _step1() -> trezorui_api.UiResult:
@@ -1801,7 +1812,7 @@ if not utils.BITCOIN_ONLY:
             with ctx as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                    Menu(menu_items),
                     br_name,
                     br_code,
                 )
@@ -1818,7 +1829,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu(summary_menu_items + [cancel_leaf(TR.buttons__cancel)]),
+                    Menu(summary_menu_items),
                     br_name,
                     br_code,
                 )
@@ -1982,6 +1993,7 @@ if not utils.BITCOIN_ONLY:
                     subtitle=TR.send__send_from,
                 )
             )
+        menu_items.append(cancel_leaf(TR.buttons__cancel_sign))
         with trezorui_api.confirm_action(
             title=title,
             action=intro_question,
@@ -1992,7 +2004,7 @@ if not utils.BITCOIN_ONLY:
         ) as layout:
             await interact_with_menu(
                 layout,
-                Menu(menu_items + [cancel_leaf(TR.buttons__cancel_sign)]),
+                Menu(menu_items),
                 br_name,
                 br_code,
             )
