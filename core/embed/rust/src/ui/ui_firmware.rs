@@ -19,6 +19,24 @@ pub const MAX_MENU_ITEMS: usize = 6;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
 
+/// One entry of `select_menu()`: its label plus what the entry means.
+///
+/// TODO: named after `select_menu` only to avoid colliding with the existing
+/// `MenuItem` types in `layout_eckhart` (device menu) and `layout_caesar`
+/// (passphrase keyboard), both of which are private and file-local. Once those
+/// are renamed to something model-specific, this should take the generic
+/// `MenuItem` name, since nothing about it is specific to `select_menu`.
+pub struct SelectMenuItem {
+    pub text: TString<'static>,
+    pub intent: MenuItemIntent,
+}
+
+impl SelectMenuItem {
+    pub fn new(text: TString<'static>, intent: MenuItemIntent) -> Self {
+        Self { text, intent }
+    }
+}
+
 pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(
@@ -277,9 +295,8 @@ pub trait FirmwareUI {
         prefill: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
-    /// Each item is its label plus what the entry means.
     fn select_menu(
-        items: heapless::Vec<(TString<'static>, MenuItemIntent), MAX_MENU_ITEMS>,
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
         current: usize,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 

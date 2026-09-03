@@ -40,8 +40,8 @@ use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ContentType, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
-    MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
 
@@ -719,17 +719,17 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn select_menu(
-        items: heapless::Vec<(TString<'static>, MenuItemIntent), MAX_MENU_ITEMS>,
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
         current: usize,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut menu_items = VerticalMenuItems::new();
-        for (text, intent) in items {
-            unwrap!(menu_items.push(match intent {
+        for item in items {
+            unwrap!(menu_items.push(match item.intent {
                 // TODO: mapping `Danger` onto the `Cancel` variant is temporary -
                 // the variant is named after what the entry did, not how it looks.
                 // `VerticalMenuItem` should carry the intent instead.
-                MenuItemIntent::Danger => VerticalMenuItem::Cancel(text),
-                MenuItemIntent::Standard => VerticalMenuItem::Item(text),
+                MenuItemIntent::Danger => VerticalMenuItem::Cancel(item.text),
+                MenuItemIntent::Standard => VerticalMenuItem::Item(item.text),
             }));
         }
         let menu = ScrolledVerticalMenu::new(menu_items, current);
