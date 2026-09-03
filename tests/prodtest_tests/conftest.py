@@ -16,7 +16,11 @@ from trezorlib._internal.prodtest_emulator import get_prodtest_emulator
 from trezorlib._internal.prodtest_transport import VcpUdpTransport
 
 from ..emulators import delete_profile
-from .tropic_utils import DEFAULT_TROPIC_MODEL_CONFIGFILE, TropicProdtest, TropicSession
+from .tropic_utils import (
+    DEFAULT_PRODTEST_TROPIC_MODEL_CONFIGFILE,
+    TropicProdtest,
+    TropicSession,
+)
 
 # UDP base port for the dedicated Tropic test emulator. Tropic tests run one
 #  at a time and tear their emulator down, so a fixed base is safe.
@@ -100,7 +104,9 @@ def tropic_prodtest(
     def _factory(
         *, tropic_model_configfile: str | Path | None = None
     ) -> t.Iterator[TropicSession]:
-        config = Path(tropic_model_configfile or DEFAULT_TROPIC_MODEL_CONFIGFILE)
+        config = Path(
+            tropic_model_configfile or DEFAULT_PRODTEST_TROPIC_MODEL_CONFIGFILE
+        )
         model_dir = tempfile.mkdtemp(prefix="prodtest_tropic_model_")
         created_dirs.append(model_dir)
         # Let the OS pick a free TCP port for the Tropic model.

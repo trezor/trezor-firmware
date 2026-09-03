@@ -1,5 +1,6 @@
 import pytest
 
+from trezorlib import models
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import EvoluDelegatedIdentityKey, EvoluGetDelegatedIdentityKey
@@ -22,15 +23,20 @@ def test_evolu_get_delegated_identity_is_constant(client: Client):
 
 
 def test_evolu_get_delegated_identity_test_vector(client: Client):
-    # on emulator, the master key is all zeroes. So the delegated identity key is constant.
+    # on emulator, the master key is hardcoded. So the delegated identity key is constant.
     if not client.is_emulator:
         pytest.skip("Only for emulator")
 
+    if client.model in (models.T3W1, models.T3T2):
+        # models with an unprivileged master key slot derive the key from the
+        # hardcoded emulator secret, see core/embed/sec/secret/unix/secret.c
+        expected = "99c0adb27ce114742e04ead75236cbb5ebd91e6a0954c1df12616372d7269929"
+    else:
+        # the remaining models derive the key from an all-zero master key
+        expected = "10e39ed3a40dd63a47a14608d4bccd4501170cf9f2188223208084d39c37b369"
+
     private_key = get_delegated_identity_key(client).private_key
-    # hardcoded expected value for the emulator with zeroed master key
-    assert private_key == bytes.fromhex(
-        "10e39ed3a40dd63a47a14608d4bccd4501170cf9f2188223208084d39c37b369"
-    )
+    assert private_key == bytes.fromhex(expected)
 
 
 @pytest.mark.protocol("protocol_v2")

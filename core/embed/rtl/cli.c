@@ -150,7 +150,7 @@ void cli_ok_hexdata(cli_t* cli, const void* data, size_t size) {
   if (size > 0) {
     cli_printf(cli, " ");
     for (size_t i = 0; i < size; i++) {
-      cli_printf(cli, "%02X", ((uint8_t*)data)[i]);
+      cli_printf(cli, "%02X", ((const uint8_t*)data)[i]);
     }
   }
   cli_printf_newline(cli);
