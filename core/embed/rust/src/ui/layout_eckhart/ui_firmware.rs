@@ -42,8 +42,8 @@ use crate::ui::layout::util::{
 };
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
-    MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
 use crate::util::interpolate;
@@ -879,18 +879,20 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn select_menu(
-        items: heapless::Vec<(TString<'static>, MenuItemIntent), MAX_MENU_ITEMS>,
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
         _current: usize,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut menu = VerticalMenu::<ShortMenuVec>::empty();
-        for (text, intent) in &items {
-            menu.item(match intent {
+        for item in &items {
+            menu.item(match item.intent {
                 // TODO: reusing the cancel button to render a dangerous entry is
                 // temporary - `Danger` describes how the entry looks, while
                 // `new_cancel_menu_item` names what it used to do. The styling
                 // should be lifted out of the cancel-specific constructor.
-                MenuItemIntent::Danger => Button::new_cancel_menu_item(*text),
-                MenuItemIntent::Standard => Button::new_menu_item(*text, theme::menu_item_title()),
+                MenuItemIntent::Danger => Button::new_cancel_menu_item(item.text),
+                MenuItemIntent::Standard => {
+                    Button::new_menu_item(item.text, theme::menu_item_title())
+                }
             });
         }
         let screen = VerticalMenuScreen::new(menu)

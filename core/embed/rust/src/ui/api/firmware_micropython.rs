@@ -20,14 +20,14 @@ use crate::ui::component::Empty;
 use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
 use crate::ui::layout::base::LAYOUT_STATE;
 use crate::ui::layout::device_menu_result::DEVICE_MENU_RESULT;
-use crate::ui::layout::menu_item_intent::{MenuItemIntent, MENU_ITEM_INTENT_OBJ};
+use crate::ui::layout::menu_item_intent::MENU_ITEM_INTENT_OBJ;
 use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
 use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
 use crate::ui::notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ};
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
-    MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
 
@@ -741,11 +741,11 @@ extern "C" fn new_request_string(n_args: usize, args: *const Obj, kwargs: *mut M
 extern "C" fn new_select_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let items_iterable: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
-        let mut items = Vec::<(TString, MenuItemIntent), MAX_MENU_ITEMS>::new();
+        let mut items = Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
         for item in IterBuf::new().try_iterate(items_iterable)? {
             let [text, intent]: [Obj; 2] = util::iter_into_array(item)?;
             items
-                .push((text.try_into()?, intent.try_into()?))
+                .push(SelectMenuItem::new(text.try_into()?, intent.try_into()?))
                 .map_err(|_| Error::OutOfRange)?;
         }
         let current = kwargs.get(Qstr::MP_QSTR_current)?.try_into()?;

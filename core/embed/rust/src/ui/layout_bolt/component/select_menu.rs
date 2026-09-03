@@ -7,7 +7,7 @@ use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::geometry::{Insets, Rect};
 use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::shape::Renderer;
-use crate::ui::ui_firmware::MAX_MENU_ITEMS;
+use crate::ui::ui_firmware::{SelectMenuItem, MAX_MENU_ITEMS};
 
 /// Maximum number of buttons shown on the screen at once.
 /// TODO: pagination for menus with more items.
@@ -29,16 +29,14 @@ pub struct SelectMenu {
 }
 
 impl SelectMenu {
-    pub fn new(
-        items: Vec<(TString<'static>, MenuItemIntent), MAX_MENU_ITEMS>,
-    ) -> Result<Self, Error> {
+    pub fn new(items: Vec<SelectMenuItem, MAX_MENU_ITEMS>) -> Result<Self, Error> {
         if items.len() > MAX_VISIBLE_BUTTONS {
             return Err(Error::NotImplementedError);
         }
         let choice_buttons = items
             .into_iter()
-            .map(|(text, intent)| {
-                Button::with_text(text).styled(match intent {
+            .map(|item| {
+                Button::with_text(item.text).styled(match item.intent {
                     MenuItemIntent::Danger => theme::button_cancel(),
                     MenuItemIntent::Standard => theme::button_default(),
                 })

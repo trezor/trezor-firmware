@@ -33,8 +33,8 @@ use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
-    MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::{geometry, ModelUI};
 
@@ -913,12 +913,12 @@ impl FirmwareUI for UICaesar {
     }
 
     fn select_menu(
-        items: heapless::Vec<(TString<'static>, MenuItemIntent), MAX_MENU_ITEMS>,
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
         current: usize,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // the entry's intent is not rendered on this model
         let labels: heapless::Vec<TString<'static>, MAX_MENU_ITEMS> =
-            items.into_iter().map(|(text, _intent)| text).collect();
+            items.into_iter().map(|item| item.text).collect();
         // Returning the index of the selected menu item
         let layout = RootComponent::new(
             SimpleChoice::new(
