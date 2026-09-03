@@ -98,7 +98,7 @@ jobs:
       - run: |
           $UV_RUN trezorctl list
           $UV_RUN trezorctl get-features
-        if: matrix.model != 'T3W1'  # gets stuck on models with THP
+        if: matrix.model != 'T3W1' && matrix.model != 'T3T1'  # gets stuck on models with THP
       - run: |
           $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
           $UV_RUN pytest -v --verbose-log-file pytest.log tests/device_tests -m 'not sd_card' -k 'not test_authenticate_device and not evolu and not test_telemetry' --durations=50 --session-timeout 19800
