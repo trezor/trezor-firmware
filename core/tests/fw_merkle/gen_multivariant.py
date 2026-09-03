@@ -114,9 +114,9 @@ def build():
             alt_image, alt_manifest = _build_variant_image(
                 vid, version=b"\x09\x09\x09\x09", app_size=CODE_SIZE * 2, app_byte=0x5A
             )
-            assert fm.variant_leaf(manifest) == fm.variant_leaf(
-                alt_manifest
-            ), "custom leaf is not app-agnostic (version/size/code_hash not zeroed?)"
+            assert fm.variant_leaf(manifest) == fm.variant_leaf(alt_manifest), (
+                "custom leaf is not app-agnostic (version/size/code_hash not zeroed?)"
+            )
             alts[vid] = alt_image
         else:
             image, manifest = _build_variant_image(vid)

@@ -26,7 +26,6 @@ import sys
 from pathlib import Path
 
 from trezor_core_tools import nrf_tree
-
 from trezorlib import _ed25519
 from trezorlib.firmware.models import ROOT_ED25519_KEYS, ROOT_ED25519_KEYS_DEV
 
@@ -54,8 +53,7 @@ def check(image: bytes) -> int:
         return 1
     prot_end = nrf_tree.mcuboot_prot_end(image)
     print(
-        f"image {len(image)} B; hashed range {prot_end} B "
-        f"(leaf = H(0x00 || that hash))"
+        f"image {len(image)} B; hashed range {prot_end} B (leaf = H(0x00 || that hash))"
     )
 
     # MCUboot's own hash must match the protected region, or it rejects the image

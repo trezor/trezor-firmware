@@ -202,9 +202,9 @@ def main() -> None:
         # PASSES -- MCUboot would reject it on its unprotected-TLV whitelist. Only a
         # shape check catches it. Assert the premise, or the case proves nothing.
         pq_rogue = nrf_tree.smuggle_rogue_tlv(pq_image)
-        assert nrf_tree.nrf_leaf(pq_rogue) == nrf_tree.nrf_leaf(
-            pq_image
-        ), "rogue variant must keep the leaf intact (else it proves nothing)"
+        assert nrf_tree.nrf_leaf(pq_rogue) == nrf_tree.nrf_leaf(pq_image), (
+            "rogue variant must keep the leaf intact (else it proves nothing)"
+        )
         assert len(pq_rogue) == len(pq_image)
         _emit_image(f, "PQ_IMAGE_ROGUE", pq_rogue)
         _emit_image(f, "PQ_OTA_ROGUE", nrf_tree.build_nrf_ota(pq_rogue, proofs[2]))
@@ -214,9 +214,9 @@ def main() -> None:
         # signatures verify AND the fold passes -- yet the nRF rejects on its
         # allow-list, after the STM has already erased its only slot.
         nrf_rogue = nrf_tree.smuggle_rogue_tlv(nrf_image)
-        assert nrf_tree.nrf_leaf(nrf_rogue) == nrf_tree.nrf_leaf(
-            nrf_image
-        ), "classic rogue variant must keep the leaf intact (else it proves nothing)"
+        assert nrf_tree.nrf_leaf(nrf_rogue) == nrf_tree.nrf_leaf(nrf_image), (
+            "classic rogue variant must keep the leaf intact (else it proves nothing)"
+        )
         assert len(nrf_rogue) == len(nrf_image)
         _emit_image(f, "NRF_IMAGE_ROGUE", nrf_rogue)
 
@@ -299,16 +299,16 @@ def main() -> None:
         pq_prot_end = nrf_tree.mcuboot_prot_end(pq_image)
         # Both shapes must have something OUTSIDE the hashed range, or the "tamper
         # outside still folds" cases would silently degenerate into no-ops.
-        assert classic_prot_end < len(
-            nrf_image
-        ), "classic image has no unprotected area"
+        assert classic_prot_end < len(nrf_image), (
+            "classic image has no unprotected area"
+        )
         assert pq_prot_end < len(pq_image), "PQ-native image has no unprotected area"
-        assert not nrf_tree.has_pq_material(
-            nrf_image
-        ), "classic fixture carries founder TLVs"
-        assert nrf_tree.has_pq_material(
-            pq_image
-        ), "PQ-native fixture carries no founder TLVs"
+        assert not nrf_tree.has_pq_material(nrf_image), (
+            "classic fixture carries founder TLVs"
+        )
+        assert nrf_tree.has_pq_material(pq_image), (
+            "PQ-native fixture carries no founder TLVs"
+        )
         f.write(f"static const unsigned int NRF_OTA_IMAGE_OFF = {img_off};\n")
         f.write(f"static const unsigned int NRF_IMAGE_PROT_END = {classic_prot_end};\n")
         f.write(f"static const unsigned int PQ_IMAGE_PROT_END = {pq_prot_end};\n")
