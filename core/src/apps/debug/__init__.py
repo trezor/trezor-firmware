@@ -164,7 +164,7 @@ if __debug__:
 
     if utils.USE_TOUCH:
 
-        async def _layout_swipe(direction: DebugSwipeDirection) -> None:  # type: ignore [obscured by a declaration of the same name]
+        async def _layout_swipe(direction: DebugSwipeDirection) -> None:  # type: ignore [obscured-by-same-name]
             from trezor.enums import DebugSwipeDirection
 
             orig_x = orig_y = 120
