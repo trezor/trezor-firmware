@@ -2,11 +2,11 @@ use crypto::merkle::merkle_root;
 use crypto::{cosi, ed25519, sha256};
 
 use super::{constants, generated};
-use crate::error::{value_error, Error};
+use crate::error::Error;
 use crate::io::InputStream;
 
-const INVALID_DEFINITION: Error = value_error!(c"Invalid definition");
-const INVALID_SIGNATURE: Error = value_error!(c"Invalid definition signature");
+const INVALID_DEFINITION: Error = Error::ExternalDataError(c"Invalid definition");
+const INVALID_SIGNATURE: Error = Error::ExternalDataError(c"Invalid definition signature");
 
 fn read<'a>(reader: &mut InputStream<'a>, len: usize) -> Result<&'a [u8], Error> {
     reader.read(len).map_err(|_| INVALID_DEFINITION)
@@ -56,13 +56,13 @@ pub fn parse_and_verify(definition: &[u8], expected_type: u8) -> Result<&[u8], E
 
     // definition type
     if read_byte(&mut reader)? != expected_type {
-        return Err(value_error!(c"Definition type mismatch"));
+        return Err(Error::ExternalDataError(c"Definition type mismatch"));
     }
 
     // data version
     let data_version = reader.read_u32_le().map_err(|_| INVALID_DEFINITION)?;
     if data_version < generated::MIN_DATA_VERSION {
-        return Err(value_error!(c"Definition is outdated"));
+        return Err(Error::ExternalDataError(c"Definition is outdated"));
     }
 
     // payload

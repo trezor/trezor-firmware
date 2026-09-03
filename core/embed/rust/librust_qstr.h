@@ -31,6 +31,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_DONE;
   MP_QSTR_DeviceMenuResult;
   MP_QSTR_DisconnectDevice;
+  MP_QSTR_ExternalDataError;
   MP_QSTR_FAILED;
   MP_QSTR_INFO;
   MP_QSTR_INITIAL;

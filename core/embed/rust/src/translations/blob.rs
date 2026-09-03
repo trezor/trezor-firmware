@@ -6,7 +6,7 @@ use heapless::Vec;
 
 use super::public_keys;
 use super::translated_string::TranslatedString;
-use crate::error::{value_error, Error};
+use crate::error::Error;
 use crate::io::InputStream;
 
 pub const MAX_HEADER_LEN: u16 = 1024;
@@ -20,7 +20,8 @@ const SIGNATURE_THRESHOLD: u8 = 2;
 // should be max 1.
 const MAX_TABLE_PADDING: usize = 3;
 
-const INVALID_TRANSLATIONS_BLOB: Error = value_error!(c"Invalid translations blob");
+const INVALID_TRANSLATIONS_BLOB: Error = Error::ExternalDataError(c"Invalid translations blob");
+const INVALID_SIGNATURE: Error = Error::ExternalDataError(c"Invalid translations blob signature");
 
 #[repr(C, packed)]
 struct OffsetEntry {
@@ -276,7 +277,9 @@ impl<'a> Translations<'a> {
         let remaining = blob_reader.rest();
         if !remaining.iter().all(|&b| b == EMPTY_BYTE) {
             // TODO optimize to quadwords?
-            return Err(value_error!(c"Trailing data in translations blob"));
+            return Err(Error::ExternalDataError(
+                c"Trailing data in translations blob",
+            ));
         }
 
         let payload_bytes = payload_reader.rest();
@@ -500,7 +503,7 @@ impl ContainerPrefix {
             b"TRTR00" => BlobMagic::V0,
             b"TRTR01" => BlobMagic::V1,
             b"TRTR02" => BlobMagic::V2,
-            _ => return Err(Error::ValueError(c"Unknown blob magic")),
+            _ => return Err(Error::ExternalDataError(c"Unknown blob magic")),
         };
         let container_length = blob_magic.parse_length(reader)?;
         let prefix_length = reader.tell() - offset;
@@ -559,7 +562,7 @@ impl<'a> TranslationsHeader<'a> {
 
         let model = read_fixedsize_str(&mut header_reader, 4)?;
         if model != crate::trezorhal::model::INTERNAL_NAME {
-            return Err(value_error!(c"Wrong Trezor model"));
+            return Err(Error::ExternalDataError(c"Wrong Trezor model"));
         }
 
         let version_bytes = header_reader.read(4)?;
@@ -639,12 +642,13 @@ impl<'a> TranslationsHeader<'a> {
 
     fn verify_with_keys(&self, public_keys: &[ed25519::PublicKey]) -> Result<(), Error> {
         let merkle_root = merkle_root(self.header_bytes, self.merkle_proof);
-        Ok(cosi::verify(
+        cosi::verify(
             SIGNATURE_THRESHOLD,
             &merkle_root,
             public_keys,
             &self.signature,
-        )?)
+        )
+        .map_err(|_| INVALID_SIGNATURE)
     }
 
     pub fn verify(&self) -> Result<(), Error> {

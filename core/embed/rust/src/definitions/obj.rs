@@ -1,5 +1,5 @@
 use super::blob;
-use crate::error::{value_error, Error};
+use crate::error::Error;
 use crate::io::InputStream;
 use crate::micropython::buffer::get_buffer;
 use crate::micropython::gc::Gc;
@@ -34,7 +34,7 @@ extern "C" fn decode(n_args: usize, args: *const Obj) -> Obj {
         };
         decoder
             .message_from_stream(&mut stream, msg_def.msg())
-            .map_err(|_| value_error!(c"Invalid definition"))
+            .map_err(|_| Error::ExternalDataError(c"Invalid definition"))
     };
 
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
