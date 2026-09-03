@@ -23,9 +23,9 @@
 
 // Mock fuel gauge for boards that have no gauged battery (e.g. a latch board
 // whose only power hardware is a soft power switch). It satisfies the
-// fuel_gauge/battery.h interface with trivial behaviour: the cell is always reported
-// as full and healthy, mirroring how such a board is treated as "always
-// adequately powered". There is no estimator, so `P` is ignored and the
+// fuel_gauge/battery.h interface with trivial behaviour: the cell is always
+// reported as full and healthy, mirroring how such a board is treated as
+// "always adequately powered". There is no estimator, so `P` is ignored and the
 // OCV-curve helpers - which are only exercised by the charger precharge
 // controller (compiled out when USE_CHARGER is off) - return passthrough
 // values.
