@@ -63,8 +63,9 @@ Configuration of the Python style tools can be found in root [`pyproject.toml`]
 [`setup.cfg`]: https://github.com/trezor/trezor-firmware/blob/master/setup.cfg
 [`pyproject.toml`]: https://github.com/trezor/trezor-firmware/blob/master/pyproject.toml
 
-We use [ruff](https://docs.astral.sh/ruff/) to organize imports, to auto-format
-code, and to enforce PEP 585/604 annotation style.
+We use [ruff](https://docs.astral.sh/ruff/) to organize imports, to remove
+unused imports, to auto-format code, and to enforce PEP 585/604 annotation
+style.
 
 #### Formatting
 
