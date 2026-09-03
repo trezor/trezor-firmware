@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 from trezor.crypto import bip39
-from trezor.enums import AmountUnit, OutputScriptType
+from trezor.enums import OutputScriptType
 from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
 from trezor.messages import (
     PrevInput,
@@ -24,15 +24,13 @@ from trezor.messages import (
     TxRequestDetailsType,
     TxRequestSerializedType,
 )
-from trezor.utils import chunks
 
 from apps.bitcoin.keychain import _get_schemas_for_coin
-from apps.bitcoin.sign_tx import bitcoinlike, helpers
+from apps.bitcoin.sign_tx import bitcoinlike
 from apps.common import coins
 from apps.common.keychain import Keychain
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
-
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestSignTx_GRS(unittest.TestCase):
@@ -96,11 +94,7 @@ class TestSignTx_GRS(unittest.TestCase):
             outputs_count=1,
         )
 
-        # precomputed tx weight is 768
-        fee_rate = 192 / (768 / 4)
-
         messages = [
-            None,
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -113,14 +107,7 @@ class TestSignTx_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(
-                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(44), H_(17), H_(0)]
-            ),
-            True,
-            helpers.UiConfirmTotal(
-                210016, 192, fee_rate, coin, AmountUnit.BITCOIN, inp1.address_n[:3]
-            ),
-            True,
+
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -208,15 +195,8 @@ class TestSignTx_GRS(unittest.TestCase):
         seed = bip39.seed(" ".join(["all"] * 12), "")
         ns = _get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoinlike.Bitcoinlike(tx, keychain, coin, None).signer()
-        for request, expected_response in chunks(messages, 2):
-            response = signer.send(request)
-            if isinstance(response, tuple):
-                _, response = response
-            self.assertEqual(response, expected_response)
-        with self.assertRaises(StopIteration):
-            signer.send(None)
-
+        signer = bitcoinlike.Bitcoinlike(tx, keychain, coin, None)
+        run_signer(self, signer, messages)
 
 if __name__ == "__main__":
     unittest.main()

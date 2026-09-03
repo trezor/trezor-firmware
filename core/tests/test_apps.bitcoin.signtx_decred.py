@@ -6,7 +6,7 @@ if (
     and not utils.BITCOIN_ONLY
 ):
     from trezor.crypto import bip39
-    from trezor.enums import AmountUnit, OutputScriptType
+    from trezor.enums import OutputScriptType
     from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
     from trezor.messages import (
         PrevInput,
@@ -28,10 +28,8 @@ if (
         TxRequestDetailsType,
         TxRequestSerializedType,
     )
-    from trezor.utils import chunks
-
     from apps.bitcoin.keychain import _get_schemas_for_coin
-    from apps.bitcoin.sign_tx import decred, helpers
+    from apps.bitcoin.sign_tx import decred
     from apps.common import coins
     from apps.common.keychain import Keychain
 
@@ -67,7 +65,6 @@ if (
         decred_script_version=0,
     )
 
-
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 @unittest.skipUnless(utils.INTERNAL_MODEL == "T2T1", "only for T2T1")
 class TestSignTxDecred(unittest.TestCase):
@@ -98,11 +95,15 @@ class TestSignTxDecred(unittest.TestCase):
             outputs_count=1,
         )
 
-        # precomputed tx weight is 864
-        fee_rate = 100_000 / (864 / 4)
+        tx = SignTx(
+            coin_name="Decred Testnet",
+            version=1,
+            lock_time=0,
+            inputs_count=1,
+            outputs_count=1,
+        )
 
         messages = [
-            None,
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -121,19 +122,7 @@ class TestSignTxDecred(unittest.TestCase):
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(
-                out1, coin_decred, AmountUnit.BITCOIN, 0, False, [H_(44), H_(1), H_(0)]
-            ),
-            True,
-            helpers.UiConfirmTotal(
-                200_000_000,
-                100_000,
-                fee_rate,
-                coin_decred,
-                AmountUnit.BITCOIN,
-                inp1.address_n[:3],
-            ),
-            True,
+
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -215,17 +204,9 @@ class TestSignTxDecred(unittest.TestCase):
         )
         ns = _get_schemas_for_coin(coin_decred)
         keychain = Keychain(seed, coin_decred.curve_name, ns)
-        signer = decred.Decred(tx, keychain, coin_decred, None).signer()
+        signer = decred.Decred(tx, keychain, coin_decred, None)
 
-        for request, response in chunks(messages, 2):
-            res = signer.send(request)
-            if isinstance(res, tuple):
-                _, res = res
-
-            self.assertEqual(res, response)
-
-        with self.assertRaises(StopIteration):
-            signer.send(None)
+        run_signer(self, signer, messages)
 
     def test_purchase_ticket(self):
         inp1 = TxInput(
@@ -265,11 +246,16 @@ class TestSignTxDecred(unittest.TestCase):
             decred_staking_ticket=True,
         )
 
-        # precomputed tx weight is 1188
-        fee_rate = 100_000 / (1188 / 4)
+        tx = SignTx(
+            coin_name="Decred Testnet",
+            version=1,
+            lock_time=0,
+            inputs_count=1,
+            outputs_count=3,
+            decred_staking_ticket=True,
+        )
 
         messages = [
-            None,
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -288,10 +274,7 @@ class TestSignTxDecred(unittest.TestCase):
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmDecredSSTXSubmission(
-                out1, coin_decred, AmountUnit.BITCOIN
-            ),
-            True,
+
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
@@ -312,15 +295,7 @@ class TestSignTxDecred(unittest.TestCase):
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out3)),
-            helpers.UiConfirmTotal(
-                200_000_000,
-                100_000,
-                fee_rate,
-                coin_decred,
-                AmountUnit.BITCOIN,
-                inp1.address_n[:3],
-            ),
-            True,
+
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -402,17 +377,9 @@ class TestSignTxDecred(unittest.TestCase):
         )
         ns = _get_schemas_for_coin(coin_decred)
         keychain = Keychain(seed, coin_decred.curve_name, ns)
-        signer = decred.Decred(tx, keychain, coin_decred, None).signer()
+        signer = decred.Decred(tx, keychain, coin_decred, None)
 
-        for request, response in chunks(messages, 2):
-            res = signer.send(request)
-            if isinstance(res, tuple):
-                _, res = res
-
-            self.assertEqual(res, response)
-
-        with self.assertRaises(StopIteration):
-            signer.send(None)
+        run_signer(self, signer, messages)
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ from ..common import (
 from ..keychain import address_n_to_name
 
 if TYPE_CHECKING:
+    from typing import Any, Awaitable
     from buffer_types import AnyBytes
 
     from trezor.enums import AmountUnit
@@ -58,14 +59,14 @@ def account_label(coin: CoinInfo, address_n: Bip32Path | None) -> str:
         ) or address_n_to_str(address_n)
 
 
-async def confirm_output(
+def confirm_output(
     output: TxOutput,
     coin: CoinInfo,
     amount_unit: AmountUnit,
     output_index: int,
     chunkify: bool,
     address_n: Bip32Path | None,
-) -> None:
+) -> Awaitable[None]:
     from trezor.enums import OutputScriptType
 
     from . import omni
@@ -125,7 +126,7 @@ async def confirm_output(
             source_account_path=address_n_to_str(address_n) if address_n else None,
         )
 
-    await layout
+    return layout
 
 
 async def confirm_decred_sstx_submission(
@@ -154,13 +155,13 @@ async def confirm_decred_sstx_submission(
     )
 
 
-async def show_payment_request_details(
+def show_payment_request_details(
     provider_address: str,
     payment_request: PaymentRequest,
     coin: CoinInfo,
     amount_unit: AmountUnit,
     address_n: Bip32Path | None,
-) -> None:
+) -> Awaitable[None]:
     from trezor import wire
     from trezor.ui.layouts.slip24 import Refund, Trade
 
@@ -213,7 +214,7 @@ async def show_payment_request_details(
     if account_path:
         account_items.append((TR.address_details__derivation_path, account_path, True))
 
-    await layouts.confirm_payment_request(
+    return layouts.confirm_payment_request(
         payment_request.recipient_name,
         provider_address,
         texts,
@@ -225,23 +226,23 @@ async def show_payment_request_details(
     )
 
 
-async def confirm_replacement(title: str, txid: AnyBytes) -> None:
-    await layouts.confirm_replacement(
+def confirm_replacement(title: str, txid: AnyBytes) -> Awaitable[None]:
+    return layouts.confirm_replacement(
         title,
         txid.hex(),
     )
 
 
-async def confirm_modify_output(
+def confirm_modify_output(
     txo: TxOutput,
     orig_txo: TxOutput,
     coin: CoinInfo,
     amount_unit: AmountUnit,
-) -> None:
+) -> Awaitable[None]:
     assert txo.address is not None
     address_short = addresses.address_short(coin, txo.address)
     amount_change = txo.amount - orig_txo.amount
-    await layouts.confirm_modify_output(
+    return layouts.confirm_modify_output(
         address_short,
         amount_change,
         format_coin_amount(abs(amount_change), coin, amount_unit),
@@ -249,15 +250,15 @@ async def confirm_modify_output(
     )
 
 
-async def confirm_modify_fee(
+def confirm_modify_fee(
     title: str,
     user_fee_change: int,
     total_fee_new: int,
     fee_rate: float,
     coin: CoinInfo,
     amount_unit: AmountUnit,
-) -> None:
-    await layouts.confirm_modify_fee(
+) -> Awaitable[None]:
+    return layouts.confirm_modify_fee(
         title,
         user_fee_change,
         format_coin_amount(abs(user_fee_change), coin, amount_unit),
@@ -266,33 +267,30 @@ async def confirm_modify_fee(
     )
 
 
-async def confirm_joint_total(
-    spending: int,
-    total: int,
-    coin: CoinInfo,
-    amount_unit: AmountUnit,
-) -> None:
-    await layouts.confirm_joint_total(
+def confirm_joint_total(
+    spending: int, total: int, coin: CoinInfo, amount_unit: AmountUnit
+) -> Awaitable[None]:
+    return layouts.confirm_joint_total(
         spending_amount=format_coin_amount(spending, coin, amount_unit),
         total_amount=format_coin_amount(total, coin, amount_unit),
     )
 
 
-async def confirm_total(
+def confirm_total(
     spending: int,
     fee: int,
     fee_rate: float,
     coin: CoinInfo,
     amount_unit: AmountUnit,
     address_n: Bip32Path | None,
-) -> None:
+) -> Awaitable[Any]:
     account = account_label(coin, address_n)
     account_path = address_n_to_str(address_n) if address_n else None
     account_items: list[StrPropertyType] = [(TR.words__account, account, None)]
     if account_path and account_path != account:
         account_items.append((TR.address_details__derivation_path, account_path, None))
 
-    await layouts.confirm_total(
+    return layouts.confirm_total(
         format_coin_amount(spending, coin, amount_unit),
         format_coin_amount(fee, coin, amount_unit),
         account_items=account_items,
@@ -304,11 +302,11 @@ async def confirm_total(
     )
 
 
-async def confirm_feeoverthreshold(
+def confirm_feeoverthreshold(
     fee: int, coin: CoinInfo, amount_unit: AmountUnit
-) -> None:
+) -> Awaitable[None]:
     fee_amount = format_coin_amount(fee, coin, amount_unit)
-    await layouts.show_warning(
+    return layouts.show_warning(
         "fee_over_threshold",
         TR.bitcoin__unusually_high_fee,
         fee_amount,
@@ -316,8 +314,8 @@ async def confirm_feeoverthreshold(
     )
 
 
-async def confirm_change_count_over_threshold(change_count: int) -> None:
-    await layouts.show_warning(
+def confirm_change_count_over_threshold(change_count: int) -> Awaitable[None]:
+    return layouts.show_warning(
         "change_count_over_threshold",
         TR.bitcoin__lot_of_change_outputs,
         f"{str(change_count)} {TR.words__outputs}",
@@ -325,8 +323,8 @@ async def confirm_change_count_over_threshold(change_count: int) -> None:
     )
 
 
-async def confirm_unverified_external_input() -> None:
-    await layouts.show_warning(
+def confirm_unverified_external_input() -> Awaitable[None]:
+    return layouts.show_warning(
         "unverified_external_input",
         TR.bitcoin__unverified_external_inputs,
         TR.words__continue_anyway_question,
@@ -335,15 +333,17 @@ async def confirm_unverified_external_input() -> None:
     )
 
 
-async def confirm_multiple_accounts() -> None:
-    await layouts.confirm_multiple_accounts_warning()
+def confirm_multiple_accounts() -> Awaitable[None]:
+    return layouts.confirm_multiple_accounts_warning()
 
 
-async def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> None:
+def confirm_nondefault_locktime(
+    lock_time: int, lock_time_disabled: bool
+) -> Awaitable[None]:
     from trezor.strings import format_timestamp
 
     if lock_time_disabled:
-        await layouts.lock_time_disabled_warning()
+        return layouts.lock_time_disabled_warning()
     else:
         if lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
             text = TR.bitcoin__locktime_set_to_blockheight
@@ -353,7 +353,7 @@ async def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) 
             text = TR.bitcoin__locktime_set_to
             value = format_timestamp(lock_time)
             is_data = False
-        await layouts.confirm_value(
+        return layouts.confirm_value(
             TR.bitcoin__confirm_locktime,
             value,
             text,
@@ -362,3 +362,9 @@ async def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) 
             br_code=ButtonRequestType.SignTx,
             verb=TR.buttons__confirm,
         )
+
+
+def confirm_foreign_address(address_n: list) -> Awaitable[None]:
+    from apps.common import paths
+
+    return paths.show_path_warning(address_n)

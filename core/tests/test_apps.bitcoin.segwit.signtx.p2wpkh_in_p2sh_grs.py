@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 from trezor.crypto import bip39
-from trezor.enums import AmountUnit, InputScriptType, OutputScriptType
+from trezor.enums import InputScriptType, OutputScriptType
 from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
 from trezor.messages import (
     PrevInput,
@@ -24,15 +24,13 @@ from trezor.messages import (
     TxRequestDetailsType,
     TxRequestSerializedType,
 )
-from trezor.utils import chunks
 
 from apps.bitcoin.keychain import _get_schemas_for_coin
-from apps.bitcoin.sign_tx import bitcoinlike, helpers
+from apps.bitcoin.sign_tx import bitcoinlike
 from apps.common import coins
 from apps.common.keychain import Keychain
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
-
 
 # https://groestlsight-test.groestlcoin.org/api/tx/4ce0220004bdfe14e3dd49fd8636bcb770a400c0c9e9bff670b6a13bb8f15c72
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -112,7 +110,6 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
         fee_rate = 11000 / 168
 
         messages = [
-            None,
             # check fee
             TxRequest(
                 request_type=TXINPUT,
@@ -126,31 +123,14 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(
-                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
-            ),
-            True,
+
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
-            helpers.UiConfirmOutput(
-                out2, coin, AmountUnit.BITCOIN, 1, False, [H_(49), H_(1), H_(0)]
-            ),
-            True,
-            helpers.UiConfirmNonDefaultLocktime(tx.lock_time, lock_time_disabled=False),
-            True,
-            helpers.UiConfirmTotal(
-                123445789 + 11000,
-                11000,
-                fee_rate,
-                coin,
-                AmountUnit.BITCOIN,
-                inp1.address_n[:3],
-            ),
-            True,
+
             # check prev tx
             TxRequest(
                 request_type=TXINPUT,
@@ -249,14 +229,8 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
 
         ns = _get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoinlike.Bitcoinlike(tx, keychain, coin, None).signer()
-        for request, expected_response in chunks(messages, 2):
-            response = signer.send(request)
-            if isinstance(response, tuple):
-                _, response = response
-            self.assertEqual(response, expected_response)
-        with self.assertRaises(StopIteration):
-            signer.send(None)
+        signer = bitcoinlike.Bitcoinlike(tx, keychain, coin, None)
+        run_signer(self, signer, messages)
 
     def test_send_p2wpkh_in_p2sh_change(self):
 
@@ -331,7 +305,6 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
         fee_rate = 11000 / 168
 
         messages = [
-            None,
             # check fee
             TxRequest(
                 request_type=TXINPUT,
@@ -345,27 +318,14 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(
-                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
-            ),
-            True,
+
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
-            helpers.UiConfirmNonDefaultLocktime(tx.lock_time, lock_time_disabled=False),
-            True,
-            helpers.UiConfirmTotal(
-                12300000 + 11000,
-                11000,
-                fee_rate,
-                coin,
-                AmountUnit.BITCOIN,
-                inp1.address_n[:3],
-            ),
-            True,
+
             # check prev tx
             TxRequest(
                 request_type=TXINPUT,
@@ -465,15 +425,8 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
 
         ns = _get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoinlike.Bitcoinlike(tx, keychain, coin, None).signer()
-        for request, expected_response in chunks(messages, 2):
-            response = signer.send(request)
-            if isinstance(response, tuple):
-                _, response = response
-            self.assertEqual(response, expected_response)
-        with self.assertRaises(StopIteration):
-            signer.send(None)
-
+        signer = bitcoinlike.Bitcoinlike(tx, keychain, coin, None)
+        run_signer(self, signer, messages)
 
 if __name__ == "__main__":
     unittest.main()
