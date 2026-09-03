@@ -37,6 +37,7 @@ pub enum Error {
     NotImplementedError,
     #[cfg(feature = "thp")]
     ThpError(&'static CStr),
+    ExternalDataError(&'static CStr),
 }
 
 #[allow(unused_macros)]
@@ -80,6 +81,9 @@ impl Error {
                 Error::NotImplementedError => new_exception(exception::NotImplementedError),
                 #[cfg(feature = "thp")]
                 Error::ThpError(msg) => new_exception_arg_from(&ThpError, msg),
+                Error::ExternalDataError(msg) => {
+                    new_exception_arg_from(&exception::ExternalDataError, msg)
+                }
             }
         }
     }
