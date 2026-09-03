@@ -89,6 +89,20 @@ def leaf_from_layout(
         with layout_factory() as obj:
             # the leaf's layout is de-allocated after interact() returns.
             result = await interact(obj, br_name, br_code, raise_on_cancel)
+        if result is trezorui_api.CANCELLED:
+            # `raise_on_cancel` is None by default, so cancelling returns the
+            # sentinel instead of raising. Resume the tree rather than handing
+            # `CANCELLED` to the caller as if it were a value of type `R`.
+            #
+            # TODO: `CANCELLED` is the wrong signal here. Dismissing a leaf's
+            # layout - the close button in its header - means "go back to the
+            # menu", not "abort the workflow", but the screens have no way to
+            # say so: `TextScreenMsg` only has `Cancelled`, and `BACK` (which
+            # already exists next to CONFIRMED/CANCELLED/INFO) is never
+            # produced. So every caller has to re-interpret the same sentinel
+            # for itself. Fixing it properly means teaching the action
+            # vocabulary to distinguish "dismissed" from "aborted".
+            return None
         return result if return_result else None
 
     return MenuLeaf(name, _interact, intent=intent)
