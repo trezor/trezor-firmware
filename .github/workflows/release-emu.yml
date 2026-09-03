@@ -32,6 +32,7 @@ jobs:
   get_models:
     name: Get models
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       models: ${{ steps.get_models.outputs.models }}
       version: ${{ steps.get_models.outputs.version }}
@@ -59,6 +60,7 @@ jobs:
     name: Build emu
     needs: get_models
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -84,6 +86,7 @@ jobs:
     name: Build core emu arm
     needs: get_models
     runs-on: ubuntu-latest-arm64
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -110,6 +113,7 @@ jobs:
     name: Build legacy emu
     needs: get_models
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       matrix:
         coins: [universal]
@@ -133,6 +137,7 @@ jobs:
     name: Build legacy emu arm
     needs: get_models
     runs-on: ubuntu-latest-arm64
+    timeout-minutes: 20
     strategy:
       matrix:
         coins: [universal]

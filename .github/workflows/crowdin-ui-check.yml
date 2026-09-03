@@ -25,6 +25,7 @@ jobs:
   core_emu:
     name: Build emulator (${{ matrix.model }}, universal, debuglink, noasan)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -56,6 +57,8 @@ jobs:
     if: ${{ !inputs.all-languages }}
     permissions:
       id-token: write  # for fetching OIDC token for AWS in reusable workflow jobs
+    # A reusable-workflow call cannot declare `timeout-minutes` -- the called
+    # workflow's jobs carry them. TODO: pass it as a `workflow_call` input.
     uses: ./.github/workflows/crowdin-ui-check-reuse.yml
     with:
       languages: '["en", "${{ inputs.language }}"]'
@@ -65,6 +68,8 @@ jobs:
     if: ${{ inputs.all-languages }}
     permissions:
       id-token: write  # for fetching OIDC token for AWS in reusable workflow jobs
+    # A reusable-workflow call cannot declare `timeout-minutes` -- the called
+    # workflow's jobs carry them. TODO: pass it as a `workflow_call` input.
     uses: ./.github/workflows/crowdin-ui-check-reuse.yml
     with:
       languages: '["en", "cs", "fr", "de", "es", "pt"]'

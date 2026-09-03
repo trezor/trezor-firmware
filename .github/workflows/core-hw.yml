@@ -31,6 +31,7 @@ jobs:
   param:
     name: Determine pipeline parameters
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     # No scheduled runs on forks.
     if: github.repository == 'trezor/trezor-firmware' || github.event_name != 'schedule'
     outputs:
@@ -118,6 +119,7 @@ jobs:
     runs-on:
       - self-hosted
       - ${{ matrix.model == 'T2B1' && 'hw-t2b1' || matrix.model == 'T3T1' && 'hw-t3t1' || matrix.model == 'T3B1' && 'hw-t3b1' || matrix.model == 'T3W1' && 'hw-t3w1' || 'hw-t2t1' }}
+    timeout-minutes: 360
     if: needs.param.outputs.core_models != '[]' && false  # FIXME https://github.com/trezor/trezor-firmware/issues/3128
     strategy:
       fail-fast: false
@@ -163,6 +165,7 @@ jobs:
     runs-on:
       - self-hosted
       - hw-t1b1
+    timeout-minutes: 240
     if: needs.param.outputs.run_legacy == '1'
     strategy:
       fail-fast: false

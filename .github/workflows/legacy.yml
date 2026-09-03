@@ -38,6 +38,7 @@ jobs:
   legacy_firmware:
     name: Firmware
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       matrix:
         coins: [universal, btconly]
@@ -64,6 +65,7 @@ jobs:
   legacy_emu:
     name: Emulator
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       matrix:
         coins: [universal, btconly]
@@ -95,6 +97,7 @@ jobs:
     if: github.event_name == 'schedule'
     name: Emulator arm
     runs-on: ubuntu-latest-arm64
+    timeout-minutes: 20
     strategy:
       matrix:
         coins: [universal]
@@ -184,6 +187,7 @@ jobs:
     if: false  # XXX currently failing
     continue-on-error: true
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: legacy_emu
     env:
       EMULATOR: 1
@@ -206,6 +210,7 @@ jobs:
     name: Upload emulator binaries
     if: github.event_name == 'schedule' && github.repository == 'trezor/trezor-firmware'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs:
       - legacy_emu
       - legacy_emu_arm

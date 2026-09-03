@@ -32,6 +32,7 @@ jobs:
   pr_comment:
     name: Post a comment to the pull request
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event.action == 'opened' || github.event.action == 'synchronize'
     permissions:
       pull-requests: write  # needed to post a comment
@@ -57,6 +58,7 @@ jobs:
   issue_open:
     name: Open an issue for trezor-user-env
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event.action == 'closed' && github.event.merged == true && github.repository == 'trezor/trezor-firmware'
     env:
       URL: ${{ github.event.pull_request.html_url }}
