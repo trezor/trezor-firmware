@@ -190,11 +190,13 @@ def cancel(debug: "DebugLink") -> None:
 
 
 VECTORS = (  # passphrase, address
-    (CommonPass.SHORT, CommonPass.SHORT_ADDRESS),
-    (CommonPass.WITH_SPACE, CommonPass.WITH_SPACE_ADDRESS),
-    (CommonPass.RANDOM_25, CommonPass.RANDOM_25_ADDRESS),
-    (CommonPass.AAA_SHORTER, CommonPass.AAA_SHORTER_ADDRESS),
-    (CommonPass.AAA_LIMIT, CommonPass.AAA_LIMIT_ADDRESS),
+    pytest.param(CommonPass.SHORT, CommonPass.SHORT_ADDRESS, id="short"),
+    pytest.param(CommonPass.WITH_SPACE, CommonPass.WITH_SPACE_ADDRESS, id="with_space"),
+    pytest.param(CommonPass.RANDOM_25, CommonPass.RANDOM_25_ADDRESS, id="random_25"),
+    pytest.param(
+        CommonPass.AAA_SHORTER, CommonPass.AAA_SHORTER_ADDRESS, id="aaa_shorter"
+    ),
+    pytest.param(CommonPass.AAA_LIMIT, CommonPass.AAA_LIMIT_ADDRESS, id="aaa_limit"),
 )
 
 

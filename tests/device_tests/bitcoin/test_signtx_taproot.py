@@ -389,13 +389,22 @@ def test_attack_script_type(session: Session):
     "address",
     (
         # SegWit v1 pubkey not on the curve.
-        "tb1pam775nxmvam4pfpqlm5q06k0y84e3x9w0xuhdpmxuna2qj3dfg6qy2pq29",
+        pytest.param(
+            "tb1pam775nxmvam4pfpqlm5q06k0y84e3x9w0xuhdpmxuna2qj3dfg6qy2pq29",
+            id="pubkey_not_on_curve",
+        ),
         # SegWit v1 invalid address length.
-        "tb1plycg5qvjtrp3qjf5f7zl382j9x6nrjz9n0dh50",
+        pytest.param("tb1plycg5qvjtrp3qjf5f7zl382j9x6nrjz9n0dh50", id="invalid_length"),
         # Unrecognized SegWit version.
-        "tb1zlycg5qvjtrp3qjf5f7zl382j9x6nrjz9sdhenvyxq8c3808qxmusxanpxu",
+        pytest.param(
+            "tb1zlycg5qvjtrp3qjf5f7zl382j9x6nrjz9sdhenvyxq8c3808qxmusxanpxu",
+            id="unrecognized_segwit_version",
+        ),
         # SegWit v1 pubkey x-coordinate exceeds the field size.
-        "tb1pllllllllllllllllllllllllllllllllllllllllllllallllscqgl4zhn",
+        pytest.param(
+            "tb1pllllllllllllllllllllllllllllllllllllllllllllallllscqgl4zhn",
+            id="pubkey_x_exceeds_field_size",
+        ),
     ),
 )
 def test_send_invalid_address(session: Session, address: str):

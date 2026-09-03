@@ -172,7 +172,14 @@ def test_change_mismatch(session: Session):
     _check_pin(session, PIN4)
 
 
-@pytest.mark.parametrize("invalid_pin", ("1204", "", PIN_TOO_LONG))
+@pytest.mark.parametrize(
+    "invalid_pin",
+    (
+        pytest.param("1204", id="invalid_digit"),
+        pytest.param("", id="empty"),
+        pytest.param(PIN_TOO_LONG, id="too_long"),
+    ),
+)
 def test_set_invalid(session: Session, invalid_pin):
     assert session.features.pin_protection is False
 
@@ -207,7 +214,14 @@ def test_set_invalid(session: Session, invalid_pin):
     _check_no_pin(session)
 
 
-@pytest.mark.parametrize("invalid_pin", ("1204", "", PIN_TOO_LONG))
+@pytest.mark.parametrize(
+    "invalid_pin",
+    (
+        pytest.param("1204", id="invalid_digit"),
+        pytest.param("", id="empty"),
+        pytest.param(PIN_TOO_LONG, id="too_long"),
+    ),
+)
 @pytest.mark.setup_client(pin=PIN4)
 def test_enter_invalid(session: Session, invalid_pin):
     assert session.features.pin_protection is True

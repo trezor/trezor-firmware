@@ -35,12 +35,12 @@ EXTRA_GROUP_SHARE = [
 ]
 
 # secrets generated using model T
+SECRET_20 = "c2d2e26ad06023c60145f150abe2dd2b"
+SECRET_33 = "c41d5cf80fed71a008a3a0ae0458ff0c6d621b1a5522bccbfedbcfad87005c06"
+
 VECTORS = (
-    (MNEMONIC_SLIP39_ADVANCED_20, "c2d2e26ad06023c60145f150abe2dd2b"),
-    (
-        MNEMONIC_SLIP39_ADVANCED_33,
-        "c41d5cf80fed71a008a3a0ae0458ff0c6d621b1a5522bccbfedbcfad87005c06",
-    ),
+    pytest.param(MNEMONIC_SLIP39_ADVANCED_20, SECRET_20, id="20_words"),
+    pytest.param(MNEMONIC_SLIP39_ADVANCED_33, SECRET_33, id="33_words"),
 )
 
 
@@ -81,7 +81,7 @@ def test_extra_share_entered(session: Session):
     _test_secret(
         session,
         shares=EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20,
-        secret=VECTORS[0][1],
+        secret=SECRET_20,
     )
 
 

@@ -26,67 +26,85 @@ from .signtx import forge_prevtx
 
 VECTORS = (  # path, script_types
     # GreenAddress A m/[1,4]/address_index
-    (
+    pytest.param(
         "m/4/255",
         (
             messages.InputScriptType.SPENDADDRESS,
             messages.InputScriptType.SPENDWITNESS,
             messages.InputScriptType.SPENDP2SHWITNESS,
         ),
+        id="greenaddress_a",
     ),
     # GreenAddress B m/3'/[1-100]'/[1,4]/address_index
-    (
+    pytest.param(
         "m/3h/100h/4/255",
         (
             messages.InputScriptType.SPENDADDRESS,
             messages.InputScriptType.SPENDWITNESS,
             messages.InputScriptType.SPENDP2SHWITNESS,
         ),
+        id="greenaddress_b",
     ),
     # GreenAdress Sign A m/1195487518
-    (
+    pytest.param(
         "m/1195487518",
         (
             messages.InputScriptType.SPENDADDRESS,
             messages.InputScriptType.SPENDWITNESS,
             messages.InputScriptType.SPENDP2SHWITNESS,
         ),
+        id="greenaddress_sign_a",
     ),
     # GreenAdress Sign B m/1195487518/6/address_index
-    (
+    pytest.param(
         "m/1195487518/6/255",
         (
             messages.InputScriptType.SPENDADDRESS,
             messages.InputScriptType.SPENDWITNESS,
             messages.InputScriptType.SPENDP2SHWITNESS,
         ),
+        id="greenaddress_sign_b",
     ),
     # Casa m/49/coin_type/account/change/address_index
-    (
+    pytest.param(
         "m/49/0/63/0/255",
         (messages.InputScriptType.SPENDP2SHWITNESS,),
+        id="casa",
     ),
 )
 
 # 2-of-3 multisig, first path is ours
 VECTORS_MULTISIG = (  # paths, address_index
     # GreenAddress A m/[1,4]/address_index
-    (("m/1", "m/1", "m/4"), [255]),
+    pytest.param(("m/1", "m/1", "m/4"), [255], id="greenaddress_a"),
     # GreenAddress B m/3'/[1-100]'/[1,4]/address_index
-    (("m/3h/100h/1", "m/3h/99h/1", "m/3h/98h/1"), [255]),
+    pytest.param(
+        ("m/3h/100h/1", "m/3h/99h/1", "m/3h/98h/1"), [255], id="greenaddress_b"
+    ),
     # GreenAdress Sign A m/1195487518
-    (("m/1195487518", "m/1195487518", "m/1195487518"), []),
+    pytest.param(
+        ("m/1195487518", "m/1195487518", "m/1195487518"), [], id="greenaddress_sign_a"
+    ),
     # GreenAdress Sign B m/1195487518/6/address_index
-    (("m/1195487518/6", "m/1195487518/6", "m/1195487518/6"), [255]),
+    pytest.param(
+        ("m/1195487518/6", "m/1195487518/6", "m/1195487518/6"),
+        [255],
+        id="greenaddress_sign_b",
+    ),
     # Unchained hardened m/45'/coin_type'/account'/[0-1000000]/change/address_index
-    (
+    pytest.param(
         ("m/45h/0h/63h/1000000", "m/45h/0h/62h/1000000", "m/45h/0h/61h/1000000"),
         [0, 255],
+        id="unchained_hardened",
     ),
     # Unchained unhardened m/45'/coin_type/account/[0-1000000]/change/address_index
-    (("m/45h/0/63/1000000", "m/45h/0/62/1000000", "m/45h/0/61/1000000"), [0, 255]),
+    pytest.param(
+        ("m/45h/0/63/1000000", "m/45h/0/62/1000000", "m/45h/0/61/1000000"),
+        [0, 255],
+        id="unchained_unhardened",
+    ),
     # Casa Paths
-    (("m/45h/0/60/1", "m/45h/1/60/0", "m/45h/2/60/0"), [255]),
+    pytest.param(("m/45h/0/60/1", "m/45h/1/60/0", "m/45h/2/60/0"), [255], id="casa"),
 )
 
 
