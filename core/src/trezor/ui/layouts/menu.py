@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Iterable, Sequence
     from typing import Generic, TypeAlias, overload
 
-    from typing_extensions import Never, TypeVar
+    from typing_extensions import TypeVar
 
     from .common import ExceptionType
 
@@ -44,6 +44,12 @@ class MenuLeaf(Generic[R]):
     `interact()` returns `None` to indicate that the menu tree should be resumed
     (one level up), or a value of type `R`, which is propagated out of the whole
     tree by `show_menu()`.
+
+    Because `None` is that sentinel, it can never be a *value*, whatever `R` is.
+    `MenuLeaf[None]` is therefore a leaf that only ever resumes the tree - which
+    is what the information-only entries are. Note the type system does not
+    enforce this: `Menu[int | None]` typechecks and `MenuResult.value` is then
+    declared `int | None`, but `None` is unreachable there at runtime.
     """
 
     def __init__(
@@ -93,21 +99,31 @@ def cancel_leaf(
     exc: ExceptionType = ActionCancelled,
     *,
     confirm: "Callable[[], trezorui_api.LayoutContext[trezorui_api.UiResult]] | None" = None,
-) -> "MenuLeaf[Never]":
+) -> "MenuLeaf[R]":
     """A menu entry that aborts the workflow.
 
     Selecting it raises `exc`. If `confirm` is given, that layout is shown first
     and the workflow is aborted only if the user confirms it; otherwise the menu
     is resumed, as with any leaf that returns `None`.
+
+    Produces no value, so it fits a tree of any `R`. Declared `MenuLeaf[R]`
+    rather than the more precise `MenuLeaf[Never]` on purpose: `Never` would make
+    `[cancel_leaf(...)]` infer `list[MenuLeaf[Never]]`, which then rejects every
+    information leaf appended to it. With `R` the list infers `list[MenuLeaf[None]]`
+    by the TypeVar default, and still narrows when the tree does return values.
     """
 
     async def _interact() -> None:
-        if confirm is not None:
-            with confirm() as obj:
-                result = await interact(obj, br_name=None, raise_on_cancel=None)
-            if result is not trezorui_api.CONFIRMED:
-                return None  # declined - back to the menu
-        raise exc
+        if confirm is None:
+            raise exc
+
+        with confirm() as obj:
+            result = await interact(obj, br_name=None, raise_on_cancel=None)
+        if result is trezorui_api.CANCELLED:
+            return None  # declined - back to the menu
+        if result is trezorui_api.CONFIRMED:
+            raise exc
+        raise RuntimeError  # unexpected result from the confirmation layout
 
     return MenuLeaf(name, _interact, intent=trezorui_api.MenuItemIntent.DANGER)
 
@@ -127,6 +143,9 @@ async def show_menu(
 
     Returns the leaf and the value it produced, so that the caller can tell the
     leaves apart, or `None` if the tree was left without producing a value.
+
+    A leaf that returns `None` resumes the tree instead of ending it, so a
+    returned `MenuResult.value` is never `None` - see `MenuLeaf`.
     """
     menu_path: list[int] = []
     current_item = 0
@@ -148,6 +167,9 @@ async def show_menu(
                 menu_path.append(choice)
                 current_item = 0
                 continue
+            if choice is not trezorui_api.CONFIRMED:
+                # `select_menu` returns an index, or CONFIRMED when closed
+                raise RuntimeError
         else:
             # the leaf's layout is created on-demand (saving memory)
             leaf_result = await menu._interact()
