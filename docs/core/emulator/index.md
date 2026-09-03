@@ -132,7 +132,7 @@ is interpreted) but if you make C changes, you need to rebuild yourself.
 
 ### Print screen
 
-Press `p` on your keyboard to capture emulator's screen. You will find a png screenshot
+Press `s` on your keyboard to capture emulator's screen. You will find a png screenshot
 in the `src` directory.
 
 ### Disable animation
