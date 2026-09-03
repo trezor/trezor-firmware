@@ -42,7 +42,10 @@ _TAMPERS = {
     # ph1: patch hw_model -> boot_header_auth_get rejects it ("Invalid boot header")
     # BEFORE the workflow's own (now-dead) "Wrong model" check.
     "wrong-model": "Invalid boot header",
-    "variant-swap": "fold/authenticity failed",  # ph2: stream a different variant than ph1
+    # ph2: stream a SIBLING variant of the same release. It FOLDS (firmware_root
+    # is the root over every variant), so the fold cannot catch it -- what does
+    # is the variant binding against the installed boot header's firmware_type.
+    "variant-swap": "Firmware variant mismatch",
     # ph2: flip a payload byte -> the chain check fails; on_chunk returns the
     # retryable status, so the device only fails terminally once the engine's
     # retry budget is exhausted -> "Invalid chunk hash".
