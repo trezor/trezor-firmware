@@ -74,7 +74,7 @@ firmware image is present. */
  * @return sectrue when the vendor header is the same or there is no lock;
  *         secfalse otherwise.
  */
-secbool check_vendor_header_lock(const vendor_header *vhdr);
+secbool __wur check_vendor_header_lock(const vendor_header *const vhdr);
 
 /**
  * @brief Perform comprehensive verification of the firmware image available

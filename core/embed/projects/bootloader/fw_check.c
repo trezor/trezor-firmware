@@ -32,7 +32,7 @@
 #include "emulator.h"
 #endif
 
-secbool check_vendor_header_lock(const vendor_header *vhdr) {
+secbool check_vendor_header_lock(const vendor_header *const vhdr) {
   uint8_t lock[FLASH_OTP_BLOCK_SIZE];
   ensure(flash_otp_read(FLASH_OTP_BLOCK_VENDOR_HEADER_LOCK, 0, lock,
                         FLASH_OTP_BLOCK_SIZE),
