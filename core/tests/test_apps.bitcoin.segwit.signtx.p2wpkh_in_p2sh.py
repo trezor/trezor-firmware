@@ -25,10 +25,9 @@ from trezor.messages import (
     TxRequestDetailsType,
     TxRequestSerializedType,
 )
-from trezor.utils import chunks
 
 from apps.bitcoin.keychain import _get_schemas_for_coin
-from apps.bitcoin.sign_tx import bitcoin, helpers
+from apps.bitcoin.sign_tx import bitcoin
 from apps.common import coins
 from apps.common.keychain import Keychain
 
@@ -103,7 +102,6 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
         fee_rate = 11000 / 168
 
         messages = [
-            None,
             # check fee
             TxRequest(
                 request_type=TXINPUT,
@@ -117,21 +115,19 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(
+            ui.confirm_output(
                 out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
             ),
-            True,
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
-            helpers.UiConfirmOutput(
+            ui.confirm_output(
                 out2, coin, AmountUnit.BITCOIN, 1, False, [H_(49), H_(1), H_(0)]
             ),
-            True,
-            helpers.UiConfirmTotal(
+            ui.confirm_total(
                 123445789 + 11000,
                 11000,
                 fee_rate,
@@ -139,7 +135,6 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                 AmountUnit.BITCOIN,
                 inp1.address_n[:3],
             ),
-            True,
             # check prev tx
             TxRequest(
                 request_type=TXINPUT,
@@ -238,14 +233,8 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
 
         ns = _get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoin.Bitcoin(tx, keychain, coin, None).signer()
-        for request, expected_response in chunks(messages, 2):
-            response = signer.send(request)
-            if isinstance(response, tuple):
-                _, response = response
-            self.assertEqual(response, expected_response)
-        with self.assertRaises(StopIteration):
-            signer.send(None)
+        signer = bitcoin.Bitcoin(tx, keychain, coin, None)
+        run_signer(self, signer, messages)
 
     def test_send_p2wpkh_in_p2sh_change(self):
 
@@ -312,7 +301,6 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
         fee_rate = 11000 / 168
 
         messages = [
-            None,
             # check fee
             TxRequest(
                 request_type=TXINPUT,
@@ -326,17 +314,16 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(
+            ui.confirm_output(
                 out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
             ),
-            True,
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
-            helpers.UiConfirmTotal(
+            ui.confirm_total(
                 12300000 + 11000,
                 11000,
                 fee_rate,
@@ -344,7 +331,6 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                 AmountUnit.BITCOIN,
                 inp1.address_n[:3],
             ),
-            True,
             # check prev tx
             TxRequest(
                 request_type=TXINPUT,
@@ -444,14 +430,8 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
 
         ns = _get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoin.Bitcoin(tx, keychain, coin, None).signer()
-        for request, expected_response in chunks(messages, 2):
-            response = signer.send(request)
-            if isinstance(response, tuple):
-                _, response = response
-            self.assertEqual(response, expected_response)
-        with self.assertRaises(StopIteration):
-            signer.send(None)
+        signer = bitcoin.Bitcoin(tx, keychain, coin, None)
+        run_signer(self, signer, messages)
 
     def test_send_p2wpkh_in_p2sh_attack_amount(self):
 
@@ -530,7 +510,6 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
         fee_rate = (9 - 8 - 1) / 168
 
         messages = [
-            None,
             # check fee
             TxRequest(
                 request_type=TXINPUT,
@@ -544,20 +523,18 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(
+            ui.confirm_output(
                 out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
             ),
-            True,
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
-            helpers.UiConfirmTotal(
+            ui.confirm_total(
                 9 - 1, 9 - 8 - 1, fee_rate, coin, AmountUnit.BITCOIN, inp1.address_n[:3]
             ),
-            True,
             # check prev tx
             TxRequest(
                 request_type=TXINPUT,
@@ -591,33 +568,13 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckPrevOutput(tx=TxAckPrevOutputWrapper(output=pout2)),
-            # sign tx
-            TxRequest(
-                request_type=TXINPUT,
-                details=TxRequestDetailsType(request_index=0, tx_hash=None),
-                serialized=TxRequestSerializedType(
-                    # returned serialized header
-                    serialized_tx=bytes.fromhex("01000000000101"),
-                ),
-            ),
         ]
 
         ns = _get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoin.Bitcoin(tx, keychain, coin, None).signer()
-        i = 0
-        messages_count = int(len(messages) / 2)
-        for request, expected_response in chunks(messages, 2):
-            if i == messages_count - 1:  # last message should throw wire.Error
-                self.assertRaises(wire.DataError, signer.send, request)
-            else:
-                response = signer.send(request)
-                if isinstance(response, tuple):
-                    _, response = response
-                self.assertEqual(response, expected_response)
-            i += 1
-        with self.assertRaises(StopIteration):
-            signer.send(None)
+        signer = bitcoin.Bitcoin(tx, keychain, coin, None)
+        with self.assertRaises(wire.DataError):
+            run_signer(self, signer, messages)
 
 
 if __name__ == "__main__":
