@@ -156,5 +156,5 @@ class TrezorCore(Device):
         self.wait_until_debuggable()
 
         # THP gets stuck on get-features
-        if model_name != "Safe 7":
+        if model_name not in ["Safe 5", "Safe 7"]:
             print(self.check_model(model_name))
