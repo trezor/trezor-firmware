@@ -24,7 +24,8 @@
 	certs certs_check \
 	python_doc python_doc_check \
 	gen gen_check \
-	uvlock_check
+	uvlock_check \
+	workflow_timeout_check
 
 ## help commands:
 
@@ -38,7 +39,7 @@ C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.inclu
 PROTO_FILES = $(shell find common core -type f -name '*.proto')
 RUST_CRATES = $(shell find core -type f -name Cargo.toml -printf "%h\n")
 
-style_check: pystyle_check ruststyle_check cstyle_check protostyle_check changelog_check translations_style_check yaml_check docs_summary_check editor_check ## run all style checks
+style_check: pystyle_check ruststyle_check cstyle_check protostyle_check changelog_check translations_style_check yaml_check workflow_timeout_check docs_summary_check editor_check ## run all style checks
 
 style: pystyle ruststyle cstyle protostyle changelog_style translations_style ## apply all code styles (Python+Rust+C+protobuf+changelog+translation JSON)
 
@@ -100,6 +101,10 @@ translations_style_check: ## Check that translation files are properly formatted
 yaml_check: ## check yaml formatting
 	@echo [YAML-STYLE-CHECK]
 	yamllint --strict .
+
+workflow_timeout_check: ## check that all CI jobs declare a timeout
+	@echo [WORKFLOW-TIMEOUT-CHECK]
+	@./tools/check-workflow-timeouts.py
 
 editor_check: ## check editorconfig formatting
 	@echo [EDITORCONFIG-STYLE-CHECK]
