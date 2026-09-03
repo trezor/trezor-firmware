@@ -8,20 +8,15 @@ Features:
 - ignores specific pyright errors based on substring or regex
 - reports empty `# type: ignore`s (without ignore reason in `[]`)
 - reports unused `# type: ignore`s (for example after pyright is updated)
-- allows for ignoring some errors in the whole file - see `FILE_SPECIFIC_IGNORES` variable
 - allows for error aliases - see `ALIASES` variable
 
 Usage:
-- there are multiple options how to ignore/silence a pyright error:
+- there are two options how to ignore/silence a pyright error:
     1 - "# type: ignore [<error_substring>]"
         - put it as a comment to the line we want to ignore
         - "# type: ignore [<error1>;;<error2>;;...]" if there are more than one errors on that line
         - also regex patterns are valid substrings
-    2 - "# pyright: off" / "# pyright: on"
-        - all errors in block of code between these marks will be ignored
-    3 - FILE_SPECIFIC_IGNORES
-        - ignore specific rules (defined by pyright) or error substrings in the whole file
-    4 - ALIASES
+    2 - ALIASES
         - create an alias for a common error and use is with option 1 - "# type: ignore [<error_alias>]"
 
 Running the script:
@@ -47,21 +42,14 @@ import tempfile
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 import click
-from typing_extensions import (  # for python37 support, is not present in typing there
-    TypedDict,
-)
 
 if TYPE_CHECKING:
     LineIgnores = list["LineIgnore"]
 
     FileIgnores = dict[str, LineIgnores]
-    FileSpecificIgnores = dict[str, list["FileSpecificIgnore"]]
-
-    PyrightOffIgnores = list["PyrightOffIgnore"]
-    FilePyrightOffIgnores = dict[str, PyrightOffIgnores]
 
 
 class RangeDetail(TypedDict):
@@ -109,52 +97,20 @@ class LineIgnore:
     ignore_statements: list[IgnoreStatement]
 
 
-@dataclass
-class FileSpecificIgnore:
-    rule: str = ""
-    substring: str = ""
-    already_used: bool = False
-
-    def __post_init__(self) -> None:
-        if self.rule and self.substring:
-            raise ValueError("Only one of rule|substring should be set")
-
-
-@dataclass
-class PyrightOffIgnore:
-    start_line: int
-    end_line: int
-    already_used: bool = False
-
-
-# TODO: move into a JSON or other config file
-# Files need to have a relative location to the directory being tested
-# Example (when checking `python` directory):
-# "tools/helloworld.py": [
-#     FileSpecificIgnore(rule="reportMissingParameterType"),
-#     FileSpecificIgnore(substring="cannot be assigned to parameter"),
-# ],
-FILE_SPECIFIC_IGNORES: FileSpecificIgnores = {}
-
-
 # Allowing for more readable ignore of common problems, with an easy-to-understand alias
 ALIASES: dict[str, str] = {
     "awaitable-return-type": 'Return type of generator function must be compatible with "Generator',
-    "obscured-by-same-name": "is obscured by a declaration of the same name",
     "int-into-enum": r'Type "int.*" is not assignable to return type ".*"',
 }
 
 
 class PyrightTool:
-    ON_PATTERN: Final = "# pyright: on"
-    OFF_PATTERN: Final = "# pyright: off"
     IGNORE_PATTERN: Final = "# type: ignore"
     IGNORE_DELIMITER: Final = ";;"
 
     original_pyright_results: PyrightResults
     all_files_to_check: set[str]
     all_pyright_ignores: FileIgnores
-    pyright_off_ignores: FilePyrightOffIgnores
     real_errors: list[Error]
     unused_ignores: list[str]
     inconsistencies: list[str] = []
@@ -164,7 +120,6 @@ class PyrightTool:
         workdir: Path,
         pyright_config_file: io.TextIOWrapper,
         *,
-        file_specific_ignores: FileSpecificIgnores | None = None,
         aliases: dict[str, str] | None = None,
         input_file: io.TextIOWrapper | None = None,
         error_file: io.TextIOWrapper | None = None,
@@ -181,7 +136,6 @@ class PyrightTool:
         # save config
         self.workdir = workdir.resolve()
         self.pyright_config_data = self.load_config(pyright_config_file)
-        self.file_specific_ignores = file_specific_ignores or {}
         self.aliases = aliases or {}
         self.input_file = input_file
         self.error_file = error_file
@@ -192,20 +146,6 @@ class PyrightTool:
 
     def check_input_correctness(self) -> None:
         """Verify the input data structures are correct."""
-        # Checking for correct file_specific_ignores structure
-        for file, ignores in self.file_specific_ignores.items():
-            for ignore in ignores:
-                if not isinstance(ignore, FileSpecificIgnore):
-                    raise RuntimeError(
-                        "All items of file_specific_ignores must be FileSpecificIgnore classes. "
-                        f"Got {ignore} - type {type(ignore)}"
-                    )
-            # Also putting substrings at the beginning of ignore-lists, so they are matched before rules
-            # (Not to leave them potentially unused when error would be matched by a rule instead)
-            self.file_specific_ignores[file].sort(
-                key=lambda x: x.substring, reverse=True
-            )
-
         # Checking for correct aliases (dict[str, str] type)
         for alias, full_substring in self.aliases.items():
             if not isinstance(alias, str) or not isinstance(full_substring, str):
@@ -220,7 +160,6 @@ class PyrightTool:
 
         self.all_files_to_check = self.get_all_files_to_check()
         self.all_pyright_ignores = self.get_all_pyright_ignores()
-        self.pyright_off_ignores = self.get_pyright_off_ignores()
 
         self.real_errors = self.get_all_real_errors()
         self.unused_ignores = self.get_unused_ignores()
@@ -331,10 +270,7 @@ class PyrightTool:
     def get_all_real_errors(self) -> list[Error]:
         """Analyze all pyright errors and discard all that should be ignored.
 
-        Ignores can be different:
-        - as per "# type: ignore [<error_substring>]" comment
-        - as per "file_specific_ignores"
-        - as per "# pyright: off" mark
+        Ignores are done as per "# type: ignore [<error_substring>]" comment.
         """
         real_errors: list[Error] = []
         for error in self.original_pyright_results["generalDiagnostics"]:
@@ -355,18 +291,6 @@ class PyrightTool:
             ):
                 self.count_of_ignored_errors += 1
                 self.log_ignore(error, "error substring matched")
-                continue
-
-            # Checking in file_specific_ignores
-            if self.should_ignore_file_specific_error(file_path, error):
-                self.count_of_ignored_errors += 1
-                self.log_ignore(error, "file specific error")
-                continue
-
-            # Checking for "# pyright: off" mark
-            if self.is_line_in_pyright_off_block(file_path, line_no):
-                self.count_of_ignored_errors += 1
-                self.log_ignore(error, "pyright disabled for this line")
                 continue
 
             real_errors.append(error)
@@ -405,16 +329,6 @@ class PyrightTool:
 
         return file_ignores
 
-    def get_pyright_off_ignores(self) -> FilePyrightOffIgnores:
-        """Get ignore information based on `# pyright: on/off` marks."""
-        pyright_off_ignores: FilePyrightOffIgnores = {}
-        for file in self.all_files_to_check:
-            ignores = self.find_pyright_off_from_file(file)
-            if ignores:
-                pyright_off_ignores[file] = ignores
-
-        return pyright_off_ignores
-
     def get_unused_ignores(self) -> list[str]:
         """Evaluate if there are no ignores not matched by pyright errors."""
         unused_ignores: list[str] = []
@@ -427,30 +341,6 @@ class PyrightTool:
                         unused_ignores.append(
                             f"File {file}:{line_ignore.line_no + 1} has unused ignore. "
                             f"Substring: {ignore_statement.substring}"
-                        )
-
-        # Pyright: off
-        for file, file_ignores in self.pyright_off_ignores.items():
-            for off_ignore in file_ignores:
-                if not off_ignore.already_used:
-                    unused_ignores.append(
-                        f"File {file} has unused # pyright: off ignore between lines "
-                        f"{off_ignore.start_line + 1} and {off_ignore.end_line + 1}."
-                    )
-
-        # File-specific
-        for file, file_ignores in self.file_specific_ignores.items():
-            for ignore_object in file_ignores:
-                if not ignore_object.already_used:
-                    if ignore_object.substring:
-                        unused_ignores.append(
-                            f"File {file} has unused specific ignore substring. "
-                            f"Substring: {ignore_object.substring}"
-                        )
-                    elif ignore_object.rule:
-                        unused_ignores.append(
-                            f"File {file} has unused specific ignore rule. "
-                            f"Rule: {ignore_object.rule}"
                         )
 
         return unused_ignores
@@ -478,58 +368,6 @@ class PyrightTool:
                         return True
 
         return False
-
-    def should_ignore_file_specific_error(self, file: str, error: Error) -> bool:
-        """Check if line should be ignored based on file-specific ignores."""
-        if file not in self.file_specific_ignores:
-            return False
-
-        for ignore_object in self.file_specific_ignores[file]:
-            if ignore_object.rule:
-                if error["rule"] == ignore_object.rule:
-                    ignore_object.already_used = True
-                    return True
-            elif ignore_object.substring:
-                # Supporting both text substrings and regex patterns
-                if ignore_object.substring in error["message"] or re.search(
-                    ignore_object.substring, error["message"]
-                ):
-                    ignore_object.already_used = True
-                    return True
-
-        return False
-
-    def is_line_in_pyright_off_block(self, file: str, line_no: int) -> bool:
-        """Check if line should be ignored based on `# pyright: off` mark."""
-        if file not in self.pyright_off_ignores:
-            return False
-
-        for off_ignore in self.pyright_off_ignores[file]:
-            if off_ignore.start_line < line_no < off_ignore.end_line:
-                off_ignore.already_used = True
-                return True
-
-        return False
-
-    def find_pyright_off_from_file(self, file: str) -> PyrightOffIgnores:
-        """Get sections in file to be ignored based on `# pyright: off`."""
-        pyright_off_ignores: PyrightOffIgnores = []
-        with open(file, "r") as f:
-            pyright_off = False
-            start_line = 0
-            index = 0
-            for index, line in enumerate(f):
-                if self.OFF_PATTERN in line and not pyright_off:
-                    start_line = index
-                    pyright_off = True
-                elif self.ON_PATTERN in line and pyright_off:
-                    pyright_off_ignores.append(PyrightOffIgnore(start_line, index))
-                    pyright_off = False
-
-            if pyright_off:
-                pyright_off_ignores.append(PyrightOffIgnore(start_line, index))
-
-        return pyright_off_ignores
 
     def get_inline_type_ignores_from_file(self, file: str) -> LineIgnores:
         """Get all type ignore lines and statements from a certain file."""
@@ -627,7 +465,6 @@ def main(
         tool = PyrightTool(
             workdir=workdir,
             pyright_config_file=config,
-            file_specific_ignores=FILE_SPECIFIC_IGNORES,
             aliases=ALIASES,
             input_file=input_file,
             error_file=output_file,
