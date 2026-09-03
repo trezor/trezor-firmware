@@ -64,6 +64,29 @@ fn main() -> Result<()> {
             lib.add_define("PQ_SECURE_BOOT", Some("1"));
             lib.add_source("fw_check_pq.c");
             lib.add_source("workflow/wf_firmware_update_pq.c");
+
+            // Boot-warning logo for an unofficial (custom) firmware. The
+            // Merkle-tree layout has no vendor header, so a logo has nowhere to
+            // travel in: variants are founder-defined, not third-party, and the
+            // only variant that ever draws this screen is the unofficial one
+            // (fw_check_pq.c clears the warning for anything positively
+            // official). So the bootloader owns the asset outright.
+            //
+            // Taken from the model's OWN vendorheader directory, which already
+            // ships it sized and formatted for that model's UI -- 120x120 TOIF
+            // on bolt/delizia/eckhart, 24x24 TOIG on caesar. That is what makes
+            // this differentiate correctly the moment a second UI gets
+            // pq_secure_boot: nothing here has to know about layouts.
+            //
+            // Section named `rodata_*` so the linker's existing `*(.rodata*)`
+            // rule places it in FLASH: embed_binary renames `.data` to
+            // `.<section>`, and a bespoke name would need a rule added to every
+            // bootloader linker script.
+            let model_id = xbuild::current_model_id()?;
+            lib.embed_binary(
+                format!("../../models/{model_id}/vendorheader/vendor_unsafe.toif"),
+                "rodata_vendor_unsafe",
+            )?;
             // nRF (BLE co-processor) OTA rides FirmwareBegin and needs the SMP
             // serial-recovery push (USE_SMP). nrf_staging.c persists the staged
             // image + descriptor across the reboot for the deferred phase-2 push.
