@@ -194,14 +194,9 @@ if TYPE_CHECKING:
     # on the old plain-`T` typing while the second serves menus that do produce a
     # value.
     #
-    # Drop both overloads once these call sites handle `MenuResult` themselves
-    # (25 calls in total, all of them value-less menus today):
-    #
-    #   delizia:  confirm_action, confirm_value, confirm_ethereum_vault_tx (5),
-    #             confirm_ethereum_vault_claim (3)
-    #   eckhart:  confirm_output (2), confirm_trade, confirm_ethereum_tx,
-    #             confirm_ethereum_vault_tx (5), confirm_ethereum_vault_claim (3),
-    #             confirm_ethereum_staking_tx, confirm_solana_staking_tx (2)
+    # Drop both overloads once those call sites handle `MenuResult` themselves.
+    # To find them, delete the overloads and let the typechecker enumerate the
+    # failures - every value-less menu today.
     #
     # Note the overload is picked from the menu's *declared* type: annotating a
     # value-less menu as anything but `Menu[None]` pushes its caller onto the
