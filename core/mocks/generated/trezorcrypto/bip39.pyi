@@ -28,6 +28,13 @@ def seed(
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip39.h
+def cache_clear() -> None:
+    """
+    Clear the cache of BIP-39 seeds derived from mnemonic and passphrase.
+    """
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-bip39.h
 def mnemonic_to_bits(mnemonic: str) -> bytes:
     """
     Convert the mnemonic to its binary representation (including checksum).

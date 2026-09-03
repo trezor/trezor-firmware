@@ -14,6 +14,7 @@ if __debug__:
 async def wipe_device(msg: WipeDevice) -> None:
     import storage
     from trezor import TR, config, translations
+    from trezor.crypto import bip39
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.pin import render_empty_loader
@@ -44,6 +45,9 @@ async def wipe_device(msg: WipeDevice) -> None:
 
     # clear cache - exclude current context
     storage.wipe_cache(excluded=try_get_ctx_ids())
+
+    # clear the cache of seeds derived from BIP-39 mnemonics
+    bip39.cache_clear()
 
     # erase translations
     translations.deinit()
