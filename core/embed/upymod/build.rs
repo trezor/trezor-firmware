@@ -863,6 +863,7 @@ impl<'a> MpyBuilder<'a> {
         let tool = self.mpy_dir.join("tools/mpy-tool.py");
         cmd.arg(&tool)
             .arg("-f")
+            .arg("--compress-names")
             .arg("-q")
             .arg(qstr_preprocessed)
             .args(&mpy_files);

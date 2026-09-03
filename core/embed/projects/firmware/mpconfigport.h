@@ -35,6 +35,7 @@
 
 // frozen modules
 #define MICROPY_MODULE_FROZEN_MPY   (1)
+#define MICROPY_MODULE_FROZEN_MPY_COMPRESS_NAMES (1)
 #define MICROPY_QSTR_EXTRA_POOL     (mp_qstr_frozen_const_pool)
 
 // memory allocation policies
