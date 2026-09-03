@@ -24,10 +24,9 @@ from trezor.messages import (
     TxRequestDetailsType,
     TxRequestSerializedType,
 )
-from trezor.utils import chunks
 
 from apps.bitcoin.keychain import _get_schemas_for_coin
-from apps.bitcoin.sign_tx import bitcoin, helpers
+from apps.bitcoin.sign_tx import bitcoin
 from apps.common import coins
 from apps.common.keychain import Keychain
 
@@ -99,7 +98,6 @@ class TestSignTx(unittest.TestCase):
         fee_rate = 50_000 / (768 / 4)
 
         messages = [
-            None,
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -112,11 +110,10 @@ class TestSignTx(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(
+            ui.confirm_output(
                 out1, coin_bitcoin, AmountUnit.BITCOIN, 0, False, [H_(44), H_(0), H_(0)]
             ),
-            True,
-            helpers.UiConfirmTotal(
+            ui.confirm_total(
                 3_801_747,
                 50_000,
                 fee_rate,
@@ -124,7 +121,6 @@ class TestSignTx(unittest.TestCase):
                 AmountUnit.BITCOIN,
                 inp1.address_n[:3],
             ),
-            True,
             # ButtonRequest(code=ButtonRequest_ConfirmOutput),
             # ButtonRequest(code=ButtonRequest_SignTx),
             TxRequest(
@@ -224,16 +220,9 @@ class TestSignTx(unittest.TestCase):
         )
         ns = _get_schemas_for_coin(coin_bitcoin)
         keychain = Keychain(seed, coin_bitcoin.curve_name, ns)
-        signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin, None).signer()
+        signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin, None)
 
-        for request, response in chunks(messages, 2):
-            res = signer.send(request)
-            if isinstance(res, tuple):
-                _, res = res
-            self.assertEqual(res, response)
-
-        with self.assertRaises(StopIteration):
-            signer.send(None)
+        run_signer(self, signer, messages)
 
 
 if __name__ == "__main__":

@@ -28,10 +28,9 @@ if (
         TxRequestDetailsType,
         TxRequestSerializedType,
     )
-    from trezor.utils import chunks
 
     from apps.bitcoin.keychain import _get_schemas_for_coin
-    from apps.bitcoin.sign_tx import decred, helpers
+    from apps.bitcoin.sign_tx import decred
     from apps.common import coins
     from apps.common.keychain import Keychain
 
@@ -102,7 +101,6 @@ class TestSignTxDecred(unittest.TestCase):
         fee_rate = 100_000 / (864 / 4)
 
         messages = [
-            None,
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -121,11 +119,10 @@ class TestSignTxDecred(unittest.TestCase):
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(
+            ui.confirm_output(
                 out1, coin_decred, AmountUnit.BITCOIN, 0, False, [H_(44), H_(1), H_(0)]
             ),
-            True,
-            helpers.UiConfirmTotal(
+            ui.confirm_total(
                 200_000_000,
                 100_000,
                 fee_rate,
@@ -133,7 +130,6 @@ class TestSignTxDecred(unittest.TestCase):
                 AmountUnit.BITCOIN,
                 inp1.address_n[:3],
             ),
-            True,
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -215,17 +211,9 @@ class TestSignTxDecred(unittest.TestCase):
         )
         ns = _get_schemas_for_coin(coin_decred)
         keychain = Keychain(seed, coin_decred.curve_name, ns)
-        signer = decred.Decred(tx, keychain, coin_decred, None).signer()
+        signer = decred.Decred(tx, keychain, coin_decred, None)
 
-        for request, response in chunks(messages, 2):
-            res = signer.send(request)
-            if isinstance(res, tuple):
-                _, res = res
-
-            self.assertEqual(res, response)
-
-        with self.assertRaises(StopIteration):
-            signer.send(None)
+        run_signer(self, signer, messages)
 
     def test_purchase_ticket(self):
         inp1 = TxInput(
@@ -269,7 +257,6 @@ class TestSignTxDecred(unittest.TestCase):
         fee_rate = 100_000 / (1188 / 4)
 
         messages = [
-            None,
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -288,10 +275,7 @@ class TestSignTxDecred(unittest.TestCase):
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmDecredSSTXSubmission(
-                out1, coin_decred, AmountUnit.BITCOIN
-            ),
-            True,
+            ui.confirm_decred_sstx_submission(out1, coin_decred, AmountUnit.BITCOIN),
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
@@ -312,7 +296,7 @@ class TestSignTxDecred(unittest.TestCase):
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out3)),
-            helpers.UiConfirmTotal(
+            ui.confirm_total(
                 200_000_000,
                 100_000,
                 fee_rate,
@@ -320,7 +304,6 @@ class TestSignTxDecred(unittest.TestCase):
                 AmountUnit.BITCOIN,
                 inp1.address_n[:3],
             ),
-            True,
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -402,17 +385,9 @@ class TestSignTxDecred(unittest.TestCase):
         )
         ns = _get_schemas_for_coin(coin_decred)
         keychain = Keychain(seed, coin_decred.curve_name, ns)
-        signer = decred.Decred(tx, keychain, coin_decred, None).signer()
+        signer = decred.Decred(tx, keychain, coin_decred, None)
 
-        for request, response in chunks(messages, 2):
-            res = signer.send(request)
-            if isinstance(res, tuple):
-                _, res = res
-
-            self.assertEqual(res, response)
-
-        with self.assertRaises(StopIteration):
-            signer.send(None)
+        run_signer(self, signer, messages)
 
 
 if __name__ == "__main__":
