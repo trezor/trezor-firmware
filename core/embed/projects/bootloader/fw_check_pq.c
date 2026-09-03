@@ -25,6 +25,13 @@
 #include "fw_check.h"
 #include "version_check.h"
 
+// Boot-warning logo for an unofficial (custom) firmware, embedded by build.rs
+// from THIS model's vendorheader/vendor_unsafe.toif -- so it is already the
+// right size and format for this model's UI (see the comment there). The tree
+// layout has no vendor header to carry a logo, and the unofficial variant is
+// the only one that ever draws this screen, so the bootloader owns the asset.
+extern const void rodata_vendor_unsafe_start;
+
 // Vendor identity string for the tree layout (which has no vendor header). Used
 // by every place the bootloader surfaces a vendor name: the boot warning, the
 // intro screen, the install confirm and the Features `fw_vendor`. A custom
@@ -252,6 +259,9 @@ void firmware_prepare_boot(firmware_boot_info_t* info) {
   info->ui.version = fw_tree.version;
   info->ui.vendor_str =
       tree_vendor_str(fw_tree.variant, is_official, &info->ui.vendor_str_len);
+  // Same FIH direction as the rest of this block: the UNSAFE logo is the
+  // default, so a skipped/glitched official verdict can only over-warn.
+  info->ui.vendor_img = (const uint8_t*)&rodata_vendor_unsafe_start;
 
   // Positively official -> grant privileges and clear the warning.
   if (is_official == sectrue) {
@@ -265,6 +275,9 @@ void firmware_prepare_boot(firmware_boot_info_t* info) {
     info->allow_unlimited_run = sectrue;
     info->show_warning = secfalse;
     info->ui.red_screen = false;
+    // Official images never draw the warning screen; don't leave the UNSAFE
+    // logo dangling in the struct for a future consumer to pick up.
+    info->ui.vendor_img = NULL;
     info->warn_delay = 0;
     info->warn_click = secfalse;
   }
