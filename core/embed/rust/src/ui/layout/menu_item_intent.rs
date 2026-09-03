@@ -10,7 +10,8 @@ use crate::micropython::{
 
 /// What a menu entry means, which each model renders in its own way.
 #[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "test", derive(core::fmt::Debug))]
 pub enum MenuItemIntent {
     /// An ordinary entry.
     Standard = 0,
