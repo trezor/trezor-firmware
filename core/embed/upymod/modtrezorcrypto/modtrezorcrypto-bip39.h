@@ -91,6 +91,19 @@ static mp_obj_t mod_trezorcrypto_bip39_seed(size_t n_args,
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_bip39_seed_obj, 2,
                                            3, mod_trezorcrypto_bip39_seed);
 
+/// def cache_clear() -> None:
+///     """
+///     Clear the cache of BIP-39 seeds derived from mnemonic and passphrase.
+///     """
+static mp_obj_t mod_trezorcrypto_bip39_cache_clear(void) {
+#if USE_BIP39_CACHE
+  bip39_cache_clear();
+#endif
+  return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_bip39_cache_clear_obj,
+                                 mod_trezorcrypto_bip39_cache_clear);
+
 #if !BITCOIN_ONLY
 /// def mnemonic_to_bits(mnemonic: str) -> bytes:
 ///     """
@@ -117,6 +130,8 @@ static const mp_rom_map_elem_t mod_trezorcrypto_bip39_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_bip39_from_data_obj)},
     {MP_ROM_QSTR(MP_QSTR_check), MP_ROM_PTR(&mod_trezorcrypto_bip39_check_obj)},
     {MP_ROM_QSTR(MP_QSTR_seed), MP_ROM_PTR(&mod_trezorcrypto_bip39_seed_obj)},
+    {MP_ROM_QSTR(MP_QSTR_cache_clear),
+     MP_ROM_PTR(&mod_trezorcrypto_bip39_cache_clear_obj)},
 #if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_mnemonic_to_bits),
      MP_ROM_PTR(&mod_trezorcrypto_bip39_mnemonic_to_bits_obj)},
