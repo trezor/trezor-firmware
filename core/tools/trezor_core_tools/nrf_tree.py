@@ -598,9 +598,9 @@ def fill_pq_material(
         raise ValueError(f"founder records end at {p}, image is {len(out)} B (slack)")
 
     filled = bytes(out)
-    assert nrf_leaf(filled) == nrf_leaf(
-        image
-    ), "filling founder material moved the leaf"
+    assert nrf_leaf(filled) == nrf_leaf(image), (
+        "filling founder material moved the leaf"
+    )
     return filled
 
 
