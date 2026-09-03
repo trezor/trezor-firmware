@@ -62,6 +62,26 @@ _TAMPERS = {
     # ph1: flip a boot-header sig byte -> forces the full-bootloader path; the
     # staging step (ucb_stage_commit) verifies the [header|code] sig and rejects.
     "bl-sig": "Invalid bootloader signature",
+    # --- interaction-less consent (needs FIRMWARE mode; these exercise the gates
+    #     that make an unattended install safe, none of which the cases above
+    #     reach: every ph1 tamper above mutates the bytes BEFORE the preamble is
+    #     computed, so its consent digest always matches what is delivered) ---
+    #
+    # ph1: confirm one variant in firmware, then deliver a SIBLING variant. Both
+    # fold to firmware_root (it is the root over every variant of a release), so
+    # authenticity passes and the consent digest is the ONLY thing left to catch
+    # the substitution.
+    "consent-mismatch": "Firmware mismatch",
+    # firmware-side (Python) gate: hand firmware a preamble that does not parse.
+    "bad-preamble": "Invalid firmware header",
+    # firmware-side gate: ask firmware to confirm a SIBLING variant. Its vendor
+    # string differs (firmware_vendor_str derives it from the variant), and
+    # crossing that erases the seed, so firmware refuses before any reboot rather
+    # than letting the bootloader fall back to prompting.
+    "vendor-change": "Different firmware vendor",
+    # ph2 with NO ph1: nothing armed CONTINUE_UPGRADE, so a bare FirmwareErase
+    # must not be able to erase a valid firmware. Needs BOOTLOADER mode.
+    "bare-phase-2": "must begin with FirmwareBegin",
 }
 
 
@@ -389,8 +409,41 @@ def main() -> None:
             " must reject at FirmwareBegin, before confirm)"
         )
 
+    # Consent cases mutate what phase 1 DELIVERS while leaving the preamble (what
+    # the user confirmed) genuine, so the digest comparison is what fails. Every
+    # other ph1 tamper mutates before the preamble is built, which keeps the two
+    # in agreement and never reaches the consent gate.
+    ph1_headers = module_headers
+
     def _run() -> None:
+        nonlocal ph1_headers
         _client, session = connect()
+
+        # --- ph2 without ph1: no CONTINUE_UPGRADE is armed, so FirmwareErase alone
+        #     must be refused. Bypasses the handoff and phase 1 entirely. ---
+        if tamper == "bare-phase-2":
+            if session.features.bootloader_mode is not True:
+                raise SystemExit(
+                    "bare-phase-2 needs the device ALREADY in bootloader mode "
+                    "(and with no update armed -- power-cycle into it by hand)"
+                )
+            print(
+                "TEST[bare-phase-2]: skipping FirmwareBegin; sending FirmwareErase "
+                "straight into phase 2"
+            )
+            firmware.update(
+                session, fw, prev_hashes=firmware_module.build_chunk_prev_hashes(fw)
+            )
+            raise SystemExit("FAIL: bare phase 2 was accepted")
+
+        if (
+            tamper in ("consent-mismatch", "bad-preamble", "vendor-change")
+            and session.features.bootloader_mode is True
+        ):
+            raise SystemExit(
+                f"{tamper} needs the device in FIRMWARE mode (it exercises the "
+                "interaction-less consent path, which only runs on the handoff)"
+            )
 
         # --- Interaction-less handoff (only when starting from firmware mode) ---
         #     The user confirms the release in the FIRMWARE UI; firmware hashes the
@@ -400,11 +453,35 @@ def main() -> None:
         #     device already in bootloader mode skips this and confirms on-device.
         if session.features.bootloader_mode is not True:
             preamble = consent_preamble(boot_header, module_headers)
+            # Describe what is ACTUALLY sent, not what a genuine run would send:
+            # the tamper cases below rewrite `preamble`, and a breakdown recomputed
+            # from the untampered inputs would contradict its own total.
+            breakdown = (
+                f"{len(boot_header_prefix(boot_header))} B boot header prefix + "
+                f"{len(module_headers)} B manifest region"
+            )
+            if tamper == "bad-preamble":
+                preamble = preamble[: len(preamble) // 3]
+                breakdown = "TRUNCATED mid-header"
+                print(
+                    f"TEST[bad-preamble]: truncated the preamble to {len(preamble)} B"
+                    " -- check_firmware_header must refuse to parse it"
+                )
+            elif tamper == "vendor-change":
+                other = _find_other_variant(args.firmware)
+                other_region = firmware_module.read_manifest_region(other.read_bytes())
+                preamble = consent_preamble(boot_header, other_region)
+                breakdown = (
+                    f"{len(boot_header_prefix(boot_header))} B boot header prefix + "
+                    f"{len(other_region)} B manifest region FROM {other.name}"
+                )
+                print(
+                    f"TEST[vendor-change]: asking firmware to confirm {other.name}"
+                    " instead -- its variant maps to a different vendor string"
+                )
             print(
                 "device is in firmware mode; asking it to confirm the upgrade "
-                f"({len(preamble)} B preamble = "
-                f"{len(boot_header_prefix(boot_header))} B boot header prefix + "
-                f"{len(module_headers)} B manifest region) ..."
+                f"({len(preamble)} B preamble = {breakdown}) ..."
             )
             device.reboot_to_bootloader(
                 session,
@@ -417,12 +494,21 @@ def main() -> None:
                 raise SystemExit("device did not enter bootloader mode")
             print("reconnected in bootloader mode; consent carried in the boot command")
 
+            if tamper == "consent-mismatch":
+                other = _find_other_variant(args.firmware)
+                ph1_headers = firmware_module.read_manifest_region(other.read_bytes())
+                print(
+                    f"TEST[consent-mismatch]: confirmed {args.firmware.name}, "
+                    f"delivering {other.name}'s manifest to FirmwareBegin "
+                    "(still folds -- only the consent digest differs)"
+                )
+
         # --- Phase 1 ---
         print(f"phase 1: FirmwareBegin ({mode}) ...")
         served = firmware.firmware_begin(
             session,
             boot_header,
-            module_headers,
+            ph1_headers,
             code=bl_code,
             nrf_image=nrf_image,
             nrf_co_path=nrf_co_path,
