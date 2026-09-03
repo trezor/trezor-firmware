@@ -17,11 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if PYOPT
-#define MEMINFO_DICT_ENTRIES /* empty */
-
-#else
-
 #include <trezor_types.h>
 
 #include "py/bc.h"
@@ -37,6 +32,9 @@
 #include <io/usb.h>
 #include "../../rust/librust.h"
 #include "../trezorobj.h"
+
+// TODO: does it work with current MicroPython?
+// https://github.com/trezor/trezor-firmware/issues/7462
 
 #if !TREZOR_EMULATOR
 #define fopen(path, mode) &mp_plat_print
@@ -749,25 +747,3 @@ static void dump_meminfo_json(FILE *out) {
 
   gc_dump_alloc_table(&mp_plat_print);
 }
-
-/// def meminfo(filename: str | None) -> None:
-///     """
-///     Dumps map of micropython GC arena to a file.
-///     The JSON file can be decoded by analyze-memory-dump.py
-///     """
-static mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
-  size_t fn_len;
-  FILE *out = (filename == mp_const_none)
-                  ? NULL
-                  : fopen(mp_obj_str_get_data(filename, &fn_len), "w");
-  (void)fn_len;
-  dump_meminfo_json(out);
-  return mp_const_none;
-}
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_meminfo_obj,
-                                 mod_trezorutils_meminfo);
-
-#define MEMINFO_DICT_ENTRIES \
-  {MP_ROM_QSTR(MP_QSTR_meminfo), MP_ROM_PTR(&mod_trezorutils_meminfo_obj)},
-
-#endif
