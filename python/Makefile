@@ -40,7 +40,6 @@ git-clean:
 style:
 	ruff check --fix $(STYLE_TARGETS)
 	ruff format $(STYLE_TARGETS)
-	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS)
 	flake8
 	make pyright
 

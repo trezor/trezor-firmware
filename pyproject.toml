@@ -27,7 +27,6 @@ dependencies = [
     "flake8>=7",
     "mako>=1.3.10,<2",
     "munch>=4,<5",
-    "autoflake",
     "flake8-requirements>=2.1.0",
     "pylint~=3.3",
     "demjson3",
@@ -78,9 +77,10 @@ toiftool = { path = "./python/tools/toiftool", editable = true }
 trezor-pylint-plugin = { path = "./tools/trezor-pylint-plugin", editable = true }
 trezor-core-tools = { path = "./core/tools", editable = true }
 
-# Ruff replaces `isort` and `black` (import sorting, formatting) and enforces
-# the PEP 585/604 annotation style. All other Python style checks are still
-# handled by flake8 / pylint -- see setup.cfg and .pylintrc.
+# Ruff replaces `isort`, `black` and `autoflake` (import sorting, formatting,
+# unused-import removal) and enforces the PEP 585/604 annotation style. All
+# other Python style checks are still handled by flake8 / pylint -- see
+# setup.cfg and .pylintrc.
 # The set of files to lint is not configured here -- the Makefiles pass it in,
 # so that ruff covers exactly what every other style tool covers
 # (tools/style.py.include, python/Makefile).
@@ -93,6 +93,8 @@ per-file-target-version = { "python/**/*.py" = "py39" }
 select = [
     # isort
     "I",
+    # autoflake (unused imports)
+    "F401",
     # PEP 585
     "UP006",  # non-pep585-annotation: typing.Tuple -> tuple, typing.Type -> type, ...
     "UP035",  # deprecated-import: typing.Sequence -> collections.abc.Sequence, ...
