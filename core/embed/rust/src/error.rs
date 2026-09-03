@@ -1,3 +1,4 @@
+use core::array::TryFromSliceError;
 use core::convert::Infallible;
 use core::ffi::CStr;
 use core::num::TryFromIntError;
@@ -101,6 +102,12 @@ impl From<Infallible> for Error {
 impl From<TryFromIntError> for Error {
     fn from(_: TryFromIntError) -> Self {
         Self::OutOfRange
+    }
+}
+
+impl From<TryFromSliceError> for Error {
+    fn from(_: TryFromSliceError) -> Self {
+        Self::EOFError
     }
 }
 
