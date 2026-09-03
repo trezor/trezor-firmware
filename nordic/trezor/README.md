@@ -25,7 +25,7 @@ the `t3w1_revA_nrf52832` board on the regulatory-frozen **NCS v2.9.0**, and the
 
 Before you begin, ensure you have met the following requirements:
 
-- **nrfutil**: Install [nrfutil](https://docs.nordicsemi.com/bundle/nrfutil/page/README.html). This tool is essential for managing the nRF Connect SDK and toolchains.
+- **nrfutil**: Install [nrfutil](https://docs.nordicsemi.com/bundle/nrfutil/page/README.html). This tool is essential for managing the nRF Connect SDK and toolchains. Save the file locally e.g. in user's folder ~/.local/bin.
 - **Git**: Ensure you have Git installed for cloning repositories.
 
 ## Getting Started
@@ -37,6 +37,7 @@ Follow these steps to set up the project on your local machine.
 Using nrfutil, install the toolchain for the nRF Connect SDK. The project
 defaults to **NCS v3.3.0**; install the matching toolchain:
 ```sh
+nrfutil install toolchain-manager
 nrfutil toolchain-manager install --ncs-version v3.3.0
 ```
 
@@ -45,6 +46,11 @@ it (see [Selecting the SDK version](#selecting-the-nrf-connect-sdk-version)),
 install that toolchain as well:
 ```sh
 nrfutil toolchain-manager install --ncs-version v2.9.0
+```
+
+Add Python package `jsonschema`
+```
+uv pip install jsonschema
 ```
 
 ### Launch the nRF Shell
