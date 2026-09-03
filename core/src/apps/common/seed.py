@@ -70,7 +70,7 @@ class Slip21Node:
 
 if utils.USE_THP:
 
-    async def get_seed() -> bytes:  # type: ignore [Function declaration "get_seed" is obscured by a declaration of the same name]
+    async def get_seed() -> bytes:  # type: ignore [obscured-by-same-name]
         common_seed = context.cache_get(APP_COMMON_SEED)
         assert common_seed is not None
         return common_seed
