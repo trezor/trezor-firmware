@@ -332,6 +332,32 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
       // Confirmed one release, delivered another.
       return fw_begin_fail(iface, "Firmware mismatch");
     }
+    // The unattended path installs an UPGRADE only -- matching legacy, which
+    // refuses a non-upgrade here rather than trusting the host (`is_upgrade` in
+    // wf_firmware_update.c). Firmware checks this too, but that cannot
+    // substitute for it: the bootloader must not take firmware's word for the
+    // version. Its own anti-rollback axis (the boot header's monotonic_version)
+    // is coarser, so a downgrade WITHIN one monotonic version would otherwise
+    // install with nobody looking.
+    //
+    // A USER-CONFIRMED install may still be a downgrade -- the version is on
+    // the confirm screen and the user decides. So this gates only the
+    // interaction-less path, exactly as legacy does.
+    //
+    // The installed manifest is read unauthenticated, which is adequate for
+    // what this defends against: a host pushing a silent downgrade cannot
+    // rewrite flash, and anyone who can already owns the device by other means.
+    // An absent/garbage manifest means no installed firmware, and a fresh
+    // install is not a downgrade (legacy's `is_new` fallback).
+    const firmware_manifest_t *installed =
+        (const firmware_manifest_t *)(uintptr_t)FIRMWARE_START;
+    if (installed->magic == FW_MANIFEST_MAGIC &&
+        memcmp(manifest->firmware_version, installed->firmware_version,
+               sizeof(manifest->firmware_version)) <= 0) {
+      // Byte-wise over [major, minor, patch, build]: the array order IS the
+      // precedence order, so memcmp is the version comparison.
+      return fw_begin_fail(iface, "Not a firmware upgrade");
+    }
     // Spent before it is acted on: whatever happens to this install, the next
     // upload asks the user again.
     consent_consumed = true;
