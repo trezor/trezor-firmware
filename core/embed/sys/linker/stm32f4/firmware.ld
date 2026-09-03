@@ -36,7 +36,7 @@ SECTIONS {
     . = ALIGN(COREAPP_ALIGNMENT);
     KEEP(*(.coreapp_header));
     . = ALIGN(4);
-    *frozen_mpy.o(.rodata*);
+    *(.text*);
     . = ALIGN(4);
     KEEP(*(.bootloader));
     *(.bootloader*);
@@ -44,8 +44,7 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .flash2 : ALIGN(512) {
-    . = ALIGN(4);
-    *(.text*);
+    *frozen_mpy.o(.rodata*);
     . = ALIGN(4);
     *(.rodata*);
     . = ALIGN(512);
