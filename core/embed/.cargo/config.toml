@@ -28,6 +28,8 @@ rustflags = [
     # - https://github.com/japaric/stack-sizes/
     "-Z",
     "emit-stack-sizes",
+    "-Z",
+    "location-detail=line"
 ]
 
 [target.thumbv8m.main-none-eabihf]
