@@ -512,7 +512,7 @@ async def confirm_payment_request(
         external_menu=True,
     )
 
-    menu_items = []
+    menu_items = [cancel_leaf(TR.buttons__cancel_sign)]
     if recipient_address is not None:
         menu_items.append(
             create_info_menu_leaf(TR.address__title_provider_address, recipient_address)
@@ -531,7 +531,7 @@ async def confirm_payment_request(
                 refund_account_items,
             )
         )
-    menu = Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items)
+    menu = Menu(menu_items)
 
     with main_ctx as main_layout:
         await confirm_with_menu(main_layout, menu, "confirm_payment_request")
@@ -853,18 +853,15 @@ async def confirm_value(
         external_menu=True,
     )
 
-    menu_items = []
+    menu_items = [
+        cancel_leaf(
+            cancel_text or TR.buttons__cancel,
+            confirm=trezorui_api.confirm_cancel,
+        )
+    ]
     for name, p, page_title in info_items or []:
         menu_items.append(create_info_menu_leaf(name, p, page_title))
-    menu = Menu(
-        [
-            cancel_leaf(
-                cancel_text or TR.buttons__cancel,
-                confirm=trezorui_api.confirm_cancel,
-            )
-        ]
-        + menu_items
-    )
+    menu = Menu(menu_items)
     with main_ctx as main_layout:
         return await interact_with_menu(main_layout, menu, br_name, br_code)
 
@@ -985,11 +982,12 @@ async def confirm_trade(
             (TR.address_details__derivation_path, trade.account_path, None)
         )
     menu_items = [
-        create_info_menu_leaf(TR.address__title_receive_address, account_items)
+        cancel_leaf(TR.buttons__cancel_sign),
+        create_info_menu_leaf(TR.address__title_receive_address, account_items),
     ]
     for k, v in extra_menu_items:
         menu_items.append(create_info_menu_leaf(k, v))
-    menu = Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items)
+    menu = Menu(menu_items)
 
     with trade_ctx as trade_layout:
         await confirm_with_menu(trade_layout, menu, "confirm_trade")
@@ -1349,7 +1347,7 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from trezor.ui.layouts.menu import Menu, cancel_leaf, interact_with_menu
 
-        menu_items = []
+        menu_items = [cancel_leaf(TR.buttons__cancel_sign)]
         account_info_items = _get_account_info_items(account, account_path)
         if account_info_items:
             menu_items.append(
@@ -1371,7 +1369,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
+                    Menu(menu_items),
                     f"{br_name}/intro",
                     ButtonRequestType.SignTx,
                 )
@@ -1386,7 +1384,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
+                    Menu(menu_items),
                     f"{br_name}/vault_name",
                 )
 
@@ -1402,7 +1400,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
+                    Menu(menu_items),
                     f"{br_name}/amount",
                     br_code,
                 )
@@ -1420,7 +1418,7 @@ if not utils.BITCOIN_ONLY:
                 ) as layout:
                     return await interact_with_menu(
                         layout,
-                        Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
+                        Menu(menu_items),
                         f"{br_name}/extra_data",
                         br_code,
                     )
@@ -1440,7 +1438,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
+                    Menu(menu_items),
                     f"{br_name}/summary",
                     br_code,
                 )
@@ -1462,7 +1460,7 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from trezor.ui.layouts.menu import Menu, cancel_leaf, interact_with_menu
 
-        menu_items = []
+        menu_items = [cancel_leaf(TR.buttons__cancel_sign)]
         account_info_items = _get_account_info_items(account, account_path)
         if account_info_items:
             menu_items.append(
@@ -1484,7 +1482,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
+                    Menu(menu_items),
                     f"{br_name}/intro",
                     br_code,
                 )
@@ -1500,7 +1498,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
+                    Menu(menu_items),
                     f"{br_name}/tokens",
                     br_code,
                 )
@@ -1518,7 +1516,7 @@ if not utils.BITCOIN_ONLY:
             ) as layout:
                 return await interact_with_menu(
                     layout,
-                    Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
+                    Menu(menu_items),
                     f"{br_name}/summary",
                     br_code,
                 )
@@ -1563,12 +1561,13 @@ if not utils.BITCOIN_ONLY:
                 (TR.cardano__nonce, str(nonce), False),
             ]
             children = [
+                cancel_leaf(TR.buttons__cancel),
                 create_info_menu_leaf(TR.address_details__account_info, account_info),
                 create_info_menu_leaf(TR.buttons__more_info, more_info),
             ]
             await confirm_with_menu(
                 layout,
-                Menu([cancel_leaf(TR.buttons__cancel)] + children),
+                Menu(children),
                 "ethereum/auth7702/details",
                 ButtonRequestType.SignTx,
             )
@@ -1858,7 +1857,7 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from trezor.ui.layouts.menu import Menu, cancel_leaf, interact_with_menu
 
-        menu_items = []
+        menu_items = [cancel_leaf(TR.buttons__cancel_sign)]
         account_info_items = _get_account_info_items(account, account_path)
         if account_info_items:
             menu_items.append(
@@ -1879,7 +1878,7 @@ if not utils.BITCOIN_ONLY:
         ) as layout:
             await interact_with_menu(
                 layout,
-                Menu([cancel_leaf(TR.buttons__cancel_sign)] + menu_items),
+                Menu(menu_items),
                 br_name,
                 br_code,
             )
@@ -2235,7 +2234,14 @@ async def confirm_signverify(
         external_menu=True,
     )
 
-    items: list[MenuLeaf] = []
+    items: list[MenuLeaf] = [
+        cancel_leaf(
+            TR.buttons__cancel,
+            confirm=lambda: trezorui_api.show_mismatch(
+                title=TR.addr_mismatch__mismatch
+            ),
+        )
+    ]
     if account is not None:
         items.append(create_info_menu_leaf(TR.words__account, account))
     if path is not None:
@@ -2247,17 +2253,7 @@ async def confirm_signverify(
         )
     )
 
-    menu = Menu(
-        [
-            cancel_leaf(
-                TR.buttons__cancel,
-                confirm=lambda: trezorui_api.show_mismatch(
-                    title=TR.addr_mismatch__mismatch
-                ),
-            )
-        ]
-        + items
-    )
+    menu = Menu(items)
 
     with address_ctx as address_layout:
         await confirm_with_menu(address_layout, menu, br_name, br_code=BR_CODE_OTHER)
