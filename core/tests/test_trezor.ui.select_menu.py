@@ -29,7 +29,6 @@ CLOSE_BUTTON_Y = 28
 
 @unittest.skipUnless(utils.UI_LAYOUT == "BOLT", "Bolt layout only")
 class TestSelectMenu(unittest.TestCase):
-
     # a cancel entry is an ordinary item asking for the `DANGER` intent;
     # it is selected by index like any other.
     ITEMS = [("Alpha", STANDARD), ("Beta", STANDARD), ("Cancel", DANGER)]
