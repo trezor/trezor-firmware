@@ -40,7 +40,7 @@ SECTIONS {
     . = ALIGN(4);
     KEEP(*(.bootloader));
     *(.bootloader*);
-    . = ALIGN(512);
+    . = ALIGN(4);
   } >FLASH AT>FLASH
 
   .flash2 : ALIGN(512) {
@@ -48,7 +48,7 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
-    . = ALIGN(4);
+    . = ALIGN(512);
   } >FLASH2 AT>FLASH2
 
   .stack : ALIGN(8) {
