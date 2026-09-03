@@ -245,8 +245,8 @@ ts_t bat_fg_compensate_soc(float* soc, uint32_t elapsed_s,
 }
 
 // LiFePO4 brownout thresholds. Kept with the chemistry, not the policy.
-#define BAT_UNDERVOLT_THR_V 3.0f          // set critical below this
-#define BAT_CRITICAL_RECOVERY_SOC 0.02f   // clear critical at/above this SoC
+#define BAT_UNDERVOLT_THR_V 3.0f         // set critical below this
+#define BAT_CRITICAL_RECOVERY_SOC 0.02f  // clear critical at/above this SoC
 
 bool bat_eval_critical(bool currently_critical, float voltage_V,
                        float current_mA, float temp_C) {

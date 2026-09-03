@@ -30,6 +30,7 @@ fuel_gauge = "io/fuel_gauge_lifepo4"
 wireless = "io/wireless_stwlc38"
 
 [nfc]
+driver = "io/nfc_st25r3916"
 
 [optiga]
 
