@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use anyhow::{Result, anyhow};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use serde::Deserialize;
@@ -186,6 +188,12 @@ pub struct FlashArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Binary to flash, instead of this build's artifact. The destination
+    /// address still comes from the project + the model's memory.ld, so this
+    /// only replaces WHAT is written, not WHERE.
+    #[arg(long, short = 'f', value_name = "FILE")]
+    pub file: Option<PathBuf>,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
@@ -222,6 +230,12 @@ pub struct UploadArgs {
     /// Build target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Binary to upload, instead of this build's artifact. Handy for a
+    /// prebuilt or archived image -- e.g. an intermediary firmware kept
+    /// alongside a test fixture rather than produced by the current tree.
+    #[arg(long, short = 'f', value_name = "FILE")]
+    pub file: Option<PathBuf>,
 }
 
 #[derive(Args, Debug)]
