@@ -474,9 +474,12 @@ if __debug__:
     async def dispatch_WipeDevice(msg: WipeDevice) -> None:
         """Wipe the device and restart the event loop."""
         from storage import wipe
+        from trezor.crypto import bip39
 
         try:
             wipe(clear_cache=True)
+            # clear the cache of seeds derived from BIP-39 mnemonics
+            bip39.cache_clear()
             assert DEBUG_CONTEXT is not None
             await DEBUG_CONTEXT.write(Success())
         finally:
