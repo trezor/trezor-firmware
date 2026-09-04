@@ -3134,6 +3134,8 @@ pub mod features {
         Capability_TouchWakeup = 26,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Ethereum_EIP7702)
         Capability_Ethereum_EIP7702 = 28,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_UnifiedSigHash)
+        Capability_UnifiedSigHash = 29,
     }
 
     impl ::protobuf::Enum for Capability {
@@ -3172,6 +3174,7 @@ pub mod features {
                 25 => ::std::option::Option::Some(Capability::Capability_N1W1),
                 26 => ::std::option::Option::Some(Capability::Capability_TouchWakeup),
                 28 => ::std::option::Option::Some(Capability::Capability_Ethereum_EIP7702),
+                29 => ::std::option::Option::Some(Capability::Capability_UnifiedSigHash),
                 _ => ::std::option::Option::None
             }
         }
@@ -3205,6 +3208,7 @@ pub mod features {
                 "Capability_N1W1" => ::std::option::Option::Some(Capability::Capability_N1W1),
                 "Capability_TouchWakeup" => ::std::option::Option::Some(Capability::Capability_TouchWakeup),
                 "Capability_Ethereum_EIP7702" => ::std::option::Option::Some(Capability::Capability_Ethereum_EIP7702),
+                "Capability_UnifiedSigHash" => ::std::option::Option::Some(Capability::Capability_UnifiedSigHash),
                 _ => ::std::option::Option::None
             }
         }
@@ -3237,6 +3241,7 @@ pub mod features {
             Capability::Capability_N1W1,
             Capability::Capability_TouchWakeup,
             Capability::Capability_Ethereum_EIP7702,
+            Capability::Capability_UnifiedSigHash,
         ];
     }
 
@@ -3275,6 +3280,7 @@ pub mod features {
                 Capability::Capability_N1W1 => 24,
                 Capability::Capability_TouchWakeup => 25,
                 Capability::Capability_Ethereum_EIP7702 => 26,
+                Capability::Capability_UnifiedSigHash => 27,
             };
             Self::enum_descriptor().value_by_index(index)
         }
@@ -13444,7 +13450,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \roptions.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xa8\x1c\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xcd\x1c\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
@@ -13506,7 +13512,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\r:\x0250R\x10maxPassphraseLen\"C\n\x12BackupAvailability\x12\
     \x10\n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\x12\r\n\tAvai\
     lable\x10\x02\"7\n\x0eRecoveryStatus\x12\x0b\n\x07Nothing\x10\0\x12\x0c\
-    \n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\xef\x05\n\nCapability\
+    \n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\x94\x06\n\nCapability\
     \x12\x1c\n\x12Capability_Bitcoin\x10\x01\x1a\x04\x80\xa6\x1d\x01\x12\x1b\
     \n\x17Capability_Bitcoin_like\x10\x02\x12\x16\n\x12Capability_Binance\
     \x10\x03\x12\x16\n\x12Capability_Cardano\x10\x04\x12\x1b\n\x11Capability\
@@ -13526,9 +13532,10 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x1a\x04\x80\xa6\x1d\x01\x12\x13\n\x0fCapability_Tron\x10\x18\x12\x19\n\
     \x0fCapability_N1W1\x10\x19\x1a\x04\x80\xa6\x1d\x01\x12\x20\n\x16Capabil\
     ity_TouchWakeup\x10\x1a\x1a\x04\x80\xa6\x1d\x01\x12\x1f\n\x1bCapability_\
-    Ethereum_EIP7702\x10\x1c\x1a\x04\xc8\xf3\x18\x01\"\x04\x08\x1b\x10\x1b\"\
-    \x0c\n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\texpiry_ms\x18\x01\x20\x01(\
-    \rR\x08expiryMs\"\x0c\n\nEndSession\"\xdd\x05\n\rApplySettings\x12\x1e\n\
+    Ethereum_EIP7702\x10\x1c\x12#\n\x19Capability_UnifiedSigHash\x10\x1d\x1a\
+    \x04\x80\xa6\x1d\x01\x1a\x04\xc8\xf3\x18\x01\"\x04\x08\x1b\x10\x1b\"\x0c\
+    \n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\texpiry_ms\x18\x01\x20\x01(\rR\
+    \x08expiryMs\"\x0c\n\nEndSession\"\xdd\x05\n\rApplySettings\x12\x1e\n\
     \x08language\x18\x01\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05l\
     abel\x18\x02\x20\x01(\tR\x05label\x12%\n\x0euse_passphrase\x18\x03\x20\
     \x01(\x08R\rusePassphrase\x12\x1e\n\nhomescreen\x18\x04\x20\x01(\x0cR\nh\

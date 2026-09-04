@@ -195,6 +195,8 @@ message Features {
         Capability_TouchWakeup = 26 [(bitcoin_only) = true];  // Touch to wake from sleep
         reserved 27;                                          // reserved for internal use
         Capability_Ethereum_EIP7702 = 28;                     // Experimental EIP-7702 support
+        Capability_UnifiedSigHash = 29
+            [(bitcoin_only) = true];  // TxInput.unified_sighash, the unified opt-in signature hash
     }
 }
 

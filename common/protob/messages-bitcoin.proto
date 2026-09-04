@@ -344,9 +344,12 @@ message TxAck {
                                               // (used when creating a replacement transaction)
             optional DecredStakingSpendType decred_staking_spend = 18;  // if not None this holds the type of stake
                                                                         // spend: revocation or stake generation
-            optional bytes script_pubkey = 19;                  // scriptPubKey of the previous output spent by this
-                                                                // input, only set of EXTERNAL inputs
-            optional uint32 coinjoin_flags = 20 [default = 0];  // bit field of CoinJoin-specific flags
+            optional bytes script_pubkey = 19;                     // scriptPubKey of the previous output spent by this
+                                                                   // input, only set of EXTERNAL inputs
+            optional uint32 coinjoin_flags = 20 [default = 0];     // bit field of CoinJoin-specific flags
+            optional bool unified_sighash = 21 [default = false];  // see TxInput.unified_sighash. Firmware
+                                                                   // without Capability_UnifiedSigHash ignores
+                                                                   // this field and signs the legacy digest.
         }
         /**
          * Structure representing compiled transaction output
@@ -409,7 +412,9 @@ message TxInput {
         18;  // if not None this holds the type of stake spend: revocation or stake generation
     optional bytes script_pubkey =
         19;  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
-    optional uint32 coinjoin_flags = 20 [default = 0];  // bit field of CoinJoin-specific flags
+    optional uint32 coinjoin_flags = 20 [default = 0];     // bit field of CoinJoin-specific flags
+    optional bool unified_sighash = 21 [default = false];  // sign this input with the unified opt-in signature
+                                                           // hash (SIGHASH_ALL | SIGHASH_UNIFIED, i.e. 0x21)
 }
 
 /** Data type for transaction output to be signed.
