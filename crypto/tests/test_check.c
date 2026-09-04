@@ -7234,6 +7234,19 @@ START_TEST(test_mnemonic_find_word) {
 }
 END_TEST
 
+START_TEST(test_bip39_wordlist_max_len) {
+  size_t max_len = 0;
+  for (int i = 0; i < BIP39_WORD_COUNT; i++) {
+    size_t len = strlen(BIP39_WORDLIST_ENGLISH[i]);
+    ck_assert_uint_le(len, BIP39_MAX_WORD_LEN);
+    if (len > max_len) {
+      max_len = len;
+    }
+  }
+  ck_assert_uint_eq(max_len, BIP39_MAX_WORD_LEN);
+}
+END_TEST
+
 START_TEST(test_slip39_get_word) {
   static const struct {
     const int index;
@@ -12853,6 +12866,7 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_mnemonic_check);
   tcase_add_test(tc, test_mnemonic_to_bits);
   tcase_add_test(tc, test_mnemonic_find_word);
+  tcase_add_test(tc, test_bip39_wordlist_max_len);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("slip39");

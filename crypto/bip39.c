@@ -51,7 +51,7 @@ void bip39_cache_clear(void) {
 
 #endif
 
-static CONFIDENTIAL char mnemo[24 * 10];
+static CONFIDENTIAL char mnemo[BIP39_MAX_MNEMONIC_LEN + 1];
 
 const char *mnemonic_from_data(const uint8_t *data, size_t len) {
   if (len % 4 || len < 16 || len > 32) {
@@ -77,8 +77,14 @@ const char *mnemonic_from_data(const uint8_t *data, size_t len) {
       idx <<= 1;
       idx += (bits[(i * 11 + j) / 8] & (1 << (7 - ((i * 11 + j) % 8)))) > 0;
     }
-    strcpy(p, BIP39_WORDLIST_ENGLISH[idx]);
-    p += strlen(BIP39_WORDLIST_ENGLISH[idx]);
+    size_t word_len = strlen(BIP39_WORDLIST_ENGLISH[idx]);
+    if (p + word_len + 1 > mnemo + sizeof(mnemo)) {
+      memzero(bits, sizeof(bits));
+      memzero(mnemo, sizeof(mnemo));
+      return 0;
+    }
+    memcpy(p, BIP39_WORDLIST_ENGLISH[idx], word_len);
+    p += word_len;
     *p = (i < mlen - 1) ? ' ' : 0;
     p++;
   }
