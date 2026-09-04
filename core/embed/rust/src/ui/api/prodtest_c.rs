@@ -79,7 +79,7 @@ unsafe extern "C" fn screen_prodtest_draw(events: *const cty::uint32_t, events_l
 
     let mut v: Vec<TouchEvent, 256> = Vec::new();
 
-    for e in events.as_slice().unwrap_or_default().iter() {
+    for e in events.as_slice().iter() {
         if let Some(event) = touch_unpack(*e) {
             unwrap!(v.push(event));
         }

@@ -1,4 +1,7 @@
 #![cfg_attr(not(test), no_std)]
+#![feature(custom_test_frameworks)]
+#![reexport_test_harness_main = "test_main"]
+#![no_main]
 
 use core::hint::black_box;
 
@@ -7,27 +10,33 @@ pub mod aesgcm;
 pub mod cosi;
 pub mod crc32;
 pub mod curve25519;
+pub mod ecdsa;
 pub mod ed25519;
 mod ffi;
 pub mod hmac;
-pub mod memory;
 pub mod merkle;
+pub mod secret;
 pub mod sha256;
+pub mod sha3;
 pub mod sha512;
 
+#[cfg(test)]
+mod testutil;
+
+/// Error returned by cryptographic operations in this crate.
 #[cfg_attr(feature = "test", derive(core::fmt::Debug))]
 pub enum Error {
-    // Signature verification failed
+    /// Signature verification failed.
     SignatureVerificationFailed,
-    // Provided value is not a valid public key / signature / etc.
+    /// Provided value is not a valid public key, signature, or similar.
     InvalidEncoding,
-    // Provided parameters are not accepted (e.g., signature threshold out of bounds)
+    /// Parameters are not accepted (e.g., signature threshold out of bounds).
     InvalidParams,
-    // State precondition check failed (possibly raised by C implementation)
+    /// State precondition check failed (can be raised by the C implementation).
     InvalidContext,
-    // Authentication failed (e.g. AEAD tag mismatch)
+    /// Authentication failed (e.g. AEAD tag mismatch).
     AuthenticationFailed,
-    // Invalid sigmask
+    /// CoSi sigmask selects more public keys than supported.
     InvalidSigmask,
 }
 

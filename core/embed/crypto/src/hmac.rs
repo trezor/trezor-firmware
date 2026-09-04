@@ -1,51 +1,80 @@
-use core::pin::Pin;
+use core::ops::DerefMut;
 
-use zeroize::{Zeroize, ZeroizeOnDrop};
+use rtl::CSlice;
 
 use super::ffi;
-use super::memory::{Memory, init_ctx};
+use super::secret::{HazardGuard, SecretContext, SecretContextLock, ZeroableMemory};
 
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
-#[derive(Zeroize, ZeroizeOnDrop)]
-pub struct HmacSha256<'a> {
-    ctx: Pin<&'a mut Memory<ffi::HMAC_SHA256_CTX>>,
-}
+pub type HmacSha256Ctx = SecretContext<ffi::HMAC_SHA256_CTX>;
 
-impl<'a> HmacSha256<'a> {
-    pub fn new(mut ctx: Pin<&'a mut Memory<ffi::HMAC_SHA256_CTX>>, key: &[u8]) -> Self {
-        // initialize the context
+// SAFETY: HMAC_SHA256_CTX is valid when zeroed
+unsafe impl ZeroableMemory for ffi::HMAC_SHA256_CTX {}
+
+impl HazardGuard<'_, ffi::HMAC_SHA256_CTX> {
+    /// Initialize the HMAC context with the given key.
+    ///
+    /// Called by [`HmacSha256::new`].
+    fn init(&mut self, key: &[u8]) {
+        let ptr = CSlice::from(key);
         // SAFETY: ffi
-        unsafe { ffi::hmac_sha256_Init(ctx.inner(), key.as_ptr(), key.len() as u32) };
-        Self { ctx }
+        // COPY HAZARD: operates on the guarded context in place
+        unsafe { ffi::hmac_sha256_Init(self.hazard_mut(), ptr.ptr(), ptr.len() as u32) };
     }
 
+    /// Update the HMAC context with the given data.
+    fn update(&mut self, data: &[u8]) {
+        let ptr = CSlice::from(data);
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the guarded context in place
+        unsafe { ffi::hmac_sha256_Update(self.hazard_mut(), ptr.ptr(), ptr.len() as u32) };
+    }
+
+    /// Finalize the HMAC context and return the digest.
+    fn finalize(&mut self) -> Digest {
+        let mut digest = [0u8; DIGEST_SIZE];
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the guarded context in place
+        unsafe { ffi::hmac_sha256_Final(self.hazard_mut(), digest.as_mut_ptr()) };
+        digest
+    }
+}
+
+/// HMAC-SHA256 hasher.
+///
+/// A wrapper around an HMAC-SHA256 context that provides a safe interface for
+/// authenticating data.
+pub struct HmacSha256<D: DerefMut<Target = HmacSha256Ctx>>(SecretContextLock<D>);
+
+impl<D: DerefMut<Target = HmacSha256Ctx>> HmacSha256<D> {
+    /// Construct a new HMAC-SHA256 hasher keyed by `key`.
+    pub fn new(ctx: D, key: &[u8]) -> Self {
+        let mut locked_ctx = SecretContextLock::new(ctx);
+        locked_ctx.guarded().init(key);
+        Self(locked_ctx)
+    }
+
+    /// Update the HMAC context with the given data.
     pub fn update(&mut self, data: &[u8]) {
-        // SAFETY: ffi
-        unsafe { ffi::hmac_sha256_Update(self.ctx.inner(), data.as_ptr(), data.len() as u32) };
+        self.0.guarded().update(data);
     }
 
-    pub fn memory() -> Memory<ffi::HMAC_SHA256_CTX> {
-        Memory::default()
-    }
-
-    pub fn finalize_into(mut self, out: &mut Digest) {
-        // SAFETY: ffi
-        unsafe { ffi::hmac_sha256_Final(self.ctx.inner(), out.as_mut_ptr()) };
+    /// Finalize the HMAC context and return the digest.
+    pub fn finalize(mut self) -> Digest {
+        self.0.guarded().finalize()
     }
 }
 
-pub fn digest_into(key: &[u8], data: &[u8], out: &mut Digest) {
-    init_ctx!(HmacSha256, ctx, key);
-    ctx.update(data);
-    ctx.finalize_into(out);
-}
-
-pub fn digest(key: &[u8], data: &[u8]) -> Digest {
-    let mut out = [0u8; DIGEST_SIZE];
-    digest_into(key, data, &mut out);
-    out
+impl HmacSha256<&'_ mut HmacSha256Ctx> {
+    /// Calculate the HMAC-SHA256 digest of `data` under `key`.
+    pub fn digest(key: &[u8], data: &[u8]) -> Digest {
+        let mut ctx = HmacSha256Ctx::default();
+        let mut hmac = HmacSha256::new(&mut ctx, key);
+        hmac.update(data);
+        hmac.finalize()
+    }
 }
 
 #[cfg(test)]
@@ -96,15 +125,14 @@ mod test {
     ];
 
     fn hexdigest(key: &[u8], data: &[u8]) -> String {
-        hex::encode(digest(key, data))
+        hex::encode(HmacSha256::digest(key, data))
     }
 
     #[test]
     fn test_empty_ctx() {
-        let mut out = [0u8; DIGEST_SIZE];
-
-        init_ctx!(HmacSha256, ctx, b"");
-        ctx.finalize_into(&mut out);
+        let mut ctx = HmacSha256Ctx::default();
+        let hmac = HmacSha256::new(&mut ctx, b"");
+        let out = hmac.finalize();
         let out_hex = hex::encode(out);
 
         assert_eq!(out_hex, HMAC_SHA256_EMPTY);
@@ -123,12 +151,12 @@ mod test {
         // case 3
         let key =
             b"\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa";
-        init_ctx!(HmacSha256, ctx, key);
+        let mut ctx = HmacSha256Ctx::default();
+        let mut hmac = HmacSha256::new(&mut ctx, key);
         for _ in 0..50 {
-            ctx.update(b"\xdd");
+            hmac.update(b"\xdd");
         }
-        let mut out = [0u8; DIGEST_SIZE];
-        ctx.finalize_into(&mut out);
+        let out = hmac.finalize();
         assert_eq!(
             hex::encode(out),
             "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe"
@@ -136,11 +164,12 @@ mod test {
 
         // case 4
         let key = b"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19";
-        init_ctx!(HmacSha256, ctx, key);
+        let mut ctx = HmacSha256Ctx::default();
+        let mut hmac = HmacSha256::new(&mut ctx, key);
         for _ in 0..50 {
-            ctx.update(b"\xcd");
+            hmac.update(b"\xcd");
         }
-        ctx.finalize_into(&mut out);
+        let out = hmac.finalize();
         assert_eq!(
             hex::encode(out),
             "82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b"

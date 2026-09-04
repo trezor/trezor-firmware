@@ -1,4 +1,4 @@
-use crypto::memory::init_ctx;
+use crypto::secret::HazardGuard;
 use crypto::{aesgcm, curve25519, sha256};
 use trezor_thp::channel::{Backend, Cipher, Hash, U8Array, DH};
 use zeroize::{Zeroize, Zeroizing};
@@ -97,8 +97,12 @@ impl Cipher for TrezorCryptoAesGcm {
         let (in_out, tag_out) = out.split_at_mut(plaintext.len());
         in_out.copy_from_slice(plaintext);
 
-        init_ctx!(aesgcm::AesGcmEncrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
+        let mut ctx = aesgcm::AesGcmContext::default();
+        let mut ctx = unwrap!(aesgcm::AesGcmEncrypt::new(
+            &mut ctx,
+            key.as_slice(),
+            &full_nonce
+        ));
         unwrap!(ctx.encrypt_in_place(in_out));
         unwrap!(ctx.auth(ad));
         let tag = unwrap!(ctx.finish());
@@ -120,8 +124,12 @@ impl Cipher for TrezorCryptoAesGcm {
         let (in_out, tag_out) =
             in_out[..plaintext_len + aesgcm::TAG_SIZE].split_at_mut(plaintext_len);
 
-        init_ctx!(aesgcm::AesGcmEncrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
+        let mut ctx = aesgcm::AesGcmContext::default();
+        let mut ctx = unwrap!(aesgcm::AesGcmEncrypt::new(
+            &mut ctx,
+            key.as_slice(),
+            &full_nonce
+        ));
         unwrap!(ctx.encrypt_in_place(in_out));
         unwrap!(ctx.auth(ad));
         let tag = unwrap!(ctx.finish());
@@ -143,8 +151,12 @@ impl Cipher for TrezorCryptoAesGcm {
         let (ciphertext, tag) = unwrap!(ciphertext.split_last_chunk::<{ aesgcm::TAG_SIZE }>());
         out.copy_from_slice(ciphertext);
 
-        init_ctx!(aesgcm::AesGcmDecrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
+        let mut ctx = aesgcm::AesGcmContext::default();
+        let mut ctx = unwrap!(aesgcm::AesGcmDecrypt::new(
+            &mut ctx,
+            key.as_slice(),
+            &full_nonce
+        ));
         unwrap!(ctx.decrypt_in_place(out));
         unwrap!(ctx.auth(ad));
         ctx.finish(tag).map_err(|_| out.zeroize())?;
@@ -166,8 +178,12 @@ impl Cipher for TrezorCryptoAesGcm {
         let in_out = &mut in_out[..ciphertext_len];
         let (in_out, tag) = unwrap!(in_out.split_last_chunk_mut::<{ aesgcm::TAG_SIZE }>());
 
-        init_ctx!(aesgcm::AesGcmDecrypt, ctx, key.as_slice(), &full_nonce);
-        let mut ctx = unwrap!(ctx);
+        let mut ctx = aesgcm::AesGcmContext::default();
+        let mut ctx = unwrap!(aesgcm::AesGcmDecrypt::new(
+            &mut ctx,
+            key.as_slice(),
+            &full_nonce
+        ));
         unwrap!(ctx.decrypt_in_place(in_out));
         unwrap!(ctx.auth(ad));
         ctx.finish(tag).map_err(|_| in_out.zeroize())?;
@@ -176,8 +192,7 @@ impl Cipher for TrezorCryptoAesGcm {
     }
 }
 
-#[derive(Default)]
-pub struct TrezorCryptoSha256(sha256::NoPinSha256);
+pub struct TrezorCryptoSha256(sha256::Sha256Ctx);
 
 impl Hash for TrezorCryptoSha256 {
     fn name() -> &'static str {
@@ -188,13 +203,30 @@ impl Hash for TrezorCryptoSha256 {
     type Output = Sensitive<sha256::Digest>;
 
     fn input(&mut self, data: &[u8]) {
-        self.0.update(data);
+        // COPY HAZARD: Hazardous!
+        //
+        // This struct breaks the assumption that the hasher's inner state
+        // cannot be copied around. We have to live with that here, because we
+        // can't put the storage on the heap, so it needs to be owned, which
+        // prevents us from creating a safe interface.
+        let mut guard = HazardGuard::hazard_new(&mut self.0);
+        guard.update(data);
     }
 
     fn result(&mut self) -> Self::Output {
-        let mut digest = sha256::Digest::default();
-        self.0.clone().finalize_into(&mut digest);
+        // COPY HAZARD: Hazardous! (see `input()` above for details)
+        let mut guard = HazardGuard::hazard_new(&mut self.0);
+        let digest = guard.finalize();
         Self::Output::from_slice(&digest)
+    }
+}
+
+impl Default for TrezorCryptoSha256 {
+    fn default() -> Self {
+        let mut ctx = sha256::Sha256Ctx::default();
+        // COPY HAZARD: init is a public operation
+        ctx.hazard_mut().init();
+        Self(ctx)
     }
 }
 
