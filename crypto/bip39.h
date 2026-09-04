@@ -46,6 +46,7 @@ extern const char *const BIP39_WORDLIST_ENGLISH[BIP39_WORD_COUNT];
 const char *mnemonic_from_data(const uint8_t *data, size_t len);
 void mnemonic_clear(void);
 
+// Only 12, 18 and 24 word mnemonics are accepted
 int mnemonic_check(const char *mnemonic);
 
 // Returns the number of meaningful bits written to `bits`, or 0 if the mnemonic
