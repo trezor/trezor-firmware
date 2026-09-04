@@ -44,7 +44,7 @@ typedef struct __attribute__((packed)) {
 //
 // Last tag must be terminator or all space used.
 
-#define CAPABILITIES_HEADER "TRZC"
+#define CAPABILITIES_HEADER {'T', 'R', 'Z', 'C'}
 
 enum CapabilityTag {
   TAG_TERMINATOR = 0x00,

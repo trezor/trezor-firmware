@@ -45,12 +45,17 @@
 #ifdef USE_TROPIC_LOGGING
 #include <rtl/printf.h>
 
+#ifdef TREZOR_EMULATOR
+
+void tropic_set_log_sink(cli_t *cli) { (void)cli; }
+
+#else   // !TREZOR_EMULATOR
+
 // CLI for libtropic's log output; non-NULL only while a caller has armed it.
 static cli_t *g_lt_log_cli = NULL;
 
 void tropic_set_log_sink(cli_t *cli) { g_lt_log_cli = cli; }
 
-#ifndef TREZOR_EMULATOR
 // Log sink called by libtropic's `LT_LOG_*()` macros. On the
 // emulator the libtropic POSIX port provides its own implementation.
 int lt_port_log(const char *format, ...) {
