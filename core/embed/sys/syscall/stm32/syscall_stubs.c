@@ -196,6 +196,11 @@ void reboot_to_bootloader(void) {
   while (1);
 }
 
+void reboot_and_connect(void) {
+  syscall_invoke0(SYSCALL_REBOOT_AND_CONNECT);
+  while (1);
+}
+
 void reboot_and_upgrade(const uint8_t hash[32]) {
   syscall_invoke1((uint32_t)hash, SYSCALL_REBOOT_AND_UPGRADE);
   while (1);
