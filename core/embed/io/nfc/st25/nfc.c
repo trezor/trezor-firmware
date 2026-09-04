@@ -428,11 +428,8 @@ static ts_t nfc_transceive_blocking(const nfc_apdu_message_t *cmd,
       rfalNfcDataExchangeStart((uint8_t *)cmd->data, cmd->data_len, &rx_data,
                                &rx_data_len, RFAL_FWT_NONE);
 
-  if (err == RFAL_ERR_WRONG_STATE) {
-    return TS_ENOSTATE;
-  } else if (err == RFAL_ERR_PARAM) {
-    return TS_EINVAL;
-  }
+  TSH_CHECK(err != RFAL_ERR_WRONG_STATE, TS_ENOSTATE);
+  TSH_CHECK(err != RFAL_ERR_PARAM, TS_EINVAL);
 
   do {
     rfalNfcWorker();
@@ -441,15 +438,10 @@ static ts_t nfc_transceive_blocking(const nfc_apdu_message_t *cmd,
   TSH_CHECK(err == RFAL_ERR_NONE, TS_ENOEN);
 
   // copy Rx APDU data and length
-  if ((rx_data != NULL) && (rx_data_len != NULL)) {
-    if (*rx_data_len > sizeof(resp->data)) {
-      return TS_ENOMEM;
-    }
-    memcpy(resp->data, rx_data, *rx_data_len);
-    resp->data_len = *rx_data_len;
-  } else {
-    return TS_EINVAL;
-  }
+  TSH_CHECK((rx_data != NULL) && (rx_data_len != NULL), TS_EINVAL);
+  TSH_CHECK(*rx_data_len <= sizeof(resp->data), TS_ENOMEM);
+  memcpy(resp->data, rx_data, *rx_data_len);
+  resp->data_len = *rx_data_len;
 
 cleanup:
   TSH_RETURN;
