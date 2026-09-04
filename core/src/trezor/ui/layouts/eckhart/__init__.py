@@ -1980,7 +1980,7 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "tron/claim",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        from trezor.ui.layouts.menu import Menu, cancel_leaf, interact_with_menu
+        from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
 
         menu_items = []
         account_properties = _get_account_info_items(account, account_path)
@@ -2002,7 +2002,7 @@ if not utils.BITCOIN_ONLY:
             external_menu=True,
             cancel=False,
         ) as layout:
-            await interact_with_menu(
+            await confirm_with_menu(
                 layout,
                 Menu(menu_items),
                 br_name,
