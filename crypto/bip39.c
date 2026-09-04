@@ -89,7 +89,7 @@ const char *mnemonic_from_data(const uint8_t *data, size_t len) {
 
 void mnemonic_clear(void) { memzero(mnemo, sizeof(mnemo)); }
 
-size_t mnemonic_to_bits(const char *mnemonic_orig, uint8_t *bits) {
+size_t mnemonic_to_bits(const char *mnemonic_orig, uint8_t bits[32 + 1]) {
   if (!mnemonic_orig) {
     return 0;
   }
