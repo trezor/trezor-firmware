@@ -83,7 +83,7 @@ pub fn parse_and_verify(definition: &[u8], expected_type: u8) -> Result<&[u8], E
     let sigmask = read_byte(&mut reader)?;
     let signature = cosi::Signature::new(
         sigmask,
-        unwrap!(read(&mut reader, ed25519::SIGNATURE_SIZE)?.try_into()),
+        read(&mut reader, ed25519::SIGNATURE_SIZE)?.try_into()?,
     );
 
     // no trailing data

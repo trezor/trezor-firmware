@@ -592,7 +592,7 @@ impl<'a> TranslationsHeader<'a> {
         }
         let signature = cosi::Signature::new(
             proof_reader.read_byte()?,
-            unwrap!(proof_reader.read(ed25519::SIGNATURE_SIZE)?.try_into()),
+            proof_reader.read(ed25519::SIGNATURE_SIZE)?.try_into()?,
         );
 
         // check that there is no trailing data in the proof section

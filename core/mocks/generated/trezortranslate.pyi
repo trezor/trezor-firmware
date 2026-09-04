@@ -2,6 +2,7 @@ from typing import *
 from buffer_types import *
 from trezortranslate_keys import TR as TR  # noqa: F401
 """Translation object with attributes."""
+ExternalDataError: type[ValueError]
 
 
 # rust/src/translations/obj.rs

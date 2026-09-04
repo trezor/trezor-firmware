@@ -8,7 +8,7 @@ use crate::micropython::map::Map;
 use crate::micropython::module::Module;
 use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
-use crate::micropython::util;
+use crate::micropython::{exception, util};
 use crate::protobuf::decode::Decoder;
 use crate::protobuf::obj::MsgDefObj;
 
@@ -47,6 +47,9 @@ pub static mp_module_trezordefinitions: Module = obj_module! {
     ///
     /// mock:global
     /// T = TypeVar("T", bound=MessageType)
+    ///
+    /// ExternalDataError: type[ValueError]
+    Qstr::MP_QSTR_ExternalDataError => exception::ExternalDataError.as_type().as_obj(),
     ///
     /// def decode(
     ///     definition: AnyBytes,

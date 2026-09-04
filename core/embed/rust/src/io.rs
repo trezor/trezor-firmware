@@ -49,12 +49,12 @@ impl<'a> InputStream<'a> {
 
     pub fn read_u16_le(&mut self) -> Result<u16, Error> {
         let buf = self.read(2)?;
-        Ok(u16::from_le_bytes(unwrap!(buf.try_into())))
+        Ok(u16::from_le_bytes(buf.try_into()?))
     }
 
     pub fn read_u32_le(&mut self) -> Result<u32, Error> {
         let buf = self.read(4)?;
-        Ok(u32::from_le_bytes(unwrap!(buf.try_into())))
+        Ok(u32::from_le_bytes(buf.try_into()?))
     }
 
     pub fn read_uvarint(&mut self) -> Result<u64, Error> {
