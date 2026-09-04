@@ -7,7 +7,7 @@
   },
   "header": {
     "language": "id-ID",
-    "version": "2.12.5"
+    "version": "2.12.5.0"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Hubungi Dukungan Trezor di",
@@ -356,7 +356,12 @@
     "buttons__again": "Lagi",
     "buttons__allow": "Izinkan",
     "buttons__back": "Kembali",
-    "buttons__back_up": "Cadangkan",
+    "buttons__back_up": {
+      "Bolt": "Cadang- kan",
+      "Caesar": "Cadangkan",
+      "Delizia": "Cadangkan",
+      "Eckhart": "Cadangkan"
+    },
     "buttons__cancel": "Batalkan",
     "buttons__change": "Ubah",
     "buttons__check": "Periksa",
@@ -1732,7 +1737,7 @@
     "pin__changed": "PIN diubah.",
     "pin__cursor_will_change": {
       "Bolt": "",
-      "Caesar": "Posisi kursor akan berubah setiap kali PIN dimasukkan untuk meningkatkan keamanan.",
+      "Caesar": "Posisi kursor akan berubah antarentri untuk meningkatkan keamanan.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1836,7 +1841,7 @@
     "recovery__cancel_dry_run": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Batalkan pemeriksaan cadangan",
+      "Delizia": "Batalkan pemeriksaan",
       "Eckhart": ""
     },
     "recovery__check_dry_run": {
@@ -1847,7 +1852,7 @@
     },
     "recovery__cursor_will_change": {
       "Bolt": "",
-      "Caesar": "Posisi kursor akan berubah setiap kali PIN dimasukkan untuk meningkatkan keamanan.",
+      "Caesar": "Posisi kursor akan berubah antarentri untuk meningkatkan keamanan.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2020,7 +2025,7 @@
       "Delizia": "Periksa bagian {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Periksa cadangan dompet",
+    "reset__check_wallet_backup_title": "Periksa cadangan",
     "reset__continue_with_next_share": {
       "Bolt": "Lanjutkan dengan bagian berikutnya.",
       "Caesar": "Lanjutkan dengan bagian berikutnya.",
@@ -3062,7 +3067,7 @@
     "tutorial__title_hold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Tahan untuk mengonfirmasi tindakan penting",
+      "Delizia": "Tahan untuk mengon- firmasi tindakan penting",
       "Eckhart": "Tahan tombol di bagian bawah layar untuk mengonfirmasi tindakan penting."
     },
     "tutorial__title_lets_begin": {
