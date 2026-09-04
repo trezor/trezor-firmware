@@ -793,11 +793,14 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutil_get_scm_revision_obj,
 ///     The JSON file can be decoded by analyze-memory-dump.py
 ///     """
 static mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
-  size_t fn_len;
-  FILE *out = (filename == mp_const_none)
-                  ? NULL
-                  : fopen(mp_obj_str_get_data(filename, &fn_len), "w");
-  (void)fn_len;
+  FILE *out = NULL;
+  if (filename != mp_const_none) {
+    size_t fn_len = 0;
+    out = fopen(mp_obj_str_get_data(filename, &fn_len), "w");
+    if (out == NULL) {
+      mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("Cannot open file"));
+    }
+  }
   dump_meminfo_json(out);
   return mp_const_none;
 }
