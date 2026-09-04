@@ -121,6 +121,16 @@ class ZcashHasher:
     ) -> bytes:
         raise NotImplementedError
 
+    def hash_unified(
+        self,
+        i: int,
+        tx: SignTx | PrevTx,
+        script_type: int,
+        script_code: bytes | None,
+        sighash_type: SigHashType,
+    ) -> bytes:
+        raise NotImplementedError
+
     def hash_zip244(
         self,
         txi: TxInput | None,

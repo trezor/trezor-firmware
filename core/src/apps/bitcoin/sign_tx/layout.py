@@ -339,6 +339,16 @@ async def confirm_multiple_accounts() -> None:
     await layouts.confirm_multiple_accounts_warning()
 
 
+async def confirm_unified_sighash() -> None:
+    await layouts.show_warning(
+        "unified_sighash",
+        TR.bitcoin__unified_sighash,
+        TR.words__continue_anyway_question,
+        button=TR.buttons__continue,
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
 async def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> None:
     from trezor.strings import format_timestamp
 

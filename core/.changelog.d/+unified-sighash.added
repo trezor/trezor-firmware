@@ -1,0 +1,1 @@
+Bitcoin: support the unified opt-in signature hash (Bitcoin Knots), selected per input with `TxInput.unified_sighash`.

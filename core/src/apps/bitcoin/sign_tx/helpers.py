@@ -264,6 +264,11 @@ class UiConfirmMultipleAccounts(UiConfirm):
         return layout.confirm_multiple_accounts()
 
 
+class UiConfirmUnifiedSigHash(UiConfirm):
+    def confirm_dialog(self) -> Awaitable[Any]:
+        return layout.confirm_unified_sighash()
+
+
 def confirm_output(
     output: TxOutput,
     coin: CoinInfo,
@@ -367,6 +372,10 @@ def confirm_nondefault_locktime(
 
 def confirm_multiple_accounts() -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
     return (yield UiConfirmMultipleAccounts())  # type: ignore [awaitable-return-type]
+
+
+def confirm_unified_sighash() -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmUnifiedSigHash())  # type: ignore [awaitable-return-type]
 
 
 def request_tx_meta(
@@ -581,6 +590,17 @@ def _sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
 
     if txi.orig_hash and txi.orig_index is None:
         raise DataError("Missing orig_index field.")
+
+    if txi.unified_sighash:
+        if coin.coin_name not in common.BITCOIN_NAMES:
+            raise DataError("Unified sighash not enabled on this coin.")
+
+        # We would have to reconstruct the scriptCode of an arbitrary foreign
+        # input to check its signature, which we cannot do. Refusing is
+        # fail-closed: the signature we would have produced for our own inputs
+        # stays correct either way.
+        if script_type == InputScriptType.EXTERNAL:
+            raise DataError("Unified sighash not supported for external inputs.")
 
     return txi
 

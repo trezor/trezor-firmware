@@ -43,6 +43,7 @@ class Progress:
         external: int,
         segwit: int,
         presigned: int,
+        legacy_digests: int,
         taproot_only: bool,
         serialize: bool,
         coin: CoinInfo,
@@ -65,21 +66,18 @@ class Progress:
         for orig in orig_txs:
             self.steps += orig.tx.inputs_count
 
-        # Steps 3 and 4 - get_legacy_tx_digest() for each legacy input.
+        # Steps 3 and 4 - get_legacy_tx_digest() for each input that needs it.
+        # SegWit inputs and inputs which opt into the unified signature hash
+        # take their digest from the cached sub-hashes instead. An original
+        # transaction's inputs are counted from what it actually contains,
+        # which is known by the end of Step 1.
         if not (coin.force_bip143 or coin.overwintered or coin.decred):
-            self.steps += (tx.inputs_count - segwit) * (
-                tx.inputs_count + tx.outputs_count
-            )
+            self.steps += legacy_digests * (tx.inputs_count + tx.outputs_count)
 
-            if segwit != tx.inputs_count:
-                # The transaction has a legacy input.
-
-                # Simplification: We assume that all original transaction inputs
-                # are legacy, since mixed script types are not supported in Suite.
-                for orig in orig_txs:
-                    self.steps += orig.tx.inputs_count * (
-                        orig.tx.inputs_count + orig.tx.outputs_count
-                    )
+            for orig in orig_txs:
+                self.steps += orig.legacy_digest_count * (
+                    orig.tx.inputs_count + orig.tx.outputs_count
+                )
 
         # Steps 4 and 6 - serialize and sign inputs
         if serialize:

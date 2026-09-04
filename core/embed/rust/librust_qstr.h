@@ -199,6 +199,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_bitcoin__title_proof_of_ownership;
   MP_QSTR_bitcoin__title_purchase_ticket;
   MP_QSTR_bitcoin__title_update_transaction;
+  MP_QSTR_bitcoin__unified_sighash;
   MP_QSTR_bitcoin__unknown_path;
   MP_QSTR_bitcoin__unknown_transaction;
   MP_QSTR_bitcoin__unusually_high_fee;
