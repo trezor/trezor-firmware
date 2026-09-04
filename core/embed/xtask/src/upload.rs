@@ -12,8 +12,14 @@ pub fn upload(args: UploadArgs) -> Result<()> {
         args.project.binary_name()
     );
 
-    let binary =
-        helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.project.binary_name()));
+    // An explicitly given file replaces the build artifact; `--model` then only
+    // names the intended target, since trezorctl talks to whatever is connected.
+    let binary = match args.file {
+        Some(ref file) => file.clone(),
+        None => {
+            helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.project.binary_name()))
+        }
+    };
 
     let binary = binary
         .canonicalize()

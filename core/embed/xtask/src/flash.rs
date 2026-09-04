@@ -14,8 +14,15 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         args.project.binary_name()
     );
 
-    let binary =
-        helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.project.binary_name()));
+    // An explicitly given file replaces the build artifact; the address below is
+    // still derived from the project + model, so a prebuilt binary lands exactly
+    // where that project belongs.
+    let binary = match args.file {
+        Some(ref file) => file.clone(),
+        None => {
+            helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.project.binary_name()))
+        }
+    };
 
     let binary = binary
         .canonicalize()
