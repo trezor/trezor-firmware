@@ -257,6 +257,10 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       reboot_to_bootloader();
     } break;
 
+    case SYSCALL_REBOOT_AND_CONNECT: {
+      reboot_and_connect();
+    } break;
+
     case SYSCALL_REBOOT_AND_UPGRADE: {
       const uint8_t *hash = (const uint8_t *)args[0];
       reboot_and_upgrade__verified(hash);
