@@ -47,6 +47,16 @@ void __attribute__((noreturn)) reboot_to_off(void);
 // halting there and waiting for further user instructions.
 void __attribute__((noreturn)) reboot_to_bootloader(void);
 
+// Resets the device into the bootloader and brings up the host link straight
+// away, skipping the intro screen that reboot_to_bootloader() lands on.
+//
+// Unlike an interaction-less upgrade this carries no consent material and
+// authorizes nothing: it only chooses which screen the bootloader starts on.
+// Use it when a host is already waiting to talk -- notably when the caller has
+// just invalidated its own firmware, where the intro screen would strand the
+// device behind a tap it cannot ask for.
+void __attribute__((noreturn)) reboot_and_connect(void);
+
 // Resets the device into the bootloader and automatically continues
 // with the installation of new firmware (also known as an
 // interaction-less upgrade).
