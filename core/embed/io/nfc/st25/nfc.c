@@ -421,6 +421,9 @@ void NFC_EXTI_INTERRUPT_HANDLER(void) {
 static ts_t nfc_transceive_blocking(const nfc_apdu_message_t *cmd,
                                     nfc_apdu_message_t *resp) {
   TSH_DECLARE;
+  TSH_CHECK(cmd != NULL && cmd->data_len <= sizeof(cmd->data), TS_EINVAL);
+  TSH_CHECK(resp != NULL, TS_EINVAL);
+
   uint8_t *rx_data = NULL;
   uint16_t *rx_data_len = NULL;
 
