@@ -163,6 +163,7 @@ def format_header(
     code_hashes: t.Sequence[bytes],
     digest: bytes,
     sig_status: Status,
+    verbose: bool,
 ) -> str:
     header_dict = asdict(header)
     header_out = header_dict.copy()
@@ -187,11 +188,20 @@ def format_header(
 
     all_ok = SYM_OK if hash_status.is_ok() and sig_status.is_ok() else SYM_FAIL
 
-    output = [
-        "Firmware Header " + format_container(header_out),
-        f"Fingerprint: {click.style(chunkify(digest), bold=True)}",
-        f"{all_ok} Signature is {sig_status.value}, hashes are {hash_status.value}",
-    ]
+    if verbose:
+        output = ["Firmware Header " + format_container(header_out)]
+    else:
+        model = str(header_out["hw_model"])
+        version = header_out["version"]
+        output = [
+            f"Firmware Header for {click.style(model, bold=True)} "
+            f"version {click.style(version, bold=True)}"
+        ]
+
+    output.append(f"Fingerprint: {click.style(chunkify(digest), bold=True)}")
+    output.append(
+        f"{all_ok} Signature is {sig_status.value}, hashes are {hash_status.value}"
+    )
 
     return "\n".join(output)
 
@@ -374,6 +384,7 @@ class VendorFirmware(firmware.VendorFirmware, CosiSignedMixin):
                 self.firmware.code_hashes(),
                 self.digest(),
                 check_signature_any(self, is_devel),
+                verbose,
             )
         )
 
@@ -400,6 +411,7 @@ class BootloaderImage(firmware.FirmwareImage, CosiSignedMixin):
             self.code_hashes(),
             self.digest(),
             check_signature_any(self),
+            verbose,
         )
 
     def verify(self, dev_keys: bool = False) -> None:
@@ -611,6 +623,7 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
             self.code_hashes(),
             self.digest(),
             check_signature_any(self),
+            verbose,
         )
 
     def public_keys(
