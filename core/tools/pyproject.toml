@@ -3,7 +3,7 @@ name = "trezor_core_tools"
 version = "0.1.4"
 description = "Collection of CLI tools for trezor-core development"
 authors = [{ name = "matejcik", email = "jan.matejek@satoshilabs.com" }]
-requires-python = ">=3.9,<4"
+requires-python = ">=3.11,<4"
 readme = "README.md"
 license = "GPL-3.0-or-later"
 dependencies = ["trezor>=0.14,<0.15"]
