@@ -38,7 +38,7 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         address
     );
 
-    let flash_instruction = build_flash_write_instruction(&binary, address);
+    let flash_instruction = build_flash_write_instruction(&binary, address)?;
 
     run_openocd(args.model, &flash_instruction)
 }
@@ -79,12 +79,37 @@ fn run_openocd(model: Model, instructions: &str) -> Result<()> {
     Ok(())
 }
 
-fn build_flash_write_instruction(binary: &Path, address: u32) -> String {
-    format!(
+/// Quotes a path for interpolation into an OpenOCD `-c` script.
+///
+/// The script is handed to openocd as a single argv element, so no shell is
+/// involved -- but openocd parses it as Tcl, where an unquoted path containing
+/// a space becomes two words and `[`, `$` or `;` change the parse entirely.
+/// Tcl braces suppress every substitution, so `{...}` is the correct quoting
+/// and the braces are stripped before the command sees its argument.
+///
+/// Braces and backslashes would break the brace grouping itself, so they are
+/// rejected rather than escaped: they are vanishingly rare in real paths, and a
+/// clear error beats a silently misparsed flash command.
+fn tcl_quote_path(path: &Path) -> Result<String> {
+    let path = path
+        .to_str()
+        .with_context(|| format!("path is not valid UTF-8: {}", path.display()))?;
+
+    ensure!(
+        !path.contains(['{', '}', '\\', '\n', '\r']),
+        "path cannot be quoted for OpenOCD's Tcl parser \
+         (contains a brace, backslash or newline): {path}"
+    );
+
+    Ok(format!("{{{path}}}"))
+}
+
+fn build_flash_write_instruction(binary: &Path, address: u32) -> Result<String> {
+    Ok(format!(
         "init; reset halt; flash write_image erase {} 0x{:X}; exit",
-        binary.display(),
+        tcl_quote_path(binary)?,
         address
-    )
+    ))
 }
 
 fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result<String> {
@@ -127,17 +152,48 @@ fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result
 mod tests {
     use std::path::Path;
 
-    use super::{build_flash_erase_instruction, build_flash_write_instruction};
+    use super::{build_flash_erase_instruction, build_flash_write_instruction, tcl_quote_path};
     use crate::args::FlashSection;
 
     #[test]
     fn builds_flash_write_instruction() {
-        let instruction = build_flash_write_instruction(Path::new("/tmp/fw.bin"), 0x0800_4000);
+        let instruction =
+            build_flash_write_instruction(Path::new("/tmp/fw.bin"), 0x0800_4000).unwrap();
 
         assert_eq!(
             instruction,
-            "init; reset halt; flash write_image erase /tmp/fw.bin 0x8004000; exit"
+            "init; reset halt; flash write_image erase {/tmp/fw.bin} 0x8004000; exit"
         );
+    }
+
+    /// `--file` accepts any path the user types, and openocd parses the `-c`
+    /// script as Tcl: unquoted, a space would split the filename into two Tcl
+    /// words and `[...]` would be command substitution.
+    #[test]
+    fn quotes_paths_that_tcl_would_otherwise_reparse() {
+        let instruction =
+            build_flash_write_instruction(Path::new("/my builds/fw [v2].bin"), 0x0800_4000)
+                .unwrap();
+
+        assert_eq!(
+            instruction,
+            "init; reset halt; flash write_image erase {/my builds/fw [v2].bin} 0x8004000; exit"
+        );
+    }
+
+    #[test]
+    fn rejects_paths_that_cannot_be_brace_quoted() {
+        // A brace or backslash would end (or unbalance) the brace group itself,
+        // so these fail loudly instead of producing a misparsed command.
+        for bad in ["/tmp/fw{.bin", "/tmp/fw}.bin", "/tmp/fw\\.bin"] {
+            assert!(
+                tcl_quote_path(Path::new(bad)).is_err(),
+                "expected {bad} to be rejected"
+            );
+        }
+
+        assert!(tcl_quote_path(Path::new("/tmp/fw.bin")).is_ok());
+        assert!(tcl_quote_path(Path::new("/my builds/fw.bin")).is_ok());
     }
 
     #[test]
