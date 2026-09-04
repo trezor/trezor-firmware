@@ -41,7 +41,7 @@ void parse_boardloader_capabilities() {
   const uint8_t *pos = (const uint8_t *)BOARDCAPS_START;
   const uint8_t *end = (const uint8_t *)(BOARDCAPS_START + BOARDCAPS_MAXSIZE);
 
-  if (memcmp(pos, CAPABILITIES_HEADER, 4) != 0) {
+  if (memcmp(pos, (const uint8_t[])CAPABILITIES_HEADER, 4) != 0) {
     mpu_restore(mpu_mode);
     return;
   }
