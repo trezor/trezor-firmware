@@ -31,6 +31,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         add_driver_i8080(lib)?;
     } else if cfg!(feature = "display_vg2864") {
         add_driver_vg2864(lib)?;
+    } else if cfg!(feature = "display_mi0240agt5cp1f") {
+        add_driver_mi0240agt5cp1f(lib)?;
     } else if cfg!(feature = "display_stm32f429i_disc1") {
         add_driver_stm32f429i_disc1(lib)?;
     } else {
@@ -86,6 +88,14 @@ fn set_panel_lx200b4501ctp03(lib: &mut CLibrary) {
 fn set_panel_lx240d4508ctp05(lib: &mut CLibrary) {
     lib.add_defines([
         ("DISPLAY_PANEL_LX240D4508CTP05", Some("1")),
+        ("DISPLAY_RESX", Some("240")),
+        ("DISPLAY_RESY", Some("320")),
+    ]);
+}
+
+fn set_panel_mi0240agt5cp1f(lib: &mut CLibrary) {
+    lib.add_defines([
+        ("DISPLAY_PANEL_MI0240AGT5CP1F", Some("1")),
         ("DISPLAY_RESX", Some("240")),
         ("DISPLAY_RESY", Some("320")),
     ]);
@@ -244,6 +254,23 @@ fn add_driver_vg2864(lib: &mut CLibrary) -> Result<()> {
     }
     if cfg!(feature = "mcu_stm32u58") || cfg!(feature = "mcu_stm32f4") {
         lib.add_source("display/vg-2864/display_driver.c");
+    } else {
+        bail_unsupported!();
+    }
+    Ok(())
+}
+
+// AVNet (Multi-Inno) MI0240AGT-5CP1-F, 240x320 TFT, ST7789V2 controller
+// wired for 4-line 8-bit serial (SPI) mode. Self-contained driver, like
+// vg-2864, rather than a display_i8080 panel - see display/mi0240agt5cp1f/.
+fn add_driver_mi0240agt5cp1f(lib: &mut CLibrary) -> Result<()> {
+    if cfg!(feature = "display_panel_mi0240agt5cp1f") {
+        set_panel_mi0240agt5cp1f(lib);
+    } else {
+        bail_unsupported!();
+    }
+    if cfg!(feature = "mcu_stm32u58") {
+        lib.add_source("display/mi0240agt5cp1f/display_driver.c");
     } else {
         bail_unsupported!();
     }

@@ -104,6 +104,7 @@ display_none = []
 display_ltdc_dsi = ["framebuffer"]
 display_i8080 = []
 display_vg2864 = ["framebuffer"]
+display_mi0240agt5cp1f = ["framebuffer"]
 display_stm32f429i_disc1 = ["framebuffer"]
 
 display_panel_lx250a2401a = []
@@ -113,6 +114,7 @@ display_panel_lx154a2482 = []
 display_panel_dem240320b1 = []
 display_panel_lx200b4501ctp03 = []
 display_panel_lx240d4508ctp05 = []
+display_panel_mi0240agt5cp1f = []
 display_panel_vg2864 = []
 
 # --------------------------------------------------------------------------

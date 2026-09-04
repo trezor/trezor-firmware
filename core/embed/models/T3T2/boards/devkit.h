@@ -98,6 +98,41 @@
 #define DISPLAY_IM2_PORT GPIOG
 #define DISPLAY_IM2_PIN GPIO_PIN_1
 
+// AVNet (Multi-Inno) MI0240AGT-5CP1-F, ST7789V2 over 4-line 8-bit serial
+// (SPI), an alternate display_panel_mi0240agt5cp1f build option for this
+// board (see display/mi0240agt5cp1f/display_driver.c). Reset (DISPLAY_RST_*
+// above) and D/C (DISPLAY_DC_* above, WRX pin in this serial mode) are wired
+// the same as the i8080 panels above and are reused as-is; only the SPI bus
+// pins and mode-select pins below are new.
+//
+// Interface-mode select pins, latched at reset: IM2=1, IM1=1, IM0=0
+// selects 4-line 8-bit serial I/F (ST7789V2 datasheet section 6.2).
+#define DISPLAY_SPI_IM0_PORT GPIOD
+#define DISPLAY_SPI_IM0_PIN GPIO_PIN_14
+#define DISPLAY_SPI_IM1_PORT GPIOD
+#define DISPLAY_SPI_IM1_PIN GPIO_PIN_4
+#define DISPLAY_SPI_IM2_PORT GPIOD
+#define DISPLAY_SPI_IM2_PIN GPIO_PIN_5
+
+// SPI2, with CS driven manually via GPIO (SW CS) rather than SPI hardware
+// NSS. NOTE: SPI2_SCK on PD3 is AF3, but SPI2_MOSI on PC3 is AF5 -- the MOSI
+// alternate function is therefore overridden below (same situation as
+// TROPIC01_SPI_MOSI_AF further down this file).
+#define DISPLAY_SPI SPI2
+#define DISPLAY_SPI_CLK_EN __HAL_RCC_SPI2_CLK_ENABLE
+#define DISPLAY_SPI_CLK_DIS __HAL_RCC_SPI2_CLK_DISABLE
+#define DISPLAY_SPI_PIN_AF GPIO_AF3_SPI2
+#define DISPLAY_SPI_MOSI_AF GPIO_AF5_SPI2
+#define DISPLAY_SPI_SCK_PORT GPIOD
+#define DISPLAY_SPI_SCK_PIN GPIO_PIN_3
+#define DISPLAY_SPI_SCK_CLK_EN __HAL_RCC_GPIOD_CLK_ENABLE
+#define DISPLAY_SPI_MOSI_PORT GPIOC
+#define DISPLAY_SPI_MOSI_PIN GPIO_PIN_3
+#define DISPLAY_SPI_MOSI_CLK_EN __HAL_RCC_GPIOC_CLK_ENABLE
+#define DISPLAY_SPI_CS_PORT GPIOD
+#define DISPLAY_SPI_CS_PIN GPIO_PIN_7
+#define DISPLAY_SPI_CS_CLK_EN __HAL_RCC_GPIOD_CLK_ENABLE
+
 // Backlight: four LED strings driven as synchronized active-low PWM by
 // TIM3 CH1-CH4 on PE3-PE6 (cathodes via 33R), with a common boost supply.
 #define BACKLIGHT_PWM_TIM TIM3
