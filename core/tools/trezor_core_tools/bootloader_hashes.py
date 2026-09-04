@@ -5,6 +5,7 @@ from pathlib import Path
 
 import click
 import construct as c
+import tomllib
 
 from trezorlib.firmware.core import BootableImage, FirmwareImage
 from trezorlib.firmware.models import Model
@@ -62,14 +63,14 @@ def model_uses_boot_ucb(model_dir: Path) -> bool:
     layout symbols are not reliable (some non-UCB models define them too).
     """
     model_toml = model_dir / "model.toml"
-    if not model_toml.is_file():
+
+    try:
+        with model_toml.open("rb") as file:
+            config = tomllib.load(file)
+    except FileNotFoundError:
         return False
-    for raw in model_toml.read_text().splitlines():
-        # tolerate leading indentation, a trailing comma and inline comments
-        line = raw.split("#", 1)[0].strip().rstrip(",").strip()
-        if line == '"boot_ucb"':
-            return True
-    return False
+
+    return "boot_ucb" in config.get("features", [])
 
 
 def to_uint_array(data: bytes) -> str:
@@ -129,7 +130,6 @@ def main(check: bool) -> None:
     models = [model for model in models if model.is_dir()]
 
     for model in models:
-
         if model_uses_boot_ucb(model):
             # UCB models never consume these digests (see model_uses_boot_ucb):
             # both the header and its #include have been removed for them, so
