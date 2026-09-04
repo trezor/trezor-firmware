@@ -1421,9 +1421,7 @@ int ecdsa_unmask_scalar(const ecdsa_curve *curve,
 
   bignum256 s = {0};
   bn_read_be(masked_scalar, &s);
-  bn_inverse(&k, &curve->order);       // k = k^-1
-  bn_multiply(&k, &s, &curve->order);  // s = s * k
-  bn_mod(&s, &curve->order);
+  bn_divide_blinded(&s, &k, &curve->order);  // s = s / k
   bn_write_be(&s, scalar);
   memzero(&k, sizeof(k));
   memzero(&s, sizeof(s));
@@ -1452,8 +1450,7 @@ int ecdsa_unmask_public_key(const ecdsa_curve *curve,
     goto cleanup;
   }
 
-  bn_inverse(&k, &curve->order);
-  bn_mod(&k, &curve->order);
+  bn_inverse_blinded(&k, &curve->order);
   point_multiply(curve, &k, &point, &point);
 
   pub_key[0] = 0x04;
