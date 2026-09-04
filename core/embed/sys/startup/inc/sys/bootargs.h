@@ -30,6 +30,8 @@ typedef enum {
   BOOT_COMMAND_NONE = 0x00000000,
   // Stop and wait for further instructions
   BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
+  // Stop in the bootloader and bring up the host link immediately
+  BOOT_COMMAND_STOP_AND_CONNECT = 0x3B7E1C64,
   // Do not ask anything, install an upgrade
   BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
   // Show RSOD and wait for user input

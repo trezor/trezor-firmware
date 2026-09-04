@@ -201,9 +201,16 @@ static screen_t handle_wait_for_host(const fw_check_info_t* fw,
   return next_screen;
 }
 
-workflow_result_t workflow_bootloader(const fw_check_info_t* fw) {
+workflow_result_t workflow_bootloader(const fw_check_info_t* fw,
+                                      secbool connect_to_host) {
   ui_set_initial_setup(false);
+  // Only the entry point differs: the host-waiting screen is the one that
+  // initializes the wire interfaces, so a caller that knows a host is already
+  // connected can skip the tap the intro screen would otherwise require.
   screen_t screen = SCREEN_INTRO;
+  if (sectrue == connect_to_host) {
+    screen = SCREEN_WAIT_FOR_HOST;
+  }
   workflow_result_t final_res = WF_ERROR_FATAL;
 
   while (screen != SCREEN_DONE) {
