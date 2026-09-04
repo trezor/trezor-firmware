@@ -568,6 +568,7 @@ bool tx_input_check_hash(Hasher *hasher, const TxInputType *input) {
   HASHER_UPDATE_BYTES(hasher, input->orig_hash.bytes, 32);
   HASHER_UPDATE_INT(hasher, input->orig_index, uint32_t);
   tx_script_hash(hasher, input->script_pubkey.size, input->script_pubkey.bytes);
+  HASHER_UPDATE_INT(hasher, input->unified_sighash, uint8_t);
   return true;
 }
 
@@ -989,7 +990,10 @@ static uint32_t tx_input_script_size(const TxInputType *txinput,
                         + txinput->multisig.m * (1 + TXSIZE_DER_SIGNATURE) +
                         multisig_script_size;
   } else if (script_type == InputScriptType_SPENDTAPROOT) {
-    input_script_size = 1 + TXSIZE_SCHNORR_SIGNATURE;
+    // A unified opt-in signature appends the hash type byte, BIP-341's
+    // SIGHASH_DEFAULT does not.
+    input_script_size =
+        1 + TXSIZE_SCHNORR_SIGNATURE + (txinput->unified_sighash ? 1 : 0);
   } else {
     input_script_size = (1 + TXSIZE_DER_SIGNATURE + 1 + TXSIZE_PUBKEY);
   }

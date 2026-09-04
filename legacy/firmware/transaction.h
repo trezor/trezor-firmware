@@ -44,6 +44,21 @@ enum {
   // Signature hash flag used in some Bitcoin-like altcoins for replay
   // protection.
   SIGHASH_FORKID = 0x40,
+
+  // SIGHASH_ALL opted into the unified signature hash, i.e. SIGHASH_UNIFIED
+  // (0x20) | SIGHASH_ALL (0x01). The only unified hash type we support: the
+  // other five commit to less than the user approved.
+  SIGHASH_ALL_UNIFIED = 0x21,
+};
+
+// Script type byte in the unified signature hash message. It provides domain
+// separation, so a signature made for one script type can never be valid for
+// another. Note that P2SH-wrapped SegWit is WITNESS_V0, not BARE, because the
+// byte follows the sigversion the input is signed under, not the outer script.
+enum {
+  UNIFIED_SCRIPT_TYPE_BARE = 0,  // bare and P2SH
+  UNIFIED_SCRIPT_TYPE_WITNESS_V0 = 1,
+  UNIFIED_SCRIPT_TYPE_TAPROOT = 2,  // key path
 };
 
 typedef struct {
