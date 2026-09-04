@@ -83,7 +83,7 @@ class BackgroundDeviceHandler:
             client: The client object to configure.
         """
         self.client = client
-        self.client.ui = NullUI()  # pyright: ignore [reportAttributeAccessIssue]
+        self.client.ui = NullUI()  # type: ignore ["NullUI" is not assignable to "DebugUI"]
         self.client.app.button_callback = self.client.ui.button_request
         self.client.debug.input_wait_type = DebugWaitType.CURRENT_LAYOUT
 
