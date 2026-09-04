@@ -556,6 +556,9 @@ int bootloader_main(void) {
 #endif
 
   volatile secbool auto_upgrade = secfalse;
+  // Start the bootloader workflow on the connect screen instead of the intro
+  // (BOOT_COMMAND_STOP_AND_CONNECT).
+  bool connect_to_host = false;
 
   fw_check_info_t fw;
   fw_check(&fw);
@@ -569,6 +572,13 @@ int bootloader_main(void) {
     case BOOT_COMMAND_STOP_AND_WAIT:
       // firmware requested to stay in bootloader
       stay_in_bootloader = sectrue;
+      break;
+    case BOOT_COMMAND_STOP_AND_CONNECT:
+      // As STOP_AND_WAIT, but a host is already waiting: start on the connect
+      // screen so the wire interfaces come up without a tap first. Carries no
+      // authorization -- it only selects the entry screen.
+      stay_in_bootloader = sectrue;
+      connect_to_host = true;
       break;
     case BOOT_COMMAND_INSTALL_UPGRADE:
       if (fw.firmware_present == sectrue) {
@@ -640,7 +650,7 @@ int bootloader_main(void) {
       if (auto_upgrade == sectrue && fw.firmware_present == sectrue) {
         result = workflow_auto_update(&fw);
       } else {
-        result = workflow_bootloader(&fw);
+        result = workflow_bootloader(&fw, connect_to_host);
       }
     } else {
       result = workflow_empty_device();

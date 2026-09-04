@@ -30,6 +30,13 @@ typedef enum {
   BOOT_COMMAND_NONE = 0x00000000,
   // Stop and wait for further instructions
   BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
+  // Stop in the bootloader and bring up the host link immediately, skipping
+  // the intro screen. STOP_AND_WAIT deliberately lands on the menu ("Go to
+  // bootloader menu" per the BootCommand protobuf), and only the wait-for-host
+  // screen initializes the wire interfaces -- so a host that rebooted the
+  // device cannot talk to it until somebody taps through. Use this when the
+  // caller knows a host is already waiting.
+  BOOT_COMMAND_STOP_AND_CONNECT = 0x3B7E1C64,
   // Do not ask anything, install an upgrade
   BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
   // Show RSOD and wait for user input
