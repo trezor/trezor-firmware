@@ -177,6 +177,9 @@ pub struct BuildArgs {
 pub struct TestArgs {
     /// Package to test
     pub packages: Vec<String>,
+    /// Run tests under MIRI
+    #[arg(long)]
+    pub miri: bool,
 }
 
 #[derive(Args, Debug)]

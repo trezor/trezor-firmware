@@ -38,6 +38,9 @@ pub fn test(args: TestArgs) -> Result<()> {
     for package in &args.packages {
         let mut cmd = process::Command::new("cargo");
 
+        if args.miri {
+            cmd.arg("miri");
+        }
         cmd.arg("test")
             .args(["--package", package])
             .args(["--features", "test"])
