@@ -52,6 +52,7 @@ btc-only                      = { false = ["universal_fw"] }
 dbg-console                   = { vcp = ["dbg_console_vcp"], swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 debug-link                    = { true = ["debuglink"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
+n1w1                          = { true = ["nfc"] }  # TODO: move back to `uses` section (after stabilization)
 production                    = { true = ["production"] }
 pyopt                         = { false = ["optiga_testing"] }
 storage-insecure-testing-mode = { true = ["storage_insecure_testing_mode"] }

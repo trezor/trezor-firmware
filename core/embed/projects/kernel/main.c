@@ -50,6 +50,10 @@
 #include <io/ble.h>
 #endif
 
+#ifdef USE_NFC
+#include <io/nfc.h>
+#endif
+
 #ifdef USE_CONSUMPTION_MASK
 #include <sec/consumption_mask.h>
 #endif
@@ -203,6 +207,10 @@ void drivers_init() {
 
 #ifdef USE_BLE
   ble_init();
+#endif
+
+#ifdef USE_NFC
+  nfc_init();
 #endif
 
 #ifdef SECURE_MODE
