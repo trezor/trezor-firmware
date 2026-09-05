@@ -35,14 +35,15 @@ use crate::ui::component::{BLEHandler, BLEHandlerMode};
 use crate::ui::component::{ComponentExt as _, Empty, FormattedText, Timeout};
 use crate::ui::flow::FlowMsg;
 use crate::ui::geometry::{Alignment, LinearPlacement, Offset};
+use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{
     ConfirmValueParams, ContentType, PropsList, RecoveryType, StrOrBytes,
 };
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
-    MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
 use crate::util::interpolate;
@@ -878,30 +879,28 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn select_menu(
-        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
         _current: usize,
-        cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut menu = VerticalMenu::<ShortMenuVec>::empty();
-        for text in &items {
-            menu.item(Button::new_menu_item(*text, theme::menu_item_title()));
-        }
-        if let Some(text) = cancel {
-            menu.item(Button::new_cancel_menu_item(text));
+        for item in &items {
+            menu.item(match item.intent {
+                // TODO: reusing the cancel button to render a dangerous entry is
+                // temporary - `Danger` describes how the entry looks, while
+                // `new_cancel_menu_item` names what it used to do. The styling
+                // should be lifted out of the cancel-specific constructor.
+                MenuItemIntent::Danger => Button::new_cancel_menu_item(item.text),
+                MenuItemIntent::Standard => {
+                    Button::new_menu_item(item.text, theme::menu_item_title())
+                }
+            });
         }
         let screen = VerticalMenuScreen::new(menu)
             .with_header(Header::new(TString::empty()).with_close_button())
-            .map(move |msg| {
-                let choice = match msg {
-                    VerticalMenuScreenMsg::Selected(i) => i,
-                    VerticalMenuScreenMsg::Close => return Some(FlowMsg::Confirmed),
-                    _ => return None,
-                };
-                Some(if cancel.is_some() && choice == items.len() {
-                    FlowMsg::Cancelled
-                } else {
-                    FlowMsg::Choice(choice)
-                })
+            .map(move |msg| match msg {
+                VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
+                VerticalMenuScreenMsg::Close => Some(FlowMsg::Confirmed),
+                _ => None,
             });
 
         flow::util::single_page(screen)

@@ -1,5 +1,6 @@
 use heapless::Vec;
 
+use super::layout::menu_item_intent::MenuItemIntent;
 use super::layout::obj::{LayoutMaybeTrace, LayoutObj};
 use super::layout::util::RecoveryType;
 use crate::error::Error;
@@ -14,9 +15,27 @@ use crate::ui::notification::Notification;
 pub const MAX_CHECKLIST_ITEMS: usize = 3;
 pub const MAX_WORD_QUIZ_ITEMS: usize = 3;
 pub const MAX_GROUP_SHARE_LINES: usize = 4;
-pub const MAX_MENU_ITEMS: usize = 5;
+pub const MAX_MENU_ITEMS: usize = 6;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
+
+/// One entry of `select_menu()`: its label plus what the entry means.
+///
+/// TODO: named after `select_menu` only to avoid colliding with the existing
+/// `MenuItem` types in `layout_eckhart` (device menu) and `layout_caesar`
+/// (passphrase keyboard), both of which are private and file-local. Once those
+/// are renamed to something model-specific, this should take the generic
+/// `MenuItem` name, since nothing about it is specific to `select_menu`.
+pub struct SelectMenuItem {
+    pub text: TString<'static>,
+    pub intent: MenuItemIntent,
+}
+
+impl SelectMenuItem {
+    pub fn new(text: TString<'static>, intent: MenuItemIntent) -> Self {
+        Self { text, intent }
+    }
+}
 
 pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
@@ -277,9 +296,8 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn select_menu(
-        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
         current: usize,
-        cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn select_word(

@@ -6,7 +6,7 @@ use super::component::{
     AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, ChoiceControls,
     CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen,
     NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords, ShowMore,
-    SimpleChoice, WordlistEntry, WordlistType,
+    SimpleChoice, WordlistEntry, WordlistType, SIMPLE_CHOICE_MAX_LENGTH,
 };
 use super::{constant, fonts, theme, UICaesar};
 use crate::error::Error;
@@ -28,12 +28,13 @@ use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
     Component, ComponentExt, Empty, FormattedText, Label, LineBreaking, Paginate, Timeout,
 };
+use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_PAIRED_DEVICES,
-    MAX_WORD_QUIZ_ITEMS,
+    FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+    MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::{geometry, ModelUI};
 
@@ -912,17 +913,23 @@ impl FirmwareUI for UICaesar {
     }
 
     fn select_menu(
-        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
         current: usize,
-        _cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        // the entry's intent is not rendered on this model
+        let labels: heapless::Vec<TString<'static>, MAX_MENU_ITEMS> =
+            items.into_iter().map(|item| item.text).collect();
         // Returning the index of the selected menu item
         let layout = RootComponent::new(
-            SimpleChoice::new(items, ChoiceControls::Cancellable, TR::buttons__view.into())
-                .with_initial_page_counter(current)
-                .with_show_incomplete()
-                .with_return_index()
-                .with_ignore_cancelled(),
+            SimpleChoice::new(
+                labels,
+                ChoiceControls::Cancellable,
+                TR::buttons__view.into(),
+            )
+            .with_initial_page_counter(current)
+            .with_show_incomplete()
+            .with_return_index()
+            .with_ignore_cancelled(),
         );
         Ok(layout)
     }
@@ -932,7 +939,7 @@ impl FirmwareUI for UICaesar {
         description: TString<'static>,
         words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let words: Vec<TString<'static>, 5> = Vec::from_iter(words);
+        let words: Vec<TString<'static>, SIMPLE_CHOICE_MAX_LENGTH> = Vec::from_iter(words);
         // Returning the index of the selected word, not the word itself
         let layout = RootComponent::new(
             Frame::new(
@@ -948,7 +955,7 @@ impl FirmwareUI for UICaesar {
 
     fn select_word_count(recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error> {
         let title: TString = TR::word_count__title.into();
-        let choices: Vec<TString<'static>, 5> = {
+        let choices: Vec<TString<'static>, SIMPLE_CHOICE_MAX_LENGTH> = {
             let nums: &[&str] = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
                 &["20", "33"]
             } else {

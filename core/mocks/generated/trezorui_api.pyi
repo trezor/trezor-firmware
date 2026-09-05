@@ -528,11 +528,11 @@ def request_string(
 # rust/src/ui/api/firmware_micropython.rs
 def select_menu(
     *,
-    items: Iterable[str],
+    items: Iterable[tuple[str, int]],
     current: int,
-    cancel: str | None = None
-) -> LayoutContext[int]:
-    """Select an item from a menu. Returns index in range `0..len(items)`."""
+) -> LayoutContext[int | UiResult]:
+    """Select an item from a menu. Each item is its label and its
+    `MenuItemIntent`. Returns index in range `0..len(items)`."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -880,6 +880,13 @@ class NotificationLevel:
     WARNING: ClassVar[int]
     INFO: ClassVar[int]
     SUCCESS: ClassVar[int]
+
+
+# rust/src/ui/api/firmware_micropython.rs
+class MenuItemIntent:
+    """What a menu entry means; each model renders it in its own way."""
+    STANDARD: ClassVar[int]
+    DANGER: ClassVar[int]
 
 
 # rust/src/ui/api/firmware_micropython.rs

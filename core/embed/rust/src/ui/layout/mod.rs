@@ -5,6 +5,7 @@ pub mod obj;
 
 #[cfg(feature = "micropython")]
 pub mod device_menu_result;
+pub mod menu_item_intent;
 #[cfg(feature = "micropython")]
 pub mod result;
 
