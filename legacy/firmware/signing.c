@@ -74,12 +74,14 @@ enum {
 static bool foreign_address_confirmed;  // indicates that user approved warning
 static bool taproot_only;  // indicates whether all internal inputs are Taproot
 static bool has_unverified_external_input;
+static bool has_unified_sighash;  // any input opted into the unified sighash
 static uint32_t idx1;  // The index of the input or output in the current tx
                        // which is being processed, signed or serialized.
 static uint32_t idx2;  // The index of the input or output in the original tx
                        // (Phase 1), in the previous tx (Phase 2) or in the
                        // current tx when computing the legacy digest (Phase 2).
 static uint32_t external_inputs[16];  // bitfield of external input indices
+static uint32_t unified_inputs[16];   // bitfield of opted-in input indices
 static uint32_t signatures;
 static TxRequest resp;
 static TxInputType input;
@@ -379,6 +381,29 @@ static void set_external_input(uint32_t i) {
 
 static bool is_external_input(uint32_t i) {
   return external_inputs[i / 32] & (1 << (i % 32));
+}
+
+static void set_unified_input(uint32_t i) {
+  unified_inputs[i / 32] |= (1 << (i % 32));
+}
+
+static bool is_unified_input(uint32_t i) {
+  return unified_inputs[i / 32] & (1 << (i % 32));
+}
+
+// The opt-in decides which algorithm signs and is what the confirmation
+// screen reported, and both algorithms produce a valid signature. So the
+// input streamed for signing has to carry the same value as the one streamed
+// in phase 1; nothing else would catch a host that gets the opt-in approved
+// and then quietly drops it.
+static bool check_unified_sighash(uint32_t i, const TxInputType *txinput) {
+  if ((bool)txinput->unified_sighash != is_unified_input(i)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Transaction has changed during signing"));
+    signing_abort();
+    return false;
+  }
+  return true;
 }
 
 static uint32_t interpolate(uint32_t value, uint32_t num, uint32_t den) {
@@ -1437,6 +1462,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root,
   foreign_address_confirmed = false;
   taproot_only = true;
   has_unverified_external_input = false;
+  has_unified_sighash = false;
   signatures = 0;
   idx1 = 0;
   total_in = 0;
@@ -1450,6 +1476,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root,
   orig_change_out = 0;
   coinjoin_coordination_fee_base = 0;
   memzero(external_inputs, sizeof(external_inputs));
+  memzero(unified_inputs, sizeof(unified_inputs));
   memzero(&input, sizeof(TxInputType));
   memzero(&output, sizeof(TxOutputType));
   memzero(&resp, sizeof(TxRequest));
@@ -1495,6 +1522,15 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root,
 }
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+// The unified opt-in belongs to the Bitcoin fork, so every other coin refuses
+// it. Mirrors BITCOIN_NAMES in core.
+static bool coin_is_bitcoin_family(const CoinInfo *c) {
+  return strcmp(c->coin_name, "Bitcoin") == 0 ||
+         strcmp(c->coin_name, "Testnet") == 0 ||
+         strcmp(c->coin_name, "Regtest") == 0 ||
+         strcmp(c->coin_name, "Signet") == 0;
+}
 
 static bool signing_validate_input(const TxInputType *txinput) {
   if (txinput->prev_hash.size != 32) {
@@ -1587,6 +1623,26 @@ static bool signing_validate_input(const TxInputType *txinput) {
                     _("Taproot not enabled on this coin."));
     signing_abort();
     return false;
+  }
+
+  if (txinput->unified_sighash) {
+    if (!coin_is_bitcoin_family(coin)) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Unified sighash not enabled on this coin."));
+      signing_abort();
+      return false;
+    }
+
+    // We would have to reconstruct the scriptCode of an arbitrary foreign
+    // input to check its signature, which we cannot do. Refusing is
+    // fail-closed: the signature we would have produced for our own inputs
+    // stays correct either way.
+    if (txinput->script_type == InputScriptType_EXTERNAL) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Unified sighash not supported for external inputs."));
+      signing_abort();
+      return false;
+    }
   }
 
   if (txinput->has_commitment_data && !txinput->has_ownership_proof) {
@@ -2250,17 +2306,24 @@ static bool save_signature(TxInputType *txinput) {
   size = bytes[0];
   bytes += 1;
 
+  // SIGHASH_ALL_TAPROOT is implied and appends nothing. Every other hash type
+  // we accept is carried in the last byte of the signature.
+  const uint8_t expected_sighash =
+      txinput->unified_sighash ? SIGHASH_ALL_UNIFIED : SIGHASH_ALL;
+
   if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
-    if (size != 64) {
+    const uint32_t expected_size = txinput->unified_sighash ? 65 : 64;
+    if (size != expected_size ||
+        (txinput->unified_sighash && bytes[size - 1] != expected_sighash)) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Unsupported signature script."));
       signing_abort();
       return false;
     }
-    memcpy(sig, bytes, size);
+    memcpy(sig, bytes, 64);
   } else {
     // Decode the DER-encoded signature and store in sig.
-    if (bytes[size - 1] != SIGHASH_ALL ||
+    if (bytes[size - 1] != expected_sighash ||
         ecdsa_sig_from_der(bytes, size - 1, sig) != 0) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Unsupported signature script."));
@@ -2307,6 +2370,19 @@ static bool signing_add_orig_input(TxInputType *orig_input) {
              input.script_pubkey.size) != 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Original input does not match current input."));
+    signing_abort();
+    return false;
+  }
+
+  // A replacement may add the opt-in, which is how a transaction signed before
+  // the fork gets replay protection, but it must not take it away. Dropping it
+  // would hand the host a pre-fork-valid signature over a transaction the user
+  // approved only in its unified form, and a replacement that changes nothing
+  // else is confirmed with the TXID screen alone.
+  if (orig_input->unified_sighash && !input.unified_sighash) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Replacement transaction must not remove the unified "
+                      "signature hash."));
     signing_abort();
     return false;
   }
@@ -2440,6 +2516,15 @@ static bool signing_add_orig_output(TxOutputType *orig_output) {
 }
 
 static bool payment_confirm_tx(void) {
+  if (has_unified_sighash) {
+    layoutConfirmUnifiedSigHash();
+    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      signing_abort();
+      return false;
+    }
+  }
+
   if (has_unverified_external_input) {
     layoutConfirmUnverifiedExternalInputs();
     if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
@@ -2579,6 +2664,15 @@ static bool coinjoin_confirm_tx(void) {
   // Largest possible weight of an output supported by Trezor (P2TR or P2WSH).
   const uint64_t MAX_OUTPUT_WEIGHT = 4 * (8 + 1 + 1 + 1 + 32);
 
+  if (has_unified_sighash) {
+    // A preauthorized CoinJoin signs without user interaction, so it must not
+    // be able to opt into a signature hash the user was never shown.
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Unified sighash not supported in CoinJoin."));
+    signing_abort();
+    return false;
+  }
+
   if (has_unverified_external_input) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Unverifiable external input."));
@@ -2655,7 +2749,24 @@ static bool signing_confirm_tx(void) {
   }
 }
 
+// Script type byte for the unified message. P2SH-wrapped SegWit is
+// WITNESS_V0, not BARE: the byte follows the sigversion the input is signed
+// under, not the outer script.
+static uint8_t unified_script_type(const TxInputType *txinput) {
+  if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
+    return UNIFIED_SCRIPT_TYPE_TAPROOT;
+  }
+  if (is_segwit_input_script_type(txinput->script_type)) {
+    return UNIFIED_SCRIPT_TYPE_WITNESS_V0;
+  }
+  return UNIFIED_SCRIPT_TYPE_BARE;
+}
+
 static uint32_t signing_hash_type(const TxInputType *txinput) {
+  if (txinput->unified_sighash) {
+    return SIGHASH_ALL_UNIFIED;
+  }
+
   uint32_t hash_type = SIGHASH_ALL;
   if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
     hash_type = SIGHASH_ALL_TAPROOT;
@@ -2726,6 +2837,67 @@ static void signing_hash_bip341(const TxInfo *tx_info, uint32_t i,
   hasher_Update(&sigmsg_hasher, &zero, 1);
   // input_index
   HASHER_UPDATE_INT(&sigmsg_hasher, i, uint32_t);
+
+  hasher_Final(&sigmsg_hasher, hash);
+}
+
+// Unified opt-in signature hash, one message shared by every script type.
+// See doc/unified-sighash.md in Bitcoin Knots. Laid out in the same order as
+// the specification, so the two can be read side by side. Only
+// SIGHASH_ALL_UNIFIED is implemented; the branches the other five hash types
+// would take are absent rather than unreachable.
+//
+// script_code is the scriptCode for script types BARE and WITNESS_V0, and is
+// ignored for TAPROOT.
+static void signing_hash_unified(const TxInfo *tx_info, uint32_t i,
+                                 uint8_t script_type, uint32_t script_code_len,
+                                 const uint8_t *script_code, uint8_t *hash) {
+  const uint8_t zero = 0;
+  const uint8_t sighash_type = SIGHASH_ALL_UNIFIED;
+  Hasher sigmsg_hasher = {0};
+
+  // BIP-340 tagged hash, SHA256(SHA256(tag) || SHA256(tag) || message). The
+  // tag is hashed at run time rather than carried as a precomputed midstate,
+  // which is one SHA-256 of 14 bytes per signature.
+  static const char TAG[] = "UnifiedSighash";
+  uint8_t tag_digest[32] = {0};
+  hasher_Raw(HASHER_SHA2, (const uint8_t *)TAG, sizeof(TAG) - 1, tag_digest);
+  hasher_Init(&sigmsg_hasher, HASHER_SHA2);
+  hasher_Update(&sigmsg_hasher, tag_digest, sizeof(tag_digest));
+  hasher_Update(&sigmsg_hasher, tag_digest, sizeof(tag_digest));
+
+  // sighash epoch 0
+  hasher_Update(&sigmsg_hasher, &zero, 1);
+  // nHashType. One byte, as the signature carries it: consensus reads the
+  // hash type from the last byte of the signature.
+  hasher_Update(&sigmsg_hasher, &sighash_type, 1);
+  // nVersion
+  HASHER_UPDATE_INT(&sigmsg_hasher, tx_info->version, uint32_t);
+  // nLockTime, committed to as five bytes rather than the four it occupies in
+  // a transaction. Four run out in 2106, and widening the field later would
+  // invalidate every signature made under this message. The fifth byte is zero.
+  HASHER_UPDATE_INT(&sigmsg_hasher, tx_info->lock_time, uint32_t);
+  hasher_Update(&sigmsg_hasher, &zero, 1);
+  // sha_prevouts, sha_amounts, sha_scripts, sha_sequences. Single SHA-256,
+  // unlike the double-SHA-256 digests BIP-143 takes from the same writers.
+  HASHER_UPDATE_BYTES(&sigmsg_hasher, tx_info->hash_prevouts, 32);
+  HASHER_UPDATE_BYTES(&sigmsg_hasher, tx_info->hash_amounts, 32);
+  HASHER_UPDATE_BYTES(&sigmsg_hasher, tx_info->hash_scriptpubkeys, 32);
+  HASHER_UPDATE_BYTES(&sigmsg_hasher, tx_info->hash_sequences, 32);
+  // sha_outputs, present because the hash type is SIGHASH_ALL
+  HASHER_UPDATE_BYTES(&sigmsg_hasher, tx_info->hash_outputs, 32);
+  // script type, where BIP-341 writes its spend type
+  hasher_Update(&sigmsg_hasher, &script_type, 1);
+  // input_index, since SIGHASH_ANYONECANPAY is not set
+  HASHER_UPDATE_INT(&sigmsg_hasher, i, uint32_t);
+
+  if (script_type == UNIFIED_SCRIPT_TYPE_TAPROOT) {
+    // annex absent
+    hasher_Update(&sigmsg_hasher, &zero, 1);
+  } else {
+    // scriptCode, compact-size prefixed
+    tx_script_hash(&sigmsg_hasher, script_code_len, script_code);
+  }
 
   hasher_Final(&sigmsg_hasher, hash);
 }
@@ -2874,7 +3046,12 @@ static bool signing_verify_orig_nonlegacy_input(TxInputType *orig_input) {
   uint32_t hash_type = signing_hash_type(orig_input);
   bool valid = false;
   if (orig_input->script_type == InputScriptType_SPENDTAPROOT) {
-    signing_hash_bip341(&orig_info, idx1, hash_type & 0xff, hash);
+    if (orig_input->unified_sighash) {
+      signing_hash_unified(&orig_info, idx1, unified_script_type(orig_input), 0,
+                           NULL, hash);
+    } else {
+      signing_hash_bip341(&orig_info, idx1, hash_type & 0xff, hash);
+    }
     uint8_t output_public_key[32] = {0};
     valid = (zkp_bip340_tweak_public_key(node.public_key + 1, NULL,
                                          output_public_key) == 0) &&
@@ -2885,7 +3062,12 @@ static bool signing_verify_orig_nonlegacy_input(TxInputType *orig_input) {
       signing_hash_zip243(&orig_info, orig_input, hash);
     } else
 #endif
-    {
+        if (orig_input->unified_sighash) {
+      // fill_input_script_sig() above left the scriptCode in script_sig.
+      signing_hash_unified(&orig_info, idx1, unified_script_type(orig_input),
+                           orig_input->script_sig.size,
+                           orig_input->script_sig.bytes, hash);
+    } else {
       signing_hash_bip143(&orig_info, orig_input, hash);
     }
 
@@ -2909,6 +3091,13 @@ static bool signing_verify_orig_legacy_input(void) {
   // Compute the signed digest and verify signature.
   uint8_t hash[32] = {0};
   tx_hash_final(&ti, hash, false);
+  if (input.unified_sighash) {
+    // The original input opted in, so it was signed over the unified message
+    // rather than the streamed preimage. signing_hash_orig_input() left the
+    // scriptCode in script_sig.
+    signing_hash_unified(&orig_info, idx1, unified_script_type(&input),
+                         input.script_sig.size, input.script_sig.bytes, hash);
+  }
 
   bool valid = ecdsa_verify_digest(coin->curve->params, pubkey, sig, hash) == 0;
 
@@ -3210,6 +3399,10 @@ static bool signing_sign_bip340(const uint8_t *private_key,
 }
 
 static bool signing_sign_legacy_input(void) {
+  if (!check_unified_sighash(idx1, &input)) {
+    return false;
+  }
+
   // Finalize legacy digest computation.
   uint32_t hash_type = signing_hash_type(&input);
   HASHER_UPDATE_INT(&ti.hasher, hash_type, uint32_t);
@@ -3217,6 +3410,14 @@ static bool signing_sign_legacy_input(void) {
   // Compute the digest and generate signature.
   uint8_t hash[32] = {0};
   tx_hash_final(&ti, hash, false);
+  if (input.unified_sighash) {
+    // The unified message takes the whole transaction from the sub-hashes, so
+    // the streamed preimage above is discarded. It is still streamed, because
+    // that pass is what checks the inputs are the ones approved in phase 1.
+    // fill_input_script_sig() has left the scriptCode in script_sig.
+    signing_hash_unified(&info, idx1, unified_script_type(&input),
+                         input.script_sig.size, input.script_sig.bytes, hash);
+  }
   if (!signing_sign_ecdsa(&input, privkey, pubkey, hash)) return false;
   if (serialize) {
     resp.has_serialized = true;
@@ -3239,8 +3440,17 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
     return false;
   }
 
+  if (!check_unified_sighash(idx1, txinput)) {
+    return false;
+  }
+
   if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
-    signing_hash_bip341(&info, idx1, signing_hash_type(txinput), hash);
+    if (txinput->unified_sighash) {
+      signing_hash_unified(&info, idx1, unified_script_type(txinput), 0, NULL,
+                           hash);
+    } else {
+      signing_hash_bip341(&info, idx1, signing_hash_type(txinput), hash);
+    }
 
     if (!input_validate_path(txinput) || !tx_info_check_input(&info, txinput) ||
         !input_derive_node(txinput) ||
@@ -3251,9 +3461,13 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
     if (serialize) {
       resp.has_serialized = true;
       resp.serialized.has_serialized_tx = true;
+      // SIGHASH_ALL_TAPROOT is implied and appends nothing; the unified
+      // opt-in has no such form, so its byte is carried in the signature.
+      uint8_t taproot_sighash =
+          txinput->unified_sighash ? SIGHASH_ALL_UNIFIED : 0;
       resp.serialized.serialized_tx.size = serialize_p2tr_witness(
-          resp.serialized.signature.bytes, resp.serialized.signature.size, 0,
-          resp.serialized.serialized_tx.bytes);
+          resp.serialized.signature.bytes, resp.serialized.signature.size,
+          taproot_sighash, resp.serialized.serialized_tx.bytes);
     }
   } else if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
              txinput->script_type == InputScriptType_SPENDWITNESS) {
@@ -3276,7 +3490,13 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
       return false;
     }
 
-    signing_hash_bip143(&info, txinput, hash);
+    if (txinput->unified_sighash) {
+      signing_hash_unified(&info, idx1, unified_script_type(txinput),
+                           txinput->script_sig.size, txinput->script_sig.bytes,
+                           hash);
+    } else {
+      signing_hash_bip143(&info, txinput, hash);
+    }
 
     if (!signing_sign_ecdsa(txinput, node.private_key, node.public_key, hash))
       return false;
@@ -3383,6 +3603,11 @@ void signing_txack(TransactionType *tx) {
       if (!signing_validate_input(&tx->inputs[0]) ||
           !signing_add_input(&tx->inputs[0])) {
         return;
+      }
+
+      if (tx->inputs[0].unified_sighash) {
+        set_unified_input(idx1);
+        has_unified_sighash = true;
       }
 
       if (!tx->inputs[0].has_amount) {

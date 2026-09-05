@@ -1,0 +1,1 @@
+Support the unified opt-in signature hash via `TxInput.unified_sighash`, refused unless the device reports `Capability_UnifiedSigHash`.

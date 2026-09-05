@@ -49,7 +49,7 @@ class TestWriters(unittest.TestCase):
         b = bytearray()
         writers.write_tx_input_check(b, inp)
         self.assertEqual(
-            len(b), 4 + 4 + 32 + 4 + 11 + 4 + 4 + 1 + 8 + 1 + 1 + 1 + 4 + 26
+            len(b), 4 + 4 + 32 + 4 + 11 + 4 + 4 + 1 + 8 + 1 + 1 + 1 + 4 + 26 + 1
         )
 
         for bad_prevhash in (b"", b"x", b"hello", b"x" * 33):

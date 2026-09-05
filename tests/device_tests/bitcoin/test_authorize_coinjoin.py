@@ -1001,3 +1001,141 @@ def test_multisession_authorization(client: Client):
         commitment_data=b"\x10www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
         preauthorized=True,
     )
+
+
+@pytest.mark.setup_client(pin=PIN)
+def test_sign_tx_refuses_unified_sighash(session: Session):
+    """A preauthorized CoinJoin signs without user interaction, so it must not
+    be able to opt into a signature hash the user was never shown. The device
+    has to refuse before it signs anything."""
+    assert session.features.unlocked is False
+
+    with session.test_ctx as client:
+        client.use_pin_sequence([PIN])
+        btc.authorize_coinjoin(
+            session,
+            coordinator="www.example.com",
+            max_rounds=2,
+            max_coordinator_fee_rate=500_000,
+            max_fee_per_kvbyte=3500,
+            n=parse_path("m/10025h/1h/0h/1h"),
+            coin_name="Testnet",
+            script_type=messages.InputScriptType.SPENDTAPROOT,
+        )
+
+    commitment_data = b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
+
+    inputs = [
+        messages.TxInputType(
+            # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
+            # m/10025h/1h/0h/1h/0/0
+            # tb1pkw382r3plt8vx6e22mtkejnqrxl4z7jugh3w4rjmfmgezzg0xqpsdaww8z
+            amount=100_000,
+            prev_hash=FAKE_TXHASH_e5b7e2,
+            prev_index=0,
+            script_type=messages.InputScriptType.EXTERNAL,
+            script_pubkey=bytes.fromhex(
+                "5120b3a2750e21facec36b2a56d76cca6019bf517a5c45e2ea8e5b4ed191090f3003"
+            ),
+            ownership_proof=bytes.fromhex(
+                "534c001901019cf1b0ad730100bd7a69e987d55348bb798e2b2096a6a5713e9517655bd2021300014052d479f48d34f1ca6872d4571413660040c3e98841ab23a2c5c1f37399b71bfa6f56364b79717ee90552076a872da68129694e1b4fb0e0651373dcf56db123c5"
+            ),
+            commitment_data=commitment_data,
+        ),
+        messages.TxInputType(
+            address_n=parse_path("m/10025h/1h/0h/1h/1/0"),
+            amount=7_289_000,
+            prev_hash=FAKE_TXHASH_f982c0,
+            prev_index=1,
+            script_type=messages.InputScriptType.SPENDTAPROOT,
+        ),
+    ]
+
+    input_script_pubkeys = [
+        bytes.fromhex(
+            "5120b3a2750e21facec36b2a56d76cca6019bf517a5c45e2ea8e5b4ed191090f3003"
+        ),
+        bytes.fromhex(
+            "51202f436892d90fb2665519efa3d9f0f5182859124f179486862c2cd7a78ea9ac19"
+        ),
+    ]
+
+    outputs = [
+        # Other's coinjoined output.
+        messages.TxOutputType(
+            # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
+            # m/10025h/1h/0h/1h/1/0
+            address="tb1pupzczx9cpgyqgtvycncr2mvxscl790luqd8g88qkdt2w3kn7ymhsrdueu2",
+            amount=50_000,
+            script_type=messages.OutputScriptType.PAYTOADDRESS,
+        ),
+        # Our coinjoined output.
+        messages.TxOutputType(
+            # tb1phkcspf88hge86djxgtwx2wu7ddghsw77d6sd7txtcxncu0xpx22shcydyf
+            address_n=parse_path("m/10025h/1h/0h/1h/1/1"),
+            amount=50_000,
+            script_type=messages.OutputScriptType.PAYTOTAPROOT,
+        ),
+        # Our change output.
+        messages.TxOutputType(
+            # tb1pchruvduckkwuzm5hmytqz85emften5dnmkqu9uhfxwfywaqhuu0qjggqyp
+            address_n=parse_path("m/10025h/1h/0h/1h/1/2"),
+            amount=7_289_000 - 50_000 - 36_445 - 490,
+            script_type=messages.OutputScriptType.PAYTOTAPROOT,
+        ),
+        # Other's change output.
+        messages.TxOutputType(
+            # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
+            # m/10025h/1h/0h/1h/1/1
+            address="tb1pvt7lzserh8xd5m6mq0zu9s5wxkpe5wgf5ts56v44jhrr6578hz8saxup5m",
+            amount=100_000 - 50_000 - 500 - 490,
+            script_type=messages.OutputScriptType.PAYTOADDRESS,
+        ),
+        # Coordinator's output.
+        messages.TxOutputType(
+            address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
+            amount=36_945,
+            script_type=messages.OutputScriptType.PAYTOADDRESS,
+        ),
+    ]
+
+    output_script_pubkeys = [
+        bytes.fromhex(
+            "5120e0458118b80a08042d84c4f0356d86863fe2bffc034e839c166ad4e8da7e26ef"
+        ),
+        bytes.fromhex(
+            "5120bdb100a4e7ba327d364642dc653b9e6b51783bde6ea0df2ccbc1a78e3cc13295"
+        ),
+        bytes.fromhex(
+            "5120c5c7c63798b59dc16e97d916011e99da5799d1b3dd81c2f2e93392477417e71e"
+        ),
+        bytes.fromhex(
+            "512062fdf14323b9ccda6f5b03c5c2c28e35839a3909a2e14d32b595c63d53c7b88f"
+        ),
+        bytes.fromhex("76a914a579388225827d9f2fe9014add644487808c695d88ac"),
+    ]
+
+    # The device's own input asks for the opt-in.
+    inputs[1].unified_sighash = True
+
+    coinjoin_req = make_coinjoin_request(
+        "www.example.com",
+        inputs,
+        input_script_pubkeys,
+        outputs,
+        output_script_pubkeys,
+        no_fee_indices=[],
+    )
+
+    with pytest.raises(TrezorFailure, match="CoinJoin"):
+        btc.sign_tx(
+            session,
+            "Testnet",
+            inputs,
+            outputs,
+            prev_txes=TxCache("Testnet"),
+            coinjoin_request=coinjoin_req,
+            preauthorized=True,
+            version=2,
+            lock_time=0,
+        )

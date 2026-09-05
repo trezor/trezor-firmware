@@ -66,12 +66,27 @@ class TxInfoBase:
         # The minimum nSequence of all inputs.
         self.min_sequence = _SEQUENCE_FINAL
 
+        # Whether any input opts into the unified signature hash.
+        self.unified_sighash = False
+
+        # The number of inputs whose digest is taken by re-streaming the whole
+        # transaction, which is what get_legacy_tx_digest() does. SegWit inputs
+        # and inputs which opt into the unified signature hash take theirs from
+        # the cached sub-hashes instead. The progress bar has to know.
+        self.legacy_digest_count = 0
+
     def add_input(self, txi: TxInput, script_pubkey: AnyBytes) -> None:
+        from ..common import input_is_segwit
+
         # all inputs are included (non-segwit as well)
         self.sig_hasher.add_input(txi, script_pubkey)
         writers.write_tx_input_check(self.h_tx_check, txi)
         self.min_sequence = min(self.min_sequence, txi.sequence)
         self.change_detector.add_input(txi)
+        if txi.unified_sighash:
+            self.unified_sighash = True
+        elif not input_is_segwit(txi):
+            self.legacy_digest_count += 1
 
     def add_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None:
         self.sig_hasher.add_output(txo, script_pubkey)
