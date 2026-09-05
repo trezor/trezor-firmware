@@ -97,6 +97,8 @@ class PairingController:
         elif state is ControllerLifecycle.FINISHED:
             self.channel.state = ChannelState.ENCRYPTED_TRANSPORT
             self._pairing_requested = False
+        elif state is ControllerLifecycle.FAILED:
+            self._pairing_requested = False
         else:
             raise ValueError(f"Invalid state: {state}")
 
@@ -118,18 +120,26 @@ class PairingController:
         self._maybe_open()
         if self.state is not ControllerLifecycle.INITIAL:
             return
-        self.session.call(
-            messages.ThpPairingRequest(
-                host_name=self.client.app.host_name,
-                app_name=self.client.app.app_name,
-            ),
-            expect=messages.ThpPairingRequestApproved,
-        )
+        try:
+            self.session.call(
+                messages.ThpPairingRequest(
+                    host_name=self.client.app.host_name,
+                    app_name=self.client.app.app_name,
+                ),
+                expect=messages.ThpPairingRequestApproved,
+            )
+        except Exception:
+            self.abort()
+            raise
         self.state = ControllerLifecycle.PAIRING_REQUESTED
 
     def _call(self, message: MessageType, *, expect: type[MT]) -> MT:
-        self.start()
-        return self.session.call(message, expect=expect)
+        try:
+            self.start()
+            return self.session.call(message, expect=expect)
+        except Exception:
+            self.abort()
+            raise
 
     @property
     def channel(self) -> Channel:
