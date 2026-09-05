@@ -141,9 +141,7 @@
       "Delizia": "Crea una c. seg. para evitar perder el acceso a tus fondos.",
       "Eckhart": "Crea una c. seg. para evitar perder el acceso a tus fondos."
     },
-    "backup__info_multi_group_backup": "La c. seg. de la billetera contiene {0} grupos con un umbral de grupo de {1}.",
     "backup__info_multi_share_backup": "La c. seg. de la billetera contiene varias listas de palabras en un orden concreto (partes).",
-    "backup__info_n_of_m_template": "{0}-de-{1}",
     "backup__info_single_share_backup": "La c. seg. de la billetera contiene {0} palabras en un orden concreto.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Debes realizar una c. seg. de tu billetera.",
@@ -202,7 +200,7 @@
     },
     "backup__type_create": "",
     "backup__type_have": "",
-    "backup__type_n1w1": "",
+    "backup__type_n4w1": "",
     "backup__type_wordlist": "",
     "backup__want_to_skip": {
       "Bolt": "¿Quieres omitir la copia de seguridad?",
@@ -543,6 +541,7 @@
     "cardano__message_text": "Texto del mensaje",
     "cardano__multisig_path": "ruta multi-firma",
     "cardano__nested_scripts_template": "Contiene {0} scripts anidados.",
+    "cardano__network": "Red",
     "cardano__no_output_tx": "La transacción no tiene salidas; la red no se puede verificar.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Otros",
@@ -602,6 +601,7 @@
     "cardano__vote_public_key": "Clave pública de voto",
     "cardano__voting_purpose": "Propósito del voto",
     "cardano__warning": "Advertencia",
+    "cardano__weight": "Peso",
     "cardano__withdrawal_for_address_template": "Confirmar retiro para la dirección de {0}",
     "cardano__x_of_y_signatures_template": "Requiere {0} de {1} firmas.",
     "coinjoin__access_account": "¿Acceder a tu cuenta de CoinJoin?",
@@ -708,8 +708,20 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "eos__delegate": {
+      "Bolt": "Delegar",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__delete_auth": {
       "Bolt": "Eliminar autorización",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__from": {
+      "Bolt": "De",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -828,6 +840,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "eos__undelegate": {
+      "Bolt": "Anular delegación",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__unlink_auth": {
       "Bolt": "Desvincular autorización",
       "Caesar": "",
@@ -915,6 +933,7 @@
     },
     "ethereum__max_gas_price": "Comisión máx. de gas",
     "ethereum__name_and_version": "Nombre y versión",
+    "ethereum__network": "Red",
     "ethereum__new_contract": "Se desplegará un nuevo contrato",
     "ethereum__no_message_field": "Sin campo de mensaje.",
     "ethereum__priority_fee": "Comisión máx. de prioridad",
@@ -1435,17 +1454,17 @@
     "monero__wanna_export_watchkey": "¿Quieres exportar las credenciales de solo lectura?",
     "monero__wanna_start_refresh": "¿Quieres iniciar \nla actualización?",
     "monero__wanna_sync_key_images": "¿Quieres\nsincronizar imágenes clave?",
-    "n1w1__err_damaged": "",
-    "n1w1__err_empty": "",
-    "n1w1__err_nonempty": "",
-    "n1w1__footer_first": "",
-    "n1w1__footer_last": "",
-    "n1w1__footer_next": "",
-    "n1w1__hold_first": "",
-    "n1w1__hold_last": "",
-    "n1w1__hold_next": "",
-    "n1w1__reading": "",
-    "n1w1__writing": "",
+    "n4w1__err_damaged": "",
+    "n4w1__err_empty": "",
+    "n4w1__err_nonempty": "",
+    "n4w1__footer_first": "",
+    "n4w1__footer_last": "",
+    "n4w1__footer_next": "",
+    "n4w1__hold_first": "",
+    "n4w1__hold_last": "",
+    "n4w1__hold_next": "",
+    "n4w1__reading": "",
+    "n4w1__writing": "",
     "nem__absolute": {
       "Bolt": "absoluto",
       "Caesar": "",
@@ -1964,7 +1983,12 @@
     },
     "recovery__enter_each_word": "Introduce cada palabra de la c. seg. de la billetera en orden.",
     "recovery__enter_share_from_diff_group": "Introduce una parte de otro grupo.",
-    "recovery__group_num_template": "Grupo {0}",
+    "recovery__group_num_template": {
+      "Bolt": "Grupo {0}",
+      "Caesar": "Grupo {0}",
+      "Delizia": "Grupo {0}",
+      "Eckhart": ""
+    },
     "recovery__group_threshold_reached": "Umbral de grupo alcanzado.",
     "recovery__invalid_share_entered": "La parte de recuperación es inválida.",
     "recovery__invalid_wallet_backup_entered": "La c. seg. de la billetera es inválida.",
@@ -2213,7 +2237,7 @@
     },
     "reset__never_make_digital_copy": "Nunca guardes tu c. seg. de forma digital.",
     "reset__num_of_share_holders_template": {
-      "Bolt": "{0} personas o ubicaciones tendrán una parte cada una.",
+      "Bolt": "{0} partes, una por persona o sitio.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2317,9 +2341,9 @@
       "Eckhart": "Selecciona la palabra {0} de la c. seg. de tu billetera"
     },
     "reset__select_word_x_of_y_template": {
-      "Bolt": "Palabra {0} de {1}:",
+      "Bolt": "La palabra {0} de {1} es:",
       "Caesar": "Palabra {0} de {1}:",
-      "Delizia": "Selec. palabra {0} de {1}",
+      "Delizia": "La palabra {0} de {1} es",
       "Eckhart": ""
     },
     "reset__set_it_to_count_template": {
@@ -3389,12 +3413,6 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "words__delegate": {
-      "Bolt": "Delegar",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "words__deposit": "Depósito",
     "words__device": "Dispositivo",
     "words__disabled": {
@@ -3424,12 +3442,6 @@
       "Delizia": "del",
       "Eckhart": ""
     },
-    "words__from_title": {
-      "Bolt": "De",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "words__function": "Función",
     "words__important": "Importante",
     "words__instructions": "Instrucciones",
@@ -3450,7 +3462,6 @@
     },
     "words__my_trezor": "Mi Trezor",
     "words__name": "Nombre",
-    "words__network": "Red",
     "words__no": "No",
     "words__not_recommended": {
       "Bolt": "",
@@ -3574,12 +3585,6 @@
       "Delizia": "Reintentar.",
       "Eckhart": "Reintentar."
     },
-    "words__undelegate": {
-      "Bolt": "Anular delegación",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "words__unknown": "Desconocido",
     "words__unlimited": "Ilimitado",
     "words__unlocked": {
@@ -3592,7 +3597,6 @@
     "words__voting": "Votación",
     "words__wallet": "Billetera",
     "words__warning": "Advertencia",
-    "words__weight": "Peso",
     "words__writable": "Modificable",
     "words__yes": "Sí"
   }
