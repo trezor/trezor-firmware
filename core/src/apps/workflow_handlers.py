@@ -107,6 +107,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.misc.get_ecdh_session_key"
     if msg_type == MessageType.CipherKeyValue:
         return "apps.misc.cipher_key_value"
+    if msg_type == MessageType.GetBip85Entropy:
+        return "apps.misc.get_bip85_entropy"
     if msg_type == MessageType.GetFirmwareHash:
         return "apps.misc.get_firmware_hash"
     if msg_type == MessageType.PaymentNotification:

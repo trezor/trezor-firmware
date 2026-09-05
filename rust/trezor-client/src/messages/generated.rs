@@ -72,6 +72,8 @@ trezor_message_impl! {
     GetECDHSessionKey => MessageType_GetECDHSessionKey,
     ECDHSessionKey => MessageType_ECDHSessionKey,
     PaymentNotification => MessageType_PaymentNotification,
+    GetBip85Entropy => MessageType_GetBip85Entropy,
+    Bip85Entropy => MessageType_Bip85Entropy,
     DebugLinkDecision => MessageType_DebugLinkDecision,
     DebugLinkGetState => MessageType_DebugLinkGetState,
     DebugLinkState => MessageType_DebugLinkState,
