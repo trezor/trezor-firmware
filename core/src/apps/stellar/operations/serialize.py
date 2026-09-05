@@ -40,8 +40,10 @@ if TYPE_CHECKING:
         StellarPaymentOp,
         StellarSetOptionsOp,
         StellarSorobanAddressCredentials,
+        StellarSorobanAddressCredentialsWithDelegates,
         StellarSorobanAuthorizationEntry,
         StellarSorobanCredentials,
+        StellarSorobanDelegateSignature,
     )
     from trezor.utils import Writer
 
@@ -246,6 +248,13 @@ def _write_soroban_credentials(w: Writer, msg: StellarSorobanCredentials) -> Non
         if msg.address_v2 is None:
             raise DataError("Stellar: missing address credentials")
         _write_soroban_address_credentials(w, msg.address_v2)
+    elif (
+        msg.type
+        == StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES
+    ):
+        if msg.address_with_delegates is None:
+            raise DataError("Stellar: missing address credentials with delegates")
+        _write_soroban_address_credentials_with_delegates(w, msg.address_with_delegates)
     else:
         raise ProcessError("Stellar: unsupported credentials type")
 
@@ -257,3 +266,18 @@ def _write_soroban_address_credentials(
     write_int64(w, msg.nonce)
     write_uint32(w, msg.signature_expiration_ledger)
     write_sc_val(w, msg.signature)
+
+
+def _write_soroban_address_credentials_with_delegates(
+    w: Writer, msg: StellarSorobanAddressCredentialsWithDelegates
+) -> None:
+    _write_soroban_address_credentials(w, msg.address_credentials)
+    write_vec(w, msg.delegates, _write_soroban_delegate_signature)
+
+
+def _write_soroban_delegate_signature(
+    w: Writer, msg: StellarSorobanDelegateSignature
+) -> None:
+    write_sc_address(w, msg.address)
+    write_sc_val(w, msg.signature)
+    write_vec(w, msg.nested_delegates, _write_soroban_delegate_signature)

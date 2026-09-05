@@ -9402,6 +9402,373 @@ impl ::protobuf::reflect::ProtobufValue for StellarSorobanAddressCredentials {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSorobanDelegateSignature)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarSorobanDelegateSignature {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanDelegateSignature.address)
+    pub address: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanDelegateSignature.signature)
+    pub signature: ::protobuf::MessageField<StellarSCVal>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanDelegateSignature.nested_delegates)
+    pub nested_delegates: ::std::vec::Vec<StellarSorobanDelegateSignature>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSorobanDelegateSignature.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarSorobanDelegateSignature {
+    fn default() -> &'a StellarSorobanDelegateSignature {
+        <StellarSorobanDelegateSignature as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarSorobanDelegateSignature {
+    pub fn new() -> StellarSorobanDelegateSignature {
+        ::std::default::Default::default()
+    }
+
+    // required string address = 1;
+
+    pub fn address(&self) -> &str {
+        match self.address.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_address(&mut self) {
+        self.address = ::std::option::Option::None;
+    }
+
+    pub fn has_address(&self) -> bool {
+        self.address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_address(&mut self, v: ::std::string::String) {
+        self.address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_address(&mut self) -> &mut ::std::string::String {
+        if self.address.is_none() {
+            self.address = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_address(&mut self) -> ::std::string::String {
+        self.address.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "address",
+            |m: &StellarSorobanDelegateSignature| { &m.address },
+            |m: &mut StellarSorobanDelegateSignature| { &mut m.address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarSCVal>(
+            "signature",
+            |m: &StellarSorobanDelegateSignature| { &m.signature },
+            |m: &mut StellarSorobanDelegateSignature| { &mut m.signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "nested_delegates",
+            |m: &StellarSorobanDelegateSignature| { &m.nested_delegates },
+            |m: &mut StellarSorobanDelegateSignature| { &mut m.nested_delegates },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSorobanDelegateSignature>(
+            "StellarSorobanDelegateSignature",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarSorobanDelegateSignature {
+    const NAME: &'static str = "StellarSorobanDelegateSignature";
+
+    fn is_initialized(&self) -> bool {
+        if self.address.is_none() {
+            return false;
+        }
+        if self.signature.is_none() {
+            return false;
+        }
+        for v in &self.signature {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.nested_delegates {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.address = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.signature)?;
+                },
+                26 => {
+                    self.nested_delegates.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.address.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.signature.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        for value in &self.nested_delegates {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.address.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.signature.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        for v in &self.nested_delegates {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarSorobanDelegateSignature {
+        StellarSorobanDelegateSignature::new()
+    }
+
+    fn clear(&mut self) {
+        self.address = ::std::option::Option::None;
+        self.signature.clear();
+        self.nested_delegates.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarSorobanDelegateSignature {
+        static instance: StellarSorobanDelegateSignature = StellarSorobanDelegateSignature {
+            address: ::std::option::Option::None,
+            signature: ::protobuf::MessageField::none(),
+            nested_delegates: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarSorobanDelegateSignature {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarSorobanDelegateSignature").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarSorobanDelegateSignature {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarSorobanDelegateSignature {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSorobanAddressCredentialsWithDelegates)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarSorobanAddressCredentialsWithDelegates {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAddressCredentialsWithDelegates.address_credentials)
+    pub address_credentials: ::protobuf::MessageField<StellarSorobanAddressCredentials>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAddressCredentialsWithDelegates.delegates)
+    pub delegates: ::std::vec::Vec<StellarSorobanDelegateSignature>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSorobanAddressCredentialsWithDelegates.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarSorobanAddressCredentialsWithDelegates {
+    fn default() -> &'a StellarSorobanAddressCredentialsWithDelegates {
+        <StellarSorobanAddressCredentialsWithDelegates as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarSorobanAddressCredentialsWithDelegates {
+    pub fn new() -> StellarSorobanAddressCredentialsWithDelegates {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarSorobanAddressCredentials>(
+            "address_credentials",
+            |m: &StellarSorobanAddressCredentialsWithDelegates| { &m.address_credentials },
+            |m: &mut StellarSorobanAddressCredentialsWithDelegates| { &mut m.address_credentials },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "delegates",
+            |m: &StellarSorobanAddressCredentialsWithDelegates| { &m.delegates },
+            |m: &mut StellarSorobanAddressCredentialsWithDelegates| { &mut m.delegates },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSorobanAddressCredentialsWithDelegates>(
+            "StellarSorobanAddressCredentialsWithDelegates",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarSorobanAddressCredentialsWithDelegates {
+    const NAME: &'static str = "StellarSorobanAddressCredentialsWithDelegates";
+
+    fn is_initialized(&self) -> bool {
+        if self.address_credentials.is_none() {
+            return false;
+        }
+        for v in &self.address_credentials {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.delegates {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.address_credentials)?;
+                },
+                18 => {
+                    self.delegates.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.address_credentials.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        for value in &self.delegates {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.address_credentials.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        for v in &self.delegates {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarSorobanAddressCredentialsWithDelegates {
+        StellarSorobanAddressCredentialsWithDelegates::new()
+    }
+
+    fn clear(&mut self) {
+        self.address_credentials.clear();
+        self.delegates.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarSorobanAddressCredentialsWithDelegates {
+        static instance: StellarSorobanAddressCredentialsWithDelegates = StellarSorobanAddressCredentialsWithDelegates {
+            address_credentials: ::protobuf::MessageField::none(),
+            delegates: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarSorobanAddressCredentialsWithDelegates {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarSorobanAddressCredentialsWithDelegates").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarSorobanAddressCredentialsWithDelegates {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarSorobanAddressCredentialsWithDelegates {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSorobanCredentials)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct StellarSorobanCredentials {
@@ -9410,6 +9777,8 @@ pub struct StellarSorobanCredentials {
     pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_soroban_credentials::StellarSorobanCredentialsType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanCredentials.address_v2)
     pub address_v2: ::protobuf::MessageField<StellarSorobanAddressCredentials>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanCredentials.address_with_delegates)
+    pub address_with_delegates: ::protobuf::MessageField<StellarSorobanAddressCredentialsWithDelegates>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSorobanCredentials.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -9449,7 +9818,7 @@ impl StellarSorobanCredentials {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "type",
@@ -9460,6 +9829,11 @@ impl StellarSorobanCredentials {
             "address_v2",
             |m: &StellarSorobanCredentials| { &m.address_v2 },
             |m: &mut StellarSorobanCredentials| { &mut m.address_v2 },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarSorobanAddressCredentialsWithDelegates>(
+            "address_with_delegates",
+            |m: &StellarSorobanCredentials| { &m.address_with_delegates },
+            |m: &mut StellarSorobanCredentials| { &mut m.address_with_delegates },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSorobanCredentials>(
             "StellarSorobanCredentials",
@@ -9481,6 +9855,11 @@ impl ::protobuf::Message for StellarSorobanCredentials {
                 return false;
             }
         };
+        for v in &self.address_with_delegates {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -9492,6 +9871,9 @@ impl ::protobuf::Message for StellarSorobanCredentials {
                 },
                 18 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.address_v2)?;
+                },
+                26 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.address_with_delegates)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -9512,6 +9894,10 @@ impl ::protobuf::Message for StellarSorobanCredentials {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.address_with_delegates.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -9523,6 +9909,9 @@ impl ::protobuf::Message for StellarSorobanCredentials {
         }
         if let Some(v) = self.address_v2.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        if let Some(v) = self.address_with_delegates.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -9543,6 +9932,7 @@ impl ::protobuf::Message for StellarSorobanCredentials {
     fn clear(&mut self) {
         self.type_ = ::std::option::Option::None;
         self.address_v2.clear();
+        self.address_with_delegates.clear();
         self.special_fields.clear();
     }
 
@@ -9550,6 +9940,7 @@ impl ::protobuf::Message for StellarSorobanCredentials {
         static instance: StellarSorobanCredentials = StellarSorobanCredentials {
             type_: ::std::option::Option::None,
             address_v2: ::protobuf::MessageField::none(),
+            address_with_delegates: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -9582,6 +9973,8 @@ pub mod stellar_soroban_credentials {
         SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2)
         SOROBAN_CREDENTIALS_ADDRESS_V2 = 2,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES)
+        SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES = 3,
     }
 
     impl ::protobuf::Enum for StellarSorobanCredentialsType {
@@ -9595,6 +9988,7 @@ pub mod stellar_soroban_credentials {
             match value {
                 0 => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT),
                 2 => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_V2),
+                3 => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES),
                 _ => ::std::option::Option::None
             }
         }
@@ -9603,6 +9997,7 @@ pub mod stellar_soroban_credentials {
             match str {
                 "SOROBAN_CREDENTIALS_SOURCE_ACCOUNT" => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT),
                 "SOROBAN_CREDENTIALS_ADDRESS_V2" => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_V2),
+                "SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES" => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES),
                 _ => ::std::option::Option::None
             }
         }
@@ -9610,6 +10005,7 @@ pub mod stellar_soroban_credentials {
         const VALUES: &'static [StellarSorobanCredentialsType] = &[
             StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT,
             StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_V2,
+            StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES,
         ];
     }
 
@@ -9623,6 +10019,7 @@ pub mod stellar_soroban_credentials {
             let index = match self {
                 StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT => 0,
                 StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_V2 => 1,
+                StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES => 2,
             };
             Self::enum_descriptor().value_by_index(index)
         }
@@ -11342,42 +11739,54 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x02\x20\x02(\x12R\x05nonce\x12>\n\x1bsignature_expiration_ledger\
     \x18\x03\x20\x02(\rR\x19signatureExpirationLedger\x12F\n\tsignature\x18\
     \x04\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarSCValR\tsignature\
-    \"\xd4\x02\n\x19StellarSorobanCredentials\x12g\n\x04type\x18\x01\x20\x02\
-    (\x0e2S.hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSoro\
-    banCredentialsTypeR\x04type\x12[\n\naddress_v2\x18\x02\x20\x01(\x0b2<.hw\
-    .trezor.messages.stellar.StellarSorobanAddressCredentialsR\taddressV2\"q\
-    \n\x1dStellarSorobanCredentialsType\x12&\n\"SOROBAN_CREDENTIALS_SOURCE_A\
-    CCOUNT\x10\0\x12\"\n\x1eSOROBAN_CREDENTIALS_ADDRESS_V2\x10\x02\"\x04\x08\
-    \x01\x10\x01\"\xe4\x01\n\x20StellarSorobanAuthorizationEntry\x12W\n\x0bc\
-    redentials\x18\x01\x20\x02(\x0b25.hw.trezor.messages.stellar.StellarSoro\
-    banCredentialsR\x0bcredentials\x12g\n\x0froot_invocation\x18\x02\x20\x02\
-    (\x0b2>.hw.trezor.messages.stellar.StellarSorobanAuthorizedInvocationR\
-    \x0erootInvocation\"\xe3\x01\n\x1bStellarInvokeHostFunctionOp\x12%\n\x0e\
-    source_account\x18\x01\x20\x01(\tR\rsourceAccount\x12K\n\x08function\x18\
-    \x02\x20\x02(\x0b2/.hw.trezor.messages.stellar.StellarHostFunctionR\x08f\
-    unction\x12P\n\x04auth\x18\x03\x20\x03(\x0b2<.hw.trezor.messages.stellar\
-    .StellarSorobanAuthorizationEntryR\x04auth\"\x86\x06\n\x1fStellarSignSor\
-    obanAuthorization\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
-    \x12-\n\x12network_passphrase\x18\x02\x20\x02(\tR\x11networkPassphrase\
-    \x12\x88\x01\n\renvelope_type\x18\x03\x20\x02(\x0e2c.hw.trezor.messages.\
-    stellar.StellarSignSorobanAuthorization.StellarSorobanAuthorizationEnvel\
-    opeTypeR\x0cenvelopeType\x12\xaf\x01\n\"soroban_authorization_with_addre\
-    ss\x18\x04\x20\x01(\x0b2b.hw.trezor.messages.stellar.StellarSignSorobanA\
-    uthorization.StellarSorobanAuthorizationWithAddressR\x1fsorobanAuthoriza\
-    tionWithAddress\x1a\xf8\x01\n&StellarSorobanAuthorizationWithAddress\x12\
-    \x14\n\x05nonce\x18\x01\x20\x02(\x12R\x05nonce\x12>\n\x1bsignature_expir\
-    ation_ledger\x18\x02\x20\x02(\rR\x19signatureExpirationLedger\x12\x18\n\
-    \x07address\x18\x03\x20\x02(\tR\x07address\x12^\n\ninvocation\x18\x04\
-    \x20\x02(\x0b2>.hw.trezor.messages.stellar.StellarSorobanAuthorizedInvoc\
-    ationR\ninvocation\"_\n'StellarSorobanAuthorizationEnvelopeType\x124\n0E\
-    NVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS\x10\n\"c\n$StellarSoroba\
-    nAuthorizationSignature\x12\x1d\n\npublic_key\x18\x01\x20\x02(\x0cR\tpub\
-    licKey\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\x15\n\x13\
-    StellarTxExtRequest\"?\n\x0cStellarTxExt\x12\x0c\n\x01v\x18\x01\x20\x02(\
-    \x11R\x01v\x12!\n\x0csoroban_data\x18\x02\x20\x01(\x0cR\x0bsorobanData*=\
-    \n\x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\x12\r\n\tALPHANUM4\x10\
-    \x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satoshilabs.trezor.lib.protob\
-    ufB\x14TrezorMessageStellar\
+    \"\xeb\x01\n\x1fStellarSorobanDelegateSignature\x12\x18\n\x07address\x18\
+    \x01\x20\x02(\tR\x07address\x12F\n\tsignature\x18\x02\x20\x02(\x0b2(.hw.\
+    trezor.messages.stellar.StellarSCValR\tsignature\x12f\n\x10nested_delega\
+    tes\x18\x03\x20\x03(\x0b2;.hw.trezor.messages.stellar.StellarSorobanDele\
+    gateSignatureR\x0fnestedDelegates\"\xf9\x01\n-StellarSorobanAddressCrede\
+    ntialsWithDelegates\x12m\n\x13address_credentials\x18\x01\x20\x02(\x0b2<\
+    .hw.trezor.messages.stellar.StellarSorobanAddressCredentialsR\x12address\
+    Credentials\x12Y\n\tdelegates\x18\x02\x20\x03(\x0b2;.hw.trezor.messages.\
+    stellar.StellarSorobanDelegateSignatureR\tdelegates\"\x86\x04\n\x19Stell\
+    arSorobanCredentials\x12g\n\x04type\x18\x01\x20\x02(\x0e2S.hw.trezor.mes\
+    sages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsTypeR\
+    \x04type\x12[\n\naddress_v2\x18\x02\x20\x01(\x0b2<.hw.trezor.messages.st\
+    ellar.StellarSorobanAddressCredentialsR\taddressV2\x12\x7f\n\x16address_\
+    with_delegates\x18\x03\x20\x01(\x0b2I.hw.trezor.messages.stellar.Stellar\
+    SorobanAddressCredentialsWithDelegatesR\x14addressWithDelegates\"\xa1\
+    \x01\n\x1dStellarSorobanCredentialsType\x12&\n\"SOROBAN_CREDENTIALS_SOUR\
+    CE_ACCOUNT\x10\0\x12\"\n\x1eSOROBAN_CREDENTIALS_ADDRESS_V2\x10\x02\x12.\
+    \n*SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES\x10\x03\"\x04\x08\x01\x10\
+    \x01\"\xe4\x01\n\x20StellarSorobanAuthorizationEntry\x12W\n\x0bcredentia\
+    ls\x18\x01\x20\x02(\x0b25.hw.trezor.messages.stellar.StellarSorobanCrede\
+    ntialsR\x0bcredentials\x12g\n\x0froot_invocation\x18\x02\x20\x02(\x0b2>.\
+    hw.trezor.messages.stellar.StellarSorobanAuthorizedInvocationR\x0erootIn\
+    vocation\"\xe3\x01\n\x1bStellarInvokeHostFunctionOp\x12%\n\x0esource_acc\
+    ount\x18\x01\x20\x01(\tR\rsourceAccount\x12K\n\x08function\x18\x02\x20\
+    \x02(\x0b2/.hw.trezor.messages.stellar.StellarHostFunctionR\x08function\
+    \x12P\n\x04auth\x18\x03\x20\x03(\x0b2<.hw.trezor.messages.stellar.Stella\
+    rSorobanAuthorizationEntryR\x04auth\"\x86\x06\n\x1fStellarSignSorobanAut\
+    horization\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12-\n\
+    \x12network_passphrase\x18\x02\x20\x02(\tR\x11networkPassphrase\x12\x88\
+    \x01\n\renvelope_type\x18\x03\x20\x02(\x0e2c.hw.trezor.messages.stellar.\
+    StellarSignSorobanAuthorization.StellarSorobanAuthorizationEnvelopeTypeR\
+    \x0cenvelopeType\x12\xaf\x01\n\"soroban_authorization_with_address\x18\
+    \x04\x20\x01(\x0b2b.hw.trezor.messages.stellar.StellarSignSorobanAuthori\
+    zation.StellarSorobanAuthorizationWithAddressR\x1fsorobanAuthorizationWi\
+    thAddress\x1a\xf8\x01\n&StellarSorobanAuthorizationWithAddress\x12\x14\n\
+    \x05nonce\x18\x01\x20\x02(\x12R\x05nonce\x12>\n\x1bsignature_expiration_\
+    ledger\x18\x02\x20\x02(\rR\x19signatureExpirationLedger\x12\x18\n\x07add\
+    ress\x18\x03\x20\x02(\tR\x07address\x12^\n\ninvocation\x18\x04\x20\x02(\
+    \x0b2>.hw.trezor.messages.stellar.StellarSorobanAuthorizedInvocationR\ni\
+    nvocation\"_\n'StellarSorobanAuthorizationEnvelopeType\x124\n0ENVELOPE_T\
+    YPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS\x10\n\"c\n$StellarSorobanAuthoriz\
+    ationSignature\x12\x1d\n\npublic_key\x18\x01\x20\x02(\x0cR\tpublicKey\
+    \x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\x15\n\x13Stella\
+    rTxExtRequest\"?\n\x0cStellarTxExt\x12\x0c\n\x01v\x18\x01\x20\x02(\x11R\
+    \x01v\x12!\n\x0csoroban_data\x18\x02\x20\x01(\x0cR\x0bsorobanData*=\n\
+    \x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\x12\r\n\tALPHANUM4\x10\x01\
+    \x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satoshilabs.trezor.lib.protobufB\
+    \x14TrezorMessageStellar\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -11396,7 +11805,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_common::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(39);
+            let mut messages = ::std::vec::Vec::with_capacity(41);
             messages.push(StellarAsset::generated_message_descriptor_data());
             messages.push(StellarGetAddress::generated_message_descriptor_data());
             messages.push(StellarAddress::generated_message_descriptor_data());
@@ -11423,6 +11832,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(StellarSorobanAuthorizedInvocation::generated_message_descriptor_data());
             messages.push(StellarHostFunction::generated_message_descriptor_data());
             messages.push(StellarSorobanAddressCredentials::generated_message_descriptor_data());
+            messages.push(StellarSorobanDelegateSignature::generated_message_descriptor_data());
+            messages.push(StellarSorobanAddressCredentialsWithDelegates::generated_message_descriptor_data());
             messages.push(StellarSorobanCredentials::generated_message_descriptor_data());
             messages.push(StellarSorobanAuthorizationEntry::generated_message_descriptor_data());
             messages.push(StellarInvokeHostFunctionOp::generated_message_descriptor_data());
