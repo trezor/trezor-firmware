@@ -23,7 +23,7 @@
 
 #include <sys/irq.h>
 
-#include "battery.h"
+#include "../battery.h"
 #include "battery_model.h"
 #include "fuel_gauge.h"
 #include "math.h"
@@ -242,6 +242,35 @@ ts_t bat_fg_compensate_soc(float* soc, uint32_t elapsed_s,
                                                  avg_temp_C, discharging_mode));
 
   return TS_OK;
+}
+
+// LiFePO4 brownout thresholds. Kept with the chemistry, not the policy.
+#define BAT_UNDERVOLT_THR_V 3.0f         // set critical below this
+#define BAT_CRITICAL_RECOVERY_SOC 0.02f  // clear critical at/above this SoC
+
+bool bat_eval_critical(bool currently_critical, float voltage_V,
+                       float current_mA, float temp_C) {
+  bat_driver_t* drv = &g_bat_driver;
+  (void)current_mA;
+  (void)temp_C;
+
+  // Set on undervoltage. Voltage is a reliable SoC indicator in the critical
+  // region (steep curve), so snap the estimate to empty - keeping the
+  // covariance - as bat_fg_set_soc() does.
+  if (voltage_V < BAT_UNDERVOLT_THR_V && !currently_critical) {
+    bat_fg_set_soc(0.0f, drv->fg_state.P);
+    return true;
+  }
+
+  // Recover only on a genuine SoC rise (recharge). Raw voltage rebounds on
+  // relaxation without the cell actually recovering, so a voltage-based clear
+  // would falsely un-latch at rest; the persisted SoC also guards boot across
+  // hibernation.
+  if (drv->fg_state.soc_latched >= BAT_CRITICAL_RECOVERY_SOC) {
+    return false;
+  }
+
+  return currently_critical;
 }
 
 float bat_fetch_cycle_increment(void) {

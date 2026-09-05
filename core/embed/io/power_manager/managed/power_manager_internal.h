@@ -23,19 +23,36 @@
 
 #include <io/pmic.h>
 #include <io/power_manager.h>
+#ifdef USE_RTC
+// Only for rtc_event_id_t below; every RTC user in this module is USE_RTC-only.
 #include <sys/rtc_scheduler.h>
+#endif
 #include <sys/systimer.h>
 
-#include "../stwlc38/stwlc38.h"
+#include "../wireless/stwlc38/stwlc38.h"
+
+#ifdef USE_CHARGER
+// Charger extension to the core PMIC interface. Implemented only by
+// charger-capable PMICs, so the policy may only reach for it - including for
+// its current limits below - when USE_CHARGER is set.
+#include "../pmic/pmic_charger.h"
+#endif
 
 // Power manager thresholds & timings
 #define PM_TIMER_PERIOD_MS 100
 #define PM_SHUTDOWN_TIMEOUT_MS 15000
-#define PM_BATTERY_UNDERVOLT_THR_V 3.0f
-#define PM_BATTERY_CRITICAL_RECOVERY_SOC 0.02f
+// Battery-critical (brownout) thresholds moved into the chemistry-specific
+// gauge (see bat_eval_critical() in fuel_gauge/*), since the correct set/clear
+// mechanism depends on the cell and the gauge's precision.
 #define PM_BATTERY_LOW_THRESHOLD_SOC 15
+
+#ifdef USE_CHARGER
+// Charging-current bounds are a property of the charger, so they come from the
+// selected PMIC's charger extension rather than being restated by the policy.
+// Undefined without a charger: every user is charger-only code.
 #define PM_BATTERY_CHARGING_CURRENT_MAX PMIC_CHARGING_LIMIT_MAX
 #define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
+#endif
 
 #define PM_BATTERY_DISCONNECTED_THR_V 0.5f  // battery disconnection detection
 #define PM_BATTERY_DISCONNECTED_REC_V \
@@ -50,8 +67,12 @@
 
 #define PM_STABILIZATION_TIMEOUT_MS 2000
 
-// Thermal controller switch, comment out to disable the thermal controller
+// Thermal controller switch, comment out to disable the thermal controller.
+// The thermal controller limits the *charging* current by temperature, so it
+// is only meaningful when a charger is present.
+#ifdef USE_CHARGER
 #define PM_ENABLE_TEMP_CONTROL
+#endif
 
 // Temperature controller parameters
 #define PM_TEMP_CONTROL_IDLE_PERIOD_MS 2 * 60 * 1000  // 2 minutes
@@ -130,7 +151,9 @@ typedef struct {
   uint32_t suspend_timestamp;
   uint32_t last_active_timestamp;
   uint32_t time_in_suspend_s;
+#ifdef USE_RTC
   rtc_event_id_t autohibernate_event_id;
+#endif
 
 } pm_driver_t;
 
@@ -163,7 +186,9 @@ void pm_charging_controller(pm_driver_t* drv);
 // Store power manager data to backup RAM
 pm_status_t pm_store_data_to_backup_ram(void);
 
+#ifdef USE_RTC
 // Schedule the RTC wakeup when going into suspend mode.
 // Return false if the driver was not initialized or the RTC timestamp is
 // not available.
 bool pm_schedule_rtc_wakeup(void);
+#endif
