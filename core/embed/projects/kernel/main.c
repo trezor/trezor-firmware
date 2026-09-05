@@ -256,7 +256,6 @@ static void kernel_loop(applet_t *coreapp) {
 
 // Shows RSOD (Red Screen of Death)
 static void show_rsod(const systask_postmortem_t *pminfo) {
-#ifdef RSOD_IN_COREAPP
   applet_t coreapp;
 
   // Reset and run the coreapp in RSOD mode
@@ -273,7 +272,6 @@ static void show_rsod(const systask_postmortem_t *pminfo) {
       return;
     }
   }
-#endif
 
   // If coreapp crashed, fallback to showing the error using a terminal
   rsod_terminal(pminfo);
