@@ -22,8 +22,58 @@ use crate::{
     transport::{ProtoMessage, Transport},
     Model,
 };
-use protobuf::MessageField;
+use protobuf::{MessageField, MessageFull};
 use tracing::{debug, trace};
+
+/// Message fields whose contents must never be written to a log, keyed by the
+/// protobuf message's full name and the field name within it.
+///
+/// The selection criterion is "a secret or an authentication credential
+/// carried by an exchange this crate performs". `ECDHSessionKey.session_key`
+/// is the shared decryption secret; `PinMatrixAck.pin` and
+/// `PassphraseAck.passphrase` are the user credentials being sent to the
+/// device; and `SignedIdentity.signature` is authentication material that
+/// should not be persisted to logs. The list is deliberately scoped to the
+/// fields the crate's typed helpers actually exchange, and is trivial to
+/// extend if more such methods are added.
+const REDACTED_FIELDS: &[(&str, &str)] = &[
+    ("hw.trezor.messages.crypto.SignedIdentity", "signature"),
+    ("hw.trezor.messages.crypto.ECDHSessionKey", "session_key"),
+    ("hw.trezor.messages.common.PinMatrixAck", "pin"),
+    ("hw.trezor.messages.common.PassphraseAck", "passphrase"),
+];
+
+/// Formats `msg` for logging with any [`REDACTED_FIELDS`] cleared, so a secret
+/// cannot be emitted through the crate's tracing. Messages that carry no
+/// redacted field are formatted exactly like their derived `Debug`.
+///
+/// Redaction is applied here, at the crate's own device-I/O log call sites
+/// (the only place these messages are logged); it does not replace `Debug` on
+/// the generated types. The `trace!` macro only evaluates this when a
+/// subscriber has enabled the call site, so callers that do not log pay
+/// nothing.
+fn redacted_debug<M: MessageFull>(msg: &M) -> String {
+    let descriptor = M::descriptor();
+    let full_name = descriptor.full_name();
+    let redacted: Vec<_> = descriptor
+        .fields()
+        .filter(|field| {
+            REDACTED_FIELDS
+                .iter()
+                .any(|(message, name)| *message == full_name && *name == field.name())
+        })
+        .collect();
+    if redacted.is_empty() {
+        return format!("{msg:?}");
+    }
+
+    let mut clone = msg.clone();
+    for field in &redacted {
+        field.clear_field(&mut clone);
+    }
+    let names: Vec<&str> = redacted.iter().map(|field| field.name()).collect();
+    format!("{clone:?} [redacted: {}]", names.join(", "))
+}
 
 /// A Trezor client.
 pub struct Trezor {
@@ -75,11 +125,11 @@ impl Trezor {
         message: S,
         result_handler: Box<ResultHandler<'a, T, R>>,
     ) -> Result<TrezorResponse<'a, T, R>> {
-        trace!("Sending {:?} msg: {:?}", S::MESSAGE_TYPE, message);
+        trace!("Sending {:?} msg: {}", S::MESSAGE_TYPE, redacted_debug(&message));
         let resp = self.call_raw(message)?;
         if resp.message_type() == R::MESSAGE_TYPE {
             let resp_msg = resp.into_message()?;
-            trace!("Received {:?} msg: {:?}", R::MESSAGE_TYPE, resp_msg);
+            trace!("Received {:?} msg: {}", R::MESSAGE_TYPE, redacted_debug(&resp_msg));
             Ok(TrezorResponse::Ok(result_handler(self, resp_msg)?))
         } else {
             match resp.message_type() {
@@ -261,5 +311,61 @@ impl Trezor {
         req.set_peer_public_key(peer_public_key);
         req.set_ecdsa_curve_name(curve);
         self.call(req, Box::new(|_, m| Ok(m)))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn redacts_signed_identity_signature() {
+        let mut msg = protos::SignedIdentity::new();
+        msg.set_public_key(vec![0x01, 0x02, 0x03]);
+        msg.set_signature(vec![0xab; 8]);
+
+        let out = redacted_debug(&msg);
+        // The secret signature bytes (171 == 0xab in the `Debug` of a
+        // `Vec<u8>`) must not appear, and the field must read as cleared.
+        assert!(!out.contains("171"), "signature leaked: {out}");
+        assert!(out.contains("signature: None"), "signature not cleared: {out}");
+        // Non-secret context and the redaction marker remain.
+        assert!(out.contains("public_key"), "lost useful context: {out}");
+        assert!(out.contains("[redacted: signature]"), "no redaction marker: {out}");
+    }
+
+    #[test]
+    fn redacts_ecdh_session_key() {
+        let mut msg = protos::ECDHSessionKey::new();
+        msg.set_public_key(vec![0x01, 0x02, 0x03]);
+        msg.set_session_key(vec![0xcd; 8]);
+
+        let out = redacted_debug(&msg);
+        assert!(!out.contains("205"), "session key leaked: {out}");
+        assert!(out.contains("session_key: None"), "session key not cleared: {out}");
+        assert!(out.contains("[redacted: session_key]"), "no redaction marker: {out}");
+    }
+
+    #[test]
+    fn redacts_credentials_sent_to_device() {
+        let mut pin = protos::PinMatrixAck::new();
+        pin.set_pin("997531".to_owned());
+        let out = redacted_debug(&pin);
+        assert!(!out.contains("997531"), "pin leaked: {out}");
+        assert!(out.contains("[redacted: pin]"), "no redaction marker: {out}");
+
+        let mut passphrase = protos::PassphraseAck::new();
+        passphrase.set_passphrase("hunter2".to_owned());
+        let out = redacted_debug(&passphrase);
+        assert!(!out.contains("hunter2"), "passphrase leaked: {out}");
+        assert!(out.contains("[redacted: passphrase]"), "no redaction marker: {out}");
+    }
+
+    #[test]
+    fn leaves_non_secret_messages_unchanged() {
+        let mut msg = protos::Features::new();
+        msg.set_vendor("trezor.io".to_owned());
+        // A message with no redacted field formats exactly like its `Debug`.
+        assert_eq!(redacted_debug(&msg), format!("{msg:?}"));
     }
 }
