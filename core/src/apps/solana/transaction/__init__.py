@@ -89,12 +89,13 @@ class Transaction:
     def _parse_addresses(self, serialized_tx_reader: BufferReader) -> None:
         num_of_addresses = parse_var_int(serialized_tx_reader)
 
-        # Read-only signers are always just a subset of all signers.
-        assert self.num_signature_read_only_addresses <= self.required_signers_count
-        assert (
+        if self.num_signature_read_only_addresses >= self.required_signers_count:
+            raise DataError("At least one writable signer required")
+        if (
             num_of_addresses
-            >= self.required_signers_count + self.num_read_only_addresses
-        )
+            < self.required_signers_count + self.num_read_only_addresses
+        ):
+            raise DataError("Not enough addresses")
 
         addresses: list[Address] = []
         for i in range(num_of_addresses):
