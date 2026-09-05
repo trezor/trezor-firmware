@@ -26,6 +26,7 @@ if TYPE_CHECKING:
         *,
         confirm_only: Literal[True],
         layout_type: type[ui.Layout] = ui.Layout,
+        params_provider: Callable[[], dict[str, Any]] | None = None,
     ) -> None: ...
 
     @overload
@@ -37,6 +38,7 @@ if TYPE_CHECKING:
         *,
         confirm_only: bool = False,
         layout_type: type[ui.Layout] = ui.Layout,
+        params_provider: Callable[[], dict[str, Any]] | None = None,
     ) -> T: ...
 
 
@@ -48,6 +50,7 @@ async def interact(
     *,
     confirm_only: bool = False,
     layout_type: type[ui.Layout] = ui.Layout,
+    params_provider: Callable[[], dict[str, Any]] | None = None,
 ) -> T | None:
     """Return the result of user interaction with the layout.
 
@@ -61,11 +64,15 @@ async def interact(
     * on any other result (indicating a bug in the caller), raise a RuntimeError
     Setting `raise_on_cancel=None` together with `confirm_only=True` invalid,
     and a RuntimeError will be raised in the cancel case.
+
+    Pass `params_provider` for layouts that ask for fresh construction parameters
+    while running; it is called to produce them.
     """
     # shut down other workflows to prevent them from interfering with the current one
     workflow.close_others()
     # start the layout
     layout = layout_type(layout_obj)
+    layout.params_provider = params_provider
     layout.start()
     if br_name is not None:
         # store the first button request to be sent

@@ -59,7 +59,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_RX_PACKET_LEN;
   MP_QSTR_Reboot;
   MP_QSTR_RebootToBootloader;
-  MP_QSTR_RefreshMenu;
   MP_QSTR_RemovePin;
   MP_QSTR_RemoveWipeCode;
   MP_QSTR_ReviewFailedBackup;
@@ -529,6 +528,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_n1w1__hold_next;
   MP_QSTR_n1w1__reading;
   MP_QSTR_n1w1__writing;
+  MP_QSTR_needs_params_refresh;
   MP_QSTR_next_timeout;
   MP_QSTR_notification;
   MP_QSTR_packet_in;
@@ -977,6 +977,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_type_for_name;
   MP_QSTR_type_for_wire;
   MP_QSTR_unpair;
+  MP_QSTR_update_params;
   MP_QSTR_usb_event;
   MP_QSTR_user_fee_change;
   MP_QSTR_value;
