@@ -34,7 +34,7 @@ static uint16_t nfc_compose_uri(const char* uri, uint8_t* buffer,
   const uint8_t uri_header[] = {0x03,    uri_len + 5, 0xD1, 0x01,
                                 uri_len, 0x55,        0x01};
 
-  if (buffer_size < (uri_len + sizeof(uri_header))) {
+  if (buffer_size < (uri_len + sizeof(uri_header) + 1)) {
     return 0;  // Not enough room to create URI
   }
 
@@ -44,7 +44,7 @@ static uint16_t nfc_compose_uri(const char* uri, uint8_t* buffer,
   buffer = buffer + uri_len;
   *buffer = 0xFE;
 
-  return uri_len + sizeof(uri_header);  // return buffer len
+  return uri_len + sizeof(uri_header) + 1;  // return buffer len
 }
 
 static void prodtest_nfc_read_card(cli_t* cli) {
