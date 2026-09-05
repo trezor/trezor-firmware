@@ -8,7 +8,7 @@ use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs,
 };
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
-use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
 use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -54,8 +54,9 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text_intro));
     let content_intro = Frame::with_header(
         Header::left_aligned(title).with_menu_button(),
-        SwipeContent::new(paragraphs),
+        SwipeContent::new(SwipePage::vertical(paragraphs)),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
@@ -75,8 +76,9 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     .into_paragraphs();
     let content_skip_intro = Frame::with_header(
         Header::left_aligned(TR::backup__title_skip.into()).with_cancel_button(),
-        SwipeContent::new(paragraphs_skip_intro),
+        SwipeContent::new(SwipePage::vertical(paragraphs_skip_intro)),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
     .with_swipe(Direction::Up, SwipeSettings::Default)
     .map_to_button_msg();

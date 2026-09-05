@@ -8,7 +8,7 @@ use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs,
 };
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
-use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
 use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -66,8 +66,9 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
     let content_intro = Frame::with_header(
         Header::left_aligned(title.into()).with_menu_button(),
-        SwipeContent::new(paragraphs),
+        SwipeContent::new(SwipePage::vertical(paragraphs)),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(None)
     .map_to_button_msg();
 
@@ -91,8 +92,9 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
     .into_paragraphs();
     let content_cancel_intro = Frame::with_header(
         Header::left_aligned(cancel.into()).with_cancel_button(),
-        SwipeContent::new(paragraphs_cancel_intro),
+        SwipeContent::new(SwipePage::vertical(paragraphs_cancel_intro)),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(Some(if is_wipe_code {
         TR::buttons__cancel.into()
     } else {

@@ -4,10 +4,11 @@ use crate::error::Error;
 use crate::strutil::{self, TString};
 use crate::ui::component::paginated::SinglePage;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
-use crate::ui::component::{Component, Event, EventCtx, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Pad, Paginate};
 use crate::ui::event::TouchEvent;
 use crate::ui::geometry::{Alignment, Grid, Insets, Offset, Rect};
 use crate::ui::shape::{self, Renderer};
+use crate::ui::util::assert_single_page;
 
 pub enum NumberInputDialogMsg {
     Changed(u16),
@@ -49,6 +50,9 @@ impl Component for NumberInputDialog {
         let input_area = input_area.inset(Insets::bottom(bot_padding));
 
         self.paragraphs.place(content_area);
+        // The dialog is single-page by design; fail loudly in ui_debug when
+        // the text does not fit.
+        assert_single_page(self.paragraphs.pager());
         self.paragraphs_pad.place(content_area);
         self.input.place(input_area);
         bounds

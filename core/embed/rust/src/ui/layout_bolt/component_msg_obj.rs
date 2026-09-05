@@ -16,7 +16,7 @@ use crate::ui::component::placed::GridPlaced;
 use crate::ui::component::text::paragraphs::{ParagraphSource, Paragraphs};
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::Timeout;
-use crate::ui::component::{Component, FormattedText, Never, Paginate};
+use crate::ui::component::{CheckSinglePage, Component, FormattedText, Never, Paginate};
 use crate::ui::layout::obj::ComponentMsgObj;
 use crate::ui::layout::result::{CANCELLED, CONFIRMED, INFO};
 
@@ -86,6 +86,15 @@ where
             FidoMsg::Confirmed(page) => Ok((page as u8).into()),
             FidoMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
+    }
+}
+
+impl<T> ComponentMsgObj for CheckSinglePage<T>
+where
+    T: ComponentMsgObj + Paginate,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        self.inner().msg_try_into_obj(msg)
     }
 }
 

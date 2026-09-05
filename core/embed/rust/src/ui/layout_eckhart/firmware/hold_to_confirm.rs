@@ -236,6 +236,7 @@ impl HoldToConfirmAnim {
             text.map(|text| {
                 shape::Text::new(text_pos, text, font)
                     .with_fg(self.color)
+                    .with_max_width(header_pad.width() - text_offset.x)
                     .render(target);
             });
         }

@@ -69,7 +69,9 @@ impl Component for ResultScreen<'_> {
             let bottom_area = Rect::new(
                 Point::new(0, FOOTER_AREA_START_2L),
                 Point::new(WIDTH, FOOTER_AREA_START_2L + h),
-            );
+            )
+            // Making sure the text does not go below the screen.
+            .clamp(bounds);
             self.message_bottom.place(bottom_area);
         } else {
             self.message_top.place(Rect::new(
@@ -80,7 +82,9 @@ impl Component for ResultScreen<'_> {
             let bottom_area = Rect::new(
                 Point::new(0, FOOTER_AREA_START),
                 Point::new(WIDTH, FOOTER_AREA_START + h),
-            );
+            )
+            // Making sure the text does not go below the screen.
+            .clamp(bounds);
             self.message_bottom.place(bottom_area);
         }
 

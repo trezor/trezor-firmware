@@ -396,6 +396,7 @@ impl BootloaderUI for UIBolt {
                 shape::Text::new(pos, text, fonts::FONT_NORMAL)
                     .with_align(Alignment::Center)
                     .with_fg(BLD_FG) //COLOR_BL_BG
+                    .with_max_width(SCREEN.width())
                     .render(target);
 
                 let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 25);

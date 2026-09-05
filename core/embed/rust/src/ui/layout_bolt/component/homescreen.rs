@@ -213,6 +213,7 @@ impl Component for Homescreen {
                 shape::Text::new(pos, t, style.text_font)
                     .with_align(Alignment::Center)
                     .with_fg(theme::FG)
+                    .with_max_width(r.width())
                     .render(target);
             });
 
@@ -247,6 +248,7 @@ impl Component for Homescreen {
 
                     shape::Text::new(text_pos, t, style.text_font)
                         .with_fg(style.text_color)
+                        .with_max_width(banner.width() - icon_width)
                         .render(target);
 
                     let icon_pos = Point::new(text_pos.x - icon_width, banner.center().y);
@@ -380,6 +382,7 @@ impl Component for Lockscreen<'_> {
 
                 shape::Text::new(text_pos, t, item.style.text_font)
                     .with_fg(item.style.text_color)
+                    .with_max_width(area.width() - icon_width)
                     .render(target);
 
                 if let Some(icon) = item.icon {

@@ -9,7 +9,7 @@ use crate::ui::display::toif::Icon;
 use crate::ui::display::Color;
 use crate::ui::geometry::{Alignment, Dimensions, Insets, LinearPlacement, Offset, Point, Rect};
 use crate::ui::shape::{self, Renderer};
-use crate::ui::util::Pager;
+use crate::ui::util::{assert_single_page, Pager};
 
 /// Used as an upper bound of number of different styles we may render on single
 /// page.
@@ -736,6 +736,9 @@ where
         self.area = bounds;
         let para_area = bounds.inset(Insets::left(self.check_width));
         self.paragraphs.place(para_area);
+        // Checklist is single-page by design; fail loudly in ui_debug when
+        // the items do not fit on one page.
+        assert_single_page(self.paragraphs.pager());
         self.area
     }
 

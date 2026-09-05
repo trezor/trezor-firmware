@@ -20,6 +20,9 @@ pub struct Text<'a> {
     align: Alignment,
     // Final bounds calculated when rendered
     bounds: Rect,
+    // Maximum width the text is allowed to occupy. When set and the text is
+    // wider, an overflow exception is raised in `ui_debug` builds.
+    max_width: Option<i16>,
 }
 
 impl<'a> Text<'a> {
@@ -34,6 +37,7 @@ impl<'a> Text<'a> {
             font,
             align: Alignment::Start,
             bounds: Rect::zero(),
+            max_width: None,
         }
     }
 
@@ -49,7 +53,31 @@ impl<'a> Text<'a> {
         Self { alpha, ..self }
     }
 
+    /// Sets the maximum width the text is allowed to occupy. If the rendered
+    /// text is wider, an overflow exception is raised in `ui_debug` builds
+    /// (in production builds the text is silently clipped at the screen edge
+    /// as before).
+    pub fn with_max_width(self, max_width: i16) -> Self {
+        Self {
+            max_width: Some(max_width),
+            ..self
+        }
+    }
+
     pub fn render<'r>(mut self, renderer: &mut impl Renderer<'r>) {
+        #[cfg(feature = "ui_debug")]
+        if let Some(max_width) = self.max_width {
+            // `text_width` includes the bearing of the first character, which
+            // is not drawn, so allow for that extra slack.
+            let first_bearing = self
+                .text
+                .chars()
+                .next()
+                .map_or(0, |c| self.font.start_x_bearing(&self.text[..c.len_utf8()]));
+            if self.font.text_width(self.text) - first_bearing > max_width {
+                renderer.raise_overflow_exception();
+            }
+        }
         self.bounds = self.calc_bounds();
         renderer.render_shape(self);
     }

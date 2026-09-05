@@ -16,7 +16,7 @@ use crate::ui::component::{
     Timeout,
 };
 use crate::ui::component::{Component, Never};
-use crate::ui::flow::Swipable;
+use crate::ui::flow::{Swipable, SwipePage};
 use crate::ui::layout::obj::ComponentMsgObj;
 use crate::ui::layout::result::{CANCELLED, CONFIRMED};
 
@@ -110,6 +110,12 @@ impl ComponentMsgObj for PromptScreen {
 }
 
 impl<T: Component + ComponentMsgObj> ComponentMsgObj for SwipeContent<T> {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        self.inner().msg_try_into_obj(msg)
+    }
+}
+
+impl<T: Component + ComponentMsgObj + Paginate> ComponentMsgObj for SwipePage<T> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         self.inner().msg_try_into_obj(msg)
     }

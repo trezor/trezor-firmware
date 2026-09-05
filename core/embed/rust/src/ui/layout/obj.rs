@@ -143,6 +143,8 @@ where
     fn paint(&mut self) -> Result<(), Error> {
         #[cfg(feature = "ui_debug")]
         let mut overflow: bool = false;
+        #[cfg(not(feature = "ui_debug"))]
+        let overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
             self.inner.render(target);
 
@@ -155,8 +157,11 @@ where
             }
         });
 
-        // TODO: raise here, so we also test older layouts
-        Ok(())
+        if overflow {
+            Err(Error::OutOfRange)
+        } else {
+            Ok(())
+        }
     }
 }
 

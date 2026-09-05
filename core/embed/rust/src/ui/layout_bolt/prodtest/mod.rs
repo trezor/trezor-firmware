@@ -47,6 +47,7 @@ impl ProdtestUI for UIBolt {
             shape::Text::new(screen().center(), text, fonts::FONT_BOLD_UPPER)
                 .with_fg(Color::white())
                 .with_align(Alignment::Center)
+                .with_max_width(screen().width())
                 .render(target);
         });
 
