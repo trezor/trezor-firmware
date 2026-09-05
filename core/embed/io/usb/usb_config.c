@@ -56,7 +56,7 @@ static secbool usb_device_init(void) {
       .usb21_enabled = sectrue,
       .usb21_landing = secfalse,
   };
-#elif defined(PRODTEST)
+#elif defined(TREZOR_PRODTEST)
   static const usb_dev_info_t dev_info_default = {
       .device_class = 0xEF,     // Composite Device Class
       .device_subclass = 0x02,  // Common Class
