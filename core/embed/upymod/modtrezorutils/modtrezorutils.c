@@ -33,7 +33,10 @@
 #if MICROPY_PY_TREZORUTILS
 
 #include "../trezorobj.h"
+
+#if MICROPY_PY_TREZORUTILS_MEMINFO
 #include "modtrezorutils-meminfo.h"
+#endif
 
 #include <io/notify.h>
 #include <io/usb.h>
@@ -447,7 +450,7 @@ static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_estimate_unused_stack_obj,
 #if MICROPY_OOM_CALLBACK
 static void gc_oom_callback(void) {
   gc_dump_info(&mp_plat_print);
-#if BLOCK_ON_VCP
+#if MICROPY_PY_TREZORUTILS_MEMINFO
   dump_meminfo_json(NULL);  // dump to stdout
 #endif
 }
@@ -782,6 +785,28 @@ static mp_obj_t mod_trezorutil_get_scm_revision(mp_obj_t xor2) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutil_get_scm_revision_obj,
                                  mod_trezorutil_get_scm_revision);
+
+#if MICROPY_PY_TREZORUTILS_MEMINFO
+/// def meminfo(filename: str | None) -> None:
+///     """
+///     Dumps map of micropython GC arena to a file.
+///     The JSON file can be decoded by analyze-memory-dump.py
+///     """
+static mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
+  FILE *out = NULL;
+  if (filename != mp_const_none) {
+    size_t fn_len = 0;
+    out = fopen(mp_obj_str_get_data(filename, &fn_len), "w");
+    if (out == NULL) {
+      mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("Cannot open file"));
+    }
+  }
+  dump_meminfo_json(out);
+  return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_meminfo_obj,
+                                 mod_trezorutils_meminfo);
+#endif
 
 static const mp_obj_str_t mod_trezorutils_model_name_obj = {
     {&mp_type_str}, 0, sizeof(MODEL_NAME) - 1, (const byte *)MODEL_NAME};
@@ -1121,7 +1146,9 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #error Unknown layout
 #endif
 #if !PYOPT
-    MEMINFO_DICT_ENTRIES
+#if MICROPY_PY_TREZORUTILS_MEMINFO
+    {MP_ROM_QSTR(MP_QSTR_meminfo), MP_ROM_PTR(&mod_trezorutils_meminfo_obj)},
+#endif
 #if DISABLE_ANIMATION
     {MP_ROM_QSTR(MP_QSTR_DISABLE_ANIMATION), mp_const_true},
 #else
