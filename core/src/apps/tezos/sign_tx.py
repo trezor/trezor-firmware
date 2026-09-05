@@ -207,6 +207,8 @@ def _get_operation_bytes(w: Writer, msg: TezosSignTx) -> None:
             raise DataError("Invalid tag in public key")
 
         write_bytes_fixed(w, reveal.public_key, 1 + public_key_size)
+        # Tezos from protocol Seoul to reveal tz1, tz2, and tz3 addresses, presence of the new optional field “proof” is needed which will be false here for tz1, tz2, and tz3 addresses
+        write_bool(w, False)
 
     # transaction operation
     if msg.transaction is not None:
