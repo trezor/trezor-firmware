@@ -828,12 +828,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
 #ifdef USE_NFC
-    case SYSCALL_NFC_INIT: {
-      args[0] = ts_code(nfc_init());
-    } break;
-    case SYSCALL_NFC_DEINIT: {
-      nfc_deinit();
-    } break;
     case SYSCALL_NFC_START_DISCOVERY: {
       args[0] = ts_code(nfc_start_discovery());
     } break;

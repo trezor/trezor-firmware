@@ -817,10 +817,6 @@ void nrf_reboot(void) { syscall_invoke0(SYSCALL_NRF_REBOOT); }
 
 #include <io/nfc.h>
 
-ts_t nfc_init(void) { return ts_make(syscall_invoke0(SYSCALL_NFC_INIT)); }
-
-void nfc_deinit(void) { syscall_invoke0(SYSCALL_NFC_DEINIT); }
-
 ts_t nfc_start_discovery(void) {
   return ts_make(syscall_invoke0(SYSCALL_NFC_START_DISCOVERY));
 }
