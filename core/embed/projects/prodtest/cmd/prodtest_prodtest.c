@@ -33,7 +33,7 @@
 
 #include "prodtest.h"
 
-#include <version.h>
+#include "../version.h"
 
 #define MEM_BUFFER_SIZE (4 * 1024)
 static uint8_t mem_buffer[MEM_BUFFER_SIZE];

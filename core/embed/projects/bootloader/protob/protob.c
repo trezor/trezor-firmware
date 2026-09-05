@@ -34,11 +34,11 @@
 #include <io/power_manager.h>
 #endif
 
+#include "../version.h"
 #include "memzero.h"
 #include "pb/messages.pb.h"
 #include "protob.h"
 #include "protob_common.h"
-#include "version.h"
 #include "wire/codec_v1.h"
 
 secbool send_user_abort(protob_io_t *iface, const char *msg) {

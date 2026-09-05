@@ -3,7 +3,9 @@ use color_eyre::eyre::WrapErr;
 
 use super::CLibrary;
 use crate::cargo_out;
-use crate::helpers::{derive_output_path, join_paths_lexically, links_name, path_from_env};
+use crate::helpers::{
+    cargo_profile_dir, derive_output_path, join_paths_lexically, links_name, path_from_env,
+};
 
 /// Path to the partial compile_commands.json fragment within OUT_DIR.
 const COMPILE_COMMANDS_FILE: &str = "compile_commands.json";
@@ -96,7 +98,7 @@ impl CLibrary {
 
         // Write merged compile_commands.json next to the final binary
         let name = links_name()?;
-        let target_path = out_dir.join(format!("../../../{name}.cc.json"));
+        let target_path = cargo_profile_dir()?.join(format!("{name}.cc.json"));
         std::fs::write(&target_path, serde_json::to_string_pretty(&all_entries)?)?;
 
         Ok(())

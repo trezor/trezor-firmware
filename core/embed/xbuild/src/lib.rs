@@ -17,8 +17,8 @@ pub use dep_tracking::{
     emit_command_output, needs_rebuild, run_command, run_command_to_file, run_if_changed,
 };
 pub use helpers::{
-    cargo_target_dir, derive_output_path, diagnostics_color_flag, emit_rerun_if_changed,
-    is_rust_analyzer, scm_revision, trace_enabled,
+    cargo_profile_dir, cargo_target_dir, derive_output_path, diagnostics_color_flag,
+    emit_rerun_if_changed, is_rust_analyzer, scm_revision, trace_enabled,
 };
 pub use input_files::InputFiles;
 pub use parallel::{optimal_parallel_job_count, run_parallel};
