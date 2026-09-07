@@ -42,10 +42,9 @@
 #include "rust_ui_bootloader.h"
 #include "workflow.h"
 
-static void send_error_conditionally(protob_io_t* iface, char* msg) {
+static void send_error_conditionally(protob_io_t* iface, const char* msg) {
   if (iface != NULL) {
-    send_msg_failure(iface, FailureType_Failure_ProcessError,
-                     "Could not read BLE status");
+    send_msg_failure(iface, FailureType_Failure_ProcessError, msg);
   }
 }
 
