@@ -1,4 +1,3 @@
-use heapless::String;
 use sys::time::Duration;
 
 use super::super::super::component::ButtonContent;
