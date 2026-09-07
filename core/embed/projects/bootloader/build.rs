@@ -61,7 +61,6 @@ fn main() -> Result<()> {
         // Merkle-tree path (fw_check_pq.c + wf_firmware_update_pq.c).
         // Exactly one; both provide `workflow_firmware_update`.
         if cfg!(feature = "pq_secure_boot") {
-            lib.add_define("PQ_SECURE_BOOT", Some("1"));
             lib.add_source("fw_check_pq.c");
             lib.add_source("workflow/wf_firmware_update_pq.c");
 

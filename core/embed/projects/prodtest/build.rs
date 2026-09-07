@@ -17,7 +17,6 @@ fn main() -> Result<()> {
             // variant. Emit the (single-entry) manifest that commits its code
             // directly, and stamp the prodtest variant. No per-module header and
             // no legacy vendor/image/secmon header.
-            lib.add_define("PQ_SECURE_BOOT", Some("1"));
             lib.add_source("manifest_header.S");
             lib.add_define("FW_VARIANT", Some("4")); // FW_VARIANT_PRODTEST
         } else {
