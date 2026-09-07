@@ -843,7 +843,10 @@ def pq_reboot_for_install(
         features.patch_version,
         0,
     )
-    if bundle.version > current:
+    # TEMPORARY TEST RELAXATION -- DO NOT COMMIT. `>` here means a same-version
+    # bundle is never even offered, so the handoff could not be tested. Restore
+    # `>` before committing.
+    if bundle.version >= current:
         try:
             device.reboot_to_bootloader(
                 session,

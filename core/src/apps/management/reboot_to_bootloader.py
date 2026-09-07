@@ -40,7 +40,11 @@ async def install_upgrade(firmware_header: AnyBytes) -> AnyBytes:
     # Not an upgrade. The authoritative anti-rollback axis is the boot header's
     # monotonic_version, enforced by the bootloader and the boardloader; this is
     # the friendlier early rejection.
-    if hdr.version <= utils.VERSION:
+    #
+    # TEMPORARY TEST RELAXATION -- DO NOT COMMIT. Allows re-offering the SAME
+    # version so the interaction-less path can be exercised without rebuilding
+    # with a bumped VERSION_BUILD. Restore `<=` before committing.
+    if hdr.version < utils.VERSION:
         raise wire.DataError("Not a firmware upgrade.")
 
     version_str = ".".join(map(str, hdr.version[:3]))

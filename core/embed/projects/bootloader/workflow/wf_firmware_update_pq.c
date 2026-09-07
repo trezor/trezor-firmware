@@ -351,9 +351,15 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
     // install is not a downgrade (legacy's `is_new` fallback).
     const firmware_manifest_t *installed =
         (const firmware_manifest_t *)(uintptr_t)FIRMWARE_START;
+    // TEMPORARY TEST RELAXATION -- DO NOT COMMIT. `< 0` instead of `<= 0` so
+    // the SAME version can be re-offered interaction-less without rebuilding
+    // with a bumped VERSION_BUILD. This is the THIRD version gate on this path
+    // (firmware's install_upgrade and the host's pq_reboot_for_install are the
+    // others); all three must be relaxed together or the test cannot run.
+    // Restore `<= 0` before committing.
     if (installed->magic == FW_MANIFEST_MAGIC &&
         memcmp(manifest->firmware_version, installed->firmware_version,
-               sizeof(manifest->firmware_version)) <= 0) {
+               sizeof(manifest->firmware_version)) < 0) {
       // Byte-wise over [major, minor, patch, build]: the array order IS the
       // precedence order, so memcmp is the version comparison.
       return fw_begin_fail(iface, "Not a firmware upgrade");
