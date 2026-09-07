@@ -2,7 +2,7 @@ header = "T3T2/boards/devkit.h"
 emulator_header = "T3T2/boards/unix.h"
 
 [display]
-driver = "io/display_st7789"
+driver = "io/display_i8080"
 panel = "io/display_panel_dem240320b1"
 
 [backlight]
