@@ -655,6 +655,7 @@ if TYPE_CHECKING:
         decred_staking_spend: "DecredStakingSpendType | None"
         script_pubkey: "AnyBytes | None"
         coinjoin_flags: "int"
+        unified_sighash: "bool"
 
         def __init__(
             self,
@@ -676,6 +677,7 @@ if TYPE_CHECKING:
             decred_staking_spend: "DecredStakingSpendType | None" = None,
             script_pubkey: "AnyBytes | None" = None,
             coinjoin_flags: "int | None" = None,
+            unified_sighash: "bool | None" = None,
         ) -> None:
             pass
 

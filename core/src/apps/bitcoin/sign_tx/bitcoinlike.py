@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
+
 from .. import writers
 from . import helpers
 from .bitcoin import Bitcoin
@@ -13,29 +15,6 @@ if TYPE_CHECKING:
 
 
 class Bitcoinlike(Bitcoin):
-    async def sign_nonsegwit_bip143_input(self, i_sign: int) -> None:
-        from trezor import wire
-
-        from .. import multisig
-        from ..common import NONSEGWIT_INPUT_SCRIPT_TYPES
-
-        txi = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
-        self.tx_info.check_input(txi)
-        self.approver.check_internal_input(txi)
-
-        if txi.script_type not in NONSEGWIT_INPUT_SCRIPT_TYPES:
-            raise wire.ProcessError("Transaction has changed during signing")
-        public_key, signature = self.sign_bip143_input(i_sign, txi)
-
-        # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
-        if txi.multisig:
-            multisig.multisig_pubkey_index(txi.multisig, public_key)
-
-        # serialize input with correct signature
-        if self.serialize:
-            self.write_tx_input_derived(self.serialized_tx, txi, public_key, signature)
-        self.set_serialized_signature(i_sign, signature)
-
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
         if self.coin.force_bip143:
             await self.sign_nonsegwit_bip143_input(i_sign)
@@ -52,6 +31,12 @@ class Bitcoinlike(Bitcoin):
         script_pubkey: bytes,
     ) -> bytes:
         if self.coin.force_bip143:
+            # Unreachable while the opt-in is gated to coins that do not force
+            # BIP-143, but this path would otherwise sign the legacy digest and
+            # stamp 0x21 on it, which fails open rather than closed. ensure()
+            # rather than assert, because mpy-cross runs at -O3 for release
+            # builds and MicroPython does not compile assertions at all there.
+            utils.ensure(not txi.unified_sighash)
             return tx_info.sig_hasher.hash143(
                 txi,
                 public_keys,

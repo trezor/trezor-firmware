@@ -319,6 +319,16 @@ def sign_tx(
             if hasattr(signtx, name):
                 setattr(signtx, name, value)
 
+    if any(i.unified_sighash for i in inputs) and (
+        messages.Capability.UnifiedSigHash not in session.features.capabilities
+    ):
+        # Firmware without the capability ignores the field and signs the legacy
+        # digest, which produces a transaction no node accepts and no error the
+        # caller can attribute. Refuse instead of failing open.
+        raise exceptions.TrezorException(
+            "Device does not support the unified opt-in signature hash."
+        )
+
     if unlock_path:
         session.call(
             messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac),

@@ -90,7 +90,9 @@ class TxWeightCalculator:
                 + multisig_script_size
             )
         elif script_type == IST.SPENDTAPROOT:
-            return 1 + _TXSIZE_SCHNORR_SIGNATURE
+            # A unified opt-in signature appends the hash type byte, BIP-341's
+            # SIGHASH_DEFAULT does not.
+            return 1 + _TXSIZE_SCHNORR_SIGNATURE + int(bool(i.unified_sighash))
         else:
             return 1 + _TXSIZE_DER_SIGNATURE + 1 + _TXSIZE_PUBKEY
 

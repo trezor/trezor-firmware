@@ -152,6 +152,8 @@ def get_features() -> Features:
                 ]
             )
 
+    f.capabilities.append(Capability.UnifiedSigHash)
+
     if utils.USE_HAPTIC:
         f.haptic_feedback = storage_device.get_haptic_feedback()
         f.capabilities.append(Capability.Haptic)

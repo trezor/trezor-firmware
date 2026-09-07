@@ -335,6 +335,9 @@ class BasicApprover(Approver):
 
         await super().approve_tx(tx_info, orig_txs, signer)
 
+        if tx_info.unified_sighash:
+            await helpers.confirm_unified_sighash()
+
         if self.has_unverified_external_input:
             await helpers.confirm_unverified_external_input()
 
@@ -515,6 +518,11 @@ class CoinJoinApprover(Approver):
         signer: Bitcoin | None,
     ) -> None:
         from ..authorization import FEE_RATE_DECIMALS
+
+        # A preauthorized CoinJoin runs without user interaction, so it must not
+        # be able to opt into a signature hash the user never saw.
+        if tx_info.unified_sighash:
+            raise DataError("Unified sighash not supported in CoinJoin.")
 
         await super().approve_tx(tx_info, orig_txs, signer)
 

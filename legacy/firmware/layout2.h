@@ -77,6 +77,7 @@ void layoutFeeOverThreshold(const CoinInfo *coin, AmountUnit amount_unit,
 void layoutFeeRateOverThreshold(const CoinInfo *coin, uint32_t fee_per_kvbyte);
 void layoutChangeCountOverThreshold(uint32_t change_count);
 void layoutConfirmUnverifiedExternalInputs(void);
+void layoutConfirmUnifiedSigHash(void);
 void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                                      bool lock_time_disabled);
 void layoutAuthorizeCoinJoin(const CoinInfo *coin, uint64_t max_rounds,

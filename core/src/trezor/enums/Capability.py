@@ -16,6 +16,7 @@ BLE = 22
 NFC = 23
 N1W1 = 25
 TouchWakeup = 26
+UnifiedSigHash = 29
 if not utils.BITCOIN_ONLY:
     Bitcoin_like = 2
     Binance = 3

@@ -47,6 +47,11 @@ class SigHashType(IntEnum):
     # Bitcoin-like altcoins for replay protection.
     SIGHASH_ALL_FORKID = 0x41
 
+    # SIGHASH_ALL opted into the unified signature hash, i.e. SIGHASH_UNIFIED
+    # (0x20) | SIGHASH_ALL (0x01). The only unified hash type we support: the
+    # other five commit to less than the user approved.
+    SIGHASH_ALL_UNIFIED = 0x21
+
     @classmethod
     def from_int(cls, sighash_type: int) -> "SigHashType":
         val: SigHashType
@@ -73,6 +78,14 @@ class ExternalInputType(IntEnum):
             return cls.HAS_OWNERSHIP_PROOF
         return cls.UNVERIFIED
 
+
+# Script type byte in the unified signature hash message. It provides domain
+# separation, so a signature made for one script type can never be valid for
+# another. Note that P2SH-wrapped SegWit is WITNESS_V0, not BARE, because the
+# byte follows the sigversion the input is signed under, not the outer script.
+UNIFIED_SCRIPT_TYPE_BARE = const(0)  # bare and P2SH
+UNIFIED_SCRIPT_TYPE_WITNESS_V0 = const(1)
+UNIFIED_SCRIPT_TYPE_TAPROOT = const(2)  # key path
 
 # The number of bip32 levels used in a wallet (chain and address)
 BIP32_WALLET_DEPTH = const(2)
@@ -198,6 +211,15 @@ def input_is_taproot(txi: TxInput) -> bool:
 
 def input_is_external(txi: TxInput) -> bool:
     return txi.script_type == InputScriptType.EXTERNAL
+
+
+def unified_script_type(txi: TxInput) -> int:
+    if input_is_taproot(txi):
+        return UNIFIED_SCRIPT_TYPE_TAPROOT
+    elif input_is_segwit(txi):
+        return UNIFIED_SCRIPT_TYPE_WITNESS_V0
+    else:
+        return UNIFIED_SCRIPT_TYPE_BARE
 
 
 def input_is_external_unverified(txi: TxInput) -> bool:

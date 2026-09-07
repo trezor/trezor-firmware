@@ -273,6 +273,7 @@ class Capability(IntEnum):
     N1W1 = 25
     TouchWakeup = 26
     Ethereum_EIP7702 = 28
+    UnifiedSigHash = 29
 
 
 class SdProtectOperationType(IntEnum):
@@ -1498,6 +1499,7 @@ class TxInput(protobuf.MessageType):
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False, default=None),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False, default=None),
         20: protobuf.Field("coinjoin_flags", "uint32", repeated=False, required=False, default=0),
+        21: protobuf.Field("unified_sighash", "bool", repeated=False, required=False, default=False),
     }
 
     def __init__(
@@ -1520,6 +1522,7 @@ class TxInput(protobuf.MessageType):
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
         coinjoin_flags: Optional["int"] = 0,
+        unified_sighash: Optional["bool"] = False,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1538,6 +1541,7 @@ class TxInput(protobuf.MessageType):
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
         self.coinjoin_flags = coinjoin_flags
+        self.unified_sighash = unified_sighash
 
 
 class TxOutput(protobuf.MessageType):
@@ -1989,6 +1993,7 @@ class TxInputType(protobuf.MessageType):
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False, default=None),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False, default=None),
         20: protobuf.Field("coinjoin_flags", "uint32", repeated=False, required=False, default=0),
+        21: protobuf.Field("unified_sighash", "bool", repeated=False, required=False, default=False),
     }
 
     def __init__(
@@ -2011,6 +2016,7 @@ class TxInputType(protobuf.MessageType):
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
         coinjoin_flags: Optional["int"] = 0,
+        unified_sighash: Optional["bool"] = False,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -2029,6 +2035,7 @@ class TxInputType(protobuf.MessageType):
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
         self.coinjoin_flags = coinjoin_flags
+        self.unified_sighash = unified_sighash
 
 
 class TxOutputBinType(protobuf.MessageType):

@@ -55,6 +55,7 @@ def write_tx_input_check(w: Writer, i: TxInput) -> None:
     write_bytes_prefixed(w, i.ownership_proof or b"")
     write_bytes_prefixed(w, i.orig_hash or b"")
     write_uint32(w, i.orig_index or 0)
+    write_uint8(w, int(bool(i.unified_sighash)))
     write_bytes_prefixed(w, i.script_pubkey or b"")
 
 

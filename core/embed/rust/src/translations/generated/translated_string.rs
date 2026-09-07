@@ -1685,6 +1685,7 @@ pub enum TranslatedString {
     words__undelegate = 1293,  // "Undelegate"
     buttons__review = 1294,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Review"}
     buttons__cancel_sign = 1295,  // "Cancel sign"
+    bitcoin__unified_sighash = 1296,  // "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules."
 }
 
 impl TranslatedString {
@@ -2988,6 +2989,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4289,6 +4291,7 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19216,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5589,6 +5592,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6890,6 +6894,7 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19216,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8190,6 +8195,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9491,6 +9497,7 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19216,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10791,6 +10798,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12092,6 +12100,7 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19216,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13393,6 +13402,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14694,6 +14704,7 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                17066,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15994,6 +16005,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17295,6 +17307,7 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                17066,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18595,6 +18608,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19896,6 +19910,7 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                17066,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21196,6 +21211,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22497,6 +22513,7 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                17066,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23798,6 +23815,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25099,6 +25117,7 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19165,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26399,6 +26418,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27700,6 +27720,7 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19165,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29000,6 +29021,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30301,6 +30323,7 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19165,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31601,6 +31624,7 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32902,6 +32926,7 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19165,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34203,6 +34228,7 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -35504,6 +35530,7 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20601,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36804,6 +36831,7 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38105,6 +38133,7 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20601,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39405,6 +39434,7 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -40706,6 +40736,7 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20601,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42006,6 +42037,7 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43307,6 +43339,7 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20601,
             ];
 
         }
@@ -43391,6 +43424,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_bitcoin__title_proof_of_ownership, Self::bitcoin__title_proof_of_ownership),
         (Qstr::MP_QSTR_bitcoin__title_purchase_ticket, Self::bitcoin__title_purchase_ticket),
         (Qstr::MP_QSTR_bitcoin__title_update_transaction, Self::bitcoin__title_update_transaction),
+        (Qstr::MP_QSTR_bitcoin__unified_sighash, Self::bitcoin__unified_sighash),
         (Qstr::MP_QSTR_bitcoin__unknown_path, Self::bitcoin__unknown_path),
         (Qstr::MP_QSTR_bitcoin__unknown_transaction, Self::bitcoin__unknown_transaction),
         (Qstr::MP_QSTR_bitcoin__unusually_high_fee, Self::bitcoin__unusually_high_fee),

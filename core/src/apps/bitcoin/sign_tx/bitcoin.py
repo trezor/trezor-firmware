@@ -47,6 +47,7 @@ class Bitcoin:
             len(self.external),
             len(self.segwit),
             len(self.presigned),
+            self.tx_info.legacy_digest_count,
             self.taproot_only,
             self.serialize,
             self.coin,
@@ -134,6 +135,9 @@ class Bitcoin:
         # set of indices of inputs which are presigned
         self.presigned: set[int] = set()
 
+        # set of indices of inputs which opt into the unified signature hash
+        self.unified: set[int] = set()
+
         # indicates whether all internal inputs are Taproot
         self.taproot_only = True
 
@@ -189,6 +193,9 @@ class Bitcoin:
 
             if input_is_segwit(txi):
                 self.segwit.add(i)
+
+            if txi.unified_sighash:
+                self.unified.add(i)
 
             if input_is_external(txi):
                 node = None
@@ -423,6 +430,17 @@ class Bitcoin:
         ):
             raise ProcessError("Original input does not match current input.")
 
+        # A replacement may add the opt-in, which is how a transaction signed
+        # before the fork gets replay protection, but it must not take it away.
+        # Dropping it would hand the host a pre-fork-valid signature over a
+        # transaction the user approved only in its unified form, and a
+        # replacement that changes nothing else is confirmed with the TXID
+        # screen alone.
+        if orig_txi.unified_sighash and not txi.unified_sighash:
+            raise ProcessError(
+                "Replacement transaction must not remove the unified signature hash."
+            )
+
         orig.add_input(orig_txi, script_pubkey)
         orig.index += 1
 
@@ -559,7 +577,9 @@ class Bitcoin:
         threshold: int,
         script_pubkey: AnyBytes,
     ) -> bytes:
-        if txi.witness:
+        if txi.unified_sighash:
+            return self.unified_digest(i, tx_info, txi, public_keys, threshold)
+        elif txi.witness:
             if common.input_is_taproot(txi):
                 return tx_info.sig_hasher.hash341(
                     i,
@@ -624,6 +644,31 @@ class Bitcoin:
 
         self.write_tx_input_derived(self.serialized_tx, txi, key_sign_pub, b"")
 
+    def unified_digest(
+        self,
+        i: int,
+        tx_info: TxInfo | OriginalTxInfo,
+        txi: TxInput,
+        public_keys: Sequence[AnyBytes],
+        threshold: int,
+    ) -> bytes:
+        # The script type and the scriptCode have to agree with each other, so
+        # they are derived together rather than at each call site.
+        script_type = common.unified_script_type(txi)
+        if script_type == common.UNIFIED_SCRIPT_TYPE_TAPROOT:
+            script_code = None
+        else:
+            script_code = scripts.bip143_script_code_prefixed(
+                txi, public_keys, threshold, self.coin
+            )
+        return tx_info.sig_hasher.hash_unified(
+            i,
+            tx_info.tx,
+            script_type,
+            script_code,
+            self.get_sighash_type(txi),
+        )
+
     def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, AnyBytes]:
         if self.taproot_only:
             # Prevents an attacker from bypassing prev tx checking by providing a different
@@ -640,27 +685,33 @@ class Bitcoin:
             public_keys = [public_key]
             threshold = 1
 
-        hash143_digest = self.tx_info.sig_hasher.hash143(
-            txi,
-            public_keys,
-            threshold,
-            self.tx_info.tx,
-            self.coin,
-            self.get_hash_type(txi),
-        )
+        if txi.unified_sighash:
+            digest = self.unified_digest(i, self.tx_info, txi, public_keys, threshold)
+        else:
+            digest = self.tx_info.sig_hasher.hash143(
+                txi,
+                public_keys,
+                threshold,
+                self.tx_info.tx,
+                self.coin,
+                self.get_hash_type(txi),
+            )
 
-        signature = ecdsa_sign(node, hash143_digest)
+        signature = ecdsa_sign(node, digest)
 
         return public_key, signature
 
     def sign_taproot_input(self, i: int, txi: TxInput) -> bytes:
         from ..common import bip340_sign
 
-        sigmsg_digest = self.tx_info.sig_hasher.hash341(
-            i,
-            self.tx_info.tx,
-            self.get_sighash_type(txi),
-        )
+        if txi.unified_sighash:
+            sigmsg_digest = self.unified_digest(i, self.tx_info, txi, (), 0)
+        else:
+            sigmsg_digest = self.tx_info.sig_hasher.hash341(
+                i,
+                self.tx_info.tx,
+                self.get_sighash_type(txi),
+            )
 
         node = self.keychain.derive(txi.address_n)
         return bip340_sign(node, sigmsg_digest)
@@ -669,6 +720,7 @@ class Bitcoin:
         # STAGE_REQUEST_SEGWIT_WITNESS in legacy
         txi = await request_tx_input(self.tx_req, i, self.coin)
         self.tx_info.check_input(txi)
+        self.check_unified_sighash(i, txi)
         self.approver.check_internal_input(txi)
         if txi.script_type not in common.SEGWIT_INPUT_SCRIPT_TYPES:
             raise ProcessError("Transaction has changed during signing")
@@ -781,11 +833,47 @@ class Bitcoin:
         tx_digest = writers.get_tx_hash(h_sign, coin.sign_hash_double)
         return tx_digest, txi_sign, node
 
+    def check_unified_sighash(self, i: int, txi: TxInput) -> None:
+        # The opt-in decides which signing algorithm is used and was shown to
+        # the user at approval time, so the input streamed for signing has to
+        # carry the same value as the one streamed in Step 1. Both algorithms
+        # produce a valid signature, so nothing else would catch a host that
+        # asks for the opt-in, gets it approved, and then quietly drops it.
+        if bool(txi.unified_sighash) != (i in self.unified):
+            raise ProcessError("Transaction has changed during signing")
+
+    async def sign_nonsegwit_bip143_input(self, i_sign: int) -> None:
+        # Signs a non-SegWit input from a digest taken over the cached
+        # per-transaction sub-hashes, rather than by re-streaming the whole
+        # transaction as the legacy algorithm requires. Used by the unified
+        # opt-in signature hash and by coins which force BIP-143.
+        txi = await request_tx_input(self.tx_req, i_sign, self.coin)
+        self.tx_info.check_input(txi)
+        self.check_unified_sighash(i_sign, txi)
+        self.approver.check_internal_input(txi)
+
+        if txi.script_type not in common.NONSEGWIT_INPUT_SCRIPT_TYPES:
+            raise ProcessError("Transaction has changed during signing")
+        public_key, signature = self.sign_bip143_input(i_sign, txi)
+
+        # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
+        if txi.multisig:
+            multisig.multisig_pubkey_index(txi.multisig, public_key)
+
+        # serialize input with correct signature
+        if self.serialize:
+            self.write_tx_input_derived(self.serialized_tx, txi, public_key, signature)
+        self.set_serialized_signature(i_sign, signature)
+
     async def sign_nonsegwit_input(self, i: int) -> None:
         if self.taproot_only:
             # Prevents an attacker from bypassing prev tx checking by providing a different
             # script type than the one that was provided during the confirmation phase.
             raise ProcessError("Transaction has changed during signing")
+
+        if i in self.unified:
+            await self.sign_nonsegwit_bip143_input(i)
+            return
 
         tx_digest, txi, node = await self.get_legacy_tx_digest(i, self.tx_info)
         assert node is not None
@@ -865,7 +953,9 @@ class Bitcoin:
 
     def get_hash_type(self, txi: TxInput) -> int:
         # The nHashType in BIP 143.
-        if common.input_is_taproot(txi):
+        if txi.unified_sighash:
+            return SigHashType.SIGHASH_ALL_UNIFIED
+        elif common.input_is_taproot(txi):
             return SigHashType.SIGHASH_ALL_TAPROOT
         else:
             return SigHashType.SIGHASH_ALL

@@ -748,6 +748,13 @@ void layoutConfirmUnverifiedExternalInputs(void) {
                     _("Continue?"), NULL);
 }
 
+void layoutConfirmUnifiedSigHash(void) {
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Warning!"), _("This transaction"), _("uses the UNIFIED"),
+                    _("sighash and is not"), _("valid under the"),
+                    _("pre-fork rules."));
+}
+
 void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                                      bool lock_time_disabled) {
   if (lock_time_disabled) {

@@ -43,6 +43,15 @@ if TYPE_CHECKING:
             sighash_type: SigHashType,
         ) -> bytes: ...
 
+        def hash_unified(
+            self,
+            i: int,
+            tx: SignTx | PrevTx,
+            script_type: int,
+            script_code: AnyBytes | None,
+            sighash_type: SigHashType,
+        ) -> bytes: ...
+
         def hash_zip244(
             self,
             txi: TxInput | None,
@@ -170,6 +179,75 @@ class BitcoinSigHasher:
 
         # input_index
         write_uint32(h_sigmsg, i)
+
+        return h_sigmsg.get_digest()
+
+    def hash_unified(
+        self,
+        i: int,
+        tx: SignTx | PrevTx,
+        script_type: int,
+        script_code: AnyBytes | None,
+        sighash_type: SigHashType,
+    ) -> bytes:
+        """Unified opt-in signature hash, one message shared by every script type.
+
+        See doc/unified-sighash.md in Bitcoin Knots. Laid out in the same order as
+        the specification, so the two can be read side by side. Only
+        SIGHASH_ALL_UNIFIED is implemented; the branches the other five hash types
+        would take are absent rather than unreachable.
+
+        script_code is the compact-size prefixed scriptCode for script types BARE
+        and WITNESS_V0, and None for TAPROOT.
+        """
+        from trezor.utils import ensure
+
+        from ..common import UNIFIED_SCRIPT_TYPE_TAPROOT, SigHashType, tagged_hashwriter
+        from ..writers import write_bytes_unchecked, write_uint8
+
+        ensure(sighash_type == SigHashType.SIGHASH_ALL_UNIFIED)
+
+        h_sigmsg = tagged_hashwriter(b"UnifiedSighash")
+
+        # sighash epoch 0
+        write_uint8(h_sigmsg, 0)
+
+        # nHashType. One byte, as the signature carries it: consensus reads the hash
+        # type from the last byte of the signature.
+        write_uint8(h_sigmsg, sighash_type)
+
+        # nVersion
+        write_uint32(h_sigmsg, tx.version)
+
+        # nLockTime, committed to as five bytes rather than the four it occupies in
+        # a transaction. Four run out in 2106, and widening the field later would
+        # invalidate every signature made under this message. The fifth byte is zero.
+        write_uint32(h_sigmsg, tx.lock_time)
+        write_uint8(h_sigmsg, 0)
+
+        # sha_prevouts, sha_amounts, sha_scripts, sha_sequences. Single SHA-256,
+        # unlike the double-SHA-256 digests hash143() takes from the same writers.
+        write_bytes_fixed(h_sigmsg, self.h_prevouts.get_digest(), TX_HASH_SIZE)
+        write_bytes_fixed(h_sigmsg, self.h_amounts.get_digest(), TX_HASH_SIZE)
+        write_bytes_fixed(h_sigmsg, self.h_scriptpubkeys.get_digest(), TX_HASH_SIZE)
+        write_bytes_fixed(h_sigmsg, self.h_sequences.get_digest(), TX_HASH_SIZE)
+
+        # sha_outputs, present because the hash type is SIGHASH_ALL
+        write_bytes_fixed(h_sigmsg, self.h_outputs.get_digest(), TX_HASH_SIZE)
+
+        # script type, where BIP-341 writes its spend type
+        write_uint8(h_sigmsg, script_type)
+
+        # input_index, since SIGHASH_ANYONECANPAY is not set
+        write_uint32(h_sigmsg, i)
+
+        if script_type == UNIFIED_SCRIPT_TYPE_TAPROOT:
+            assert script_code is None
+            # annex absent
+            write_uint8(h_sigmsg, 0)
+        else:
+            assert script_code is not None
+            write_bytes_unchecked(h_sigmsg, script_code)
 
         return h_sigmsg.get_digest()
 

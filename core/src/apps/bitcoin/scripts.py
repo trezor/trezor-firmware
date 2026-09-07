@@ -152,6 +152,25 @@ def write_bip143_script_code_prefixed(
         raise DataError("Unknown input script type for bip143 script code")
 
 
+def bip143_script_code_prefixed(
+    txi: TxInput,
+    public_keys: Sequence[AnyBytes],
+    threshold: int,
+    coin: CoinInfo,
+) -> bytearray:
+    if len(public_keys) > 1:
+        # write_output_script_multisig() enforces this too, but only after we
+        # would have sized an allocation from an unvalidated n.
+        if len(public_keys) > 15:
+            raise DataError("Invalid multisig parameters")
+        length = output_script_multisig_length(public_keys, threshold)
+    else:
+        length = 25  # P2PKH
+    w = empty_bytearray(3 + length)  # 3 bytes is the longest compact size we can emit
+    write_bip143_script_code_prefixed(w, txi, public_keys, threshold, coin)
+    return w
+
+
 # P2PKH, P2SH
 # ===
 # https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki

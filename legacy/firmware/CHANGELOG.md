@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## Unreleased
+
+### Added
+- Bitcoin: support the unified opt-in signature hash, selected per input with `TxInput.unified_sighash`.
+
 ## 1.14.1 [18th March 2026]
 
 ### Changed

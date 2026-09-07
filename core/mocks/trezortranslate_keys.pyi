@@ -77,6 +77,7 @@ class TR:
     bitcoin__title_proof_of_ownership: str = "Proof of ownership"
     bitcoin__title_purchase_ticket: str = "Purchase ticket"
     bitcoin__title_update_transaction: str = "Update transaction"
+    bitcoin__unified_sighash: str = "This transaction uses the UNIFIED sighash and is not valid under the pre-fork rules."
     bitcoin__unknown_path: str = "Unknown path"
     bitcoin__unknown_transaction: str = "Unknown transaction"
     bitcoin__unusually_high_fee: str = "Unusually high fee."
