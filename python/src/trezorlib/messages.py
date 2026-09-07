@@ -233,6 +233,11 @@ class RecoveryType(IntEnum):
     UnlockRepeatedBackup = 2
 
 
+class FirmwareScheme(IntEnum):
+    Legacy = 0
+    PqSecure = 1
+
+
 class BackupAvailability(IntEnum):
     NotAvailable = 0
     Required = 1
@@ -3413,6 +3418,7 @@ class Features(protobuf.MessageType):
         60: protobuf.Field("wireless_connected", "bool", repeated=False, required=False, default=None),
         63: protobuf.Field("tap_to_wake", "bool", repeated=False, required=False, default=None),
         64: protobuf.Field("max_passphrase_len", "uint32", repeated=False, required=False, default=50),
+        65: protobuf.Field("firmware_scheme", "FirmwareScheme", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3480,6 +3486,7 @@ class Features(protobuf.MessageType):
         wireless_connected: Optional["bool"] = None,
         tap_to_wake: Optional["bool"] = None,
         max_passphrase_len: Optional["int"] = 50,
+        firmware_scheme: Optional["FirmwareScheme"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3543,6 +3550,7 @@ class Features(protobuf.MessageType):
         self.wireless_connected = wireless_connected
         self.tap_to_wake = tap_to_wake
         self.max_passphrase_len = max_passphrase_len
+        self.firmware_scheme = firmware_scheme
 
 
 class LockDevice(protobuf.MessageType):

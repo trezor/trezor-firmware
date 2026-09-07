@@ -864,6 +864,9 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware supports BLE."""
 /// USE_NFC: bool
 /// """Whether the hardware supports NFC."""
+/// USE_PQ_SECURE_BOOT: bool
+/// """Whether this build uses the Merkle-tree (pq_secure_boot) image layout,
+/// rather than the legacy vendor + image headers."""
 /// USE_SD_CARD: bool
 /// """Whether the hardware supports SD card."""
 /// USE_SERIAL_NUMBER: bool
@@ -1065,6 +1068,11 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_NFC), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_NFC), mp_const_false},
+#endif
+#ifdef PQ_SECURE_BOOT
+    {MP_ROM_QSTR(MP_QSTR_USE_PQ_SECURE_BOOT), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_PQ_SECURE_BOOT), mp_const_false},
 #endif
 #ifdef USE_BACKLIGHT
     {MP_ROM_QSTR(MP_QSTR_USE_BACKLIGHT), mp_const_true},

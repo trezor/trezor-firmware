@@ -33,6 +33,7 @@ from trezorutils import (  # noqa: F401
     USE_NRF,
     USE_OPTIGA,
     USE_POWER_MANAGER,
+    USE_PQ_SECURE_BOOT,
     USE_RGB_LED,
     USE_SD_CARD,
     USE_SERIAL_NUMBER,

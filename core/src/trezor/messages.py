@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from trezor.enums import EthereumERC7730ContainerPath  # noqa: F401
     from trezor.enums import EthereumERC7730FieldFormatterType  # noqa: F401
     from trezor.enums import FailureType  # noqa: F401
+    from trezor.enums import FirmwareScheme  # noqa: F401
     from trezor.enums import HomescreenFormat  # noqa: F401
     from trezor.enums import InputScriptType  # noqa: F401
     from trezor.enums import MessageType  # noqa: F401
@@ -2107,6 +2108,7 @@ if TYPE_CHECKING:
         wireless_connected: "bool | None"
         tap_to_wake: "bool | None"
         max_passphrase_len: "int"
+        firmware_scheme: "FirmwareScheme | None"
 
         def __init__(
             self,
@@ -2172,6 +2174,7 @@ if TYPE_CHECKING:
             wireless_connected: "bool | None" = None,
             tap_to_wake: "bool | None" = None,
             max_passphrase_len: "int | None" = None,
+            firmware_scheme: "FirmwareScheme | None" = None,
         ) -> None:
             pass
 

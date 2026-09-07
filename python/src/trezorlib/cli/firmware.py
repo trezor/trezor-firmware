@@ -149,6 +149,45 @@ def pq_pick_variant(
     return PQ_VARIANT_BITCOIN_ONLY if bitcoin_only else PQ_VARIANT_UNIVERSAL
 
 
+def check_scheme_match(features: messages.Features, wants_pq: bool, what: str) -> None:
+    """Refuse an incompatible release before touching the device.
+
+    `Features.firmware_scheme` describes the binary that answered -- the
+    bootloader in bootloader mode, the firmware in firmware mode -- which is
+    exactly the one that has to consume what we are about to send.
+
+    This is an OPTIMISATION, not a gate. Both directions already fail safe on
+    the device (a legacy bootloader rejects FirmwareBegin as unknown; a
+    pq_secure bootloader demands FirmwareBegin before a bare FirmwareErase; and
+    firmware refuses a preamble of the wrong layout), so all this adds is a
+    clear message instead of a confusing one, before anything is written.
+
+    Which is why an ABSENT field means "no information", NOT "legacy":
+    pq_secure builds predating the field exist -- every unit flashed before it
+    landed -- and assuming legacy would refuse a release the device can install
+    perfectly well. With nothing to go on, defer to the device exactly as
+    happened before the field existed.
+    """
+    scheme = features.firmware_scheme
+    if scheme is None:
+        return
+    if (scheme == messages.FirmwareScheme.PqSecure) == wants_pq:
+        return
+
+    where = "bootloader" if features.bootloader_mode else "firmware"
+    if wants_pq:
+        click.echo(
+            f"This is a pq_secure {what}, but the {where} on your device uses "
+            "the legacy image layout and cannot install it."
+        )
+    else:
+        click.echo(
+            f"This is a legacy {what}, but the {where} on your device uses the "
+            "pq_secure (Merkle-tree) layout and needs a release bundle."
+        )
+    sys.exit(3)
+
+
 def read_pq_bundle(
     raw: bytes,
     variant: Optional[str],
@@ -768,6 +807,7 @@ def update_pq(
         if bundle is None:
             click.echo("Not a firmware bundle.")
             sys.exit(2)
+        check_scheme_match(client.features, wants_pq=True, what="release")
         if not skip_check:
             validate_pq_bundle(bundle, fingerprint, client.model)
         if dry_run:
@@ -1044,6 +1084,12 @@ def update(
                     fingerprint = fp
 
             firmware_data = download_firmware_data(url)
+
+        # The mirror of the bundle check: a legacy image on a pq_secure device
+        # cannot be installed either, and saying so here beats the device
+        # refusing a bare FirmwareErase after a reboot.
+        if not raw:
+            check_scheme_match(client.features, wants_pq=False, what="firmware image")
 
         if not raw and not skip_check:
             validate_firmware(

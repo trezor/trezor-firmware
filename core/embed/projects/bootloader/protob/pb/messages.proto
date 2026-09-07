@@ -81,6 +81,15 @@ message Features {
     optional bool firmware_corrupted = 56;  // is firmware corrupted?
     optional bool usb_connected = 59;       // USB connected
     optional bool wireless_connected = 60;  // Wireless charger connected
+    // Which kind of release THIS bootloader can install. Mirrors
+    // Features.firmware_scheme in common/protob/messages-management.proto,
+    // including the field number -- the host parses one Features either way.
+    optional FirmwareScheme firmware_scheme = 65;
+}
+
+enum FirmwareScheme {
+    FirmwareScheme_Legacy = 0;    // vendor header + image header
+    FirmwareScheme_PqSecure = 1;  // Merkle-tree (pq_secure_boot)
 }
 
 /**
