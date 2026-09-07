@@ -166,7 +166,7 @@ def main() -> None:
     ap.add_argument(
         "--bundle",
         type=Path,
-        help="a build_firmware_pq bundle -- either the output DIR or the "
+        help="an `xtask release` bundle -- either the output DIR or the "
         "portable .zip; with --variant, resolves "
         "--bootloader/--firmware from it",
     )

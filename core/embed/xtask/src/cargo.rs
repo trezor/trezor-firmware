@@ -171,7 +171,8 @@ fn build_impl(args: ResolvedBuildArgs, is_dependency: bool) -> Result<()> {
         // magic/variant/module_type/addr/size + a default chunk_size, code_hash
         // left zero). A raw `xtask build firmware` therefore yields an unfilled
         // template (not bootable on its own -- its leaf must fold into the
-        // bootloader's signed firmware_root); build_firmware_pq (build -> sign)
+        // bootloader's signed firmware_root); `xtask build firmware` / `xtask
+        // release` (build -> sign)
         // produces the filled, dev-signed bundle.
 
         if args.project == Project::Firmware {

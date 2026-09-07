@@ -478,7 +478,7 @@ class PqSecureBundle:
 
     @classmethod
     def load(cls, src: BundleSource, variant: str | None = None) -> PqSecureBundle:
-        """Load from a ``build_firmware_pq`` bundle.
+        """Load from an ``xtask release`` bundle.
 
         Accepts the bundle directory, the path to its zip, or an already-open
         binary stream of that zip -- the CLI has the bytes in hand and should not

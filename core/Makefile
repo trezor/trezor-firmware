@@ -59,19 +59,14 @@ RANDOM=$(shell python -c 'import random; print(random.randint(0, 1000000))')
 
 # Please only add options used by CI, otherwise just run xtask directly.
 XTASK_BUILD_OPTS += --model $(TREZOR_MODEL)
-# `xtask release` takes --model itself, so it needs the option flags without it.
-XTASK_RELEASE_OPTS =
 ifeq ($(ADDRESS_SANITIZER),1)
 XTASK_BUILD_OPTS += --asan
-XTASK_RELEASE_OPTS += --asan
 endif
 ifeq ($(BITCOIN_ONLY),1)
 XTASK_BUILD_OPTS += --btc-only
-XTASK_RELEASE_OPTS += --btc-only
 endif
 ifeq ($(BOOTLOADER_DEVEL),1)
 XTASK_BUILD_OPTS += --bootloader-devel
-XTASK_RELEASE_OPTS += --bootloader-devel
 endif
 ifeq ($(N1W1),1)
 XTASK_BUILD_OPTS += --n1w1
@@ -288,64 +283,16 @@ build_secmon: ## build security monitor image
 build_firmware: ## build firmware with frozen modules
 	xtask build firmware $(XTASK_BUILD_OPTS)
 
-build_pq: ## build + sign a multi-variant pq_secure release
-	# Builds EVERY variant (universal, btc-only, custom, prodtest), folds the
-	# founder firmware_root over them into the committed bootloader's header,
-	# re-signs it, bakes each variant's proof into its own image, and writes
-	# build-xtask/tree/$(TREZOR_MODEL){,.zip}.
-	#
-	#   make build_pq BOOTLOADER_DEVEL=1
-	#
-	# Omitting --model releases every tree model at once; this target always
-	# names one. For a single variant -- the usual dev loop -- skip this target
-	# and build directly, since the variant rides the ordinary build flags:
-	#   xtask build firmware -m $(TREZOR_MODEL) --bootloader-devel
-	#   xtask build firmware -m $(TREZOR_MODEL) --bootloader-devel --btc-only
-	#   xtask build prodtest -m $(TREZOR_MODEL) --bootloader-devel
-	#
-	# Extra xtask build options (e.g. --dbg-console swo) via TREE_OPTS.
-	xtask release --model $(TREZOR_MODEL) $(XTASK_RELEASE_OPTS) $(TREE_OPTS)
-
-upload_pq: ## OTA-upload a variant from the build_pq bundle using trezorctl
-	# Uploads VARIANT (default: universal) from build-xtask/tree/$(TREZOR_MODEL).zip
-	# to a connected device. Works from either firmware mode (the release is
-	# confirmed in the firmware UI and installed without asking again) or
-	# bootloader mode. Official-vs-custom is AUTO-DETECTED from the image, so a
-	# custom/--unsafe-fw bundle installs as custom with no flag. Extra flags via
-	# UPLOAD_OPTS, e.g.
-	#   make upload_pq VARIANT=prodtest
-	#   make upload_pq VARIANT=universal UPLOAD_OPTS="--skip-check"
-	#
-	# `make upload` reaches the same device by the same route (xtask upload now
-	# installs the RELEASE on a tree model, not the per-project artifact, which
-	# is only a manifest template there). This target stays because it forwards
-	# UPLOAD_OPTS, which xtask does not.
-	#
-	# Unlike `make upload`, no -s: verifying the bundle offline (signature, every
-	# variant's fold, code hashes) before touching the device is most of the
-	# point of having it in one file.
-	trezorctl firmware update -f build-xtask/tree/$(TREZOR_MODEL).zip \
-		--variant $(VARIANT) $(UPLOAD_OPTS)
-
 upload_pq_test: ## [test] drive the PQ OTA harness, incl. --tamper fault injection
-	# The same two-phase install as `upload_pq`, but through the test harness so
-	# a fault can be injected to exercise one specific device rejection. Kept
-	# separate because trezorctl deliberately cannot do this: fault injection
-	# must not ship in a library. e.g.
+	# The same two-phase install `make upload` performs, but through the test
+	# harness so a fault can be injected to exercise one specific device
+	# rejection. Separate because trezorctl deliberately cannot do this: fault
+	# injection must not ship in a library. Build a release first
+	# (`xtask release -m $(TREZOR_MODEL) --bootloader-devel`), then e.g.
 	#   make upload_pq_test UPLOAD_OPTS="--tamper consent-mismatch"
 	#   make upload_pq_test VARIANT=custom UPLOAD_OPTS="--tamper custom-app-size"
 	python tools/trezor_core_tools/firmware_pq_update.py \
 		--bundle build-xtask/tree/$(TREZOR_MODEL).zip --variant $(VARIANT) $(UPLOAD_OPTS)
-
-sign_pq: ## [prototype] fold firmware_root into the bootloader header and sign it
-	# firmware_pq_sign.py fills each module's manifest code_hash over the placed
-	# code (the build emits a zero-code_hash template -- fill-at-sign), computes
-	# the firmware_root, and folds it into the (re-signed) bootloader header.
-	python tools/trezor_core_tools/firmware_pq_sign.py \
-		--firmware $(BUILD_DIR)/firmware.bin \
-		--bootloader $(BUILD_DIR)/bootloader.bin \
-		--manifest-out $(BUILD_DIR)/firmware_tree.json \
-		--vector-out $(BUILD_DIR)/firmware_tree.vec
 
 build_unix: ## build unix port
 	xtask build firmware --emulator $(XTASK_BUILD_OPTS) --pyopt=false
