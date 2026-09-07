@@ -267,7 +267,7 @@ async def confirm_unsupported_instruction_details(
             await confirm_properties(
                 "accounts",
                 title,
-                maybe_with_colon(accounts),
+                list(maybe_with_colon(accounts)),
             )
 
 
