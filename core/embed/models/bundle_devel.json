@@ -1,0 +1,61 @@
+{
+  "models": {
+    "T3W1": {
+      "bootloader_signed_root": "c124c9cdcb3aac6b5b39ce9edbbf70fa3f940f0d252d53a6eacf8afe050a1dd4",
+      "firmware_root": "de61e2ddb5c90bb114b4e615f2f117191ce2c3dd504a529ef32433b64fd95629",
+      "firmware_type_offset": 16380,
+      "nrf": {
+        "co_path": [
+          "7ce230de7ea88535b7b05b0edf079883881a18b0a15537e1bd851861930103f0",
+          "e67675959f66ed931033d3b395a3913b83fce188b2951cf8d7040fbd7c29c72d",
+          "84e020333769de86c5affce429efdeb9a6e1727ff21e27ac1f2c6b8f0f9cc170",
+          "e2e5f780386cec7532cb4a83084bee17d1801801adfaad61b94506491f1b3583"
+        ],
+        "image": "trezor-ble-dev.bin",
+        "image_hash": "50a73900a8b474b0dfd48fdc72dc4874a100613cdb2684e72e919c43fb9b1182",
+        "length": 271312,
+        "model_id": "T3W1",
+        "model_root": "c124c9cdcb3aac6b5b39ce9edbbf70fa3f940f0d252d53a6eacf8afe050a1dd4"
+      },
+      "variants": [
+        {
+          "firmware": "universal.bin",
+          "firmware_type": 2,
+          "leaf": "f63b4fd803881a8da01a079bf9ac6b5f2cae537c55044a615993805a6dc04e2e",
+          "proof": [
+            "d481dd9e9cb34d11082da54de8789c84ea0330739e37d3b7fb160711bf1b132b",
+            "b4071c7a38897622a1f98774ce6d81da87e56d0319441767716dd84fd024dc7e"
+          ]
+        },
+        {
+          "firmware": "btc-only.bin",
+          "firmware_type": 3,
+          "leaf": "603a727f1db649c3421c670cba1625aca0b73845b56297ca955df7ce8adfe8ba",
+          "proof": [
+            "2de367b133e7c318e8fa9ca94bff8d520447ccc3b27eb3cf479944b1a9bee958",
+            "785d3b6814a48546a37c5e12433d9094df7d3cc50e9e269156bec2ad7be00978"
+          ]
+        },
+        {
+          "authenticity_manifest": "54525a44010000000000000000000000000000000000000000000000000000000000000000000000000000000200000001000000010000000004000000200000007c0200b35b3b17afa844557d4994d1f2352622529cca17fab7a77409bae0347f62c5f602000000000000000080020000200000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "firmware": "custom.bin",
+          "firmware_type": 1,
+          "leaf": "d481dd9e9cb34d11082da54de8789c84ea0330739e37d3b7fb160711bf1b132b",
+          "proof": [
+            "f63b4fd803881a8da01a079bf9ac6b5f2cae537c55044a615993805a6dc04e2e",
+            "b4071c7a38897622a1f98774ce6d81da87e56d0319441767716dd84fd024dc7e"
+          ]
+        },
+        {
+          "firmware": "prodtest.bin",
+          "firmware_type": 4,
+          "leaf": "2de367b133e7c318e8fa9ca94bff8d520447ccc3b27eb3cf479944b1a9bee958",
+          "proof": [
+            "603a727f1db649c3421c670cba1625aca0b73845b56297ca955df7ce8adfe8ba",
+            "785d3b6814a48546a37c5e12433d9094df7d3cc50e9e269156bec2ad7be00978"
+          ]
+        }
+      ]
+    }
+  }
+}
