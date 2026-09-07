@@ -335,11 +335,13 @@ class TokenAmountFormatter(FieldFormatter):
         const_token_address: bytes | None = None,
         native_currency_address: list[bytes] | None = None,
         threshold: int | None = None,
+        threshold_message: str | None = None,
     ) -> None:
         self.token_path = token_path
         self.const_token_address = const_token_address
         self.native_currency_address = native_currency_address
         self.threshold = threshold
+        self.threshold_message = threshold_message
 
     async def format(
         self,
@@ -369,10 +371,15 @@ class TokenAmountFormatter(FieldFormatter):
         else:
             raise InvalidFormatDefinition
 
+        # TODO: Dead code. We don't pull this externally but we need to.
         if self.native_currency_address is not None:
             if token_address in self.native_currency_address:
                 if self.threshold is not None and amount > self.threshold:
-                    return AboveThreshold(TR.words__unlimited), None, None
+                    return (
+                        AboveThreshold(self.threshold_message or TR.words__unlimited),
+                        None,
+                        None,
+                    )
                 else:
                     return (
                         format_ethereum_amount(amount, None, defs.network),
@@ -392,7 +399,11 @@ class TokenAmountFormatter(FieldFormatter):
                     token = received_definitions.get_token(token_address)
 
         if self.threshold is not None and amount > self.threshold:
-            return AboveThreshold(TR.words__unlimited), token, token_address
+            return (
+                AboveThreshold(self.threshold_message or TR.words__unlimited),
+                token,
+                token_address,
+            )
         else:
             return (
                 format_ethereum_amount(amount, token, defs.network),
@@ -864,6 +875,8 @@ class FieldDefinition:
                 )
             if info.threshold is not None:
                 formatter_params["threshold"] = int.from_bytes(info.threshold, "big")
+            if info.threshold_message is not None:
+                formatter_params["threshold_message"] = info.threshold_message
             formatter = TokenAmountFormatter(**formatter_params)
         elif fmt_type == FT.FORMATTER_UNIT:
             formatter_params = {}
