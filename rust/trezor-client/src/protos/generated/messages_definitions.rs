@@ -1659,6 +1659,8 @@ pub struct EthereumERC7730FieldInfo {
     pub token_path: ::protobuf::MessageField<EthereumERC7730Path>,
     // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.threshold)
     pub threshold: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.threshold_message)
+    pub threshold_message: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.decimals)
     pub decimals: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.base)
@@ -1781,6 +1783,42 @@ impl EthereumERC7730FieldInfo {
     // Take field
     pub fn take_threshold(&mut self) -> ::std::vec::Vec<u8> {
         self.threshold.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional string threshold_message = 13;
+
+    pub fn threshold_message(&self) -> &str {
+        match self.threshold_message.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_threshold_message(&mut self) {
+        self.threshold_message = ::std::option::Option::None;
+    }
+
+    pub fn has_threshold_message(&self) -> bool {
+        self.threshold_message.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_threshold_message(&mut self, v: ::std::string::String) {
+        self.threshold_message = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_threshold_message(&mut self) -> &mut ::std::string::String {
+        if self.threshold_message.is_none() {
+            self.threshold_message = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.threshold_message.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_threshold_message(&mut self) -> ::std::string::String {
+        self.threshold_message.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
     // optional uint32 decimals = 6;
@@ -1930,7 +1968,7 @@ impl EthereumERC7730FieldInfo {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(12);
+        let mut fields = ::std::vec::Vec::with_capacity(13);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, EthereumERC7730Path>(
             "path",
@@ -1956,6 +1994,11 @@ impl EthereumERC7730FieldInfo {
             "threshold",
             |m: &EthereumERC7730FieldInfo| { &m.threshold },
             |m: &mut EthereumERC7730FieldInfo| { &mut m.threshold },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "threshold_message",
+            |m: &EthereumERC7730FieldInfo| { &m.threshold_message },
+            |m: &mut EthereumERC7730FieldInfo| { &mut m.threshold_message },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "decimals",
@@ -2054,6 +2097,9 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
                 42 => {
                     self.threshold = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                106 => {
+                    self.threshold_message = ::std::option::Option::Some(is.read_string()?);
+                },
                 48 => {
                     self.decimals = ::std::option::Option::Some(is.read_uint32()?);
                 },
@@ -2104,6 +2150,9 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
         if let Some(v) = self.threshold.as_ref() {
             my_size += ::protobuf::rt::bytes_size(5, &v);
         }
+        if let Some(v) = self.threshold_message.as_ref() {
+            my_size += ::protobuf::rt::string_size(13, &v);
+        }
         if let Some(v) = self.decimals {
             my_size += ::protobuf::rt::uint32_size(6, v);
         }
@@ -2148,6 +2197,9 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
         if let Some(v) = self.threshold.as_ref() {
             os.write_bytes(5, v)?;
         }
+        if let Some(v) = self.threshold_message.as_ref() {
+            os.write_string(13, v)?;
+        }
         if let Some(v) = self.decimals {
             os.write_uint32(6, v)?;
         }
@@ -2191,6 +2243,7 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
         self.formatter = ::std::option::Option::None;
         self.token_path.clear();
         self.threshold = ::std::option::Option::None;
+        self.threshold_message = ::std::option::Option::None;
         self.decimals = ::std::option::Option::None;
         self.base = ::std::option::Option::None;
         self.prefix = ::std::option::Option::None;
@@ -2208,6 +2261,7 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
             formatter: ::std::option::Option::None,
             token_path: ::protobuf::MessageField::none(),
             threshold: ::std::option::Option::None,
+            threshold_message: ::std::option::Option::None,
             decimals: ::std::option::Option::None,
             base: ::std::option::Option::None,
             prefix: ::std::option::Option::None,
@@ -3320,23 +3374,24 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     h\x18\x02\x20\x01(\x0e2<.hw.trezor.messages.definitions.EthereumERC7730C\
     ontainerPathR\rcontainerPath\x12\x1f\n\x0bconst_value\x18\x03\x20\x01(\t\
     R\nconstValue\x12\x1f\n\x0bslice_start\x18\x04\x20\x01(\x11R\nsliceStart\
-    \x12\x1b\n\tslice_end\x18\x05\x20\x01(\x11R\x08sliceEnd\"\x91\x05\n\x18E\
+    \x12\x1b\n\tslice_end\x18\x05\x20\x01(\x11R\x08sliceEnd\"\xbe\x05\n\x18E\
     thereumERC7730FieldInfo\x12G\n\x04path\x18\x01\x20\x02(\x0b23.hw.trezor.\
     messages.definitions.EthereumERC7730PathR\x04path\x12\x14\n\x05label\x18\
     \x02\x20\x02(\tR\x05label\x12_\n\tformatter\x18\x03\x20\x02(\x0e2A.hw.tr\
     ezor.messages.definitions.EthereumERC7730FieldFormatterTypeR\tformatter\
     \x12R\n\ntoken_path\x18\x04\x20\x01(\x0b23.hw.trezor.messages.definition\
     s.EthereumERC7730PathR\ttokenPath\x12\x1c\n\tthreshold\x18\x05\x20\x01(\
-    \x0cR\tthreshold\x12\x1a\n\x08decimals\x18\x06\x20\x01(\rR\x08decimals\
-    \x12\x12\n\x04base\x18\x07\x20\x01(\tR\x04base\x12\x16\n\x06prefix\x18\
-    \x08\x20\x01(\x08R\x06prefix\x12.\n\x13const_token_address\x18\t\x20\x01\
-    (\x0cR\x11constTokenAddress\x12T\n\x0bcallee_path\x18\n\x20\x01(\x0b23.h\
-    w.trezor.messages.definitions.EthereumERC7730PathR\ncalleePath\x12\x1a\n\
-    \x08selector\x18\x0b\x20\x01(\x0cR\x08selector\x12Y\n\x0benum_values\x18\
-    \x0c\x20\x03(\x0b28.hw.trezor.messages.definitions.EthereumERC7730EnumEn\
-    tryR\nenumValues\"B\n\x18EthereumERC7730EnumEntry\x12\x10\n\x03key\x18\
-    \x01\x20\x02(\rR\x03key\x12\x14\n\x05value\x18\x02\x20\x02(\tR\x05value\
-    \"\xfa\x02\n\x19EthereumDisplayFormatInfo\x12\x19\n\x08chain_id\x18\x01\
+    \x0cR\tthreshold\x12+\n\x11threshold_message\x18\r\x20\x01(\tR\x10thresh\
+    oldMessage\x12\x1a\n\x08decimals\x18\x06\x20\x01(\rR\x08decimals\x12\x12\
+    \n\x04base\x18\x07\x20\x01(\tR\x04base\x12\x16\n\x06prefix\x18\x08\x20\
+    \x01(\x08R\x06prefix\x12.\n\x13const_token_address\x18\t\x20\x01(\x0cR\
+    \x11constTokenAddress\x12T\n\x0bcallee_path\x18\n\x20\x01(\x0b23.hw.trez\
+    or.messages.definitions.EthereumERC7730PathR\ncalleePath\x12\x1a\n\x08se\
+    lector\x18\x0b\x20\x01(\x0cR\x08selector\x12Y\n\x0benum_values\x18\x0c\
+    \x20\x03(\x0b28.hw.trezor.messages.definitions.EthereumERC7730EnumEntryR\
+    \nenumValues\"B\n\x18EthereumERC7730EnumEntry\x12\x10\n\x03key\x18\x01\
+    \x20\x02(\rR\x03key\x12\x14\n\x05value\x18\x02\x20\x02(\tR\x05value\"\
+    \xfa\x02\n\x19EthereumDisplayFormatInfo\x12\x19\n\x08chain_id\x18\x01\
     \x20\x02(\x04R\x07chainId\x12\x18\n\x07address\x18\x02\x20\x02(\x0cR\x07\
     address\x12\x19\n\x08func_sig\x18\x03\x20\x02(\x0cR\x07funcSig\x12\x16\n\
     \x06intent\x18\x04\x20\x02(\tR\x06intent\x12i\n\x15parameter_definitions\
