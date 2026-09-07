@@ -152,8 +152,13 @@ typedef enum {
   SYSCALL_BLE_SET_ENABLED,
   SYSCALL_BLE_GET_ENABLED,
 
+#ifndef PQ_SECURE_BOOT
+  // Legacy layout only -- the tree layout has the bootloader install the nRF.
+  // Safe to renumber around, unlike the smcall table: kernel and coreapp are
+  // always built together.
   SYSCALL_NRF_UPDATE_REQUIRED,
   SYSCALL_NRF_UPDATE,
+#endif
   SYSCALL_NRF_GET_VERSION,
   SYSCALL_NRF_AUTHENTICATE,
   SYSCALL_NRF_REBOOT,

@@ -1072,7 +1072,7 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
-#ifdef USE_NRF
+#if defined(USE_NRF) && !defined(PQ_SECURE_BOOT)
 
 bool nrf_update_required__verified(const uint8_t *data, size_t len) {
   if (!probe_read_access(data, len)) {

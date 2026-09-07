@@ -57,6 +57,18 @@
 
 #ifdef USE_NRF
 #include <io/nrf.h>
+#endif
+
+// The firmware carries and pushes an nRF image only on the legacy layout. Under
+// the Merkle-tree scheme the nRF is a model-level leaf of the founder tree and
+// the BOOTLOADER installs it (workflow_nrf_ota, itself gated on
+// PQ_SECURE_BOOT), so the firmware neither embeds a copy nor writes one.
+//
+// Both layouts are live for now: T3W1 still builds with pq_secure_boot off
+// during the transition, and in that configuration nothing else can update the
+// nRF.
+#if defined(USE_NRF) && !defined(PQ_SECURE_BOOT)
+#define FIRMWARE_UPDATES_NRF 1
 
 extern const void nrf_app_start;
 extern const void nrf_app_end;
@@ -96,7 +108,7 @@ int main_func(uint32_t cmd, void *arg) {
   update_required = update_required || bl_update_required;
 #endif
 
-#ifdef USE_NRF
+#ifdef FIRMWARE_UPDATES_NRF
   bool nrf_update_required_ =
       nrf_update_required(&nrf_app_start, (size_t)&nrf_app_size);
   update_required = update_required || nrf_update_required_;
@@ -112,7 +124,7 @@ int main_func(uint32_t cmd, void *arg) {
     }
 #endif
 
-#ifdef USE_NRF
+#ifdef FIRMWARE_UPDATES_NRF
     if (nrf_update_required_) {
       nrf_update(&nrf_app_start, (size_t)&nrf_app_size);
     }

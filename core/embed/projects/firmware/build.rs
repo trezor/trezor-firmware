@@ -89,7 +89,10 @@ fn main() -> Result<()> {
         }
         embed_kernel_binary(lib)?;
 
-        if cfg!(feature = "nrf") {
+        // Legacy layout only: under the Merkle-tree scheme the bootloader
+        // installs the nRF as a model-level leaf of the founder tree, so the
+        // firmware does not carry a ~170 KB copy of it. See main.c.
+        if cfg!(feature = "nrf") && !cfg!(feature = "pq_secure_boot") {
             embed_nrf_app_binary(lib)?;
         }
 

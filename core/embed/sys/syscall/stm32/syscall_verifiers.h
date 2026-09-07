@@ -267,7 +267,7 @@ uint8_t ble_get_bond_list__verified(bt_le_addr_t *bonds, size_t count);
 #endif
 
 // ---------------------------------------------------------------------
-#ifdef USE_NRF
+#if defined(USE_NRF) && !defined(PQ_SECURE_BOOT)
 
 #include <io/nrf.h>
 

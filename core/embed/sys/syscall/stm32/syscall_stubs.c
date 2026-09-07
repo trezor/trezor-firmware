@@ -796,6 +796,8 @@ bool ble_get_enabled(void) {
 // nrf.h
 // =============================================================================
 
+#ifndef PQ_SECURE_BOOT
+
 bool nrf_update_required(const uint8_t *data, size_t len) {
   return (bool)syscall_invoke2((uint32_t)data, (uint32_t)len,
                                SYSCALL_NRF_UPDATE_REQUIRED);
@@ -805,6 +807,8 @@ bool nrf_update(const uint8_t *data, size_t len) {
   return (bool)syscall_invoke2((uint32_t)data, (uint32_t)len,
                                SYSCALL_NRF_UPDATE);
 }
+
+#endif  // PQ_SECURE_BOOT
 
 uint32_t nrf_get_version(void) {
   return syscall_invoke0(SYSCALL_NRF_GET_VERSION);
