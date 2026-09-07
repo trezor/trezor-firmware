@@ -42,6 +42,10 @@
 #include "rust_ui_bootloader.h"
 #include "workflow.h"
 
+#if defined(PQ_SECURE_BOOT) && defined(USE_BOOT_UCB)
+#include "wf_ucb_stage.h"
+#endif
+
 static void send_error_conditionally(protob_io_t* iface, const char* msg) {
   if (iface != NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError, msg);
@@ -114,6 +118,24 @@ workflow_result_t workflow_wipe_device(protob_io_t* iface) {
   if (sectrue != wipe_result) {
     send_error_conditionally(iface, "Could not erase flash");
   }
+
+#if defined(PQ_SECURE_BOOT) && defined(USE_BOOT_UCB)
+  // Erasing the firmware is what makes a LEGACY device read empty, because
+  // `fw_check` looks for a valid vendor header in the firmware area. In the
+  // Merkle-tree layout it reads the boot header's firmware_type instead, so
+  // clear that too or a wiped device still claims to be provisioned with its
+  // firmware merely missing -- offering to reinstall rather than reading as the
+  // empty device a wipe is supposed to produce.
+  //
+  // After the erase, not before: the staging area lives in the tail of the
+  // firmware region, so erase_device would have wiped whatever was staged. The
+  // boardloader installs the cleared header on the reboot this workflow ends in
+  // (WF_OK_DEVICE_WIPED).
+  if (sectrue == wipe_result && sectrue != ucb_stage_clear_firmware_type()) {
+    send_error_conditionally(iface, "Could not unprovision the device");
+    wipe_result = secfalse;
+  }
+#endif
 
 #ifdef USE_BACKUP_RAM
   if (!backup_ram_erase_protected()) {

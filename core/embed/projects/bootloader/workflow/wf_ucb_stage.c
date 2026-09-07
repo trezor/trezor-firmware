@@ -27,7 +27,17 @@
 #include <sys/flash.h>
 
 #include "protob/protob.h"
+#include "wf_image_upload.h"  // chunk_buffer
 #include "wf_ucb_stage.h"
+
+// Report a staging failure to the host, if there is one. `ucb_stage_verify` is
+// also reached from the bootloader's own boot path, where nobody is listening
+// and `iface` is NULL -- MSG_SEND would dereference it.
+static void stage_report_failure(protob_io_t *iface, const char *msg) {
+  if (iface != NULL) {
+    send_msg_failure(iface, FailureType_Failure_ProcessError, msg);
+  }
+}
 
 #ifdef BOARDLOADER_UCB_ZERO_ADDR_BUG
 // Copy `len` bytes of the currently installed bootloader code into the staging
@@ -74,15 +84,13 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
 
   const boot_header_auth_t *hdr = boot_header_auth_get(staged);
   if (hdr == NULL) {
-    send_msg_failure(iface, FailureType_Failure_ProcessError,
-                     "Invalid bootloader header");
+    stage_report_failure(iface, "Invalid bootloader header");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER;
   }
 
   const boot_header_auth_t *cur = boot_header_auth_get(BOOTLOADER_START);
   if (cur != NULL && hdr->monotonic_version < cur->monotonic_version) {
-    send_msg_failure(iface, FailureType_Failure_ProcessError,
-                     "Bootloader downgrade protection");
+    stage_report_failure(iface, "Bootloader downgrade protection");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_VERSION;
   }
 
@@ -103,8 +111,7 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
     // and hand the boardloader a real, in-range address instead of the
     // sentinel.
     if (sectrue != stage_copy_current_code(hdr->header_size, hdr->code_size)) {
-      send_msg_failure(iface, FailureType_Failure_ProcessError,
-                       "Staging failed");
+      stage_report_failure(iface, "Staging failed");
       return UPLOAD_ERR_COMMUNICATION;
     }
     verify_code_address = staged + hdr->header_size;
@@ -127,8 +134,7 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
   boot_header_calc_merkle_root(hdr, verify_code_address, &merkle_root);
 
   if (sectrue != boot_header_check_signature(hdr, &merkle_root)) {
-    send_msg_failure(iface, FailureType_Failure_ProcessError,
-                     "Invalid bootloader signature");
+    stage_report_failure(iface, "Invalid bootloader signature");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
   }
 
@@ -182,5 +188,55 @@ secbool ucb_stage_write_header(const uint8_t *data, uint32_t len) {
 
   return sectrue;
 }
+
+#ifdef PQ_SECURE_BOOT
+secbool ucb_stage_clear_firmware_type(void) {
+  const boot_header_auth_t *installed = boot_header_auth_get(BOOTLOADER_START);
+  if (installed == NULL) {
+    return secfalse;
+  }
+  const uint32_t header_size = installed->header_size;
+  if (header_size == 0 || header_size > IMAGE_CHUNK_SIZE) {
+    return secfalse;
+  }
+
+  // Copy the installed header verbatim, then clear the one byte. Everything
+  // authenticated is preserved bit for bit, so the founder signature over it
+  // still verifies below; firmware_type is outside auth_size.
+  uint8_t *staged = (uint8_t *)chunk_buffer;
+  memcpy(staged, (const void *)(uintptr_t)BOOTLOADER_START, header_size);
+
+  boot_header_auth_t *hdr =
+      (boot_header_auth_t *)(uintptr_t)boot_header_auth_get(
+          (uint32_t)(uintptr_t)staged);
+  if (hdr == NULL) {
+    return secfalse;
+  }
+  boot_header_unauth_t *unauth =
+      (boot_header_unauth_t *)(uintptr_t)boot_header_unauth_get(hdr);
+  if (unauth == NULL) {
+    return secfalse;
+  }
+  if (unauth->firmware_type == 0) {
+    // Already unprovisioned -- nothing to install, and arming the UCB for a
+    // no-op change would spend a boardloader install for nothing.
+    return sectrue;
+  }
+  unauth->firmware_type = 0;
+
+  if (sectrue != ucb_stage_write_header(staged, header_size)) {
+    return secfalse;
+  }
+
+  // No iface: this runs from the bootloader's own boot path, not a host
+  // workflow, so a failure has nobody to report to over the wire.
+  uint32_t code_address = 0;
+  if (UPLOAD_OK != ucb_stage_verify(&STAGING_AREA, /*header_only=*/true, NULL,
+                                    NULL, &code_address)) {
+    return secfalse;
+  }
+  return ucb_stage_arm(&STAGING_AREA, code_address);
+}
+#endif  // PQ_SECURE_BOOT
 
 #endif  // USE_BOOT_UCB

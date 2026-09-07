@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <rtl/secbool.h>
 #include <sys/startup_args.h>
 #include <sys/systask.h>
 
@@ -34,6 +35,11 @@ typedef struct {
   char title[64];
   char message[64];
   char footer[64];
+  // Also return the device to the UNPROVISIONED (empty) state, not just erase
+  // its data -- see `reboot_and_wipe`. Only `sectrue` asks for it; every other
+  // value, including the zero that `{0}` and a cleared bootargs region leave,
+  // keeps the device provisioned and its firmware bootable.
+  secbool unprovision;
 } bootutils_wipe_info_t;
 
 // Immediately resets the device and initiates the normal boot sequence as if
@@ -86,6 +92,14 @@ void __attribute__((noreturn)) reboot_with_rsod(
 
 // Resets the device and wipes all the user data.
 // RSOD with wipe information is displayed.
+//
+// With `info->unprovision == sectrue` the device is instead returned to the
+// unprovisioned (empty) state a customer receives: the bootloader erases the
+// firmware and assets as well as the user data, and reboots straight into a
+// normal boot without a screen to acknowledge. Used at the end of factory
+// testing. Firmware cannot do this for itself -- it cannot erase the area it
+// runs from, and in the Merkle-tree layout the provisioning marker lives in the
+// write-protected boot header -- so asking here is the only way.
 void __attribute__((noreturn)) reboot_and_wipe(
     const bootutils_wipe_info_t *info);
 

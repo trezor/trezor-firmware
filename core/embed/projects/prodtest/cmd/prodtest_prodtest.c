@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <sec/fwutils.h>
+#include <sys/bootutils.h>
 #include <sys/systick.h>
 
 #include "prodtest_error_codes.h"
@@ -82,13 +82,27 @@ static void prodtest_prodtest_wipe(cli_t* cli) {
   }
 #endif
 
-  cli_trace(cli, "Invalidating the production test firmware header...");
-  firmware_invalidate_header();
+  // Hand the wipe to the bootloader: it erases the firmware and the user data,
+  // and returns the device to the unprovisioned (empty) state a customer
+  // receives. Firmware cannot do the last part itself -- in the Merkle-tree
+  // layout the provisioning marker lives in the write-protected boot header --
+  // and it cannot erase the firmware area it is running from either.
+  //
+  // Rebooting is the last thing this command does, so report success first and
+  // give the response time to reach the host, as the reboot commands do. The OK
+  // therefore means "wipe started", and a factory flow should confirm the end
+  // state rather than take it as proof the device is empty.
+  cli_trace(cli, "Rebooting to wipe and unprovision the device...");
 
   const char msg[] = "WIPED";
   screen_prodtest_show_text(msg, strlen(msg));
 
   cli_ok(cli, "");
+  systick_delay_ms(1000);
+
+  bootutils_wipe_info_t info = {0};
+  info.unprovision = sectrue;
+  reboot_and_wipe(&info);
 }
 
 static void prodtest_homescreen(cli_t* cli) {

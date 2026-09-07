@@ -111,6 +111,10 @@
 #include "workflow/wf_nrf_ota.h"
 #include "workflow/workflow.h"
 
+#if defined(PQ_SECURE_BOOT) && defined(USE_BOOT_UCB)
+#include "workflow/wf_ucb_stage.h"
+#endif
+
 #ifdef DEBUGLINK
 #include "workflow/debuglink.h"
 #endif
@@ -551,7 +555,21 @@ int bootloader_main(void) {
     display_init(DISPLAY_RESET_CONTENT);
 #endif
 
-    erase_storage(NULL);
+    // wipe info was left in bootargs
+    boot_args_t args;
+    bootargs_get_args(&args);
+
+    // Unprovisioning returns the device to the empty state it shipped in, so it
+    // takes the firmware and assets with it. A plain wipe erases the user's
+    // data and leaves the installed firmware bootable, which is what the
+    // wipe-code and PIN-attempt paths want.
+    const bool unprovision = (args.wipeinfo.unprovision == sectrue);
+
+    if (unprovision) {
+      erase_device(NULL);
+    } else {
+      erase_storage(NULL);
+    }
 
 #ifdef USE_BLE
     ble_init();
@@ -563,9 +581,28 @@ int bootloader_main(void) {
     backup_ram_erase_protected();
 #endif
 
-    // wipe info was left in bootargs
-    boot_args_t args;
-    bootargs_get_args(&args);
+    if (unprovision) {
+#if defined(PQ_SECURE_BOOT) && defined(USE_BOOT_UCB)
+      // Erasing the firmware is what makes a LEGACY device read empty --
+      // `fw_check` looks for a valid vendor header in the firmware area. In the
+      // Merkle-tree layout it reads the boot header's firmware_type instead, so
+      // that byte has to be cleared too or the device would still claim to be
+      // provisioned, with its firmware merely missing.
+      //
+      // Staged and armed rather than written in place: the byte shares a flash
+      // page with the founder signatures, so editing it in place would mean
+      // reprogramming the page that authenticates the bootloader, and losing
+      // power midway would leave the device unbootable. The boardloader
+      // installs the cleared header on the reboot below.
+      if (sectrue != ucb_stage_clear_firmware_type()) {
+        error_shutdown("Unprovision failed");
+      }
+#endif
+      // Straight back to a normal boot, with no screen to acknowledge: the
+      // device is now empty, which is a state it can simply show, not an event
+      // to report. (It is also what installs the cleared boot header.)
+      reboot_device();
+    }
 
     show_wipe_info(&args.wipeinfo);
     reboot_or_halt_after_rsod();

@@ -38,7 +38,8 @@
  *
  * Runs the downgrade check, recomputes the Merkle root over the authenticated
  * header + code, verifies the founder signature over that root, and writes the
- * UCB (`boot_ucb_write`). Sends its own failure message on any error.
+ * UCB (`boot_ucb_write`). Sends its own failure message on any error, unless
+ * `iface` is NULL.
  *
  * A caller may set `firmware_type` in the staged (unauth) header before calling
  * this; that field is outside `auth_size` so it does not affect the signature
@@ -60,7 +61,8 @@
  *
  * @param staging_area Flash area holding the staged boot header (+ code).
  * @param header_only Bootloader code unchanged (reuse current code).
- * @param iface Protobuf I/O used to send failure messages.
+ * @param iface Protobuf I/O used to send failure messages, or NULL when the
+ *              caller has no host link (the bootloader's own boot path).
  * @param out_root Receives the signature-verified modelRoot the new boot header
  *                 commits to (for verifying co-processor leaves).
  * @param out_code_address Receives the code address the UCB must record (pass
@@ -88,5 +90,34 @@ secbool ucb_stage_arm(const flash_area_t *staging_area, uint32_t code_address);
  * Fatal on flash error.
  */
 secbool ucb_stage_write_header(const uint8_t *data, uint32_t len);
+
+#ifdef PQ_SECURE_BOOT
+/**
+ * Restage this device's OWN boot header with `firmware_type` cleared, so the
+ * boardloader installs it on the next boot and the device then reads as
+ * unprovisioned (empty) -- see `fw_check`, which decides "is this device
+ * provisioned" from exactly that byte.
+ *
+ * Goes the long way round on purpose. `firmware_type` sits in the
+ * write-protected boot header, which only the boardloader writes, and it shares
+ * a flash page with the founder signatures -- so flipping the byte in place
+ * would mean erasing and reprogramming the page that authenticates the
+ * bootloader, and losing power mid-write would leave an unbootable device.
+ * Restaging routes the change through the same verify-and-arm path an
+ * over-the-wire update uses, where a power loss at any point leaves either the
+ * old header or the new one installed.
+ *
+ * Nothing else about the header changes: the code is untouched (`header_only`),
+ * the authenticated part is copied verbatim, so the founder signature still
+ * covers it. Borrows `chunk_buffer` as scratch.
+ *
+ * Requires the caller to have decided this is allowed -- it does not police who
+ * may un-provision a device.
+ *
+ * @return sectrue if the new header is staged and the UCB armed; the caller
+ *         must then reboot for the boardloader to install it.
+ */
+secbool ucb_stage_clear_firmware_type(void);
+#endif  // PQ_SECURE_BOOT
 
 #endif  // USE_BOOT_UCB

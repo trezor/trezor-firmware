@@ -66,7 +66,7 @@ typedef union {
   uint8_t hash[32];
   // error information, BOOT_COMMAND_SHOW_RSOD
   systask_postmortem_t pminfo;
-  // wipe information, BOOT_COMMAND_WIPE
+  // wipe information (and whether to unprovision), BOOT_COMMAND_WIPE
   bootutils_wipe_info_t wipeinfo;
 } boot_args_t;
 
