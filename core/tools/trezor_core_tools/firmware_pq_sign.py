@@ -61,6 +61,26 @@ def _variant_info(firmware: Path) -> dict:
     }
 
 
+def _authenticity_manifest_field(variant: dict) -> dict:
+    """The custom variant's authenticity manifest, for presigned custom builds.
+
+    Only CUSTOM gets one, because only CUSTOM's leaf is code-independent: the
+    fold zeroes the firmware version and the app entry's size + code_hash, so a
+    creator's own app reaches the same leaf. Everything else in those bytes
+    stays authenticated -- including the WHOLE secmon entry -- so this is also
+    the only record that ties a committed secmon to a signed root, which is what
+    `presigned_check` folds. Official variants' leaves move with their code, so
+    storing theirs would only invite someone to reuse one.
+    """
+    if variant["variant"] != firmware_module.FW_VARIANT_CUSTOM:
+        return {}
+    return {
+        "authenticity_manifest": firmware_module.authenticity_manifest(
+            variant["manifest"]
+        ).hex()
+    }
+
+
 def sign_firmware_images(
     firmwares: list[Path],
     bootloader: Path,
@@ -241,23 +261,7 @@ def main() -> None:
     ap.add_argument(
         "--vector-out", type=Path, help="write the first variant's raw manifest bytes"
     )
-    ap.add_argument(
-        "--install-proof",
-        type=Path,
-        help="stamp THIS variant's firmware_type into the bootloader for "
-        "direct-flashing that variant (no OTA); the proof rides in the image",
-    )
-    ap.add_argument(
-        "--bare",
-        action="store_true",
-        help="leave the bootloader firmware_type BARE (0) so the firmware "
-        "must be installed via OTA; zeroed explicitly so re-signing a "
-        "stamped bootloader is bare too",
-    )
     args = ap.parse_args()
-
-    if args.install_proof and args.bare:
-        raise SystemExit("--bare and --install-proof are mutually exclusive")
 
     variants, firmware_root, bl, nrf_info = sign_firmware_images(
         args.firmware, args.bootloader, args.nrf, args.nrf_pq_native
@@ -290,30 +294,33 @@ def main() -> None:
         )
         print("  committed under the ONE boot-header signature (modelRoot leaf)")
 
-    # For a direct flash (no OTA) the proof already rides in the firmware image;
-    # we only stamp the variant into the bootloader's firmware_type so the device
-    # reads as PROVISIONED (fw_check keys off firmware_type != 0) and picks the
-    # right storage domain. firmware_type is unauth, so this does not re-sign.
-    if args.install_proof:
-        match = next((v for v in variants if v["path"] == args.install_proof), None)
-        if match is None:
-            raise SystemExit(
-                f"--install-proof {args.install_proof}: not among --firmware"
-            )
-        # Dev builds are official, so firmware_type == variant (no custom flag).
-        bl.unauth.firmware_type = match["variant"]
-        args.bootloader.write_bytes(bl.build())
-        print(
-            f"stamped firmware_type={match['variant']} ({match['path'].name}) into "
-            "the bootloader for direct-flashing (the proof rides in the image)"
+    # firmware_type is the PROVISIONING marker: 0 means the device reads as
+    # unprovisioned, and whoever installs the firmware writes the variant into
+    # it -- the bootloader when installing over the wire, `xtask flash` when
+    # flashing with a debugger. A release is therefore always signed BARE, and
+    # zeroed explicitly so re-signing an already-stamped bootloader is bare too.
+    #
+    # The field is unauthenticated, so stamping it later needs no key and does
+    # not disturb the signature. To let a tool find it without duplicating the
+    # header layout, locate it by probe: flip the byte, diff, and the single
+    # differing offset IS the field. Self-verifying, and immune to layout drift.
+    bl.unauth.firmware_type = 0
+    bare = bl.build()
+    bl.unauth.firmware_type = 0xFF
+    probe = bl.build()
+    bl.unauth.firmware_type = 0
+    differing = [i for i in range(len(bare)) if bare[i] != probe[i]]
+    if len(differing) != 1:
+        raise SystemExit(
+            f"firmware_type is not a single byte of the built header "
+            f"({len(differing)} bytes differ) -- the probe cannot locate it"
         )
-    elif args.bare:
-        # firmware_type 0 -> the device reads as unprovisioned and MUST receive the
-        # firmware via OTA (phase 1 stamps firmware_type; the proof rides in the
-        # image). Zero explicitly so re-signing a stamped bootloader ends up bare.
-        bl.unauth.firmware_type = 0
-        args.bootloader.write_bytes(bl.build())
-        print("bootloader firmware_type left BARE (0) -> install via OTA")
+    firmware_type_offset = differing[0]
+    args.bootloader.write_bytes(bare)
+    print(
+        f"bootloader firmware_type left BARE (0) at offset {firmware_type_offset}"
+        " -> stamped by whoever installs it"
+    )
 
     print(
         f"bootloader     : signed root {bl.merkle_root().hex()[:12]}, "
@@ -330,10 +337,19 @@ def main() -> None:
                     "firmware": v["path"].name,
                     "leaf": v["leaf"].hex(),
                     "proof": [n.hex() for n in v["proof"]],
+                    # What the bootloader's firmware_type must hold for the
+                    # device to boot THIS variant. The bootloader writes it
+                    # when installing over the wire; a debugger flash has to
+                    # stamp it, which is why the release records it.
+                    "firmware_type": v["variant"],
+                    **_authenticity_manifest_field(v),
                 }
                 for v in variants
             ],
             "bootloader_signed_root": bl.merkle_root().hex(),
+            # Where that byte lives in bootloader.bin, so a stamping tool needs
+            # no boot-header layout knowledge of its own.
+            "firmware_type_offset": firmware_type_offset,
         }
         if nrf_info is not None:
             # What the OTA client feeds to FirmwareBegin (nrf_co_path / nrf_length
