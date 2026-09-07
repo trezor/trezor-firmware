@@ -38,14 +38,19 @@ xtask build <project> -m <model> [options]
 - `xtask clean` — remove build artifacts.
 - `xtask fmt` — format Rust sources with rustfmt.
 - `xtask flash <project> -m <model>` — flash a built binary to a connected
-  device via OpenOCD.
+  device via OpenOCD. `--combined` flashes the whole boot chain instead, from
+  the image `xtask combine` produced.
 - `xtask flash-erase [section] -m <model>` — erase a flash section (`all`,
   `boardloader`, `bootloader`, `firmware`, `storage`).
 - `xtask reset -m <model>` — reset the connected device.
 - `xtask upload <project> -m <model>` — upload firmware/prodtest to a running
   device.
-- `xtask combine <project> -m <model>` — combine the dependency chain (e.g.
-  secmon + kernel + firmware) into a single flashable binary.
+- `xtask combine <project> -m <model>` — combine the boot chain, from the
+  boardloader up to this project, into a single flashable binary. Flash it with
+  `xtask flash <project> -m <model> --combined`.
+- `xtask release [-m <model>]` — cut a complete pq_secure release: every
+  variant, folded into one signed tree (see
+  [pq_secure releases](#pq_secure-releases)).
 
 ## Build options
 
@@ -269,7 +274,7 @@ consumed only by the firmware build).
 
 ### Where `xtask flash` and `xtask upload` read from
 
-Both `xtask flash` and `xtask upload` read the signed binary from the
+On a model with the legacy image layout, both read the signed binary from the
 collected artifacts directory:
 
 - `build/artifacts/<MODEL_ID>/<project>.bin`

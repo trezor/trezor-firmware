@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 pub use crate::model::Model;
 use crate::options::BuildOptions;
-use crate::pq::BootloaderSource;
+use crate::pq::{BootloaderSource, Variant};
 
 #[derive(ValueEnum, Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -103,15 +103,6 @@ impl Project {
     /// using the `upload` subcommand.
     pub fn uploadable(self) -> bool {
         matches!(self, Project::Firmware | Project::Prodtest)
-    }
-
-    /// Returns whether the project can head a combined image -- one binary
-    /// holding the whole boot chain from the boardloader up to this project.
-    pub fn combinable(self) -> bool {
-        matches!(
-            self,
-            Project::Bootloader | Project::BootloaderCi | Project::Firmware | Project::Prodtest
-        )
     }
 }
 
@@ -234,11 +225,21 @@ pub struct FlashArgs {
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
 
+    /// Which variant of a pq_secure release to flash.
+    ///
+    /// Needed only when the release holds several firmware variants and the
+    /// project does not name one by itself. On `flash bootloader` it instead
+    /// says which variant to provision the device for; without it the
+    /// bootloader is flashed BARE, which is the state of a fresh device.
+    #[arg(long, value_name = "VARIANT")]
+    pub variant: Option<Variant>,
+
     /// Flash the combined image built by `xtask combine` -- the whole boot
     /// chain, boardloader included, as one write.
     ///
     /// This is what puts a blank device into a working state. The image is
-    /// flashed exactly as combined, so what it contains was decided by `xtask
+    /// flashed exactly as combined, so what it contains (and, on a Merkle-tree
+    /// model, which variant it is provisioned for) was decided by `xtask
     /// combine`.
     #[arg(long)]
     pub combined: bool,
@@ -278,6 +279,14 @@ pub struct UploadArgs {
     /// Build target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Which variant of a pq_secure release to install.
+    ///
+    /// Unset lets trezorctl decide between the firmware variants: a release
+    /// holding one needs no choice, and otherwise it picks by the device's
+    /// bitcoin-only indicator. Uploading `prodtest` implies that variant.
+    #[arg(long, value_name = "VARIANT")]
+    pub variant: Option<Variant>,
 }
 
 #[derive(Args, Debug)]
@@ -287,6 +296,15 @@ pub struct CombineArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Which variant of a pq_secure release to combine.
+    ///
+    /// Needed only when the release holds several firmware variants and the
+    /// project does not name one by itself. On `combine bootloader` it instead
+    /// says which variant to provision the device for; without it the
+    /// bootloader is combined BARE.
+    #[arg(long, value_name = "VARIANT")]
+    pub variant: Option<Variant>,
 }
 
 #[derive(Args, Debug)]

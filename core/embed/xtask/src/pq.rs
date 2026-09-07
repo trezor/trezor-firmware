@@ -33,7 +33,11 @@ use crate::options::ResolvedBuildArgs;
 use crate::{cargo, helpers};
 
 /// One variant of a release: one leaf of the founder firmware tree.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+///
+/// Also the value type of `--variant`, so clap validates the name and lists
+/// the choices.
+#[derive(ValueEnum, Clone, Copy, PartialEq, Eq, Debug)]
+#[value(rename_all = "kebab-case")]
 pub enum Variant {
     Universal,
     BtcOnly,
@@ -92,7 +96,14 @@ impl Variant {
         }
     }
 
-    fn project(self) -> Project {
+    /// The variant a release directory names, as recorded in bundle.json.
+    pub fn from_name(name: &str) -> Option<Variant> {
+        ALL_VARIANTS.into_iter().find(|v| v.name() == name)
+    }
+
+    /// Which project builds this variant, and so which `xtask flash <PROJECT>`
+    /// installs it.
+    pub fn project(self) -> Project {
         match self {
             Variant::Prodtest => Project::Prodtest,
             _ => Project::Firmware,
@@ -117,6 +128,227 @@ impl Variant {
         args.btc_only = matches!(self, Variant::BtcOnly);
         args.unsafe_fw = matches!(self, Variant::Custom);
     }
+}
+
+/// Where a model's release is assembled: `build-xtask/tree/<MODEL>/`, with the
+/// portable zip alongside it as `<MODEL>.zip`.
+pub fn release_dir(model: Model) -> Result<PathBuf> {
+    // Normalised, because cargo reports its target directory as
+    // `core/embed/../build-xtask` and every path printed from here -- the
+    // release dir, the zip -- would carry that `..` through and read as if it
+    // were somewhere else.
+    let build_dir = helpers::build_dir()?;
+    let build_dir = build_dir.canonicalize().unwrap_or(build_dir);
+    Ok(build_dir.join("tree").join(model.model_id()))
+}
+
+/// What a signed release records about itself, read from its `bundle.json`.
+pub struct ReleaseManifest {
+    /// Every variant in the release, each with the `firmware_type` byte the
+    /// bootloader must carry for the device to boot that variant.
+    variants: Vec<(Variant, u8)>,
+    /// Where that byte sits in `bootloader.bin`. Recorded by the signer, which
+    /// locates it by probing its own build, so nothing here needs to know the
+    /// boot-header layout.
+    firmware_type_offset: usize,
+}
+
+impl ReleaseManifest {
+    pub fn load(dir: &Path) -> Result<ReleaseManifest> {
+        let path = dir.join("bundle.json");
+        let text = fs::read_to_string(&path)
+            .with_context(|| format!("Failed to read {}", path.display()))?;
+        let json: serde_json::Value = serde_json::from_str(&text)
+            .with_context(|| format!("Failed to parse {}", path.display()))?;
+
+        let offset = json
+            .get("firmware_type_offset")
+            .and_then(|v| v.as_u64())
+            .context("release bundle has no firmware_type_offset -- it was signed by an older tool, rebuild it")?;
+
+        let mut variants = Vec::new();
+        for entry in json
+            .get("variants")
+            .and_then(|v| v.as_array())
+            .context("release bundle has no variants")?
+        {
+            let name = entry
+                .get("firmware")
+                .and_then(|v| v.as_str())
+                .context("a release variant has no firmware name")?;
+            let name = name.strip_suffix(".bin").unwrap_or(name);
+            let variant =
+                Variant::from_name(name).with_context(|| format!("unknown variant `{name}`"))?;
+            let firmware_type = entry
+                .get("firmware_type")
+                .and_then(|v| v.as_u64())
+                .with_context(|| format!("variant `{name}` records no firmware_type"))?;
+            variants.push((variant, u8::try_from(firmware_type)?));
+        }
+
+        Ok(ReleaseManifest {
+            variants,
+            firmware_type_offset: usize::try_from(offset)?,
+        })
+    }
+
+    pub fn variants(&self) -> impl Iterator<Item = Variant> + '_ {
+        self.variants.iter().map(|(v, _)| *v)
+    }
+
+    pub fn names(&self) -> String {
+        self.variants()
+            .map(|v| v.name())
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+
+    fn firmware_type(&self, variant: Variant) -> Result<u8> {
+        self.variants
+            .iter()
+            .find(|(v, _)| *v == variant)
+            .map(|(_, t)| *t)
+            .with_context(|| {
+                format!(
+                    "`{}` is not in this release ({})",
+                    variant.name(),
+                    self.names()
+                )
+            })
+    }
+
+    /// Write a copy of the release bootloader provisioned for `variant`, and
+    /// return its path.
+    ///
+    /// This is the whole of "installing" a boot header by debugger:
+    /// `firmware_type` is unauthenticated, so stamping it needs no key and
+    /// leaves the signature intact -- it is the same byte the bootloader writes
+    /// for itself when it installs firmware over the wire.
+    pub fn stamp(&self, dir: &Path, variant: Variant) -> Result<PathBuf> {
+        let firmware_type = self.firmware_type(variant)?;
+        let src = dir.join("bootloader.bin");
+        let mut image =
+            fs::read(&src).with_context(|| format!("Failed to read {}", src.display()))?;
+
+        let at = self.firmware_type_offset;
+        let current = *image.get(at).with_context(|| {
+            format!(
+                "{} is shorter than its firmware_type offset {at}",
+                src.display()
+            )
+        })?;
+        // A release is signed bare, so anything else means the offset and the
+        // image disagree -- a stale bundle.json next to a different bootloader.
+        ensure!(
+            current == 0,
+            "{} already carries firmware_type {current} at offset {at}, but a \
+             release is signed bare -- bundle.json does not match this bootloader",
+            src.display(),
+        );
+        image[at] = firmware_type;
+
+        let out = dir.join(format!("bootloader-{}.bin", variant.name()));
+        fs::write(&out, &image).with_context(|| format!("Failed to write {}", out.display()))?;
+        Ok(out)
+    }
+}
+
+/// The images a pq_secure release contributes to one install.
+///
+/// Bootloader and firmware come as a PAIR because they are one unit: the
+/// bootloader's signed header carries the `firmware_root` the firmware folds up
+/// to, and rebuilding the firmware changes that root -- so the bootloader
+/// already on a device vouches only for the previous build. Installing one
+/// without the other is not useful.
+pub struct ReleaseInstall {
+    /// The release bootloader, provisioned for `variant` when there is one.
+    pub bootloader: PathBuf,
+    /// The firmware image, absent when only the bootloader was asked for.
+    pub firmware: Option<PathBuf>,
+    /// The variant this install provisions the device for, `None` for a bare
+    /// bootloader.
+    pub variant: Option<Variant>,
+}
+
+/// Resolve what to install from a model's release, stamping the bootloader for
+/// the variant being installed.
+///
+/// `firmware_type` is the provisioning marker an over-the-wire install would
+/// have written; a debugger flash or a factory image has nobody to write it, so
+/// it is stamped here. Asking for the bootloader ALONE leaves it bare unless a
+/// variant is named -- bare is the legitimate state of a fresh device, which
+/// then takes its firmware over the wire.
+pub fn resolve_install(
+    model: Model,
+    project: Project,
+    variant: Option<Variant>,
+) -> Result<ReleaseInstall> {
+    let dir = release_dir(model)?;
+    let model_id = model.model_id();
+    ensure!(
+        dir.exists(),
+        "no pq_secure release at {dir} -- build one first:\n             \
+         xtask build firmware -m {model_id} --bootloader-devel",
+        dir = dir.display(),
+    );
+    let release = ReleaseManifest::load(&dir)?;
+
+    if project == Project::Bootloader {
+        let (bootloader, variant) = match variant {
+            None => (dir.join("bootloader.bin"), None),
+            Some(variant) => (release.stamp(&dir, variant)?, Some(variant)),
+        };
+        return Ok(ReleaseInstall {
+            bootloader,
+            firmware: None,
+            variant,
+        });
+    }
+
+    let variant = pick_variant(project, variant, &release)?;
+    Ok(ReleaseInstall {
+        bootloader: release.stamp(&dir, variant)?,
+        firmware: Some(dir.join(format!("{}.bin", variant.name()))),
+        variant: Some(variant),
+    })
+}
+
+/// Which variant of a release to install.
+///
+/// An explicit choice wins. Otherwise the project names it -- prodtest is its
+/// own variant -- and a release holding a single firmware variant needs
+/// nothing.
+pub fn pick_variant(
+    project: Project,
+    requested: Option<Variant>,
+    release: &ReleaseManifest,
+) -> Result<Variant> {
+    if let Some(variant) = requested {
+        ensure!(
+            variant.project() == project,
+            "`{}` is built by `{}`, not `{}`",
+            variant.name(),
+            variant.project().binary_name(),
+            project.binary_name()
+        );
+        return Ok(variant);
+    }
+
+    let mut candidates = release.variants().filter(|v| v.project() == project);
+    let first = candidates.next().with_context(|| {
+        format!(
+            "this release holds no `{}` variant (it has {})",
+            project.binary_name(),
+            release.names()
+        )
+    })?;
+    ensure!(
+        candidates.next().is_none(),
+        "this release holds several firmware variants ({}), so --variant has to \
+         say which one to install",
+        release.names()
+    );
+    Ok(first)
 }
 
 /// Which variant the request as given selects.
@@ -164,13 +396,7 @@ pub fn build_release(
         );
     }
 
-    // Normalised, because cargo reports its target directory as
-    // `core/embed/../build-xtask` and every path printed from here -- the
-    // release dir, the zip -- would carry that `..` through and read as if it
-    // were somewhere else.
-    let build_dir = helpers::build_dir()?;
-    let build_dir = build_dir.canonicalize().unwrap_or(build_dir);
-    let out = build_dir.join("tree").join(args.model.model_id());
+    let out = release_dir(args.model)?;
     fs::create_dir_all(&out).with_context(|| format!("Failed to create {}", out.display()))?;
 
     println!(
@@ -362,11 +588,6 @@ fn sign(out: &Path, variants: &[Variant], nrf: Option<&Path>, nrf_pq_native: boo
             cmd.arg("--nrf-pq-native");
         }
     }
-
-    // Leave firmware_type at 0 so the release installs over OTA. Direct
-    // flashing needs a variant stamped in instead, which is the
-    // --install-proof path and belongs with the flash tooling.
-    cmd.arg("--bare");
 
     println!("{}", "xtask: signing the release".bold().dimmed());
     let status = cmd
