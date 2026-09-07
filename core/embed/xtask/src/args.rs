@@ -104,6 +104,15 @@ impl Project {
     pub fn uploadable(self) -> bool {
         matches!(self, Project::Firmware | Project::Prodtest)
     }
+
+    /// Returns whether the project can head a combined image -- one binary
+    /// holding the whole boot chain from the boardloader up to this project.
+    pub fn combinable(self) -> bool {
+        matches!(
+            self,
+            Project::Bootloader | Project::BootloaderCi | Project::Firmware | Project::Prodtest
+        )
+    }
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
@@ -224,6 +233,15 @@ pub struct FlashArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Flash the combined image built by `xtask combine` -- the whole boot
+    /// chain, boardloader included, as one write.
+    ///
+    /// This is what puts a blank device into a working state. The image is
+    /// flashed exactly as combined, so what it contains was decided by `xtask
+    /// combine`.
+    #[arg(long)]
+    pub combined: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
