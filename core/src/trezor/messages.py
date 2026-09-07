@@ -3402,6 +3402,7 @@ if TYPE_CHECKING:
         token_path: "EthereumERC7730Path | None"
         threshold: "AnyBytes | None"
         threshold_message: "str | None"
+        native_currency_address: "list[AnyBytes]"
         decimals: "int | None"
         base: "str | None"
         prefix: "bool | None"
@@ -3416,6 +3417,7 @@ if TYPE_CHECKING:
             path: "EthereumERC7730Path",
             label: "str",
             formatter: "EthereumERC7730FieldFormatterType",
+            native_currency_address: "list[AnyBytes] | None" = None,
             enum_values: "list[EthereumERC7730EnumEntry] | None" = None,
             token_path: "EthereumERC7730Path | None" = None,
             threshold: "AnyBytes | None" = None,

@@ -186,6 +186,7 @@ message EthereumERC7730FieldInfo {
     optional EthereumERC7730Path token_path = 4;
     optional bytes threshold = 5;
     optional string threshold_message = 13;
+    repeated bytes native_currency_address = 14;
 
     // UnitFormatter params
     optional uint32 decimals = 6;

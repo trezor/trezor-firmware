@@ -4871,6 +4871,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         4: protobuf.Field("token_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
         5: protobuf.Field("threshold", "bytes", repeated=False, required=False, default=None),
         13: protobuf.Field("threshold_message", "string", repeated=False, required=False, default=None),
+        14: protobuf.Field("native_currency_address", "bytes", repeated=True, required=False, default=None),
         6: protobuf.Field("decimals", "uint32", repeated=False, required=False, default=None),
         7: protobuf.Field("base", "string", repeated=False, required=False, default=None),
         8: protobuf.Field("prefix", "bool", repeated=False, required=False, default=None),
@@ -4886,6 +4887,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         path: "EthereumERC7730Path",
         label: "str",
         formatter: "EthereumERC7730FieldFormatterType",
+        native_currency_address: Optional[Sequence["bytes"]] = None,
         enum_values: Optional[Sequence["EthereumERC7730EnumEntry"]] = None,
         token_path: Optional["EthereumERC7730Path"] = None,
         threshold: Optional["bytes"] = None,
@@ -4897,6 +4899,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         callee_path: Optional["EthereumERC7730Path"] = None,
         selector: Optional["bytes"] = None,
     ) -> None:
+        self.native_currency_address: Sequence["bytes"] = native_currency_address if native_currency_address is not None else []
         self.enum_values: Sequence["EthereumERC7730EnumEntry"] = enum_values if enum_values is not None else []
         self.path = path
         self.label = label
