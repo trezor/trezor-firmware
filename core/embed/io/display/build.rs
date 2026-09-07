@@ -33,6 +33,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         add_driver_vg2864(lib)?;
     } else if cfg!(feature = "display_mi0240agt5cp1f") {
         add_driver_mi0240agt5cp1f(lib)?;
+    } else if cfg!(feature = "display_mi0200aet1") {
+        add_driver_mi0200aet1(lib)?;
     } else if cfg!(feature = "display_stm32f429i_disc1") {
         add_driver_stm32f429i_disc1(lib)?;
     } else {
@@ -96,6 +98,14 @@ fn set_panel_lx240d4508ctp05(lib: &mut CLibrary) {
 fn set_panel_mi0240agt5cp1f(lib: &mut CLibrary) {
     lib.add_defines([
         ("DISPLAY_PANEL_MI0240AGT5CP1F", Some("1")),
+        ("DISPLAY_RESX", Some("240")),
+        ("DISPLAY_RESY", Some("320")),
+    ]);
+}
+
+fn set_panel_mi0200aet1(lib: &mut CLibrary) {
+    lib.add_defines([
+        ("DISPLAY_PANEL_MI0200AET1", Some("1")),
         ("DISPLAY_RESX", Some("240")),
         ("DISPLAY_RESY", Some("320")),
     ]);
@@ -271,6 +281,29 @@ fn add_driver_mi0240agt5cp1f(lib: &mut CLibrary) -> Result<()> {
     }
     if cfg!(feature = "mcu_stm32u58") {
         lib.add_source("display/mi0240agt5cp1f/display_driver.c");
+    } else {
+        bail_unsupported!();
+    }
+    Ok(())
+}
+
+// AVNet (Multi-Inno) MI0200AET-1 (+ MI0240EGP-C1_OB adapter board), 2.0"
+// 240x320 TFT, ST7789V2 controller - electrically pin-compatible with
+// MI0240AGT-5CP1-F above on this board (same RESET/DC/SPI2 wiring - see
+// devkit.h), but this panel's IM[2:0] mode-select pins are not wired to the
+// MCU at all, so unlike that driver this one must not drive them. Kept as a
+// separate self-contained driver (like vg-2864) rather than an #ifdef inside
+// mi0240agt5cp1f/display_driver.c, matching the one-file-per-panel
+// convention already used for the i8080 panels - see
+// display/mi0200aet1/.
+fn add_driver_mi0200aet1(lib: &mut CLibrary) -> Result<()> {
+    if cfg!(feature = "display_panel_mi0200aet1") {
+        set_panel_mi0200aet1(lib);
+    } else {
+        bail_unsupported!();
+    }
+    if cfg!(feature = "mcu_stm32u58") {
+        lib.add_source("display/mi0200aet1/display_driver.c");
     } else {
         bail_unsupported!();
     }
