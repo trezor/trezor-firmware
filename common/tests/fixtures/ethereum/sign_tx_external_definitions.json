@@ -623,6 +623,26 @@
                 "sig_r": "ffa6ee4bdc7fd229a89a93648ffb6953ce54771ab527d30173e48b6db6515c24",
                 "sig_s": "442b96cd4dd3b79fdabc81b93ad7571678d0892b003fb8a2ce9685ef9eaee7a8"
             }
+        },
+        {
+            "name": "benqi_sAVAX_redeem",
+            "parameters": {
+                "comment": "supported, No properties to show | https://snowscan.xyz/tx/0xc942e020e6866023355b995c99217d3592a56027eb416b3d148127807f98213c",
+                "data": "be040fb0",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE",
+                "chain_id": 43114,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 86264,
+                "sig_r": "49a82695328abea5fea14bfbabdb73b21f9e05121a4d7ebfce9bf72c0797eff9",
+                "sig_s": "60a08fe7104e8c3a46898be6e5dc8375a211c1aa1860c8cf8a3584d678d1e8e0"
+            }
         }
     ]
 }
