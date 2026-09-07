@@ -18,7 +18,7 @@ use crate::ui::component::Empty;
 use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
 use crate::ui::layout::base::LAYOUT_STATE;
 use crate::ui::layout::device_menu_result::DEVICE_MENU_RESULT;
-use crate::ui::layout::menu_item_intent::MENU_ITEM_INTENT_OBJ;
+use crate::ui::layout::menu_item_intent::micropython::MENU_ITEM_INTENT_OBJ;
 use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
 use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};

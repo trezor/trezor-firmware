@@ -26,7 +26,6 @@ use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
     Component, ComponentExt, Empty, FormattedText, Label, LineBreaking, Paginate, Timeout,
 };
-use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
