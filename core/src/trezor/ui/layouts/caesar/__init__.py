@@ -1260,11 +1260,12 @@ if not utils.BITCOIN_ONLY:
 
         await confirm_action("confirm_contract", TR.words__provider, recipient_str)
         await confirm_action("confirm_contract", TR.words__intent, intent)
-        await confirm_properties(
-            "confirm_contract",
-            TR.ethereum__confirm_contract,
-            properties,
-        )
+        if properties:
+            await confirm_properties(
+                "confirm_contract",
+                TR.ethereum__confirm_contract,
+                properties,
+            )
 
         with trezorui_api.confirm_summary(
             amount=amount,
