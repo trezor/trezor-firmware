@@ -1,4 +1,6 @@
-use xbuild::{CLibrary, Result, bail_unsupported};
+use std::path::PathBuf;
+
+use xbuild::{CLibrary, Result, bail, bail_unsupported};
 
 fn main() -> Result<()> {
     xbuild::build_and_link("firmware", |lib| {
@@ -9,7 +11,7 @@ fn main() -> Result<()> {
 
         lib.add_include("../../rust"); // Cyclic dependency
 
-        lib.add_sources(["main.c", "boot_image_embdata.c"]);
+        lib.add_source("main.c");
 
         // Firmware header: the Merkle-tree layout describes each module directly
         // in the manifest (no per-module header); otherwise the legacy vendor
@@ -48,6 +50,11 @@ fn main() -> Result<()> {
         }
 
         if cfg!(feature = "force_bootloader_upgrade") {
+            if cfg!(feature = "pq_secure_boot") {
+                // Would be silently inert: the tree layout compiles the
+                // firmware's bootloader updater out entirely.
+                bail!("force_bootloader_upgrade is not supported with pq_secure_boot");
+            }
             lib.add_define("FORCE_BOOTLOADER_UPGRADE", Some("1"));
         }
 
@@ -61,8 +68,10 @@ fn main() -> Result<()> {
         }
 
         // The Merkle-tree path does not bake the bootloader into the firmware
-        // (it is installed separately via the boardloader/UCB mechanism).
+        // (it is installed separately via the boardloader/UCB mechanism), so
+        // neither the image nor the code that would install it is built.
         if !cfg!(feature = "pq_secure_boot") {
+            lib.add_source("boot_image_embdata.c");
             embed_bootloader_binary(lib)?;
         }
         // In the Merkle-tree layout the secmon is a separate module, prefixed
@@ -81,8 +90,8 @@ fn main() -> Result<()> {
             let model_id = xbuild::current_model_id()?;
             let dir = PathBuf::from(format!("../../models/{}/secmon", model_id));
             if cfg!(feature = "bootloader_devel") {
-                let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-                lib.embed_binary(out_dir.join("../../../secmon.bin"), "secmon")?;
+                let out_dir = xbuild::cargo_profile_dir()?;
+                lib.embed_binary(out_dir.join("secmon.bin"), "secmon")?;
             } else {
                 lib.embed_binary(dir.join("secmon.bin"), "secmon")?;
             }

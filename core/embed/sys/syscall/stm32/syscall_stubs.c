@@ -171,6 +171,8 @@ bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
 
 #endif  // USE_IPC
 
+#ifndef PQ_SECURE_BOOT
+
 // =============================================================================
 // boot_image.h
 // =============================================================================
@@ -184,6 +186,8 @@ bool boot_image_check(const boot_image_t *image) {
 void boot_image_replace(const boot_image_t *image) {
   syscall_invoke1((uint32_t)image, SYSCALL_BOOT_IMAGE_REPLACE);
 }
+
+#endif  // PQ_SECURE_BOOT
 
 // =============================================================================
 // bootutils.h

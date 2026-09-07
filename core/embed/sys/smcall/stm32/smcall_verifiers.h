@@ -31,11 +31,13 @@ void bootargs_get_args__verified(boot_args_t *args);
 
 // ---------------------------------------------------------------------
 
+#ifndef PQ_SECURE_BOOT
 #include <sec/boot_image.h>
 
 bool boot_image_check__verified(const boot_image_t *image);
 
 void boot_image_replace__verified(const boot_image_t *image);
+#endif
 
 // ---------------------------------------------------------------------
 #include <sys/bootutils.h>

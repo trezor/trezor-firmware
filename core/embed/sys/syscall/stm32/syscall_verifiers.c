@@ -247,6 +247,8 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifndef PQ_SECURE_BOOT
+
 bool boot_image_check__verified(const boot_image_t *image) {
   if (!probe_read_access(image, sizeof(*image))) {
     goto access_violation;
@@ -286,6 +288,8 @@ void boot_image_replace__verified(const boot_image_t *image) {
 access_violation:
   apptask_access_violation();
 }
+
+#endif  // PQ_SECURE_BOOT
 
 // ---------------------------------------------------------------------
 

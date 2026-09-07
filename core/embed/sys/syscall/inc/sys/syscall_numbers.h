@@ -57,8 +57,13 @@ typedef enum {
   SYSCALL_IPC_FREE_MESSAGE,
   SYSCALL_IPC_SEND,
 
+#ifndef PQ_SECURE_BOOT
+  // Legacy layout only: the firmware installs the bootloader it carries. Safe
+  // to renumber around, unlike the smcall table -- kernel and coreapp are
+  // always built together.
   SYSCALL_BOOT_IMAGE_CHECK,
   SYSCALL_BOOT_IMAGE_REPLACE,
+#endif
 
   SYSCALL_REBOOT_DEVICE,
   SYSCALL_REBOOT_TO_BOOTLOADER,

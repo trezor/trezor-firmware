@@ -95,11 +95,13 @@ void reboot_and_upgrade__verified(const uint8_t hash[32]);
 
 // ---------------------------------------------------------------------
 
+#ifndef PQ_SECURE_BOOT
 #include <sec/boot_image.h>
 
 bool boot_image_check__verified(const boot_image_t *image);
 
 void boot_image_replace__verified(const boot_image_t *image);
+#endif
 
 // ---------------------------------------------------------------------
 #include <io/display.h>

@@ -33,6 +33,12 @@ typedef enum {
   SMCALL_BOOTARGS_SET = 1,
   SMCALL_BOOTARGS_GET_ARGS,
 
+  // Unused on the Merkle-tree layout, where the firmware neither carries nor
+  // installs a bootloader. The slots stay: this numbering is shared with the
+  // separately-signed, checked-in secmon binary (models/<id>/secmon/secmon.bin,
+  // refreshed by its own "update signed secmon" commits), so removing entries
+  // here would silently repoint every smcall after them in a build that pairs a
+  // fresh kernel with a released secmon.
   SMCALL_BOOT_IMAGE_CHECK,
   SMCALL_BOOT_IMAGE_REPLACE,
 

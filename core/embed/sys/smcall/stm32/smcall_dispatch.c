@@ -73,6 +73,8 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       bootargs_get_args__verified(boot_args);
     } break;
 
+#ifndef PQ_SECURE_BOOT
+
     case SMCALL_BOOT_IMAGE_CHECK: {
       const boot_image_t *image = (const boot_image_t *)args[0];
       args[0] = boot_image_check__verified(image);
@@ -82,6 +84,8 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       const boot_image_t *image = (const boot_image_t *)args[0];
       boot_image_replace__verified(image);
     } break;
+
+#endif  // PQ_SECURE_BOOT
 
     case SMCALL_GET_BOARD_NAME: {
       args[0] = get_board_name();

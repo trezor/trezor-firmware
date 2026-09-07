@@ -76,6 +76,15 @@ extern const void nrf_app_size;
 
 #endif
 
+// Likewise for the bootloader: the legacy firmware carries one and installs it
+// when what is on the device does not match. The Merkle-tree layout installs
+// the bootloader through the bootloader's own OTA and the boardloader's UCB, so
+// the firmware neither carries a copy nor writes one -- see build.rs, which
+// also stops compiling boot_image_embdata.c.
+#if !defined(PQ_SECURE_BOOT) && (PRODUCTION || FORCE_BOOTLOADER_UPGRADE)
+#define FIRMWARE_UPDATES_BOOTLOADER 1
+#endif
+
 // The firmware variant stamped into the manifest (firmware/build.rs ->
 // FW_VARIANT, consumed by manifest_header.S) must be a known fw_variant_t. This
 // pins the build.rs numeric literals to the enum, so renumbering fw_variant_t
@@ -102,7 +111,7 @@ int main_func(uint32_t cmd, void *arg) {
 
   bool update_required = false;
 
-#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
+#ifdef FIRMWARE_UPDATES_BOOTLOADER
   // Check if the bootloader is valid and replace it if not
   bool bl_update_required = boot_image_check(boot_image_get_embdata());
   update_required = update_required || bl_update_required;
@@ -118,7 +127,7 @@ int main_func(uint32_t cmd, void *arg) {
     screen_update();
     fading = true;
 
-#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
+#ifdef FIRMWARE_UPDATES_BOOTLOADER
     if (bl_update_required) {
       boot_image_replace(boot_image_get_embdata());
     }
@@ -131,7 +140,7 @@ int main_func(uint32_t cmd, void *arg) {
 #endif
   }
 
-#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
+#ifdef FIRMWARE_UPDATES_BOOTLOADER
   if (bl_update_required) {
     reboot_device();
   }
