@@ -897,12 +897,14 @@ def confirm_text(
 async def confirm_properties(
     br_name: str,
     title: str,
-    props: Iterable[PropertyType],  # TODO: replace with StrPropertyType
+    props: Sequence[PropertyType],  # TODO: replace with StrPropertyType
     subtitle: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
 ) -> None:
+
+    assert props
     from ..properties import with_colon
 
     items = with_colon(

@@ -880,12 +880,14 @@ async def confirm_value(
 async def confirm_properties(
     br_name: str,
     title: str,
-    props: Iterable[PropertyType],
+    props: Sequence[PropertyType],
     subtitle: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
 ) -> None:
+
+    assert props
     from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
 
     menu = Menu([cancel_leaf(TR.buttons__cancel)])

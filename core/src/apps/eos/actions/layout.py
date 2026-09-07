@@ -7,7 +7,7 @@ from trezor.ui.layouts import confirm_properties
 from ..helpers import eos_asset_to_string, eos_name_to_string
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Sequence
 
     from trezor.messages import (
         EosActionBuyRam,
@@ -38,7 +38,7 @@ is_last = False
 async def _confirm_properties(
     br_name: str,
     title: str,
-    props: Iterable[PropertyType],
+    props: Sequence[PropertyType],
 ) -> None:
     await confirm_properties(
         br_name,
@@ -145,10 +145,10 @@ async def confirm_action_voteproducer(msg: EosActionVoteProducer) -> None:
         await _confirm_properties(
             "confirm_voteproducer",
             TR.eos__vote_for_producers,
-            (
+            [
                 (None, f"{wi:2d}. {eos_name_to_string(producer)}", None)
                 for wi, producer in enumerate(producers, 1)
-            ),
+            ],
         )
 
     else:

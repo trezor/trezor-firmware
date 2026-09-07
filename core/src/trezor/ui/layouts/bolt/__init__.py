@@ -884,12 +884,14 @@ async def confirm_value(
 async def confirm_properties(
     br_name: str,
     title: str,
-    props: Iterable[PropertyType],
+    props: Sequence[PropertyType],
     subtitle: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
 ) -> None:
+
+    assert props
 
     items = with_colon(
         (
