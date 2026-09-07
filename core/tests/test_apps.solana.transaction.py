@@ -11,7 +11,8 @@ if not utils.BITCOIN_ONLY:
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Callable, Sequence, TypeVar
+    from collections.abc import Callable, Sequence
+    from typing import Any, TypeVar
 
     from trezor.utils import Writer
 
