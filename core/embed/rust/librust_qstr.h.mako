@@ -15,12 +15,12 @@ from typing import Union, Set
 RUST_SRC = THIS_FILE.parent / "src"
 
 def find_qstrs_in_dir() -> set[str]:
-    pattern = r"\bMP_QSTR_\w*"
+    pattern = r"\bMP_QSTR_\w+"
     # Avoid processing generated files here, to avoid the following race condition:
     # * If translations are updated, `translated_string.rs` is updated via `translated_string.rs.mako`.
     # * This template may be processed concurrently, and use an older version of `translated_string.rs`.
     # (see https://github.com/trezor/trezor-firmware/issues/7338)
-    args = ["grep", "-ro", "--exclude-dir=generated", pattern, RUST_SRC]
+    args = ["grep", "-roE", "--exclude-dir=generated", pattern, RUST_SRC]
     output_lines = subprocess.check_output(args, text=True).strip().split("\n")
     return {line.split(":", 1)[1] for line in output_lines if line}
 
