@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import zipfile
 from pathlib import Path
 
 from trezor_core_tools import firmware_module, nrf_tree
@@ -231,6 +232,13 @@ def main() -> None:
     )
     ap.add_argument("--manifest-out", type=Path)
     ap.add_argument(
+        "--zip-out",
+        type=Path,
+        help="also write a portable zip of the release directory (bootloader, "
+        "every variant, bundle.json and the nRF image if present) -- what "
+        "`trezorctl firmware update -f` consumes",
+    )
+    ap.add_argument(
         "--vector-out", type=Path, help="write the first variant's raw manifest bytes"
     )
     ap.add_argument(
@@ -339,6 +347,27 @@ def main() -> None:
                 "model_root": nrf_info["model_root"].hex(),
             }
         args.manifest_out.write_text(json.dumps(bundle, indent=2))
+
+    if args.zip_out is not None:
+        # A flat archive of the release: the bootloader, each variant, the
+        # bundle.json and the nRF image. Written here because this is the step
+        # that finalises the release -- every variant's Merkle proof has just
+        # been baked into its own manifest region, so each <variant>.bin in the
+        # archive is self-contained.
+        members = [
+            args.bootloader,
+            *(v["path"] for v in variants),
+        ]
+        if args.manifest_out is not None:
+            members.append(args.manifest_out)
+        if nrf_info is not None:
+            members.append(args.bootloader.parent / nrf_info["image_name"])
+        args.zip_out.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(args.zip_out, "w", zipfile.ZIP_DEFLATED) as zf:
+            for f in members:
+                if f.exists():
+                    zf.write(f, arcname=f.name)
+        print(f"zip            : {args.zip_out}")
 
     print("\nverification:")
     try:

@@ -5,10 +5,27 @@ use owo_colors::OwoColorize;
 
 use crate::args::{BuildArgs, Project, TestArgs};
 use crate::options::ResolvedBuildArgs;
-use crate::{artifacts, features, helpers, memusage, postbuild, prebuild};
+use crate::{artifacts, features, helpers, memusage, postbuild, pq, prebuild};
 
 pub fn build(args: BuildArgs) -> Result<()> {
     let resolved_args = ResolvedBuildArgs::from_build_args(&args)?;
+
+    // A Merkle-tree image is not installable on its own: its manifest has to
+    // fold to the firmware_root of a signed boot header. So on a tree model,
+    // building one means building a RELEASE -- variants, the bootloader header
+    // they fold into, and the signature over it.
+    //
+    // Prodtest counts. It is its own project rather than a firmware variant,
+    // but it is a leaf of the same tree, and built on its own it would emit the
+    // same uninstallable manifest template (zero code_hash, no proof).
+    if matches!(args.project, Project::Firmware | Project::Prodtest) && pq::applies(&resolved_args)?
+    {
+        return pq::build_release(
+            &resolved_args,
+            &[pq::selected_variant(&resolved_args)],
+            args.bootloader,
+        );
+    }
 
     build_impl(resolved_args.clone(), false)?;
 
@@ -89,6 +106,13 @@ pub fn fmt() -> Result<()> {
     ensure!(status.success(), "`cargo fmt` failed with status: {status}",);
 
     Ok(())
+}
+
+/// Build a single project, as a plain build with no release orchestration.
+/// [`pq::build_release`] calls this per variant, which is also why it must not
+/// route back through [`build`].
+pub fn build_project(args: ResolvedBuildArgs) -> Result<()> {
+    build_impl(args, false)
 }
 
 fn build_impl(args: ResolvedBuildArgs, is_dependency: bool) -> Result<()> {

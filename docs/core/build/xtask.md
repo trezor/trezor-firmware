@@ -280,6 +280,141 @@ OpenOCD and the flash start address read from the model's `memory.ld`;
 (boardloader, bootloader, bootloader_ci, firmware, prodtest) can be flashed,
 and only `firmware`/`prodtest` can be uploaded.
 
+On a model with the `pq_secure_boot` feature they instead read the release
+directory — see below.
+
+## pq_secure releases
+
+A model with the `pq_secure_boot` feature does not have a self-contained
+firmware image. A firmware's authenticity is the fold of its manifest up to the
+`firmware_root` that the SIGNED BOOTLOADER HEADER commits to, so a firmware
+image only means anything next to a bootloader that names the tree it belongs
+to. `xtask build firmware` on such a model therefore produces a signed release
+directory rather than one binary:
+
+```text
+build-xtask/tree/<MODEL_ID>/
+├── bootloader.bin        # committed bootloader, header re-signed over this tree
+├── <variant>.bin         # one per variant, its Merkle co-path baked in
+├── trezor-ble*.bin       # the nRF image, if the model has one
+└── bundle.json           # firmware_root, per-variant leaves and proofs
+build-xtask/tree/<MODEL_ID>.zip   # the same, portable: `trezorctl firmware update -f`
+```
+
+The per-project `artifacts/<MODEL_ID>/firmware.bin` from such a build is **not
+installable**: its manifest is an unfilled template, whose leaf folds to
+nothing. `xtask flash` and `xtask upload` know this and use the release.
+
+`xtask build` signs a release over the ONE variant its flags select
+(`--btc-only`, `--unsafe-fw` for the custom slot, or the `prodtest` project),
+which is what a developer usually wants — a one-leaf tree, so a different
+`firmware_root` than a full release. `xtask release` cuts the full tree over
+every variant; omitting `-m` cuts one release per pq_secure model, which are
+independent since each model's `firmware_root` lives in its own header.
+
+Both currently require `--bootloader-devel`, since only development signing
+keys are available locally.
+
+### Which bootloader a release folds
+
+Signing rewrites the boot **header**, not the bootloader **code**, so a release
+folds an existing bootloader binary and re-signs its header over the release's
+`firmware_root`. `--bootloader` picks which binary:
+
+| value | binary |
+| --- | --- |
+| `auto` (default) | the one you last built for this model, else the committed one |
+| `built` | `build/artifacts/<MODEL_ID>/bootloader.bin`; errors if absent |
+| `committed` | `models/<MODEL_ID>/bootloaders/bootloader_<MODEL_ID>[_devel].bin` |
+
+The bootloader is **never built implicitly** — a release builds firmware, and
+rebuilding the bootloader as a side effect of `xtask build prodtest` would be a
+surprise. Run `xtask build bootloader` when you want a fresh one folded in;
+`auto` then picks it up, and the build prints which binary it folded (with its
+age, for a built one) because that decides which code the device ends up
+running.
+
+Whichever is folded must have been built with the same key selection the
+release is signed with. A bootloader built without `--bootloader-devel` trusts
+the production founder keys, so folding it into a dev-signed release yields a
+device that verifies nothing.
+
+`committed` is what a production release must use: there the founder-signed
+bootloader is a released artifact whose exact bytes have to be signed over, and
+a local rebuild would be the wrong thing.
+
+### Flashing a release
+
+```sh
+xtask build firmware -m t3w1 --bootloader-devel
+xtask flash firmware -m t3w1
+```
+
+Nothing has to be decided at build time: one release installs either over the
+wire or with a debugger.
+
+`xtask flash firmware` writes the **bootloader and the firmware together**, in
+one OpenOCD run. They are one unit — the bootloader's signed header carries the
+`firmware_root` that the firmware folds up to, and rebuilding the firmware
+changes that root, so the bootloader already on the device vouches only for the
+previous build. There is no useful "flash just the firmware" on a tree model.
+
+The header also carries `firmware_type`, the provisioning marker: 0 means the
+device reads as *unprovisioned* and boots nothing. An over-the-wire install
+writes the variant into it; a debugger install has nobody to do that, so
+`xtask flash` stamps it while writing the bootloader. The field is
+unauthenticated, so this needs no key and leaves the signature intact — the
+release itself stays bare. `bundle.json` records the byte's offset (the signer
+locates it by probing its own build) and each variant's value, so no tool
+duplicates the boot-header layout.
+
+`--variant` picks which variant to flash, needed only when the release holds
+more than one and the project does not name it by itself:
+
+```sh
+xtask flash prodtest -m t3w1                  # prodtest IS the variant
+xtask flash firmware -m t3w1 --variant custom  # a full release needs to be told
+```
+
+Flashing the bootloader on its own leaves it **bare** — the legitimate state of
+a fresh device, which then takes its firmware over the wire — unless
+`--variant` asks for it to be provisioned:
+
+```sh
+xtask flash bootloader -m t3w1                    # bare
+xtask flash bootloader -m t3w1 --variant btc-only  # provisioned, for testing
+```
+
+### Combining a release
+
+`xtask combine` builds the single image a factory line flashes, and takes its
+bootloader and firmware from the release on the same terms as `xtask flash` —
+same `--variant`, same stamp, same bootloader-is-bare-alone rule:
+
+```sh
+xtask combine prodtest -m t3w1
+```
+
+Flash it with the same project name plus `--combined`, which writes the whole
+chain in one go from the boardloader address — the command that puts a blank
+device into a working state:
+
+```sh
+xtask flash prodtest -m t3w1 --combined
+```
+
+The project here only names WHICH combined image; the image always starts at
+the bottom of the chain. Everything about its contents was settled by `xtask
+combine`, so `--variant` belongs there and is refused here.
+
+The combined image also pads the **UCB region with 0xFF**, not the 0x00 used
+between other sections. The bootloader erases that region on its first boot
+(`boot_ucb_erase`), so any other padding would make the device stop matching
+the image the moment it boots, and a line that verifies by reading flash back
+would fail. Padded with the erased value the erase is a no-op — the bootloader
+skips it entirely — and the image stays byte-identical. The rule generalises:
+a region the boot chain erases has to be combined in its erased state.
+
 ## Tips and common pitfalls
 
 - Omit `--board` to use the model's default board.

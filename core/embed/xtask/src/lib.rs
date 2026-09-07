@@ -10,6 +10,7 @@ pub mod memusage;
 pub mod model;
 pub mod options;
 pub mod postbuild;
+pub mod pq;
 pub mod prebuild;
 pub mod presets;
 pub mod upload;

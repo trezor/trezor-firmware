@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 pub use crate::model::Model;
 use crate::options::BuildOptions;
+use crate::pq::BootloaderSource;
 
 #[derive(ValueEnum, Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -148,6 +149,9 @@ pub enum Cmd {
     Upload(UploadArgs),
     /// Combine multiple firmware projects into a single binary for flashing
     Combine(CombineArgs),
+    /// Build a complete pq_secure release: every variant, folded into one
+    /// signed founder tree
+    Release(ReleaseArgs),
     /// Print current version of specified project
     PrintVersion(PrintVersionArgs),
 }
@@ -168,6 +172,37 @@ pub struct BuildArgs {
     /// Build preset
     #[arg(long, short = 'p')]
     pub preset: Option<String>,
+
+    /// Which bootloader binary a pq_secure release folds its firmware_root
+    /// into. The bootloader is never built implicitly; run `xtask build
+    /// bootloader` when you want a fresh one folded in.
+    #[arg(long, value_name = "SOURCE", default_value = "auto")]
+    pub bootloader: BootloaderSource,
+
+    #[command(flatten)]
+    pub options: BuildOptions,
+}
+
+#[derive(Args, Debug)]
+pub struct ReleaseArgs {
+    /// Target model. Omit to release EVERY model using the Merkle-tree layout.
+    ///
+    /// Each model's bootloader header carries its own firmware_root, so models
+    /// are independent: releasing one leaves the others' signatures untouched.
+    /// Omitting this is a convenience for cutting them together, not a joint
+    /// tree.
+    #[arg(long, short = 'm', ignore_case = true)]
+    pub model: Option<Model>,
+
+    /// Build preset
+    #[arg(long, short = 'p')]
+    pub preset: Option<String>,
+
+    /// Which bootloader binary a pq_secure release folds its firmware_root
+    /// into. The bootloader is never built implicitly; run `xtask build
+    /// bootloader` when you want a fresh one folded in.
+    #[arg(long, value_name = "SOURCE", default_value = "auto")]
+    pub bootloader: BootloaderSource,
 
     #[command(flatten)]
     pub options: BuildOptions,
