@@ -31,3 +31,12 @@ features = [
     "layout_eckhart",
     "display_rgba8888",
 ]
+
+# The SMP serial-recovery transport exists to push firmware to the nRF. Under
+# `pq_secure_boot` the BOOTLOADER does that (workflow_nrf_ota), so the kernel
+# has no use for it -- and while `smp` is present it still brings up the nRF
+# UART and its interrupt on every boot. Keep this coupled to `pq_secure_boot`
+# above: a build that drops the feature needs `smp` back, because then the
+# firmware is the only thing that can update the nRF.
+[project_overrides.kernel]
+exclude = ["smp"]
