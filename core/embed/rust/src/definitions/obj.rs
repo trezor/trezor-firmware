@@ -1,28 +1,39 @@
 use crypto::{cosi, ed25519};
 
-use super::constants;
+use super::error::Error as DefinitionsError;
+use super::{blob, constants};
+use crate::io::InputStream;
 use crate::micropython::buffer::get_buffer;
+use crate::micropython::exception::Exception;
 use crate::micropython::gc::Gc;
 use crate::micropython::macros::{obj_fn_var, obj_module};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
 use crate::micropython::qstr::Qstr;
+use crate::micropython::util::EXTERNAL_DATA_ERROR;
 use crate::micropython::{util, Error, Obj};
+use crate::protobuf::decode::Decoder;
+use crate::protobuf::obj::MsgDefObj;
+
+impl From<DefinitionsError> for Error {
+    fn from(error: DefinitionsError) -> Self {
+        let exc = Exception::new_with_arg(&EXTERNAL_DATA_ERROR, error.to_string());
+        Error::Exception(exc)
+    }
+}
 
 fn verify_with_keys(
     threshold: u8,
     digest: &[u8],
     sig: &cosi::Signature,
     public_keys: &[ed25519::PublicKey; 3],
-) -> Result<(), Error> {
+) -> Result<(), DefinitionsError> {
     cosi::verify(threshold, digest, public_keys, sig)
-        .map_err(|_| Error::ValueError(c"Signature verification failed"))
+        .map_err(|_| DefinitionsError::InvalidSignature)
 }
 
-fn threshold_for_version(version: u8) -> Result<u8, Error> {
-    let version = constants::DefsVersion::from_byte(version)
-        .ok_or(Error::ValueError(c"Unsupported definition format version"))?;
-    Ok(version.threshold())
+fn threshold_for_version(version: u8) -> Result<u8, DefinitionsError> {
+    constants::DefsVersion::try_from_byte(version).map(|version| version.threshold())
 }
 
 extern "C" fn decode(n_args: usize, args: *const Obj) -> Obj {
@@ -47,7 +58,7 @@ extern "C" fn decode(n_args: usize, args: *const Obj) -> Obj {
         };
         decoder
             .message_from_stream(&mut stream, msg_def.msg())
-            .map_err(|_| Error::ExternalDataError(c"Invalid definition"))
+            .map_err(|_| DefinitionsError::InvalidPayload.into())
     };
 
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
