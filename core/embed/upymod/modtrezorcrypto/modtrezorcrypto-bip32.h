@@ -542,17 +542,15 @@ static mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid curve name"));
   }
 
-  HDNode hdnode = {0};
-  int res = hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode);
+  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
+      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
+  o->fingerprint = 0;
 
-  if (!res) {
+  if (!hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &o->hdnode)) {
+    memzero(&o->hdnode, sizeof(o->hdnode));
     mp_raise_ValueError(MP_ERROR_TEXT("Failed to derive the root node"));
   }
 
-  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
-      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
-  o->hdnode = hdnode;
-  o->fingerprint = 0;
   return MP_OBJ_FROM_PTR(o);
 }
 static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj,
