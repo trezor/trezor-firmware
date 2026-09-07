@@ -3401,6 +3401,7 @@ if TYPE_CHECKING:
         formatter: "EthereumERC7730FieldFormatterType"
         token_path: "EthereumERC7730Path | None"
         threshold: "AnyBytes | None"
+        threshold_message: "str | None"
         decimals: "int | None"
         base: "str | None"
         prefix: "bool | None"
@@ -3418,6 +3419,7 @@ if TYPE_CHECKING:
             enum_values: "list[EthereumERC7730EnumEntry] | None" = None,
             token_path: "EthereumERC7730Path | None" = None,
             threshold: "AnyBytes | None" = None,
+            threshold_message: "str | None" = None,
             decimals: "int | None" = None,
             base: "str | None" = None,
             prefix: "bool | None" = None,
