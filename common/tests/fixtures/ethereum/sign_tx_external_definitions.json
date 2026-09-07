@@ -627,7 +627,7 @@
         {
             "name": "aave_lpv3_repayWithPermit",
             "parameters": {
-                "comment": "supported | unlimited external message | https://etherscan.io/tx/0x4e74a1a38d78e856268c527fa03ae8acfd5f392eeccb6f25f41af9c73cc84e2d",
+                "comment": " unlimited external message | https://etherscan.io/tx/0x4e74a1a38d78e856268c527fa03ae8acfd5f392eeccb6f25f41af9c73cc84e2d",
                 "data": "ee3e210b000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000200000000000000000000000011ce13cb0cd73f29dd05219213fa277b16f7b800000000000000000000000000000000000000000000000000000000006a9f2e0b000000000000000000000000000000000000000000000000000000000000001bd42acca912579a4c60ffb16035fb7e8df3dccfa067f9e17648766f4c27db94380729666c13c10b8cd28ef26157a003057ab75a2e19d57904063bf912a50f0a32",
                 "path": "m/44'/60'/0'/0/0",
                 "to_address": "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
@@ -642,6 +642,26 @@
                 "sig_v": 37,
                 "sig_r": "33e075f9434c224a6e9d127e1e8c8284848bf8360716fe0adb9afb58f1b4309a",
                 "sig_s": "24c6e1bf8c5033e88e1b8db7a493b057b81ff7d24ec241314062a4669cd85308"
+            }
+        },
+        {
+            "name": "aave_WrappedTokenGatewayV3_withdrawETH",
+            "parameters": {
+                "comment": "uses native currency parameter in token formatter | https://etherscan.io/tx/0x5c80804266f525ac45262cde1601fb07ccdec6fd5c5f863717d563c82f6577a9",
+                "data": "80500d2000000000000000000000000087870bca3f3fd6335c3f4ce8392d69350b4fa4e2ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000006f2eccc962975c9e2841db64b0e82c0b1218b4d3",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xd01607c3C5eCABa394D8be377a08590149325722",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "bf0257e259b0f04dd026f436cf890982107136da2381312b7a6133582b490e5a",
+                "sig_s": "4d9f0dad1f563fb378eb1e34194bea6ae6fefc460bda07c8c5faa15c2b1ce371"
             }
         }
     ]
