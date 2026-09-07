@@ -877,6 +877,10 @@ class FieldDefinition:
                 formatter_params["threshold"] = int.from_bytes(info.threshold, "big")
             if info.threshold_message is not None:
                 formatter_params["threshold_message"] = info.threshold_message
+            if info.native_currency_address:
+                formatter_params["native_currency_address"] = [
+                    bytes(addr) for addr in info.native_currency_address
+                ]
             formatter = TokenAmountFormatter(**formatter_params)
         elif fmt_type == FT.FORMATTER_UNIT:
             formatter_params = {}
