@@ -38,13 +38,14 @@ xtask build <project> -m <model> [options]
 - `xtask clean` — remove build artifacts.
 - `xtask fmt` — format Rust sources with rustfmt.
 - `xtask flash <project> -m <model>` — flash a built binary to a connected
-  device via OpenOCD.
+  device via OpenOCD. `--combined` flashes the combined image instead, from the
+  boardloader address.
 - `xtask flash-erase [section] -m <model>` — erase a flash section (`all`,
   `boardloader`, `bootloader`, `firmware`, `storage`).
 - `xtask reset -m <model>` — reset the connected device.
 - `xtask upload <project> -m <model>` — upload firmware/prodtest to a running
   device.
-- `xtask combine <project> -m <model>` — combine the dependency chain (e.g.
+- `xtask combine <project> -m <model>` — combine the boot chain (e.g.
   secmon + kernel + firmware) into a single flashable binary.
 
 ## Build options
@@ -288,6 +289,27 @@ OpenOCD and the flash start address read from the model's `memory.ld`;
 `upload` uses `trezorctl fw update`. Only flashable projects
 (boardloader, bootloader, bootloader_ci, firmware, prodtest) can be flashed,
 and only `firmware`/`prodtest` can be uploaded.
+
+`xtask flash <project> --combined` reads the combined image instead:
+
+- `build/artifacts/<MODEL_ID>/combined-<project>.bin`
+
+and writes it at `BOARDLOADER_START`, since a combined image always begins at
+the bottom of the boot chain — the project name only says WHICH image, not
+where it goes. This is the command that takes a blank device to a working
+state, boardloader included. Run `xtask combine <project>` first; the image is
+flashed exactly as combined, so everything about its contents was decided
+there.
+
+The combinable projects are a **narrower set than the flashable ones**: only
+`bootloader`, `bootloader_ci`, `firmware` and `prodtest` can head a combined
+image. `boardloader` cannot — it is the bottom of the chain that every combined
+image already starts with, so there is nothing for it to head.
+
+```sh
+xtask combine prodtest -m t3w1
+xtask flash   prodtest -m t3w1 --combined
+```
 
 ## Tips and common pitfalls
 
