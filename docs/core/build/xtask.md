@@ -252,6 +252,15 @@ Dependency builds (kernel, secmon when built as part of firmware) collect the
 ELF, map and compile_commands but **not** the `.bin`. `xtask combine` writes
 `combined-<project>.bin` here.
 
+A combined image pads the gaps between its sections with `0x00`, with one
+exception: a region the **boot chain erases on first boot** is padded with
+`0xFF`, the erased state. The bootloader erases the UCB region
+(`boot_ucb_erase`), so padding it with anything else would make the device stop
+matching the image it was flashed from the moment it boots, and a factory line
+that verifies by reading flash back would fail. Padded erased, the erase is a
+no-op and the image stays byte-identical. Models whose `memory.ld` declares no
+such region are unaffected.
+
 Files are copied only if newer, so rebuilding one project doesn't clobber
 others. The `latest` symlink always points at the model directory most recently
 built.
