@@ -3,12 +3,12 @@ use core::slice;
 use heapless::Vec;
 
 use super::error::Error;
-use super::ffi;
 use super::iter::IterBuf;
 use super::map::{Map, MapElem};
 use super::obj::Obj;
 use super::qstr::Qstr;
 use super::runtime::catch_exception;
+use super::{exception, ffi};
 
 /// Perform a call and convert errors into a raised MicroPython exception.
 /// Should only called when returning from Rust to C. See `raise_exception` for
@@ -154,3 +154,8 @@ pub fn get_slice(obj: Obj, offset: u16, len: u16) -> Result<Obj, Error> {
         ffi::mp_obj_subscr(obj, slice_obj, Obj::const_sentinel())
     })
 }
+
+pub static EXTERNAL_DATA_ERROR: exception::ExceptionType = exception::ExceptionType::new(
+    exception::builtin::ValueError,
+    Qstr::MP_QSTR_ExternalDataError,
+);

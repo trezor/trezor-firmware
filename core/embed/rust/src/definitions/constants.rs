@@ -1,5 +1,7 @@
 use crypto::ed25519;
 
+use super::error::Error;
+
 // Magic string at the beginning of every definition blob.
 pub const MAGIC: &[u8; 4] = b"trzd";
 
@@ -19,11 +21,11 @@ impl DefsVersion {
         }
     }
 
-    pub const fn from_byte(byte: u8) -> Option<Self> {
+    pub const fn try_from_byte(byte: u8) -> Result<Self, Error> {
         match byte {
-            b'1' => Some(DefsVersion::V1),
-            b'2' => Some(DefsVersion::V2),
-            _ => None,
+            b'1' => Ok(DefsVersion::V1),
+            b'2' => Ok(DefsVersion::V2),
+            _ => Err(Error::UnsupportedVersion),
         }
     }
 }
