@@ -197,6 +197,11 @@ pub struct FlashArgs {
     /// only replaces WHAT is written, not WHERE.
     #[arg(long, short = 'f', value_name = "FILE")]
     pub file: Option<PathBuf>,
+
+    /// Flash the combined image built by `xtask combine`. This puts a blank
+    /// device into a working state.
+    #[arg(long)]
+    pub combined: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
