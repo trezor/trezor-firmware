@@ -1372,6 +1372,7 @@ async def try_confirm(
         await _handle_generic_ui(
             calldata,
             display_format,
+            address_bytes,
             msg,
             defs,
             maximum_fee,
@@ -1528,6 +1529,7 @@ async def _handle_transfer(
 async def _handle_generic_ui(
     calldata: memoryview,
     display_format: DisplayFormat,
+    address_bytes: bytes,
     msg: MsgInSignTx,
     defs: Definitions,
     maximum_fee: str,
@@ -1573,10 +1575,15 @@ async def _handle_generic_ui(
         else display_format.provider_name
     )
 
+    account, account_path = get_account_and_path(msg.address_n)
+
     await require_confirm_clear_signing(
         recipient_str,
         display_format.intent,
         properties_to_confirm,
         maximum_fee,
         None if value_shown_as_field else amount,
+        account,
+        account_path,
+        address_from_bytes(address_bytes, defs.network),
     )
