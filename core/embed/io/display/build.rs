@@ -272,7 +272,11 @@ fn add_driver_vg2864(lib: &mut CLibrary) -> Result<()> {
 
 // AVNet (Multi-Inno) MI0240AGT-5CP1-F, 240x320 TFT, ST7789V2 controller
 // wired for 4-line 8-bit serial (SPI) mode. Self-contained driver, like
-// vg-2864, rather than a display_i8080 panel - see display/mi0240agt5cp1f/.
+// vg-2864, rather than a display_i8080 panel - shares the st7789v2_spi
+// driver core with mi0200aet1 below, with the panel-specific register init
+// sequence / orientation handling / IM-pin setup factored out into
+// display/st7789v2_spi/panels/mi0240agt5cp1f.c (see that driver core at
+// display/st7789v2_spi/display_driver.c for the #ifdef dispatch).
 fn add_driver_mi0240agt5cp1f(lib: &mut CLibrary) -> Result<()> {
     if cfg!(feature = "display_panel_mi0240agt5cp1f") {
         set_panel_mi0240agt5cp1f(lib);
@@ -280,7 +284,8 @@ fn add_driver_mi0240agt5cp1f(lib: &mut CLibrary) -> Result<()> {
         bail_unsupported!();
     }
     if cfg!(feature = "mcu_stm32u58") {
-        lib.add_source("display/mi0240agt5cp1f/display_driver.c");
+        lib.add_source("display/st7789v2_spi/display_driver.c");
+        lib.add_source("display/st7789v2_spi/panels/mi0240agt5cp1f.c");
     } else {
         bail_unsupported!();
     }
@@ -291,11 +296,9 @@ fn add_driver_mi0240agt5cp1f(lib: &mut CLibrary) -> Result<()> {
 // 240x320 TFT, ST7789V2 controller - electrically pin-compatible with
 // MI0240AGT-5CP1-F above on this board (same RESET/DC/SPI2 wiring - see
 // devkit.h), but this panel's IM[2:0] mode-select pins are not wired to the
-// MCU at all, so unlike that driver this one must not drive them. Kept as a
-// separate self-contained driver (like vg-2864) rather than an #ifdef inside
-// mi0240agt5cp1f/display_driver.c, matching the one-file-per-panel
-// convention already used for the i8080 panels - see
-// display/mi0200aet1/.
+// MCU at all, so unlike that driver this one must not drive them. Shares the
+// st7789v2_spi driver core with mi0240agt5cp1f above - see
+// display/st7789v2_spi/panels/mi0200aet1.c.
 fn add_driver_mi0200aet1(lib: &mut CLibrary) -> Result<()> {
     if cfg!(feature = "display_panel_mi0200aet1") {
         set_panel_mi0200aet1(lib);
@@ -303,7 +306,8 @@ fn add_driver_mi0200aet1(lib: &mut CLibrary) -> Result<()> {
         bail_unsupported!();
     }
     if cfg!(feature = "mcu_stm32u58") {
-        lib.add_source("display/mi0200aet1/display_driver.c");
+        lib.add_source("display/st7789v2_spi/display_driver.c");
+        lib.add_source("display/st7789v2_spi/panels/mi0200aet1.c");
     } else {
         bail_unsupported!();
     }
