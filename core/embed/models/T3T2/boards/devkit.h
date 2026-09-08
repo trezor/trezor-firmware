@@ -42,10 +42,13 @@
 #define BATTERY_MEAS_DIVIDER_NUM 1
 #define BATTERY_MEAS_DIVIDER_DEN 1
 
-// GC9307C (LX200B4501CTP03A/B) over i8080 FMC bus (see DISPLAY_IM0-2 below).
-// Same reset/DC/power-enable wiring is also used by the ST7789-based
-// DEM240320B1 panel (see display/i8080/panels/dem240320b1.c), still
-// supported as an alternate display_panel_dem240320b1 build option.
+// GC9307C (LX240D4508CTP05A/B) over i8080 FMC bus (see DISPLAY_IM0-2 below).
+// Pinout, resolution and init sequence are identical to the LX200B4501CTP03A/B
+// module (see display/i8080/panels/lx200b4501ctp03.c), still supported as an
+// alternate display_panel_lx200b4501ctp03 build option. Same reset/DC/
+// power-enable wiring is also used by the ST7789-based DEM240320B1 panel (see
+// display/i8080/panels/dem240320b1.c), still supported as an alternate
+// display_panel_dem240320b1 build option.
 // The module has no tearing-effect (TE) output, so no DISPLAY_TE_* defines.
 //
 // Bus width is a macro-level choice - flip the #if below to switch between
