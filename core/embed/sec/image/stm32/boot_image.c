@@ -248,7 +248,8 @@ void boot_image_replace(const boot_image_t *image) {
          "Bootloader image too small");
 
   // Read bootloader header
-  const boot_header_auth_t *hdr = boot_header_auth_get(header_address);
+  const boot_header_auth_t *hdr =
+      boot_header_auth_get((const void *)header_address);
   ensure((hdr != NULL) * sectrue, "Invalid bootloader header");
 
   // Check the image is big enough to hold both header and code
@@ -259,7 +260,8 @@ void boot_image_replace(const boot_image_t *image) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
-  const boot_header_auth_t *old_hdr = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t *old_hdr =
+      boot_header_auth_get((const void *)BOOTLOADER_START);
 
   ensure((old_hdr != NULL) * sectrue, "Invalid current bootloader header");
 
@@ -274,7 +276,7 @@ void boot_image_replace(const boot_image_t *image) {
 
   // Calculate the Merkle root from the header and the code
   merkle_proof_node_t merkle_root;
-  boot_header_calc_merkle_root(hdr, code_address, &merkle_root);
+  boot_header_calc_merkle_root(hdr, (const void *)code_address, &merkle_root);
 
   // Check whether the new bootloader is properly signed
   ensure(boot_header_check_signature(hdr, &merkle_root),

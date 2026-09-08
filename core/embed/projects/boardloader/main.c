@@ -157,7 +157,8 @@ static void try_bootloader_update(void) {
   }
 
   // Check if the new boot header is present and valid
-  const boot_header_auth_t* hdr = boot_header_auth_get(ucb.header_address);
+  const boot_header_auth_t* hdr =
+      boot_header_auth_get((const void*)ucb.header_address);
   if (hdr == NULL) {
     return;
   }
@@ -181,13 +182,14 @@ static void try_bootloader_update(void) {
 
   // Check if the new bootloader is the same as the old one
   // (just prevents unnecessary flash erase/write)
-  if (sectrue != bootloader_area_needs_update(hdr, code_address)) {
+  if (sectrue != bootloader_area_needs_update(hdr, (const void*)code_address,
+                                              (const void*)BOOTLOADER_START)) {
     return;
   }
 
   // Calculate the Merkle root
   merkle_proof_node_t merkle_root;
-  boot_header_calc_merkle_root(hdr, code_address, &merkle_root);
+  boot_header_calc_merkle_root(hdr, (const void*)code_address, &merkle_root);
 
   // Check whether the new bootloader is properly signed
   if (sectrue != boot_header_check_signature(hdr, &merkle_root)) {
@@ -254,7 +256,8 @@ static inline void ensure_signed_bootloader(
   fih_delay(0);
 
   // Check if the boot header is present and valid
-  const boot_header_auth_t* hdr = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t* hdr =
+      boot_header_auth_get((const void*)BOOTLOADER_START);
   fih_ensure(sectrue * (hdr != NULL), "invalid boot header");
 
   // Get address of the bootloader code
@@ -262,7 +265,7 @@ static inline void ensure_signed_bootloader(
 
   // Calculate the Merkle root from the header and the code
   merkle_proof_node_t merkle_root;
-  boot_header_calc_merkle_root(hdr, code_address, &merkle_root);
+  boot_header_calc_merkle_root(hdr, (const void*)code_address, &merkle_root);
 
   // Check the header signature
   fih_ensure(boot_header_check_signature(hdr, &merkle_root),
