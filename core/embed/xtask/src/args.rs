@@ -204,6 +204,13 @@ pub struct ReleaseArgs {
     #[arg(long, value_name = "SOURCE", default_value = "auto")]
     pub bootloader: BootloaderSource,
 
+    /// Copy the cut release into the tree as the committed presigned reference:
+    /// the cross-model bundle, each model's signed bootloader, and the secmon
+    /// pair. They are copied together because a bundle only folds against the
+    /// bootloader and secmon it was signed over.
+    #[arg(long)]
+    pub promote: bool,
+
     #[command(flatten)]
     pub options: BuildOptions,
 }
