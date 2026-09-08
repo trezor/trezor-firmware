@@ -181,7 +181,8 @@ static void try_bootloader_update(void) {
 
   // Check if the new bootloader is the same as the old one
   // (just prevents unnecessary flash erase/write)
-  if (sectrue != bootloader_area_needs_update(hdr, code_address)) {
+  if (sectrue !=
+      bootloader_area_needs_update(hdr, code_address, BOOTLOADER_START)) {
     return;
   }
 
