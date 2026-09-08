@@ -1389,7 +1389,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///
     ///     if utils.USE_BLE:
     ///         def ble_event(self, event: int, data: bytes) -> LayoutState | None:
-    ///             """Receive a BLE events."""
+    ///             """Receive a BLE event."""
     ///
     ///     if utils.USE_POWER_MANAGER:
     ///         def pm_event(self, flags: int) -> LayoutState | None:
