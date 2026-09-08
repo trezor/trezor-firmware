@@ -24,6 +24,12 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     } else if cfg!(feature = "mcu_stm32u5") {
         lib.add_source("flash/stm32u5/flash_layout.c");
 
+        // Uniform 8 KiB pages across the whole STM32U5 family, and the same
+        // value flash/unix/flash.c uses to build its emulated sector table.
+        // Consumed by flash_layout_ucb.c, which needs it at compile time and
+        // cannot read the HAL's FLASH_PAGE_SIZE on an emulator build.
+        lib.add_define("FLASH_LAYOUT_PAGE_SIZE", Some("0x2000"));
+
         if cfg!(feature = "emulator") {
             // TODO: do not use FLASH_BIT_ACCESS for emulating STM32U5
             // (keeping it for backward compatibility with the SCons build system,
@@ -56,6 +62,18 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         }
     } else {
         bail_unsupported!();
+    }
+
+    if cfg!(feature = "boot_ucb") {
+        // Where a staged image lives follows from the model's firmware region,
+        // not from the MCU, so this is shared rather than copied per family.
+        // It does need a uniform page size (set just above per MCU); an MCU
+        // with mixed sector sizes could not express the areas this way, which
+        // is why the guard is here and not a silent fallback.
+        if !cfg!(feature = "mcu_stm32u5") {
+            bail_unsupported!();
+        }
+        lib.add_source("flash/flash_layout_ucb.c");
     }
 
     Ok(())
