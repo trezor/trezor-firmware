@@ -18,7 +18,13 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     }
 
     if cfg!(feature = "emulator") {
-        lib.add_source("image/unix/boot_ucb.c");
+        // Gated like the stm32 side below: the UCB areas it writes only exist
+        // under USE_BOOT_UCB, so a model without the scheme must not pull this
+        // in. (It was ungated while the file was a stub that referenced
+        // nothing.)
+        if cfg!(feature = "boot_ucb") {
+            lib.add_source("image/unix/boot_ucb.c");
+        }
     } else if cfg!(feature = "mcu_stm32") {
         if cfg!(feature = "boot_ucb") {
             // USE_BOOT_UCB symbol is already define in sys layer

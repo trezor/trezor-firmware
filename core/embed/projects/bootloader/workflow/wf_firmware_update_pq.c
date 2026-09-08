@@ -20,6 +20,14 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+// Must sit at TOP LEVEL, not inside any #ifdef: it #undefs the model's flash
+// address constants so they resolve to the emulator's mapped addresses, and a
+// use further down the file that is NOT under the same condition would silently
+// get the device constant back -- a pointer to nothing on the host.
+#ifdef TREZOR_EMULATOR
+#include "../emulator.h"
+#endif
+
 #ifdef PQ_SECURE_BOOT
 
 // PQ secure boot only supports lockable-bootloader models: unofficial
@@ -207,8 +215,7 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   // --- Validate the new boot header (structure + model). ---
   //     boot_header_auth_get() also enforces hw_model/hw_revision, so a
   //     model mismatch is already rejected here as "Invalid boot header".
-  const boot_header_auth_t *hdr =
-      boot_header_auth_get(bh_buf);
+  const boot_header_auth_t *hdr = boot_header_auth_get(bh_buf);
   if (hdr == NULL || hdr->header_size > bh_len) {
     return fw_begin_fail(iface, "Invalid boot header");
   }
@@ -242,7 +249,8 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   //     guesses with a --full-bootloader flag.
   merkle_proof_node_t root;
   boot_header_calc_merkle_root(
-      hdr, (const void *)(BOOTLOADER_START + hdr->header_size), &root);
+      hdr, (const uint8_t *)(uintptr_t)BOOTLOADER_START + hdr->header_size,
+      &root);
   const bool code_conforms =
       (sectrue == boot_header_check_signature(hdr, &root));
   const bool have_code = msg->has_code_length && msg->code_length > 0;
@@ -412,7 +420,8 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   // never a silent install or a seed kept across storage domains.
   secbool keep_seed = secfalse;
   secbool empty_device = secfalse;
-  const boot_header_auth_t *cur = boot_header_auth_get((const void *)BOOTLOADER_START);
+  const boot_header_auth_t *cur =
+      boot_header_auth_get((const uint8_t *)(uintptr_t)BOOTLOADER_START);
   const boot_header_unauth_t *cur_unauth =
       (cur != NULL) ? boot_header_unauth_get(cur) : NULL;
   if (cur == NULL || cur_unauth == NULL || cur_unauth->firmware_type == 0) {
@@ -483,7 +492,7 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   // asking.
   const secbool skip_empty =
       (empty_device == sectrue && install_official == sectrue) ? sectrue
-                                                              : secfalse;
+                                                               : secfalse;
   if (sectrue != skip_empty && sectrue != skip_confirm &&
       CONFIRM != ui_screen_install_confirm_bootloader(
                      fw_version, firmware_root.bytes, keep_seed,
@@ -735,7 +744,8 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
   // manifest); fold the variant leaf through it to firmware_root. Its
   // (now-trusted) entries then drive the per-module verification as the modules
   // stream in.
-  const boot_header_auth_t *bl = boot_header_auth_get((const void *)BOOTLOADER_START);
+  const boot_header_auth_t *bl =
+      boot_header_auth_get((const uint8_t *)(uintptr_t)BOOTLOADER_START);
   if (bl == NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Invalid boot header");

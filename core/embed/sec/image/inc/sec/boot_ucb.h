@@ -61,14 +61,20 @@ secbool boot_ucb_read(boot_ucb_t* ucb);
  * or the bootloader header. Before calling this function, the updater must
  * store the bootloader header and code in flash memory.
  *
- * @param header_address Address of the start of the boot header in flash
- *        memory. This parameter is mandatory.
+ * The header is passed as a pointer because this function reads it (to hash
+ * it), while `code_address` is passed as an address because this function only
+ * records it: the boardloader is what dereferences it, on a later boot. The two
+ * coincide on the device, where flash is memory-mapped at that address, and do
+ * not on the emulator -- so they are kept apart in the signature.
+ *
+ * @param header Pointer to the start of the boot header in flash memory. This
+ *        parameter is mandatory.
  * @param code_address Address of the start of the bootloader code in flash
  *        memory. If the code is not present, it is expected that only the
  *        header will be updated and this parameter should be set to 0.
  * @return sectrue if the write was successful, secfalse otherwise.
  */
-secbool boot_ucb_write(uint32_t header_address, uint32_t code_address);
+secbool boot_ucb_write(const void* header, uint32_t code_address);
 
 /**
  * Erases the update control block in flash memory.

@@ -122,15 +122,18 @@ secbool boot_ucb_read(boot_ucb_t* ucb) {
   return sectrue;
 }
 
-secbool boot_ucb_write(uint32_t header_address, uint32_t code_address) {
+secbool boot_ucb_write(const void* header, uint32_t code_address) {
   boot_ucb_t ucb = {
       .magic = BOOT_UCB_MAGIC,
-      .header_address = header_address,
+      // Flash is memory-mapped at this address on the device, so the pointer
+      // the caller read the header through IS the address the boardloader will
+      // read it from.
+      .header_address = (uint32_t)(uintptr_t)header,
       .code_address = code_address,
   };
 
   // Calculate the hash of the header
-  boot_header_auth_t* hdr = (boot_header_auth_t*)header_address;
+  const boot_header_auth_t* hdr = (const boot_header_auth_t*)header;
 
   IMAGE_HASH_CTX ctx;
   IMAGE_HASH_INIT(&ctx);

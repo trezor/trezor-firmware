@@ -21,6 +21,19 @@
 
 #include <trezor_types.h>
 
+// The model's memory.h gives flash regions as absolute DEVICE addresses, which
+// the boot chain then dereferences directly -- correct on the MCU, where flash
+// is memory-mapped there. The emulator's flash is an mmap of `trezor.flash` at
+// whatever address the kernel picked, so those constants point at nothing. Each
+// one is replaced by a variable holding the mapped address of the same region,
+// assigned in main() once flash_init() has run.
+//
+// Include this AFTER trezor_model.h so the #undef takes effect, and note the
+// constants are gone in emulator builds: anything needing a compile-time value
+// (a linker script, a static initializer) cannot use these.
+
 #undef FIRMWARE_START
+#undef BOOTLOADER_START
 
 extern uintptr_t FIRMWARE_START;
+extern uintptr_t BOOTLOADER_START;

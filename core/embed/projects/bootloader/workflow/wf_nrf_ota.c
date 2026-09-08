@@ -20,6 +20,14 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+// Must sit at TOP LEVEL, not inside any #ifdef: it #undefs the model's flash
+// address constants so they resolve to the emulator's mapped addresses, and a
+// use further down the file that is NOT under the same condition would silently
+// get the device constant back -- a pointer to nothing on the host.
+#ifdef TREZOR_EMULATOR
+#include "../emulator.h"
+#endif
+
 #if defined(PQ_SECURE_BOOT) && defined(USE_SMP)
 
 #include <io/nrf.h>
@@ -76,7 +84,7 @@ static upload_status_t nrf_on_chunk(image_upload_handler_t *base,
   return UPLOAD_OK;  // fold + model-id verified in on_finish
 }
 
-// Run the PQ-native push gate against the boot header at `header_address` (the
+// Run the PQ-native push gate against the boot header at `boot_header` (the
 // one whose modelRoot we folded against). A classic image passes trivially; a
 // PQ-native one must additionally carry this release's founder signature
 // records, an image-side Merkle proof that folds, and no rogue TLVs --
@@ -84,8 +92,8 @@ static upload_status_t nrf_on_chunk(image_upload_handler_t *base,
 // only slot. See nrf_image_verify_for_push.
 static secbool nrf_pq_gate(const uint8_t *image, size_t image_len,
                            const merkle_proof_node_t *model_root,
-                           uint32_t header_address) {
-  const boot_header_auth_t *hdr = boot_header_auth_get((const void *)header_address);
+                           const void *boot_header) {
+  const boot_header_auth_t *hdr = boot_header_auth_get(boot_header);
   if (hdr == NULL) {
     return secfalse;
   }
@@ -139,9 +147,9 @@ static upload_status_t nrf_on_finish(image_upload_handler_t *base,
   //    since that is the header h->model_root came from (ucb_stage_verify). A
   //    classic image passes trivially. Rejecting here means we never erase a
   //    working nRF for an image its own MCUboot would refuse.
-  uint32_t staged_hdr = (uint32_t)(uintptr_t)flash_area_get_address(
-      &STAGING_AREA, 0, sizeof(boot_header_auth_t));
-  if (staged_hdr == 0 ||
+  const void *staged_hdr =
+      flash_area_get_address(&STAGING_AREA, 0, sizeof(boot_header_auth_t));
+  if (staged_hdr == NULL ||
       nrf_pq_gate(image, h->image_len, &h->model_root, staged_hdr) != sectrue) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "nRF image would be rejected by its bootloader");
@@ -213,14 +221,15 @@ void nrf_ota_resume_boot(void) {
   // ucb_stage_verify's fixed-boardloader path). The boardloader already
   // authenticated this header+code before running us, so recomputation is
   // trusted.
-  const boot_header_auth_t *cur = boot_header_auth_get((const void *)BOOTLOADER_START);
+  const boot_header_auth_t *cur =
+      boot_header_auth_get((const uint8_t *)(uintptr_t)BOOTLOADER_START);
   if (cur == NULL) {
     return;  // cannot verify -> keep staged, retry next boot
   }
   merkle_proof_node_t model_root;
-  boot_header_calc_merkle_root(cur,
-                               (const void *)(BOOTLOADER_START + cur->header_size),
-                               &model_root);
+  boot_header_calc_merkle_root(
+      cur, (const uint8_t *)(uintptr_t)BOOTLOADER_START + cur->header_size,
+      &model_root);
 
   // Founder commitment + cross-model guard against the INSTALLED root. A
   // stale/aborted/foreign descriptor (e.g. staged for a bootloader we did NOT
@@ -240,7 +249,8 @@ void nrf_ota_resume_boot(void) {
   // happened, so this is the release the staged nRF belongs to). Re-checked
   // here and not just trusted from staging time: this runs after a reboot, and
   // the push is what actually erases the nRF's only slot.
-  if (nrf_pq_gate(image, image_len, &model_root, BOOTLOADER_START) != sectrue) {
+  if (nrf_pq_gate(image, image_len, &model_root,
+                  (const uint8_t *)(uintptr_t)BOOTLOADER_START) != sectrue) {
     nrf_staging_clear();
     return;
   }

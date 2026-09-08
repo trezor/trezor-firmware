@@ -141,7 +141,8 @@ static secbool is_manufacturing_mode(void) {
   // POSITIVELY official prodtest variant -- anything else (custom, other
   // variant, missing header, glitch) returns secfalse and stays in the
   // fully-enforced state.
-  const boot_header_auth_t *bl = boot_header_auth_get((const void*)BOOTLOADER_START);
+  const boot_header_auth_t *bl =
+      boot_header_auth_get((const uint8_t *)(uintptr_t)BOOTLOADER_START);
   const boot_header_unauth_t *unauth =
       (bl != NULL) ? boot_header_unauth_get(bl) : NULL;
   if (unauth == NULL ||

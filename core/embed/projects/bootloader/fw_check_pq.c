@@ -20,6 +20,14 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+// Must sit at TOP LEVEL, not inside any #ifdef: it #undefs the model's flash
+// address constants so they resolve to the emulator's mapped addresses, and a
+// use further down the file that is NOT under the same condition would silently
+// get the device constant back -- a pointer to nothing on the host.
+#ifdef TREZOR_EMULATOR
+#include "emulator.h"
+#endif
+
 #include <sec/boot_header.h>
 
 #include "fw_check.h"
@@ -68,7 +76,8 @@ const char* tree_vendor_str(uint32_t variant, secbool is_official,
 secbool firmware_verify_tree(firmware_tree_info_t* info) {
   // The trusted firmware_root comes from our own boot header, which the
   // boardloader has already verified. It commits to the firmware tree.
-  const boot_header_auth_t* bl = boot_header_auth_get((const void*)BOOTLOADER_START);
+  const boot_header_auth_t* bl =
+      boot_header_auth_get((const uint8_t*)(uintptr_t)BOOTLOADER_START);
   if (bl == NULL) {
     return secfalse;
   }
@@ -188,7 +197,8 @@ void fw_check(fw_check_info_t* info) {
   // bootloader menu / reinstall, keeping storage. firmware_type lives in the
   // write-protected boot header unauth region (only the bootloader writes it)
   // and is carried across a bootloader update by the UCB hash.
-  const boot_header_auth_t* bh = boot_header_auth_get((const void*)BOOTLOADER_START);
+  const boot_header_auth_t* bh =
+      boot_header_auth_get((const uint8_t*)(uintptr_t)BOOTLOADER_START);
   const boot_header_unauth_t* unauth =
       (bh != NULL) ? boot_header_unauth_get(bh) : NULL;
   info->header_present =
@@ -226,7 +236,8 @@ void fw_run_prepare(fw_run_info_t* info) {
   ensure(firmware_verify_tree(&fw_tree), "Firmware is corrupted");
 
   // Single downgrade counter (bootloader monotonic) vs the signed boot header.
-  const boot_header_auth_t* bl = boot_header_auth_get((const void*)BOOTLOADER_START);
+  const boot_header_auth_t* bl =
+      boot_header_auth_get((const uint8_t*)(uintptr_t)BOOTLOADER_START);
   ensure((bl != NULL) * sectrue, "Invalid boot header");
   ensure(check_bootloader_min_version(bl->monotonic_version),
          "Firmware downgrade protection");
