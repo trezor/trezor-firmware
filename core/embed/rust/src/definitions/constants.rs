@@ -1,6 +1,7 @@
 use crypto::ed25519;
 
 use super::error::Error;
+use super::generated;
 
 // Magic string at the beginning of every definition blob.
 pub const MAGIC: &[u8; 4] = b"trzd";
@@ -18,6 +19,14 @@ impl DefsVersion {
         match self {
             DefsVersion::V1 => 2,
             DefsVersion::V2 => 1,
+        }
+    }
+
+    // Minimum accepted data version (definitions timestamp) for this version.
+    pub const fn min_data_version(self) -> u32 {
+        match self {
+            DefsVersion::V1 => generated::MIN_DATA_VERSION_V1,
+            DefsVersion::V2 => generated::MIN_DATA_VERSION_V2,
         }
     }
 

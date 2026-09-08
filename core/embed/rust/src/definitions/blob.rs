@@ -1,8 +1,8 @@
 use crypto::merkle::merkle_root;
 use crypto::{cosi, ed25519, sha256};
 
+use super::constants;
 use super::error::Error;
-use super::{constants, generated};
 use crate::io::InputStream;
 
 fn verify_with_keys(
@@ -49,7 +49,7 @@ pub fn parse_and_verify(definition: &[u8], expected_type: u8) -> Result<&[u8], E
 
     // data version
     let data_version = reader.read_u32_le()?;
-    if data_version < generated::MIN_DATA_VERSION {
+    if data_version < version.min_data_version() {
         return Err(Error::Outdated);
     }
 

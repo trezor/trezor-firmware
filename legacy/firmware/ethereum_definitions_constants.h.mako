@@ -9,7 +9,7 @@
 #include "crypto.h"
 #include "pb.h"
 
-#define MIN_DATA_VERSION ${defs_timestamp}
+#define MIN_DATA_VERSION ${defs_timestamps[1]}
 #define FORMAT_VERSION_LENGTH 5
 #define FORMAT_VERSION (const pb_byte_t *)"trzd1"
 
