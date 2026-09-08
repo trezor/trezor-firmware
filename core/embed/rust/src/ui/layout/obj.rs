@@ -370,13 +370,19 @@ impl LayoutObjInner {
         }
     }
 
-    fn obj_needs_params_refresh(&mut self) -> Obj {
-        let requested = self.params_requested;
-        self.params_requested = false;
-        requested.into()
+    /// Whether a component is waiting for fresh construction parameters.
+    ///
+    /// The request stays pending until `obj_update_params` serves it, so a
+    /// layout that asks while no parameters can be supplied keeps asking.
+    fn obj_needs_params_refresh(&self) -> Obj {
+        self.params_requested.into()
     }
 
     fn obj_update_params(&mut self, params: Obj) -> Result<Obj, Error> {
+        // A component may ask for another round while handling `UpdateParams`,
+        // and `obj_event` raises the flag at the end of the pass - so the
+        // pending request is cleared before the event is sent.
+        self.params_requested = false;
         self.obj_event(Event::UpdateParams(ParamsObj(params)))
     }
 

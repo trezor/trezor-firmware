@@ -75,9 +75,9 @@ class LayoutObj(Generic[T]):
     def button_request(self) -> tuple[ButtonRequestType, str] | None:
         """Return (code, type) of button request made during the last event or timer pass."""
     def needs_params_refresh(self) -> bool:
-        """Return True if the layout asked for fresh construction parameters
-        during the last event or timer pass.
-        Clears the request, so a second call returns False.
+        """Return True if the layout is waiting for fresh construction
+        parameters.
+        The request stays pending until `update_params()` serves it.
         """
     def update_params(self, params: dict[str, Any]) -> LayoutState | None:
         """Hand fresh construction parameters to the layout.

@@ -1364,10 +1364,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///         """Return (code, type) of button request made during the last event or timer pass."""
     ///
     ///     def needs_params_refresh(self) -> bool:
-    ///         """Return True if the layout asked for fresh construction parameters
-    ///         during the last event or timer pass.
+    ///         """Return True if the layout is waiting for fresh construction
+    ///         parameters.
     ///
-    ///         Clears the request, so a second call returns False.
+    ///         The request stays pending until `update_params()` serves it.
     ///         """
     ///
     ///     def update_params(self, params: dict[str, Any]) -> LayoutState | None:
