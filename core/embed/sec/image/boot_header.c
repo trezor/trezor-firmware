@@ -139,8 +139,8 @@ static const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
   return proof;
 }
 
-const boot_header_auth_t* boot_header_auth_get(uint32_t address) {
-  boot_header_auth_t* hdr = (boot_header_auth_t*)address;
+const boot_header_auth_t* boot_header_auth_get(uintptr_t header) {
+  const boot_header_auth_t* hdr = (const boot_header_auth_t*)header;
 
   // Check if the header starts with the magic
   if (hdr->magic != BOOT_HEADER_MAGIC_TRZQ) {
@@ -172,13 +172,16 @@ const boot_header_auth_t* boot_header_auth_get(uint32_t address) {
   }
 
   // Check if bootloader code size is within reasonable limits
-  if (hdr->code_size < SIZE_8K) {
+  _Static_assert(NONBOARDLOADER_MAXSIZE >= SIZE_64K,
+                 "non-boardloader area smaller than the maximum header size");
+  if (hdr->code_size < SIZE_8K ||
+      hdr->code_size > NONBOARDLOADER_MAXSIZE - hdr->header_size) {
     return NULL;
   }
 
   // Check if the hardware model and revision match
   if (hdr->hw_model != HW_MODEL || hdr->hw_revision != HW_REVISION) {
-    return secfalse;
+    return NULL;
   }
 
   // Check if the header contains a valid Merkle proof
@@ -219,8 +222,7 @@ const boot_header_unauth_t* boot_header_unauth_get(
   return unauth;
 }
 
-void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
-                                  uint32_t code_address,
+void boot_header_calc_merkle_root(const boot_header_auth_t* hdr, uintptr_t code,
                                   merkle_proof_node_t* root) {
   IMAGE_HASH_CTX ctx;
 
@@ -229,7 +231,7 @@ void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
 
   // Hash the bootloader code
   IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)code_address, hdr->code_size);
+  IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)code, hdr->code_size);
   IMAGE_HASH_FINAL(&ctx, root->bytes);
 
   // Hash the authenticated part of the header
@@ -258,12 +260,12 @@ void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
 }
 
 secbool bootloader_area_needs_update(const boot_header_auth_t* hdr,
-                                     uint32_t code_address) {
-  boot_header_auth_t* prev_hdr = (boot_header_auth_t*)BOOTLOADER_START;
+                                     uintptr_t code, uintptr_t prev_header) {
+  const boot_header_auth_t* prev_hdr = (const boot_header_auth_t*)prev_header;
   if (hdr->header_size == prev_hdr->header_size &&
       hdr->code_size == prev_hdr->code_size &&
       (memcmp(hdr, prev_hdr, hdr->header_size) == 0) &&
-      (memcmp((const uint8_t*)code_address,
+      (memcmp((const uint8_t*)code,
               (const uint8_t*)prev_hdr + prev_hdr->header_size,
               hdr->code_size) == 0)) {
     return secfalse;
