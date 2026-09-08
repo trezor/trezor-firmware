@@ -120,6 +120,7 @@ signed by the CoSi algorithm.
 
 The format version is bumped on backward incompatible change.
 For versions 1 and 2, the data structure is identical but the number of necessary signatures is changed from 2 to 1.
+Trezor One (legacy firmware) accepts only format version 2 since version 1.14.2.
 
 The full format of the definition is as follows:
 

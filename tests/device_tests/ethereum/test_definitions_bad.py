@@ -109,6 +109,16 @@ def _make_display_format_payload(
     )
 
 
+def downgrade_to_v1(payload: bytes) -> bytes:
+    """Downgrade a v2 payload to v1 by swapping the version byte.
+
+    Formats 1 and 2 differ only in the version byte, so this is equivalent to
+    building the payload with format_version=b"1". Must be done before
+    signing, since the version byte is covered by the signature.
+    """
+    return b"trzd1" + payload[5:]
+
+
 def _cases(session: Session) -> list[tuple]:
     cases: list[tuple] = [
         (make_payload, _fails_network),
@@ -133,11 +143,22 @@ def test_mangled_signature(session: Session) -> None:
         check(session, payload + proof + bad_signature, "Invalid definition signature")
 
 
+@pytest.mark.models("core")
 def test_not_enough_signatures(session: Session) -> None:
+    # version 1 requires two signatures, one is not enough
     for make, check in _cases(session):
-        payload = make()
+        payload = downgrade_to_v1(make())
         proof, signature = sign_payload(payload, [], threshold=1)
         check(session, payload + proof + signature, "Invalid definition signature")
+
+
+@pytest.mark.models("legacy")
+def test_v1_format_version_rejected(session: Session) -> None:
+    # legacy firmware accepts only format version 2
+    for make, check in _cases(session):
+        payload = downgrade_to_v1(make())
+        proof, signature = sign_payload(payload, [])
+        check(session, payload + proof + signature, "Invalid definition")
 
 
 def test_missing_signature(session: Session) -> None:
@@ -183,7 +204,7 @@ def test_bad_prefix(session: Session) -> None:
     for make, check in _cases(session):
         payload = make()
         # mangle the magic, keep a valid version byte
-        payload = b"trze1" + payload[5:]
+        payload = b"trze" + payload[4:]
         proof, signature = sign_payload(payload, [])
         check(session, payload + proof + signature, "Invalid definition")
 

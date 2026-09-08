@@ -40,7 +40,7 @@ def make_eth_token(
 
 def make_payload(
     magic: bytes = b"trzd",
-    format_version: bytes = b"1",
+    format_version: bytes = b"2",
     data_type: messages.DefinitionType = messages.DefinitionType.ETHEREUM_NETWORK,
     timestamp: int = 0xFFFF_FFFF,
     message: (
