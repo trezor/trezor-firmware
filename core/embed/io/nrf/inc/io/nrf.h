@@ -192,6 +192,13 @@ bool nrf_update(const uint8_t *image_ptr, size_t image_len);
  * (done_bytes, total_bytes) per chunk. For direct (non-syscall) callers such as
  * the bootloader OTA workflow, which drive a progress bar during the push.
  *
+ * `done` is NOT monotonic across the internal retries: a failed attempt is
+ * restarted from offset 0, so the next report drops back to one chunk. That is
+ * deliberate -- the upload really did start over, and a bar that visibly
+ * restarts is truthful where a stalled one would not be. Treat each
+ * (done, total) as an absolute position and render it as such; do NOT
+ * accumulate deltas or assume the sequence only rises.
+ *
  * @param image_ptr  Pointer to the firmware image in memory
  * @param image_len  Length of the firmware image in bytes
  * @param progress   Per-chunk callback (may be NULL); NOT usable across the
