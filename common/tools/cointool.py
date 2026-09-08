@@ -21,8 +21,14 @@ import coin_info
 from coin_info import Coin, CoinBuckets, Coins, CoinsInfo, FidoApps, SupportInfo
 
 DEFINITIONS_TIMESTAMP_PATH = (
-    coin_info.DEFS_DIR / "ethereum" / "released-definitions-timestamp.txt"
+    coin_info.DEFS_DIR / "ethereum" / "released-definitions-timestamp.json"
 )
+# Definitions format versions, kept in sync with ACTIVE_VERSIONS in
+# trezor/definitions. When a version is retired there, prune it here too,
+# otherwise MIN_DATA_VERSION for that version would freeze at its stale
+# timestamp.
+DEFINITIONS_FORMAT_VERSIONS: tuple[int, ...] = (1, 2)
+DEFINITIONS_METADATA_URL_TEMPLATE = "https://raw.githubusercontent.com/trezor/definitions/signed/definitions-latest-metadata-v{version}.json"
 DEFINITIONS_LATEST_URL = "https://raw.githubusercontent.com/trezor/definitions/signed/definitions-latest.json"
 
 HERE = Path(__file__).parent.resolve()
@@ -158,19 +164,30 @@ ALTCOIN_PREFIXES = (
 DEBUG_PREFIXES = ("debug",)
 
 
+def load_definitions_timestamps() -> dict[int, int]:
+    """Read per-version definitions timestamps, in unix seconds, keyed by version.
+
+    The timestamp file is a JSON object mapping format version (as string) to
+    an ISO 8601 datetime, written by the `new-definitions` command.
+    """
+    datetimes = json.loads(DEFINITIONS_TIMESTAMP_PATH.read_text())
+    return {
+        int(version): int(datetime.datetime.fromisoformat(dt).timestamp())
+        for version, dt in datetimes.items()
+    }
+
+
 def render_file(
     src: Path, dst: Path, coins: CoinsInfo, support_info: SupportInfo, models: list[str]
 ) -> None:
     """Renders `src` template into `dst`."""
     template = mako.template.Template(filename=str(src.resolve()))
-    eth_defs_date = datetime.datetime.fromisoformat(
-        DEFINITIONS_TIMESTAMP_PATH.read_text().strip()
-    )
+    defs_timestamps = load_definitions_timestamps()
     this_file = Path(src)
     result = template.render(
         support_info=support_info,
         supported_on=make_support_filter(support_info),
-        defs_timestamp=int(eth_defs_date.timestamp()),
+        defs_timestamps=defs_timestamps,
         THIS_FILE=this_file,
         ROOT=ROOT,
         ALTCOIN_PREFIXES=ALTCOIN_PREFIXES,
@@ -945,23 +962,73 @@ def render(
             do_render(file, file.parent / file.stem)
 
 
+def _fetch_json(url: str) -> Any:
+    assert requests is not None
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.json()
+
+
+def _fetch_definitions_metadata() -> dict[int, Any]:
+    """Fetch per-version definitions metadata from the `signed` branch.
+
+    Returns a dict of metadata objects keyed by definitions format version.
+    """
+    assert requests is not None
+    metadata: dict[int, Any] = {}
+    missing: list[int] = []
+    for version in DEFINITIONS_FORMAT_VERSIONS:
+        url = DEFINITIONS_METADATA_URL_TEMPLATE.format(version=version)
+        response = requests.get(url)
+        if response.status_code == 404:
+            missing.append(version)
+            continue
+        response.raise_for_status()
+        metadata[version] = response.json()
+
+    if not missing:
+        return metadata
+
+    if metadata:
+        raise click.ClickException(
+            "Some per-version metadata files are missing from the `signed` branch "
+            f"(versions: {', '.join(map(str, missing))}). "
+            "This is an inconsistent state -- check the trezor/definitions repo."
+        )
+
+    # MIGRATION FALLBACK: the `signed` branch does not carry per-version
+    # metadata yet (definitions-latest-metadata-v*.json were introduced in
+    # trezor/definitions PR #113). The upcoming release is the last one
+    # reading the old all-in-one definitions-latest.json; once it is cut and
+    # the `signed` branch is re-signed, remove this fallback.
+    print_log(
+        logging.WARNING,
+        "Per-version definitions metadata not found on the `signed` branch, "
+        f"falling back to legacy {DEFINITIONS_LATEST_URL}",
+    )
+    legacy_metadata = _fetch_json(DEFINITIONS_LATEST_URL)["metadata"]
+    return {version: legacy_metadata for version in DEFINITIONS_FORMAT_VERSIONS}
+
+
 # fmt: off
 @cli.command()
 @click.option("-v", "--verbose", is_flag=True, help="Print timestamp and merkle root")
 # fmt: on
 def new_definitions(verbose: bool) -> None:
     """Update timestamp of external coin definitions."""
-    assert requests is not None
-    eth_defs = requests.get(DEFINITIONS_LATEST_URL).json()
-    eth_defs_date = eth_defs["metadata"]["datetime"]
-    if verbose:
-        click.echo(
-            f"Latest definitions from {eth_defs_date}: {eth_defs['metadata']['merkle_root']}"
-        )
-    eth_defs_date = datetime.datetime.fromisoformat(eth_defs_date)
-    DEFINITIONS_TIMESTAMP_PATH.write_text(
-        eth_defs_date.isoformat(timespec="seconds") + "\n"
-    )
+    metadata = _fetch_definitions_metadata()
+    datetimes = {}
+    for version in DEFINITIONS_FORMAT_VERSIONS:
+        eth_defs_date = metadata[version]["datetime"]
+        if verbose:
+            click.echo(
+                f"Latest definitions v{version} from {eth_defs_date}: "
+                f"{metadata[version]['merkle_root']}"
+            )
+        # normalize to whole seconds
+        parsed_date = datetime.datetime.fromisoformat(eth_defs_date)
+        datetimes[str(version)] = parsed_date.isoformat(timespec="seconds")
+    DEFINITIONS_TIMESTAMP_PATH.write_text(json.dumps(datetimes) + "\n")
 
 
 if __name__ == "__main__":

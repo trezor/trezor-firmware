@@ -2,5 +2,7 @@
 // (by running `make templates` in `core`)
 // do not edit manually!
 
-/// Definitions older than this data version are rejected.
-pub const MIN_DATA_VERSION: u32 = ${defs_timestamp};
+/// v1 definitions older than this data version are rejected.
+pub const MIN_DATA_VERSION_V1: u32 = ${defs_timestamps[1]};
+/// v2 definitions older than this data version are rejected.
+pub const MIN_DATA_VERSION_V2: u32 = ${defs_timestamps[2]};
