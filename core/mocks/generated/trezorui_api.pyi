@@ -39,7 +39,7 @@ class LayoutObj(Generic[T]):
             """Receive a button event `event` for button `button`."""
     if utils.USE_BLE:
         def ble_event(self, event: int, data: bytes) -> LayoutState | None:
-            """Receive a BLE events."""
+            """Receive a BLE event."""
     if utils.USE_POWER_MANAGER:
         def pm_event(self, flags: int) -> LayoutState | None:
             """Receive a power management event with packed flags."""
