@@ -81,15 +81,22 @@ fn main() -> Result<()> {
             // The prefixed secmon MUST be the exact same binary the kernel was
             // built against (see kernel/build.rs embed_secmon_binary) or the
             // kernel secure-faults, so mirror that selection here:
-            //   - dev build: the freshly-built secmon (from source). A CUSTOM (--unsafe-fw)
-            //     build embeds the SAME dev secmon -- the secmon is founder-bound even for
-            //     the custom variant (only the app is unbound), so its manifest secmon
-            //     code_hash must match the founder-signed custom leaf. The secmon SOURCE
-            //     and the firmware VARIANT are independent axes.
+            //   - CUSTOM (--unsafe-fw): the COMMITTED secmon, because a custom build is
+            //     presigned -- it folds into an already-signed firmware_root whose custom
+            //     leaf covers that exact secmon.
+            //   - dev build: the freshly-built secmon (from source) -- a dev release cuts
+            //     its own tree over exactly that secmon.
             //   - release: the officially built secmon.
             let model_id = xbuild::current_model_id()?;
             let dir = PathBuf::from(format!("../../models/{}/secmon", model_id));
-            if cfg!(feature = "bootloader_devel") {
+            if cfg!(feature = "unsafe_fw") {
+                let bin = if cfg!(feature = "bootloader_devel") {
+                    "secmon_DEV.bin"
+                } else {
+                    "secmon.bin"
+                };
+                lib.embed_binary(dir.join(bin), "secmon")?;
+            } else if cfg!(feature = "bootloader_devel") {
                 let out_dir = xbuild::cargo_profile_dir()?;
                 lib.embed_binary(out_dir.join("secmon.bin"), "secmon")?;
             } else {

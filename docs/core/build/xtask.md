@@ -348,6 +348,80 @@ device that verifies nothing.
 bootloader is a released artifact whose exact bytes have to be signed over, and
 a local rebuild would be the wrong thing.
 
+### The committed reference set
+
+A third party can build custom firmware without any founder key, because the
+CUSTOM variant's Merkle leaf is code-independent: the authenticity fold zeroes
+the firmware version and the app entry's `size` and `code_hash`, so any
+creator's app folds to the one founder-signed custom slot. What the creator
+needs instead is a **reference set** — the signed pieces that slot hangs from.
+`xtask release --promote` copies a cut release into the tree as that set:
+
+| what | where it lands |
+| --- | --- |
+| the cross-model bundle | `models/bundle[_devel].json` |
+| each model's signed bootloader | `models/<MODEL_ID>/bootloaders/bootloader_<MODEL_ID>[_devel].bin` |
+| the secmon pair | `models/<MODEL_ID>/secmon/secmon[_DEV].bin` and `secmon_api[_DEV].o` |
+
+They are promoted together because a bundle only folds against the bootloader
+and secmon it was signed over. The bundle is one file for every model, keyed by
+model id, since the models are independent trees — merging is a convenience for
+whoever reads the set, not a joint tree. Production and development keys get
+separate files so promoting one set cannot touch the other's data.
+
+Two details about the pieces. The signed bootloader *replaces* the committed
+one rather than sitting beside it: signing rewrites the header and not the code,
+so the next release folds this same binary again. And the secmon travels as a
+pair — the kernel links the veneer object and secure-faults if it drifts from
+the binary it was built against — so a promote fails outright if only one of
+them was built.
+
+`presigned_check` proves a set still hangs together, folding the committed
+inputs rather than trusting that they were promoted at the same time:
+
+```sh
+python3 -m trezor_core_tools.presigned_check                 # every model, both key sets
+python3 -m trezor_core_tools.presigned_check -m T3W1
+python3 -m trezor_core_tools.presigned_check --from-release build-xtask/tree/T3W1
+```
+
+`--from-release` checks a freshly cut release directory instead of the
+committed set, which is what you want *before* promoting. It expects a full
+release — the custom slot is the thing being verified, and only `xtask release`
+cuts every variant, so a single-variant `xtask build` directory is refused.
+
+### Building custom firmware against it
+
+`--unsafe-fw` on a pq_secure model does not cut a tree. A fresh single-variant
+root would be self-consistent and useless — no field device carries it — and it
+is impossible with production keys anyway, so a custom build folds into the
+committed release instead:
+
+```sh
+xtask build firmware -m t3w1 --bootloader-devel --unsafe-fw
+```
+
+This needs no key. It builds the custom variant, checks the image's own leaf
+against the one the bundle records, bakes the committed co-path into the
+image's manifest region, and copies the promoted bootloader through unchanged.
+A missing bundle is refused up front, naming the fix — cut and promote a
+release first. The other way this fails is a leaf that does not match the one
+the bundle records, and that is reported field by field rather than as a bare
+hash mismatch, because the differing field is the thing a creator has to
+change.
+
+Everything the fold does *not* zero still has to match, and that includes the
+**whole secmon entry** — secmon is founder-bound even for custom, only the app
+is unbound. So a custom build embeds the *committed* secmon rather than a
+freshly built one, and `--bootloader` has no effect here: there is nothing to
+choose, since the image folds into a header that was signed elsewhere.
+
+The release directory and its zip are rebuilt from scratch each time. A
+previous full release's variant binaries left beside a bundle that lists them
+would invite installing a stale one, and `xtask upload` installs the zip rather
+than the directory, so a leftover zip is worse than a missing one — it is
+plausible, and it installs the wrong image.
+
 ### Flashing a release
 
 ```sh

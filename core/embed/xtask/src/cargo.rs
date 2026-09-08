@@ -20,11 +20,16 @@ pub fn build(args: BuildArgs) -> Result<()> {
     // same uninstallable manifest template (zero code_hash, no proof).
     if matches!(args.project, Project::Firmware | Project::Prodtest) && pq::applies(&resolved_args)?
     {
-        return pq::build_release(
-            &resolved_args,
-            &[pq::selected_variant(&resolved_args)],
-            args.bootloader,
-        );
+        let variant = pq::selected_variant(&resolved_args);
+        // A CUSTOM build never cuts a tree: its leaf is code-independent, so it
+        // folds into the one founder-signed custom slot of the COMMITTED
+        // release. A fresh single-variant root would be self-consistent and
+        // useless -- no field device carries it -- and it is impossible with
+        // production keys anyway, so dev takes the same path.
+        if variant == pq::Variant::Custom {
+            return pq::build_presigned(&resolved_args);
+        }
+        return pq::build_release(&resolved_args, &[variant], args.bootloader);
     }
 
     build_impl(resolved_args.clone(), false)?;
@@ -119,13 +124,28 @@ fn build_impl(args: ResolvedBuildArgs, is_dependency: bool) -> Result<()> {
     if !args.emulator {
         // Recursively build dependencies (Firmware -> Kernel -> Secmon)
         if let Some(dependency) = args.project.dependency(args.model)? {
-            build_impl(
-                ResolvedBuildArgs {
-                    project: dependency,
-                    ..args.clone()
-                },
-                true,
-            )?;
+            // A presigned CUSTOM build embeds the COMMITTED secmon -- the one
+            // the signed custom leaf covers -- so building one is not just
+            // wasted work: it would leave artifacts/<MODEL>/secmon.bin holding a
+            // binary that is NOT the one inside the firmware being built, which
+            // is the sort of near-miss that gets promoted by mistake.
+            let embeds_committed_secmon =
+                dependency == Project::Secmon && args.unsafe_fw && pq::applies(&args)?;
+            if embeds_committed_secmon {
+                println!(
+                    "{}",
+                    "xtask: skipping the secmon build -- a custom build embeds the committed one"
+                        .dimmed()
+                );
+            } else {
+                build_impl(
+                    ResolvedBuildArgs {
+                        project: dependency,
+                        ..args.clone()
+                    },
+                    true,
+                )?;
+            }
         }
     }
 
