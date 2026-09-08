@@ -6,7 +6,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_define("USE_NFC", Some("1"));
 
     if cfg!(feature = "emulator") {
-        // No sources for the emulator
+        lib.add_source("nfc/unix/nfc.c");
     } else if cfg!(feature = "mcu_stm32u5") {
         lib.add_sources_with_attrs(
             [
