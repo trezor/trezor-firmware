@@ -51,7 +51,8 @@ layout_eckhart = []
 log_stack_usage = []
 mcu_attestation = ["sec/mcu_attestation"]
 memperf = []
-n1w1 = []
+n1w1 = ["nfc"]
+nfc = ["io/nfc"]
 nem = []
 optiga = ["sec/optiga"]
 power_manager = ["io/power_manager"]
@@ -65,7 +66,6 @@ touch = ["io/touch"]
 touch_wakeup = ["io/touch_wakeup"]
 tropic = ["sec/tropic"]
 universal_fw = ["crypto/universal_fw"]
-nfc = []
 
 # --------------------------------------------------------------------------
 # Automatically derived features (do not enable from outside)
