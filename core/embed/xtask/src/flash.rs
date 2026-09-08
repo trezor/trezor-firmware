@@ -87,18 +87,34 @@ fn run_openocd(model: Model, instructions: &str) -> Result<()> {
 /// Tcl braces suppress every substitution, so `{...}` is the correct quoting
 /// and the braces are stripped before the command sees its argument.
 ///
-/// Braces and backslashes would break the brace grouping itself, so they are
-/// rejected rather than escaped: they are vanishingly rare in real paths, and a
-/// clear error beats a silently misparsed flash command.
+/// What still has to be rejected, since brace quoting cannot express it:
+///
+/// * Braces, which would close or unbalance the group itself.
+/// * Newlines: backslash-newline is the one substitution Tcl *does* perform
+///   inside braces, and a raw newline would also break the `;`-separated
+///   script.
+/// * A path ENDING in a backslash. Interior backslashes are literal inside
+///   braces, but Tcl does not count a brace that a backslash quotes when it
+///   looks for the matching close brace -- and the close brace here is the one
+///   this function appends. `foo\` would become `{foo\}`, whose `\}` is not the
+///   terminator, so the rest of the command gets swallowed into the word.
+///
+/// Interior backslashes are therefore allowed: rejecting them would refuse
+/// every Windows-style path for no reason.
 fn tcl_quote_path(path: &Path) -> Result<String> {
     let path = path
         .to_str()
         .with_context(|| format!("path is not valid UTF-8: {}", path.display()))?;
 
     ensure!(
-        !path.contains(['{', '}', '\\', '\n', '\r']),
+        !path.contains(['{', '}', '\n', '\r']),
         "path cannot be quoted for OpenOCD's Tcl parser \
-         (contains a brace, backslash or newline): {path}"
+         (contains a brace or newline): {path}"
+    );
+    ensure!(
+        !path.ends_with('\\'),
+        "path cannot be quoted for OpenOCD's Tcl parser \
+         (ends in a backslash, which would escape the closing brace): {path}"
     );
 
     Ok(format!("{{{path}}}"))
@@ -183,17 +199,42 @@ mod tests {
 
     #[test]
     fn rejects_paths_that_cannot_be_brace_quoted() {
-        // A brace or backslash would end (or unbalance) the brace group itself,
-        // so these fail loudly instead of producing a misparsed command.
-        for bad in ["/tmp/fw{.bin", "/tmp/fw}.bin", "/tmp/fw\\.bin"] {
+        // A brace would end (or unbalance) the group itself; a newline is the
+        // one thing Tcl still substitutes inside braces. A TRAILING backslash
+        // would escape the closing brace this code appends, so the rest of the
+        // command would be swallowed into the word.
+        for bad in [
+            "/tmp/fw{.bin",
+            "/tmp/fw}.bin",
+            "/tmp/fw\n.bin",
+            "/tmp/fw\r.bin",
+            "/tmp/builds\\",
+        ] {
             assert!(
                 tcl_quote_path(Path::new(bad)).is_err(),
-                "expected {bad} to be rejected"
+                "expected {bad:?} to be rejected"
             );
         }
 
         assert!(tcl_quote_path(Path::new("/tmp/fw.bin")).is_ok());
         assert!(tcl_quote_path(Path::new("/my builds/fw.bin")).is_ok());
+    }
+
+    /// Interior backslashes are literal inside Tcl braces, so a Windows-style
+    /// path must survive quoting untouched rather than being refused.
+    #[test]
+    fn accepts_interior_backslashes() {
+        assert_eq!(
+            tcl_quote_path(Path::new(r"C:\builds\fw.bin")).unwrap(),
+            r"{C:\builds\fw.bin}"
+        );
+        // An even run of trailing backslashes still leaves the close brace
+        // countable, but the check is deliberately conservative about the end
+        // of the path -- only the interior case is guaranteed.
+        assert_eq!(
+            tcl_quote_path(Path::new(r"/my builds\v2/fw.bin")).unwrap(),
+            r"{/my builds\v2/fw.bin}"
+        );
     }
 
     #[test]
