@@ -208,7 +208,7 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   //     boot_header_auth_get() also enforces hw_model/hw_revision, so a
   //     model mismatch is already rejected here as "Invalid boot header".
   const boot_header_auth_t *hdr =
-      boot_header_auth_get((uint32_t)(uintptr_t)bh_buf);
+      boot_header_auth_get(bh_buf);
   if (hdr == NULL || hdr->header_size > bh_len) {
     return fw_begin_fail(iface, "Invalid boot header");
   }
@@ -241,7 +241,8 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   //     we request it only when we actually need it, so the client no longer
   //     guesses with a --full-bootloader flag.
   merkle_proof_node_t root;
-  boot_header_calc_merkle_root(hdr, BOOTLOADER_START + hdr->header_size, &root);
+  boot_header_calc_merkle_root(
+      hdr, (const void *)(BOOTLOADER_START + hdr->header_size), &root);
   const bool code_conforms =
       (sectrue == boot_header_check_signature(hdr, &root));
   const bool have_code = msg->has_code_length && msg->code_length > 0;
@@ -411,7 +412,7 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   // never a silent install or a seed kept across storage domains.
   secbool keep_seed = secfalse;
   secbool empty_device = secfalse;
-  const boot_header_auth_t *cur = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t *cur = boot_header_auth_get((const void *)BOOTLOADER_START);
   const boot_header_unauth_t *cur_unauth =
       (cur != NULL) ? boot_header_unauth_get(cur) : NULL;
   if (cur == NULL || cur_unauth == NULL || cur_unauth->firmware_type == 0) {
@@ -734,7 +735,7 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
   // manifest); fold the variant leaf through it to firmware_root. Its
   // (now-trusted) entries then drive the per-module verification as the modules
   // stream in.
-  const boot_header_auth_t *bl = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t *bl = boot_header_auth_get((const void *)BOOTLOADER_START);
   if (bl == NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Invalid boot header");

@@ -397,7 +397,8 @@ typedef struct __attribute__((packed)) {
  *
  * Checks the magic number, header size, code size, hardware model and revision
  *
- * @param header Pointer to the boot header
+ * @param header Pointer to the boot header -- in flash on device, but any
+ *               readable buffer will do: this only parses and hashes
  * @return Pointer to the boot header if valid, NULL otherwise.
  */
 const boot_header_auth_t* boot_header_auth_get(const void* header);

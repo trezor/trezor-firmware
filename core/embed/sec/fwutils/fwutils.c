@@ -128,7 +128,7 @@ secbool firmware_get_vendor(char* buff, size_t buff_size) {
   // default MPU mode does not map -- switch to MPU_MODE_BOOTLOADER for the read
   // (same pattern as storage_salt_get).
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
-  const boot_header_auth_t* bl = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t* bl = boot_header_auth_get((const void*)BOOTLOADER_START);
   const boot_header_unauth_t* unauth =
       (bl != NULL) ? boot_header_unauth_get(bl) : NULL;
   uint8_t fw_type = (unauth != NULL) ? unauth->firmware_type : 0;

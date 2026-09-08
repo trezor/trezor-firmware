@@ -7,19 +7,22 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_define("USE_SECMON_VERIFICATION", Some("1"));
     }
 
+    // The boot header itself is portable: parsing, hashing and signature
+    // verification over a caller-supplied buffer, with no flash or MPU of its
+    // own. So it is shared rather than per-MCU -- a bootloader emulator IS the
+    // boot chain and cannot emulate anything without it, and the fw_merkle
+    // harnesses already build these files for the host. Only the parts that
+    // actually touch flash stay platform-specific.
     if cfg!(feature = "boot_ucb") {
-        lib.add_source("image/boot_header.c");
+        lib.add_sources(["image/boot_header.c", "image/boot_header_merkle.c"]);
     }
 
     if cfg!(feature = "emulator") {
-        lib.add_source("image/unix/boot_ucb.c")
+        lib.add_source("image/unix/boot_ucb.c");
     } else if cfg!(feature = "mcu_stm32") {
         if cfg!(feature = "boot_ucb") {
-            lib.add_sources([
-                "image/stm32/boot_header_merkle.c",
-                "image/stm32/boot_ucb.c",
-            ]);
             // USE_BOOT_UCB symbol is already define in sys layer
+            lib.add_source("image/stm32/boot_ucb.c");
         }
         lib.add_sources(["image/stm32/boot_image.c"]);
     } else {

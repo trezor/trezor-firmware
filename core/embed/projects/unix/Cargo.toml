@@ -39,6 +39,13 @@ micropy_enable_source_lines = ["upymod/enable_source_lines"]
 n1w1 = ["upymod/n1w1"]
 nfc = ["upymod/nfc"]
 optiga_testing = ["sec/optiga_testing"]
+# Accepted but INERT, like unsafe_fw above. The Merkle-tree scheme is entirely
+# about the boot chain -- a signed boot header, a firmware_root folded into it,
+# a UCB to stage through -- and the emulator has none of that: the unix binary
+# IS the whole artifact (see pq::applies in xtask). Forwarding this to sec would
+# compile the device-only PQ paths in sec/image and sec/fwutils, which reference
+# boot-header accessors that only exist for stm32.
+pq_secure_boot = []
 pyopt = ["upymod/pyopt"]
 ui_debug = ["trezor_lib/ui_debug"]
 ui_debug_overlay = ["trezor_lib/ui_debug_overlay"]

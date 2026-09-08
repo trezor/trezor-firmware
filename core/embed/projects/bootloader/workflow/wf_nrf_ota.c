@@ -85,7 +85,7 @@ static upload_status_t nrf_on_chunk(image_upload_handler_t *base,
 static secbool nrf_pq_gate(const uint8_t *image, size_t image_len,
                            const merkle_proof_node_t *model_root,
                            uint32_t header_address) {
-  const boot_header_auth_t *hdr = boot_header_auth_get(header_address);
+  const boot_header_auth_t *hdr = boot_header_auth_get((const void *)header_address);
   if (hdr == NULL) {
     return secfalse;
   }
@@ -213,12 +213,13 @@ void nrf_ota_resume_boot(void) {
   // ucb_stage_verify's fixed-boardloader path). The boardloader already
   // authenticated this header+code before running us, so recomputation is
   // trusted.
-  const boot_header_auth_t *cur = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t *cur = boot_header_auth_get((const void *)BOOTLOADER_START);
   if (cur == NULL) {
     return;  // cannot verify -> keep staged, retry next boot
   }
   merkle_proof_node_t model_root;
-  boot_header_calc_merkle_root(cur, BOOTLOADER_START + cur->header_size,
+  boot_header_calc_merkle_root(cur,
+                               (const void *)(BOOTLOADER_START + cur->header_size),
                                &model_root);
 
   // Founder commitment + cross-model guard against the INSTALLED root. A

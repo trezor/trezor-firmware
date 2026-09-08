@@ -47,7 +47,8 @@ void storage_salt_get(storage_salt_t* salt) {
   // header lives in the bootloader flash area, which the secmon's default MPU
   // mode does not map -- switch to MPU_MODE_BOOTLOADER for the read.
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
-  const boot_header_auth_t* bl = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t* bl =
+      boot_header_auth_get((const void*)BOOTLOADER_START);
   ensure((bl != NULL) * sectrue, "Invalid boot header");
   const boot_header_unauth_t* unauth = boot_header_unauth_get(bl);
   ensure((unauth != NULL) * sectrue, "Invalid boot header");

@@ -9,6 +9,27 @@ use crate::dep_tracking::{run_command, run_if_changed};
 use crate::helpers::{derive_output_path, ensure_parent_directory, path_from_env};
 use crate::is_rust_analyzer;
 
+/// The `objcopy` and output format for the target currently being built.
+///
+/// `embed_binary` turns a raw file into an object file, and that object has to
+/// carry the architecture of whatever will link it. Device builds cross-compile
+/// with `arm-none-eabi-objcopy`; an emulator build links a host binary and
+/// needs the host's, so the choice comes from `CARGO_CFG_TARGET_ARCH` rather
+/// than being fixed. Unknown architectures fail loudly here: a wrong object is
+/// a link error that names the file and not the cause.
+fn objcopy_for_target() -> Result<(&'static str, &'static str, &'static str)> {
+    let arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+    match arch.as_str() {
+        "arm" => Ok(("arm-none-eabi-objcopy", "elf32-littlearm", "arm")),
+        "x86_64" => Ok(("objcopy", "elf64-x86-64", "i386:x86-64")),
+        "aarch64" => Ok(("objcopy", "elf64-littleaarch64", "aarch64")),
+        other => Err(color_eyre::eyre::eyre!(
+            "embed_binary does not know which object format to emit for target \
+             architecture `{other}` -- add it to objcopy_for_target"
+        )),
+    }
+}
+
 impl CLibrary {
     /// Embeds a binary file into the library by converting it into an object
     /// file with symbols.
@@ -41,11 +62,17 @@ impl CLibrary {
         let out_dir = path_from_env("OUT_DIR")?;
         let output = derive_output_path(&base_dir, binary_path, &out_dir, "o");
 
-        let mut cmd = std::process::Command::new("arm-none-eabi-objcopy");
+        // The object has to match the target being linked, not the device we
+        // usually build for: an emulator links a HOST binary, and an ARM object
+        // in it fails at link time with "incompatible with elf64-x86-64" --
+        // which reads as a corrupt file rather than the wrong architecture.
+        let (objcopy, output_format, binary_arch) = objcopy_for_target()?;
+
+        let mut cmd = std::process::Command::new(objcopy);
 
         cmd.args(["-I", "binary"])
-            .args(["-O", "elf32-littlearm"])
-            .args(["-B", "arm"])
+            .args(["-O", output_format])
+            .args(["-B", binary_arch])
             .args(["--rename-section", &format!(".data=.{section}")])
             .args(redefine_sym("start"))
             .args(redefine_sym("end"))

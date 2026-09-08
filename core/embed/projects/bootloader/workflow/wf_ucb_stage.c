@@ -82,13 +82,13 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
   uint32_t staged = (uint32_t)(uintptr_t)flash_area_get_address(
       staging_area, 0, sizeof(boot_header_auth_t));
 
-  const boot_header_auth_t *hdr = boot_header_auth_get(staged);
+  const boot_header_auth_t *hdr = boot_header_auth_get((const void *)staged);
   if (hdr == NULL) {
     stage_report_failure(iface, "Invalid bootloader header");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER;
   }
 
-  const boot_header_auth_t *cur = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t *cur = boot_header_auth_get((const void *)BOOTLOADER_START);
   if (cur != NULL && hdr->monotonic_version < cur->monotonic_version) {
     stage_report_failure(iface, "Bootloader downgrade protection");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_VERSION;
@@ -131,7 +131,8 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
   // signature over that root. (firmware_type is outside auth_size, so a
   // device-set firmware_type does not affect this check.)
   merkle_proof_node_t merkle_root;
-  boot_header_calc_merkle_root(hdr, verify_code_address, &merkle_root);
+  boot_header_calc_merkle_root(hdr, (const void *)verify_code_address,
+                               &merkle_root);
 
   if (sectrue != boot_header_check_signature(hdr, &merkle_root)) {
     stage_report_failure(iface, "Invalid bootloader signature");
@@ -191,7 +192,7 @@ secbool ucb_stage_write_header(const uint8_t *data, uint32_t len) {
 
 #ifdef PQ_SECURE_BOOT
 secbool ucb_stage_clear_firmware_type(void) {
-  const boot_header_auth_t *installed = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t *installed = boot_header_auth_get((const void *)BOOTLOADER_START);
   if (installed == NULL) {
     return secfalse;
   }
@@ -206,9 +207,7 @@ secbool ucb_stage_clear_firmware_type(void) {
   uint8_t *staged = (uint8_t *)chunk_buffer;
   memcpy(staged, (const void *)(uintptr_t)BOOTLOADER_START, header_size);
 
-  boot_header_auth_t *hdr =
-      (boot_header_auth_t *)(uintptr_t)boot_header_auth_get(
-          (uint32_t)(uintptr_t)staged);
+  boot_header_auth_t *hdr = (boot_header_auth_t *)boot_header_auth_get(staged);
   if (hdr == NULL) {
     return secfalse;
   }
