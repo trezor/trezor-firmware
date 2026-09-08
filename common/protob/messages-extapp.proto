@@ -1,10 +1,11 @@
 syntax = "proto2";
-package hw.trezor.messages.trezorapps;
+package hw.trezor.messages.extapp;
 
 // Sugar for easier handling in Java
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
-option java_outer_classname = "MessageTrezorApp";
+option java_outer_classname = "MessageExtApp";
 
+import "messages-common.proto";
 import "options.proto";
 
 option (include_in_bitcoin_only) = true;
@@ -17,48 +18,47 @@ option (include_in_bitcoin_only) = true;
  * into Trezor.
  *
  * @start
- * @next TrezorAppLoaded
- * @next TrezorAppHeaderRequest
+ * @next ExtAppLoaded
+ * @next ExtAppHeaderRequest
  */
-message TrezorAppLoad {
+message ExtAppLoad {
     /// Application id
     required string id = 1;
     /// Minimal required version
-    repeated uint32 version = 2;
-    /// Hash of the app to load (optional)
-    required bytes hash = 3 [default = ''];
+    required common.Version version = 2;
+    /// Fingerprint of the app to load (optional)
+    required bytes fingerprint = 3 [default = ''];
 }
 
 /**
  * Response: External application loaded
  * @end
  */
-message TrezorAppLoaded {
-    /// Instance ID of the loaded app, referred to in TrezorAppRun
+message ExtAppLoaded {
+    /// Instance ID of the loaded app, referred to in ExtAppRun
     required uint32 instance_id = 1;
 }
 
 /**
  * Request: Ask for application header and merkle proof
  *
- * @next TrezorAppHeaderAck
- * @next TrezorAppRootPacketRequest
+ * @next ExtAppHeaderAck
  */
-message TrezorAppHeaderRequest {}
+message ExtAppHeaderRequest {}
 
 /**
  * Response: Application header and merkle proof
  *
- * @next TrezorAppDataChunkRequest
- * @next TrezorAppRootPacketRequest
+ * @next ExtAppDataChunkRequest
+ * @next ExtAppRootPacketRequest
  */
-message TrezorAppHeaderAck {
+message ExtAppHeaderAck {
     /// Application header
     required bytes header = 1;
     /// Merkle proof
     required bytes proof = 2;
     /// Root packet timestamp
-    required uint32 timestamp = 3;
+    required sint64 root_packet_timestamp = 3;
 }
 
 /**
@@ -67,22 +67,19 @@ message TrezorAppHeaderAck {
  * The device asks for a root packet required for verification
  * of the uploaded application.
  *
- * @next TrezorAppRootPacketAck
- * @next TrezorAppHeaderAck
+ * @next ExtAppRootPacketAck
  */
-message TrezorAppRootPacketRequest {
+message ExtAppRootPacketRequest {
     /// Application ring of the requested root packet
     required uint32 app_ring = 1;
-    /// Signals that the Trezor has the root packet with newer timestamp
-    required bool host_timestamp_stale = 2;
 }
 
 /**
  * Response: Root packet
  *
- * @next TrezorAppDataChunkRequest
+ * @next ExtAppDataChunkRequest
  */
-message TrezorAppRootPacketAck {
+message ExtAppRootPacketAck {
     /// Root packet content
     required bytes root_packet = 1;
 }
@@ -90,9 +87,9 @@ message TrezorAppRootPacketAck {
 /**
  * Response: Device asks for more data from application image.
  * @end
- * @next TrezorAppDataChunkAck
+ * @next ExtAppDataChunkAck
  */
-message TrezorAppDataChunkRequest {
+message ExtAppDataChunkRequest {
     /// Index of the requested chunk
     required uint32 index = 1;
 }
@@ -100,10 +97,10 @@ message TrezorAppDataChunkRequest {
 /**
  * Request: Data chunk sent to the device
  *
- * @next TrezorAppDataChunkRequest
- * @next TrezorAppLoaded
+ * @next ExtAppDataChunkRequest
+ * @next ExtAppLoaded
  */
-message TrezorAppDataChunkAck {
+message ExtAppDataChunkAck {
     /// Bytes from the application image
     required bytes data = 1;
     /// Hash used for the chunk verification
@@ -114,10 +111,10 @@ message TrezorAppDataChunkAck {
  * Request: Run a workflow in an external application.
  *
  * @start
- * @next TrezorAppResponse
+ * @next ExtAppResponse
  */
-message TrezorAppMessage {
-    /// Instance ID of a loaded external application, result of TrezorAppLoad.
+message ExtAppMessage {
+    /// Instance ID of a loaded external application, result of ExtAppLoad.
     required uint32 instance_id = 1;
     /// Message ID to pass to the external app.
     required uint32 message_id = 2;
@@ -127,9 +124,9 @@ message TrezorAppMessage {
 
 /**
  * Response: Response of a workflow in the external application.
- * @next TrezorAppMessage
+ * @next ExtAppMessage
  */
-message TrezorAppResponse {
+message ExtAppResponse {
     /// Message ID of the response.
     required uint32 message_id = 1;
     /// Data returned by the external application.

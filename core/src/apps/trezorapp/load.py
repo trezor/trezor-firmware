@@ -1,33 +1,36 @@
+import storage.device as storage_device
 import ustruct  # pyright: ignore[reportMissingImports]
 from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
 from trezor import app, log
 from trezor.crypto import random
 from trezor.messages import (
-    TrezorAppDataChunkAck,
-    TrezorAppDataChunkRequest,
-    TrezorAppHeaderAck,
-    TrezorAppHeaderRequest,
-    TrezorAppLoad,
-    TrezorAppLoaded,
-    TrezorAppRootPacketAck,
-    TrezorAppRootPacketRequest,
+    ExtAppDataChunkAck,
+    ExtAppDataChunkRequest,
+    ExtAppHeaderAck,
+    ExtAppHeaderRequest,
+    ExtAppLoad,
+    ExtAppLoaded,
+    ExtAppRootPacketAck,
+    ExtAppRootPacketRequest,
 )
 from trezor.wire import context
 from trezor.wire.errors import DataError
+from trezordefinitions import app_root_min_timestamp
 
 
-def image_matches(image: app.AppImage, msg: TrezorAppLoad) -> bool:
+def image_matches(image: app.AppImage, msg: ExtAppLoad) -> bool:
+    v = msg.version
     if image.id() != msg.id:
         return False
-    if image.version() < tuple(msg.version):
+    if image.version() < (v.major, v.minor, v.patch, v.build):
         return False
-    if msg.hash != b"" and image.header_hash() != msg.hash:
+    if msg.fingerprint != b"" and image.fingerprint() != msg.fingerprint:
         return False
     return True
 
 
-async def _load_image(msg: TrezorAppLoad) -> app.AppImage:
+async def _load_image(msg: ExtAppLoad) -> app.AppImage:
     from trezor import app
     from trezor.ui.layouts.progress import progress
 
@@ -36,8 +39,8 @@ async def _load_image(msg: TrezorAppLoad) -> app.AppImage:
     # ---------------------------------------------------------------
 
     header_ack = await context.call(
-        TrezorAppHeaderRequest(),
-        TrezorAppHeaderAck,
+        ExtAppHeaderRequest(),
+        ExtAppHeaderAck,
     )
 
     # ---------------------------------------------------------------
@@ -51,16 +54,17 @@ async def _load_image(msg: TrezorAppLoad) -> app.AppImage:
     else:
         root_timestamp = 0
 
-    if root_timestamp != header_ack.timestamp:
+    if root_timestamp != header_ack.root_packet_timestamp:
         root_packet_ack = await context.call(
-            TrezorAppRootPacketRequest(
-                app_ring=app_ring,
-                host_timestamp_stale=root_timestamp > header_ack.timestamp,
-            ),
-            TrezorAppRootPacketAck,
+            ExtAppRootPacketRequest(app_ring=app_ring),
+            ExtAppRootPacketAck,
         )
 
-        app.root_update(root_packet_ack.root_packet)
+        # Update the root packet
+        min_timestamp = app_root_min_timestamp()
+        state = app.AppRootState(min_timestamp, storage_device.get_app_root_state())
+        app.root_update(root_packet_ack.root_packet, state)
+        storage_device.set_app_root_state(state.serialize())
 
     # ---------------------------------------------------------------
     # Create image and load chunks
@@ -78,10 +82,10 @@ async def _load_image(msg: TrezorAppLoad) -> app.AppImage:
     for chunk_index in range(chunk_count):
         prog.report(int(chunk_index / chunk_count * 1000))
         chunk = await context.call(
-            TrezorAppDataChunkRequest(
+            ExtAppDataChunkRequest(
                 index=chunk_index,
             ),
-            TrezorAppDataChunkAck,
+            ExtAppDataChunkAck,
         )
         image.write_chunk(chunk.data, chunk.hash)
 
@@ -94,7 +98,7 @@ async def _load_image(msg: TrezorAppLoad) -> app.AppImage:
     return image
 
 
-async def load(msg: TrezorAppLoad) -> TrezorAppLoaded:
+async def load(msg: ExtAppLoad) -> ExtAppLoaded:
     """Load external application from a host"""
     from trezor import app
 
@@ -128,4 +132,4 @@ async def load(msg: TrezorAppLoad) -> TrezorAppLoaded:
     instance_id = random.uniform(2**32 - 1)
     cache_entry = ustruct.pack("<II", image.handle(), instance_id)
     get_sessionless_cache().set(cc.APP_EXTAPP_IDS, cache_entry)
-    return TrezorAppLoaded(instance_id=instance_id)
+    return ExtAppLoaded(instance_id=instance_id)

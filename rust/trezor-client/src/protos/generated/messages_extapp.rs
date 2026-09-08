@@ -18,35 +18,35 @@
 #![allow(unused_results)]
 #![allow(unused_mut)]
 
-//! Generated file from `messages-trezorapp.proto`
+//! Generated file from `messages-extapp.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
 const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_7_2;
 
-// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppLoad)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapp.ExtAppLoad)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct TrezorAppLoad {
+pub struct ExtAppLoad {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppLoad.id)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppLoad.id)
     pub id: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppLoad.version)
-    pub version: ::std::vec::Vec<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppLoad.hash)
-    pub hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppLoad.version)
+    pub version: ::protobuf::MessageField<super::messages_common::Version>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppLoad.fingerprint)
+    pub fingerprint: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppLoad.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppLoad.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a TrezorAppLoad {
-    fn default() -> &'a TrezorAppLoad {
-        <TrezorAppLoad as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppLoad {
+    fn default() -> &'a ExtAppLoad {
+        <ExtAppLoad as ::protobuf::Message>::default_instance()
     }
 }
 
-impl TrezorAppLoad {
-    pub fn new() -> TrezorAppLoad {
+impl ExtAppLoad {
+    pub fn new() -> ExtAppLoad {
         ::std::default::Default::default()
     }
 
@@ -86,40 +86,40 @@ impl TrezorAppLoad {
         self.id.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
-    // required bytes hash = 3;
+    // required bytes fingerprint = 3;
 
-    pub fn hash(&self) -> &[u8] {
-        match self.hash.as_ref() {
+    pub fn fingerprint(&self) -> &[u8] {
+        match self.fingerprint.as_ref() {
             Some(v) => v,
             None => b"",
         }
     }
 
-    pub fn clear_hash(&mut self) {
-        self.hash = ::std::option::Option::None;
+    pub fn clear_fingerprint(&mut self) {
+        self.fingerprint = ::std::option::Option::None;
     }
 
-    pub fn has_hash(&self) -> bool {
-        self.hash.is_some()
+    pub fn has_fingerprint(&self) -> bool {
+        self.fingerprint.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_hash(&mut self, v: ::std::vec::Vec<u8>) {
-        self.hash = ::std::option::Option::Some(v);
+    pub fn set_fingerprint(&mut self, v: ::std::vec::Vec<u8>) {
+        self.fingerprint = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.hash.is_none() {
-            self.hash = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_fingerprint(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.fingerprint.is_none() {
+            self.fingerprint = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.hash.as_mut().unwrap()
+        self.fingerprint.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_hash(&mut self) -> ::std::vec::Vec<u8> {
-        self.hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_fingerprint(&mut self) -> ::std::vec::Vec<u8> {
+        self.fingerprint.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
@@ -127,37 +127,45 @@ impl TrezorAppLoad {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "id",
-            |m: &TrezorAppLoad| { &m.id },
-            |m: &mut TrezorAppLoad| { &mut m.id },
+            |m: &ExtAppLoad| { &m.id },
+            |m: &mut ExtAppLoad| { &mut m.id },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_common::Version>(
             "version",
-            |m: &TrezorAppLoad| { &m.version },
-            |m: &mut TrezorAppLoad| { &mut m.version },
+            |m: &ExtAppLoad| { &m.version },
+            |m: &mut ExtAppLoad| { &mut m.version },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "hash",
-            |m: &TrezorAppLoad| { &m.hash },
-            |m: &mut TrezorAppLoad| { &mut m.hash },
+            "fingerprint",
+            |m: &ExtAppLoad| { &m.fingerprint },
+            |m: &mut ExtAppLoad| { &mut m.fingerprint },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppLoad>(
-            "TrezorAppLoad",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppLoad>(
+            "ExtAppLoad",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for TrezorAppLoad {
-    const NAME: &'static str = "TrezorAppLoad";
+impl ::protobuf::Message for ExtAppLoad {
+    const NAME: &'static str = "ExtAppLoad";
 
     fn is_initialized(&self) -> bool {
         if self.id.is_none() {
             return false;
         }
-        if self.hash.is_none() {
+        if self.version.is_none() {
             return false;
         }
+        if self.fingerprint.is_none() {
+            return false;
+        }
+        for v in &self.version {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -168,13 +176,10 @@ impl ::protobuf::Message for TrezorAppLoad {
                     self.id = ::std::option::Option::Some(is.read_string()?);
                 },
                 18 => {
-                    is.read_repeated_packed_uint32_into(&mut self.version)?;
-                },
-                16 => {
-                    self.version.push(is.read_uint32()?);
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.version)?;
                 },
                 26 => {
-                    self.hash = ::std::option::Option::Some(is.read_bytes()?);
+                    self.fingerprint = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -191,10 +196,11 @@ impl ::protobuf::Message for TrezorAppLoad {
         if let Some(v) = self.id.as_ref() {
             my_size += ::protobuf::rt::string_size(1, &v);
         }
-        for value in &self.version {
-            my_size += ::protobuf::rt::uint32_size(2, *value);
-        };
-        if let Some(v) = self.hash.as_ref() {
+        if let Some(v) = self.version.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.fingerprint.as_ref() {
             my_size += ::protobuf::rt::bytes_size(3, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -206,10 +212,10 @@ impl ::protobuf::Message for TrezorAppLoad {
         if let Some(v) = self.id.as_ref() {
             os.write_string(1, v)?;
         }
-        for v in &self.version {
-            os.write_uint32(2, *v)?;
-        };
-        if let Some(v) = self.hash.as_ref() {
+        if let Some(v) = self.version.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        if let Some(v) = self.fingerprint.as_ref() {
             os.write_bytes(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
@@ -224,64 +230,64 @@ impl ::protobuf::Message for TrezorAppLoad {
         &mut self.special_fields
     }
 
-    fn new() -> TrezorAppLoad {
-        TrezorAppLoad::new()
+    fn new() -> ExtAppLoad {
+        ExtAppLoad::new()
     }
 
     fn clear(&mut self) {
         self.id = ::std::option::Option::None;
         self.version.clear();
-        self.hash = ::std::option::Option::None;
+        self.fingerprint = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static TrezorAppLoad {
-        static instance: TrezorAppLoad = TrezorAppLoad {
+    fn default_instance() -> &'static ExtAppLoad {
+        static instance: ExtAppLoad = ExtAppLoad {
             id: ::std::option::Option::None,
-            version: ::std::vec::Vec::new(),
-            hash: ::std::option::Option::None,
+            version: ::protobuf::MessageField::none(),
+            fingerprint: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
     }
 }
 
-impl ::protobuf::MessageFull for TrezorAppLoad {
+impl ::protobuf::MessageFull for ExtAppLoad {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppLoad").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppLoad").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for TrezorAppLoad {
+impl ::std::fmt::Display for ExtAppLoad {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for TrezorAppLoad {
+impl ::protobuf::reflect::ProtobufValue for ExtAppLoad {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppLoaded)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapp.ExtAppLoaded)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct TrezorAppLoaded {
+pub struct ExtAppLoaded {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppLoaded.instance_id)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppLoaded.instance_id)
     pub instance_id: ::std::option::Option<u32>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppLoaded.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppLoaded.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a TrezorAppLoaded {
-    fn default() -> &'a TrezorAppLoaded {
-        <TrezorAppLoaded as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppLoaded {
+    fn default() -> &'a ExtAppLoaded {
+        <ExtAppLoaded as ::protobuf::Message>::default_instance()
     }
 }
 
-impl TrezorAppLoaded {
-    pub fn new() -> TrezorAppLoaded {
+impl ExtAppLoaded {
+    pub fn new() -> ExtAppLoaded {
         ::std::default::Default::default()
     }
 
@@ -309,19 +315,19 @@ impl TrezorAppLoaded {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "instance_id",
-            |m: &TrezorAppLoaded| { &m.instance_id },
-            |m: &mut TrezorAppLoaded| { &mut m.instance_id },
+            |m: &ExtAppLoaded| { &m.instance_id },
+            |m: &mut ExtAppLoaded| { &mut m.instance_id },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppLoaded>(
-            "TrezorAppLoaded",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppLoaded>(
+            "ExtAppLoaded",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for TrezorAppLoaded {
-    const NAME: &'static str = "TrezorAppLoaded";
+impl ::protobuf::Message for ExtAppLoaded {
+    const NAME: &'static str = "ExtAppLoaded";
 
     fn is_initialized(&self) -> bool {
         if self.instance_id.is_none() {
@@ -372,8 +378,8 @@ impl ::protobuf::Message for TrezorAppLoaded {
         &mut self.special_fields
     }
 
-    fn new() -> TrezorAppLoaded {
-        TrezorAppLoaded::new()
+    fn new() -> ExtAppLoaded {
+        ExtAppLoaded::new()
     }
 
     fn clear(&mut self) {
@@ -381,8 +387,8 @@ impl ::protobuf::Message for TrezorAppLoaded {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static TrezorAppLoaded {
-        static instance: TrezorAppLoaded = TrezorAppLoaded {
+    fn default_instance() -> &'static ExtAppLoaded {
+        static instance: ExtAppLoaded = ExtAppLoaded {
             instance_id: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -390,55 +396,55 @@ impl ::protobuf::Message for TrezorAppLoaded {
     }
 }
 
-impl ::protobuf::MessageFull for TrezorAppLoaded {
+impl ::protobuf::MessageFull for ExtAppLoaded {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppLoaded").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppLoaded").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for TrezorAppLoaded {
+impl ::std::fmt::Display for ExtAppLoaded {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for TrezorAppLoaded {
+impl ::protobuf::reflect::ProtobufValue for ExtAppLoaded {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppHeaderRequest)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapp.ExtAppHeaderRequest)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct TrezorAppHeaderRequest {
+pub struct ExtAppHeaderRequest {
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppHeaderRequest.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppHeaderRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a TrezorAppHeaderRequest {
-    fn default() -> &'a TrezorAppHeaderRequest {
-        <TrezorAppHeaderRequest as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppHeaderRequest {
+    fn default() -> &'a ExtAppHeaderRequest {
+        <ExtAppHeaderRequest as ::protobuf::Message>::default_instance()
     }
 }
 
-impl TrezorAppHeaderRequest {
-    pub fn new() -> TrezorAppHeaderRequest {
+impl ExtAppHeaderRequest {
+    pub fn new() -> ExtAppHeaderRequest {
         ::std::default::Default::default()
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(0);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppHeaderRequest>(
-            "TrezorAppHeaderRequest",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppHeaderRequest>(
+            "ExtAppHeaderRequest",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for TrezorAppHeaderRequest {
-    const NAME: &'static str = "TrezorAppHeaderRequest";
+impl ::protobuf::Message for ExtAppHeaderRequest {
+    const NAME: &'static str = "ExtAppHeaderRequest";
 
     fn is_initialized(&self) -> bool {
         true
@@ -477,62 +483,62 @@ impl ::protobuf::Message for TrezorAppHeaderRequest {
         &mut self.special_fields
     }
 
-    fn new() -> TrezorAppHeaderRequest {
-        TrezorAppHeaderRequest::new()
+    fn new() -> ExtAppHeaderRequest {
+        ExtAppHeaderRequest::new()
     }
 
     fn clear(&mut self) {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static TrezorAppHeaderRequest {
-        static instance: TrezorAppHeaderRequest = TrezorAppHeaderRequest {
+    fn default_instance() -> &'static ExtAppHeaderRequest {
+        static instance: ExtAppHeaderRequest = ExtAppHeaderRequest {
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
     }
 }
 
-impl ::protobuf::MessageFull for TrezorAppHeaderRequest {
+impl ::protobuf::MessageFull for ExtAppHeaderRequest {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppHeaderRequest").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppHeaderRequest").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for TrezorAppHeaderRequest {
+impl ::std::fmt::Display for ExtAppHeaderRequest {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for TrezorAppHeaderRequest {
+impl ::protobuf::reflect::ProtobufValue for ExtAppHeaderRequest {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppHeaderAck)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapp.ExtAppHeaderAck)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct TrezorAppHeaderAck {
+pub struct ExtAppHeaderAck {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppHeaderAck.header)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppHeaderAck.header)
     pub header: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppHeaderAck.proof)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppHeaderAck.proof)
     pub proof: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppHeaderAck.timestamp)
-    pub timestamp: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppHeaderAck.root_packet_timestamp)
+    pub root_packet_timestamp: ::std::option::Option<i64>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppHeaderAck.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppHeaderAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a TrezorAppHeaderAck {
-    fn default() -> &'a TrezorAppHeaderAck {
-        <TrezorAppHeaderAck as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppHeaderAck {
+    fn default() -> &'a ExtAppHeaderAck {
+        <ExtAppHeaderAck as ::protobuf::Message>::default_instance()
     }
 }
 
-impl TrezorAppHeaderAck {
-    pub fn new() -> TrezorAppHeaderAck {
+impl ExtAppHeaderAck {
+    pub fn new() -> ExtAppHeaderAck {
         ::std::default::Default::default()
     }
 
@@ -608,23 +614,23 @@ impl TrezorAppHeaderAck {
         self.proof.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // required uint32 timestamp = 3;
+    // required sint64 root_packet_timestamp = 3;
 
-    pub fn timestamp(&self) -> u32 {
-        self.timestamp.unwrap_or(0)
+    pub fn root_packet_timestamp(&self) -> i64 {
+        self.root_packet_timestamp.unwrap_or(0)
     }
 
-    pub fn clear_timestamp(&mut self) {
-        self.timestamp = ::std::option::Option::None;
+    pub fn clear_root_packet_timestamp(&mut self) {
+        self.root_packet_timestamp = ::std::option::Option::None;
     }
 
-    pub fn has_timestamp(&self) -> bool {
-        self.timestamp.is_some()
+    pub fn has_root_packet_timestamp(&self) -> bool {
+        self.root_packet_timestamp.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_timestamp(&mut self, v: u32) {
-        self.timestamp = ::std::option::Option::Some(v);
+    pub fn set_root_packet_timestamp(&mut self, v: i64) {
+        self.root_packet_timestamp = ::std::option::Option::Some(v);
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
@@ -632,29 +638,29 @@ impl TrezorAppHeaderAck {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "header",
-            |m: &TrezorAppHeaderAck| { &m.header },
-            |m: &mut TrezorAppHeaderAck| { &mut m.header },
+            |m: &ExtAppHeaderAck| { &m.header },
+            |m: &mut ExtAppHeaderAck| { &mut m.header },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "proof",
-            |m: &TrezorAppHeaderAck| { &m.proof },
-            |m: &mut TrezorAppHeaderAck| { &mut m.proof },
+            |m: &ExtAppHeaderAck| { &m.proof },
+            |m: &mut ExtAppHeaderAck| { &mut m.proof },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "timestamp",
-            |m: &TrezorAppHeaderAck| { &m.timestamp },
-            |m: &mut TrezorAppHeaderAck| { &mut m.timestamp },
+            "root_packet_timestamp",
+            |m: &ExtAppHeaderAck| { &m.root_packet_timestamp },
+            |m: &mut ExtAppHeaderAck| { &mut m.root_packet_timestamp },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppHeaderAck>(
-            "TrezorAppHeaderAck",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppHeaderAck>(
+            "ExtAppHeaderAck",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for TrezorAppHeaderAck {
-    const NAME: &'static str = "TrezorAppHeaderAck";
+impl ::protobuf::Message for ExtAppHeaderAck {
+    const NAME: &'static str = "ExtAppHeaderAck";
 
     fn is_initialized(&self) -> bool {
         if self.header.is_none() {
@@ -663,7 +669,7 @@ impl ::protobuf::Message for TrezorAppHeaderAck {
         if self.proof.is_none() {
             return false;
         }
-        if self.timestamp.is_none() {
+        if self.root_packet_timestamp.is_none() {
             return false;
         }
         true
@@ -679,7 +685,7 @@ impl ::protobuf::Message for TrezorAppHeaderAck {
                     self.proof = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 24 => {
-                    self.timestamp = ::std::option::Option::Some(is.read_uint32()?);
+                    self.root_packet_timestamp = ::std::option::Option::Some(is.read_sint64()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -699,8 +705,8 @@ impl ::protobuf::Message for TrezorAppHeaderAck {
         if let Some(v) = self.proof.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
-        if let Some(v) = self.timestamp {
-            my_size += ::protobuf::rt::uint32_size(3, v);
+        if let Some(v) = self.root_packet_timestamp {
+            my_size += ::protobuf::rt::sint64_size(3, v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -714,8 +720,8 @@ impl ::protobuf::Message for TrezorAppHeaderAck {
         if let Some(v) = self.proof.as_ref() {
             os.write_bytes(2, v)?;
         }
-        if let Some(v) = self.timestamp {
-            os.write_uint32(3, v)?;
+        if let Some(v) = self.root_packet_timestamp {
+            os.write_sint64(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -729,66 +735,64 @@ impl ::protobuf::Message for TrezorAppHeaderAck {
         &mut self.special_fields
     }
 
-    fn new() -> TrezorAppHeaderAck {
-        TrezorAppHeaderAck::new()
+    fn new() -> ExtAppHeaderAck {
+        ExtAppHeaderAck::new()
     }
 
     fn clear(&mut self) {
         self.header = ::std::option::Option::None;
         self.proof = ::std::option::Option::None;
-        self.timestamp = ::std::option::Option::None;
+        self.root_packet_timestamp = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static TrezorAppHeaderAck {
-        static instance: TrezorAppHeaderAck = TrezorAppHeaderAck {
+    fn default_instance() -> &'static ExtAppHeaderAck {
+        static instance: ExtAppHeaderAck = ExtAppHeaderAck {
             header: ::std::option::Option::None,
             proof: ::std::option::Option::None,
-            timestamp: ::std::option::Option::None,
+            root_packet_timestamp: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
     }
 }
 
-impl ::protobuf::MessageFull for TrezorAppHeaderAck {
+impl ::protobuf::MessageFull for ExtAppHeaderAck {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppHeaderAck").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppHeaderAck").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for TrezorAppHeaderAck {
+impl ::std::fmt::Display for ExtAppHeaderAck {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for TrezorAppHeaderAck {
+impl ::protobuf::reflect::ProtobufValue for ExtAppHeaderAck {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppRootPacketRequest)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapp.ExtAppRootPacketRequest)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct TrezorAppRootPacketRequest {
+pub struct ExtAppRootPacketRequest {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppRootPacketRequest.app_ring)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppRootPacketRequest.app_ring)
     pub app_ring: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppRootPacketRequest.host_timestamp_stale)
-    pub host_timestamp_stale: ::std::option::Option<bool>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppRootPacketRequest.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppRootPacketRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a TrezorAppRootPacketRequest {
-    fn default() -> &'a TrezorAppRootPacketRequest {
-        <TrezorAppRootPacketRequest as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppRootPacketRequest {
+    fn default() -> &'a ExtAppRootPacketRequest {
+        <ExtAppRootPacketRequest as ::protobuf::Message>::default_instance()
     }
 }
 
-impl TrezorAppRootPacketRequest {
-    pub fn new() -> TrezorAppRootPacketRequest {
+impl ExtAppRootPacketRequest {
+    pub fn new() -> ExtAppRootPacketRequest {
         ::std::default::Default::default()
     }
 
@@ -811,54 +815,27 @@ impl TrezorAppRootPacketRequest {
         self.app_ring = ::std::option::Option::Some(v);
     }
 
-    // required bool host_timestamp_stale = 2;
-
-    pub fn host_timestamp_stale(&self) -> bool {
-        self.host_timestamp_stale.unwrap_or(false)
-    }
-
-    pub fn clear_host_timestamp_stale(&mut self) {
-        self.host_timestamp_stale = ::std::option::Option::None;
-    }
-
-    pub fn has_host_timestamp_stale(&self) -> bool {
-        self.host_timestamp_stale.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_host_timestamp_stale(&mut self, v: bool) {
-        self.host_timestamp_stale = ::std::option::Option::Some(v);
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "app_ring",
-            |m: &TrezorAppRootPacketRequest| { &m.app_ring },
-            |m: &mut TrezorAppRootPacketRequest| { &mut m.app_ring },
+            |m: &ExtAppRootPacketRequest| { &m.app_ring },
+            |m: &mut ExtAppRootPacketRequest| { &mut m.app_ring },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "host_timestamp_stale",
-            |m: &TrezorAppRootPacketRequest| { &m.host_timestamp_stale },
-            |m: &mut TrezorAppRootPacketRequest| { &mut m.host_timestamp_stale },
-        ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppRootPacketRequest>(
-            "TrezorAppRootPacketRequest",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppRootPacketRequest>(
+            "ExtAppRootPacketRequest",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for TrezorAppRootPacketRequest {
-    const NAME: &'static str = "TrezorAppRootPacketRequest";
+impl ::protobuf::Message for ExtAppRootPacketRequest {
+    const NAME: &'static str = "ExtAppRootPacketRequest";
 
     fn is_initialized(&self) -> bool {
         if self.app_ring.is_none() {
-            return false;
-        }
-        if self.host_timestamp_stale.is_none() {
             return false;
         }
         true
@@ -869,9 +846,6 @@ impl ::protobuf::Message for TrezorAppRootPacketRequest {
             match tag {
                 8 => {
                     self.app_ring = ::std::option::Option::Some(is.read_uint32()?);
-                },
-                16 => {
-                    self.host_timestamp_stale = ::std::option::Option::Some(is.read_bool()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -888,9 +862,6 @@ impl ::protobuf::Message for TrezorAppRootPacketRequest {
         if let Some(v) = self.app_ring {
             my_size += ::protobuf::rt::uint32_size(1, v);
         }
-        if let Some(v) = self.host_timestamp_stale {
-            my_size += 1 + 1;
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -899,9 +870,6 @@ impl ::protobuf::Message for TrezorAppRootPacketRequest {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.app_ring {
             os.write_uint32(1, v)?;
-        }
-        if let Some(v) = self.host_timestamp_stale {
-            os.write_bool(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -915,62 +883,60 @@ impl ::protobuf::Message for TrezorAppRootPacketRequest {
         &mut self.special_fields
     }
 
-    fn new() -> TrezorAppRootPacketRequest {
-        TrezorAppRootPacketRequest::new()
+    fn new() -> ExtAppRootPacketRequest {
+        ExtAppRootPacketRequest::new()
     }
 
     fn clear(&mut self) {
         self.app_ring = ::std::option::Option::None;
-        self.host_timestamp_stale = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static TrezorAppRootPacketRequest {
-        static instance: TrezorAppRootPacketRequest = TrezorAppRootPacketRequest {
+    fn default_instance() -> &'static ExtAppRootPacketRequest {
+        static instance: ExtAppRootPacketRequest = ExtAppRootPacketRequest {
             app_ring: ::std::option::Option::None,
-            host_timestamp_stale: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
     }
 }
 
-impl ::protobuf::MessageFull for TrezorAppRootPacketRequest {
+impl ::protobuf::MessageFull for ExtAppRootPacketRequest {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppRootPacketRequest").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppRootPacketRequest").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for TrezorAppRootPacketRequest {
+impl ::std::fmt::Display for ExtAppRootPacketRequest {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for TrezorAppRootPacketRequest {
+impl ::protobuf::reflect::ProtobufValue for ExtAppRootPacketRequest {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppRootPacketAck)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapp.ExtAppRootPacketAck)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct TrezorAppRootPacketAck {
+pub struct ExtAppRootPacketAck {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppRootPacketAck.root_packet)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppRootPacketAck.root_packet)
     pub root_packet: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppRootPacketAck.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppRootPacketAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a TrezorAppRootPacketAck {
-    fn default() -> &'a TrezorAppRootPacketAck {
-        <TrezorAppRootPacketAck as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppRootPacketAck {
+    fn default() -> &'a ExtAppRootPacketAck {
+        <ExtAppRootPacketAck as ::protobuf::Message>::default_instance()
     }
 }
 
-impl TrezorAppRootPacketAck {
-    pub fn new() -> TrezorAppRootPacketAck {
+impl ExtAppRootPacketAck {
+    pub fn new() -> ExtAppRootPacketAck {
         ::std::default::Default::default()
     }
 
@@ -1015,19 +981,19 @@ impl TrezorAppRootPacketAck {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "root_packet",
-            |m: &TrezorAppRootPacketAck| { &m.root_packet },
-            |m: &mut TrezorAppRootPacketAck| { &mut m.root_packet },
+            |m: &ExtAppRootPacketAck| { &m.root_packet },
+            |m: &mut ExtAppRootPacketAck| { &mut m.root_packet },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppRootPacketAck>(
-            "TrezorAppRootPacketAck",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppRootPacketAck>(
+            "ExtAppRootPacketAck",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for TrezorAppRootPacketAck {
-    const NAME: &'static str = "TrezorAppRootPacketAck";
+impl ::protobuf::Message for ExtAppRootPacketAck {
+    const NAME: &'static str = "ExtAppRootPacketAck";
 
     fn is_initialized(&self) -> bool {
         if self.root_packet.is_none() {
@@ -1078,8 +1044,8 @@ impl ::protobuf::Message for TrezorAppRootPacketAck {
         &mut self.special_fields
     }
 
-    fn new() -> TrezorAppRootPacketAck {
-        TrezorAppRootPacketAck::new()
+    fn new() -> ExtAppRootPacketAck {
+        ExtAppRootPacketAck::new()
     }
 
     fn clear(&mut self) {
@@ -1087,8 +1053,8 @@ impl ::protobuf::Message for TrezorAppRootPacketAck {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static TrezorAppRootPacketAck {
-        static instance: TrezorAppRootPacketAck = TrezorAppRootPacketAck {
+    fn default_instance() -> &'static ExtAppRootPacketAck {
+        static instance: ExtAppRootPacketAck = ExtAppRootPacketAck {
             root_packet: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -1096,42 +1062,42 @@ impl ::protobuf::Message for TrezorAppRootPacketAck {
     }
 }
 
-impl ::protobuf::MessageFull for TrezorAppRootPacketAck {
+impl ::protobuf::MessageFull for ExtAppRootPacketAck {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppRootPacketAck").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppRootPacketAck").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for TrezorAppRootPacketAck {
+impl ::std::fmt::Display for ExtAppRootPacketAck {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for TrezorAppRootPacketAck {
+impl ::protobuf::reflect::ProtobufValue for ExtAppRootPacketAck {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppDataChunkRequest)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapp.ExtAppDataChunkRequest)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct TrezorAppDataChunkRequest {
+pub struct ExtAppDataChunkRequest {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppDataChunkRequest.index)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppDataChunkRequest.index)
     pub index: ::std::option::Option<u32>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppDataChunkRequest.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppDataChunkRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a TrezorAppDataChunkRequest {
-    fn default() -> &'a TrezorAppDataChunkRequest {
-        <TrezorAppDataChunkRequest as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppDataChunkRequest {
+    fn default() -> &'a ExtAppDataChunkRequest {
+        <ExtAppDataChunkRequest as ::protobuf::Message>::default_instance()
     }
 }
 
-impl TrezorAppDataChunkRequest {
-    pub fn new() -> TrezorAppDataChunkRequest {
+impl ExtAppDataChunkRequest {
+    pub fn new() -> ExtAppDataChunkRequest {
         ::std::default::Default::default()
     }
 
@@ -1159,19 +1125,19 @@ impl TrezorAppDataChunkRequest {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "index",
-            |m: &TrezorAppDataChunkRequest| { &m.index },
-            |m: &mut TrezorAppDataChunkRequest| { &mut m.index },
+            |m: &ExtAppDataChunkRequest| { &m.index },
+            |m: &mut ExtAppDataChunkRequest| { &mut m.index },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppDataChunkRequest>(
-            "TrezorAppDataChunkRequest",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppDataChunkRequest>(
+            "ExtAppDataChunkRequest",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for TrezorAppDataChunkRequest {
-    const NAME: &'static str = "TrezorAppDataChunkRequest";
+impl ::protobuf::Message for ExtAppDataChunkRequest {
+    const NAME: &'static str = "ExtAppDataChunkRequest";
 
     fn is_initialized(&self) -> bool {
         if self.index.is_none() {
@@ -1222,8 +1188,8 @@ impl ::protobuf::Message for TrezorAppDataChunkRequest {
         &mut self.special_fields
     }
 
-    fn new() -> TrezorAppDataChunkRequest {
-        TrezorAppDataChunkRequest::new()
+    fn new() -> ExtAppDataChunkRequest {
+        ExtAppDataChunkRequest::new()
     }
 
     fn clear(&mut self) {
@@ -1231,8 +1197,8 @@ impl ::protobuf::Message for TrezorAppDataChunkRequest {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static TrezorAppDataChunkRequest {
-        static instance: TrezorAppDataChunkRequest = TrezorAppDataChunkRequest {
+    fn default_instance() -> &'static ExtAppDataChunkRequest {
+        static instance: ExtAppDataChunkRequest = ExtAppDataChunkRequest {
             index: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -1240,44 +1206,44 @@ impl ::protobuf::Message for TrezorAppDataChunkRequest {
     }
 }
 
-impl ::protobuf::MessageFull for TrezorAppDataChunkRequest {
+impl ::protobuf::MessageFull for ExtAppDataChunkRequest {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppDataChunkRequest").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppDataChunkRequest").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for TrezorAppDataChunkRequest {
+impl ::std::fmt::Display for ExtAppDataChunkRequest {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for TrezorAppDataChunkRequest {
+impl ::protobuf::reflect::ProtobufValue for ExtAppDataChunkRequest {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppDataChunkAck)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapp.ExtAppDataChunkAck)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct TrezorAppDataChunkAck {
+pub struct ExtAppDataChunkAck {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppDataChunkAck.data)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppDataChunkAck.data)
     pub data: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppDataChunkAck.hash)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppDataChunkAck.hash)
     pub hash: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppDataChunkAck.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppDataChunkAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a TrezorAppDataChunkAck {
-    fn default() -> &'a TrezorAppDataChunkAck {
-        <TrezorAppDataChunkAck as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppDataChunkAck {
+    fn default() -> &'a ExtAppDataChunkAck {
+        <ExtAppDataChunkAck as ::protobuf::Message>::default_instance()
     }
 }
 
-impl TrezorAppDataChunkAck {
-    pub fn new() -> TrezorAppDataChunkAck {
+impl ExtAppDataChunkAck {
+    pub fn new() -> ExtAppDataChunkAck {
         ::std::default::Default::default()
     }
 
@@ -1358,24 +1324,24 @@ impl TrezorAppDataChunkAck {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "data",
-            |m: &TrezorAppDataChunkAck| { &m.data },
-            |m: &mut TrezorAppDataChunkAck| { &mut m.data },
+            |m: &ExtAppDataChunkAck| { &m.data },
+            |m: &mut ExtAppDataChunkAck| { &mut m.data },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "hash",
-            |m: &TrezorAppDataChunkAck| { &m.hash },
-            |m: &mut TrezorAppDataChunkAck| { &mut m.hash },
+            |m: &ExtAppDataChunkAck| { &m.hash },
+            |m: &mut ExtAppDataChunkAck| { &mut m.hash },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppDataChunkAck>(
-            "TrezorAppDataChunkAck",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppDataChunkAck>(
+            "ExtAppDataChunkAck",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for TrezorAppDataChunkAck {
-    const NAME: &'static str = "TrezorAppDataChunkAck";
+impl ::protobuf::Message for ExtAppDataChunkAck {
+    const NAME: &'static str = "ExtAppDataChunkAck";
 
     fn is_initialized(&self) -> bool {
         if self.data.is_none() {
@@ -1438,8 +1404,8 @@ impl ::protobuf::Message for TrezorAppDataChunkAck {
         &mut self.special_fields
     }
 
-    fn new() -> TrezorAppDataChunkAck {
-        TrezorAppDataChunkAck::new()
+    fn new() -> ExtAppDataChunkAck {
+        ExtAppDataChunkAck::new()
     }
 
     fn clear(&mut self) {
@@ -1448,8 +1414,8 @@ impl ::protobuf::Message for TrezorAppDataChunkAck {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static TrezorAppDataChunkAck {
-        static instance: TrezorAppDataChunkAck = TrezorAppDataChunkAck {
+    fn default_instance() -> &'static ExtAppDataChunkAck {
+        static instance: ExtAppDataChunkAck = ExtAppDataChunkAck {
             data: ::std::option::Option::None,
             hash: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
@@ -1458,46 +1424,46 @@ impl ::protobuf::Message for TrezorAppDataChunkAck {
     }
 }
 
-impl ::protobuf::MessageFull for TrezorAppDataChunkAck {
+impl ::protobuf::MessageFull for ExtAppDataChunkAck {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppDataChunkAck").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppDataChunkAck").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for TrezorAppDataChunkAck {
+impl ::std::fmt::Display for ExtAppDataChunkAck {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for TrezorAppDataChunkAck {
+impl ::protobuf::reflect::ProtobufValue for ExtAppDataChunkAck {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppMessage)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapp.ExtAppMessage)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct TrezorAppMessage {
+pub struct ExtAppMessage {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppMessage.instance_id)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppMessage.instance_id)
     pub instance_id: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppMessage.message_id)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppMessage.message_id)
     pub message_id: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppMessage.data)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppMessage.data)
     pub data: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppMessage.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppMessage.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a TrezorAppMessage {
-    fn default() -> &'a TrezorAppMessage {
-        <TrezorAppMessage as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppMessage {
+    fn default() -> &'a ExtAppMessage {
+        <ExtAppMessage as ::protobuf::Message>::default_instance()
     }
 }
 
-impl TrezorAppMessage {
-    pub fn new() -> TrezorAppMessage {
+impl ExtAppMessage {
+    pub fn new() -> ExtAppMessage {
         ::std::default::Default::default()
     }
 
@@ -1580,29 +1546,29 @@ impl TrezorAppMessage {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "instance_id",
-            |m: &TrezorAppMessage| { &m.instance_id },
-            |m: &mut TrezorAppMessage| { &mut m.instance_id },
+            |m: &ExtAppMessage| { &m.instance_id },
+            |m: &mut ExtAppMessage| { &mut m.instance_id },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "message_id",
-            |m: &TrezorAppMessage| { &m.message_id },
-            |m: &mut TrezorAppMessage| { &mut m.message_id },
+            |m: &ExtAppMessage| { &m.message_id },
+            |m: &mut ExtAppMessage| { &mut m.message_id },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "data",
-            |m: &TrezorAppMessage| { &m.data },
-            |m: &mut TrezorAppMessage| { &mut m.data },
+            |m: &ExtAppMessage| { &m.data },
+            |m: &mut ExtAppMessage| { &mut m.data },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppMessage>(
-            "TrezorAppMessage",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppMessage>(
+            "ExtAppMessage",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for TrezorAppMessage {
-    const NAME: &'static str = "TrezorAppMessage";
+impl ::protobuf::Message for ExtAppMessage {
+    const NAME: &'static str = "ExtAppMessage";
 
     fn is_initialized(&self) -> bool {
         if self.instance_id.is_none() {
@@ -1677,8 +1643,8 @@ impl ::protobuf::Message for TrezorAppMessage {
         &mut self.special_fields
     }
 
-    fn new() -> TrezorAppMessage {
-        TrezorAppMessage::new()
+    fn new() -> ExtAppMessage {
+        ExtAppMessage::new()
     }
 
     fn clear(&mut self) {
@@ -1688,8 +1654,8 @@ impl ::protobuf::Message for TrezorAppMessage {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static TrezorAppMessage {
-        static instance: TrezorAppMessage = TrezorAppMessage {
+    fn default_instance() -> &'static ExtAppMessage {
+        static instance: ExtAppMessage = ExtAppMessage {
             instance_id: ::std::option::Option::None,
             message_id: ::std::option::Option::None,
             data: ::std::option::Option::None,
@@ -1699,46 +1665,46 @@ impl ::protobuf::Message for TrezorAppMessage {
     }
 }
 
-impl ::protobuf::MessageFull for TrezorAppMessage {
+impl ::protobuf::MessageFull for ExtAppMessage {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppMessage").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppMessage").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for TrezorAppMessage {
+impl ::std::fmt::Display for ExtAppMessage {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for TrezorAppMessage {
+impl ::protobuf::reflect::ProtobufValue for ExtAppMessage {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.trezorapps.TrezorAppResponse)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapp.ExtAppResponse)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct TrezorAppResponse {
+pub struct ExtAppResponse {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppResponse.message_id)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppResponse.message_id)
     pub message_id: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppResponse.data)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppResponse.data)
     pub data: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.trezorapps.TrezorAppResponse.finished)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppResponse.finished)
     pub finished: ::std::option::Option<bool>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.trezorapps.TrezorAppResponse.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppResponse.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a TrezorAppResponse {
-    fn default() -> &'a TrezorAppResponse {
-        <TrezorAppResponse as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppResponse {
+    fn default() -> &'a ExtAppResponse {
+        <ExtAppResponse as ::protobuf::Message>::default_instance()
     }
 }
 
-impl TrezorAppResponse {
-    pub fn new() -> TrezorAppResponse {
+impl ExtAppResponse {
+    pub fn new() -> ExtAppResponse {
         ::std::default::Default::default()
     }
 
@@ -1821,29 +1787,29 @@ impl TrezorAppResponse {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "message_id",
-            |m: &TrezorAppResponse| { &m.message_id },
-            |m: &mut TrezorAppResponse| { &mut m.message_id },
+            |m: &ExtAppResponse| { &m.message_id },
+            |m: &mut ExtAppResponse| { &mut m.message_id },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "data",
-            |m: &TrezorAppResponse| { &m.data },
-            |m: &mut TrezorAppResponse| { &mut m.data },
+            |m: &ExtAppResponse| { &m.data },
+            |m: &mut ExtAppResponse| { &mut m.data },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "finished",
-            |m: &TrezorAppResponse| { &m.finished },
-            |m: &mut TrezorAppResponse| { &mut m.finished },
+            |m: &ExtAppResponse| { &m.finished },
+            |m: &mut ExtAppResponse| { &mut m.finished },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TrezorAppResponse>(
-            "TrezorAppResponse",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppResponse>(
+            "ExtAppResponse",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for TrezorAppResponse {
-    const NAME: &'static str = "TrezorAppResponse";
+impl ::protobuf::Message for ExtAppResponse {
+    const NAME: &'static str = "ExtAppResponse";
 
     fn is_initialized(&self) -> bool {
         if self.message_id.is_none() {
@@ -1915,8 +1881,8 @@ impl ::protobuf::Message for TrezorAppResponse {
         &mut self.special_fields
     }
 
-    fn new() -> TrezorAppResponse {
-        TrezorAppResponse::new()
+    fn new() -> ExtAppResponse {
+        ExtAppResponse::new()
     }
 
     fn clear(&mut self) {
@@ -1926,8 +1892,8 @@ impl ::protobuf::Message for TrezorAppResponse {
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static TrezorAppResponse {
-        static instance: TrezorAppResponse = TrezorAppResponse {
+    fn default_instance() -> &'static ExtAppResponse {
+        static instance: ExtAppResponse = ExtAppResponse {
             message_id: ::std::option::Option::None,
             data: ::std::option::Option::None,
             finished: ::std::option::Option::None,
@@ -1937,45 +1903,45 @@ impl ::protobuf::Message for TrezorAppResponse {
     }
 }
 
-impl ::protobuf::MessageFull for TrezorAppResponse {
+impl ::protobuf::MessageFull for ExtAppResponse {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("TrezorAppResponse").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppResponse").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for TrezorAppResponse {
+impl ::std::fmt::Display for ExtAppResponse {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for TrezorAppResponse {
+impl ::protobuf::reflect::ProtobufValue for ExtAppResponse {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x18messages-trezorapp.proto\x12\x1dhw.trezor.messages.trezorapps\x1a\
-    \roptions.proto\"O\n\rTrezorAppLoad\x12\x0e\n\x02id\x18\x01\x20\x02(\tR\
-    \x02id\x12\x18\n\x07version\x18\x02\x20\x03(\rR\x07version\x12\x14\n\x04\
-    hash\x18\x03\x20\x02(\x0c:\0R\x04hash\"2\n\x0fTrezorAppLoaded\x12\x1f\n\
-    \x0binstance_id\x18\x01\x20\x02(\rR\ninstanceId\"\x18\n\x16TrezorAppHead\
-    erRequest\"`\n\x12TrezorAppHeaderAck\x12\x16\n\x06header\x18\x01\x20\x02\
-    (\x0cR\x06header\x12\x14\n\x05proof\x18\x02\x20\x02(\x0cR\x05proof\x12\
-    \x1c\n\ttimestamp\x18\x03\x20\x02(\rR\ttimestamp\"i\n\x1aTrezorAppRootPa\
-    cketRequest\x12\x19\n\x08app_ring\x18\x01\x20\x02(\rR\x07appRing\x120\n\
-    \x14host_timestamp_stale\x18\x02\x20\x02(\x08R\x12hostTimestampStale\"9\
-    \n\x16TrezorAppRootPacketAck\x12\x1f\n\x0broot_packet\x18\x01\x20\x02(\
-    \x0cR\nrootPacket\"1\n\x19TrezorAppDataChunkRequest\x12\x14\n\x05index\
-    \x18\x01\x20\x02(\rR\x05index\"?\n\x15TrezorAppDataChunkAck\x12\x12\n\
-    \x04data\x18\x01\x20\x02(\x0cR\x04data\x12\x12\n\x04hash\x18\x02\x20\x02\
-    (\x0cR\x04hash\"f\n\x10TrezorAppMessage\x12\x1f\n\x0binstance_id\x18\x01\
-    \x20\x02(\rR\ninstanceId\x12\x1d\n\nmessage_id\x18\x02\x20\x02(\rR\tmess\
-    ageId\x12\x12\n\x04data\x18\x03\x20\x02(\x0cR\x04data\"i\n\x11TrezorAppR\
-    esponse\x12\x1d\n\nmessage_id\x18\x01\x20\x02(\rR\tmessageId\x12\x12\n\
-    \x04data\x18\x02\x20\x02(\x0cR\x04data\x12!\n\x08finished\x18\x03\x20\
-    \x01(\x08:\x05falseR\x08finishedB;\n#com.satoshilabs.trezor.lib.protobuf\
-    B\x10MessageTrezorApp\x80\xa6\x1d\x01\
+    \n\x15messages-extapp.proto\x12\x19hw.trezor.messages.extapp\x1a\x15mess\
+    ages-common.proto\x1a\roptions.proto\"~\n\nExtAppLoad\x12\x0e\n\x02id\
+    \x18\x01\x20\x02(\tR\x02id\x12<\n\x07version\x18\x02\x20\x02(\x0b2\".hw.\
+    trezor.messages.common.VersionR\x07version\x12\"\n\x0bfingerprint\x18\
+    \x03\x20\x02(\x0c:\0R\x0bfingerprint\"/\n\x0cExtAppLoaded\x12\x1f\n\x0bi\
+    nstance_id\x18\x01\x20\x02(\rR\ninstanceId\"\x15\n\x13ExtAppHeaderReques\
+    t\"s\n\x0fExtAppHeaderAck\x12\x16\n\x06header\x18\x01\x20\x02(\x0cR\x06h\
+    eader\x12\x14\n\x05proof\x18\x02\x20\x02(\x0cR\x05proof\x122\n\x15root_p\
+    acket_timestamp\x18\x03\x20\x02(\x12R\x13rootPacketTimestamp\"4\n\x17Ext\
+    AppRootPacketRequest\x12\x19\n\x08app_ring\x18\x01\x20\x02(\rR\x07appRin\
+    g\"6\n\x13ExtAppRootPacketAck\x12\x1f\n\x0broot_packet\x18\x01\x20\x02(\
+    \x0cR\nrootPacket\".\n\x16ExtAppDataChunkRequest\x12\x14\n\x05index\x18\
+    \x01\x20\x02(\rR\x05index\"<\n\x12ExtAppDataChunkAck\x12\x12\n\x04data\
+    \x18\x01\x20\x02(\x0cR\x04data\x12\x12\n\x04hash\x18\x02\x20\x02(\x0cR\
+    \x04hash\"c\n\rExtAppMessage\x12\x1f\n\x0binstance_id\x18\x01\x20\x02(\r\
+    R\ninstanceId\x12\x1d\n\nmessage_id\x18\x02\x20\x02(\rR\tmessageId\x12\
+    \x12\n\x04data\x18\x03\x20\x02(\x0cR\x04data\"f\n\x0eExtAppResponse\x12\
+    \x1d\n\nmessage_id\x18\x01\x20\x02(\rR\tmessageId\x12\x12\n\x04data\x18\
+    \x02\x20\x02(\x0cR\x04data\x12!\n\x08finished\x18\x03\x20\x01(\x08:\x05f\
+    alseR\x08finishedB8\n#com.satoshilabs.trezor.lib.protobufB\rMessageExtAp\
+    p\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1992,19 +1958,20 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(1);
+            let mut deps = ::std::vec::Vec::with_capacity(2);
+            deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(10);
-            messages.push(TrezorAppLoad::generated_message_descriptor_data());
-            messages.push(TrezorAppLoaded::generated_message_descriptor_data());
-            messages.push(TrezorAppHeaderRequest::generated_message_descriptor_data());
-            messages.push(TrezorAppHeaderAck::generated_message_descriptor_data());
-            messages.push(TrezorAppRootPacketRequest::generated_message_descriptor_data());
-            messages.push(TrezorAppRootPacketAck::generated_message_descriptor_data());
-            messages.push(TrezorAppDataChunkRequest::generated_message_descriptor_data());
-            messages.push(TrezorAppDataChunkAck::generated_message_descriptor_data());
-            messages.push(TrezorAppMessage::generated_message_descriptor_data());
-            messages.push(TrezorAppResponse::generated_message_descriptor_data());
+            messages.push(ExtAppLoad::generated_message_descriptor_data());
+            messages.push(ExtAppLoaded::generated_message_descriptor_data());
+            messages.push(ExtAppHeaderRequest::generated_message_descriptor_data());
+            messages.push(ExtAppHeaderAck::generated_message_descriptor_data());
+            messages.push(ExtAppRootPacketRequest::generated_message_descriptor_data());
+            messages.push(ExtAppRootPacketAck::generated_message_descriptor_data());
+            messages.push(ExtAppDataChunkRequest::generated_message_descriptor_data());
+            messages.push(ExtAppDataChunkAck::generated_message_descriptor_data());
+            messages.push(ExtAppMessage::generated_message_descriptor_data());
+            messages.push(ExtAppResponse::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),

@@ -283,6 +283,26 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["PaymentRequest"]:
             return isinstance(msg, cls)
 
+    class Version(protobuf.MessageType):
+        major: "int"
+        minor: "int"
+        patch: "int"
+        build: "int"
+
+        def __init__(
+            self,
+            *,
+            major: "int",
+            minor: "int",
+            patch: "int | None" = None,
+            build: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["Version"]:
+            return isinstance(msg, cls)
+
     class PaymentRequestMemo(protobuf.MessageType):
         text_memo: "TextMemo | None"
         refund_memo: "RefundMemo | None"
@@ -4617,6 +4637,156 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EvoluIndexManagementResponse"]:
             return isinstance(msg, cls)
 
+    class ExtAppLoad(protobuf.MessageType):
+        id: "str"
+        version: "Version"
+        fingerprint: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            id: "str",
+            version: "Version",
+            fingerprint: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppLoad"]:
+            return isinstance(msg, cls)
+
+    class ExtAppLoaded(protobuf.MessageType):
+        instance_id: "int"
+
+        def __init__(
+            self,
+            *,
+            instance_id: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppLoaded"]:
+            return isinstance(msg, cls)
+
+    class ExtAppHeaderRequest(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppHeaderRequest"]:
+            return isinstance(msg, cls)
+
+    class ExtAppHeaderAck(protobuf.MessageType):
+        header: "AnyBytes"
+        proof: "AnyBytes"
+        root_packet_timestamp: "int"
+
+        def __init__(
+            self,
+            *,
+            header: "AnyBytes",
+            proof: "AnyBytes",
+            root_packet_timestamp: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppHeaderAck"]:
+            return isinstance(msg, cls)
+
+    class ExtAppRootPacketRequest(protobuf.MessageType):
+        app_ring: "int"
+
+        def __init__(
+            self,
+            *,
+            app_ring: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppRootPacketRequest"]:
+            return isinstance(msg, cls)
+
+    class ExtAppRootPacketAck(protobuf.MessageType):
+        root_packet: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            root_packet: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppRootPacketAck"]:
+            return isinstance(msg, cls)
+
+    class ExtAppDataChunkRequest(protobuf.MessageType):
+        index: "int"
+
+        def __init__(
+            self,
+            *,
+            index: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppDataChunkRequest"]:
+            return isinstance(msg, cls)
+
+    class ExtAppDataChunkAck(protobuf.MessageType):
+        data: "AnyBytes"
+        hash: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            data: "AnyBytes",
+            hash: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppDataChunkAck"]:
+            return isinstance(msg, cls)
+
+    class ExtAppMessage(protobuf.MessageType):
+        instance_id: "int"
+        message_id: "int"
+        data: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            instance_id: "int",
+            message_id: "int",
+            data: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppMessage"]:
+            return isinstance(msg, cls)
+
+    class ExtAppResponse(protobuf.MessageType):
+        message_id: "int"
+        data: "AnyBytes"
+        finished: "bool"
+
+        def __init__(
+            self,
+            *,
+            message_id: "int",
+            data: "AnyBytes",
+            finished: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppResponse"]:
+            return isinstance(msg, cls)
+
     class MoneroTransactionSourceEntry(protobuf.MessageType):
         outputs: "list[MoneroOutputEntry]"
         real_output: "int | None"
@@ -7697,158 +7867,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["ThpPairedCacheEntry"]:
-            return isinstance(msg, cls)
-
-    class TrezorAppLoad(protobuf.MessageType):
-        id: "str"
-        version: "list[int]"
-        hash: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            id: "str",
-            hash: "AnyBytes",
-            version: "list[int] | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppLoad"]:
-            return isinstance(msg, cls)
-
-    class TrezorAppLoaded(protobuf.MessageType):
-        instance_id: "int"
-
-        def __init__(
-            self,
-            *,
-            instance_id: "int",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppLoaded"]:
-            return isinstance(msg, cls)
-
-    class TrezorAppHeaderRequest(protobuf.MessageType):
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppHeaderRequest"]:
-            return isinstance(msg, cls)
-
-    class TrezorAppHeaderAck(protobuf.MessageType):
-        header: "AnyBytes"
-        proof: "AnyBytes"
-        timestamp: "int"
-
-        def __init__(
-            self,
-            *,
-            header: "AnyBytes",
-            proof: "AnyBytes",
-            timestamp: "int",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppHeaderAck"]:
-            return isinstance(msg, cls)
-
-    class TrezorAppRootPacketRequest(protobuf.MessageType):
-        app_ring: "int"
-        host_timestamp_stale: "bool"
-
-        def __init__(
-            self,
-            *,
-            app_ring: "int",
-            host_timestamp_stale: "bool",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppRootPacketRequest"]:
-            return isinstance(msg, cls)
-
-    class TrezorAppRootPacketAck(protobuf.MessageType):
-        root_packet: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            root_packet: "AnyBytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppRootPacketAck"]:
-            return isinstance(msg, cls)
-
-    class TrezorAppDataChunkRequest(protobuf.MessageType):
-        index: "int"
-
-        def __init__(
-            self,
-            *,
-            index: "int",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppDataChunkRequest"]:
-            return isinstance(msg, cls)
-
-    class TrezorAppDataChunkAck(protobuf.MessageType):
-        data: "AnyBytes"
-        hash: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            data: "AnyBytes",
-            hash: "AnyBytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppDataChunkAck"]:
-            return isinstance(msg, cls)
-
-    class TrezorAppMessage(protobuf.MessageType):
-        instance_id: "int"
-        message_id: "int"
-        data: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            instance_id: "int",
-            message_id: "int",
-            data: "AnyBytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppMessage"]:
-            return isinstance(msg, cls)
-
-    class TrezorAppResponse(protobuf.MessageType):
-        message_id: "int"
-        data: "AnyBytes"
-        finished: "bool"
-
-        def __init__(
-            self,
-            *,
-            message_id: "int",
-            data: "AnyBytes",
-            finished: "bool | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TrezorAppResponse"]:
             return isinstance(msg, cls)
 
     class TronGetAddress(protobuf.MessageType):

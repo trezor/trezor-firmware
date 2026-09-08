@@ -25,9 +25,9 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	BleUnpair PaymentNotification Evolu \
 	GetSerialNumber SerialNumber \
 	TelemetryGet Telemetry \
-	TrezorAppLoad TrezorAppLoaded TrezorAppHeaderRequest TrezorAppHeaderAck \
-	TrezorAppRootPacketRequest TrezorAppRootPacketAck TrezorAppDataChunkRequest TrezorAppDataChunkAck \
-	TrezorAppMessage TrezorAppResponse
+	ExtAppLoad ExtAppLoaded ExtAppHeaderRequest ExtAppHeaderAck \
+	ExtAppRootPacketRequest ExtAppRootPacketAck ExtAppDataChunkRequest ExtAppDataChunkAck \
+	ExtAppMessage ExtAppResponse
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum NEM Stellar

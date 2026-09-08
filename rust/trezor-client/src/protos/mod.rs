@@ -26,7 +26,7 @@ mod generated {
         messages_benchmark
         messages_thp
         messages_telemetry
-        messages_trezorapp
+        messages_extapp
         options
 
         "bitcoin" => messages_bitcoin

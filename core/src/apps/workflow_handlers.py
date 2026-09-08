@@ -99,9 +99,9 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.bitcoin.verify_message"
 
     # trezorapp
-    if msg_type == MessageType.TrezorAppLoad:
+    if msg_type == MessageType.ExtAppLoad:
         return "apps.trezorapp.load"
-    if msg_type == MessageType.TrezorAppMessage:
+    if msg_type == MessageType.ExtAppMessage:
         return "apps.trezorapp.run"
 
     # misc
