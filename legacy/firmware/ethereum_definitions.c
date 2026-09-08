@@ -37,7 +37,7 @@
 
 typedef pb_byte_t proof_entry[SHA256_DIGEST_LENGTH];
 
-#define SIGNATURE_THRESHOLD 2
+#define SIGNATURE_THRESHOLD 1
 #define DEFS_PUBLIC_KEYS_COUNT 3
 
 const ed25519_public_key DEFS_PUBLIC_KEYS[DEFS_PUBLIC_KEYS_COUNT] = {

@@ -11,6 +11,6 @@
 
 #define MIN_DATA_VERSION ${defs_timestamp}
 #define FORMAT_VERSION_LENGTH 5
-#define FORMAT_VERSION (const pb_byte_t *)"trzd1"
+#define FORMAT_VERSION (const pb_byte_t *)"trzd2"
 
 #endif
