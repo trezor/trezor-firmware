@@ -542,32 +542,39 @@ def _read_sc_val(val: xdr.SCVal) -> messages.StellarSCVal:
     elif val.type == xdr.SCValType.SCV_VOID:
         return messages.StellarSCVal(type=messages.StellarSCValType.SCV_VOID)
     elif val.type == xdr.SCValType.SCV_U32:
+        assert val.u32 is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_U32, u32=val.u32.uint32
         )
     elif val.type == xdr.SCValType.SCV_I32:
+        assert val.i32 is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_I32, i32=val.i32.int32
         )
     elif val.type == xdr.SCValType.SCV_U64:
+        assert val.u64 is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_U64, u64=val.u64.uint64
         )
     elif val.type == xdr.SCValType.SCV_I64:
+        assert val.i64 is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_I64, i64=val.i64.int64
         )
     elif val.type == xdr.SCValType.SCV_TIMEPOINT:
+        assert val.timepoint is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_TIMEPOINT,
             timepoint=val.timepoint.time_point.uint64,
         )
     elif val.type == xdr.SCValType.SCV_DURATION:
+        assert val.duration is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_DURATION,
             duration=val.duration.duration.uint64,
         )
     elif val.type == xdr.SCValType.SCV_U128:
+        assert val.u128 is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_U128,
             u128=messages.StellarUInt128Parts(
@@ -575,6 +582,7 @@ def _read_sc_val(val: xdr.SCVal) -> messages.StellarSCVal:
             ),
         )
     elif val.type == xdr.SCValType.SCV_I128:
+        assert val.i128 is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_I128,
             i128=messages.StellarInt128Parts(
@@ -582,6 +590,7 @@ def _read_sc_val(val: xdr.SCVal) -> messages.StellarSCVal:
             ),
         )
     elif val.type == xdr.SCValType.SCV_U256:
+        assert val.u256 is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_U256,
             u256=messages.StellarUInt256Parts(
@@ -592,6 +601,7 @@ def _read_sc_val(val: xdr.SCVal) -> messages.StellarSCVal:
             ),
         )
     elif val.type == xdr.SCValType.SCV_I256:
+        assert val.i256 is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_I256,
             i256=messages.StellarInt256Parts(
@@ -602,15 +612,18 @@ def _read_sc_val(val: xdr.SCVal) -> messages.StellarSCVal:
             ),
         )
     elif val.type == xdr.SCValType.SCV_BYTES:
+        assert val.bytes is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_BYTES, bytes=val.bytes.sc_bytes
         )
     elif val.type == xdr.SCValType.SCV_STRING:
+        assert val.str is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_STRING,
             string=val.str.sc_string,  # raw bytes, not necessarily UTF-8
         )
     elif val.type == xdr.SCValType.SCV_SYMBOL:
+        assert val.sym is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_SYMBOL,
             symbol=val.sym.sc_symbol.decode("utf-8"),
@@ -640,6 +653,7 @@ def _read_sc_val(val: xdr.SCVal) -> messages.StellarSCVal:
             ],
         )
     elif val.type == xdr.SCValType.SCV_ADDRESS:
+        assert val.address is not None
         return messages.StellarSCVal(
             type=messages.StellarSCValType.SCV_ADDRESS,
             address=_read_sc_address(val.address),
@@ -667,6 +681,7 @@ def _read_authorized_function(
         function.type
         == xdr.SorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN
     ):
+        assert function.contract_fn is not None
         return messages.StellarSorobanAuthorizedFunction(
             type=messages.StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN,
             contract_fn=_read_invoke_contract_args(function.contract_fn),
@@ -728,6 +743,7 @@ def _read_credentials(
         and credentials.type
         == xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2
     ):
+        assert credentials.address_v2 is not None
         return messages.StellarSorobanCredentials(
             type=messages.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS_V2,
             address_v2=_read_address_credentials(credentials.address_v2),
@@ -779,6 +795,7 @@ def _read_host_function(
     if host_function.type != xdr.HostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT:
         raise ValueError(f"Unsupported host function type: {host_function.type}")
 
+    assert host_function.invoke_contract is not None
     return messages.StellarHostFunction(
         type=messages.StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT,
         invoke_contract=_read_invoke_contract_args(host_function.invoke_contract),
