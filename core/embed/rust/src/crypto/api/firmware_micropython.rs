@@ -20,10 +20,7 @@ use crate::micropython::module::Module;
 use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 #[cfg(feature = "app_loading")]
-use crate::{
-    error::Error,
-    micropython::{list::List, util},
-};
+use crate::micropython::{error::Error, list::List, util};
 
 #[cfg(feature = "app_loading")]
 extern "C" fn new_deserialize_crypto_message(
