@@ -39,6 +39,7 @@ use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
 use crate::ui::layout::base::LAYOUT_STATE;
 use crate::ui::layout::device_menu_result::DEVICE_MENU_RESULT;
 use crate::ui::layout::menu_item_intent::micropython::MENU_ITEM_INTENT_OBJ;
+use crate::ui::layout::menu_item_intent::MenuItemIntent;
 #[cfg(feature = "app_loading")]
 use crate::ui::layout::obj::LayoutMaybeTrace;
 use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
@@ -1337,7 +1338,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 LayoutObj::new_root(layout)?,
                 br_code,
                 match br_name {
-                    Some(s) => Obj::try_from(s.as_ref())?,
+                    Some(s) => <Obj as TryFrom<&str>>::try_from(s.as_ref())?,
                     None => Obj::const_none(),
                 },
             ))
@@ -1390,12 +1391,12 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         // Access the archived data zero-copy using safe Deref access
         match archived {
         Archived::<TrezorUiEnum>::SelectMenu(m) => {
-            let mut vec = heapless::Vec::<TString<'static>, 5>::new();
+            let mut vec = heapless::Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
             for item in m.items.as_ref() {
-                unwrap!(vec.push(tstr(item)));
+                unwrap!(vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard)));
             }
             wrap(
-                ModelUI::select_menu(vec, 0, tstr_opt(&m.cancel))?,
+                ModelUI::select_menu(vec, 0)?,
                 m.br_code.to_native(),
                 None,
             )?
@@ -1633,7 +1634,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
     };
 
         Ok((
-            main_layout.into(),
+            Obj::from(main_layout),
             Obj::try_from(u32::try_from(br_code)?)?,
             br_name,
         )

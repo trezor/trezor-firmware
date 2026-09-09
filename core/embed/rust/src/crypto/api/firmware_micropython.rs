@@ -108,9 +108,11 @@ extern "C" fn new_deserialize_crypto_message(
                 )
                     .try_into()?
             }
-            Archived::<TrezorCryptoEnum>::GetAddressMac { address_n, address } => {
-                (obj_from_dp_slice(address_n), address.as_ref().try_into()?).try_into()?
-            }
+            Archived::<TrezorCryptoEnum>::GetAddressMac { address_n, address } => (
+                obj_from_dp_slice(address_n),
+                Obj::try_from(address.as_ref())?,
+            )
+                .try_into()?,
             Archived::<TrezorCryptoEnum>::VerifyNonceCache { nonce } => {
                 Obj::try_from(nonce.as_ref())?
             }
@@ -120,8 +122,8 @@ extern "C" fn new_deserialize_crypto_message(
                 address,
             } => (
                 obj_from_dp_slice(address_n),
-                mac.as_ref().try_into()?,
-                address.as_ref().try_into()?,
+                Obj::try_from(mac.as_ref())?,
+                Obj::try_from(address.as_ref())?,
             )
                 .try_into()?,
         };
