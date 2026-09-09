@@ -54,7 +54,7 @@ enum CapabilityTag {
 };
 
 typedef struct __attribute__((packed)) {
-  uint8_t header[4];
+  __attribute__((nonstring)) uint8_t header[4];
   uint8_t model_tag;
   uint8_t model_length;
   uint32_t model_name;
