@@ -219,6 +219,9 @@ cleanup:
   TSH_RETURN;
 }
 
+// Adjusts the given data pointer and size to meet the MPU 
+// alignment requirements. Adjusted block always lies within
+// the original block and may be smaller than it.
 static ts_t align_data(void** data, size_t* data_size) {
   TSH_DECLARE;
 
