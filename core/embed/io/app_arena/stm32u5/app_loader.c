@@ -268,7 +268,7 @@ static ts_t fit_in_memory(const app_code_header_t* chdr, void* data,
 
   // Place the heap after the stack
   map->heap_p_addr = map->stack_p_addr + map->stack_size;
-  map->heap_size = ALIGN_UP(chdr->heap_size, MPU_ALIGNMENT);
+  map->heap_size = chdr->heap_size;
 
   TSH_CHECK(map->heap_p_addr + map->heap_size <= (uint32_t)data + data_size,
             TS_ENOMEM);
