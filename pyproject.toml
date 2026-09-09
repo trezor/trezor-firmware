@@ -57,6 +57,7 @@ dependencies = [
     "bleak>=1.1.0",
     "construct-typing>=0.7.0",
     "flake8-annotations>=3.1.1,<4",
+    "stellar-sdk>=15.0.0",
 ]
 
 [dependency-groups]
