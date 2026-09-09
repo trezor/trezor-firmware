@@ -11,12 +11,11 @@ use miniscript::descriptor::Wsh;
 use miniscript::expression::{FromTree, Tree};
 use miniscript::{Descriptor, DescriptorPublicKey};
 
-use crate::error::Error;
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::module::Module;
 use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
-use crate::micropython::util;
+use crate::micropython::{util, Error};
 
 #[global_allocator]
 static MINISCRIPT_ALLOCATOR: emballoc::Allocator<{ 40 << 10 }> = emballoc::Allocator::new();
