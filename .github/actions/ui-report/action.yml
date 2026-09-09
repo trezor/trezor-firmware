@@ -11,6 +11,14 @@ inputs:
     description: 'Either "success" or "failure"'
     required: false
     default: "failure"
+  app-root:
+    description: 'Path (relative to repo root) of the app whose tests/ui_tests to prepare. Defaults to the repo root, i.e. Core itself.'
+    required: false
+    default: "."
+  job-name:
+    description: 'Override for the job identifier used in the report file prefix. Defaults to the current job id.'
+    required: false
+    default: ${{ github.job }}
 runs:
   using: composite
   steps:
@@ -20,12 +28,12 @@ runs:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
         aws-region: eu-central-1
     - run: |
-        MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}
+        MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ inputs.job-name }}
         OUTDIR=${{ github.run_id }}
         mkdir -p $OUTDIR
-        nix-shell --run "uv run python ci/prepare_ui_artifacts.py || true"
-        mv tests/ui_tests/reports/test/* $OUTDIR
-        mv tests/ui_tests/fixtures.*.json $OUTDIR
+        nix-shell --run "uv run python ci/prepare_ui_artifacts.py ${{ inputs.app-root }} || true"
+        mv ${{ inputs.app-root }}/tests/ui_tests/reports/test/* $OUTDIR
+        mv ${{ inputs.app-root }}/tests/ui_tests/fixtures.*.json $OUTDIR
 
         # rename all model/job-speficific report files, so they won't be overwritten during upload
         cd $OUTDIR

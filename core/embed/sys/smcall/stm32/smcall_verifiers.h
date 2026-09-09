@@ -188,4 +188,18 @@ bool telemetry_get__verified(telemetry_data_t *out);
 
 #endif  // USE_TELEMETRY
 
+// ---------------------------------------------------------------------
+// mldsa44
+// ---------------------------------------------------------------------
+
+#ifdef USE_MLDSA44
+
+#include <sec/mldsa44.h>
+
+ts_t mldsa44_verify__verified(const mldsa44_signature_t *sig, const void *m,
+                              size_t mlen, const mldsa44_public_key_t *pk,
+                              secbool *valid);
+
+#endif  // USE_MLDSA44
+
 #endif  // SECMON

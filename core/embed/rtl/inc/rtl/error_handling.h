@@ -235,6 +235,12 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
   } while (0)
 
 /**
+ * Retrieves the current status value that would return
+ * if `TSH_RETURN` is called.
+ */
+#define TSH_STATUS (__status)
+
+/**
  * Checks the status, if it indicates an error, set
  * status variable and jumps to `cleanup` label.
  *

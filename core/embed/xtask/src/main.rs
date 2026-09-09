@@ -1,7 +1,8 @@
 use anyhow::Result;
 use clap::Parser;
+use modular_xtask::run_cmd;
 use xtask::args::{Cli, Cmd};
-use xtask::{cargo, combine, flash, helpers, upload};
+use xtask::{api, cargo, combine, flash, helpers, upload};
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -19,5 +20,7 @@ fn main() -> Result<()> {
         Cmd::Upload(args) => upload::upload(args),
         Cmd::Combine(args) => combine::combine(args),
         Cmd::PrintVersion(args) => helpers::print_version(args),
+        Cmd::Modular(args) => run_cmd(&args.command, std::path::Path::new("../../sdk/apps/")),
+        Cmd::ApiBindings(args) => api::bindings(args.check_only),
     }
 }

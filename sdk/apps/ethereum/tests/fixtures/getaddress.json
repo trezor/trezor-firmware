@@ -1,0 +1,58 @@
+{
+    "setup": {
+        "mnemonic": "all all all all all all all all all all all all",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "parameters": {
+                "path": "m/44'/60'/0'"
+            },
+            "result": {
+                "address": "0xdA0b608bdb1a4A154325C854607c68950b4F1a34"
+            }
+        },
+        {
+            "parameters": {
+                "path": "m/44'/60'/100'"
+            },
+            "result": {
+                "address": "0x93Fb0Ff84F5BB6E7b6a9835C7AA6dE7a76794266"
+            }
+        },
+        {
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8"
+            }
+        },
+        {
+            "parameters": {
+                "path": "m/44'/60'/0'/0/100"
+            },
+            "result": {
+                "address": "0x1e6E3708a059aEa1241a81c7aAe84b6CDbC54d59"
+            }
+        },
+        {
+            "name": "ETC",
+            "parameters": {
+                "path": "m/44'/61'/0'/0/0"
+            },
+            "result": {
+                "address": "0xF410e37E9C8BCf8CF319c84Ae9dCEbe057804a04"
+            }
+        },
+        {
+            "name": "Ledger Live legacy path",
+            "parameters": {
+                "path": "m/44'/60'/0'/0"
+            },
+            "result": {
+                "address": "0x1ec5C1854e3E9F1674c34D6C2Be1bf13DFc0Fd8F"
+            }
+        }
+    ]
+}

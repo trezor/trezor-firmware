@@ -37,15 +37,15 @@
 #include <io/notify.h>
 #include <io/rsod.h>
 #include <sec/boot_image.h>
+#include <sys/bootutils.h>
 #include <sys/linker_utils.h>
 #include <sys/logging.h>
 #include <sys/systask.h>
 #include <sys/system.h>
+
 #include "rust_ui_common.h"
 
 #include <blake2s.h>
-
-#include "sys/bootutils.h"
 
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
@@ -53,6 +53,10 @@
 
 #ifdef USE_BLE
 #include <io/ble.h>
+#endif
+
+#ifdef USE_IPC
+#include <sys/ipc.h>
 #endif
 
 #ifdef USE_NRF
@@ -66,12 +70,20 @@ extern const void nrf_app_size;
 
 LOG_DECLARE(coreapp_main)
 
+#if USE_IPC
+uint32_t ipc_buffer[8192];
+#endif
+
 int main_func(uint32_t cmd, void *arg) {
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
     rsod_gui(info);
     system_exit(0);
   }
+
+#if USE_IPC
+  ipc_register(2, ipc_buffer, sizeof(ipc_buffer));  // !@# test
+#endif
 
   bool fading = DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT;
 

@@ -105,7 +105,6 @@ fn main() -> Result<()> {
             "modutime.c",
             "rustmods.c",
             "trezorobj.c",
-            "modtrezorapp/modtrezorapp.c",
             "modtrezorconfig/modtrezorconfig.c",
             "modtrezorcrypto/modtrezorcrypto.c",
             "modtrezorcrypto/crc.c",
@@ -113,6 +112,10 @@ fn main() -> Result<()> {
             "modtrezorui/modtrezorui.c",
             "modtrezorutils/modtrezorutils.c",
         ]);
+
+        if cfg!(feature = "app_loading") {
+            lib.add_sources(["modtrezorapp/modtrezorapp.c"]);
+        }
 
         if cfg!(feature = "sd_card") {
             lib.add_sources(["modtrezorio/ff.c", "modtrezorio/ffunicode.c"]);
@@ -1190,6 +1193,10 @@ impl<'a> MpyBuilder<'a> {
 
         if cfg!(feature = "thp") {
             files.add(src, "apps/thp/*.py")?;
+        }
+
+        if cfg!(feature = "app_loading") {
+            files.add(src, "apps/trezorapp/*.py")?;
         }
 
         if cfg!(feature = "universal_fw") {
