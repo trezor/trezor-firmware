@@ -248,6 +248,7 @@ pub struct CombineArgs {
     pub model: Model,
 }
 
+#[derive(Args, Debug)]
 #[command(hide = true)] // Should probably go under some kind of misc subcommand.
 pub struct PrintVersionArgs {
     pub project: Project,
