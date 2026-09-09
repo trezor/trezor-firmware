@@ -148,10 +148,10 @@ def validate_path_against_script_type(
         if coin.coin_name in BITCOIN_NAMES:
             append(PATTERN_CASA_UNHARDENED)
 
-    elif coin.segwit and script_type in (
-        InputScriptType.SPENDWITNESS,
-        InputScriptType.SPENDMINISCRIPT,
-    ):
+    elif coin.segwit and script_type == InputScriptType.SPENDMINISCRIPT:
+        append(PATTERN_BIP48_SEGWIT)  # Liana
+
+    elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
         append(PATTERN_BIP84)
         if multisig:
             append(PATTERN_BIP48_SEGWIT)
