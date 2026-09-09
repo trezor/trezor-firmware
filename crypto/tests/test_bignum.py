@@ -565,6 +565,16 @@ def assert_bn_inverse(x_old, prime):
     assert (x_old == 0 and x_new == 0) or (x_old != 0 and (x_old * x_new) % prime == 1)
 
 
+def assert_bn_random(prime):
+    bn_x = bignum256()
+    bn_prime = int_to_bignum256(prime)
+    lib.bn_random(bn_x, bn_prime)
+    x = bignum256_to_int(bn_x)
+
+    assert bignum_is_normalised(bn_x)
+    assert 0 < x < prime
+
+
 def assert_bn_normalize(bn_x):
     x_old = bignum256_to_int(bn_x)
     lib.bn_normalize(bn_x)
@@ -1019,6 +1029,10 @@ def test_bn_inverse_2(r, prime):
             break
 
     assert_bn_inverse(n, prime)
+
+
+def test_bn_random(r, prime):
+    assert_bn_random(prime)
 
 
 def test_bn_normalize(r):

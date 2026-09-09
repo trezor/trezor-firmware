@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include "memzero.h"
+#include "rand.h"
 #include "script.h"
 
 /*
@@ -1908,3 +1909,17 @@ void bn_inverse(bignum256 *x, const bignum256 *prime) {
   bn_inverse_slow(x, prime);
 }
 #endif
+
+// x = random number in the range [1, prime - 1]
+// Guarantees x is normalized and fully reduced modulo prime
+// Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256, so that
+//   the expected number of rejection-sampling iterations is close to one
+void bn_random(bignum256 *x, const bignum256 *prime) {
+  do {
+    for (int i = 0; i < BN_LIMBS - 1; i++) {
+      x->val[i] = random32() & ((1u << BN_BITS_PER_LIMB) - 1);
+    }
+    x->val[BN_LIMBS - 1] = random32() & ((1u << BN_BITS_LAST_LIMB) - 1);
+    // check that x is in range and not zero.
+  } while (bn_is_zero(x) || !bn_is_less(x, prime));
+}
