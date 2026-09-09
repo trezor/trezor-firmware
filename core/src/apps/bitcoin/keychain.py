@@ -149,6 +149,7 @@ def validate_path_against_script_type(
             append(PATTERN_CASA_UNHARDENED)
 
     elif coin.segwit and script_type == InputScriptType.SPENDMINISCRIPT:
+        append(PATTERN_BIP84)
         append(PATTERN_BIP48_SEGWIT)  # Liana
 
     elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
