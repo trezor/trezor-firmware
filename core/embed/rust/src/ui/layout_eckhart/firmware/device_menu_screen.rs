@@ -811,6 +811,8 @@ impl DeviceMenuScreen {
         *self = Self::new(params)?;
         self.place(bounds);
         if let ActiveScreen::Menu(screen, ..) = self.active_screen.deref_mut() {
+            // Initialize now, so that a refresh of a running layout takes effect
+            // immediately without waiting for an event that may never come.
             screen.initialize_screen(ctx);
         }
         ctx.request_repaint_root();
