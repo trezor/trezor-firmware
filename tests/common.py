@@ -351,7 +351,8 @@ def click_info_button_delizia_eckhart(debug: "DebugLink"):
     """Click Shamir backup info button, scroll through it and return back."""
     debug.click(debug.screen_buttons.menu())
     layout = debug.read_layout()
-    assert "VerticalMenu" in layout.all_components()
+    components = layout.all_components()
+    assert "VerticalMenu" in components or "ScrolledVerticalMenu" in components
     # Click on the first item in the vertical menu
     debug.button_actions.navigate_to_menu_item(0)
 
