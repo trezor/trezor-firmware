@@ -1606,7 +1606,14 @@ def test_lock_time_blockheight(session: Session):
 
 @pytest.mark.models("core", reason="Cannot test layouts on T1")
 @pytest.mark.parametrize(
-    "lock_time_str", ("1985-11-05 00:53:20", "2048-08-16 22:14:00")
+    "lock_time_str",
+    (
+        "1985-11-05 00:53:20",
+        "2048-08-16 22:14:00",
+        "2070-07-08 12:34:56",
+        "2099-09-10 01:02:03",
+        "2106-02-07 06:28:15",
+    ),
 )
 def test_lock_time_datetime(session: Session, lock_time_str: str):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
