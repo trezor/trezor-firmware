@@ -47,7 +47,10 @@ def f4jumble(message: memoryview) -> None:
 
 
 def f4unjumble(message: memoryview) -> None:
-    assert 48 <= len(message) <= 4194368
+    from trezor.utils import ensure
+
+    ensure(48 <= len(message) <= 4194368)
+
     left_length = min(_HASH_LENGTH, len(message) // 2)
 
     left = message[:left_length]
