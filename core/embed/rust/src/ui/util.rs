@@ -254,12 +254,9 @@ impl Default for Pager {
 pub fn assert_single_page(#[allow(unused)] pager: Pager) {
     #[cfg(all(feature = "ui_debug", feature = "micropython"))]
     if !pager.is_single() {
-        use crate::micropython::runtime::raise_exception;
+        use crate::micropython::Error;
 
-        unsafe {
-            use crate::error::Error;
-            raise_exception(Error::TypeError)
-        };
+        unsafe { Error::TypeError.into_exception().raise() };
     }
 }
 

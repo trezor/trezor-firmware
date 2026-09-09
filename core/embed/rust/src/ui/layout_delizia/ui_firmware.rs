@@ -4,9 +4,10 @@ use heapless::Vec;
 
 use super::component::{
     check_homescreen_format, Bip39Input, CoinJoinProgress, Frame, FrameMsg, Header, Homescreen,
-    Lockscreen, MnemonicKeyboard, PinKeyboard, Progress, PromptScreen, ScrolledVerticalMenu,
-    SelectWordCount, SelectWordCountLayout, Slip39Input, StatusScreen, SwipeContent, SwipeUpScreen,
-    TradeScreen, VerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem, VerticalMenuItems,
+    Lockscreen, MnemonicKeyboard, MoreInfoScreen, NumberInputDialog, PinKeyboard, Progress,
+    PromptScreen, ScrolledVerticalMenu, SelectWordCount, SelectWordCountLayout, Slip39Input,
+    StatusScreen, SwipeContent, SwipeUpScreen, TradeScreen, VerticalMenu, VerticalMenuChoiceMsg,
+    VerticalMenuItem, VerticalMenuItems,
 };
 use super::flow::{
     self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
@@ -650,25 +651,31 @@ impl FirmwareUI for UIDelizia {
         min_count: u32,
         max_count: u32,
         description: Option<TString<'static>>,
-        more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
+        _more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         debug_assert!(
             description.is_some(),
             "Description is required for request_number"
         );
-        debug_assert!(
-            more_info_callback.is_some(),
-            "More info callback is required for request_number"
+        // The "more info" content is driven from Python: the menu button in
+        // the header emits `FlowMsg::Info` and the layout returns the
+        // currently displayed number along with the result (see
+        // `ComponentMsgObj for RequestNumberScreen`).
+        let layout = RootComponent::new(
+            Frame::with_header(
+                Header::left_aligned(title).with_menu_button(),
+                SwipeContent::new(NumberInputDialog::new(
+                    min_count as u16,
+                    max_count as u16,
+                    count as u16,
+                    description.unwrap(),
+                )?),
+            )
+            .with_swipeup_footer(None)
+            .with_external_menu()
+            .map_to_button_msg(),
         );
-        let flow = flow::request_number::new_request_number(
-            title,
-            count,
-            min_count,
-            max_count,
-            description.unwrap(),
-            more_info_callback.unwrap(),
-        )?;
-        Ok(flow)
+        Ok(layout)
     }
 
     fn request_duration(
@@ -1019,24 +1026,24 @@ impl FirmwareUI for UIDelizia {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [key, value, _]: [Obj; 3] = util::iter_into_array(para)?;
+            let [key, value, is_data]: [Obj; 3] = util::iter_into_array(para)?;
             let key: TString = key.try_into()?;
             let value: TString = value.try_into()?;
+            let is_data: bool = is_data.try_into()?;
             paragraphs.add(Paragraph::new(&theme::TEXT_SUB_GREY, key).no_break());
             if chunkify {
                 paragraphs.add(Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, value));
-            } else {
+            } else if is_data {
                 paragraphs.add(Paragraph::new(&theme::TEXT_MONO_DATA, value));
+            } else {
+                paragraphs.add(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, value));
             }
         }
 
-        let layout = RootComponent::new(SwipeUpScreen::new(
-            Frame::with_header(
-                Header::left_aligned(title).with_cancel_button(),
-                SwipeContent::new(SwipePage::vertical(paragraphs.into_paragraphs())),
-            )
-            .with_vertical_pages(),
-        ));
+        let layout = RootComponent::new(SwipeUpScreen::new(MoreInfoScreen::new(
+            title,
+            paragraphs.into_paragraphs(),
+        )));
         Ok(layout)
     }
 

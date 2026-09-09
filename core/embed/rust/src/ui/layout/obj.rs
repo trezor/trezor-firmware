@@ -158,7 +158,7 @@ where
         });
 
         if overflow {
-            Err(Error::OutOfRange)
+            Err(PaintOutOfBounds)
         } else {
             Ok(())
         }
