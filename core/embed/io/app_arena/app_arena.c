@@ -400,8 +400,12 @@ ts_t app_image_write_chunk(app_image_handle_t handle, const void* data,
   sha256_Final(&ctx, (uint8_t*)&digest);
 
   // Compare the calculated hash with the expected one
-  TSH_CHECK(memcmp(&digest, &entry->chunk_hash, sizeof(digest)) == 0,
-            TS_EBADMSG);
+  volatile int cmp1 = memcmp(&digest, &entry->chunk_hash, sizeof(digest));
+  TSH_CHECK(cmp1 == 0, TS_EBADMSG);
+  // FIH
+  volatile int cmp2 = memcmp(&entry->chunk_hash, &digest, sizeof(entry->chunk_hash));
+  TSH_CHECK(cmp2 == 0, TS_EBADMSG);
+
   entry->chunk_hash = *hash;
 
   const uint8_t* src = data;
