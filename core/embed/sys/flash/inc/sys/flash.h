@@ -32,6 +32,12 @@ void flash_init(void);
 
 void flash_deinit(void);
 
+#ifdef TREZOR_EMULATOR
+// Returns true when flash_init() mapped a pre-existing flash image file
+// (of the correct size) instead of creating a brand new, fully erased one.
+bool flash_file_preexisted(void);
+#endif
+
 extern const flash_area_t BOARDLOADER_AREA;
 extern const flash_area_t SECRET_AREA;
 extern const flash_area_t BHK_AREA;

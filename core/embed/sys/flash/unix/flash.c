@@ -80,6 +80,9 @@ static uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 };
 
 static uint8_t *FLASH_BUFFER = NULL;
+static bool FLASH_FILE_PREEXISTED = true;
+
+bool flash_file_preexisted(void) { return FLASH_FILE_PREEXISTED; }
 static uint32_t FLASH_SIZE;
 
 void flash_init(void) {
@@ -100,6 +103,7 @@ void flash_init(void) {
 
   // (re)create if non existent or wrong size
   if (r != 0 || sb.st_size != FLASH_SIZE) {
+    FLASH_FILE_PREEXISTED = false;
     int fd = open(FLASH_FILE, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
     ensure(sectrue * (fd >= 0), "open failed");
     for (int i = 0; i < FLASH_SIZE / 16; i++) {

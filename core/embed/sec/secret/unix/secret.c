@@ -24,6 +24,7 @@
 
 #include <sec/rsod_special.h>
 #include <sec/secret.h>
+#include <sys/flash.h>
 
 #ifdef KERNEL_MODE
 
@@ -35,58 +36,73 @@ static secbool bootloader_locked = secfalse;
 #define SECRET_NUM_KEY_SLOTS 0
 #endif
 
-#ifdef SECRET_KEY_SLOT_0_LEN
-static uint8_t secret_key_slot0[SECRET_KEY_SLOT_0_LEN] = {0};
+#define SECRET_NUM_MAX_SLOTS 3
+
+#ifndef SECRET_KEY_SLOT_0_OFFSET
+#define SECRET_KEY_SLOT_0_OFFSET 0
+#define SECRET_KEY_SLOT_0_LEN 0
 #endif
-#ifdef SECRET_KEY_SLOT_1_LEN
-static uint8_t secret_key_slot1[SECRET_KEY_SLOT_1_LEN] = {0};
+
+#ifndef SECRET_KEY_SLOT_1_OFFSET
+#define SECRET_KEY_SLOT_1_OFFSET 0
+#define SECRET_KEY_SLOT_1_LEN 0
 #endif
-#ifdef SECRET_KEY_SLOT_2_LEN
-static uint8_t secret_key_slot2[SECRET_KEY_SLOT_2_LEN] = {0};
+
+#ifndef SECRET_KEY_SLOT_2_OFFSET
+#define SECRET_KEY_SLOT_2_OFFSET 0
+#define SECRET_KEY_SLOT_2_LEN 0
 #endif
+
+_Static_assert(SECRET_NUM_MAX_SLOTS >= SECRET_NUM_KEY_SLOTS);
+
+static const uint32_t secret_slot_offsets[SECRET_NUM_MAX_SLOTS] = {
+    SECRET_KEY_SLOT_0_OFFSET,
+    SECRET_KEY_SLOT_1_OFFSET,
+    SECRET_KEY_SLOT_2_OFFSET,
+};
+
+static const uint32_t secret_slot_lengths[SECRET_NUM_MAX_SLOTS] = {
+    SECRET_KEY_SLOT_0_LEN,
+    SECRET_KEY_SLOT_1_LEN,
+    SECRET_KEY_SLOT_2_LEN,
+};
+
+// The key slots live in the SECRET area of the emulated flash so that they
+// persist in the profile's flash image, just like on real hardware. A brand
+// new flash image gets the slots initialized in `secret_init()` to the same
+// values the in-memory slots used to have.
 
 #ifdef SECRET_LOCK_SLOT_OFFSET
 static secbool secret_sector_locked = secfalse;
 #endif
 
-size_t secret_get_slot_len(uint8_t slot) {
-  switch (slot) {
-#ifdef SECRET_KEY_SLOT_0_LEN
-    case 0:
-      return SECRET_KEY_SLOT_0_LEN;
-#endif
-#ifdef SECRET_KEY_SLOT_1_LEN
-    case 1:
-      return SECRET_KEY_SLOT_1_LEN;
-#endif
-#ifdef SECRET_KEY_SLOT_2_LEN
-    case 2:
-      return SECRET_KEY_SLOT_2_LEN;
-#endif
-    default:
-      break;
+static secbool secret_is_slot_valid(uint8_t slot) {
+  return ((slot < SECRET_NUM_KEY_SLOTS) && (secret_slot_offsets[slot] != 0)) *
+         sectrue;
+}
+
+static uint32_t secret_get_slot_offset(uint8_t slot) {
+  if (slot >= SECRET_NUM_KEY_SLOTS) {
+    return 0;
   }
-  return 0;
+  return secret_slot_offsets[slot];
+}
+
+size_t secret_get_slot_len(uint8_t slot) {
+  if (slot >= SECRET_NUM_KEY_SLOTS) {
+    return 0;
+  }
+  return secret_slot_lengths[slot];
 }
 
 uint8_t* secret_get_slot_ptr(uint8_t slot) {
-  switch (slot) {
-#ifdef SECRET_KEY_SLOT_0_LEN
-    case 0:
-      return secret_key_slot0;
-#endif
-#ifdef SECRET_KEY_SLOT_1_LEN
-    case 1:
-      return secret_key_slot1;
-#endif
-#ifdef SECRET_KEY_SLOT_2_LEN
-    case 2:
-      return secret_key_slot2;
-#endif
-    default:
-      break;
+  if (sectrue != secret_is_slot_valid(slot)) {
+    return NULL;
   }
-  return NULL;
+  // The emulated flash is a writable memory mapping, so it is safe to drop
+  // the const qualifier and write through the returned pointer.
+  return (uint8_t*)(uintptr_t)flash_area_get_address(
+      &SECRET_AREA, secret_get_slot_offset(slot), secret_get_slot_len(slot));
 }
 
 void secret_erase(void) {
@@ -180,7 +196,20 @@ void secret_prepare_fw(secbool allow_run_with_secret,
 #endif
 }
 
-void secret_init(void) {}
+void secret_init(void) {
+  if (flash_file_preexisted()) {
+    // Pre-existing flash image - leave the slots untouched.
+    return;
+  }
+  // A brand new flash image: initialize the slots to the same values the
+  // in-memory slots used to have.
+  for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
+    uint8_t* slot_ptr = secret_get_slot_ptr(i);
+    if (slot_ptr != NULL) {
+      memzero(slot_ptr, secret_get_slot_len(i));
+    }
+  }
+}
 
 #ifdef SECRET_LOCK_SLOT_OFFSET
 

@@ -88,6 +88,10 @@ static void drivers_init(void) {
   flash_init();
   flash_otp_init();
 
+#ifdef USE_SECRET
+  secret_init();
+#endif
+
   monoctr_init();
 
   unit_properties_init();

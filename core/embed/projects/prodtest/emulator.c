@@ -57,6 +57,10 @@ int main(int argc, char **argv) {
   flash_init();
   flash_otp_init();
 
+#ifdef USE_SECRET
+  secret_init();
+#endif
+
 #ifdef LOCKABLE_BOOTLOADER
   secret_lock_bootloader();
 #endif
