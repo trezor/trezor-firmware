@@ -20,7 +20,6 @@ from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
-from ...input_flows import InputFlowConfirmAllWarnings
 from ...tx_cache import TxCache
 
 TPUBS = [
@@ -196,18 +195,15 @@ def test_miniscript_spend_liana(session: Session):
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 
-    with session.test_ctx as client:
-        IF = InputFlowConfirmAllWarnings(session)
-        client.set_input_flow(IF.get())
-        signatures, serialized = btc.sign_tx(
-            session,
-            "Testnet",
-            [inp1],
-            [out1],
-            prev_txes=TX_CACHE_SIGNET,
-            version=2,
-            lock_time=304036,
-        )
+    signatures, serialized = btc.sign_tx(
+        session,
+        "Testnet",
+        [inp1],
+        [out1],
+        prev_txes=TX_CACHE_SIGNET,
+        version=2,
+        lock_time=304036,
+    )
     # 657c7c72f8e29eb0f9e97cb6418b8f5a228c2b05148f1b10c0f72982f7d3e38a on signet (height=304038)
     assert (
         signatures[0].hex()
