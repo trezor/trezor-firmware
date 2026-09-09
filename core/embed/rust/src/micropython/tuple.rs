@@ -36,14 +36,8 @@ impl Tuple {
         // SAFETY:
         // - micropython promises that items have the right len
         // - items are part of the same allocation so the lifetime bound is correct
+        // - tuples are immutable so nobody is going to be modifying the result
         unsafe { self.items.as_slice(self.len) }
-    }
-
-    pub fn as_mut_slice(&mut self) -> &mut [Obj] {
-        // SAFETY:
-        // - micropython promises that items have the right len
-        // - items are part of the same allocation so the lifetime bound is correct
-        unsafe { self.items.as_mut_slice(self.len) }
     }
 }
 
