@@ -1,0 +1,1 @@
+Stellar: `from_envelope`, `from_authorization_entry` and `HAVE_STELLAR_SDK_PROTOCOL_27` moved from `trezorlib.stellar` to the new `trezorlib.stellar_sdk_helpers` module, which requires `stellar-sdk`. `trezorlib.stellar.HAVE_STELLAR_SDK` was removed.

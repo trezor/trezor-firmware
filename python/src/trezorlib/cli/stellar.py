@@ -26,17 +26,9 @@ from .. import stellar, tools
 from . import with_session
 
 if t.TYPE_CHECKING:
-    from ..client import Session
+    from stellar_sdk import Asset
 
-try:
-    from stellar_sdk import (
-        Asset,
-        FeeBumpTransactionEnvelope,
-        parse_transaction_envelope_from_xdr,
-    )
-    from stellar_sdk import xdr as stellar_xdr
-except ImportError:
-    pass
+    from ..client import Session
 
 PATH_HELP = "BIP32 path. Always use hardened paths and the m/44h/148h/ prefix"
 ASSET_HINT_HELP = (
@@ -46,15 +38,20 @@ ASSET_HINT_HELP = (
 )
 
 
+def _exit_missing_sdk() -> t.NoReturn:
+    click.echo("Stellar requirements not installed.")
+    click.echo("Please run:")
+    click.echo()
+    click.echo("  pip install stellar-sdk")
+    sys.exit(1)
+
+
 def _parse_asset(value: str) -> Asset:
     """Parse an asset written the SEP-11 way: `native`, or CODE:ISSUER."""
+    from ..stellar_sdk_helpers import parse_asset
+
     try:
-        if value == "native":
-            return Asset.native()
-        code, _, issuer = value.partition(":")
-        if not issuer:
-            raise ValueError("expected CODE:ISSUER or `native`")
-        return Asset(code, issuer)
+        return parse_asset(value)
     except Exception as e:
         raise click.BadParameter(f"invalid asset {value!r}: {e}")
 
@@ -113,12 +110,16 @@ def sign_transaction(
     For testnet transactions, use the following network passphrase:
     'Test SDF Network ; September 2015'
     """
-    if not stellar.HAVE_STELLAR_SDK:
-        click.echo("Stellar requirements not installed.")
-        click.echo("Please run:")
-        click.echo()
-        click.echo("  pip install stellar-sdk")
-        sys.exit(1)
+    try:
+        from stellar_sdk import (
+            FeeBumpTransactionEnvelope,
+            parse_transaction_envelope_from_xdr,
+        )
+
+        from ..stellar_sdk_helpers import from_envelope
+    except ImportError:
+        _exit_missing_sdk()
+
     try:
         envelope = parse_transaction_envelope_from_xdr(b64envelope, network_passphrase)
     except Exception:
@@ -136,7 +137,7 @@ def sign_transaction(
 
     address_n = tools.parse_path(address)
     asset_hints = [_parse_asset(a) for a in asset_hint]
-    tx, operations, tx_ext = stellar.from_envelope(envelope, asset_hints=asset_hints)
+    tx, operations, tx_ext = from_envelope(envelope, asset_hints=asset_hints)
     resp = stellar.sign_tx(
         session, tx, operations, tx_ext, address_n, network_passphrase
     )
@@ -192,13 +193,17 @@ def sign_soroban_authorization(
     way whether the signature is to go into the top-level credentials or into
     one of the delegate slots -- -n/--address only picks the signing key.
     """
-    if not stellar.HAVE_STELLAR_SDK:
-        click.echo("Stellar requirements not installed.")
-        click.echo("Please run:")
-        click.echo()
-        click.echo("  pip install stellar-sdk")
-        sys.exit(1)
-    if not stellar.HAVE_STELLAR_SDK_PROTOCOL_27:
+    try:
+        from stellar_sdk import xdr as stellar_xdr
+
+        from ..stellar_sdk_helpers import (
+            HAVE_STELLAR_SDK_PROTOCOL_27,
+            from_authorization_entry,
+        )
+    except ImportError:
+        _exit_missing_sdk()
+
+    if not HAVE_STELLAR_SDK_PROTOCOL_27:
         click.echo("Signing authorization entries requires Protocol 27 support.")
         click.echo("Please run:")
         click.echo()
@@ -228,7 +233,7 @@ def sign_soroban_authorization(
 
     address_n = tools.parse_path(address)
     asset_hints = [_parse_asset(a) for a in asset_hint]
-    authorization = stellar.from_authorization_entry(
+    authorization = from_authorization_entry(
         entry_xdr, network_passphrase, asset_hints=asset_hints
     )
     if valid_until_ledger is not None:

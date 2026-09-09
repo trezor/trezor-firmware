@@ -36,7 +36,12 @@ try:
 except ImportError:
     pytest.skip("stellar_sdk not installed", allow_module_level=True)
 
-from trezorlib import messages, stellar
+from trezorlib import messages
+from trezorlib.stellar_sdk_helpers import (
+    HAVE_STELLAR_SDK_PROTOCOL_27,
+    from_authorization_entry,
+    from_envelope,
+)
 
 TX_SOURCE = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
 SEQUENCE = 123456
@@ -65,7 +70,7 @@ def make_default_tx(default_op: bool = False, **kwargs) -> TransactionBuilder:
 def test_simple():
     envelope = make_default_tx(default_op=True).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert tx.source_account == TX_SOURCE
     assert tx.fee == envelope.transaction.fee
@@ -85,7 +90,7 @@ def test_memo_text():
         make_default_tx(default_op=True).add_text_memo(memo_text.encode()).build()
     )
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert tx.memo_type == messages.StellarMemoType.TEXT
     assert tx.memo_text == memo_text
@@ -97,7 +102,7 @@ def test_memo_id():
     memo_id = 123456789
     envelope = make_default_tx(default_op=True).add_id_memo(memo_id).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert tx.memo_type == messages.StellarMemoType.ID
     assert tx.memo_text is None
@@ -111,7 +116,7 @@ def test_memo_hash():
         make_default_tx(v1=False, default_op=True).add_hash_memo(memo_hash).build()
     )
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert tx.memo_type == messages.StellarMemoType.HASH
     assert tx.memo_text is None
@@ -127,7 +132,7 @@ def test_memo_return_hash():
         .build()
     )
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert tx.memo_type == messages.StellarMemoType.RETURN
     assert tx.memo_text is None
@@ -144,7 +149,7 @@ def test_time_bounds_missing():
         envelope = tx.build()
 
     with pytest.raises(ValueError):
-        stellar.from_envelope(envelope)
+        from_envelope(envelope)
 
 
 def test_multiple_operations():
@@ -171,7 +176,7 @@ def test_multiple_operations():
         .build()
     )
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert tx.source_account == TX_SOURCE
     assert tx.fee == envelope.transaction.fee
@@ -210,7 +215,7 @@ def test_create_account():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarCreateAccountOp)
@@ -234,7 +239,7 @@ def test_payment_native_asset():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarPaymentOp)
@@ -261,7 +266,7 @@ def test_payment_alpha4_asset():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarPaymentOp)
@@ -288,7 +293,7 @@ def test_payment_alpha12_asset():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarPaymentOp)
@@ -327,7 +332,7 @@ def test_path_payment_strict_receive():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
 
@@ -367,7 +372,7 @@ def test_manage_sell_offer_new_offer():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageSellOfferOp)
@@ -402,7 +407,7 @@ def test_manage_sell_offer_update_offer():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageSellOfferOp)
@@ -435,7 +440,7 @@ def test_create_passive_sell_offer():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarCreatePassiveSellOfferOp)
@@ -476,7 +481,7 @@ def test_set_options():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarSetOptionsOp)
@@ -504,7 +509,7 @@ def test_set_options_ed25519_signer():
         account_id=signer, weight=weight, source=operation_source
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarSetOptionsOp)
@@ -534,7 +539,7 @@ def test_set_options_pre_auth_tx_signer():
         pre_auth_tx_hash=signer, weight=weight, source=operation_source
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarSetOptionsOp)
@@ -555,7 +560,7 @@ def test_set_options_hashx_signer():
         sha256_hash=signer, weight=weight, source=operation_source
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarSetOptionsOp)
@@ -577,7 +582,7 @@ def test_change_trust():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarChangeTrustOp)
@@ -606,7 +611,7 @@ def test_allow_trust():
             source=operation_source,
         ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarAllowTrustOp)
@@ -626,7 +631,7 @@ def test_account_merge():
         destination=destination, source=operation_source
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarAccountMergeOp)
@@ -644,7 +649,7 @@ def test_manage_data():
         data_name=data_name, data_value=data_value, source=operation_source
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageDataOp)
@@ -663,7 +668,7 @@ def test_manage_data_remove_data_entity():
         data_name=data_name, data_value=data_value, source=operation_source
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageDataOp)
@@ -681,7 +686,7 @@ def test_bump_sequence():
         bump_to=bump_to, source=operation_source
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarBumpSequenceOp)
@@ -707,7 +712,7 @@ def test_manage_buy_offer_new_offer():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageBuyOfferOp)
@@ -742,7 +747,7 @@ def test_manage_buy_offer_update_offer():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarManageBuyOfferOp)
@@ -784,7 +789,7 @@ def test_path_payment_strict_send():
         source=operation_source,
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
 
@@ -824,7 +829,7 @@ def test_payment_muxed_account_not_support_raise():
     ).build()
 
     with pytest.raises(ValueError, match="MuxedAccount is not supported"):
-        stellar.from_envelope(envelope)
+        from_envelope(envelope)
 
 
 def test_path_payment_strict_send_muxed_account_not_support_raise():
@@ -857,7 +862,7 @@ def test_path_payment_strict_send_muxed_account_not_support_raise():
     ).build()
 
     with pytest.raises(ValueError, match="MuxedAccount is not supported"):
-        stellar.from_envelope(envelope)
+        from_envelope(envelope)
 
 
 def test_path_payment_strict_receive_muxed_account_not_support_raise():
@@ -890,7 +895,7 @@ def test_path_payment_strict_receive_muxed_account_not_support_raise():
     ).build()
 
     with pytest.raises(ValueError, match="MuxedAccount is not supported"):
-        stellar.from_envelope(envelope)
+        from_envelope(envelope)
 
 
 def test_account_merge_muxed_account_not_support_raise():
@@ -905,7 +910,7 @@ def test_account_merge_muxed_account_not_support_raise():
     ).build()
 
     with pytest.raises(ValueError, match="MuxedAccount is not supported"):
-        stellar.from_envelope(envelope)
+        from_envelope(envelope)
 
 
 def test_op_source_muxed_account_not_support_raise():
@@ -926,7 +931,7 @@ def test_op_source_muxed_account_not_support_raise():
     ).build()
 
     with pytest.raises(ValueError, match="MuxedAccount is not supported"):
-        stellar.from_envelope(envelope)
+        from_envelope(envelope)
 
 
 def test_tx_source_muxed_account_not_support_raise():
@@ -954,7 +959,7 @@ def test_tx_source_muxed_account_not_support_raise():
     )
 
     with pytest.raises(ValueError, match="MuxedAccount is not supported"):
-        stellar.from_envelope(envelope)
+        from_envelope(envelope)
 
 
 def test_claim_claimable_balance():
@@ -968,7 +973,7 @@ def test_claim_claimable_balance():
         balance_id=balance_id, source=operation_source
     ).build()
 
-    tx, operations, ext = stellar.from_envelope(envelope)
+    tx, operations, ext = from_envelope(envelope)
     assert ext == messages.StellarTxExt(v=0)
     assert len(operations) == 1
     assert isinstance(operations[0], messages.StellarClaimClaimableBalanceOp)
@@ -997,7 +1002,7 @@ NATIVE_SAC_ADDRESS = Asset.native().contract_id(Network.TESTNET_NETWORK_PASSPHRA
 NATIVE_ASSET_HINT = messages.StellarAsset(type=messages.StellarAssetType.NATIVE)
 
 skip_if_no_protocol_27 = pytest.mark.skipif(
-    not stellar.HAVE_STELLAR_SDK_PROTOCOL_27,
+    not HAVE_STELLAR_SDK_PROTOCOL_27,
     reason="requires Stellar SDK with Protocol 27 support",
 )
 
@@ -1076,7 +1081,7 @@ def make_authorization_entry(
 def test_from_authorization_entry():
     entry = make_authorization_entry(SOROBAN_SOURCE, 123456789, 600000)
 
-    authorization = stellar.from_authorization_entry(entry)
+    authorization = from_authorization_entry(entry)
 
     assert authorization == messages.StellarSorobanAuthorizationWithAddress(
         nonce=123456789,
@@ -1090,7 +1095,7 @@ def test_from_authorization_entry():
 def test_from_authorization_entry_contract_address():
     entry = make_authorization_entry(SOROBAN_CONTRACT, 123456789, 700000)
 
-    authorization = stellar.from_authorization_entry(entry)
+    authorization = from_authorization_entry(entry)
 
     assert authorization.address == SOROBAN_CONTRACT
     assert authorization.nonce == 123456789
@@ -1111,7 +1116,7 @@ def test_from_authorization_entry_sub_invocations():
         ],
     )
 
-    authorization = stellar.from_authorization_entry(entry)
+    authorization = from_authorization_entry(entry)
 
     assert authorization.invocation == expected_invocation(
         "transfer",
@@ -1132,9 +1137,7 @@ def test_from_authorization_entry_ignores_signature():
         SOROBAN_SOURCE, 123456789, 600000, signature=scval.to_bytes(b"whatever")
     )
 
-    assert stellar.from_authorization_entry(signed) == stellar.from_authorization_entry(
-        unsigned
-    )
+    assert from_authorization_entry(signed) == from_authorization_entry(unsigned)
 
 
 def make_delegates_authorization_entry(
@@ -1186,7 +1189,7 @@ def test_from_authorization_entry_with_delegates():
         ],
     )
 
-    authorization = stellar.from_authorization_entry(entry)
+    authorization = from_authorization_entry(entry)
 
     assert authorization == messages.StellarSorobanAuthorizationWithAddress(
         nonce=123456789,
@@ -1206,7 +1209,7 @@ def test_from_authorization_entry_unsupported_credentials():
     )
 
     with pytest.raises(ValueError, match="Unsupported SorobanCredentials type"):
-        stellar.from_authorization_entry(entry)
+        from_authorization_entry(entry)
 
 
 @skip_if_no_protocol_27
@@ -1227,7 +1230,7 @@ def test_from_authorization_entry_legacy_address_credentials():
     )
 
     with pytest.raises(ValueError, match="Unsupported SorobanCredentials type"):
-        stellar.from_authorization_entry(entry)
+        from_authorization_entry(entry)
 
 
 def make_sac_transfer_tx(auth=()):
@@ -1267,7 +1270,7 @@ def test_from_envelope_delegates():
         ],
     )
 
-    _, operations, _ = stellar.from_envelope(make_sac_transfer_tx(auth=[entry]))
+    _, operations, _ = from_envelope(make_sac_transfer_tx(auth=[entry]))
 
     credentials = operations[0].auth[0].credentials
     assert (
@@ -1291,7 +1294,7 @@ def test_from_envelope_asset_hints():
     )
     envelope = make_sac_transfer_tx(auth=[entry])
 
-    _, operations, _ = stellar.from_envelope(envelope, asset_hints=[SAC_ASSET])
+    _, operations, _ = from_envelope(envelope, asset_hints=[SAC_ASSET])
 
     op = operations[0]
     assert op.function.invoke_contract.asset_hint == SAC_ASSET_HINT
@@ -1316,9 +1319,7 @@ def test_from_envelope_multiple_asset_hints():
     )
     envelope = make_sac_transfer_tx(auth=[entry])
 
-    _, operations, _ = stellar.from_envelope(
-        envelope, asset_hints=[Asset.native(), SAC_ASSET]
-    )
+    _, operations, _ = from_envelope(envelope, asset_hints=[Asset.native(), SAC_ASSET])
 
     root = operations[0].auth[0].root_invocation
     assert root.function.contract_fn.asset_hint is None
@@ -1331,11 +1332,11 @@ def test_from_envelope_unmatched_asset_hint():
     envelope = make_sac_transfer_tx()
 
     # a hint whose SAC is not invoked anywhere is dropped, not sent
-    _, operations, _ = stellar.from_envelope(envelope, asset_hints=[UNRELATED_ASSET])
+    _, operations, _ = from_envelope(envelope, asset_hints=[UNRELATED_ASSET])
     assert operations[0].function.invoke_contract.asset_hint is None
 
     # and no hints means no stamping at all
-    _, operations, _ = stellar.from_envelope(envelope)
+    _, operations, _ = from_envelope(envelope)
     assert operations[0].function.invoke_contract.asset_hint is None
 
 
@@ -1348,7 +1349,7 @@ def test_from_authorization_entry_asset_hints():
         sub_invocations=[make_soroban_invocation(contract_address=SAC_ADDRESS)],
     )
 
-    authorization = stellar.from_authorization_entry(
+    authorization = from_authorization_entry(
         entry, Network.TESTNET_NETWORK_PASSPHRASE, asset_hints=[SAC_ASSET]
     )
 
@@ -1362,7 +1363,7 @@ def test_from_authorization_entry_hints_require_network_passphrase():
     entry = make_authorization_entry(SOROBAN_SOURCE, 123456789, 600000)
 
     with pytest.raises(ValueError, match="network_passphrase is required"):
-        stellar.from_authorization_entry(entry, asset_hints=[SAC_ASSET])
+        from_authorization_entry(entry, asset_hints=[SAC_ASSET])
 
     # an exhausted iterator carries no hints, so no passphrase is needed
-    stellar.from_authorization_entry(entry, asset_hints=iter(()))
+    from_authorization_entry(entry, asset_hints=iter(()))
