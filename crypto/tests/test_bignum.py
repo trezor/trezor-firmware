@@ -565,6 +565,29 @@ def assert_bn_inverse(x_old, prime):
     assert (x_old == 0 and x_new == 0) or (x_old != 0 and (x_old * x_new) % prime == 1)
 
 
+def assert_bn_inverse_blinded(x_old, prime):
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
+    lib.bn_inverse_blinded(bn_x, bn_prime)
+    x_new = bignum256_to_int(bn_x)
+
+    assert bignum_is_normalised(bn_x)
+    assert number_is_fully_reduced(x_new, prime)
+    assert (x_old == 0 and x_new == 0) or (x_old != 0 and (x_old * x_new) % prime == 1)
+
+
+def assert_bn_divide_blinded(s_old, x, prime):
+    bn_s = int_to_bignum256(s_old)
+    bn_x = int_to_bignum256(x)
+    bn_prime = int_to_bignum256(prime)
+    lib.bn_divide_blinded(bn_s, bn_x, bn_prime)
+    s_new = bignum256_to_int(bn_s)
+
+    assert bignum_is_normalised(bn_s)
+    assert number_is_fully_reduced(s_new, prime)
+    assert (s_new * x) % prime == s_old % prime
+
+
 def assert_bn_random(prime):
     bn_x = bignum256()
     bn_prime = int_to_bignum256(prime)
@@ -1029,6 +1052,24 @@ def test_bn_inverse_2(r, prime):
             break
 
     assert_bn_inverse(n, prime)
+
+
+def test_bn_inverse_blinded_1(prime):
+    assert_bn_inverse_blinded(0, prime)
+    assert_bn_inverse_blinded(1, prime)
+
+
+def test_bn_inverse_blinded_2(r, prime):
+    assert_bn_inverse_blinded(r.randrange(1, prime), prime)
+
+
+def test_bn_divide_blinded_1(r, prime):
+    assert_bn_divide_blinded(r.randrange(0, prime), 1, prime)
+    assert_bn_divide_blinded(0, r.randrange(1, prime), prime)
+
+
+def test_bn_divide_blinded_2(r, prime):
+    assert_bn_divide_blinded(r.randrange(0, prime), r.randrange(1, prime), prime)
 
 
 def test_bn_random(r, prime):
