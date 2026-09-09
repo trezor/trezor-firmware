@@ -693,7 +693,7 @@ int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
   int ret = -1;
   int i = 0;
   curve_point R = {0};
-  bignum256 k = {0}, z = {0}, randk = {0}, s = {0};
+  bignum256 k = {0}, z = {0}, s = {0};
   uint8_t by;  // signature recovery byte
 
 #if USE_RFC6979
@@ -744,15 +744,9 @@ int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
       goto cleanup;
     }
 
-    // randomize operations to counter side-channel attacks
-    bn_random(&randk, &curve->order);
-    bn_multiply(&randk, &k, &curve->order);  // k*rand
-    bn_inverse(&k, &curve->order);           // (k*rand)^-1
-    bn_multiply(&R.x, &s, &curve->order);    // R.x*priv
-    bn_add(&s, &z);                          // R.x*priv + z
-    bn_multiply(&k, &s, &curve->order);      // (k*rand)^-1 (R.x*priv + z)
-    bn_multiply(&randk, &s, &curve->order);  // k^-1 (R.x*priv + z)
-    bn_mod(&s, &curve->order);
+    bn_multiply(&R.x, &s, &curve->order);      // R.x*priv
+    bn_add(&s, &z);                            // R.x*priv + z
+    bn_divide_blinded(&s, &k, &curve->order);  // k^-1 (R.x*priv + z)
     // if s is zero, we retry
     if (bn_is_zero(&s)) {
       continue;
@@ -784,7 +778,6 @@ int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
 cleanup:
   memzero(&R, sizeof(R));
   memzero(&k, sizeof(k));
-  memzero(&randk, sizeof(randk));
   memzero(&z, sizeof(z));
   memzero(&s, sizeof(s));
 #if USE_RFC6979
