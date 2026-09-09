@@ -45,7 +45,7 @@ VECTORS = (  # coin, path, script_type, address
         "wsh(or_d(pk(@0/**),and_v(v:pkh(@1/**),older(1))))".format(*TPUBS),
         [change, index],
         address,
-        id=f'Liana-{"internal" if change else "external"}-{index}',
+        id=f"Liana-{'internal' if change else 'external'}-{index}",
     )
     for change, index, address in DATA
 )
