@@ -1052,6 +1052,7 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_NFC), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_NFC), mp_const_false},
+#endif
 #ifdef USE_IPC
     {MP_ROM_QSTR(MP_QSTR_USE_IPC), mp_const_true},
 #else
