@@ -1,6 +1,6 @@
-#include <stddef.h>
+#include <stdint.h>
 
-enum Qstr : size_t {
+enum Qstr : uint16_t {
 
 // Copied from `vendor/micropython/py/qstr.h`:
 
