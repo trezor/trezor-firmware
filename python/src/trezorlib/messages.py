@@ -4870,6 +4870,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         3: protobuf.Field("formatter", "EthereumERC7730FieldFormatterType", repeated=False, required=True),
         4: protobuf.Field("token_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
         5: protobuf.Field("threshold", "bytes", repeated=False, required=False, default=None),
+        13: protobuf.Field("threshold_message", "string", repeated=False, required=False, default=None),
         6: protobuf.Field("decimals", "uint32", repeated=False, required=False, default=None),
         7: protobuf.Field("base", "string", repeated=False, required=False, default=None),
         8: protobuf.Field("prefix", "bool", repeated=False, required=False, default=None),
@@ -4888,6 +4889,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         enum_values: Optional[Sequence["EthereumERC7730EnumEntry"]] = None,
         token_path: Optional["EthereumERC7730Path"] = None,
         threshold: Optional["bytes"] = None,
+        threshold_message: Optional["str"] = None,
         decimals: Optional["int"] = None,
         base: Optional["str"] = None,
         prefix: Optional["bool"] = None,
@@ -4901,6 +4903,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         self.formatter = formatter
         self.token_path = token_path
         self.threshold = threshold
+        self.threshold_message = threshold_message
         self.decimals = decimals
         self.base = base
         self.prefix = prefix
