@@ -727,6 +727,32 @@ class TestCryptoBip32(unittest.TestCase):
             "xpub6FnCn6nSzZAw5Tw7cgR9bi15UV96gLZhjDstkXXxvCLsUXBGXPdSnLFbdpq8p9HmGsApME5hQTZ3emM2rnY5agb9rXpVGyy3bdW6EEgAtqt",
         )
 
+    def test_that_derive_cannot_overflow_depth(self):
+        xkey = bip32.from_seed(
+            unhexlify("000102030405060708090a0b0c0d0e0f"), SECP256K1_NAME
+        )
+
+        for _ in range(255):
+            xkey.derive(0)
+
+        self.assertEqual(xkey.depth(), 255)
+
+        with self.assertRaises(ValueError):
+            xkey.derive(0)
+
+    def test_that_derive_path_cannot_overflow_depth(self):
+        xkey = bip32.from_seed(
+            unhexlify("000102030405060708090a0b0c0d0e0f"), SECP256K1_NAME
+        )
+
+        for _ in range(7):
+            xkey.derive_path([0] * 32)
+
+        self.assertEqual(xkey.depth(), 224)
+
+        with self.assertRaises(ValueError):
+            xkey.derive_path([0] * 32)
+
 
 if __name__ == "__main__":
     unittest.main()
