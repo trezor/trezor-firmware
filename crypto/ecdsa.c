@@ -33,7 +33,6 @@
 #include "ecdsa.h"
 #include "hmac.h"
 #include "memzero.h"
-#include "rand.h"
 #include "rfc6979.h"
 #include "secp256k1.h"
 #ifdef USE_SECP256K1_ZKP_ECDSA
@@ -172,22 +171,10 @@ typedef struct jacobian_curve_point {
   bignum256 x, y, z;
 } jacobian_curve_point;
 
-// generate random K for signing/side-channel noise
-static void generate_k_random(bignum256 *k, const bignum256 *prime) {
-  do {
-    int i = 0;
-    for (i = 0; i < 8; i++) {
-      k->val[i] = random32() & ((1u << BN_BITS_PER_LIMB) - 1);
-    }
-    k->val[8] = random32() & ((1u << BN_BITS_LAST_LIMB) - 1);
-    // check that k is in range and not zero.
-  } while (bn_is_zero(k) || !bn_is_less(k, prime));
-}
-
 void curve_to_jacobian(const curve_point *p, jacobian_curve_point *jp,
                        const bignum256 *prime) {
   // randomize z coordinate
-  generate_k_random(&jp->z, prime);
+  bn_random(&jp->z, prime);
 
   jp->x = jp->z;
   bn_multiply(&jp->z, &jp->x, prime);
@@ -714,7 +701,7 @@ int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
     }
 #else
     // generate random number k
-    generate_k_random(&k, &curve->order);
+    bn_random(&k, &curve->order);
 #endif
 
     // compute k*G
@@ -738,7 +725,7 @@ int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
     }
 
     // randomize operations to counter side-channel attacks
-    generate_k_random(&randk, &curve->order);
+    bn_random(&randk, &curve->order);
     bn_multiply(&randk, &k, &curve->order);  // k*rand
     bn_inverse(&k, &curve->order);           // (k*rand)^-1
     bn_multiply(&R.x, &s, &curve->order);    // R.x*priv
