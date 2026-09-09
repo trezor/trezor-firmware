@@ -2,9 +2,10 @@ use core::convert::TryInto;
 
 use super::component::{
     AddressDetails, CoinJoinProgress, Frame, FrameMsg, Homescreen, HomescreenMsg, Lockscreen,
-    MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
-    PromptScreen, SelectWordCount, SelectWordCountMsg, StatusScreen, SwipeContent, SwipeUpScreen,
-    SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
+    MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, MoreInfoScreen, NumberInputDialog,
+    NumberInputDialogMsg, PinKeyboard, PinKeyboardMsg, Progress, PromptScreen, SelectWordCount,
+    SelectWordCountMsg, StatusScreen, SwipeContent, SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu,
+    VerticalMenuChoiceMsg,
 };
 use crate::micropython::gc::GcBox;
 use crate::micropython::{Error, Obj};
@@ -14,10 +15,10 @@ use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
     Timeout,
 };
-use crate::ui::component::{Component, Never};
+use crate::ui::component::{Component, FlowMsg, MsgMap, Never};
 use crate::ui::flow::{Swipable, SwipePage};
 use crate::ui::layout::obj::ComponentMsgObj;
-use crate::ui::layout::result::{CANCELLED, CONFIRMED};
+use crate::ui::layout::result::{CANCELLED, CONFIRMED, INFO};
 
 impl TryFrom<SelectWordCountMsg> for Obj {
     type Error = Error;
@@ -138,6 +139,36 @@ where
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
+    }
+}
+
+#[cfg(not(feature = "clippy"))]
+impl<T> ComponentMsgObj for MoreInfoScreen<T>
+where
+    T: ParagraphSource<'static>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        msg.try_into()
+    }
+}
+
+/// Layout returned by `request_number`: the number input screen with the
+/// "more info" menu button in the header.
+pub type RequestNumberScreen = MsgMap<
+    Frame<SwipeContent<NumberInputDialog>>,
+    fn(FrameMsg<NumberInputDialogMsg>) -> Option<FlowMsg>,
+>;
+
+impl ComponentMsgObj for RequestNumberScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        // Return not only the result, but also the currently displayed number,
+        // so that Python can e.g. show the corresponding "more info" text.
+        let value: u16 = self.inner().inner().inner().value();
+        match msg {
+            FlowMsg::Confirmed | FlowMsg::Next => Ok((CONFIRMED.as_obj(), value).try_into()?),
+            FlowMsg::Info => Ok((INFO.as_obj(), value).try_into()?),
+            msg => msg.try_into(),
+        }
     }
 }
 
