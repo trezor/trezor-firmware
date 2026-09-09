@@ -1,8 +1,8 @@
-use crate::micropython::macros::obj_type;
+use crate::micropython::macros::{obj_dict, obj_map, obj_type};
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
 use crate::micropython::typ::FullType;
-use crate::micropython::{ffi, util, Error, Obj};
+use crate::micropython::Obj;
 
 #[derive(Copy, Clone)]
 pub enum DeviceMenuMsg {
@@ -87,48 +87,32 @@ impl DeviceMenuMsg {
 // Create a DeviceMenuResult class that contains all result types
 static DEVICE_MENU_RESULT_TYPE: FullType = obj_type! {
     name: Qstr::MP_QSTR_DeviceMenuResult,
-    attr_fn: device_menu_result_attr,
+    locals: &obj_dict!(obj_map! {
+        Qstr::MP_QSTR_Close => Qstr::MP_QSTR_Close.to_obj(),
+        Qstr::MP_QSTR_ReviewFailedBackup => Qstr::MP_QSTR_ReviewFailedBackup.to_obj(),
+        Qstr::MP_QSTR_PairDevice => Qstr::MP_QSTR_PairDevice.to_obj(),
+        Qstr::MP_QSTR_DisconnectDevice => Qstr::MP_QSTR_DisconnectDevice.to_obj(),
+        Qstr::MP_QSTR_UnpairDevice => Qstr::MP_QSTR_UnpairDevice.to_obj(),
+        Qstr::MP_QSTR_UnpairAllDevices => Qstr::MP_QSTR_UnpairAllDevices.to_obj(),
+        Qstr::MP_QSTR_TurnOff => Qstr::MP_QSTR_TurnOff.to_obj(),
+        Qstr::MP_QSTR_Reboot => Qstr::MP_QSTR_Reboot.to_obj(),
+        Qstr::MP_QSTR_RebootToBootloader => Qstr::MP_QSTR_RebootToBootloader.to_obj(),
+        Qstr::MP_QSTR_ToggleBluetooth => Qstr::MP_QSTR_ToggleBluetooth.to_obj(),
+        Qstr::MP_QSTR_SetOrChangePin => Qstr::MP_QSTR_SetOrChangePin.to_obj(),
+        Qstr::MP_QSTR_RemovePin => Qstr::MP_QSTR_RemovePin.to_obj(),
+        Qstr::MP_QSTR_SetAutoLockBattery => Qstr::MP_QSTR_SetAutoLockBattery.to_obj(),
+        Qstr::MP_QSTR_SetAutoLockUSB => Qstr::MP_QSTR_SetAutoLockUSB.to_obj(),
+        Qstr::MP_QSTR_SetOrChangeWipeCode => Qstr::MP_QSTR_SetOrChangeWipeCode.to_obj(),
+        Qstr::MP_QSTR_RemoveWipeCode => Qstr::MP_QSTR_RemoveWipeCode.to_obj(),
+        Qstr::MP_QSTR_CheckBackup => Qstr::MP_QSTR_CheckBackup.to_obj(),
+        Qstr::MP_QSTR_SetDeviceName => Qstr::MP_QSTR_SetDeviceName.to_obj(),
+        Qstr::MP_QSTR_SetBrightness => Qstr::MP_QSTR_SetBrightness.to_obj(),
+        Qstr::MP_QSTR_ToggleTapToWake => Qstr::MP_QSTR_ToggleTapToWake.to_obj(),
+        Qstr::MP_QSTR_ToggleHaptics => Qstr::MP_QSTR_ToggleHaptics.to_obj(),
+        Qstr::MP_QSTR_ToggleLed => Qstr::MP_QSTR_ToggleLed.to_obj(),
+        Qstr::MP_QSTR_WipeDevice => Qstr::MP_QSTR_WipeDevice.to_obj(),
+        Qstr::MP_QSTR_RefreshMenu => Qstr::MP_QSTR_RefreshMenu.to_obj(),
+    }),
 };
-
-unsafe extern "C" fn device_menu_result_attr(_self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
-    let block = || {
-        let arg = unsafe { dest.read() };
-        if !arg.is_null() {
-            // Null destination would mean a `setattr`.
-            return Err(Error::TypeError);
-        }
-        let attr = Qstr::from_u16(attr as _);
-        let msg = match attr {
-            Qstr::MP_QSTR_Close => Qstr::MP_QSTR_Close,
-            Qstr::MP_QSTR_ReviewFailedBackup => Qstr::MP_QSTR_ReviewFailedBackup,
-            Qstr::MP_QSTR_PairDevice => Qstr::MP_QSTR_PairDevice,
-            Qstr::MP_QSTR_DisconnectDevice => Qstr::MP_QSTR_DisconnectDevice,
-            Qstr::MP_QSTR_UnpairDevice => Qstr::MP_QSTR_UnpairDevice,
-            Qstr::MP_QSTR_UnpairAllDevices => Qstr::MP_QSTR_UnpairAllDevices,
-            Qstr::MP_QSTR_ToggleBluetooth => Qstr::MP_QSTR_ToggleBluetooth,
-            Qstr::MP_QSTR_SetOrChangePin => Qstr::MP_QSTR_SetOrChangePin,
-            Qstr::MP_QSTR_RemovePin => Qstr::MP_QSTR_RemovePin,
-            Qstr::MP_QSTR_SetAutoLockBattery => Qstr::MP_QSTR_SetAutoLockBattery,
-            Qstr::MP_QSTR_SetAutoLockUSB => Qstr::MP_QSTR_SetAutoLockUSB,
-            Qstr::MP_QSTR_SetOrChangeWipeCode => Qstr::MP_QSTR_SetOrChangeWipeCode,
-            Qstr::MP_QSTR_RemoveWipeCode => Qstr::MP_QSTR_RemoveWipeCode,
-            Qstr::MP_QSTR_CheckBackup => Qstr::MP_QSTR_CheckBackup,
-            Qstr::MP_QSTR_SetDeviceName => Qstr::MP_QSTR_SetDeviceName,
-            Qstr::MP_QSTR_SetBrightness => Qstr::MP_QSTR_SetBrightness,
-            Qstr::MP_QSTR_ToggleTapToWake => Qstr::MP_QSTR_ToggleTapToWake,
-            Qstr::MP_QSTR_ToggleHaptics => Qstr::MP_QSTR_ToggleHaptics,
-            Qstr::MP_QSTR_ToggleLed => Qstr::MP_QSTR_ToggleLed,
-            Qstr::MP_QSTR_WipeDevice => Qstr::MP_QSTR_WipeDevice,
-            Qstr::MP_QSTR_TurnOff => Qstr::MP_QSTR_TurnOff,
-            Qstr::MP_QSTR_Reboot => Qstr::MP_QSTR_Reboot,
-            Qstr::MP_QSTR_RebootToBootloader => Qstr::MP_QSTR_RebootToBootloader,
-            Qstr::MP_QSTR_RefreshMenu => Qstr::MP_QSTR_RefreshMenu,
-            _ => return Err(Error::AttributeError(attr.to_obj())),
-        };
-        unsafe { dest.write(msg.to_obj()) };
-        Ok(())
-    };
-    unsafe { util::try_or_raise(block) }
-}
 
 pub static DEVICE_MENU_RESULT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_TYPE);
