@@ -8,9 +8,6 @@ mod generated {
 }
 pub use generated::Qstr;
 
-// TODO: bindgen generates the Qstr type as usize, but for us it would be enough
-// to have a u16
-
 impl Qstr {
     pub const fn to_obj(self) -> Obj {
         <Self as qstr::QstrValue>::to_attribute(self).to_obj()
