@@ -1,0 +1,1 @@
+Host-initiated firmware upgrades now proceed without user interaction even when the installed firmware body is corrupted.
