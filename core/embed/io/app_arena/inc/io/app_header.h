@@ -66,7 +66,7 @@ typedef struct {
   uint32_t code_size;
   /** Size of RAM required by the app (includes stack, heap, and static data) */
   uint32_t data_size;
-  /** Hash of the first payload chunk */
+  /** Head hash of the application chunk chain */
   sha256_digest_t chunk_hash;
   /** Size of each chunk of the payload in bytes */
   uint16_t chunk_size;
