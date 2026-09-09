@@ -249,7 +249,7 @@ def test_miniscript_show_multisig_3(session: Session):
     registered = session.call(
         messages.Policy(
             name="2-of-3",
-            template=f'wsh(multi(2,{",".join(items)}))',
+            template=f"wsh(multi(2,{','.join(items)}))",
             xpubs=[node.xpub for node in nodes],
             coin_name="Testnet",
         ),
