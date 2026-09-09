@@ -152,13 +152,17 @@ def test_sign_tx(session: Session, parameters, result):
     tx, operations, ext = parameters_to_proto(session, parameters)
 
     # check fixture consistency
-    if stellar.HAVE_STELLAR_SDK:
+    try:
         from stellar_sdk import Keypair, TransactionEnvelope
 
+        from trezorlib.stellar_sdk_helpers import from_envelope
+    except ImportError:
+        pass
+    else:
         envelope = TransactionEnvelope.from_xdr(
             parameters["xdr"], parameters["network_passphrase"]
         )
-        tx_parsed, operations_parsed, ext_parsed = stellar.from_envelope(
+        tx_parsed, operations_parsed, ext_parsed = from_envelope(
             envelope, asset_hints=parse_asset_hints(parameters)
         )
         tx_parsed.address_n = parse_path(parameters["address_n"])
@@ -239,14 +243,22 @@ def test_sign_soroban_authorization(session: Session, parameters, result):
     )
 
     # check fixture consistency
-    if stellar.HAVE_STELLAR_SDK_PROTOCOL_27:
+    try:
         from stellar_sdk import Keypair
         from stellar_sdk import auth as stellar_auth
         from stellar_sdk import xdr as stellar_xdr
 
+        from trezorlib.stellar_sdk_helpers import (
+            HAVE_STELLAR_SDK_PROTOCOL_27,
+            from_authorization_entry,
+        )
+    except ImportError:
+        HAVE_STELLAR_SDK_PROTOCOL_27 = False
+
+    if HAVE_STELLAR_SDK_PROTOCOL_27:
         entry = stellar_xdr.SorobanAuthorizationEntry.from_xdr(parameters["xdr"])
         assert (
-            stellar.from_authorization_entry(
+            from_authorization_entry(
                 entry,
                 parameters["network_passphrase"],
                 asset_hints=parse_asset_hints(parameters),
