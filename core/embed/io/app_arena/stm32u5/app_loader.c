@@ -180,7 +180,7 @@ ts_t app_loader_verify_payload(const app_header_t* header, const void* code,
   TSH_CHECK(chdr->ro_rel_offset <= raw_code_size, TS_EBADMSG);
   TSH_CHECK(chdr->ro_rel_offset + chdr->ro_rel_size >= chdr->ro_rel_offset,
             TS_EBADMSG);
-  TSH_CHECK(chdr->ro_rel_size + chdr->ro_rel_offset <= raw_code_size,
+  TSH_CHECK(chdr->ro_rel_offset + chdr->ro_rel_size <= raw_code_size,
             TS_EBADMSG);
 
   // Check that RW segment size and address are valid
