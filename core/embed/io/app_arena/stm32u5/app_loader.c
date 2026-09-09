@@ -484,9 +484,6 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
   // Initialize applet privileges
   applet_privileges_t privileges = {0};
 
-  // Get static base address
-  uint32_t sb_addr = map.rw_p_addr;
-
   applet_init(applet, &privileges, unload_cb);
 
   applet_set_heap(applet, (void*)map.heap_p_addr, map.heap_size);
@@ -505,7 +502,7 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
 
   // Initialize the applet task
   bool ok = systask_init(&applet->task, map.stack_p_addr, map.stack_size,
-                         sb_addr, applet);
+                         map.rw_p_addr, applet);
   TSH_CHECK(ok, TS_ENOMEM);
 
   // Enable coreapp TLS area swapping
