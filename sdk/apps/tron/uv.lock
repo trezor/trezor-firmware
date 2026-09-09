@@ -1531,10 +1531,7 @@ provides-extras = ["hidapi", "ethereum", "qt-widgets", "extra", "stellar", "ble"
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "autoflake", specifier = ">=2.3.1" },
-    { name = "black", specifier = ">=25" },
     { name = "flake8", specifier = ">=2.3.0" },
-    { name = "isort", specifier = ">=5.13.2" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-random-order", specifier = ">=1.2.0" },
     { name = "tox", specifier = ">=4.25.0" },
