@@ -27,12 +27,15 @@
 #include "extmod/modtime.h"
 #include "shared/timeutils/timeutils.h"
 
+// 32-bit integer will overflow at 2068.
+_Static_assert(sizeof(mp_timestamp_t) >= 8);
+
 // copy of ports/stm32/modutime.c:time_localtime, without support
 // for getting current clock time (i.e., timestamp must always be provided)
 static mp_obj_t time_gmtime2000(mp_obj_t timestamp) {
-  mp_int_t seconds = mp_obj_get_int(timestamp);
+  mp_timestamp_t t = timeutils_obj_get_timestamp(timestamp);
   timeutils_struct_time_t tm;
-  timeutils_seconds_since_2000_to_struct_time(seconds, &tm);
+  timeutils_seconds_since_2000_to_struct_time(t, &tm);
   mp_obj_t tuple[8] = {
       tuple[0] = mp_obj_new_int(tm.tm_year),
       tuple[1] = mp_obj_new_int(tm.tm_mon),
