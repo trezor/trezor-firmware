@@ -32,7 +32,7 @@ subclass only describes what its *body* looks like, in `parse_body()`:
 | `Atomic`      | `uintN`, `address`, `bool`, `bytes32`, ... | never | the one-word value itself             |
 | `DynamicLeaf` | `bytes`, `string`    | always       | one-word **byte length**, then that many bytes         |
 | `Array`       | `T[]`                | always       | one-word **element count**, then the elements' heads   |
-| `Tuple`       | structs (leaf fields only) | iff any field is dynamic | the fields' heads, back to back  |
+| `Tuple`       | structs                    | iff any field is dynamic | the fields' heads, back to back  |
 
 Note the two length prefixes mean different things: a `DynamicLeaf` counts
 *bytes*, an `Array` counts *elements*.
@@ -52,7 +52,7 @@ Note the two length prefixes mean different things: a `DynamicLeaf` counts
   static struct, with its own dynamic-field offsets relative to the body
   start. ("Parse the body in place" is universal; only the head dereference
   depends on the type's dynamism.)
-* Whether a leaf-only tuple is dynamic is fully derivable from its fields.
+* Whether a tuple is dynamic is fully derivable from its fields.
   For tuples nested inside arrays, `ABIValue.from_proto` therefore *derives*
   the flag and ignores the wire descriptor's `is_dynamic` (which was
   historically ignored in that position anyway).
