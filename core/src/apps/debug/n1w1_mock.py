@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import log, loop
+from trezor import io, log, loop
 from trezor.messages import DebugLinkN1W1Read, DebugLinkN1W1Response, DebugLinkN1W1Write
 from trezor.ui import Layout
 
@@ -24,10 +24,12 @@ class N1W1Context:
 
     def __enter__(self) -> Self:
         log.debug(__name__, "N1W1 exchange start")
+        io.nfc.start()
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, tb: Any) -> None:
         log.debug(__name__, "N1W1 exchange done")
+        io.nfc.stop()
         self.tx.put(None)
 
     async def connect(self) -> None:
