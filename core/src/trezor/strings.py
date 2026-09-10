@@ -1,9 +1,6 @@
 import utime
-from micropython import const
 
 from . import TR
-
-_SECONDS_1970_TO_2000 = const(946684800)
 
 
 def format_amount(amount: int, decimals: int) -> str:
@@ -143,15 +140,12 @@ def format_timestamp(timestamp: int) -> str:
     Returns human-friendly representation of a unix timestamp (in seconds format).
     Minutes and seconds are always displayed as 2 digits.
     Example:
-    >>> format_timestamp_to_human(0)
+    >>> format_timestamp(0)
     '1970-01-01 00:00:00'
-    >>> format_timestamp_to_human(1616051824)
+    >>> format_timestamp(1616051824)
     '2021-03-18 07:17:04'
     """
-    # By doing the conversion to 2000-based epoch in Python, we take advantage of the
-    # bignum implementation, and get another 30 years out of the 32-bit mp_int_t
-    # that is used internally.
-    d = utime.gmtime2000(timestamp - _SECONDS_1970_TO_2000)
+    d = utime.gmtime1970(timestamp)
     return f"{d[0]}-{d[1]:02d}-{d[2]:02d} {d[3]:02d}:{d[4]:02d}:{d[5]:02d}"
 
 
