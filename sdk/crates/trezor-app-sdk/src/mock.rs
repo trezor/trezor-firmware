@@ -17,30 +17,36 @@ use mock_sha3::{
     Digest, Keccak256 as Keccak256_impl, Keccak512 as Keccak512_impl, Sha3_256 as Sha3_256_impl,
     Sha3_512 as Sha3_512_impl,
 };
+use stabby::boxed::{Box, BoxedSlice};
 use stabby::slice::{Slice, SliceMut};
 use stabby::str::Str;
 
-use super::crypto::Hasher;
 use crate::traits::ApiVariant;
 use crate::traits::allocator::{FfiLayout, GlobalAllocatorV1, GlobalAllocatorV1Vtable};
 use crate::traits::crypto::{
-    BoxedHasher, CryptoError, CryptoV1, CryptoV1Vtable, EcCurve, HashingAlgorithm,
+    BoxedHasher, CryptoError, CryptoV1, CryptoV1Vtable, EcCurve, HashingAlgorithm, Hasher,
 };
-use crate::traits::service::{IpcError, IpcRemote, IpcRemoteVtable, MessageRef};
 use crate::traits::syslog::{
     LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1, SyslogV1Vtable,
 };
 use crate::traits::trezor_v1::{TrezorApiV1, TrezorApiV1Struct, TrezorApiV1Vtable};
+use crate::traits::ui::{
+    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
+    ConfirmValueIntro, ConfirmWithInfo, RequestNumber, SelectMenu, ShowAddress, ShowDanger,
+    ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess, ShowWarning,
+    TrezorUiResult, UiV1, UiV1Vtable,
+};
 use crate::traits::util::FastResult;
+use crate::traits::wire::{WireError, WireMessage, WireV1, WireV1Vtable};
 
 // ============================================================================
 // Dummy implementation of the stable ABI, for host-based unit tests.
 //
-// Only `syslog` and (indirectly, via `std`'s allocator) `allocator` do
-// anything real; nothing in the current test suite exercises `crypto`/`ipc`
-// through this API — hashing goes straight to the `Sha256`/`Keccak256`/etc.
-// mocks further down instead (see `crate::crypto::sha2`/`sha3`), and no test
-// talks to a (nonexistent, in this context) Core over IPC.
+// `syslog`, `allocator` (indirectly, via `std`'s allocator), and `crypto`'s
+// `get_hasher`/`get_hmac` (via the `Sha256`/`Keccak256`/etc. mocks further
+// down) do real work; everything else in `crypto` and all of `ipc` are
+// unimplemented — no test talks to a (nonexistent, in this context) Core
+// over IPC.
 // ============================================================================
 
 struct DummyApi;
@@ -110,20 +116,78 @@ unsafe impl GlobalAllocatorV1 for DummyAllocator {
 struct DummyCrypto;
 
 impl CryptoV1 for DummyCrypto {
-    extern "C" fn get_hasher(&self, _algorithm: HashingAlgorithm) -> BoxedHasher {
-        unimplemented!("tests use crate::crypto::sha2/sha3, which bypass this vtable")
+    extern "C" fn get_hasher(&self, algorithm: HashingAlgorithm) -> BoxedHasher {
+        match algorithm {
+            HashingAlgorithm::Sha256 => Box::new(Sha256::new(None)).into(),
+            HashingAlgorithm::Sha512 => Box::new(Sha512::new(None)).into(),
+            HashingAlgorithm::Sha3_256 => Box::new(Sha3_256::new(None)).into(),
+            HashingAlgorithm::Keccak256 => Box::new(Keccak256::new(None)).into(),
+        }
     }
 
-    extern "C" fn get_hmac_hasher<'a>(&self, _key: Slice<'a, u8>) -> BoxedHasher {
-        unimplemented!("tests use crate::crypto::hmac, which bypasses this vtable")
+    extern "C" fn get_hmac<'a>(&self, key: Slice<'a, u8>) -> BoxedHasher {
+        Box::new(HmacSha256::new(key.as_slice(), None)).into()
     }
 
-    extern "C" fn hasher_update<'a>(&self, _hasher: BoxedHasher, _input: Slice<'a, u8>) {
-        unimplemented!("tests use crate::crypto::sha2/sha3, which bypass this vtable")
+    extern "C" fn get_xpub<'a>(
+        &self,
+        _address_n: Slice<'a, u32>,
+        _xpub_magic: u32,
+    ) -> FastResult<[u8; 111], WireError> {
+        unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn hasher_finalize(&self, _hasher: BoxedHasher) -> stabby::boxed::BoxedSlice<u8> {
-        unimplemented!("tests use crate::crypto::sha2/sha3, which bypass this vtable")
+    extern "C" fn get_public_key<'a>(
+        &self,
+        _address_n: Slice<'a, u32>,
+        _compressed: bool,
+    ) -> FastResult<stabby::boxed::BoxedSlice<u8>, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn sign_typed_hash<'a>(
+        &self,
+        _address_n: Slice<'a, u32>,
+        _hash: [u8; 32],
+        _encoded_network: stabby::option::Option<Slice<'a, u8>>,
+        _encoded_token: stabby::option::Option<Slice<'a, u8>>,
+        _chain_id: stabby::option::Option<u64>,
+        _show_progress: bool,
+    ) -> FastResult<[u8; 65], WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn sign_digest<'a>(
+        &self,
+        _address_n: Slice<'a, u32>,
+        _digest: [u8; 32],
+        _compressed: bool,
+    ) -> FastResult<[u8; 65], WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn check_address_mac<'a>(
+        &self,
+        _address_n: Slice<'a, u32>,
+        _mac: [u8; 32],
+        _address: Str<'a>,
+    ) -> FastResult<bool, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn get_address_mac<'a>(
+        &self,
+        _address_n: Slice<'a, u32>,
+        _address: Str<'a>,
+    ) -> FastResult<[u8; 32], WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn verify_nonce_cache<'a>(
+        &self,
+        _nonce: Slice<'a, u8>,
+    ) -> FastResult<bool, WireError> {
+        unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn ec_verify_recover<'a>(
@@ -189,36 +253,173 @@ impl SyslogV1 for DummySyslog {
     }
 }
 
-struct DummyIpc;
+struct DummyWire;
 
-impl IpcRemote for DummyIpc {
-    extern "C" fn register_inbox<'remote, 'local>(&'remote self, _buffer: SliceMut<'local, usize>) {
+impl WireV1 for DummyWire {
+    extern "C" fn register_inbox<'a>(&self, _buffer: SliceMut<'a, usize>) {}
+
+    extern "C" fn wire_receive_start(&self, _timeout_ms: u32) -> FastResult<WireMessage, WireError> {
+        Err(WireError::Timeout).into()
     }
 
-    extern "C" fn receive<'remote>(
-        &'remote self,
-        _timeout_ms: u32,
-    ) -> FastResult<MessageRef<'remote>, IpcError<'remote>> {
-        Err(IpcError::Timeout).into()
-    }
-
-    extern "C" fn send<'remote, 'local>(
-        &'remote self,
-        _service: u16,
+    extern "C" fn wire_request<'a>(
+        &self,
         _id: u16,
-        _message: Slice<'local, u8>,
-    ) -> FastResult<(), IpcError<'remote>> {
-        Err(IpcError::FailedToSend).into()
+        _data: Slice<'a, u8>,
+        _timeout_ms: u32,
+    ) -> FastResult<WireMessage, WireError> {
+        Err(WireError::Timeout).into()
     }
 
-    extern "C" fn call<'remote, 'local>(
-        &'remote self,
-        _service: u16,
-        _id: u16,
-        _message: Slice<'local, u8>,
-        _timeout_ms: u32,
-    ) -> FastResult<MessageRef<'remote>, IpcError<'remote>> {
-        Err(IpcError::Timeout).into()
+    extern "C" fn wire_respond<'a>(
+        &self,
+        _response_id: u16,
+        _data: Slice<'a, u8>,
+    ) -> FastResult<(), WireError> {
+        Err(WireError::FailedToSend).into()
+    }
+
+    extern "C" fn wire_error<'a>(&self, _code: u16, _message: Str<'a>) -> FastResult<(), WireError> {
+        Err(WireError::FailedToSend).into()
+    }
+}
+
+struct DummyUi;
+
+impl UiV1 for DummyUi {
+    extern "C" fn confirm_value<'a>(
+        &self,
+        _value: ConfirmValue<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_value_intro<'a>(
+        &self,
+        _value: ConfirmValueIntro<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_summary<'a>(
+        &self,
+        _value: ConfirmSummary<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_action<'a>(
+        &self,
+        _value: ConfirmAction<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn select_menu<'a>(
+        &self,
+        _value: SelectMenu<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_properties<'a>(
+        &self,
+        _value: ConfirmProperties<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_properties<'a>(
+        &self,
+        _value: ShowProperties<'a>,
+    ) -> FastResult<(), WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_warning<'a>(&self, _value: ShowWarning<'a>) -> FastResult<(), WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_info_with_cancel<'a>(
+        &self,
+        _value: ShowInfoWithCancel<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_mismatch<'a>(
+        &self,
+        _value: ShowMismatch<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_trade<'a>(
+        &self,
+        _value: ConfirmTrade<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_danger<'a>(
+        &self,
+        _value: ShowDanger<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_success<'a>(&self, _value: ShowSuccess<'a>) -> FastResult<(), WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn request_number<'a>(
+        &self,
+        _value: RequestNumber<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_public_key<'a>(
+        &self,
+        _value: ShowPublicKey<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_with_info<'a>(
+        &self,
+        _value: ConfirmWithInfo<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_address<'a>(
+        &self,
+        _value: ShowAddress<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn init_progress<'a>(
+        &self,
+        _description: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
+        _title: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
+        _indeterminate: bool,
+        _danger: bool,
+    ) -> FastResult<(), WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn update_progress<'a>(
+        &self,
+        _description: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
+        _value: u32,
+    ) -> FastResult<(), WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn end_progress(&self) -> FastResult<(), WireError> {
+        unimplemented!("not exercised by the current test suite")
     }
 }
 
@@ -227,7 +428,8 @@ static DUMMY_API: TrezorApiV1Struct = TrezorApiV1Struct {
     allocator: stabby::dynref_static!(DummyAllocator as GlobalAllocatorV1Vtable),
     crypto: stabby::dynref_static!(DummyCrypto as CryptoV1Vtable),
     syslog: stabby::dynref_static!(DummySyslog as SyslogV1Vtable),
-    ipc: stabby::dynref_static!(DummyIpc as IpcRemoteVtable),
+    wire: stabby::dynref_static!(DummyWire as WireV1Vtable),
+    ui: stabby::dynref_static!(DummyUi as UiV1Vtable),
 };
 
 extern "C" fn dummy_api_getter(version: u32) -> ApiVariant {
@@ -268,7 +470,7 @@ impl Sha256 {
         let ctx = Sha256_impl::new();
         let mut hasher = Self { ctx };
         if let Some(data) = data {
-            Self::update(&mut hasher, data);
+            hasher.ctx.update(data);
         }
         hasher
     }
@@ -287,13 +489,12 @@ impl Drop for Sha256 {
 }
 
 impl Hasher for Sha256 {
-    fn update(&mut self, data: &[u8]) {
-        self.ctx.update(data);
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
     }
 
-    fn finalize(&mut self, output: &mut [u8]) {
-        let digest = self.ctx.clone().finalize();
-        output.copy_from_slice(digest.as_slice());
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.ctx.clone().finalize()[..])
     }
 }
 
@@ -307,7 +508,7 @@ impl Sha512 {
         let ctx = Sha512_impl::new();
         let mut hasher = Self { ctx };
         if let Some(data) = data {
-            Self::update(&mut hasher, data);
+            hasher.ctx.update(data);
         }
         hasher
     }
@@ -326,13 +527,12 @@ impl Drop for Sha512 {
 }
 
 impl Hasher for Sha512 {
-    fn update(&mut self, data: &[u8]) {
-        self.ctx.update(data);
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
     }
 
-    fn finalize(&mut self, output: &mut [u8]) {
-        let digest = Sha512::digest(self);
-        output.copy_from_slice(digest.as_slice());
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
     }
 }
 // Sha3 functions
@@ -347,25 +547,25 @@ impl Keccak256 {
         let ctx = Keccak256_impl::new();
         let mut hasher = Self { ctx };
         if let Some(data) = data {
-            Self::update(&mut hasher, data);
+            hasher.ctx.update(data);
         }
         hasher
     }
 
     pub fn digest(&mut self) -> [u8; 32] {
         let mut out = [0u8; 32];
-        Self::finalize(self, &mut out);
+        out.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
         out
     }
 }
 
 impl Hasher for Keccak256 {
-    fn update(&mut self, data: &[u8]) {
-        self.ctx.update(data);
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
     }
 
-    fn finalize(&mut self, output: &mut [u8]) {
-        output.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
     }
 }
 
@@ -385,107 +585,31 @@ impl Sha3_256 {
         let ctx = Sha3_256_impl::new();
         let mut hasher = Self { ctx };
         if let Some(data) = data {
-            Self::update(&mut hasher, data);
+            hasher.ctx.update(data);
         }
         hasher
     }
 
     pub fn digest(&mut self) -> [u8; 32] {
-        let mut digest = [0u8; 32];
-        Self::finalize(self, &mut digest);
-        digest
+        let mut out = [0u8; 32];
+        out.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
+        out
     }
 }
 
 impl Hasher for Sha3_256 {
-    fn update(&mut self, data: &[u8]) {
-        self.ctx.update(data);
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
     }
 
-    fn finalize(&mut self, output: &mut [u8]) {
-        output.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
     }
 }
 
 impl Drop for Sha3_256 {
     fn drop(&mut self) {
         self.ctx.reset();
-    }
-}
-
-/// **Functional** — delegates to `mock_sha3::Keccak256` (software Keccak-512).
-pub struct Keccak512 {
-    ctx: Keccak512_impl,
-}
-
-impl Keccak512 {
-    pub fn new(data: Option<&[u8]>) -> Self {
-        let ctx = Keccak512_impl::new();
-        let mut hasher = Self { ctx };
-        if let Some(data) = data {
-            Self::update(&mut hasher, data);
-        }
-        hasher
-    }
-
-    pub fn digest(&mut self) -> [u8; 64] {
-        let mut out = [0u8; 64];
-        Self::finalize(self, &mut out);
-        out
-    }
-}
-
-impl Hasher for Keccak512 {
-    fn update(&mut self, data: &[u8]) {
-        self.ctx.update(data);
-    }
-
-    fn finalize(&mut self, output: &mut [u8]) {
-        output.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
-    }
-}
-
-impl Drop for Keccak512 {
-    fn drop(&mut self) {
-        self.ctx.reset();
-    }
-}
-
-/// **Functional** — delegates to `mock_sha3::Sha3_512` (software SHA3-512).
-pub struct Sha3_512 {
-    ctx: Sha3_512_impl,
-}
-
-impl Sha3_512 {
-    pub fn new(data: Option<&[u8]>) -> Self {
-        let ctx = Sha3_512_impl::new();
-        let mut hasher = Self { ctx };
-        if let Some(data) = data {
-            Self::update(&mut hasher, data);
-        }
-        hasher
-    }
-
-    pub fn digest(&mut self) -> [u8; 64] {
-        let mut digest = [0u8; 64];
-        Self::finalize(self, &mut digest);
-        digest
-    }
-}
-
-impl Drop for Sha3_512 {
-    fn drop(&mut self) {
-        self.ctx.reset();
-    }
-}
-
-impl Hasher for Sha3_512 {
-    fn update(&mut self, data: &[u8]) {
-        self.ctx.update(data);
-    }
-
-    fn finalize(&mut self, output: &mut [u8]) {
-        output.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
     }
 }
 
@@ -501,72 +625,29 @@ impl HmacSha256 {
         let ctx = HMAC256_impl::new(key);
         let mut hasher = Self { ctx };
         if let Some(data) = data {
-            Self::update(&mut hasher, data);
+            hasher.ctx.update(data);
         }
         hasher
     }
 
     pub fn digest(&mut self) -> [u8; 32] {
-        let mut digest = [0u8; 32];
-        Self::finalize(self, &mut digest);
-        digest
+        let mut out = [0u8; 32];
+        out.copy_from_slice(self.ctx.clone().finalize().as_slice());
+        out
     }
 }
 
 impl Hasher for HmacSha256 {
-    fn update(&mut self, data: &[u8]) {
-        self.ctx.update(data);
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
     }
 
-    fn finalize(&mut self, output: &mut [u8]) {
-        output.copy_from_slice(self.ctx.clone().finalize().as_slice());
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
     }
 }
 
 impl Drop for HmacSha256 {
-    fn drop(&mut self) {
-        unsafe {
-            core::ptr::write_volatile(&mut self.ctx, core::mem::zeroed());
-        }
-    }
-}
-
-/// **Functional** — delegates to `mock_hmac_sha512::HMAC` (software HMAC-SHA-512).
-pub struct HmacSha512 {
-    ctx: HMAC512_impl,
-}
-
-impl HmacSha512 {
-    pub fn new(key: &[u8], data: Option<&[u8]>) -> Self {
-        let ctx = HMAC512_impl::new(key);
-        let mut hasher = Self { ctx };
-        if let Some(data) = data {
-            Self::update(&mut hasher, data);
-        }
-        hasher
-    }
-
-    pub fn digest(&mut self) -> [u8; 64] {
-        let mut digest = [0u8; 64];
-        Self::finalize(self, &mut digest);
-        digest
-    }
-}
-
-impl Hasher for HmacSha512 {
-    fn update(&mut self, data: &[u8]) {
-        self.ctx.update(data);
-    }
-
-    fn finalize(&mut self, output: &mut [u8]) {
-        // output.copy_from_slice(self.ctx.clone().finalize().as_slice());
-        let ctx = core::mem::replace(&mut self.ctx, HMAC512_impl::new(&[]));
-        let digest = ctx.finalize();
-        output.copy_from_slice(&digest);
-    }
-}
-
-impl Drop for HmacSha512 {
     fn drop(&mut self) {
         unsafe {
             core::ptr::write_volatile(&mut self.ctx, core::mem::zeroed());

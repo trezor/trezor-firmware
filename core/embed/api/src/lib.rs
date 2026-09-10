@@ -8,6 +8,7 @@ extern crate alloc;
 mod allocator;
 mod crypto;
 mod syslog;
+mod ui;
 mod v1;
 mod wire;
 

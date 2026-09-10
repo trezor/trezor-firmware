@@ -12,11 +12,13 @@ bindgen.workspace = true
 [dependencies]
 bs58.workspace = true
 lock_api.workspace = true
+rkyv = { workspace = true, features = ["alloc", "bytecheck"] }
 spin = { workspace = true, features = ["lock_api"] }
 stabby.workspace = true
 talc.workspace = true
 trezor-app-sdk.workspace = true
 ufmt.workspace = true
+zeroize.workspace = true
 
 crypto.workspace = true
 models.workspace = true

@@ -10,6 +10,7 @@ pub const DIGEST_SIZE: usize = ffi::SHA512_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub type Sha512Ctx = SecretContext<ffi::SHA512_CTX>;
+pub type Sha512Guard<'a> = HazardGuard<'a, ffi::SHA512_CTX>;
 
 // SAFETY: SHA512_CTX is valid when zeroed
 unsafe impl ZeroableMemory for ffi::SHA512_CTX {}
@@ -55,9 +56,10 @@ impl ffi::SHA512_CTX {
     }
 }
 
-impl HazardGuard<'_, ffi::SHA512_CTX> {
+impl Sha512Guard<'_> {
     /// Update the SHA512 context with the given data.
     pub fn update(&mut self, data: &[u8]) {
+        // COPY HAZARD: implemented on a guard
         self.hazard_mut().hazard_update(data);
     }
 
@@ -67,27 +69,7 @@ impl HazardGuard<'_, ffi::SHA512_CTX> {
     /// reusing it, the caller must call [`ffi::SHA512_CTX::init`] to
     /// reinitialize it.
     pub fn finalize(&mut self) -> Digest {
-        self.hazard_mut().hazard_finalize()
-    }
-}
-
-impl Sha512Ctx {
-    /// Initialize the SHA512 context.
-    pub fn init(&mut self) {
-        self.hazard_mut().init();
-    }
-
-    /// # Copy hazard
-    ///
-    /// See [`ffi::SHA512_CTX::hazard_update`].
-    pub fn hazard_update(&mut self, data: &[u8]) {
-        self.hazard_mut().hazard_update(data);
-    }
-
-    /// # Copy hazard
-    ///
-    /// See [`ffi::SHA512_CTX::hazard_update`].
-    pub fn hazard_finalize(&mut self) -> Digest {
+        // COPY HAZARD: implemented on a guard
         self.hazard_mut().hazard_finalize()
     }
 }
@@ -109,7 +91,7 @@ impl<D: DerefMut<Target = Sha512Ctx>> Sha512<D> {
     }
 
     /// Finalize the SHA512 context and return the digest.
-    pub fn finalize(mut self) -> Digest {
+    pub fn finalize(&mut self) -> Digest {
         // COPY HAZARD: neither hazard call exfiltrates data
         self.0.guarded().finalize()
     }
@@ -156,7 +138,7 @@ mod test {
     #[test]
     fn test_empty_ctx() {
         let mut ctx = Sha512Ctx::default();
-        let sha = Sha512::new(&mut ctx);
+        let mut sha = Sha512::new(&mut ctx);
         let out_hex = hex::encode(sha.finalize());
         assert_eq!(out_hex, SHA512_EMPTY);
     }

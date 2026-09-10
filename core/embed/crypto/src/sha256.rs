@@ -10,6 +10,7 @@ pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub type Sha256Ctx = SecretContext<ffi::SHA256_CTX>;
+pub type Sha256Guard<'a> = HazardGuard<'a, ffi::SHA256_CTX>;
 
 // SAFETY: SHA256_CTX is valid when zeroed
 unsafe impl ZeroableMemory for ffi::SHA256_CTX {}
@@ -55,9 +56,10 @@ impl ffi::SHA256_CTX {
     }
 }
 
-impl HazardGuard<'_, ffi::SHA256_CTX> {
+impl Sha256Guard<'_> {
     /// Update the SHA256 context with the given data.
     pub fn update(&mut self, data: &[u8]) {
+        // COPY HAZARD: implemented on a guard
         self.hazard_mut().hazard_update(data);
     }
 
@@ -67,27 +69,7 @@ impl HazardGuard<'_, ffi::SHA256_CTX> {
     /// reusing it, the caller must call [`ffi::SHA256_CTX::init`] to
     /// reinitialize it.
     pub fn finalize(&mut self) -> Digest {
-        self.hazard_mut().hazard_finalize()
-    }
-}
-
-impl Sha256Ctx {
-    /// Initialize the SHA256 context.
-    pub fn init(&mut self) {
-        self.hazard_mut().init();
-    }
-
-    /// # Copy hazard
-    ///
-    /// See [`ffi::SHA256_CTX::hazard_update`].
-    pub fn hazard_update(&mut self, data: &[u8]) {
-        self.hazard_mut().hazard_update(data);
-    }
-
-    /// # Copy hazard
-    ///
-    /// See [`ffi::SHA256_CTX::hazard_update`].
-    pub fn hazard_finalize(&mut self) -> Digest {
+        // COPY HAZARD: implemented on a guard
         self.hazard_mut().hazard_finalize()
     }
 }
@@ -107,7 +89,7 @@ impl<D: DerefMut<Target = Sha256Ctx>> Sha256<D> {
     }
 
     /// Finalize the SHA256 context and return the digest.
-    pub fn finalize(mut self) -> Digest {
+    pub fn finalize(&mut self) -> Digest {
         self.0.guarded().finalize()
     }
 }
@@ -142,7 +124,7 @@ mod test {
     #[test]
     fn test_empty_ctx() {
         let mut ctx = Sha256Ctx::default();
-        let sha = Sha256::new(&mut ctx);
+        let mut sha = Sha256::new(&mut ctx);
         let out_hex = hex::encode(sha.finalize());
         assert_eq!(out_hex, SHA256_EMPTY.to_string());
     }

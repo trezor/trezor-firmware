@@ -3,18 +3,17 @@ use core::alloc::Layout;
 use talc::base::Talc;
 use trezor_app_sdk::traits::allocator as alloc_traits;
 
-/// Core's only Rust heap. Core itself is alloc-free — it never holds live
-/// Rust-heap state of its own, so this exists purely to back
+/// Core's only Rust heap, and its `#[global_allocator]` (`TalcLock`
+/// implements `GlobalAlloc` directly). Core itself is alloc-free — it never
+/// holds live Rust-heap state of its own, so this exists purely to back
 /// [`AllocatorProxy`], i.e. the allocator loaded apps use (via the API
 /// vtable). Rebuilt from scratch (not reused) on every app launch; see
-/// [`init`] for why.
-///
-/// A plain `Talc` behind our own lock, rather than a `talc::TalcLock`: a
-/// `TalcLock` bundles its own inner mutex, which would leave no way to
-/// replace the *whole* `Talc` value — only to call methods on the one
-/// instance that's lived there since boot.
-static APP_ALLOCATOR: spin::Mutex<Talc<talc::source::Manual, talc::DefaultBinning>> =
-    spin::Mutex::new(Talc::new(talc::source::Manual));
+/// [`init`] for why — `TalcLock::lock()` hands out a guard that derefs to
+/// the inner `Talc`, so `*lock = Talc::new(..)` replaces the whole value in
+/// place, same as it would through a plain `Mutex`.
+#[global_allocator]
+static APP_ALLOCATOR: talc::TalcLock<spin::Mutex<()>, talc::source::Manual> =
+    talc::TalcLock::new(talc::source::Manual);
 
 /// Gives [`APP_ALLOCATOR`] a backing memory region to allocate from: the
 /// real, manifest-sized heap the loader carved out for the currently active
@@ -40,6 +39,20 @@ static APP_ALLOCATOR: spin::Mutex<Talc<talc::source::Manual, talc::DefaultBinnin
 /// `Talc` has never claimed anything, so `claim` always takes its "first
 /// heap ever" path and rebuilds that bookkeeping from scratch.
 pub fn init() {
+    // `rkyv`'s `to_bytes`/`to_bytes_in` cache a scratch `Arena` in this
+    // thread's thread-local storage, backed by the global allocator, and
+    // reuse it across calls for efficiency. The task's underlying OS thread
+    // outlives any single app launch (it's the same thread that just called a
+    // freshly `dlopen`ed app's new entry point), so without this, the next
+    // app's first `rkyv::to_bytes` call would reuse a block pointer that was
+    // allocated by the *previous* `Talc` instance. Must run before that old
+    // instance is discarded below: dropping the arena deallocates its block
+    // through the *current* global allocator, so the old `Talc` instance
+    // needs to still be live to see a deallocation matching what it handed
+    // out — freeing it against a freshly-`claim`ed instance instead corrupts
+    // that instance's bookkeeping.
+    rkyv::util::clear_arena();
+
     let (heap_base, heap_size) = io::get_heap();
 
     let mut allocator = APP_ALLOCATOR.lock();
@@ -51,52 +64,36 @@ pub fn init() {
     }
 }
 
-unsafe fn raw_alloc(layout: Layout) -> *mut u8 {
-    unsafe {
-        APP_ALLOCATOR
-            .lock()
-            .allocate(layout)
-            .map_or(core::ptr::null_mut(), |ptr| ptr.as_ptr())
-    }
-}
-
-unsafe fn raw_dealloc(ptr: *mut u8, layout: Layout) {
-    unsafe { APP_ALLOCATOR.lock().deallocate(ptr, layout) }
-}
-
-unsafe fn raw_realloc(ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
-    let Ok(new_layout) = Layout::from_size_align(new_size, layout.align()) else {
-        return core::ptr::null_mut();
-    };
-    unsafe {
-        let mut allocator = APP_ALLOCATOR.lock();
-        let Some(new_ptr) = allocator.allocate(new_layout) else {
-            return core::ptr::null_mut();
-        };
-        let copy_size = core::cmp::min(layout.size(), new_size);
-        core::ptr::copy_nonoverlapping(ptr, new_ptr.as_ptr(), copy_size);
-        allocator.deallocate(ptr, layout);
-        new_ptr.as_ptr()
-    }
-}
-
-/// Doubles as Core's `#[global_allocator]` below and as the allocator loaded
-/// apps use, exposed to them through the API vtable ([`alloc_traits::GlobalAllocatorV1`]).
-/// Both sides just forward to [`APP_ALLOCATOR`].
+/// The allocator loaded apps use, exposed to them through the API vtable
+/// ([`alloc_traits::GlobalAllocatorV1`]). Just forwards to [`APP_ALLOCATOR`],
+/// which is also Core's own `#[global_allocator]`.
 pub struct AllocatorProxy;
 
 unsafe impl alloc_traits::GlobalAllocatorV1 for AllocatorProxy {
     unsafe extern "C" fn alloc(&self, layout: alloc_traits::FfiLayout) -> *mut u8 {
-        unsafe { raw_alloc(Layout::from(layout)) }
+        // SAFETY: caller upholds `GlobalAllocatorV1::alloc`'s contract.
+        unsafe {
+            APP_ALLOCATOR
+                .lock()
+                .allocate(Layout::from(layout))
+                .map_or(core::ptr::null_mut(), |ptr| ptr.as_ptr())
+        }
     }
 
     unsafe extern "C" fn dealloc(&self, ptr: *mut u8, layout: alloc_traits::FfiLayout) {
-        unsafe { raw_dealloc(ptr, Layout::from(layout)) }
+        // SAFETY: caller upholds `GlobalAllocatorV1::dealloc`'s contract.
+        unsafe { APP_ALLOCATOR.lock().deallocate(ptr, Layout::from(layout)) }
     }
 
     unsafe extern "C" fn alloc_zeroed(&self, layout: alloc_traits::FfiLayout) -> *mut u8 {
         let layout = Layout::from(layout);
-        let ptr = unsafe { raw_alloc(layout) };
+        // SAFETY: caller upholds `GlobalAllocatorV1::alloc_zeroed`'s contract.
+        let ptr = unsafe {
+            APP_ALLOCATOR
+                .lock()
+                .allocate(layout)
+                .map_or(core::ptr::null_mut(), |ptr| ptr.as_ptr())
+        };
         if !ptr.is_null() {
             unsafe { ptr.write_bytes(0, layout.size()) };
         }
@@ -109,23 +106,20 @@ unsafe impl alloc_traits::GlobalAllocatorV1 for AllocatorProxy {
         layout: alloc_traits::FfiLayout,
         new_size: usize,
     ) -> *mut u8 {
-        unsafe { raw_realloc(ptr, Layout::from(layout), new_size) }
-    }
-}
-
-#[global_allocator]
-static GLOBAL_ALLOCATOR: AllocatorProxy = AllocatorProxy;
-
-unsafe impl core::alloc::GlobalAlloc for AllocatorProxy {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        unsafe { raw_alloc(layout) }
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        unsafe { raw_dealloc(ptr, layout) }
-    }
-
-    unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
-        unsafe { raw_realloc(ptr, layout, new_size) }
+        let layout = Layout::from(layout);
+        let Ok(new_layout) = Layout::from_size_align(new_size, layout.align()) else {
+            return core::ptr::null_mut();
+        };
+        // SAFETY: caller upholds `GlobalAllocatorV1::realloc`'s contract.
+        unsafe {
+            let mut allocator = APP_ALLOCATOR.lock();
+            let Some(new_ptr) = allocator.allocate(new_layout) else {
+                return core::ptr::null_mut();
+            };
+            let copy_size = core::cmp::min(layout.size(), new_size);
+            core::ptr::copy_nonoverlapping(ptr, new_ptr.as_ptr(), copy_size);
+            allocator.deallocate(ptr, layout);
+            new_ptr.as_ptr()
+        }
     }
 }

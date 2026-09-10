@@ -8,8 +8,8 @@
 //! macro instead of repeating both at every call site.
 
 use crate::alloc_types::Vec;
-use crate::app_runtime2::get_ipc_or_die;
-use crate::traits::service::{CoreIpcService, IpcRemoteDyn as _, MessageDyn as _};
+use crate::app_runtime2::get_wire_or_die;
+use crate::traits::wire::WireV1Dyn as _;
 use crate::util::Timeout;
 use crate::{Error, IntoAppResult, Result, ResultExt, debug};
 
@@ -29,8 +29,8 @@ pub fn wire_respond_raw(response_msg: i32, response_bytes: &[u8]) -> Result<()> 
         .try_into()
         .map_err(|_| Error::InvalidMessage)
         .c()?;
-    get_ipc_or_die()
-        .send(CoreIpcService::WireEnd.into(), id, response_bytes.into())
+    get_wire_or_die()
+        .wire_respond(id, response_bytes.into())
         .into_app_result()
         .c()?;
     Ok(())
@@ -39,12 +39,8 @@ pub fn wire_respond_raw(response_msg: i32, response_bytes: &[u8]) -> Result<()> 
 /// Sends an error response over the wire.
 pub fn wire_error_raw(e: &Error) -> Result<()> {
     crate::error!("{}", e);
-    get_ipc_or_die()
-        .send(
-            CoreIpcService::WireError.into(),
-            e.code(),
-            e.message().as_bytes().into(),
-        )
+    get_wire_or_die()
+        .wire_error(e.code(), e.message().into())
         .into_app_result()
         .c()?;
     Ok(())
@@ -61,16 +57,11 @@ pub fn wire_error_raw(e: &Error) -> Result<()> {
 /// case; use this directly only when you need that dispatch, or need to
 /// bypass [`WireRequest`]/[`WireEncode`]/[`WireDecode`] entirely.
 pub fn wire_request_raw(req_bytes: &[u8], id: u16) -> Result<(u16, Vec<u8>)> {
-    let result = get_ipc_or_die()
-        .call(
-            CoreIpcService::WireContinue.into(),
-            id,
-            req_bytes.into(),
-            Timeout::max().as_ms(),
-        )
+    let result = get_wire_or_die()
+        .wire_request(id, req_bytes.into(), Timeout::max().as_ms())
         .into_app_result()
         .c()?;
-    Ok((result.id(), result.data().to_vec()))
+    Ok((result.id, result.data.as_ref().to_vec()))
 }
 
 /// Associates a request type with its response type and wire id.
@@ -100,24 +91,11 @@ where
 
 pub fn wire_receive_wire_start() -> Result<(u16, Vec<u8>)> {
     debug!("Waiting for wire start IPC message");
-    let message = get_ipc_or_die()
-        .receive(Timeout::max().as_ms())
+    let message = get_wire_or_die()
+        .wire_receive_start(Timeout::max().as_ms())
         .into_app_result()
         .c()?;
-    debug!(
-        "Received wire start IPC message: service={}, id={}",
-        message.service(),
-        message.id()
-    );
+    debug!("Received wire start IPC message: id={}", message.id);
 
-    if message.service() != u16::from(CoreIpcService::WireStart) {
-        debug!(
-            "Received unexpected IPC message: service={}, id={}",
-            message.service(),
-            message.id()
-        );
-        return Err(Error::InvalidMessage);
-    }
-
-    Ok((message.id(), message.data().to_vec()))
+    Ok((message.id, message.data.as_ref().to_vec()))
 }

@@ -1,8 +1,6 @@
+use trezor_app_sdk::crypto::{self, HashingAlgorithm, HasherExt as _};
 use crate::{alloc_types::String, paths::Bip32Path};
-use trezor_app_sdk::{
-    Error, Result, ResultExt,
-    crypto::{self, Hasher},
-};
+use trezor_app_sdk::{Error, Result, ResultExt};
 
 pub const COIN: &str = "Tron";
 pub const CURVE: &str = "secp256k1";
@@ -11,10 +9,9 @@ pub const SLIP44_ID: u32 = 195;
 pub(crate) fn get_pubkey_hash(dp: &Bip32Path) -> Result<[u8; 20]> {
     let public_key = crypto::get_public_key(dp.as_slice(), false).c()?;
 
-    let mut hasher = crypto::sha3::Keccak256::new(None);
+    let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
     hasher.update(&public_key[1..]);
-    let mut hash = [0u8; 32];
-    hasher.finalize(&mut hash);
+    let hash = hasher.finalize();
     Ok(hash[12..].try_into().unwrap())
 }
 
