@@ -19,6 +19,7 @@ if not utils.BITCOIN_ONLY:
         STRKEY_LIQUIDITY_POOL,
         STRKEY_MUXED_ACCOUNT,
         address_from_public_key,
+        contract_address_from_address,
         contract_address_from_asset,
         decode_strkey,
         encode_strkey,
@@ -250,6 +251,47 @@ class TestStellarContractAddress(unittest.TestCase):
         for passphrase, asset, expected in VECTORS:
             network_id = sha256(passphrase.encode()).digest()
             self.assertEqual(contract_address_from_asset(network_id, asset), expected)
+
+    # Expected addresses cross-checked against stellar_sdk (the contract ID
+    # preimage hashed as ENVELOPE_TYPE_CONTRACT_ID of the network).
+    def test_contract_address_from_address(self):
+        salt = bytes(range(32))
+        user = "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+        contract = "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI"
+        VECTORS = (
+            (
+                NETWORK_PASSPHRASE_TESTNET,
+                user,
+                salt,
+                "CDJF3R3MMGGPD2IKQXDLE6JKU4FHZDBKHRHHRJQEGDN7274LVTNVEW7M",
+            ),
+            # another salt yields another contract for the same deployer
+            (
+                NETWORK_PASSPHRASE_TESTNET,
+                user,
+                bytes(range(32, 64)),
+                "CC3IGQXG4UJBKFY2REJKX4DVEGRUZ6KBBDXTDFZP72ACXY4TC7CA6BCP",
+            ),
+            # the same preimage yields a different contract on each network
+            (
+                NETWORK_PASSPHRASE_PUBLIC,
+                user,
+                salt,
+                "CCQAZWSDF67IIKGEB543CJTX4VVYFHFSXJ7VKIULYDM5Y54PXO3OW77H",
+            ),
+            # a contract can be the deployer too
+            (
+                NETWORK_PASSPHRASE_TESTNET,
+                contract,
+                salt,
+                "CCUMNRWWUAA5YSVTVCTOMNNKCJYZ74SZ3VUOHX7NU3YHAEBF242QNRR4",
+            ),
+        )
+        for passphrase, deployer, salt, expected in VECTORS:
+            network_id = sha256(passphrase.encode()).digest()
+            self.assertEqual(
+                contract_address_from_address(network_id, deployer, salt), expected
+            )
 
 
 if __name__ == "__main__":

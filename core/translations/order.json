@@ -1295,5 +1295,7 @@
   "1293": "words__undelegate",
   "1294": "buttons__review",
   "1295": "buttons__cancel_sign",
-  "1296": "address__title_multisig_xpub_template"
+  "1296": "address__title_multisig_xpub_template",
+  "1297": "stellar__deploy_contract",
+  "1298": "stellar__wasm_hash"
 }
