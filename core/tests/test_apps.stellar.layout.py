@@ -3,12 +3,18 @@ from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
     from trezor.enums import (
+        StellarContractExecutableType,
+        StellarContractIDPreimageType,
         StellarHostFunctionType,
         StellarSCValType,
         StellarSorobanAuthorizedFunctionType,
         StellarSorobanCredentialsType,
     )
     from trezor.messages import (
+        StellarContractExecutable,
+        StellarContractIDPreimage,
+        StellarContractIDPreimageFromAddress,
+        StellarCreateContractArgsV2,
         StellarHostFunction,
         StellarInt128Parts,
         StellarInt256Parts,
@@ -382,6 +388,94 @@ class TestStellarIsRootAuthEntry(unittest.TestCase):
                 ),
             )
             self.assertEqual(_is_root_auth_entry(auth_entry, invoked), is_root)
+
+    def test_is_root_auth_entry_create_contract(self):
+        salt = bytes(range(32))
+        wasm_hash = bytes(range(32, 64))
+
+        def create_args(
+            address=_ACCOUNT_A, salt=salt, wasm_hash=wasm_hash, constructor_args=()
+        ):
+            return StellarCreateContractArgsV2(
+                contract_id_preimage=StellarContractIDPreimage(
+                    type=StellarContractIDPreimageType.CONTRACT_ID_PREIMAGE_FROM_ADDRESS,
+                    from_address=StellarContractIDPreimageFromAddress(
+                        address=address, salt=salt
+                    ),
+                ),
+                executable=StellarContractExecutable(
+                    type=StellarContractExecutableType.CONTRACT_EXECUTABLE_WASM,
+                    wasm_hash=wasm_hash,
+                ),
+                constructor_args=list(constructor_args),
+            )
+
+        def source_entry(function):
+            return StellarSorobanAuthorizationEntry(
+                credentials=StellarSorobanCredentials(
+                    type=StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT
+                ),
+                root_invocation=StellarSorobanAuthorizedInvocation(
+                    function=function, sub_invocations=[]
+                ),
+            )
+
+        def create_fn(args):
+            return StellarSorobanAuthorizedFunction(
+                type=StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN,
+                create_contract_v2_host_fn=args,
+            )
+
+        invoked = StellarHostFunction(
+            type=StellarHostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2,
+            create_contract_v2=create_args(constructor_args=[_u32(1)]),
+        )
+
+        TESTS = [
+            (create_args(constructor_args=[_u32(1)]), True),  # identical
+            (create_args(address=_ACCOUNT_B, constructor_args=[_u32(1)]), False),
+            (create_args(salt=bytes(32), constructor_args=[_u32(1)]), False),
+            (create_args(wasm_hash=bytes(32), constructor_args=[_u32(1)]), False),
+            (create_args(constructor_args=[_u32(2)]), False),  # different arg value
+            (create_args(constructor_args=[_u64(1)]), False),  # different arg type
+            (create_args(constructor_args=[_u32(1), _u32(1)]), False),  # extra arg
+            (create_args(), False),  # missing arg
+        ]
+        for args, is_root in TESTS:
+            self.assertEqual(
+                _is_root_auth_entry(source_entry(create_fn(args)), invoked), is_root
+            )
+
+        # a contract call and a contract creation never match each other
+        call = StellarInvokeContractArgs(
+            contract_address=_CONTRACT_A, function_name="deploy", args=[_u32(1)]
+        )
+        invoked_call = StellarHostFunction(
+            type=StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT,
+            invoke_contract=call,
+        )
+        call_fn = StellarSorobanAuthorizedFunction(
+            type=StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN,
+            contract_fn=call,
+        )
+        creation = create_fn(create_args(constructor_args=[_u32(1)]))
+        self.assertFalse(_is_root_auth_entry(source_entry(creation), invoked_call))
+        self.assertFalse(_is_root_auth_entry(source_entry(call_fn), invoked))
+
+        # a creation missing on either side never matches
+        no_creation_fn = StellarSorobanAuthorizedFunction(
+            type=StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN
+        )
+        no_creation_invoked = StellarHostFunction(
+            type=StellarHostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2
+        )
+        self.assertFalse(_is_root_auth_entry(source_entry(no_creation_fn), invoked))
+        self.assertFalse(
+            _is_root_auth_entry(source_entry(creation), no_creation_invoked)
+        )
+        self.assertFalse(
+            _is_root_auth_entry(source_entry(no_creation_fn), no_creation_invoked)
+        )
 
 
 if __name__ == "__main__":
