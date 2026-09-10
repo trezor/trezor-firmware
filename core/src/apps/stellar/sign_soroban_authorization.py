@@ -49,8 +49,7 @@ async def sign_soroban_authorization(
     network_id = sha256(msg.network_passphrase.encode()).digest()
 
     w = bytearray()
-    writers.write_uint32(w, msg.envelope_type)
-    writers.write_bytes_fixed(w, network_id, 32)
+    writers.write_hash_id_preimage_header(w, msg.envelope_type, network_id)
     writers.write_int64(w, auth.nonce)
     writers.write_uint32(w, auth.signature_expiration_ledger)
     writers.write_sc_address(w, auth.address)
