@@ -625,6 +625,36 @@ def address_n_to_name(
             require_taproot=True,
             account_level=account_level,
         ),
+        # BIP-48 multisig, one entry per script-type level. All three share the
+        # name: longer variants wrap mid-word on the narrowest screens, and the
+        # level is already visible on the derivation-path item next to it.
+        AccountType(
+            "Multisig",
+            PATTERN_BIP48_RAW,
+            InputScriptType.SPENDADDRESS,
+            require_segwit=False,
+            require_bech32=False,
+            require_taproot=False,
+            account_level=account_level,
+        ),
+        AccountType(
+            "Multisig",
+            PATTERN_BIP48_P2SHSEGWIT,
+            InputScriptType.SPENDP2SHWITNESS,
+            require_segwit=True,
+            require_bech32=False,
+            require_taproot=False,
+            account_level=account_level,
+        ),
+        AccountType(
+            "Multisig",
+            PATTERN_BIP48_SEGWIT,
+            InputScriptType.SPENDWITNESS,
+            require_segwit=True,
+            require_bech32=True,
+            require_taproot=False,
+            account_level=account_level,
+        ),
     )
 
     for account in ACCOUNT_TYPES:

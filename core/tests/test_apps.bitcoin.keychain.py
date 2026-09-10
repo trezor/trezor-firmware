@@ -187,6 +187,147 @@ class TestAltcoinKeychains(TestCaseWithContext):
             self.assertRaises(wire.DataError, keychain.derive, addr)
 
 
+class TestXpubPathWarning(unittest.TestCase):
+    """Which xpub paths the account-naming table can name.
+
+    The table decides only the account label; the warning is decided by
+    validate_xpub_path_against_script_type(), see TestValidateXpubPath.
+    Purpose 48 has entries; purpose 45 and the compatibility patterns do not.
+    """
+
+    def test_unnamed_multisig_sharing_points(self):
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import address_n_to_name
+
+        coin = _get_coin_by_name("Bitcoin")
+
+        # Sharing points of recognized multisig patterns that the table still
+        # cannot name, hence still labelled "Unknown path". The BIP-48 levels
+        # used to be here too; they are now covered by
+        # test_named_account_types.
+        unnamed = (
+            ([H_(45)], InputScriptType.SPENDADDRESS),
+            ([H_(45)], InputScriptType.SPENDP2SHWITNESS),
+            ([H_(45), 0, 0], InputScriptType.SPENDP2SHWITNESS),
+            ([H_(45), H_(0), H_(0)], InputScriptType.SPENDADDRESS),
+            ([H_(45), H_(0), H_(0)], InputScriptType.SPENDMULTISIG),
+            ([H_(3), H_(100)], InputScriptType.SPENDADDRESS),
+            ([49, 0, 0], InputScriptType.SPENDP2SHWITNESS),
+        )
+
+        for path, script_type in unnamed:
+            self.assertIsNone(
+                address_n_to_name(coin, path, script_type, account_level=True)
+            )
+
+    def test_named_account_types(self):
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import address_n_to_name
+
+        coin = _get_coin_by_name("Bitcoin")
+
+        named = (
+            ([H_(44), H_(0), H_(0)], InputScriptType.SPENDADDRESS, "Legacy"),
+            ([H_(49), H_(0), H_(0)], InputScriptType.SPENDP2SHWITNESS, "L. SegWit"),
+            ([H_(84), H_(0), H_(0)], InputScriptType.SPENDWITNESS, "SegWit"),
+            ([H_(86), H_(0), H_(0)], InputScriptType.SPENDTAPROOT, "Taproot"),
+            # BIP-48 multisig account nodes. Before these entries existed the
+            # signing and xpub screens showed "Unknown path" here.
+            (
+                [H_(48), H_(0), H_(0), H_(0)],
+                InputScriptType.SPENDADDRESS,
+                "Multisig",
+            ),
+            (
+                [H_(48), H_(0), H_(0), H_(1)],
+                InputScriptType.SPENDP2SHWITNESS,
+                "Multisig",
+            ),
+            (
+                [H_(48), H_(0), H_(0), H_(2)],
+                InputScriptType.SPENDWITNESS,
+                "Multisig",
+            ),
+        )
+
+        for path, script_type, name in named:
+            self.assertEqual(
+                address_n_to_name(coin, path, script_type, account_level=True),
+                name + " #1",
+            )
+
+        # The same names at leaf depth, which is what SignMessage passes.
+        leaves = (
+            (
+                [H_(48), H_(0), H_(0), H_(0), 0, 0],
+                InputScriptType.SPENDADDRESS,
+                "Multisig",
+            ),
+            (
+                [H_(48), H_(0), H_(0), H_(1), 0, 0],
+                InputScriptType.SPENDP2SHWITNESS,
+                "Multisig",
+            ),
+            (
+                [H_(48), H_(0), H_(0), H_(2), 0, 0],
+                InputScriptType.SPENDWITNESS,
+                "Multisig",
+            ),
+        )
+
+        for path, script_type, name in leaves:
+            self.assertEqual(address_n_to_name(coin, path, script_type), name + " #1")
+
+        # The "#N" suffix tracks the account index.
+        self.assertEqual(
+            address_n_to_name(
+                coin,
+                [H_(48), H_(0), H_(4), H_(2), 0, 0],
+                InputScriptType.SPENDWITNESS,
+            ),
+            "Multisig #5",
+        )
+
+        # A mismatched script type must stay unnamed, so the levels cannot be
+        # confused for one another.
+        self.assertIsNone(
+            address_n_to_name(
+                coin,
+                [H_(48), H_(0), H_(0), H_(2)],
+                InputScriptType.SPENDADDRESS,
+                account_level=True,
+            )
+        )
+
+    def test_depth_1_is_unreachable(self):
+        """No AccountType can match a depth-1 path, so m/45' cannot be named.
+
+        get_name() discards BIP32_WALLET_DEPTH components and every address
+        pattern has at least four, so the shallowest reachable depth is 2.
+        """
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import address_n_to_name
+
+        coin = _get_coin_by_name("Bitcoin")
+
+        for purpose in (44, 45, 48, 49, 84, 86):
+            for script_type in (
+                InputScriptType.SPENDADDRESS,
+                InputScriptType.SPENDMULTISIG,
+                InputScriptType.SPENDP2SHWITNESS,
+                InputScriptType.SPENDWITNESS,
+                InputScriptType.SPENDTAPROOT,
+            ):
+                self.assertIsNone(
+                    address_n_to_name(
+                        coin, [H_(purpose)], script_type, account_level=True
+                    )
+                )
+
+
 class TestValidateXpubPath(unittest.TestCase):
     def test_bitcoin(self):
         from trezor.enums import InputScriptType
