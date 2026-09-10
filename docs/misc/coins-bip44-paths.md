@@ -42,14 +42,23 @@ on Trezor.
 ### Public nodes
 
 Some currencies allow exporting a _public node_, which lets the client derive all
-non-hardened paths below it. In that case, the conforming path is equal to the
-hardened prefix.
+non-hardened paths below it.
 
-I.e., for Bitcoin's path `44'/c'/a'/y/i`, the allowed public node path is `44'/c'/a'`.
+The conforming public-node path is the scheme's deepest hardened prefix, or its account
+level when that is deeper. For Bitcoin's `44'/c'/a'/y/i` that is `44'/c'/a'`. Schemes
+whose account level is not hardened therefore have two conforming paths: Casa's
+`45'/c/a/y/i` may be exported at `45'` or at `45'/c/a`. A scheme with no hardened
+component has none at all, so the master node is never a conforming public node -- even
+though a legacy client did use it, see `PATTERN_GREENADDRESS_A` in
+`core/src/apps/bitcoin/keychain.py`.
 
-Trezor does not check if the path is followed by other non-hardened items (anyone can
-derive those anyway). This is beneficial for Ethereum and its MEW compatibility, which
-sends `44'/60'/0'/0` for getPublicKey.
+A GetPublicKey request does not say whether the xpub is intended for multisig, so both
+the single-sig and the multisig schemes of the requested script type are accepted.
+
+For Bitcoin the path must be exactly one of those depths; a trailing non-hardened item
+such as `44'/c'/a'/y` is not a conforming public node. Ethereum accepts `44'/60'/0'/0`
+for MEW compatibility through its own pattern list, in
+`core/src/apps/ethereum/keychain.py`.
 
 ### Notes
 

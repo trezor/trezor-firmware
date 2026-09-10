@@ -97,12 +97,12 @@ async def get_public_key(
         from .keychain import address_n_to_name, validate_xpub_path_against_script_type
 
         path = address_n_to_str(address_n)
+        # Only the predicate decides the warning; the name below is a label.
+        path_warning = not validate_xpub_path_against_script_type(
+            coin, address_n, script_type
+        )
         account_name = address_n_to_name(
             coin, address_n, script_type, account_level=True
-        )
-        path_warning = (
-            account_name is None
-            and not validate_xpub_path_against_script_type(coin, address_n, script_type)
         )
         if path_warning:
             await confirm_path_warning(path)

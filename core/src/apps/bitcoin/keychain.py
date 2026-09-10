@@ -68,6 +68,15 @@ PATTERN_SLIP25_TAPROOT = "m/10025'/coin_type'/0'/1'/change/address_index"
 PATTERN_SLIP25_TAPROOT_EXTERNAL = "m/10025'/coin_type'/0'/1'/0/address_index"
 
 # compatibility patterns, will be removed in the future
+# GreenAddress derived /1/address_index and /4/address_index host-side in
+# hw-keys-manager.js, so the xpub changed hands above them. For A the host
+# called getPublicKey() with no path and cached the root as pubHDWallet, so m
+# was the historical export point despite having no hardened component. For B
+# it called getPublicKey() for m/3'/subaccount' (SUBACCOUNT = 3), so that node
+# is the historical export point, which the deepest-hardened rule matches.
+# Path syntax alone cannot show where an application exchanged an xpub, so the
+# heuristic in validate_xpub_path_against_script_type() is a default for
+# standard schemas, not a definition.
 PATTERN_GREENADDRESS_A = "m/[1,4]/address_index"
 PATTERN_GREENADDRESS_B = "m/3'/[1-100]'/[1,4]/address_index"
 PATTERN_GREENADDRESS_SIGN_A = "m/1195487518"
@@ -196,6 +205,17 @@ def validate_xpub_path_against_script_type(
     from the exported xpub) or at the account level, whichever is deeper.
     Casa-style patterns with an unhardened account level thus have two export
     points, e.g. m/45' and m/45'/coin_type/account.
+
+    Accepting the deepest-hardened prefix too is intentional: m/45' is the
+    BIP-45 cosigner xpub and BIP-45 has no hardened account level. It is the
+    broader export, deriving every unhardened branch below it; the extra
+    linkability is accepted.
+
+    Patterns with no hardened component are skipped, so the root xpub is never
+    exportable this way. That is a limit, not a definition -- m really was
+    GreenAddress A's export point, see PATTERN_GREENADDRESS_A -- but it stays
+    withheld: the warning cannot be scoped to one requester, and the root xpub
+    also yields every PATTERN_CASA_UNHARDENED address.
     """
     patterns = _get_patterns_for_script_type(coin, script_type, multisig=False)
     patterns += _get_patterns_for_script_type(coin, script_type, multisig=True)
