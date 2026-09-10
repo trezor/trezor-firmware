@@ -7,6 +7,7 @@ from ..writers import (
     write_asset_code,
     write_bool,
     write_bytes_fixed,
+    write_create_contract_args_v2,
     write_int64,
     write_invoke_contract_args,
     write_pubkey,
@@ -227,6 +228,10 @@ def _write_host_function(w: Writer, msg: StellarHostFunction) -> None:
         if msg.invoke_contract is None:
             raise DataError("Stellar: missing invoke_contract")
         write_invoke_contract_args(w, msg.invoke_contract)
+    elif msg.type == StellarHostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2:
+        if msg.create_contract_v2 is None:
+            raise DataError("Stellar: missing create_contract_v2")
+        write_create_contract_args_v2(w, msg.create_contract_v2)
     else:
         raise ProcessError("Stellar: unsupported host function type")
 

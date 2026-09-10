@@ -570,6 +570,48 @@ def _read_invoke_contract_args(
     )
 
 
+def _read_contract_id_preimage(
+    preimage: xdr.ContractIDPreimage,
+) -> messages.StellarContractIDPreimage:
+    """Read ContractIDPreimage from XDR."""
+    if preimage.type == xdr.ContractIDPreimageType.CONTRACT_ID_PREIMAGE_FROM_ADDRESS:
+        assert preimage.from_address is not None
+        return messages.StellarContractIDPreimage(
+            type=messages.StellarContractIDPreimageType.CONTRACT_ID_PREIMAGE_FROM_ADDRESS,
+            from_address=messages.StellarContractIDPreimageFromAddress(
+                address=_read_sc_address(preimage.from_address.address),
+                salt=preimage.from_address.salt.uint256,
+            ),
+        )
+    else:
+        raise ValueError(f"Unsupported ContractIDPreimage type: {preimage.type}")
+
+
+def _read_contract_executable(
+    executable: xdr.ContractExecutable,
+) -> messages.StellarContractExecutable:
+    """Read ContractExecutable from XDR."""
+    if executable.type == xdr.ContractExecutableType.CONTRACT_EXECUTABLE_WASM:
+        assert executable.wasm_hash is not None
+        return messages.StellarContractExecutable(
+            type=messages.StellarContractExecutableType.CONTRACT_EXECUTABLE_WASM,
+            wasm_hash=executable.wasm_hash.hash,
+        )
+    else:
+        raise ValueError(f"Unsupported ContractExecutable type: {executable.type}")
+
+
+def _read_create_contract_args_v2(
+    args: xdr.CreateContractArgsV2,
+) -> messages.StellarCreateContractArgsV2:
+    """Read CreateContractArgsV2 from XDR."""
+    return messages.StellarCreateContractArgsV2(
+        contract_id_preimage=_read_contract_id_preimage(args.contract_id_preimage),
+        executable=_read_contract_executable(args.executable),
+        constructor_args=[_read_sc_val(arg) for arg in args.constructor_args],
+    )
+
+
 def _read_authorized_function(
     function: xdr.SorobanAuthorizedFunction,
 ) -> messages.StellarSorobanAuthorizedFunction:
@@ -582,6 +624,17 @@ def _read_authorized_function(
         return messages.StellarSorobanAuthorizedFunction(
             type=messages.StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN,
             contract_fn=_read_invoke_contract_args(function.contract_fn),
+        )
+    elif (
+        function.type
+        == xdr.SorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN
+    ):
+        assert function.create_contract_v2_host_fn is not None
+        return messages.StellarSorobanAuthorizedFunction(
+            type=messages.StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN,
+            create_contract_v2_host_fn=_read_create_contract_args_v2(
+                function.create_contract_v2_host_fn
+            ),
         )
     else:
         raise ValueError(f"Unsupported SorobanAuthorizedFunction type: {function.type}")
@@ -689,11 +742,21 @@ def _read_host_function(
     host_function: xdr.HostFunction,
 ) -> messages.StellarHostFunction:
     """Read HostFunction from XDR."""
-    if host_function.type != xdr.HostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT:
+    if host_function.type == xdr.HostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT:
+        assert host_function.invoke_contract is not None
+        return messages.StellarHostFunction(
+            type=messages.StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT,
+            invoke_contract=_read_invoke_contract_args(host_function.invoke_contract),
+        )
+    elif (
+        host_function.type == xdr.HostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2
+    ):
+        assert host_function.create_contract_v2 is not None
+        return messages.StellarHostFunction(
+            type=messages.StellarHostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2,
+            create_contract_v2=_read_create_contract_args_v2(
+                host_function.create_contract_v2
+            ),
+        )
+    else:
         raise ValueError(f"Unsupported host function type: {host_function.type}")
-
-    assert host_function.invoke_contract is not None
-    return messages.StellarHostFunction(
-        type=messages.StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT,
-        invoke_contract=_read_invoke_contract_args(host_function.invoke_contract),
-    )

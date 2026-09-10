@@ -398,17 +398,74 @@ message StellarInvokeContractArgs {
 }
 
 /**
- * https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-transaction.x#L540
+ * https://github.com/stellar/stellar-xdr/blob/v28.0/Stellar-transaction.x#L489
+ * @embed
+ */
+message StellarContractIDPreimage {
+    required StellarContractIDPreimageType type = 1;
+    optional StellarContractIDPreimageFromAddress from_address = 2;
+
+    enum StellarContractIDPreimageType {
+        CONTRACT_ID_PREIMAGE_FROM_ADDRESS = 0;
+        // Deploying the Stellar Asset Contract of an asset is intentionally not
+        // supported. Its creation needs no authorization, and CAP-46-11 does
+        // not even allow it in authorization entries, so it can only be the
+        // host function of an operation, where anyone can invoke it and the
+        // deployer gains nothing: there is nothing security-relevant for the
+        // user to confirm on the device.
+        reserved 1;  // CONTRACT_ID_PREIMAGE_FROM_ASSET
+    }
+
+    message StellarContractIDPreimageFromAddress {
+        required string address = 1;  // the deployer address
+        required bytes salt = 2;      // 32-byte salt
+    }
+}
+
+/**
+ * https://github.com/stellar/stellar-xdr/blob/v28.0/Stellar-contract.x#L229
+ * @embed
+ */
+message StellarContractExecutable {
+    required StellarContractExecutableType type = 1;
+    optional bytes wasm_hash = 2;  // CONTRACT_EXECUTABLE_WASM: 32-byte hash of the uploaded Wasm code
+
+    enum StellarContractExecutableType {
+        CONTRACT_EXECUTABLE_WASM = 0;
+        // Only used by the Stellar Asset Contract, whose deployment is not
+        // supported (see StellarContractIDPreimageType).
+        reserved 1;  // CONTRACT_EXECUTABLE_STELLAR_ASSET
+        reserved 2;  // CONTRACT_EXECUTABLE_EXTERNAL_REF (Protocol 28), not supported yet
+    }
+}
+
+/**
+ * https://github.com/stellar/stellar-xdr/blob/v28.0/Stellar-transaction.x#L507
+ * @embed
+ */
+message StellarCreateContractArgsV2 {
+    required StellarContractIDPreimage contract_id_preimage = 1;
+    required StellarContractExecutable executable = 2;
+    repeated StellarSCVal constructor_args = 3;  // arguments of the contract's constructor
+}
+
+/**
+ * https://github.com/stellar/stellar-xdr/blob/v28.0/Stellar-transaction.x#L540
  * @embed
  */
 message StellarSorobanAuthorizedFunction {
     required StellarSorobanAuthorizedFunctionType type = 1;
     optional StellarInvokeContractArgs contract_fn = 2;
+    optional StellarCreateContractArgsV2 create_contract_v2_host_fn = 3;
 
     enum StellarSorobanAuthorizedFunctionType {
         SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0;
-        reserved 1;  // SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN, not supported yet
-        reserved 2;  // SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN, not supported yet
+        // The legacy contract creation without constructor arguments is
+        // superseded by the V2 variant, which the host records in
+        // authorization entries since Protocol 22, and is intentionally not
+        // supported.
+        reserved 1;  // SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN = 2;
     }
 }
 
@@ -422,18 +479,24 @@ message StellarSorobanAuthorizedInvocation {
 }
 
 /**
- * https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-transaction.x#L521
+ * https://github.com/stellar/stellar-xdr/blob/v28.0/Stellar-transaction.x#L521
  * @embed
  */
 message StellarHostFunction {
     required StellarHostFunctionType type = 1;
     optional StellarInvokeContractArgs invoke_contract = 2;
+    optional StellarCreateContractArgsV2 create_contract_v2 = 3;
 
     enum StellarHostFunctionType {
-        HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0;  // We only support this type of host function at this time.
-        reserved 1;                              // HOST_FUNCTION_TYPE_CREATE_CONTRACT, not supported yet
-        reserved 2;                              // HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM, not supported yet
-        reserved 3;                              // HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2, not supported yet
+        HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0;
+        // The legacy contract creation without constructor arguments is
+        // superseded by the V2 variant (Protocol 22) and is intentionally not
+        // supported.
+        reserved 1;  // HOST_FUNCTION_TYPE_CREATE_CONTRACT
+        // Uploading Wasm is intentionally not supported: there is no meaningful
+        // way for the user to verify the Wasm blob on the device.
+        reserved 2;  // HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM
+        HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 = 3;
     }
 }
 

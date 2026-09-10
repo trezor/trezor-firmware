@@ -83,6 +83,24 @@ def decode_strkey(strkey: str) -> tuple[int, bytes]:
     return version, data
 
 
+def contract_address_from_address(
+    network_id: AnyBytes, address: str, salt: AnyBytes
+) -> str:
+    """Derive the address (C...) of the contract an address deploys with a salt."""
+    from trezor.crypto.hashlib import sha256
+
+    from .consts import ENVELOPE_TYPE_CONTRACT_ID
+    from .writers import (
+        write_contract_id_preimage_from_address,
+        write_hash_id_preimage_header,
+    )
+
+    w = bytearray()
+    write_hash_id_preimage_header(w, ENVELOPE_TYPE_CONTRACT_ID, network_id)
+    write_contract_id_preimage_from_address(w, address, salt)
+    return encode_strkey(STRKEY_CONTRACT, sha256(w).digest())
+
+
 def contract_address_from_asset(network_id: AnyBytes, asset: StellarAsset) -> str:
     """Derive the address (C...) of an asset's Stellar Asset Contract (SAC)."""
     from trezor.crypto.hashlib import sha256
