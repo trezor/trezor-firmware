@@ -54,10 +54,17 @@ import json
 from base64 import b64decode, b64encode
 
 import pytest
+from stellar_sdk import Asset, Keypair, TransactionEnvelope
+from stellar_sdk import auth as stellar_auth
+from stellar_sdk import xdr as stellar_xdr
 
 from trezorlib import btc, messages, misc, protobuf, stellar
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.stellar_sdk_helpers import (
+    from_authorization_entry,
+    from_envelope,
+)
 from trezorlib.tools import parse_path
 
 from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
@@ -74,7 +81,6 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.stellar]
 
 def parse_asset_hints(parameters):
     """The fixture's asset hints as SDK objects (SEP-11: `native` or CODE:ISSUER)."""
-    from stellar_sdk import Asset
 
     return [
         Asset.native() if hint == "native" else Asset(*hint.split(":"))
@@ -152,34 +158,26 @@ def test_sign_tx(session: Session, parameters, result):
     tx, operations, ext = parameters_to_proto(session, parameters)
 
     # check fixture consistency
-    try:
-        from stellar_sdk import Keypair, TransactionEnvelope
+    envelope = TransactionEnvelope.from_xdr(
+        parameters["xdr"], parameters["network_passphrase"]
+    )
+    tx_parsed, operations_parsed, ext_parsed = from_envelope(
+        envelope, asset_hints=parse_asset_hints(parameters)
+    )
+    tx_parsed.address_n = parse_path(parameters["address_n"])
+    # payment requests are not encoded in XDR
+    tx_parsed.payment_req = tx.payment_req
 
-        from trezorlib.stellar_sdk_helpers import from_envelope
-    except ImportError:
-        pass
-    else:
-        envelope = TransactionEnvelope.from_xdr(
-            parameters["xdr"], parameters["network_passphrase"]
-        )
-        tx_parsed, operations_parsed, ext_parsed = from_envelope(
-            envelope, asset_hints=parse_asset_hints(parameters)
-        )
-        tx_parsed.address_n = parse_path(parameters["address_n"])
-        # payment requests are not encoded in XDR
-        tx_parsed.payment_req = tx.payment_req
-
-        assert tx == tx_parsed
-        for op, op_parsed in zip(operations, operations_parsed, strict=True):
-            assert op == op_parsed
-        assert ext == ext_parsed
-
-        if "signature" in result:
-            pubkey = bytes.fromhex(result["public_key"])
-            keypair = Keypair.from_raw_ed25519_public_key(pubkey)
-            keypair.verify(envelope.hash(), b64decode(result["signature"]))
+    assert tx == tx_parsed
+    for op, op_parsed in zip(operations, operations_parsed, strict=True):
+        assert op == op_parsed
+    assert ext == ext_parsed
 
     if "signature" in result:
+        pubkey = bytes.fromhex(result["public_key"])
+        keypair = Keypair.from_raw_ed25519_public_key(pubkey)
+        keypair.verify(envelope.hash(), b64decode(result["signature"]))
+
         response = stellar.sign_tx(
             session,
             tx,
@@ -243,43 +241,29 @@ def test_sign_soroban_authorization(session: Session, parameters, result):
     )
 
     # check fixture consistency
-    try:
-        from stellar_sdk import Keypair
-        from stellar_sdk import auth as stellar_auth
-        from stellar_sdk import xdr as stellar_xdr
-
-        from trezorlib.stellar_sdk_helpers import (
-            HAVE_STELLAR_SDK_PROTOCOL_27,
-            from_authorization_entry,
+    entry = stellar_xdr.SorobanAuthorizationEntry.from_xdr(parameters["xdr"])
+    assert (
+        from_authorization_entry(
+            entry,
+            parameters["network_passphrase"],
+            asset_hints=parse_asset_hints(parameters),
         )
-    except ImportError:
-        HAVE_STELLAR_SDK_PROTOCOL_27 = False
-
-    if HAVE_STELLAR_SDK_PROTOCOL_27:
-        entry = stellar_xdr.SorobanAuthorizationEntry.from_xdr(parameters["xdr"])
-        assert (
-            from_authorization_entry(
-                entry,
-                parameters["network_passphrase"],
-                asset_hints=parse_asset_hints(parameters),
-            )
-            == authorization
-        )
-
-        if "signature" in result:
-            assert entry.credentials.address_v2 is not None
-            payload = stellar_auth.authorization_payload_hash(
-                stellar_auth.build_authorization_preimage(
-                    entry,
-                    valid_until_ledger_sequence=entry.credentials.address_v2.signature_expiration_ledger.uint32,
-                    network_passphrase=parameters["network_passphrase"],
-                )
-            )
-            pubkey = bytes.fromhex(result["public_key"])
-            keypair = Keypair.from_raw_ed25519_public_key(pubkey)
-            keypair.verify(payload, b64decode(result["signature"]))
+        == authorization
+    )
 
     if "signature" in result:
+        assert entry.credentials.address_v2 is not None
+        payload = stellar_auth.authorization_payload_hash(
+            stellar_auth.build_authorization_preimage(
+                entry,
+                valid_until_ledger_sequence=entry.credentials.address_v2.signature_expiration_ledger.uint32,
+                network_passphrase=parameters["network_passphrase"],
+            )
+        )
+        pubkey = bytes.fromhex(result["public_key"])
+        keypair = Keypair.from_raw_ed25519_public_key(pubkey)
+        keypair.verify(payload, b64decode(result["signature"]))
+
         response = stellar.sign_soroban_authorization(
             session,
             parse_path(parameters["address_n"]),
