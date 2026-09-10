@@ -2843,6 +2843,354 @@
         "signature": "NwACNJ1pg0BEV6LxOq1IgpN0r1Z05pYwlogNFXIclwWt3wF1ekt7UhXdFVBphNTZU2ZzTystrGQZ+xChuMzmBw=="
       },
       "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-create-contract",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAw7QAAAAAAAAbWQAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAGAAAAAMAAAAAAAAAAAAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fAAAAAOTBXqPVpLait7sLNKTjz49F2eLwsaXG1+j5ChssPU5fAAAAAAAAAAEAAAAAAAAAAgAAAAAAAAAAAAAAAC8iucYvCLd08+vm3W59uTw+wsveAnlWGj2cUiW4wyKSAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8AAAAA5MFeo9WktqK3uws0pOPPj0XZ4vCxpcbX6PkKGyw9Tl8AAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDUAAAAAA=",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 50100,
+          "sequence_number": 7001,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2",
+              "create_contract_v2": {
+                "contract_id_preimage": {
+                  "type": "CONTRACT_ID_PREIMAGE_FROM_ADDRESS",
+                  "from_address": {
+                    "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+                    "salt": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                  }
+                },
+                "executable": {
+                  "type": "CONTRACT_EXECUTABLE_WASM",
+                  "wasm_hash": "e4c15ea3d5a4b6a2b7bb0b34a4e3cf8f45d9e2f0b1a5c6d7e8f90a1b2c3d4e5f"
+                }
+              }
+            },
+            "auth": [
+              {
+                "credentials": {
+                  "type": "SOROBAN_CREDENTIALS_SOURCE_ACCOUNT"
+                },
+                "root_invocation": {
+                  "function": {
+                    "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN",
+                    "create_contract_v2_host_fn": {
+                      "contract_id_preimage": {
+                        "type": "CONTRACT_ID_PREIMAGE_FROM_ADDRESS",
+                        "from_address": {
+                          "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+                          "salt": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                        }
+                      },
+                      "executable": {
+                        "type": "CONTRACT_EXECUTABLE_WASM",
+                        "wasm_hash": "e4c15ea3d5a4b6a2b7bb0b34a4e3cf8f45d9e2f0b1a5c6d7e8f90a1b2c3d4e5f"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "000000000000000000000000000000000000000000000000000000000000c350"
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "ig75gd4mFGVuIyoYc7xBmXLvhHwjE/tlcWL6DcsrH3Z1myyMJ1wQ2uDw20BvpWYgF8WOd8N12+oL5eC8WEdYCQ=="
+      },
+      "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-create-contract-constructor-args",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAw7QAAAAAAAAbWgAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAGAAAAAMAAAAAAAAAAAAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fAAAAAOTBXqPVpLait7sLNKTjz49F2eLwsaXG1+j5ChssPU5fAAAAAwAAABIAAAAAAAAAAC8iucYvCLd08+vm3W59uTw+wsveAnlWGj2cUiW4wyKSAAAAAwAAAAcAAAAOAAAABWhlbGxvAAAAAAAAAQAAAAAAAAACAAAAAAAAAAAAAAAALyK5xi8It3Tz6+bdbn25PD7Cy94CeVYaPZxSJbjDIpIAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHwAAAADkwV6j1aS2ore7CzSk48+PRdni8LGlxtfo+QobLD1OXwAAAAMAAAASAAAAAAAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAAMAAAAHAAAADgAAAAVoZWxsbwAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAw1AAAAAA",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 50100,
+          "sequence_number": 7002,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2",
+              "create_contract_v2": {
+                "contract_id_preimage": {
+                  "type": "CONTRACT_ID_PREIMAGE_FROM_ADDRESS",
+                  "from_address": {
+                    "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+                    "salt": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                  }
+                },
+                "executable": {
+                  "type": "CONTRACT_EXECUTABLE_WASM",
+                  "wasm_hash": "e4c15ea3d5a4b6a2b7bb0b34a4e3cf8f45d9e2f0b1a5c6d7e8f90a1b2c3d4e5f"
+                },
+                "constructor_args": [
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                  },
+                  {
+                    "type": "SCV_U32",
+                    "u32": 7
+                  },
+                  {
+                    "type": "SCV_STRING",
+                    "string": "68656c6c6f"
+                  }
+                ]
+              }
+            },
+            "auth": [
+              {
+                "credentials": {
+                  "type": "SOROBAN_CREDENTIALS_SOURCE_ACCOUNT"
+                },
+                "root_invocation": {
+                  "function": {
+                    "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN",
+                    "create_contract_v2_host_fn": {
+                      "contract_id_preimage": {
+                        "type": "CONTRACT_ID_PREIMAGE_FROM_ADDRESS",
+                        "from_address": {
+                          "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+                          "salt": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                        }
+                      },
+                      "executable": {
+                        "type": "CONTRACT_EXECUTABLE_WASM",
+                        "wasm_hash": "e4c15ea3d5a4b6a2b7bb0b34a4e3cf8f45d9e2f0b1a5c6d7e8f90a1b2c3d4e5f"
+                      },
+                      "constructor_args": [
+                        {
+                          "type": "SCV_ADDRESS",
+                          "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                        },
+                        {
+                          "type": "SCV_U32",
+                          "u32": 7
+                        },
+                        {
+                          "type": "SCV_STRING",
+                          "string": "68656c6c6f"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "000000000000000000000000000000000000000000000000000000000000c350"
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "B40RIDaiESR2lviGfU1+DhSg0QbogVAdB3flkAgTnXLYbuKn/qTDE6YabcIldioGHhD+Hf07y24dPy0wz+W+DQ=="
+      },
+      "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-create-contract-other-deployer",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAw7QAAAAAAAAbWwAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAGAAAAAMAAAAAAAAAAAAAAABdVWQkZrGFuEMVLp4hkVHbxYkgJ+xAEBpRe+1coDDC4P/+/fz7+vn49/b19PPy8fDv7u3s6+rp6Ofm5eTj4uHgAAAAAOTBXqPVpLait7sLNKTjz49F2eLwsaXG1+j5ChssPU5fAAAAAAAAAAEAAAACAAAAAAAAAABdVWQkZrGFuEMVLp4hkVHbxYkgJ+xAEBpRe+1coDDC4AAAAAAACH6FAAquYAAAABAAAAABAAAAAAAAAAIAAAAAAAAAAAAAAABdVWQkZrGFuEMVLp4hkVHbxYkgJ+xAEBpRe+1coDDC4P/+/fz7+vn49/b19PPy8fDv7u3s6+rp6Ofm5eTj4uHgAAAAAOTBXqPVpLait7sLNKTjz49F2eLwsaXG1+j5ChssPU5fAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAw1AAAAAA",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 50100,
+          "sequence_number": 7003,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2",
+              "create_contract_v2": {
+                "contract_id_preimage": {
+                  "type": "CONTRACT_ID_PREIMAGE_FROM_ADDRESS",
+                  "from_address": {
+                    "address": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V",
+                    "salt": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0"
+                  }
+                },
+                "executable": {
+                  "type": "CONTRACT_EXECUTABLE_WASM",
+                  "wasm_hash": "e4c15ea3d5a4b6a2b7bb0b34a4e3cf8f45d9e2f0b1a5c6d7e8f90a1b2c3d4e5f"
+                }
+              }
+            },
+            "auth": [
+              {
+                "credentials": {
+                  "type": "SOROBAN_CREDENTIALS_ADDRESS_V2",
+                  "address_v2": {
+                    "address": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V",
+                    "nonce": 556677,
+                    "signature_expiration_ledger": 700000,
+                    "signature": {
+                      "type": "SCV_VEC"
+                    }
+                  }
+                },
+                "root_invocation": {
+                  "function": {
+                    "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN",
+                    "create_contract_v2_host_fn": {
+                      "contract_id_preimage": {
+                        "type": "CONTRACT_ID_PREIMAGE_FROM_ADDRESS",
+                        "from_address": {
+                          "address": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V",
+                          "salt": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0"
+                        }
+                      },
+                      "executable": {
+                        "type": "CONTRACT_EXECUTABLE_WASM",
+                        "wasm_hash": "e4c15ea3d5a4b6a2b7bb0b34a4e3cf8f45d9e2f0b1a5c6d7e8f90a1b2c3d4e5f"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "000000000000000000000000000000000000000000000000000000000000c350"
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "uzW3rnwF6zKnbRfguwbi43VNT9sfH2a6xaf0axUYleWd+iwBXkS/uwzE0bNggWsr+OknPsPiy2kq4aa/+tJoBQ=="
+      },
+      "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-factory-deploy",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAw7QAAAAAAAAbXgAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAABAwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dwAAAAGZGVwbG95AAAAAAACAAAAEgAAAAAAAAAALyK5xi8It3Tz6+bdbn25PD7Cy94CeVYaPZxSJbjDIpIAAAANAAAAIAABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fAAAAAQAAAAAAAAAAAAAAAQMKERgfJi00O0JJUFdeZWxzeoGIj5adpKuyucDHztXcAAAABmRlcGxveQAAAAAAAgAAABIAAAAAAAAAAC8iucYvCLd08+vm3W59uTw+wsveAnlWGj2cUiW4wyKSAAAADQAAACAAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHwAAAAEAAAACAAAAAAAAAAAAAAAALyK5xi8It3Tz6+bdbn25PD7Cy94CeVYaPZxSJbjDIpIAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHwAAAADkwV6j1aS2ore7CzSk48+PRdni8LGlxtfo+QobLD1OXwAAAAEAAAASAAAAAAAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAw1AAAAAA",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 50100,
+          "sequence_number": 7006,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_INVOKE_CONTRACT",
+              "invoke_contract": {
+                "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                "function_name": "deploy",
+                "args": [
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                  },
+                  {
+                    "type": "SCV_BYTES",
+                    "bytes": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                  }
+                ]
+              }
+            },
+            "auth": [
+              {
+                "credentials": {
+                  "type": "SOROBAN_CREDENTIALS_SOURCE_ACCOUNT"
+                },
+                "root_invocation": {
+                  "function": {
+                    "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                    "contract_fn": {
+                      "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                      "function_name": "deploy",
+                      "args": [
+                        {
+                          "type": "SCV_ADDRESS",
+                          "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                        },
+                        {
+                          "type": "SCV_BYTES",
+                          "bytes": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                        }
+                      ]
+                    }
+                  },
+                  "sub_invocations": [
+                    {
+                      "function": {
+                        "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN",
+                        "create_contract_v2_host_fn": {
+                          "contract_id_preimage": {
+                            "type": "CONTRACT_ID_PREIMAGE_FROM_ADDRESS",
+                            "from_address": {
+                              "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+                              "salt": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                            }
+                          },
+                          "executable": {
+                            "type": "CONTRACT_EXECUTABLE_WASM",
+                            "wasm_hash": "e4c15ea3d5a4b6a2b7bb0b34a4e3cf8f45d9e2f0b1a5c6d7e8f90a1b2c3d4e5f"
+                          },
+                          "constructor_args": [
+                            {
+                              "type": "SCV_ADDRESS",
+                              "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "000000000000000000000000000000000000000000000000000000000000c350"
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "OtGMqKfrGXojXiuxcI7op9ibfOBMKUH+S7OpQzgzOmI3NXvQMyGYgo+bgSGKvRlkaob3f15pbSdcIEyurL41Bw=="
+      },
+      "skip_models": ["t1b1"]
     }
   ]
 }

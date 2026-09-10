@@ -1685,6 +1685,10 @@ pub enum TranslatedString {
     words__undelegate = 1293,  // "Undelegate"
     buttons__review = 1294,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Review"}
     buttons__cancel_sign = 1295,  // "Cancel sign"
+    #[cfg(feature = "universal_fw")]
+    stellar__deploy_contract = 1296,  // "Deploy contract"
+    #[cfg(feature = "universal_fw")]
+    stellar__wasm_hash = 1297,  // "Wasm hash"
 }
 
 impl TranslatedString {
@@ -2988,6 +2992,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4289,6 +4295,8 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19147,
+                19156,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5589,6 +5597,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6890,6 +6900,8 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19147,
+                19156,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8190,6 +8202,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9491,6 +9505,8 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19147,
+                19156,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10791,6 +10807,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12092,6 +12110,8 @@ impl TranslatedString {
                 19121,
                 19121,
                 19132,
+                19147,
+                19156,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13393,6 +13413,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14694,6 +14716,8 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                16997,
+                17006,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15994,6 +16018,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17295,6 +17321,8 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                16997,
+                17006,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18595,6 +18623,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19896,6 +19926,8 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                16997,
+                17006,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21196,6 +21228,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22497,6 +22531,8 @@ impl TranslatedString {
                 16971,
                 16971,
                 16982,
+                16997,
+                17006,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23798,6 +23834,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25099,6 +25137,8 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19096,
+                19105,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26399,6 +26439,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27700,6 +27742,8 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19096,
+                19105,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29000,6 +29044,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30301,6 +30347,8 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19096,
+                19105,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31601,6 +31649,8 @@ impl TranslatedString {
                 "Undelegate",
                 "",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32902,6 +32952,8 @@ impl TranslatedString {
                 19070,
                 19070,
                 19081,
+                19096,
+                19105,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34203,6 +34255,8 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -35504,6 +35558,8 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20532,
+                20541,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36804,6 +36860,8 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38105,6 +38163,8 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20532,
+                20541,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39405,6 +39465,8 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -40706,6 +40768,8 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20532,
+                20541,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42006,6 +42070,8 @@ impl TranslatedString {
                 "Undelegate",
                 "Review",
                 "Cancel sign",
+                "Deploy contract",
+                "Wasm hash",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43307,6 +43373,8 @@ impl TranslatedString {
                 20500,
                 20506,
                 20517,
+                20532,
+                20541,
             ];
 
         }
@@ -44655,6 +44723,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__delete_trust, Self::stellar__delete_trust),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__deploy_contract, Self::stellar__deploy_contract),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__destination, Self::stellar__destination),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__exchanges_require_memo, Self::stellar__exchanges_require_memo),
@@ -44760,6 +44830,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_stellar__value_sha256, Self::stellar__value_sha256),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__wanna_clean_value_key_template, Self::stellar__wanna_clean_value_key_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__wasm_hash, Self::stellar__wasm_hash),
         (Qstr::MP_QSTR_storage_msg__processing, Self::storage_msg__processing),
         (Qstr::MP_QSTR_storage_msg__starting, Self::storage_msg__starting),
         (Qstr::MP_QSTR_storage_msg__verifying_pin, Self::storage_msg__verifying_pin),
