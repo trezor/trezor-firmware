@@ -850,7 +850,7 @@ async def confirm_value(
 
     info_ctx = trezorui_api.show_info_with_cancel(
         title=info_title if info_title else TR.words__title_information,
-        items=list(info_items) if info_items else [],
+        items=with_colon(info_items) or [],
         chunkify=chunkify_info,
     )
 
