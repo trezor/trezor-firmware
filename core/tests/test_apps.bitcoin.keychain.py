@@ -216,6 +216,10 @@ class TestValidateXpubPath(unittest.TestCase):
             ([H_(86), H_(0), H_(0)], InputScriptType.SPENDTAPROOT),
             # SLIP-25 coinjoin account
             ([H_(10025), H_(0), H_(0), H_(1)], InputScriptType.SPENDTAPROOT),
+            # GreenAddress B subaccount: the host asked the device for
+            # m/3'/subaccount' and derived /[1,4]/address_index itself, so this
+            # is the requested export point.
+            ([H_(3), H_(100)], InputScriptType.SPENDADDRESS),
         )
         invalid_paths = (
             # depths between or beyond the export points
@@ -229,10 +233,24 @@ class TestValidateXpubPath(unittest.TestCase):
             ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDP2SHWITNESS),
             # coin type mismatch
             ([H_(44), H_(1), H_(0)], InputScriptType.SPENDADDRESS),
-            # GreenAddress patterns have no hardened level, must not allow
-            # exporting the root xpub or their unhardened nodes
+            # m was GreenAddress A's real export point -- it asked for the root
+            # and derived /[1,4]/address_index host-side -- but it is withheld:
+            # the warning cannot be scoped to one requester, and the root xpub
+            # also yields every PATTERN_CASA_UNHARDENED address. Withheld under
+            # every script type that offers the pattern, and on every coin,
+            # since the pattern is Bitcoin-only.
             ([], InputScriptType.SPENDADDRESS),
+            ([], InputScriptType.SPENDWITNESS),
+            # no GreenAddress pattern under taproot, so m is unreachable there
+            # for a second, independent reason
+            ([], InputScriptType.SPENDTAPROOT),
+            # /1 and /4 are the branches the host derived itself; neither was
+            # ever an export point
             ([1], InputScriptType.SPENDADDRESS),
+            ([4], InputScriptType.SPENDADDRESS),
+            # PATTERN_CASA_UNHARDENED has no hardened component either, so the
+            # whole pattern is skipped and its account node is not an export point.
+            ([49, 0, 0], InputScriptType.SPENDP2SHWITNESS),
         )
 
         for path, script_type in valid_paths:
@@ -267,6 +285,13 @@ class TestValidateXpubPath(unittest.TestCase):
         self.assertTrue(
             validate_xpub_path_against_script_type(
                 coin, [H_(45)], InputScriptType.SPENDP2SHWITNESS
+            )
+        )
+        # The GreenAddress patterns are Bitcoin-only, so m is not even a
+        # candidate export point here
+        self.assertFalse(
+            validate_xpub_path_against_script_type(
+                coin, [], InputScriptType.SPENDADDRESS
             )
         )
 
