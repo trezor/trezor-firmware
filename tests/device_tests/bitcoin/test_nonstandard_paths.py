@@ -105,7 +105,60 @@ VECTORS_MULTISIG = (  # paths, address_index
     ),
     # Casa Paths
     pytest.param(("m/45h/0/60/1", "m/45h/1/60/0", "m/45h/2/60/0"), [255], id="casa"),
+    # BIP-48 raw script type. Already accepted for addresses and spending,
+    # which is the premise for exporting the account xpub without a warning.
+    pytest.param(
+        ("m/48h/0h/0h/0h", "m/48h/0h/1h/0h", "m/48h/0h/2h/0h"),
+        [0, 255],
+        id="bip48_raw",
+    ),
 )
+
+
+# BIP-48 segwit levels; the tests above hardcode SPENDMULTISIG so cannot cover them.
+VECTORS_BIP48_SEGWIT = (  # paths, script_type
+    (
+        ("m/48h/0h/0h/1h", "m/48h/0h/1h/1h", "m/48h/0h/2h/1h"),
+        messages.InputScriptType.SPENDP2SHWITNESS,
+    ),
+    (
+        ("m/48h/0h/0h/2h", "m/48h/0h/1h/2h", "m/48h/0h/2h/2h"),
+        messages.InputScriptType.SPENDWITNESS,
+    ),
+)
+
+
+@pytest.mark.multisig
+@pytest.mark.parametrize("paths, script_type", VECTORS_BIP48_SEGWIT)
+def test_getaddress_multisig_bip48_segwit(
+    session: Session, paths: list[str], script_type: messages.InputScriptType
+):
+    address_index = [0, 255]
+    pubs = [
+        messages.HDNodePathType(
+            node=btc.get_public_node(
+                session, parse_path(path), coin_name="Bitcoin"
+            ).node,
+            address_n=address_index,
+        )
+        for path in paths
+    ]
+    multisig = messages.MultisigRedeemScriptType(pubkeys=pubs, m=2)
+
+    with session.test_ctx as client:
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+        address = btc.get_address(
+            session,
+            "Bitcoin",
+            parse_path(paths[0]) + address_index,
+            show_display=True,
+            multisig=multisig,
+            script_type=script_type,
+        )
+
+    assert address
 
 
 # Has AlwaysMatchingSchema but let's make sure the nonstandard paths are
