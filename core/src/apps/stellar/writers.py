@@ -12,7 +12,7 @@ write_uint32 = writers.write_uint32_be
 write_uint64 = writers.write_uint64_be
 
 if TYPE_CHECKING:
-    from buffer_types import StrOrBytes
+    from buffer_types import AnyBytes, StrOrBytes
     from collections.abc import Callable
     from typing import TypeVar
 
@@ -136,6 +136,25 @@ def write_invoke_contract_args(w: Writer, msg: StellarInvokeContractArgs) -> Non
     write_sc_address(w, msg.contract_address)
     _write_sc_symbol(w, msg.function_name)
     write_vec(w, msg.args, write_sc_val)
+
+
+def write_hash_id_preimage_header(
+    w: Writer, envelope_type: int, network_id: AnyBytes
+) -> None:
+    """Write what every HashIDPreimage variant starts with: its envelope type
+    and the ID of the network it is bound to."""
+    write_uint32(w, envelope_type)
+    write_bytes_fixed(w, network_id, 32)
+
+
+def write_contract_id_preimage_from_asset(w: Writer, asset: StellarAsset) -> None:
+    """Write the CONTRACT_ID_PREIMAGE_FROM_ASSET variant of ContractIDPreimage.
+
+    Contracts are not created from it on the device; it only serves to derive
+    the address of an asset's Stellar Asset Contract.
+    """
+    write_uint32(w, 1)  # CONTRACT_ID_PREIMAGE_FROM_ASSET
+    write_asset(w, asset)
 
 
 def write_sc_address(w: Writer, addr: str) -> None:
