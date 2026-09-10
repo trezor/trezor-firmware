@@ -2152,23 +2152,23 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
             self.debug.press_yes()
 
         assert (yield).name == "backup_intro"
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "slip39_checklist"
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "slip39_shares"
         if self.click_info:
             click_info_button_delizia_eckhart(self.debug)
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "slip39_checklist"
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "slip39_threshold"
         if self.click_info:
             click_info_button_delizia_eckhart(self.debug)
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "slip39_checklist"
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "backup_warning"
-        self.debug.swipe_up()
+        self.debug.press_yes()
 
         # Mnemonic phrases
         self.mnemonics = yield from load_N_shares(self.debug, 5)
@@ -2559,30 +2559,30 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
     def input_flow_delizia(self) -> BRGeneratorType:
         assert self.backup_method is messages.BackupMethod.Display
         assert (yield).name == "backup_intro"
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "slip39_checklist"
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "slip39_groups"
         if self.click_info:
             click_info_button_delizia_eckhart(self.debug)
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "slip39_checklist"
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "slip39_group_threshold"
         if self.click_info:
             click_info_button_delizia_eckhart(self.debug)
-        self.debug.swipe_up()
+        self.debug.press_yes()
         assert (yield).name == "slip39_checklist"
-        self.debug.swipe_up()
+        self.debug.press_yes()
         for _i in range(5):  # for each of 5 groups
             assert (yield).name == "slip39_shares"
             if self.click_info:
                 click_info_button_delizia_eckhart(self.debug)
-            self.debug.swipe_up()
+            self.debug.press_yes()
             assert (yield).name == "slip39_threshold"
             if self.click_info:
                 click_info_button_delizia_eckhart(self.debug)
-            self.debug.swipe_up()
+            self.debug.press_yes()
         assert (yield).name == "backup_warning"
         self.debug.press_yes()
 
