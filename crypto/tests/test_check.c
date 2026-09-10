@@ -7195,7 +7195,7 @@ START_TEST(test_mnemonic_to_bits) {
   };
 
   const char **a, **b;
-  uint8_t mnemonic_bits[64];
+  uint8_t mnemonic_bits[33];
 
   a = vectors;
   b = vectors + 1;
