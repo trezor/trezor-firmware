@@ -8517,6 +8517,898 @@ impl ::protobuf::reflect::ProtobufValue for StellarInvokeContractArgs {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarContractIDPreimage)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarContractIDPreimage {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarContractIDPreimage.type)
+    pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_contract_idpreimage::StellarContractIDPreimageType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarContractIDPreimage.from_address)
+    pub from_address: ::protobuf::MessageField<stellar_contract_idpreimage::StellarContractIDPreimageFromAddress>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarContractIDPreimage.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarContractIDPreimage {
+    fn default() -> &'a StellarContractIDPreimage {
+        <StellarContractIDPreimage as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarContractIDPreimage {
+    pub fn new() -> StellarContractIDPreimage {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.stellar.StellarContractIDPreimage.StellarContractIDPreimageType type = 1;
+
+    pub fn type_(&self) -> stellar_contract_idpreimage::StellarContractIDPreimageType {
+        match self.type_ {
+            Some(e) => e.enum_value_or(stellar_contract_idpreimage::StellarContractIDPreimageType::CONTRACT_ID_PREIMAGE_FROM_ADDRESS),
+            None => stellar_contract_idpreimage::StellarContractIDPreimageType::CONTRACT_ID_PREIMAGE_FROM_ADDRESS,
+        }
+    }
+
+    pub fn clear_type_(&mut self) {
+        self.type_ = ::std::option::Option::None;
+    }
+
+    pub fn has_type(&self) -> bool {
+        self.type_.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type(&mut self, v: stellar_contract_idpreimage::StellarContractIDPreimageType) {
+        self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type",
+            |m: &StellarContractIDPreimage| { &m.type_ },
+            |m: &mut StellarContractIDPreimage| { &mut m.type_ },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, stellar_contract_idpreimage::StellarContractIDPreimageFromAddress>(
+            "from_address",
+            |m: &StellarContractIDPreimage| { &m.from_address },
+            |m: &mut StellarContractIDPreimage| { &mut m.from_address },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarContractIDPreimage>(
+            "StellarContractIDPreimage",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarContractIDPreimage {
+    const NAME: &'static str = "StellarContractIDPreimage";
+
+    fn is_initialized(&self) -> bool {
+        if self.type_.is_none() {
+            return false;
+        }
+        for v in &self.from_address {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.from_address)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.type_ {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.from_address.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.type_ {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.from_address.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarContractIDPreimage {
+        StellarContractIDPreimage::new()
+    }
+
+    fn clear(&mut self) {
+        self.type_ = ::std::option::Option::None;
+        self.from_address.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarContractIDPreimage {
+        static instance: StellarContractIDPreimage = StellarContractIDPreimage {
+            type_: ::std::option::Option::None,
+            from_address: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarContractIDPreimage {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarContractIDPreimage").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarContractIDPreimage {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarContractIDPreimage {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `StellarContractIDPreimage`
+pub mod stellar_contract_idpreimage {
+    // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarContractIDPreimage.StellarContractIDPreimageFromAddress)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct StellarContractIDPreimageFromAddress {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarContractIDPreimage.StellarContractIDPreimageFromAddress.address)
+        pub address: ::std::option::Option<::std::string::String>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarContractIDPreimage.StellarContractIDPreimageFromAddress.salt)
+        pub salt: ::std::option::Option<::std::vec::Vec<u8>>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarContractIDPreimage.StellarContractIDPreimageFromAddress.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a StellarContractIDPreimageFromAddress {
+        fn default() -> &'a StellarContractIDPreimageFromAddress {
+            <StellarContractIDPreimageFromAddress as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl StellarContractIDPreimageFromAddress {
+        pub fn new() -> StellarContractIDPreimageFromAddress {
+            ::std::default::Default::default()
+        }
+
+        // required string address = 1;
+
+        pub fn address(&self) -> &str {
+            match self.address.as_ref() {
+                Some(v) => v,
+                None => "",
+            }
+        }
+
+        pub fn clear_address(&mut self) {
+            self.address = ::std::option::Option::None;
+        }
+
+        pub fn has_address(&self) -> bool {
+            self.address.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_address(&mut self, v: ::std::string::String) {
+            self.address = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_address(&mut self) -> &mut ::std::string::String {
+            if self.address.is_none() {
+                self.address = ::std::option::Option::Some(::std::string::String::new());
+            }
+            self.address.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_address(&mut self) -> ::std::string::String {
+            self.address.take().unwrap_or_else(|| ::std::string::String::new())
+        }
+
+        // required bytes salt = 2;
+
+        pub fn salt(&self) -> &[u8] {
+            match self.salt.as_ref() {
+                Some(v) => v,
+                None => &[],
+            }
+        }
+
+        pub fn clear_salt(&mut self) {
+            self.salt = ::std::option::Option::None;
+        }
+
+        pub fn has_salt(&self) -> bool {
+            self.salt.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_salt(&mut self, v: ::std::vec::Vec<u8>) {
+            self.salt = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_salt(&mut self) -> &mut ::std::vec::Vec<u8> {
+            if self.salt.is_none() {
+                self.salt = ::std::option::Option::Some(::std::vec::Vec::new());
+            }
+            self.salt.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_salt(&mut self) -> ::std::vec::Vec<u8> {
+            self.salt.take().unwrap_or_else(|| ::std::vec::Vec::new())
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(2);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "address",
+                |m: &StellarContractIDPreimageFromAddress| { &m.address },
+                |m: &mut StellarContractIDPreimageFromAddress| { &mut m.address },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "salt",
+                |m: &StellarContractIDPreimageFromAddress| { &m.salt },
+                |m: &mut StellarContractIDPreimageFromAddress| { &mut m.salt },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarContractIDPreimageFromAddress>(
+                "StellarContractIDPreimage.StellarContractIDPreimageFromAddress",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for StellarContractIDPreimageFromAddress {
+        const NAME: &'static str = "StellarContractIDPreimageFromAddress";
+
+        fn is_initialized(&self) -> bool {
+            if self.address.is_none() {
+                return false;
+            }
+            if self.salt.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    10 => {
+                        self.address = ::std::option::Option::Some(is.read_string()?);
+                    },
+                    18 => {
+                        self.salt = ::std::option::Option::Some(is.read_bytes()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.address.as_ref() {
+                my_size += ::protobuf::rt::string_size(1, &v);
+            }
+            if let Some(v) = self.salt.as_ref() {
+                my_size += ::protobuf::rt::bytes_size(2, &v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.address.as_ref() {
+                os.write_string(1, v)?;
+            }
+            if let Some(v) = self.salt.as_ref() {
+                os.write_bytes(2, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> StellarContractIDPreimageFromAddress {
+            StellarContractIDPreimageFromAddress::new()
+        }
+
+        fn clear(&mut self) {
+            self.address = ::std::option::Option::None;
+            self.salt = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static StellarContractIDPreimageFromAddress {
+            static instance: StellarContractIDPreimageFromAddress = StellarContractIDPreimageFromAddress {
+                address: ::std::option::Option::None,
+                salt: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for StellarContractIDPreimageFromAddress {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("StellarContractIDPreimage.StellarContractIDPreimageFromAddress").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for StellarContractIDPreimageFromAddress {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for StellarContractIDPreimageFromAddress {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.stellar.StellarContractIDPreimage.StellarContractIDPreimageType)
+    pub enum StellarContractIDPreimageType {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarContractIDPreimage.StellarContractIDPreimageType.CONTRACT_ID_PREIMAGE_FROM_ADDRESS)
+        CONTRACT_ID_PREIMAGE_FROM_ADDRESS = 0,
+    }
+
+    impl ::protobuf::Enum for StellarContractIDPreimageType {
+        const NAME: &'static str = "StellarContractIDPreimageType";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<StellarContractIDPreimageType> {
+            match value {
+                0 => ::std::option::Option::Some(StellarContractIDPreimageType::CONTRACT_ID_PREIMAGE_FROM_ADDRESS),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<StellarContractIDPreimageType> {
+            match str {
+                "CONTRACT_ID_PREIMAGE_FROM_ADDRESS" => ::std::option::Option::Some(StellarContractIDPreimageType::CONTRACT_ID_PREIMAGE_FROM_ADDRESS),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [StellarContractIDPreimageType] = &[
+            StellarContractIDPreimageType::CONTRACT_ID_PREIMAGE_FROM_ADDRESS,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for StellarContractIDPreimageType {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("StellarContractIDPreimage.StellarContractIDPreimageType").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for StellarContractIDPreimageType {
+        fn default() -> Self {
+            StellarContractIDPreimageType::CONTRACT_ID_PREIMAGE_FROM_ADDRESS
+        }
+    }
+
+    impl StellarContractIDPreimageType {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<StellarContractIDPreimageType>("StellarContractIDPreimage.StellarContractIDPreimageType")
+        }
+    }
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarContractExecutable)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarContractExecutable {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarContractExecutable.type)
+    pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_contract_executable::StellarContractExecutableType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarContractExecutable.wasm_hash)
+    pub wasm_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarContractExecutable.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarContractExecutable {
+    fn default() -> &'a StellarContractExecutable {
+        <StellarContractExecutable as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarContractExecutable {
+    pub fn new() -> StellarContractExecutable {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.stellar.StellarContractExecutable.StellarContractExecutableType type = 1;
+
+    pub fn type_(&self) -> stellar_contract_executable::StellarContractExecutableType {
+        match self.type_ {
+            Some(e) => e.enum_value_or(stellar_contract_executable::StellarContractExecutableType::CONTRACT_EXECUTABLE_WASM),
+            None => stellar_contract_executable::StellarContractExecutableType::CONTRACT_EXECUTABLE_WASM,
+        }
+    }
+
+    pub fn clear_type_(&mut self) {
+        self.type_ = ::std::option::Option::None;
+    }
+
+    pub fn has_type(&self) -> bool {
+        self.type_.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type(&mut self, v: stellar_contract_executable::StellarContractExecutableType) {
+        self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    // optional bytes wasm_hash = 2;
+
+    pub fn wasm_hash(&self) -> &[u8] {
+        match self.wasm_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_wasm_hash(&mut self) {
+        self.wasm_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_wasm_hash(&self) -> bool {
+        self.wasm_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_wasm_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.wasm_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_wasm_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.wasm_hash.is_none() {
+            self.wasm_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.wasm_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_wasm_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.wasm_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type",
+            |m: &StellarContractExecutable| { &m.type_ },
+            |m: &mut StellarContractExecutable| { &mut m.type_ },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "wasm_hash",
+            |m: &StellarContractExecutable| { &m.wasm_hash },
+            |m: &mut StellarContractExecutable| { &mut m.wasm_hash },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarContractExecutable>(
+            "StellarContractExecutable",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarContractExecutable {
+    const NAME: &'static str = "StellarContractExecutable";
+
+    fn is_initialized(&self) -> bool {
+        if self.type_.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                18 => {
+                    self.wasm_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.type_ {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.wasm_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.type_ {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.wasm_hash.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarContractExecutable {
+        StellarContractExecutable::new()
+    }
+
+    fn clear(&mut self) {
+        self.type_ = ::std::option::Option::None;
+        self.wasm_hash = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarContractExecutable {
+        static instance: StellarContractExecutable = StellarContractExecutable {
+            type_: ::std::option::Option::None,
+            wasm_hash: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarContractExecutable {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarContractExecutable").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarContractExecutable {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarContractExecutable {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `StellarContractExecutable`
+pub mod stellar_contract_executable {
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.stellar.StellarContractExecutable.StellarContractExecutableType)
+    pub enum StellarContractExecutableType {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarContractExecutable.StellarContractExecutableType.CONTRACT_EXECUTABLE_WASM)
+        CONTRACT_EXECUTABLE_WASM = 0,
+    }
+
+    impl ::protobuf::Enum for StellarContractExecutableType {
+        const NAME: &'static str = "StellarContractExecutableType";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<StellarContractExecutableType> {
+            match value {
+                0 => ::std::option::Option::Some(StellarContractExecutableType::CONTRACT_EXECUTABLE_WASM),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<StellarContractExecutableType> {
+            match str {
+                "CONTRACT_EXECUTABLE_WASM" => ::std::option::Option::Some(StellarContractExecutableType::CONTRACT_EXECUTABLE_WASM),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [StellarContractExecutableType] = &[
+            StellarContractExecutableType::CONTRACT_EXECUTABLE_WASM,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for StellarContractExecutableType {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("StellarContractExecutable.StellarContractExecutableType").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for StellarContractExecutableType {
+        fn default() -> Self {
+            StellarContractExecutableType::CONTRACT_EXECUTABLE_WASM
+        }
+    }
+
+    impl StellarContractExecutableType {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<StellarContractExecutableType>("StellarContractExecutable.StellarContractExecutableType")
+        }
+    }
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarCreateContractArgsV2)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarCreateContractArgsV2 {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarCreateContractArgsV2.contract_id_preimage)
+    pub contract_id_preimage: ::protobuf::MessageField<StellarContractIDPreimage>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarCreateContractArgsV2.executable)
+    pub executable: ::protobuf::MessageField<StellarContractExecutable>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarCreateContractArgsV2.constructor_args)
+    pub constructor_args: ::std::vec::Vec<StellarSCVal>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarCreateContractArgsV2.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarCreateContractArgsV2 {
+    fn default() -> &'a StellarCreateContractArgsV2 {
+        <StellarCreateContractArgsV2 as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarCreateContractArgsV2 {
+    pub fn new() -> StellarCreateContractArgsV2 {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarContractIDPreimage>(
+            "contract_id_preimage",
+            |m: &StellarCreateContractArgsV2| { &m.contract_id_preimage },
+            |m: &mut StellarCreateContractArgsV2| { &mut m.contract_id_preimage },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarContractExecutable>(
+            "executable",
+            |m: &StellarCreateContractArgsV2| { &m.executable },
+            |m: &mut StellarCreateContractArgsV2| { &mut m.executable },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "constructor_args",
+            |m: &StellarCreateContractArgsV2| { &m.constructor_args },
+            |m: &mut StellarCreateContractArgsV2| { &mut m.constructor_args },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarCreateContractArgsV2>(
+            "StellarCreateContractArgsV2",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarCreateContractArgsV2 {
+    const NAME: &'static str = "StellarCreateContractArgsV2";
+
+    fn is_initialized(&self) -> bool {
+        if self.contract_id_preimage.is_none() {
+            return false;
+        }
+        if self.executable.is_none() {
+            return false;
+        }
+        for v in &self.contract_id_preimage {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.executable {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.constructor_args {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.contract_id_preimage)?;
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.executable)?;
+                },
+                26 => {
+                    self.constructor_args.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.contract_id_preimage.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.executable.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        for value in &self.constructor_args {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.contract_id_preimage.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.executable.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        for v in &self.constructor_args {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarCreateContractArgsV2 {
+        StellarCreateContractArgsV2::new()
+    }
+
+    fn clear(&mut self) {
+        self.contract_id_preimage.clear();
+        self.executable.clear();
+        self.constructor_args.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarCreateContractArgsV2 {
+        static instance: StellarCreateContractArgsV2 = StellarCreateContractArgsV2 {
+            contract_id_preimage: ::protobuf::MessageField::none(),
+            executable: ::protobuf::MessageField::none(),
+            constructor_args: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarCreateContractArgsV2 {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarCreateContractArgsV2").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarCreateContractArgsV2 {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarCreateContractArgsV2 {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct StellarSorobanAuthorizedFunction {
@@ -8525,6 +9417,8 @@ pub struct StellarSorobanAuthorizedFunction {
     pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_soroban_authorized_function::StellarSorobanAuthorizedFunctionType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.contract_fn)
     pub contract_fn: ::protobuf::MessageField<StellarInvokeContractArgs>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.create_contract_v2_host_fn)
+    pub create_contract_v2_host_fn: ::protobuf::MessageField<StellarCreateContractArgsV2>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -8564,7 +9458,7 @@ impl StellarSorobanAuthorizedFunction {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "type",
@@ -8575,6 +9469,11 @@ impl StellarSorobanAuthorizedFunction {
             "contract_fn",
             |m: &StellarSorobanAuthorizedFunction| { &m.contract_fn },
             |m: &mut StellarSorobanAuthorizedFunction| { &mut m.contract_fn },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarCreateContractArgsV2>(
+            "create_contract_v2_host_fn",
+            |m: &StellarSorobanAuthorizedFunction| { &m.create_contract_v2_host_fn },
+            |m: &mut StellarSorobanAuthorizedFunction| { &mut m.create_contract_v2_host_fn },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSorobanAuthorizedFunction>(
             "StellarSorobanAuthorizedFunction",
@@ -8596,6 +9495,11 @@ impl ::protobuf::Message for StellarSorobanAuthorizedFunction {
                 return false;
             }
         };
+        for v in &self.create_contract_v2_host_fn {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -8607,6 +9511,9 @@ impl ::protobuf::Message for StellarSorobanAuthorizedFunction {
                 },
                 18 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.contract_fn)?;
+                },
+                26 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.create_contract_v2_host_fn)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -8627,6 +9534,10 @@ impl ::protobuf::Message for StellarSorobanAuthorizedFunction {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.create_contract_v2_host_fn.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -8638,6 +9549,9 @@ impl ::protobuf::Message for StellarSorobanAuthorizedFunction {
         }
         if let Some(v) = self.contract_fn.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        if let Some(v) = self.create_contract_v2_host_fn.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -8658,6 +9572,7 @@ impl ::protobuf::Message for StellarSorobanAuthorizedFunction {
     fn clear(&mut self) {
         self.type_ = ::std::option::Option::None;
         self.contract_fn.clear();
+        self.create_contract_v2_host_fn.clear();
         self.special_fields.clear();
     }
 
@@ -8665,6 +9580,7 @@ impl ::protobuf::Message for StellarSorobanAuthorizedFunction {
         static instance: StellarSorobanAuthorizedFunction = StellarSorobanAuthorizedFunction {
             type_: ::std::option::Option::None,
             contract_fn: ::protobuf::MessageField::none(),
+            create_contract_v2_host_fn: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -8695,6 +9611,8 @@ pub mod stellar_soroban_authorized_function {
     pub enum StellarSorobanAuthorizedFunctionType {
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN)
         SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN)
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN = 2,
     }
 
     impl ::protobuf::Enum for StellarSorobanAuthorizedFunctionType {
@@ -8707,6 +9625,7 @@ pub mod stellar_soroban_authorized_function {
         fn from_i32(value: i32) -> ::std::option::Option<StellarSorobanAuthorizedFunctionType> {
             match value {
                 0 => ::std::option::Option::Some(StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN),
+                2 => ::std::option::Option::Some(StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN),
                 _ => ::std::option::Option::None
             }
         }
@@ -8714,12 +9633,14 @@ pub mod stellar_soroban_authorized_function {
         fn from_str(str: &str) -> ::std::option::Option<StellarSorobanAuthorizedFunctionType> {
             match str {
                 "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN" => ::std::option::Option::Some(StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN),
+                "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN" => ::std::option::Option::Some(StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN),
                 _ => ::std::option::Option::None
             }
         }
 
         const VALUES: &'static [StellarSorobanAuthorizedFunctionType] = &[
             StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN,
+            StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN,
         ];
     }
 
@@ -8730,7 +9651,10 @@ pub mod stellar_soroban_authorized_function {
         }
 
         fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
-            let index = *self as usize;
+            let index = match self {
+                StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN => 0,
+                StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN => 1,
+            };
             Self::enum_descriptor().value_by_index(index)
         }
     }
@@ -8911,6 +9835,8 @@ pub struct StellarHostFunction {
     pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_host_function::StellarHostFunctionType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarHostFunction.invoke_contract)
     pub invoke_contract: ::protobuf::MessageField<StellarInvokeContractArgs>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarHostFunction.create_contract_v2)
+    pub create_contract_v2: ::protobuf::MessageField<StellarCreateContractArgsV2>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarHostFunction.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -8950,7 +9876,7 @@ impl StellarHostFunction {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "type",
@@ -8961,6 +9887,11 @@ impl StellarHostFunction {
             "invoke_contract",
             |m: &StellarHostFunction| { &m.invoke_contract },
             |m: &mut StellarHostFunction| { &mut m.invoke_contract },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarCreateContractArgsV2>(
+            "create_contract_v2",
+            |m: &StellarHostFunction| { &m.create_contract_v2 },
+            |m: &mut StellarHostFunction| { &mut m.create_contract_v2 },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarHostFunction>(
             "StellarHostFunction",
@@ -8982,6 +9913,11 @@ impl ::protobuf::Message for StellarHostFunction {
                 return false;
             }
         };
+        for v in &self.create_contract_v2 {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -8993,6 +9929,9 @@ impl ::protobuf::Message for StellarHostFunction {
                 },
                 18 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.invoke_contract)?;
+                },
+                26 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.create_contract_v2)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -9013,6 +9952,10 @@ impl ::protobuf::Message for StellarHostFunction {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.create_contract_v2.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -9024,6 +9967,9 @@ impl ::protobuf::Message for StellarHostFunction {
         }
         if let Some(v) = self.invoke_contract.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        if let Some(v) = self.create_contract_v2.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -9044,6 +9990,7 @@ impl ::protobuf::Message for StellarHostFunction {
     fn clear(&mut self) {
         self.type_ = ::std::option::Option::None;
         self.invoke_contract.clear();
+        self.create_contract_v2.clear();
         self.special_fields.clear();
     }
 
@@ -9051,6 +9998,7 @@ impl ::protobuf::Message for StellarHostFunction {
         static instance: StellarHostFunction = StellarHostFunction {
             type_: ::std::option::Option::None,
             invoke_contract: ::protobuf::MessageField::none(),
+            create_contract_v2: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -9081,6 +10029,8 @@ pub mod stellar_host_function {
     pub enum StellarHostFunctionType {
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarHostFunction.StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT)
         HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarHostFunction.StellarHostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2)
+        HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 = 3,
     }
 
     impl ::protobuf::Enum for StellarHostFunctionType {
@@ -9093,6 +10043,7 @@ pub mod stellar_host_function {
         fn from_i32(value: i32) -> ::std::option::Option<StellarHostFunctionType> {
             match value {
                 0 => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_INVOKE_CONTRACT),
+                3 => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2),
                 _ => ::std::option::Option::None
             }
         }
@@ -9100,12 +10051,14 @@ pub mod stellar_host_function {
         fn from_str(str: &str) -> ::std::option::Option<StellarHostFunctionType> {
             match str {
                 "HOST_FUNCTION_TYPE_INVOKE_CONTRACT" => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_INVOKE_CONTRACT),
+                "HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2" => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2),
                 _ => ::std::option::Option::None
             }
         }
 
         const VALUES: &'static [StellarHostFunctionType] = &[
             StellarHostFunctionType::HOST_FUNCTION_TYPE_INVOKE_CONTRACT,
+            StellarHostFunctionType::HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2,
         ];
     }
 
@@ -9116,7 +10069,10 @@ pub mod stellar_host_function {
         }
 
         fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
-            let index = *self as usize;
+            let index = match self {
+                StellarHostFunctionType::HOST_FUNCTION_TYPE_INVOKE_CONTRACT => 0,
+                StellarHostFunctionType::HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 => 1,
+            };
             Self::enum_descriptor().value_by_index(index)
         }
     }
@@ -11718,75 +12674,98 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x02\x20\x02(\tR\x0cfunctionName\x12<\n\x04args\x18\x03\x20\x03(\x0b2(.h\
     w.trezor.messages.stellar.StellarSCValR\x04args\x12G\n\nasset_hint\x18\
     \x04\x20\x01(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\tassetHint\
-    \"\xd7\x02\n\x20StellarSorobanAuthorizedFunction\x12u\n\x04type\x18\x01\
-    \x20\x02(\x0e2a.hw.trezor.messages.stellar.StellarSorobanAuthorizedFunct\
-    ion.StellarSorobanAuthorizedFunctionTypeR\x04type\x12V\n\x0bcontract_fn\
-    \x18\x02\x20\x01(\x0b25.hw.trezor.messages.stellar.StellarInvokeContract\
-    ArgsR\ncontractFn\"d\n$StellarSorobanAuthorizedFunctionType\x120\n,SOROB\
-    AN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN\x10\0\"\x04\x08\x01\x10\x01\"\
-    \x04\x08\x02\x10\x02\"\xe7\x01\n\"StellarSorobanAuthorizedInvocation\x12\
-    X\n\x08function\x18\x01\x20\x02(\x0b2<.hw.trezor.messages.stellar.Stella\
-    rSorobanAuthorizedFunctionR\x08function\x12g\n\x0fsub_invocations\x18\
-    \x02\x20\x03(\x0b2>.hw.trezor.messages.stellar.StellarSorobanAuthorizedI\
-    nvocationR\x0esubInvocations\"\xa7\x02\n\x13StellarHostFunction\x12[\n\
-    \x04type\x18\x01\x20\x02(\x0e2G.hw.trezor.messages.stellar.StellarHostFu\
-    nction.StellarHostFunctionTypeR\x04type\x12^\n\x0finvoke_contract\x18\
-    \x02\x20\x01(\x0b25.hw.trezor.messages.stellar.StellarInvokeContractArgs\
-    R\x0einvokeContract\"S\n\x17StellarHostFunctionType\x12&\n\"HOST_FUNCTIO\
-    N_TYPE_INVOKE_CONTRACT\x10\0\"\x04\x08\x01\x10\x01\"\x04\x08\x02\x10\x02\
-    \"\x04\x08\x03\x10\x03\"\xda\x01\n\x20StellarSorobanAddressCredentials\
-    \x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x14\n\x05nonce\
-    \x18\x02\x20\x02(\x12R\x05nonce\x12>\n\x1bsignature_expiration_ledger\
-    \x18\x03\x20\x02(\rR\x19signatureExpirationLedger\x12F\n\tsignature\x18\
-    \x04\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarSCValR\tsignature\
-    \"\xeb\x01\n\x1fStellarSorobanDelegateSignature\x12\x18\n\x07address\x18\
-    \x01\x20\x02(\tR\x07address\x12F\n\tsignature\x18\x02\x20\x02(\x0b2(.hw.\
-    trezor.messages.stellar.StellarSCValR\tsignature\x12f\n\x10nested_delega\
-    tes\x18\x03\x20\x03(\x0b2;.hw.trezor.messages.stellar.StellarSorobanDele\
-    gateSignatureR\x0fnestedDelegates\"\xf9\x01\n-StellarSorobanAddressCrede\
-    ntialsWithDelegates\x12m\n\x13address_credentials\x18\x01\x20\x02(\x0b2<\
-    .hw.trezor.messages.stellar.StellarSorobanAddressCredentialsR\x12address\
-    Credentials\x12Y\n\tdelegates\x18\x02\x20\x03(\x0b2;.hw.trezor.messages.\
-    stellar.StellarSorobanDelegateSignatureR\tdelegates\"\x86\x04\n\x19Stell\
-    arSorobanCredentials\x12g\n\x04type\x18\x01\x20\x02(\x0e2S.hw.trezor.mes\
-    sages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsTypeR\
-    \x04type\x12[\n\naddress_v2\x18\x02\x20\x01(\x0b2<.hw.trezor.messages.st\
-    ellar.StellarSorobanAddressCredentialsR\taddressV2\x12\x7f\n\x16address_\
-    with_delegates\x18\x03\x20\x01(\x0b2I.hw.trezor.messages.stellar.Stellar\
-    SorobanAddressCredentialsWithDelegatesR\x14addressWithDelegates\"\xa1\
-    \x01\n\x1dStellarSorobanCredentialsType\x12&\n\"SOROBAN_CREDENTIALS_SOUR\
-    CE_ACCOUNT\x10\0\x12\"\n\x1eSOROBAN_CREDENTIALS_ADDRESS_V2\x10\x02\x12.\
-    \n*SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES\x10\x03\"\x04\x08\x01\x10\
-    \x01\"\xe4\x01\n\x20StellarSorobanAuthorizationEntry\x12W\n\x0bcredentia\
-    ls\x18\x01\x20\x02(\x0b25.hw.trezor.messages.stellar.StellarSorobanCrede\
-    ntialsR\x0bcredentials\x12g\n\x0froot_invocation\x18\x02\x20\x02(\x0b2>.\
-    hw.trezor.messages.stellar.StellarSorobanAuthorizedInvocationR\x0erootIn\
-    vocation\"\xe3\x01\n\x1bStellarInvokeHostFunctionOp\x12%\n\x0esource_acc\
-    ount\x18\x01\x20\x01(\tR\rsourceAccount\x12K\n\x08function\x18\x02\x20\
-    \x02(\x0b2/.hw.trezor.messages.stellar.StellarHostFunctionR\x08function\
-    \x12P\n\x04auth\x18\x03\x20\x03(\x0b2<.hw.trezor.messages.stellar.Stella\
-    rSorobanAuthorizationEntryR\x04auth\"\x86\x06\n\x1fStellarSignSorobanAut\
-    horization\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12-\n\
-    \x12network_passphrase\x18\x02\x20\x02(\tR\x11networkPassphrase\x12\x88\
-    \x01\n\renvelope_type\x18\x03\x20\x02(\x0e2c.hw.trezor.messages.stellar.\
-    StellarSignSorobanAuthorization.StellarSorobanAuthorizationEnvelopeTypeR\
-    \x0cenvelopeType\x12\xaf\x01\n\"soroban_authorization_with_address\x18\
-    \x04\x20\x01(\x0b2b.hw.trezor.messages.stellar.StellarSignSorobanAuthori\
-    zation.StellarSorobanAuthorizationWithAddressR\x1fsorobanAuthorizationWi\
-    thAddress\x1a\xf8\x01\n&StellarSorobanAuthorizationWithAddress\x12\x14\n\
-    \x05nonce\x18\x01\x20\x02(\x12R\x05nonce\x12>\n\x1bsignature_expiration_\
-    ledger\x18\x02\x20\x02(\rR\x19signatureExpirationLedger\x12\x18\n\x07add\
-    ress\x18\x03\x20\x02(\tR\x07address\x12^\n\ninvocation\x18\x04\x20\x02(\
-    \x0b2>.hw.trezor.messages.stellar.StellarSorobanAuthorizedInvocationR\ni\
-    nvocation\"_\n'StellarSorobanAuthorizationEnvelopeType\x124\n0ENVELOPE_T\
-    YPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS\x10\n\"c\n$StellarSorobanAuthoriz\
-    ationSignature\x12\x1d\n\npublic_key\x18\x01\x20\x02(\x0cR\tpublicKey\
-    \x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\x15\n\x13Stella\
-    rTxExtRequest\"?\n\x0cStellarTxExt\x12\x0c\n\x01v\x18\x01\x20\x02(\x11R\
-    \x01v\x12!\n\x0csoroban_data\x18\x02\x20\x01(\x0cR\x0bsorobanData*=\n\
-    \x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\x12\r\n\tALPHANUM4\x10\x01\
-    \x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satoshilabs.trezor.lib.protobufB\
-    \x14TrezorMessageStellar\
+    \"\xa7\x03\n\x19StellarContractIDPreimage\x12g\n\x04type\x18\x01\x20\x02\
+    (\x0e2S.hw.trezor.messages.stellar.StellarContractIDPreimage.StellarCont\
+    ractIDPreimageTypeR\x04type\x12}\n\x0cfrom_address\x18\x02\x20\x01(\x0b2\
+    Z.hw.trezor.messages.stellar.StellarContractIDPreimage.StellarContractID\
+    PreimageFromAddressR\x0bfromAddress\x1aT\n$StellarContractIDPreimageFrom\
+    Address\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x12\n\
+    \x04salt\x18\x02\x20\x02(\x0cR\x04salt\"L\n\x1dStellarContractIDPreimage\
+    Type\x12%\n!CONTRACT_ID_PREIMAGE_FROM_ADDRESS\x10\0\"\x04\x08\x01\x10\
+    \x01\"\xec\x01\n\x19StellarContractExecutable\x12g\n\x04type\x18\x01\x20\
+    \x02(\x0e2S.hw.trezor.messages.stellar.StellarContractExecutable.Stellar\
+    ContractExecutableTypeR\x04type\x12\x1b\n\twasm_hash\x18\x02\x20\x01(\
+    \x0cR\x08wasmHash\"I\n\x1dStellarContractExecutableType\x12\x1c\n\x18CON\
+    TRACT_EXECUTABLE_WASM\x10\0\"\x04\x08\x01\x10\x01\"\x04\x08\x02\x10\x02\
+    \"\xb2\x02\n\x1bStellarCreateContractArgsV2\x12g\n\x14contract_id_preima\
+    ge\x18\x01\x20\x02(\x0b25.hw.trezor.messages.stellar.StellarContractIDPr\
+    eimageR\x12contractIdPreimage\x12U\n\nexecutable\x18\x02\x20\x02(\x0b25.\
+    hw.trezor.messages.stellar.StellarContractExecutableR\nexecutable\x12S\n\
+    \x10constructor_args\x18\x03\x20\x03(\x0b2(.hw.trezor.messages.stellar.S\
+    tellarSCValR\x0fconstructorArgs\"\x88\x04\n\x20StellarSorobanAuthorizedF\
+    unction\x12u\n\x04type\x18\x01\x20\x02(\x0e2a.hw.trezor.messages.stellar\
+    .StellarSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionTypeR\
+    \x04type\x12V\n\x0bcontract_fn\x18\x02\x20\x01(\x0b25.hw.trezor.messages\
+    .stellar.StellarInvokeContractArgsR\ncontractFn\x12s\n\x1acreate_contrac\
+    t_v2_host_fn\x18\x03\x20\x01(\x0b27.hw.trezor.messages.stellar.StellarCr\
+    eateContractArgsV2R\x16createContractV2HostFn\"\x9f\x01\n$StellarSoroban\
+    AuthorizedFunctionType\x120\n,SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_\
+    FN\x10\0\x12?\n;SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST\
+    _FN\x10\x02\"\x04\x08\x01\x10\x01\"\xe7\x01\n\"StellarSorobanAuthorizedI\
+    nvocation\x12X\n\x08function\x18\x01\x20\x02(\x0b2<.hw.trezor.messages.s\
+    tellar.StellarSorobanAuthorizedFunctionR\x08function\x12g\n\x0fsub_invoc\
+    ations\x18\x02\x20\x03(\x0b2>.hw.trezor.messages.stellar.StellarSorobanA\
+    uthorizedInvocationR\x0esubInvocations\"\xb3\x03\n\x13StellarHostFunctio\
+    n\x12[\n\x04type\x18\x01\x20\x02(\x0e2G.hw.trezor.messages.stellar.Stell\
+    arHostFunction.StellarHostFunctionTypeR\x04type\x12^\n\x0finvoke_contrac\
+    t\x18\x02\x20\x01(\x0b25.hw.trezor.messages.stellar.StellarInvokeContrac\
+    tArgsR\x0einvokeContract\x12e\n\x12create_contract_v2\x18\x03\x20\x01(\
+    \x0b27.hw.trezor.messages.stellar.StellarCreateContractArgsV2R\x10create\
+    ContractV2\"x\n\x17StellarHostFunctionType\x12&\n\"HOST_FUNCTION_TYPE_IN\
+    VOKE_CONTRACT\x10\0\x12)\n%HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2\x10\x03\
+    \"\x04\x08\x01\x10\x01\"\x04\x08\x02\x10\x02\"\xda\x01\n\x20StellarSorob\
+    anAddressCredentials\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\
+    \x12\x14\n\x05nonce\x18\x02\x20\x02(\x12R\x05nonce\x12>\n\x1bsignature_e\
+    xpiration_ledger\x18\x03\x20\x02(\rR\x19signatureExpirationLedger\x12F\n\
+    \tsignature\x18\x04\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarSCV\
+    alR\tsignature\"\xeb\x01\n\x1fStellarSorobanDelegateSignature\x12\x18\n\
+    \x07address\x18\x01\x20\x02(\tR\x07address\x12F\n\tsignature\x18\x02\x20\
+    \x02(\x0b2(.hw.trezor.messages.stellar.StellarSCValR\tsignature\x12f\n\
+    \x10nested_delegates\x18\x03\x20\x03(\x0b2;.hw.trezor.messages.stellar.S\
+    tellarSorobanDelegateSignatureR\x0fnestedDelegates\"\xf9\x01\n-StellarSo\
+    robanAddressCredentialsWithDelegates\x12m\n\x13address_credentials\x18\
+    \x01\x20\x02(\x0b2<.hw.trezor.messages.stellar.StellarSorobanAddressCred\
+    entialsR\x12addressCredentials\x12Y\n\tdelegates\x18\x02\x20\x03(\x0b2;.\
+    hw.trezor.messages.stellar.StellarSorobanDelegateSignatureR\tdelegates\"\
+    \x86\x04\n\x19StellarSorobanCredentials\x12g\n\x04type\x18\x01\x20\x02(\
+    \x0e2S.hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSorob\
+    anCredentialsTypeR\x04type\x12[\n\naddress_v2\x18\x02\x20\x01(\x0b2<.hw.\
+    trezor.messages.stellar.StellarSorobanAddressCredentialsR\taddressV2\x12\
+    \x7f\n\x16address_with_delegates\x18\x03\x20\x01(\x0b2I.hw.trezor.messag\
+    es.stellar.StellarSorobanAddressCredentialsWithDelegatesR\x14addressWith\
+    Delegates\"\xa1\x01\n\x1dStellarSorobanCredentialsType\x12&\n\"SOROBAN_C\
+    REDENTIALS_SOURCE_ACCOUNT\x10\0\x12\"\n\x1eSOROBAN_CREDENTIALS_ADDRESS_V\
+    2\x10\x02\x12.\n*SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES\x10\x03\"\
+    \x04\x08\x01\x10\x01\"\xe4\x01\n\x20StellarSorobanAuthorizationEntry\x12\
+    W\n\x0bcredentials\x18\x01\x20\x02(\x0b25.hw.trezor.messages.stellar.Ste\
+    llarSorobanCredentialsR\x0bcredentials\x12g\n\x0froot_invocation\x18\x02\
+    \x20\x02(\x0b2>.hw.trezor.messages.stellar.StellarSorobanAuthorizedInvoc\
+    ationR\x0erootInvocation\"\xe3\x01\n\x1bStellarInvokeHostFunctionOp\x12%\
+    \n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12K\n\x08functi\
+    on\x18\x02\x20\x02(\x0b2/.hw.trezor.messages.stellar.StellarHostFunction\
+    R\x08function\x12P\n\x04auth\x18\x03\x20\x03(\x0b2<.hw.trezor.messages.s\
+    tellar.StellarSorobanAuthorizationEntryR\x04auth\"\x86\x06\n\x1fStellarS\
+    ignSorobanAuthorization\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addr\
+    essN\x12-\n\x12network_passphrase\x18\x02\x20\x02(\tR\x11networkPassphra\
+    se\x12\x88\x01\n\renvelope_type\x18\x03\x20\x02(\x0e2c.hw.trezor.message\
+    s.stellar.StellarSignSorobanAuthorization.StellarSorobanAuthorizationEnv\
+    elopeTypeR\x0cenvelopeType\x12\xaf\x01\n\"soroban_authorization_with_add\
+    ress\x18\x04\x20\x01(\x0b2b.hw.trezor.messages.stellar.StellarSignSoroba\
+    nAuthorization.StellarSorobanAuthorizationWithAddressR\x1fsorobanAuthori\
+    zationWithAddress\x1a\xf8\x01\n&StellarSorobanAuthorizationWithAddress\
+    \x12\x14\n\x05nonce\x18\x01\x20\x02(\x12R\x05nonce\x12>\n\x1bsignature_e\
+    xpiration_ledger\x18\x02\x20\x02(\rR\x19signatureExpirationLedger\x12\
+    \x18\n\x07address\x18\x03\x20\x02(\tR\x07address\x12^\n\ninvocation\x18\
+    \x04\x20\x02(\x0b2>.hw.trezor.messages.stellar.StellarSorobanAuthorizedI\
+    nvocationR\ninvocation\"_\n'StellarSorobanAuthorizationEnvelopeType\x124\
+    \n0ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS\x10\n\"c\n$StellarSo\
+    robanAuthorizationSignature\x12\x1d\n\npublic_key\x18\x01\x20\x02(\x0cR\
+    \tpublicKey\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\x15\
+    \n\x13StellarTxExtRequest\"?\n\x0cStellarTxExt\x12\x0c\n\x01v\x18\x01\
+    \x20\x02(\x11R\x01v\x12!\n\x0csoroban_data\x18\x02\x20\x01(\x0cR\x0bsoro\
+    banData*=\n\x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\x12\r\n\tALPHANU\
+    M4\x10\x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satoshilabs.trezor.lib.\
+    protobufB\x14TrezorMessageStellar\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -11805,7 +12784,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_common::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(41);
+            let mut messages = ::std::vec::Vec::with_capacity(45);
             messages.push(StellarAsset::generated_message_descriptor_data());
             messages.push(StellarGetAddress::generated_message_descriptor_data());
             messages.push(StellarAddress::generated_message_descriptor_data());
@@ -11828,6 +12807,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(StellarSignedTx::generated_message_descriptor_data());
             messages.push(StellarSCVal::generated_message_descriptor_data());
             messages.push(StellarInvokeContractArgs::generated_message_descriptor_data());
+            messages.push(StellarContractIDPreimage::generated_message_descriptor_data());
+            messages.push(StellarContractExecutable::generated_message_descriptor_data());
+            messages.push(StellarCreateContractArgsV2::generated_message_descriptor_data());
             messages.push(StellarSorobanAuthorizedFunction::generated_message_descriptor_data());
             messages.push(StellarSorobanAuthorizedInvocation::generated_message_descriptor_data());
             messages.push(StellarHostFunction::generated_message_descriptor_data());
@@ -11846,12 +12828,15 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(stellar_scval::StellarUInt256Parts::generated_message_descriptor_data());
             messages.push(stellar_scval::StellarInt256Parts::generated_message_descriptor_data());
             messages.push(stellar_scval::StellarSCValMapEntry::generated_message_descriptor_data());
+            messages.push(stellar_contract_idpreimage::StellarContractIDPreimageFromAddress::generated_message_descriptor_data());
             messages.push(stellar_sign_soroban_authorization::StellarSorobanAuthorizationWithAddress::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(8);
+            let mut enums = ::std::vec::Vec::with_capacity(10);
             enums.push(StellarAssetType::generated_enum_descriptor_data());
             enums.push(stellar_sign_tx::StellarMemoType::generated_enum_descriptor_data());
             enums.push(stellar_set_options_op::StellarSignerType::generated_enum_descriptor_data());
             enums.push(stellar_scval::StellarSCValType::generated_enum_descriptor_data());
+            enums.push(stellar_contract_idpreimage::StellarContractIDPreimageType::generated_enum_descriptor_data());
+            enums.push(stellar_contract_executable::StellarContractExecutableType::generated_enum_descriptor_data());
             enums.push(stellar_soroban_authorized_function::StellarSorobanAuthorizedFunctionType::generated_enum_descriptor_data());
             enums.push(stellar_host_function::StellarHostFunctionType::generated_enum_descriptor_data());
             enums.push(stellar_soroban_credentials::StellarSorobanCredentialsType::generated_enum_descriptor_data());

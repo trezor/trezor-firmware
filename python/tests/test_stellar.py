@@ -1367,3 +1367,142 @@ def test_from_authorization_entry_hints_require_network_passphrase():
 
     # an exhausted iterator carries no hints, so no passphrase is needed
     from_authorization_entry(entry, asset_hints=iter(()))
+
+
+CREATE_WASM_HASH = bytes(range(32))
+CREATE_SALT = bytes(range(32, 64))
+
+
+def make_create_contract_args(preimage=None, executable=None):
+    """CreateContractArgsV2 deploying a Wasm contract on behalf of the source."""
+    if preimage is None:
+        preimage = stellar_xdr.ContractIDPreimage(
+            type=stellar_xdr.ContractIDPreimageType.CONTRACT_ID_PREIMAGE_FROM_ADDRESS,
+            from_address=stellar_xdr.ContractIDPreimageFromAddress(
+                address=Address(SOROBAN_SOURCE).to_xdr_sc_address(),
+                salt=stellar_xdr.Uint256(CREATE_SALT),
+            ),
+        )
+    if executable is None:
+        executable = stellar_xdr.ContractExecutable(
+            type=stellar_xdr.ContractExecutableType.CONTRACT_EXECUTABLE_WASM,
+            wasm_hash=stellar_xdr.Hash(CREATE_WASM_HASH),
+        )
+    return stellar_xdr.CreateContractArgsV2(
+        contract_id_preimage=preimage,
+        executable=executable,
+        constructor_args=[scval.to_address(SOROBAN_DESTINATION), scval.to_uint32(7)],
+    )
+
+
+EXPECTED_CREATE_CONTRACT_ARGS = messages.StellarCreateContractArgsV2(
+    contract_id_preimage=messages.StellarContractIDPreimage(
+        type=messages.StellarContractIDPreimageType.CONTRACT_ID_PREIMAGE_FROM_ADDRESS,
+        from_address=messages.StellarContractIDPreimageFromAddress(
+            address=SOROBAN_SOURCE, salt=CREATE_SALT
+        ),
+    ),
+    executable=messages.StellarContractExecutable(
+        type=messages.StellarContractExecutableType.CONTRACT_EXECUTABLE_WASM,
+        wasm_hash=CREATE_WASM_HASH,
+    ),
+    constructor_args=[
+        messages.StellarSCVal(
+            type=messages.StellarSCValType.SCV_ADDRESS, address=SOROBAN_DESTINATION
+        ),
+        messages.StellarSCVal(type=messages.StellarSCValType.SCV_U32, u32=7),
+    ],
+)
+
+
+def make_create_contract_tx(args, auth=()):
+    """A transaction creating a contract with the given CreateContractArgsV2."""
+    op = InvokeHostFunction(
+        host_function=stellar_xdr.HostFunction(
+            type=stellar_xdr.HostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2,
+            create_contract_v2=args,
+        ),
+        auth=list(auth),
+    )
+    return make_default_tx().append_operation(op).build()
+
+
+def test_from_envelope_create_contract():
+    args = make_create_contract_args()
+    # the source account authorizes its own deployment
+    entry = stellar_xdr.SorobanAuthorizationEntry(
+        credentials=stellar_xdr.SorobanCredentials(
+            type=stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT
+        ),
+        root_invocation=stellar_xdr.SorobanAuthorizedInvocation(
+            function=stellar_xdr.SorobanAuthorizedFunction(
+                type=stellar_xdr.SorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN,
+                create_contract_v2_host_fn=args,
+            ),
+            sub_invocations=[],
+        ),
+    )
+
+    _, operations, _ = from_envelope(make_create_contract_tx(args, [entry]))
+
+    op = operations[0]
+    assert op.function == messages.StellarHostFunction(
+        type=messages.StellarHostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2,
+        create_contract_v2=EXPECTED_CREATE_CONTRACT_ARGS,
+    )
+    assert op.auth[0].root_invocation.function == (
+        messages.StellarSorobanAuthorizedFunction(
+            type=messages.StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN,
+            create_contract_v2_host_fn=EXPECTED_CREATE_CONTRACT_ARGS,
+        )
+    )
+
+
+def test_from_envelope_unsupported_contract_creation():
+    # deploying the Stellar Asset Contract of an asset
+    from_asset = stellar_xdr.ContractIDPreimage(
+        type=stellar_xdr.ContractIDPreimageType.CONTRACT_ID_PREIMAGE_FROM_ASSET,
+        from_asset=SAC_ASSET.to_xdr_object(),
+    )
+    with pytest.raises(ValueError, match="Unsupported ContractIDPreimage type"):
+        from_envelope(
+            make_create_contract_tx(make_create_contract_args(preimage=from_asset))
+        )
+
+    stellar_asset = stellar_xdr.ContractExecutable(
+        type=stellar_xdr.ContractExecutableType.CONTRACT_EXECUTABLE_STELLAR_ASSET
+    )
+    with pytest.raises(ValueError, match="Unsupported ContractExecutable type"):
+        from_envelope(
+            make_create_contract_tx(make_create_contract_args(executable=stellar_asset))
+        )
+
+    # the legacy creation without constructor arguments
+    v2_args = make_create_contract_args()
+    legacy = stellar_xdr.CreateContractArgs(
+        v2_args.contract_id_preimage, v2_args.executable
+    )
+    legacy_op = InvokeHostFunction(
+        host_function=stellar_xdr.HostFunction(
+            type=stellar_xdr.HostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT,
+            create_contract=legacy,
+        ),
+        auth=[],
+    )
+    with pytest.raises(ValueError, match="Unsupported host function type"):
+        from_envelope(make_default_tx().append_operation(legacy_op).build())
+
+    entry = stellar_xdr.SorobanAuthorizationEntry(
+        credentials=stellar_xdr.SorobanCredentials(
+            type=stellar_xdr.SorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT
+        ),
+        root_invocation=stellar_xdr.SorobanAuthorizedInvocation(
+            function=stellar_xdr.SorobanAuthorizedFunction(
+                type=stellar_xdr.SorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN,
+                create_contract_host_fn=legacy,
+            ),
+            sub_invocations=[],
+        ),
+    )
+    with pytest.raises(ValueError, match="Unsupported SorobanAuthorizedFunction type"):
+        from_envelope(make_sac_transfer_tx(auth=[entry]))

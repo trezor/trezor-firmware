@@ -68,6 +68,8 @@ if TYPE_CHECKING:
     from trezor.enums import SafetyCheckLevel  # noqa: F401
     from trezor.enums import SdProtectOperationType  # noqa: F401
     from trezor.enums import StellarAssetType  # noqa: F401
+    from trezor.enums import StellarContractExecutableType  # noqa: F401
+    from trezor.enums import StellarContractIDPreimageType  # noqa: F401
     from trezor.enums import StellarHostFunctionType  # noqa: F401
     from trezor.enums import StellarMemoType  # noqa: F401
     from trezor.enums import StellarSCValType  # noqa: F401
@@ -6687,15 +6689,67 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["StellarInvokeContractArgs"]:
             return isinstance(msg, cls)
 
+    class StellarContractIDPreimage(protobuf.MessageType):
+        type: "StellarContractIDPreimageType"
+        from_address: "StellarContractIDPreimageFromAddress | None"
+
+        def __init__(
+            self,
+            *,
+            type: "StellarContractIDPreimageType",
+            from_address: "StellarContractIDPreimageFromAddress | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarContractIDPreimage"]:
+            return isinstance(msg, cls)
+
+    class StellarContractExecutable(protobuf.MessageType):
+        type: "StellarContractExecutableType"
+        wasm_hash: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            type: "StellarContractExecutableType",
+            wasm_hash: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarContractExecutable"]:
+            return isinstance(msg, cls)
+
+    class StellarCreateContractArgsV2(protobuf.MessageType):
+        contract_id_preimage: "StellarContractIDPreimage"
+        executable: "StellarContractExecutable"
+        constructor_args: "list[StellarSCVal]"
+
+        def __init__(
+            self,
+            *,
+            contract_id_preimage: "StellarContractIDPreimage",
+            executable: "StellarContractExecutable",
+            constructor_args: "list[StellarSCVal] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarCreateContractArgsV2"]:
+            return isinstance(msg, cls)
+
     class StellarSorobanAuthorizedFunction(protobuf.MessageType):
         type: "StellarSorobanAuthorizedFunctionType"
         contract_fn: "StellarInvokeContractArgs | None"
+        create_contract_v2_host_fn: "StellarCreateContractArgsV2 | None"
 
         def __init__(
             self,
             *,
             type: "StellarSorobanAuthorizedFunctionType",
             contract_fn: "StellarInvokeContractArgs | None" = None,
+            create_contract_v2_host_fn: "StellarCreateContractArgsV2 | None" = None,
         ) -> None:
             pass
 
@@ -6722,12 +6776,14 @@ if TYPE_CHECKING:
     class StellarHostFunction(protobuf.MessageType):
         type: "StellarHostFunctionType"
         invoke_contract: "StellarInvokeContractArgs | None"
+        create_contract_v2: "StellarCreateContractArgsV2 | None"
 
         def __init__(
             self,
             *,
             type: "StellarHostFunctionType",
             invoke_contract: "StellarInvokeContractArgs | None" = None,
+            create_contract_v2: "StellarCreateContractArgsV2 | None" = None,
         ) -> None:
             pass
 
@@ -6985,6 +7041,22 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["StellarSCValMapEntry"]:
+            return isinstance(msg, cls)
+
+    class StellarContractIDPreimageFromAddress(protobuf.MessageType):
+        address: "str"
+        salt: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            salt: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarContractIDPreimageFromAddress"]:
             return isinstance(msg, cls)
 
     class StellarSorobanAuthorizationWithAddress(protobuf.MessageType):
