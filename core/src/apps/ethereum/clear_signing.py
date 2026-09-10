@@ -1578,12 +1578,12 @@ async def _handle_generic_ui(
     account, account_path = get_account_and_path(msg.address_n)
 
     await require_confirm_clear_signing(
-        recipient_str,
-        display_format.intent,
-        properties_to_confirm,
-        maximum_fee,
-        None if value_shown_as_field else amount,
-        account,
-        account_path,
-        address_from_bytes(address_bytes, defs.network),
+        recipient_str=recipient_str,
+        intent=display_format.intent,
+        properties=properties_to_confirm,
+        maximum_fee=maximum_fee,
+        contract_address=address_from_bytes(address_bytes, defs.network),
+        amount=None if value_shown_as_field else amount,
+        account=account,
+        account_path=account_path,
     )

@@ -1252,14 +1252,15 @@ if not utils.BITCOIN_ONLY:
             )
 
     async def confirm_ethereum_clear_signing(
+        *,
         recipient_str: str,
         intent: str,
         properties: list[StrPropertyType],
         maximum_fee: str,
+        contract_address: str,
         amount: str | None = None,
         account: str | None = None,
         account_path: str | None = None,
-        contract_address: str | None = None,
     ) -> None:
         from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
@@ -1275,8 +1276,6 @@ if not utils.BITCOIN_ONLY:
                 (TR.address_details__derivation_path, account_path, None)
             )
 
-        has_menu = bool(account_properties or contract_address)
-
         def _menu() -> Menu[None]:
             menu_items: list[MenuLeaf[None]] = []
             if account_properties:
@@ -1286,12 +1285,9 @@ if not utils.BITCOIN_ONLY:
                         with_colon(account_properties),
                     )
                 )
-            if contract_address:
-                menu_items.append(
-                    create_info_menu_leaf(
-                        TR.ethereum__contract_address, contract_address
-                    )
-                )
+            menu_items.append(
+                create_info_menu_leaf(TR.ethereum__contract_address, contract_address)
+            )
             return Menu(menu_items)
 
         await confirm_action(f"{br_name}/provider", TR.words__provider, recipient_str)
@@ -1301,7 +1297,7 @@ if not utils.BITCOIN_ONLY:
                 title=TR.ethereum__confirm_contract,
                 items=with_colon(properties),
                 hold=False,
-                external_menu=has_menu,
+                external_menu=True,
             ) as layout:
                 await confirm_with_menu(
                     layout, _menu(), br_name, ButtonRequestType.ConfirmOutput
@@ -1316,7 +1312,7 @@ if not utils.BITCOIN_ONLY:
             fee_label=with_colon(TR.send__maximum_fee),
             extra_items=None,
             extra_title=None,
-            external_menu=has_menu,
+            external_menu=True,
         ) as layout:
             await confirm_with_menu(layout, _menu(), f"{br_name}/summary")
 

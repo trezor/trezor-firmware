@@ -1309,14 +1309,15 @@ if not utils.BITCOIN_ONLY:
         )
 
     async def confirm_ethereum_clear_signing(
+        *,
         recipient_str: str,
         intent: str,
         properties: list[StrPropertyType],
         maximum_fee: str,
+        contract_address: str,
         amount: str | None = None,
         account: str | None = None,
         account_path: str | None = None,
-        contract_address: str | None = None,
     ) -> None:
         from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
 
@@ -1334,14 +1335,13 @@ if not utils.BITCOIN_ONLY:
                         subtitle=TR.send__send_from,
                     )
                 )
-            if contract_address:
-                menu_items.append(
-                    create_info_menu_leaf(
-                        TR.ethereum__contract_address,
-                        contract_address,
-                        title=TR.ethereum__contract_address,
-                    )
+            menu_items.append(
+                create_info_menu_leaf(
+                    TR.ethereum__contract_address,
+                    contract_address,
+                    title=TR.ethereum__contract_address,
                 )
+            )
             menu_items.append(cancel_leaf(TR.buttons__cancel))
             return Menu(menu_items)
 

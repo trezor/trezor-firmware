@@ -1277,14 +1277,15 @@ if not utils.BITCOIN_ONLY:
         )
 
     async def confirm_ethereum_clear_signing(
+        *,
         recipient_str: str,
         intent: str,
         properties: list[StrPropertyType],
         maximum_fee: str,
+        contract_address: str,
         amount: str | None = None,
         account: str | None = None,
         account_path: str | None = None,
-        contract_address: str | None = None,
     ) -> None:
         from ..properties import with_colon
 
@@ -1295,8 +1296,7 @@ if not utils.BITCOIN_ONLY:
             assert account is not None
             info_items.append((TR.words__account, account, None))
             info_items.append((TR.address_details__derivation_path, account_path, None))
-        if contract_address:
-            info_items.append((TR.ethereum__contract_address, contract_address, None))
+        info_items.append((TR.ethereum__contract_address, contract_address, None))
         info_items = with_colon(info_items)
 
         def _info_ctx() -> trezorui_api.LayoutContext[ui.UiResult]:
