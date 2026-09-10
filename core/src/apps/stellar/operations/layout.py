@@ -15,6 +15,8 @@ from ..tokens import NATIVE_TOKEN, StellarToken
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
+    from collections.abc import Callable
+    from typing import TypeVar
 
     from trezor.messages import (
         StellarAccountMergeOp,
@@ -37,6 +39,9 @@ if TYPE_CHECKING:
         StellarSorobanAuthorizationEntry,
     )
     from trezor.ui.layouts import PropertyType
+    from trezor.utils import Writer
+
+    T = TypeVar("T")
 
 
 async def confirm_source_account(source_account: str) -> None:
@@ -430,6 +435,11 @@ async def confirm_asset_issuer(asset: StellarAsset) -> None:
 def _is_root_auth_entry(
     auth_entry: StellarSorobanAuthorizationEntry, invoked_fn: StellarHostFunction
 ) -> bool:
+    """Whether the entry's root invocation is the invoked host function itself.
+
+    Such an entry only authorizes what the user has already confirmed, so its
+    root is not shown again. The two are compared in their XDR form.
+    """
     from trezor.enums import (
         StellarHostFunctionType,
         StellarSorobanAuthorizedFunctionType,
@@ -445,17 +455,22 @@ def _is_root_auth_entry(
         and invoked_fn.type
         == StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT
     ):
-        if auth_fn.contract_fn is None or invoked_fn.invoke_contract is None:
-            return False
-
-        b1 = bytearray()
-        write_invoke_contract_args(b1, auth_fn.contract_fn)
-        b2 = bytearray()
-        write_invoke_contract_args(b2, invoked_fn.invoke_contract)
-
-        return b1 == b2
-
+        return _same_xdr(
+            write_invoke_contract_args,
+            auth_fn.contract_fn,
+            invoked_fn.invoke_contract,
+        )
     return False
+
+
+def _same_xdr(write: Callable[[Writer, T], None], a: T | None, b: T | None) -> bool:
+    if a is None or b is None:
+        return False
+    b1 = bytearray()
+    write(b1, a)
+    b2 = bytearray()
+    write(b2, b)
+    return b1 == b2
 
 
 async def confirm_invoke_host_function_op(

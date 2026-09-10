@@ -271,11 +271,20 @@ async def _confirm_invoke_contract_args(
         args.function_name,
         description=TR.words__function if authorization_title else None,
     )
-    if not args.args:
+    await _confirm_args(args.args, br_name_prefix, authorization_title)
+
+
+async def _confirm_args(
+    args: list[StellarSCVal],
+    br_name_prefix: str,
+    authorization_title: str | None,
+) -> None:
+    """Confirm the arguments of a call, if any, one formatted value each."""
+    if not args:
         return
     props = [
-        (f"{i + 1} / {len(args.args)}", _format_sc_val(arg), True)
-        for i, arg in enumerate(args.args)
+        (f"{i + 1} / {len(args)}", _format_sc_val(arg), True)
+        for i, arg in enumerate(args)
     ]
     await layouts.confirm_properties(
         f"{br_name_prefix}_args",
