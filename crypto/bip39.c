@@ -78,7 +78,8 @@ const char *mnemonic_from_data(const uint8_t *data, size_t len) {
       idx += (bits[(i * 11 + j) / 8] & (1 << (7 - ((i * 11 + j) % 8)))) > 0;
     }
     size_t word_len = strlen(BIP39_WORDLIST_ENGLISH[idx]);
-    if (p + word_len + 1 > mnemo + sizeof(mnemo)) {
+    size_t remaining = sizeof(mnemo) - (size_t)(p - mnemo);
+    if (word_len + 1 > remaining) {
       memzero(bits, sizeof(bits));
       memzero(mnemo, sizeof(mnemo));
       return 0;
