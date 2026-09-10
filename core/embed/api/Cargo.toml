@@ -17,6 +17,7 @@ stabby.workspace = true
 talc.workspace = true
 trezor-app-sdk.workspace = true
 ufmt.workspace = true
+zeroize.workspace = true
 
 crypto.workspace = true
 models.workspace = true
