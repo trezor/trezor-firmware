@@ -27,15 +27,18 @@
 #include "extmod/modtime.h"
 #include "shared/timeutils/timeutils.h"
 
-// 32-bit integer will overflow at 2068.
+// 32-bit signed integer will overflow at 2038.
 _Static_assert(sizeof(mp_timestamp_t) >= 8);
+
+// Make sure both timestamp types have the same width:
+_Static_assert(sizeof(mp_timestamp_t) == sizeof(timeutils_timestamp_t));
 
 // copy of ports/stm32/modutime.c:time_localtime, without support
 // for getting current clock time (i.e., timestamp must always be provided)
-static mp_obj_t time_gmtime2000(mp_obj_t timestamp) {
+static mp_obj_t time_gmtime1970(mp_obj_t timestamp) {
   mp_timestamp_t t = timeutils_obj_get_timestamp(timestamp);
   timeutils_struct_time_t tm;
-  timeutils_seconds_since_2000_to_struct_time(t, &tm);
+  timeutils_seconds_since_1970_to_struct_time(t, &tm);
   mp_obj_t tuple[8] = {
       tuple[0] = mp_obj_new_int(tm.tm_year),
       tuple[1] = mp_obj_new_int(tm.tm_mon),
@@ -49,12 +52,12 @@ static mp_obj_t time_gmtime2000(mp_obj_t timestamp) {
   return mp_obj_new_tuple(8, tuple);
 }
 
-MP_DEFINE_CONST_FUN_OBJ_1(time_gmtime2000_obj, time_gmtime2000);
+MP_DEFINE_CONST_FUN_OBJ_1(time_gmtime1970_obj, time_gmtime1970);
 
 static const mp_rom_map_elem_t time_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_utime)},
 
-    {MP_ROM_QSTR(MP_QSTR_gmtime2000), MP_ROM_PTR(&time_gmtime2000_obj)},
+    {MP_ROM_QSTR(MP_QSTR_gmtime1970), MP_ROM_PTR(&time_gmtime1970_obj)},
     {MP_ROM_QSTR(MP_QSTR_sleep), MP_ROM_PTR(&mp_time_sleep_obj)},
     {MP_ROM_QSTR(MP_QSTR_sleep_ms), MP_ROM_PTR(&mp_time_sleep_ms_obj)},
     {MP_ROM_QSTR(MP_QSTR_sleep_us), MP_ROM_PTR(&mp_time_sleep_us_obj)},
