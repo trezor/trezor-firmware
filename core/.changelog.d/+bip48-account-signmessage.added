@@ -1,0 +1,1 @@
+Bitcoin: Allow signing messages with BIP-48 multisig account keys (e.g. m/48h/0h/0h/2h).

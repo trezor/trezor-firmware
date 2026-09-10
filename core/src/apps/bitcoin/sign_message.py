@@ -25,6 +25,7 @@ async def sign_message(
     from .addresses import address_short, get_address
     from .keychain import (
         address_n_to_name_or_unknown,
+        is_sign_message_account_node,
         validate_path_against_script_type,
     )
 
@@ -39,7 +40,12 @@ async def sign_message(
     node = keychain.derive(address_n)
     address = get_address(script_type, coin, node)
     path = address_n_to_str(address_n)
-    account = address_n_to_name_or_unknown(coin, address_n, script_type)
+    if is_sign_message_account_node(coin, address_n, script_type):
+        # The naming table cannot match an account node, and "Unknown path"
+        # would contradict a path we allow without warning.
+        account = None
+    else:
+        account = address_n_to_name_or_unknown(coin, address_n, script_type)
     await confirm_signverify(
         decode_message(message),
         address_short(coin, address),

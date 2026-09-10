@@ -97,6 +97,8 @@ for MEW compatibility through its own pattern list, in
 Sign message paths are validated against both the single-sig and the multisig schemes of
 the requested script type, because a message signature commits to no output script and the
 distinction is not meaningful for it. Sign tx keeps the strict single-versus-multisig rule.
+The BIP-48 account nodes `48'/c'/a'/t'` are accepted as well, since cosigners share the
+xpub there and hosts sign with that key to prove ownership of the account.
 
 ## Allowed values
 
