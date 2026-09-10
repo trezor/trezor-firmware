@@ -558,6 +558,41 @@ def test_signmessage_multisig_account_signs(session: Session):
     assert sig.signature
 
 
+def test_signmessage_multisig_legacy_level_signs(session: Session):
+    # trezorctl sends SPENDMULTISIG for the BIP-48 0' level, and message
+    # signing has no multisig form, so it signs as p2pkh.
+    from trezorlib.cli.btc import guess_script_type_from_path
+
+    address_n = parse_path("m/48h/0h/0h/0h/0/0")
+    message = "This is an example of a signed message."
+
+    assert guess_script_type_from_path(address_n) is S.SPENDMULTISIG
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                # no path warning
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                messages.MessageSignature,
+            ]
+        )
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+        sig = btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=address_n,
+            message=message,
+            script_type=S.SPENDMULTISIG,
+        )
+
+    assert sig.signature
+    # p2pkh: the ordinary single-key address for this node
+    assert sig.address.startswith("1")
+
+
 def test_signmessage_multisig_account_wrong_script_type(session: Session):
     # Only the node matching the script type is offered.
     with pytest.raises(TrezorFailure, match="Forbidden key path") as exc:

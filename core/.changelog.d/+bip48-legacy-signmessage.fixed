@@ -1,0 +1,1 @@
+Bitcoin: Sign messages with BIP-48 legacy-multisig (0') keys instead of refusing them.

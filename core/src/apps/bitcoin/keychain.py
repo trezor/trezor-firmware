@@ -170,6 +170,33 @@ def _get_patterns_for_script_type(
     return patterns
 
 
+def sign_message_script_type(
+    coin: coininfo.CoinInfo,
+    msg: SignMessage,
+) -> InputScriptType:
+    """
+    The script type a message signature is made under.
+
+    trezorlib maps the BIP-48 0' level to SPENDMULTISIG, but message signing
+    is single-key, so there it means SPENDADDRESS. Elsewhere SPENDMULTISIG is
+    left alone and still fails for want of multisig details.
+    """
+    script_type = msg.script_type or InputScriptType.SPENDADDRESS
+
+    if script_type != InputScriptType.SPENDMULTISIG:
+        return script_type
+
+    # Matched against the two BIP-48 0' patterns rather than applied to every
+    # SPENDMULTISIG request: unconditionally, a plain BIP-44 key would sign for
+    # a request that asked for multisig. Wildcard-free, so the match also pins
+    # the length.
+    for pattern in (PATTERN_BIP48_RAW, PATTERN_BIP48_RAW_ACCOUNT):
+        if PathSchema.parse(pattern, coin.slip44).match(msg.address_n):
+            return InputScriptType.SPENDADDRESS
+
+    return script_type
+
+
 def _get_sign_message_account_patterns(
     coin: coininfo.CoinInfo,
     script_type: InputScriptType,
@@ -178,9 +205,6 @@ def _get_sign_message_account_patterns(
     BIP-48 account nodes, for SignMessage only.
 
     The six-component BIP-48 patterns cannot match the four-component node.
-    Only the node matching `script_type` is returned, so a mismatch still
-    warns, and the patterns are wildcard-free, so the subtree stays out.
-
     Only the node matching `script_type` is returned, so a mismatch still
     warns, and the patterns are wildcard-free, so the subtree stays out.
 
@@ -229,6 +253,7 @@ def validate_path_against_script_type(
 
     if SignMessage.is_type_of(msg):
         # No output script, so the multisig distinction is meaningless here.
+        script_type = sign_message_script_type(coin, msg)
         if script_type not in (
             InputScriptType.SPENDADDRESS,
             InputScriptType.SPENDP2SHWITNESS,
@@ -470,7 +495,7 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
             # also be spendable by SignTx.
             extra_schemas += get_schemas_from_patterns(
                 _get_sign_message_account_patterns(
-                    coin, msg.script_type or InputScriptType.SPENDADDRESS
+                    coin, sign_message_script_type(coin, msg)
                 ),
                 coin,
             )

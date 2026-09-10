@@ -26,12 +26,13 @@ async def sign_message(
     from .keychain import (
         address_n_to_name_or_unknown,
         is_sign_message_account_node,
+        sign_message_script_type,
         validate_path_against_script_type,
     )
 
     message = msg.message
     address_n = msg.address_n
-    script_type = msg.script_type or InputScriptType.SPENDADDRESS
+    script_type = sign_message_script_type(coin, msg)
 
     await validate_path(
         keychain, address_n, validate_path_against_script_type(coin, msg)

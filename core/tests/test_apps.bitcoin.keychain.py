@@ -328,6 +328,14 @@ class TestSignMessagePathValidation(unittest.TestCase):
             # xpub is shared here, so hosts sign with these keys to prove
             # account ownership; see #7717.
             ([H_(48), H_(0), H_(0), H_(0)], InputScriptType.SPENDADDRESS),
+            # The 0' level, which trezorlib guesses as SPENDMULTISIG. Message
+            # signing is single-key, so it is taken as SPENDADDRESS and both
+            # the node and its leaf match.
+            ([H_(48), H_(0), H_(0), H_(0)], InputScriptType.SPENDMULTISIG),
+            (
+                [H_(48), H_(0), H_(0), H_(0), 0, 0],
+                InputScriptType.SPENDMULTISIG,
+            ),
             ([H_(48), H_(0), H_(0), H_(1)], InputScriptType.SPENDP2SHWITNESS),
             ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDWITNESS),
             # Unchained leaves, hardened and unhardened
@@ -367,6 +375,9 @@ class TestSignMessagePathValidation(unittest.TestCase):
                 InputScriptType.SPENDMULTISIG,
             ),
             ([H_(86), H_(0), H_(0), 0, 0], InputScriptType.SPENDTAPROOT),
+            # SPENDMULTISIG off the BIP-48 0' level is not reinterpreted, so a
+            # BIP-44 leaf carrying it stays unmatched and keeps warning.
+            ([H_(44), H_(0), H_(0), 0, 0], InputScriptType.SPENDMULTISIG),
         )
 
         for address_n, script_type in valid_paths:
@@ -374,6 +385,74 @@ class TestSignMessagePathValidation(unittest.TestCase):
 
         for address_n, script_type in invalid_paths:
             self.assertFalse(self._validate(coin, address_n, script_type))
+
+    def test_spendmultisig_maps_only_on_bip48_legacy_level(self):
+        """SPENDMULTISIG is taken as single-key on BIP-48 0' paths only.
+
+        Redefining it for every SignMessage would turn failing requests on
+        unrelated paths into valid P2PKH signatures.
+        """
+        from trezor.enums import InputScriptType
+        from trezor.messages import SignMessage
+
+        from apps.bitcoin.keychain import sign_message_script_type
+
+        coin = _get_coin_by_name("Bitcoin")
+
+        def resolve(address_n, script_type=InputScriptType.SPENDMULTISIG):
+            return sign_message_script_type(
+                coin,
+                SignMessage(
+                    address_n=address_n, script_type=script_type, message=b"hello"
+                ),
+            )
+
+        # BIP-48 0', address level and account node
+        mapped = (
+            [H_(48), H_(0), H_(0), H_(0), 0, 0],
+            [H_(48), H_(0), H_(0), H_(0)],
+        )
+        for address_n in mapped:
+            self.assertEqual(
+                resolve(address_n), InputScriptType.SPENDADDRESS, address_n
+            )
+
+        # Everywhere else SPENDMULTISIG is left alone.
+        untouched = (
+            # signable as SPENDADDRESS, so reinterpreting would turn a failing
+            # request into a valid signature
+            [H_(44), H_(0), H_(0), 0, 0],
+            # BIP-45 and Unchained leaves
+            [H_(45), 0, 0, 0],
+            [H_(45), H_(0), H_(63), 1000000, 0, 255],
+            # depths between and beyond the two BIP-48 0' forms
+            [H_(48), H_(0), H_(0), H_(0), 0],
+            [H_(48), H_(0), H_(0)],
+            # the other BIP-48 script-type levels are not 0'
+            [H_(48), H_(0), H_(0), H_(2), 0, 0],
+        )
+        for address_n in untouched:
+            self.assertEqual(
+                resolve(address_n), InputScriptType.SPENDMULTISIG, address_n
+            )
+
+        # Other script types pass through, on any path.
+        for script_type in (
+            InputScriptType.SPENDADDRESS,
+            InputScriptType.SPENDP2SHWITNESS,
+            InputScriptType.SPENDWITNESS,
+            InputScriptType.SPENDTAPROOT,
+        ):
+            self.assertEqual(
+                resolve([H_(48), H_(0), H_(0), H_(0), 0, 0], script_type),
+                script_type,
+            )
+
+        # An absent script type still defaults to SPENDADDRESS.
+        self.assertEqual(
+            sign_message_script_type(coin, SignMessage(address_n=[], message=b"hello")),
+            InputScriptType.SPENDADDRESS,
+        )
 
     def test_union_is_sign_message_only(self):
         from trezor.enums import InputScriptType
