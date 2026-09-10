@@ -6,18 +6,30 @@ use rtl::error::ensure;
 use super::secret::{HazardGuard, SecretContext, SecretContextLock, ZeroableMemory};
 use super::{Error, ffi};
 
-pub type Sha3Ctx = SecretContext<ffi::SHA3_CTX>;
+pub struct Sha3CtxInner {
+    ctx: ffi::SHA3_CTX,
+    bit_size: u32,
+    is_keccak: bool,
+}
 
-impl ffi::SHA3_CTX {
+// SAFETY: all fields are valid when zeroed
+unsafe impl ZeroableMemory for Sha3CtxInner {}
+
+pub type Sha3Ctx = SecretContext<Sha3CtxInner>;
+pub type Sha3Guard<'a> = HazardGuard<'a, Sha3CtxInner>;
+
+impl Sha3CtxInner {
     /// Initialize the SHA3/Keccak context for the given digest bit size.
     ///
     /// # Copy hazard
     ///
     /// None because a "freshly initialized context" is public information.
-    pub fn init(&mut self, bit_size: u32) -> Result<(), Error> {
+    pub fn init(&mut self, bit_size: u32, is_keccak: bool) -> Result<(), Error> {
+        self.bit_size = bit_size;
+        self.is_keccak = is_keccak;
         // SAFETY: ffi
         // COPY HAZARD: no sensitive data is encoded into the state
-        if unsafe { ffi::sha3_Init(self, bit_size) } {
+        if unsafe { ffi::sha3_Init(&mut self.ctx, self.bit_size) } {
             Ok(())
         } else {
             Err(Error::InvalidParams)
@@ -36,83 +48,46 @@ impl ffi::SHA3_CTX {
         let ptr = CSlice::from(data);
         // SAFETY: ffi
         // COPY HAZARD: operates on the context in place
-        unsafe { ffi::sha3_Update(self, ptr.ptr(), ptr.len()) };
+        unsafe { ffi::sha3_Update(&mut self.ctx, ptr.ptr(), ptr.len()) };
     }
 
-    /// Finalize as SHA-3 into `buffer`.
+    /// Finalize into `buffer`.
     ///
     /// # Copy hazard
     ///
     /// See [`Self::hazard_update`].
-    pub fn hazard_sha3_finalize(&mut self, buffer: &mut [u8]) {
+    pub fn hazard_finalize_into(&mut self, buffer: &mut [u8]) {
         // SAFETY: ffi
         // COPY HAZARD: operates on the context in place
-        unsafe { ffi::sha3_Final(self, buffer.as_mut_ptr()) };
+        if self.is_keccak {
+            unsafe { ffi::keccak_Final(&mut self.ctx, buffer.as_mut_ptr()) };
+        } else {
+            unsafe { ffi::sha3_Final(&mut self.ctx, buffer.as_mut_ptr()) };
+        }
     }
 
-    /// Finalize as Keccak into `buffer`.
-    ///
-    /// # Copy hazard
-    ///
-    /// See [`Self::hazard_update`].
-    pub fn hazard_keccak_finalize(&mut self, buffer: &mut [u8]) {
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the context in place
-        unsafe { ffi::keccak_Final(self, buffer.as_mut_ptr()) };
+    pub fn bit_size(&self) -> u32 {
+        self.bit_size
+    }
+
+    pub fn is_keccak(&self) -> bool {
+        self.is_keccak
     }
 }
 
-impl HazardGuard<'_, ffi::SHA3_CTX> {
+impl Sha3Guard<'_> {
     /// Update the SHA3/Keccak context with the given data.
-    fn update(&mut self, data: &[u8]) {
+    pub fn update(&mut self, data: &[u8]) {
+        // COPY HAZARD: implemented on a guard
         self.hazard_mut().hazard_update(data);
     }
 
-    /// Finalize as SHA-3 into `buffer`.
-    fn sha3_finalize(&mut self, buffer: &mut [u8]) {
-        self.hazard_mut().hazard_sha3_finalize(buffer);
-    }
-
-    /// Finalize as Keccak into `buffer`.
-    fn keccak_finalize(&mut self, buffer: &mut [u8]) {
-        self.hazard_mut().hazard_keccak_finalize(buffer);
+    /// Finalize into `buffer`.
+    pub fn finalize_into(&mut self, buffer: &mut [u8]) {
+        // COPY HAZARD: implemented on a guard
+        self.hazard_mut().hazard_finalize_into(buffer);
     }
 }
-
-impl Sha3Ctx {
-    /// Initialize the SHA3/Keccak context for the given digest bit size.
-    pub fn init(&mut self, bit_size: u32) -> Result<(), Error> {
-        self.hazard_mut().init(bit_size)
-    }
-
-    /// # Copy hazard
-    ///
-    /// See [`ffi::SHA3_CTX::hazard_update`].
-    pub fn hazard_update(&mut self, data: &[u8]) {
-        self.hazard_mut().hazard_update(data);
-    }
-
-    /// Finalize as SHA-3 into `buffer`.
-    ///
-    /// # Copy hazard
-    ///
-    /// See [`ffi::SHA3_CTX::hazard_update`].
-    pub fn hazard_sha3_finalize(&mut self, buffer: &mut [u8]) {
-        self.hazard_mut().hazard_sha3_finalize(buffer);
-    }
-
-    /// Finalize as Keccak into `buffer`.
-    ///
-    /// # Copy hazard
-    ///
-    /// See [`ffi::SHA3_CTX::hazard_update`].
-    pub fn hazard_keccak_finalize(&mut self, buffer: &mut [u8]) {
-        self.hazard_mut().hazard_keccak_finalize(buffer);
-    }
-}
-
-// SAFETY: SHA3_CTX is valid when zeroed
-unsafe impl ZeroableMemory for ffi::SHA3_CTX {}
 
 macro_rules! impl_raw_hasher {
     ($name:ident, $bit_size:literal, $is_keccak:literal, $digest_size:expr) => {
@@ -123,7 +98,7 @@ macro_rules! impl_raw_hasher {
             #[doc = concat!("Construct a new `", stringify!($name), "` hasher.")]
             pub fn new(mut ctx: D) -> Self {
                 // COPY HAZARD: init is a public operation
-                ensure!(ctx.hazard_mut().init($bit_size).is_ok(), "Invalid SHA3 bit size");
+                ensure!(ctx.hazard_mut().init($bit_size, $is_keccak).is_ok(), "Invalid SHA3 bit size");
                 Self(SecretContextLock::new(ctx))
             }
 
@@ -135,11 +110,7 @@ macro_rules! impl_raw_hasher {
             #[doc = concat!("Finalize the `", stringify!($name), "` context and return the digest.")]
             pub fn finalize(mut self) -> [u8; $digest_size] {
                 let mut buffer = [0u8; $digest_size];
-                if $is_keccak {
-                    self.0.guarded().keccak_finalize(&mut buffer);
-                } else {
-                    self.0.guarded().sha3_finalize(&mut buffer);
-                }
+                self.0.guarded().finalize_into(&mut buffer);
                 buffer
             }
         }
