@@ -56,6 +56,11 @@ PATTERN_BIP48_RAW = "m/48'/coin_type'/account'/0'/change/address_index"
 PATTERN_BIP48_P2SHSEGWIT = "m/48'/coin_type'/account'/1'/change/address_index"
 PATTERN_BIP48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
 
+# BIP-48 account nodes, where cosigners share the xpub.
+PATTERN_BIP48_RAW_ACCOUNT = "m/48'/coin_type'/account'/0'"
+PATTERN_BIP48_P2SHSEGWIT_ACCOUNT = "m/48'/coin_type'/account'/1'"
+PATTERN_BIP48_SEGWIT_ACCOUNT = "m/48'/coin_type'/account'/2'"
+
 # BIP-49 for segwit-in-P2SH: https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki
 PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
 # BIP-84 for segwit: https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki
@@ -165,6 +170,47 @@ def _get_patterns_for_script_type(
     return patterns
 
 
+def _get_sign_message_account_patterns(
+    coin: coininfo.CoinInfo,
+    script_type: InputScriptType,
+) -> list[str]:
+    """
+    BIP-48 account nodes, for SignMessage only.
+
+    The six-component BIP-48 patterns cannot match the four-component node.
+    Only the node matching `script_type` is returned, so a mismatch still
+    warns, and the patterns are wildcard-free, so the subtree stays out.
+
+    Only the node matching `script_type` is returned, so a mismatch still
+    warns, and the patterns are wildcard-free, so the subtree stays out.
+
+    SPENDMULTISIG is absent: message signing is single-key, and
+    sign_message_script_type() maps the 0' level before it gets here.
+    """
+    if script_type == InputScriptType.SPENDADDRESS:
+        return [PATTERN_BIP48_RAW_ACCOUNT]
+
+    if coin.segwit and script_type == InputScriptType.SPENDP2SHWITNESS:
+        return [PATTERN_BIP48_P2SHSEGWIT_ACCOUNT]
+
+    if coin.segwit and script_type == InputScriptType.SPENDWITNESS:
+        return [PATTERN_BIP48_SEGWIT_ACCOUNT]
+
+    return []
+
+
+def is_sign_message_account_node(
+    coin: coininfo.CoinInfo,
+    address_n: Bip32Path,
+    script_type: InputScriptType,
+) -> bool:
+    """Whether the path is a BIP-48 account node SignMessage may sign with."""
+    return any(
+        PathSchema.parse(pattern, coin.slip44).match(address_n)
+        for pattern in _get_sign_message_account_patterns(coin, script_type)
+    )
+
+
 def validate_path_against_script_type(
     coin: coininfo.CoinInfo,
     msg: MsgWithAddressScriptType | None = None,
@@ -192,9 +238,14 @@ def validate_path_against_script_type(
             # path is not standard for message signing however standard it is
             # to spend from.
             return False
-        patterns = _get_patterns_for_script_type(
-            coin, script_type, multisig=False, include_fw_signing=True
-        ) + _get_patterns_for_script_type(coin, script_type, multisig=True)
+        patterns = (
+            _get_patterns_for_script_type(
+                coin, script_type, multisig=False, include_fw_signing=True
+            )
+            + _get_patterns_for_script_type(coin, script_type, multisig=True)
+            # Same list with_keychain() unlocks, so access and warning agree.
+            + _get_sign_message_account_patterns(coin, script_type)
+        )
     else:
         patterns = _get_patterns_for_script_type(coin, script_type, multisig)
 
@@ -413,8 +464,17 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
         auth_msg: MessageType | None = None,
     ) -> MsgOut:
         coin = _get_coin_by_name(msg.coin_name)
-        unlock_schemas = _get_unlock_schemas(msg, auth_msg, coin)
-        keychain = await _get_keychain_for_coin(coin, unlock_schemas)
+        extra_schemas = _get_unlock_schemas(msg, auth_msg, coin)
+        if SignMessage.is_type_of(msg):
+            # SignMessage only: in _get_schemas_for_coin() these nodes would
+            # also be spendable by SignTx.
+            extra_schemas += get_schemas_from_patterns(
+                _get_sign_message_account_patterns(
+                    coin, msg.script_type or InputScriptType.SPENDADDRESS
+                ),
+                coin,
+            )
+        keychain = await _get_keychain_for_coin(coin, extra_schemas)
         if AuthorizeCoinJoin.is_type_of(auth_msg):
             auth_obj = authorization.from_cached_message(auth_msg)
             return await func(msg, keychain, coin, auth_obj)

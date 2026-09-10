@@ -21,7 +21,7 @@ import pytest
 from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType, message_filters
-from trezorlib.exceptions import Cancelled
+from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import is_core
@@ -528,3 +528,46 @@ def test_signmessage_multisig_leaf_no_warning(session: Session):
 
     assert sig.signature
 
+
+def test_signmessage_multisig_account_signs(session: Session):
+    # The account node, whose xpub cosigners share. The six-component BIP-48
+    # patterns cannot match it, so it needs a schema of its own.
+    address_n = parse_path("m/48h/0h/0h/2h")
+    message = "This is an example of a signed message."
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                # no path warning
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                messages.MessageSignature,
+            ]
+        )
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+        sig = btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=address_n,
+            message=message,
+            script_type=S.SPENDWITNESS,
+        )
+
+    assert sig.signature
+
+
+def test_signmessage_multisig_account_wrong_script_type(session: Session):
+    # Only the node matching the script type is offered.
+    with pytest.raises(TrezorFailure, match="Forbidden key path") as exc:
+        btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path("m/48h/0h/0h/2h"),
+            message="This is an example of a signed message.",
+            script_type=S.SPENDP2SHWITNESS,
+        )
+
+    # DataError is what the issue's HWI transcript shows as code -13.
+    assert exc.value.code is messages.FailureType.DataError
