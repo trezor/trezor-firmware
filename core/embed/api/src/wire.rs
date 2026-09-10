@@ -1,24 +1,54 @@
-//! Implements [`trezor_app_sdk::traits::service`]'s `IpcRemote`/`Message` on
-//! top of [`sys::ipc`], exposed to apps via `TrezorApiV1Struct::ipc`. This is
-//! the transport underneath every app-facing protocol built on top of it —
-//! `trezor_app_sdk::wire`'s host-facing wire messages, as well as
-//! `crypto`/`ui`'s Core-internal calls all move over this same channel.
+//! Implements [`trezor_app_sdk::traits::wire`]'s `WireV1` on top of
+//! [`sys::ipc`], exposed to apps via `TrezorApiV1Struct::wire`. This is the
+//! transport underneath every app-facing protocol built on top of it —
+//! `trezor_app_sdk::wire`'s host-facing wire messages, as well as this
+//! crate's own `crypto`/`ui` implementations, all move over this same
+//! channel via [`ipc_call`].
 //!
 //! There is currently a single remote endpoint apps talk to: Core (the
 //! `CoreApp` system task).
 
 use spin::Mutex;
+use stabby::boxed::BoxedSlice;
 use stabby::slice::{Slice, SliceMut};
+use stabby::str::Str;
 use sys::ipc::IpcInbox;
 use sys::sysevent::{self, SysEvents};
-use sys::syslog::{self, LogLevel};
-use trezor_app_sdk::traits::service::{
-    IpcError, IpcRemote, Message, MessageDyn as _, MessageRef, RemoteSysTask,
-};
 use trezor_app_sdk::traits::util::FastResult;
+use trezor_app_sdk::traits::wire::{WireError, WireMessage, WireV1};
 
 fn coreapp() -> u8 {
-    RemoteSysTask::CoreApp.into()
+    RemoteSysTask::CoreApp as u8
+}
+
+/// Identifies the remote system task that sent or will receive an IPC message.
+#[derive(Copy, Clone)]
+#[repr(u8)]
+enum RemoteSysTask {
+    #[allow(dead_code)]
+    Kernel = 0,
+    CoreApp = 1,
+}
+
+/// Identifies the IPC services provided by the Core application. Only ever
+/// constructed from a known variant here — apps never need to parse an
+/// arbitrary numeric service id back into this enum.
+#[derive(Copy, Clone, PartialEq, Eq)]
+#[repr(u16)]
+pub(crate) enum CoreIpcService {
+    WireStart = 0,
+    WireContinue = 1,
+    WireEnd = 2,
+    WireError = 3,
+    Ui = 4,
+    Progress = 5,
+    Crypto = 6,
+}
+
+impl From<CoreIpcService> for u16 {
+    fn from(service: CoreIpcService) -> Self {
+        service as u16
+    }
 }
 
 // Borrows the app-provided buffer handed to `register_inbox`, rather than
@@ -29,27 +59,13 @@ static INBOX: Mutex<Option<IpcInbox<&'static mut [usize]>>> = Mutex::new(None);
 
 /// A view of the most recently received message, borrowing its payload
 /// straight out of the app's own IPC inbox buffer — Core never allocates or
-/// copies. Valid only until the next `receive`/`call` overwrites
-/// [`CURRENT_MESSAGE`]; callers must fully consume one message (deserialize
-/// it, copy out whatever they need) before requesting the next.
+/// copies. Valid only until the next receive overwrites [`CURRENT_MESSAGE`];
+/// callers must fully consume one message (copy out whatever they need)
+/// before requesting the next.
 struct MessageView {
     service: u16,
     id: u16,
     data: &'static [u8],
-}
-
-impl Message for MessageView {
-    extern "C" fn service(&self) -> u16 {
-        self.service
-    }
-
-    extern "C" fn id(&self) -> u16 {
-        self.id
-    }
-
-    extern "C" fn data<'a>(&'a self) -> Slice<'a, u8> {
-        self.data.into()
-    }
 }
 
 // SAFETY (of the `static mut` accesses below): only ever touched
@@ -70,7 +86,7 @@ fn store_current_message(view: MessageView) -> &'static MessageView {
 
 /// Polls for a message until one arrives or `deadline` (an absolute
 /// [`sys::time`] tick count) passes.
-fn receive_until(deadline: u32) -> Option<MessageRef<'static>> {
+fn receive_until(deadline: u32) -> Option<&'static MessageView> {
     loop {
         if let Some(msg) = INBOX
             .lock()
@@ -87,8 +103,7 @@ fn receive_until(deadline: u32) -> Option<MessageRef<'static>> {
             // releases the kernel's ring-buffer bookkeeping for this slot;
             // it doesn't touch the bytes themselves.
             let data: &'static [u8] = unsafe { core::mem::transmute(msg.data()) };
-            let view = store_current_message(MessageView { service, id, data });
-            return Some(MessageRef::from(view));
+            return Some(store_current_message(MessageView { service, id, data }));
         }
         if sys::time::ticks_ms() >= deadline {
             return None;
@@ -98,11 +113,33 @@ fn receive_until(deadline: u32) -> Option<MessageRef<'static>> {
     }
 }
 
-pub struct IpcRemoteImpl;
+/// Sends `data` tagged `service`/`id` to Core and waits (up to `timeout_ms`)
+/// for a reply on the same service. The single low-level call primitive
+/// shared by [`WireV1Impl::wire_request`] and this crate's `crypto`/`ui`
+/// implementations — the one place the wire protocol is actually spoken.
+pub(crate) fn ipc_call(
+    service: u16,
+    id: u16,
+    data: &[u8],
+    timeout_ms: u32,
+) -> Result<(u16, &'static [u8]), WireError> {
+    if !sys::ipc::send(coreapp(), service, id, data) {
+        return Err(WireError::FailedToSend);
+    }
 
-impl IpcRemote for IpcRemoteImpl {
-    extern "C" fn register_inbox<'remote, 'local>(&'remote self, buffer: SliceMut<'local, usize>) {
-        let buffer: &'local mut [usize] = buffer.into();
+    let deadline = sys::time::ticks_ms().wrapping_add(timeout_ms);
+    match receive_until(deadline) {
+        Some(msg) if msg.service == service => Ok((msg.id, msg.data)),
+        Some(_) => Err(WireError::UnexpectedService),
+        None => Err(WireError::Timeout),
+    }
+}
+
+pub struct WireV1Impl;
+
+impl WireV1 for WireV1Impl {
+    extern "C" fn register_inbox<'a>(&self, buffer: SliceMut<'a, usize>) {
+        let buffer: &'a mut [usize] = buffer.into();
         // SAFETY: the caller (the app currently executing this shared code)
         // guarantees `buffer` stays valid for as long as it keeps calling
         // into this API, i.e. its own lifetime — which this crate treats as
@@ -119,46 +156,66 @@ impl IpcRemote for IpcRemoteImpl {
         *guard = Some(IpcInbox::new(coreapp(), buffer));
     }
 
-    extern "C" fn receive<'remote>(
-        &'remote self,
-        timeout_ms: u32,
-    ) -> FastResult<MessageRef<'remote>, IpcError<'remote>> {
+    extern "C" fn wire_receive_start(&self, timeout_ms: u32) -> FastResult<WireMessage, WireError> {
         let deadline = sys::time::ticks_ms().wrapping_add(timeout_ms);
         match receive_until(deadline) {
-            Some(msg) => Ok(msg).into(),
-            None => Err(IpcError::Timeout).into(),
+            Some(msg) => Ok(WireMessage {
+                id: msg.id,
+                data: BoxedSlice::from(msg.data),
+            })
+            .into(),
+            None => Err(WireError::Timeout).into(),
         }
     }
 
-    extern "C" fn send<'remote, 'local>(
-        &'remote self,
-        service: u16,
+    extern "C" fn wire_request<'a>(
+        &self,
         id: u16,
-        message: Slice<'local, u8>,
-    ) -> FastResult<(), IpcError<'remote>> {
-        if sys::ipc::send(coreapp(), service, id, message.as_slice()) {
+        data: Slice<'a, u8>,
+        timeout_ms: u32,
+    ) -> FastResult<WireMessage, WireError> {
+        match ipc_call(
+            CoreIpcService::WireContinue.into(),
+            id,
+            data.as_slice(),
+            timeout_ms,
+        ) {
+            Ok((id, data)) => Ok(WireMessage {
+                id,
+                data: BoxedSlice::from(data),
+            })
+            .into(),
+            Err(e) => Err(e).into(),
+        }
+    }
+
+    extern "C" fn wire_respond<'a>(
+        &self,
+        response_id: u16,
+        data: Slice<'a, u8>,
+    ) -> FastResult<(), WireError> {
+        if sys::ipc::send(
+            coreapp(),
+            CoreIpcService::WireEnd.into(),
+            response_id,
+            data.as_slice(),
+        ) {
             Ok(()).into()
         } else {
-            Err(IpcError::FailedToSend).into()
+            Err(WireError::FailedToSend).into()
         }
     }
 
-    extern "C" fn call<'remote, 'local>(
-        &'remote self,
-        service: u16,
-        id: u16,
-        message: Slice<'local, u8>,
-        timeout_ms: u32,
-    ) -> FastResult<MessageRef<'remote>, IpcError<'remote>> {
-        if !sys::ipc::send(coreapp(), service, id, message.as_slice()) {
-            return Err(IpcError::FailedToSend).into();
-        }
-
-        let deadline = sys::time::ticks_ms().wrapping_add(timeout_ms);
-        match receive_until(deadline) {
-            Some(msg) if msg.service() == service => Ok(msg).into(),
-            Some(msg) => Err(IpcError::UnexpectedService(msg)).into(),
-            None => Err(IpcError::Timeout).into(),
+    extern "C" fn wire_error<'a>(&self, code: u16, message: Str<'a>) -> FastResult<(), WireError> {
+        if sys::ipc::send(
+            coreapp(),
+            CoreIpcService::WireError.into(),
+            code,
+            message.as_str().as_bytes(),
+        ) {
+            Ok(()).into()
+        } else {
+            Err(WireError::FailedToSend).into()
         }
     }
 }

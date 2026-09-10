@@ -56,7 +56,6 @@ pub mod ui {
     };
 }
 
-// Full ui runtime — only when `app` feature is enabled
 #[cfg(feature = "app")]
 pub mod ui;
 
@@ -83,8 +82,6 @@ pub mod mock;
 
 #[cfg(feature = "app")]
 pub use error::{Align, Error, IntoAppResult, Result, ResultExt};
-#[cfg(feature = "app")]
-pub use ui::{ArchivedTrezorUiEnum, ArchivedTrezorUiResult};
 #[cfg(feature = "app")]
 pub use wire::{
     WireDecode, WireEncode, WireRequest, wire_error_raw, wire_receive_wire_start, wire_request,

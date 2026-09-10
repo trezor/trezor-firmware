@@ -5,6 +5,8 @@ use crate::traits::ApiVariant as ApiVersion;
 use crate::traits::crypto::StaticCryptoV1;
 use crate::traits::syslog::StaticSyslogV1;
 use crate::traits::trezor_v1::{TrezorApiV1Dyn as _, TrezorApiV1Struct};
+use crate::traits::ui::StaticUiV1;
+use crate::traits::wire::StaticWireV1;
 
 pub mod allocator;
 
@@ -29,11 +31,11 @@ const INBOX_WORDS: usize = 8192;
 fn register_inbox(api: &TrezorApiV1Struct) {
     use stabby::slice::SliceMut;
 
-    use crate::traits::service::IpcRemoteDyn as _;
+    use crate::traits::wire::WireV1Dyn as _;
 
     let buffer: &'static mut [usize] =
         alloc::boxed::Box::leak(alloc::vec![0usize; INBOX_WORDS].into_boxed_slice());
-    api.ipc.register_inbox(SliceMut::from(buffer));
+    api.wire.register_inbox(SliceMut::from(buffer));
 }
 
 #[unsafe(no_mangle)]
@@ -89,18 +91,21 @@ pub(crate) fn try_get_syslog() -> Option<StaticSyslogV1> {
     API.get().map(|api| api.syslog)
 }
 
-pub(crate) fn get_crypto_or_die() -> StaticCryptoV1 {
+/// Local, no-IPC crypto vtable (hashing, `ec_verify_recover`, `base58*`) —
+/// see [`crate::traits::crypto::CryptoV1`]. Public: apps call this directly
+/// (see e.g. `trezor_app_sdk::hasher`), not just SDK-internal code.
+pub fn get_crypto_or_die() -> StaticCryptoV1 {
     get_api_or_die().crypto
 }
 
-// Returns a reference (rather than the `IpcRemoteRef<'static>` by value, as
-// `get_crypto_or_die`/`try_get_syslog` do) because `IpcRemote`'s methods tie
-// their return lifetime to `&self`: calling them on an owned temporary would
-// tie `IpcError`/`MessageRef` to that temporary's scope instead of
-// `'static`. Borrowing the field directly out of the `'static` API struct
-// keeps that lifetime `'static` all the way through.
-pub(crate) fn get_ipc_or_die() -> &'static crate::traits::service::IpcRemoteRef<'static> {
-    &get_api_or_die().ipc
+pub(crate) fn get_wire_or_die() -> StaticWireV1 {
+    get_api_or_die().wire
+}
+
+/// UI/progress vtable — see [`crate::traits::ui::UiV1`]. Public: apps call
+/// this directly to show screens.
+pub fn get_ui_or_die() -> StaticUiV1 {
+    get_api_or_die().ui
 }
 
 /// Terminates the app normally.

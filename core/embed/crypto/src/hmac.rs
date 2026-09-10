@@ -9,6 +9,7 @@ pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub type HmacSha256Ctx = SecretContext<ffi::HMAC_SHA256_CTX>;
+pub type HmacSha256Guard<'a> = HazardGuard<'a, ffi::HMAC_SHA256_CTX>;
 
 // SAFETY: HMAC_SHA256_CTX is valid when zeroed
 unsafe impl ZeroableMemory for ffi::HMAC_SHA256_CTX {}
@@ -21,8 +22,8 @@ impl ffi::HMAC_SHA256_CTX {
     ///
     /// # Copy hazard
     ///
-    /// None because a "freshly initialized context" is public information.
-    pub fn init(&mut self, key: &[u8]) {
+    /// See [`Self::hazard_update`].
+    pub fn hazard_init(&mut self, key: &[u8]) {
         // SAFETY: ffi
         unsafe { ffi::hmac_sha256_Init(self, key.as_ptr(), key.len() as u32) };
     }
@@ -54,42 +55,21 @@ impl ffi::HMAC_SHA256_CTX {
     }
 }
 
-impl HazardGuard<'_, ffi::HMAC_SHA256_CTX> {
+impl HmacSha256Guard<'_> {
     /// Initialize the HMAC context with the given key.
     ///
     /// Called by [`HmacSha256::new`].
-    fn init(&mut self, key: &[u8]) {
-        self.hazard_mut().init(key);
+    pub fn init(&mut self, key: &[u8]) {
+        self.hazard_mut().hazard_init(key);
     }
 
     /// Update the HMAC context with the given data.
-    fn update(&mut self, data: &[u8]) {
+    pub fn update(&mut self, data: &[u8]) {
         self.hazard_mut().hazard_update(data);
     }
 
     /// Finalize the HMAC context and return the digest.
-    fn finalize(&mut self) -> Digest {
-        self.hazard_mut().hazard_finalize()
-    }
-}
-
-impl HmacSha256Ctx {
-    /// Initializes the context with `key` in place.
-    pub fn init(&mut self, key: &[u8]) {
-        self.hazard_mut().init(key);
-    }
-
-    /// # Copy hazard
-    ///
-    /// See [`ffi::HMAC_SHA256_CTX::hazard_update`].
-    pub fn hazard_update(&mut self, data: &[u8]) {
-        self.hazard_mut().hazard_update(data);
-    }
-
-    /// # Copy hazard
-    ///
-    /// See [`ffi::HMAC_SHA256_CTX::hazard_update`].
-    pub fn hazard_finalize(&mut self) -> Digest {
+    pub fn finalize(&mut self) -> Digest {
         self.hazard_mut().hazard_finalize()
     }
 }
@@ -110,7 +90,7 @@ impl<D: DerefMut<Target = HmacSha256Ctx>> HmacSha256<D> {
     }
 
     /// Finalize the HMAC context and return the digest.
-    pub fn finalize(mut self) -> Digest {
+    pub fn finalize(&mut self) -> Digest {
         self.0.guarded().finalize()
     }
 }

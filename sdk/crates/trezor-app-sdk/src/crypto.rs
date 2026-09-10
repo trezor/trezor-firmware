@@ -3,100 +3,74 @@
 //! This module provides user-friendly functions for interacting with the Trezor crypto.
 //!
 //! [`get_address_mac`] and friends round-trip through Core over IPC (via the
-//! stable-ABI [`IpcRemote`](crate::traits::service::IpcRemote) handed to this
-//! app), since they touch key material Core alone holds.
+//! stable-ABI [`CryptoV1`](crate::traits::crypto::CryptoV1) vtable handed to
+//! this app), since they touch key material Core alone holds.
 //!
-//! [`sha2`] and [`sha3`] are local (non-IPC) hashers — hashing needs no secret
+//! [`get_hasher`]/[`get_hmac`] are local (non-IPC) — hashing needs no secret
 //! material, so instead of Core they call straight through the local
-//! `CryptoV1::get_hasher` vtable (see the module docs).
+//! `CryptoV1::get_hasher`/`get_hmac` vtable, returning a [`BoxedHasher`]:
+//! update it and read the digest via [`HasherExt`], which — unlike the
+//! underlying stable-ABI [`Hasher`](crate::traits::crypto::Hasher) trait —
+//! takes/returns plain `&[u8]`/[`BoxedSlice<u8>`], so call sites don't need
+//! their own dependency on `stabby` (the SDK crate is the only dependency
+//! apps should need).
 
-use rkyv::rancor::Failure;
-use rkyv::{Archived, to_bytes};
+pub use crate::traits::crypto::{BoxedHasher, HashingAlgorithm};
 
-use crate::alloc_types::Vec;
-use crate::app_runtime2::get_ipc_or_die;
-use crate::structs::{TrezorCryptoEnum, TrezorCryptoResultRef};
-use crate::traits::service::{CoreIpcService, IpcRemoteDyn as _, MessageDyn as _, MessageRef};
-use crate::util::Timeout;
-use crate::{Error, IntoAppResult, Result, ResultExt};
+use stabby::boxed::BoxedSlice;
+use stabby::slice::Slice;
 
-pub type ArchivedTrezorCryptoEnum<'a> = Archived<TrezorCryptoEnum<'a>>;
-pub type ArchivedTrezorCryptoResultRef<'a> = Archived<TrezorCryptoResultRef<'a>>;
+use crate::alloc_types::{String, Vec};
+use crate::app_runtime2::get_crypto_or_die;
+use crate::traits::crypto::{CryptoV1Dyn as _, EcCurve, HasherDynMut};
+use crate::{IntoAppResult, Result, ResultExt};
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/// Serializes `value` and sends it to Core's crypto service, returning the
-/// raw response message. Callers deserialize it themselves (via
-/// [`ArchivedTrezorCryptoResultRef`]) so the response stays borrowed from
-/// this message rather than being copied out through a shared helper.
-fn ipc_crypto_call(value: &TrezorCryptoEnum<'_>) -> Result<MessageRef<'static>> {
-    let bytes = to_bytes::<Failure>(value)
-        .map_err(|_| Error::ServiceError)
-        .c()?;
-    get_ipc_or_die()
-        .call(
-            CoreIpcService::Crypto.into(),
-            value.id() as u16,
-            bytes.as_ref().into(),
-            Timeout::max().as_ms(),
-        )
-        .into_app_result()
-        .c()
+/// A local (non-IPC) streaming hasher for `algorithm` — see the module docs.
+pub fn get_hasher(algorithm: HashingAlgorithm) -> BoxedHasher {
+    get_crypto_or_die().get_hasher(algorithm)
 }
 
-// ============================================================================
-// Public crypto Functions
-// ============================================================================
+/// A local (non-IPC) HMAC-SHA256 hasher keyed with `key` — see the module docs.
+pub fn get_hmac(key: &[u8]) -> BoxedHasher {
+    get_crypto_or_die().get_hmac(key.into())
+}
 
-/// A streaming hash function: feed input via [`update`](Hasher::update), read
-/// the digest via [`finalize`](Hasher::finalize).
-pub trait Hasher {
+/// Ergonomic, `stabby`-free wrapper around [`BoxedHasher`]'s stable-ABI
+/// methods — see the module docs.
+pub trait HasherExt {
     /// Feeds more input into the hash state.
     fn update(&mut self, input: &[u8]);
-    /// Writes the final digest into `output`, consuming accumulated state.
-    fn finalize(&mut self, output: &mut [u8]);
+    /// Writes the final digest, consuming accumulated state.
+    fn finalize(&mut self) -> BoxedSlice<u8>;
+}
+
+impl HasherExt for BoxedHasher {
+    fn update(&mut self, input: &[u8]) {
+        HasherDynMut::update(self, Slice::from(input));
+    }
+
+    fn finalize(&mut self) -> BoxedSlice<u8> {
+        HasherDynMut::finalize(self)
+    }
 }
 
 /// Derives the extended public key (xpub) for `address_n`, base58check-encoded
 /// with `xpub_magic` as its version bytes (e.g. the "xpub"/"ypub"/"zpub"
 /// prefix bytes for the coin/script type in use).
 pub fn get_xpub(address_n: &[u32], xpub_magic: u32) -> Result<[u8; 111]> {
-    let value = TrezorCryptoEnum::GetXpub {
-        address_n: address_n.into(),
-        xpub_magic,
-    };
-    let message = ipc_crypto_call(&value)?;
-    let archived =
-        rkyv::access::<ArchivedTrezorCryptoResultRef<'_>, Failure>(message.data().into())
-            .map_err(|_| Error::ServiceError)?;
-
-    match archived {
-        ArchivedTrezorCryptoResultRef::Xpub(xpub) => Ok(*xpub),
-        _ => Err(Error::ServiceError),
-    }
+    get_crypto_or_die()
+        .get_xpub(address_n.into(), xpub_magic)
+        .into_app_result()
+        .c()
 }
 
 /// Derives the public key for `address_n`.
 pub fn get_public_key(address_n: &[u32], compressed: bool) -> Result<Vec<u8>> {
-    let value = TrezorCryptoEnum::GetPublicKey {
-        address_n: address_n.into(),
-        compressed,
-    };
-    let message = ipc_crypto_call(&value)?;
-    let archived =
-        rkyv::access::<ArchivedTrezorCryptoResultRef<'_>, Failure>(message.data().into())
-            .map_err(|_| Error::ServiceError)?;
-
-    match archived {
-        ArchivedTrezorCryptoResultRef::PublicKey(key) => {
-            let mut owned = Vec::new();
-            owned.extend_from_slice(key.as_ref());
-            Ok(owned)
-        }
-        _ => Err(Error::ServiceError),
-    }
+    get_crypto_or_die()
+        .get_public_key(address_n.into(), compressed)
+        .into_app_result()
+        .c()
+        .map(|b| b.as_ref().to_vec())
 }
 
 /// Signs a 32-byte typed-data hash (e.g. EIP-712) with the key at `address_n`.
@@ -112,242 +86,106 @@ pub fn sign_typed_hash(
     chain_id: Option<u64>,
     show_progress: bool,
 ) -> Result<[u8; 65]> {
-    let value = TrezorCryptoEnum::SignTypedHash {
-        address_n: address_n.into(),
-        hash: *hash,
-        encoded_network: encoded_network.map(|network| network.into()),
-        encoded_token: encoded_token.map(|token| token.into()),
-        chain_id,
-        show_progress,
-    };
-    let message = ipc_crypto_call(&value)?;
-    let archived =
-        rkyv::access::<ArchivedTrezorCryptoResultRef<'_>, Failure>(message.data().into())
-            .map_err(|_| Error::ServiceError)?;
-
-    match archived {
-        ArchivedTrezorCryptoResultRef::Signature(signature) => Ok(*signature),
-        _ => Err(Error::ServiceError),
-    }
+    get_crypto_or_die()
+        .sign_typed_hash(
+            address_n.into(),
+            *hash,
+            encoded_network.map(Into::into).into(),
+            encoded_token.map(Into::into).into(),
+            chain_id.into(),
+            show_progress,
+        )
+        .into_app_result()
+        .c()
 }
 
 /// Signs a raw 32-byte digest with the key at `address_n`.
 pub fn sign_digest(address_n: &[u32], digest: &[u8; 32], compressed: bool) -> Result<[u8; 65]> {
-    let value = TrezorCryptoEnum::SignDigest {
-        address_n: address_n.into(),
-        digest: *digest,
-        compressed,
-    };
-    let message = ipc_crypto_call(&value)?;
-    let archived =
-        rkyv::access::<ArchivedTrezorCryptoResultRef<'_>, Failure>(message.data().into())
-            .map_err(|_| Error::ServiceError)?;
-
-    match archived {
-        ArchivedTrezorCryptoResultRef::Signature(signature) => Ok(*signature),
-        _ => Err(Error::ServiceError),
-    }
+    get_crypto_or_die()
+        .sign_digest(address_n.into(), *digest, compressed)
+        .into_app_result()
+        .c()
 }
 
 /// Verifies a MAC previously produced by [`get_address_mac`] for `address_n`
 /// and `address`, confirming the pairing hasn't been tampered with.
 pub fn check_address_mac(address_n: &[u32], mac: &[u8; 32], address: &str) -> Result<bool> {
-    let value = TrezorCryptoEnum::CheckAddressMac {
-        address_n: address_n.into(),
-        mac: *mac,
-        address: address.into(),
-    };
-    let message = ipc_crypto_call(&value)?;
-    let archived =
-        rkyv::access::<ArchivedTrezorCryptoResultRef<'_>, Failure>(message.data().into())
-            .map_err(|_| Error::ServiceError)?;
-
-    match archived {
-        ArchivedTrezorCryptoResultRef::Boolean(valid) => Ok(*valid),
-        _ => Err(Error::ServiceError),
-    }
+    get_crypto_or_die()
+        .check_address_mac(address_n.into(), *mac, address.into())
+        .into_app_result()
+        .c()
 }
 
 /// Computes a MAC binding `address_n` to `address`, so a cached `address` can
 /// later be re-authenticated via [`check_address_mac`] without a full re-derivation.
 pub fn get_address_mac(address_n: &[u32], address: &str) -> Result<[u8; 32]> {
-    let value = TrezorCryptoEnum::GetAddressMac {
-        address_n: address_n.into(),
-        address: address.into(),
-    };
-    let message = ipc_crypto_call(&value)?;
-    let archived =
-        rkyv::access::<ArchivedTrezorCryptoResultRef<'_>, Failure>(message.data().into())
-            .map_err(|_| Error::ServiceError)?;
-
-    match archived {
-        ArchivedTrezorCryptoResultRef::AddressMac(mac) => Ok(*mac),
-        _ => Err(Error::ServiceError),
-    }
+    get_crypto_or_die()
+        .get_address_mac(address_n.into(), address.into())
+        .into_app_result()
+        .c()
 }
 
 /// Checks `nonce` against Core's cached-nonce store, returning whether it's still valid.
 pub fn verify_nonce_cache(nonce: &[u8]) -> Result<bool> {
-    let value = TrezorCryptoEnum::VerifyNonceCache {
-        nonce: nonce.into(),
-    };
-    let message = ipc_crypto_call(&value)?;
-    let archived =
-        rkyv::access::<ArchivedTrezorCryptoResultRef<'_>, Failure>(message.data().into())
-            .map_err(|_| Error::ServiceError)?;
-
-    match archived {
-        ArchivedTrezorCryptoResultRef::Boolean(valid) => Ok(*valid),
-        _ => Err(Error::ServiceError),
-    }
+    get_crypto_or_die()
+        .verify_nonce_cache(nonce.into())
+        .into_app_result()
+        .c()
 }
 
-/// SHA-3 family hashers (Keccak-256), implementing [`Hasher`].
-///
-/// Hashing is a local, non-secret operation, so unlike the functions above it
-/// doesn't go through Core's IPC — it calls straight through the local
-/// `CryptoV1::get_hasher` vtable instead (except under `test`, where it
-/// delegates to a real software implementation via [`crate::mock`] instead of
-/// requiring [`crate::mock::sdk_init`] to have populated that vtable).
-pub mod sha3 {
-    #[cfg(not(feature = "test"))]
-    pub use real::Keccak256;
-
-    #[cfg(feature = "test")]
-    pub use crate::mock::Keccak256;
-
-    #[cfg(not(feature = "test"))]
-    mod real {
-        use stabby::slice::Slice;
-
-        use crate::app_runtime2::get_crypto_or_die;
-        use crate::crypto::Hasher;
-        use crate::traits::crypto::{BoxedHasher, CryptoV1Dyn as _, HashingAlgorithm};
-
-        pub struct Keccak256(BoxedHasher);
-
-        impl Keccak256 {
-            /// Creates a new hasher, optionally pre-seeded with `data`.
-            pub fn new(data: Option<&[u8]>) -> Self {
-                let mut hasher = Self(get_crypto_or_die().get_hasher(HashingAlgorithm::Keccak256));
-                if let Some(data) = data {
-                    hasher.update(data);
-                }
-                hasher
-            }
-        }
-
-        impl Hasher for Keccak256 {
-            fn update(&mut self, input: &[u8]) {
-                get_crypto_or_die().hasher_update(self.0, Slice::from(input));
-            }
-
-            fn finalize(&mut self, output: &mut [u8]) {
-                output.copy_from_slice(&get_crypto_or_die().hasher_finalize(self.0));
-            }
-        }
-    }
+/// Recovers the public key from `signature` over `message` (hashed with
+/// SHA-256 for the Weierstrass curves) and confirms it matches `public_key`.
+pub fn ec_verify_recover(
+    curve: EcCurve,
+    public_key: &[u8],
+    signature: &[u8],
+    message: &[u8],
+) -> Result<Vec<u8>> {
+    get_crypto_or_die()
+        .ec_verify_recover(curve, public_key.into(), signature.into(), message.into())
+        .into_app_result()
+        .c()
+        .map(|b| b.as_ref().to_vec())
 }
 
-/// SHA-2 family hashers (SHA-256), implementing [`Hasher`].
-///
-/// See [`sha3`] — calls straight through the local `CryptoV1::get_hasher`
-/// vtable, no IPC round trip (except under `test`, see [`sha3`]).
-pub mod sha2 {
-    #[cfg(not(feature = "test"))]
-    pub use real::Sha256;
-
-    #[cfg(feature = "test")]
-    pub use crate::mock::Sha256;
-
-    #[cfg(not(feature = "test"))]
-    mod real {
-        use stabby::slice::Slice;
-
-        use crate::app_runtime2::get_crypto_or_die;
-        use crate::crypto::Hasher;
-        use crate::traits::crypto::{BoxedHasher, CryptoV1Dyn as _, HashingAlgorithm};
-
-        pub struct Sha256(BoxedHasher);
-
-        impl Sha256 {
-            /// Creates a new hasher, optionally pre-seeded with `data`.
-            pub fn new(data: Option<&[u8]>) -> Self {
-                let mut hasher = Self(get_crypto_or_die().get_hasher(HashingAlgorithm::Sha256));
-                if let Some(data) = data {
-                    hasher.update(data);
-                }
-                hasher
-            }
-
-            /// Finalizes and returns the digest.
-            pub fn digest(&mut self) -> [u8; 32] {
-                let mut out = [0u8; 32];
-                self.finalize(&mut out);
-                out
-            }
-        }
-
-        impl Hasher for Sha256 {
-            fn update(&mut self, input: &[u8]) {
-                get_crypto_or_die().hasher_update(self.0, Slice::from(input));
-            }
-
-            fn finalize(&mut self, output: &mut [u8]) {
-                output.copy_from_slice(&get_crypto_or_die().hasher_finalize(self.0));
-            }
-        }
-    }
+/// Like [`ec_verify_recover`], but takes an already-hashed `digest` directly.
+pub fn ec_verify_recover_digest(
+    curve: EcCurve,
+    public_key: &[u8],
+    signature: &[u8],
+    digest: &[u8],
+) -> Result<Vec<u8>> {
+    get_crypto_or_die()
+        .ec_verify_recover_digest(curve, public_key.into(), signature.into(), digest.into())
+        .into_app_result()
+        .c()
+        .map(|b| b.as_ref().to_vec())
 }
 
-/// HMAC-SHA256, implementing [`Hasher`].
-///
-/// See [`sha3`] — calls straight through the local `CryptoV1::get_hmac_hasher`
-/// vtable, no IPC round trip (except under `test`, see [`sha3`]).
-pub mod hmac {
-    #[cfg(not(feature = "test"))]
-    pub use real::HmacSha256;
+/// Base58-encodes `data`.
+pub fn base58_encode(data: &[u8]) -> String {
+    String::from(get_crypto_or_die().base58_encode(data.into()).as_ref())
+}
 
-    #[cfg(feature = "test")]
-    pub use crate::mock::HmacSha256;
+/// Decodes a base58-encoded `data` string.
+pub fn base58_decode(data: &str) -> Result<Vec<u8>> {
+    get_crypto_or_die()
+        .base58_decode(data.into())
+        .into_app_result()
+        .c()
+        .map(|b| b.as_ref().to_vec())
+}
 
-    #[cfg(not(feature = "test"))]
-    mod real {
-        use stabby::slice::Slice;
+/// Base58Check-encodes `data` (base58 plus a 4-byte checksum).
+pub fn base58check_encode(data: &[u8]) -> String {
+    String::from(get_crypto_or_die().base58check_encode(data.into()).as_ref())
+}
 
-        use crate::app_runtime2::get_crypto_or_die;
-        use crate::crypto::Hasher;
-        use crate::traits::crypto::{BoxedHasher, CryptoV1Dyn as _};
-
-        pub struct HmacSha256(BoxedHasher);
-
-        impl HmacSha256 {
-            /// Creates a new hasher keyed with `key`, optionally pre-seeded
-            /// with `data`.
-            pub fn new(key: &[u8], data: Option<&[u8]>) -> Self {
-                let mut hasher = Self(get_crypto_or_die().get_hmac_hasher(Slice::from(key)));
-                if let Some(data) = data {
-                    hasher.update(data);
-                }
-                hasher
-            }
-
-            /// Finalizes and returns the digest.
-            pub fn digest(&mut self) -> [u8; 32] {
-                let mut out = [0u8; 32];
-                self.finalize(&mut out);
-                out
-            }
-        }
-
-        impl Hasher for HmacSha256 {
-            fn update(&mut self, input: &[u8]) {
-                get_crypto_or_die().hasher_update(self.0, Slice::from(input));
-            }
-
-            fn finalize(&mut self, output: &mut [u8]) {
-                output.copy_from_slice(&get_crypto_or_die().hasher_finalize(self.0));
-            }
-        }
-    }
+/// Decodes a base58Check-encoded `data` string, verifying its checksum.
+pub fn base58check_decode(data: &str) -> Result<Vec<u8>> {
+    get_crypto_or_die()
+        .base58check_decode(data.into())
+        .into_app_result()
+        .c()
+        .map(|b| b.as_ref().to_vec())
 }

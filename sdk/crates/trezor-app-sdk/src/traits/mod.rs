@@ -1,9 +1,10 @@
 pub mod allocator;
 pub mod crypto;
-pub mod service;
 pub mod syslog;
 pub mod trezor_v1;
+pub mod ui;
 pub mod util;
+pub mod wire;
 
 pub use trezor_v1::{TrezorApiV1, TrezorApiV1Struct};
 

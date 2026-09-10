@@ -1,9 +1,11 @@
 use stabby::alloc::string::String;
-use stabby::boxed::BoxedSlice;
+use stabby::boxed::{Box, BoxedSlice};
+use stabby::option::Option as StabbyOption;
 use stabby::slice::Slice;
 use stabby::str::Str;
 
 use super::util::FastResult;
+use super::wire::WireError;
 
 #[stabby::stabby]
 #[repr(u8)]
@@ -13,20 +15,24 @@ pub enum CryptoError {
     InvalidEncoding,
 }
 
-/// Opaque handle to a streaming hash in progress.
-///
-/// `get_hasher`/`get_hmac_hasher` heap-allocate the hash context and hand
-/// back a pointer to it, pinned at that heap address for the hasher's
-/// lifetime — any number of hashers, of any mix of algorithms, can be in
-/// flight at once. Core owns and interprets the pointee; the app must treat
-/// this as opaque, and pass it to `hasher_update` any number of times
-/// before passing it to `hasher_finalize` exactly once, which consumes it
-/// and frees the underlying allocation. A handle that is never finalized
-/// leaks.
-#[stabby::stabby]
-#[repr(transparent)]
-#[derive(Clone, Copy)]
-pub struct BoxedHasher(pub *mut u8);
+impl CryptoError {
+    /// Returns a static human-readable description of the error.
+    pub fn message(&self) -> &'static str {
+        match self {
+            Self::InvalidPublicKey => "invalid public key",
+            Self::InvalidSignature => "invalid signature",
+            Self::InvalidEncoding => "invalid encoding",
+        }
+    }
+}
+
+#[stabby::stabby(checked)]
+pub trait Hasher {
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>);
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8>;
+}
+
+pub type BoxedHasher = stabby::dynptr!(Box<dyn Hasher>);
 
 #[stabby::stabby]
 #[repr(u8)]
@@ -51,9 +57,65 @@ pub trait CryptoV1: Send + Sync {
     /// Starts an HMAC-SHA256 computation under `key`. `key` is only read
     /// during this call (copied into the HMAC context's internal state);
     /// Core never retains it afterward.
-    extern "C" fn get_hmac_hasher<'a>(&self, key: Slice<'a, u8>) -> BoxedHasher;
-    extern "C" fn hasher_update<'a>(&self, hasher: BoxedHasher, input: Slice<'a, u8>);
-    extern "C" fn hasher_finalize(&self, hasher: BoxedHasher) -> BoxedSlice<u8>;
+    extern "C" fn get_hmac<'a>(&self, key: Slice<'a, u8>) -> BoxedHasher;
+
+    /// Derives the extended public key (xpub) for `address_n`.
+    extern "C" fn get_xpub<'a>(
+        &self,
+        address_n: Slice<'a, u32>,
+        xpub_magic: u32,
+    ) -> FastResult<[u8; 111], WireError>;
+    /// Derives the public key for `address_n`.
+    extern "C" fn get_public_key<'a>(
+        &self,
+        address_n: Slice<'a, u32>,
+        compressed: bool,
+    ) -> FastResult<BoxedSlice<u8>, WireError>;
+    /// Signs a 32-byte typed-data hash (e.g. EIP-712) with the key at `address_n`.
+    ///
+    /// `encoded_network`/`encoded_token` let Core resolve display metadata
+    /// for the confirmation prompt; `chain_id` is used for replay
+    /// protection. `show_progress` requests a progress indicator while
+    /// signing.
+    extern "C" fn sign_typed_hash<'a>(
+        &self,
+        address_n: Slice<'a, u32>,
+        hash: [u8; 32],
+        encoded_network: StabbyOption<Slice<'a, u8>>,
+        encoded_token: StabbyOption<Slice<'a, u8>>,
+        chain_id: StabbyOption<u64>,
+        show_progress: bool,
+    ) -> FastResult<[u8; 65], WireError>;
+    /// Signs a raw 32-byte digest with the key at `address_n`.
+    extern "C" fn sign_digest<'a>(
+        &self,
+        address_n: Slice<'a, u32>,
+        digest: [u8; 32],
+        compressed: bool,
+    ) -> FastResult<[u8; 65], WireError>;
+    /// Verifies a MAC previously produced by [`Self::get_address_mac`] for
+    /// `address_n` and `address`, confirming the pairing hasn't been
+    /// tampered with.
+    extern "C" fn check_address_mac<'a>(
+        &self,
+        address_n: Slice<'a, u32>,
+        mac: [u8; 32],
+        address: Str<'a>,
+    ) -> FastResult<bool, WireError>;
+    /// Computes a MAC binding `address_n` to `address`, so a cached `address`
+    /// can later be re-authenticated via [`Self::check_address_mac`] without
+    /// a full re-derivation.
+    extern "C" fn get_address_mac<'a>(
+        &self,
+        address_n: Slice<'a, u32>,
+        address: Str<'a>,
+    ) -> FastResult<[u8; 32], WireError>;
+    /// Checks `nonce` against Core's cached-nonce store, returning whether
+    /// it's still valid.
+    extern "C" fn verify_nonce_cache<'a>(
+        &self,
+        nonce: Slice<'a, u8>,
+    ) -> FastResult<bool, WireError>;
 
     extern "C" fn ec_verify_recover<'a>(
         &self,

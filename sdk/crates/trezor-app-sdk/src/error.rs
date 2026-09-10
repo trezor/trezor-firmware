@@ -1,9 +1,11 @@
 #[cfg(all(feature = "debug", feature = "app"))]
 use crate::alloc_types::Box;
 #[cfg(feature = "app")]
-use crate::traits::service::IpcError;
+use crate::traits::crypto::CryptoError;
 #[cfg(feature = "app")]
 use crate::traits::util::FastResult;
+#[cfg(feature = "app")]
+use crate::traits::wire::WireError;
 
 /// A wrapper which aligns its inner value to 8 bytes.
 #[doc(hidden)]
@@ -91,14 +93,22 @@ impl Error {
 }
 
 #[cfg(feature = "app")]
-impl From<IpcError<'_>> for Error {
-    fn from(error: IpcError<'_>) -> Self {
+impl From<WireError> for Error {
+    fn from(error: WireError) -> Self {
         Error::DataError(error.message())
     }
 }
 
-/// Converts the stable-ABI [`FastResult`] an [`IpcRemote`](crate::traits::service::IpcRemote)
-/// call returns into this crate's own [`Result`] — every IPC call site was
+#[cfg(feature = "app")]
+impl From<CryptoError> for Error {
+    fn from(error: CryptoError) -> Self {
+        Error::DataError(error.message())
+    }
+}
+
+/// Converts the stable-ABI [`FastResult`] a [`WireV1`](crate::traits::wire::WireV1)/
+/// [`CryptoV1`](crate::traits::crypto::CryptoV1)/[`UiV1`](crate::traits::ui::UiV1)
+/// call returns into this crate's own [`Result`] — every wire call site was
 /// hand-rolling `.into_result().map_err(Into::into)` for this.
 #[cfg(feature = "app")]
 pub trait IntoAppResult<T> {
@@ -106,7 +116,14 @@ pub trait IntoAppResult<T> {
 }
 
 #[cfg(feature = "app")]
-impl<T> IntoAppResult<T> for FastResult<T, IpcError<'_>> {
+impl<T> IntoAppResult<T> for FastResult<T, WireError> {
+    fn into_app_result(self) -> Result<T> {
+        self.into_result().map_err(Into::into)
+    }
+}
+
+#[cfg(feature = "app")]
+impl<T> IntoAppResult<T> for FastResult<T, CryptoError> {
     fn into_app_result(self) -> Result<T> {
         self.into_result().map_err(Into::into)
     }
