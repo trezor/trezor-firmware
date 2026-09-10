@@ -493,3 +493,38 @@ def test_signmessage_path_warning(session: Session):
             message=message,
             script_type=messages.InputScriptType.SPENDWITNESS,
         )
+
+
+def test_signmessage_multisig_leaf_no_warning(session: Session):
+    # SignMessage has no multisig field, so PATTERN_BIP48_SEGWIT used to be
+    # unreachable and every such path warned.
+    from trezorlib.cli.btc import guess_script_type_from_path
+
+    address_n = parse_path("m/48h/0h/0h/2h/0/0")
+    message = "This is an example of a signed message."
+
+    # The warning is not the host guessing wrong: SPENDWITNESS is correct here.
+    assert guess_script_type_from_path(address_n) is S.SPENDWITNESS
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                # no path warning
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                messages.MessageSignature,
+            ]
+        )
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+        sig = btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=address_n,
+            message=message,
+            script_type=S.SPENDWITNESS,
+        )
+
+    assert sig.signature
+

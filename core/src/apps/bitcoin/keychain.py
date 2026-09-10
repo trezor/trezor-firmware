@@ -181,9 +181,22 @@ def validate_path_against_script_type(
     else:
         assert address_n is not None and script_type is not None
 
-    patterns = _get_patterns_for_script_type(
-        coin, script_type, multisig, include_fw_signing=SignMessage.is_type_of(msg)
-    )
+    if SignMessage.is_type_of(msg):
+        # No output script, so the multisig distinction is meaningless here.
+        if script_type not in (
+            InputScriptType.SPENDADDRESS,
+            InputScriptType.SPENDP2SHWITNESS,
+            InputScriptType.SPENDWITNESS,
+        ):
+            # sign_message() has no recovery byte for anything else, so such a
+            # path is not standard for message signing however standard it is
+            # to spend from.
+            return False
+        patterns = _get_patterns_for_script_type(
+            coin, script_type, multisig=False, include_fw_signing=True
+        ) + _get_patterns_for_script_type(coin, script_type, multisig=True)
+    else:
+        patterns = _get_patterns_for_script_type(coin, script_type, multisig)
 
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns

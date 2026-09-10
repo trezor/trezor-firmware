@@ -296,5 +296,101 @@ class TestValidateXpubPath(unittest.TestCase):
         )
 
 
+class TestSignMessagePathValidation(unittest.TestCase):
+    """SignMessage has no multisig field, so it matches the union of both
+    pattern sets. See #7717."""
+
+    def _validate(self, coin, address_n, script_type):
+        from trezor.messages import SignMessage
+
+        from apps.bitcoin.keychain import validate_path_against_script_type
+
+        msg = SignMessage(
+            address_n=address_n, script_type=script_type, message=b"hello"
+        )
+        return validate_path_against_script_type(coin, msg)
+
+    def test_bitcoin(self):
+        from trezor.enums import InputScriptType
+
+        coin = _get_coin_by_name("Bitcoin")
+
+        valid_paths = (
+            # BIP-44 leaf, accepted before this rule as well
+            ([H_(44), H_(0), H_(0), 0, 0], InputScriptType.SPENDADDRESS),
+            # BIP-48 leaves, one per script-type level. These are what #7717
+            # asks for; without the union the BIP-48 patterns are unreachable
+            # from message signing.
+            ([H_(48), H_(0), H_(0), H_(0), 0, 0], InputScriptType.SPENDADDRESS),
+            ([H_(48), H_(0), H_(0), H_(1), 0, 0], InputScriptType.SPENDP2SHWITNESS),
+            ([H_(48), H_(0), H_(0), H_(2), 0, 0], InputScriptType.SPENDWITNESS),
+            # Unchained leaves, hardened and unhardened
+            ([H_(45), H_(0), H_(63), 1000000, 0, 255], InputScriptType.SPENDADDRESS),
+            ([H_(45), 0, 63, 1000000, 0, 255], InputScriptType.SPENDADDRESS),
+            # BIP-45 leaf
+            ([H_(45), 0, 0, 0], InputScriptType.SPENDADDRESS),
+            # Model 1 firmware signing, offered for SignMessage only
+            ([H_(10026), H_(826421588), H_(2), H_(0)], InputScriptType.SPENDADDRESS),
+        )
+        invalid_paths = (
+            # Casa's leaf. Only PATTERN_CASA has five components and it is
+            # offered under SPENDP2SHWITNESS alone, so the union does not
+            # reach it. Purpose 45 is ambiguous, so no host can guess this.
+            ([H_(45), 0, 0, 0, 0], InputScriptType.SPENDADDRESS),
+            # ECDSA with a taproot account key must keep warning; see the note
+            # in sign_tx/approvers.py about reusing a key across signature
+            # schemes.
+            ([H_(86), H_(0), H_(0), 0, 0], InputScriptType.SPENDWITNESS),
+            # GreenAddress login challenge: in the keychain, but in no
+            # script-type branch, so it always warns.
+            ([1195487518], InputScriptType.SPENDADDRESS),
+            # the BIP-48 account node itself is not a pattern of any length
+            ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDWITNESS),
+            # sign_message() has no recovery byte for SPENDMULTISIG or
+            # SPENDTAPROOT, so however standard these paths are to spend from,
+            # accepting them here would promise a signature that cannot be
+            # produced.
+            ([H_(45), 0, 0, 0], InputScriptType.SPENDMULTISIG),
+            (
+                [H_(45), H_(0), H_(63), 1000000, 0, 255],
+                InputScriptType.SPENDMULTISIG,
+            ),
+            ([H_(86), H_(0), H_(0), 0, 0], InputScriptType.SPENDTAPROOT),
+        )
+
+        for address_n, script_type in valid_paths:
+            self.assertTrue(self._validate(coin, address_n, script_type))
+
+        for address_n, script_type in invalid_paths:
+            self.assertFalse(self._validate(coin, address_n, script_type))
+
+    def test_union_is_sign_message_only(self):
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import validate_path_against_script_type
+
+        coin = _get_coin_by_name("Bitcoin")
+        address_n = [H_(48), H_(0), H_(0), H_(2), 0, 0]
+
+        # Must stay unmatched when the caller passes address_n/script_type
+        # directly, as GetAddress and SignTx do: there multisig is load-bearing.
+        self.assertFalse(
+            validate_path_against_script_type(
+                coin,
+                address_n=address_n,
+                script_type=InputScriptType.SPENDWITNESS,
+                multisig=False,
+            )
+        )
+        self.assertTrue(
+            validate_path_against_script_type(
+                coin,
+                address_n=address_n,
+                script_type=InputScriptType.SPENDWITNESS,
+                multisig=True,
+            )
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
