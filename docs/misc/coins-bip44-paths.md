@@ -94,7 +94,9 @@ for MEW compatibility through its own pattern list, in
 6. <a name="Tezos"></a> Tezos supports multiple curves, but Trezor currently supports
    ed25519 only.
 
-Sign message paths are validated in the same way as the sign tx paths are.
+Sign message paths are validated against both the single-sig and the multisig schemes of
+the requested script type, because a message signature commits to no output script and the
+distinction is not meaningful for it. Sign tx keeps the strict single-versus-multisig rule.
 
 ## Allowed values
 

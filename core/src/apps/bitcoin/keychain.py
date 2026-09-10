@@ -106,7 +106,6 @@ def _get_patterns_for_script_type(
     coin: coininfo.CoinInfo,
     script_type: InputScriptType,
     multisig: bool,
-    include_fw_signing: bool = False,
 ) -> list[str]:
     patterns: list[str] = []
     append = patterns.append  # local_cache_attribute
@@ -117,9 +116,6 @@ def _get_patterns_for_script_type(
         if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
-
-        if include_fw_signing:
-            append(PATTERN_SLIP26_T1_FW)
     elif (
         script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG)
         and multisig
@@ -165,6 +161,22 @@ def _get_patterns_for_script_type(
     return patterns
 
 
+def _get_sign_message_fw_patterns(
+    coin: coininfo.CoinInfo,
+    script_type: InputScriptType,
+) -> list[str]:
+    """
+    Model 1 firmware-signing key, for SignMessage only.
+
+    A signing target, never a spend target. Gated on Bitcoin mainnet to match
+    _get_schemas_for_coin(), which only unlocks it there.
+    """
+    if script_type == InputScriptType.SPENDADDRESS and coin.slip44 == SLIP44_BITCOIN:
+        return [PATTERN_SLIP26_T1_FW]
+
+    return []
+
+
 def validate_path_against_script_type(
     coin: coininfo.CoinInfo,
     msg: MsgWithAddressScriptType | None = None,
@@ -181,9 +193,26 @@ def validate_path_against_script_type(
     else:
         assert address_n is not None and script_type is not None
 
-    patterns = _get_patterns_for_script_type(
-        coin, script_type, multisig, include_fw_signing=SignMessage.is_type_of(msg)
-    )
+    if SignMessage.is_type_of(msg):
+        # No output script, so the multisig distinction is meaningless here.
+        if script_type not in (
+            InputScriptType.SPENDADDRESS,
+            InputScriptType.SPENDP2SHWITNESS,
+            InputScriptType.SPENDWITNESS,
+        ):
+            # sign_message() has no recovery byte for anything else, so such a
+            # path is not standard for message signing however standard it is
+            # to spend from.
+            return False
+        patterns = (
+            _get_patterns_for_script_type(coin, script_type, multisig=False)
+            + _get_patterns_for_script_type(coin, script_type, multisig=True)
+            # Model 1 firmware-signing key: a signing target, never a spend
+            # target.
+            + _get_sign_message_fw_patterns(coin, script_type)
+        )
+    else:
+        patterns = _get_patterns_for_script_type(coin, script_type, multisig)
 
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
