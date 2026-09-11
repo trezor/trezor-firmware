@@ -9,10 +9,12 @@ use super::wire::WireV1Ref;
 #[stabby::stabby(checked)]
 pub trait TrezorApiV1: Send + Sync {
     /// Prepares Core's per-app-launch state for the app currently calling
-    /// in — right now, that's (re)claiming this app's heap region for
-    /// `AllocatorProxy`. Must be called exactly once, before any other API
-    /// call that might allocate (including `WireV1::register_inbox`).
-    extern "C" fn init(&self);
+    /// in: (re)claims this app's heap region for `AllocatorProxy`, then
+    /// allocates (out of that now-available heap) and registers this app's
+    /// `WireV1` inbox buffer, `inbox_words` [`usize`] words long. Must be
+    /// called exactly once, before any other API call that might allocate
+    /// or that talks to Core over the wire.
+    extern "C" fn init(&self, inbox_words: usize);
 
     extern "C" fn system_exit(&self) -> !;
     extern "C" fn system_exit_error<'a>(

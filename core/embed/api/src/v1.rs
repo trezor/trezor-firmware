@@ -25,8 +25,9 @@ pub static TREZOR_API_V1: TrezorApiV1Struct = TrezorApiV1Struct {
 struct TrezorApiV1Impl;
 
 impl TrezorApiV1 for TrezorApiV1Impl {
-    extern "C" fn init(&self) {
+    extern "C" fn init(&self, inbox_words: usize) {
         crate::allocator::init();
+        crate::wire::register_inbox(inbox_words);
     }
 
     extern "C" fn system_exit(&self) -> ! {

@@ -19,24 +19,13 @@ unsafe extern "Rust" {
     unsafe fn app() -> crate::error::Result<()>;
 }
 
-/// Words for this app's own IPC inbox buffer, registered with Core once at
-/// startup (see [`register_inbox`]). 8192 `usize` words is 64 KiB on a
-/// 32-bit target, matching the kernel's `IPC_MAX_BUFFER_SIZE`.
+/// Words for this app's own IPC inbox buffer, passed to [`TrezorApiV1::init`]
+/// (via [`applet_main`]) for Core to allocate and register once at startup.
+/// 8192 `usize` words is 64 KiB on a 32-bit target, matching the kernel's
+/// `IPC_MAX_BUFFER_SIZE`.
+///
+/// [`TrezorApiV1::init`]: crate::traits::trezor_v1::TrezorApiV1::init
 const INBOX_WORDS: usize = 8192;
-
-/// Allocates this app's IPC inbox buffer out of its own heap and hands it to
-/// Core. Core never allocates memory of its own for IPC — it only ever
-/// borrows a buffer the app itself allocated, matching the per-app-heap
-/// model apps already get everything else (`AllocatorProxy`) through.
-fn register_inbox(api: &TrezorApiV1Struct) {
-    use stabby::slice::SliceMut;
-
-    use crate::traits::wire::WireV1Dyn as _;
-
-    let buffer: &'static mut [usize] =
-        alloc::boxed::Box::leak(alloc::vec![0usize; INBOX_WORDS].into_boxed_slice());
-    api.wire.register_inbox(SliceMut::from(buffer));
-}
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core::ffi::c_int {
@@ -53,11 +42,10 @@ pub unsafe extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core:
 
     #[cfg(not(feature = "test"))]
     {
-        // `init` must run before anything that might allocate (including
-        // `register_inbox`, right below): it's what gives this app's own
-        // heap region to `AllocatorProxy` in the first place.
-        get_api_or_die().api.init();
-        register_inbox(get_api_or_die());
+        // `init` must run before anything else that might allocate or talk
+        // to Core over the wire: it's what gives this app's own heap region
+        // to `AllocatorProxy`, and registers this app's `WireV1` inbox.
+        get_api_or_die().api.init(INBOX_WORDS);
 
         match unsafe { app() } {
             Ok(()) => system_exit(),

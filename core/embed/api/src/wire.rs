@@ -10,7 +10,7 @@
 
 use spin::Mutex;
 use stabby::boxed::BoxedSlice;
-use stabby::slice::{Slice, SliceMut};
+use stabby::slice::Slice;
 use stabby::str::Str;
 use sys::ipc::IpcInbox;
 use sys::sysevent::{self, SysEvents};
@@ -135,27 +135,29 @@ pub(crate) fn ipc_call(
     }
 }
 
+/// Allocates this app's IPC inbox buffer (`inbox_words` [`usize`] words) out
+/// of its own heap and registers it with Core's [`sys::ipc`] layer. Called
+/// once by [`crate::v1::TrezorApiV1Impl::init`], right after
+/// [`crate::allocator::init`] makes the app's heap available — Core never
+/// allocates memory of its own for IPC, it only ever borrows a buffer the
+/// app itself allocated.
+pub(crate) fn register_inbox(inbox_words: usize) {
+    let buffer: &'static mut [usize] =
+        alloc::boxed::Box::leak(alloc::vec![0usize; inbox_words].into_boxed_slice());
+    let mut guard = INBOX.lock();
+    // Drop any previous registration *before* creating the new one:
+    // `IpcInbox::new` registers first, and only then does assigning
+    // `Some(new)` drop the old value — if that happened the other way
+    // around, the old value's `Drop` (`ipc_unregister`) would zero the
+    // slot the new registration just wrote, since both share the same
+    // `remote` and therefore the same kernel queue slot.
+    *guard = None;
+    *guard = Some(IpcInbox::new(coreapp(), buffer));
+}
+
 pub struct WireV1Impl;
 
 impl WireV1 for WireV1Impl {
-    extern "C" fn register_inbox<'a>(&self, buffer: SliceMut<'a, usize>) {
-        let buffer: &'a mut [usize] = buffer.into();
-        // SAFETY: the caller (the app currently executing this shared code)
-        // guarantees `buffer` stays valid for as long as it keeps calling
-        // into this API, i.e. its own lifetime — which this crate treats as
-        // 'static throughout, same as every other field of `TrezorApiV1Struct`.
-        let buffer: &'static mut [usize] = unsafe { core::mem::transmute(buffer) };
-        let mut guard = INBOX.lock();
-        // Drop any previous registration *before* creating the new one:
-        // `IpcInbox::new` registers first, and only then does assigning
-        // `Some(new)` drop the old value — if that happened the other way
-        // around, the old value's `Drop` (`ipc_unregister`) would zero the
-        // slot the new registration just wrote, since both share the same
-        // `remote` and therefore the same kernel queue slot.
-        *guard = None;
-        *guard = Some(IpcInbox::new(coreapp(), buffer));
-    }
-
     extern "C" fn wire_receive_start(&self, timeout_ms: u32) -> FastResult<WireMessage, WireError> {
         let deadline = sys::time::ticks_ms().wrapping_add(timeout_ms);
         match receive_until(deadline) {

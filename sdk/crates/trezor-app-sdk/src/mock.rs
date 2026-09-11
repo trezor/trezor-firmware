@@ -18,7 +18,7 @@ use mock_sha3::{
     Sha3_512 as Sha3_512_impl,
 };
 use stabby::boxed::{Box, BoxedSlice};
-use stabby::slice::{Slice, SliceMut};
+use stabby::slice::Slice;
 use stabby::str::Str;
 
 use crate::traits::ApiVariant;
@@ -52,7 +52,7 @@ use crate::traits::wire::{WireError, WireMessage, WireV1, WireV1Vtable};
 struct DummyApi;
 
 impl TrezorApiV1 for DummyApi {
-    extern "C" fn init(&self) {}
+    extern "C" fn init(&self, _inbox_words: usize) {}
 
     extern "C" fn system_exit(&self) -> ! {
         panic!("app called system_exit")
@@ -276,8 +276,6 @@ impl SyslogV1 for DummySyslog {
 struct DummyWire;
 
 impl WireV1 for DummyWire {
-    extern "C" fn register_inbox<'a>(&self, _buffer: SliceMut<'a, usize>) {}
-
     extern "C" fn wire_receive_start(&self, _timeout_ms: u32) -> FastResult<WireMessage, WireError> {
         Err(WireError::Timeout).into()
     }

@@ -1,5 +1,5 @@
 use stabby::boxed::BoxedSlice;
-use stabby::slice::{Slice, SliceMut};
+use stabby::slice::Slice;
 use stabby::str::Str;
 
 use super::util::FastResult;
@@ -46,15 +46,6 @@ pub struct WireMessage {
 /// how bytes actually move between the app and Core.
 #[stabby::stabby(checked)]
 pub trait WireV1: Send + Sync {
-    /// Registers `buffer` as this app's own inbox for messages from Core.
-    ///
-    /// Must be called exactly once, before any other method. Core never
-    /// allocates memory of its own for the wire — `buffer` must be allocated
-    /// by the app (out of its own heap) and stay valid for as long as the
-    /// app is running; Core only ever holds a reference into it, never a
-    /// copy.
-    extern "C" fn register_inbox<'a>(&self, buffer: SliceMut<'a, usize>);
-
     /// Waits for the message that starts a new wire transaction — Core
     /// pushes this, the app never sends it.
     extern "C" fn wire_receive_start(&self, timeout_ms: u32) -> FastResult<WireMessage, WireError>;
