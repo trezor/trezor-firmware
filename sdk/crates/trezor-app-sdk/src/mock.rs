@@ -210,6 +210,26 @@ impl CryptoV1 for DummyCrypto {
         unimplemented!("not exercised by the current test suite")
     }
 
+    extern "C" fn ec_recover_pubkey<'a>(
+        &self,
+        _curve: EcCurve,
+        _signature: Slice<'a, u8>,
+        _digest: Slice<'a, u8>,
+    ) -> FastResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn cosi_verify<'a>(
+        &self,
+        _threshold: u8,
+        _message: Slice<'a, u8>,
+        _public_keys: Slice<'a, [u8; 32]>,
+        _sigmask: u8,
+        _signature: Slice<'a, u8>,
+    ) -> FastResult<(), CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
     extern "C" fn base58_encode<'a>(&self, _data: Slice<'a, u8>) -> stabby::string::String {
         unimplemented!("not exercised by the current test suite")
     }

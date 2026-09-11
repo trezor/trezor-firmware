@@ -19,7 +19,7 @@ use crate::{
 use primitive_types::U256;
 use trezor_app_sdk::{
     Error, Result, ResultExt,
-    crypto::{self, Hasher},
+    crypto::{self, BoxedHasher, HashingAlgorithm, HasherExt},
     ui::{self, Property},
     unwrap,
 };
@@ -86,7 +86,7 @@ pub(crate) fn decode_message(message: &[u8]) -> Result<String> {
 
 /// Request at most `MAX_DATA_STORED` which we keep locally
 pub(crate) fn request_initial_data(
-    hasher: &mut crypto::sha3::Keccak256,
+    hasher: &mut BoxedHasher,
     data_length: usize,
     data_initial_chunk: &[u8],
 ) -> Result<Vec<u8>> {
@@ -366,7 +366,7 @@ pub(crate) fn confirm_data_and_summary<'a>(
     confirm_summary: Option<Box<dyn FnOnce() -> Result<()> + 'a>>,
     initial_data: &[u8],
     data_length: usize,
-    hasher: &mut crypto::sha3::Keccak256,
+    hasher: &mut BoxedHasher,
 ) -> Result<()> {
     // `confirm_data_chunk` and `confirm_summary` can be `None`
     // if we clear signed so there is nothing more to confirm
@@ -394,10 +394,9 @@ pub(crate) fn confirm_data_and_summary<'a>(
 pub(crate) fn get_eth_pubkey_hash(dp: &Bip32Path) -> Result<[u8; 20]> {
     let ecdsa_pubkey = crypto::get_public_key(dp.as_slice(), false)?;
 
-    let mut hasher = crypto::sha3::Keccak256::new(None);
+    let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
     hasher.update(&ecdsa_pubkey[1..]);
-    let mut hash = [0u8; 32];
-    hasher.finalize(&mut hash);
+    let hash = hasher.finalize();
     Ok(hash[12..].try_into().unwrap())
 }
 

@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 use stabby::boxed::BoxedSlice;
@@ -323,6 +324,68 @@ impl CryptoV1 for TrezorCryptoV1Impl {
             // it always hashes the message itself as part of the scheme.
             EcCurve::Ed25519 => Err(CryptoError::InvalidSignature).into(),
         }
+    }
+
+    extern "C" fn ec_recover_pubkey<'a>(
+        &self,
+        curve: EcCurve,
+        signature: Slice<'a, u8>,
+        digest: Slice<'a, u8>,
+    ) -> FastResult<BoxedSlice<u8>, CryptoError> {
+        (|| {
+            let Some(curve) = ecdsa_curve(curve) else {
+                return Err(CryptoError::InvalidSignature);
+            };
+            let (recid_byte, rs) = signature
+                .as_slice()
+                .split_first()
+                .ok_or(CryptoError::InvalidEncoding)?;
+            let recid = crypto::ecdsa::RecId::try_new(*recid_byte)
+                .map_err(|_| CryptoError::InvalidEncoding)?;
+            let rs: &crypto::ecdsa::EcdsaSignature =
+                rs.try_into().map_err(|_| CryptoError::InvalidEncoding)?;
+            let digest: &crypto::ecdsa::EcdsaDigest = digest
+                .as_slice()
+                .try_into()
+                .map_err(|_| CryptoError::InvalidEncoding)?;
+            let pubkey = crypto::ecdsa::verify_recover(curve, rs, recid, digest)
+                .map_err(|_| CryptoError::InvalidSignature)?;
+            Ok(BoxedSlice::from(&pubkey[..]))
+        })()
+        .into()
+    }
+
+    extern "C" fn cosi_verify<'a>(
+        &self,
+        threshold: u8,
+        message: Slice<'a, u8>,
+        public_keys: Slice<'a, [u8; 32]>,
+        sigmask: u8,
+        signature: Slice<'a, u8>,
+    ) -> FastResult<(), CryptoError> {
+        (|| {
+            let sig: &crypto::ed25519::Signature = signature
+                .as_slice()
+                .try_into()
+                .map_err(|_| CryptoError::InvalidEncoding)?;
+            let cosi_sig = crypto::cosi::Signature::new(sigmask, *sig);
+
+            let keys: Result<Vec<crypto::ed25519::PublicKey>, CryptoError> = public_keys
+                .as_slice()
+                .iter()
+                .map(|k| {
+                    let key: &crypto::ed25519::PublicKey =
+                        k[..].try_into().map_err(|_| CryptoError::InvalidEncoding)?;
+                    Ok(*key)
+                })
+                .collect();
+            let keys = keys?;
+
+            crypto::cosi::verify(threshold, message.as_slice(), &keys, &cosi_sig)
+                .map_err(|_| CryptoError::InvalidSignature)?;
+            Ok(())
+        })()
+        .into()
     }
 
     extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String {

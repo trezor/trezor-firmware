@@ -8,7 +8,11 @@ use crate::{
     },
     sign_message::message_digest,
 };
-use trezor_app_sdk::{Error, Result, ResultExt, crypto, ui};
+use trezor_app_sdk::{
+    Error, Result, ResultExt,
+    crypto::{self, EcCurve, HashingAlgorithm, HasherExt},
+    ui,
+};
 
 pub fn verify_message(msg: VerifyMessage) -> Result<Success> {
     let digest = message_digest(msg.message.as_slice());
@@ -20,12 +24,18 @@ pub fn verify_message(msg: VerifyMessage) -> Result<Success> {
         .map_err(|_| Error::DataError("Invalid signature"))?;
 
     sig.rotate_right(1);
+    // Ethereum's wire `v` is `27 + recid` (or `31 + recid` for a compressed-key
+    // signature, which never applies here since we only ever recover the
+    // uncompressed key) — normalize down to the raw `0..=3` recovery id
+    // `ec_recover_pubkey` expects.
+    sig[0] = sig[0].wrapping_sub(27) & 3;
 
-    let pubkey = crypto::secp256k1::verify_recover(&sig, &digest)
-        .ok_or(Error::DataError("Invalid signature"))?;
+    let pubkey = crypto::ec_recover_pubkey(EcCurve::Secp256k1, &sig, &digest)
+        .map_err(|_| Error::DataError("Invalid signature"))?;
 
-    let mut hasher = crypto::sha3::Keccak256::new(Some(&pubkey[1..]));
-    let pkh_hash = hasher.digest();
+    let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
+    hasher.update(&pubkey[1..]);
+    let pkh_hash = hasher.finalize();
 
     let address_bytes = bytes_from_address(&msg.address).c()?;
 

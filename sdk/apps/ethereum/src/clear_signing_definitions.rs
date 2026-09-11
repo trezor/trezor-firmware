@@ -72,11 +72,12 @@ pub(crate) fn get_transfer_display_format() -> DisplayFormat {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use trezor_app_sdk::crypto;
+    use trezor_app_sdk::crypto::{self, HashingAlgorithm, HasherExt};
 
     fn keccak_32(input: &[u8]) -> [u8; 4] {
-        let mut hasher = crypto::sha3::Keccak256::new(Some(input));
-        hasher.digest()[..4]
+        let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
+        hasher.update(input);
+        hasher.finalize().as_slice()[..4]
             .try_into()
             .expect("slice with incorrect length")
     }

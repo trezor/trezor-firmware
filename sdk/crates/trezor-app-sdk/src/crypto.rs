@@ -15,14 +15,14 @@
 //! their own dependency on `stabby` (the SDK crate is the only dependency
 //! apps should need).
 
-pub use crate::traits::crypto::{BoxedHasher, HashingAlgorithm};
+pub use crate::traits::crypto::{BoxedHasher, EcCurve, HashingAlgorithm};
 
 use stabby::boxed::BoxedSlice;
 use stabby::slice::Slice;
 
 use crate::alloc_types::{String, Vec};
 use crate::app_runtime2::get_crypto_or_die;
-use crate::traits::crypto::{CryptoV1Dyn as _, EcCurve, HasherDynMut};
+use crate::traits::crypto::{CryptoV1Dyn as _, HasherDynMut};
 use crate::{IntoAppResult, Result, ResultExt};
 
 /// A local (non-IPC) streaming hasher for `algorithm` — see the module docs.
@@ -160,6 +160,40 @@ pub fn ec_verify_recover_digest(
         .into_app_result()
         .c()
         .map(|b| b.as_ref().to_vec())
+}
+
+/// Recovers the uncompressed public key from an ECDSA `signature` over
+/// `digest`, with no candidate public key to check against — see
+/// [`traits::crypto::CryptoV1::ec_recover_pubkey`](crate::traits::crypto::CryptoV1::ec_recover_pubkey)
+/// for `signature`'s exact byte layout.
+pub fn ec_recover_pubkey(curve: EcCurve, signature: &[u8], digest: &[u8]) -> Result<Vec<u8>> {
+    get_crypto_or_die()
+        .ec_recover_pubkey(curve, signature.into(), digest.into())
+        .into_app_result()
+        .c()
+        .map(|b| b.as_ref().to_vec())
+}
+
+/// Verifies a CoSi (collective Ed25519) `signature` of `message` against
+/// `public_keys`, combining the ones selected by `sigmask` (bit 0 = first
+/// key) and requiring at least `threshold` of them to have participated.
+pub fn cosi_verify(
+    threshold: u8,
+    message: &[u8],
+    public_keys: &[[u8; 32]],
+    sigmask: u8,
+    signature: &[u8],
+) -> Result<()> {
+    get_crypto_or_die()
+        .cosi_verify(
+            threshold,
+            message.into(),
+            public_keys.into(),
+            sigmask,
+            signature.into(),
+        )
+        .into_app_result()
+        .c()
 }
 
 /// Base58-encodes `data`.

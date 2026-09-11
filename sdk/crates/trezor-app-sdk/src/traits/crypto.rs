@@ -131,6 +131,34 @@ pub trait CryptoV1: Send + Sync {
         signature: Slice<'a, u8>,
         digest: Slice<'a, u8>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError>;
+    /// Recovers the uncompressed public key from an ECDSA `signature` over
+    /// `digest`, with no candidate public key to check against (unlike
+    /// [`Self::ec_verify_recover_digest`], which confirms `signature`
+    /// matches a given key — this instead always returns whichever key the
+    /// signature's own recovery id points to). `signature` is 65 bytes: a
+    /// 1-byte recovery id (`0..=3`) followed by the 64-byte `r||s` signature
+    /// (Trezor's `[v, r, s]` convention). Only defined for the Weierstrass
+    /// curves (`Secp256k1`/`Nist256p1`) — `Ed25519` has no ECDSA recovery scheme.
+    extern "C" fn ec_recover_pubkey<'a>(
+        &self,
+        curve: EcCurve,
+        signature: Slice<'a, u8>,
+        digest: Slice<'a, u8>,
+    ) -> FastResult<BoxedSlice<u8>, CryptoError>;
+
+    /// Verifies a CoSi (collective Ed25519) `signature` of `message` against
+    /// `public_keys`, combining the ones selected by `sigmask` (bit 0 =
+    /// first key) and requiring at least `threshold` of them to have
+    /// participated. `signature` is the raw 64-byte Ed25519 signature over
+    /// the combined key.
+    extern "C" fn cosi_verify<'a>(
+        &self,
+        threshold: u8,
+        message: Slice<'a, u8>,
+        public_keys: Slice<'a, [u8; 32]>,
+        sigmask: u8,
+        signature: Slice<'a, u8>,
+    ) -> FastResult<(), CryptoError>;
 
     extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String;
     extern "C" fn base58_decode<'a>(

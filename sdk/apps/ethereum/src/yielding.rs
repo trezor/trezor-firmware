@@ -198,26 +198,31 @@ fn is_vault_tx_safe<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use trezor_app_sdk::crypto::sha3::Keccak256;
+    use trezor_app_sdk::crypto::{self, HashingAlgorithm, HasherExt};
+
+    fn keccak256(data: &[u8]) -> [u8; 32] {
+        let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
+        hasher.update(data);
+        hasher.finalize().as_slice().try_into().unwrap()
+    }
 
     #[test]
     fn test_func_constants() {
         assert_eq!(
             FUNC_SIG_DEPOSIT,
-            &Keccak256::new(Some(b"deposit(uint256,address)")).digest()[..4]
+            &keccak256(b"deposit(uint256,address)")[..4]
         );
         assert_eq!(
             FUNC_SIG_WITHDRAW,
-            &Keccak256::new(Some(b"withdraw(uint256,address,address)")).digest()[..4]
+            &keccak256(b"withdraw(uint256,address,address)")[..4]
         );
         assert_eq!(
             FUNC_SIG_REDEEM,
-            &Keccak256::new(Some(b"redeem(uint256,address,address)")).digest()[..4]
+            &keccak256(b"redeem(uint256,address,address)")[..4]
         );
         assert_eq!(
             FUNC_SIG_CLAIM,
-            &Keccak256::new(Some(b"claim(address[],address[],uint256[],bytes32[][])")).digest()
-                [..4]
+            &keccak256(b"claim(address[],address[],uint256[],bytes32[][])")[..4]
         );
     }
 }
