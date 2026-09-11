@@ -148,10 +148,10 @@ typedef struct __attribute__((packed)) {
  *
  * Checks the magic number, header size, code size, hardware model and revision
  *
- * @param header Pointer to the boot header
+ * @param header Address of the boot header
  * @return Pointer to the boot header if valid, NULL otherwise.
  */
-const boot_header_auth_t* boot_header_auth_get(const void* header);
+const boot_header_auth_t* boot_header_auth_get(uintptr_t header);
 
 /**
  * Gets pointer to the unauthenticated part of the boot header.
@@ -170,11 +170,11 @@ const boot_header_unauth_t* boot_header_unauth_get(
  * boot header and the Merkle tree path.
  *
  * @param hdr Pointer to the boot header
- * @param code Pointer to the bootloader code
+ * @param code Address of the bootloader code
  * @param root Pointer to the output Merkle root node
  */
-void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
-                                  const void* code, merkle_proof_node_t* root);
+void boot_header_calc_merkle_root(const boot_header_auth_t* hdr, uintptr_t code,
+                                  merkle_proof_node_t* root);
 
 /**
  * Checks the signature in the boot header against the public keys.
@@ -196,10 +196,10 @@ secbool boot_header_check_signature(const boot_header_auth_t* hdr,
  * it returns sectrue, otherwise secfalse.
  *
  * @param hdr Pointer to the new boot header
- * @param code Pointer to the new bootloader code
- * @param prev_header Pointer to the installed boot header; the installed code
+ * @param code Address of the new bootloader code
+ * @param prev_header Address of the installed boot header; the installed code
  *        is taken to follow it, at its own `header_size`
  * @return secbool indicating whether the boot header and code need update
  */
 secbool bootloader_area_needs_update(const boot_header_auth_t* hdr,
-                                     const void* code, const void* prev_header);
+                                     uintptr_t code, uintptr_t prev_header);

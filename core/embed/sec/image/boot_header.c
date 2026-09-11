@@ -139,7 +139,7 @@ static const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
   return proof;
 }
 
-const boot_header_auth_t* boot_header_auth_get(const void* header) {
+const boot_header_auth_t* boot_header_auth_get(uintptr_t header) {
   const boot_header_auth_t* hdr = (const boot_header_auth_t*)header;
 
   // Check if the header starts with the magic
@@ -219,8 +219,8 @@ const boot_header_unauth_t* boot_header_unauth_get(
   return unauth;
 }
 
-void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
-                                  const void* code, merkle_proof_node_t* root) {
+void boot_header_calc_merkle_root(const boot_header_auth_t* hdr, uintptr_t code,
+                                  merkle_proof_node_t* root) {
   IMAGE_HASH_CTX ctx;
 
   static const uint8_t prefix0[] = {0x00};
@@ -257,8 +257,7 @@ void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
 }
 
 secbool bootloader_area_needs_update(const boot_header_auth_t* hdr,
-                                     const void* code,
-                                     const void* prev_header) {
+                                     uintptr_t code, uintptr_t prev_header) {
   const boot_header_auth_t* prev_hdr = (const boot_header_auth_t*)prev_header;
   if (hdr->header_size == prev_hdr->header_size &&
       hdr->code_size == prev_hdr->code_size &&
