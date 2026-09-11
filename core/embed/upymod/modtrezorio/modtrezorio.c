@@ -69,6 +69,9 @@
 #ifdef USE_POWER_MANAGER
 #include "modtrezorio-pm.h"
 #endif
+#ifdef USE_NFC
+#include "modtrezorio-nfc.h"
+#endif
 #ifdef USE_IPC
 #include "modtrezorio-ipc.h"
 #endif
@@ -156,6 +159,7 @@ static const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_PM_EVENT), MP_ROM_INT(SYSHANDLE_POWER_MANAGER)},
 #endif
 #ifdef USE_NFC
+    {MP_ROM_QSTR(MP_QSTR_nfc), MP_ROM_PTR(&mod_trezorio_nfc_module)},
     {MP_ROM_QSTR(MP_QSTR_NFC_EVENT), MP_ROM_INT(SYSHANDLE_NFC)},
 #endif
 #ifdef USE_IPC
