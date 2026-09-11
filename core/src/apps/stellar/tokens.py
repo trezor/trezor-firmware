@@ -19,11 +19,8 @@ if TYPE_CHECKING:
 # hint. Keyed by contract address, mapping to `(symbol, decimals)` as the
 # contract itself reports them.
 PUBLIC_TOKENS: dict[str, tuple[str, int]] = {
-    # SolvBTC
-    # https://stellar.expert/explorer/public/contract/CBIJBDNZNF4X35BJ4FFZWCDBSCKOP5NB4PLG4SNENRMLAPYG4P5FM6VN
+    # Solv Protocol assets: https://solv.finance/.well-known/stellar.toml
     "CBIJBDNZNF4X35BJ4FFZWCDBSCKOP5NB4PLG4SNENRMLAPYG4P5FM6VN": ("SolvBTC", 8),
-    # xSolvBTC
-    # https://stellar.expert/explorer/public/contract/CAUP7NFABXE5TJRL3FKTPMWRLC7IAXYDCTHQRFSCLR5TMGKHOOQO772J
     "CAUP7NFABXE5TJRL3FKTPMWRLC7IAXYDCTHQRFSCLR5TMGKHOOQO772J": ("xSolvBTC", 8),
 }
 
