@@ -72,7 +72,7 @@ jobs:
           - model: T3T1
             coins: btconly
             type: debuglink
-            miniscript: true  # currently Miniscript is not supported for universal builds
+            miniscript: true  # currently Miniscript is not supported for universal FW builds
           - model: T3W1
             coins: universal
             type: debuglink
@@ -139,10 +139,10 @@ jobs:
             asan: asan
         include:
           - model: T3T1
-            coins: btconly
+            coins: universal
             type: debuglink
             asan: noasan
-            miniscript: true  # currently Miniscript is not supported for universal builds
+            miniscript: true
           - model: T3W1
             coins: universal
             type: debuglink
@@ -350,7 +350,7 @@ jobs:
         n1w1: [false]
         include:
           - model: T3T1
-            coins: btconly
+            coins: universal
             asan: noasan
             lang: en
             miniscript: true
