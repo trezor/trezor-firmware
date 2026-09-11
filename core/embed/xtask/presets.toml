@@ -34,6 +34,15 @@ storage-insecure-testing-mode = true
 disable-optiga = true
 disable-tropic = true
 
+# Device/UI tests against live Python sources: like "test", but non-frozen, so
+# Python edits are picked up from disk without rebuilding.
+[[test-live]]
+when = { emulator = true }
+debug-link = true
+disable-animation = true
+frozen = false
+pyopt = false
+
 [[dev]]
 when = { emulator = true }
 asan = true
