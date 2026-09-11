@@ -576,6 +576,9 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
   LOG_HEXDUMP_DBG(__func__, tx_buffer, tx_size);
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
+  if (ret != OPTIGA_SUCCESS) {
+    return ret;
+  }
 
   ret = process_output_fixedlen(nonce, sizeof(nonce));
   if (ret != OPTIGA_SUCCESS) {
