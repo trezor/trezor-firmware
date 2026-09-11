@@ -23,13 +23,13 @@
 //
 // Register sequence transcribed verbatim from the manufacturer-supplied
 // reference init code ("MI0240AGT-5 Initialization Code.txt", AVNet/
-// Multi-Inno) - same command order, same values, including MADCTL and
-// RAMCTRL. CASET/RASET (setting the full 0..239 / 0..319 addressing window)
-// are the one addition beyond the reference: the reference never sets an
-// address window at init at all, but display_sync_with_fb() in
-// display_driver.c relies on the window already covering the full frame
-// buffer before every RAMWR, so it must be set exactly once, and here is the
-// natural place.
+// Multi-Inno) - same command order, same values, with two deliberate
+// deviations on RAMCTRL and MADCTL - see NOTEs below. CASET/RASET (setting
+// the full 0..239 / 0..319 addressing window) are the one other addition
+// beyond the reference: the reference never sets an address window at init
+// at all, but display_sync_with_fb() in display_driver.c relies on the
+// window already covering the full frame buffer before every RAMWR, so it
+// must be set exactly once, and here is the natural place.
 //
 // The reference's SLPOUT + 120ms delay (before any register write) and
 // final INVON+DISPON (after the last register write) are handled by the
@@ -38,11 +38,34 @@
 // command in this sequence, immediately before display_driver.c issues
 // DISPON, to preserve the reference's exact command order.
 //
-// NOTE: RAMCTRL is set to the reference's {0x11, 0xF0} here (ENDIAN=0, Big
-// Endian), reverting a previously hardware-validated {0x00, 0xC8}
-// (ENDIAN=1) fix for a color-channel-swap/gradient-stripe bug - see the
-// comment on RAMCTRL below and in display_sync_with_fb() (display_driver.c)
-// for the full explanation. This needs re-validation on real hardware.
+// NOTE: RAMCTRL is {0x00, 0xC8} here, NOT the reference's verbatim
+// {0x11, 0xF0} - two deliberate deviations, both confirmed on real hardware:
+//
+// 1st parameter 0x00 (reference: 0x11): 0x11 sets RM=1/DM=01 (RAM access
+// from the RGB interface - ST7789V2 datasheet section 9.2.1), which
+// silently breaks pixel writes on this board: it's wired purely as 4-wire
+// SPI (IM[2:0]=1,1,0, no RGB/DE/HSYNC/VSYNC/PCLK lines connected at all),
+// so with RM=1 the controller's GRAM is only ever fed from that
+// (nonexistent) RGB interface and every RAMWR byte sent over SPI in
+// display_sync_with_fb() is a no-op - confirmed as a fully blank screen.
+// 0x00 selects RM=0/DM=00 (MCU interface), required for RAMWR-over-SPI to
+// reach GRAM at all.
+//
+// 2nd parameter 0xC8 (reference: 0xF0): sets ENDIAN (D3) = 1, Little
+// Endian, to match our framebuf's native little-endian uint16_t pixel
+// storage - see display_sync_with_fb() (display_driver.c). The reference's
+// 0xF0 (ENDIAN=0, Big Endian) would otherwise expect the MSB of each pixel
+// first while getting the LSB, causing a color-channel-swap/gradient-stripe
+// pattern (the same failure mode previously seen and fixed on this same
+// controller - see git history).
+//
+// NOTE: MADCTL is 0x00 here, NOT the reference's verbatim MADCTL_BGR
+// (0x08) - confirmed on real hardware: with MADCTL_BGR set, the controller
+// interprets our RGB565 framebuffer data (standard RGB component order, as
+// produced by the rest of the graphics stack) as BGR, swapping red and
+// blue on screen. 0x00 (RGB order) matches what this driver's framebuffer
+// actually produces - see mi0240agt5cp1f_rotate below, which no longer
+// carries MADCTL_BGR through either.
 
 #pragma GCC optimize ("O0")
 
@@ -78,12 +101,12 @@ void mi0240agt5cp1f_select_interface_mode(void) {
 // Verbatim transcription of "MI0240AGT-5 Initialization Code.txt" - see the
 // file header comment above.
 void mi0240agt5cp1f_init_seq(display_driver_t *drv) {
-  // Memory Data Access Control (MADCTL): reference default - BGR panel,
-  // no mirror/rotation. NOT yet verified against real hardware (the
-  // reference is a single fixed-orientation demo); see mi0240agt5cp1f_rotate
-  // below for the 90/180/270 derivation.
+  // Memory Data Access Control (MADCTL): 0x00 (RGB order, no mirror/
+  // rotation), NOT the reference's verbatim MADCTL_BGR - see file header
+  // NOTE above. See mi0240agt5cp1f_rotate below for the 90/180/270
+  // derivation.
   st7789v2_cmd(drv, ST7789V2_MADCTL);
-  st7789v2_data1(drv, MADCTL_BGR);
+  st7789v2_data1(drv, 0x00);
 
   // Interface Pixel Format: 16 bits/pixel (RGB565)
   st7789v2_cmd(drv, ST7789V2_COLMOD);
@@ -137,18 +160,15 @@ void mi0240agt5cp1f_init_seq(display_driver_t *drv) {
   st7789v2_cmd(drv, ST7789V2_FRCTRL2);
   st7789v2_data1(drv, 0x0F);
 
-  // RAM Control. Reference value {0x11, 0xF0}: 1st parameter 0x11 selects
-  // RM=1 (RAM access from RGB interface... bit ignored in MCU-only mode) /
-  // DM left non-zero per reference; 2nd parameter 0xF0 has ENDIAN (D3) = 0,
-  // i.e. Big Endian (MSB of each pixel first). This reverts a previously
-  // hardware-validated {0x00, 0xC8} (ENDIAN=1 / Little Endian) fix for a
-  // color-channel-swap/gradient-stripe bug caused by exactly this mismatch
-  // against our framebuf's native little-endian pixel storage - see
-  // display_sync_with_fb() in display_driver.c. Needs re-validation on real
-  // hardware.
+  // RAM Control. {0x00, 0xC8}, NOT the reference's verbatim {0x11, 0xF0} -
+  // see file header NOTE above: 0x00 selects RM=0/DM=00 (MCU interface,
+  // required for RAMWR-over-SPI to reach GRAM at all on this SPI-only-wired
+  // board), and 0xC8 sets ENDIAN=1 (Little Endian) to match our framebuf's
+  // native little-endian pixel storage - see display_sync_with_fb() in
+  // display_driver.c.
   st7789v2_cmd(drv, ST7789V2_RAMCTRL);
   {
-    static const uint8_t d[2] = {0x11, 0xF0};
+    static const uint8_t d[2] = {0x00, 0xC8};
     st7789v2_data(drv, d, sizeof(d));
   }
 
@@ -193,21 +213,19 @@ void mi0240agt5cp1f_rotate(display_driver_t *drv, int angle) {
   // The reference init code only demonstrates the 0-degree (default)
   // orientation above; it gives no data for 90/180/270. These follow the
   // "textbook" ST7789V2 rotation table (0=none, 90=MV|MX, 180=MX|MY,
-  // 270=MV|MY - see e.g. Adafruit_ST7789), with MADCTL_BGR carried through
-  // at every angle to preserve the reference's color-order bit. NOT yet
-  // verified against real hardware - the previous "0/180 swapped" hack this
-  // replaces was tuned against the old MX-based default, which no longer
-  // applies now that the default matches the reference (BGR only, no MX).
-  uint8_t madctl = MADCTL_BGR;
+  // 270=MV|MY - see e.g. Adafruit_ST7789). No MADCTL_BGR here - see the
+  // MADCTL NOTE in the file header comment and in mi0240agt5cp1f_init_seq
+  // above: this panel's framebuffer data is RGB order, not BGR.
+  uint8_t madctl = 0x00;
   switch (angle) {
     case 90:
-      madctl |= MADCTL_MV | MADCTL_MX;
+      madctl = MADCTL_MV | MADCTL_MX;
       break;
     case 180:
-      madctl |= MADCTL_MX | MADCTL_MY;
+      madctl = MADCTL_MX | MADCTL_MY;
       break;
     case 270:
-      madctl |= MADCTL_MV | MADCTL_MY;
+      madctl = MADCTL_MV | MADCTL_MY;
       break;
     default:
       break;
