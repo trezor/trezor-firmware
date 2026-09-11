@@ -1084,6 +1084,12 @@ def get_instruction(
                         None,
                     ),
                     UIProperty(
+                        "base",
+                        None,
+                        "Base account",
+                        "signer",
+                    ),
+                    UIProperty(
                         "space",
                         None,
                         "Data size",
