@@ -27,7 +27,7 @@ TPUBS = [
     "tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb",
 ]
 
-pytestmark = [pytest.mark.miniscript]
+pytestmark = [pytest.mark.capabilities(messages.Capability.Miniscript)]
 
 DATA = [
     (0, 0, "tb1qwr00r4x9a2ycm7fn48c7kqm6kpsp56ydwx482ns5c3wxmrwqwu2stjh6cc"),

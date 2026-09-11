@@ -237,7 +237,7 @@ def test_show_multisig_3(session: Session):
         )
 
 
-@pytest.mark.miniscript
+@pytest.mark.capabilities(messages.Capability.Miniscript)
 def test_miniscript_show_multisig_3(session: Session):
     nodes = [
         btc.get_public_node(

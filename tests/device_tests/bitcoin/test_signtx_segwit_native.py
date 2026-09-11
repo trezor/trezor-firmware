@@ -655,7 +655,7 @@ def test_send_multisig_3_change(session: Session):
     )
 
 
-@pytest.mark.miniscript
+@pytest.mark.capabilities(messages.Capability.Miniscript)
 def test_miniscript_send_multisig_2(session: Session):
     # input tx: b9abfa0d4a28f6f25e1f6c0f974bfc3f7c5a44c4d381b1796e3fbeef51b560a6
 
