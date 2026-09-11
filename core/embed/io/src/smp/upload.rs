@@ -16,6 +16,7 @@ pub fn upload_image(
     progress: Option<extern "C" fn(u32, u32)>,
 ) -> bool {
     let total = image_data.len() as u32;
+    let first_chunk_len = image_data.len().min(CHUNK_SIZE);
     let report = |done: usize| {
         if let Some(cb) = progress {
             cb((done as u32).min(total), total);
@@ -40,7 +41,7 @@ pub fn upload_image(
     unwrap!(enc.str("hash"));
     unwrap!(enc.bytes(image_hash));
     unwrap!(enc.str("data"));
-    unwrap!(enc.bytes(&image_data[..CHUNK_SIZE]));
+    unwrap!(enc.bytes(&image_data[..first_chunk_len]));
 
     let data_len = writer.bytes_written();
     unwrap!(receiver_acquire());
@@ -75,7 +76,7 @@ pub fn upload_image(
         return false;
     }
 
-    let mut offset = CHUNK_SIZE;
+    let mut offset = first_chunk_len;
     report(offset);
 
     for chunk in image_data.chunks(CHUNK_SIZE).skip(1) {
@@ -118,7 +119,7 @@ pub fn upload_image(
             return false;
         }
 
-        offset += CHUNK_SIZE;
+        offset += chunk.len();
         report(offset);
     }
 

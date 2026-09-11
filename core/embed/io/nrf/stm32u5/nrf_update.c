@@ -208,7 +208,7 @@ bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
 }
 
 bool nrf_update_with_progress(const uint8_t *image_ptr, size_t image_len,
-                              void (*progress)(uint32_t done, uint32_t total)) {
+                              nrf_progress_callback_t progress) {
   nrf_reboot_to_bootloader();
   nrf_set_dfu_mode(true);
 
