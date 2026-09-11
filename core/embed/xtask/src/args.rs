@@ -230,12 +230,6 @@ pub struct UploadArgs {
     /// Build target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
-
-    /// Binary to upload, instead of this build's artifact. Handy for a
-    /// prebuilt or archived image -- e.g. an intermediary firmware kept
-    /// alongside a test fixture rather than produced by the current tree.
-    #[arg(long, short = 'f', value_name = "FILE")]
-    pub file: Option<PathBuf>,
 }
 
 #[derive(Args, Debug)]
