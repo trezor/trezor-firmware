@@ -40,9 +40,6 @@ pub enum DeviceMenuMsg {
     ToggleHaptics,
     ToggleLed,
     WipeDevice,
-
-    // Misc
-    RefreshMenu,
 }
 
 impl DeviceMenuMsg {
@@ -71,7 +68,6 @@ impl DeviceMenuMsg {
             Self::ToggleHaptics => Qstr::MP_QSTR_ToggleHaptics,
             Self::ToggleLed => Qstr::MP_QSTR_ToggleLed,
             Self::WipeDevice => Qstr::MP_QSTR_WipeDevice,
-            Self::RefreshMenu => Qstr::MP_QSTR_RefreshMenu,
         }
         .to_obj()
     }
@@ -122,7 +118,6 @@ unsafe extern "C" fn device_menu_result_attr(_self_in: Obj, attr: ffi::qstr, des
             Qstr::MP_QSTR_TurnOff => Qstr::MP_QSTR_TurnOff,
             Qstr::MP_QSTR_Reboot => Qstr::MP_QSTR_Reboot,
             Qstr::MP_QSTR_RebootToBootloader => Qstr::MP_QSTR_RebootToBootloader,
-            Qstr::MP_QSTR_RefreshMenu => Qstr::MP_QSTR_RefreshMenu,
             _ => return Err(Error::AttributeError(attr.to_obj())),
         };
         unsafe { dest.write(msg.to_obj()) };

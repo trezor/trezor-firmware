@@ -96,8 +96,11 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
 
     /// Update swipe detection and buttons state based on menu size
     pub fn initialize_screen(&mut self, ctx: &mut EventCtx) {
-        // `self.initial_offset` replaced with 0, so next screens are not "resumed".
-        let initial_offset = core::mem::take(&mut self.initial_offset);
+        // The position this screen sits at whenever it is initialized. Not
+        // consumed: a screen may be initialized more than once - refreshed in
+        // place and then attached again - and has to land in the same place
+        // every time.
+        let initial_offset = self.initial_offset;
 
         if animation_disabled() {
             self.swipe = Some(SwipeDetect::new());

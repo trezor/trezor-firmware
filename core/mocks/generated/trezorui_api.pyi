@@ -74,6 +74,16 @@ class LayoutObj(Generic[T]):
         """Return the number of pages in the layout object."""
     def button_request(self) -> tuple[ButtonRequestType, str] | None:
         """Return (code, type) of button request made during the last event or timer pass."""
+    def needs_params_refresh(self) -> bool:
+        """Return True if the layout is waiting for fresh construction
+        parameters.
+        The request stays pending until `update_params()` serves it.
+        """
+    def update_params(self, params: dict[str, Any]) -> LayoutState | None:
+        """Hand fresh construction parameters to the layout.
+        `params` takes the same keys the layout was constructed with. The
+        layout updates itself in place, without being restarted.
+        """
     def get_transition_out(self) -> AttachType:
         """Return the transition type."""
     def return_value(self) -> T | None:
@@ -927,4 +937,3 @@ class DeviceMenuResult:
     Reboot: ClassVar[str]
     RebootToBootloader: ClassVar[str]
     TurnOff: ClassVar[str]
-    RefreshMenu: ClassVar[str]
