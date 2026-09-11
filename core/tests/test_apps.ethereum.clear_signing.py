@@ -5,8 +5,10 @@ import unittest
 
 if not utils.BITCOIN_ONLY:
     from ethereum_common import *
+    from trezor.enums import EthereumABIType as EABIT
     from trezor.enums import EthereumERC7730FieldFormatterType as FT
     from trezor.messages import (
+        EthereumABIValueInfo,
         EthereumERC7730EnumEntry,
         EthereumERC7730FieldInfo,
         EthereumERC7730Path,
@@ -14,6 +16,7 @@ if not utils.BITCOIN_ONLY:
 
     from apps.ethereum import clear_signing_definitions
     from apps.ethereum.clear_signing import (
+        ABIValue,
         AddressNameFormatter,
         Array,
         Atomic,
@@ -60,6 +63,38 @@ SEVEN_RANDOM_BYTES = b"\xb2^\xa7\x064\x05\x01"
 
 def to_bytes(v: int) -> bytes:
     return v.to_bytes(32, "big")
+
+
+def pad_left(value: bytes) -> bytes:
+    """Right-align a value in its word, like `address` or any numeric type."""
+    return b"\x00" * (32 - len(value)) + value
+
+
+def pad_right(value: bytes) -> bytes:
+    """Left-align a value and pad the word out, like the body of `bytes`."""
+    return value + b"\x00" * (-len(value) % 32)
+
+
+# `EthereumABIValueInfo` builders, to keep the descriptor trees below readable.
+# Exactly one variant may be set on each node.
+
+
+def p_atomic(abi_type: int) -> "EthereumABIValueInfo":
+    return EthereumABIValueInfo(atomic=abi_type)
+
+
+def p_dynamic(abi_type: int) -> "EthereumABIValueInfo":
+    return EthereumABIValueInfo(dynamic=abi_type)
+
+
+def p_tuple(fields: list, is_dynamic: bool) -> "EthereumABIValueInfo":
+    return EthereumABIValueInfo(
+        tuple=EthereumABITupleInfo(fields=fields, is_dynamic=is_dynamic)
+    )
+
+
+def p_array(element: "EthereumABIValueInfo") -> "EthereumABIValueInfo":
+    return EthereumABIValueInfo(array=element)
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -1490,6 +1525,265 @@ class TestEthereumClearSigning(unittest.TestCase):
         fields, defs = self._expand_array([])
         self.assertEqual(fields, [])
         self.assertEqual(defs.token_requests, [])
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestABIValueFromProto(unittest.TestCase):
+    """Characterization of `ABIValue.from_proto`: the wire descriptor -> parser
+    tree decoder.
+
+    `head_size` and `is_dynamic` are asserted in the two tuple cases because
+    static-vs-dynamic *is* the contract there - it decides whether the value is
+    encoded in place or behind an offset.
+    """
+
+    ADDR1 = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+    ADDR2 = bytes.fromhex("1111111111111111111111111111111111111111")
+
+    # --- leaves ---
+
+    def test_atomic_address(self):
+        node = ABIValue.from_proto(p_atomic(EABIT.ABI_ADDRESS))
+
+        data = memoryview(FIVE_RANDOM_BYTES + pad_left(self.ADDR1) + SEVEN_RANDOM_BYTES)
+        parsed, consumed = node.parse(data, len(FIVE_RANDOM_BYTES))
+
+        self.assertEqual(parsed, self.ADDR1)
+        self.assertEqual(consumed, 32)
+
+    def test_atomic_uint160_range_checked(self):
+        # A narrow uint is still one word on the wire; the unused high bytes
+        # must be zero, which is what distinguishes it from ABI_UINT256.
+        node = ABIValue.from_proto(p_atomic(EABIT.ABI_UINT160))
+
+        val = 2**160 - 1
+        parsed, consumed = node.parse(memoryview(to_bytes(val)), 0)
+        self.assertEqual(parsed, val)
+        self.assertEqual(consumed, 32)
+
+        with self.assertRaises(ValueOverflow):
+            node.parse(memoryview(to_bytes(2**160)), 0)
+
+    def test_dynamic_bytes(self):
+        node = ABIValue.from_proto(p_dynamic(EABIT.ABI_BYTES))
+
+        blob = b"\xde\xad\xbe\xef"
+        data = memoryview(
+            to_bytes(32)  # 0   head: body at 32
+            + to_bytes(len(blob))  # 32  byte length
+            + pad_right(blob)  # 64  data
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, blob)
+        self.assertEqual(consumed, 32)  # only the pointer is consumed
+
+    def test_dynamic_string(self):
+        node = ABIValue.from_proto(p_dynamic(EABIT.ABI_STRING))
+
+        text = "Hello World!"
+        data = memoryview(
+            to_bytes(32)  # 0   head: body at 32
+            + to_bytes(len(text))  # 32  byte length
+            + pad_right(text.encode())  # 64  data
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, text)
+        self.assertEqual(consumed, 32)
+
+    # --- tuples ---
+
+    def test_static_tuple(self):
+        # (address, uint256): no dynamic field, so the whole value is encoded
+        # in place and its head is its body.
+        node = ABIValue.from_proto(
+            p_tuple(
+                [p_atomic(EABIT.ABI_ADDRESS), p_atomic(EABIT.ABI_UINT256)],
+                is_dynamic=False,
+            )
+        )
+
+        self.assertFalse(node.is_dynamic)
+        self.assertEqual(node.head_size, 64)
+
+        payload = pad_left(self.ADDR1) + to_bytes(7)
+        data = memoryview(FIVE_RANDOM_BYTES + payload + SEVEN_RANDOM_BYTES)
+        parsed, consumed = node.parse(data, len(FIVE_RANDOM_BYTES))
+
+        self.assertEqual(parsed, (self.ADDR1, 7))
+        self.assertEqual(consumed, 64)
+
+    def test_dynamic_tuple(self):
+        # (address, bytes): one dynamic field makes the tuple dynamic, so its
+        # head is a single pointer and the `bytes` offset inside it is relative
+        # to the tuple's own body start.
+        node = ABIValue.from_proto(
+            p_tuple(
+                [p_atomic(EABIT.ABI_ADDRESS), p_dynamic(EABIT.ABI_BYTES)],
+                is_dynamic=True,
+            )
+        )
+
+        self.assertTrue(node.is_dynamic)
+        self.assertEqual(node.head_size, 32)
+
+        blob = b"\xde\xad\xbe\xef"
+        data = memoryview(
+            to_bytes(32)  # 0   head: tuple body at 32
+            + pad_left(self.ADDR1)  # 32  field 0
+            + to_bytes(64)  # 64  field 1 head, rel to 32 -> 96
+            + to_bytes(len(blob))  # 96  byte length
+            + pad_right(blob)  # 128 data
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, (self.ADDR1, blob))
+        self.assertEqual(consumed, 32)
+
+    # --- arrays ---
+
+    def test_array_of_atomics(self):
+        node = ABIValue.from_proto(p_array(p_atomic(EABIT.ABI_UINT256)))
+
+        data = memoryview(
+            to_bytes(32)  # 0   head: body at 32
+            + to_bytes(2)  # 32  element count
+            + to_bytes(11)  # 64  elements, in place
+            + to_bytes(22)  # 96
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, [11, 22])
+        self.assertEqual(consumed, 32)
+
+    def test_array_of_dynamic_leaves(self):
+        # bytes[]: a dynamic element type, so the element area holds one offset
+        # per element, each relative to the start of that area.
+        node = ABIValue.from_proto(p_array(p_dynamic(EABIT.ABI_BYTES)))
+
+        first, second = b"\xaa\xbb\xcc", b"\xdd\xee"
+        data = memoryview(
+            to_bytes(32)  # 0   head: body at 32
+            + to_bytes(2)  # 32  element count
+            + to_bytes(64)  # 64  elem 0, rel to 64 -> 128
+            + to_bytes(128)  # 96  elem 1, rel to 64 -> 192
+            + to_bytes(len(first))  # 128
+            + pad_right(first)  # 160
+            + to_bytes(len(second))  # 192
+            + pad_right(second)  # 224
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, [first, second])
+        self.assertEqual(consumed, 32)
+
+    def test_array_of_arrays(self):
+        node = ABIValue.from_proto(p_array(p_array(p_atomic(EABIT.ABI_UINT256))))
+
+        data = memoryview(
+            to_bytes(32)  # 0   head: outer body at 32
+            + to_bytes(2)  # 32  outer count
+            + to_bytes(64)  # 64  elem 0, rel to 64 -> 128
+            + to_bytes(160)  # 96  elem 1, rel to 64 -> 224
+            + to_bytes(2)  # 128 inner 0 count
+            + to_bytes(1)  # 160
+            + to_bytes(2)  # 192
+            + to_bytes(1)  # 224 inner 1 count
+            + to_bytes(3)  # 256
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, [[1, 2], [3]])
+        self.assertEqual(consumed, 32)
+
+    def test_array_of_static_tuples(self):
+        # A static element type is laid out in place at a stride of its own
+        # size - 64 bytes here, not one word.
+        node = ABIValue.from_proto(
+            p_array(
+                p_tuple(
+                    [p_atomic(EABIT.ABI_ADDRESS), p_atomic(EABIT.ABI_UINT256)],
+                    is_dynamic=False,
+                )
+            )
+        )
+
+        data = memoryview(
+            to_bytes(32)  # 0   head: body at 32
+            + to_bytes(2)  # 32  element count
+            + pad_left(self.ADDR1)  # 64  elem 0
+            + to_bytes(11)  # 96
+            + pad_left(self.ADDR2)  # 128 elem 1
+            + to_bytes(22)  # 160
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, [(self.ADDR1, 11), (self.ADDR2, 22)])
+        self.assertEqual(consumed, 32)
+
+    def test_array_of_dynamic_tuples(self):
+        # The wire descriptor's `is_dynamic` is already ignored in this
+        # position - the flag is derived from the fields instead - so pass the
+        # value the generator actually emits here (False) to pin that.
+        node = ABIValue.from_proto(
+            p_array(
+                p_tuple(
+                    [p_atomic(EABIT.ABI_ADDRESS), p_dynamic(EABIT.ABI_STRING)],
+                    is_dynamic=False,
+                )
+            )
+        )
+
+        one, two = "one", "two two"
+        data = memoryview(
+            to_bytes(32)  # 0   head: body at 32
+            + to_bytes(2)  # 32  element count
+            + to_bytes(64)  # 64  elem 0, rel to 64 -> 128
+            + to_bytes(192)  # 96  elem 1, rel to 64 -> 256
+            + pad_left(self.ADDR1)  # 128 elem 0 field 0
+            + to_bytes(64)  # 160 elem 0 field 1, rel to 128 -> 192
+            + to_bytes(len(one))  # 192
+            + pad_right(one.encode())  # 224
+            + pad_left(self.ADDR2)  # 256 elem 1 field 0
+            + to_bytes(64)  # 288 elem 1 field 1, rel to 256 -> 320
+            + to_bytes(len(two))  # 320
+            + pad_right(two.encode())  # 352
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, [(self.ADDR1, one), (self.ADDR2, two)])
+        self.assertEqual(consumed, 32)
+
+    # --- shapes the decoder refuses ---
+
+    def test_no_variant_set_rejected(self):
+        with self.assertRaises(InvalidFormatDefinition):
+            ABIValue.from_proto(EthereumABIValueInfo())
+
+    def test_unknown_abi_type_rejected(self):
+        # 99 is not a member of EthereumABIType.
+        with self.assertRaises(InvalidFormatDefinition):
+            ABIValue.from_proto(p_atomic(99))
+
+    def test_tuple_field_may_not_be_a_tuple(self):
+        # Lifted in a later change; pinned here so that change is visible.
+        inner = p_tuple([p_atomic(EABIT.ABI_UINT256)], is_dynamic=False)
+        with self.assertRaises(InvalidFormatDefinition):
+            ABIValue.from_proto(p_tuple([inner], is_dynamic=False))
+
+    def test_tuple_field_may_not_be_an_array(self):
+        # Lifted in a later change; pinned here so that change is visible.
+        inner = p_array(p_atomic(EABIT.ABI_UINT256))
+        with self.assertRaises(InvalidFormatDefinition):
+            ABIValue.from_proto(p_tuple([inner], is_dynamic=True))
+
+    def test_three_nested_arrays_rejected(self):
+        # Stays rejected in the later change, but for a stated nesting limit
+        # rather than by falling off the end of the unrolled cases.
+        node = p_array(p_array(p_array(p_atomic(EABIT.ABI_UINT256))))
+        with self.assertRaises(InvalidFormatDefinition):
+            ABIValue.from_proto(node)
 
 
 if __name__ == "__main__":
