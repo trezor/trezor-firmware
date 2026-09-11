@@ -86,16 +86,27 @@ async def require_confirm_approve(
 
 
 async def require_confirm_clear_signing(
+    *,
     recipient_str: str,
     intent: str,
     properties: list[StrPropertyType],
     maximum_fee: str,
+    contract_address: str,
     amount: str | None = None,
+    account: str | None = None,
+    account_path: str | None = None,
 ) -> None:
     from trezor.ui.layouts import confirm_ethereum_clear_signing
 
     await confirm_ethereum_clear_signing(
-        recipient_str, intent, properties, maximum_fee, amount
+        recipient_str=recipient_str,
+        intent=intent,
+        properties=properties,
+        maximum_fee=maximum_fee,
+        contract_address=contract_address,
+        amount=amount,
+        account=account,
+        account_path=account_path,
     )
 
 

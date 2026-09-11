@@ -1269,33 +1269,66 @@ if not utils.BITCOIN_ONLY:
         )
 
     async def confirm_ethereum_clear_signing(
+        *,
         recipient_str: str,
         intent: str,
         properties: list[StrPropertyType],
         maximum_fee: str,
+        contract_address: str,
         amount: str | None = None,
+        account: str | None = None,
+        account_path: str | None = None,
     ) -> None:
         from ..properties import with_colon
 
-        await confirm_action("confirm_contract", TR.words__provider, recipient_str)
-        await confirm_action("confirm_contract", TR.words__intent, intent)
-        if properties:
-            await confirm_properties(
-                "confirm_contract",
-                TR.ethereum__confirm_contract,
-                properties,
+        br_name = "ethereum/clear_signing"
+
+        info_items: list[StrPropertyType] = []
+        if account_path:
+            assert account is not None
+            info_items.append((TR.words__account, account, None))
+            info_items.append((TR.address_details__derivation_path, account_path, None))
+        info_items.append((TR.ethereum__contract_address, contract_address, None))
+        info_items = with_colon(info_items)
+
+        def _info_ctx() -> trezorui_api.LayoutContext[ui.UiResult]:
+            return trezorui_api.show_info_with_cancel(
+                title=TR.address_details__account_info,
+                items=info_items,
             )
-        with trezorui_api.confirm_summary(
+
+        await confirm_action(f"{br_name}/provider", TR.words__provider, recipient_str)
+        await confirm_action(f"{br_name}/intent", TR.words__intent, intent)
+        if properties:
+            props_ctx = trezorui_api.confirm_properties(
+                title=TR.ethereum__confirm_contract,
+                items=with_colon(properties),
+                hold=False,
+                external_menu=bool(info_items),
+            )
+            with props_ctx as props_layout, _info_ctx() as info_layout:
+                await with_info(
+                    props_layout,
+                    info_layout,
+                    br_name,
+                    ButtonRequestType.ConfirmOutput,
+                )
+
+        summary_ctx = trezorui_api.confirm_summary(
             amount=amount,
             amount_label=with_colon(TR.words__amount) if amount is not None else None,
             fee=maximum_fee,
             fee_label=with_colon(TR.send__maximum_fee),
+            account_items=info_items or None,
             extra_items=None,
             extra_title=None,
-        ) as layout:
-            await raise_if_not_confirmed(
-                layout,
-                br_name="confirm_ethereum_tx",
+        )
+        with summary_ctx as summary_layout, _info_ctx() as info_layout:
+            await with_info(
+                summary_layout,
+                info_layout,
+                f"{br_name}/summary",
+                BR_CODE_OTHER,
             )
 
     async def confirm_ethereum_staking_tx(
