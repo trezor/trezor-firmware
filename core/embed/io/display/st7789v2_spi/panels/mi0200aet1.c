@@ -29,18 +29,30 @@
 // the MI0240EGP-C1_OB adapter board itself - so unlike the sibling panel,
 // this one has no _select_interface_mode() hook (see mi0200aet1.h).
 //
-// Register sequence carried over unmodified from mi0240agt5cp1f (same
-// ST7789V2 controller, same 240x320 resolution). Checked against the
-// module's own datasheet (MI0200AET-1 Ver 1.3, Multi-Inno): it confirms the
-// ST7789V2 controller, the 240x320 resolution, 4-wire SPI, and the 4-LED
-// (common-anode, 4 cathodes LEDK1-4) backlight already wired on this board
-// via BACKLIGHT_PWM_* (see devkit.h) - but, like the sibling panel's
-// datasheet, it does not publish a register init table, so it can't
-// independently confirm the gamma/VCOM/porch/inversion values below, nor the
-// MADCTL orientation bits (carried over from the sibling panel and NOT yet
-// verified against this panel's own glass - it may scan differently). These
-// values remain a reasonable starting point pending validation on real
-// hardware.
+// Register sequence transcribed verbatim from the manufacturer-supplied
+// reference init code ("MI0200AET-1 Initialization Code.txt", AVNet/
+// Multi-Inno) - same command order, same values, including MADCTL. Notably,
+// this reference never writes RAMCTRL (0xB0) at all, unlike the
+// mi0240agt5cp1f sibling - so this panel is left at the ST7789V2 silicon
+// reset default (ENDIAN=0, Big Endian) rather than an explicit value; see
+// the RAMCTRL/ENDIAN discussion in display_sync_with_fb() (display_driver.c)
+// for why that matters. It also writes an undocumented register, 0xD6 - not
+// listed anywhere in the ST7789V2 datasheet (confirmed by full-text search),
+// so presumably a manufacturer/factory-test register - reproduced here
+// as-is since the reference does so unconditionally.
+//
+// CASET/RASET (setting the full 0..239 / 0..319 addressing window) are the
+// one addition beyond the reference: the reference never sets an address
+// window at init at all, but display_sync_with_fb() in display_driver.c
+// relies on the window already covering the full frame buffer before every
+// RAMWR, so it must be set exactly once, and here is the natural place.
+//
+// The reference's SLPOUT + 120ms delay (before any register write) and
+// final INVON+DISPON (after the last register write) are handled by the
+// shared core in display_driver.c, which calls PANEL_INIT_SEQ() (this file)
+// between them - see display_init() there. INVON below is kept as the last
+// command in this sequence, immediately before display_driver.c issues
+// DISPON, to preserve the reference's exact command order.
 
 #pragma GCC optimize ("O0")
 
@@ -49,54 +61,15 @@
 
 #include "mi0200aet1.h"
 
-// Register values below are carried over unmodified from the mi0240agt5cp1f
-// sibling panel (same ST7789 controller family, same 240x320 resolution) -
-// see comment at the top of this file. Gamma / VCOM / porch / inversion
-// values, and the MADCTL orientation bits, may need tuning against this
-// panel's own real hardware.
+// Undocumented ST7789V2 register written unconditionally by the reference
+// init code - not in the ST7789V2 datasheet's register map (confirmed via
+// full-text search), likely a manufacturer/factory-test register. Named
+// after its raw command byte since no datasheet name exists.
+#define ST7789V2_UNDOCUMENTED_0xD6 0xD6
+
+// Verbatim transcription of "MI0200AET-1 Initialization Code.txt" - see the
+// file header comment above.
 void mi0200aet1_init_seq(display_driver_t *drv) {
-  // Memory Data Access Control (MADCTL): default orientation. Carried over
-  // from the mi0240agt5cp1f sibling panel as a starting point - NOT yet
-  // verified against this panel's own glass, which may scan differently.
-  // See the matching 0/180 swap in mi0200aet1_rotate() below.
-  st7789v2_cmd(drv, ST7789V2_MADCTL);
-  st7789v2_data1(drv, MADCTL_MX);
-
-  // Interface Pixel Format: 16 bits/pixel (RGB565)
-  st7789v2_cmd(drv, ST7789V2_COLMOD);
-  st7789v2_data1(drv, 0x05);
-
-  // RAM Control: set ENDIAN=1 (Little Endian, D3 of 2nd parameter). Our
-  // framebuffer stores each RGB565 pixel as a native little-endian uint16_t
-  // and display_sync_with_fb() sends its bytes as-is (low byte first), but
-  // the controller's power-on default (ENDIAN=0) expects the high byte
-  // first - see the mi0240agt5cp1f sibling panel, where this was the root
-  // cause of a color-channel-swap and gradient-stripe bug on the same
-  // controller. 1st parameter 0x00 selects RM=0 (RAM access from MCU
-  // interface) / DM=00 (MCU interface mode) - both already the reset
-  // default, spelled out here since they must accompany the 2nd parameter in
-  // the same command. See ST7789V2 datasheet section 9.2.1, "RAMCTRL (B0h):
-  // RAM Control".
-  st7789v2_cmd(drv, ST7789V2_RAMCTRL);
-  {
-    static const uint8_t d[2] = {0x00, 0xC8};
-    st7789v2_data(drv, d, sizeof(d));
-  }
-
-  // Column Address Set: 0 .. 239
-  st7789v2_cmd(drv, ST7789V2_CASET);
-  {
-    static const uint8_t d[4] = {0x00, 0x00, 0x00, 0xEF};
-    st7789v2_data(drv, d, sizeof(d));
-  }
-
-  // Row Address Set: 0 .. 319
-  st7789v2_cmd(drv, ST7789V2_RASET);
-  {
-    static const uint8_t d[4] = {0x00, 0x00, 0x01, 0x3F};
-    st7789v2_data(drv, d, sizeof(d));
-  }
-
   // Porch Setting
   st7789v2_cmd(drv, ST7789V2_PORCTRL);
   {
@@ -104,21 +77,49 @@ void mi0200aet1_init_seq(display_driver_t *drv) {
     st7789v2_data(drv, d, sizeof(d));
   }
 
+  // Memory Data Access Control (MADCTL): reference default - RGB panel
+  // (BGR bit clear), no mirror/rotation. NOT yet verified against real
+  // hardware (the reference is a single fixed-orientation demo); see
+  // mi0200aet1_rotate below for the 90/180/270 derivation.
+  st7789v2_cmd(drv, ST7789V2_MADCTL);
+  st7789v2_data1(drv, 0x00);
+
+  // Interface Pixel Format: 16 bits/pixel (RGB565)
+  st7789v2_cmd(drv, ST7789V2_COLMOD);
+  st7789v2_data1(drv, 0x55);
+
+  // Column Address Set: 0 .. 239 / Row Address Set: 0 .. 319. Not part of
+  // the reference sequence - see file header comment above.
+  st7789v2_cmd(drv, ST7789V2_CASET);
+  {
+    static const uint8_t d[4] = {0x00, 0x00, 0x00, 0xEF};
+    st7789v2_data(drv, d, sizeof(d));
+  }
+  st7789v2_cmd(drv, ST7789V2_RASET);
+  {
+    static const uint8_t d[4] = {0x00, 0x00, 0x01, 0x3F};
+    st7789v2_data(drv, d, sizeof(d));
+  }
+
+  // Gate Control
+  st7789v2_cmd(drv, ST7789V2_GCTRL);
+  st7789v2_data1(drv, 0x62);
+
   // VCOM Setting
   st7789v2_cmd(drv, ST7789V2_VCOMS);
-  st7789v2_data1(drv, 0x1F);
+  st7789v2_data1(drv, 0x31);
 
   // LCMCTRL: LCM Control
   st7789v2_cmd(drv, ST7789V2_LCMCTRL);
-  st7789v2_data1(drv, 0x20);
+  st7789v2_data1(drv, 0x2C);
 
   // VDV and VRH Command Enable
   st7789v2_cmd(drv, ST7789V2_VDVVRHEN);
   st7789v2_data1(drv, 0x01);
 
-  // VRH Set (4.3V)
+  // VRH Set
   st7789v2_cmd(drv, ST7789V2_VRHS);
-  st7789v2_data1(drv, 0x0F);
+  st7789v2_data1(drv, 0x00);
 
   // VDV Setting
   st7789v2_cmd(drv, ST7789V2_VDVS);
@@ -126,10 +127,7 @@ void mi0200aet1_init_seq(display_driver_t *drv) {
 
   // Frame Rate Control in Normal Mode (column inversion)
   st7789v2_cmd(drv, ST7789V2_FRCTRL2);
-  st7789v2_data1(drv, 0xEF);
-
-  // Display Inversion On (panel is normally black)
-  st7789v2_cmd(drv, ST7789V2_INVON);
+  st7789v2_data1(drv, 0x0F);
 
   // PWCTRL1: Power Control 1
   st7789v2_cmd(drv, ST7789V2_PWCTRL1);
@@ -138,41 +136,53 @@ void mi0200aet1_init_seq(display_driver_t *drv) {
     st7789v2_data(drv, d, sizeof(d));
   }
 
+  // Undocumented register - see #define comment above.
+  st7789v2_cmd(drv, ST7789V2_UNDOCUMENTED_0xD6);
+  st7789v2_data1(drv, 0xA1);
+
   // Positive voltage gamma correction
   st7789v2_cmd(drv, ST7789V2_PVGAMCTRL);
   {
-    static const uint8_t d[14] = {0xD0, 0x0A, 0x10, 0x0A, 0x0A, 0x26, 0x36,
-                                  0x34, 0x4D, 0x18, 0x13, 0x14, 0x2F, 0x34};
+    static const uint8_t d[14] = {0xF0, 0x00, 0x06, 0x0F, 0x10, 0x3D, 0x2D,
+                                  0x44, 0x40, 0x3F, 0x1C, 0x19, 0x13, 0x15};
     st7789v2_data(drv, d, sizeof(d));
   }
 
   // Negative voltage gamma correction
   st7789v2_cmd(drv, ST7789V2_NVGAMCTRL);
   {
-    static const uint8_t d[14] = {0xD0, 0x0A, 0x10, 0x0A, 0x09, 0x26, 0x36,
-                                  0x53, 0x4C, 0x18, 0x14, 0x14, 0x2F, 0x34};
+    static const uint8_t d[14] = {0xF0, 0x00, 0x00, 0x03, 0x04, 0x02, 0x2D,
+                                  0x44, 0x40, 0x08, 0x14, 0x15, 0x11, 0x17};
     st7789v2_data(drv, d, sizeof(d));
   }
+
+  // Display Inversion On (panel is normally black). Last command in the
+  // reference sequence, immediately before DISPON - which display_driver.c
+  // issues right after this function returns.
+  st7789v2_cmd(drv, ST7789V2_INVON);
 }
 
 void mi0200aet1_rotate(display_driver_t *drv, int angle) {
-  // Carried over from the mi0240agt5cp1f sibling panel as a starting point
-  // (0/180 swapped relative to the "textbook" ST7789V2 bits) - NOT yet
-  // verified against this panel's own glass, which may scan differently.
-  // See mi0200aet1_init_seq() above.
-  uint8_t madctl = 0;
+  // The reference init code only demonstrates the 0-degree (default)
+  // orientation above; it gives no data for 90/180/270. These follow the
+  // "textbook" ST7789V2 rotation table (0=none, 90=MV|MX, 180=MX|MY,
+  // 270=MV|MY - see e.g. Adafruit_ST7789). NOT yet verified against real
+  // hardware - the previous "0/180 swapped" hack this replaces was tuned
+  // against an MX-based default borrowed from the mi0240agt5cp1f sibling,
+  // which no longer applies now that the default matches this panel's own
+  // reference (0x00, no MX).
+  uint8_t madctl = 0x00;
   switch (angle) {
     case 90:
       madctl = MADCTL_MV | MADCTL_MX;
       break;
     case 180:
-      madctl = MADCTL_MY;
+      madctl = MADCTL_MX | MADCTL_MY;
       break;
     case 270:
       madctl = MADCTL_MV | MADCTL_MY;
       break;
     default:
-      madctl = MADCTL_MX;
       break;
   }
 
