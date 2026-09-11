@@ -22,6 +22,9 @@ PUBLIC_TOKENS: dict[str, tuple[str, int]] = {
     # Solv Protocol assets: https://solv.finance/.well-known/stellar.toml
     "CBIJBDNZNF4X35BJ4FFZWCDBSCKOP5NB4PLG4SNENRMLAPYG4P5FM6VN": ("SolvBTC", 8),
     "CAUP7NFABXE5TJRL3FKTPMWRLC7IAXYDCTHQRFSCLR5TMGKHOOQO772J": ("xSolvBTC", 8),
+    # Centrifuge assets: https://centrifuge.io/.well-known/stellar.toml
+    "CBI7UCH5KGSVQRO5H4SUCZUTZABCITZLRHQQZTWL2TK4RZ72TAR6IHRV": ("deJTRSY", 18),
+    "CC64WBDGS6QQP22QTTIACYIXT3WF7BBQEYOQPLTP7GTKYY7PZ74QYGSL": ("deJAAA", 18),
 }
 
 
