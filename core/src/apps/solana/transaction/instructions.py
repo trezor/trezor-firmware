@@ -917,6 +917,12 @@ def get_instruction(
                         None,
                     ),
                     UIProperty(
+                        "space",
+                        None,
+                        "Data size",
+                        0,
+                    ),
+                    UIProperty(
                         "owner",
                         None,
                         "Owner",
@@ -1075,6 +1081,12 @@ def get_instruction(
                         "created_account",
                         "Create account",
                         None,
+                    ),
+                    UIProperty(
+                        "space",
+                        None,
+                        "Data size",
+                        0,
                     ),
                     UIProperty(
                         "owner",
