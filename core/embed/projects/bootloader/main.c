@@ -558,7 +558,7 @@ int bootloader_main(void) {
   volatile secbool auto_upgrade = secfalse;
   // Start the bootloader workflow on the connect screen instead of the intro
   // (BOOT_COMMAND_STOP_AND_CONNECT).
-  bool connect_to_host = false;
+  volatile secbool connect_to_host = secfalse;
 
   fw_check_info_t fw;
   fw_check(&fw);
@@ -578,7 +578,7 @@ int bootloader_main(void) {
       // screen so the wire interfaces come up without a tap first. Carries no
       // authorization -- it only selects the entry screen.
       stay_in_bootloader = sectrue;
-      connect_to_host = true;
+      connect_to_host = sectrue;
       break;
     case BOOT_COMMAND_INSTALL_UPGRADE:
       if (fw.firmware_present == sectrue) {

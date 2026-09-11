@@ -48,7 +48,7 @@ workflow_result_t workflow_menu(const fw_check_info_t *fw, protob_ios_t *ios);
 // wire interfaces) rather than the intro screen; see
 // BOOT_COMMAND_STOP_AND_CONNECT.
 workflow_result_t workflow_bootloader(const fw_check_info_t *fw,
-                                      bool connect_to_host);
+                                      secbool connect_to_host);
 
 workflow_result_t workflow_empty_device(void);
 
