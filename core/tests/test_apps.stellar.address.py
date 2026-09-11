@@ -4,6 +4,14 @@ from common import *  # isort:skip
 from trezor.wire import DataError
 
 if not utils.BITCOIN_ONLY:
+    from trezor.crypto.hashlib import sha256
+    from trezor.enums import StellarAssetType
+    from trezor.messages import StellarAsset
+
+    from apps.stellar.consts import (
+        NETWORK_PASSPHRASE_PUBLIC,
+        NETWORK_PASSPHRASE_TESTNET,
+    )
     from apps.stellar.helpers import (
         STRKEY_CLAIMABLE_BALANCE,
         STRKEY_CONTRACT,
@@ -11,6 +19,8 @@ if not utils.BITCOIN_ONLY:
         STRKEY_LIQUIDITY_POOL,
         STRKEY_MUXED_ACCOUNT,
         address_from_public_key,
+        contract_address_from_address,
+        contract_address_from_asset,
         decode_strkey,
         encode_strkey,
         public_key_from_address,
@@ -187,6 +197,101 @@ class TestStellarAddress(unittest.TestCase):
             strkey = encode_strkey(version, bytes(size))
             with self.assertRaises(DataError):
                 decode_strkey(strkey)
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestStellarContractAddress(unittest.TestCase):
+    # Expected addresses cross-checked against stellar_sdk's
+    # Asset.contract_id(); the PUBLIC USDC one is Circle's well-known SAC.
+    def test_contract_address_from_asset(self):
+        native = StellarAsset(type=StellarAssetType.NATIVE)
+        usdc = StellarAsset(  # ALPHANUM4
+            type=StellarAssetType.ALPHANUM4,
+            code="USDC",
+            issuer="GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+        )
+        ustry = StellarAsset(  # ALPHANUM12
+            type=StellarAssetType.ALPHANUM12,
+            code="USTRY",
+            issuer="GCRYUGD5NVARGXT56XEZI5CIFCQETYHAPQQTHO2O3IQZTHDH4LATMYWC",
+        )
+        # the same asset resolves to a different contract on each network
+        VECTORS = (
+            (
+                NETWORK_PASSPHRASE_PUBLIC,
+                native,
+                "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA",
+            ),
+            (
+                NETWORK_PASSPHRASE_PUBLIC,
+                usdc,
+                "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+            ),
+            (
+                NETWORK_PASSPHRASE_PUBLIC,
+                ustry,
+                "CBLV4ATSIWU67CFSQU2NVRKINQIKUZ2ODSZBUJTJ43VJVRSBTZYOPNUR",
+            ),
+            (
+                NETWORK_PASSPHRASE_TESTNET,
+                native,
+                "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            ),
+            (
+                NETWORK_PASSPHRASE_TESTNET,
+                usdc,
+                "CA2E53VHFZ6YSWQIEIPBXJQGT6VW3VKWWZO555XKRQXYJ63GEBJJGHY7",
+            ),
+            (
+                NETWORK_PASSPHRASE_TESTNET,
+                ustry,
+                "CBEHZAPSMUJXT6R4X4LSQYEOOSNBNUQISUTHJNDZKMPSZQEKJC753HR3",
+            ),
+        )
+        for passphrase, asset, expected in VECTORS:
+            network_id = sha256(passphrase.encode()).digest()
+            self.assertEqual(contract_address_from_asset(network_id, asset), expected)
+
+    # Expected addresses cross-checked against stellar_sdk (the contract ID
+    # preimage hashed as ENVELOPE_TYPE_CONTRACT_ID of the network).
+    def test_contract_address_from_address(self):
+        salt = bytes(range(32))
+        user = "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+        contract = "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI"
+        VECTORS = (
+            (
+                NETWORK_PASSPHRASE_TESTNET,
+                user,
+                salt,
+                "CDJF3R3MMGGPD2IKQXDLE6JKU4FHZDBKHRHHRJQEGDN7274LVTNVEW7M",
+            ),
+            # another salt yields another contract for the same deployer
+            (
+                NETWORK_PASSPHRASE_TESTNET,
+                user,
+                bytes(range(32, 64)),
+                "CC3IGQXG4UJBKFY2REJKX4DVEGRUZ6KBBDXTDFZP72ACXY4TC7CA6BCP",
+            ),
+            # the same preimage yields a different contract on each network
+            (
+                NETWORK_PASSPHRASE_PUBLIC,
+                user,
+                salt,
+                "CCQAZWSDF67IIKGEB543CJTX4VVYFHFSXJ7VKIULYDM5Y54PXO3OW77H",
+            ),
+            # a contract can be the deployer too
+            (
+                NETWORK_PASSPHRASE_TESTNET,
+                contract,
+                salt,
+                "CCUMNRWWUAA5YSVTVCTOMNNKCJYZ74SZ3VUOHX7NU3YHAEBF242QNRR4",
+            ),
+        )
+        for passphrase, deployer, salt, expected in VECTORS:
+            network_id = sha256(passphrase.encode()).digest()
+            self.assertEqual(
+                contract_address_from_address(network_id, deployer, salt), expected
+            )
 
 
 if __name__ == "__main__":

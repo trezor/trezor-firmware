@@ -409,11 +409,19 @@ if TYPE_CHECKING:
         SCV_MAP = 17
         SCV_ADDRESS = 18
 
+    class StellarContractIDPreimageType(IntEnum):
+        CONTRACT_ID_PREIMAGE_FROM_ADDRESS = 0
+
+    class StellarContractExecutableType(IntEnum):
+        CONTRACT_EXECUTABLE_WASM = 0
+
     class StellarSorobanAuthorizedFunctionType(IntEnum):
         SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN = 2
 
     class StellarHostFunctionType(IntEnum):
         HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0
+        HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 = 3
 
     class StellarSorobanCredentialsType(IntEnum):
         SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0

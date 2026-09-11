@@ -465,12 +465,22 @@ class StellarSCValType(IntEnum):
     SCV_ADDRESS = 18
 
 
+class StellarContractIDPreimageType(IntEnum):
+    CONTRACT_ID_PREIMAGE_FROM_ADDRESS = 0
+
+
+class StellarContractExecutableType(IntEnum):
+    CONTRACT_EXECUTABLE_WASM = 0
+
+
 class StellarSorobanAuthorizedFunctionType(IntEnum):
     SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0
+    SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN = 2
 
 
 class StellarHostFunctionType(IntEnum):
     HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0
+    HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 = 3
 
 
 class StellarSorobanCredentialsType(IntEnum):
@@ -8604,11 +8614,66 @@ class StellarInvokeContractArgs(protobuf.MessageType):
         self.asset_hint = asset_hint
 
 
+class StellarContractIDPreimage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "StellarContractIDPreimageType", repeated=False, required=True),
+        2: protobuf.Field("from_address", "StellarContractIDPreimageFromAddress", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "StellarContractIDPreimageType",
+        from_address: Optional["StellarContractIDPreimageFromAddress"] = None,
+    ) -> None:
+        self.type = type
+        self.from_address = from_address
+
+
+class StellarContractExecutable(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "StellarContractExecutableType", repeated=False, required=True),
+        2: protobuf.Field("wasm_hash", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "StellarContractExecutableType",
+        wasm_hash: Optional["bytes"] = None,
+    ) -> None:
+        self.type = type
+        self.wasm_hash = wasm_hash
+
+
+class StellarCreateContractArgsV2(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("contract_id_preimage", "StellarContractIDPreimage", repeated=False, required=True),
+        2: protobuf.Field("executable", "StellarContractExecutable", repeated=False, required=True),
+        3: protobuf.Field("constructor_args", "StellarSCVal", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        contract_id_preimage: "StellarContractIDPreimage",
+        executable: "StellarContractExecutable",
+        constructor_args: Optional[Sequence["StellarSCVal"]] = None,
+    ) -> None:
+        self.constructor_args: Sequence["StellarSCVal"] = constructor_args if constructor_args is not None else []
+        self.contract_id_preimage = contract_id_preimage
+        self.executable = executable
+
+
 class StellarSorobanAuthorizedFunction(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("type", "StellarSorobanAuthorizedFunctionType", repeated=False, required=True),
         2: protobuf.Field("contract_fn", "StellarInvokeContractArgs", repeated=False, required=False, default=None),
+        3: protobuf.Field("create_contract_v2_host_fn", "StellarCreateContractArgsV2", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -8616,9 +8681,11 @@ class StellarSorobanAuthorizedFunction(protobuf.MessageType):
         *,
         type: "StellarSorobanAuthorizedFunctionType",
         contract_fn: Optional["StellarInvokeContractArgs"] = None,
+        create_contract_v2_host_fn: Optional["StellarCreateContractArgsV2"] = None,
     ) -> None:
         self.type = type
         self.contract_fn = contract_fn
+        self.create_contract_v2_host_fn = create_contract_v2_host_fn
 
 
 class StellarSorobanAuthorizedInvocation(protobuf.MessageType):
@@ -8643,6 +8710,7 @@ class StellarHostFunction(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("type", "StellarHostFunctionType", repeated=False, required=True),
         2: protobuf.Field("invoke_contract", "StellarInvokeContractArgs", repeated=False, required=False, default=None),
+        3: protobuf.Field("create_contract_v2", "StellarCreateContractArgsV2", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -8650,9 +8718,11 @@ class StellarHostFunction(protobuf.MessageType):
         *,
         type: "StellarHostFunctionType",
         invoke_contract: Optional["StellarInvokeContractArgs"] = None,
+        create_contract_v2: Optional["StellarCreateContractArgsV2"] = None,
     ) -> None:
         self.type = type
         self.invoke_contract = invoke_contract
+        self.create_contract_v2 = create_contract_v2
 
 
 class StellarSorobanAddressCredentials(protobuf.MessageType):
@@ -8928,6 +8998,23 @@ class StellarSCValMapEntry(protobuf.MessageType):
     ) -> None:
         self.key = key
         self.value = value
+
+
+class StellarContractIDPreimageFromAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("salt", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        salt: "bytes",
+    ) -> None:
+        self.address = address
+        self.salt = salt
 
 
 class StellarSorobanAuthorizationWithAddress(protobuf.MessageType):

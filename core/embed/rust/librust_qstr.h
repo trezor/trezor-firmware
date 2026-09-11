@@ -1513,6 +1513,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__delete;
   MP_QSTR_stellar__delete_passive_offer;
   MP_QSTR_stellar__delete_trust;
+  MP_QSTR_stellar__deploy_contract;
   MP_QSTR_stellar__destination;
   MP_QSTR_stellar__exchanges_require_memo;
   MP_QSTR_stellar__ext_auth;
@@ -1566,6 +1567,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__valid_until_ledger;
   MP_QSTR_stellar__value_sha256;
   MP_QSTR_stellar__wanna_clean_value_key_template;
+  MP_QSTR_stellar__wasm_hash;
   MP_QSTR_tezos__baker_address;
   MP_QSTR_tezos__balance;
   MP_QSTR_tezos__ballot;
