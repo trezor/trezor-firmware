@@ -139,10 +139,10 @@ jobs:
             asan: asan
         include:
           - model: T3T1
-            coins: btconly
+            coins: universal
             type: debuglink
             asan: noasan
-            miniscript: true  # currently Miniscript is not supported for universal builds
+            miniscript: true
           - model: T3W1
             coins: universal
             type: debuglink
@@ -316,17 +316,23 @@ jobs:
       fail-fast: false
       matrix:
         model: [T2T1, T3B1]
+        miniscript: [false]
+        include:
+          - model: T3T1
+            miniscript: true
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
+          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan${{ matrix.miniscript && '-miniscript' || '' }}
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "uv run core/emu.py --headless -q --temporary-profile --slip0014 --command cargo test --manifest-path rust/trezor-client/Cargo.toml"
+      - run: |
+          nix-shell --run "uv run core/emu.py --headless -q --temporary-profile --slip0014 --command \
+          cargo test --manifest-path rust/trezor-client/Cargo.toml -- ${{ matrix.miniscript && '' || ' --skip test_miniscript_' }}"
 
   # Device tests for Core. Running device tests and also comparing screens
   # with the expected UI result.
