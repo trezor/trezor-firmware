@@ -244,6 +244,7 @@ if TYPE_CHECKING:
         N1W1 = 25
         TouchWakeup = 26
         Ethereum_EIP7702 = 28
+        Miniscript = 29
 
     class SdProtectOperationType(IntEnum):
         DISABLE = 0
