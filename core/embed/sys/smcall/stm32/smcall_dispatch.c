@@ -455,6 +455,18 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     } break;
 #endif  // USE_TELEMETRY
 
+#ifdef USE_MLDSA44
+    case SMCALL_MLDSA44_VERIFY: {
+      const mldsa44_signature_t *sig = (const mldsa44_signature_t *)args[0];
+      const void *m = (const void *)args[1];
+      size_t mlen = args[2];
+      const mldsa44_public_key_t *pk = (const mldsa44_public_key_t *)args[3];
+      secbool *valid = (secbool *)args[4];
+      ts_t status = mldsa44_verify__verified(sig, m, mlen, pk, valid);
+      args[0] = ts_code(status);
+    } break;
+#endif
+
     default:
       system_exit_fatal("Invalid smcall", __FILE__, __LINE__);
       break;
