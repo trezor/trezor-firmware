@@ -5,6 +5,7 @@ from pathlib import Path
 
 import click
 import construct as c
+import tomllib
 
 from trezorlib.firmware.core import BootableImage, FirmwareImage
 from trezorlib.firmware.models import Model
@@ -46,6 +47,30 @@ def aligned_digest(fn: Path, data: bytes, padding: bytes, aligned_size: int) -> 
     digest_data = data + padding * (aligned_size - len(data))
     assert len(digest_data) == aligned_size
     return blake2s(digest_data).digest()
+
+
+def model_uses_boot_ucb(model_dir: Path) -> bool:
+    """Whether the model enables the UCB (update control block) bootloader scheme.
+
+    UCB models verify a staged bootloader through its PQ boot-header signature
+    (see boot_image_replace under USE_BOOT_UCB), not through the padded blake2s
+    digests in bootloader_hashes.h -- boot_image_embdata.c only wires
+    .hash_00/.hash_FF ``#ifndef USE_BOOT_UCB``. The digests are dead for these
+    models, so generating them only churns the header whenever the bootloader
+    binary changes, for no consumer.
+
+    The authoritative source is the model.toml ``features`` list; the BOOTUCB_*
+    layout symbols are not reliable (some non-UCB models define them too).
+    """
+    model_toml = model_dir / "model.toml"
+
+    try:
+        with model_toml.open("rb") as file:
+            config = tomllib.load(file)
+    except FileNotFoundError:
+        return False
+
+    return "boot_ucb" in config.get("features", [])
 
 
 def to_uint_array(data: bytes) -> str:
@@ -105,6 +130,13 @@ def main(check: bool) -> None:
     models = [model for model in models if model.is_dir()]
 
     for model in models:
+        if model_uses_boot_ucb(model):
+            # UCB models never consume these digests (see model_uses_boot_ucb):
+            # both the header and its #include have been removed for them, so
+            # skip generation to avoid recreating a dead file.
+            print(f"Skipping {model.name}: boot_ucb model, bootloader hashes unused")
+            continue
+
         path = model / "bootloaders"
 
         if path.is_dir():
