@@ -394,7 +394,8 @@ pub trait FirmwareUI {
 
     fn show_thp_pairing_code(
         title: TString<'static>,
-        description: TString<'static>,
+        description: StrBuffer,
+        host_name: TString<'static>,
         code: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
