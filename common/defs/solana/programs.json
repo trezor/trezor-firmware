@@ -159,6 +159,11 @@
               "display_name": "Create account"
             },
             {
+              "parameter": "base",
+              "display_name": "Base account",
+              "default_value_to_hide": "signer"
+            },
+            {
               "parameter": "space",
               "display_name": "Data size",
               "default_value_to_hide": 0
