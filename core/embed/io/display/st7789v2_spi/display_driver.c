@@ -177,8 +177,18 @@ static void display_sync_with_fb(display_driver_t *drv) {
   HAL_GPIO_WritePin(DISPLAY_DC_PORT, DISPLAY_DC_PIN, GPIO_PIN_SET);
   HAL_GPIO_WritePin(DISPLAY_SPI_CS_PORT, DISPLAY_SPI_CS_PIN, GPIO_PIN_RESET);
 
-  // Sent as-is, no byte-swap needed - RAMCTRL.ENDIAN is set to Little Endian
-  // in PANEL_INIT_SEQ() to match our framebuf's native pixel byte order.
+  // Sent as-is (no byte-swap). Both panels' PANEL_INIT_SEQ() otherwise follow
+  // their vendor reference code verbatim, but each now explicitly writes
+  // RAMCTRL.ENDIAN=1 (Little Endian) rather than leaving it at the vendor
+  // reference's Big Endian - see each panel's file header NOTE for the
+  // hardware evidence (mi0240agt5cp1f's reference also has RM=1/DM=01, RGB
+  // interface, which produces a blank screen on this SPI-only-wired board
+  // and had to be deviated from regardless; mi0200aet1's reference never
+  // wrote RAMCTRL at all, silently leaving ENDIAN at its reset-default 0).
+  // ENDIAN=1 is required to match our framebuf's native little-endian
+  // uint16_t pixel storage (LSB first) - Big Endian expects the MSB of each
+  // pixel first and produces a color-channel-swap/gradient-stripe pattern
+  // instead, as confirmed on real hardware on both panels.
   const uint8_t *src = drv->framebuf;
   size_t remaining = FRAME_BUFFER_SIZE;
   while (remaining > 0) {
@@ -271,11 +281,16 @@ bool display_init(display_content_mode_t mode) {
     HAL_GPIO_WritePin(DISPLAY_RST_PORT, DISPLAY_RST_PIN, GPIO_PIN_SET);
     HAL_Delay(120);
 
+    // Exit Sleep Mode first, then wait the settling time before issuing any
+    // other command - this order (and the 120ms delay) matches both panel
+    // vendors' reference init code exactly, which perform SLPOUT+delay
+    // before any register configuration and DISPON only at the very end,
+    // after the panel's register init sequence.
+    st7789v2_cmd(drv, ST7789V2_SLPOUT);
+    HAL_Delay(120);
+
     PANEL_INIT_SEQ(drv);
 
-    st7789v2_cmd(drv, ST7789V2_SLPOUT);
-    HAL_Delay(5);  // need to wait 5 milliseconds after "sleep out" before
-                   // sending any new commands
     st7789v2_cmd(drv, ST7789V2_DISPON);
 
     // g_framebuf is already zeroed (BSS) at this point in boot; the actual

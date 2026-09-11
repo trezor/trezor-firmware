@@ -37,7 +37,9 @@ typedef struct display_driver display_driver_t;
 #define ST7789V2_MADCTL 0x36
 #define ST7789V2_COLMOD 0x3A
 #define ST7789V2_RAMCTRL 0xB0
+#define ST7789V2_FRCTRL1 0xB1
 #define ST7789V2_PORCTRL 0xB2
+#define ST7789V2_GCTRL 0xB7
 #define ST7789V2_VCOMS 0xBB
 #define ST7789V2_LCMCTRL 0xC0
 #define ST7789V2_VDVVRHEN 0xC2
@@ -48,7 +50,8 @@ typedef struct display_driver display_driver_t;
 #define ST7789V2_PVGAMCTRL 0xE0
 #define ST7789V2_NVGAMCTRL 0xE1
 
-// MADCTL rotation bits (ST7789V2 manual, section 8.12)
+// MADCTL bits (ST7789V2 manual, section 8.12)
+#define MADCTL_BGR (1 << 3)
 #define MADCTL_MV (1 << 5)
 #define MADCTL_MX (1 << 6)
 #define MADCTL_MY (1 << 7)
