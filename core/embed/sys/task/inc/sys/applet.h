@@ -45,6 +45,11 @@ struct applet {
   /** Callback called when the applet is unloaded */
   applet_unload_cb_t unload_cb;
 
+  /** Pointer to the applet's heap */
+  void* heap_ptr;
+  /** Size of the applet's heap */
+  size_t heap_size;
+
 #ifdef TREZOR_EMULATOR
   /** Handle returned by `dlopen()` */
   void* handle;
@@ -98,5 +103,22 @@ bool applet_is_alive(applet_t* applet);
  * @return Pointer to the currently active applet, or NULL if none.
  */
 applet_t* applet_active(void);
+
+/**
+ * @brief Sets the heap pointer and size for the applet.
+ * @param applet Pointer to the applet to set the heap for.
+ * @param heap_ptr Pointer to the start of the heap.
+ * @param heap_size Size of the heap in bytes.
+ */
+void applet_set_heap(applet_t* applet, void* heap_ptr, size_t heap_size);
+
+/**
+ * @brief Gets the heap pointer and size for the applet.
+ * @param applet Pointer to the applet to get the heap for.
+ * @param heap_ptr Pointer to a variable to store the heap pointer.
+ * @param heap_size Pointer to a variable to store the heap size.
+ * @return TS_OK on success, or an error code on failure.
+ */
+ts_t applet_get_heap(applet_t* applet, void** heap_ptr, size_t* heap_size);
 
 #endif  // USE_APPLETS
