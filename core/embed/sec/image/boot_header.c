@@ -172,7 +172,10 @@ const boot_header_auth_t* boot_header_auth_get(uintptr_t header) {
   }
 
   // Check if bootloader code size is within reasonable limits
-  if (hdr->code_size < SIZE_8K) {
+  _Static_assert(NONBOARDLOADER_MAXSIZE >= SIZE_64K,
+                 "non-boardloader area smaller than the maximum header size");
+  if (hdr->code_size < SIZE_8K ||
+      hdr->code_size > NONBOARDLOADER_MAXSIZE - hdr->header_size) {
     return NULL;
   }
 
