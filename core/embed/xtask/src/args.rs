@@ -187,12 +187,8 @@ pub struct FlashArgs {
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
 
-    /// Flash the combined image built by `xtask combine` -- the whole boot
-    /// chain, boardloader included, as one write.
-    ///
-    /// This is what puts a blank device into a working state. The image is
-    /// flashed exactly as combined, so what it contains was decided by `xtask
-    /// combine`.
+    /// Flash the combined image built by `xtask combine`. This puts a blank
+    /// device into a working state.
     #[arg(long)]
     pub combined: bool,
 }
