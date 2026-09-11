@@ -31,15 +31,25 @@
 //
 // Register sequence transcribed verbatim from the manufacturer-supplied
 // reference init code ("MI0200AET-1 Initialization Code.txt", AVNet/
-// Multi-Inno) - same command order, same values, including MADCTL. Notably,
-// this reference never writes RAMCTRL (0xB0) at all, unlike the
-// mi0240agt5cp1f sibling - so this panel is left at the ST7789V2 silicon
-// reset default (ENDIAN=0, Big Endian) rather than an explicit value; see
-// the RAMCTRL/ENDIAN discussion in display_sync_with_fb() (display_driver.c)
-// for why that matters. It also writes an undocumented register, 0xD6 - not
-// listed anywhere in the ST7789V2 datasheet (confirmed by full-text search),
-// so presumably a manufacturer/factory-test register - reproduced here
-// as-is since the reference does so unconditionally.
+// Multi-Inno) - same command order, same values, including MADCTL, with one
+// deliberate deviation on RAMCTRL - see NOTE below. It also writes an
+// undocumented register, 0xD6 - not listed anywhere in the ST7789V2
+// datasheet (confirmed by full-text search), so presumably a manufacturer/
+// factory-test register - reproduced here as-is since the reference does so
+// unconditionally.
+//
+// NOTE: unlike the reference (which never writes RAMCTRL (0xB0) at all,
+// leaving it at the ST7789V2 silicon reset default), this file now writes
+// RAMCTRL = {0x00, 0xC8} explicitly - confirmed on real hardware: this panel
+// showed the same color-channel-swap/gradient-stripe pattern as the
+// mi0240agt5cp1f sibling before its own RAMCTRL fix (see that panel's file
+// header NOTE), because ENDIAN was left at its reset default of 0 (Big
+// Endian), which mismatches our framebuf's native little-endian uint16_t
+// pixel storage - see display_sync_with_fb() (display_driver.c). 0x00 for
+// the 1st parameter (RM=0/DM=00, MCU interface) matches the silicon reset
+// default already in effect - this panel's pixel writes were reaching GRAM
+// fine, only the byte order was wrong - so only ENDIAN (2nd parameter,
+// 0x00->0xC8) is an actual behavior change here.
 //
 // CASET/RASET (setting the full 0..239 / 0..319 addressing window) are the
 // one addition beyond the reference: the reference never sets an address
@@ -128,6 +138,17 @@ void mi0200aet1_init_seq(display_driver_t *drv) {
   // Frame Rate Control in Normal Mode (column inversion)
   st7789v2_cmd(drv, ST7789V2_FRCTRL2);
   st7789v2_data1(drv, 0x0F);
+
+  // RAM Control. {0x00, 0xC8}, NOT part of the reference sequence at all -
+  // see file header NOTE above: 0x00 keeps RM=0/DM=00 (MCU interface, the
+  // silicon reset default already in effect), and 0xC8 sets ENDIAN=1 (Little
+  // Endian) to match our framebuf's native little-endian pixel storage - see
+  // display_sync_with_fb() in display_driver.c.
+  st7789v2_cmd(drv, ST7789V2_RAMCTRL);
+  {
+    static const uint8_t d[2] = {0x00, 0xC8};
+    st7789v2_data(drv, d, sizeof(d));
+  }
 
   // PWCTRL1: Power Control 1
   st7789v2_cmd(drv, ST7789V2_PWCTRL1);
