@@ -37,9 +37,6 @@
 #define BIP39_MAX_MNEMONIC_LEN (24 * BIP39_MAX_WORD_LEN + 23)
 #define BIP39_BITS_PER_WORD 11
 
-#if USE_BIP39_CACHE
-void bip39_cache_clear(void);
-#endif
 
 extern const char *const BIP39_WORDLIST_ENGLISH[BIP39_WORD_COUNT];
 

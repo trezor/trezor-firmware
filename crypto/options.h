@@ -71,12 +71,6 @@
 #define USE_BIP32_25519_CURVES 1
 #endif
 
-// implement BIP39 caching
-#ifndef USE_BIP39_CACHE
-#define USE_BIP39_CACHE 1
-#define BIP39_CACHE_SIZE 4
-#endif
-
 // support Ethereum operations
 #ifndef USE_ETHEREUM
 #define USE_ETHEREUM 0

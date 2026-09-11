@@ -133,9 +133,6 @@ void fuzzer_reset_state(void) {
 #if USE_BIP32_CACHE
   bip32_cache_clear();
 #endif
-#if USE_BIP39_CACHE
-  bip39_cache_clear();
-#endif
 }
 
 __attribute__((noreturn)) void crash(void) {

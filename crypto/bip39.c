@@ -33,24 +33,6 @@
 #include "rand.h"
 #include "sha2.h"
 
-#if USE_BIP39_CACHE
-
-static int bip39_cache_index = 0;
-
-static CONFIDENTIAL struct {
-  bool set;
-  char mnemonic[256];
-  char passphrase[64];
-  uint8_t seed[512 / 8];
-} bip39_cache[BIP39_CACHE_SIZE];
-
-void bip39_cache_clear(void) {
-  memzero(bip39_cache, sizeof(bip39_cache));
-  bip39_cache_index = 0;
-}
-
-#endif
-
 static CONFIDENTIAL char mnemo[24 * 10];
 
 const char *mnemonic_from_data(const uint8_t *data, size_t len) {
@@ -198,19 +180,6 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
                                                 uint32_t total)) {
   size_t mnemoniclen = strlen(mnemonic);
   size_t passphraselen = strnlen(passphrase, 256);
-#if USE_BIP39_CACHE
-  // check cache
-  if (mnemoniclen < 256 && passphraselen < 64) {
-    for (int i = 0; i < BIP39_CACHE_SIZE; i++) {
-      if (!bip39_cache[i].set) continue;
-      if (strcmp(bip39_cache[i].mnemonic, mnemonic) != 0) continue;
-      if (strcmp(bip39_cache[i].passphrase, passphrase) != 0) continue;
-      // found the correct entry
-      memcpy(seed, bip39_cache[i].seed, 512 / 8);
-      return;
-    }
-  }
-#endif
   uint8_t salt[8 + 256] = {0};
   memcpy(salt, "mnemonic", 8);
   memcpy(salt + 8, passphrase, passphraselen);
@@ -229,16 +198,6 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
   }
   pbkdf2_hmac_sha512_Final(&pctx, seed);
   memzero(salt, sizeof(salt));
-#if USE_BIP39_CACHE
-  // store to cache
-  if (mnemoniclen < 256 && passphraselen < 64) {
-    bip39_cache[bip39_cache_index].set = true;
-    strcpy(bip39_cache[bip39_cache_index].mnemonic, mnemonic);
-    strcpy(bip39_cache[bip39_cache_index].passphrase, passphrase);
-    memcpy(bip39_cache[bip39_cache_index].seed, seed, 512 / 8);
-    bip39_cache_index = (bip39_cache_index + 1) % BIP39_CACHE_SIZE;
-  }
-#endif
 }
 
 /**

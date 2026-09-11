@@ -48,7 +48,7 @@ Advanced usage:
 To be determined:
 
 * `-DNDEBUG`
-* `-DUSE_BIP39_CACHE=0 -DUSE_BIP32_CACHE=0` to explicitly disable the cache, a workaround for automatic cache clearing is used otherwise
+* `-DUSE_BIP32_CACHE=0` to explicitly disable the cache, a workaround for automatic cache clearing is used otherwise
 * `-D_FORTIFY_SOURCE=2` together with optimization flag -O2 or above
 * `-fstack-protector-strong` or `-fstack-protector-all`
 * `-m32` to closer emulate the 32-bit environment present on microcontroller platforms
