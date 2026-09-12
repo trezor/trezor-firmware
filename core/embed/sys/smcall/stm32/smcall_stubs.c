@@ -74,6 +74,11 @@ void reboot_to_bootloader(void) {
   while (1);
 }
 
+void reboot_and_connect(void) {
+  smcall_invoke0(SMCALL_REBOOT_AND_CONNECT);
+  while (1);
+}
+
 void reboot_and_upgrade(const uint8_t hash[32]) {
   smcall_invoke1((uint32_t)hash, SMCALL_REBOOT_AND_UPGRADE);
   while (1);
