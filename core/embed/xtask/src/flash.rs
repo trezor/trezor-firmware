@@ -14,8 +14,15 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         args.project.binary_name()
     );
 
-    let binary =
-        helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.project.binary_name()));
+    // An explicitly given file replaces the build artifact; the address below is
+    // still derived from the project + model, so a prebuilt binary lands exactly
+    // where that project belongs.
+    let binary = match args.file {
+        Some(ref file) => file.clone(),
+        None => {
+            helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.project.binary_name()))
+        }
+    };
 
     let binary = binary
         .canonicalize()
@@ -31,7 +38,7 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         address
     );
 
-    let flash_instruction = build_flash_write_instruction(&binary, address);
+    let flash_instruction = build_flash_write_instruction(&binary, address)?;
 
     run_openocd(args.model, &flash_instruction)
 }
@@ -72,12 +79,53 @@ fn run_openocd(model: Model, instructions: &str) -> Result<()> {
     Ok(())
 }
 
-fn build_flash_write_instruction(binary: &Path, address: u32) -> String {
-    format!(
+/// Quotes a path for interpolation into an OpenOCD `-c` script.
+///
+/// The script is handed to openocd as a single argv element, so no shell is
+/// involved -- but openocd parses it as Tcl, where an unquoted path containing
+/// a space becomes two words and `[`, `$` or `;` change the parse entirely.
+/// Tcl braces suppress every substitution, so `{...}` is the correct quoting
+/// and the braces are stripped before the command sees its argument.
+///
+/// What still has to be rejected, since brace quoting cannot express it:
+///
+/// * Braces, which would close or unbalance the group itself.
+/// * Newlines: backslash-newline is the one substitution Tcl *does* perform
+///   inside braces, and a raw newline would also break the `;`-separated
+///   script.
+/// * A path ENDING in a backslash. Interior backslashes are literal inside
+///   braces, but Tcl does not count a brace that a backslash quotes when it
+///   looks for the matching close brace -- and the close brace here is the one
+///   this function appends. `foo\` would become `{foo\}`, whose `\}` is not the
+///   terminator, so the rest of the command gets swallowed into the word.
+///
+/// Interior backslashes are therefore allowed: rejecting them would refuse
+/// every Windows-style path for no reason.
+fn tcl_quote_path(path: &Path) -> Result<String> {
+    let path = path
+        .to_str()
+        .with_context(|| format!("path is not valid UTF-8: {}", path.display()))?;
+
+    ensure!(
+        !path.contains(['{', '}', '\n', '\r']),
+        "path cannot be quoted for OpenOCD's Tcl parser \
+         (contains a brace or newline): {path}"
+    );
+    ensure!(
+        !path.ends_with('\\'),
+        "path cannot be quoted for OpenOCD's Tcl parser \
+         (ends in a backslash, which would escape the closing brace): {path}"
+    );
+
+    Ok(format!("{{{path}}}"))
+}
+
+fn build_flash_write_instruction(binary: &Path, address: u32) -> Result<String> {
+    Ok(format!(
         "init; reset halt; flash write_image erase {} 0x{:X}; exit",
-        binary.display(),
+        tcl_quote_path(binary)?,
         address
-    )
+    ))
 }
 
 fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result<String> {
@@ -120,16 +168,72 @@ fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result
 mod tests {
     use std::path::Path;
 
-    use super::{build_flash_erase_instruction, build_flash_write_instruction};
+    use super::{build_flash_erase_instruction, build_flash_write_instruction, tcl_quote_path};
     use crate::args::FlashSection;
 
     #[test]
     fn builds_flash_write_instruction() {
-        let instruction = build_flash_write_instruction(Path::new("/tmp/fw.bin"), 0x0800_4000);
+        let instruction =
+            build_flash_write_instruction(Path::new("/tmp/fw.bin"), 0x0800_4000).unwrap();
 
         assert_eq!(
             instruction,
-            "init; reset halt; flash write_image erase /tmp/fw.bin 0x8004000; exit"
+            "init; reset halt; flash write_image erase {/tmp/fw.bin} 0x8004000; exit"
+        );
+    }
+
+    /// `--file` accepts any path the user types, and openocd parses the `-c`
+    /// script as Tcl: unquoted, a space would split the filename into two Tcl
+    /// words and `[...]` would be command substitution.
+    #[test]
+    fn quotes_paths_that_tcl_would_otherwise_reparse() {
+        let instruction =
+            build_flash_write_instruction(Path::new("/my builds/fw [v2].bin"), 0x0800_4000)
+                .unwrap();
+
+        assert_eq!(
+            instruction,
+            "init; reset halt; flash write_image erase {/my builds/fw [v2].bin} 0x8004000; exit"
+        );
+    }
+
+    #[test]
+    fn rejects_paths_that_cannot_be_brace_quoted() {
+        // A brace would end (or unbalance) the group itself; a newline is the
+        // one thing Tcl still substitutes inside braces. A TRAILING backslash
+        // would escape the closing brace this code appends, so the rest of the
+        // command would be swallowed into the word.
+        for bad in [
+            "/tmp/fw{.bin",
+            "/tmp/fw}.bin",
+            "/tmp/fw\n.bin",
+            "/tmp/fw\r.bin",
+            "/tmp/builds\\",
+        ] {
+            assert!(
+                tcl_quote_path(Path::new(bad)).is_err(),
+                "expected {bad:?} to be rejected"
+            );
+        }
+
+        assert!(tcl_quote_path(Path::new("/tmp/fw.bin")).is_ok());
+        assert!(tcl_quote_path(Path::new("/my builds/fw.bin")).is_ok());
+    }
+
+    /// Interior backslashes are literal inside Tcl braces, so a Windows-style
+    /// path must survive quoting untouched rather than being refused.
+    #[test]
+    fn accepts_interior_backslashes() {
+        assert_eq!(
+            tcl_quote_path(Path::new(r"C:\builds\fw.bin")).unwrap(),
+            r"{C:\builds\fw.bin}"
+        );
+        // An even run of trailing backslashes still leaves the close brace
+        // countable, but the check is deliberately conservative about the end
+        // of the path -- only the interior case is guaranteed.
+        assert_eq!(
+            tcl_quote_path(Path::new(r"/my builds\v2/fw.bin")).unwrap(),
+            r"{/my builds\v2/fw.bin}"
         );
     }
 
