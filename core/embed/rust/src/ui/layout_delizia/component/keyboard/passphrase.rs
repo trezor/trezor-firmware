@@ -511,16 +511,23 @@ impl Input {
 
     fn render_shown<'s>(&self, target: &mut impl Renderer<'s>) {
         debug_assert_eq!(self.display_style, DisplayStyle::Shown);
+        const SHOWN_PASSPHRASE_PAD_RADIUS: i16 = 12;
 
-        Bar::new(self.shown_area)
+        // Clamp the overlay to the screen and make sure that the end of the
+        // passphrase stays visible even when it overflows the screen, cutting
+        // off the beginning instead.
+        let shown_area = self.shown_area.clamp(SCREEN);
+        let text_area = shown_area.inset(Self::SHOWN_INSETS);
+
+        Bar::new(shown_area)
             .with_bg(theme::GREY_EXTRA_DARK)
-            .with_radius(12)
+            .with_radius(SHOWN_PASSPHRASE_PAD_RADIUS)
             .render(target);
 
         TextLayout::new(Self::STYLE)
             .with_align(Alignment::Start)
             .with_bounds(self.shown_area.inset(Self::SHOWN_INSETS))
-            .render_text(self.textbox.content(), target, true);
+            .render_text_ensure_end_visible(self.textbox.content(), text_area, target);
     }
 
     fn render_hidden<'s>(&self, target: &mut impl Renderer<'s>) {
