@@ -2,14 +2,13 @@ use heapless::Vec;
 
 use super::layout::{LayoutFit, TextLayout, TextStyle};
 use crate::strutil::TString;
-use crate::ui::component::paginated::SinglePage;
 use crate::ui::component::{Component, Event, EventCtx, Never, Paginate};
 use crate::ui::display::font::Font;
 use crate::ui::display::toif::Icon;
 use crate::ui::display::Color;
 use crate::ui::geometry::{Alignment, Dimensions, Insets, LinearPlacement, Offset, Point, Rect};
 use crate::ui::shape::{self, Renderer};
-use crate::ui::util::{assert_single_page, Pager};
+use crate::ui::util::Pager;
 
 /// Used as an upper bound of number of different styles we may render on single
 /// page.
@@ -735,9 +734,6 @@ where
         self.area = bounds;
         let para_area = bounds.inset(Insets::left(self.check_width));
         self.paragraphs.place(para_area);
-        // Checklist is single-page by design; fail loudly in ui_debug when
-        // the items do not fit on one page.
-        assert_single_page(self.paragraphs.pager());
         self.area
     }
 
@@ -751,7 +747,20 @@ where
     }
 }
 
-impl<T> SinglePage for Checklist<T> {}
+/// Checklist can paginate; the surrounding component is responsible for
+/// providing the paging controls.
+impl<'a, T> Paginate for Checklist<T>
+where
+    T: ParagraphSource<'a>,
+{
+    fn pager(&self) -> Pager {
+        self.paragraphs.pager()
+    }
+
+    fn change_page(&mut self, active_page: u16) {
+        self.paragraphs.change_page(active_page);
+    }
+}
 
 #[cfg(feature = "ui_debug")]
 impl<'a, T: ParagraphSource<'a>> crate::trace::Trace for Checklist<T> {
