@@ -78,15 +78,41 @@ impl PassphraseInput {
         // Make sure the pin should be shown
         debug_assert_eq!(self.display_style, DisplayStyle::Shown);
 
-        Bar::new(self.shown_area)
+        let mut shown_area = self.shown_area;
+        let content = self.content();
+        let mut text = content;
+
+        if shown_area.clamp(SCREEN) != shown_area {
+            // The revealed passphrase overflows the screen. Clamp the overlay
+            // to the screen and show only the longest suffix of the
+            // passphrase that fits, so that the most recently entered
+            // characters stay visible and the beginning is hidden instead.
+            shown_area = shown_area.clamp(SCREEN);
+            let text_area = shown_area.inset(SHOWN_INSETS);
+            for (i, _) in content.char_indices().skip(1) {
+                let suffix = &content[i..];
+                text = suffix;
+                let fits = matches!(
+                    TextLayout::new(Self::STYLE)
+                        .with_bounds(text_area)
+                        .fit_text(suffix),
+                    LayoutFit::Fitting { .. }
+                );
+                if fits {
+                    break;
+                }
+            }
+        }
+
+        Bar::new(shown_area)
             .with_bg(theme::GREY_SUPER_DARK)
             .with_radius(KEYBOARD_INPUT_RADIUS)
             .render(target);
 
         TextLayout::new(Self::STYLE)
-            .with_bounds(self.shown_area.inset(SHOWN_INSETS))
+            .with_bounds(shown_area.inset(SHOWN_INSETS))
             .with_align(Alignment::Start)
-            .render_text(self.content(), target, true);
+            .render_text(text, target, true);
     }
 
     fn render_hidden<'s>(&self, target: &mut impl Renderer<'s>) {
