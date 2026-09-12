@@ -1909,7 +1909,7 @@
     "plurals__transaction_of_x_operations": "operación|operaciones",
     "plurals__x_groups_needed": "grupo|grupos",
     "plurals__x_shares_needed": "parte|partes",
-    "progress__authenticity_check": "Verificando autenticidad...",
+    "progress__authenticity_check": "Verif. autenticidad...",
     "progress__done": "Listo",
     "progress__loading_transaction": "Cargando transacc...",
     "progress__locking_device": {
