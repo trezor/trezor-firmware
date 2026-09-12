@@ -67,6 +67,19 @@ To use the "all all all" seed defined in [SLIP-14](https://github.com/satoshilab
 ./emu.py -s
 ```
 
+### Device language
+
+In debug mode, the emulator can be started with a specific device language:
+
+```sh
+./emu.py --lang=cs
+./emu.py -l cs
+```
+
+Run `./emu.py --help` to see the list of supported languages. The language is stored
+in the device storage, so it persists between runs with the same profile. Use
+`--lang=en` to reset the device to English.
+
 ### Storage and Profiles
 
 Internal Trezor's storage is emulated and stored in the `/var/tmp/trezor.flash` file by
