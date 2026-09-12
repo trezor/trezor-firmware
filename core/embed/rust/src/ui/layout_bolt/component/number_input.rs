@@ -5,9 +5,10 @@ use crate::strutil::{self, TString};
 use crate::translations::TR;
 use crate::ui::component::base::ComponentExt;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
-use crate::ui::component::{Child, Component, Event, EventCtx, Pad};
+use crate::ui::component::{Child, Component, Event, EventCtx, Pad, Paginate};
 use crate::ui::geometry::{Alignment, Grid, GridCellSpan, Insets, Offset, Rect};
 use crate::ui::shape::{self, Renderer};
+use crate::ui::util::assert_single_page;
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum NumberInputDialogMsg {
@@ -54,6 +55,9 @@ where
             ctx.request_paint()
         });
         self.paragraphs_pad.clear();
+        // Re-run the place pass so that the single-page check re-evaluates
+        // the new text.
+        ctx.request_place();
         ctx.request_paint();
     }
 
@@ -84,6 +88,9 @@ where
         let grid = Grid::new(button_area, 1, 3).with_spacing(theme::KEYBOARD_SPACING);
         self.input.place(input_area);
         self.paragraphs.place(content_area);
+        // The dialog cannot paginate; fail loudly in ui_debug when the
+        // description does not fit.
+        assert_single_page(self.paragraphs.pager());
         self.paragraphs_pad.place(content_area);
         self.info_button.place(grid.row_col(0, 0));
         self.confirm_button.place(grid.cells(GridCellSpan {

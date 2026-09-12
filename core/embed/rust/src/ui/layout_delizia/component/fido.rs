@@ -49,7 +49,8 @@ impl<F: Fn() -> TString<'static>> Component for FidoCredential<F> {
         self.text.place(text_area);
         let text_height = self.text.area().height();
         let vertical_space = bounds.height() - icon_size.y - Self::SPACING - text_height;
-        let off = Offset::y(vertical_space / 2);
+        // Do not shift the content above the top edge when it does not fit.
+        let off = Offset::y((vertical_space / 2).max(0));
 
         let icon_area = icon_area.with_width(icon_size.x).translate(off);
         let text_area = text_area.with_height(text_height).translate(off);

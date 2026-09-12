@@ -5,9 +5,10 @@ use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
 };
 use crate::ui::component::text::TextStyle;
-use crate::ui::component::{Child, Component, Event, EventCtx, Never};
+use crate::ui::component::{Child, Component, Event, EventCtx, Never, Paginate};
 use crate::ui::geometry::{Insets, LinearPlacement, Rect};
 use crate::ui::shape::Renderer;
+use crate::ui::util::assert_single_page;
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum DialogMsg<T, U> {
@@ -184,6 +185,9 @@ where
         };
 
         self.paragraphs.place(content_area);
+        // The dialog cannot paginate; fail loudly in ui_debug when the
+        // content does not fit.
+        assert_single_page(self.paragraphs.pager());
         bounds
     }
 

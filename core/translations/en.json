@@ -1915,7 +1915,12 @@
     "pin__tries_left": "tries left",
     "pin__turn_off": "Are you sure you want to turn off PIN protection?",
     "pin__turn_on": "Turn on PIN protection?",
-    "pin__wipe_code_exists_description": "Wipe code must be turned off before turning off PIN protection.",
+    "pin__wipe_code_exists_description": {
+      "Bolt": "Wipe code must be turned off before turning off PIN.",
+      "Caesar": "Wipe code must be turned off before turning off PIN protection.",
+      "Delizia": "Wipe code must be turned off before turning off PIN protection.",
+      "Eckhart": "Wipe code must be turned off before turning off PIN protection."
+    },
     "pin__wipe_code_exists_title": "Wipe code set",
     "pin__wrong_pin": "Wrong PIN",
     "plurals__contains_x_keys": "key|keys",

@@ -99,7 +99,12 @@ fn render_notif<'s>(notif: Notification, top: i16, target: &mut impl Renderer<'s
     notif.text.map(|t| {
         let style = theme::TEXT_BOLD;
 
-        let text_width = style.text_font.text_width(t);
+        // Clamp the banner to the screen so that a wide (translated) text
+        // cannot push it past the screen edges.
+        let text_width = style
+            .text_font
+            .text_width(t)
+            .min(AREA.width() - 2 * NOTIFICATION_BORDER);
         let (color_bg, color_text) = level_to_style(notif.level);
 
         let banner = Rect::new(
@@ -123,6 +128,7 @@ fn render_notif<'s>(notif: Notification, top: i16, target: &mut impl Renderer<'s
 
         shape::Text::new(text_pos, t, style.text_font)
             .with_fg(color_text)
+            .with_max_width(text_width)
             .render(target);
     });
 }
@@ -147,6 +153,7 @@ fn render_instruction<'s>(instruction: TString<'static>, target: &mut impl Rende
             .render(target);
         shape::Text::new(text_pos, t, theme::TEXT_SUB_GREY.text_font)
             .with_fg(theme::GREY_DARK)
+            .with_max_width(screen().width())
             .render(target);
     });
 }
@@ -637,7 +644,7 @@ impl Component for Homescreen {
         let (text_unlocked_area, _) = rest.split_top(label_unlocked_height);
 
         self.label_device
-            .place(label_area.with_width(self.labels_width));
+            .place(label_area.with_width(self.labels_width).clamp(label_area));
         self.label_unlocked
             .place(text_unlocked_area.with_width(self.labels_width));
         bounds

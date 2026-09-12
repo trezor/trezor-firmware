@@ -13,6 +13,10 @@ impl<T, F> MsgMap<T, F> {
     pub fn new(inner: T, func: F) -> Self {
         Self { inner, func }
     }
+
+    pub fn inner(&self) -> &T {
+        &self.inner
+    }
 }
 
 impl<T, F, U> Component for MsgMap<T, F>

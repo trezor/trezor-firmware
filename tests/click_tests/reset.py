@@ -94,7 +94,11 @@ def set_selection(debug: "DebugLink", diff: int) -> None:
         if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
             debug.click(debug.screen_buttons.ok())
         else:
-            debug.swipe_up()
+            # FIXME: tap_to_confirm() returns middle of the screen, i.e. (120, 120)
+            # but the request_number screen has the active area slimmer below the -/+ buttons
+            # coords = debug.screen_buttons.tap_to_confirm()
+            coords = (120, 230)
+            debug.click(coords)
     elif debug.layout_type is LayoutType.Caesar:
         layout = debug.read_layout()
         if (

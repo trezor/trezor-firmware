@@ -518,6 +518,7 @@ impl Button {
                 .with_fg(stylesheet.text_color)
                 .with_align(self.text_align)
                 .with_alpha(alpha)
+                .with_max_width(self.area.width() - 2 * self.content_offset.x.abs())
                 .render(target)
         };
         let render_origin = |offset: Offset| {
@@ -680,6 +681,7 @@ impl Button {
                             .with_fg(stylesheet.text_color)
                             .with_align(Alignment::Center)
                             .with_alpha(alpha)
+                            .with_max_width(self.area.width())
                             .render(target);
                     });
                     shape::ToifImage::new(self.area.center() + OFFSET_Y, theme::ICON_MINUS.toif)

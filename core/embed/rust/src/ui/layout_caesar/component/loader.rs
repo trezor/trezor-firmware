@@ -200,6 +200,7 @@ impl Loader {
                     );
                     shape::Text::new(pt, t, style.font)
                         .with_fg(text_color)
+                        .with_max_width(self.area.width())
                         .render(target);
                 });
             });

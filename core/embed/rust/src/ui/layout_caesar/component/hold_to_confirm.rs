@@ -40,6 +40,10 @@ impl Component for HoldToConfirm {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let button_width = self.text_width + 2 * theme::BUTTON_OUTLINE;
+        #[cfg(feature = "ui_debug")]
+        if button_width > bounds.width() {
+            fatal_error!("Hold-to-confirm text does not fit the screen");
+        }
         let loader_area = bounds.split_right(button_width).1;
         self.loader.place(loader_area)
     }

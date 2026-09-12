@@ -307,7 +307,11 @@ impl RegulatoryContent {
                 rest
             }
             // Text that does not fit in the area is not rendered
-            _ => area,
+            _ => {
+                #[cfg(feature = "ui_debug")]
+                target.raise_overflow_exception();
+                area
+            }
         }
     }
 }

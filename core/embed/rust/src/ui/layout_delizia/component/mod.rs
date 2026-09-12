@@ -22,6 +22,8 @@ mod homescreen;
 mod keyboard;
 mod loader;
 #[cfg(feature = "translations")]
+mod more_info_screen;
+#[cfg(feature = "translations")]
 mod number_input;
 #[cfg(feature = "translations")]
 pub mod number_input_slider;
@@ -38,7 +40,6 @@ mod swipe_up_screen;
 #[cfg(feature = "translations")]
 mod tap_to_confirm;
 mod trade_screen;
-mod updatable_more_info;
 mod welcome_screen;
 
 #[cfg(all(feature = "micropython", feature = "translations"))]
@@ -68,6 +69,8 @@ pub use keyboard::{
 };
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 #[cfg(feature = "translations")]
+pub use more_info_screen::MoreInfoScreen;
+#[cfg(feature = "translations")]
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
 #[cfg(feature = "translations")]
 pub use number_input_slider::NumberInputSliderDialog;
@@ -84,7 +87,6 @@ pub use swipe_up_screen::{SwipeUpScreen, SwipeUpScreenMsg};
 #[cfg(feature = "translations")]
 pub use tap_to_confirm::TapToConfirm;
 pub use trade_screen::TradeScreen;
-pub use updatable_more_info::UpdatableMoreInfo;
 pub use vertical_menu::{
     PagedVerticalMenu, ScrolledVerticalMenu, VerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem,
     VerticalMenuItems,

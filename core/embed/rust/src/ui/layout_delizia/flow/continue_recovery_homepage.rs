@@ -168,8 +168,9 @@ pub fn new_continue_recovery_homepage(
         Header::left_aligned(title.into())
             .with_subtitle(TR::words__instructions.into())
             .with_menu_button(),
-        SwipeContent::new(pars_main.into_paragraphs()),
+        SwipeContent::new(SwipePage::vertical(pars_main.into_paragraphs())),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(footer_description)
     .map_to_button_msg()
     .repeated_button_request(ButtonRequest::new(
@@ -185,8 +186,9 @@ pub fn new_continue_recovery_homepage(
     .into_paragraphs();
     let content_cancel_intro = Frame::with_header(
         Header::left_aligned(cancel_title.into()).with_cancel_button(),
-        SwipeContent::new(paragraphs_cancel),
+        SwipeContent::new(SwipePage::vertical(paragraphs_cancel)),
     )
+    .with_vertical_pages()
     .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
     .map_to_button_msg()
     .repeated_button_request(ButtonRequest::new(

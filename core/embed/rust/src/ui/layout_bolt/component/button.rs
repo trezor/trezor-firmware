@@ -403,7 +403,10 @@ impl Button {
         let left_is_small: bool;
 
         let left = if let Some(verb) = left {
-            left_is_small = verb.len() <= 4;
+            // Decide by the rendered pixel width, not the byte length of the
+            // (translated) verb.
+            left_is_small = verb
+                .map(|v| theme::button_default().normal.font.text_width(v) <= theme::BUTTON_WIDTH);
             if verb == "^".into() {
                 Button::with_icon(theme::ICON_UP)
             } else {
