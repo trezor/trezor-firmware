@@ -10,7 +10,19 @@ use super::{
 const CHUNK_SIZE: usize = 256;
 const MAX_PACKET_SIZE: usize = 512;
 
-pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
+pub fn upload_image(
+    image_data: &[u8],
+    image_hash: &[u8],
+    progress: Option<extern "C" fn(u32, u32)>,
+) -> bool {
+    let total = image_data.len() as u32;
+    let first_chunk_len = image_data.len().min(CHUNK_SIZE);
+    let report = |done: usize| {
+        if let Some(cb) = progress {
+            cb((done as u32).min(total), total);
+        }
+    };
+
     let mut cbor_data = [0u8; MAX_PACKET_SIZE];
     let mut data = [0u8; MAX_PACKET_SIZE];
     let mut buffer = [0u8; MAX_PACKET_SIZE];
@@ -29,7 +41,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
     unwrap!(enc.str("hash"));
     unwrap!(enc.bytes(image_hash));
     unwrap!(enc.str("data"));
-    unwrap!(enc.bytes(&image_data[..CHUNK_SIZE]));
+    unwrap!(enc.bytes(&image_data[..first_chunk_len]));
 
     let data_len = writer.bytes_written();
     unwrap!(receiver_acquire());
@@ -64,7 +76,8 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
         return false;
     }
 
-    let mut offset = CHUNK_SIZE;
+    let mut offset = first_chunk_len;
+    report(offset);
 
     for chunk in image_data.chunks(CHUNK_SIZE).skip(1) {
         let mut cbor_data = [0u8; MAX_PACKET_SIZE];
@@ -106,7 +119,8 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
             return false;
         }
 
-        offset += CHUNK_SIZE;
+        offset += chunk.len();
+        report(offset);
     }
 
     true
