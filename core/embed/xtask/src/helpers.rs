@@ -9,7 +9,7 @@ use crate::options::ResolvedBuildArgs;
 
 /// Returns the path to the built ELF file for the given build arguments.
 pub fn elf_path(args: &ResolvedBuildArgs) -> Result<PathBuf> {
-    let elf_name = args.project.package_name(args.emulator);
+    let elf_name = args.project.package_name();
     Ok(profile_dir(args)?.join(elf_name))
 }
 

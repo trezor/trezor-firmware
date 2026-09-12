@@ -66,7 +66,7 @@ thp = []
 touch = ["io/touch"]
 touch_wakeup = ["io/touch_wakeup"]
 tropic = ["sec/tropic"]
-universal_fw = ["crypto/universal_fw"]
+universal_fw = ["crypto/universal_fw", "io/usb_iface_webauthn"]
 
 # --------------------------------------------------------------------------
 # Automatically derived features (do not enable from outside)
