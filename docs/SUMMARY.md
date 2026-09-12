@@ -14,6 +14,7 @@
   - [Debugging on hardware](core/embed_debug/index.md)
   - [SystemView instrumentation](core/systemview/index.md)
   - [High-level Architecture](core/embed-arch/embed-arch.md)
+    - [Power management](core/embed-arch/power-manager.md)
   - [Miscellaneous](core/misc/index.md)
     - [Boot stages](core/misc/boot.md)
     - [Code style](core/misc/codestyle.md)
