@@ -189,6 +189,11 @@ pub struct FlashArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Flash the combined image built by `xtask combine`. This puts a blank
+    /// device into a working state.
+    #[arg(long)]
+    pub combined: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]

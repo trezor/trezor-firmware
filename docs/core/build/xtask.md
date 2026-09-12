@@ -38,13 +38,14 @@ xtask build <project> -m <model> [options]
 - `xtask clean` — remove build artifacts.
 - `xtask fmt` — format Rust sources with rustfmt.
 - `xtask flash <project> -m <model>` — flash a built binary to a connected
-  device via OpenOCD.
+  device via OpenOCD. `--combined` flashes the combined image instead, from the
+  boardloader address.
 - `xtask flash-erase [section] -m <model>` — erase a flash section (`all`,
   `boardloader`, `bootloader`, `firmware`, `storage`).
 - `xtask reset -m <model>` — reset the connected device.
 - `xtask upload <project> -m <model>` — upload firmware/prodtest to a running
   device.
-- `xtask combine <project> -m <model>` — combine the dependency chain (e.g.
+- `xtask combine <project> -m <model>` — combine the boot chain (e.g.
   secmon + kernel + firmware) into a single flashable binary.
 
 ## Build options
@@ -253,6 +254,15 @@ Dependency builds (kernel, secmon when built as part of firmware) collect the
 ELF, map and compile_commands but **not** the `.bin`. `xtask combine` writes
 `combined-<project>.bin` here.
 
+A combined image pads the gaps between its sections with `0x00`, with one
+exception: a region the **boot chain erases on first boot** is padded with
+`0xFF`, the erased state. The bootloader erases the UCB region
+(`boot_ucb_erase`), so padding it with anything else would make the device stop
+matching the image it was flashed from the moment it boots, and a factory line
+that verifies by reading flash back would fail. Padded erased, the erase is a
+no-op and the image stays byte-identical. Models whose `memory.ld` declares no
+such region are unaffected.
+
 Files are copied only if newer, so rebuilding one project doesn't clobber
 others. The `latest` symlink always points at the model directory most recently
 built.
@@ -280,6 +290,27 @@ OpenOCD and the flash start address read from the model's `memory.ld`;
 `upload` uses `trezorctl fw update`. Only flashable projects
 (boardloader, bootloader, bootloader_ci, firmware, prodtest) can be flashed,
 and only `firmware`/`prodtest` can be uploaded.
+
+`xtask flash <project> --combined` reads the combined image instead:
+
+- `build/artifacts/<MODEL_ID>/combined-<project>.bin`
+
+and writes it at `BOARDLOADER_START`, since a combined image always begins at
+the bottom of the boot chain — the project name only says WHICH image, not
+where it goes. This is the command that takes a blank device to a working
+state, boardloader included. Run `xtask combine <project>` first; the image is
+flashed exactly as combined, so everything about its contents was decided
+there.
+
+The combinable projects are a **narrower set than the flashable ones**: only
+`bootloader`, `bootloader_ci`, `firmware` and `prodtest` can head a combined
+image. `boardloader` cannot — it is the bottom of the chain that every combined
+image already starts with, so there is nothing for it to head.
+
+```sh
+xtask combine prodtest -m t3w1
+xtask flash   prodtest -m t3w1 --combined
+```
 
 ## Tips and common pitfalls
 

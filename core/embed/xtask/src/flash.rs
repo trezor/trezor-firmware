@@ -3,8 +3,8 @@ use std::{fs, process};
 
 use anyhow::{Context, Result, ensure};
 
-use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, ResetArgs};
-use crate::helpers;
+use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, Project, ResetArgs};
+use crate::{combine, helpers};
 
 /// Flashes the specified project to the device using OpenOCD.
 pub fn flash(args: FlashArgs) -> Result<()> {
@@ -13,6 +13,12 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         "Flashing is not supported for `{}`",
         args.project.binary_name()
     );
+
+    // A combined image already holds the whole boot chain, assembled by
+    // `xtask combine`, so it is written as-is from the boardloader address.
+    if args.combined {
+        return flash_combined(&args);
+    }
 
     let binary =
         helpers::artifacts_dir(args.model)?.join(format!("{}.bin", args.project.binary_name()));
@@ -34,6 +40,44 @@ pub fn flash(args: FlashArgs) -> Result<()> {
     let flash_instruction = build_flash_write_instruction(&binary, address);
 
     run_openocd(args.model, &flash_instruction)
+}
+
+/// Flash the combined image: the whole boot chain in one write.
+///
+/// Written byte for byte as `xtask combine` produced it, starting at the
+/// boardloader. The project name only says WHICH combined image; the image
+/// always starts at the bottom of the chain, so nothing about its contents is
+/// decided here.
+fn flash_combined(args: &FlashArgs) -> Result<()> {
+    ensure!(
+        combine::supported(args.project),
+        "there is no combined image for `{}` -- a combined image runs from the \
+         boardloader up to one of: {}",
+        args.project.binary_name(),
+        combine::supported_projects()
+    );
+
+    let binary = combine::combined_artifact(args.model, args.project)?;
+    ensure!(
+        binary.exists(),
+        "no combined image at {binary} -- build one first:\n             \
+         xtask combine {project} -m {model}",
+        binary = binary.display(),
+        project = args.project.binary_name(),
+        model = args.model.model_id(),
+    );
+
+    let memory_ld = args.model.model_memory_ld()?;
+    let address = helpers::read_symbol(&memory_ld, Project::Boardloader.flash_start_symbol()?)?;
+
+    println!(
+        "Flashing the combined `{}` image `{}` to address 0x{:08X}",
+        args.project.binary_name(),
+        binary.display(),
+        address
+    );
+
+    run_openocd(args.model, &build_flash_write_instruction(&binary, address))
 }
 
 /// Erase specified flash section using OpenOCD. The section boundaries are
