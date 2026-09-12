@@ -81,7 +81,8 @@ async def show_code_entry_screen(
 
     with show_thp_pairing_code(
         title=TR.thp__code_title,
-        description=TR.thp__code_entry.format(host_name),
+        description=TR.thp__code_entry,
+        host_name=host_name,
         code=code_entry_str,
     ) as layout:
         return await interact(layout, br_name=None)
