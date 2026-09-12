@@ -1,8 +1,10 @@
+use sys::time::Instant;
+
 use super::super::fonts::FONT_SUB;
 use super::{theme, Button, ButtonMsg};
 use crate::strutil::TString;
 use crate::ui::component::text::TextStyle;
-use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::component::{Component, Event, EventCtx, Marquee};
 use crate::ui::display::{Color, Font};
 use crate::ui::event::SwipeEvent;
 use crate::ui::geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Point, Rect};
@@ -20,9 +22,11 @@ use crate::ui::{CommonUI, ModelUI};
 /// A host of this component is responsible of providing the exact area
 /// considering also the spacing. The height must be 18px (only instruction) or
 /// 37px (instruction and description/position).
-pub struct Footer<'a> {
+/// The instruction and description texts are rendered by a `Marquee` so that
+/// they scroll back and forth when they do not fit the available width.
+pub struct Footer {
     area: Rect,
-    content: FooterContent<'a>,
+    content: FooterContent,
     swipe_allow_up: bool,
     swipe_allow_down: bool,
     progress: i16,
@@ -30,15 +34,14 @@ pub struct Footer<'a> {
     virtual_button: Button,
 }
 
-#[derive(Clone)]
-enum FooterContent<'a> {
-    Instruction(TString<'a>),
-    InstructionDescription(TString<'a>, TString<'a>),
+enum FooterContent {
+    Instruction(Marquee),
+    InstructionDescription(Marquee, Marquee),
     PageCounter(PageCounter),
     PageHint(PageHint),
 }
 
-impl<'a> Footer<'a> {
+impl Footer {
     /// height of the component with only instruction [px]
     pub const HEIGHT_SIMPLE: i16 = 18;
     /// height of the component with instruction and additional content [px]
@@ -47,7 +50,7 @@ impl<'a> Footer<'a> {
     const STYLE_INSTRUCTION: &'static TextStyle = &theme::TEXT_SUB_GREY;
     const STYLE_DESCRIPTION: &'static TextStyle = &theme::TEXT_SUB_GREY_LIGHT;
 
-    fn from_content(content: FooterContent<'a>) -> Self {
+    fn from_content(content: FooterContent) -> Self {
         Self {
             area: Rect::zero(),
             content,
@@ -59,16 +62,25 @@ impl<'a> Footer<'a> {
         }
     }
 
-    pub fn new<T: Into<TString<'a>>>(
+    fn set_marquee_text(marquee: &mut Marquee, ctx: &mut EventCtx, text: TString<'static>) {
+        marquee.set_text(text);
+        marquee.reset();
+        marquee.start(ctx, Instant::now());
+    }
+
+    pub fn new<T: Into<TString<'static>>>(
         instruction: T,
         description: Option<TString<'static>>,
     ) -> Self {
-        let instruction = instruction.into();
-        Self::from_content(
-            description
-                .map(|d| FooterContent::InstructionDescription(instruction, d))
-                .unwrap_or(FooterContent::Instruction(instruction)),
-        )
+        let instruction = FooterContent::instruction_marquee(instruction.into());
+        let content = match description {
+            Some(d) => FooterContent::InstructionDescription(
+                instruction,
+                FooterContent::description_marquee(d),
+            ),
+            None => FooterContent::Instruction(instruction),
+        };
+        Self::from_content(content)
     }
 
     pub fn with_page_counter(instruction: TString<'static>) -> Self {
@@ -86,14 +98,20 @@ impl<'a> Footer<'a> {
             description_last,
             instruction,
             instruction_last,
+            // The texts are empty until the pager is updated, same as the
+            // behavior of `Pager::single_page()`.
+            description_marquee: FooterContent::description_marquee(TString::empty()),
+            instruction_marquee: FooterContent::instruction_marquee(TString::empty()),
             pager: Pager::single_page(),
         }))
     }
 
     pub fn update_instruction<T: Into<TString<'static>>>(&mut self, ctx: &mut EventCtx, s: T) {
         match &mut self.content {
-            FooterContent::Instruction(i) => *i = s.into(),
-            FooterContent::InstructionDescription(i, _d) => *i = s.into(),
+            FooterContent::Instruction(i) => Self::set_marquee_text(i, ctx, s.into()),
+            FooterContent::InstructionDescription(i, _d) => {
+                Self::set_marquee_text(i, ctx, s.into())
+            }
             FooterContent::PageCounter(page_counter) => page_counter.instruction = s.into(),
             _ => {
                 #[cfg(feature = "ui_debug")]
@@ -103,9 +121,9 @@ impl<'a> Footer<'a> {
         ctx.request_paint();
     }
 
-    pub fn update_description<T: Into<TString<'a>>>(&mut self, ctx: &mut EventCtx, s: T) {
+    pub fn update_description<T: Into<TString<'static>>>(&mut self, ctx: &mut EventCtx, s: T) {
         if let FooterContent::InstructionDescription(_i, d) = &mut self.content {
-            *d = s.into();
+            Self::set_marquee_text(d, ctx, s.into());
             ctx.request_paint();
         } else {
             #[cfg(feature = "ui_debug")]
@@ -122,7 +140,7 @@ impl<'a> Footer<'a> {
                 ctx.request_paint();
             }
             FooterContent::PageHint(hint) => {
-                hint.update(pager);
+                hint.update(ctx, pager);
                 self.swipe_allow_down = pager.is_first();
                 self.swipe_allow_up = pager.is_last();
                 ctx.request_paint();
@@ -153,7 +171,7 @@ impl<'a> Footer<'a> {
     }
 }
 
-impl<'a> Component for Footer<'a> {
+impl Component for Footer {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -163,11 +181,13 @@ impl<'a> Component for Footer<'a> {
 
         assert!(bounds.height() == self.content.height());
         self.area = bounds;
+        self.content.place(bounds);
         self.area
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let btn_event = self.virtual_button.event(ctx, event);
+        self.content.event(ctx, event);
         match event {
             Event::Attach(_) => {
                 self.progress = 0;
@@ -224,16 +244,16 @@ impl<'a> Component for Footer<'a> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Footer<'_> {
+impl crate::trace::Trace for Footer {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Footer");
         match &self.content {
             FooterContent::Instruction(i) => {
-                t.string("instruction", *i);
+                t.string("instruction", i.text());
             }
             FooterContent::InstructionDescription(i, d) => {
-                t.string("description", *d);
-                t.string("instruction", *i);
+                t.string("description", d.text());
+                t.string("instruction", i.text());
             }
             FooterContent::PageCounter(counter) => counter.trace(t),
             FooterContent::PageHint(page_hint) => {
@@ -244,7 +264,7 @@ impl crate::trace::Trace for Footer<'_> {
     }
 }
 
-impl<'a> FooterContent<'a> {
+impl FooterContent {
     fn height(&self) -> i16 {
         if matches!(self, FooterContent::Instruction(_)) {
             Footer::HEIGHT_SIMPLE
@@ -253,56 +273,118 @@ impl<'a> FooterContent<'a> {
         }
     }
 
-    fn render<'s>(&'s self, area: Rect, target: &mut impl Renderer<'s>)
-    where
-        's: 'a,
-    {
+    fn instruction_marquee(text: TString<'static>) -> Marquee {
+        Marquee::new(
+            text,
+            Footer::STYLE_INSTRUCTION.text_font,
+            Footer::STYLE_INSTRUCTION.text_color,
+            theme::BG,
+        )
+        .with_alignment(Alignment::Center)
+    }
+
+    fn description_marquee(text: TString<'static>) -> Marquee {
+        Marquee::new(
+            text,
+            Footer::STYLE_DESCRIPTION.text_font,
+            Footer::STYLE_DESCRIPTION.text_color,
+            theme::BG,
+        )
+        .with_alignment(Alignment::Center)
+    }
+
+    /// Area of a `Marquee` rendering text previously drawn at the bottom of
+    /// `strip`: `Marquee` renders the text baseline at `text_height - 1`
+    /// below the top of its area, so the area is shifted upwards such that
+    /// the baseline matches the original text position. The bottom of the
+    /// area is kept at the bottom of the strip so that descenders are not
+    /// clipped.
+    fn marquee_area(strip: Rect, font: Font) -> Rect {
+        let descent = font.visible_text_height_ex("Ay").1;
+        let top = strip.y1 - descent - (font.text_height() - 1);
+        Rect::from_top_left_and_size(
+            Point::new(strip.x0, top),
+            Offset::new(strip.width(), strip.y1 - top),
+        )
+    }
+
+    fn instruction_marquee_area(area: Rect) -> Rect {
+        let strip = area.split_bottom(Footer::HEIGHT_SIMPLE).1;
+        Self::marquee_area(strip, Footer::STYLE_INSTRUCTION.text_font)
+    }
+
+    fn description_marquee_area(area: Rect) -> Rect {
+        let strip = area.split_top(Footer::HEIGHT_SIMPLE).0;
+        Self::marquee_area(strip, Footer::STYLE_DESCRIPTION.text_font)
+    }
+
+    fn place(&mut self, area: Rect) {
         match self {
             FooterContent::Instruction(instruction) => {
-                Self::render_instruction(target, area, instruction);
+                instruction.place(Self::instruction_marquee_area(area));
             }
             FooterContent::InstructionDescription(instruction, description) => {
-                Self::render_description(target, area, description);
-                Self::render_instruction(target, area, instruction);
+                instruction.place(Self::instruction_marquee_area(area));
+                description.place(Self::description_marquee_area(area));
             }
-            FooterContent::PageCounter(page_counter) => page_counter.render(target, area),
+            FooterContent::PageCounter(_) => {}
             FooterContent::PageHint(page_hint) => {
-                Self::render_description(target, area, &page_hint.description());
-                Self::render_instruction(target, area, &page_hint.instruction());
+                page_hint
+                    .instruction_marquee
+                    .place(Self::instruction_marquee_area(area));
+                page_hint
+                    .description_marquee
+                    .place(Self::description_marquee_area(area));
             }
         }
     }
 
-    fn render_description<'s>(
-        target: &mut impl Renderer<'s>,
-        area: Rect,
-        description: &TString<'a>,
-    ) {
-        let area_description = area.split_top(Footer::HEIGHT_SIMPLE).0;
-        let text_description_font_descent = Footer::STYLE_DESCRIPTION
-            .text_font
-            .visible_text_height_ex("Ay")
-            .1;
-        let text_description_baseline =
-            area_description.bottom_center() - Offset::y(text_description_font_descent);
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) {
+        if let Event::Attach(_) = event {
+            self.for_each_marquee(|m| m.start(ctx, Instant::now()));
+        } else {
+            self.for_each_marquee(|m| {
+                m.event(ctx, event);
+            });
+        }
+    }
 
-        description.map(|t| {
-            Text::new(
-                text_description_baseline,
-                t,
-                Footer::STYLE_DESCRIPTION.text_font,
-            )
-            .with_fg(Footer::STYLE_DESCRIPTION.text_color)
-            .with_align(Alignment::Center)
-            .with_max_width(area_description.width())
-            .render(target)
-        });
+    fn for_each_marquee(&mut self, mut f: impl FnMut(&mut Marquee)) {
+        match self {
+            FooterContent::Instruction(instruction) => f(instruction),
+            FooterContent::InstructionDescription(instruction, description) => {
+                f(instruction);
+                f(description);
+            }
+            FooterContent::PageCounter(_) => {}
+            FooterContent::PageHint(page_hint) => {
+                f(&mut page_hint.instruction_marquee);
+                f(&mut page_hint.description_marquee);
+            }
+        }
+    }
+
+    fn render<'s>(&'s self, area: Rect, target: &mut impl Renderer<'s>) {
+        match self {
+            FooterContent::Instruction(instruction) => {
+                instruction.render(target);
+            }
+            FooterContent::InstructionDescription(instruction, description) => {
+                description.render(target);
+                instruction.render(target);
+            }
+            FooterContent::PageCounter(page_counter) => page_counter.render(target, area),
+            FooterContent::PageHint(page_hint) => {
+                page_hint.description_marquee.render(target);
+                page_hint.instruction_marquee.render(target);
+            }
+        }
     }
 
     fn render_instruction<'s>(
         target: &mut impl Renderer<'s>,
         area: Rect,
-        instruction: &TString<'a>,
+        instruction: &TString<'static>,
     ) {
         let area_instruction = area.split_bottom(Footer::HEIGHT_SIMPLE).1;
         let text_instruction_font_descent = Footer::STYLE_INSTRUCTION
@@ -401,18 +483,23 @@ impl crate::trace::Trace for PageCounter {
     }
 }
 
-#[derive(Clone)]
 struct PageHint {
     pub description: TString<'static>,
     pub description_last: TString<'static>,
     pub instruction: TString<'static>,
     pub instruction_last: TString<'static>,
+    pub description_marquee: Marquee,
+    pub instruction_marquee: Marquee,
     pub pager: Pager,
 }
 
 impl PageHint {
-    fn update(&mut self, pager: Pager) {
+    fn update(&mut self, ctx: &mut EventCtx, pager: Pager) {
         self.pager = pager;
+        let description = self.description();
+        Footer::set_marquee_text(&mut self.description_marquee, ctx, description);
+        let instruction = self.instruction();
+        Footer::set_marquee_text(&mut self.instruction_marquee, ctx, instruction);
     }
 
     fn description(&self) -> TString<'static> {
