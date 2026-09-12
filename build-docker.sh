@@ -3,45 +3,12 @@ set -e -o pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-############## Select the right Alpine architecture ##############
-
-if [ -z "$ALPINE_ARCH" ]; then
-  arch="$(uname -m)"
-  case "$arch" in
-    aarch64|arm64)
-      ALPINE_ARCH="aarch64"
-      ;;
-    x86_64)
-      ALPINE_ARCH="x86_64"
-      ;;
-    *)
-      echo "Unsupported arch"
-      exit
-  esac
-fi
-
-if [ -z "$ALPINE_CHECKSUM" ]; then
-  case "$ALPINE_ARCH" in
-    aarch64)
-      ALPINE_CHECKSUM="1be50ae27c8463d005c4de16558d239e11a88ac6b2f8721c47e660fbeead69bf"
-      ;;
-    x86_64)
-      ALPINE_CHECKSUM="ec7ec80a96500f13c189a6125f2dbe8600ef593b87fc4670fe959dc02db727a2"
-      ;;
-    *)
-      exit
-  esac
- fi
-
-
 DOCKER=${DOCKER:-docker}
 CONTAINER_NAME=${CONTAINER_NAME:-trezor-firmware-env.nix}
 ALPINE_CDN=${ALPINE_CDN:-https://dl-cdn.alpinelinux.org/alpine}
 ALPINE_RELEASE=${ALPINE_RELEASE:-3.15}
 ALPINE_VERSION=${ALPINE_VERSION:-3.15.0}
-ALPINE_TARBALL=${ALPINE_FILE:-alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz}
 NIX_VERSION=${NIX_VERSION:-2.31.4}
-CONTAINER_FS_URL=${CONTAINER_FS_URL:-"$ALPINE_CDN/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/$ALPINE_TARBALL"}
 
 ############## Options parsing ##############
 
@@ -54,6 +21,7 @@ function help_and_die() {
   echo "  --repository path/to/repo - checkout the repository from the given path/url"
   echo "  --no-init - do not recreate docker environments"
   echo "  --init-only - set up the docker environment and exit without building"
+  echo "  --non-reproducible - allow non-reproducible builds on aarch64"
   echo "  --models - comma-separated list of models. default: --models T1B1,T2B1,T2T1,T3T1,T3W1"
   echo "  --targets - comma-separated list of targets for core build. default: --targets boardloader,bootloader,secmon,firmware"
   echo "  --nrf - build nRF bootloader and firmware (for bluetooth devices, i.e. T3W1)"
@@ -72,6 +40,7 @@ OPT_BUILD_NRF=0
 OPT_ADD_TRANSLATIONS=1
 INIT=1
 INIT_ONLY=0
+OPT_NON_REPRODUCIBLE=0
 MODELS=(T1B1 T2B1 T2T1 T3T1 T3W1)
 CORE_TARGETS=(boardloader bootloader secmon firmware)
 
@@ -106,6 +75,10 @@ while true; do
       INIT_ONLY=1
       shift
       ;;
+    --non-reproducible)
+      OPT_NON_REPRODUCIBLE=1
+      shift
+      ;;
     --models)
       # take comma-separated next argument and turn it into an array
       IFS=',' read -r -a MODELS <<< "$2"
@@ -129,6 +102,66 @@ done
 if [ -z "$1" ]; then
   help_and_die
 fi
+
+############## Select the right Alpine architecture ##############
+
+os="$(uname -s)"
+arch="$(uname -m)"
+
+if [ -z "${ALPINE_ARCH:-}" ]; then
+  case "$arch" in
+    aarch64|arm64)
+      if [ "$os" = "Darwin" ] && [ "$OPT_NON_REPRODUCIBLE" -eq 0 ]; then
+        ALPINE_ARCH="x86_64"
+      else
+        ALPINE_ARCH="aarch64"
+      fi
+      ;;
+    x86_64)
+      ALPINE_ARCH="x86_64"
+      ;;
+    *)
+      echo "Unsupported arch: $arch"
+      exit 1
+      ;;
+  esac
+fi
+
+if [ "$ALPINE_ARCH" = "aarch64" ] && [ "$OPT_NON_REPRODUCIBLE" -eq 0 ]; then
+  echo "Reproducible builds are not supported on aarch64."
+  echo "Pass --non-reproducible to allow a non-reproducible build."
+  exit 1
+fi
+
+if [ -z "${ALPINE_CHECKSUM:-}" ]; then
+  case "$ALPINE_ARCH" in
+    aarch64)
+      ALPINE_CHECKSUM="1be50ae27c8463d005c4de16558d239e11a88ac6b2f8721c47e660fbeead69bf"
+      ;;
+    x86_64)
+      ALPINE_CHECKSUM="ec7ec80a96500f13c189a6125f2dbe8600ef593b87fc4670fe959dc02db727a2"
+      ;;
+    *)
+      echo "Unsupported Alpine architecture: $ALPINE_ARCH"
+      exit 1
+      ;;
+  esac
+fi
+
+DOCKER_PLATFORM_ARGS=()
+if [ "$os" = "Darwin" ]; then
+  case "$ALPINE_ARCH" in
+    aarch64)
+      DOCKER_PLATFORM_ARGS=(--platform linux/arm64)
+      ;;
+    x86_64)
+      DOCKER_PLATFORM_ARGS=(--platform linux/amd64)
+      ;;
+  esac
+fi
+
+ALPINE_TARBALL=${ALPINE_FILE:-alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz}
+CONTAINER_FS_URL=${CONTAINER_FS_URL:-"$ALPINE_CDN/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/$ALPINE_TARBALL"}
 
 ################## Variant selection ##################
 
@@ -167,8 +200,8 @@ else
     echo "${ALPINE_CHECKSUM}  ci/${ALPINE_TARBALL}" | sha256sum -c
 fi
 
-tag_clean="${TAG//[^a-zA-Z0-9]/_}"
-SNAPSHOT_NAME="${CONTAINER_NAME}__${tag_clean}"
+tag_clean="${TAG//[^a-zA-Z0-9\.]/_}"
+SNAPSHOT_NAME="${CONTAINER_NAME}-${tag_clean}-${ALPINE_ARCH}"
 
 mkdir -p build
 
@@ -195,6 +228,7 @@ if [ $INIT -eq 1 ]; then
   sed "s|./ci/|./|" < shell.nix > ci/shell.nix
 
   $DOCKER build \
+    "${DOCKER_PLATFORM_ARGS[@]}" \
     --network=host \
     --build-arg ALPINE_VERSION="$ALPINE_VERSION" \
     --build-arg ALPINE_ARCH="$ALPINE_ARCH" \
@@ -271,6 +305,7 @@ echo
 rm -f build/._checkout_updated
 
 $DOCKER run \
+  "${DOCKER_PLATFORM_ARGS[@]}" \
   --network=host \
   -v "$PWD:/local" \
   -v "$PWD/build:/build" \
@@ -389,6 +424,7 @@ EOF
     echo
 
     $DOCKER run \
+      "${DOCKER_PLATFORM_ARGS[@]}" \
       --network=host \
       --rm \
       -v "$DIR:/local" \
@@ -499,6 +535,7 @@ EOF
   echo
 
   $DOCKER run \
+    "${DOCKER_PLATFORM_ARGS[@]}" \
     --network=host \
     --rm \
     -v "$DIR:/local" \
@@ -553,6 +590,7 @@ EOF
     echo
 
     $DOCKER run \
+      "${DOCKER_PLATFORM_ARGS[@]}" \
       --network=host \
       --rm \
       -v "$DIR:/local" \
@@ -582,6 +620,7 @@ if [ -f "$FINGERPRINTS_FILE" ]; then
   # Append the translations root if a firmware that consumes them was built and
   # compute the master fingerprint.
   $DOCKER run \
+      "${DOCKER_PLATFORM_ARGS[@]}" \
       --network=host \
       --rm \
       -v "$DIR:/local" \
