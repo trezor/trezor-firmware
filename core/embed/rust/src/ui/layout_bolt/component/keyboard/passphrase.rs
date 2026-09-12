@@ -435,15 +435,21 @@ impl Input {
     fn render_shown<'s>(&self, target: &mut impl Renderer<'s>) {
         debug_assert_eq!(self.display_style, DisplayStyle::Shown);
 
-        Bar::new(self.shown_area)
+        // Clamp the overlay to the screen and make sure that the end of the
+        // passphrase stays visible even when it overflows the screen, cutting
+        // off the beginning instead.
+        let shown_area = self.shown_area.clamp(SCREEN);
+        let text_area = shown_area.inset(Self::SHOWN_INSETS);
+
+        Bar::new(shown_area)
             .with_bg(theme::GREY_DARK)
             .with_radius(theme::RADIUS.into())
             .render(target);
 
         TextLayout::new(Self::STYLE)
-            .with_bounds(self.shown_area.inset(Self::SHOWN_INSETS))
             .with_align(Alignment::Start)
-            .render_text(self.textbox.content(), target, true);
+            .with_bounds(self.shown_area.inset(Self::SHOWN_INSETS))
+            .render_text_ensure_end_visible(self.textbox.content(), text_area, target);
     }
 
     fn render_hidden<'s>(&self, target: &mut impl Renderer<'s>) {

@@ -78,15 +78,21 @@ impl PassphraseInput {
         // Make sure the pin should be shown
         debug_assert_eq!(self.display_style, DisplayStyle::Shown);
 
-        Bar::new(self.shown_area)
+        // Clamp the overlay to the screen and make sure that the end of the
+        // passphrase stays visible even when it overflows the screen, cutting
+        // off the beginning instead.
+        let shown_area = self.shown_area.clamp(SCREEN);
+        let text_area = shown_area.inset(SHOWN_INSETS);
+
+        Bar::new(shown_area)
             .with_bg(theme::GREY_SUPER_DARK)
             .with_radius(KEYBOARD_INPUT_RADIUS)
             .render(target);
 
         TextLayout::new(Self::STYLE)
-            .with_bounds(self.shown_area.inset(SHOWN_INSETS))
             .with_align(Alignment::Start)
-            .render_text(self.content(), target, true);
+            .with_bounds(self.shown_area.inset(SHOWN_INSETS))
+            .render_text_ensure_end_visible(self.content(), text_area, target);
     }
 
     fn render_hidden<'s>(&self, target: &mut impl Renderer<'s>) {

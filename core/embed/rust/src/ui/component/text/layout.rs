@@ -261,6 +261,34 @@ impl TextLayout {
         fit
     }
 
+    /// Render the text, ensuring that the end of the text stays visible.
+    ///
+    /// If the text laid out in `self.bounds` is taller than the `clip` area,
+    /// the text is shifted upwards so that its bottom edge is aligned with
+    /// the bottom of `clip` and the beginning of the text is cut off. The
+    /// rendering is then clipped to `clip`. Otherwise, the text is rendered
+    /// normally within `self.bounds`.
+    pub fn render_text_ensure_end_visible<'s>(
+        &self,
+        text: &str,
+        clip: Rect,
+        target: &mut impl Renderer<'s>,
+    ) {
+        let height = match self.fit_text(text) {
+            LayoutFit::Fitting { height, .. } => height,
+            LayoutFit::OutOfBounds { .. } => self.bounds.height(),
+        };
+        let dy = self.bounds.y0 + height - clip.y1;
+        if dy <= 0 {
+            self.render_text(text, target, true);
+        } else {
+            let shifted = self.with_bounds(self.bounds.translate(Offset::y(-dy)));
+            target.in_clip(clip, &|target| {
+                shifted.render_text(text, target, true);
+            });
+        }
+    }
+
     /// Loop through the `text` and try to fit it on the current screen,
     /// reporting events to `sink`, which may do something with them (e.g. draw
     /// on screen).
