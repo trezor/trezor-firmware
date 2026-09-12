@@ -16,6 +16,7 @@ import click
 import trezorlib.debuglink
 from trezorlib.cli.debug import record_screen
 from trezorlib._internal.emulator import CoreEmulator, TropicModel
+from trezorlib.testing import translations
 
 try:
     import inotify.adapters
@@ -133,6 +134,7 @@ def _from_env(name: str) -> bool:
 @click.option("-G", "--alloc-profiling/--no-alloc-profiling", default=_from_env("TREZOR_MEMPERF"), help="Profile memory allocation (requires special micropython build)")
 @click.option("-h", "--headless", is_flag=True, help="Headless mode (no display, disables animation)")
 @click.option("--heap-size", metavar="SIZE", default="20M", help="Configure heap size")
+@click.option( "-l", "--lang", type=click.Choice(translations.LANGUAGES), help="Set device language (e.g. cs)")
 @click.option("--main", help="Path to python main file")
 @click.option("--mnemonic", "mnemonics", multiple=True, help="Initialize device with given mnemonic. Specify multiple times for Shamir shares.")
 @click.option("--log-memory/--no-log-memory", default=_from_env("TREZOR_LOG_MEMORY"), help="Print memory usage after workflows")
@@ -163,6 +165,7 @@ def cli(
     alloc_profiling: bool,
     headless: bool,
     heap_size: str,
+    lang: str | None,
     main: str,
     mnemonics: list[str],
     log_memory: bool,
@@ -229,6 +232,12 @@ def cli(
 
     if mnemonics and production:
         raise click.ClickException("Cannot load mnemonics in production mode")
+
+    if lang and (debugger or valgrind):
+        raise click.ClickException("Cannot set language when running in debugger")
+
+    if lang and production:
+        raise click.ClickException("Cannot set language in production mode")
 
     if profiling or alloc_profiling:
         main_args = ["-m", "prof"]
@@ -338,6 +347,13 @@ def cli(
             passphrase_protection=False,
             label=label,
         )
+
+    if lang:
+        try:
+            session = emulator.client.get_session(passphrase=None)
+        except RuntimeError:
+            raise click.ClickException("Cannot set language: debuglink not available.")
+        translations.set_language(session, lang)
 
     if record_dir:
         record_screen(emulator.transport, record_dir)
