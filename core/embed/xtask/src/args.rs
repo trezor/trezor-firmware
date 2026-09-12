@@ -21,18 +21,12 @@ pub enum Project {
 
 impl Project {
     /// The Rust package name used for cargo commands
-    pub fn package_name(self, emulator: bool) -> &'static str {
+    pub fn package_name(self) -> &'static str {
         match self {
             Project::Bootloader => "bootloader",
             Project::Boardloader => "boardloader",
             Project::BootloaderCi => "bootloader_ci",
-            Project::Firmware => {
-                if emulator {
-                    "unix"
-                } else {
-                    "firmware"
-                }
-            }
+            Project::Firmware => "firmware",
             Project::Prodtest => "prodtest",
             Project::Kernel => "kernel",
             Project::Secmon => "secmon",

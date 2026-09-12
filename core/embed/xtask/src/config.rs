@@ -158,7 +158,7 @@ pub struct ProjectConfig {
 
 impl ProjectConfig {
     pub fn load(project: Project) -> Result<Self> {
-        let pkg = project.package_name(false);
+        let pkg = project.package_name();
         let path = workspace_dir()?
             .join("projects")
             .join(pkg)
@@ -209,7 +209,7 @@ pub fn resolve_board_definition(
     emulator: bool,
 ) -> Result<BoardDefinition> {
     let board_config = BoardConfig::load(&model_config.model_id, board_id)?;
-    let pkg = project.package_name(false);
+    let pkg = project.package_name();
     let model_override = model_config
         .project_overrides
         .get(pkg)

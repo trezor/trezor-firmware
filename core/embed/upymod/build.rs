@@ -20,10 +20,10 @@ fn main() -> Result<()> {
             // There are two mpconfigport.h files in both ports/unix and projects/unix.
             // The first one has precedence and is used for compilation. We need mphalport.h
             // from the other.
-            lib.add_include("../projects/unix");
+            lib.add_include("../projects/firmware/src/unix");
             lib.add_include(PathBuf::from(mpy_dir).join("ports/unix"));
         } else if cfg!(feature = "mcu_stm32") {
-            lib.add_include("../projects/firmware");
+            lib.add_include("../projects/firmware/src/stm32");
         } else {
             bail_unsupported!();
         }
@@ -272,7 +272,10 @@ fn main() -> Result<()> {
                 ],
             );
         } else if cfg!(feature = "mcu_stm32") {
-            lib.add_sources_in_dir("../projects/firmware", ["mphalport.c", "nlrthumb.c"]);
+            lib.add_sources_in_dir(
+                "../projects/firmware/src/stm32",
+                ["mphalport.c", "nlrthumb.c"],
+            );
 
             lib.add_sources_in_dir(
                 mpy_dir,
@@ -430,9 +433,9 @@ impl<'a> MpyBuilder<'a> {
         // TODO: remove this hack by moving these sources (or part of them)
         // into upymod.
         let extra_sources = if cfg!(feature = "emulator") {
-            [self.crate_dir.join("../projects/unix/main.c")]
+            [self.crate_dir.join("../projects/firmware/src/unix/main.c")]
         } else if cfg!(feature = "mcu_stm32") {
-            [self.crate_dir.join("../projects/firmware/main.c")]
+            [self.crate_dir.join("../projects/firmware/src/stm32/main.c")]
         } else {
             bail_unsupported!();
         };

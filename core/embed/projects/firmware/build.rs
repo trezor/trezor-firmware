@@ -5,17 +5,7 @@ fn main() -> Result<()> {
         lib.import_lib("io")?;
         lib.import_lib("upymod")?;
 
-        lib.add_includes(["."]);
-
         lib.add_include("../../rust"); // Cyclic dependency
-
-        lib.add_sources(["main.c", "header.S", "boot_image_embdata.c"]);
-
-        if cfg!(feature = "mcu_stm32") {
-            lib.add_source("stm32/coreapp_header.S");
-        } else {
-            bail_unsupported!()
-        }
 
         if cfg!(feature = "app_loading") {
             lib.add_source("../../api/trezor_api_v1_impl.c");
@@ -25,16 +15,29 @@ fn main() -> Result<()> {
             lib.add_define("FORCE_BOOTLOADER_UPGRADE", Some("1"));
         }
 
-        lib.embed_binary(
-            xbuild::vendor_header_path("../../models", "firmware")?,
-            "vendorheader",
-        )?;
+        if cfg!(feature = "emulator") {
+            lib.add_sources(["src/unix/main.c", "src/unix/main_main.c"]);
+        } else if cfg!(feature = "mcu_stm32") {
+            lib.add_sources([
+                "src/stm32/main.c",
+                "src/stm32/header.S",
+                "src/stm32/boot_image_embdata.c",
+                "src/stm32/coreapp_header.S",
+            ]);
 
-        embed_bootloader_binary(lib)?;
-        embed_kernel_binary(lib)?;
+            lib.embed_binary(
+                xbuild::vendor_header_path("../../models", "firmware")?,
+                "vendorheader",
+            )?;
 
-        if cfg!(feature = "nrf") {
-            embed_nrf_app_binary(lib)?;
+            embed_bootloader_binary(lib)?;
+            embed_kernel_binary(lib)?;
+
+            if cfg!(feature = "nrf") {
+                embed_nrf_app_binary(lib)?;
+            }
+        } else {
+            bail_unsupported!()
         }
 
         Ok(())

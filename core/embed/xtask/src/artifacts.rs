@@ -75,7 +75,7 @@ pub fn collect_artifacts(args: &ResolvedBuildArgs, is_dependency: bool) -> Resul
     let binary_name = args.project.binary_name();
     let profile_dir = helpers::profile_dir(args)?;
     let elf = helpers::elf_path(args)?;
-    let package = args.project.package_name(args.emulator);
+    let package = args.project.package_name();
     let compile_commands = profile_dir.join(format!("{package}.cc.json"));
 
     let elf_ext = if args.emulator { "" } else { ".elf" };
