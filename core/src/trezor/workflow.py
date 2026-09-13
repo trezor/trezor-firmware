@@ -52,6 +52,10 @@ default_task: loop.spawn | None = None
 # Constructor for the default workflow.  Returns a workflow task.
 default_constructor: Callable[[], loop.Task[None]] | None = None
 
+# Set when the default workflow died on a paint overflow (ui_debug builds).
+# Prevents restarting into the same deterministically failing layout.
+_paint_overflow_halt: bool = False
+
 # Determines whether idle timer firing closes currently running workflow. Storage is locked always.
 autolock_interrupts_workflow: bool = True
 
@@ -116,6 +120,11 @@ def start_default() -> None:
 
     assert default_constructor is not None
 
+    if _paint_overflow_halt:
+        # The default workflow previously died on a paint overflow, do not
+        # restart it (see `_finalize_default`).
+        return
+
     if not default_task:
         default_task = loop.spawn(default_constructor())
         if __debug__:
@@ -134,9 +143,12 @@ def set_default(
 ) -> None:
     """Configure a default workflow, which will be started next time it is needed."""
     global default_constructor
+    global _paint_overflow_halt
     if __debug__:
         log.debug(__name__, "setting a new default: %s", constructor)
     default_constructor = constructor
+    # A new default must not be blocked by a paint overflow of the previous one.
+    _paint_overflow_halt = False
     if restart:
         # XXX should this be the default (or only) behavior?
         kill_default()
@@ -185,6 +197,7 @@ def _finalize_default(task: loop.spawn) -> None:
     """Finalizer for the default task. Cleans up globals and restarts the default
     in case no other task is running."""
     global default_task
+    global _paint_overflow_halt
 
     assert default_task is task  # finalizer is closing something other than default?
     assert default_constructor is not None  # it should always be configured
@@ -193,7 +206,15 @@ def _finalize_default(task: loop.spawn) -> None:
         log.debug(__name__, "default closed: %s", task.task)
     default_task = None
 
-    if not tasks:
+    if __debug__ and isinstance(task.return_value, OverflowError):
+        # A layout reported painting out of bounds (ui_debug feature, raised as
+        # OverflowError from `Layout.paint()`). Restarting the default workflow
+        # would deterministically fail again in a loop; halt instead and keep
+        # the single traceback above as the only report.
+        log.error(__name__, "paint overflow in default workflow, halting")
+        _paint_overflow_halt = True
+
+    if not tasks and not _paint_overflow_halt:
         # No registered workflows are running and we are in the default task
         # finalizer, so when this function finished, nothing will be running.
         # We must schedule a new instance of the default now.
