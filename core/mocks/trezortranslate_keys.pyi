@@ -645,7 +645,6 @@ class TR:
     pin__please_check_again: str = "Please check again."
     pin__reenter: str = "Re-enter PIN"
     pin__reenter_new: str = "Re-enter new PIN"
-    pin__reenter_new_description: str = "Re-enter new PIN."
     pin__reenter_to_confirm: str = "Please re-enter PIN to confirm."
     pin__remove: str = "Remove PIN"
     pin__setup_completed: str = "PIN setup completed."

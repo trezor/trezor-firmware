@@ -1877,12 +1877,6 @@
     },
     "pin__reenter": "Re-enter PIN",
     "pin__reenter_new": "Re-enter new PIN",
-    "pin__reenter_new_description": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Re-enter new PIN.",
-      "Eckhart": ""
-    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Please re-enter PIN to confirm.",

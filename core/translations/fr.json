@@ -2024,12 +2024,6 @@
       "Delizia": "Ressaisir le nouveau PIN",
       "Eckhart": "Ressaisir le nouveau PIN"
     },
-    "pin__reenter_new_description": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Ressaisir le nouveau PIN.",
-      "Eckhart": ""
-    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Veuillez ressaisir le code PIN pour confirmer.",

@@ -2114,12 +2114,6 @@
       "Delizia": "PIN neu eingeben",
       "Eckhart": "Neue PIN noch einmal eingeben"
     },
-    "pin__reenter_new_description": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Neue PIN noch einmal eingeben.",
-      "Eckhart": ""
-    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Gib die PIN zur Bestätigung erneut ein.",

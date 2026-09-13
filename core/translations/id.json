@@ -1765,12 +1765,6 @@
     },
     "pin__reenter": "Masukkan ulang PIN",
     "pin__reenter_new": "Masukkan lagi PIN baru",
-    "pin__reenter_new_description": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Masukkan lagi PIN baru.",
-      "Eckhart": ""
-    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Harap masukkan kembali PIN untuk konfirmasi.",

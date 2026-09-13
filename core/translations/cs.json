@@ -1839,12 +1839,6 @@
       "Delizia": "Znovu zadejte nový PIN",
       "Eckhart": "Znovu zadejte nový PIN"
     },
-    "pin__reenter_new_description": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Znovu zadejte nový PIN.",
-      "Eckhart": ""
-    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Znovu zadejte PIN pro jeho potvrzení.",
