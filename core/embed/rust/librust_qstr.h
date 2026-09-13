@@ -131,7 +131,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_address__xpub;
   MP_QSTR_address_details__account_info;
   MP_QSTR_address_details__derivation_path;
-  MP_QSTR_address_details__derivation_path_colon;
   MP_QSTR_address_details__title_receive_address;
   MP_QSTR_address_label;
   MP_QSTR_address_qr;
@@ -1026,7 +1025,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_words;
   MP_QSTR_words__about;
   MP_QSTR_words__account;
-  MP_QSTR_words__account_colon;
   MP_QSTR_words__account_deletion;
   MP_QSTR_words__address;
   MP_QSTR_words__amount;
