@@ -1707,14 +1707,14 @@ static void prodtest_tropic_stress_init(cli_t* cli) {
     return;
   }
 
-  for (int i = 0; i < iterations; i++) {
+  for (uint32_t i = 0; i < iterations; i++) {
     tropic_deinit();
     // Simulate a delay between suspend and wake-up.
     systick_delay_ms(delay_ms);
     lt_ret_t ret = tropic_init(cli);
     if (ret != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_INIT,
-                "Call #%d of `tropic_init()` failed with error '%s'", i + 1,
+                "Call #%u of `tropic_init()` failed with error '%s'", i + 1,
                 lt_ret_verbose(ret));
       return;
     }
@@ -1740,12 +1740,12 @@ static void prodtest_tropic_stress_session(cli_t* cli) {
     return;
   }
 
-  for (int i = 0; i < iterations; i++) {
+  for (uint32_t i = 0; i < iterations; i++) {
     lt_ret_t res = tropic_session_invalidate();
     if (res != LT_OK) {
       cli_error(
           cli, PRODTEST_ERR_TROPIC_STRESS_SESSION_INVALIDATE,
-          "Call #%d of `tropic_session_invalidate()` failed with error '%s'",
+          "Call #%u of `tropic_session_invalidate()` failed with error '%s'",
           i + 1, lt_ret_verbose(res));
       return;
     }
@@ -1753,7 +1753,7 @@ static void prodtest_tropic_stress_session(cli_t* cli) {
     if (res != LT_OK) {
       cli_error(
           cli, PRODTEST_ERR_TROPIC_STRESS_SESSION_START,
-          "Call #%d of `tropic_custom_session_start()` failed with error '%s'",
+          "Call #%u of `tropic_custom_session_start()` failed with error '%s'",
           i + 1, lt_ret_verbose(res));
       return;
     }
@@ -1800,15 +1800,15 @@ static void prodtest_tropic_stress_mac_and_destroy(cli_t* cli) {
     return;
   }
 
-  for (int s = 0; s < slot_count; s++) {
+  for (uint32_t s = 0; s < slot_count; s++) {
     lt_mac_and_destroy_slot_t slot = slots[s];
-    for (int i = 0; i < iterations; i++) {
+    for (uint32_t i = 0; i < iterations; i++) {
       uint8_t buffer[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
       rng_fill_buffer(buffer, sizeof(buffer));
       lt_ret_t res = lt_mac_and_destroy(h, slot, buffer, buffer);
       if (res != LT_OK) {
         cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_MAC_AND_DESTROY,
-                  "Call #%d of `lt_mac_and_destroy()` for slot %d failed with "
+                  "Call #%u of `lt_mac_and_destroy()` for slot %d failed with "
                   "error '%s'",
                   i + 1, slot, lt_ret_verbose(res));
         return;
@@ -1865,7 +1865,7 @@ static void prodtest_tropic_test_mac_and_destroy(cli_t* cli) {
     return;
   }
 
-  for (int s = 0; s < slot_count; s++) {
+  for (uint32_t s = 0; s < slot_count; s++) {
     lt_mac_and_destroy_slot_t slot = slots[s];
 
     uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
@@ -1894,13 +1894,13 @@ static void prodtest_tropic_test_mac_and_destroy(cli_t* cli) {
       return;
     }
 
-    for (int i = 0; i < iterations; i++) {
+    for (uint32_t i = 0; i < iterations; i++) {
       // Reset: M&D(reset_key)
       res = lt_mac_and_destroy(h, slot, reset_key, output);
       if (res != LT_OK) {
         cli_error(cli, PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY,
                   "`lt_mac_and_destroy()` reset for slot %d failed at "
-                  "iteration #%d with error '%s'",
+                  "iteration #%u with error '%s'",
                   slot, i + 1, lt_ret_verbose(res));
         return;
       }
@@ -1909,13 +1909,13 @@ static void prodtest_tropic_test_mac_and_destroy(cli_t* cli) {
       if (res != LT_OK) {
         cli_error(cli, PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY,
                   "`lt_mac_and_destroy()` re-measurement for slot %d failed at "
-                  "iteration #%d with error '%s'",
+                  "iteration #%u with error '%s'",
                   slot, i + 1, lt_ret_verbose(res));
         return;
       }
       if (memcmp(output, output_0, sizeof(output_0)) != 0) {
         cli_error(cli, PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY_MISMATCH,
-                  "MAC-and-destroy inconsistent on slot %d at iteration #%d",
+                  "MAC-and-destroy inconsistent on slot %d at iteration #%u",
                   slot, i + 1);
         return;
       }
@@ -1976,12 +1976,12 @@ static void prodtest_tropic_test_sign(cli_t* cli) {
     goto cleanup_error;
   }
 
-  for (int i = 0; i < iterations; i++) {
+  for (uint32_t i = 0; i < iterations; i++) {
     rng_fill_buffer(message, sizeof(message));
     res = lt_ecc_eddsa_sign(h, ecc_slot, message, sizeof(message), signature);
     if (res != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_EDDSA_SIGN,
-                "Call #%d of `lt_ecc_eddsa_sign()` for slot %d failed with "
+                "Call #%u of `lt_ecc_eddsa_sign()` for slot %d failed with "
                 "error '%s'",
                 i + 1, ecc_slot, lt_ret_verbose(res));
       goto cleanup_error;
@@ -1989,7 +1989,7 @@ static void prodtest_tropic_test_sign(cli_t* cli) {
     if (ed25519_sign_open(message, sizeof(message), public_key, signature) !=
         0) {
       cli_error(cli, PRODTEST_ERR_TROPIC_TEST_SIGN_VERIFY,
-                "Signature #%d for slot %d failed verification", i + 1,
+                "Signature #%u for slot %d failed verification", i + 1,
                 ecc_slot);
       goto cleanup_error;
     }
@@ -2049,7 +2049,7 @@ static void prodtest_tropic_test_counter(cli_t* cli) {
     return;
   }
 
-  for (int s = 0; s < slot_count; s++) {
+  for (uint32_t s = 0; s < slot_count; s++) {
     lt_mcounter_index_t idx = slots[s];
 
     lt_ret_t res = lt_mcounter_init(h, idx, iterations);
@@ -2070,24 +2070,24 @@ static void prodtest_tropic_test_counter(cli_t* cli) {
     }
     if (value != iterations) {
       cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_INIT_MISMATCH,
-                "Counter %d read %d after init, expected %d", idx, value,
+                "Counter %d read %u after init, expected %u", idx, value,
                 iterations);
       return;
     }
 
-    for (int i = 0; i < iterations; i++) {
+    for (uint32_t i = 0; i < iterations; i++) {
       res = lt_mcounter_update(h, idx);
       if (res != LT_OK) {
         cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_UPDATE,
                   "`lt_mcounter_update()` for counter %d failed at iteration "
-                  "#%d with error '%s'",
+                  "#%u with error '%s'",
                   idx, i + 1, lt_ret_verbose(res));
         return;
       }
       res = lt_mcounter_get(h, idx, &value);
       if (res != LT_OK) {
         cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_GET,
-                  "`lt_mcounter_get()` for counter %d failed at iteration #%d "
+                  "`lt_mcounter_get()` for counter %d failed at iteration #%u "
                   "with error '%s'",
                   idx, i + 1, lt_ret_verbose(res));
         return;
@@ -2095,7 +2095,7 @@ static void prodtest_tropic_test_counter(cli_t* cli) {
       uint32_t expected = iterations - i - 1;
       if (value != expected) {
         cli_error(cli, PRODTEST_ERR_TROPIC_TEST_COUNTER_MISMATCH,
-                  "Counter %d read %d after %d decrements, expected %d", idx,
+                  "Counter %d read %u after %u decrements, expected %u", idx,
                   value, i + 1, expected);
         return;
       }
@@ -2153,9 +2153,9 @@ static void prodtest_tropic_test_rmem(cli_t* cli) {
     return;
   }
 
-  for (int s = 0; s < slot_count; s++) {
+  for (uint32_t s = 0; s < slot_count; s++) {
     uint16_t slot = slots[s];
-    for (int i = 0; i < iterations; i++) {
+    for (uint32_t i = 0; i < iterations; i++) {
       uint8_t write_data[TROPIC_RMEM_TEST_DATA_SIZE] = {0};
       uint8_t read_data[TROPIC_RMEM_TEST_DATA_SIZE] = {0};
       rng_fill_buffer(write_data, sizeof(write_data));
@@ -2165,7 +2165,7 @@ static void prodtest_tropic_test_rmem(cli_t* cli) {
       lt_ret_t res = lt_r_mem_data_erase(h, slot);
       if (res != LT_OK) {
         cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RMEM_ERASE,
-                  "`lt_r_mem_data_erase()` for slot %d failed at iteration #%d "
+                  "`lt_r_mem_data_erase()` for slot %d failed at iteration #%u "
                   "with error '%s'",
                   slot, i + 1, lt_ret_verbose(res));
         return;
@@ -2173,7 +2173,7 @@ static void prodtest_tropic_test_rmem(cli_t* cli) {
       res = lt_r_mem_data_write(h, slot, write_data, sizeof(write_data));
       if (res != LT_OK) {
         cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RMEM_WRITE,
-                  "`lt_r_mem_data_write()` for slot %d failed at iteration #%d "
+                  "`lt_r_mem_data_write()` for slot %d failed at iteration #%u "
                   "with error '%s'",
                   slot, i + 1, lt_ret_verbose(res));
         lt_r_mem_data_erase(h, slot);
@@ -2184,7 +2184,7 @@ static void prodtest_tropic_test_rmem(cli_t* cli) {
           lt_r_mem_data_read(h, slot, read_data, sizeof(read_data), &read_size);
       if (res != LT_OK) {
         cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RMEM_READ,
-                  "`lt_r_mem_data_read()` for slot %d failed at iteration #%d "
+                  "`lt_r_mem_data_read()` for slot %d failed at iteration #%u "
                   "with error '%s'",
                   slot, i + 1, lt_ret_verbose(res));
         lt_r_mem_data_erase(h, slot);
@@ -2193,7 +2193,7 @@ static void prodtest_tropic_test_rmem(cli_t* cli) {
       if (read_size != sizeof(write_data) ||
           memcmp(read_data, write_data, sizeof(write_data)) != 0) {
         cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RMEM_MISMATCH,
-                  "R-memory slot %d read-back mismatch at iteration #%d", slot,
+                  "R-memory slot %d read-back mismatch at iteration #%u", slot,
                   i + 1);
         lt_r_mem_data_erase(h, slot);
         return;
@@ -2232,12 +2232,12 @@ static void prodtest_tropic_test_rng(cli_t* cli) {
   }
 
   uint8_t previous[32] = {0};
-  for (int i = 0; i < iterations; i++) {
+  for (uint32_t i = 0; i < iterations; i++) {
     uint8_t value[32] = {0};
     lt_ret_t res = lt_random_value_get(h, value, sizeof(value));
     if (res != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_RANDOM_GET,
-                "Call #%d of `lt_random_value_get()` failed with error '%s'",
+                "Call #%u of `lt_random_value_get()` failed with error '%s'",
                 i + 1, lt_ret_verbose(res));
       return;
     }
@@ -2251,12 +2251,12 @@ static void prodtest_tropic_test_rng(cli_t* cli) {
     }
     if (all_zero) {
       cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RNG_ZERO,
-                "RNG returned an all-zero value at iteration #%d", i + 1);
+                "RNG returned an all-zero value at iteration #%u", i + 1);
       return;
     }
     if (i > 0 && memcmp(value, previous, sizeof(value)) == 0) {
       cli_error(cli, PRODTEST_ERR_TROPIC_TEST_RNG_REPEAT,
-                "RNG returned a repeated value at iteration #%d", i + 1);
+                "RNG returned a repeated value at iteration #%u", i + 1);
       return;
     }
     memcpy(previous, value, sizeof(value));
@@ -2376,13 +2376,13 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
     }
   }
 
-  cli_trace(cli, "Initialization iterations: %d", init_iterations);
-  cli_trace(cli, "Start-session iterations: %d", start_session_iterations);
-  cli_trace(cli, "MAC-and-destroy slot count: %d", mac_and_destroy_slot_count);
-  cli_trace(cli, "MAC-and-destroy iterations per slot: %d",
+  cli_trace(cli, "Initialization iterations: %u", init_iterations);
+  cli_trace(cli, "Start-session iterations: %u", start_session_iterations);
+  cli_trace(cli, "MAC-and-destroy slot count: %u", mac_and_destroy_slot_count);
+  cli_trace(cli, "MAC-and-destroy iterations per slot: %u",
             mac_and_destroy_per_slot_iterations);
-  cli_trace(cli, "Signing iterations: %d", signing_iterations);
-  cli_trace(cli, "RNG iterations: %d", rng_iterations);
+  cli_trace(cli, "Signing iterations: %u", signing_iterations);
+  cli_trace(cli, "RNG iterations: %u", rng_iterations);
 
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
@@ -2393,12 +2393,12 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   }
 
   // test Tropic gets initialized
-  for (int i = 0; i < init_iterations; i++) {
+  for (uint32_t i = 0; i < init_iterations; i++) {
     tropic_deinit();
     lt_ret_t res = tropic_init(cli);
     if (res != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_INIT,
-                "Call #%d of `tropic_init()` failed with error '%s'", i + 1,
+                "Call #%u of `tropic_init()` failed with error '%s'", i + 1,
                 lt_ret_verbose(res));
       return;
     }
@@ -2413,19 +2413,19 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   cli_trace(cli, "Established session using pairing key %d", pairing_key_index);
 
   // Test `lt_session_start()`
-  for (int i = 0; i < start_session_iterations; i++) {
+  for (uint32_t i = 0; i < start_session_iterations; i++) {
     lt_ret_t res = tropic_session_invalidate();
     if (res != LT_OK) {
       cli_error(
           cli, PRODTEST_ERR_TROPIC_STRESS_SESSION_INVALIDATE,
-          "`Call #%d of tropic_session_invalidate() failed with error '%s'",
+          "`Call #%u of tropic_session_invalidate() failed with error '%s'",
           i + 1, lt_ret_verbose(res));
       return;
     }
     res = tropic_custom_session_start(cli, pairing_key_index);
     if (res != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_SESSION_START,
-                "Call #%d of `tropic_custom_session_start()"
+                "Call #%u of `tropic_custom_session_start()"
                 "failed with error '%s'",
                 i + 1, lt_ret_verbose(res));
       return;
@@ -2433,18 +2433,18 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   }
 
   // Test `lt_mac_and_destroy()`
-  for (int slot_index = TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED;
+  for (uint32_t slot_index = TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED;
        slot_index < TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED +
                         mac_and_destroy_slot_count;
        slot_index++) {
-    for (int i = 0; i < mac_and_destroy_per_slot_iterations; i++) {
+    for (uint32_t i = 0; i < mac_and_destroy_per_slot_iterations; i++) {
       uint8_t buffer[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
       rng_fill_buffer(buffer, sizeof(buffer));
       lt_ret_t res =
           lt_mac_and_destroy(tropic_handle, slot_index, buffer, buffer);
       if (res != LT_OK) {
         cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_SIGN_FAILED,
-                  "Call #%d of `lt_mac_and_destroy()` for slot %d failed "
+                  "Call #%u of `lt_mac_and_destroy()` for slot %u failed "
                   "with error '%s'",
                   i + 1, slot_index, lt_ret_verbose(res));
         return;
@@ -2464,13 +2464,13 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
               lt_ret_verbose(res));
     return;
   }
-  for (int i = 0; i < signing_iterations; i++) {
+  for (uint32_t i = 0; i < signing_iterations; i++) {
     rng_fill_buffer(message, sizeof(message));
     res = lt_ecc_eddsa_sign(tropic_handle, ecc_slot, message, sizeof(message),
                             signature);
     if (res != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_EDDSA_SIGN,
-                "Call #%d of `lt_ecc_eddsa_sign()` failed with error '%s'",
+                "Call #%u of `lt_ecc_eddsa_sign()` failed with error '%s'",
                 i + 1, lt_ret_verbose(res));
       lt_ecc_key_erase(tropic_handle, ecc_slot);
       return;
@@ -2485,13 +2485,13 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   }
 
   // Test lt_random_value_get()
-  for (int i = 0; i < rng_iterations; i++) {
+  for (uint32_t i = 0; i < rng_iterations; i++) {
     uint8_t random_value[32] = {0};
     lt_ret_t res =
         lt_random_value_get(tropic_handle, random_value, sizeof(random_value));
     if (res != LT_OK) {
       cli_error(cli, PRODTEST_ERR_TROPIC_STRESS_RANDOM_GET,
-                "Call #%d of `lt_random_value_get()` failed with error '%s'",
+                "Call #%u of `lt_random_value_get()` failed with error '%s'",
                 i + 1, lt_ret_verbose(res));
       return;
     }

@@ -298,8 +298,9 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
 
   slice->x = dec->slice_x;
   slice->y = dec->slice_y;
-  slice->width = MIN(dec->image.width - dec->slice_x, MAX_SLICE_WIDTH);
-  slice->height = MIN(dec->image.height - dec->slice_y, MAX_SLICE_HEIGHT);
+  slice->width = MIN(dec->image.width - dec->slice_x, (int16_t)MAX_SLICE_WIDTH);
+  slice->height =
+      MIN(dec->image.height - dec->slice_y, (int16_t)MAX_SLICE_HEIGHT);
 
   for (int y = 0; y < slice->height; y++) {
     void *src = &((uint32_t *)dec->slice_buffer[y])[slice->x];
@@ -323,8 +324,9 @@ bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
 
   slice->x = dec->slice_x;
   slice->y = dec->slice_y;
-  slice->width = MIN(dec->image.width - dec->slice_x, MAX_SLICE_WIDTH);
-  slice->height = MIN(dec->image.height - dec->slice_y, MAX_SLICE_HEIGHT);
+  slice->width = MIN(dec->image.width - dec->slice_x, (int16_t)MAX_SLICE_WIDTH);
+  slice->height =
+      MIN(dec->image.height - dec->slice_y, (int16_t)MAX_SLICE_HEIGHT);
 
   uint8_t *dst = (uint8_t *)mono8;
 

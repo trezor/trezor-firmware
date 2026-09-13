@@ -135,10 +135,10 @@ static ssize_t console_read(void *context, char *buf, size_t size) {
 
 static ssize_t console_write(void *context, const char *buf, size_t size) {
   static uint32_t timeout = 2000;
-  int rc = syshandle_write_blocking(SYSHANDLE_USB_VCP, buf, size, timeout);
+  ssize_t rc = syshandle_write_blocking(SYSHANDLE_USB_VCP, buf, size, timeout);
   // Do not wait too long if the host is not connected.
   // This is a workaround that needs to be fixed properly later.
-  timeout = rc < size ? 100 : 2000;
+  timeout = (rc < 0) || ((size_t)rc < size) ? 100 : 2000;
   return rc;
 }
 

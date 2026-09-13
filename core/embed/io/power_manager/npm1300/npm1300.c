@@ -353,7 +353,7 @@ static bool npm1300_initialize(i2c_bus_t* bus, uint16_t i_charge,
       // TODO automatic temp measurement during charging
   };
 
-  for (int i = 0; i < sizeof(table) / sizeof(table[0]); i++) {
+  for (size_t i = 0; i < sizeof(table) / sizeof(table[0]); i++) {
     if (!npm1300_set_reg(bus, table[i].addr, table[i].value)) {
       return false;
     }

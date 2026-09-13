@@ -151,7 +151,7 @@ static void read_retry(wire_iface_t *iface, uint8_t *buf) {
 
   for (int retry = 0;; retry++) {
     int r = iface->read(buf, packet_size);
-    if (r != packet_size) {  // reading failed
+    if (r < 0 || (size_t)r != packet_size) {  // reading failed
       if (r == 0 && retry < 10) {
         // only timeout => let's try again
         continue;

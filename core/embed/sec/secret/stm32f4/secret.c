@@ -92,7 +92,7 @@ void secret_write_header(void) {
 secbool secret_write(const uint8_t* data, uint32_t offset, uint32_t len) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   ensure(flash_unlock_write(), "secret write");
-  for (int i = 0; i < len; i++) {
+  for (uint32_t i = 0; i < len; i++) {
     if (sectrue != flash_area_write_byte(&SECRET_AREA, offset + i, data[i])) {
       ensure(flash_lock_write(), "secret write");
       mpu_restore(mpu_mode);
@@ -129,7 +129,7 @@ static secbool secret_wiped(void) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
 
-  for (int i = 0; i < size; i += 4) {
+  for (uint32_t i = 0; i < size; i += 4) {
     uint32_t* addr = (uint32_t*)flash_area_get_address(&SECRET_AREA, i, 4);
     if (addr == NULL) {
       wiped = secfalse;

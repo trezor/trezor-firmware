@@ -125,7 +125,6 @@ fn add_stm32f4_bsp(lib: &mut CLibrary) -> Result<()> {
             "stm32f4xx_hal_gpio.c",
             "stm32f4xx_hal_i2c.c",
             "stm32f4xx_hal_ltdc.c",
-            "stm32f4xx_hal_pcd.c",
             "stm32f4xx_hal_pcd_ex.c",
             "stm32f4xx_hal_pwr.c",
             "stm32f4xx_hal_rcc.c",
@@ -140,6 +139,12 @@ fn add_stm32f4_bsp(lib: &mut CLibrary) -> Result<()> {
             "stm32f4xx_ll_sdmmc.c",
             "stm32f4xx_ll_usb.c",
         ],
+    );
+
+    lib.add_sources_in_dir_with_attrs(
+        "../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/",
+        ["stm32f4xx_hal_pcd.c"],
+        Some(CompileAttrs::new().with_flag("-Wno-sign-compare")),
     );
 
     lib.add_sources_in_dir_with_attrs(

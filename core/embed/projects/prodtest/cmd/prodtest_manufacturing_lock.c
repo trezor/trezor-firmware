@@ -52,7 +52,7 @@ static void prodtest_manufacturing_lock_write(cli_t* cli) {
   bool dry_run = true;
 #endif
 
-  int arg_idx = 0;
+  size_t arg_idx = 0;
   while (arg_idx < cli_arg_count(cli)) {
     const char* arg = cli_nth_arg(cli, arg_idx++);
     if (strcmp(arg, "--execute") == 0) {

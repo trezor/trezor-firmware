@@ -58,7 +58,7 @@ typedef struct {
   int swipe_start_y;
   int swipe_end_x;
   int swipe_end_y;
-  int swipe_key;
+  SDL_Keycode swipe_key;
 
   // Last event not yet read
   uint32_t last_event;

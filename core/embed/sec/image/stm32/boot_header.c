@@ -58,9 +58,10 @@ secbool boot_header_check_signature(const boot_header_auth_t* hdr,
 
   const boot_header_unauth_t* sig = boot_header_unauth_get(hdr);
 
-  for (int sig_idx = 0; sig_idx < ARRAY_LENGTH(sig->ec_signature); sig_idx++) {
+  for (size_t sig_idx = 0; sig_idx < ARRAY_LENGTH(sig->ec_signature);
+       sig_idx++) {
     // Get the index of the public key in the signature mask
-    int key_idx = __builtin_ctz(sigmask);
+    size_t key_idx = __builtin_ctz(sigmask);
     if (key_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
       return secfalse;
     }

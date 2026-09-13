@@ -88,7 +88,7 @@ __attribute((no_stack_protector)) void saes_unpriv_callback(void) {
     SET_BIT(SAES->ICR, CRYP_CLEAR_CCF);
 
     /* Read the output block from the output FIFO */
-    for (int i = 0U; i < 4U; i++) {
+    for (size_t i = 0U; i < 4U; i++) {
       saes_unpriv_output[j * 4 + i] = SAES->DOUTR;
     }
   }

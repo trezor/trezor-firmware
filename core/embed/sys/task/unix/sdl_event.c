@@ -40,7 +40,7 @@ static sdl_event_dispatcher_t g_sdl_event_dispatcher = {0};
 bool sdl_events_register(sdl_event_filter_cb_t callback, void* context) {
   sdl_event_dispatcher_t* dispatcher = &g_sdl_event_dispatcher;
 
-  for (int index = 0; index < ARRAY_LENGTH(dispatcher->filter); index++) {
+  for (size_t index = 0; index < ARRAY_LENGTH(dispatcher->filter); index++) {
     sdl_event_filter_t* filter = &dispatcher->filter[index];
     if (filter->callback == NULL) {
       filter->callback = callback;
@@ -55,7 +55,7 @@ bool sdl_events_register(sdl_event_filter_cb_t callback, void* context) {
 void sdl_events_unregister(sdl_event_filter_cb_t callback, void* context) {
   sdl_event_dispatcher_t* dispatcher = &g_sdl_event_dispatcher;
 
-  for (int index = 0; index < ARRAY_LENGTH(dispatcher->filter); index++) {
+  for (size_t index = 0; index < ARRAY_LENGTH(dispatcher->filter); index++) {
     sdl_event_filter_t* filter = &dispatcher->filter[index];
     if (filter->callback == callback && filter->context == context) {
       filter->callback = NULL;
@@ -74,7 +74,8 @@ void sdl_events_poll(void) {
 
     // Process all pending events
     while (SDL_PollEvent(&sdl_event)) {
-      for (int index = 0; index < ARRAY_LENGTH(dispatcher->filter); index++) {
+      for (size_t index = 0; index < ARRAY_LENGTH(dispatcher->filter);
+           index++) {
         sdl_event_filter_t* filter = &dispatcher->filter[index];
         if (filter->callback != NULL) {
           filter->callback(filter->context, &sdl_event);

@@ -178,9 +178,9 @@ static secbool usb_emulated_poll_write(usb_iface_t *iface) {
   return sectrue * sock_can_send(&iface->sock);
 }
 
-static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, uint32_t len) {
+static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, size_t len) {
   if (iface->msg_len > 0) {
-    if (iface->msg_len < len) {
+    if ((size_t)iface->msg_len < len) {
       len = iface->msg_len;
     }
     memcpy(buf, iface->msg, len);

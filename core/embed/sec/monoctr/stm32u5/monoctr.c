@@ -112,7 +112,7 @@ secbool monoctr_read(monoctr_type_t type, uint8_t *value) {
 
   int counter = 0;
 
-  int i = 0;
+  size_t i = 0;
 
   for (i = 0; i < length / 16; i++) {
     secbool not_cleared = sectrue;
