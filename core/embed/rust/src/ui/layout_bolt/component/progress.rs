@@ -48,7 +48,19 @@ impl Component for Progress {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
-        let (title, rest) = Self::AREA.split_top(self.title.inner().max_size().y);
+        // Give the title as much height as it needs, up to two lines: the
+        // `Label` wraps the text onto the second line if it does not fit on
+        // one. A title needing more still fails loudly via `Label`'s
+        // must-fit overflow check.
+        let title_font = theme::label_progress().text_font;
+        let title_height = self
+            .title
+            .inner()
+            .text_height(Self::AREA.width())
+            // Keep the one-line strip exactly as tall as before.
+            .max(self.title.inner().max_size().y)
+            .min(title_font.text_max_height() + title_font.line_height());
+        let (title, rest) = Self::AREA.split_top(title_height);
         // Compute the height the description actually needs, taking possible
         // line wrapping of long translations into account.
         let description_height = self.description.inner().inner().content().map(|t| {
