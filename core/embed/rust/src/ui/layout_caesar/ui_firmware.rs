@@ -983,11 +983,20 @@ impl FirmwareUI for UICaesar {
         address: TString<'static>,
         case_sensitive: bool,
         _details_title: TString<'static>,
+        account_label: TString<'static>,
         account: Option<TString<'static>>,
+        path_label: TString<'static>,
         path: Option<TString<'static>>,
         xpubs: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
+        let mut ad = AddressDetails::new(
+            address,
+            case_sensitive,
+            account_label,
+            account,
+            path_label,
+            path,
+        )?;
 
         for i in IterBuf::new().try_iterate(xpubs)? {
             let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
