@@ -330,7 +330,8 @@ impl Component for Lockscreen<'_> {
 }
 
 pub struct ConfirmHomescreen {
-    title: Child<Label<'static>>,
+    title: Marquee,
+    title_bar: Rect,
     image: BinaryData<'static>,
     buttons: Child<ButtonController>,
 }
@@ -339,7 +340,13 @@ impl ConfirmHomescreen {
     pub fn new(title: TString<'static>, image: BinaryData<'static>) -> Self {
         let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__change.into());
         ConfirmHomescreen {
-            title: Child::new(Label::left_aligned(title, theme::TEXT_BOLD_UPPER)),
+            title: Marquee::new(
+                title,
+                theme::TEXT_BOLD_UPPER.text_font,
+                theme::TEXT_BOLD_UPPER.text_color,
+                theme::TEXT_BOLD_UPPER.background_color,
+            ),
+            title_bar: Rect::zero(),
             image,
             buttons: Child::new(ButtonController::new(btn_layout)),
         }
@@ -351,14 +358,29 @@ impl Component for ConfirmHomescreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (title_content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
+        let font = theme::TEXT_BOLD_UPPER.text_font;
         let title_height = theme::TEXT_BOLD.text_font.line_height();
         let (title_area, _) = title_content_area.split_top(title_height);
-        self.title.place(title_area);
+        // Marquee draws the text baseline at `text_height - 1` from the top of
+        // its area, `Label` did at `text_max_height - text_baseline`. Shifting
+        // the area up to keep the title at its original position.
+        let shift = font.text_height() - 1 - (font.text_max_height() - font.text_baseline());
+        self.title.place(title_area.translate(Offset::y(-shift)));
+        // The black bar behind the title keeps covering the area the `Label`
+        // occupied.
+        self.title_bar = title_area.inset(Insets::bottom(title_height - font.text_height()));
         self.buttons.place(button_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Start and drive the title marquee.
+        if let Event::Attach(_) = event {
+            self.title.start(ctx, Instant::now());
+        } else {
+            let _ = self.title.event(ctx, event);
+        }
+
         // Left button cancels, right confirms
         if let Some(ButtonControllerMsg::Triggered(pos, _)) = self.buttons.event(ctx, event) {
             match pos {
@@ -381,9 +403,7 @@ impl Component for ConfirmHomescreen {
         };
         // Need to make all the title background black, so the title text is well
         // visible
-        let title_area = self.title.inner().area();
-
-        shape::Bar::new(title_area)
+        shape::Bar::new(self.title_bar)
             .with_bg(theme::BG)
             .render(target);
 
