@@ -33,7 +33,9 @@ impl AddressDetails {
     pub fn new(
         qr_address: TString<'static>,
         case_sensitive: bool,
+        account_label: TString<'static>,
         account: Option<TString<'static>>,
+        path_label: TString<'static>,
         path: Option<TString<'static>>,
     ) -> Result<Self, Error> {
         let qr_code = qr_address
@@ -42,14 +44,11 @@ impl AddressDetails {
         let details_view = {
             let mut para = ParagraphVecShort::new();
             if let Some(account) = account {
-                para.add(Paragraph::new(&theme::TEXT_BOLD, TR::words__account_colon));
+                para.add(Paragraph::new(&theme::TEXT_BOLD, account_label));
                 para.add(Paragraph::new(&theme::TEXT_MONO, account));
             }
             if let Some(path) = path {
-                para.add(Paragraph::new(
-                    &theme::TEXT_BOLD,
-                    TR::address_details__derivation_path_colon,
-                ));
+                para.add(Paragraph::new(&theme::TEXT_BOLD, path_label));
                 para.add(Paragraph::new(&theme::TEXT_MONO, path));
             }
             Paragraphs::new(para)

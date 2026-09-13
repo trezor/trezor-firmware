@@ -957,7 +957,9 @@ impl FirmwareUI for UIEckhart {
         _address: TString<'static>,
         _case_sensitive: bool,
         _details_title: TString<'static>,
+        _account_label: TString<'static>,
         _account: Option<TString<'static>>,
+        _path_label: TString<'static>,
         _path: Option<TString<'static>>,
         _xpubs: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
