@@ -672,23 +672,42 @@ impl Button {
             }
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(text) => {
-                let baseline = self.area.center();
+                let center = self.area.center();
                 if let Some(text) = text {
                     const OFFSET_Y: Offset = Offset::y(16);
-                    text.map(|text| {
-                        shape::Text::new(baseline, text, stylesheet.font)
-                            .with_fg(stylesheet.text_color)
-                            .with_align(Alignment::Center)
-                            .with_alpha(alpha)
-                            .render(target);
+                    let fits_one_line = text.map(|t| {
+                        let (t1, t2) = split_two_lines(t, stylesheet.font, self.area.width());
+                        t1.is_empty() || t2.is_empty()
                     });
-                    shape::ToifImage::new(self.area.center() + OFFSET_Y, theme::ICON_MINUS.toif)
-                        .with_fg(stylesheet.icon_color)
-                        .with_align(Alignment2D::CENTER)
-                        .render(target);
+                    if fits_one_line {
+                        // The text fits on one line, show it with the icon below.
+                        text.map(|t| show_text(t, render_origin(Offset::zero())));
+                        shape::ToifImage::new(center + OFFSET_Y, theme::ICON_MINUS.toif)
+                            .with_fg(stylesheet.icon_color)
+                            .with_align(Alignment2D::CENTER)
+                            .render(target);
+                    } else {
+                        // The text needs two lines, the icon is omitted.
+                        let text_baseline_height = self.baseline_text_height();
+                        text.map(|t| {
+                            let (t1, t2) = split_two_lines(t, stylesheet.font, self.area.width());
+                            show_text(
+                                t1,
+                                render_origin(Offset::y(
+                                    -(text_baseline_height / 2 + constant::LINE_SPACE),
+                                )),
+                            );
+                            show_text(
+                                t2,
+                                render_origin(Offset::y(
+                                    text_baseline_height + constant::LINE_SPACE * 2,
+                                )),
+                            );
+                        });
+                    }
                 } else {
                     // Menu icon in the middle
-                    shape::ToifImage::new(baseline, theme::ICON_MENU.toif)
+                    shape::ToifImage::new(center, theme::ICON_MENU.toif)
                         .with_fg(stylesheet.icon_color)
                         .with_align(Alignment2D::CENTER)
                         .render(target);
