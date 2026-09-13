@@ -1859,12 +1859,6 @@
     },
     "pin__reenter": "Reintroducir PIN",
     "pin__reenter_new": "Reintroducir PIN",
-    "pin__reenter_new_description": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Reintroducir el nuevo PIN.",
-      "Eckhart": ""
-    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Reingresa el PIN para confirmar.",

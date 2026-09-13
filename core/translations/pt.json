@@ -1914,12 +1914,6 @@
       "Delizia": "Redigite o novo PIN",
       "Eckhart": "Reinsira o novo PIN"
     },
-    "pin__reenter_new_description": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Redigite o novo PIN.",
-      "Eckhart": ""
-    },
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Redigite o PIN para confirmar.",
