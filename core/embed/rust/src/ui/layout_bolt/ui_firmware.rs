@@ -428,15 +428,10 @@ impl FirmwareUI for UIBolt {
             Paragraph::new(&theme::TEXT_DEMIBOLD, TR::reset__tos_link),
         ];
         let paragraphs = Paragraphs::new(par_array);
-        let buttons = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
-            Button::with_text(button).styled(theme::button_confirm()),
-            true,
-        );
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            Dialog::new(CheckSinglePage::new(paragraphs), buttons),
+            ButtonPage::new(paragraphs, theme::BG).with_cancel_confirm(None, Some(button)),
         ));
         Ok(layout)
     }
