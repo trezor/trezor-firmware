@@ -1854,8 +1854,8 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         account_items = (
             [
-                (TR.words__account_colon, account_details[0], False),
-                (TR.address_details__derivation_path_colon, account_details[1], False),
+                (TR.words__account, account_details[0], False),
+                (TR.address_details__derivation_path, account_details[1], False),
             ]
             if account_details
             else None
@@ -1887,8 +1887,8 @@ if not utils.BITCOIN_ONLY:
             chunkify=chunkify,
             br_name="tron/send",
             info_items=[
-                (TR.words__account_colon, account_details[0], False),
-                (TR.address_details__derivation_path_colon, account_details[1], False),
+                (TR.words__account, account_details[0], False),
+                (TR.address_details__derivation_path, account_details[1], False),
             ],
             info_title=TR.address_details__account_info,
         )
