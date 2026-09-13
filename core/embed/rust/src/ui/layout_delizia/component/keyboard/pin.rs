@@ -1,6 +1,6 @@
 use core::mem;
 
-use sys::time::Duration;
+use sys::time::{Duration, Instant};
 
 use super::super::super::component::button::ButtonMsg::{self, Clicked};
 use super::super::super::component::button::{Button, ButtonContent};
@@ -12,9 +12,9 @@ use crate::time::Stopwatch;
 use crate::trezorhal::random;
 use crate::ui::component::base::{AttachType, ComponentExt};
 use crate::ui::component::text::TextStyle;
-use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad, Timer};
+use crate::ui::component::{Component, Event, EventCtx, Marquee, Never, Pad, Timer};
 use crate::ui::event::TouchEvent;
-use crate::ui::geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Rect};
+use crate::ui::geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Point, Rect};
 use crate::ui::shape::{Bar, Renderer, Text, ToifImage};
 use crate::ui::util::{animation_disabled, DisplayStyle};
 
@@ -233,13 +233,13 @@ impl CloseAnimation {
     }
 }
 
-pub struct PinKeyboard<'a> {
+pub struct PinKeyboard {
     allow_cancel: bool,
     show_erase: bool,
     show_cancel: bool,
-    major_prompt: Label<'a>,
-    minor_prompt: Label<'a>,
-    major_warning: Option<Label<'a>>,
+    major_prompt: Marquee,
+    minor_prompt: Marquee,
+    major_warning: Option<Marquee>,
     keypad_area: Rect,
     textbox_area: Rect,
     textbox: PinDots,
@@ -253,11 +253,11 @@ pub struct PinKeyboard<'a> {
     close_confirm: bool,
 }
 
-impl<'a> PinKeyboard<'a> {
+impl PinKeyboard {
     pub fn new(
-        major_prompt: TString<'a>,
-        minor_prompt: TString<'a>,
-        major_warning: Option<TString<'a>>,
+        major_prompt: TString<'static>,
+        minor_prompt: TString<'static>,
+        major_warning: Option<TString<'static>>,
         allow_cancel: bool,
     ) -> Self {
         // Control buttons.
@@ -273,10 +273,11 @@ impl<'a> PinKeyboard<'a> {
             allow_cancel,
             show_erase: false,
             show_cancel: allow_cancel,
-            major_prompt: Label::left_aligned(major_prompt, theme::label_keyboard()),
-            minor_prompt: Label::right_aligned(minor_prompt, theme::label_keyboard_minor()),
+            major_prompt: Self::prompt_marquee(major_prompt, theme::label_keyboard()),
+            minor_prompt: Self::prompt_marquee(minor_prompt, theme::label_keyboard_minor())
+                .with_alignment(Alignment::End),
             major_warning: major_warning
-                .map(|text| Label::left_aligned(text, theme::label_keyboard_warning())),
+                .map(|text| Self::prompt_marquee(text, theme::label_keyboard_warning())),
             keypad_area: Rect::zero(),
             textbox_area: Rect::zero(),
             textbox: PinDots::new(theme::label_default()),
@@ -313,6 +314,18 @@ impl<'a> PinKeyboard<'a> {
         self.textbox.request_complete_repaint(ctx);
 
         if is_empty {
+            // The prompts become visible again; reset and restart the visible
+            // marquees so they scroll from the beginning.
+            if self.major_warning.is_none() {
+                self.major_prompt.reset();
+                self.major_prompt.start(ctx, Instant::now());
+            }
+            self.minor_prompt.reset();
+            self.minor_prompt.start(ctx, Instant::now());
+            if let Some(w) = &mut self.major_warning {
+                w.reset();
+                w.start(ctx, Instant::now());
+            }
             self.major_prompt.request_complete_repaint(ctx);
             self.minor_prompt.request_complete_repaint(ctx);
             self.major_warning.request_complete_repaint(ctx);
@@ -335,6 +348,39 @@ impl<'a> PinKeyboard<'a> {
         self.textbox.pin()
     }
 
+    fn prompt_marquee(text: TString<'static>, style: TextStyle) -> Marquee {
+        Marquee::new(
+            text,
+            style.text_font,
+            style.text_color,
+            style.background_color,
+        )
+    }
+
+    /// Area of a `Marquee` replacing a top-aligned `Label` in `strip`:
+    /// `Marquee` renders the text baseline at `text_height - 1` below the top
+    /// of its area while `Label` places it at `text_max_height -
+    /// text_baseline`, so the area is shifted to make the baselines match.
+    /// The bottom of the area covers the descent so that descenders are not
+    /// clipped.
+    fn prompt_marquee_area(strip: Rect) -> Rect {
+        let font = theme::label_keyboard().text_font;
+        let baseline_y = strip.y0 + font.text_max_height() - font.text_baseline();
+        let top = baseline_y - (font.text_height() - 1);
+        Rect::from_top_left_and_size(
+            Point::new(strip.x0, top),
+            Offset::new(strip.width(), baseline_y + font.text_baseline() - top),
+        )
+    }
+
+    /// Width needed by the minor prompt, which always gets exactly as much
+    /// space as it needs (so it never scrolls); the major prompt takes the
+    /// rest and scrolls if it does not fit.
+    fn minor_prompt_width(&self) -> i16 {
+        let font = theme::label_keyboard_minor().text_font;
+        self.minor_prompt.text().map(|t| font.text_width(t))
+    }
+
     fn get_button_alpha(&self, x: usize, y: usize, attach_time: f32, close_time: f32) -> u8 {
         self.attach_animation
             .opacity(attach_time, x, y)
@@ -348,7 +394,7 @@ impl<'a> PinKeyboard<'a> {
     }
 }
 
-impl Component for PinKeyboard<'_> {
+impl Component for PinKeyboard {
     type Msg = PinKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -366,9 +412,18 @@ impl Component for PinKeyboard<'_> {
         // Prompts and PIN dots display.
         self.textbox_area = header;
         self.textbox.place(header);
-        self.major_prompt.place(prompt);
-        self.minor_prompt.place(prompt);
-        self.major_warning.as_mut().map(|c| c.place(prompt));
+        // The minor prompt takes exactly the width it needs; the major prompt
+        // (and the warning temporarily replacing it) takes the rest and
+        // scrolls if it does not fit.
+        let minor_width = self.minor_prompt_width().min(prompt.width());
+        let (major_area, minor_area) = prompt.split_right(minor_width);
+        self.major_prompt
+            .place(Self::prompt_marquee_area(major_area));
+        self.minor_prompt
+            .place(Self::prompt_marquee_area(minor_area));
+        self.major_warning
+            .as_mut()
+            .map(|c| c.place(Self::prompt_marquee_area(major_area)));
 
         // Control buttons.
         let erase_cancel_area = grid.row_col(3, 0);
@@ -405,14 +460,40 @@ impl Component for PinKeyboard<'_> {
 
         self.attach_animation.lazy_start(ctx, event);
 
+        // Start and drive the prompt marquees only while they are visible,
+        // i.e. while the PIN textbox is empty (matching render). While the
+        // warning is visible, it replaces the major prompt, which is neither
+        // started nor advanced until the warning expires.
+        if self.textbox.is_empty() {
+            if let Event::Attach(_) = event {
+                if self.major_warning.is_none() {
+                    self.major_prompt.start(ctx, Instant::now());
+                }
+                self.minor_prompt.start(ctx, Instant::now());
+                if let Some(w) = &mut self.major_warning {
+                    w.start(ctx, Instant::now());
+                }
+            } else if self.major_warning.is_some() {
+                self.minor_prompt.event(ctx, event);
+                if let Some(w) = &mut self.major_warning {
+                    w.event(ctx, event);
+                }
+            } else {
+                self.major_prompt.event(ctx, event);
+                self.minor_prompt.event(ctx, event);
+            }
+        }
+
         match event {
             // Set up timer to switch off warning prompt.
             Event::Attach(_) if self.major_warning.is_some() => {
                 self.warning_timer.start(ctx, Duration::from_secs(2));
             }
-            // Hide warning, show major prompt.
+            // Hide warning, show major prompt from the beginning.
             Event::Timer(_) if self.warning_timer.expire(event) => {
                 self.major_warning = None;
+                self.major_prompt.reset();
+                self.major_prompt.start(ctx, Instant::now());
                 self.minor_prompt.request_complete_repaint(ctx);
                 ctx.request_paint();
             }
@@ -723,7 +804,7 @@ impl Component for PinDots {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for PinKeyboard<'_> {
+impl crate::trace::Trace for PinKeyboard {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PinKeyboard");
         // So that debuglink knows the locations of the buttons
