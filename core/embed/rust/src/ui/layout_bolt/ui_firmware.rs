@@ -790,7 +790,9 @@ impl FirmwareUI for UIBolt {
         address: TString<'static>,
         case_sensitive: bool,
         details_title: TString<'static>,
+        account_label: TString<'static>,
         account: Option<TString<'static>>,
+        path_label: TString<'static>,
         path: Option<TString<'static>>,
         xpubs: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -799,7 +801,9 @@ impl FirmwareUI for UIBolt {
             address,
             case_sensitive,
             details_title,
+            account_label,
             account,
+            path_label,
             path,
         )?;
 

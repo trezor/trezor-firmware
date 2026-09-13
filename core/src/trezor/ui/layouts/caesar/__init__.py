@@ -376,7 +376,9 @@ async def show_address(
                 address=address if address_qr is None else address_qr,
                 case_sensitive=case_sensitive,
                 details_title="",  # unused on this model
+                account_label=with_colon(TR.words__account),
                 account=account,
+                path_label=with_colon(TR.address_details__derivation_path),
                 path=path,
                 xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
             ) as layout:

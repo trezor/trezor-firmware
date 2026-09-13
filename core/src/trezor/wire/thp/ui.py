@@ -110,7 +110,9 @@ async def show_qr_code_screen(qr_code_str: str) -> UiResult:
         address=qr_code_str,
         case_sensitive=True,
         details_title="",
+        account_label="",
         account="",
+        path_label="",
         path="",
         xpubs=[],
     ) as layout:

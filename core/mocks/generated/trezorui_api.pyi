@@ -570,7 +570,9 @@ def show_address_details(
     address: str,
     case_sensitive: bool,
     details_title: str,
+    account_label: str,
     account: str | None,
+    path_label: str,
     path: str | None,
     xpubs: Sequence[tuple[str, str]],
 ) -> LayoutContext[UiResult]:
