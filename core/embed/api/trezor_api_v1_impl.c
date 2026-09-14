@@ -88,3 +88,13 @@ const void* coreapp_api_get(uint32_t version) {
   }
   return NULL;
 }
+
+// Core's own entry point for a newly loaded app's task (see
+// `core/embed/sys/task/*/coreapp.c`). It is handed the app's own
+// `applet_main` as an argument instead of the loader jumping into it
+// directly, so that Core can run its own per-launch setup ahead of the app
+// in the future; for now it just forwards into `applet_main` unchanged.
+int coreapp_app_entry(void* applet_main) {
+  typedef int (*applet_main_t)(const void* (*api_getter)(uint32_t version));
+  return ((applet_main_t)applet_main)(coreapp_api_get);
+}

@@ -107,16 +107,21 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
   }
   TSH_CHECK(applet->handle != NULL, TS_EBADMSG);
 
-  // Get the entrypoint function from the dynamic library
-  void* entrypoint = dlsym(applet->handle, "applet_main");
-  TSH_CHECK(entrypoint != NULL, TS_EBADMSG);
+  // Get the app's own entrypoint function from the dynamic library
+  void* app_entry = dlsym(applet->handle, "applet_main");
+  TSH_CHECK(app_entry != NULL, TS_EBADMSG);
 
   bool ok = systask_init(&applet->task, 0, 0, 0, applet);
   TSH_CHECK(ok, TS_ENOMEM);
 
-  uintptr_t api_getter = (uintptr_t)coreapp_get_api_getter();
+  // Schedule Core's own entry point, handing it the app's `applet_main` as
+  // its argument, instead of jumping into `applet_main` directly — Core
+  // gets to finish its own per-launch setup (claiming the app's heap, etc.)
+  // before the app runs at all.
+  void* core_entry = coreapp_get_app_entry();
+  TSH_CHECK(core_entry != NULL, TS_EBADMSG);
 
-  ok = systask_push_call(&applet->task, entrypoint, api_getter, 0, 0);
+  ok = systask_push_call(&applet->task, core_entry, (uintptr_t)app_entry, 0, 0);
   TSH_CHECK(ok, TS_ENOMEM);
 
 cleanup:

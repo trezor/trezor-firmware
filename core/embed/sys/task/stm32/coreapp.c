@@ -36,6 +36,7 @@
 static mpu_area_t coreapp_code_area;
 static mpu_area_t coreapp_tls_area;
 static void* coreapp_api_getter = NULL;
+static void* coreapp_app_entry_getter = NULL;
 
 // defined in linker script
 extern uint32_t _kernel_flash_end;
@@ -129,6 +130,7 @@ bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
   coreapp_tls_area = header->tls;
   coreapp_code_area = applet->layout.code1;
   coreapp_api_getter = header->api_getter;
+  coreapp_app_entry_getter = header->app_entry;
 
   // Reset the applet task (stack pointer, etc.)
   if (!systask_init(&applet->task, header->stack.start, header->stack.size, 0,
@@ -160,5 +162,7 @@ mpu_area_t coreapp_get_code_area(void) { return coreapp_code_area; }
 mpu_area_t coreapp_get_tls_area(void) { return coreapp_tls_area; }
 
 void* coreapp_get_api_getter(void) { return coreapp_api_getter; }
+
+void* coreapp_get_app_entry(void) { return coreapp_app_entry_getter; }
 
 #endif  // USE_APPLETS && KERNEL_MODE
