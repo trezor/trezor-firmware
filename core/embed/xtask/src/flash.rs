@@ -65,15 +65,27 @@ fn flash_combined(args: &FlashArgs) -> Result<()> {
         combine::supported_projects()
     );
 
-    let binary = combine::combined_artifact(args.model, args.project)?;
-    ensure!(
-        binary.exists(),
-        "no combined image at {binary} -- build one first:\n             \
-         xtask combine {project} -m {model}",
-        binary = binary.display(),
-        project = args.project.binary_name(),
-        model = args.model.model_id(),
-    );
+    // `--file` names the combined image to write, the same way it replaces the
+    // artifact on the single-project path: WHAT is written, never WHERE. The
+    // address below stays the boardloader's, because that is what a combined
+    // image starts at whatever produced it.
+    let binary = match args.file {
+        Some(ref file) => file
+            .canonicalize()
+            .with_context(|| format!("Failed to locate `{}` for flashing", file.display()))?,
+        None => {
+            let built = combine::combined_artifact(args.model, args.project)?;
+            ensure!(
+                built.exists(),
+                "no combined image at {binary} -- build one first:\n             \
+                 xtask combine {project} -m {model}",
+                binary = built.display(),
+                project = args.project.binary_name(),
+                model = args.model.model_id(),
+            );
+            built
+        }
+    };
 
     let memory_ld = args.model.model_memory_ld()?;
     let address = helpers::read_symbol(&memory_ld, Project::Boardloader.flash_start_symbol()?)?;

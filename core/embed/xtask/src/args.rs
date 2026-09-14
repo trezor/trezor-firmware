@@ -199,7 +199,8 @@ pub struct FlashArgs {
     pub file: Option<PathBuf>,
 
     /// Flash the combined image built by `xtask combine`. This puts a blank
-    /// device into a working state.
+    /// device into a working state. With `--file`, flashes that file as the
+    /// combined image instead of the one `xtask combine` wrote.
     #[arg(long)]
     pub combined: bool,
 }
