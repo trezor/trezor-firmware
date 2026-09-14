@@ -274,6 +274,52 @@
       }
     },
     {
+      "description": "Create Account With Seed - Foreign Base",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 2,
+            "readonly_signers": 1,
+            "readonly_non_signers": 1
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq",
+            "B7vnagyh1HqtJ1eLtGreFWnLspGr9e1opCidTE8JPpXS",
+            "11111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 3,
+              "accounts": {
+                "funding_account": 0,
+                "created_account": 2,
+                "base_account": 1
+              },
+              "data": {
+                "instruction_id": 3,
+                "base": "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq",
+                "seed": {
+                  "length": 6,
+                  "chars": "seed:1"
+                },
+                "lamports": 20000000,
+                "space": 0,
+                "owner": "11111111111111111111111111111111"
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "dcb9fa87f5b69a6aa64535b4946ae3df19f4b2c9d2afb666d628dd2057ab661bdb16b21a6068a6255083d128824bea3557530afc0d8b52983a5b785d283b940d"
+      }
+    },
+    {
       "description": "Advance Nonce Account",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
