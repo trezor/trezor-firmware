@@ -789,10 +789,8 @@ impl FirmwareUI for UIDelizia {
         _address: TString<'static>,
         _case_sensitive: bool,
         _details_title: TString<'static>,
-        _account_label: TString<'static>,
-        _account: Option<TString<'static>>,
-        _path_label: TString<'static>,
-        _path: Option<TString<'static>>,
+        _account: Option<(TString<'static>, TString<'static>)>,
+        _path: Option<(TString<'static>, TString<'static>)>,
         _xpubs: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
