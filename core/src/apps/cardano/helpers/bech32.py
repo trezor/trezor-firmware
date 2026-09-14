@@ -20,13 +20,22 @@ HRP_STAKE_KEY_HASH = "stake_vkh"
 HRP_REQUIRED_SIGNER_KEY_HASH = "req_signer_vkh"
 HRP_OUTPUT_DATUM_HASH = "datum"
 HRP_SCRIPT_DATA_HASH = "script_data"
-HRP_DREP_KEY_HASH = "drep"
-HRP_DREP_SCRIPT_HASH = "drep_script"
+# CIP-0129 governance identifiers - https://github.com/cardano-foundation/CIPs/tree/master/CIP-0129
+# both DRep key hash and script hash identifiers use the "drep" prefix
+HRP_DREP = "drep"
+# header byte: key type DRep (0b0010) in bits [7;4], credential type in bits [3;0]
+DREP_HEADER_KEY_HASH = b"\x22"
+DREP_HEADER_SCRIPT_HASH = b"\x23"
 
 
 def encode(hrp: str, data: AnyBytes) -> str:
     converted_bits = bech32.convertbits(data, 8, 5)
     return bech32.bech32_encode(hrp, converted_bits, bech32.Encoding.BECH32)
+
+
+def encode_drep(credential_hash: AnyBytes, is_script: bool) -> str:
+    header = DREP_HEADER_SCRIPT_HASH if is_script else DREP_HEADER_KEY_HASH
+    return encode(HRP_DREP, header + bytes(credential_hash))
 
 
 def decode_unsafe(bech: str) -> bytes:

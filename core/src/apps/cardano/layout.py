@@ -963,14 +963,14 @@ def _format_drep(drep: messages.CardanoDRep) -> PropertyType:
         assert drep.key_hash is not None  # validate_drep
         return (
             TR.cardano__delegating_to_key_hash,
-            bech32.encode(bech32.HRP_DREP_KEY_HASH, drep.key_hash),
+            bech32.encode_drep(drep.key_hash, is_script=False),
             True,
         )
     elif drep.type == CardanoDRepType.SCRIPT_HASH:
         assert drep.script_hash is not None  # validate_drep
         return (
             TR.cardano__delegating_to_script,
-            bech32.encode(bech32.HRP_DREP_SCRIPT_HASH, drep.script_hash),
+            bech32.encode_drep(drep.script_hash, is_script=True),
             True,
         )
     elif drep.type == CardanoDRepType.ABSTAIN:
