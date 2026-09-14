@@ -22,9 +22,8 @@ curves = ["secp256k1"]
 paths = [
     # BIP-44 for basic (legacy) Bitcoin accounts, and widely used for other currencies:
     # https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
-    "m/44'/coin_type'/account'/change/address_index/**",
+    "m/44'/195'/account'/change/address_index/**",
 ]
-slip44-id = 195
 ```
 
 | Field | Description |
@@ -37,7 +36,6 @@ slip44-id = 195
 | `app-ring` | Privilege ring level; `0` is the most privileged |
 | `curves` | List of elliptic curves the app is permitted to use |
 | `paths` | Allowed BIP32 derivation path patterns (see below) |
-| `slip44-id` | [SLIP-44](https://github.com/satoshilabs/slips/blob/master/slip-0044.md) coin type identifier |
 
 ### Stack size
 
@@ -95,10 +93,6 @@ The `paths` field restricts which BIP32 paths the app may derive keys for. It ta
 | `m/44'/coin_type'/account'` | SEP-0005 for non-UTXO currencies (Stellar, etc.) |
 | `m/44'/coin_type'/0'/account` | SEP-0005 Ledger Live legacy path |
 | `m/45'/coin_type/account/change/address_index` | CASA multisig path |
-
-`slip44-id` is a single [SLIP-44](https://github.com/satoshilabs/slips/blob/master/slip-0044.md) coin type integer. At runtime, Core substitutes it for every `coin_type` placeholder across all of the app's `paths` patterns before matching an incoming request — so one `slip44-id` applies uniformly to every pattern the app declares.
-
-> Note: `paths` and `slip44-id` are two separate fields today, but this is expected to change — a future revision will likely fold them into a single field (e.g. patterns with the coin type baked in directly) rather than keeping two values that have to stay in sync.
 
 ### App Dependencies
 
