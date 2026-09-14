@@ -55,6 +55,14 @@ impl From<CoreIpcService> for u16 {
 // owning a `Box<[usize]>` — Core never allocates memory of its own for IPC;
 // the app allocates (out of its own heap) and Core just registers the
 // pointer with the kernel.
+//
+// The `Mutex` isn't for cross-task synchronization — `INBOX` is only ever
+// touched synchronously from the single task executing this app's own code
+// (`register_inbox` once at launch, `receive_until` on every poll), the same
+// single-writer discipline `allocator.rs`'s heap static relies on. It's here
+// because `IpcInbox<&'static mut [usize]>` is `!Sync` (it holds a `&'static
+// mut`) and a plain `static` requires `Sync`; `Mutex` is the safe way to get
+// mutable, `!Sync` state into a `static` without resorting to `static mut`.
 static INBOX: Mutex<Option<IpcInbox<&'static mut [usize]>>> = Mutex::new(None);
 
 /// A received message, owning a heap-allocated copy of its payload rather
