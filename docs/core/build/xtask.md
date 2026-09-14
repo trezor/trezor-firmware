@@ -38,15 +38,19 @@ xtask build <project> -m <model> [options]
 - `xtask clean` — remove build artifacts.
 - `xtask fmt` — format Rust sources with rustfmt.
 - `xtask flash <project> -m <model>` — flash a built binary to a connected
-  device via OpenOCD. `--combined` flashes the combined image instead, from the
-  boardloader address.
+  device via OpenOCD. `--combined` flashes the whole boot chain instead, from
+  the image `xtask combine` produced.
 - `xtask flash-erase [section] -m <model>` — erase a flash section (`all`,
   `boardloader`, `bootloader`, `firmware`, `storage`).
 - `xtask reset -m <model>` — reset the connected device.
 - `xtask upload <project> -m <model>` — upload firmware/prodtest to a running
   device.
-- `xtask combine <project> -m <model>` — combine the boot chain (e.g.
-  secmon + kernel + firmware) into a single flashable binary.
+- `xtask combine <project> -m <model>` — combine the boot chain, from the
+  boardloader up to this project, into a single flashable binary. Flash it with
+  `xtask flash <project> -m <model> --combined`.
+- `xtask release [-m <model>]` — cut a complete pq_secure release: every
+  variant, folded into one signed tree (see
+  [pq_secure releases](#pq_secure-releases)).
 
 ## Build options
 
@@ -280,7 +284,7 @@ consumed only by the firmware build).
 
 ### Where `xtask flash` and `xtask upload` read from
 
-Both `xtask flash` and `xtask upload` read the signed binary from the
+On a model with the legacy image layout, both read the signed binary from the
 collected artifacts directory:
 
 - `build/artifacts/<MODEL_ID>/<project>.bin`
@@ -290,6 +294,9 @@ OpenOCD and the flash start address read from the model's `memory.ld`;
 `upload` uses `trezorctl fw update`. Only flashable projects
 (boardloader, bootloader, bootloader_ci, firmware, prodtest) can be flashed,
 and only `firmware`/`prodtest` can be uploaded.
+
+On a model with the `pq_secure_boot` feature they instead read the release
+directory — see below.
 
 `xtask flash <project> --combined` reads the combined image instead:
 
@@ -311,6 +318,120 @@ image already starts with, so there is nothing for it to head.
 xtask combine prodtest -m t3w1
 xtask flash   prodtest -m t3w1 --combined
 ```
+
+## pq_secure releases
+
+A model with the `pq_secure_boot` feature does not have a self-contained
+firmware image. A firmware's authenticity is the fold of its manifest up to the
+`firmware_root` that the SIGNED BOOTLOADER HEADER commits to, so a firmware
+image only means anything next to a bootloader that names the tree it belongs
+to. `xtask build firmware` on such a model therefore produces a signed, folded
+
+```text
+build-xtask/artifacts/<MODEL_ID>/
+├── bootloader.bin        # the built bootloader, header re-signed over this tree
+├── firmware.bin          # signed in place, its Merkle co-path baked in
+├── trezor-ble*.bin       # the nRF image, if the model has one
+└── install.zip           # the same, packed for `trezorctl firmware update -f`
+```
+
+The per-project `artifacts/<MODEL_ID>/firmware.bin` from such a build is **not
+installable**: its manifest is an unfilled template, whose leaf folds to
+nothing. `xtask flash` and `xtask upload` know this and use the release.
+
+`xtask build` signs a release over the ONE variant its flags select
+(`--btc-only`, `--unsafe-fw` for the custom slot, or the `prodtest` project),
+which is what a developer usually wants — a one-leaf tree, so a different
+`firmware_root` than a full release. `xtask release` cuts the full tree over
+every variant; omitting `-m` cuts one release per pq_secure model, which are
+independent since each model's `firmware_root` lives in its own header.
+
+Both currently require `--bootloader-devel`, since only development signing
+keys are available locally.
+
+### Which bootloader a release folds
+
+Signing rewrites the boot **header**, not the bootloader **code**, so a release
+folds an existing bootloader binary and re-signs its header over the release's
+`firmware_root`. `--bootloader` picks which binary:
+
+| value | binary |
+| --- | --- |
+| `auto` (default) | the one you last built for this model, else the committed one |
+| `built` | `build/artifacts/<MODEL_ID>/bootloader.bin`; errors if absent |
+| `committed` | `models/<MODEL_ID>/bootloaders/bootloader_<MODEL_ID>[_devel].bin` |
+
+The bootloader is **never built implicitly** — a release builds firmware, and
+rebuilding the bootloader as a side effect of `xtask build prodtest` would be a
+surprise. Run `xtask build bootloader` when you want a fresh one folded in;
+`auto` then picks it up, and the build prints which binary it folded (with its
+age, for a built one) because that decides which code the device ends up
+running.
+
+Whichever is folded must have been built with the same key selection the
+release is signed with. A bootloader built without `--bootloader-devel` trusts
+the production founder keys, so folding it into a dev-signed release yields a
+device that verifies nothing.
+
+`committed` is what a production release must use: there the founder-signed
+bootloader is a released artifact whose exact bytes have to be signed over, and
+a local rebuild would be the wrong thing.
+
+### Flashing a release
+
+```sh
+xtask build firmware -m t3w1 --bootloader-devel
+xtask flash firmware -m t3w1
+```
+
+Nothing has to be decided at build time: one release installs either over the
+wire or with a debugger.
+
+`xtask flash firmware` writes the **bootloader and the firmware together**, in
+one OpenOCD run. They are one unit — the bootloader's signed header carries the
+`firmware_root` that the firmware folds up to, and rebuilding the firmware
+changes that root, so the bootloader already on the device vouches only for the
+previous build. There is no useful "flash just the firmware" on a tree model.
+
+The header also carries `firmware_type`, the provisioning marker. It holds a
+
+`--variant` picks which variant to flash, needed only when the release holds
+more than one and the project does not name it by itself:
+
+```sh
+xtask flash prodtest -m t3w1                  # prodtest IS the variant
+xtask flash firmware -m t3w1 --variant custom  # a full release needs to be told
+```
+
+Flashing the bootloader on its own leaves it **bare** — the legitimate state of
+a fresh device, which then takes its firmware over the wire — unless
+`--variant` asks for it to be provisioned:
+
+```sh
+xtask flash bootloader -m t3w1                    # bare
+xtask flash bootloader -m t3w1 --variant btc-only  # provisioned, for testing
+```
+
+### Combining a release
+
+`xtask combine` builds the single image a factory line flashes, and takes its
+bootloader and firmware from the release on the same terms as `xtask flash` —
+same `--variant`, same stamp, same bootloader-is-bare-alone rule:
+
+```sh
+xtask combine prodtest -m t3w1
+```
+
+Flash it with the same project name plus `--combined`, which writes the whole
+chain in one go from the boardloader address — the command that puts a blank
+device into a working state:
+
+```sh
+xtask flash prodtest -m t3w1 --combined
+```
+
+Everything about the image's contents was settled by `xtask combine`, so
+`--variant` belongs there and is refused here.
 
 ## Tips and common pitfalls
 

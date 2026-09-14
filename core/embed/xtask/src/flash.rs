@@ -1,10 +1,10 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{fs, process};
 
 use anyhow::{Context, Result, ensure};
 
 use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, Project, ResetArgs};
-use crate::{combine, helpers};
+use crate::{combine, helpers, pq};
 
 /// Flashes the specified project to the device using OpenOCD.
 pub fn flash(args: FlashArgs) -> Result<()> {
@@ -14,12 +14,33 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         args.project.binary_name()
     );
 
-    // A combined image already holds the whole boot chain, assembled by
-    // `xtask combine`, so it is written as-is from the boardloader address --
+    // A combined image already holds the whole boot chain, stamped and assembled
+    // by `xtask combine`, so it is written as-is from the boardloader address --
     // before any single-project binary is resolved, since it is not one.
     if args.combined {
         return flash_combined(&args);
     }
+
+    // A pq_secure release is what boots on a Merkle-tree model; the per-project
+    // artifacts are not installable. Boardloader and bootloader_ci are not part
+    // of a release, so they keep reading their own artifact. An explicit --file
+    // overrides the release: the caller named the exact bytes to write.
+    if args.file.is_none()
+        && args.model.config()?.has_feature("pq_secure_boot")
+        && matches!(
+            args.project,
+            Project::Bootloader | Project::Firmware | Project::Prodtest
+        )
+    {
+        return flash_release(&args);
+    }
+
+    ensure!(
+        args.variant.is_none(),
+        "--variant applies only to a pq_secure release; `{}` here is flashed as a \
+         plain binary",
+        args.project.binary_name()
+    );
 
     // An explicitly given file replaces the build artifact; the address below is
     // still derived from the project + model, so a prebuilt binary lands exactly
@@ -35,9 +56,7 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         .canonicalize()
         .with_context(|| format!("Failed to locate `{}` for flashing", binary.display()))?;
 
-    let flash_start = args.project.flash_start_symbol()?;
-    let memory_ld = args.model.model_memory_ld()?;
-    let address = helpers::read_symbol(&memory_ld, flash_start)?;
+    let address = project_address(&args, args.project)?;
 
     println!(
         "Flashing `{}` to address 0x{:08X}",
@@ -45,17 +64,18 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         address
     );
 
-    let flash_instruction = build_flash_write_instruction(&binary, address)?;
-
-    run_openocd(args.model, &flash_instruction)
+    run_openocd(
+        args.model,
+        &build_flash_write_instruction(&[(binary, address)])?,
+    )
 }
 
 /// Flash the combined image: the whole boot chain in one write.
 ///
-/// Written byte for byte as `xtask combine` produced it, starting at the
-/// boardloader. The project name only says WHICH combined image; the image
-/// always starts at the bottom of the chain, so nothing about its contents is
-/// decided here.
+/// The image is flashed byte for byte as `xtask combine` produced it, starting
+/// at the boardloader. Everything about its contents was decided there --
+/// which projects it holds and, on a Merkle-tree model, which variant its
+/// bootloader is provisioned for -- so nothing is resolved or stamped here.
 fn flash_combined(args: &FlashArgs) -> Result<()> {
     ensure!(
         combine::supported(args.project),
@@ -63,6 +83,11 @@ fn flash_combined(args: &FlashArgs) -> Result<()> {
          boardloader up to one of: {}",
         args.project.binary_name(),
         combine::supported_projects()
+    );
+    ensure!(
+        args.variant.is_none(),
+        "--variant belongs to `xtask combine`, which bakes the variant into the \
+         image; by now it is already decided"
     );
 
     // `--file` names the combined image to write, the same way it replaces the
@@ -87,9 +112,10 @@ fn flash_combined(args: &FlashArgs) -> Result<()> {
         }
     };
 
-    let memory_ld = args.model.model_memory_ld()?;
-    let address = helpers::read_symbol(&memory_ld, Project::Boardloader.flash_start_symbol()?)?;
-
+    // From the boardloader, not the project's own address: the project only
+    // names WHICH combined image, since the image starts at the bottom of the
+    // chain regardless.
+    let address = project_address(args, Project::Boardloader)?;
     println!(
         "Flashing the combined `{}` image `{}` to address 0x{:08X}",
         args.project.binary_name(),
@@ -99,8 +125,51 @@ fn flash_combined(args: &FlashArgs) -> Result<()> {
 
     // `?`: quoting the path is fallible since the Tcl-quoting validation landed
     // (a path that would break out of the braced word is rejected).
-    let flash_instruction = build_flash_write_instruction(&binary, address)?;
-    run_openocd(args.model, &flash_instruction)
+    run_openocd(
+        args.model,
+        &build_flash_write_instruction(&[(binary, address)])?,
+    )
+}
+
+/// Flash a pq_secure release with a debugger.
+///
+/// Bootloader and firmware are written in ONE OpenOCD run, so the device is
+/// never left holding two halves of different builds -- see
+/// [`pq::resolve_install`] for why they belong together and what gets stamped.
+fn flash_release(args: &FlashArgs) -> Result<()> {
+    let install = pq::resolve_install(args.model, args.project, args.variant)?;
+
+    match install.variant {
+        Some(variant) => println!(
+            "Flashing the {} release, provisioned for `{}`",
+            args.model.model_id(),
+            variant.name()
+        ),
+        None => println!(
+            "Flashing a BARE bootloader: the device will read as unprovisioned and needs \
+             its firmware over the wire. Any firmware already installed stops booting. \
+             Pass --variant to provision it instead."
+        ),
+    }
+
+    let mut images = vec![(
+        install.bootloader,
+        project_address(args, Project::Bootloader)?,
+    )];
+    if let Some(firmware) = install.firmware {
+        images.push((firmware, project_address(args, args.project)?));
+    }
+    for (image, address) in &images {
+        println!("  {} -> 0x{:08X}", image.display(), address);
+    }
+
+    run_openocd(args.model, &build_flash_write_instruction(&images)?)
+}
+
+/// The flash address a project is written to, from the model's `memory.ld`.
+fn project_address(args: &FlashArgs, project: Project) -> Result<u32> {
+    let memory_ld = args.model.model_memory_ld()?;
+    helpers::read_symbol(&memory_ld, project.flash_start_symbol()?)
 }
 
 /// Erase specified flash section using OpenOCD. The section boundaries are
@@ -180,12 +249,17 @@ fn tcl_quote_path(path: &Path) -> Result<String> {
     Ok(format!("{{{path}}}"))
 }
 
-fn build_flash_write_instruction(binary: &Path, address: u32) -> Result<String> {
-    Ok(format!(
-        "init; reset halt; flash write_image erase {} 0x{:X}; exit",
-        tcl_quote_path(binary)?,
-        address
-    ))
+fn build_flash_write_instruction(images: &[(PathBuf, u32)]) -> Result<String> {
+    let mut instr = String::from("init; reset halt; ");
+    for (binary, address) in images {
+        instr.push_str(&format!(
+            "flash write_image erase {} 0x{:X}; ",
+            tcl_quote_path(binary)?,
+            address
+        ));
+    }
+    instr.push_str("exit");
+    Ok(instr)
 }
 
 fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result<String> {
@@ -226,7 +300,7 @@ fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
+    use std::path::PathBuf;
 
     use super::{build_flash_erase_instruction, build_flash_write_instruction, tcl_quote_path};
     use crate::args::FlashSection;
@@ -234,7 +308,8 @@ mod tests {
     #[test]
     fn builds_flash_write_instruction() {
         let instruction =
-            build_flash_write_instruction(Path::new("/tmp/fw.bin"), 0x0800_4000).unwrap();
+            build_flash_write_instruction(&[(PathBuf::from("/tmp/fw.bin"), 0x0800_4000)])
+                .unwrap();
 
         assert_eq!(
             instruction,
@@ -294,6 +369,22 @@ mod tests {
         assert_eq!(
             tcl_quote_path(Path::new(r"/my builds\v2/fw.bin")).unwrap(),
             r"{/my builds\v2/fw.bin}"
+        );
+    }
+
+    /// A pq_secure release writes bootloader and firmware in ONE OpenOCD run.
+    #[test]
+    fn builds_flash_write_instruction_for_several_images() {
+        let instruction = build_flash_write_instruction(&[
+            (PathBuf::from("/tmp/bootloader.bin"), 0x0C01_E000),
+            (PathBuf::from("/tmp/universal.bin"), 0x0C06_E000),
+        ]);
+
+        assert_eq!(
+            instruction,
+            "init; reset halt; \
+             flash write_image erase /tmp/bootloader.bin 0xC01E000; \
+             flash write_image erase /tmp/universal.bin 0xC06E000; exit"
         );
     }
 

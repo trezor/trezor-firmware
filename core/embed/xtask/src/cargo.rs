@@ -5,10 +5,63 @@ use owo_colors::OwoColorize;
 
 use crate::args::{BuildArgs, Project, TestArgs};
 use crate::options::ResolvedBuildArgs;
-use crate::{artifacts, features, helpers, memusage, postbuild, prebuild};
+use crate::{artifacts, features, helpers, memusage, postbuild, pq, prebuild};
 
 pub fn build(args: BuildArgs) -> Result<()> {
     let resolved_args = ResolvedBuildArgs::from_build_args(&args)?;
+
+    // A bare bootloader build breaks the published install set: the new
+    // bootloader vouches for nothing, while the firmware beside it folds to the
+    // previous root. Say so by removing the manifest rather than letting an
+    // install pair them.
+    if args.project == Project::Bootloader && pq::applies(&resolved_args)? {
+        pq::invalidate_install_set(args.model)?;
+    }
+
+    // `--bootloader` selects which EXISTING bootloader binary a release folds
+    // its firmware_root into. Building the bootloader is what PRODUCES that
+    // binary, so there is nothing to select -- and accepting the flag here
+    // would imply it changes what gets built, which it never does.
+    ensure!(
+        args.project != Project::Bootloader || args.bootloader == pq::BootloaderSource::Auto,
+        "--bootloader says which existing bootloader a release folds into, so \
+         it means nothing when BUILDING the bootloader.\n             \
+         Drop it here; pass it to `xtask release` or `xtask build firmware` \
+         instead."
+    );
+
+    // A Merkle-tree image is not installable on its own: its manifest has to
+    // fold to the firmware_root of a signed boot header. So on a tree model,
+    // building one means building a RELEASE -- variants, the bootloader header
+    // they fold into, and the signature over it.
+    //
+    // Prodtest counts. It is its own project rather than a firmware variant,
+    // but it is a leaf of the same tree, and built on its own it would emit the
+    // same uninstallable manifest template (zero code_hash, no proof).
+    if matches!(args.project, Project::Firmware | Project::Prodtest) && pq::applies(&resolved_args)?
+    {
+        let variant = pq::selected_variant(&resolved_args);
+        // A CUSTOM build never cuts a tree: its leaf is code-independent, so it
+        // folds into the one founder-signed custom slot of the COMMITTED
+        // release. A fresh single-variant root would be self-consistent and
+        // useless -- no field device carries it -- and it is impossible with
+        // production keys anyway, so dev takes the same path.
+        if variant == pq::Variant::Custom {
+            return pq::build_presigned(&resolved_args);
+        }
+        // Standalone: sign inline. A developer wants one command and holds the
+        // development keys; the prepare/sign/attach split exists for a
+        // ceremony, and `xtask release` is what drives it.
+        return pq::build_release(
+            &resolved_args,
+            &[variant],
+            args.bootloader,
+            pq::SignStage::Inline,
+            // Signed where it lies: a single-variant build has no use for a
+            // release directory, and `tree/` belongs to `xtask release`.
+            pq::Dest::Artifacts,
+        );
+    }
 
     build_impl(resolved_args.clone(), false)?;
 
@@ -89,6 +142,13 @@ pub fn fmt() -> Result<()> {
     ensure!(status.success(), "`cargo fmt` failed with status: {status}",);
 
     Ok(())
+}
+
+/// Build a single project, as a plain build with no release orchestration.
+/// [`pq::build_release`] calls this per variant, which is also why it must not
+/// route back through [`build`].
+pub fn build_project(args: ResolvedBuildArgs) -> Result<()> {
+    build_impl(args, false)
 }
 
 fn build_impl(args: ResolvedBuildArgs, is_dependency: bool) -> Result<()> {

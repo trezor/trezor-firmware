@@ -6,6 +6,7 @@ use serde::Deserialize;
 
 pub use crate::model::Model;
 use crate::options::BuildOptions;
+use crate::pq::{BootloaderSource, Variant};
 
 #[derive(ValueEnum, Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -150,6 +151,9 @@ pub enum Cmd {
     Upload(UploadArgs),
     /// Combine multiple firmware projects into a single binary for flashing
     Combine(CombineArgs),
+    /// Build a complete pq_secure release: every variant, folded into one
+    /// signed founder tree
+    Release(ReleaseArgs),
     /// Print current version of specified project
     PrintVersion(PrintVersionArgs),
 }
@@ -170,6 +174,44 @@ pub struct BuildArgs {
     /// Build preset
     #[arg(long, short = 'p')]
     pub preset: Option<String>,
+
+    /// Which bootloader binary a pq_secure release folds its firmware_root
+    /// into. The bootloader is never built implicitly; run `xtask build
+    /// bootloader` when you want a fresh one folded in.
+    #[arg(long, value_name = "SOURCE", default_value = "auto")]
+    pub bootloader: BootloaderSource,
+
+    #[command(flatten)]
+    pub options: BuildOptions,
+}
+
+#[derive(Args, Debug)]
+pub struct ReleaseArgs {
+    /// Target model. Omit to release EVERY model using the Merkle-tree layout.
+    ///
+    /// Each model's bootloader header carries its own firmware_root, so models
+    /// are independent: releasing one leaves the others' signatures untouched.
+    /// Omitting this is a convenience for cutting them together, not a joint
+    /// tree.
+    #[arg(long, short = 'm', ignore_case = true)]
+    pub model: Option<Model>,
+
+    /// Build preset
+    #[arg(long, short = 'p')]
+    pub preset: Option<String>,
+
+    /// Which bootloader binary a pq_secure release folds its firmware_root
+    /// into. The bootloader is never built implicitly; run `xtask build
+    /// bootloader` when you want a fresh one folded in.
+    #[arg(long, value_name = "SOURCE", default_value = "auto")]
+    pub bootloader: BootloaderSource,
+
+    /// Copy the cut release into the tree as the committed presigned reference:
+    /// the cross-model bundle, each model's signed bootloader, and the secmon
+    /// pair. They are copied together because a bundle only folds against the
+    /// bootloader and secmon it was signed over.
+    #[arg(long)]
+    pub promote: bool,
 
     #[command(flatten)]
     pub options: BuildOptions,
@@ -198,9 +240,23 @@ pub struct FlashArgs {
     #[arg(long, short = 'f', value_name = "FILE")]
     pub file: Option<PathBuf>,
 
-    /// Flash the combined image built by `xtask combine`. This puts a blank
-    /// device into a working state. With `--file`, flashes that file as the
-    /// combined image instead of the one `xtask combine` wrote.
+    /// Which variant of a pq_secure release to flash.
+    ///
+    /// Needed only when the release holds several firmware variants and the
+    /// project does not name one by itself. On `flash bootloader` it instead
+    /// says which variant to provision the device for; without it the
+    /// bootloader is flashed BARE, which is the state of a fresh device.
+    #[arg(long, value_name = "VARIANT")]
+    pub variant: Option<Variant>,
+
+    /// Flash the combined image built by `xtask combine` -- the whole boot
+    /// chain, boardloader included, as one write.
+    ///
+    /// This is what puts a blank device into a working state. The image is
+    /// flashed exactly as combined, so what it contains (and, on a Merkle-tree
+    /// model, which variant it is provisioned for) was decided by `xtask
+    /// combine`. With `--file`, flashes that file as the combined image
+    /// instead of the one `xtask combine` wrote.
     #[arg(long)]
     pub combined: bool,
 }
@@ -239,6 +295,14 @@ pub struct UploadArgs {
     /// Build target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Which variant of a pq_secure release to install.
+    ///
+    /// Unset lets trezorctl decide between the firmware variants: a release
+    /// holding one needs no choice, and otherwise it picks by the device's
+    /// bitcoin-only indicator. Uploading `prodtest` implies that variant.
+    #[arg(long, value_name = "VARIANT")]
+    pub variant: Option<Variant>,
 }
 
 #[derive(Args, Debug)]
@@ -248,6 +312,15 @@ pub struct CombineArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Which variant of a pq_secure release to combine.
+    ///
+    /// Needed only when the release holds several firmware variants and the
+    /// project does not name one by itself. On `combine bootloader` it instead
+    /// says which variant to provision the device for; without it the
+    /// bootloader is combined BARE.
+    #[arg(long, value_name = "VARIANT")]
+    pub variant: Option<Variant>,
 }
 
 #[derive(Args, Debug)]

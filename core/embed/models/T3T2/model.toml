@@ -2,6 +2,10 @@ mcu = "stm32u58"
 default_board = "devkit"
 secmon = true
 bootloader_header_tool = "headertool_pq"
+# This model's nRF verifies the founder tree itself, so the signer gives the
+# image its own copy of the founder material. T3W1's nRF does not, and
+# correspondingly still carries MODEL_NRF_LEGACY_KEYS_* in its model header.
+nrf_pq_native = true
 
 features = [
     "backup_ram",

@@ -23,6 +23,16 @@ pub struct ModelConfig {
     /// Signing tool for bootloader/bootloader_ci. Defaults to "headertool".
     #[serde(default)]
     pub bootloader_header_tool: Option<String>,
+    /// This model's nRF verifies the founder tree itself
+    /// (CONFIG_BOOT_PQ_SECURE_BOOT) rather than trusting the STM's
+    /// install-time check. Fixed per model and not selectable: it is a property
+    /// of the co-processor's own bootloader.
+    ///
+    /// The same split shows up in the model header as
+    /// `MODEL_NRF_LEGACY_KEYS_*`, defined only by classic-scheme models -- a
+    /// PQ-native nRF has no legacy key pool. Keep the two in step.
+    #[serde(default)]
+    pub nrf_pq_native: bool,
 }
 
 impl ModelConfig {
