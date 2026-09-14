@@ -1,0 +1,381 @@
+#!/usr/bin/env python3
+"""Prototype orchestrator for a Merkle-tree (pq_secure_boot) OTA update.
+
+Drives the two-phase device flow against a connected Trezor in bootloader mode:
+
+    phase 1   FirmwareBegin (new signed boot header + the firmware's module
+              headers) -> the device authenticates, confirms, decides keep-seed,
+              stages the boot header via the UCB and reboots
+    <reboot>  the boardloader installs the new boot header; the freshly booted
+              bootloader enters auto-update (BOOT_COMMAND_INSTALL_UPGRADE)
+    phase 2   FirmwareErase + stream firmware.bin -> modules written to the
+              firmware area and verified as a tree against the new firmware_root
+
+Inputs are the built artifacts: bootloader.bin (the new signed boot header sits
+at its start) and firmware.bin (the [secmon | kernel+coreapp] tree image).
+
+PROTOTYPE: header-only phase 1 only (the bootloader *code* is assumed unchanged;
+the device rejects a code change on this path for now). The reconnect across the
+reboot is best-effort. Needs a device or emulator to exercise end-to-end.
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+import time
+from pathlib import Path
+
+from trezorlib.client import Session, TrezorClient, get_default_client
+
+# TEST-ONLY fault injections -> expected device Failure substring. Phase-1 faults
+# reject during FirmwareBegin; phase-2 faults reject during the streaming loop.
+_TAMPERS = {
+    "fw-sig": "Firmware manifest not authentic",  # ph1: manifest byte -> fold != firmware_root
+    # ph1: patch hw_model -> boot_header_auth_get rejects it ("Invalid boot header")
+    # BEFORE the workflow's own (now-dead) "Wrong model" check.
+    "wrong-model": "Invalid boot header",
+    # ph2: stream a SIBLING variant of the same release. It FOLDS (firmware_root
+    # is the root over every variant), so the fold cannot catch it -- what does
+    # is the variant binding against the installed boot header's firmware_type.
+    "variant-swap": "Firmware variant mismatch",
+    # ph2: flip a payload byte -> the chain check fails; on_chunk returns the
+    # retryable status, so the device only fails terminally once the engine's
+    # retry budget is exhausted -> "Invalid chunk hash".
+    "corrupt-chunk": "Invalid chunk hash",
+    # ph2: flip an inline prev_hash value -> same retry-then-fail path.
+    "chunk-hash": "Invalid chunk hash",
+    # ph2: drop an outer chunk's inline prev_hash -> terminal (no retry).
+    "missing-chunk-hash": "missing chunk hash",
+    # ph1 (CUSTOM variant only): inflate the app module size -- NOT founder-
+    # authenticated for custom (zeroed-for-fold), so the manifest still folds, but
+    # the layout check (fwt_manifest_layout_valid, run in phase 1 BEFORE confirm)
+    # rejects a module that runs past the firmware area.
+    "custom-app-size": "Invalid firmware manifest",
+    # ph1 (CUSTOM variant only): make the app module's size unaligned instead of
+    # oversized. It still folds (size is zeroed for custom) and it stays INSIDE
+    # the firmware area, so the bounds half of the layout check passes -- only
+    # the block-alignment check sees it. Without that check the install ran to
+    # phase 2 and died on a fatal ensure() writing the segment's short final
+    # block, after the user had confirmed and the device had rebooted: a
+    # reinstall, not a rejection. The engine streams one segment per module, so
+    # it is the MODULE size that has to be aligned, not the declared total.
+    "custom-app-unaligned": "Invalid firmware manifest",
+    # ph1: flip a boot-header sig byte -> forces the full-bootloader path, and
+    # the preamble then verifies the signature against the host's claimed
+    # code_hash and rejects BEFORE the confirm, with nothing streamed. This is
+    # the case that proves a forged header cannot reach the user.
+    "bl-sig": "Invalid boot header signature",
+    # ph1: flip a byte of the nRF co-path -> the co-processor slot no longer
+    # folds to the signed modelRoot. The slot is role bound (tag | model | kind
+    # | index | digest), so this is the STM half of that binding under test: the
+    # device builds the slot from ITS OWN build config and only the co-path comes
+    # off the wire. A wrong INDEX cannot be injected from here at all -- the
+    # device always builds index 0 -- which is the point; that case is signed by
+    # the fw_merkle harness instead.
+    "nrf-copath": "nRF image not in founder tree",
+    # ph1: send no nRF fields at all. Nothing signed says a release carries a
+    # co-processor slot -- the model tree is fixed-depth and hash-ordered, so an
+    # occupied slot is indistinguishable from padding -- so the requirement comes
+    # from the DEVICE's own build. Omission used to skip the leg and arm the UCB
+    # anyway, which is the one state arm-UCB-last exists to prevent. Needs a
+    # model whose bootloader is built with USE_SMP.
+    "no-nrf": "Release carries no co-processor image",
+    # --- interaction-less consent (needs FIRMWARE mode; these exercise the gates
+    #     that make an unattended install safe, none of which the cases above
+    #     reach: every ph1 tamper above mutates the bytes BEFORE the preamble is
+    #     computed, so its consent digest always matches what is delivered) ---
+    #
+    # ph1: confirm one variant in firmware, then deliver a SIBLING variant. Both
+    # fold to firmware_root (it is the root over every variant of a release), so
+    # authenticity passes and the consent digest is the ONLY thing left to catch
+    # the substitution.
+    "consent-mismatch": "Firmware mismatch",
+    # firmware-side (Python) gate: hand firmware a preamble that does not parse.
+    "bad-preamble": "Invalid firmware header",
+    # firmware-side gate: ask firmware to confirm a SIBLING variant. Its vendor
+    # string differs (firmware_vendor_str derives it from the variant), and
+    # crossing that erases the seed, so firmware refuses before any reboot rather
+    # than letting the bootloader fall back to prompting.
+    "vendor-change": "Different firmware vendor",
+    # ph2 with NO ph1: nothing armed CONTINUE_UPGRADE, so a bare FirmwareErase
+    # must not be able to erase a valid firmware. Needs BOOTLOADER mode.
+    "bare-phase-2": "must begin with FirmwareBegin",
+}
+
+
+
+
+# header_size is a uint32 at offset 28 of boot_header_auth_t (sec/boot_header.h:
+# magic, hw_model, hw_revision, version[4], fix_version[4], min_prev_version[4],
+# monotonic(1), sigmask(1), reserved[2], header_size).
+def _button_callback(br: "messages.ButtonRequest") -> None:
+    print("  -> confirm the action on the device")
+
+
+def connect(retries: int = 1, delay: float = 1.0) -> tuple[TrezorClient, Session]:
+    """Open a session to a connected device, retrying while it (re)enumerates."""
+    last: Exception | None = None
+    for _ in range(retries):
+        try:
+            client = get_default_client(
+            )
+            return client, client.get_session(passphrase=None)
+        except Exception as e:  # noqa: BLE001
+            last = e
+            time.sleep(delay)
+    raise SystemExit(f"could not connect to device: {last}")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--bootloader",
+        type=Path,
+        help="bootloader.bin (its boot header carries the firmware_root)",
+    )
+    ap.add_argument(
+        "--firmware",
+        type=Path,
+        help="firmware.bin (the [secmon|kernel+coreapp] tree image)",
+    )
+    ap.add_argument(
+        "--bundle",
+        type=Path,
+        help="an `xtask release` bundle -- either the output DIR or the "
+        "portable .zip; with --variant, resolves "
+        "--bootloader/--firmware from it",
+    )
+    ap.add_argument(
+        "--variant", help="variant name within --bundle to upload (e.g. universal)"
+    )
+    ap.add_argument(
+        "--skip-check",
+        action="store_true",
+        help="skip the pre-upload consistency guard (not recommended)",
+    )
+    ap.add_argument(
+        "--tamper",
+        choices=sorted(_TAMPERS),
+        default=None,
+        help="TEST ONLY: inject a fault to exercise a specific device rejection "
+        "(each maps to an expected Failure; see _TAMPERS).",
+    )
+    ap.add_argument(
+        "--tamper-offset",
+        type=lambda x: int(x, 0),
+        default=0x80000,
+        help="byte offset for --tamper corrupt-chunk (default 0x80000, in the "
+        "app module)",
+    )
+    ap.add_argument(
+        "--expect-failure",
+        default=None,
+        help="TEST: exit 0 iff the device rejects with a Failure containing this "
+        "substring (defaults to the --tamper case's expected message).",
+    )
+    args = ap.parse_args()
+
+    if args.bundle is not None:
+        if not args.variant:
+            raise SystemExit("--bundle requires --variant (e.g. --variant universal)")
+        )
+
+            raise SystemExit("refusing to upload (override with --skip-check)")
+
+    # Always make the bootloader code (everything after the boot header) available.
+    # The DEVICE decides whether to stream it: if its current code already conforms
+    # to the new header it does a header-only update and never requests the code;
+    # otherwise it requests + streams the full code. No host-side --full-bootloader
+    # guess -- the device is the judge.
+    bl_code = bundle.bootloader_code
+    mods = bundle.firmware.manifest.entries
+    # Preamble blob = the firmware image's manifest region [manifest || proof
+    # struct] -- the exact bytes at the image start, since the signer bakes the
+    # per-variant Merkle proof (co-path variant leaf -> firmware_root) into the
+    # manifest region. The device authenticates the manifest against firmware_root
+    # using this embedded proof (empty for a single-variant firmware).
+    manifest = bundle.firmware.manifest_bytes
+    module_headers = bundle.firmware.manifest_region
+    # Custom (unofficial) is the authenticated FW_VARIANT_CUSTOM variant; the
+    # device derives + gates it (unlocked bootloader, unprivileged). Detected here
+    # only to annotate the output -- there is no host flag to send.
+    is_custom = bundle.firmware.manifest.is_custom
+    mode = f"bl code available ({len(bl_code)} B); device decides header-only vs full"
+    if is_custom:
+        mode += " [CUSTOM/unofficial]"
+    print(
+        f"boot header: {len(boot_header)} B | manifest: {len(manifest)} B | "
+        f"proof: {len(proof)} node(s) | modules: {names} | "
+        f"phase-1: {mode}"
+    )
+
+    # --- TEST fault injection (--tamper). Phase-1 faults mutate the boot header /
+    #     manifest here; phase-2 faults are applied inside _run(). ---
+    tamper = args.tamper
+    if tamper == "wrong-model":
+        b = bytearray(boot_header)
+        b[4] ^= 0xFF  # hw_model is the u32 at offset 4 of the boot header
+        boot_header = bytes(b)
+        print("TEST[wrong-model]: flipped hw_model in the boot header")
+    elif tamper == "bl-sig":
+        b = bytearray(boot_header)
+        b[len(b) // 2] ^= 0xFF  # a byte in the (large) SLH signature region
+        boot_header = bytes(b)
+        print(
+            "TEST[bl-sig]: flipped a boot-header signature byte -- forces the "
+            "full-bootloader path; the preamble must reject at FirmwareBegin, "
+            "before confirm and before any code is streamed"
+        )
+    elif tamper == "fw-sig":
+        m = bytearray(module_headers)
+        m[64] ^= 0xFF  # a manifest byte -> variant leaf no longer folds to root
+        module_headers = bytes(m)
+        print("TEST[fw-sig]: flipped a manifest byte (fold != firmware_root)")
+    elif tamper == "custom-app-size":
+        # CUSTOM only: the app entry's size is zeroed-for-fold (NOT founder-
+        # authenticated), so inflating it still FOLDS -- but the layout check
+        # (fwt_manifest_layout_valid, now run in phase 1) must reject a module that
+        # runs past the firmware area. Mutate the phase-1 manifest so the device
+        # rejects during FirmwareBegin, BEFORE the user is asked to confirm and
+        # before it stages the boot header + reboots. Kept chunk-aligned so the
+        # bounds check fires (not the alignment check).
+        if not bundle.firmware.manifest.is_custom:
+            raise SystemExit(
+                "custom-app-size needs the CUSTOM variant (only there is the app "
+                "size unauthenticated): "
+                'make upload_pq VARIANT=custom UPLOAD_OPTS="--tamper custom-app-size"'
+            )
+        ent_len = pq_secure._MANIFEST_ENTRY_SIZE
+        app_i = next(
+            i
+            for i, e in enumerate(bundle.firmware.manifest.entries)
+            if e.module_type == pq_secure.ModuleType.APP
+        )
+        off = hdr_len + app_i * ent_len + 16  # size: after type+flags+addr+chunk_size
+        m = bytearray(module_headers)
+        orig = int.from_bytes(m[off : off + 4], "little")
+        bloated = orig + 0x0040_0000  # +4 MiB, chunk-aligned, past the fw area
+        m[off : off + 4] = bloated.to_bytes(4, "little")
+        module_headers = bytes(m)
+        print(
+            f"TEST[custom-app-size]: inflated custom app size {orig} -> {bloated} in"
+            " the phase-1 manifest (still folds -- size zeroed for custom; device"
+            " must reject at FirmwareBegin, before confirm)"
+        )
+    elif tamper == "custom-app-unaligned":
+        # The other half of custom-app-size: same unauthenticated field, but made
+        # UNALIGNED rather than oversized, and kept well inside the firmware area
+        # so the bounds check cannot be what rejects it. +1 byte is the smallest
+        # mutation that does it, on every MCU (FLASH_BLOCK_SIZE is 16 on U5, 4 on
+        # F4). The device must refuse at FirmwareBegin; before the alignment check
+        # existed this reached phase 2 and stopped the device on a fatal error.
+        if not bundle.firmware.manifest.is_custom:
+            raise SystemExit(
+                "custom-app-unaligned needs the CUSTOM variant (only there is the "
+                "app size unauthenticated): make upload_pq VARIANT=custom "
+                'UPLOAD_OPTS="--tamper custom-app-unaligned"'
+            )
+        hdr_len = pq_secure._MANIFEST_HEADER_SIZE
+        ent_len = pq_secure._MANIFEST_ENTRY_SIZE
+        app_i = next(
+            i
+            for i, e in enumerate(bundle.firmware.manifest.entries)
+            if e.module_type == pq_secure.ModuleType.APP
+        )
+        off = hdr_len + app_i * ent_len + 16  # size: after type+flags+addr+chunk_size
+        m = bytearray(module_headers)
+        orig = int.from_bytes(m[off : off + 4], "little")
+        m[off : off + 4] = (orig + 1).to_bytes(4, "little")
+        module_headers = bytes(m)
+        print(
+            f"TEST[custom-app-unaligned]: custom app size {orig} -> {orig + 1} in the"
+            " phase-1 manifest -- still folds and still fits the firmware area, so"
+            " only the block-alignment check can reject it (at FirmwareBegin, before"
+            " confirm)"
+        )
+
+    def _run() -> None:
+        # --- Phase 1 ---
+        print(f"phase 1: FirmwareBegin ({mode}) ...")
+        served = firmware.firmware_begin(
+        )
+            )
+        else:
+
+        # --- Reconnect across the boardloader-mediated reboot ---
+        time.sleep(3)
+        session2 = connect(retries=args.reconnect_retries)[1]
+        print("reconnected in bootloader mode; phase 2: streaming firmware ...")
+
+        # --- Phase 2: inline per-chunk prev_hashes from the GENUINE image;
+        #     phase-2 --tamper cases mutate the uploaded payload / the inline
+        #     hash map here. prev_hashes maps a chunk's image offset -> its chain
+        #     H_prev (see build_chunk_prev_hashes); it is sent inline on each
+        #     FirmwareUpload. ---
+        prev_hashes = bundle.chunk_prev_hashes()
+        upload_fw = fw
+        if tamper == "corrupt-chunk":
+            buf = bytearray(fw)
+            buf[args.tamper_offset] ^= 0xFF
+            upload_fw = bytes(buf)
+            print(
+                f"TEST[corrupt-chunk]: flipped upload byte 0x{args.tamper_offset:x}"
+                " (hashes + manifest genuine)"
+            )
+        elif tamper == "chunk-hash":
+            if not prev_hashes:
+                raise SystemExit(
+                    "chunk-hash needs a multi-chunk module (no inline hashes)"
+                )
+            # The device only looks up the TRAILING chunk of each transport block,
+            # and the block size is device-chosen, so flip EVERY inline hash to
+            # guarantee the first block's trailing intermediate is wrong -> the
+            # block reconstruction mismatches -> "Invalid chunk hash".
+            for off in list(prev_hashes):
+                b = bytearray(prev_hashes[off])
+                b[0] ^= 0xFF
+                prev_hashes[off] = bytes(b)
+            print(
+                f"TEST[chunk-hash]: flipped all {len(prev_hashes)} inline prev_hashes"
+            )
+        elif tamper == "missing-chunk-hash":
+            if not prev_hashes:
+                raise SystemExit(
+                    "missing-chunk-hash needs a multi-chunk module (no inline hashes)"
+                )
+            # Drop ALL inline hashes; the first non-last block then arrives with no
+            # trailing intermediate -> device rejects "missing chunk hash". (Block
+            # size is device-chosen, so we can't target one guaranteed-used entry.)
+            dropped = len(prev_hashes)
+            prev_hashes = {}
+            print(f"TEST[missing-chunk-hash]: dropped all {dropped} inline prev_hashes")
+        elif tamper == "variant-swap":
+            other = _other_variant(args)
+            print(
+                f"TEST[variant-swap]: phase 1 approved {bundle.variant_name}, "
+                f"streaming {other.variant_name}"
+            )
+        firmware.update(session2, upload_fw, prev_hashes=prev_hashes)
+        print("phase 2 done; firmware installed.")
+
+    # --- Run, with an optional expect-a-rejection assertion (--tamper self-asserts). ---
+    expect = args.expect_failure or (_TAMPERS.get(tamper) if tamper else None)
+    if expect is None:
+        _run()
+        return
+    try:
+        _run()
+    except exceptions.TrezorFailure as e:
+        got = str(e)
+        if expect in got:
+            print(f"PASS: device rejected as expected ({got})")
+            return
+        raise SystemExit(f"FAIL: expected a Failure containing '{expect}', got: {got}")
+    raise SystemExit(f"FAIL: expected rejection ('{expect}') but the update succeeded")
+
+
+if __name__ == "__main__":
+    main()
