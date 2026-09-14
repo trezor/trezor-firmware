@@ -54,6 +54,35 @@ def from_fn_id(fn_id: int) -> tuple[int, int]:
     return ((fn_id >> 16) & 0xFFFF, fn_id & 0xFFFF)
 
 
+def _extract_slip44_id(patterns: list[str]) -> int:
+    """Extract the app's SLIP-44 coin type from its allowed path patterns.
+
+    Every pattern is expected to hard-code the same coin type as its second
+    path component (e.g. `m/44'/60'/...`), so the value is derived from the
+    patterns themselves instead of being passed in separately.
+    """
+    if not patterns:
+        raise DataError("Expected at least one allowed path")
+
+    slip44_id: int | None = None
+    for pattern in patterns:
+        component = pattern.split("/")[2]
+        if component[-1] == "'":
+            component = component[:-1]
+        try:
+            coin_type = int(component)
+        except ValueError:
+            raise DataError(f"Invalid coin type in path pattern: {pattern}")
+
+        if slip44_id is None:
+            slip44_id = coin_type
+        elif slip44_id != coin_type:
+            raise DataError("Expected the same coin type in every allowed path")
+
+    assert slip44_id is not None
+    return slip44_id
+
+
 async def run(request: TrezorAppMessage) -> TrezorAppResponse:
     if request.message_id > 0xFFFF:
         raise DataError("Invalid message ID.")
@@ -68,12 +97,12 @@ async def run(request: TrezorAppMessage) -> TrezorAppResponse:
     image = app.image_by_handle(image_handle)
 
     curves: list[str] = list(image.allowed_curves())
-    slip44_id: int = image.slip44_id()
     if len(curves) != 1:
         raise DataError("Expected exactly one allowed curve")
     curve = curves[0]
 
     patterns: list[str] = list(image.allowed_paths())
+    slip44_id: int = _extract_slip44_id(patterns)
 
     if __debug__:
         log.debug(
