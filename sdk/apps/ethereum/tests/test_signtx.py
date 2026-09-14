@@ -301,7 +301,6 @@ def test_data_streaming(session: Session, instance_id: int):
     checked in vectorized function above.
     """
     with session.test_ctx as client:
-
         flow = InputFlowSignTxData(client, scroll=False, cancel=False)
         flow.confirm_tx = client.ui.default_input_flow()
         client.set_input_flow(flow.get())

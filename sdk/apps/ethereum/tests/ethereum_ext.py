@@ -16,7 +16,8 @@
 
 import io
 import re
-from typing import TYPE_CHECKING, Any, AnyStr, Callable, Dict, List, Optional, Tuple
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, AnyStr, Optional
 
 from trezorlib import exceptions, protobuf
 from trezorlib.messages import Failure, TrezorAppMessage, TrezorAppResponse
@@ -269,7 +270,7 @@ def _ethereum_sign_loop(
     definition_provider: Optional[
         Callable[[ethereum_messages.DefinitionRequest], ethereum_messages.DefinitionAck]
     ],
-) -> Tuple[int, bytes, bytes]:
+) -> tuple[int, bytes, bytes]:
     """Shared request/response loop for sign_tx and sign_tx_eip1559."""
     while True:
         if isinstance(response, ethereum_messages.TxRequest):
@@ -340,7 +341,7 @@ def sign_tx(
     definition_provider: Optional[
         Callable[[ethereum_messages.DefinitionRequest], ethereum_messages.DefinitionAck]
     ] = None,
-) -> Tuple[int, bytes, bytes]:
+) -> tuple[int, bytes, bytes]:
     """Sign legacy/EIP-2930 style transaction and return (v, r, s)."""
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
@@ -398,7 +399,7 @@ def sign_tx_eip1559(
     chain_id: int,
     max_gas_fee: int,
     max_priority_fee: int,
-    access_list: Optional[List[ethereum_messages.AccessList]] = None,
+    access_list: Optional[list[ethereum_messages.AccessList]] = None,
     definitions: Optional[ethereum_messages.Definitions] = None,
     chunkify: bool = False,
     payment_req: Optional[ethereum_messages.PaymentRequest] = None,
@@ -406,7 +407,7 @@ def sign_tx_eip1559(
     definition_provider: Optional[
         Callable[[ethereum_messages.DefinitionRequest], ethereum_messages.DefinitionAck]
     ] = None,
-) -> Tuple[int, bytes, bytes]:
+) -> tuple[int, bytes, bytes]:
     """Sign EIP-1559 transaction and return (v, r, s)."""
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -472,7 +473,7 @@ def sign_typed_data(
     session: "Session",
     instance_id: int,
     n: "Address",
-    data: Dict[str, Any],
+    data: dict[str, Any],
     *,
     metamask_v4_compat: bool = True,
     definitions: Optional[ethereum_messages.Definitions] = None,
@@ -506,7 +507,7 @@ def sign_typed_data(
     while isinstance(response, ethereum_messages.TypedDataStructRequest):
         struct_name = response.name
 
-        members: List["ethereum_messages.StructMember"] = []
+        members: list["ethereum_messages.StructMember"] = []
         for field in types[struct_name]:
             field_type = get_field_type(field["type"], types)
             struct_member = ethereum_messages.StructMember(

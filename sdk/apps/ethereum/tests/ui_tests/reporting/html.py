@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import shutil
 import urllib.parse
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from dominate import document
 from dominate.tags import a, i, img, span, table, td, th, tr
