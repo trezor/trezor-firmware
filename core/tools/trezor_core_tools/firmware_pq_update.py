@@ -183,6 +183,7 @@ def main() -> None:
             raise SystemExit("--bundle requires --variant (e.g. --variant universal)")
         )
 
+    nrf = bundle.nrf
             raise SystemExit("refusing to upload (override with --skip-check)")
 
     # Always make the bootloader code (everything after the boot header) available.
@@ -234,6 +235,32 @@ def main() -> None:
         m[64] ^= 0xFF  # a manifest byte -> variant leaf no longer folds to root
         module_headers = bytes(m)
         print("TEST[fw-sig]: flipped a manifest byte (fold != firmware_root)")
+    elif tamper == "nrf-copath":
+        if not nrf_co_path:
+            raise SystemExit(
+                "nrf-copath needs a release with an nRF payload (no co-path here)"
+            )
+        c = bytearray(nrf_co_path)
+        c[0] ^= 0xFF
+        nrf_co_path = bytes(c)
+        print(
+            "TEST[nrf-copath]: flipped a co-path byte -- the slot no longer "
+            "folds to the signed modelRoot, so the hint itself fails to verify "
+            "and the whole upload is rejected"
+        )
+    elif tamper == "no-nrf":
+        if not nrf_image:
+            raise SystemExit(
+                "no-nrf needs a release with an nRF payload (nothing to withhold)"
+            )
+        nrf_image = None
+        nrf_co_path = None
+        nrf_image_hash = None
+        print(
+            "TEST[no-nrf]: withholding the nRF fields entirely -- a device that "
+            "HAS a co-processor must refuse at FirmwareBegin rather than arm the "
+            "UCB and strand itself on new-bootloader + old-co-processor"
+        )
     elif tamper == "custom-app-size":
         # CUSTOM only: the app entry's size is zeroed-for-fold (NOT founder-
         # authenticated), so inflating it still FOLDS -- but the layout check

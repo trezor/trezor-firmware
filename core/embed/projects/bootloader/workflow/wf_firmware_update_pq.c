@@ -54,6 +54,11 @@
 #include "wf_ucb_stage.h"
 #include "workflow.h"
 
+#ifdef USE_SMP
+#include "sha2.h"  // SHA256_DIGEST_LENGTH
+#include "wf_nrf_ota.h"
+#endif
+
 // Target OTA transport block size in bytes. The actual block is the largest
 // WHOLE number of smart-hashing HASH chunks that fits this (T = n * chunk_size,
 // n = target / chunk_size), capped by the staging buffer (IMAGE_CHUNK_SIZE) and
@@ -68,6 +73,7 @@
 #define FW_TRANSPORT_BLOCK_TARGET (64 * 1024)
 
 // The boot header is received into the upload engine's chunk_buffer (see
+// fw_begin_preamble). BOOT_HEADER_MAXSIZE bounds the receive, so the borrowed
 // buffer must be at least that large.
 #if BOOT_HEADER_MAXSIZE > IMAGE_CHUNK_SIZE
 #error "IMAGE_CHUNK_SIZE too small to receive a boot header"
@@ -151,6 +157,12 @@ static workflow_result_t fw_begin_fail(protob_io_t *iface,
   return WF_ERROR;
 }
 
+// Everything phase 1 still needs once the boot header has been staged.
+// Extracted BY VALUE on purpose: `fw_begin_preamble` receives the header into
+// the upload engine's chunk_buffer, which the bootloader-code / nRF streams
+// below then reuse, so no pointer into that buffer (bh_buf, hdr, manifest) may
+// outlive the preamble. Returning a struct makes that the compiler's job
+// instead of a reviewer's.
 typedef struct {
   uint32_t header_size;     // staged header size (stream offset)
   secbool full_bootloader;  // the bootloader CODE must be streamed
@@ -191,9 +203,20 @@ static secbool fwt_manifest_block_aligned(const firmware_manifest_t *manifest) {
   }
   return sectrue;
 }
+
+// Phase-1 preamble: receive FirmwareBegin (boot header + manifest region + the
+// optional nRF fields), validate and authenticate both, confirm with the user,
 // and stage the boot header. Nothing here is destructive: the seed erase the
 // confirm warned about is the caller's, once the delivered code has been
 // verified against the signed header.
+//
+// Returns WF_OK to continue; any other result is terminal and already rendered
+// its own UI (see fw_begin_fail). `msg` and `nrf_arg` are filled by the receive
+// and outlive this call -- they must NOT point into chunk_buffer. `out` is
+// written only on WF_OK.
+static workflow_result_t fw_begin_preamble(protob_io_t *iface,
+                                           FirmwareBegin *msg,
+                                           firmware_begin_nrf_t *nrf_arg,
                                            fw_begin_staged_t *out) {
   // Receive buffer for the manifest region (manifest + firmware Merkle proof)
   // -- the same object phase 2 stores in fwt_upload_handler_t.manifest_buf, so
@@ -635,6 +658,7 @@ static secbool fwt_manifest_block_aligned(const firmware_manifest_t *manifest) {
   out->keep_seed = keep_seed;
   return WF_OK;
 }
+
 workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   // nRF OTA fields (optional). Their own STABLE static buffers -- NOT
   // chunk_buffer, which fw_begin_preamble borrows for the boot header and the

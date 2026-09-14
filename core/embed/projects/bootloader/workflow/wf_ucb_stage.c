@@ -66,6 +66,7 @@ static secbool stage_copy_current_code(uint32_t offset, uint32_t len) {
 
 upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
                                  bool header_only, protob_io_t *iface,
+                                 merkle_proof_node_t *out_root,
                                  uint32_t *out_code_address) {
   // The boot header is staged at the start of the staging area.
   const uint8_t *staged =

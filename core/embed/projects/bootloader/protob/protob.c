@@ -152,10 +152,15 @@ secbool recv_msg_firmware_erase(protob_io_t *iface, FirmwareErase *msg) {
 }
 
 secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
-                                  uint32_t length) {
+                                  uint32_t length, uint32_t coprocessor_index) {
   MSG_SEND_INIT(FirmwareRequest);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, offset);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(length, length);
+  // 0 => the primary stream (bootloader code / firmware); the host omits it.
+  // k>=1 identifies the k-th co-processor image so the host serves its bytes.
+  if (coprocessor_index != 0) {
+    MSG_SEND_ASSIGN_VALUE(coprocessor_index, coprocessor_index);
+  }
   return MSG_SEND(FirmwareRequest);
 }
 

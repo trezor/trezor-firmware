@@ -42,9 +42,18 @@
 #define SEG_END(e) ((e)->image_total)
 #endif
 
+/* Three handler knobs only a PQ/nRF build ever sets: an image staged behind an
+ * already-written prefix (target_offset), a handler that draws its own success
+ * screen (suppress_success), and a smaller initial prefetch (init_chunk_size).
+ * Spelling out their constant values elsewhere lets those builds drop the reads
+ * and the branches they feed. */
 #ifdef PQ_SECURE_BOOT
+#define HANDLER_TARGET_OFFSET(h) ((h)->target_offset)
+#define HANDLER_SUPPRESS_SUCCESS(h) ((h)->suppress_success)
 #define HANDLER_INIT_CHUNK(h) ((h)->init_chunk_size)
 #else
+#define HANDLER_TARGET_OFFSET(h) (0u)
+#define HANDLER_SUPPRESS_SUCCESS(h) (false)
 #define HANDLER_INIT_CHUNK(h) (0u)
 #endif
 

@@ -23,6 +23,7 @@
 
 #ifdef USE_BOOT_UCB
 
+#include <sec/boot_header.h>  // merkle_proof_node_t
 #include <sys/flash.h>
 
 #include "protob/protob.h"
@@ -70,6 +71,15 @@
  */
 upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
                                  bool header_only, protob_io_t *iface,
+                                 merkle_proof_node_t *out_root,
+                                 uint32_t *out_code_address);
+
+/**
+ * Arm the boot update control block (the point of no return): the boardloader
+ * installs the staged bootloader on the next boot. Call LAST, after
+ * co-processor updates. `code_address` comes from ucb_stage_verify.
+ */
+secbool ucb_stage_arm(const flash_area_t *staging_area, uint32_t code_address);
 
 /**
  * Write `len` bytes of a boot header from `data` to the start of the staging
