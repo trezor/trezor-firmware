@@ -41,6 +41,63 @@ typedef struct {
   uint8_t bytes[32];
 } merkle_proof_node_t;
 
+/* --- boot header, mirroring sec/boot_header.h -----------------------------
+ * Needed because boot_header_prefix_extent walks the auth part and the Merkle
+ * proof. LAYOUT-CRITICAL: these must match the real structs field for field, or
+ * the consent-digest cross-validation proves the wrong thing. consent_test.c
+ * derives every offset it pokes from these types (offsetof/sizeof) rather than
+ * hardcoding, so a change here follows through to the test automatically. */
+#define BOOT_HEADER_MAGIC_TRZQ 0x515A5254 /* 'TRZQ' */
+#define BOOT_HEADER_MERKLE_PROOF_MAXLEN (256)
+#define BOOT_HEADER_SIGNATURE_COUNT 2
+#define BOOT_HEADER_PQ_SIGNATURE_LEN (7856)
+#define BOOT_HEADER_EC_SIGNATURE_LEN (64)
+
+typedef struct __attribute__((packed)) {
+  uint8_t major;
+  uint8_t minor;
+  uint8_t patch;
+  uint8_t build;
+} boot_header_version_t;
+
+typedef struct __attribute__((packed)) {
+  uint32_t magic;
+  uint32_t hw_model;
+  uint32_t hw_revision;
+  boot_header_version_t version;
+  boot_header_version_t fix_version;
+  boot_header_version_t min_prev_version;
+  uint8_t monotonic_version;
+  uint8_t sigmask;
+  uint8_t reserved[2];
+  uint32_t header_size;
+  uint32_t auth_size;
+  uint32_t code_size;
+  uint32_t storage_address;
+  merkle_proof_node_t firmware_root;
+  uint8_t padding[0];
+} boot_header_auth_t;
+
+typedef struct __attribute__((packed)) {
+  uint32_t node_count;
+  merkle_proof_node_t nodes[0];
+} boot_header_merkle_proof_t;
+
+typedef struct __attribute__((packed)) {
+  uint8_t slh_signature[BOOT_HEADER_SIGNATURE_COUNT]
+                       [BOOT_HEADER_PQ_SIGNATURE_LEN];
+  uint8_t ec_signature[BOOT_HEADER_SIGNATURE_COUNT]
+                      [BOOT_HEADER_EC_SIGNATURE_LEN];
+  uint8_t firmware_type;
+  uint8_t padding[3];
+} boot_header_unauth_t;
+
+static inline size_t boot_header_merkle_proof_size(
+    const boot_header_merkle_proof_t* proof) {
+  return sizeof(boot_header_merkle_proof_t) +
+         (size_t)proof->node_count * sizeof(proof->nodes[0]);
+}
+
 #define BOOT_HEADER_MAX_MODULES 8
 #define FW_MODULE_SECMON 1
 #define FW_MODULE_APP 2
@@ -92,6 +149,16 @@ secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
                                  const merkle_proof_node_t* proof,
                                  size_t proof_count,
                                  const merkle_proof_node_t* trusted_root);
+secbool boot_header_prefix_extent(const uint8_t* data, size_t len,
+                                  size_t* out_extent);
+secbool boot_header_consent_digest(const uint8_t* prefix, size_t prefix_len,
+                                   const uint8_t* manifest, size_t manifest_len,
+                                   merkle_proof_node_t* out);
+secbool firmware_manifest_authentic(const firmware_manifest_t* manifest,
+                                    size_t manifest_len,
+                                    const merkle_proof_node_t* proof,
+                                    size_t proof_count,
+                                    const merkle_proof_node_t* trusted_root);
 uint8_t fw_variant_to_fw_type(fw_variant_sec_t variant);
 secbool fw_variant_is_custom(fw_variant_sec_t variant);
 

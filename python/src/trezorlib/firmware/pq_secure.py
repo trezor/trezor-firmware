@@ -68,6 +68,8 @@ __all__ = [
     "PqSecureManifest",
     "PqSecureNrf",
     "authenticity_bytes",
+    "boot_header_prefix",
+    "consent_preamble",
     "module_chain_intermediates",
     "module_code_hash",
     "variant_leaf",
@@ -416,6 +418,43 @@ class PqSecureNrf(t.NamedTuple):
         return len(self.co_path) // 32
 
 
+def boot_header_prefix(header: bytes) -> bytes:
+    """The digest-relevant part of a boot header: the authenticated part plus
+    the Merkle proof, stopping before the unauthenticated part.
+
+    Takes raw bytes so the consent cross-validation harness -- which has a
+    header and a manifest and nothing else -- computes the boundary the same
+    way the install path does. The cut comes from parsed fields rather than
+    fixed offsets, but is applied to the ORIGINAL bytes: the device recomputes
+    the same boundary from the same content, so the two must agree exactly.
+
+    It stops before the unauth part because that holds the signatures and the
+    ``firmware_type`` the bootloader rewrites while staging; including either
+    would make the digest unreproducible from an installed header.
+    """
+    # SUBCON rather than BootHeader.parse: a bare header cannot round-trip the
+    # sanity rebuild (there is no code after it), and the warning would be noise.
+    hdr = BootHeader.SUBCON.parse(header)
+    node_count = int.from_bytes(header[hdr.auth_len : hdr.auth_len + 4], "little")
+    prefix_len = hdr.auth_len + 4 + 32 * node_count
+    if prefix_len > len(header):
+        raise FirmwareIntegrityError(
+            f"boot header prefix ({prefix_len} B) runs past the header "
+            f"({len(header)} B)"
+        )
+    return header[:prefix_len]
+
+
+def consent_preamble(header: bytes, manifest_region: bytes) -> bytes:
+    """The preimage of the interaction-less consent digest.
+
+    Firmware hashes this to identify what the user is confirming; the
+    bootloader recomputes the same digest over what is actually delivered and
+    installs without asking again only if they match.
+    """
+    return boot_header_prefix(header) + manifest_region
+
+
 class PqSecureBundle:
     """A pq_secure release: a bootloader image, one variant's firmware, and an
     optional nRF payload.
@@ -592,6 +631,7 @@ class PqSecureBundle:
         staging; including either would make the digest unreproducible from an
         installed header.
         """
+        return boot_header_prefix(self.bootloader_bytes)
 
     def consent_preamble(self) -> bytes:
         """``RebootToBootloader.firmware_preamble`` for this release.
@@ -601,6 +641,7 @@ class PqSecureBundle:
         the same digest over what is actually delivered, installing without
         asking again only if they match.
         """
+        return consent_preamble(self.bootloader_bytes, self.firmware.manifest_region)
 
     def chunk_prev_hashes(self) -> dict[int, bytes]:
         return self.firmware.chunk_prev_hashes()
