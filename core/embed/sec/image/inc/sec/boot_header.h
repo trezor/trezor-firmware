@@ -47,6 +47,30 @@ typedef struct __attribute__((packed)) {
 } boot_header_version_t;
 
 /**
+ * Orders two boot header versions, most significant component first.
+ *
+ * @return <0 if `a` precedes `b`, 0 if they are equal, >0 if `a` follows `b`
+ */
+static inline int boot_header_version_compare(boot_header_version_t a,
+                                              boot_header_version_t b) {
+  if (a.major != b.major) return (int)a.major - (int)b.major;
+  if (a.minor != b.minor) return (int)a.minor - (int)b.minor;
+  if (a.patch != b.patch) return (int)a.patch - (int)b.patch;
+  return (int)a.build - (int)b.build;
+}
+
+/**
+ * Whether a version field carries a value at all.
+ *
+ * 0.0.0.0 is the "unset" encoding for the optional version constraints: no
+ * installed version can fail a floor of zero, so a header that does not care
+ * says so by leaving the field alone.
+ */
+static inline bool boot_header_version_is_set(boot_header_version_t v) {
+  return (v.major | v.minor | v.patch | v.build) != 0;
+}
+
+/**
  * Merkle proof node (SHA-256 digest)
  */
 typedef struct {

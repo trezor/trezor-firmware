@@ -289,6 +289,35 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
     return fw_begin_fail(iface, "Firmware downgrade protection");
   }
 
+  // --- Upgrade floor: refuse a release that requires a newer predecessor
+  //     than the one installed. ---
+  //     `min_prev_version` runs the OPPOSITE direction from the monotonic
+  //     axis. Monotonic says how far back an install may go; this says how far
+  //     back the DEVICE may be and still take this release. It exists for a
+  //     release that must not reach a device except through a specific
+  //     predecessor -- a migration waypoint that has to run once, say. Every
+  //     other release leaves it 0.0.0.0, which nothing can fail.
+  //
+  //     Evaluated only when SET, and then it must be POSITIVELY satisfied: an
+  //     installed header we cannot parse fails the floor rather than passing
+  //     it. With no floor the path is byte-for-byte what it was before, so a
+  //     release that does not opt in cannot be affected by this at all.
+  //
+  //     Where it is enforced is the limit of what it can promise. Both sites
+  //     are in the BOOTLOADER -- here and at staging -- because the boardloader
+  //     is fixed at manufacture and cannot be taught the field. So the floor
+  //     binds only on a device whose INSTALLED bootloader already carries this
+  //     check, and a release relying on it must bump `monotonic_version` as
+  //     well: otherwise installing an older bootloader first removes the check,
+  //     and the floor with it.
+  if (boot_header_version_is_set(hdr->min_prev_version)) {
+    const boot_header_auth_t *installed = boot_header_auth_get(BOOTLOADER_START);
+    if (installed == NULL || boot_header_version_compare(
+                                 installed->version, hdr->min_prev_version) < 0) {
+      return fw_begin_fail(iface, "Unsupported upgrade path");
+    }
+  }
+
   // --- Authenticate the boot header, and decide whether the CODE must be
   //     streamed -- in that order, so NOTHING below runs on an unverified
   //     header. ---

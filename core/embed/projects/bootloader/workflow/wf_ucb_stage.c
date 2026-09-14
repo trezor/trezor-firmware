@@ -113,6 +113,18 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_VERSION;
   }
 
+  // The same upgrade floor phase 1 applied, re-checked on the STAGED header.
+  // Worth repeating: this is the header the boardloader will actually install,
+  // it has been signature-verified by now, and the staging path is reachable
+  // without a phase-1 preamble (ucb_stage_clear_firmware_type, a resumed
+  // install). Set => must be positively satisfied, as above.
+  if (boot_header_version_is_set(hdr->min_prev_version) &&
+      (cur == NULL ||
+       boot_header_version_compare(cur->version, hdr->min_prev_version) < 0)) {
+    stage_report_failure(iface, "Unsupported bootloader upgrade path");
+    return UPLOAD_ERR_INVALID_IMAGE_HEADER_VERSION;
+  }
+
   // Resolve where the code to verify lives (`verify_code`) and what the
   // UCB records (`ucb_code_address`; 0 is the "header-only -- reuse the current
   // code" sentinel). For a full update the new code is already staged after the
