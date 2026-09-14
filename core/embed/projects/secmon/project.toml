@@ -27,10 +27,8 @@ elf_sections = [".secmon_header", ".flash", ".data", ".gnu.sgstubs"]
 apps                          = { true = ["app_loading"] }
 asan                          = { true = ["asan"] }
 bootloader-devel              = { true = ["bootloader_devel"] }
-btc-only                      = { false = ["universal_fw"] }
 dbg-console                   = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 production                    = { true = ["production"] }
 pyopt                         = { false = ["optiga_testing"] }
 storage-insecure-testing-mode = { true = ["storage_insecure_testing_mode"] }
-unsafe-fw                     = { true = ["unsafe_fw"] }
