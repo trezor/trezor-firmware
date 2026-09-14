@@ -239,15 +239,21 @@ const boot_header_unauth_t* boot_header_unauth_get(
 
 void boot_header_calc_merkle_root(const boot_header_auth_t* hdr, uintptr_t code,
                                   merkle_proof_node_t* root) {
+  uint8_t code_hash[IMAGE_HASH_DIGEST_LENGTH];
+  IMAGE_HASH_CALC((const uint8_t*)code, hdr->code_size, code_hash);
+  boot_header_calc_merkle_root_from_hash(hdr, code_hash, root);
+}
+
+void boot_header_calc_merkle_root_from_hash(
+    const boot_header_auth_t* hdr,
+    const uint8_t code_hash[IMAGE_HASH_DIGEST_LENGTH],
+    merkle_proof_node_t* root) {
   IMAGE_HASH_CTX ctx;
 
   static const uint8_t prefix0[] = {0x00};
   static const uint8_t prefix1[] = {0x01};
 
-  // Hash the bootloader code
-  IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)code, hdr->code_size);
-  IMAGE_HASH_FINAL(&ctx, root->bytes);
+  memcpy(root->bytes, code_hash, sizeof(root->bytes));
 
   // Hash the authenticated part of the header
   IMAGE_HASH_INIT(&ctx);

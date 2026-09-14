@@ -232,6 +232,7 @@ static bool read_into_buffer(pb_istream_t *stream, const pb_field_t *field,
 secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
                                 uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
                                 uint8_t *mh_buf, size_t mh_size, size_t *mh_len,
+                                uint8_t *ch_buf, size_t ch_size, size_t *ch_len,
                                 firmware_begin_nrf_t *nrf) {
   buf_ctx_t bh_ctx = {.buffer = bh_buf, .buffer_size = bh_size, .len = 0};
   buf_ctx_t mh_ctx = {.buffer = mh_buf, .buffer_size = mh_size, .len = 0};

@@ -21,6 +21,8 @@
 
 #include <trezor_types.h>
 
+#include <sec/image_hash_conf.h>
+
 // Magic number at the start of the boot header
 #define BOOT_HEADER_MAGIC_TRZQ 0x515A5254  // TRZQ
 // Reserved space for boot header
@@ -437,6 +439,26 @@ void boot_header_calc_merkle_root(const boot_header_auth_t* hdr, uintptr_t code,
                                   merkle_proof_node_t* root);
 
 /**
+ * As boot_header_calc_merkle_root, but takes the code DIGEST instead of the
+ * code.
+ *
+ * The code enters the leaf only as H(code), so a caller that knows the digest
+ * without holding the bytes -- an installer told what the incoming code hashes
+ * to -- can verify the header's signature before receiving a single byte of it.
+ * The digest is a claim, but not a forgeable one: a wrong value simply yields a
+ * root the founder never signed. Whoever relies on it must still recompute over
+ * the real bytes once they land, which is what binds the delivered code to the
+ * claim.
+ *
+ * @param hdr Pointer to the boot header
+ * @param code_hash IMAGE_HASH_DIGEST_LENGTH bytes, the digest of the code
+ * @param root Pointer to the output Merkle root node
+ */
+void boot_header_calc_merkle_root_from_hash(
+    const boot_header_auth_t* hdr,
+    const uint8_t code_hash[IMAGE_HASH_DIGEST_LENGTH],
+    merkle_proof_node_t* root);
+
 /**
  * Header-only manifest authenticity: variant leaf == firmware_root (via proof).
  *

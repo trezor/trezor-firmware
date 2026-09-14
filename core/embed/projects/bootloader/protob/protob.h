@@ -64,9 +64,15 @@ secbool recv_msg_firmware_erase(protob_io_t *iface, FirmwareErase *msg);
 #ifdef PQ_SECURE_BOOT
 // Receives a FirmwareBegin: the boot header (into bh_buf) and module headers
 // (into mh_buf) are decoded via nanopb callbacks; their lengths are returned in
+// *bh_len / *mh_len; the claimed bootloader-code digest goes to ch_buf with its
+// length in *ch_len (0 if absent). `msg` receives the scalar fields
+// (code_length, nrf_length). If `nrf` is non-NULL, the nRF co-path + image-hash
+// bytes fields are decoded into its buffers and their lengths returned in
+// nrf->*_len.
 secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
                                 uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
                                 uint8_t *mh_buf, size_t mh_size, size_t *mh_len,
+                                uint8_t *ch_buf, size_t ch_size, size_t *ch_len,
 #endif
 
 secbool recv_msg_firmware_upload(protob_io_t *iface, FirmwareUpload *msg,
