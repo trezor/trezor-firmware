@@ -58,6 +58,19 @@ static void boot_header_internal_node(const merkle_proof_node_t* a,
 // Computes the variant leaf: H(0x00 || manifest). The manifest (a firmware
 // directory) is the per-variant node of the firmware tree; this leaf folds via
 // the firmware Merkle proof up to the signed firmware_root.
+//
+// CUSTOM variant (firmware_variant == FW_VARIANT_CUSTOM): EVERYTHING the
+// creator controls is substituted with ZERO before hashing, so ANY creator app
+// (any code, size, or version) authenticates to the ONE founder-signed custom
+// slot:
+//   * the manifest firmware_version (the creator's app version), and
+//   * the app (FW_MODULE_APP) entry's size + code_hash (the contiguous tail of
+//     the entry -- chunk_size sits BEFORE it and is NOT zeroed).
+// The app entry's module_type/flags/addr/chunk_size and the ENTIRE secmon entry
+// stay real -- the founder still binds the secmon and the app's role +
+// placement + chunk_size (a layout param, not creator content). This is
+// the SINGLE place the zero-for-fold substitution happens (device + Python
+// signer in lockstep); the on-flash values are used only for integrity/display.
 static void boot_header_variant_leaf(const firmware_manifest_t* manifest,
                                      size_t len, merkle_proof_node_t* leaf) {
   static const uint8_t prefix0[] = {0x00};
@@ -302,3 +315,4 @@ uint8_t fw_variant_to_fw_type(fw_variant_sec_t variant) {
       return (uint8_t)FW_VARIANT_NONE;
   }
 }
+
