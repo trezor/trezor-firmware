@@ -8,7 +8,7 @@ use crate::ui::component::text::TextStyle;
 use crate::ui::component::{Child, Component, Event, EventCtx, Never, Paginate};
 use crate::ui::geometry::{Insets, LinearPlacement, Rect};
 use crate::ui::shape::Renderer;
-use crate::ui::util::assert_single_page;
+use crate::ui::util::{assert_single_page, Pager};
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum DialogMsg<T, U> {
@@ -85,6 +85,7 @@ pub struct IconDialog<U> {
     image: Option<Child<BlendedImage>>,
     paragraphs: Paragraphs<ParagraphVecShort<'static>>,
     controls: Child<U>,
+    allow_pagination: bool,
 }
 
 impl<U> IconDialog<U>
@@ -111,7 +112,17 @@ where
                     .with_spacing(Self::VALUE_SPACE),
             ),
             controls: Child::new(controls),
+            allow_pagination: false,
         }
+    }
+
+    /// Allow the content to paginate, disabling the single-page check. To be
+    /// used when the dialog is placed inside a paginating container such as
+    /// `ButtonPage`. The border insets are then supplied by the container and
+    /// are not applied by the dialog itself.
+    pub fn allow_pagination(mut self) -> Self {
+        self.allow_pagination = true;
+        self
     }
 
     pub fn with_paragraph(mut self, para: Paragraph<'static>) -> Self {
@@ -154,6 +165,7 @@ where
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical().align_at_center()),
             controls: Child::new(controls),
+            allow_pagination: false,
         }
     }
 
@@ -169,9 +181,15 @@ where
     type Msg = DialogMsg<Never, U::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let bounds = bounds
-            .inset(theme::borders())
-            .inset(Insets::top(Self::ICON_AREA_PADDING));
+        // When paginating inside a container (e.g. `ButtonPage`), the border
+        // insets are supplied by the container.
+        let bounds = if self.allow_pagination {
+            bounds.inset(Insets::top(Self::ICON_AREA_PADDING))
+        } else {
+            bounds
+                .inset(theme::borders())
+                .inset(Insets::top(Self::ICON_AREA_PADDING))
+        };
 
         let controls_area = self.controls.place(bounds);
         let content_area = bounds.inset(Insets::bottom(controls_area.height()));
@@ -185,9 +203,11 @@ where
         };
 
         self.paragraphs.place(content_area);
-        // The dialog cannot paginate; fail loudly in ui_debug when the
-        // content does not fit.
-        assert_single_page(self.paragraphs.pager());
+        if !self.allow_pagination {
+            // The dialog cannot paginate; fail loudly in ui_debug when the
+            // content does not fit.
+            assert_single_page(self.paragraphs.pager());
+        }
         bounds
     }
 
@@ -202,6 +222,22 @@ where
         }
         self.paragraphs.render(target);
         self.controls.render(target);
+    }
+}
+
+/// `IconDialog` can paginate its content when placed inside a paginating
+/// container such as `ButtonPage` (see `IconDialog::allow_pagination`). The
+/// icon stays visible on all pages, only the text is paginated.
+impl<U> Paginate for IconDialog<U>
+where
+    U: Component,
+{
+    fn pager(&self) -> Pager {
+        self.paragraphs.pager()
+    }
+
+    fn change_page(&mut self, active_page: u16) {
+        self.paragraphs.change_page(active_page);
     }
 }
 

@@ -1363,43 +1363,46 @@ fn new_show_modal(
             .with_value(value)
             .with_description(description),
         )?,
-        ModalButtons::CancelAndConfirm => LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                Button::cancel_confirm(
-                    Button::with_icon(theme::ICON_CANCEL),
-                    Button::with_icon(theme::ICON_CONFIRM).styled(button_style),
-                    false,
-                ),
+        // The button variants are paginated: the icon stays visible on all
+        // pages and only the text is paginated by `ButtonPage`. The `Border`
+        // keeps the whole dialog offset from the screen edges as before.
+        ModalButtons::CancelAndConfirm => LayoutObj::new(Border::new(
+            theme::borders(),
+            ButtonPage::new(
+                IconDialog::new(icon, title, Empty)
+                    .allow_pagination()
+                    .with_value(value)
+                    .with_description(description),
+                theme::BG,
             )
-            .with_value(value)
-            .with_description(description),
-        )?,
-        ModalButtons::CancelAndText(text) => LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                Button::cancel_confirm(
-                    Button::with_icon(theme::ICON_CANCEL),
-                    Button::with_text(text).styled(button_style),
-                    false,
-                ),
+            .with_cancel_confirm(None, None)
+            .with_confirm_style(button_style),
+        ))?,
+        ModalButtons::CancelAndText(text) => LayoutObj::new(Border::new(
+            theme::borders(),
+            ButtonPage::new(
+                IconDialog::new(icon, title, Empty)
+                    .allow_pagination()
+                    .with_value(value)
+                    .with_description(description),
+                theme::BG,
             )
-            .with_value(value)
-            .with_description(description),
-        )?,
-        ModalButtons::ConfirmText(text) => LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                theme::button_bar(Button::with_text(text).styled(button_style).map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                })),
+            .with_cancel_confirm(None, Some(text))
+            .with_confirm_style(button_style),
+        ))?,
+        ModalButtons::ConfirmText(text) => LayoutObj::new(Border::new(
+            theme::borders(),
+            ButtonPage::new(
+                IconDialog::new(icon, title, Empty)
+                    .allow_pagination()
+                    .with_value(value)
+                    .with_description(description),
+                theme::BG,
             )
-            .with_value(value)
-            .with_description(description),
-        )?,
+            .with_cancel_confirm(None, Some(text))
+            .without_cancel()
+            .with_confirm_style(button_style),
+        ))?,
     };
     Ok(obj)
 }
