@@ -28,6 +28,7 @@ from pathlib import Path
 
 from trezorlib import device, exceptions, firmware, messages
 from trezorlib.client import Session, TrezorClient, get_default_client
+from trezorlib.firmware import pq_secure
 
 # TEST-ONLY fault injections -> expected device Failure substring. Phase-1 faults
 # reject during FirmwareBegin; phase-2 faults reject during the streaming loop.
@@ -105,6 +106,33 @@ _TAMPERS = {
 }
 
 
+def _other_variant(args: argparse.Namespace) -> pq_secure.PqSecureBundle:
+    """A DIFFERENT variant of the same release, loaded whole.
+
+    The tamper cases needing two variants need both to be GENUINE: each folds to
+    the same firmware_root and only the identity differs, which is what isolates
+    the consent digest and the variant binding from every other check. Loading
+    through the bundle rather than globbing for a sibling .bin also means a zip
+    works without being extracted first.
+    """
+    if args.bundle is not None:
+        names = pq_secure.PqSecureBundle.variants(args.bundle)
+        other = next((n for n in names if n != args.variant), None)
+        if other is None:
+            raise SystemExit(
+                "this tamper case needs a bundle with at least two variants; "
+                f"{args.bundle} has {names or 'none'}"
+            )
+        return pq_secure.PqSecureBundle.load(args.bundle, other)
+
+    for candidate in sorted(args.firmware.parent.glob("*.bin")):
+        if candidate.name not in (args.firmware.name, args.bootloader.name):
+            return pq_secure.PqSecureBundle(
+                args.bootloader.read_bytes(),
+                pq_secure.PqSecureFirmware.parse(candidate.read_bytes()),
+                variant_name=candidate.stem,
+            )
+    raise SystemExit("this tamper case needs a second variant next to --firmware")
 
 
 # header_size is a uint32 at offset 28 of boot_header_auth_t (sec/boot_header.h:
@@ -209,14 +237,43 @@ def main() -> None:
     )
     args = ap.parse_args()
 
+    # Resolve the release. PqSecureBundle.load takes the bundle directory or its
+    # zip and, unlike this script's old copy, needs no temp dir kept alive for
+    # the run; --bootloader/--firmware stay for driving loose files.
     if args.bundle is not None:
         if not args.variant:
             raise SystemExit("--bundle requires --variant (e.g. --variant universal)")
+        bundle = pq_secure.PqSecureBundle.load(args.bundle, args.variant)
+    else:
+        if args.bootloader is None or args.firmware is None:
+            raise SystemExit("need --bootloader + --firmware, or --bundle + --variant")
+        bundle = pq_secure.PqSecureBundle(
+            args.bootloader.read_bytes(),
+            pq_secure.PqSecureFirmware.parse(args.firmware.read_bytes()),
+            variant_name=args.variant,
         )
 
     nrf = bundle.nrf
+    nrf_image = nrf.image if nrf else None
+    nrf_co_path = nrf.co_path if nrf else None
+    # --force-nrf: withhold the update-required hint so the device cannot skip
+    # on a hash match and always streams + pushes (the image is still
+    # fold-verified on-device).
+    nrf_image_hash = None if (nrf is None or args.force_nrf) else nrf.image_hash
+
+    # --- Pre-upload guard: the boot header must be signed and this variant must
+    #     fold to the firmware_root it commits to. bundle.verify() is the same
+    #     check trezorctl runs, so the harness cannot drift from the real path.
+    #     Dev keys are the norm here. ---
+    if not args.skip_check:
+        try:
+            bundle.verify(dev_keys=True)
+        except Exception as e:  # noqa: BLE001
+            print(f"PRE-UPLOAD CHECK FAILED: {e}", file=sys.stderr)
             raise SystemExit("refusing to upload (override with --skip-check)")
 
+    fw = bundle.firmware.data
+    boot_header = bundle.boot_header
     # Always make the bootloader code (everything after the boot header) available.
     # The DEVICE decides whether to stream it: if its current code already conforms
     # to the new header it does a header-only update and never requests the code;
@@ -230,7 +287,9 @@ def main() -> None:
     # manifest region. The device authenticates the manifest against firmware_root
     # using this embedded proof (empty for a single-variant firmware).
     manifest = bundle.firmware.manifest_bytes
+    proof = bundle.firmware.proof
     module_headers = bundle.firmware.manifest_region
+    names = [getattr(m.module_type, "name", str(m.module_type)).lower() for m in mods]
     # Custom (unofficial) is the authenticated FW_VARIANT_CUSTOM variant; the
     # device derives + gates it (unlocked bootloader, unprivileged). Detected here
     # only to annotate the output -- there is no host flag to send.
@@ -311,6 +370,7 @@ def main() -> None:
                 "size unauthenticated): "
                 'make upload_pq VARIANT=custom UPLOAD_OPTS="--tamper custom-app-size"'
             )
+        hdr_len = pq_secure._MANIFEST_HEADER_SIZE
         ent_len = pq_secure._MANIFEST_ENTRY_SIZE
         app_i = next(
             i
@@ -382,6 +442,7 @@ def main() -> None:
                 "TEST[bare-phase-2]: skipping FirmwareBegin; sending FirmwareErase "
                 "straight into phase 2"
             )
+            firmware.update(session, fw, prev_hashes=bundle.chunk_prev_hashes())
             raise SystemExit("FAIL: bare phase 2 was accepted")
 
         if (
@@ -422,9 +483,11 @@ def main() -> None:
                 breakdown = (
                     f"{len(bundle.boot_header_prefix())} B boot header prefix + "
                     f"{len(other_region)} B manifest region FROM "
+                    f"{other.variant_name}"
                 )
                 print(
                     "TEST[vendor-change]: asking firmware to confirm "
+                    f"{other.variant_name}"
                     " instead -- its variant maps to a different vendor string"
                 )
             print(
@@ -537,6 +600,8 @@ def main() -> None:
             print(f"TEST[missing-chunk-hash]: dropped all {dropped} inline prev_hashes")
         elif tamper == "variant-swap":
             other = _other_variant(args)
+            upload_fw = other.firmware.data
+            prev_hashes = other.chunk_prev_hashes()
             print(
                 f"TEST[variant-swap]: phase 1 approved {bundle.variant_name}, "
                 f"streaming {other.variant_name}"
