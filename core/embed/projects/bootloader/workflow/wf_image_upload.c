@@ -42,6 +42,7 @@ uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
 // Transport-level state of an in-progress upload. Everything here is
 // image-type-agnostic; type-specific state lives in the handler.
 typedef struct {
+  uint32_t image_total;
   uint32_t remaining;  // remaining bytes to upload
   uint32_t block;      // index of currently processed block
   // Bytes still owed on `remaining` for the block in flight. Not the request
@@ -68,10 +69,10 @@ static void upload_data_received(size_t len, void *ctx) {
   e->chunk_size += len;
   // update loader only after the update is confirmed
   if (e->confirmed) {
-    e->handler->ui->progress(1000 *
-                                 (e->block * IMAGE_CHUNK_SIZE + e->chunk_size) /
-                                 (e->block * IMAGE_CHUNK_SIZE + e->remaining),
-                             e->wireless_transport);
+    e->handler->ui->progress(
+        (int)(1000ULL * (e->block * IMAGE_CHUNK_SIZE + e->chunk_size) /
+              e->image_total),
+        e->wireless_transport);
   }
 }
 
@@ -270,6 +271,7 @@ workflow_result_t run_image_upload(protob_io_t *iface,
   e.wireless_transport = iface->wire->wireless;
 
   e.remaining = image_size;
+  e.image_total = image_size;
   if ((e.remaining > 0) && ((e.remaining % sizeof(uint32_t)) == 0) &&
       (e.remaining <= handler->max_size)) {
     // clear chunk buffer
