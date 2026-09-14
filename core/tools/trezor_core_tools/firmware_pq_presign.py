@@ -43,6 +43,13 @@ from trezor_core_tools import firmware_module
 # Manifest layout, mirroring trezorlib.firmware.pq_secure: a fixed header then
 # one entry per module. Used only to name the field that differs when a leaf
 # fails to match, so a creator is told WHICH input is wrong.
+# magic, variant, version, translations ROOT (a 32-byte hash, not a word), count.
+# Getting that width wrong is not a cosmetic error: it shortens the header by 28
+# bytes, so `module_count` is read from inside tr_root -- zero in practice -- and
+# the entry loop below never runs. The diagnostic then reports that no field
+# differs while an entry's code_hash is the only difference, which reads as an
+# impossibility instead of naming the secmon.
+_HEADER = struct.Struct("<4sII32sI")
 _ENTRY = struct.Struct("<IIIII32s")  # type, flags, addr, chunk_size, size, code_hash
 _MODULE_NAMES = {1: "secmon", 2: "app"}
 

@@ -536,12 +536,29 @@ xtask build firmware -m t3w1 --bootloader-devel --unsafe-fw
 ```
 
 This needs no key. It builds the custom variant **in the artifacts directory**
+like every other build — folding the image where the build left it, copying the
+promoted bootloader beside it, staging the committed nRF — and reads the
+committed bundle where it lives rather than copying it anywhere. The published
+manifest is derived from that committed body, trimmed to the one variant
+present. A missing bundle is refused up front, naming the fix: cut and promote
+a release first.
+
+The other way this fails is a leaf that does not match the one the bundle
+records, and that is reported field by field rather than as a bare hash
+mismatch, because the differing field is the thing a creator has to change.
 
 Everything the fold does *not* zero still has to match, and that includes the
 **whole secmon entry** — secmon is founder-bound even for custom, only the app
 is unbound. So a custom build embeds the *committed* secmon rather than a
 freshly built one, and `--bootloader` has no effect here: there is nothing to
 choose, since the image folds into a header that was signed elsewhere.
+
+That makes the secmon the field most likely to differ, and it is worth knowing
+that the diagnostic was blind to it for a while: it parsed the manifest header
+as 20 bytes instead of 48, reading the 32-byte translations root as a word, so
+`module_count` came out of the middle of that root as zero and **no entry field
+was ever compared**. A secmon mismatch then printed "no field differs, yet the
+leaves do not match" — which reads as an impossibility rather than an answer.
 
 The release directory and its zip are rebuilt from scratch each time. A
 previous full release's variant binaries left beside a bundle that lists them
