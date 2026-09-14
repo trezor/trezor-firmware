@@ -23,9 +23,11 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/boot_header.h>
 #include <sec/fwutils.h>
 #include <sec/image.h>
 #include <sys/flash.h>
+#include <sys/mpu.h>
 #include <sys/systask.h>
 
 #include "blake2s.h"
@@ -104,6 +106,52 @@ int firmware_hash_continue(uint8_t* hash, size_t hash_len) {
   return (100 * ctx->fw_offset) / ctx->fw_size;
 }
 
+#ifdef PQ_SECURE_BOOT
+// Merkle-tree layout: the image starts with a firmware manifest, not a vendor
+// header, so there is nothing to read from the image. Only report a vendor when
+// a firmware image is actually present (manifest magic), and derive the
+// identity from the (write-protected, trusted) firmware_type the bootloader
+// persisted into the signed boot header: its variant names an official image,
+// its custom flag flips it to the UNSAFE marker. Mirrors the bootloader's
+// tree_vendor_str and the UNSAFE-prefix official test in
+// reboot_to_bootloader.py, so device and host agree on official-vs-custom.
+secbool firmware_get_vendor(char* buff, size_t buff_size) {
+  const void* data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
+
+  memset(buff, 0, buff_size);
+
+  if (data == NULL || *(const uint32_t*)data != FW_MANIFEST_MAGIC) {
+    return secfalse;
+  }
+
+  // The boot header lives in the bootloader flash area, which the secmon's
+  // default MPU mode does not map -- switch to MPU_MODE_BOOTLOADER for the read
+  // (same pattern as storage_salt_get).
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
+  // Reached through the flash area rather than BOOTLOADER_START: this file is
+  // in `sec/`, shared by every project, so it cannot use the bootloader's
+  // emulator address overrides -- the raw constant would be a pointer to
+  // nothing on the host. flash_area_get_address is the portable spelling and
+  // bounds-checks the read as well.
+  const boot_header_auth_t* bl =
+      boot_header_auth_get((uintptr_t)flash_area_get_address(
+          &BOOTLOADER_AREA, 0, sizeof(boot_header_auth_t)));
+  const boot_header_unauth_t* unauth =
+      (bl != NULL) ? boot_header_unauth_get(bl) : NULL;
+  const fw_variant_sec_t variant =
+      (unauth != NULL) ? unauth->firmware_type : FW_VARIANT_SEC_INVALID;
+  mpu_restore(mpu_mode);
+
+  const char* vendor = firmware_vendor_str(variant);
+
+  size_t len = strlen(vendor);
+  if (buff_size < len + 1) {
+    return secfalse;
+  }
+  memcpy(buff, vendor, len);
+  return sectrue;
+}
+#else
 secbool firmware_get_vendor(char* buff, size_t buff_size) {
   const void* data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
@@ -124,6 +172,7 @@ secbool firmware_get_vendor(char* buff, size_t buff_size) {
 
   return sectrue;
 }
+#endif
 
 void firmware_invalidate_header(void) {
 #ifdef STM32U5

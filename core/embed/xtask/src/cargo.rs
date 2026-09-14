@@ -95,13 +95,28 @@ fn build_impl(args: ResolvedBuildArgs, is_dependency: bool) -> Result<()> {
     if !args.emulator {
         // Recursively build dependencies (Firmware -> Kernel -> Secmon)
         if let Some(dependency) = args.project.dependency(args.model)? {
-            build_impl(
-                ResolvedBuildArgs {
-                    project: dependency,
-                    ..args.clone()
-                },
-                true,
-            )?;
+            // A presigned CUSTOM build embeds the COMMITTED secmon -- the one
+            // the signed custom leaf covers -- so building one is not just
+            // wasted work: it would leave artifacts/<MODEL>/secmon.bin holding a
+            // binary that is NOT the one inside the firmware being built, which
+            // is the sort of near-miss that gets promoted by mistake.
+            let embeds_committed_secmon =
+                dependency == Project::Secmon && args.unsafe_fw && pq::applies(&args)?;
+            if embeds_committed_secmon {
+                println!(
+                    "{}",
+                    "xtask: skipping the secmon build -- a custom build embeds the committed one"
+                        .dimmed()
+                );
+            } else {
+                build_impl(
+                    ResolvedBuildArgs {
+                        project: dependency,
+                        ..args.clone()
+                    },
+                    true,
+                )?;
+            }
         }
     }
 
@@ -125,10 +140,31 @@ fn build_impl(args: ResolvedBuildArgs, is_dependency: bool) -> Result<()> {
         // binary before signing it.
         let bin = postbuild::elf_to_bin(&elf, args.project, &model_config, use_dev_keys)?;
 
-        // Sign the binary except for those that don't have headers
-        if !matches!(args.project, Project::Boardloader | Project::Kernel) {
+        // Sign the binary except for those that don't have headers. Firmware
+        // built with the Merkle-tree layout is skipped too: its per-module
+        // code hashes are filled into the manifest below, with the firmware_root
+        // folded into the bootloader header by the tree signer.
+        let is_tree = model_config.has_feature("pq_secure_boot");
+        let skip_legacy_sign = matches!(args.project, Project::Boardloader | Project::Kernel)
+            || (matches!(
+                args.project,
+                Project::Firmware | Project::Secmon | Project::Prodtest
+            ) && is_tree);
+        if !skip_legacy_sign {
             postbuild::sign_binary(&bin, args.project, &model_config, use_dev_keys)?;
         }
+
+        // Merkle-tree firmware: the manifest code_hashes are filled at SIGN time
+        // (fill-at-sign), NOT here. firmware_pq_sign.py computes each entry's
+        // code_hash at the chosen chunk_size in the same step that folds the
+        // variant leaves and signs -- so the authenticity data is produced in one
+        // place. The build emits only the manifest TEMPLATE (manifest_header.S:
+        // magic/variant/module_type/addr/size + a default chunk_size, code_hash
+        // left zero). A raw `xtask build firmware` therefore yields an unfilled
+        // template (not bootable on its own -- its leaf must fold into the
+        // bootloader's signed firmware_root); `xtask build firmware` / `xtask
+        // release` (build -> sign)
+        // produces the filled, dev-signed bundle.
 
         if args.project == Project::Firmware {
             let firwmare_cc_json = bin.with_extension("cc.json");

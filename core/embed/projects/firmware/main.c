@@ -64,6 +64,17 @@ extern const void nrf_app_size;
 
 #endif
 
+// The firmware variant stamped into the manifest (firmware/build.rs ->
+// FW_VARIANT, consumed by manifest_header.S) must be a known hardened codeword.
+#ifdef FW_VARIANT
+#include <sec/boot_header.h>
+_Static_assert(FW_VARIANT == FW_VARIANT_SEC_UNIVERSAL ||
+                   FW_VARIANT == FW_VARIANT_SEC_BITCOIN_ONLY ||
+                   FW_VARIANT == FW_VARIANT_SEC_CUSTOM,
+               "FW_VARIANT must be a hardened FW_VARIANT_SEC_* codeword (see "
+               "firmware/build.rs)");
+#endif
+
 LOG_DECLARE(coreapp_main)
 
 int main_func(uint32_t cmd, void *arg) {

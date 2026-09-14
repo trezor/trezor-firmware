@@ -10,6 +10,7 @@ uses = [
     "mcu_attestation",
     "nrf_auth",
     "optiga",
+    "pq_secure_boot",
     "secret",
     "secure_aes",
     "suspend",
@@ -20,7 +21,10 @@ uses = [
 
 # ELF sections to be included in the final binary.
 # The order of sections is important.
-elf_sections = [".secmon_header", ".flash", ".data", ".gnu.sgstubs"]
+# ".secmon_header" is the legacy TSEC header; ".header" is the legacy image
+# header. Both are absent (no-ops) in the Merkle-tree layout, where the secmon is
+# just code committed directly by the firmware manifest.
+elf_sections = [".secmon_header", ".header", ".flash", ".data", ".gnu.sgstubs"]
 
 # xtask build options mapped to the cargo features
 [build-options]

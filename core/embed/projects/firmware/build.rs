@@ -9,7 +9,36 @@ fn main() -> Result<()> {
 
         lib.add_include("../../rust"); // Cyclic dependency
 
-        lib.add_sources(["main.c", "header.S", "boot_image_embdata.c"]);
+        lib.add_source("main.c");
+
+        // Firmware header: the Merkle-tree layout describes each module directly
+        // in the manifest (no per-module header); otherwise the legacy vendor
+        // header + image header.
+        if cfg!(feature = "pq_secure_boot") {
+            // The firmware manifest ("firmware directory") at the image start.
+            lib.add_source("manifest_header.S");
+            // Stamp the authenticated firmware variant into the manifest. The
+            // `unsafe_fw` feature builds the CUSTOM (unofficial) variant -- a
+            // first-class tree slot whose kernel+coreapp code_hash the founder
+            // signs as zero, so any creator app authenticates to it (runs
+            // unprivileged, unlocked-bootloader-only, own storage domain).
+            // Otherwise the binary btc-only axis applies: `universal_fw` =>
+            // UNIVERSAL, its absence => BITCOIN_ONLY. These are the HARDENED
+            // codewords (FW_VARIANT_SEC_*, sec/boot_header.h): the manifest
+            // field carries that form, and `manifest_header.S` emits this value
+            // verbatim with no type checking, so main.c static-asserts it
+            // against the same constants.
+            let variant = if cfg!(feature = "unsafe_fw") {
+                "0x33333333" // FW_VARIANT_SEC_CUSTOM
+            } else if cfg!(feature = "universal_fw") {
+                "0x5A5A5A5A" // FW_VARIANT_SEC_UNIVERSAL
+            } else {
+                "0xA5A5A5A5" // FW_VARIANT_SEC_BITCOIN_ONLY
+            };
+            lib.add_define("FW_VARIANT", Some(variant));
+        } else {
+            lib.add_source("header.S");
+        }
 
         if cfg!(feature = "mcu_stm32") {
             lib.add_source("stm32/coreapp_header.S");
@@ -22,18 +51,65 @@ fn main() -> Result<()> {
         }
 
         if cfg!(feature = "force_bootloader_upgrade") {
+            if cfg!(feature = "pq_secure_boot") {
+                // Would be silently inert: the tree layout compiles the
+                // firmware's bootloader updater out entirely.
+                bail!("force_bootloader_upgrade is not supported with pq_secure_boot");
+            }
             lib.add_define("FORCE_BOOTLOADER_UPGRADE", Some("1"));
         }
 
-        lib.embed_binary(
-            xbuild::vendor_header_path("../../models", "firmware")?,
-            "vendorheader",
-        )?;
+        // The Merkle-tree layout has no legacy vendor header (the module header
+        // replaces it). Other builds keep the vendor header.
+        if !cfg!(feature = "pq_secure_boot") {
+            lib.embed_binary(
+                xbuild::vendor_header_path("../../models", "firmware")?,
+                "vendorheader",
+            )?;
+        }
 
-        embed_bootloader_binary(lib)?;
+        // The Merkle-tree path does not bake the bootloader into the firmware
+        // (it is installed separately via the boardloader/UCB mechanism), so
+        // neither the image nor the code that would install it is built.
+        if !cfg!(feature = "pq_secure_boot") {
+            lib.add_source("boot_image_embdata.c");
+            embed_bootloader_binary(lib)?;
+        }
+        // In the Merkle-tree layout the secmon is a separate module, prefixed
+        // before the module header (kernel.bin is code-only). It is excluded
+        // from this module's hash but placed here so the kernel links correctly.
+        if cfg!(feature = "pq_secure_boot") {
+            // The prefixed secmon MUST be the exact same binary the kernel was
+            // built against (see kernel/build.rs embed_secmon_binary) or the
+            // kernel secure-faults, so mirror that selection here:
+            //   - CUSTOM (--unsafe-fw): the COMMITTED secmon, because a custom build is
+            //     presigned -- it folds into an already-signed firmware_root whose custom
+            //     leaf covers that exact secmon.
+            //   - dev build: the freshly-built secmon (from source) -- a dev release cuts
+            //     its own tree over exactly that secmon.
+            //   - release: the officially built secmon.
+            let model_id = xbuild::current_model_id()?;
+            let dir = PathBuf::from(format!("../../models/{}/secmon", model_id));
+            if cfg!(feature = "unsafe_fw") {
+                let bin = if cfg!(feature = "bootloader_devel") {
+                    "secmon_DEV.bin"
+                } else {
+                    "secmon.bin"
+                };
+                lib.embed_binary(dir.join(bin), "secmon")?;
+            } else if cfg!(feature = "bootloader_devel") {
+                let out_dir = xbuild::cargo_profile_dir()?;
+                lib.embed_binary(out_dir.join("secmon.bin"), "secmon")?;
+            } else {
+                lib.embed_binary(dir.join("secmon.bin"), "secmon")?;
+            }
+        }
         embed_kernel_binary(lib)?;
 
-        if cfg!(feature = "nrf") {
+        // Legacy layout only: under the Merkle-tree scheme the bootloader
+        // installs the nRF as a model-level leaf of the founder tree, so the
+        // firmware does not carry a ~170 KB copy of it. See main.c.
+        if cfg!(feature = "nrf") && !cfg!(feature = "pq_secure_boot") {
             embed_nrf_app_binary(lib)?;
         }
 

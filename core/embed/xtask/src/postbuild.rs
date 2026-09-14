@@ -50,7 +50,15 @@ pub fn elf_to_bin(
         }
 
         Project::Prodtest => {
-            if model_config.secmon {
+            if model_config.has_feature("pq_secure_boot") {
+                // Merkle-tree layout: prodtest is a single secure module + its
+                // manifest ([.manifest | code]). Plain objcopy of the tree
+                // sections; the manifest entry's code_hash is filled at SIGN time
+                // (fill-at-sign, firmware_pq_sign.py) and the firmware_root is
+                // folded into the bootloader header by the founder tree signer --
+                // so there is no legacy secmon-split / vendor header.
+                objcopy(source, &project_config.elf_sections)
+            } else if model_config.secmon {
                 // On secmon models prodtest is a secmon-signed body with a plain
                 // vendor header prepended. The body is signed before concatenation.
                 let body_sections =

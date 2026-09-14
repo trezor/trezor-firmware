@@ -23,11 +23,9 @@ fn main() -> Result<()> {
 
         lib.add_sources([
             "bootui.c",
-            "fw_check.c",
             "main.c",
             "ui_helpers.c",
             "version_check.c",
-            "workflow/wf_firmware_update.c",
             "workflow/wf_image_upload.c",
             "workflow/wf_ucb_stage.c",
             "workflow/wf_wipe_device.c",
