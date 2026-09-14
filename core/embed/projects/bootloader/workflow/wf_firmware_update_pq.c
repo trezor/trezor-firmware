@@ -603,6 +603,19 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
     keep_seed = secfalse;
   }
 
+  // Storage-format floor. A release older than the INSTALLED header's
+  // fix_version may not keep the seed: that is what the field says, and legacy
+  // enforces it (wf_firmware_update.c). The tree layout had dropped it --
+  // keep_seed keyed only off the storage DOMAIN, so a downgrade across a
+  // storage format change handed the older firmware a seed it cannot read.
+  // Monotonic bounds this too, but only to the rung; fix_version is the finer
+  // axis and the one that names the format. Another independent gate that only
+  // forces the safe direction; inert at 0.0.0.0, which nothing sorts below.
+  if (cur != NULL &&
+      boot_header_version_compare(hdr->version, cur->fix_version) < 0) {
+    keep_seed = secfalse;
+  }
+
   // --- Confirm -- UNLESS the device is (positively) empty AND the variant is
   //     (positively) official. Like legacy, a fresh install of an OFFICIAL
   //     firmware onto an empty device needs no consent (even though setup
