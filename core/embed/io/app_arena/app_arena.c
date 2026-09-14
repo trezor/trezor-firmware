@@ -22,6 +22,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <rtl/sizedefs.h>
+
 #include <io/app_arena.h>
 #include <io/app_header.h>
 #include <io/app_root.h>
