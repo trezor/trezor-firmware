@@ -61,13 +61,6 @@
 __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
                                                       uint32_t smcall) {
   switch (smcall) {
-    case SMCALL_BOOTARGS_SET: {
-      boot_command_t command = args[0];
-      const void *args_ptr = (const void *)args[1];
-      size_t args_len = args[2];
-      bootargs_set__verified(command, args_ptr, args_len);
-    } break;
-
     case SMCALL_BOOTARGS_GET_ARGS: {
       boot_args_t *boot_args = (boot_args_t *)args[0];
       bootargs_get_args__verified(boot_args);

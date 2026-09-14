@@ -87,6 +87,8 @@ void system_deinit(void) {
   mpu_reconfig(MPU_MODE_DISABLED);
 }
 
+#ifdef SECURE_MODE
+
 __attribute((noreturn, no_stack_protector)) static void
 system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
   systask_error_handler_t error_handler = (systask_error_handler_t)arg1;
@@ -162,6 +164,8 @@ __attribute((naked, noreturn, no_stack_protector)) void system_emergency_rescue(
   call_with_new_stack((uint32_t)error_handler, 0, true,
                       system_emergency_rescue_phase_2);
 }
+
+#endif  // SECURE_MODE
 
 #endif  // KERNEL_MODE
 
