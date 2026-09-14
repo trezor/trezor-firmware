@@ -139,6 +139,21 @@ def guess_script_type_from_path(address_n: list[int]) -> messages.InputScriptTyp
     return messages.InputScriptType.SPENDADDRESS
 
 
+def guess_sign_message_script_type(
+    address_n: list[int],
+) -> messages.InputScriptType:
+    """Script type for signing a message with the key at `address_n`.
+
+    Message signing is single-key -- there is no multisig message signature --
+    so the BIP-48 0' level, which guess_script_type_from_path() reads as
+    SPENDMULTISIG, signs as its single-key analogue.
+    """
+    script_type = guess_script_type_from_path(address_n)
+    if script_type is messages.InputScriptType.SPENDMULTISIG:
+        return messages.InputScriptType.SPENDADDRESS
+    return script_type
+
+
 def get_unlock_path(address_n: list[int]) -> Optional[list[int]]:
     if address_n and address_n[0] == tools.H_(10025):
         return address_n[:1]
@@ -465,7 +480,7 @@ def sign_message(
     """Sign message using address of given path."""
     address_n = tools.parse_path(address)
     if script_type is None:
-        script_type = guess_script_type_from_path(address_n)
+        script_type = guess_sign_message_script_type(address_n)
     res = btc.sign_message(
         session,
         coin,

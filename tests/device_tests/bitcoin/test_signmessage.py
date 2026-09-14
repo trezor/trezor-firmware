@@ -558,8 +558,49 @@ def test_signmessage_multisig_account_signs(session: Session):
     assert sig.signature
 
 
+def test_signmessage_multisig_legacy_level_signs(session: Session):
+    # The BIP-48 0' level reads as SPENDMULTISIG from the path alone, but
+    # message signing has no multisig form, so the client sends the single-key
+    # analogue and the device signs as p2pkh.
+    from trezorlib.cli.btc import (
+        guess_script_type_from_path,
+        guess_sign_message_script_type,
+    )
+
+    address_n = parse_path("m/48h/0h/0h/0h/0/0")
+    message = "This is an example of a signed message."
+
+    assert guess_script_type_from_path(address_n) is S.SPENDMULTISIG
+    assert guess_sign_message_script_type(address_n) is S.SPENDADDRESS
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                # no path warning
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                messages.MessageSignature,
+            ]
+        )
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+        sig = btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=address_n,
+            message=message,
+            script_type=guess_sign_message_script_type(address_n),
+        )
+
+    assert sig.signature
+    # p2pkh: the ordinary single-key address for this node
+    assert sig.address.startswith("1")
+
+
 def test_signmessage_multisig_account_wrong_script_type(session: Session):
-    # Only the node matching the script type is offered.
+    # Only the node matching the script type is unlocked, so the 2' node is
+    # out of reach under SPENDP2SHWITNESS.
     with pytest.raises(TrezorFailure, match="Forbidden key path") as exc:
         btc.sign_message(
             session,
@@ -570,4 +611,42 @@ def test_signmessage_multisig_account_wrong_script_type(session: Session):
         )
 
     # DataError is what the issue's HWI transcript shows as code -13.
+    assert exc.value.code is messages.FailureType.DataError
+
+
+@pytest.mark.models("core")
+def test_signmessage_unknown_path_is_refused(session: Session):
+    """A path in no schema cannot be signed with under strict safety checks.
+
+    Message signing unlocks the BIP-48 account nodes and nothing else, so an
+    unrecognized derivation scheme is refused outright rather than left to a
+    warning the user can accept.
+    """
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path("m/1234h/5h/6h"),
+            message="This is an example of a signed message.",
+            script_type=S.SPENDADDRESS,
+        )
+
+
+@pytest.mark.models("core")
+def test_signmessage_slip25_still_requires_unlock_path(session: Session):
+    """SLIP-25 stays behind UnlockPath, path-generic signing notwithstanding.
+
+    The wildcard that makes every other path signable must not answer here:
+    a message signature is recoverable, so it would reveal the public key of a
+    coinjoin address without the authenticated unlock.
+    """
+    with pytest.raises(TrezorFailure, match="Forbidden key path") as exc:
+        btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path("m/10025h/0h/0h/1h/0/0"),
+            message="This is an example of a signed message.",
+            script_type=S.SPENDTAPROOT,
+        )
+
     assert exc.value.code is messages.FailureType.DataError

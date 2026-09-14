@@ -1,0 +1,1 @@
+trezorctl: sign a message with a BIP-48 legacy-multisig key, which was sent as SPENDMULTISIG and refused.
