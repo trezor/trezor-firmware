@@ -26,6 +26,7 @@ import sys
 import time
 from pathlib import Path
 
+from trezorlib import device, exceptions, firmware, messages
 from trezorlib.client import Session, TrezorClient, get_default_client
 
 # TEST-ONLY fault injections -> expected device Failure substring. Phase-1 faults
@@ -113,12 +114,30 @@ def _button_callback(br: "messages.ButtonRequest") -> None:
     print("  -> confirm the action on the device")
 
 
+def _code_entry_callback() -> str:
+    """THP pairing code prompt.
+
+    Needed only for the FIRMWARE-mode connect: running firmware requires a paired
+    channel, whereas the bootloader does not -- so this is asked once, before the
+    interaction-less handoff, and not again on the reconnects afterwards.
+    """
+    while True:
+        raw = input("  -> enter the pairing code shown on the device: ")
+        code = "".join(c for c in raw if c.isdigit())
+        if len(code) == 6:
+            return code
+        print("     the code is 6 digits")
+
+
 def connect(retries: int = 1, delay: float = 1.0) -> tuple[TrezorClient, Session]:
     """Open a session to a connected device, retrying while it (re)enumerates."""
     last: Exception | None = None
     for _ in range(retries):
         try:
             client = get_default_client(
+                "firmware_pq_update",
+                button_callback=_button_callback,
+                code_entry_callback=_code_entry_callback,
             )
             return client, client.get_session(passphrase=None)
         except Exception as e:  # noqa: BLE001
@@ -342,6 +361,31 @@ def main() -> None:
         )
 
     def _run() -> None:
+        _client, session = connect()
+
+        # --- Interaction-less handoff (only when starting from firmware mode) ---
+        #     The user confirms the release in the FIRMWARE UI; firmware hashes the
+        #     preamble into the consent digest and hands it to the bootloader in the
+        #     boot command. Phase 1 below then recomputes that digest over what we
+        #     actually deliver and skips its own confirm screen iff they match. A
+        #     device already in bootloader mode skips this and confirms on-device.
+        if session.features.bootloader_mode is not True:
+            preamble = bundle.consent_preamble()
+            print(
+                "device is in firmware mode; asking it to confirm the upgrade "
+                f"({len(preamble)} B preamble = {breakdown}) ..."
+            )
+            device.reboot_to_bootloader(
+                session,
+                boot_command=messages.BootCommand.INSTALL_UPGRADE,
+                firmware_preamble=preamble,
+            )
+            time.sleep(3)
+            _client, session = connect(retries=args.reconnect_retries)
+            if session.features.bootloader_mode is not True:
+                raise SystemExit("device did not enter bootloader mode")
+            print("reconnected in bootloader mode; consent carried in the boot command")
+
         # --- Phase 1 ---
         print(f"phase 1: FirmwareBegin ({mode}) ...")
         served = firmware.firmware_begin(

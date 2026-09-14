@@ -11548,6 +11548,8 @@ pub struct RebootToBootloader {
     pub boot_command: ::std::option::Option<::protobuf::EnumOrUnknown<reboot_to_bootloader::BootCommand>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.firmware_header)
     pub firmware_header: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.firmware_preamble)
+    pub firmware_preamble: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.RebootToBootloader.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -11622,8 +11624,44 @@ impl RebootToBootloader {
         self.firmware_header.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes firmware_preamble = 4;
+
+    pub fn firmware_preamble(&self) -> &[u8] {
+        match self.firmware_preamble.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_firmware_preamble(&mut self) {
+        self.firmware_preamble = ::std::option::Option::None;
+    }
+
+    pub fn has_firmware_preamble(&self) -> bool {
+        self.firmware_preamble.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_firmware_preamble(&mut self, v: ::std::vec::Vec<u8>) {
+        self.firmware_preamble = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_firmware_preamble(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.firmware_preamble.is_none() {
+            self.firmware_preamble = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.firmware_preamble.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_firmware_preamble(&mut self) -> ::std::vec::Vec<u8> {
+        self.firmware_preamble.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "boot_command",
@@ -11634,6 +11672,11 @@ impl RebootToBootloader {
             "firmware_header",
             |m: &RebootToBootloader| { &m.firmware_header },
             |m: &mut RebootToBootloader| { &mut m.firmware_header },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "firmware_preamble",
+            |m: &RebootToBootloader| { &m.firmware_preamble },
+            |m: &mut RebootToBootloader| { &mut m.firmware_preamble },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RebootToBootloader>(
             "RebootToBootloader",
@@ -11659,6 +11702,9 @@ impl ::protobuf::Message for RebootToBootloader {
                 18 => {
                     self.firmware_header = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                34 => {
+                    self.firmware_preamble = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -11677,6 +11723,9 @@ impl ::protobuf::Message for RebootToBootloader {
         if let Some(v) = self.firmware_header.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.firmware_preamble.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -11688,6 +11737,9 @@ impl ::protobuf::Message for RebootToBootloader {
         }
         if let Some(v) = self.firmware_header.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.firmware_preamble.as_ref() {
+            os.write_bytes(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -11708,6 +11760,7 @@ impl ::protobuf::Message for RebootToBootloader {
     fn clear(&mut self) {
         self.boot_command = ::std::option::Option::None;
         self.firmware_header = ::std::option::Option::None;
+        self.firmware_preamble = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -11715,6 +11768,7 @@ impl ::protobuf::Message for RebootToBootloader {
         static instance: RebootToBootloader = RebootToBootloader {
             boot_command: ::std::option::Option::None,
             firmware_header: ::std::option::Option::None,
+            firmware_preamble: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
