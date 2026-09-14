@@ -30,8 +30,7 @@ typedef struct {
 // Secure monitor call identifiers
 typedef enum {
 
-  SMCALL_BOOTARGS_SET = 1,
-  SMCALL_BOOTARGS_GET_ARGS,
+  SMCALL_BOOTARGS_GET_ARGS = 1,
 
   SMCALL_BOOT_IMAGE_CHECK,
   SMCALL_BOOT_IMAGE_REPLACE,
