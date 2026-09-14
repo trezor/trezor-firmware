@@ -91,4 +91,33 @@ secbool ucb_stage_arm(const flash_area_t *staging_area, uint32_t code_address);
  */
 secbool ucb_stage_write_header(const uint8_t *data, uint32_t len);
 
+#ifdef PQ_SECURE_BOOT
+/**
+ * Restage this device's OWN boot header with `firmware_type` cleared, so the
+ * boardloader installs it on the next boot and the device then reads as
+ * unprovisioned (empty) -- see `fw_check`, which decides "is this device
+ * provisioned" from exactly that byte.
+ *
+ * Goes the long way round on purpose. `firmware_type` sits in the
+ * write-protected boot header, which only the boardloader writes, and it shares
+ * a flash page with the founder signatures -- so flipping the byte in place
+ * would mean erasing and reprogramming the page that authenticates the
+ * bootloader, and losing power mid-write would leave an unbootable device.
+ * Restaging routes the change through the same verify-and-arm path an
+ * over-the-wire update uses, where a power loss at any point leaves either the
+ * old header or the new one installed.
+ *
+ * Nothing else about the header changes: the code is untouched (`header_only`),
+ * the authenticated part is copied verbatim, so the founder signature still
+ * covers it. Borrows `chunk_buffer` as scratch.
+ *
+ * Requires the caller to have decided this is allowed -- it does not police who
+ * may un-provision a device.
+ *
+ * @return sectrue if the new header is staged and the UCB armed; the caller
+ *         must then reboot for the boardloader to install it.
+ */
+secbool ucb_stage_clear_firmware_type(void);
+#endif  // PQ_SECURE_BOOT
+
 #endif  // USE_BOOT_UCB

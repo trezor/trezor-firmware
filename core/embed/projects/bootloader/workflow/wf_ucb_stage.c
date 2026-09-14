@@ -27,7 +27,20 @@
 #include <sys/flash.h>
 
 #include "protob/protob.h"
+#include "wf_image_upload.h"  // chunk_buffer
 #include "wf_ucb_stage.h"
+
+// Report a staging failure to the host, if there is one. `ucb_stage_verify` is
+// also reached from the bootloader's own boot path, where nobody is listening
+// and `iface` is NULL -- MSG_SEND would dereference it.
+static void stage_report_failure(protob_io_t *iface, const char *msg) {
+  if (iface != NULL) {
+    send_msg_failure(iface, FailureType_Failure_ProcessError, msg);
+  }
+}
+static uint32_t ucb_flash_address(const void *flash_ptr) {
+  return (uint32_t)(uintptr_t)flash_ptr;
+}
 
 #ifdef BOARDLOADER_UCB_ZERO_ADDR_BUG
 // Copy `len` bytes of the currently installed bootloader code into the staging
@@ -179,5 +192,62 @@ secbool ucb_stage_write_header(const uint8_t *data, uint32_t len) {
 
   return sectrue;
 }
+
+#ifdef PQ_SECURE_BOOT
+secbool ucb_stage_clear_firmware_type(void) {
+  const boot_header_auth_t *installed = boot_header_auth_get(BOOTLOADER_START);
+  if (installed == NULL) {
+    return secfalse;
+  }
+  const uint32_t header_size = installed->header_size;
+  if (header_size == 0 || header_size > IMAGE_CHUNK_SIZE) {
+    return secfalse;
+  }
+
+  // Copy the installed header verbatim, then rewrite the one field.
+  // Everything authenticated is preserved bit for bit, so the founder
+  // signature over it still verifies below; firmware_type is outside
+  // auth_size.
+  uint8_t *staged = (uint8_t *)chunk_buffer;
+  memcpy(staged, (const void *)(uintptr_t)BOOTLOADER_START, header_size);
+
+  boot_header_auth_t *hdr =
+      (boot_header_auth_t *)boot_header_auth_get((uintptr_t)staged);
+  if (hdr == NULL) {
+    return secfalse;
+  }
+  boot_header_unauth_t *unauth =
+      (boot_header_unauth_t *)(uintptr_t)boot_header_unauth_get(hdr);
+  if (unauth == NULL) {
+    return secfalse;
+  }
+  if (unauth->firmware_type == FW_VARIANT_SEC_NONE) {
+    // Already unprovisioned, and already the CANONICAL unprovisioned value --
+    // nothing to install, and arming the UCB for a no-op would spend a
+    // boardloader install for nothing.
+    return sectrue;
+  }
+  // Anything else is rewritten, INVALID included. INVALID also reads as
+  // unprovisioned, so it would be tempting to early-out on it too -- but the
+  // install path grants the empty-device auto-confirm only on a POSITIVE NONE,
+  // deliberately, so that garbage cannot earn it. Leaving INVALID here would
+  // therefore leave a wiped device asking for a confirmation it should not
+  // need. Normalise instead.
+  unauth->firmware_type = FW_VARIANT_SEC_NONE;
+
+  if (sectrue != ucb_stage_write_header(staged, header_size)) {
+    return secfalse;
+  }
+
+  // No iface: this runs from the bootloader's own boot path, not a host
+  // workflow, so a failure has nobody to report to over the wire.
+  uint32_t code_address = 0;
+  if (UPLOAD_OK != ucb_stage_verify(&STAGING_AREA, /*header_only=*/true, NULL,
+                                    NULL, &code_address)) {
+    return secfalse;
+  }
+  return ucb_stage_arm(&STAGING_AREA, code_address);
+}
+#endif  // PQ_SECURE_BOOT
 
 #endif  // USE_BOOT_UCB
