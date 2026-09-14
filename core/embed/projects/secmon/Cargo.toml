@@ -37,8 +37,6 @@ force_bootloader_upgrade = []
 optiga_testing = ["sec/optiga_testing"]
 production = ["sec/production"]
 storage_insecure_testing_mode = ["sec/storage_insecure_testing_mode"]
-universal_fw = []
-unsafe_fw = []
 
 # --------------------------------------------------------------------------
 # MCU selection - only enable one of these at a time
