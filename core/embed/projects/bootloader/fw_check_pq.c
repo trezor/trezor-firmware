@@ -20,6 +20,14 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+// Must sit at TOP LEVEL, not inside any #ifdef: it #undefs the model's flash
+// address constants so they resolve to the emulator's mapped addresses, and a
+// use further down the file that is NOT under the same condition would silently
+// get the device constant back -- a pointer to nothing on the host.
+#ifdef TREZOR_EMULATOR
+#include "emulator.h"
+#endif
+
 #include <sec/boot_header.h>
 
 #include "fw_check.h"

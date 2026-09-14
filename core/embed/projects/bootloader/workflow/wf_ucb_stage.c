@@ -20,6 +20,14 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+// Must sit at TOP LEVEL, not inside any #ifdef: it #undefs the model's flash
+// address constants so they resolve to the emulator's mapped addresses, and a
+// use further down the file that is NOT under the same condition would silently
+// get the device constant back -- a pointer to nothing on the host.
+#ifdef TREZOR_EMULATOR
+#include "../emulator.h"
+#endif
+
 #ifdef USE_BOOT_UCB
 
 #include <sec/boot_header.h>
@@ -38,6 +46,14 @@ static void stage_report_failure(protob_io_t *iface, const char *msg) {
     send_msg_failure(iface, FailureType_Failure_ProcessError, msg);
   }
 }
+
+// The UCB records DEVICE flash addresses: the boardloader reads the block from
+// flash on the next boot and dereferences them, so they must mean something to
+// it and not to us. On the MCU a pointer into flash IS that address and this is
+// the identity. On the emulator flash is an mmap of `trezor.flash`, so the two
+// are unrelated -- harmless there, since no boardloader ever reads the block,
+// but written out explicitly so the one place where "pointer" and "flash
+// address" stop being the same thing is visible rather than implied.
 static uint32_t ucb_flash_address(const void *flash_ptr) {
   return (uint32_t)(uintptr_t)flash_ptr;
 }
