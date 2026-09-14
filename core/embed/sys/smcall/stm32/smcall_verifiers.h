@@ -24,9 +24,6 @@
 // ---------------------------------------------------------------------
 #include <sys/bootargs.h>
 
-void bootargs_set__verified(boot_command_t command, const void *args,
-                            size_t args_size);
-
 void bootargs_get_args__verified(boot_args_t *args);
 
 // ---------------------------------------------------------------------
