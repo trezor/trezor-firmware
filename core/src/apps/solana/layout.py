@@ -85,6 +85,7 @@ async def confirm_instruction(
             br_code=ButtonRequestType.Other,
         )
 
+    props: list[StrPropertyType] = []
     for ui_property in instruction.ui_properties:
         if ui_property.parameter is not None:
             property_template = instruction.get_property_template(ui_property.parameter)
@@ -114,17 +115,12 @@ async def confirm_instruction(
                 else:
                     raise ValueError  # Invalid property template
 
-            await confirm_properties(
-                br_name="confirm_instruction",
-                title=instruction_title_index,
-                subtitle=instruction.ui_name,
-                props=(
-                    (
-                        ui_property.display_name,
-                        property_template.format(value, *args),
-                        True,
-                    ),
-                ),
+            props.append(
+                (
+                    ui_property.display_name,
+                    property_template.format(value, *args),
+                    True,
+                )
             )
         elif ui_property.account is not None:
             # optional account, skip if not present
@@ -139,7 +135,6 @@ async def confirm_instruction(
             ):
                 continue
 
-            account_data: list[StrPropertyType] = []
             if not is_address_reference(account_value):
                 account_description = f"{base58.encode(account_value[0])}"
                 token = definitions.get_token(account_value[0])
@@ -148,23 +143,22 @@ async def confirm_instruction(
                 elif account_value[0] == signer_public_key:
                     account_description = f"{account_description} ({TR.words__signer})"
 
-                account_data.append(
-                    (ui_property.display_name, account_description, True)
-                )
+                props.append((ui_property.display_name, account_description, True))
             else:
-                account_data += _get_address_reference_props(
+                props += _get_address_reference_props(
                     account_value,
                     ui_property.display_name,
                 )
-
-            await confirm_properties(
-                "confirm_instruction",
-                title=instruction_title_index,
-                props=account_data,
-                subtitle=instruction.ui_name,
-            )
         else:
             raise ValueError  # Invalid ui property
+
+    if props:
+        await confirm_properties(
+            br_name="confirm_instruction",
+            title=instruction_title_index,
+            subtitle=instruction.ui_name,
+            props=props,
+        )
 
     if instruction.multisig_signers:
         signers: list[StrPropertyType] = []
