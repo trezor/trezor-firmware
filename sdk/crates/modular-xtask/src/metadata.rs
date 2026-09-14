@@ -151,20 +151,6 @@ pub fn paths(package: &Package) -> Result<[u8; APP_PATHS_MAX_LEN]> {
     pack_null_terminated_strings(paths, "paths")
 }
 
-/// Retrieves the SLIP-44 coin type from the package metadata.
-pub fn slip44_id(package: &Package) -> Result<u32> {
-    let slip44_id = get_metadata_number(package, "slip44-id")?;
-
-    ensure!(
-        slip44_id <= u32::MAX as u64,
-        "slip44-id {} is too large (max {})",
-        slip44_id,
-        u32::MAX
-    );
-
-    Ok(slip44_id as u32)
-}
-
 fn pack_null_terminated_strings<const MAX_LEN: usize>(
     strings: &[serde_json::Value],
     collection_name: &str,

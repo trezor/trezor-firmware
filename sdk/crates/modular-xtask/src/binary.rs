@@ -74,8 +74,6 @@ struct AppHeader {
     /// Each path is a null-terminated string, and the array
     /// is zero-padded to a fixed size.
     paths: [u8; metadata::APP_PATHS_MAX_LEN],
-    /// Slip44 coin type identifier for the app (if applicable)
-    slip44_id: u32,
     // TODO logo
 }
 
@@ -147,7 +145,6 @@ pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf>
         chunk_size: U16::new(AppHeader::CHUNK_SIZE as u16),
         curves: metadata::curves(package)?,
         paths: metadata::paths(package)?,
-        slip44_id: metadata::slip44_id(package)?,
         reserved2: [0; 2],
     };
 
@@ -178,8 +175,8 @@ fn hash_payload(payload: &[u8], chunk_size: usize) -> [u8; 32] {
         .rev()
         .fold([0u8; 32], |prev_hash, chunk| {
             let mut hasher = sha2::Sha256::new();
-            hasher.update(chunk);
             hasher.update(prev_hash);
+            hasher.update(chunk);
             hasher.finalize().into()
         })
 }
@@ -190,8 +187,8 @@ mod tests {
 
     fn sha256_of(chunk: &[u8], prev_hash: [u8; 32]) -> [u8; 32] {
         let mut hasher = sha2::Sha256::new();
-        hasher.update(chunk);
         hasher.update(prev_hash);
+        hasher.update(chunk);
         hasher.finalize().into()
     }
 
