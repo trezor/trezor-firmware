@@ -56,7 +56,7 @@ PATCH_XTASK_BOOTLOADER_QA = """
  endif
 """
 
-# Before dadff32f390c062ec554794d1fc5aa89a068fe30 SCons didn't know T2B1 and T2T1
+# Before dadff32f390c062ec554794d1fc5aa89a068fe30 SCons didn't know T2B1 and T2T1.
 PATCH_INTERNAL_MODELS = """
 --- a/core/Makefile
 +++ b/core/Makefile
@@ -74,6 +74,21 @@ PATCH_INTERNAL_MODELS = """
  BUILD_DIR             = build
  BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
  BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
+"""
+
+# Used by --skip-wipe.
+PATCH_NO_WIPE = """
+--- a/core/src/boot.py
++++ b/core/src/boot.py
+@@ -158,8 +158,5 @@ translations.init()
+ if utils.USE_POWER_MANAGER:
+     lock_manager.boot()
+
+-if __debug__ and not utils.EMULATOR:
+-    config.wipe()
+-
+ loop.schedule(bootscreen())
+ loop.run()
 """
 
 
@@ -294,6 +309,7 @@ class Config:
         bootloader_options: str,
         firmware_options: str,
         keep_elf: bool,
+        skip_wipe: bool,
     ) -> None:
         self.releases = releases
         self.model = guess_model(releases)
@@ -308,6 +324,7 @@ class Config:
         self.bootloader_options = bootloader_options
         self.firmware_options = firmware_options
         self.keep_elf = keep_elf
+        self.skip_wipe = skip_wipe
 
     def build_boardloader(
         self, version: str, options: str, bin_file: Path, log_file: Path
@@ -345,6 +362,8 @@ class Config:
         LOG.info(f"Rebuilding firmware {git_tag} with {options}")
         with log_commands(log_file), in_worktree(git_tag) as workdir:
             t = EnvInfo(self.model, workdir)
+            if self.skip_wipe:
+                t.add_patch("skip-wipe", PATCH_NO_WIPE)
             t.setup()
             for dest in t.bootloader_replace:
                 bootloader_bin.copy(dest)
@@ -504,6 +523,9 @@ class Config:
     help="Also keep .elf files for firmware",
     is_flag=True,
 )
+@click.option(
+    "--skip-wipe", help="Do not wipe storage on boot for PYOPT=0 builds.", is_flag=True
+)
 def main(
     output_dir: Path | str,
     releases_json: Path | str,
@@ -511,6 +533,7 @@ def main(
     bootloader_options: str,
     firmware_options: str,
     keep_elf: bool,
+    skip_wipe: bool,
 ) -> None:
     """
     Rebuild all released firmware versions and bootloaders. You must provide releases.json file
@@ -532,6 +555,7 @@ def main(
         bootloader_options,
         firmware_options,
         keep_elf,
+        skip_wipe,
     )
 
     boardloader_bin = config.rebuild_boardloader()
