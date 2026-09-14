@@ -123,7 +123,7 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
         return UPLOAD_IN_PROGRESS;
       }
 
-      // The prefetch already delivered the whole image 
+      // The prefetch already delivered the whole image
       e->read_offset = 0;
       e->chunk_requested = 0;
     } else {
@@ -274,7 +274,7 @@ workflow_result_t run_image_upload(protob_io_t *iface,
   e.remaining = image_size;
   e.image_total = image_size;
   if ((e.remaining >= IMAGE_INIT_CHUNK_SIZE) &&
-      ((e.remaining % sizeof(uint32_t)) == 0) &&
+      ((e.remaining % FLASH_BLOCK_SIZE) == 0) &&
       (e.remaining <= handler->max_size)) {
     // clear chunk buffer
     memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
