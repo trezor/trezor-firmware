@@ -19,6 +19,19 @@ HEADER_SIZE=
 SLOT_ADDR=
 SLOT_SIZE=
 MODEL_IDENTIFIER=
+# Monotonic counter slots in the NSIB provision page (nRF54L only). Each raise of
+# the release's monotonic_version consumes ONE slot, permanently -- they are
+# write-once and there is no erase short of ERASEALL. Must be even (provision.py
+# asserts it). 240 is NCS's default: one update a month for ten years, doubled. The
+# practical ceiling on the axis is lower anyway -- the STM's monoctr caps at 63.
+#
+# This is the authoritative value: bl_storage reads num_counter_slots back out of
+# the provisioned page at runtime. MCUboot's Kconfig symbol of the same name
+# (CONFIG_MCUBOOT_HW_DOWNGRADE_PREVENTION_COUNTER_SLOTS, also 240) is consumed only
+# by NCS's provision_hex.cmake, which we bypass -- so the two are not a pair that
+# can drift, and matching them is cosmetic rather than required.
+MCUBOOT_COUNTER_SLOTS=240
+
 # MCUboot child-image Kconfig fragments (names under <app>/sysbuild/), assembled
 # from -d/-p and then extended per board -- see the BOARD block.
 MCUBOOT_CONFS=
@@ -336,6 +349,7 @@ if [ -n "$BOARD" ]; then
     # it must not live in the shared sysbuild.conf - assigning it on nRF52832 /
     # NCS 2.9 aborts the build with an "undefined symbol" Kconfig warning.
     SB_OVERLAY=
+    MCUBOOT_DTS=
     case "$BOARD" in
         t3t2_dk*)
             SB_OVERLAY="-DSB_EXTRA_CONF_FILE=$PWD/$APP_DIR/sysbuild_nrf54l.conf"
@@ -344,6 +358,16 @@ if [ -n "$BOARD" ]; then
             # revision, and assigning an undefined symbol aborts the Kconfig run.
             # T3W1 stays on 2.9 (certification) with the legacy signing scheme.
             MCUBOOT_CONFS="${MCUBOOT_CONFS:-mcuboot.conf};mcuboot_t3t2.conf"
+            # NSIB's bl_storage node, which NCS does not define for nRF54LS05B
+            # (see the overlay for why, and why a newer NCS does not fix it).
+            # EXTRA_ rather than plain DTC_OVERLAY_FILE so this APPENDS -- the
+            # plain form replaces the auto-detected board overlays.
+            #
+            # Deliberately a FLAT file beside the .conf fragments, not
+            # sysbuild/mcuboot/boards/<board>.overlay: sysbuild treats a
+            # sysbuild/<image-name>/ directory as that image's application config
+            # dir and then fails for want of a prj.conf in it.
+            MCUBOOT_DTS="-Dmcuboot_EXTRA_DTC_OVERLAY_FILE=$PWD/$APP_DIR/sysbuild/mcuboot_t3t2.overlay"
             ;;
     esac
 
@@ -461,6 +485,13 @@ stage_for_signing() {
         #                      computing the leaf. Keeping it out of the build is what
         #                      makes founder key rotation a re-sign, not a rebuild.
         #   0x00A3 model id -- pins the image to this model
+        # -s 0 emits the PROTECTED security-counter TLV (0x50) as a placeholder for
+        # the same reason: the signer stamps the STM boot header's monotonic_version
+        # into it, so the nRF enforces the SAME anti-rollback axis as the STM rather
+        # than a second, independent counter. It must exist here (imgtool owns the
+        # protected-area layout, and the leaf covers that area) for the signer to
+        # fill -- but its VALUE must not come from this build, or the two sides
+        # could disagree.
         run_native \
             "imgtool sign --version $VERSION --align 4 --header-size $HEADER_SIZE -S $SLOT_SIZE --pad-header -s 0 build/$APP_DIR/zephyr/zephyr_nohdr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x00 --custom-tlv 0x00A3 $MODEL_IDENTIFIER && \
              ../bootloader/mcuboot/scripts/imgtool.py dumpinfo ./build/$APP_DIR/zephyr/zephyr.prep.bin > ./build/$APP_DIR/zephyr/dump.txt"
@@ -512,6 +543,33 @@ TREE_OPTS=\"--nrf-pq-native\") && $0 -b <board> -d -s -f -i"
         fi
     fi
 
+    # NSIB provision page: the monotonic counter slots MCUboot's rollback
+    # protection reads (CONFIG_BOOT_PQ_ROLLBACK_PROT -> bl_storage).
+    #
+    # Generated here rather than by NCS's provision_hex.cmake, which cannot do it
+    # for this configuration: with SB_CONFIG_PARTITION_MANAGER=n it resolves
+    # s0_partition/s1_partition as REQUIRED *before* considering the mcuboot-only
+    # case, so it fails with "Unable to find a node with label: s0_partition" on a
+    # layout that has no NSIB/B0 slots. provision.py itself supports us directly --
+    # --mcuboot-only exists precisely for "MCUboot is present, but NSIB is not",
+    # and makes --s0-addr optional.
+    #
+    # Address/size mirror the bl_storage node in sysbuild/mcuboot_t3t2.overlay
+    # (UICR 0xffd000 + 0x500, length 0x460). Keep the three in step.
+    # otp-write-width 4 because nRF54L writes OTP in words, not half-words
+    # (provision_hex.cmake makes the same distinction).
+    PROVISION_HEX=
+    case "$BOARD" in
+        t3t2_dk*)
+            run_native \
+                "python ../nrf/scripts/bootloader/provision.py --mcuboot-only \
+                   --provision-addr 0xffd500 --max-size 0x460 \
+                   --mcuboot-counters-slots $MCUBOOT_COUNTER_SLOTS --otp-write-width 4 \
+                   -o build/provision.hex"
+            PROVISION_HEX="build/provision.hex"
+            echo "provision page: $MCUBOOT_COUNTER_SLOTS counter slots at 0xffd500"
+            ;;
+    esac
 
     run_native \
         "python -c \"from intelhex import IntelHex; ih = IntelHex(); ih.loadbin('build/$APP_DIR/zephyr/zephyr.trz.bin', offset=$SLOT_ADDR); ih.tofile('build/$APP_DIR/zephyr/zephyr.trz.hex', format='hex')\" && \

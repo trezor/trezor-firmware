@@ -93,6 +93,11 @@ static void put32(uint32_t off, uint32_t v) {
  * are left zeroed here: they live in the UNPROTECTED area, outside the image hash,
  * so they do not affect the leaf -- which is exactly what makes signing possible at
  * all (otherwise the signature would have to cover itself). */
+/* -1 => omit the security-counter TLV entirely */
+static long g_sec_cnt = -1;
+/* absolute offset of the counter value in `image`, 0 when omitted */
+static size_t off_sec_cnt = 0;
+
 static void build_image(uint8_t sigmask) {
   memset(image, 0, sizeof(image));
 
