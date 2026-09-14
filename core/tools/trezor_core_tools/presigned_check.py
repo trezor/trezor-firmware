@@ -56,6 +56,7 @@ from trezorlib.firmware import pq_secure
 from trezorlib.firmware.core import BootableImage
 from trezorlib.merkle_tree import evaluate_proof
 
+from . import firmware_module
 from .common import MODELS_DIR
 
 # A key set: the suffix its committed artifacts carry, and whether signatures
@@ -122,6 +123,10 @@ def load_bundle(path: Path) -> dict[str, dict[str, Any]]:
     raised, so one unreadable key set does not abandon the other.
     """
     raw = json.loads(path.read_text())
+    try:
+        return firmware_module.container_models(raw, path)
+    except SystemExit as e:
+        raise Mismatch(str(e)) from e
 
 
 def _custom_entry(body: dict[str, Any], model: str) -> dict[str, Any]:
@@ -288,6 +293,8 @@ def check_model(
         )
 
     # 5. the nRF image, under the same signed modelRoot. Addressed by its
+    #    (kind, index) slot -- the routing tuple, not an authority claim.
+    nrf = firmware_module.container_coprocessor(body, "nrf", 0)
     if not nrf:
         out.append("    SKIP  nRF: no nRF co-processor entry for this model")
         return out
@@ -296,6 +303,13 @@ def check_model(
             f"the nRF entry names modelRoot {_short(nrf['model_root'])}, but the "
             f"bootloader signs {_short(model_root)}"
         )
+    # The image's own TLV vs the model the bootloader is signed for. Both are
+    # recorded, so disagreement is visible here rather than at install time.
+    if nrf.get("image_model_id") not in (None, model):
+        raise Mismatch(
+            f"the nRF entry under {model} names image_model_id {nrf['image_model_id']}"
+        )
+    nrf_path = nrf_dir / nrf["file"]
     if not nrf_path.is_file():
         out.append(f"    SKIP  nRF: {nrf['file']} not found beside the set")
         return out
@@ -345,6 +359,8 @@ def run(key_set: str, release_dir: Path | None, only: str | None) -> tuple[bool,
             continue
         print(f"  {model}")
         if release_dir is not None:
+            # The container names its own bootloader, so this stops assuming.
+            bl_path = release_dir / models[model]["bootloader"]["file"]
             nrf_dir = release_dir
         else:
             suffix = KEY_SETS[key_set]["suffix"]
@@ -391,6 +407,9 @@ def main() -> int:
         return 0
 
     if args.from_release is not None:
+        # Runs BEFORE any container is read, so it uses the writer's name.
+        bl_name = firmware_module.CONTAINER_DEFAULT_BOOTLOADER
+        detected = detect_key_set(args.from_release / bl_name)
         if detected is None:
             print(f"{args.from_release}/{bl_name} verifies with neither key set")
             return 1

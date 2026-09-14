@@ -36,6 +36,13 @@ from trezorlib._internal import firmware_headers
 # required"; it is NOT a trust input (authenticity is the co-path fold).
 MCUBOOT_TLV_SHA256 = 0x10
 
+# Which key slots sign a release. This is `sigmask`, and it is AUTHENTICATED --
+# inside the digest -- so it has to be fixed while the release is prepared,
+# before any leaf is computed, even though preparing holds no keys. A ceremony
+# declares its own selection; development signing uses slots 0 and 1, matching
+# `BootloaderV2Image.sign_with_devkeys`.
+DEV_SIGMASK = (1 << 0) | (1 << 1)
+
 
 def _variant_info(firmware: Path) -> dict:
     fw = bytearray(firmware.read_bytes())
@@ -86,6 +93,8 @@ def sign_firmware_images(
     bootloader: Path,
     nrf: Path | None = None,
     nrf_pq_native: bool = False,
+    sign: bool = True,
+    sigmask: int = DEV_SIGMASK,
 ) -> tuple[list[dict], bytes, firmware_headers.BootloaderV2Image, dict | None]:
     """Fill each variant's manifest code_hashes (at the template chunk_size),
     compute the founder firmware_root over all variants, sign the bootloader, and
@@ -120,11 +129,28 @@ def sign_firmware_images(
     # field), THEN sign. The model leaf commits the whole authenticated header, so
     # firmware_root must be set before the leaf is read.
     bl = firmware_headers.BootloaderV2Image.parse(bootloader.read_bytes())
+    # Drop any signature the input already carried. The committed bootloader a
+    # release folds is itself signed, and setting firmware_root below changes
+    # the digest -- so keeping those bytes would leave the release carrying a
+    # signature over something else. Zeroing makes "unsigned" the honest state
+    # until this release is actually signed; the signing path overwrites them
+    # immediately anyway.
+    for idx in range(len(bl.unauth.slh_signatures)):
+        bl.unauth.slh_signatures[idx] = b"\x00" * len(bl.unauth.slh_signatures[idx])
+    for idx in range(len(bl.unauth.ec_signatures)):
+        bl.unauth.ec_signatures[idx] = b"\x00" * len(bl.unauth.ec_signatures[idx])
     bl.header.firmware_root = firmware_root
+    # sigmask FIRST, before anything is hashed. It is inside the authenticated
+    # header, so a later change would invalidate every leaf computed from it --
+    # which is why the nRF path used to need a defensive check that signing had
+    # not moved it. Setting it here removes that hazard rather than detecting it.
+    bl.header.sigmask = sigmask
 
     nrf_info: dict | None = None
     if nrf is None:
         # Single-leaf signing: empty model path, modelRoot == model leaf.
+        if sign:
+            bl.sign_with_devkeys()
     else:
         # Model-tree signing: nRF image is a peer leaf under modelRoot.
         nrf_image = nrf.read_bytes()
@@ -161,6 +187,8 @@ def sign_firmware_images(
         )
         nrf_tree.place_bootloader_in_tree(bl, model_proofs[0])  # co-path, no sign
         assert bl.merkle_root() == model_root, "boot-header fold != modelRoot"
+        if sign:
+            bl.sign_with_devkeys()
 
         if nrf_pq_native and sign:
             # The founder signature over modelRoot covers the nRF leaf too, so the
@@ -190,6 +218,13 @@ def sign_firmware_images(
                 list(bl.unauth.ec_signatures),
                 model_proofs[1],
             )
+        if nrf_pq_native:
+            # Written whether or not it was signed. The placeholders changed the
+            # image, and its hash and leaf are computed from THAT -- so an
+            # unsigned release must carry the placeholder image on disk or the
+            # recorded hash would describe a file nobody has. Filling later
+            # replaces values in reserved space, so the length does not move.
+            #
             # Re-pad for the OTA engine's flash-aligned size requirement (padding is
             # outside the leaf and past tlv_end, so it affects neither check).
             nrf_image += b"\x00" * ((-len(nrf_image)) % 16)
@@ -209,6 +244,155 @@ def sign_firmware_images(
     bootloader.write_bytes(bl.build())
 
     return variants, firmware_root, bl, nrf_info
+
+
+def finalize_bare_bootloader(
+    bl: firmware_headers.BootloaderV2Image, bootloader: Path
+) -> tuple[int, int]:
+    """Leave firmware_type BARE and report where it sits. Shared by every
+    path that finishes a bootloader, so the probe exists once.
+    """
+    # firmware_type is the PROVISIONING marker: 0 means the device reads as
+    # unprovisioned, and whoever installs the firmware writes the variant into
+    # it -- the bootloader when installing over the wire, `xtask flash` when
+    # flashing with a debugger. A release is therefore always signed BARE, and
+    # zeroed explicitly so re-signing an already-stamped bootloader is bare too.
+    #
+    # The field is unauthenticated, so stamping it later needs no key and does
+    # not disturb the signature. To let a tool find it without duplicating the
+    # header layout, locate it by probe: flip the byte, diff, and the single
+    # differing offset IS the field. Self-verifying, and immune to layout drift.
+    bare_value = firmware_module.FW_VARIANT_SEC_NONE
+    bl.unauth.firmware_type = bare_value
+    bare = bl.build()
+    # Flip to the COMPLEMENT rather than to 0xFF: that guarantees all four bytes
+    # differ whatever the codeword is, so the single contiguous run of differing
+    # bytes IS the field.
+    bl.unauth.firmware_type = bare_value ^ 0xFFFFFFFF
+    probe = bl.build()
+    bl.unauth.firmware_type = bare_value
+    differing = [i for i in range(len(bare)) if bare[i] != probe[i]]
+    if len(differing) != 4 or differing != list(range(differing[0], differing[0] + 4)):
+        raise SystemExit(
+            f"firmware_type is not 4 contiguous bytes of the built header "
+            f"({len(differing)} bytes differ) -- the probe cannot locate it"
+        )
+    firmware_type_offset = differing[0]
+    bootloader.write_bytes(bare)
+    print(
+        f"bootloader firmware_type left BARE (NONE) at offset "
+        f"{firmware_type_offset}, 4 bytes"
+        " -> stamped by whoever installs it"
+    )
+    return firmware_type_offset, bare_value
+
+
+def build_bundle(
+    variants: list[dict],
+    firmware_root: bytes,
+    bl: firmware_headers.BootloaderV2Image,
+    nrf_info: dict | None,
+    firmware_type_offset: int,
+    bare_value: int,
+    bootloader: Path,
+) -> dict:
+    """The release container (see firmware_module.CONTAINER_MAGIC)."""
+    bundle = {
+        # Self-description, so a reader can tell what it is holding before
+        # trusting any field in it. TRZL is the token reserved for the
+        # release container generally -- a future single-file container
+        # uses the same four bytes as its binary magic, so the concept has
+        # ONE name across both formats.
+        "format": firmware_module.CONTAINER_MAGIC,
+        "format_version": firmware_module.CONTAINER_VERSION,
+        # From the signed boot header, not from a flag: a manifest cannot
+        # claim a model the signature does not cover.
+        "model": firmware_module.boot_header_model_id(bl.header),
+        "firmware_root": firmware_root.hex(),
+        "bootloader": {
+            "file": bootloader.name,
+            "signed_root": bl.merkle_root().hex(),
+            # What a ceremony signs over, in a form it can re-derive: the
+            # digest of the bootloader CODE (the extent the signed leaf
+            # commits to) and which founder key pool that code trusts. Both
+            # are read back out of the .bin beside this file, so they are a
+            # RECORD of the artifact, not a claim about it -- re-run
+            # bootloader_provenance.py on the binary and the values must
+            # match.
+            #
+            # The pool is the one property no signature can carry: it is a
+            # compile-time choice (BOOTLOADER_DEVEL) that leaves no trace in
+            # the header, so without writing it down a ceremony signing a
+            # modelRoot has no way to tell whether the code it is vouching
+            # for trusts production keys or the development ones whose
+            # private halves are in this repository.
+            "code_sha256": bootloader_provenance.code_digest(
+                bootloader.read_bytes()
+            ),
+            "founder_pool": bootloader_provenance.detect_pool(
+                bootloader.read_bytes()
+            ),
+            # Where the field sits in that file and how wide it is, so a
+            # stamping tool needs no boot-header layout knowledge of its
+            # own -- the signer locates it by probing its own build. Grouped
+            # under the bootloader because that is the binary it describes.
+            "firmware_type": {
+                "offset": firmware_type_offset,
+                "len": 4,
+                # The value a bare release carries, so a stamping tool can
+                # check it is stamping an UNstamped bootloader without
+                # knowing the codewords.
+                "bare": bare_value,
+            },
+        },
+        "variants": [
+            {
+                # The variant's canonical NAME, taken from the codeword its
+                # folded manifest carries. Readers used to recover this by
+                # stripping ".bin" off the filename, which made a release
+                # writer's naming choice into an identity claim.
+                "variant": firmware_module.FW_VARIANT_NAME[v["variant"]],
+                "file": v["path"].name,
+                "leaf": v["leaf"].hex(),
+                "proof": [n.hex() for n in v["proof"]],
+                # What the bootloader's firmware_type must hold for the
+                # device to boot THIS variant. The bootloader writes it
+                # when installing over the wire; a debugger flash has to
+                # stamp it, which is why the release records it.
+                "firmware_type": v["variant"],
+                **_authenticity_manifest_field(v),
+            }
+            for v in variants
+        ],
+        # An ARRAY, and each entry names its (kind, index) slot -- the same
+        # tuple D18 binds into the co-processor leaf. This is ROUTING data:
+        # it says which payload belongs in which slot so a host with more
+        # than one can tell them apart. It is NOT authority. Every verifier
+        # takes kind and index from its OWN build configuration, never from
+        # here, or the binding would be the host's to forge.
+        "coprocessors": [],
+    }
+    if nrf_info is not None:
+        # What the OTA client feeds to FirmwareBegin (nrf_co_path /
+        # nrf_length / nrf_image_hash); model_root is the signed modelRoot
+        # for reference.
+        bundle["coprocessors"].append(
+            {
+                "kind": "nrf",
+                "index": 0,
+                "file": nrf_info["image_name"],
+                # Read out of the image's own TLV, so it records what the
+                # signer signed rather than what the release claims. Kept
+                # beside the top-level `model` on purpose: the two agreeing
+                # is a cross-check, and nrf_tree asserts it at sign time.
+                "image_model_id": nrf_info["model_id"].decode(errors="replace"),
+                "length": nrf_info["length"],
+                "image_hash": nrf_info["image_hash"].hex(),
+                "co_path": [n.hex() for n in nrf_info["co_path"]],
+                "model_root": nrf_info["model_root"].hex(),
+            }
+        )
+    return bundle
 
 
 def _short(b: bytes) -> str:
@@ -249,6 +433,14 @@ def main() -> None:
         "check. Requires an nRF bootloader built with that option, and the image's "
         "protected sigmask TLV must name the signing founder keys.",
     )
+    ap.add_argument(
+        "--unsigned",
+        action="store_true",
+        help="PREPARE only: fold everything and leave the signature region "
+        "zero, so the release can be signed as a whole afterwards (the order a "
+        "founder ceremony runs in). The container records the modelRoot to be "
+        "signed, so it IS the signing request.",
+    )
     ap.add_argument("--manifest-out", type=Path)
     ap.add_argument(
         "--zip-out",
@@ -263,6 +455,11 @@ def main() -> None:
     args = ap.parse_args()
 
     variants, firmware_root, bl, nrf_info = sign_firmware_images(
+        args.firmware,
+        args.bootloader,
+        args.nrf,
+        args.nrf_pq_native,
+        sign=not args.unsigned,
     )
 
     single = len(variants) == 1
@@ -292,6 +489,7 @@ def main() -> None:
         )
         print("  committed under the ONE boot-header signature (modelRoot leaf)")
 
+    firmware_type_offset, bare_value = finalize_bare_bootloader(bl, args.bootloader)
 
     print(
         f"bootloader     : signed root {bl.merkle_root().hex()[:12]}, "
@@ -301,6 +499,21 @@ def main() -> None:
     if args.vector_out:
         args.vector_out.write_bytes(variants[0]["manifest"])
     if args.manifest_out:
+        args.manifest_out.write_text(
+            json.dumps(
+                build_bundle(
+                    variants,
+                    firmware_root,
+                    bl,
+                    nrf_info,
+                    firmware_type_offset,
+                    bare_value,
+                    args.bootloader,
+                ),
+                indent=2,
+            )
+            + "\n"
+        )
 
     if args.zip_out is not None:
         # A flat archive of the release: the bootloader, each variant, the
@@ -317,10 +530,35 @@ def main() -> None:
         if nrf_info is not None:
             members.append(args.bootloader.parent / nrf_info["image_name"])
         args.zip_out.parent.mkdir(parents=True, exist_ok=True)
+        # DETERMINISTIC: two runs over identical inputs must produce identical
+        # archive bytes, so the container can be digested and that digest
+        # published. `ZipFile.write` defeats this -- it stamps each member's
+        # mtime -- so members are written through an explicit ZipInfo with a
+        # fixed timestamp and mode, in sorted order. (The natural order is
+        # already stable, but sorting means it cannot come to depend on the
+        # caller's argument order.)
         with zipfile.ZipFile(args.zip_out, "w", zipfile.ZIP_DEFLATED) as zf:
+            for f in sorted((f for f in members if f.exists()), key=lambda p: p.name):
+                info = zipfile.ZipInfo(f.name, date_time=(1980, 1, 1, 0, 0, 0))
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.external_attr = 0o644 << 16
+                zf.writestr(info, f.read_bytes())
         print(f"zip            : {args.zip_out}")
 
     print("\nverification:")
+    if args.unsigned:
+        # Nothing to verify yet, and saying so beats printing a failure: the
+        # signature region is deliberately zero. What IS checkable is that the
+        # thing to be signed is settled.
+        assert not bl.signature_present(), "an unsigned release carries no signature"
+        print(f"  UNSIGNED -- modelRoot to sign: {bl.merkle_root().hex()}")
+        print(f"  sigmask committed            : 0x{bl.header.sigmask:02x}")
+    else:
+        try:
+            bl.verify(dev_keys=True)
+            print("  bootloader signature (covers firmware_root)  OK")
+        except Exception as e:  # noqa: BLE001
+            print(f"  bootloader signature FAILED: {e}")
     assert bytes(bl.header.firmware_root) == firmware_root
     print("  every variant leaf folds to firmware_root  OK")
 

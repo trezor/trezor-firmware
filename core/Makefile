@@ -292,10 +292,13 @@ upload_pq_test: ## [test] drive the PQ OTA harness, incl. --tamper fault injecti
 	# rejection. Separate because trezorctl deliberately cannot do this: fault
 	# injection must not ship in a library. Build a release first
 	# (`xtask release -m $(TREZOR_MODEL) --bootloader-devel`) or just build one,
+	# then e.g. -- this installs the SAME set `xtask flash`/`upload` do, so a
+	# tamper case exercises what a real install would carry:
 	#   make upload_pq_test UPLOAD_OPTS="--tamper consent-mismatch"
 	#   make upload_pq_test VARIANT=custom UPLOAD_OPTS="--tamper custom-app-size"
 	python tools/trezor_core_tools/firmware_pq_update.py \
 		--bundle build-xtask/artifacts/$(TREZOR_MODEL)/install.zip \
+		--variant $(VARIANT) $(UPLOAD_OPTS)
 
 build_unix: ## build unix port
 	xtask build firmware --emulator $(XTASK_BUILD_OPTS) --pyopt=false

@@ -57,6 +57,98 @@ VARIANT_NAMES = {
     5: "CA",
 }
 
+# --- Release container ('bundle.json') ---------------------------------------
+#
+# The container describes a signed release: which variants it holds, what each
+# folds to, and where the bootloader's firmware_type field lives. It carries NO
+# signature of its own and needs none -- the boot-header signature is the trust
+# root and the device pins the stamped firmware_type to the authenticated
+# manifest variant, so a tampered container is a fail-closed DoS, never a
+# forgery. Treat every field here as routing and diagnostics, not authority.
+#
+# TRZL is the token reserved for the release container across formats; a future
+# single-file container uses the same four bytes as its binary magic.
+CONTAINER_MAGIC = "TRZL"
+# Bump on ANY incompatible change; readers reject what they do not know rather
+# than guessing, which is the entire reason the field exists.
+CONTAINER_VERSION = 1
+# The cross-model set that `xtask release --promote` commits: the same per-model
+# bodies, keyed by model. A distinct shape, so it identifies itself distinctly --
+# handing one to a reader expecting the other should say so, not fail later on a
+# missing field.
+CONTAINER_SET_MAGIC = f"{CONTAINER_MAGIC}-set"
+# The name the release writer gives the bootloader inside a release. Anything
+# holding a container takes the name from `bootloader.file` instead; this is for
+# the writer, and for probes that run BEFORE a container has been read.
+CONTAINER_DEFAULT_BOOTLOADER = "bootloader.bin"
+
+
+def check_container(doc: dict, path, *, is_set: bool = False) -> dict:
+    """Reject a release container this code does not speak, and return it.
+
+    Version FIRST, before any field is read: a container cut by an older tool
+    should be refused by version, not diagnosed one absent field at a time.
+    """
+    want = CONTAINER_SET_MAGIC if is_set else CONTAINER_MAGIC
+    got = doc.get("format")
+    if got is None:
+        raise SystemExit(
+            f"{path} has no `format` -- it predates the versioned release "
+            f"container, rebuild or re-promote it"
+        )
+    if got != want:
+        raise SystemExit(f"{path}: format is {got!r}, expected {want!r}")
+    version = doc.get("format_version")
+    if version != CONTAINER_VERSION:
+        raise SystemExit(
+            f"{path} is container v{version}, but this tool speaks "
+            f"v{CONTAINER_VERSION} -- rebuild or re-promote it"
+        )
+    return doc
+
+
+def container_models(doc: dict, path) -> dict[str, dict]:
+    """Read a container as ``{model: body}``, accepting either shape.
+
+    A per-model body names its own model now, so the single-model case no longer
+    has to guess it from the nRF block -- which was silently unavailable for a
+    model with no co-processor, and which a presigned build dropped entirely.
+    """
+    if "models" in doc:
+        check_container(doc, path, is_set=True)
+        out = {}
+        for model, body in doc["models"].items():
+            check_container(body, f"{path} [{model}]")
+            # The key and the body must name the same model. They come from one
+            # cut so they cannot drift, which is exactly why a disagreement
+            # means the set was assembled wrong rather than merely stale.
+            if body.get("model") != model:
+                raise SystemExit(
+                    f"{path}: the entry filed under {model} names model "
+                    f"{body.get('model')!r}"
+                )
+            out[model] = body
+        return out
+    check_container(doc, path)
+    model = doc.get("model")
+    if not model:
+        raise SystemExit(f"{path} is a single-model container but names no model")
+    return {model: doc}
+
+
+def container_coprocessor(body: dict, kind: str = "nrf", index: int = 0) -> dict | None:
+    """One co-processor entry by its (kind, index) slot, or None.
+
+    Slot addressing is ROUTING only -- it says which payload goes where. The
+    device takes kind and index from its own build configuration, never from
+    here; see the co-processor slot binding in sec/boot_header.h.
+    """
+    for entry in body.get("coprocessors", []):
+        if entry.get("kind") == kind and entry.get("index", 0) == index:
+            return entry
+    return None
+
+
 # Firmware variants (fw_variant_t, sec/boot_header.h) == vendor_fw_type_t.
 FW_VARIANT_NONE = 0
 FW_VARIANT_CUSTOM = 1
@@ -87,6 +179,23 @@ FW_VARIANT_SEC = {
     FW_VARIANT_PRODTEST: FW_VARIANT_SEC_PRODTEST,
 }
 
+# The canonical name of each variant, keyed by the codeword its manifest
+# carries. Must match Variant::name() in xtask's pq.rs, which is the other
+# half of this contract: the release manifest records the name from HERE, and
+# xtask parses it back with Variant::from_name.
+#
+# Keyed by the codeword rather than by filename because the codeword is
+# authenticated -- it is read out of the folded manifest -- while a filename is
+# just what the release writer happened to call the file. That is the whole
+# point of recording a typed variant: readers stop inferring identity from a
+# name they cannot verify.
+FW_VARIANT_NAME = {
+    FW_VARIANT_SEC_CUSTOM: "custom",
+    FW_VARIANT_SEC_UNIVERSAL: "universal",
+    FW_VARIANT_SEC_BITCOIN_ONLY: "btc-only",
+    FW_VARIANT_SEC_PRODTEST: "prodtest",
+}
+
 # Module types (fw_module_type_t, sec/boot_header.h). APP is the non-secure
 # application (kernel+coreapp); PRODTEST is a standalone secure factory-test image.
 FW_MODULE_SECMON = 1
@@ -107,6 +216,23 @@ def _model_str(hw_model: int) -> str:
     raw = hw_model.to_bytes(4, "little")
     text = raw.decode("ascii", "replace").rstrip("\x00")
     return text if text.isprintable() else f"0x{hw_model:08x}"
+
+
+def boot_header_model_id(header) -> str:
+    """The model id from a parsed boot header's AUTHENTICATED hw_model.
+
+    Taken from the header rather than passed in, so a release manifest cannot
+    claim a model the signature does not cover -- the same reason the manifest
+    records the variant codeword rather than a filename.
+
+    Handles all three shapes `hw_model` parses into across the tools: a raw u32,
+    a `Model` enum (whose `.value` is the 4 bytes), or the bytes themselves.
+    """
+    hw = header.hw_model
+    if isinstance(hw, int):
+        return _model_str(hw)
+    raw = hw if isinstance(hw, bytes) else bytes(hw.value)
+    return raw.decode("ascii", "replace").rstrip("\x00")
 
 
 # --- Variant manifest ("firmware directory") ---------------------------------

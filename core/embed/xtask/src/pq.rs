@@ -142,7 +142,84 @@ pub fn release_dir(model: Model) -> Result<PathBuf> {
     Ok(build_dir.join("tree").join(model.model_id()))
 }
 
+/// The release container's magic and the version of its layout.
+///
+/// `TRZL` is the token reserved for the release container across formats -- a
+/// future single-file container uses the same four bytes as its binary magic.
+/// Kept here as well as in the signer because xtask and the signer are separate
+/// programs; the container is the contract between them, so each states what it
+/// expects rather than importing it from the other.
+const CONTAINER_MAGIC: &str = "TRZL";
+const CONTAINER_VERSION: u64 = 1;
+
+/// The name the release writer gives the bootloader inside a release.
+///
+/// Manifest-driven readers take the name from `bootloader.file` instead; this
+/// exists for the writer, and for the one probe that deliberately runs WITHOUT
+/// a manifest (a bare bootloader install, which needs no release at all).
+const DEFAULT_BOOTLOADER_FILE: &str = "bootloader.bin";
+
+/// Where a build assembles what it signs.
+///
+/// A plain `xtask build` has no use for a release directory: it produces ONE
+/// variant, and what it produces is installed from `artifacts/` like every
+/// other build output. Copying it into `tree/` first, signing there and copying
+/// the result back is scaffolding -- and it wrote `tree/<MODEL>.zip`, the file
+/// `xtask release` also overwrites, which made "did my build reach the device?"
+/// depend on which command wrote it last.
+///
+/// So a build signs IN PLACE, and `tree/` belongs to `xtask release` alone: a
+/// cut release, with per-model subtrees and the containers packed from them.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Dest {
+    /// `build/artifacts/<MODEL>/` -- the canonical install set.
+    Artifacts,
+    /// `build/tree/<MODEL>/` -- a release being cut.
+    Release,
+}
+
+/// Whether a release is signed as it is built, or prepared to be signed later.
+///
+/// A ceremony cannot run inside a build: the founder key is not there. So the
+/// release flow is three stages -- prepare everything, sign the whole thing,
+/// attach the signatures -- and this says which of the first two a given call
+/// performs. Standalone `xtask build firmware` still signs inline, because a
+/// developer wants one command and holds the development keys.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum SignStage {
+    /// Fold and sign in one step, with development keys.
+    Inline,
+    /// Fold only; leave the signature region zero for a later `attach`.
+    PrepareOnly,
+}
+
+/// The publishable, cross-model release container.
+///
+/// Deliberately model-free: a release covers every model, so naming it after
+/// one would misdescribe it. The models live in subtrees inside.
+///
+/// `release.zip` for production keys, `release-devel.zip` for development ones,
+/// so two cuts cannot share a filename and overwrite each other. **The packer
+/// picks the name, not xtask**: the key set is a property of the SIGNATURES in
+/// `bootloader.bin`, and xtask cannot verify them. Naming it here from
+/// `--bootloader-devel` instead would be naming it from intent rather than
+/// fact, and the two diverge today -- signing is always done with development
+/// keys, so a cut without that flag would take the production name while
+/// carrying devel signatures.
+
+/// One variant of a release, as the container records it.
+struct VariantEntry {
+    variant: Variant,
+    firmware_type: u32,
+    file: String,
+}
+
 /// What a signed release records about itself, read from its `bundle.json`.
+///
+/// The container carries no signature and needs none: the boot-header signature
+/// is the trust root, and the device pins the stamped `firmware_type` to the
+/// authenticated manifest variant. So everything here is routing -- which file
+/// is which, and where a field sits -- never authority.
 pub struct ReleaseManifest {
     /// Which model this release is for, from the signer's reading of the SIGNED
     /// boot header. Recorded so a release directory is self-describing; the
@@ -537,6 +614,8 @@ pub fn build_release(
     args: &ResolvedBuildArgs,
     variants: &[Variant],
     bootloader: BootloaderSource,
+    sign: SignStage,
+    dest: Dest,
 ) -> Result<()> {
     // Checked before anything is built: signing is the last step, and finding
     // out then would waste four builds. Only an inline signature needs keys --
@@ -863,6 +942,267 @@ fn bundle_name(devel: bool) -> String {
     format!("bundle{suffix}.json")
 }
 
+/// Pack every released model into ONE publishable container.
+///
+/// The artifact carries no model in its name because a release is not a
+/// per-model thing: one source tag builds every model and the published set is
+/// the whole lot. The per-model `tree/<MODEL>.zip` stays as the thing a single
+/// device install consumes -- `xtask upload`, the OTA harness -- and this is
+/// what gets published.
+///
+/// Packed in Python for the same reason the signing step is there: it already
+/// owns archive writing, and xtask would otherwise take a zip dependency to do
+/// pure packaging.
+fn write_release_container(set_path: &Path, devel_build: bool) -> Result<()> {
+    let packer = helpers::workspace_dir()?
+        .join("../tools/trezor_core_tools/release_pack.py")
+        .canonicalize()
+        .context("Failed to locate release_pack.py")?;
+    let tree = helpers::build_dir()?.join("tree");
+    let tree = tree.canonicalize().unwrap_or(tree);
+    let status = process::Command::new("python3")
+        .arg(&packer)
+        .args(["--set".as_ref(), set_path.as_os_str()])
+        .args(["--tree".as_ref(), tree.as_os_str()])
+        .args(["--out-dir".as_ref(), tree.as_os_str()])
+        .args(if devel_build {
+            vec!["--devel-build"]
+        } else {
+            vec![]
+        })
+        .status()
+        .context("Failed to spawn release_pack.py")?;
+    ensure!(status.success(), "release_pack.py failed: {status}");
+    Ok(())
+}
+
+/// Copy a finished release's bootloader over the canonical build artifact.
+///
+/// Cutting a release does not rebuild the bootloader -- it folds
+/// `firmware_root` into an existing one and re-signs the header, leaving the
+/// code untouched -- so the result is strictly newer than what `xtask build
+/// bootloader` produced and belongs in the same place. That keeps ONE
+/// bootloader binary for `flash`/`upload` to use, instead of two that can
+/// disagree about which is current. (Same reasoning as promotion replacing the
+/// committed bootloader in place.)
+///
+/// Only ever called for a SIGNED release: an unsigned one must not become the
+/// flashable artifact, because the boardloader would refuse it and the failure
+/// would look like a broken device rather than an unfinished release.
+fn publish_images(
+    model: Model,
+    out: &Path,
+    variants: &[Variant],
+    release: &ReleaseManifest,
+) -> Result<()> {
+    // Each variant's SIGNED image replaces the template the build left behind,
+    // so the artifacts directory holds installable images rather than folds
+    // that verify against nothing.
+    //
+    // universal, btc-only and custom share the `firmware.bin` slot, so only one
+    // can occupy it. The FIRST in ALL_VARIANTS order wins, which makes it
+    // universal -- without this the slot kept whichever was built last (custom),
+    // and `xtask release` followed by `xtask flash firmware` would quietly
+    // install the unofficial variant.
+    let mut taken: Vec<&str> = Vec::new();
+    let mut published: Vec<(Variant, &str)> = Vec::new();
+    for variant in variants {
+        let slot = variant.artifact();
+        if taken.contains(&slot) {
+            continue;
+        }
+        taken.push(slot);
+        let src = out.join(release.firmware_file(*variant)?);
+        let dst = helpers::artifacts_dir(model)?.join(slot);
+        // Already in place when the build assembled there. Skipping is not an
+        // optimisation: `fs::copy` onto the same path TRUNCATES the file, so
+        // publishing over itself would destroy the image it means to publish.
+        if src != dst {
+            fs::copy(&src, &dst).with_context(|| {
+                format!("Failed to publish {} -> {}", src.display(), dst.display())
+            })?;
+            println!("xtask: {} published to {}", variant.name(), dst.display());
+        }
+        published.push((*variant, slot));
+    }
+    let src = out.join("bundle.json");
+    let text =
+        fs::read_to_string(&src).with_context(|| format!("Failed to read {}", src.display()))?;
+    let doc: serde_json::Value = serde_json::from_str(&text)
+        .with_context(|| format!("{} is not valid JSON", src.display()))?;
+    publish_manifest(model, doc, out, &published)
+}
+
+/// Publish the release's manifest, rewritten to describe what was PUBLISHED.
+///
+/// The artifacts directory is not the release: variants sharing a build slot
+/// cannot all be copied, and each image keeps its slot name rather than the
+/// release's. A manifest still listing the others would let an install pick a
+/// variant whose image is not there -- so it is filtered, and its filenames
+/// rewritten. The container recording `file` explicitly is what makes that
+/// possible.
+///
+/// `coprocessors` is KEPT, and their images published alongside: this set is
+/// the one canonical install source for BOTH paths, and the wire path installs
+/// the co-processor. Variant filtering does not affect their fold -- an nRF
+/// leaf hangs off the model tree of the same bootloader published here, so its
+/// recorded co-path still folds to the modelRoot that bootloader commits to.
+fn publish_manifest(
+    model: Model,
+    mut doc: serde_json::Value,
+    coproc_src: &Path,
+    published: &[(Variant, &str)],
+) -> Result<()> {
+    let keep: Vec<serde_json::Value> = doc
+        .get("variants")
+        .and_then(|v| v.as_array())
+        .context("release bundle has no variants")?
+        .iter()
+        .filter_map(|entry| {
+            let name = entry.get("variant").and_then(|v| v.as_str())?;
+            let slot = published
+                .iter()
+                .find(|(v, _)| v.name() == name)
+                .map(|(_, slot)| *slot)?;
+            let mut entry = entry.clone();
+            entry["file"] = serde_json::Value::String(slot.to_string());
+            Some(entry)
+        })
+        .collect();
+
+    doc["variants"] = serde_json::Value::Array(keep);
+
+    // The co-processor images travel with the manifest that names them.
+    for entry in doc
+        .get("coprocessors")
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default()
+    {
+        let Some(name) = entry.get("file").and_then(|v| v.as_str()) else {
+            continue;
+        };
+        let src = coproc_src.join(name);
+        let dst = helpers::artifacts_dir(model)?.join(name);
+        // Already in place when the build assembled there.
+        if src != dst {
+            fs::copy(&src, &dst).with_context(|| {
+                format!("Failed to publish {} -> {}", src.display(), dst.display())
+            })?;
+            println!("xtask: {name} published to {}", dst.display());
+        }
+    }
+
+    let dst = helpers::artifacts_dir(model)?.join("bundle.json");
+    fs::write(&dst, serde_json::to_string_pretty(&doc)? + "\n")
+        .with_context(|| format!("Failed to write {}", dst.display()))?;
+    Ok(())
+}
+
+/// Pack the published set into the container `xtask upload` installs.
+///
+/// `trezorctl firmware update -f` takes a FILE, while the canonical set is a
+/// directory -- so the directory is packed rather than a second set being kept
+/// in step with it. Same manifest and same deterministic writer as a release
+/// container, so the two cannot disagree about what the set contains.
+pub fn pack_install_zip(model: Model) -> Result<PathBuf> {
+    let tool = helpers::workspace_dir()?
+        .join("../tools/trezor_core_tools/release_pack.py")
+        .canonicalize()
+        .context("Failed to locate release_pack.py")?;
+    let dir = helpers::artifacts_dir(model)?;
+    let out = dir.join("install.zip");
+    let status = process::Command::new("python3")
+        .arg(&tool)
+        .args(["--single".as_ref(), dir.as_os_str()])
+        .args(["--out".as_ref(), out.as_os_str()])
+        .status()
+        .context("Failed to spawn release_pack.py")?;
+    ensure!(status.success(), "release_pack.py failed: {status}");
+    Ok(out)
+}
+
+/// Invalidate the published install set after a BARE bootloader build.
+///
+/// `build bootloader` replaces the canonical bootloader with a freshly built,
+/// bare one whose `firmware_root` commits to nothing. The firmware still
+/// sitting beside it folds to the OLD root, so the pair no longer agrees -- and
+/// installing it would put a bootloader on the device that refuses the firmware
+/// installed with it.
+///
+/// Removing the manifest says exactly that: these binaries are no longer a
+/// signed set. Cheaper and more honest than re-deriving one, and it needs no
+/// boot-header parser here to notice the mismatch.
+pub fn invalidate_install_set(model: Model) -> Result<()> {
+    let manifest = helpers::artifacts_dir(model)?.join("bundle.json");
+    if manifest.exists() {
+        fs::remove_file(&manifest)
+            .with_context(|| format!("Failed to remove {}", manifest.display()))?;
+        println!(
+            "xtask: {} removed -- a bare bootloader does not vouch for the \
+             firmware beside it",
+            manifest.display()
+        );
+    }
+    Ok(())
+}
+
+fn publish_bootloader(model: Model, out: &Path) -> Result<()> {
+    let dst = helpers::artifacts_dir(model)?.join("bootloader.bin");
+    let src = out.join(DEFAULT_BOOTLOADER_FILE);
+    // See publish_images: copying onto the same path truncates it.
+    if src == dst {
+        return Ok(());
+    }
+    fs::create_dir_all(dst.parent().context("artifacts dir has no parent")?)?;
+    fs::copy(&src, &dst)
+        .with_context(|| format!("Failed to publish {} -> {}", src.display(), dst.display()))?;
+    println!("xtask: bootloader published to {}", dst.display());
+    Ok(())
+}
+
+/// Sign a prepared release with development keys -- the ceremony's stand-in.
+///
+/// Separate from preparing on purpose: this is the only step that touches a
+/// key, so it is the one a real release replaces with an airgapped ceremony.
+/// The prepared container is the signing request (each model records the
+/// `modelRoot` its header commits to), so nothing extra is handed over.
+fn devsign(bundle: &Path, tree: &Path, out: &Path) -> Result<()> {
+    let tool = helpers::workspace_dir()?
+        .join("../tools/trezor_core_tools/firmware_pq_devsign.py")
+        .canonicalize()
+        .context("Failed to locate firmware_pq_devsign.py")?;
+    let status = process::Command::new("python3")
+        .arg(&tool)
+        .args(["--bundle".as_ref(), bundle.as_os_str()])
+        .args(["--tree".as_ref(), tree.as_os_str()])
+        .args(["--out".as_ref(), out.as_os_str()])
+        .status()
+        .context("Failed to spawn firmware_pq_devsign.py")?;
+    ensure!(status.success(), "firmware_pq_devsign.py failed: {status}");
+    Ok(())
+}
+
+/// Patch founder signatures into a prepared release.
+///
+/// Holds no key and recomputes no tree: signatures land in unauthenticated
+/// space, so this cannot invalidate anything the prepare stage folded.
+fn attach(bundle: &Path, tree: &Path, signatures: &Path) -> Result<()> {
+    let tool = helpers::workspace_dir()?
+        .join("../tools/trezor_core_tools/firmware_pq_attach.py")
+        .canonicalize()
+        .context("Failed to locate firmware_pq_attach.py")?;
+    let status = process::Command::new("python3")
+        .arg(&tool)
+        .args(["--bundle".as_ref(), bundle.as_os_str()])
+        .args(["--tree".as_ref(), tree.as_os_str()])
+        .args(["--signatures".as_ref(), signatures.as_os_str()])
+        .status()
+        .context("Failed to spawn firmware_pq_attach.py")?;
+    ensure!(status.success(), "firmware_pq_attach.py failed: {status}");
+    Ok(())
+}
+
 /// Merge every model's `bundle.json` into one cross-model file.
 ///
 /// Keyed by model id because the models are INDEPENDENT trees -- each carries
@@ -1187,6 +1527,12 @@ fn committed_bootloader(args: &ResolvedBuildArgs) -> Result<PathBuf> {
 ///
 /// The crypto stays in Python: this is the same relationship xtask already has
 /// with `headertool`, and the signer is what a founder ceremony runs too.
+fn run_signer(
+    out: &Path,
+    firmwares: &[PathBuf],
+    nrf: Option<&Path>,
+    nrf_pq_native: bool,
+    stage: SignStage,
 ) -> Result<()> {
     let signer = helpers::workspace_dir()?
         .join("../tools/trezor_core_tools/firmware_pq_sign.py")

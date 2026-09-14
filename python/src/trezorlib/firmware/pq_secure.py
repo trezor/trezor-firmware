@@ -461,6 +461,70 @@ def consent_preamble(header: bytes, manifest_region: bytes) -> bytes:
     return boot_header_prefix(header) + manifest_region
 
 
+#: The release container's magic, and the container layout this code speaks.
+#:
+#: Restated here rather than shared with the core tools because trezorlib ships
+#: on its own: the container is the contract between the signer and every
+#: reader, so each states what it expects. A mismatch must be a clear refusal,
+#: which is exactly what the version field is for.
+CONTAINER_MAGIC = "TRZL"
+#: The cross-model container: one subtree per model, each self-contained. This
+#: is what gets published, because a release covers every model rather than one
+#: -- which is why the artifact carries no model in its name.
+CONTAINER_SET_MAGIC = "TRZL-set"
+CONTAINER_VERSION = 1
+
+
+def _check_container(meta: dict, *, is_set: bool = False) -> dict:
+    """Refuse a release container this trezorlib does not speak.
+
+    Checked before any field is read, so an old release is refused by version
+    instead of surfacing as a confusing absent-field error later.
+
+    The container carries no signature and needs none -- the boot-header
+    signature is the trust root and the device pins the stamped
+    ``firmware_type`` to the authenticated manifest variant, so a tampered
+    container is a fail-closed DoS, never a forgery. Everything read from it is
+    routing: which file is which.
+    """
+    want = CONTAINER_SET_MAGIC if is_set else CONTAINER_MAGIC
+    got = meta.get("format")
+    if got is None:
+        raise FirmwareIntegrityError(
+            "bundle.json has no `format` -- it predates the versioned release "
+            "container; rebuild the release"
+        )
+    if got != want:
+        raise FirmwareIntegrityError(
+            f"bundle.json is not a release container: format {got!r}, expected {want!r}"
+        )
+    version = meta.get("format_version")
+    if version != CONTAINER_VERSION:
+        raise FirmwareIntegrityError(
+            f"bundle.json is release container v{version}, but this trezorlib "
+            f"speaks v{CONTAINER_VERSION}"
+        )
+    return meta
+
+
+def _check_set(root: dict) -> dict:
+    """Refuse a cross-model container that does not describe itself.
+
+    Each entry must be a container in its own right AND must agree with the key
+    it is filed under. Both come from one cut, so a disagreement means the set
+    was assembled wrong -- and left unchecked it would offer one model's
+    firmware under another model's name.
+    """
+    _check_container(root, is_set=True)
+    for model, body in root.get("models", {}).items():
+        _check_container(body)
+        if body.get("model") != model:
+            raise FirmwareIntegrityError(
+                f"the entry filed under {model} names model {body.get('model')!r}"
+            )
+    return root
+
+
 class PqSecureBundle:
     """A pq_secure release: a bootloader image, one variant's firmware, and an
     optional nRF payload.
@@ -488,6 +552,70 @@ class PqSecureBundle:
     # --- loading -----------------------------------------------------------
 
     @staticmethod
+    def _scoped(read: Reader, exists: Exists, prefix: str) -> tuple[Reader, Exists]:
+        """The same reader, rooted at one model's subtree."""
+        if not prefix:
+            return read, exists
+        return (lambda name: read(prefix + name), lambda name: exists(prefix + name))
+
+    @classmethod
+    def _enter(cls, src: BundleSource, model: str | None) -> tuple[Reader, Exists]:
+        """Open a bundle, descending into one model's subtree if it is a SET.
+
+        A cross-model container holds `<MODEL>/bundle.json` beside each model's
+        members, so descending one level yields exactly the per-model layout
+        every reader below already understands -- the set adds a level, not a
+        second format.
+        """
+        read, exists = cls._opener(src)
+        if not exists("bundle.json"):
+            raise FirmwareIntegrityError(
+                "not a pq_secure release: no bundle.json in the bundle"
+            )
+        root = json.loads(read("bundle.json"))
+        if root.get("format") != CONTAINER_SET_MAGIC:
+            if model is not None and root.get("model") != model:
+                raise ValueError(f"this bundle is for {root.get('model')}, not {model}")
+            return read, exists
+        _check_set(root)
+        available = sorted(root.get("models", {}))
+        if model is None:
+            if len(available) != 1:
+                raise ValueError(
+                    f"bundle covers several models; pick one of: {', '.join(available)}"
+                )
+            model = available[0]
+        elif model not in available:
+            raise ValueError(
+                f"no model {model!r} in the bundle; have: {', '.join(available)}"
+            )
+        scoped_read, scoped_exists = cls._scoped(read, exists, f"{model}/")
+        if not scoped_exists("bundle.json"):
+            raise FirmwareIntegrityError(
+                f"the bundle lists {model} but holds no {model}/bundle.json"
+            )
+        # The subtree must agree with the directory it lives in. Both come from
+        # one cut, so a disagreement means the container was assembled wrong --
+        # and it would otherwise install one model's firmware as another's.
+        subtree = _check_container(json.loads(scoped_read("bundle.json")))
+        if subtree.get("model") != model:
+            raise FirmwareIntegrityError(
+                f"the {model}/ subtree names model {subtree.get('model')!r}"
+            )
+        return scoped_read, scoped_exists
+
+    @classmethod
+    def models(cls, src: BundleSource) -> list[str]:
+        """The models a bundle covers -- one entry for a per-model bundle."""
+        read, exists = cls._opener(src)
+        if not exists("bundle.json"):
+            return []
+        root = json.loads(read("bundle.json"))
+        if root.get("format") == CONTAINER_SET_MAGIC:
+            return sorted(_check_set(root).get("models", {}))
+        return [m] if (m := _check_container(root).get("model")) else []
+
+    @staticmethod
     def _opener(src: BundleSource) -> tuple[Reader, Exists]:
         """Uniform access to a bundle directory, a zip path, or an open zip."""
         if not isinstance(src, (str, Path)):  # an already-open binary stream
@@ -510,8 +638,16 @@ class PqSecureBundle:
     def variants(cls, src: BundleSource, model: str | None = None) -> list[str]:
         """The variant names a bundle offers, without loading any of them."""
         read, _ = cls._enter(src, model)
+        meta = _check_container(json.loads(read("bundle.json")))
+        return [v["variant"] for v in meta.get("variants", []) if "variant" in v]
 
     @classmethod
+    def load(
+        cls,
+        src: BundleSource,
+        variant: str | None = None,
+        model: str | None = None,
+    ) -> PqSecureBundle:
         """Load from an ``xtask release`` bundle.
 
         Accepts the bundle directory, the path to its zip, or an already-open
@@ -528,8 +664,22 @@ class PqSecureBundle:
         meta = _check_container(json.loads(read("bundle.json")))
         variant = cls._pick_variant(meta, variant, exists)
 
+        entry = next(v for v in meta["variants"] if v.get("variant") == variant)
+        firmware = PqSecureFirmware.parse(read(entry["file"]))
+
+        # Addressed by its (kind, index) slot. That tuple is ROUTING -- it says
+        # which payload belongs in which slot when a model has more than one.
+        # The device derives kind and index from its own build configuration and
+        # never from here, so nothing read here is an authority claim.
         nrf = None
         nrf_meta = next(
+            (
+                c
+                for c in meta.get("coprocessors", [])
+                if c.get("kind") == "nrf" and c.get("index", 0) == 0
+            ),
+            None,
+        )
         if nrf_meta:
             image = read(nrf_meta["file"])
             if len(image) != nrf_meta["length"]:
@@ -549,12 +699,16 @@ class PqSecureBundle:
     def _pick_variant(
         meta: dict, requested: str | None, exists: t.Callable[[str], bool]
     ) -> str:
+        available = [v["variant"] for v in meta.get("variants", []) if "variant" in v]
         if requested is not None:
             if requested not in available:
                 raise ValueError(
                     f"no variant {requested!r} in the bundle; have: "
                     f"{', '.join(sorted(available))}"
                 )
+            entry = next(v for v in meta["variants"] if v["variant"] == requested)
+            if not exists(entry["file"]):
+                raise ValueError(f"bundle has no {entry['file']}")
             return requested
         if len(available) == 1:
             return available[0]

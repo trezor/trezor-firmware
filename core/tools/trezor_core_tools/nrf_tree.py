@@ -309,6 +309,15 @@ def model_leaf_value(bl: firmware_headers.BootloaderV2Image) -> bytes:
 def place_bootloader_in_tree(
     bl: firmware_headers.BootloaderV2Image, model_copath: list[bytes]
 ) -> None:
+    """Seat the boot header in the model tree, WITHOUT signing it.
+
+    Everything here feeds the digest: the co-path decides the header's size and
+    `_refit_auth_padding` adjusts the authenticated padding to match. Signing is
+    deliberately a separate step, because a release is prepared in full and only
+    then signed as a whole -- which is the order a founder ceremony runs in, and
+    the only order in which the signing input (`bl.merkle_root()`) is final
+    before any key is touched.
+    """
     if len(model_copath) != MODEL_TREE_DEPTH:
         raise ValueError("model co-path length must equal MODEL_TREE_DEPTH")
     bl.set_merkle_proof(model_copath)
@@ -797,6 +806,7 @@ def _demo(bl_path: str, img_path: str) -> None:
     model_root, proofs = build_model_tree(slots)
 
     place_bootloader_in_tree(bl, proofs[0])
+    bl.sign_with_devkeys()
     assert bl.merkle_root() == model_root, "boot-header fold != modelRoot"
     bl.verify(dev_keys=True)  # the ONE signature, over modelRoot
 

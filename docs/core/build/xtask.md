@@ -326,14 +326,61 @@ firmware image. A firmware's authenticity is the fold of its manifest up to the
 `firmware_root` that the SIGNED BOOTLOADER HEADER commits to, so a firmware
 image only means anything next to a bootloader that names the tree it belongs
 to. `xtask build firmware` on such a model therefore produces a signed, folded
+SET rather than one binary — and it produces it in the ordinary artifacts
+directory, signing each image where the build left it:
 
 ```text
 build-xtask/artifacts/<MODEL_ID>/
 ├── bootloader.bin        # the built bootloader, header re-signed over this tree
 ├── firmware.bin          # signed in place, its Merkle co-path baked in
+├── prodtest.bin          # likewise, when prodtest was built
 ├── trezor-ble*.bin       # the nRF image, if the model has one
+├── bundle.json           # the container: what this set holds
 └── install.zip           # the same, packed for `trezorctl firmware update -f`
 ```
+
+`xtask release` is the only command that writes a release area, because a
+release is a different thing: several variants that cannot share one build
+slot, per-model subtrees, and the publishable containers packed from them:
+
+```text
+build-xtask/tree/<MODEL_ID>/          # one subtree per released model
+build-xtask/tree/<MODEL_ID>.zip       # that model, portable
+build-xtask/tree/release[-devel].zip  # every released model, publishable
+```
+
+Keeping those apart matters for a mundane reason: while a build also wrote
+`tree/<MODEL_ID>.zip`, cutting a release overwrote the file a previous build
+had put there, and "did my build reach the device?" depended on which command
+wrote it last.
+
+`release.zip` is what gets **published** (`release-devel.zip` when the release
+was signed with development keys, so a devel cut cannot quietly overwrite a
+production one), and it carries no model in its name on purpose: a release is
+not a per-model thing. One source tag builds every model,
+the ceremony signs each model's `modelRoot`, and the whole set ships together.
+It holds one self-contained subtree per model, with the cross-model index at the
+root:
+
+```text
+release.zip
+├── bundle.json          # the cross-model index (TRZL-set)
+├── T3W1/bundle.json     # that model's own container (TRZL)
+├── T3W1/bootloader.bin
+├── T3W1/<variant>.bin
+└── <MODEL_ID>/...       # one subtree per released model
+```
+
+Extracting one subtree gives a working per-model release, so the ordinary reader
+handles it unchanged — the set adds a level, not a second format. Members come
+from what each model's container *names*, so derived files that accumulate in a
+release directory (`bootloader-<variant>.bin`, written when stamping) stay out of
+the published artifact. `trezorctl` picks the model the same way it picks the
+variant: from what the device reports about itself.
+
+The per-model `<MODEL_ID>.zip` stays, because a single device install has no use
+for the other models' payloads — that is what `xtask upload` and the OTA harness
+consume.
 
 The per-project `artifacts/<MODEL_ID>/firmware.bin` from such a build is **not
 installable**: its manifest is an unfilled template, whose leaf folds to
@@ -367,6 +414,64 @@ surprise. Run `xtask build bootloader` when you want a fresh one folded in;
 `auto` then picks it up, and the build prints which binary it folded (with its
 age, for a built one) because that decides which code the device ends up
 running.
+
+`--bootloader` applies to **cutting a release** (`xtask release`) and to
+**building firmware or prodtest** on a tree model, since those fold a bootloader
+they did not build. It is rejected on `xtask build bootloader`, which *produces*
+that binary and has nothing to select, and it does not exist on `flash` or
+`upload` — see below.
+
+### One bootloader binary, so "flash" means the last one built
+
+`build/artifacts/<MODEL_ID>/bootloader.bin` is the **canonical** bootloader.
+Both commands that produce one write there: `xtask build bootloader` compiles
+and signs it, and cutting a release copies its folded, signed bootloader back
+over it (only once signed — an unsigned release must not become the flashable
+artifact, or the boardloader would reject it and the failure would look like a
+broken device). Because signing rewrites only the header, the release's copy is
+strictly newer than the build's, never a different build.
+
+`flash` and `upload` therefore read that one file and offer no choice of source.
+That is deliberate: when two locations both held a bootloader, `xtask build
+bootloader` followed by `xtask flash bootloader` silently flashed the *release's*
+copy instead of what had just been built — which, if the release had folded the
+committed binary, could even be a monotonic version older.
+
+The firmware follows the same rule, by two different routes. A plain `xtask
+build` **signs in place** there — nothing is copied anywhere. `xtask release`
+signs in its own release area and then publishes the result into the same
+directory: each variant's image into its build slot, plus the release's
+`bundle.json` rewritten to describe what was published. Either way `flash`,
+`upload` and `combine` **install what is there and sign nothing**: signing a third time would re-cut a
+one-variant tree over an image that already folds correctly, discarding a
+multi-variant release's proof in the process.
+
+`bundle.json` in the artifacts directory is the token saying those binaries form
+an installable **set**. It is written together with them, and `xtask build
+bootloader` **removes** it — a freshly built bare bootloader commits to nothing,
+while the firmware beside it still folds to the previous root, so the pair no
+longer agrees. An install then refuses rather than pairing them:
+
+```text
+Error: no installable release in build/artifacts/T3W1 -- those binaries are not
+a signed set (a bare `build bootloader` invalidates it). Build or cut one:
+             xtask build firmware -m T3W1 --bootloader-devel
+```
+
+Two consequences of one directory holding one image per slot. Variants sharing
+the `firmware.bin` slot cannot coexist, so **building two variants in a row
+leaves the first uninstallable** — build the one you mean to install. And where
+a multi-variant release publishes, the **first variant in `ALL_VARIANTS` order
+wins** the shared slot, which makes it `universal`; without that the slot kept
+whichever was compiled last (custom), and `xtask release` followed by `xtask
+flash firmware` would quietly install the unofficial variant.
+
+`tree/` is untouched by all of this, and only `xtask release` writes it: it
+holds a *cut* release, a publishable artifact rather than an install source.
+`xtask upload` reads the same published set the others do, packing it to
+`install.zip` because `trezorctl firmware update -f` takes a file. So does the
+OTA harness (`make upload_pq_test`), which therefore exercises exactly what a
+real install carries.
 
 Whichever is folded must have been built with the same key selection the
 release is signed with. A bootloader built without `--bootloader-devel` trusts
@@ -461,6 +566,98 @@ changes that root, so the bootloader already on the device vouches only for the
 previous build. There is no useful "flash just the firmware" on a tree model.
 
 The header also carries `firmware_type`, the provisioning marker. It holds a
+32-bit hardened codeword rather than a small number, so no single bit flip turns
+one variant into another; the `NONE` codeword means the device reads as
+*unprovisioned* and boots nothing. An over-the-wire install writes the variant
+into it; a debugger install has nobody to do that, so `xtask flash` stamps it
+while writing the bootloader. The field is unauthenticated, so this needs no key
+and leaves the signature intact — the release itself stays bare. `bundle.json`
+records where the field sits and how wide it is (the signer locates it by
+probing its own build), the value a bare release carries, and each variant's
+value, so no tool duplicates the boot-header layout or the codewords.
+
+### Preparing, signing, assembling
+
+A founder ceremony cannot run inside a build: the key is not there. So cutting a
+release is three stages, and `xtask release` performs them in that order rather
+than signing each model as it is built:
+
+| stage | keys | what it does |
+|---|---|---|
+| **prepare** | none | build every model, fill every manifest, fold every tree, seat each boot header in its model tree — and leave the signature region **zero** |
+| **sign** | founder | 32 bytes per model out, two hybrid signature pairs per model back |
+| **attach** | none | patch those signatures into the prepared artifacts, then pack |
+
+The order matters beyond tidiness: signing model 1 while model 2 has not been
+built is not something an airgapped step can do, and `sigmask` is *authenticated*
+— inside the digest — so which key slots will sign has to be committed during
+prepare, before any leaf exists.
+
+Attaching afterwards is safe because **every signature lands in unauthenticated
+space**: the boot header's `slh_signature[]` / `ec_signature[]` sit past
+`auth_size`, and a PQ-native co-processor's founder records live in unprotected
+TLVs whose *sizes* were reserved before its leaf was computed. No digest moves,
+so nothing prepare folded is invalidated. It is the same property that lets
+`firmware_type` be stamped into a signed bootloader without a key.
+
+The prepared container **is the signing request** — each model records the
+`modelRoot` its header commits to — so there is no second request format to keep
+in step with the release.
+
+`xtask release` requires one of `--bootloader-devel` or `--production`, because
+the two select key sets on **different axes** and exactly one pairing is
+dangerous. `--bootloader-devel` picks the founder pool the boot chain trusts
+(`root_keys.h`, on `BOOTLOADER_DEVEL`); `--production` picks the keys that sign
+translations and coin definitions (the `dev_keys` cargo feature). With neither, a
+release carries production founder keys and *development* data keys — it enforces
+secure boot, so it looks shippable, yet it accepts translations and definitions
+signed with private halves checked into this repository. The requirement is
+explicit because that is the case you get by typing nothing.
+
+```sh
+# development: prepared, then signed with dev keys and assembled, in one command
+xtask release -m t3w1 --bootloader-devel
+
+# production: stops after prepare, unsigned, waiting for the ceremony
+xtask release -m t3w1 --production
+#   -> release-unsigned.zip
+# ... ceremony returns a signature set ...
+python tools/trezor_core_tools/firmware_pq_attach.py \
+    --release build-xtask/tree --signatures signatures.json
+```
+
+`firmware_pq_devsign.py` is the ceremony's stand-in for development: it signs a
+prepared release with the development keys and writes the signature set that
+`firmware_pq_attach.py` consumes. It is the only step that touches a key, which
+is what makes it the one a real release replaces.
+
+A standalone `xtask build firmware` still signs inline — a developer wants one
+command and holds the development keys.
+
+### The release container
+
+`bundle.json` describes the release: which variants it holds, what each folds
+to, which file is the bootloader, and any co-processor payloads. It opens with
+`format` (`TRZL`) and `format_version`, and every reader **rejects a version it
+does not know** rather than guessing — a release cut by an older tool is refused
+by version, not diagnosed one absent field at a time.
+
+It carries **no signature and needs none**. The boot-header signature is the
+trust root, and the device pins the stamped `firmware_type` to the authenticated
+manifest variant, so a tampered container is a fail-closed DoS and never a
+forgery. Read everything in it as routing — which file is which — not authority.
+Two consequences worth knowing:
+
+- A variant is identified by its own `variant` name, taken from the codeword in
+  its folded manifest. Readers do not recover identity by stripping `.bin` off a
+  filename, which would make the writer's naming a claim about what an image is.
+- Co-processor entries are addressed by their `(kind, index)` slot — the same
+  tuple bound into the co-processor's Merkle leaf. It says which payload belongs
+  in which slot; every verifier still takes kind and index from its *own* build
+  configuration, never from here.
+
+The archive is written deterministically (fixed member timestamps and order), so
+identical inputs give identical bytes and the container can be digested.
 
 `--variant` picks which variant to flash, needed only when the release holds
 more than one and the project does not name it by itself:

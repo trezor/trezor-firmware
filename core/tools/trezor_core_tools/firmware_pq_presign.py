@@ -93,7 +93,22 @@ def _describe_difference(mine: bytes, theirs: bytes) -> list[str]:
 def _custom_entry(bundle_path: Path, model: str | None) -> tuple[dict, str]:
     """The bundle's CUSTOM variant entry, from either bundle shape."""
     raw = json.loads(bundle_path.read_text())
+    # Version-checked, and keyed by the model each body names for itself -- the
+    # single-model case used to read that off the nRF block, which a model
+    # without a co-processor does not have.
+    models = firmware_module.container_models(raw, bundle_path)
+    if model is None:
+        if len(models) != 1:
+            raise SystemExit(
+                f"{bundle_path} covers {', '.join(sorted(models))} -- "
+                "pass --model to say which one this firmware is for"
+            )
+        name = next(iter(models))
     else:
+        name = model
+    if name not in models:
+        raise SystemExit(f"{bundle_path} has no entry for {name}")
+    body = models[name]
 
     entry = next(
         (
@@ -200,11 +215,24 @@ def main() -> int:
         # bootloader, this one image, the bundle, and the nRF image. Written here
         # because the image is only self-contained once the proof is baked in.
         release = args.firmware.parent
+        bundle = release / "bundle.json"
+        body = firmware_module.check_container(json.loads(bundle.read_text()), bundle)
+        members = [release / body["bootloader"]["file"], args.firmware, bundle]
+        members += [
+            release / c["file"] for c in body.get("coprocessors", []) if "file" in c
+        ]
         args.zip_out.parent.mkdir(parents=True, exist_ok=True)
+        # Deterministic for the same reason the signer's archive is: identical
+        # inputs must give identical bytes, so the container can be digested.
         with zipfile.ZipFile(args.zip_out, "w", zipfile.ZIP_DEFLATED) as zf:
             for member in members:
                 if not member.is_file():
                     raise SystemExit(f"{member} is missing from the release")
+            for member in sorted(members, key=lambda m: m.name):
+                info = zipfile.ZipInfo(member.name, date_time=(1980, 1, 1, 0, 0, 0))
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.external_attr = 0o644 << 16
+                zf.writestr(info, member.read_bytes())
         print(f"  zip {args.zip_out} ({', '.join(m.name for m in members)})")
     return 0
 

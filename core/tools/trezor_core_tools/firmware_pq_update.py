@@ -125,6 +125,9 @@ def _other_variant(args: argparse.Namespace) -> pq_secure.PqSecureBundle:
             )
         return pq_secure.PqSecureBundle.load(args.bundle, other)
 
+    # No container on this path (explicit --firmware/--bootloader), so the
+    # filename is all there is to go on -- excluding the bootloader by the name
+    # actually passed rather than by an assumed one.
     for candidate in sorted(args.firmware.parent.glob("*.bin")):
         if candidate.name not in (args.firmware.name, args.bootloader.name):
             return pq_secure.PqSecureBundle(

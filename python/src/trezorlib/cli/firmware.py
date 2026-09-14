@@ -202,6 +202,12 @@ def read_pq_bundle(
     if not zipfile.is_zipfile(io.BytesIO(raw)):
         return None
     try:
+        # A cross-model container (release.zip) holds one subtree per model,
+        # so the model is selected the same way the variant is: from what the
+        # device reports about itself. None means "not a set, or only one
+        # model in it", which the loader handles.
+        model = getattr(features, "internal_model", None)
+        available = firmware.PqSecureBundle.variants(io.BytesIO(raw), model=model)
         chosen = pq_pick_variant(available, variant, bitcoin_only, features)
         return firmware.PqSecureBundle.load(io.BytesIO(raw), chosen, model=model)
     except ValueError as e:
@@ -270,6 +276,55 @@ def verify_pq_bundle(
     Exits with the usual codes on failure, as validate_firmware does.
     """
     try:
+        # A cross-model container yields one entry per model; a per-model bundle
+        # yields exactly one, so both shapes take the same path below.
+        models = firmware.PqSecureBundle.models(io.BytesIO(raw_bundle)) or [None]
+    except (ValueError, firmware.FirmwareIntegrityError) as e:
+        click.echo(f"Cannot read this firmware bundle: {e}")
+        sys.exit(2)
+
+    named = [m for m in models if m is not None]
+    if model is not None and named and model.internal_name not in named:
+        click.echo(
+            f"This release covers {', '.join(named)}, but your device is "
+            f"{model.internal_name}. Aborting."
+        )
+        sys.exit(3)
+    # A fingerprint identifies ONE model's firmware_root, so it cannot be
+    # checked against several at once -- say so instead of matching one and
+    # ignoring the rest.
+    if fingerprint is not None and len(named) > 1:
+        click.echo(
+            f"This release covers {', '.join(named)}; a fingerprint identifies "
+            "one model, so check it against that model's own bundle."
+        )
+        sys.exit(2)
+
+    dev_keys_used = False
+    for model_name in models:
+        dev_keys_used |= _verify_one_model(
+            raw_bundle, model_name, variant, fingerprint, len(named) > 1
+        )
+
+    if dev_keys_used:
+        click.echo("WARNING: Firmware for development kit only.")
+    if model is not None:
+        click.echo("Firmware is appropriate for your device.")
+
+
+def _verify_one_model(
+    raw_bundle: bytes,
+    model_name: Optional[str],
+    variant: Optional[str],
+    fingerprint: Optional[str],
+    several: bool,
+) -> bool:
+    """Verify every variant of one model. Returns whether dev keys were used."""
+    try:
+        available = firmware.PqSecureBundle.variants(
+            io.BytesIO(raw_bundle), model=model_name
+        )
+    except (ValueError, firmware.FirmwareIntegrityError) as e:
         click.echo(f"Cannot read this firmware bundle: {e}")
         sys.exit(2)
 
@@ -282,6 +337,8 @@ def verify_pq_bundle(
     for index, name in enumerate(wanted):
         try:
             bundle = firmware.PqSecureBundle.load(
+                io.BytesIO(raw_bundle), name, model=model_name
+            )
         except ValueError as e:
             click.echo(f"Cannot read variant {name}: {e}")
             sys.exit(2)
@@ -289,8 +346,11 @@ def verify_pq_bundle(
         if index == 0:
             # firmware_root and the boot header are shared by every variant of
             # a model, so report that model's identity once rather than per
+            # variant -- but once PER MODEL, since each is its own tree.
             _print_firmware_model(bundle.bootloader.header.hw_model)
             _print_version(bundle.version)
+            if not several:
+                validate_fingerprint(bundle, fingerprint)
 
         try:
             bundle.verify()
