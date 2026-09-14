@@ -402,7 +402,6 @@ def _generate_app_image(
         chunk_size=1024,
         curves=[],
         paths=[],
-        slip44_id=0,
     )
     return AppImage(header=header, payload=payload)
 
