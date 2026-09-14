@@ -19,6 +19,7 @@ impl From<crate::io::Error> for Error {
     fn from(error: crate::io::Error) -> Self {
         match error {
             crate::io::Error::EOFError => Error::NotEnoughData,
+            crate::io::Error::OutOfRange => Error::InvalidPayload,
         }
     }
 }
