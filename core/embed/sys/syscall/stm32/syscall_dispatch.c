@@ -246,6 +246,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 #endif  // USE_IPC
 
+#ifndef PQ_SECURE_BOOT
+
     case SYSCALL_BOOT_IMAGE_CHECK: {
       const boot_image_t *image = (const boot_image_t *)args[0];
       args[0] = boot_image_check__verified(image);
@@ -255,6 +257,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const boot_image_t *image = (const boot_image_t *)args[0];
       boot_image_replace__verified(image);
     } break;
+
+#endif  // PQ_SECURE_BOOT
 
     case SYSCALL_REBOOT_DEVICE: {
       reboot_device();
@@ -808,6 +812,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
 #ifdef USE_NRF
 
+#ifndef PQ_SECURE_BOOT
+
     case SYSCALL_NRF_UPDATE_REQUIRED: {
       const uint8_t *data = (const uint8_t *)args[0];
       size_t len = args[1];
@@ -819,6 +825,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t len = args[1];
       args[0] = nrf_update__verified(data, len);
     } break;
+
+#endif  // PQ_SECURE_BOOT
 
     case SYSCALL_NRF_GET_VERSION: {
       args[0] = nrf_get_version();

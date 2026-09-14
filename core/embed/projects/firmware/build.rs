@@ -1,4 +1,6 @@
-use xbuild::{CLibrary, Result, bail_unsupported};
+use std::path::PathBuf;
+
+use xbuild::{CLibrary, Result, bail, bail_unsupported};
 
 fn main() -> Result<()> {
     xbuild::build_and_link("firmware", |lib| {
