@@ -196,8 +196,38 @@ def has_pq_material(image: bytes) -> bool:
     return pq_material_offset(image) is not None
 
 
+# Co-processor slot -- mirrors coproc_slot_t in sec/image/inc/sec/boot_header.h
+# and the same struct in mcuboot's image_pq.c. 44 bytes:
+#   tag(4) | model(4) | kind(1) | index(1) | reserved(2) | digest(32)
+COPROC_SLOT_TAG = b"TRZP"
+COPROC_KIND_NRF = 1
+_COPROC_SLOT = struct.Struct("<4s4sBB2x32s")
 
 
+def coproc_slot_value(model_id: bytes, kind: int, index: int, digest: bytes) -> bytes:
+    """A co-processor's model-tree SLOT VALUE, role bound into the bytes.
+
+    A fold proves the founder committed to SOME artifact under this modelRoot,
+    never WHICH slot it is: the tree folds sorted pairs, so a proof carries no
+    direction and position is unrecoverable. The role therefore has to live in
+    the value, and this is it.
+
+    `kind` and `index` MUST come from the caller's own build configuration --
+    never from the image, never from the wire. An index taken from the artifact
+    would let a host re-tag it and the binding would be worth nothing.
+    """
+    if len(model_id) != 4:
+        raise ValueError(f"model_id must be 4 bytes, got {len(model_id)!r}")
+    if len(digest) != 32:
+        raise ValueError(f"digest must be 32 bytes, got {len(digest)}")
+    if not 0 <= kind <= 0xFF or not 0 <= index <= 0xFF:
+        raise ValueError("kind and index are single bytes")
+    value = _COPROC_SLOT.pack(COPROC_SLOT_TAG, model_id, kind, index, digest)
+    assert len(value) == 44, len(value)
+    return value
+
+
+def nrf_leaf_value(image: bytes, index: int = 0) -> bytes:
     """The nRF's model-tree SLOT VALUE: a co-processor slot over its image hash.
 
     The digest commits the image THROUGH MCUboot's own image hash (TLV 0x10:
@@ -216,6 +246,12 @@ def has_pq_material(image: bytes) -> bool:
     Pass THIS -- never the raw image -- to build_model_tree / get_proof /
     evaluate_proof, which all apply leaf_hash() to the value themselves.
     """
+    model_id = mcuboot_model_id(image)
+    if model_id is None:
+        raise ValueError("nRF image has no MCUboot model-id TLV")
+    return coproc_slot_value(
+        model_id, COPROC_KIND_NRF, index, mcuboot_image_hash(image)
+    )
 
 
 def nrf_leaf(image: bytes) -> bytes:

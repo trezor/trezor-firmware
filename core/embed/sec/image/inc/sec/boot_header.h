@@ -717,6 +717,34 @@ secbool firmware_verify_manifest_entry(const firmware_manifest_entry_t* entry,
  * -- MCUboot's image hash covers header + payload + protected TLVs, and the
  * founder records live in the unprotected area for exactly this reason.
  */
+#define COPROC_SLOT_TAG "TRZP"
+#define COPROC_SLOT_MODEL_LEN 4
+/* SHA-256, same width as merkle_proof_node_t. Spelled literally for the same
+ * reason that struct does: this header depends only on trezor_types.h. */
+#define COPROC_SLOT_DIGEST_LEN 32
+
+/** Co-processor kind. A FIELD rather than part of the tag, mirroring the
+ *  firmware manifest, which already binds role this way (`module_type` is
+ *  authenticated inside the entry, so a secmon cannot pass as an app). */
+typedef enum {
+  COPROC_KIND_NRF = 1,
+} coproc_kind_t;
+
+typedef struct __attribute__((packed)) {
+  uint8_t tag[4];                         /**< COPROC_SLOT_TAG */
+  uint8_t model[COPROC_SLOT_MODEL_LEN];   /**< MODEL_INTERNAL_NAME, 4 ASCII */
+  uint8_t kind;                           /**< coproc_kind_t (build config) */
+  uint8_t index;                          /**< instance of that kind (build
+                                               config); 0 until a model has
+                                               two of one kind */
+  uint8_t reserved[2];                    /**< zero */
+  uint8_t digest[COPROC_SLOT_DIGEST_LEN]; /**< per-kind, see above */
+} coproc_slot_t;
+
+_Static_assert(sizeof(coproc_slot_t) == 44,
+               "coproc_slot_t must be 44 bytes -- it is a leaf preimage shared "
+               "with the signer and the nRF's MCUboot");
+
 /**
  * @brief Fold a MODEL-tree slot value up to `trusted_model_root`.
  *

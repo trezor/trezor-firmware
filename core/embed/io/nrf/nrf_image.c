@@ -170,6 +170,40 @@ static uint16_t nrf_image_find_tlv(const uint8_t* image, size_t image_len,
   return 0;
 }
 
+/* Fold a co-processor slot built around an image hash the caller already has.
+ *
+ * Separate from the image-based entry point because the update-required hint
+ * arrives BEFORE the image does: the hint decides whether the image is streamed
+ * at all, so it has to be checked against the founder tree with nothing but
+ * itself and the co-path in hand.
+ *
+ * kind and index come from OUR build configuration, never from the image or the
+ * wire: this file is compiled only for a model that has an nRF, and `index` is
+ * 0 until some model carries two of one kind (which then needs a per-instance
+ * build or a strapping pin -- a hardware question, not a crypto one). Taking
+ * either from the artifact would let whoever supplies it re-tag the slot.
+ *
+ * The fold itself is not nRF-specific -- it is boot-header tree math on the
+ * boot-header trust anchor, so it stays in sec. All this adds is WHICH bytes
+ * become the slot value.
+ */
+secbool nrf_image_verify_hash_in_tree(
+    const uint8_t image_hash[SHA256_DIGEST_LENGTH],
+    const merkle_proof_node_t* proof, size_t proof_count,
+    const merkle_proof_node_t* trusted_model_root) {
+  if (image_hash == NULL) {
+    return secfalse;
+  }
+  coproc_slot_t slot = {0};
+  memcpy(slot.tag, COPROC_SLOT_TAG, sizeof(slot.tag));
+  memcpy(slot.model, MODEL_INTERNAL_NAME, sizeof(slot.model));
+  slot.kind = (uint8_t)COPROC_KIND_NRF;
+  slot.index = 0;
+  memcpy(slot.digest, image_hash, sizeof(slot.digest));
+  return boot_header_verify_slot((const uint8_t*)&slot, sizeof(slot), proof,
+                                 proof_count, trusted_model_root);
+}
+
 /**
  * @brief Extract the 4-byte model id (TLV 0x00A3).
  *

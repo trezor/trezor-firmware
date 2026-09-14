@@ -52,6 +52,14 @@
 bool nrf_image_model_id(const uint8_t* image, size_t image_len,
                         uint8_t out[NRF_IMAGE_MODEL_ID_LEN]);
 
+/* Fold a slot built around an image hash the caller already holds -- used for
+ * the update-required hint, which must be founder-committed before it is
+ * allowed to decide whether the image is streamed. */
+secbool nrf_image_verify_hash_in_tree(
+    const uint8_t image_hash[SHA256_DIGEST_LENGTH],
+    const merkle_proof_node_t* proof, size_t proof_count,
+    const merkle_proof_node_t* trusted_model_root);
+
 /**
  * @brief Is this nRF image committed in the founder MODEL tree?
  *

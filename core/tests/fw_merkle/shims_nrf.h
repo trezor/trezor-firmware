@@ -43,6 +43,30 @@
 
 #include <ed25519-donna/ed25519.h>
 
+/* Mirrors of sec/image/inc/sec/boot_header.h, which this harness cannot include
+ * (it pulls in the whole sec layer). The point of the harness is that C, Python
+ * and mcuboot agree byte-for-byte, so a copy drifting here is exactly the kind of
+ * divergence it exists to catch -- the 44-byte assert below is the tripwire. */
+#define COPROC_SLOT_TAG "TRZP"
+#define COPROC_SLOT_MODEL_LEN 4
+#define COPROC_SLOT_DIGEST_LEN 32
+typedef enum {
+  COPROC_KIND_NRF = 1,
+} coproc_kind_t;
+typedef struct __attribute__((packed)) {
+  uint8_t tag[4];
+  uint8_t model[COPROC_SLOT_MODEL_LEN];
+  uint8_t kind;
+  uint8_t index;
+  uint8_t reserved[2];
+  uint8_t digest[COPROC_SLOT_DIGEST_LEN];
+} coproc_slot_t;
+_Static_assert(sizeof(coproc_slot_t) == 44, "coproc_slot_t must be 44 bytes");
+
+/* The model this harness stands in for; matches -DMODEL_IDENTIFIER=0x31573354
+ * ("T3W1" little-endian) passed to mcuboot's copy in run_nrf.sh. */
+#define MODEL_INTERNAL_NAME "T3W1"
+
 /* sec keeps only the generic slot fold now; the nRF entry points are io/nrf's. */
 secbool boot_header_verify_slot(const uint8_t* slot_value, size_t slot_len,
                                 const merkle_proof_node_t* proof,

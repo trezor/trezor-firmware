@@ -153,6 +153,26 @@ def main() -> None:
     ]
     model_root, proofs = nrf_tree.build_model_tree(slots)
 
+    # Roots over a slot set identical to the genuine one EXCEPT for the role
+    # fields. A verifier builds kind/index from its own build configuration, so
+    # neither of these may fold for it -- and nothing else in the system would
+    # catch them: the model-id check covers the wrong MODEL, while a wrong index
+    # or kind is exactly what role binding, and only role binding, rejects.
+    wrong_index_root, wrong_index_proofs = nrf_tree.build_model_tree(
+        [nrf_tree.nrf_leaf_value(nrf_image, index=1)] + slots[1:]
+    )
+    wrong_kind_root, wrong_kind_proofs = nrf_tree.build_model_tree(
+        [
+            nrf_tree.coproc_slot_value(
+                DEVICE_MODEL,
+                nrf_tree.COPROC_KIND_NRF + 1,
+                0,
+                nrf_tree.mcuboot_image_hash(nrf_image),
+            )
+        ]
+        + slots[1:]
+    )
+
     # Fill the PQ-native fixture's material for real, now that the tree exists: the
     # signatures are stand-ins (no host SLH-DSA), but the MERKLE PROOF must be the
     # genuine one, because the STM's push gate folds with the copy carried in the
@@ -191,6 +211,12 @@ def main() -> None:
         _emit_proof(f, "OTHER_PROOF", proofs[1])
         f.write(
             f"static const unsigned char NRF_MODEL_ROOT[32] = {{{_carr(model_root)}}};\n"
+        )
+        f.write(
+            "/* roots over slots differing ONLY in the role fields -- a verifier\n"
+            "   that builds kind/index from its own config must fold to NEITHER. */\n"
+            f"static const unsigned char NRF_WRONG_INDEX_ROOT[32] = {{{_carr(wrong_index_root)}}};\n"
+            f"static const unsigned char NRF_WRONG_KIND_ROOT[32] = {{{_carr(wrong_kind_root)}}};\n"
         )
         _emit_image(f, "NRF_OTA", nrf_ota)
         _emit_image(f, "OTHER_OTA", other_ota)
