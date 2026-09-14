@@ -37,6 +37,11 @@
               "display_name": "Create account"
             },
             {
+              "parameter": "space",
+              "display_name": "Data size",
+              "default_value_to_hide": 0
+            },
+            {
               "parameter": "owner",
               "display_name": "Owner"
             },
@@ -152,6 +157,11 @@
             {
               "account": "created_account",
               "display_name": "Create account"
+            },
+            {
+              "parameter": "space",
+              "display_name": "Data size",
+              "default_value_to_hide": 0
             },
             {
               "parameter": "owner",
