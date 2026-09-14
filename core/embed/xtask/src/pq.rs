@@ -668,6 +668,181 @@ pub fn build_release(
     Ok(())
 }
 
+/// Build a CUSTOM firmware and fold it into the committed, already-signed root.
+///
+/// A custom build never cuts a tree. Its leaf is code-independent -- the fold
+/// zeroes the firmware version and the app entry's `size` + `code_hash` -- so
+/// it belongs in the one founder-signed custom slot, and re-signing a fresh
+/// single-variant root would only produce something no field device accepts.
+/// This is also the only shape possible with production keys, so the dev flow
+/// runs the same path rather than a more permissive cousin of it.
+///
+/// The release directory is rebuilt from the COMMITTED set plus this one image:
+/// the promoted bootloader (it already carries the signed `firmware_root`), the
+/// committed bundle, the committed nRF. Nothing here is signed.
+pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
+    let models_dir = helpers::workspace_dir()?.join("models");
+    let bundle_src = models_dir.join(bundle_name(args.bootloader_devel));
+    ensure!(
+        bundle_src.exists(),
+        "a custom build folds into the committed release, but {} does not exist \
+         -- cut and promote one first:\n             \
+         xtask release -m {} {}--promote",
+        bundle_src.display(),
+        args.model.model_id(),
+        if args.bootloader_devel {
+            "--bootloader-devel "
+        } else {
+            ""
+        },
+    );
+
+    let model_id = args.model.model_id();
+    let body = read_model_entry(&bundle_src, model_id)?;
+
+    // Assembled in the artifacts directory, like every other build: the
+    // committed bundle it folds into is read where it lives, so there is
+    // nothing a scratch release directory would hold. It is NOT cleared --
+    // every other build output lives here -- and nothing is signed.
+    let out = helpers::artifacts_dir(args.model)?;
+    fs::create_dir_all(&out)?;
+
+    println!(
+        "{}",
+        format!(
+            "xtask: presigned custom build for {model_id} -- folding into the committed release"
+        )
+        .bold()
+        .dimmed()
+    );
+
+    let mut variant_args = args.clone();
+    Variant::Custom.apply(&mut variant_args);
+    cargo::build_project(variant_args)?;
+
+    // Folded where the build left it: the container records each image's
+    // `file`, so it keeps its build name.
+    let firmware = out.join(Variant::Custom.artifact());
+
+    // The promoted bootloader, whose header already carries the root this image
+    // folds to. Copied unchanged -- a custom build has no key and needs none.
+    let bootloader = models_dir.join(model_id).join("bootloaders").join(format!(
+        "bootloader_{model_id}{}.bin",
+        if args.bootloader_devel { "_devel" } else { "" }
+    ));
+    fs::copy(&bootloader, out.join(DEFAULT_BOOTLOADER_FILE))
+        .with_context(|| format!("Failed to copy {}", bootloader.display()))?;
+
+    stage_nrf_image(args, &out)?;
+    presign(&firmware, &bundle_src, model_id)?;
+
+    // The COMMITTED body describes the release this image folds into, so it is
+    // what the published manifest is derived from -- trimmed to the one variant
+    // present and pointed at its build name. Writing a verbatim copy first, as
+    // a scratch release directory needed, would have described three images
+    // that are not here.
+    publish_manifest(
+        args.model,
+        body,
+        &out,
+        &[(Variant::Custom, Variant::Custom.artifact())],
+    )?;
+    pack_install_zip(args.model)?;
+
+    // Publish, exactly as a signed release does. Without this the presigned
+    // path was the one build that did NOT update the canonical artifacts, so
+    // `flash` kept installing the previous variant while `upload` -- which
+    // reads the zip this build did rewrite -- installed the custom one. The
+    // bootloader published here is the COMMITTED one this image folds to, not
+    // a re-signed copy: a custom build has no key and needs none.
+    publish_bootloader(args.model, &out)?;
+    publish_images(
+        args.model,
+        &out,
+        &[Variant::Custom],
+        &ReleaseManifest::load(&out)?,
+    )?;
+
+    println!(
+        "{}",
+        format!(
+            "xtask: presigned custom firmware ready in {}",
+            out.display()
+        )
+        .green()
+    );
+    Ok(())
+}
+
+/// One model's entry from a cross-model bundle.
+fn read_model_entry(bundle: &Path, model_id: &str) -> Result<serde_json::Value> {
+    let raw = fs::read_to_string(bundle)
+        .with_context(|| format!("Failed to read {}", bundle.display()))?;
+    let doc: serde_json::Value = serde_json::from_str(&raw)
+        .with_context(|| format!("{} is not valid JSON", bundle.display()))?;
+    let expected = format!("{CONTAINER_MAGIC}-set");
+    let format = doc
+        .get("format")
+        .and_then(|v| v.as_str())
+        .with_context(|| {
+            format!(
+                "{} has no `format` -- it predates the versioned release container, \
+                 re-promote it",
+                bundle.display()
+            )
+        })?;
+    ensure!(
+        format == expected,
+        "{} is not a cross-model release set: format `{format}`, expected `{expected}`",
+        bundle.display(),
+    );
+    let version = doc
+        .get("format_version")
+        .and_then(|v| v.as_u64())
+        .with_context(|| format!("{} has no `format_version`", bundle.display()))?;
+    ensure!(
+        version == CONTAINER_VERSION,
+        "{} is release set v{version}, but this xtask speaks v{CONTAINER_VERSION} \
+         -- re-promote it (or update xtask)",
+        bundle.display(),
+    );
+    doc.get("models")
+        .and_then(|m| m.get(model_id))
+        .cloned()
+        .with_context(|| {
+            format!(
+                "{} has no entry for {model_id} -- promote a release for it first",
+                bundle.display()
+            )
+        })
+}
+
+/// Fill the manifest, check the leaf against the signed slot, bake the co-path.
+///
+/// Keyless: the check is what makes it safe to do without one. A leaf that does
+/// not match the committed slot cannot fold, and left unchecked that surfaces
+/// only as a rejected install on the device.
+fn presign(firmware: &Path, bundle: &Path, model_id: &str) -> Result<()> {
+    let tool = helpers::workspace_dir()?
+        .join("../tools/trezor_core_tools/firmware_pq_presign.py")
+        .canonicalize()
+        .context("Failed to locate firmware_pq_presign.py")?;
+
+    let status = process::Command::new("python3")
+        .arg(&tool)
+        .args(["--firmware".as_ref(), firmware.as_os_str()])
+        .args(["--bundle".as_ref(), bundle.as_os_str()])
+        .args(["--model", model_id])
+        .status()
+        .context("Failed to spawn firmware_pq_presign.py")?;
+    ensure!(
+        status.success(),
+        "firmware_pq_presign.py failed: {status} -- this image does not fold into \
+         the committed custom slot"
+    );
+    Ok(())
+}
+
 /// Where the one cross-model bundle is written, and where it is promoted to.
 ///
 /// `xtask release` cuts each model into its own `tree/<MODEL>/`, then merges
