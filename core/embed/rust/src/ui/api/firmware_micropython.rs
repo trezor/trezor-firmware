@@ -1053,9 +1053,10 @@ extern "C" fn new_show_ble_pairing_code(
 extern "C" fn new_show_thp_pairing_code(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let host_name: TString = kwargs.get(Qstr::MP_QSTR_host_name)?.try_into()?;
         let code: TString = kwargs.get(Qstr::MP_QSTR_code)?.try_into()?;
-        let layout = ModelUI::show_thp_pairing_code(title, description, code)?;
+        let layout = ModelUI::show_thp_pairing_code(title, description, host_name, code)?;
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
     };
@@ -2026,6 +2027,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     description: str,
+    ///     host_name: str | None,
     ///     code: str,
     /// ) -> LayoutContext[UiResult]:
     ///     """THP pairing: second screen (pairing code)."""

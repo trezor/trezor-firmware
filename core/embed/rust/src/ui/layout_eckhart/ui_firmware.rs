@@ -1207,11 +1207,16 @@ impl FirmwareUI for UIEckhart {
 
     fn show_thp_pairing_code(
         title: TString<'static>,
-        description: TString<'static>,
+        description: StrBuffer,
+        host_name: TString<'static>,
         code: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow =
-            flow::show_thp_pairing_code::new_show_thp_pairing_code(title, description, code)?;
+        let flow = flow::show_thp_pairing_code::new_show_thp_pairing_code(
+            title,
+            description,
+            host_name,
+            code,
+        )?;
         Ok(flow)
     }
 

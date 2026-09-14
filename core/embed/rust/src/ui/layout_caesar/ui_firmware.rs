@@ -1152,25 +1152,12 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_thp_pairing_code(
-        title: TString<'static>,
-        description: TString<'static>,
-        code: TString<'static>,
+        _title: TString<'static>,
+        _description: StrBuffer,
+        _host_name: TString<'static>,
+        _code: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Self::confirm_action(
-            title,
-            Some(code),
-            Some(description),
-            None,
-            None,
-            true,
-            None,
-            false,
-            false,
-            false,
-            false,
-            None,
-            false,
-        )
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_thp_pairing(
