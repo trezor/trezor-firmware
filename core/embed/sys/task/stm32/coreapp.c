@@ -36,6 +36,7 @@
 static mpu_area_t coreapp_code_area;
 static mpu_area_t coreapp_tls_area;
 static void* coreapp_api_getter = NULL;
+static void* coreapp_app_entry_getter = NULL;
 
 // defined in linker script
 extern uint32_t _kernel_flash_end;
@@ -67,9 +68,9 @@ static void applet_set_unpriv(applet_t* applet, bool unpriv) {
 
 static void coreapp_unload_cb(applet_t* applet) {
   // Clear all memory the applet was allowed to use
-  mpu_set_active_applet(&applet->layout);
+  mpu_set_active_applet(&applet->layout, false);
   coreapp_clear_memory(applet);
-  mpu_set_active_applet(NULL);
+  mpu_set_active_applet(NULL, false);
 #ifdef USE_TRUSTZONE
   // Disable unprivileged access to the coreapp memory regions
   applet_set_unpriv(applet, false);
@@ -102,7 +103,8 @@ bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
   };
 
   applet_privileges_t coreapp_privileges = {
-      .assets_area_access = true,
+      .framebuffer_access = true,
+      .unlimited_syscalls = true,
   };
 
   applet_init(applet, &coreapp_privileges, coreapp_unload_cb);
@@ -110,7 +112,7 @@ bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
   applet->layout = coreapp_layout;
 
   // Enable access to coreapp memory regions
-  mpu_set_active_applet(&applet->layout);
+  mpu_set_active_applet(&applet->layout, false);
 
   // Clear all memory the applet is allowed to use
   coreapp_clear_memory(applet);
@@ -128,6 +130,7 @@ bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
   coreapp_tls_area = header->tls;
   coreapp_code_area = applet->layout.code1;
   coreapp_api_getter = header->api_getter;
+  coreapp_app_entry_getter = header->app_entry;
 
   // Reset the applet task (stack pointer, etc.)
   if (!systask_init(&applet->task, header->stack.start, header->stack.size, 0,
@@ -159,5 +162,7 @@ mpu_area_t coreapp_get_code_area(void) { return coreapp_code_area; }
 mpu_area_t coreapp_get_tls_area(void) { return coreapp_tls_area; }
 
 void* coreapp_get_api_getter(void) { return coreapp_api_getter; }
+
+void* coreapp_get_app_entry(void) { return coreapp_app_entry_getter; }
 
 #endif  // USE_APPLETS && KERNEL_MODE

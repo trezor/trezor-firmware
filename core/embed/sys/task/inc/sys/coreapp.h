@@ -39,6 +39,9 @@ typedef struct {
   mpu_area_t tls;
   // API interface getter
   void* api_getter;
+  // Inverted app-loading entry point (wraps `applet_main`, letting Core
+  // finish its own per-launch setup before the app runs)
+  void* app_entry;
   // Unprivileged SAES input buffer
   void* saes_input;
   // Unprivileged SAES output buffer
@@ -76,6 +79,7 @@ mpu_area_t coreapp_get_tls_area(void);
 
 #ifdef USE_APP_LOADING
 void* coreapp_get_api_getter(void);
+void* coreapp_get_app_entry(void);
 #endif
 
 #endif  // KERNEL_MODE

@@ -1,0 +1,15 @@
+[workspace]
+members = ["ethereum", "tron"]
+
+resolver = "2"
+
+# `debug-fw`/`release-fw`, the profiles apps actually ship in, are owned
+# entirely by `modular-xtask`'s generated linker package (see
+# `sdk/crates/modular-xtask/src/linker.rs`) -- not declared here, so this
+# workspace root exists purely for path-dependency resolution and IDE/human
+# convenience (`cargo check`/`clippy`/`build` here still work, just against
+# the builtin `dev`/`release` profiles instead).
+
+[profile.test]
+split-debuginfo = "off"
+debug = 2

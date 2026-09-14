@@ -64,6 +64,7 @@ on one page here.
     stellar            Stellar commands.
     telemetry          Telemetry commands.
     tezos              Tezos commands.
+    trezorapp          External application commands - load and run external apps.
     tron               Tron commands.
     usb-reset          Perform USB reset on stuck devices.
     version            Show version of trezorctl/trezorlib.
@@ -552,6 +553,25 @@ Tezos commands.
     get-address     Get Tezos address for specified path.
     get-public-key  Get Tezos public key.
     sign-tx         Sign Tezos transaction.
+
+External application commands - load and run external apps.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl trezorapp --help
+
+.. code::
+
+  Usage: trezorctl trezorapp [OPTIONS] COMMAND [ARGS]...
+
+    External application commands - load and run external apps.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    load  Load an external application onto the device.
 
 Tron commands.
 ~~~~~~~~~~~~~~

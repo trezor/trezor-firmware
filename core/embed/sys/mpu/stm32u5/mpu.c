@@ -209,6 +209,8 @@ typedef struct {
   mpu_area_t active_fb;
   // Applet thread-local storage area
   mpu_area_t app_tls;
+  // Applet has access to the framebuffer
+  bool app_fb_access;
 
 } mpu_driver_t;
 
@@ -217,7 +219,8 @@ mpu_driver_t g_mpu_driver = {
     .mode = MPU_MODE_DISABLED,
 };
 
-// forward declaration
+// forward declarations
+static void mpu_update_region5(mpu_mode_t mode);
 static void mpu_update_region7(mpu_mode_t mode);
 
 static inline void mpu_disable(void) {
@@ -324,7 +327,7 @@ mpu_mode_t mpu_get_mode(void) {
   return drv->mode;
 }
 
-void mpu_set_active_applet(const applet_layout_t* layout) {
+void mpu_set_active_applet(const applet_layout_t* layout, bool fb_access) {
   mpu_driver_t* drv = &g_mpu_driver;
 
   if (!drv->initialized) {
@@ -388,6 +391,10 @@ void mpu_set_active_applet(const applet_layout_t* layout) {
   // (used in region #7 in MPU_APP mode)
   drv->app_tls = layout ? layout->tls : (mpu_area_t){0};
 
+  // Remember whether the active applet has access to the framebuffer
+  drv->app_fb_access = fb_access;
+
+  mpu_update_region5(drv->mode);
   mpu_update_region7(drv->mode);
 
   if (drv->mode != MPU_MODE_DISABLED) {
@@ -451,25 +458,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   // Region #5 is banked
 
-  // clang-format off
-  switch (mode) {
-    case MPU_MODE_APP_SAES:
-    case MPU_MODE_APP:
-      if (drv->active_fb.start != 0) {
-        SET_REGRUN( 5, drv->active_fb.start,    drv->active_fb.size,   SRAM,       YES,    YES );
-      } else {
-        DIS_REGION( 5 );
-      }
-      break;
-    default:
-      if (drv->active_fb.start != 0) {
-        SET_REGRUN( 5, drv->active_fb.start,    drv->active_fb.size,   SRAM,       YES,    NO );
-      } else {
-        DIS_REGION( 5 );
-      }
-      break;
-  }
-  // clang-format on
+  mpu_update_region5(mode);
 
   // Region #6 is banked
 
@@ -546,6 +535,31 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   irq_unlock(irq_key);
 
   return prev_mode;
+}
+
+// Must be called with IRQs disabled and MPU disabled
+static void mpu_update_region5(mpu_mode_t mode) {
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  // clang-format off
+  switch (mode) {
+    case MPU_MODE_APP_SAES:
+    case MPU_MODE_APP:
+      if (drv->app_fb_access && drv->active_fb.start != 0) {
+        SET_REGRUN( 5, drv->active_fb.start,    drv->active_fb.size,   SRAM,       YES,    YES );
+      } else {
+        DIS_REGION( 5 );
+      }
+      break;
+    default:
+      if (drv->active_fb.start != 0) {
+        SET_REGRUN( 5, drv->active_fb.start,    drv->active_fb.size,   SRAM,       YES,    NO );
+      } else {
+        DIS_REGION( 5 );
+      }
+      break;
+  }
+  // clang-format on
 }
 
 // Must be called with IRQs disabled and MPU disabled

@@ -12,7 +12,9 @@ coreapp_header:
   .word _tls_section_start
   .word _tls_section_size
   .word coreapp_api_get
+  .word coreapp_app_entry
 #else
+  .word 0
   .word 0
   .word 0
   .word 0

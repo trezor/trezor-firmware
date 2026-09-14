@@ -22,6 +22,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <rtl/sizedefs.h>
+
 #include <io/app_arena.h>
 #include <io/app_header.h>
 #include <io/app_root.h>
@@ -285,7 +287,7 @@ static void app_arena_configure_mpu(const app_arena_entry_t* entry) {
   applet_layout_t layout = {
       .data1 = {.start = (uintptr_t)entry->mem_ptr, .size = entry->mem_size},
   };
-  mpu_set_active_applet(&layout);
+  mpu_set_active_applet(&layout, false);
 #endif
 }
 
