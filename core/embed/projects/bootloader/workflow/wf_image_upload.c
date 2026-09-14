@@ -106,25 +106,26 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
       e->headers_parsed = true;
       e->confirmed = true;
 
-      e->read_offset = IMAGE_INIT_CHUNK_SIZE;
-
-      // request the rest of the first chunk
       uint32_t chunk_limit =
           (e->remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : e->remaining;
-      e->chunk_requested = chunk_limit - e->read_offset;
       // The buffer is complete only once the whole block is in it.
       e->chunk_expected = chunk_limit;
+      e->remaining -= IMAGE_INIT_CHUNK_SIZE;
 
-      if (sectrue != send_msg_request_firmware(iface, e->read_offset,
-                                               e->chunk_requested)) {
-        return UPLOAD_ERR_COMMUNICATION;
-      }
-
-      e->remaining -= e->read_offset;
-      if (e->remaining > 0) {
+      if (chunk_limit > IMAGE_INIT_CHUNK_SIZE) {
+        // request the rest of the first block
+        e->read_offset = IMAGE_INIT_CHUNK_SIZE;
+        e->chunk_requested = chunk_limit - e->read_offset;
+        if (sectrue != send_msg_request_firmware(iface, e->read_offset,
+                                                 e->chunk_requested)) {
+          return UPLOAD_ERR_COMMUNICATION;
+        }
         return UPLOAD_IN_PROGRESS;
       }
-      return UPLOAD_OK;
+
+      // The prefetch already delivered the whole image 
+      e->read_offset = 0;
+      e->chunk_requested = 0;
     } else {
       // first block with the headers parsed -> the first chunk is now complete
       e->read_offset = 0;
@@ -272,7 +273,8 @@ workflow_result_t run_image_upload(protob_io_t *iface,
 
   e.remaining = image_size;
   e.image_total = image_size;
-  if ((e.remaining > 0) && ((e.remaining % sizeof(uint32_t)) == 0) &&
+  if ((e.remaining >= IMAGE_INIT_CHUNK_SIZE) &&
+      ((e.remaining % sizeof(uint32_t)) == 0) &&
       (e.remaining <= handler->max_size)) {
     // clear chunk buffer
     memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
