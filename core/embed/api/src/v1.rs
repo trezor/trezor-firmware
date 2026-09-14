@@ -26,7 +26,8 @@ struct TrezorApiV1Impl;
 
 impl TrezorApiV1 for TrezorApiV1Impl {
     extern "C" fn init(&self, inbox_words: usize) {
-        crate::allocator::init();
+        // `allocator::init()` already ran in `coreapp_app_entry`, before the
+        // app's own `applet_main` (and so this vtable call) ever started.
         crate::wire::register_inbox(inbox_words);
     }
 
