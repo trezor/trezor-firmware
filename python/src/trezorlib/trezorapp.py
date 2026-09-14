@@ -70,8 +70,6 @@ class AppHeader(SanityCheckedStruct):
     curves: list[str]
     # Allowed BIP32 path prefixes
     paths: list[str]
-    # SLIP-0044 coin type identifier for the app
-    slip44_id: int
     # Reserved for future use
     reserved_3: bytes | None = None
 
@@ -116,7 +114,6 @@ class AppHeader(SanityCheckedStruct):
                 path.encode("utf-8") for path in cast(list[str], obj)
             ).ljust(256, b"\0"),
         ),
-        "slip44_id" / c.Int32ul,
         "_end_offset" / c.Tell,
         "reserved_3"
         / Reserved(c.this.header_size - c.this._end_offset + c.this._start_offset),
@@ -152,7 +149,7 @@ class AppImage(SanityCheckedStruct):
 
         for chunk in reversed(chunks):
             result.append((chunk, hash))
-            hash = sha256(chunk + hash).digest()
+            hash = sha256(hash + chunk).digest()
 
         if hash != self.header.chunk_hash:
             raise ValueError("Calculated payload hash does not match header")
