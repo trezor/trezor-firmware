@@ -69,7 +69,12 @@ def _language_version_matches() -> bool:
 def get_features() -> Features:
     import storage.recovery as storage_recovery
     from trezor import translations
-    from trezor.enums import BackupAvailability, Capability, RecoveryStatus
+    from trezor.enums import (
+        BackupAvailability,
+        Capability,
+        FirmwareScheme,
+        RecoveryStatus,
+    )
     from trezor.messages import Features
     from trezor.ui import HEIGHT, WIDTH
 
@@ -102,6 +107,14 @@ def get_features() -> Features:
         unit_packaging=utils.unit_packaging(),
         bootloader_locked=utils.bootloader_locked(),
         max_passphrase_len=MAX_PASSPHRASE_LEN,
+        # Which release this firmware can be handed for an interaction-less
+        # upgrade. Reported unconditionally, so an absent field only ever means
+        # firmware predating the field -- which is legacy anyway.
+        firmware_scheme=(
+            FirmwareScheme.PqSecure
+            if utils.USE_PQ_SECURE_BOOT
+            else FirmwareScheme.Legacy
+        ),
     )
 
     if (

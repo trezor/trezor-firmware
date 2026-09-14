@@ -276,6 +276,9 @@ USE_BLE: bool
 """Whether the hardware supports BLE."""
 USE_NFC: bool
 """Whether the hardware supports NFC."""
+USE_PQ_SECURE_BOOT: bool
+"""Whether this build uses the Merkle-tree (pq_secure_boot) image layout,
+rather than the legacy vendor + image headers."""
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
 USE_SERIAL_NUMBER: bool

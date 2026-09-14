@@ -147,6 +147,28 @@ message Features {
     optional bool wireless_connected = 60;                         // Wireless charger connected
     optional bool tap_to_wake = 63;                                // tap to wake is enabled (None = not supported)
     optional uint32 max_passphrase_len = 64 [default = 50];        // maximal passphrase length (in bytes)
+    optional FirmwareScheme firmware_scheme = 65;                  // image layout the REPORTING binary implements
+
+    /// Firmware image layout, and so which kind of release the reporting binary
+    /// can consume.
+    ///
+    /// Describes the binary that SENT this Features: the bootloader in
+    /// bootloader mode, the firmware in firmware mode. Both are useful, and to
+    /// the caller they answer different questions -- whether this bootloader can
+    /// install a given release, and whether this firmware can parse a given
+    /// upgrade preamble.
+    ///
+    /// ABSENT means UNKNOWN, not Legacy. pq_secure builds predating this field
+    /// exist, so a host must not infer the layout from silence -- it should
+    /// defer to the device, which refuses a release of the wrong layout on its
+    /// own. This field only lets a host say so earlier, and more clearly.
+    enum FirmwareScheme {
+        /// Vendor header + image header, signed with CoSi.
+        FirmwareScheme_Legacy = 0;
+        /// Merkle-tree (pq_secure_boot): a signed boot header committing to a
+        /// firmware_root, and a manifest folding up to it.
+        FirmwareScheme_PqSecure = 1;
+    }
 
     enum BackupAvailability {
         /// Device is already backed up, or a previous backup has failed.

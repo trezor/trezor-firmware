@@ -31,6 +31,11 @@ typedef enum _MessageType {
     MessageType_MessageType_DebugLinkRecordScreen = 9003
 } MessageType;
 
+typedef enum _FirmwareScheme {
+    FirmwareScheme_FirmwareScheme_Legacy = 0,
+    FirmwareScheme_FirmwareScheme_PqSecure = 1
+} FirmwareScheme;
+
 typedef enum _FailureType {
     FailureType_Failure_UnexpectedMessage = 1,
     FailureType_Failure_DataError = 3,
@@ -109,6 +114,8 @@ typedef struct _Features {
     uint32_t build_version;
     bool has_fw_build;
     uint32_t fw_build;
+    bool has_firmware_scheme;
+    FirmwareScheme firmware_scheme;
 } Features;
 
 typedef struct _Ping {

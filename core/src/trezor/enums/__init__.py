@@ -204,6 +204,10 @@ if TYPE_CHECKING:
         DryRun = 1
         UnlockRepeatedBackup = 2
 
+    class FirmwareScheme(IntEnum):
+        Legacy = 0
+        PqSecure = 1
+
     class BackupAvailability(IntEnum):
         NotAvailable = 0
         Required = 1

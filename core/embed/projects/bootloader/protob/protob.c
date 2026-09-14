@@ -104,6 +104,18 @@ secbool send_msg_features(protob_io_t *iface, const fw_check_info_t *fw) {
                         (secret_bootloader_locked() == sectrue));
 #endif
 
+  // Which kind of release this bootloader can install. Reported
+  // unconditionally, so an absent field only ever means a bootloader predating
+  // it -- which is legacy anyway. Lets a host refuse an incompatible bundle
+  // before it starts writing, instead of finding out from FirmwareBegin being
+  // rejected as an unknown message.
+#ifdef PQ_SECURE_BOOT
+  MSG_SEND_ASSIGN_VALUE(firmware_scheme,
+                        FirmwareScheme_FirmwareScheme_PqSecure);
+#else
+  MSG_SEND_ASSIGN_VALUE(firmware_scheme, FirmwareScheme_FirmwareScheme_Legacy);
+#endif
+
 #ifdef USE_POWER_MANAGER
   pm_state_t state = {0};
   if (PM_OK == pm_get_state(&state)) {
