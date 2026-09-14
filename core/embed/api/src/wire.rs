@@ -57,36 +57,18 @@ impl From<CoreIpcService> for u16 {
 // pointer with the kernel.
 static INBOX: Mutex<Option<IpcInbox<&'static mut [usize]>>> = Mutex::new(None);
 
-/// A view of the most recently received message, borrowing its payload
-/// straight out of the app's own IPC inbox buffer — Core never allocates or
-/// copies. Valid only until the next receive overwrites [`CURRENT_MESSAGE`];
-/// callers must fully consume one message (copy out whatever they need)
-/// before requesting the next.
-struct MessageView {
+/// A received message, owning a heap-allocated copy of its payload rather
+/// than borrowing from the IPC inbox — so it can freely outlive the
+/// `IpcMessage` it was copied out of, with no `'static` lifetime tricks.
+struct ReceivedMessage {
     service: u16,
     id: u16,
-    data: &'static [u8],
-}
-
-// SAFETY (of the `static mut` accesses below): only ever touched
-// synchronously from within `receive_until`, which itself only ever runs on
-// the single task currently executing this app's own code — the same
-// single-writer discipline already relied on elsewhere in this crate (e.g.
-// `allocator.rs`'s heap statics).
-static mut CURRENT_MESSAGE: Option<MessageView> = None;
-
-/// Overwrites [`CURRENT_MESSAGE`] and returns a `'static` reference to it.
-fn store_current_message(view: MessageView) -> &'static MessageView {
-    unsafe {
-        let slot = &raw mut CURRENT_MESSAGE;
-        *slot = Some(view);
-        (*slot).as_ref().unwrap()
-    }
+    data: BoxedSlice<u8>,
 }
 
 /// Polls for a message until one arrives or `deadline` (an absolute
 /// [`sys::time`] tick count) passes.
-fn receive_until(deadline: u32) -> Option<&'static MessageView> {
+fn receive_until(deadline: u32) -> Option<ReceivedMessage> {
     loop {
         if let Some(msg) = INBOX
             .lock()
@@ -96,14 +78,11 @@ fn receive_until(deadline: u32) -> Option<&'static MessageView> {
         {
             let service = msg.service();
             let id = msg.id();
-            // SAFETY: `data` borrows directly from the app-provided inbox
-            // buffer registered via `register_inbox` (itself already treated
-            // as 'static there), not from `msg` or the `INBOX` guard — so
-            // extending it here is sound. Dropping `msg` right after just
-            // releases the kernel's ring-buffer bookkeeping for this slot;
-            // it doesn't touch the bytes themselves.
-            let data: &'static [u8] = unsafe { core::mem::transmute(msg.data()) };
-            return Some(store_current_message(MessageView { service, id, data }));
+            // Copies out of the inbox buffer while `msg` (and so the buffer
+            // slot it borrows) is still alive; `msg` is released right after,
+            // via its `Drop` impl, once the copy is safely in `data`.
+            let data = BoxedSlice::from(msg.data());
+            return Some(ReceivedMessage { service, id, data });
         }
         if sys::time::ticks_ms() >= deadline {
             return None;
@@ -122,7 +101,7 @@ pub(crate) fn ipc_call(
     id: u16,
     data: &[u8],
     timeout_ms: u32,
-) -> Result<(u16, &'static [u8]), WireError> {
+) -> Result<(u16, BoxedSlice<u8>), WireError> {
     if !sys::ipc::send(coreapp(), service, id, data) {
         return Err(WireError::FailedToSend);
     }
@@ -163,7 +142,7 @@ impl WireV1 for WireV1Impl {
         match receive_until(deadline) {
             Some(msg) => Ok(WireMessage {
                 id: msg.id,
-                data: BoxedSlice::from(msg.data),
+                data: msg.data,
             })
             .into(),
             None => Err(WireError::Timeout).into(),
@@ -182,11 +161,7 @@ impl WireV1 for WireV1Impl {
             data.as_slice(),
             timeout_ms,
         ) {
-            Ok((id, data)) => Ok(WireMessage {
-                id,
-                data: BoxedSlice::from(data),
-            })
-            .into(),
+            Ok((id, data)) => Ok(WireMessage { id, data }).into(),
             Err(e) => Err(e).into(),
         }
     }

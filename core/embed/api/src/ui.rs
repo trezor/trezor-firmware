@@ -44,7 +44,7 @@ fn to_str_exts<'a>(items: &[StrExt<'a>], out: &mut alloc::vec::Vec<structs::StrE
 fn ipc_ui_call(value: &TrezorUiEnum) -> Result<WireTrezorUiResult, WireError> {
     let bytes = to_bytes::<Failure>(value).map_err(|_| WireError::DecodeError)?;
     let (_id, data) = ipc_call(CoreIpcService::Ui.into(), 0, &bytes, TIMEOUT_MAX)?;
-    let archived = rkyv::access::<rkyv::Archived<WireTrezorUiResult>, Failure>(data)
+    let archived = rkyv::access::<rkyv::Archived<WireTrezorUiResult>, Failure>(&data)
         .map_err(|_| WireError::DecodeError)?;
     rkyv::api::low::deserialize::<WireTrezorUiResult, Failure>(archived)
         .map_err(|_| WireError::DecodeError)
