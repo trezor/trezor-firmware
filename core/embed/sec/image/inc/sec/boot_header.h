@@ -561,12 +561,22 @@ secbool boot_header_prefix_extent(const uint8_t* data, size_t len,
  * What each half pins:
  *   - the AUTH part: bootloader version, `monotonic_version`, `code_size` and
  *     `firmware_root` -- hence which release;
- *   - the Merkle PROOF: modelRoot, hence which nRF image is admissible (the nRF
- *     leaf is a sibling of the bootloader leaf, not a descendant, so
+ *   - the Merkle PROOF: the co-path SIBLINGS, which in the fixed-depth model
+ *     tree include the nRF leaf itself -- hence which nRF image is admissible
+ *     (the nRF leaf is a sibling of the bootloader leaf, not a descendant, so
  *     `firmware_root` alone does not cover it);
  *   - the MANIFEST: the variant, `firmware_version` and every module
  *     `code_hash` -- including a CUSTOM variant's app hash, which the
  *     founder-signed variant leaf deliberately zeroes.
+ *
+ * What it does NOT pin is the bootloader CODE, and therefore not modelRoot
+ * either: the model leaf is `H(0x00 || auth || H(code))`, of which only `auth`
+ * is in the digest, and modelRoot needs that leaf. So two founder-signed
+ * releases sharing an auth part and a co-path but differing in bootloader code
+ * produce the SAME digest. What bounds it is that both must be founder-signed;
+ * closing it is not free, because firmware is handed only the preamble and
+ * never the bootloader code (see `RebootToBootloader.firmware_preamble`), so
+ * `H(code)` would have to travel as a new field.
  *
  * The UNAUTHENTICATED part is deliberately excluded. It holds the signatures (a
  * confirmation must identify the payload, not which of several valid signatures

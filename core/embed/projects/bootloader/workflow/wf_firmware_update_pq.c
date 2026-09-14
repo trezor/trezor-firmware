@@ -433,16 +433,16 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
 
   // --- Interaction-less upgrade: was THIS release confirmed in firmware? ---
   //     The digest covers the boot header's authenticated part + Merkle proof
-  //     (bootloader version, monotonic_version, firmware_root, modelRoot -- so
-  //     the nRF image too) and the manifest as received (variant,
-  //     firmware_version, every module code_hash). Recomputing it over what the
-  //     host actually delivered and comparing against the value firmware stored
-  //     in bootargs is what lets the confirm screen be skipped -- but only
-  //     together with an unchanged storage domain AND an official variant, see
-  //     `skip_confirm` below. The digest proves WHICH release the running
-  //     firmware named; that it showed the user anything is trust placed in
-  //     that firmware, which is why the skip is not extended to unofficial
-  //     builds.
+  //     (bootloader version, monotonic_version, firmware_root, and the co-path
+  //     siblings -- so the nRF image too) and the manifest as received
+  //     (variant, firmware_version, every module code_hash). Recomputing it
+  //     over what the host actually delivered and comparing against the value
+  //     firmware stored in bootargs is what lets the confirm screen be skipped
+  //     -- but only together with an unchanged storage domain AND an official
+  //     variant, see `skip_confirm` below. The digest proves WHICH release the
+  //     running firmware named; that it showed the user anything is trust
+  //     placed in that firmware, which is why the skip is not extended to
+  //     unofficial builds.
   //     FIH: `ilu` only ever flips on a POSITIVE match, so a skipped/glitched
   //     check leaves the confirm shown.
   //     Consent is ONE-SHOT: it authorizes the install the user asked for, not
