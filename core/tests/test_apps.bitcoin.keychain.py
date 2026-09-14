@@ -509,6 +509,15 @@ class TestSignMessagePathValidation(unittest.TestCase):
                 InputScriptType.SPENDMULTISIG,
             ),
             ([H_(86), H_(0), H_(0), 0, 0], InputScriptType.SPENDTAPROOT),
+            ([H_(44), H_(0), H_(0), 0, 0], InputScriptType.SPENDMULTISIG),
+            # Not even on BIP-48 0', where trezorctl used to guess it: the
+            # client sends the single-key analogue now, so the device does not
+            # reinterpret the script type on any path.
+            ([H_(48), H_(0), H_(0), H_(0)], InputScriptType.SPENDMULTISIG),
+            (
+                [H_(48), H_(0), H_(0), H_(0), 0, 0],
+                InputScriptType.SPENDMULTISIG,
+            ),
         )
 
         for address_n, script_type in valid_paths:
@@ -545,11 +554,13 @@ class TestSignMessagePathValidation(unittest.TestCase):
         )
 
 
-class TestSignMessageAccountAccess(TestCaseWithContext):
-    """The keychain schemas that let SignMessage derive a BIP-48 account key.
+class TestSignMessageKeyAccess(TestCaseWithContext):
+    """The keys SignMessage may derive, and no others.
 
-    Validating the path is not enough: the six-component BIP-48 patterns do
-    not cover the four-component node. See #7717.
+    On top of the per-coin schemas SignMessage unlocks the BIP-48 account
+    nodes and nothing else, so a path outside the keychain is still refused
+    outright under strict safety checks rather than merely warned about.
+    See #7717.
     """
 
     if utils.USE_THP:
@@ -565,46 +576,100 @@ class TestSignMessageAccountAccess(TestCaseWithContext):
             seed = bip39.seed(" ".join(["all"] * 12), "")
             cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
 
-    def test_account_node_needs_the_extra_schemas(self):
+    def _derive(self, msg):
+        """Derive msg.address_n the way a handler decorated with
+        with_keychain() does, i.e. through the schemas the wrapper picks."""
+        from apps.bitcoin.keychain import with_keychain
+
+        @with_keychain
+        async def handler(msg, keychain, coin):
+            keychain.derive(msg.address_n)
+            return True
+
+        return await_result(handler(msg))
+
+    def _sign_message(self, address_n, script_type=None):
+        from trezor.messages import SignMessage
+
+        return SignMessage(
+            address_n=address_n,
+            message=b"hello",
+            coin_name="Bitcoin",
+            script_type=script_type,
+        )
+
+    def test_unrecognized_path_is_refused(self):
+        """The grant is the account nodes, not every path.
+
+        Keychain.verify_path() raises for a path in no schema, so an unknown
+        derivation scheme cannot be signed with at all under strict safety
+        checks -- it is not a warning the user can click through.
+        """
         from trezor.enums import InputScriptType
 
-        from apps.bitcoin.keychain import (
-            _get_sign_message_account_patterns,
-            get_schemas_from_patterns,
-        )
+        from apps.bitcoin.keychain import validate_path_against_script_type
+
+        coin = _get_coin_by_name("Bitcoin")
+        # In no pattern table and in no schema.
+        address_n = [H_(1234), H_(5), H_(6)]
+        msg = self._sign_message(address_n, InputScriptType.SPENDADDRESS)
+
+        self.assertRaises(wire.DataError, self._derive, msg)
+        self.assertFalse(validate_path_against_script_type(coin, msg))
+
+    def test_bip48_account_node_and_leaf(self):
+        """The two paths #7717 asks for: signable, and without a warning."""
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import validate_path_against_script_type
 
         coin = _get_coin_by_name("Bitcoin")
         account = [H_(48), H_(0), H_(0), H_(2)]
 
-        # Without them the account node is out of reach, which is what #7717
-        # reports as "Forbidden key path".
-        keychain = await_result(_get_keychain_for_coin(coin))
-        self.assertRaises(wire.DataError, keychain.derive, account)
+        for address_n in (account, account + [0, 0]):
+            msg = self._sign_message(address_n, InputScriptType.SPENDWITNESS)
+            self.assertTrue(self._derive(msg), address_n)
+            self.assertTrue(validate_path_against_script_type(coin, msg), address_n)
 
-        schemas = get_schemas_from_patterns(
-            _get_sign_message_account_patterns(coin, InputScriptType.SPENDWITNESS),
-            coin,
+    def test_slip25_still_requires_unlock_path(self):
+        """_get_unlock_schemas() offers SignMessage the external chain alone,
+        and only after UnlockPath."""
+        from trezor.enums import InputScriptType
+
+        from apps.common.paths import SLIP25_PURPOSE
+
+        msg = self._sign_message(
+            [SLIP25_PURPOSE, H_(0), H_(0), H_(1), 0, 0],
+            InputScriptType.SPENDTAPROOT,
         )
-        keychain = await_result(_get_keychain_for_coin(coin, schemas))
-        keychain.derive(account)
+        self.assertRaises(wire.DataError, self._derive, msg)
 
-        # The node only, never its subtree: the schema carries no wildcard, so
-        # anything below is still reached through the ordinary BIP-48 pattern.
-        self.assertRaises(wire.DataError, keychain.derive, account + [0])
-        keychain.derive(account + [0, 0])
+    def test_other_messages_keep_their_schemas(self):
+        """Whatever SignMessage unlocks, GetAddress must not inherit."""
+        from trezor.enums import InputScriptType
+        from trezor.messages import GetAddress
+
+        msg = GetAddress(
+            address_n=[H_(1234), H_(5), H_(6)],
+            coin_name="Bitcoin",
+            script_type=InputScriptType.SPENDADDRESS,
+        )
+        self.assertRaises(wire.DataError, self._derive, msg)
+
+
+class TestSignMessageAccountPatterns(unittest.TestCase):
+    """Which BIP-48 account nodes are recognized, and therefore not warned
+    about. A pure policy list: access no longer depends on it."""
 
     def test_spendmultisig_is_not_offered(self):
         """Message signing is single-key, so SPENDMULTISIG gets no account node.
 
-        get_address() would raise "Multisig details required", so offering it
-        would let validation agree on a path the operation cannot use.
+        get_address() would raise "Multisig details required", so recognizing
+        it would drop the warning from a path the operation cannot use.
         """
         from trezor.enums import InputScriptType
 
-        from apps.bitcoin.keychain import (
-            _get_sign_message_account_patterns,
-            get_schemas_from_patterns,
-        )
+        from apps.bitcoin.keychain import _get_sign_message_account_patterns
 
         coin = _get_coin_by_name("Bitcoin")
 
@@ -613,35 +678,26 @@ class TestSignMessageAccountAccess(TestCaseWithContext):
             [],
         )
 
-        schemas = get_schemas_from_patterns(
-            _get_sign_message_account_patterns(coin, InputScriptType.SPENDMULTISIG),
-            coin,
-        )
-        keychain = await_result(_get_keychain_for_coin(coin, schemas))
-        self.assertRaises(
-            wire.DataError, keychain.derive, [H_(48), H_(0), H_(0), H_(0)]
-        )
-
-    def test_schemas_are_script_type_specific(self):
+    def test_patterns_are_script_type_specific(self):
         from trezor.enums import InputScriptType
 
         from apps.bitcoin.keychain import (
+            PATTERN_BIP48_P2SHSEGWIT_ACCOUNT,
+            PATTERN_BIP48_SEGWIT_ACCOUNT,
             _get_sign_message_account_patterns,
-            get_schemas_from_patterns,
         )
 
         coin = _get_coin_by_name("Bitcoin")
 
-        # The 2' level is unlocked for SPENDWITNESS only; asking under another
-        # script type must not reach it.
-        schemas = get_schemas_from_patterns(
-            _get_sign_message_account_patterns(coin, InputScriptType.SPENDP2SHWITNESS),
-            coin,
+        # The 2' level answers for SPENDWITNESS alone; asking under another
+        # script type leaves the node unrecognized, so it still warns.
+        self.assertEqual(
+            _get_sign_message_account_patterns(coin, InputScriptType.SPENDWITNESS),
+            [PATTERN_BIP48_SEGWIT_ACCOUNT],
         )
-        keychain = await_result(_get_keychain_for_coin(coin, schemas))
-        keychain.derive([H_(48), H_(0), H_(0), H_(1)])
-        self.assertRaises(
-            wire.DataError, keychain.derive, [H_(48), H_(0), H_(0), H_(2)]
+        self.assertEqual(
+            _get_sign_message_account_patterns(coin, InputScriptType.SPENDP2SHWITNESS),
+            [PATTERN_BIP48_P2SHSEGWIT_ACCOUNT],
         )
 
 
