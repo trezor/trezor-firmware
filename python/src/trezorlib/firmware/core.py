@@ -298,6 +298,7 @@ class BootHeaderUnauth(SanityCheckedStruct):
         # header only carries the storage-domain identity (firmware_type). Future
         # unauth fields are appended AFTER this, bounded by the FixedSized unauth
         # region (see BootableImage), so older bins/parsers stay compatible.
+        "firmware_type" / c.Int32ul,
     )
     # fmt: on
 

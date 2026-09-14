@@ -372,6 +372,38 @@ uint8_t fw_variant_to_fw_type(fw_variant_sec_t variant) {
   }
 }
 
+secbool fw_variant_is_official(fw_variant_sec_t variant) {
+  // Positive allow-list; custom / none / unknown / INVALID yield secfalse.
+  //
+  // FIH: branchless, and `|` rather than `||` so no comparison is skipped by
+  // short-circuiting. The verdict is a PRODUCT with sectrue, not a literal
+  // returned from a taken branch: a glitch in the multiply or in any comparison
+  // yields something that is not sectrue, and every caller tests `== sectrue`,
+  // so the failure direction is restricted. A switch would put the whole
+  // decision on one jump.
+  return ((variant == FW_VARIANT_SEC_UNIVERSAL) |
+          (variant == FW_VARIANT_SEC_BITCOIN_ONLY) |
+          (variant == FW_VARIANT_SEC_PRODTEST)) *
+         sectrue;
+}
+
+secbool fw_variant_is_custom(fw_variant_sec_t variant) {
+  // FIH: branchless, as above.
+  return (variant == FW_VARIANT_SEC_CUSTOM) * sectrue;
+}
+
+secbool fw_variant_is_provisioned(fw_variant_sec_t variant) {
+  // Positive allow-list over the real variants; NONE and INVALID yield
+  // secfalse. FIH: branchless, as above.
+  return ((variant == FW_VARIANT_SEC_CUSTOM) |
+          (variant == FW_VARIANT_SEC_UNIVERSAL) |
+          (variant == FW_VARIANT_SEC_BITCOIN_ONLY) |
+          (variant == FW_VARIANT_SEC_PRODTEST)) *
+         sectrue;
+}
+
+// Display identity for a hardened firmware variant. ONE definition shared by
+// every binary that has to name a firmware: the secmon for the INSTALLED image
 // (firmware_get_vendor), the coreapp for an OFFERED one
 // (check_firmware_header). So the string the user confirms before rebooting is
 // the string the device reports afterwards.

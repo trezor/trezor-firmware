@@ -120,6 +120,9 @@ typedef struct {
 void fw_run_prepare(fw_run_info_t *info);
 
 #ifdef PQ_SECURE_BOOT
+
+#include <sec/boot_header.h>
+
 /** Result of a successful firmware-tree verification. */
 typedef struct {
   fw_variant_sec_t variant; /**< hardened variant of the installed firmware */

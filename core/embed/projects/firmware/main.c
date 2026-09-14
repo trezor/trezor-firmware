@@ -87,6 +87,10 @@ extern const void nrf_app_size;
 
 // The firmware variant stamped into the manifest (firmware/build.rs ->
 // FW_VARIANT, consumed by manifest_header.S) must be a known hardened codeword.
+// This is the ONLY check on that value: manifest_header.S emits it with `.word`
+// and the assembler type-checks nothing, so without this a small fw_variant_t
+// value -- or a mistyped codeword -- would be stamped into the authenticated
+// manifest and every device would refuse the firmware as unprovisioned.
 #ifdef FW_VARIANT
 #include <sec/boot_header.h>
 _Static_assert(FW_VARIANT == FW_VARIANT_SEC_UNIVERSAL ||

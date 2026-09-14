@@ -91,6 +91,11 @@ def _build_variant_image(
             "code_hash": fm.module_code_hash(kernel_code, CHUNK_SIZE_TEST),
         },
     ]
+    # VARIANTS is keyed by the small fw_variant_t id (it is the name map); the
+    # manifest field itself carries the hardened codeword.
+    manifest = fm.build_manifest(
+        fm.FW_VARIANT_SEC[vid], entries, firmware_version=version
+    )
 
     image = bytearray(b"\xff" * _align(ker_addr + app_size))
     image[0 : len(manifest)] = manifest

@@ -208,6 +208,42 @@ typedef enum {
   FW_VARIANT_PRODTEST = 4,      // == VENDOR_FW_TYPE_PRODTEST
 } fw_variant_t;
 
+/**
+ * Hardened firmware variant -- the form every DECISION is made on.
+ *
+ * `fw_variant_t` values are 0..4, so single bit flips move between them:
+ * CUSTOM(1) -> BITCOIN_ONLY(3) crosses unofficial -> official, and
+ * NONE(0) -> PRODTEST(4) reaches manufacturing mode. These codewords are
+ * Reed-Muller RM(1,5): every pair, INVALID included, is at least 16 bit flips
+ * apart, and each is 16 from both 0x00000000 and 0xFFFFFFFF -- so zeroed,
+ * erased and torn-write memory all decode to INVALID rather than to a variant.
+ *
+ * INVALID is all-zero for the same reason `secfalse` is: the restrictive value
+ * is the one uninitialised memory yields. It is deliberately DISTINCT from
+ * NONE -- "unprovisioned" is a real state that auto-confirms an official
+ * install, and garbage must not reach it. The values avoid 0xAAAAAAAA /
+ * 0x55555555 so nothing can read as a `secbool`.
+ *
+ * BOTH places a variant lives hold this form: the authenticated manifest field
+ * and the persisted `boot_header_unauth_t.firmware_type`. So nothing converts
+ * in either direction -- the install write is a copy, the variant pin is a
+ * direct comparison (a mismatch is 16 bit flips from passing, not one), and the
+ * only narrowing is `fw_variant_to_fw_type` for the storage KDF.
+ *
+ * Hardening the MANIFEST field is the half that matters most: the install-time
+ * unlock gate reads its variant out of a RAM buffer filled from the wire, after
+ * the fold has already passed, so a fault there is what could turn a CUSTOM
+ * image into an official one. Authentication cannot help -- the flip lands
+ * after it.
+ */
+typedef uint32_t fw_variant_sec_t;
+#define FW_VARIANT_SEC_INVALID 0x00000000U /**< not a variant */
+#define FW_VARIANT_SEC_NONE 0xCCCCCCCCU    /**< unprovisioned */
+#define FW_VARIANT_SEC_CUSTOM 0x33333333U
+#define FW_VARIANT_SEC_UNIVERSAL 0x5A5A5A5AU
+#define FW_VARIANT_SEC_BITCOIN_ONLY 0xA5A5A5A5U
+#define FW_VARIANT_SEC_PRODTEST 0x66666666U
+
 /*
  * The resolved firmware_type byte (the storage-domain identity the bootloader
  * persists to boot_header_unauth_t.firmware_type) IS the authenticated variant
@@ -739,16 +775,32 @@ void firmware_module_chain_step(const uint8_t* h_prev, const uint8_t* data,
  */
 const char* firmware_vendor_str(fw_variant_sec_t variant);
 
+/**
+ * @brief The ONLY narrowing back to the canonical small value.
+ *
+ * This is what the storage KDF and the legacy-compatible byte must see:
+ * `secret_key_storage_salt()` mixes it in, and `FW_VARIANT_* ==
+ * VENDOR_FW_TYPE_*` is what lets the legacy->PQ migration keep the seed. So the
+ * hardened form never reaches the KDF, and the narrow form never carries a
+ * decision. Returns FW_VARIANT_NONE for INVALID.
+ */
+uint8_t fw_variant_to_fw_type(fw_variant_sec_t variant);
 
+/** Positive allow-list on a hardened variant: sectrue ONLY for a recognized
+ *  official one. Custom, none, unknown and INVALID all return secfalse, so a
+ *  glitch fails toward restricted. */
+secbool fw_variant_is_official(fw_variant_sec_t variant);
 
 /** Returns sectrue only on a positive match against FW_VARIANT_SEC_CUSTOM.
  *  For granting privileges use fw_variant_is_official(), never !is_custom. */
+secbool fw_variant_is_custom(fw_variant_sec_t variant);
 
 /** Returns sectrue only on a positive match against one of the four REAL image
  *  variants -- i.e. "a firmware is installed / this manifest names a variant".
  *  NONE (unprovisioned) and INVALID (garbage, zeroed, erased, torn write) both
  *  return secfalse, which is what the old `firmware_type != 0` tests meant plus
  *  the garbage case they could not express. */
+secbool fw_variant_is_provisioned(fw_variant_sec_t variant);
 
 /**
  * Checks the signature in the boot header against the public keys.

@@ -64,6 +64,29 @@ FW_VARIANT_UNIVERSAL = 2
 FW_VARIANT_BITCOIN_ONLY = 3
 FW_VARIANT_PRODTEST = 4
 
+# Hardened variant codewords (FW_VARIANT_SEC_*, sec/boot_header.h). These are
+# what the manifest's firmware_variant field and the boot header's
+# firmware_type carry; the small values above stay the canonical form for the
+# storage KDF and the legacy vendor header. Reed-Muller RM(1,5): every pair,
+# INVALID included, is >= 16 bit flips apart, so no single fault moves between
+# variants -- which matters because the install-time unlock gate reads this
+# field out of a RAM buffer after the fold has already passed.
+FW_VARIANT_SEC_INVALID = 0x00000000
+FW_VARIANT_SEC_NONE = 0xCCCCCCCC
+FW_VARIANT_SEC_CUSTOM = 0x33333333
+FW_VARIANT_SEC_UNIVERSAL = 0x5A5A5A5A
+FW_VARIANT_SEC_BITCOIN_ONLY = 0xA5A5A5A5
+FW_VARIANT_SEC_PRODTEST = 0x66666666
+
+# The signer is the ONLY place a variant name becomes a codeword; the device
+# never converts in this direction (see fw_variant_* in boot_header.h).
+FW_VARIANT_SEC = {
+    FW_VARIANT_CUSTOM: FW_VARIANT_SEC_CUSTOM,
+    FW_VARIANT_UNIVERSAL: FW_VARIANT_SEC_UNIVERSAL,
+    FW_VARIANT_BITCOIN_ONLY: FW_VARIANT_SEC_BITCOIN_ONLY,
+    FW_VARIANT_PRODTEST: FW_VARIANT_SEC_PRODTEST,
+}
+
 # Module types (fw_module_type_t, sec/boot_header.h). APP is the non-secure
 # application (kernel+coreapp); PRODTEST is a standalone secure factory-test image.
 FW_MODULE_SECMON = 1

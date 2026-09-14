@@ -118,6 +118,12 @@ class FirmwareVariant(IntEnum):
     and legacy vendor-header form, which nothing here needs.
     """
 
+    INVALID = 0x00000000
+    NONE = 0xCCCCCCCC
+    CUSTOM = 0x33333333
+    UNIVERSAL = 0x5A5A5A5A
+    BITCOIN_ONLY = 0xA5A5A5A5
+    PRODTEST = 0x66666666
 
 
 class ModuleType(IntEnum):

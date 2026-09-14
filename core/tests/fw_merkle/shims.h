@@ -108,6 +108,20 @@ static inline size_t boot_header_merkle_proof_size(
 #define FW_VARIANT_BITCOIN_ONLY 3
 #define FW_VARIANT_PRODTEST 4
 
+/* Hardened variant codewords -- what the manifest field and the boot header's
+ * firmware_type carry. Mirrors FW_VARIANT_SEC_* in sec/boot_header.h; the
+ * small values above survive only as the storage-KDF / legacy form. Keeping
+ * both here is the point of the harness: it cross-validates the real
+ * on-device math against Python, so a divergence in these constants shows up
+ * as a fold mismatch rather than on a device. */
+typedef uint32_t fw_variant_sec_t;
+#define FW_VARIANT_SEC_INVALID 0x00000000U
+#define FW_VARIANT_SEC_NONE 0xCCCCCCCCU
+#define FW_VARIANT_SEC_CUSTOM 0x33333333U
+#define FW_VARIANT_SEC_UNIVERSAL 0x5A5A5A5AU
+#define FW_VARIANT_SEC_BITCOIN_ONLY 0xA5A5A5A5U
+#define FW_VARIANT_SEC_PRODTEST 0x66666666U
+
 #define FW_MANIFEST_MAGIC 0x445A5254 /* 'TRZD' */
 #define FW_MANIFEST_REGION 0x400     /* mirrors sec/boot_header.h */
 #ifndef BOOT_HEADER_MAX_MODULES
@@ -160,6 +174,8 @@ secbool firmware_manifest_authentic(const firmware_manifest_t* manifest,
                                     size_t proof_count,
                                     const merkle_proof_node_t* trusted_root);
 uint8_t fw_variant_to_fw_type(fw_variant_sec_t variant);
+secbool fw_variant_is_official(fw_variant_sec_t variant);
 secbool fw_variant_is_custom(fw_variant_sec_t variant);
+secbool fw_variant_is_provisioned(fw_variant_sec_t variant);
 
 #include "boot_header_merkle_internal.h"

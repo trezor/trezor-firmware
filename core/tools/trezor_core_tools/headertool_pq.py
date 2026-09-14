@@ -148,6 +148,17 @@ def cli(
 
     fw.set_merkle_proof(list(map(bytes.fromhex, merkle_proof)))
 
+    # A built bootloader is deliberately UNPROVISIONED, so say so: the field
+    # lives in the unauth part, which the .header section only zero-fills, and
+    # zero is FW_VARIANT_SEC_INVALID -- "not a variant" rather than "no firmware
+    # yet". The difference is not cosmetic: the install path skips its confirm
+    # only on a POSITIVE NONE, so a bootloader left at INVALID would make a
+    # fresh device ask before its first official install, unlike one flashed
+    # from a signed release. INVALID is then left to mean what it should --
+    # something went wrong. Signing does not cover the unauth part, so writing
+    # this here is free.
+    fw.unauth.firmware_type = firmware_module.FW_VARIANT_SEC_NONE
+
     if print_merkle_root:
         click.echo(fw.merkle_root().hex())
         return
