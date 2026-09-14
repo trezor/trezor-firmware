@@ -291,6 +291,7 @@ upload_pq_test: ## [test] drive the PQ OTA harness, incl. --tamper fault injecti
 	# harness so a fault can be injected to exercise one specific device
 	# rejection. Separate because trezorctl deliberately cannot do this: fault
 	# injection must not ship in a library. Build a release first
+	# (`xtask release -m $(TREZOR_MODEL) --bootloader-devel`) or just build one,
 	#   make upload_pq_test UPLOAD_OPTS="--tamper consent-mismatch"
 	#   make upload_pq_test VARIANT=custom UPLOAD_OPTS="--tamper custom-app-size"
 	python tools/trezor_core_tools/firmware_pq_update.py \
