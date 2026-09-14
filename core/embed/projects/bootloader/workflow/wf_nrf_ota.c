@@ -76,6 +76,29 @@ static upload_status_t nrf_on_chunk(image_upload_handler_t *base,
   return UPLOAD_OK;  // fold + model-id verified in on_finish
 }
 
+// Run the PQ-native push gate against the boot header at `boot_header` (the
+// one whose modelRoot we folded against). A classic image passes trivially; a
+// PQ-native one must additionally carry this release's founder signature
+// records, an image-side Merkle proof that folds, and no rogue TLVs --
+// otherwise its own MCUboot would reject it AFTER we had already erased the
+// only slot. See nrf_image_verify_for_push.
+static secbool nrf_pq_gate(const uint8_t *image, size_t image_len,
+                           const merkle_proof_node_t *model_root,
+                           const void *boot_header) {
+  const boot_header_auth_t *hdr = boot_header_auth_get((uintptr_t)boot_header);
+  if (hdr == NULL) {
+    return secfalse;
+  }
+  const boot_header_unauth_t *unauth = boot_header_unauth_get(hdr);
+  if (unauth == NULL) {
+    return secfalse;
+  }
+  return nrf_image_verify_for_push(
+      image, image_len, model_root, unauth->slh_signature[0],
+      unauth->slh_signature[1], unauth->ec_signature[0],
+      unauth->ec_signature[1]);
+}
+
 static upload_status_t nrf_on_finish(image_upload_handler_t *base,
                                      protob_io_t *iface) {
   nrf_upload_handler_t *h = (nrf_upload_handler_t *)base;
