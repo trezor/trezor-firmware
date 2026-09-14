@@ -578,6 +578,67 @@ secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
 secbool firmware_verify_manifest_entry(const firmware_manifest_entry_t* entry,
                                        uintptr_t firmware_base);
 
+/** Upper bound on a model-tree co-path (MODEL_TREE_DEPTH is 4 today).
+ *
+ *  Bounds an UNTRUSTED proof_count before it is used in size arithmetic, so it
+ * is load-bearing rather than cosmetic. Declared beside
+ * boot_header_verify_slot, which takes the count, and there is exactly ONE
+ * definition: the fold, the OTA workflow, the staging descriptor and the shape
+ * check all share it, where they previously each had a copy (two of them under
+ * the same name in different headers).
+ */
+#define MODEL_TREE_MAX_PROOF_NODES 32U
+
+/**
+ * Co-processor slot value -- what a co-processor's model-tree leaf commits to.
+ *
+ * A fold proves the founder committed to SOME artifact under this modelRoot; it
+ * cannot prove WHICH slot the artifact is, because the tree folds sorted pairs
+ * and so carries no direction. The role therefore has to live in the leaf
+ * VALUE, and this is it. Without it, separation between co-processor kinds is
+ * incidental -- it rests on the preimages happening to be shaped differently --
+ * and separation between two instances of one kind does not exist at all.
+ *
+ * The STM's own model leaf is deliberately NOT wrapped: it is already
+ * self-identifying, carrying TRZQ + hw_model + hw_revision inside auth_header.
+ * Once this tag exists, an STM header cannot produce a co-processor value and
+ * vice versa, so the separation is designed rather than lucky.
+ *
+ * THE INVARIANT: each verifier takes `kind` and `index` from its OWN build
+ * configuration, never from the image and never from the wire. An index read
+ * from the artifact would let a host re-tag it, and the binding would be worth
+ * nothing.
+ *
+ * `digest` is per-kind, and it is the one rule a new kind cannot inherit: it
+ * must cover the image EXCEPT the region holding the founder material, or the
+ * signature would sit inside its own preimage. The nRF gets that boundary free
+ * -- MCUboot's image hash covers header + payload + protected TLVs, and the
+ * founder records live in the unprotected area for exactly this reason.
+ */
+/**
+ * @brief Fold a MODEL-tree slot value up to `trusted_model_root`.
+ *
+ * A slot value is the 32 bytes something sharing the model tree is committed by
+ * -- today a co-processor's firmware image hash. This hashes it into a leaf and
+ * folds the co-path; it knows nothing about what produced the value, so every
+ * slot folds the same way and a second co-processor needs no new fold.
+ *
+ * A passing fold proves founder-commitment, NOT identity: every model's slot
+ * hangs under the same modelRoot. Callers that need identity must pin it
+ * separately.
+ *
+ * @param slot_value   the committed 32-byte value
+ * @param proof        co-path from the slot up to modelRoot
+ * @param proof_count  number of co-path nodes (bound by
+ * MODEL_TREE_MAX_PROOF_NODES)
+ * @param trusted_model_root modelRoot recomputed from the verified boot header
+ * @return secbool -- sectrue iff the fold reaches `trusted_model_root`
+ */
+secbool boot_header_verify_slot(const uint8_t* slot_value, size_t slot_len,
+                                const merkle_proof_node_t* proof,
+                                size_t proof_count,
+                                const merkle_proof_node_t* trusted_model_root);
+
 /**
  * Smart-hashing chain primitives shared by the whole-module recompute
  * (firmware_module_code_hash / firmware_verify_manifest_entry) and the

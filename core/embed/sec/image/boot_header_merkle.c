@@ -298,6 +298,50 @@ secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
   return sectrue;
 }
 
+// Generic Merkle leaf hash H(0x00 || data). The firmware variant leaf
+// (boot_header_variant_leaf) is the manifest-specific case; this is the plain
+// leaf used for the nRF (over MCUboot's signed region) -- see
+// nrf_image_verify_in_tree.
+void merkle_leaf_hash(const uint8_t* data, size_t len,
+                      merkle_proof_node_t* out) {
+  static const uint8_t prefix0[] = {0x00};
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  IMAGE_HASH_UPDATE(&ctx, prefix0, sizeof(prefix0));
+  IMAGE_HASH_UPDATE(&ctx, data, len);
+  IMAGE_HASH_FINAL(&ctx, out->bytes);
+}
+
+// Fold a MODEL-tree slot value up to modelRoot.
+//
+// A slot value is the 32 bytes a co-processor (or anything else sharing the
+// model tree) is committed by; this hashes it into a leaf and folds the
+// co-path. Nothing here knows what produced the value -- which is the point:
+// every slot folds identically, so adding a second co-processor needs no new
+// fold.
+//
+// The caller must ALSO pin the value to the right device where that matters:
+// every model's slot hangs under the same modelRoot, so a passing fold proves
+// founder-commitment, not identity. Mirrors the firmware-variant fold
+// (firmware_manifest_authentic), one tree level up.
+secbool boot_header_verify_slot(const uint8_t* slot_value, size_t slot_len,
+                                const merkle_proof_node_t* proof,
+                                size_t proof_count,
+                                const merkle_proof_node_t* trusted_model_root) {
+  if (slot_value == NULL || slot_len == 0 || trusted_model_root == NULL) {
+    return secfalse;
+  }
+  merkle_proof_node_t node;
+  merkle_leaf_hash(slot_value, slot_len, &node);
+  for (size_t i = 0; i < proof_count; i++) {
+    boot_header_internal_node(&node, &proof[i], &node);
+  }
+  return (memcmp(node.bytes, trusted_model_root->bytes, sizeof(node.bytes)) ==
+          0)
+             ? sectrue
+             : secfalse;
+}
+
 uint8_t fw_variant_to_fw_type(fw_variant_sec_t variant) {
   // The canonical small value the storage KDF and the legacy scheme share.
   // INVALID and NONE narrow to FW_VARIANT_NONE: an unusable variant must not

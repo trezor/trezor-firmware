@@ -52,6 +52,9 @@
  * @param len   length of @p data
  * @param out   [out] the resulting leaf
  */
+void merkle_leaf_hash(const uint8_t* data, size_t len,
+                      merkle_proof_node_t* out);
+
 /**
  * @brief Smart-hashing chain over one firmware module's code.
  *
