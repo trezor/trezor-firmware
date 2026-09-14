@@ -309,6 +309,7 @@ pub trait FirmwareUI {
 
     fn set_brightness(current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
     fn show_address_details(
         qr_title: TString<'static>,
         address: TString<'static>,

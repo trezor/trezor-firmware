@@ -23,6 +23,7 @@ pub struct AddressDetails {
 }
 
 impl AddressDetails {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         qr_title: TString<'static>,
         qr_address: TString<'static>,
