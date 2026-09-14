@@ -57,7 +57,7 @@ ssize_t sock_sendto(emu_sock_t *sock, const void *data, size_t len) {
   if (sock->slen > 0) {
     ssize_t r = sendto(sock->sock, data, len, 0,
                        (const struct sockaddr *)&(sock->si_other), sock->slen);
-    if (r != len) {
+    if (r < 0 || (size_t)r != len) {
       return -1;
     }
     return r;

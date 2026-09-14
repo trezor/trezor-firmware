@@ -314,7 +314,7 @@ static secbool ft3168_configure(i2c_bus_t* i2c_bus) {
 
   _Static_assert(sizeof(config) % 2 == 0);
 
-  for (int i = 0; i < sizeof(config); i += 2) {
+  for (size_t i = 0; i < sizeof(config); i += 2) {
     uint8_t reg = config[i];
     uint8_t value = config[i + 1];
 

@@ -83,7 +83,7 @@ static void prodtest_otp_variant_read(cli_t* cli) {
 
   // Make a list of integers separated by spaces
   char* dst = block_text;
-  for (int i = 0; i < sizeof(block); i++) {
+  for (size_t i = 0; i < sizeof(block); i++) {
     if (i != 0) {
       *dst++ = ' ';
     }
@@ -105,8 +105,8 @@ static void prodtest_otp_variant_write(cli_t* cli) {
 #endif
   bool rework = false;
 
-  int arg_idx = 0;
-  int val_count = 0;
+  size_t arg_idx = 0;
+  size_t val_count = 0;
 
   block[val_count++] = 0x01;  // Always 1
 

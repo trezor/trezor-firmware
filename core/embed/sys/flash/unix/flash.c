@@ -102,7 +102,7 @@ void flash_init(void) {
   if (r != 0 || sb.st_size != FLASH_SIZE) {
     int fd = open(FLASH_FILE, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
     ensure(sectrue * (fd >= 0), "open failed");
-    for (int i = 0; i < FLASH_SIZE / 16; i++) {
+    for (uint32_t i = 0; i < FLASH_SIZE / 16; i++) {
       ssize_t s = write(
           fd,
           "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF",

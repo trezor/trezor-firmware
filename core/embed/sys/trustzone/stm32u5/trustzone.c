@@ -96,7 +96,7 @@ void tz_set_sram_unpriv(uint32_t start, uint32_t size, bool unpriv) {
 
   uint32_t end = start + size;
 
-  for (int idx = 0; idx < ARRAY_LENGTH(g_sram_regions); idx++) {
+  for (size_t idx = 0; idx < ARRAY_LENGTH(g_sram_regions); idx++) {
     const sram_region_t* r = &g_sram_regions[idx];
 
     if (start >= r->end) {
@@ -138,7 +138,7 @@ void tz_set_sram_unsecure(uint32_t start, uint32_t size, bool unsecure) {
   }
 #endif
 
-  for (int idx = 0; idx < ARRAY_LENGTH(g_sram_regions); idx++) {
+  for (size_t idx = 0; idx < ARRAY_LENGTH(g_sram_regions); idx++) {
     const sram_region_t* r = &g_sram_regions[idx];
 
     if (start >= r->end) {
@@ -207,7 +207,7 @@ void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv) {
 
   uint32_t end = start + size;
 
-  for (int idx = 0; idx < ARRAY_LENGTH(g_flash_regions); idx++) {
+  for (size_t idx = 0; idx < ARRAY_LENGTH(g_flash_regions); idx++) {
     const flash_region_t* r = &g_flash_regions[idx];
 
     if (start >= r->end) {
@@ -249,7 +249,7 @@ void tz_set_flash_unsecure(uint32_t start, uint32_t size, bool unsecure) {
   }
 #endif
 
-  for (int idx = 0; idx < ARRAY_LENGTH(g_flash_regions); idx++) {
+  for (size_t idx = 0; idx < ARRAY_LENGTH(g_flash_regions); idx++) {
     const flash_region_t* r = &g_flash_regions[idx];
 
     if (start >= r->end) {
