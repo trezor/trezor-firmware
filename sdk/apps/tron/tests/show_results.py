@@ -66,7 +66,6 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self) -> None:
         if self.path == "/fixtures.json":
-
             length = int(self.headers.get("content-length"))
             field_data = self.rfile.read(length)
             data = json.loads(field_data)

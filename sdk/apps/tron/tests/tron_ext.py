@@ -1,5 +1,5 @@
 import io
-from typing import TYPE_CHECKING, Any, Tuple, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from trezorlib import exceptions, protobuf
 from trezorlib.messages import Failure, TrezorAppMessage, TrezorAppResponse
@@ -91,7 +91,7 @@ DEFAULT_BIP32_PATH = "m/44h/195h/0h/0/0"
 
 def from_raw_data(
     raw_data: bytes,
-) -> Tuple[tron_messages.SignTx, "TronMessageType"]:
+) -> tuple[tron_messages.SignTx, "TronMessageType"]:
     raw_tx = load_message(io.BytesIO(raw_data), tron_messages.RawTransaction)
     tx = tron_messages.SignTx(
         ref_block_bytes=raw_tx.ref_block_bytes,

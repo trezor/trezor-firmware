@@ -11,13 +11,18 @@ input flow details.
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from trezorlib import messages as trezor_messages
 from trezorlib.client import Session
-from trezorlib.debuglink import DebugLink, DebugSession, LayoutContent, LayoutType
+from trezorlib.debuglink import (
+    DebugLink,
+    DebugSession,
+    LayoutContent,
+    LayoutType,
+    multipage_content,
+)
 from trezorlib.debuglink import TrezorTestContext as Client
-from trezorlib.debuglink import multipage_content
 from trezorlib.testing import translations as TR
 from trezorlib.testing.common import BRGeneratorType, swipe_if_necessary
 
@@ -25,7 +30,6 @@ B = trezor_messages.ButtonRequestType
 
 
 class EthereumFlow:
-
     def __init__(self, client: Client):
         self.client = client
         self.debug = self.client.debug
@@ -443,7 +447,6 @@ class InputFlowSignTxStaking(InputFlowBase):
 
 
 class InputFlowConfirmAllWarnings(InputFlowBase):
-
     def __init__(
         self,
         client: Client | DebugSession,
