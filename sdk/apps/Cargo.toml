@@ -1,28 +1,14 @@
-cargo-features = ["panic-immediate-abort"]
-
 [workspace]
 members = ["ethereum", "tron"]
 
 resolver = "2"
 
-[profile.debug-fw]
-inherits = "dev"
-split-debuginfo = "off"
-debug = 2
-strip = "none"
-panic = "abort"
-
-[profile.release-fw]
-inherits = "release"
-opt-level = "z"
-lto = "fat"
-codegen-units = 1
-split-debuginfo = "off"
-debug = 0
-debug-assertions = false
-overflow-checks = false
-incremental = false
-panic = "immediate-abort"
+# `debug-fw`/`release-fw`, the profiles apps actually ship in, are owned
+# entirely by `modular-xtask`'s generated linker package (see
+# `sdk/crates/modular-xtask/src/linker.rs`) -- not declared here, so this
+# workspace root exists purely for path-dependency resolution and IDE/human
+# convenience (`cargo check`/`clippy`/`build` here still work, just against
+# the builtin `dev`/`release` profiles instead).
 
 [profile.test]
 split-debuginfo = "off"

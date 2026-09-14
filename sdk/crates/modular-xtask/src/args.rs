@@ -161,7 +161,7 @@ pub enum Cmd {
 /// Arguments for `xtask modular build`/`clippy`/`check`/`size`, i.e.
 /// everything that needs a resolved feature set, profile, and (for a
 /// non-emulator build) target triple. See [`BuildArgs::resolve_features`]
-/// and [`BuildArgs::configure_cargo`].
+/// and [`BuildArgs::configure_cargo_check`]/[`BuildArgs::configure_cargo_linked`].
 #[derive(Args, Debug, Clone)]
 #[command(
     override_usage = "xtask build --project <PROJECT> --model <MODEL> --language <LANGUAGE> --log_level <LOG_LEVEL> [OPTIONS]"
@@ -188,7 +188,8 @@ pub struct BuildArgs {
     #[arg(long, short = 'e')]
     pub emulator: bool,
 
-    /// Use the `debug-fw` cargo profile instead of `release-fw`.
+    /// Use the debug profile (`debug-fw` when linking, plain `dev` for
+    /// `check`/`clippy`) instead of the release one (`release-fw`/`release`).
     #[arg(long, short = 'd', default_value = "false")]
     pub debug: bool,
 
@@ -249,9 +250,17 @@ impl BuildArgs {
         Ok(features)
     }
 
-    /// Configures the cargo command with the appropriate arguments and features
-    /// based on the provided cli arguments
-    pub fn configure_cargo(&self, cmd: &mut process::Command) -> Result<()> {
+    /// Configures `cmd` for `cargo check`/`clippy` against the app package
+    /// directly -- these don't need the final linked artifact (see
+    /// [`Self::configure_cargo_linked`] for that), so there's no reason to
+    /// route them through the generated linker package. They also don't
+    /// need to match the app's exact shipped profile (LTO, `opt-level`,
+    /// `panic-immediate-abort`) -- only `debug_assertions`/`overflow-checks`
+    /// parity with it, which the builtin `dev`/`release` profiles already
+    /// give for free, with no custom profile (and so no `cargo-features`
+    /// opt-in) needed anywhere for this to work, whether the app is a
+    /// workspace member or a fully standalone package.
+    pub fn configure_cargo_check(&self, cmd: &mut process::Command) -> Result<()> {
         if helpers::is_workspace()? {
             ensure!(
                 !self.project.is_empty(),
@@ -264,31 +273,15 @@ impl BuildArgs {
         cmd.args(["--features", &features.join(",")]);
 
         if self.debug {
-            cmd.arg("--profile").arg("debug-fw");
+            cmd.arg("--profile").arg("dev");
         } else {
             cmd.arg("--profile")
-                .arg("release-fw")
+                .arg("release")
                 .arg("-Zbuild-std=core,alloc");
         }
 
         if !self.emulator {
-            // A single script shared by every app in the workspace (or, for
-            // a standalone app, its own root-level `memory.x`) -- see
-            // `configure_cargo_linked` for the build that actually links
-            // against it.
-            let linker_script = helpers::root_dir()?.join("memory.x");
             cmd.args(["--target", self.model.target_triple()]);
-            cmd.env(
-                "RUSTFLAGS",
-                format!(
-                    "-C link-arg=-T{} \
-                     -C link-arg=--emit-relocs \
-                     -C link-arg=-z \
-                     -C link-arg=max-page-size=0x20 \
-                     -C link-arg=--no-dynamic-linker",
-                    linker_script.display()
-                ),
-            );
         }
 
         if self.verbose {
@@ -298,11 +291,13 @@ impl BuildArgs {
         Ok(())
     }
 
-    /// Like [`Self::configure_cargo`], but targets the generated linker
-    /// package (see [`crate::linker`]) that actually produces this app's
-    /// linked ELF/`.so`, instead of the app package itself -- which, in a
-    /// workspace, builds only as a library and has no `[[bin]]` target to
-    /// build/link at all.
+    /// Configures `cmd` to build the generated linker package (see
+    /// [`crate::linker`]) that actually produces `project`'s linked
+    /// ELF/`.so`, instead of the app package itself -- which only ever
+    /// builds as a library and has no `[[bin]]` target to build/link at
+    /// all. `project` is the app's resolved package name (see
+    /// [`crate::helpers::resolve_project_name`] -- `self.project` alone
+    /// isn't enough, since it's meaningless/empty for a standalone app).
     ///
     /// The linker package has none of the app's own cargo features, so
     /// this invocation's resolved features are forwarded through via
@@ -316,18 +311,15 @@ impl BuildArgs {
     pub fn configure_cargo_linked(
         &self,
         cmd: &mut process::Command,
+        project: &str,
         linker_package: &str,
         linker_manifest_path: &std::path::Path,
     ) -> Result<()> {
-        ensure!(
-            !self.project.is_empty(),
-            "Project name must be specified when linking in a workspace"
-        );
         // The linker package is its own workspace root (see
         // `crate::linker`'s docs), so it's not reachable via `-p` from the
-        // app workspace's own `cargo` invocations -- point straight at its
-        // manifest instead, and force its output into the app workspace's
-        // own target directory so `helpers::elf_path` still finds it.
+        // app's own `cargo` invocations -- point straight at its manifest
+        // instead, and force its output into the app's own target
+        // directory so `helpers::elf_path` still finds it.
         cmd.arg("--manifest-path").arg(linker_manifest_path);
         cmd.arg("-p").arg(linker_package);
         cmd.arg("--target-dir").arg(helpers::build_dir()?);
@@ -335,7 +327,7 @@ impl BuildArgs {
         let features: Vec<String> = self
             .resolve_features()?
             .into_iter()
-            .map(|feature| format!("{}/{feature}", self.project))
+            .map(|feature| format!("{project}/{feature}"))
             .collect();
         cmd.args(["--features", &features.join(",")]);
 

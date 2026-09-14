@@ -1,5 +1,3 @@
-cargo-features = ["panic-immediate-abort"]
-
 [package]
 name = "ethereum"
 version = "0.1.0"

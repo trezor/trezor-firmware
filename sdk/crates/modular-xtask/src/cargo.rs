@@ -10,29 +10,19 @@ use crate::{
     binary, helpers, linker, postbuild, tools,
 };
 
-/// Which package actually produces the linked ELF/`.so` for a given
-/// [`BuildArgs`]: the generated linker package in a workspace (the app
-/// package itself only ever builds as a library there -- see
-/// [`crate::linker`]), or the app package directly for a standalone app
-/// (which still builds straight to a `[[bin]]`, with its own root-level
-/// `memory.x`).
-enum LinkTarget {
-    Linker { package: String, manifest_path: PathBuf },
-    Direct,
-}
-
-/// Resolves [`LinkTarget`] for `args`, generating the linker package (see
-/// [`linker::generate`]) when running in a workspace.
-fn resolve_link_target(args: &BuildArgs) -> Result<LinkTarget> {
-    if helpers::is_workspace()? {
-        let (package, manifest_path) = linker::generate(&args.project)?;
-        Ok(LinkTarget::Linker {
-            package,
-            manifest_path,
-        })
-    } else {
-        Ok(LinkTarget::Direct)
-    }
+/// Resolves `args.project` (see [`helpers::resolve_project_name`]) and
+/// (re)generates its linker package (see [`linker::generate`]) -- the
+/// package that actually produces the linked ELF/`.so`, whether `args`
+/// targets a member of an app workspace or a standalone app, neither of
+/// which have a `[[bin]]` target of their own to build/link. Returns the
+/// resolved project name alongside the generated package's own name and
+/// manifest path, all three of which [`crate::args::BuildArgs::configure_cargo_linked`]
+/// needs.
+fn generate_linker_package(args: &BuildArgs) -> Result<(String, String, PathBuf)> {
+    let project = helpers::resolve_project_name(&args.project)?;
+    let app_manifest_dir = helpers::app_manifest_dir(&project)?;
+    let (package, manifest_path) = linker::generate(&project, &app_manifest_dir)?;
+    Ok((project, package, manifest_path))
 }
 
 /// Builds the app for the model/language/profile in `args`, then converts
@@ -40,23 +30,20 @@ fn resolve_link_target(args: &BuildArgs) -> Result<LinkTarget> {
 /// and (unless `args.production`) generates the dev-signed app proofs and
 /// RootPacket needed to load it.
 pub fn build(args: &BuildArgs) -> Result<()> {
-    // Build (and, in a workspace, link) the component.
-    run_cargo_subcommand("build", args, resolve_link_target(args)?, None::<&[&str]>)?;
+    let (project, package, manifest_path) = generate_linker_package(args)?;
+
+    run_cargo_subcommand(
+        "build",
+        |cmd| args.configure_cargo_linked(cmd, &project, &package, &manifest_path),
+        None::<&[&str]>,
+    )?;
 
     let elf_path = helpers::elf_path(args)?;
-
-    let app = if helpers::is_workspace()? {
-        args.project.clone()
-    } else {
-        helpers::standalone_project_name()?
-    };
-
-    let app_package = helpers::app_package(&app)?;
-
+    let app_package = helpers::app_package(&project)?;
     let bin_path = binary::convert_elf_to_bin(&elf_path, &app_package)?;
 
-    postbuild::publish_artifact(&elf_path, &app, args.model, args.emulator)?;
-    postbuild::publish_artifact(&bin_path, &app, args.model, args.emulator)?;
+    postbuild::publish_artifact(&elf_path, &project, args.model, args.emulator)?;
+    postbuild::publish_artifact(&bin_path, &project, args.model, args.emulator)?;
 
     if args.production {
         // The proofs would have to be covered by a production-signed RootPacket.
@@ -72,28 +59,41 @@ pub fn build(args: &BuildArgs) -> Result<()> {
 /// `args`, against the app package directly -- linting doesn't need the
 /// final linked artifact.
 pub fn clippy(args: &BuildArgs) -> Result<()> {
-    run_cargo_subcommand("clippy", args, LinkTarget::Direct, None::<&[&str]>)
+    run_cargo_subcommand(
+        "clippy",
+        |cmd| args.configure_cargo_check(cmd),
+        None::<&[&str]>,
+    )
 }
 
 /// Runs `cargo check` with the feature/profile/target configuration for
 /// `args`, against the app package directly -- see [`clippy`].
 pub fn check(args: &BuildArgs) -> Result<()> {
-    run_cargo_subcommand("check", args, LinkTarget::Direct, None::<&[&str]>)
+    run_cargo_subcommand(
+        "check",
+        |cmd| args.configure_cargo_check(cmd),
+        None::<&[&str]>,
+    )
 }
 
 /// Runs `cargo size -A` with the feature/profile/target configuration for
-/// `args`, against the linked artifact (see [`resolve_link_target`]).
+/// `args`, against the linked artifact (see [`generate_linker_package`]).
 pub fn size(args: &BuildArgs) -> Result<()> {
-    run_cargo_subcommand("size", args, resolve_link_target(args)?, Some(&["-A"]))
+    let (project, package, manifest_path) = generate_linker_package(args)?;
+    run_cargo_subcommand(
+        "size",
+        |cmd| args.configure_cargo_linked(cmd, &project, &package, &manifest_path),
+        Some(&["-A"]),
+    )
 }
 
 /// Runs `cargo nm` with the feature/profile/target configuration for `args`
 /// and prints a size-sorted, symbol-grouped breakdown of the resulting ELF.
 pub fn nm(args: &BuildArgs) -> Result<()> {
+    let (project, package, manifest_path) = generate_linker_package(args)?;
     let output = run_cargo_subcommand_output(
         "nm",
-        args,
-        resolve_link_target(args)?,
+        |cmd| args.configure_cargo_linked(cmd, &project, &package, &manifest_path),
         Some(&["--size-sort", "--print-size", "--demangle"]),
     )?;
     let elf = helpers::elf_path(args)?;
@@ -177,8 +177,7 @@ pub fn fmt(check_only: bool) -> Result<()> {
 
 fn run_cargo_subcommand_output<S, I>(
     subcommand: &str,
-    args: &BuildArgs,
-    target: LinkTarget,
+    configure: impl FnOnce(&mut process::Command) -> Result<()>,
     extra_args: Option<I>,
 ) -> Result<process::Output>
 where
@@ -189,13 +188,7 @@ where
     cmd.arg(subcommand);
     cmd.stderr(process::Stdio::inherit()); // warnings go to terminal
     cmd.stdout(process::Stdio::piped()); // nm output captured
-    match target {
-        LinkTarget::Linker {
-            package,
-            manifest_path,
-        } => args.configure_cargo_linked(&mut cmd, &package, &manifest_path)?,
-        LinkTarget::Direct => args.configure_cargo(&mut cmd)?,
-    }
+    configure(&mut cmd)?;
     if let Some(extra_args) = extra_args {
         cmd.arg("--").args(extra_args);
     }
@@ -215,8 +208,7 @@ where
 
 fn run_cargo_subcommand<S, I>(
     subcommand: &str,
-    args: &BuildArgs,
-    target: LinkTarget,
+    configure: impl FnOnce(&mut process::Command) -> Result<()>,
     extra_args: Option<I>,
 ) -> Result<()>
 where
@@ -227,13 +219,7 @@ where
     cmd.arg(subcommand);
     // cmd.stderr(process::Stdio::inherit()); // warnings go to terminal
     // cmd.stdout(process::Stdio::piped());    // nm output captured
-    match target {
-        LinkTarget::Linker {
-            package,
-            manifest_path,
-        } => args.configure_cargo_linked(&mut cmd, &package, &manifest_path)?,
-        LinkTarget::Direct => args.configure_cargo(&mut cmd)?,
-    }
+    configure(&mut cmd)?;
     if let Some(extra_args) = extra_args {
         cmd.arg("--").args(extra_args);
     }

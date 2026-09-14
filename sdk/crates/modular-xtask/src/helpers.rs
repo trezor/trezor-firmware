@@ -11,13 +11,7 @@ use crate::args::{BuildArgs, Model};
 
 /// Returns the path to the built ELF file for the given build arguments.
 pub fn elf_path(args: &BuildArgs) -> Result<PathBuf> {
-    let elf_name = if is_workspace()? {
-        args.project.clone()
-    } else {
-        standalone_project_name()?
-    };
-
-    Ok(profile_dir(args)?.join(elf_name))
+    Ok(profile_dir(args)?.join(resolve_project_name(&args.project)?))
 }
 
 /// Returns the profile output directory (e.g. `build/thumbv7em-none-eabihf/release`).
@@ -88,6 +82,33 @@ pub fn app_package(package_name: &str) -> Result<Package> {
         .into_iter()
         .find(|p| p.name == package_name)
         .ok_or_else(|| anyhow!("Package '{}' not found in the workspace", package_name))
+}
+
+/// Resolves the effective app package name for `project`: `project` itself
+/// in a workspace (which must be non-empty there), or the standalone
+/// project's own name (see [`standalone_project_name`]) when there's only
+/// one package to build and `project` is meaningless (and typically empty).
+pub fn resolve_project_name(project: &str) -> Result<String> {
+    if is_workspace()? {
+        ensure!(
+            !project.is_empty(),
+            "Project name must be specified when running in a workspace"
+        );
+        Ok(project.to_string())
+    } else {
+        standalone_project_name()
+    }
+}
+
+/// Returns the directory containing `project`'s own `Cargo.toml`, resolved
+/// via cargo metadata so it works the same whether `project` is a member of
+/// an app workspace or a standalone package building on its own.
+pub fn app_manifest_dir(project: &str) -> Result<PathBuf> {
+    let manifest_path = app_package(project)?.manifest_path;
+    manifest_path
+        .parent()
+        .map(|dir| dir.to_path_buf().into_std_path_buf())
+        .with_context(|| format!("Manifest path {manifest_path} has no parent directory"))
 }
 
 /// Returns the package name of a standalone (non-workspace) app. Fails if

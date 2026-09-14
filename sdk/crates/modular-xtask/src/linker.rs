@@ -1,11 +1,14 @@
 //! Generates the throwaway "linker" package that turns an app's own rlib
 //! into the actual loadable ELF/`.so` Core runs.
 //!
-//! Every app in an `xtask modular`-driven workspace builds as a plain
-//! library (no `[[bin]]` target of its own, no per-app linker script) so
-//! that boilerplate isn't duplicated across apps, or hand-maintained at all
-//! -- both the linker script (see [`MEMORY_X`]) and each app's
-//! `Cargo.toml`/`src/main.rs` equivalent are generated here, on every
+//! Every app driven by `xtask modular` -- whether it's a member of an app
+//! workspace like this repository's `sdk/apps`, or a standalone app repo
+//! consuming `modular-xtask` as a path dependency -- builds as a plain
+//! library (no `[[bin]]` target of its own, no `memory.x`, no custom
+//! profile or `cargo-features` opt-in to declare) so none of that has to be
+//! duplicated across apps, or hand-maintained at all: the linker script
+//! (see [`MEMORY_X`]), the profiles (see [`PROFILES`]), and each app's
+//! `Cargo.toml`/`src/main.rs` equivalent are all generated here, on every
 //! build. The one piece of code that *does* need a `[[bin]]` target is
 //! generated as a throwaway crate: a two-line crate that does nothing but
 //! `extern crate <app> as _;`, which is enough to pull the app's
@@ -13,35 +16,41 @@
 //! `trezor_app_sdk::app_runtime`, which calls back into the app's own
 //! `#[no_mangle] fn app()` via an `unsafe extern "Rust"` declaration) into
 //! the final link as the entry symbol `ENTRY(applet_main)` in `memory.x`
-//! names -- the linker resolves that
-//! undefined entry symbol by pulling exactly the one object file that
-//! defines it out of the app's `.rlib` archive, same as it would out of any
-//! other static library.
+//! names -- the linker resolves that undefined entry symbol by pulling
+//! exactly the one object file that defines it out of the app's `.rlib`
+//! archive, same as it would out of any other static library.
 //!
 //! The generated crate declares its own `[workspace]` rather than joining
-//! the app workspace as a member: a `members` entry (even a glob) has to
-//! already exist on disk the moment anything asks `cargo`/`cargo_metadata`
-//! about that workspace, which is exactly what generating it on demand
-//! can't guarantee. Being its own workspace root sidesteps that, at the
-//! cost of duplicating the two `[profile]` tables `sdk/apps/Cargo.toml`
-//! defines (kept in sync manually -- see [`PROFILES`]); callers point its
-//! build at the app workspace's own target directory (`--target-dir`) so
-//! the linked artifact still lands exactly where
+//! the app's own workspace (or, for a standalone app, becoming one): a
+//! `members` entry (even a glob) has to already exist on disk the moment
+//! anything asks `cargo`/`cargo_metadata` about that workspace, which is
+//! exactly what generating it on demand can't guarantee -- and, for an
+//! in-workspace app, it's already a member of its *own* workspace (e.g.
+//! `sdk/apps`), which a package can't straddle alongside a second one.
+//! Being its own workspace root sidesteps both problems, at the cost of
+//! depending on the app crate by an absolute path (computed from cargo
+//! metadata, see [`crate::helpers::app_manifest_dir`]) rather than a
+//! relative one -- there's no fixed relative depth that would work for
+//! both an in-workspace app and a standalone one, and the manifest is
+//! regenerated fresh on every build anyway, so portability doesn't matter.
+//! Callers point its build at the app workspace's own target directory
+//! (`--target-dir`) so the linked artifact still lands exactly where
 //! [`crate::helpers::elf_path`] expects it.
 
 use anyhow::{Context, Result};
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 /// Directory every generated linker package lives under, relative to the
-/// app workspace root. Not checked into git -- regenerated fresh on every
-/// build, never hand-edited.
+/// app's own workspace root (or, for a standalone app, its own root). Not
+/// checked into git -- regenerated fresh on every build, never hand-edited.
 const LINKER_ROOT: &str = "_xtask_linker";
 
-/// The linker script shared by every in-workspace app, identical to what
-/// each app's own root-level `memory.x` looks like for a standalone
-/// (out-of-tree) app -- see [`crate::args::BuildArgs::configure_cargo`].
-/// Generated fresh into each app's linker package rather than checked into
-/// `sdk/apps/` so it can't drift from this copy or get hand-edited.
+/// The linker script shared by every app `xtask modular` builds, generated
+/// fresh into each app's linker package rather than checked in anywhere so
+/// it can't drift or get hand-edited.
 const MEMORY_X: &str = "OUTPUT_ARCH(arm)\n\
 ENTRY(applet_main)\n\
 \n\
@@ -87,10 +96,6 @@ SECTIONS\n\
   }\n\
 }\n";
 
-/// The `[profile.debug-fw]`/`[profile.release-fw]` tables from
-/// `sdk/apps/Cargo.toml`, duplicated here since the generated linker
-/// package is its own workspace root and can't inherit them. Keep this in
-/// sync with that file by hand if those profiles ever change.
 /// The generated crate's `build.rs`: emits the shared-library link flags an
 /// emulator (host-target) build needs, exactly as each app's own `build.rs`
 /// used to before every app became a plain library -- `cargo:rustc-link-*`
@@ -114,10 +119,15 @@ fn main() {\n\
     }\n\
 }\n";
 
-/// The `[profile.debug-fw]`/`[profile.release-fw]` tables from
-/// `sdk/apps/Cargo.toml`, duplicated here since the generated linker
-/// package is its own workspace root and can't inherit them. Keep this in
-/// sync with that file by hand if those profiles ever change.
+/// The `[profile.debug-fw]`/`[profile.release-fw]` tables every app needs
+/// (`release-fw` in particular relies on the unstable `panic-immediate-abort`
+/// cargo feature, hence the `cargo-features` opt-in below it). Generated
+/// fresh into each app's linker package -- this is their *only* home;
+/// individual apps and any workspace they happen to live in don't declare
+/// either of these at all, so there's nothing here that could drift out of
+/// sync with a checked-in copy. `check`/`clippy` deliberately don't use
+/// these (see [`crate::args::BuildArgs::configure_cargo_check`]) and so
+/// don't need any of this either.
 const PROFILES: &str = "cargo-features = [\"panic-immediate-abort\"]\n\
 \n\
 [profile.debug-fw]\n\
@@ -146,16 +156,19 @@ pub fn package_name(project: &str) -> String {
 
 /// (Re)generates the linker package for `project` (overwriting whatever was
 /// there before -- this is fully derived, not hand-maintained) relative to
-/// the app workspace root (the process's current directory -- callers run
-/// this from inside [`crate::run_cmd`], which already `set_current_dir`s
-/// there; deliberately not [`crate::helpers::root_dir`], which shells out to
-/// `cargo metadata` and would trip over the very package this function is
-/// about to create). Returns its package name (see [`package_name`]) and
-/// manifest path -- the latter is what callers must build via
-/// `--manifest-path`, since (being its own workspace root, see the module
-/// docs) it isn't reachable via `-p` from the app workspace's own `cargo`
-/// invocations.
-pub fn generate(project: &str) -> Result<(String, PathBuf)> {
+/// the calling project's own root (the process's current directory --
+/// callers run this from inside [`crate::run_cmd`], which already
+/// `set_current_dir`s there; deliberately not [`crate::helpers::root_dir`],
+/// which shells out to `cargo metadata` and would trip over the very
+/// package this function is about to create). `app_manifest_dir` is the
+/// directory containing `project`'s own `Cargo.toml` (see
+/// [`crate::helpers::app_manifest_dir`]), embedded as an absolute path
+/// dependency -- see the module docs for why. Returns the generated
+/// package's name (see [`package_name`]) and manifest path -- the latter is
+/// what callers must build via `--manifest-path`, since (being its own
+/// workspace root, see the module docs) it isn't reachable via `-p` from
+/// the app's own `cargo` invocations.
+pub fn generate(project: &str, app_manifest_dir: &Path) -> Result<(String, PathBuf)> {
     let dir = std::env::current_dir()
         .context("Failed to read current directory")?
         .join(LINKER_ROOT)
@@ -165,9 +178,14 @@ pub fn generate(project: &str) -> Result<(String, PathBuf)> {
 
     let package = package_name(project);
     // Cargo/Rust crate names normalize `-` to `_`; `project` itself is
-    // known to be a valid package name already (it's an existing workspace
-    // member), so this only ever matters for hyphenated names.
+    // known to be a valid package name already (it's an existing package),
+    // so this only ever matters for hyphenated names.
     let crate_ident = project.replace('-', "_");
+    // `{:?}` renders as a quoted, escaped Rust string literal, which is
+    // also valid TOML string syntax -- needed since an absolute path may
+    // contain characters (backslashes on Windows) that aren't safe to
+    // splice into a TOML string unescaped.
+    let app_manifest_dir = format!("{:?}", app_manifest_dir.to_string_lossy());
 
     let manifest = format!(
         "# Generated by `xtask modular build` -- do not edit, do not commit.\n\
@@ -185,7 +203,7 @@ pub fn generate(project: &str) -> Result<(String, PathBuf)> {
          path = \"main.rs\"\n\
          \n\
          [dependencies]\n\
-         {project} = {{ path = \"../../{project}\" }}\n"
+         {project} = {{ path = {app_manifest_dir} }}\n"
     );
     fs::write(dir.join("Cargo.toml"), manifest)
         .with_context(|| format!("Failed to write {}/Cargo.toml", dir.display()))?;
