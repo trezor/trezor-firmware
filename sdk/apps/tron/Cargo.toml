@@ -16,9 +16,8 @@ curves = ["secp256k1"]
 paths = [
     # BIP-44 for basic (legacy) Bitcoin accounts, and widely used for other currencies:
     # https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
-    "m/44'/coin_type'/account'/change/address_index/**",
+    "m/44'/195'/account'/change/address_index/**",
 ]
-slip44-id = 195
 
 [dependencies]
 trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }
