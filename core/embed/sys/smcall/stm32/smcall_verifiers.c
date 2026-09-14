@@ -33,20 +33,6 @@
 
 // ---------------------------------------------------------------------
 
-void bootargs_set__verified(boot_command_t command, const void *args,
-                            size_t args_size) {
-  // args are optional, so we allow NULL with size 0
-  if (!probe_read_access_opt(args, args_size)) {
-    goto access_violation;
-  }
-
-  bootargs_set(command, args, args_size);
-  return;
-
-access_violation:
-  apptask_access_violation();
-}
-
 void bootargs_get_args__verified(boot_args_t *args) {
   if (!probe_write_access(args, sizeof(*args))) {
     goto access_violation;
