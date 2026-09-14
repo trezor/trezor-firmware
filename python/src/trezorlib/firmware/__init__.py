@@ -139,7 +139,11 @@ def firmware_begin(
     boot_header: bytes,
     module_headers: bytes,
     code: t.Optional[bytes] = None,
+    nrf_image: t.Optional[bytes] = None,
+    nrf_co_path: t.Optional[bytes] = None,
+    nrf_image_hash: t.Optional[bytes] = None,
     progress_update: t.Callable[[int], t.Any] = lambda _: None,
+) -> dict[str, int]:
     """Phase 1 of a Merkle-tree firmware update.
 
     Sends the new signed boot header and the new firmware's module headers. The
@@ -190,14 +194,27 @@ def firmware_begin(
             # digest. A wrong value just fails that check, and the device
             # rehashes the bytes it actually receives.
             code_hash=sha256(code).digest() if code else None,
+            nrf_length=len(nrf_image) if nrf_image else None,
+            nrf_co_path=nrf_co_path,
+            nrf_image_hash=nrf_image_hash,
         )
     )
 
+    # The device drives the request loop, tagging each FirmwareRequest with the
+    # image it wants: coprocessor_index 0 = the bootloader code (requested only if
+    # the current code does not conform to the new header), 1 = the nRF image.
+    # Track bytes served per image so the caller knows what the device actually
+    # pulled (an already-current nRF is simply never requested).
+    served = {"code": 0, "nrf": 0}
     while isinstance(resp, messages.FirmwareRequest):
+        is_nrf = (resp.coprocessor_index or 0) != 0
+        src = nrf_image if is_nrf else code
+        assert src is not None, "device requested image bytes but none supplied"
         length = resp.length
         payload = src[resp.offset : resp.offset + length]
         digest = blake2s(payload).digest()
         resp = session.call(messages.FirmwareUpload(payload=payload, hash=digest))
+        served["nrf" if is_nrf else "code"] += length
         progress_update(length)
 
     messages.Success.ensure_isinstance(resp)
