@@ -59,6 +59,21 @@ def _variant_info(firmware: Path) -> dict:
         "leaf": firmware_module.variant_leaf(manifest),
         "variant": firmware_module.manifest_variant(manifest),
     }
+
+
+def _authenticity_manifest_field(variant: dict) -> dict:
+    """The custom variant's authenticity manifest, for presigned custom builds.
+
+    Only CUSTOM gets one, because only CUSTOM's leaf is code-independent: the
+    fold zeroes the firmware version and the app entry's size + code_hash, so a
+    creator's own app reaches the same leaf. Everything else in those bytes
+    stays authenticated -- including the WHOLE secmon entry -- so this is also
+    the only record that ties a committed secmon to a signed root, which is what
+    `presigned_check` folds. Official variants' leaves move with their code, so
+    storing theirs would only invite someone to reuse one.
+    """
+    if variant["variant"] != firmware_module.FW_VARIANT_SEC_CUSTOM:
+        return {}
     return {
         "authenticity_manifest": firmware_module.authenticity_manifest(
             variant["manifest"]
