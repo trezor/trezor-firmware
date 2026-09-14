@@ -668,6 +668,168 @@ pub fn build_release(
     Ok(())
 }
 
+/// Where the one cross-model bundle is written, and where it is promoted to.
+///
+/// `xtask release` cuts each model into its own `tree/<MODEL>/`, then merges
+/// the per-model bundles into `tree/bundle.json` keyed by model id. That merged
+/// file is what a presigned custom build reads, so it is the one that gets
+/// committed.
+fn tree_bundle(model_devel: bool) -> Result<PathBuf> {
+    Ok(helpers::build_dir()?
+        .join("tree")
+        .join(bundle_name(model_devel)))
+}
+
+/// `bundle.json` for production keys, `bundle_devel.json` for development ones.
+/// Two files rather than one with both, so promoting a production set cannot
+/// touch the devel data or the reverse.
+fn bundle_name(devel: bool) -> String {
+    let suffix = if devel { "_devel" } else { "" };
+    format!("bundle{suffix}.json")
+}
+
+/// Merge every model's `bundle.json` into one cross-model file.
+///
+/// Keyed by model id because the models are INDEPENDENT trees -- each carries
+/// its own `firmware_root` and its own signature. Merging is a convenience for
+/// whoever reads the set, not a joint tree.
+fn write_aggregate_bundle(models: &[Model], devel: bool) -> Result<PathBuf> {
+    let mut entries = serde_json::Map::new();
+    for model in models {
+        let per_model = release_dir(*model)?.join("bundle.json");
+        let raw = fs::read_to_string(&per_model)
+            .with_context(|| format!("Failed to read {}", per_model.display()))?;
+        let body: serde_json::Value = serde_json::from_str(&raw)
+            .with_context(|| format!("{} is not valid JSON", per_model.display()))?;
+        entries.insert(model.model_id().to_string(), body);
+    }
+
+    let mut doc = serde_json::Map::new();
+    // The aggregate is its own document shape, so it says so separately -- the
+    // per-model bodies nested inside keep their own `format`/`format_version`
+    // because `build_presigned` lifts one out and writes it as a standalone
+    // release manifest, which then has to be self-describing on its own.
+    doc.insert(
+        "format".to_string(),
+        serde_json::Value::String(format!("{CONTAINER_MAGIC}-set")),
+    );
+    doc.insert(
+        "format_version".to_string(),
+        serde_json::Value::from(CONTAINER_VERSION),
+    );
+    doc.insert("models".to_string(), serde_json::Value::Object(entries));
+
+    let path = tree_bundle(devel)?;
+    fs::create_dir_all(path.parent().context("bundle has no parent")?)?;
+    fs::write(&path, serde_json::to_string_pretty(&doc)? + "\n")
+        .with_context(|| format!("Failed to write {}", path.display()))?;
+    println!(
+        "{}",
+        format!("xtask: cross-model bundle written to {}", path.display()).green()
+    );
+    Ok(path)
+}
+
+/// Copy a release into the tree, as the reference a presigned custom build
+/// reads.
+///
+/// The pieces only work together -- the bundle names a `firmware_root` that
+/// only this bootloader carries, and a custom leaf that only this secmon
+/// satisfies -- so they are copied as ONE step. Promoting a subset leaves a set
+/// that fails to fold, or a kernel that secure-faults, and neither shows up as
+/// a build error. `presigned_check` re-verifies the result afterwards.
+fn promote(models: &[Model], devel: bool) -> Result<()> {
+    let models_dir = helpers::workspace_dir()?.join("models");
+    let suffix = if devel { "_devel" } else { "" };
+
+    let bundle = tree_bundle(devel)?;
+    let bundle_dst = models_dir.join(bundle_name(devel));
+    fs::copy(&bundle, &bundle_dst).with_context(|| {
+        format!(
+            "Failed to copy {} -> {}",
+            bundle.display(),
+            bundle_dst.display()
+        )
+    })?;
+    println!("  bundle    -> {}", bundle_dst.display());
+
+    for model in models {
+        let out = release_dir(*model)?;
+        let id = model.model_id();
+
+        // The SIGNED bootloader replaces the committed one. Signing rewrites the
+        // header and not the code, so the next release can fold this binary
+        // again -- there is no need to keep a separate bare copy.
+        let bl_dst = models_dir
+            .join(id)
+            .join("bootloaders")
+            .join(format!("bootloader_{id}{suffix}.bin"));
+        fs::copy(out.join(DEFAULT_BOOTLOADER_FILE), &bl_dst)
+            .with_context(|| format!("Failed to write {}", bl_dst.display()))?;
+        println!("  {id} bootloader -> {}", bl_dst.display());
+
+        // The secmon travels as a PAIR: the kernel links the veneer object and
+        // secure-faults if it drifts from the binary it was built against.
+        let secmon_dir = models_dir.join(id).join("secmon");
+        let (bin_name, api_name) = if devel {
+            ("secmon_DEV.bin", "secmon_api_DEV.o")
+        } else {
+            ("secmon.bin", "secmon_api.o")
+        };
+        // Taken from the RELEASE, not from `artifacts/`: the release kept the
+        // secmon its custom slot was signed over, while artifacts holds
+        // whichever variant built last. Committing the latter produced a set
+        // that could not fold -- caught only by `presigned_check`, and only
+        // after a creator's build had already failed.
+        for (src_name, dst_name) in [("secmon.bin", bin_name), ("secmon_api.o", api_name)] {
+            let src = out.join(src_name);
+            if !src.exists() {
+                bail!(
+                    "{} is missing -- the release must keep the secmon its custom \
+                     slot was signed over, so re-cut the release",
+                    src.display()
+                );
+            }
+            let dst = secmon_dir.join(dst_name);
+            fs::copy(&src, &dst).with_context(|| format!("Failed to write {}", dst.display()))?;
+            println!("  {id} {dst_name} -> {}", dst.display());
+        }
+    }
+
+    // Verified here rather than suggested. The committed set is four artifacts
+    // that only mean anything together -- bundle, bootloader, secmon pair --
+    // and promoting the wrong combination is silent: nothing fails until a
+    // creator's presigned build cannot fold, which is both much later and much
+    // harder to read. `presigned_check` names that failure exactly, so it runs
+    // now, while the cause is one command away.
+    println!("{}", "xtask: verifying the promoted set".bold().dimmed());
+    let checker = helpers::workspace_dir()?
+        .join("../tools/trezor_core_tools/presigned_check.py")
+        .canonicalize()
+        .context("Failed to locate presigned_check.py")?;
+    let status = process::Command::new("python3")
+        .arg("-m")
+        .arg("trezor_core_tools.presigned_check")
+        .env(
+            "PYTHONPATH",
+            checker
+                .parent()
+                .and_then(|p| p.parent())
+                .context("presigned_check has no package parent")?,
+        )
+        .status()
+        .context("Failed to spawn presigned_check")?;
+    ensure!(
+        status.success(),
+        "the promoted set does not hang together -- see the failures above. \
+         The files are written; re-promote from a consistent release rather \
+         than shipping this one."
+    );
+
+    println!("{}", "xtask: promoted and verified".green());
+    Ok(())
+}
+
 /// The bootloader whose header this release folds `firmware_root` into.
 ///
 /// Never built here: a release builds firmware, and quietly rebuilding the
