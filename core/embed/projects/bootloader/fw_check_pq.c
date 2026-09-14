@@ -25,6 +25,14 @@
 #include "fw_check.h"
 #include "version_check.h"
 
+// Boot-warning logo for an unofficial (custom) firmware, embedded by build.rs
+// from THIS model's vendorheader/vendor_unsafe.toif -- so it is already the
+// right size and format for this model's UI (see the comment there). The tree
+// layout has no vendor header to carry a logo, and the unofficial variant is
+// the only one that ever draws this screen, so the bootloader owns the asset.
+extern const void rodata_vendor_unsafe_start;
+extern const void rodata_vendor_unsafe_end;
+
 // Vendor identity string for the tree layout (which has no vendor header). Used
 // by every place the bootloader surfaces a vendor name: the boot warning, the
 // intro screen, the install confirm and the Features `fw_vendor`. A custom
