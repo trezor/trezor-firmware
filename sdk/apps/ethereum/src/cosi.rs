@@ -1,22 +1,5 @@
 use crate::alloc_types::Vec;
-use trezor_app_sdk::{Error, Result, ResultExt, crypto};
-
-fn select_keys(sigmask: u8, keys: &[&[u8; 32]]) -> Result<Vec<[u8; 32]>> {
-    let mut selected_keys = Vec::new();
-    let mut sigmask = sigmask;
-    for key in keys {
-        if sigmask & 1 != 0 {
-            selected_keys.push(**key);
-        }
-        sigmask >>= 1;
-    }
-    if sigmask != 0 {
-        return Err(Error::DataError(
-            "Sigmask specifies more public keys than provided",
-        ));
-    }
-    Ok(selected_keys)
-}
+use trezor_app_sdk::{Error, Result, crypto};
 
 pub fn verify(
     signature: &[u8; 64],
@@ -29,12 +12,13 @@ pub fn verify(
         return Err(Error::DataError("At least one signer is required"));
     }
 
-    let selected_keys = select_keys(sigmask, keys).c()?;
+    let keys: Vec<[u8; 32]> = keys.iter().map(|k| **k).collect();
+    let threshold: u8 = threshold
+        .try_into()
+        .map_err(|_| Error::DataError("Threshold too large"))?;
 
-    if selected_keys.len() < threshold {
-        return Ok(false); // insufficient number of signatures
+    match crypto::cosi_verify(threshold, data, &keys, sigmask, signature) {
+        Ok(()) => Ok(true),
+        Err(_) => Ok(false),
     }
-
-    let global_pk = crypto::ed25519::cosi_combine_publickeys(&selected_keys).c()?;
-    crypto::ed25519::sign_open(&global_pk, signature, data).c()
 }

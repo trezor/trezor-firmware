@@ -19,7 +19,7 @@ use crate::{helpers::get_type_name, uformat, wire_request};
 use primitive_types::U256;
 use trezor_app_sdk::{
     Error, Result, ResultExt,
-    crypto::{self, Hasher},
+    crypto::{self, HashingAlgorithm, HasherExt},
     ui, unwrap,
 };
 
@@ -141,11 +141,11 @@ fn generate_typed_data_hash(
 
     confirm_typed_data_final()?;
 
-    let mut hasher = crypto::sha3::Keccak256::new(None);
+    let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
     hasher.update(b"\x19\x01");
     hasher.update(&domain_separator);
     hasher.update(&message_hash);
-    Ok(hasher.digest())
+    Ok(hasher.finalize().as_slice().try_into().unwrap())
 }
 
 /// Encapsulates the type information for the message being hashed and signed.
@@ -228,7 +228,7 @@ impl TypedDataEnvelope {
     where
         F: Fn(u32) -> u32 + Copy,
     {
-        let mut hasher = crypto::sha3::Keccak256::new(None);
+        let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
 
         self.hash_type(&mut hasher, primary_type)?;
 
@@ -241,7 +241,7 @@ impl TypedDataEnvelope {
             map_progress,
         )?;
 
-        Ok(hasher.digest())
+        Ok(hasher.finalize().as_slice().try_into().unwrap())
     }
 
     /// Gradually fetch data from client and encode the whole struct.
@@ -250,7 +250,7 @@ impl TypedDataEnvelope {
     /// The encoding of a struct instance is enc(value₁) ‖ enc(value₂) ‖ … ‖ enc(valueₙ),
     /// i.e. the concatenation of the encoded member values in the order that they appear in the type.
     /// Each encoded member value is exactly 32-byte long.
-    fn get_and_encode_data<F, H: Hasher>(
+    fn get_and_encode_data<F, H: HasherExt>(
         &self,
         hasher: &mut H,
         primary_type: &str,
@@ -334,7 +334,7 @@ impl TypedDataEnvelope {
                     } else {
                         false
                     };
-                    let mut arr_w = crypto::sha3::Keccak256::new(None);
+                    let mut arr_w = crypto::get_hasher(HashingAlgorithm::Keccak256);
                     let mut el_member_path = member_value_path.to_vec();
                     el_member_path.push(0);
                     for idx in 0..array_size {
@@ -386,7 +386,7 @@ impl TypedDataEnvelope {
                             }
                         }
                     }
-                    let hash = arr_w.digest();
+                    let hash = arr_w.finalize();
                     hasher.update(&hash);
                 } else {
                     return Err(Error::DataError("Missing entry type for array field"))?;
@@ -402,9 +402,11 @@ impl TypedDataEnvelope {
         Ok(())
     }
 
-    fn hash_type<H: Hasher>(&self, hasher: &mut H, primary_type: &str) -> Result<()> {
-        let mut hasher_inner = crypto::sha3::Keccak256::new(Some(&self.encode_type(primary_type)?));
-        hasher.update(&hasher_inner.digest());
+    fn hash_type<H: HasherExt>(&self, hasher: &mut H, primary_type: &str) -> Result<()> {
+        let encoded_type = self.encode_type(primary_type)?;
+        let mut hasher_inner = crypto::get_hasher(HashingAlgorithm::Keccak256);
+        hasher_inner.update(&encoded_type);
+        hasher.update(&hasher_inner.finalize());
         Ok(())
     }
 
@@ -655,18 +657,20 @@ fn rightpad32(value: &[u8]) -> Result<[u8; 32]> {
 /// - Array values are encoded as the keccak256 hash of the concatenated
 ///   encodeData of their contents
 /// - Struct values are encoded recursively as hashStruct(value)
-fn encode_field<H: Hasher>(h: &mut H, field: &FieldType, value: &[u8]) -> Result<()> {
+fn encode_field<H: HasherExt>(h: &mut H, field: &FieldType, value: &[u8]) -> Result<()> {
     if field.data_type == DataType::Bytes as i32 {
         if let Some(_size) = field.size {
             // write_rightpad32
             h.update(&rightpad32(value)?);
         } else {
-            let mut hasher_inner = crypto::sha3::Keccak256::new(Some(value));
-            h.update(&hasher_inner.digest());
+            let mut hasher_inner = crypto::get_hasher(HashingAlgorithm::Keccak256);
+            hasher_inner.update(value);
+            h.update(&hasher_inner.finalize());
         };
     } else if field.data_type == DataType::String as i32 {
-        let mut hasher_inner = crypto::sha3::Keccak256::new(Some(value));
-        h.update(&hasher_inner.digest());
+        let mut hasher_inner = crypto::get_hasher(HashingAlgorithm::Keccak256);
+        hasher_inner.update(value);
+        h.update(&hasher_inner.finalize());
     } else if field.data_type == DataType::Int as i32 {
         h.update(&leftpad32(value, true)?);
     } else if field.data_type == DataType::Uint as i32

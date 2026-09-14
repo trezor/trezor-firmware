@@ -6,7 +6,7 @@ impl<T> UnwrapOrFatalError<T> for Option<T> {
     fn unwrap_or_fatal_error(self, msg: &str, file: &str, line: u32) -> T {
         match self {
             Some(x) => x,
-            None => crate::low_level_api::system_exit_fatal(msg, file, line as i32),
+            None => crate::app_runtime2::system_exit_fatal(msg, file, line),
         }
     }
 }
@@ -15,14 +15,14 @@ impl<T, E> UnwrapOrFatalError<T> for Result<T, E> {
     fn unwrap_or_fatal_error(self, msg: &str, file: &str, line: u32) -> T {
         match self {
             Ok(x) => x,
-            Err(_) => crate::low_level_api::system_exit_fatal(msg, file, line as i32),
+            Err(_) => crate::app_runtime2::system_exit_fatal(msg, file, line),
         }
     }
 }
 
 /// Unwraps an [`Option`] or [`Result`], triggering a fatal error on failure.
 ///
-/// On failure calls [`system_exit_fatal`](crate::low_level_api::system_exit_fatal)
+/// On failure calls [`system_exit_fatal`](crate::app_runtime2::system_exit_fatal)
 /// with the file name, line number, and an optional custom message.
 ///
 /// # Forms

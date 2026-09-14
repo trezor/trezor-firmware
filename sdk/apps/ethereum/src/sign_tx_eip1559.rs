@@ -16,7 +16,8 @@ use crate::{
 };
 use primitive_types::U256;
 use trezor_app_sdk::{
-    Error, Result, ResultExt, crypto,
+    Error, Result, ResultExt,
+    crypto::{self, HashingAlgorithm, HasherExt},
     ui::{self, Property},
 };
 
@@ -96,7 +97,7 @@ pub fn sign_tx_eip1559(mut msg: SignTxEip1559) -> Result<TxRequest> {
         None
     };
 
-    let mut hasher = crypto::sha3::Keccak256::new(None);
+    let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
 
     rlp::write(&mut hasher, &RLPItem::Int(TX_TYPE.into()));
 
@@ -182,7 +183,7 @@ pub fn sign_tx_eip1559(mut msg: SignTxEip1559) -> Result<TxRequest> {
         rlp::write(&mut hasher, &RLPItem::List(storage_key_items.as_slice()));
     }
 
-    let digest = hasher.digest();
+    let digest: [u8; 32] = hasher.finalize().as_slice().try_into().unwrap();
     let res = sign_digest(&msg, &digest)?;
 
     ui::end_progress()?;
