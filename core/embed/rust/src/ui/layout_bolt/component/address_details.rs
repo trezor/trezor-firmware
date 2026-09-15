@@ -4,7 +4,6 @@ use super::{theme, Frame, FrameMsg};
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::Error;
 use crate::strutil::TString;
-use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
 };
@@ -29,23 +28,17 @@ impl AddressDetails {
         qr_address: TString<'static>,
         case_sensitive: bool,
         details_title: TString<'static>,
-        account: Option<TString<'static>>,
-        path: Option<TString<'static>>,
+        account: Option<(TString<'static>, TString<'static>)>,
+        path: Option<(TString<'static>, TString<'static>)>,
     ) -> Result<Self, Error> {
         let mut para = ParagraphVecShort::new();
-        if let Some(a) = account {
-            para.add(Paragraph::new(
-                &theme::TEXT_NORMAL,
-                TR::words__account_colon,
-            ));
-            para.add(Paragraph::new(&theme::TEXT_MONO_DATA, a));
+        if let Some((label, account)) = account {
+            para.add(Paragraph::new(&theme::TEXT_NORMAL, label));
+            para.add(Paragraph::new(&theme::TEXT_MONO_DATA, account));
         }
-        if let Some(p) = path {
-            para.add(Paragraph::new(
-                &theme::TEXT_NORMAL,
-                TR::address_details__derivation_path_colon,
-            ));
-            para.add(Paragraph::new(&theme::TEXT_MONO_DATA, p));
+        if let Some((label, path)) = path {
+            para.add(Paragraph::new(&theme::TEXT_NORMAL, label));
+            para.add(Paragraph::new(&theme::TEXT_MONO_DATA, path));
         }
         let result = Self {
             qr_code: Frame::left_aligned(

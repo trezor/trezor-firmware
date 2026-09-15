@@ -983,8 +983,8 @@ impl FirmwareUI for UICaesar {
         address: TString<'static>,
         case_sensitive: bool,
         _details_title: TString<'static>,
-        account: Option<TString<'static>>,
-        path: Option<TString<'static>>,
+        account: Option<(TString<'static>, TString<'static>)>,
+        path: Option<(TString<'static>, TString<'static>)>,
         xpubs: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;

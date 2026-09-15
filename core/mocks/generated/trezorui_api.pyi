@@ -570,8 +570,8 @@ def show_address_details(
     address: str,
     case_sensitive: bool,
     details_title: str,
-    account: str | None,
-    path: str | None,
+    account: tuple[str, str] | None,
+    path: tuple[str, str] | None,
     xpubs: Sequence[tuple[str, str]],
 ) -> LayoutContext[UiResult]:
     """Show address details - QR code, account, path, cosigner xpubs."""

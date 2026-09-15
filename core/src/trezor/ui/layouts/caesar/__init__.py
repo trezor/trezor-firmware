@@ -376,8 +376,12 @@ async def show_address(
                 address=address if address_qr is None else address_qr,
                 case_sensitive=case_sensitive,
                 details_title="",  # unused on this model
-                account=account,
-                path=path,
+                account=(with_colon(TR.words__account), account) if account else None,
+                path=(
+                    (with_colon(TR.address_details__derivation_path), path)
+                    if path
+                    else None
+                ),
                 xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
             ) as layout:
                 result = await interact(layout, None, raise_on_cancel=None)
