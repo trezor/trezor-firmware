@@ -273,6 +273,28 @@ Because the value is a bare 32 bytes, it is foldable on its own: a device can
 establish *which* co-processor image a release expects without holding the image —
 fold `H(0x00 ‖ hash)` through the co-path and compare against `modelRoot`.
 
+### Rollback floor (PQ-native only)
+
+A PQ-native nRF enforces the release's `monotonic_version` itself, from the
+PROTECTED `IMAGE_TLV_SEC_CNT` — the same counter the STM is on, not a second
+axis. That is what closes serial recovery: an image arriving over UART bypasses
+the STM's push gate entirely, so the floor has to be checked by the chip that
+boots it.
+
+The floor lives in NSIB's provision page (`bl_storage`, UICR+0x500), and **it
+must be in factory flash**: MCUboot reads it before it will boot the app, and no
+OTA path writes it — a push replaces the app image only. Sysbuild does not build
+that page for this layout, so `build_sign_flash.sh` generates it with
+`provision.py --mcuboot-only` and merges it into the flashed hex.
+
+One consequence for the STM: its push gate does not check the counter, on the
+grounds that an image which folds carries the counter this bootloader was signed
+with, and the nRF's floor cannot be ahead of it without a bootloader downgrade
+that `check_bootloader_min_version` already refuses. Serial recovery is the
+exception — it can raise the floor past the running bootloader. The cost is a
+refused push (physical access, and a DoS rather than an acceptance), but the STM
+cannot predict that state.
+
 ### The unprotected area is not covered by the fold
 
 The hash stops at the protected TLVs, so the fold proves nothing about the

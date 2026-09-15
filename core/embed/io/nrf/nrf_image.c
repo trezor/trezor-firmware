@@ -867,10 +867,15 @@ secbool nrf_image_verify_for_push(const uint8_t* image, size_t image_len,
   // TLV, so it lies INSIDE the leaf -- and the fold above already proved that
   // leaf reaches this boot header's modelRoot. An image that folds is therefore
   // the one signed alongside THIS bootloader, carrying the counter the signer
-  // stamped from THIS header; a tampered counter simply fails the fold. Nor can
-  // the nRF refuse the push on rollback grounds: that needs the nRF's floor
-  // above the pushed counter, which needs the bootloader downgraded first,
-  // which check_bootloader_min_version already refuses.
+  // stamped from THIS header; a tampered counter simply fails the fold. Nor, over
+  // the wire, can the nRF refuse the push on rollback grounds: that needs the
+  // nRF's floor above the pushed counter, which needs the bootloader downgraded
+  // first, which check_bootloader_min_version already refuses.
+  //
+  // The floor can still be raised out of band -- serial recovery over UART takes
+  // a signed newer image straight into the nRF, past this bootloader. That needs
+  // physical access, and it costs a refused push (the STM erases the slot, then
+  // the nRF rejects the image) rather than anything accepted that should not be.
   //
   // That is exactly why the signature records below DO need checking: they are
   // UNPROTECTED, outside the leaf, so the fold says nothing about them. If the
