@@ -2023,6 +2023,40 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["PaymentNotification"]:
             return isinstance(msg, cls)
 
+    class GetBip85Entropy(protobuf.MessageType):
+        address_n: "list[int]"
+        show_display: "bool | None"
+        on_device_only: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            address_n: "list[int] | None" = None,
+            show_display: "bool | None" = None,
+            on_device_only: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["GetBip85Entropy"]:
+            return isinstance(msg, cls)
+
+    class Bip85Entropy(protobuf.MessageType):
+        entropy: "AnyBytes | None"
+        secret: "str | None"
+
+        def __init__(
+            self,
+            *,
+            entropy: "AnyBytes | None" = None,
+            secret: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["Bip85Entropy"]:
+            return isinstance(msg, cls)
+
     class Initialize(protobuf.MessageType):
         session_id: "AnyBytes | None"
         derive_cardano: "bool | None"

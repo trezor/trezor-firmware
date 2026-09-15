@@ -173,9 +173,10 @@ Miscellaneous cryptography features.
     --help  Show this message and exit.
 
   Commands:
-    decrypt-keyvalue  Decrypt value by given key and path.
-    encrypt-keyvalue  Encrypt value by given key and path.
-    get-entropy       Get random bytes from device.
+    decrypt-keyvalue   Decrypt value by given key and path.
+    encrypt-keyvalue   Encrypt value by given key and path.
+    get-bip85-entropy  Derive deterministic entropy according to BIP-85.
+    get-entropy        Get random bytes from device.
 
 Miscellaneous debug features.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
