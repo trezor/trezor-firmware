@@ -4,7 +4,7 @@ Complete the setup (nix-shell + uv) described in [index.md](index.md) before pro
 
 ### Working with Developer Tools
 
-If you need embedded development tools such as OpenOCD, gcc-arm-embedded, or gdb, run nix-shell with:
+If you need embedded development tools such as OpenOCD or gdb, run nix-shell with:
 
 ```sh
 nix-shell --arg devTools true
