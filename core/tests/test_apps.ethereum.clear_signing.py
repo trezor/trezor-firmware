@@ -194,8 +194,7 @@ class TestEthereumClearSigning(unittest.TestCase):
 
     def test_static_struct_valid(self):
         static_struct = Tuple(
-            (parse_address, parse_uint160, parse_bool),
-            is_dynamic=False,
+            (Atomic(parse_address), Atomic(parse_uint160), Atomic(parse_bool))
         )
 
         addr_bytes = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
@@ -215,8 +214,7 @@ class TestEthereumClearSigning(unittest.TestCase):
 
     def test_static_struct_uint160_overflow(self):
         static_struct = Tuple(
-            (parse_address, parse_uint160, parse_bool),
-            is_dynamic=False,
+            (Atomic(parse_address), Atomic(parse_uint160), Atomic(parse_bool))
         )
 
         addr_bytes = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
@@ -235,7 +233,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             static_struct.parse(data, len(FIVE_RANDOM_BYTES))
 
     def test_dynamic_struct_valid(self):
-        dynamic_struct = Tuple((parse_address, parse_string), is_dynamic=True)
+        dynamic_struct = Tuple((Atomic(parse_address), DynamicLeaf(parse_string)))
 
         addr = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
         # left padded with zeroes
@@ -271,7 +269,9 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertEqual(consumed, 32)  # only the initial pointer is consumed
 
     def test_dynamic_struct_out_of_bounds(self):
-        dynamic_struct = Tuple((parse_uint256,), is_dynamic=True)
+        # the `bytes` field is what makes the struct a dynamic type, and so
+        # what puts its body behind the pointer this test aims out of bounds
+        dynamic_struct = Tuple((DynamicLeaf(parse_bytes),))
 
         # pointer says struct starts at byte 1000, but data is only 32 bytes long
         payload = to_bytes(1000)
@@ -279,6 +279,74 @@ class TestEthereumClearSigning(unittest.TestCase):
 
         with self.assertRaises(OutOfBounds):
             dynamic_struct.parse(data, 0)
+
+    def test_nested_static_struct_head_accumulation(self):
+        # (uint256 a, (address b, uint256 c) inner, uint256 d)
+        #
+        # A nested *static* struct occupies its whole body in the enclosing
+        # struct's head area - 64 bytes here, not one word - so the field heads
+        # have to be walked by accumulating each field's size. Reading field
+        # `i` at a fixed stride of one word would find `d` at word 2 (`c`)
+        # instead of word 3.
+        nested_struct = Tuple(
+            (
+                Atomic(parse_uint256),
+                Tuple((Atomic(parse_address), Atomic(parse_uint256))),
+                Atomic(parse_uint256),
+            )
+        )
+
+        self.assertFalse(nested_struct.is_dynamic)
+        self.assertEqual(nested_struct.head_size, 128)  # 32 + 64 + 32
+
+        addr = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        payload = (
+            to_bytes(11)  # +0  a
+            + pad_left(addr)  # +32 inner.b
+            + to_bytes(22)  # +64 inner.c
+            + to_bytes(33)  # +96 d
+        )
+        data = memoryview(FIVE_RANDOM_BYTES + payload + SEVEN_RANDOM_BYTES)
+
+        parsed, consumed = nested_struct.parse(data, len(FIVE_RANDOM_BYTES))
+
+        self.assertEqual(parsed, (11, (addr, 22), 33))
+        self.assertEqual(consumed, 128)
+
+    def test_nested_dynamic_struct_offset_is_relative_to_enclosing_body(self):
+        # (address a, (uint256 x, bytes y) inner)
+        #
+        # `inner` is dynamic (it holds a `bytes`), so its head is a pointer -
+        # and that pointer is relative to the start of the *enclosing struct's
+        # body*, not to the parameter block. The outer body deliberately does
+        # not start at 0 here, so the two readings resolve to different words.
+        nested_struct = Tuple(
+            (
+                Atomic(parse_address),
+                Tuple((Atomic(parse_uint256), DynamicLeaf(parse_bytes))),
+            )
+        )
+
+        self.assertTrue(nested_struct.is_dynamic)
+        self.assertEqual(nested_struct.head_size, 32)
+
+        addr = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        blob = b"\xca\xfe"
+        data = memoryview(
+            to_bytes(64)  # 0   outer head -> outer body at 64
+            + to_bytes(0)  # 32  unused gap, keeps the outer body off 0
+            + pad_left(addr)  # 64  outer field 0
+            + to_bytes(64)  # 96  outer field 1, rel to 64 -> inner body at 128
+            + to_bytes(7)  # 128 inner field 0
+            + to_bytes(64)  # 160 inner field 1, rel to 128 -> bytes body at 192
+            + to_bytes(len(blob))  # 192 byte length
+            + pad_right(blob)  # 224 data
+        )
+
+        parsed, consumed = nested_struct.parse(data, 0)
+
+        self.assertEqual(parsed, (addr, (7, blob)))
+        self.assertEqual(consumed, 32)  # only the outer pointer is consumed
 
     def test_array_of_addresses_valid(self):
         address_array_parser = Array(Atomic(parse_address))
@@ -332,10 +400,9 @@ class TestEthereumClearSigning(unittest.TestCase):
     def test_array_of_dynamic_structs(self):
         array_parser = Array(
             Tuple(
-                (parse_address, parse_string),
                 # the `string` field makes the struct a dynamic type, so the
                 # array encodes its elements via offset heads
-                is_dynamic=True,
+                (Atomic(parse_address), DynamicLeaf(parse_string))
             )
         )
 
@@ -385,10 +452,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         # the length word, at a stride of the struct size (96 bytes), with no
         # offset heads at all.
         array_parser = Array(
-            Tuple(
-                (parse_address, parse_address, parse_uint256),
-                is_dynamic=False,
-            )
+            Tuple((Atomic(parse_address), Atomic(parse_address), Atomic(parse_uint256)))
         )
 
         addr1 = bytes.fromhex("6666666666666666666666666666666666666666")
@@ -435,9 +499,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         # the heads bounds pre-check (array_length * 0) and let an
         # attacker-controlled length word drive an unbounded parse loop.
         with self.assertRaises(InvalidFormatDefinition):
-            Tuple((), is_dynamic=False)
-        with self.assertRaises(InvalidFormatDefinition):
-            Tuple((), is_dynamic=True)
+            Tuple(())
 
     def test_bytes32_parsing(self):
         atomic_bytes32 = Atomic(parse_bytes32)
