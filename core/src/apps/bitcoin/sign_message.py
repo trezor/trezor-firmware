@@ -26,6 +26,7 @@ async def sign_message(
     from .keychain import (
         address_n_to_name_or_unknown,
         is_sign_message_account_node,
+        is_sign_message_bip48_path,
         validate_path_against_script_type,
     )
 
@@ -44,11 +45,16 @@ async def sign_message(
     # the patterns in the naming table; account_level trims them to match, so
     # the node is named rather than left as "Unknown path" -- which would
     # contradict a path we allow without warning.
+    #
+    # A BIP-48 path is named by its level, passing no script type: the level
+    # need not agree with the one asked for, and get_name() would otherwise
+    # reject the entry and leave the same "Unknown path". The trimmed patterns
+    # differ by level, so the level alone picks the name.
     account = address_n_to_name_or_unknown(
         coin,
         address_n,
-        script_type,
-        account_level=is_sign_message_account_node(coin, address_n, script_type),
+        None if is_sign_message_bip48_path(coin, address_n) else script_type,
+        account_level=is_sign_message_account_node(coin, address_n),
     )
     await confirm_signverify(
         decode_message(message),
