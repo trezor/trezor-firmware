@@ -717,9 +717,32 @@ def upload_firmware_into_device(
         sys.exit(3)
 
 
+# How long to watch for the device to drop off USB before assuming it already
+# came back. Only reached when the reboot is faster than this loop polls.
+_REBOOT_DEPART_TIMEOUT = 5.0
+
+
 def _wait_for_device(obj: "TrezorConnection", message: str) -> None:
-    """Block until the device re-enumerates after a reboot."""
+    """Block until the device re-enumerates after a reboot.
+
+    Waiting only for it to be findable is not enough: for a moment after the
+    reboot is requested the PRE-reboot enumeration is still there and still
+    answers, so a reconnect can land on a device that is about to drop off USB.
+    The caller's `bootloader_mode` check does not catch that when the device is
+    in bootloader mode on BOTH sides of the reboot, which is the case after the
+    boot header is staged -- the reconnect looks successful and the next request
+    goes to a rebooting device.
+
+    So wait for it to leave first, then to come back. If it never appears to
+    leave it re-enumerated faster than this polls, which is the old behaviour and
+    still correct -- just no longer the assumption.
+    """
     click.echo(message)
+    deadline = time.monotonic() + _REBOOT_DEPART_TIMEOUT
+    while time.monotonic() < deadline:
+        if not obj.is_present():
+            break
+        time.sleep(0.1)
     while True:
         time.sleep(0.5)
         try:
@@ -788,7 +811,6 @@ def upload_pq_bundle(
     # The device reboots into the boardloader, which installs the staged boot
     # header. If it also has an nRF image to push, that runs before the device
     # re-advertises, so this wait can be tens of seconds -- not a hang.
-    time.sleep(1)
     _wait_for_device(obj, "Waiting for the device to install the bootloader...")
 
     with obj.client_context() as client:

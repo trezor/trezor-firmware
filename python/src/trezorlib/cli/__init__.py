@@ -280,6 +280,18 @@ class TrezorConnection:
         assert self._transport is not None
         record_screen(self._transport, self.record_dir if start else None)
 
+    def is_present(self) -> bool:
+        """Whether the device can be FOUND right now, without opening it.
+
+        Opening would claim the interface and toggle screen recording, neither of
+        which belongs in a liveness poll -- so this only enumerates.
+        """
+        try:
+            self._get_transport()
+            return True
+        except Exception:
+            return False
+
     def open(self) -> None:
         if self._transport is None:
             self._transport = self._get_transport()
