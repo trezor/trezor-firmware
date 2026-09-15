@@ -201,7 +201,7 @@ class EnvInfo:
                 new_bl_replacement,
                 new_bl_replacement.with_name(f"bootloader_{model.upper()}_qa.bin"),
             ]
-        elif model == "T2T1" and t2t1_old_bl_replacement.is_file():
+        elif model.lower() == "t2t1" and t2t1_old_bl_replacement.is_file():
             self.bootloader_replace = [t2t1_old_bl_replacement]
         else:
             raise click.ClickException("Unknown bootloader replacement path.")
