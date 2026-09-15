@@ -633,12 +633,116 @@ def test_signmessage_unknown_path_is_refused(session: Session):
 
 
 @pytest.mark.models("core")
-def test_signmessage_slip25_still_requires_unlock_path(session: Session):
-    """SLIP-25 stays behind UnlockPath, path-generic signing notwithstanding.
+@pytest.mark.parametrize(
+    "path",
+    ["m/44h/60h/0h/0/0", "m"],
+    ids=["ethereum-namespace", "master-key"],
+)
+def test_signmessage_cross_namespace_path_is_refused(session: Session, path: str):
+    """Message signing reaches Bitcoin keys, not every secp256k1 key.
 
-    The wildcard that makes every other path signable must not answer here:
-    a message signature is recoverable, so it would reveal the public key of a
-    coinjoin address without the authenticated unlock.
+    A message signature is recoverable, so it hands the host the public key of
+    whatever it was made with. Signing under another coin's namespace would
+    leak that key while the confirmation shows a Bitcoin address, and the
+    master key must never take part in a signing protocol at all. Both paths
+    are outside the keychain, so they are refused before any confirmation
+    rather than warned about: a namespace becomes signable only by being
+    allowlisted, never by nobody having blacklisted it.
+
+    With safety checks explicitly disabled, Keychain.verify_path() stops
+    enforcing schemas by design and these paths reach the warning flow. That
+    is what disabling safety checks means globally, not a Bitcoin-specific
+    hole, so it is not worked around here.
+    """
+    with pytest.raises(TrezorFailure, match="Forbidden key path") as exc:
+        btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path(path),
+            message="This is an example of a signed message.",
+            script_type=S.SPENDADDRESS,
+        )
+
+    assert exc.value.code is messages.FailureType.DataError
+
+
+@pytest.mark.models("core")
+@pytest.mark.parametrize(
+    "path,error",
+    [
+        # in the keychain by PATTERN_BIP48_RAW, so it fails on the address
+        ("m/48h/0h/0h/0h/0/0", "Multisig details required"),
+        # _get_sign_message_account_patterns() offers no node for SPENDMULTISIG,
+        # so the node is not unlocked in the first place
+        ("m/48h/0h/0h/0h", "Forbidden key path"),
+    ],
+    ids=["leaf", "account-node"],
+)
+def test_signmessage_multisig_script_type_is_refused(
+    session: Session, path: str, error: str
+):
+    """SPENDMULTISIG is refused on every path, BIP-48 0' included.
+
+    Message signing is single-key: the digest covers the coin header and the
+    message, so there is no output script and no multisig signature to make.
+    The device does not reinterpret the script type -- the client sends the
+    single-key analogue instead, see guess_sign_message_script_type().
+    """
+    with session.test_ctx as client:
+        IF = InputFlowConfirmAllWarnings(session)
+        client.set_input_flow(IF.get())
+        with pytest.raises(TrezorFailure, match=error):
+            btc.sign_message(
+                session,
+                coin_name="Bitcoin",
+                n=parse_path(path),
+                message="This is an example of a signed message.",
+                script_type=S.SPENDMULTISIG,
+            )
+
+
+@pytest.mark.models("core")
+def test_signmessage_taproot_script_type_is_refused(session: Session):
+    """sign_message() has no recovery byte for a taproot signature."""
+    with session.test_ctx as client:
+        IF = InputFlowConfirmAllWarnings(session)
+        client.set_input_flow(IF.get())
+        with pytest.raises(TrezorFailure, match="Unsupported script type"):
+            btc.sign_message(
+                session,
+                coin_name="Bitcoin",
+                n=parse_path("m/86h/0h/0h/0/0"),
+                message="This is an example of a signed message.",
+                script_type=S.SPENDTAPROOT,
+            )
+
+
+@pytest.mark.models("core")
+def test_signmessage_grant_is_not_shared_with_getaddress(session: Session):
+    """The BIP-48 account node is signable, not addressable.
+
+    The account-node grant is SignMessage-only: GetAddress keeps the ordinary
+    per-coin schemas, where the account node sits two levels above every
+    BIP-48 pattern.
+    """
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.get_address(
+            session,
+            "Bitcoin",
+            parse_path("m/48h/0h/0h/2h"),
+            script_type=S.SPENDWITNESS,
+        )
+
+
+@pytest.mark.models("core")
+def test_signmessage_slip25_still_requires_unlock_path(session: Session):
+    """SLIP-25 stays behind UnlockPath.
+
+    The SignMessage-only BIP-48 account-node exception grants no access to
+    SLIP-25, nor to anything else outside the ordinary keychain schemas. It
+    matters here because a message signature is recoverable: reaching a
+    coinjoin address would reveal its public key without the authenticated
+    unlock.
     """
     with pytest.raises(TrezorFailure, match="Forbidden key path") as exc:
         btc.sign_message(
