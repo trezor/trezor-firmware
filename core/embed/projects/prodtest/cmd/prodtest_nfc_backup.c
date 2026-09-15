@@ -38,9 +38,9 @@
 #define NFC_BACKUP_SEED_SIZE 256
 #define NFC_BACKUP_VERBOSE_SECRETS false
 #define NFC_BACKUP_MAX_PIN_LEN 32
-#define ENC_TAG_SIZE 16
 
 static noise_xxpsk3_initiator_t intr = {0};
+static bool handshake_completed = false;
 
 typedef struct {
   uint8_t version;                // 0 = v1, 1 = v2, 2 = v3
@@ -156,6 +156,58 @@ static void nfc_backup_format_key_usage(uint16_t key_usage, char *out,
   }
 }
 
+// Sends `cmd` (CLA/INS/P1/P2/Lc/Data) over NFC. Once the Noise XXpsk3
+// handshake is complete, the whole APDU is encrypted before transmission and
+// the response payload is decrypted, with SW1/SW2 (the last two bytes)
+// always left in plaintext. Prior to the handshake, `cmd`/`rsp` pass through
+// unmodified.
+static ts_t nfc_backup_secure_transceive(const nfc_apdu_message_t *cmd,
+                                         nfc_apdu_message_t *rsp) {
+  TSH_DECLARE;
+  ts_t status;
+
+  TSH_CHECK_ARG(cmd != NULL);
+  TSH_CHECK_ARG(rsp != NULL);
+
+  if (!handshake_completed) {
+    status = nfc_transceive(cmd, rsp);
+    TSH_CHECK_OK(status);
+    goto cleanup;
+  }
+
+  nfc_apdu_message_t enc_cmd = {0};
+  size_t enc_cmd_len = 0;
+  bool ok = noise_xxpsk3_send_message(&intr.transport_state, cmd->data,
+                                      cmd->data_len, enc_cmd.data,
+                                      sizeof(enc_cmd.data), &enc_cmd_len);
+  TSH_CHECK(ok, TS_EINVAL);
+  enc_cmd.data_len = (uint16_t)enc_cmd_len;
+
+  nfc_apdu_message_t enc_rsp = {0};
+  status = nfc_transceive(&enc_cmd, &enc_rsp);
+  TSH_CHECK_OK(status);
+
+  TSH_CHECK(enc_rsp.data_len >= 2U, TS_EINVAL);
+  size_t enc_payload_len = enc_rsp.data_len - 2U;
+  uint8_t sw1 = enc_rsp.data[enc_rsp.data_len - 2];
+  uint8_t sw2 = enc_rsp.data[enc_rsp.data_len - 1];
+
+  size_t dec_len = 0;
+  if (enc_payload_len > 0) {
+    ok = noise_xxpsk3_receive_message(&intr.transport_state, enc_rsp.data,
+                                      enc_payload_len, rsp->data,
+                                      sizeof(rsp->data) - 2U, &dec_len);
+    TSH_CHECK(ok, TS_EINVAL);
+  }
+
+  rsp->data[dec_len] = sw1;
+  rsp->data[dec_len + 1] = sw2;
+  rsp->data_len = (uint16_t)(dec_len + 2U);
+
+cleanup:
+  TSH_RETURN;
+}
+
 static ts_t nfc_backup_transceive_logged(cli_t *cli, const char *api_name,
                                          uint8_t ins,
                                          const nfc_apdu_message_t *cmd,
@@ -165,7 +217,7 @@ static ts_t nfc_backup_transceive_logged(cli_t *cli, const char *api_name,
   cli_trace(cli, "APDU %s: TX INS=0x%02X (%u bytes)", api_name, ins,
             (unsigned)cmd->data_len);
 
-  status = nfc_transceive(cmd, rsp);
+  status = nfc_backup_secure_transceive(cmd, rsp);
   if (ts_error(status)) {
     cli_trace(cli, "APDU %s: transceive failed (%s/%d)", api_name,
               ts_string(status), ts_code(status));
@@ -287,8 +339,11 @@ static ts_t nfc_backup_tap(cli_t *cli, on_tap_callback_t callback) {
     return status;
   }
 
+  handshake_completed = false;
+
   status = nfc_wait_for_tap(cli, callback);
   memzero(&intr, sizeof(intr));
+
   nfc_poll_stop();
   return status;
 }
@@ -671,7 +726,7 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
                                    request_size, &cmd);
   TSH_CHECK_OK(status);
 
-  status = nfc_transceive(&cmd, &rsp);
+  status = nfc_backup_secure_transceive(&cmd, &rsp);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(rsp.data_len >= 2U, TS_EINVAL);
@@ -711,7 +766,7 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
                                    request_size, &cmd);
   TSH_CHECK_OK(status);
 
-  status = nfc_transceive(&cmd, &rsp);
+  status = nfc_backup_secure_transceive(&cmd, &rsp);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(rsp.data_len >= 2U, TS_EINVAL);
@@ -742,23 +797,23 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
   // Clear the initiator structure
   memzero(&intr, sizeof(intr));
 
-  if(cli != NULL) {  
+  if (cli != NULL) {
     cli_trace(cli, "Handshake: start");
     cli_trace(cli, "Handshake step 1/4: selecting backup applet.");
-  } 
+  }
   nfc_apdu_message_t cmd = {.data = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xA0, 0x00,
                                      0x00, 0x09, 0x59, 0x00, 0x01},
                             .data_len = 12};
 
   nfc_apdu_message_t resp = {0};
 
-  status = nfc_transceive(&cmd, &resp);
+  status = nfc_backup_secure_transceive(&cmd, &resp);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(resp.data_len == 2U, TS_EINVAL);
   TSH_CHECK(resp.data[0] == 0x90U && resp.data[1] == 0x00U, TS_EINVAL);
 
-  if(cli != NULL) {
+  if (cli != NULL) {
     cli_trace(cli, "Handshake step 2/4: exchanging PSK.");
   }
   uint8_t pcd_psk[16] = {0};
@@ -771,9 +826,9 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
                               sizeof(picc_psk), &picc_psk_len);
 
   if (ts_error(status) || picc_psk_len != sizeof(picc_psk)) {
-    if(cli != NULL) {
+    if (cli != NULL) {
       cli_error(cli, PRODTEST_ERR_NFC_BACKUP_PSK_EXCHANGE_FAILED,
-                 "NFC PSK exchange failed");
+                "NFC PSK exchange failed");
     }
   }
   TSH_CHECK_OK(status);
@@ -785,22 +840,24 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
 
   nfc_backup_trace_hex_preview(cli, "Exchanged PSK", psk, sizeof(psk));
 
-  if(cli != NULL) {
+  if (cli != NULL) {
     cli_trace(cli, "Handshake step 3/4: running Noise XXpsk3.");
   }
   status = nfc_backup_noise(cli, &psk);
   if (ts_error(status)) {
-    if(cli != NULL) {
+    if (cli != NULL) {
       cli_error(cli, PRODTEST_ERR_NFC_BACKUP_NOISE_FAILED,
                 "NFC noise handshake failed");
     }
   }
   TSH_CHECK_OK(status);
 
-  if(cli != NULL) {
+  if (cli != NULL) {
     cli_trace(cli, "Handshake step 4/4: secure channel established.");
     cli_trace(cli, "Handshake: completed");
   }
+
+  handshake_completed = true;
 
 cleanup:
   TSH_RETURN;
@@ -822,16 +879,9 @@ static ts_t api_authenticate(cli_t *cli, const char *pin, size_t pin_len) {
     pin_padded[i] = 0xFFU;
   }
 
-  // Encrypt the PIN using Noise XXpsk3
-  uint8_t enc_pin[NFC_BACKUP_MAX_PIN_LEN + ENC_TAG_SIZE] = {0};
-  size_t enc_pin_size = 0;
-  bool ok = noise_xxpsk3_send_message(
-      &intr.transport_state, (const uint8_t *)pin_padded,
-      NFC_BACKUP_MAX_PIN_LEN, enc_pin, sizeof(enc_pin), &enc_pin_size);
-  TSH_CHECK(ok, TS_EINVAL);
-
-  status = nfc_backup_compose_apdu(
-      0x80, 0x03, 0x00, 0x00, (const uint8_t *)enc_pin, enc_pin_size, &cmd);
+  status = nfc_backup_compose_apdu(0x80, 0x03, 0x00, 0x00,
+                                   (const uint8_t *)pin_padded,
+                                   NFC_BACKUP_MAX_PIN_LEN, &cmd);
   TSH_CHECK_OK(status);
 
   status = nfc_backup_transceive_logged(cli, "authenticate", 0x03, &cmd, &rsp);
@@ -862,16 +912,9 @@ static ts_t api_set_pin(cli_t *cli, const char *new_pin, size_t new_pin_len) {
     pin_padded[i] = 0xFFU;
   }
 
-  // Encrypt the new PIN using Noise XXpsk3
-  uint8_t enc_pin[NFC_BACKUP_MAX_PIN_LEN + ENC_TAG_SIZE] = {0};
-  size_t enc_pin_size = 0;
-  bool ok = noise_xxpsk3_send_message(
-      &intr.transport_state, (const uint8_t *)pin_padded,
-      NFC_BACKUP_MAX_PIN_LEN, enc_pin, sizeof(enc_pin), &enc_pin_size);
-  TSH_CHECK(ok, TS_EINVAL);
-
-  status = nfc_backup_compose_apdu(
-      0x80, 0x04, 0x00, 0x00, (const uint8_t *)enc_pin, enc_pin_size, &cmd);
+  status = nfc_backup_compose_apdu(0x80, 0x04, 0x00, 0x00,
+                                   (const uint8_t *)pin_padded,
+                                   NFC_BACKUP_MAX_PIN_LEN, &cmd);
   TSH_CHECK_OK(status);
 
   status = nfc_backup_transceive_logged(cli, "set-pin", 0x04, &cmd, &rsp);
@@ -1113,16 +1156,14 @@ static ts_t api_read_seed(cli_t *cli, uint8_t *seed, size_t seed_buf_size,
   }
 
   TSH_CHECK(rsp.data_len > 2U, TS_EINVAL);
-  TSH_CHECK(rsp.data_len == (NFC_BACKUP_SEED_SIZE + 16 + 2), TS_EINVAL);
+  TSH_CHECK(rsp.data_len == (NFC_BACKUP_SEED_SIZE + 2U), TS_EINVAL);
   TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
                 rsp.data[rsp.data_len - 1] == 0x00U,
             TS_EINVAL);
   TSH_CHECK(seed_buf_size >= NFC_BACKUP_SEED_SIZE, TS_EINVAL);
 
-  bool ok = noise_xxpsk3_receive_message(&intr.transport_state, rsp.data,
-                                         NFC_BACKUP_SEED_SIZE + ENC_TAG_SIZE,
-                                         seed, seed_buf_size, seed_len);
-  TSH_CHECK(ok, TS_EINVAL);
+  memcpy(seed, rsp.data, NFC_BACKUP_SEED_SIZE);
+  *seed_len = NFC_BACKUP_SEED_SIZE;
 
 cleanup:
   TSH_RETURN;
@@ -1138,15 +1179,8 @@ static ts_t api_write_seed(cli_t *cli, const uint8_t *seed, size_t seed_len) {
   TSH_CHECK_ARG(seed != NULL);
   TSH_CHECK_ARG(seed_len == NFC_BACKUP_SEED_SIZE);
 
-  uint8_t enc_seed[NFC_BACKUP_SEED_SIZE + ENC_TAG_SIZE] = {0};
-  size_t enc_seed_size = 0;
-  bool ok =
-      noise_xxpsk3_send_message(&intr.transport_state, seed, seed_len, enc_seed,
-                                sizeof(enc_seed), &enc_seed_size);
-  TSH_CHECK(ok, TS_EINVAL);
-
-  status = nfc_backup_compose_apdu(0x80, 0x0E, 0x00, 0x00, enc_seed,
-                                   enc_seed_size, &cmd);
+  status =
+      nfc_backup_compose_apdu(0x80, 0x0E, 0x00, 0x00, seed, seed_len, &cmd);
   TSH_CHECK_OK(status);
 
   status = nfc_backup_transceive_logged(cli, "write-seed", 0x0E, &cmd, &rsp);
@@ -1169,7 +1203,7 @@ static ts_t nfc_backup_activate_flashloader(cli_t *cli) {
                             .data_len = 5};
   nfc_apdu_message_t rsp = {0};
 
-  status = nfc_transceive(&cmd, &rsp);
+  status = nfc_backup_secure_transceive(&cmd, &rsp);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(rsp.data_len == 2U, TS_EINVAL);
@@ -1510,16 +1544,15 @@ static const char *nfc_backup_tm_cmd_reset(cli_t *cli, const char *arg) {
 }
 
 static const char *nfc_backup_tm_cmd_noise(cli_t *cli, const char *arg) {
-
   if (!nfc_tm_connected) {
     return "ERROR: no card connected";
   }
 
   ts_t status = nfc_backup_handshake(cli);
-  if(ts_ok(status)) {
+  if (ts_ok(status)) {
     return "OK";
   }
-  
+
   return "ERROR: handshake failed";
 }
 
@@ -1542,7 +1575,7 @@ static const char *nfc_backup_tm_cmd_transceive(cli_t *cli, const char *arg) {
   }
   cmd.data_len = (uint16_t)cmd_len;
 
-  if (ts_error(nfc_transceive(&cmd, &rsp))) {
+  if (ts_error(nfc_backup_secure_transceive(&cmd, &rsp))) {
     return "ERROR: transceive failed";
   }
 
@@ -1575,8 +1608,8 @@ static void nfc_backup_tm_dispatch(cli_t *cli, char *line) {
     arg = "";
   }
 
-  for (size_t i = 0; i < sizeof(nfc_backup_tm_cmds) / sizeof(nfc_backup_tm_cmds[0]);
-       i++) {
+  for (size_t i = 0;
+       i < sizeof(nfc_backup_tm_cmds) / sizeof(nfc_backup_tm_cmds[0]); i++) {
     if (strcmp(line, nfc_backup_tm_cmds[i].name) == 0) {
       const char *resp = nfc_backup_tm_cmds[i].handler(cli, arg);
       if (resp != NULL) {
@@ -1596,8 +1629,9 @@ static void prodtest_nfc_backup_transparent_mode(cli_t *cli) {
     return;
   }
 
-  cli_trace(cli, "Entering transparent mode. Commands: on, off, reset, noise, "
-                 "transceive <hex>.");
+  cli_trace(cli,
+            "Entering transparent mode. Commands: on, off, reset, noise, "
+            "transceive <hex>.");
 
   char line_buf[1024] = {0};
   size_t line_len = 0;
@@ -1661,7 +1695,6 @@ static void prodtest_nfc_backup_transparent_mode(cli_t *cli) {
     nfc_tm_connected = false;
   }
 }
-
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_handshake, &nfc_backup_handshake,
                         PRODTEST_ERR_NFC_BACKUP_HANDSHAKE_FAILED,
