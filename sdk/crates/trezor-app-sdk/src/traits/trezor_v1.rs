@@ -8,12 +8,16 @@ use super::wire::WireV1Ref;
 
 #[stabby::stabby(checked)]
 pub trait TrezorApiV1: Send + Sync {
-    /// Prepares Core's per-app-launch state for the app currently calling
-    /// in: (re)claims this app's heap region for `AllocatorProxy`, then
-    /// allocates (out of that now-available heap) and registers this app's
-    /// `WireV1` inbox buffer, `inbox_words` [`usize`] words long. Must be
-    /// called exactly once, before any other API call that might allocate
-    /// or that talks to Core over the wire.
+    /// Allocates and registers this app's `WireV1` inbox buffer,
+    /// `inbox_words` [`usize`] words long. Must be called exactly once,
+    /// before any other API call that talks to Core over the wire.
+    ///
+    /// The heap this allocates from is already live by the time an app can
+    /// call in: Core claims the app's heap region for its allocator in
+    /// `coreapp_app_entry`, the entry point it runs on the app's task
+    /// *before* calling [`applet_main`].
+    ///
+    /// [`applet_main`]: crate::app_runtime2::applet_main
     extern "C" fn init(&self, inbox_words: usize);
 
     extern "C" fn system_exit(&self) -> !;

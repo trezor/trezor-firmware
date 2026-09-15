@@ -19,6 +19,10 @@ static APP_ALLOCATOR: talc::TalcLock<spin::Mutex<()>, talc::source::Manual> =
 /// real, manifest-sized heap the loader carved out for the currently active
 /// applet (via `app_get_heap`).
 ///
+/// Called from [`crate::coreapp_app_entry`], on the app's own task but
+/// before the app's `applet_main` runs, so that the app can allocate from
+/// its very first instruction.
+///
 /// Must be called once per app launch, not just once ever — the loaded app
 /// is always the same kernel task id, so without resetting the allocator
 /// first, every app after the first would keep allocating out of whichever
