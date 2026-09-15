@@ -600,6 +600,14 @@ class TestSignMessagePathValidation(unittest.TestCase):
             ([H_(48), H_(0), H_(0), H_(0)], InputScriptType.SPENDADDRESS),
             ([H_(48), H_(0), H_(0), H_(1)], InputScriptType.SPENDP2SHWITNESS),
             ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDWITNESS),
+            # ... and under any other message-signing script type. The level
+            # describes an output script a message signature does not have, and
+            # a host sending no script type gets SPENDADDRESS for every level.
+            ([H_(48), H_(0), H_(0), H_(1)], InputScriptType.SPENDADDRESS),
+            ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDADDRESS),
+            ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDP2SHWITNESS),
+            ([H_(48), H_(0), H_(0), H_(1), 0, 0], InputScriptType.SPENDADDRESS),
+            ([H_(48), H_(0), H_(0), H_(2), 0, 0], InputScriptType.SPENDADDRESS),
             # Unchained leaves, hardened and unhardened
             ([H_(45), H_(0), H_(63), 1000000, 0, 255], InputScriptType.SPENDADDRESS),
             ([H_(45), 0, 63, 1000000, 0, 255], InputScriptType.SPENDADDRESS),
@@ -620,10 +628,6 @@ class TestSignMessagePathValidation(unittest.TestCase):
             # GreenAddress login challenge: in the keychain, but in no
             # script-type branch, so it always warns.
             ([1195487518], InputScriptType.SPENDADDRESS),
-            # The BIP-48 account node under the wrong script-type level: only
-            # the node matching script_type is offered, so 2' does not answer
-            # for SPENDP2SHWITNESS.
-            ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDP2SHWITNESS),
             # Sharing points that are not BIP-48 account nodes stay unsignable.
             ([H_(45)], InputScriptType.SPENDADDRESS),
             ([H_(84), H_(0), H_(0)], InputScriptType.SPENDWITNESS),
@@ -768,10 +772,8 @@ class TestSignMessageKeyAccess(TestCaseWithContext):
 
         # the alias the helper would have added, pinned so the trap stays
         # visible if anyone routes this grant through it again
-        patterns = _get_sign_message_account_patterns(
-            coin, InputScriptType.SPENDADDRESS
-        )
-        self.assertEqual(len(patterns), 1)
+        patterns = _get_sign_message_account_patterns(coin)
+        self.assertEqual(len(patterns), 1)  # no segwit, so the 0' level alone
         self.assertEqual(len(get_schemas_from_patterns(patterns, coin)), 2)
 
         # Bcash's own account node: granted
@@ -835,6 +837,7 @@ class TestSignMessageKeyAccess(TestCaseWithContext):
         from apps.bitcoin.keychain import (
             address_n_to_name_or_unknown,
             is_sign_message_account_node,
+            is_sign_message_bip48_path,
         )
 
         coin = _get_coin_by_name("Bitcoin")
@@ -856,20 +859,38 @@ class TestSignMessageKeyAccess(TestCaseWithContext):
                     coin,
                     address_n,
                     script_type,
-                    account_level=is_sign_message_account_node(
-                        coin, address_n, script_type
-                    ),
+                    account_level=is_sign_message_account_node(coin, address_n),
                 ),
                 f"BTC {name} #1",
                 address_n,
             )
 
+        # ... and named by its level even when the requested script type is
+        # another one, which the level need not agree with. Without this the
+        # screen would read "Unknown path" for a path signed without a warning.
+        for address_n, _script_type, name in named:
+            for script_type in (
+                InputScriptType.SPENDADDRESS,
+                InputScriptType.SPENDP2SHWITNESS,
+                InputScriptType.SPENDWITNESS,
+            ):
+                self.assertEqual(
+                    address_n_to_name_or_unknown(
+                        coin,
+                        address_n,
+                        None
+                        if is_sign_message_bip48_path(coin, address_n)
+                        else script_type,
+                        account_level=is_sign_message_account_node(coin, address_n),
+                    ),
+                    f"BTC {name} #1",
+                    (address_n, script_type),
+                )
+
         # A leaf is not an account node, so it is named by the untrimmed
         # pattern and must not gain account_level along the way.
         leaf = [H_(48), H_(0), H_(0), H_(2), 0, 0]
-        self.assertFalse(
-            is_sign_message_account_node(coin, leaf, InputScriptType.SPENDWITNESS)
-        )
+        self.assertFalse(is_sign_message_account_node(coin, leaf))
         self.assertEqual(
             address_n_to_name_or_unknown(coin, leaf, InputScriptType.SPENDWITNESS),
             "BTC SegWit MS #1",
@@ -939,44 +960,72 @@ class TestSignMessageAccountPatterns(unittest.TestCase):
     """Which BIP-48 account nodes are recognized, and therefore not warned
     about. A pure policy list: access no longer depends on it."""
 
-    def test_spendmultisig_is_not_offered(self):
-        """Message signing is single-key, so SPENDMULTISIG gets no account node.
+    def test_spendmultisig_is_not_recognized(self):
+        """Message signing is single-key, so SPENDMULTISIG matches nothing.
 
+        The levels are offered whatever script type was asked for, but
+        SPENDMULTISIG is not one a message signature can be made under at all:
         get_address() would raise "Multisig details required", so recognizing
         it would drop the warning from a path the operation cannot use.
         """
         from trezor.enums import InputScriptType
+        from trezor.messages import SignMessage
 
-        from apps.bitcoin.keychain import _get_sign_message_account_patterns
+        from apps.bitcoin.keychain import validate_path_against_script_type
 
         coin = _get_coin_by_name("Bitcoin")
 
-        self.assertEqual(
-            _get_sign_message_account_patterns(coin, InputScriptType.SPENDMULTISIG),
-            [],
-        )
+        for address_n in (
+            [H_(48), H_(0), H_(0), H_(0)],
+            [H_(48), H_(0), H_(0), H_(0), 0, 0],
+        ):
+            msg = SignMessage(
+                address_n=address_n,
+                message=b"hello",
+                coin_name="Bitcoin",
+                script_type=InputScriptType.SPENDMULTISIG,
+            )
+            self.assertFalse(validate_path_against_script_type(coin, msg), address_n)
 
-    def test_patterns_are_script_type_specific(self):
-        from trezor.enums import InputScriptType
+    def test_patterns_cover_every_level(self):
+        """Every BIP-48 level, whatever script type was asked for.
 
+        A host that sends no script type gets trezorlib's SPENDADDRESS default,
+        so tying the level to it left the 1' and 2' accounts unusable there.
+        """
         from apps.bitcoin.keychain import (
+            PATTERN_BIP48_P2SHSEGWIT,
             PATTERN_BIP48_P2SHSEGWIT_ACCOUNT,
+            PATTERN_BIP48_RAW,
+            PATTERN_BIP48_RAW_ACCOUNT,
+            PATTERN_BIP48_SEGWIT,
             PATTERN_BIP48_SEGWIT_ACCOUNT,
             _get_sign_message_account_patterns,
+            _get_sign_message_leaf_patterns,
         )
 
         coin = _get_coin_by_name("Bitcoin")
 
-        # The 2' level answers for SPENDWITNESS alone; asking under another
-        # script type leaves the node unrecognized, so it still warns.
         self.assertEqual(
-            _get_sign_message_account_patterns(coin, InputScriptType.SPENDWITNESS),
-            [PATTERN_BIP48_SEGWIT_ACCOUNT],
+            _get_sign_message_account_patterns(coin),
+            [
+                PATTERN_BIP48_RAW_ACCOUNT,
+                PATTERN_BIP48_P2SHSEGWIT_ACCOUNT,
+                PATTERN_BIP48_SEGWIT_ACCOUNT,
+            ],
         )
         self.assertEqual(
-            _get_sign_message_account_patterns(coin, InputScriptType.SPENDP2SHWITNESS),
-            [PATTERN_BIP48_P2SHSEGWIT_ACCOUNT],
+            _get_sign_message_leaf_patterns(coin),
+            [PATTERN_BIP48_RAW, PATTERN_BIP48_P2SHSEGWIT, PATTERN_BIP48_SEGWIT],
         )
+
+        # a coin without segwit gets the legacy level alone
+        bcash = _get_coin_by_name("Bcash")
+        self.assertFalse(bcash.segwit)
+        self.assertEqual(
+            _get_sign_message_account_patterns(bcash), [PATTERN_BIP48_RAW_ACCOUNT]
+        )
+        self.assertEqual(_get_sign_message_leaf_patterns(bcash), [PATTERN_BIP48_RAW])
 
 
 if __name__ == "__main__":

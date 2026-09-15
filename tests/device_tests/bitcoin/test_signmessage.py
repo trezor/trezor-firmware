@@ -598,20 +598,81 @@ def test_signmessage_multisig_legacy_level_signs(session: Session):
     assert sig.address.startswith("1")
 
 
-def test_signmessage_multisig_account_wrong_script_type(session: Session):
-    # Only the node matching the script type is unlocked, so the 2' node is
-    # out of reach under SPENDP2SHWITNESS.
-    with pytest.raises(TrezorFailure, match="Forbidden key path") as exc:
-        btc.sign_message(
+@pytest.mark.models("core")
+def test_signmessage_multisig_account_level_need_not_match(session: Session):
+    # The 2' node asked for under SPENDP2SHWITNESS. The level says what the
+    # multisig wallet's output script is, and a message signature has none, so
+    # the two need not agree and no warning is due.
+    address_n = parse_path("m/48h/0h/0h/2h")
+    message = "This is an example of a signed message."
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                # no path warning
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                messages.MessageSignature,
+            ]
+        )
+        IF = InputFlowConfirmAllWarnings(session)
+        client.set_input_flow(IF.get())
+        sig = btc.sign_message(
             session,
             coin_name="Bitcoin",
-            n=parse_path("m/48h/0h/0h/2h"),
-            message="This is an example of a signed message.",
+            n=address_n,
+            message=message,
             script_type=S.SPENDP2SHWITNESS,
         )
 
-    # DataError is what the issue's HWI transcript shows as code -13.
-    assert exc.value.code is messages.FailureType.DataError
+    assert sig.signature
+    # p2sh-segwit, as the requested script type asks for
+    assert sig.address.startswith("3")
+
+
+@pytest.mark.models("core")
+@pytest.mark.parametrize(
+    "path",
+    [
+        "m/48h/0h/0h/0h",
+        "m/48h/0h/0h/1h",
+        "m/48h/0h/0h/2h",
+        "m/48h/0h/0h/0h/0/0",
+        "m/48h/0h/0h/1h/0/0",
+        "m/48h/0h/0h/2h/0/0",
+    ],
+)
+def test_signmessage_bip48_without_script_type(session: Session, path: str):
+    """A host that sends no script type, as HWI does.
+
+    HWI calls btc.sign_message(client, coin_name, path, message), so trezorlib's
+    SPENDADDRESS default goes on the wire for every request. Requiring the
+    script type to match the BIP-48 level made every level but 0' fail for it:
+    the account nodes with "Forbidden key path", the leaves with a warning.
+    Every level signs, and none warns. See #7717.
+    """
+    message = "This is an example of a signed message."
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                # no path warning
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                messages.MessageSignature,
+            ]
+        )
+        IF = InputFlowConfirmAllWarnings(session)
+        client.set_input_flow(IF.get())
+        # no script_type, exactly as HWI calls it
+        sig = btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path(path),
+            message=message,
+        )
+
+    assert sig.signature
 
 
 @pytest.mark.models("core")
