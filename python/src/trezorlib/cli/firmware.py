@@ -210,9 +210,20 @@ def read_pq_bundle(
         available = firmware.PqSecureBundle.variants(io.BytesIO(raw), model=model)
         chosen = pq_pick_variant(available, variant, bitcoin_only, features)
         return firmware.PqSecureBundle.load(io.BytesIO(raw), chosen, model=model)
-    except ValueError as e:
-        click.echo(f"Cannot read this firmware bundle: {e}")
+    except (ValueError, KeyError, firmware.FirmwareIntegrityError) as e:
+        click.echo(f"Cannot read this firmware bundle: {_bundle_defect(e)}")
         sys.exit(2)
+
+
+def _bundle_defect(e: Exception) -> str:
+    """Phrase a bundle defect for someone holding a zip, not a stack trace.
+
+    A KeyError stringifies to the bare key name, which reads as noise next to
+    the messages the loader raises deliberately.
+    """
+    if isinstance(e, KeyError):
+        return f"bundle.json has no {e} field"
+    return str(e)
 
 
 def validate_pq_bundle(
@@ -229,11 +240,11 @@ def validate_pq_bundle(
     print_firmware_version(bundle)
     try:
         bundle.verify()
-    except firmware.FirmwareIntegrityError as prod_error:
+    except (ValueError, firmware.FirmwareIntegrityError) as prod_error:
         try:
             bundle.verify(dev_keys=True)
             click.echo("WARNING: Firmware for development kit only.")
-        except firmware.FirmwareIntegrityError as dev_error:
+        except (ValueError, firmware.FirmwareIntegrityError) as dev_error:
             # The dev-key failure names the real defect; the production one is
             # always the signature on a dev-signed release. See verify_pq_bundle.
             click.echo(dev_error)
@@ -339,8 +350,8 @@ def _verify_one_model(
             bundle = firmware.PqSecureBundle.load(
                 io.BytesIO(raw_bundle), name, model=model_name
             )
-        except ValueError as e:
-            click.echo(f"Cannot read variant {name}: {e}")
+        except (ValueError, KeyError, firmware.FirmwareIntegrityError) as e:
+            click.echo(f"Cannot read variant {name}: {_bundle_defect(e)}")
             sys.exit(2)
 
         if index == 0:
@@ -354,11 +365,11 @@ def _verify_one_model(
 
         try:
             bundle.verify()
-        except firmware.FirmwareIntegrityError as prod_error:
+        except (ValueError, firmware.FirmwareIntegrityError) as prod_error:
             try:
                 bundle.verify(dev_keys=True)
                 dev_keys_used = True
-            except firmware.FirmwareIntegrityError as dev_error:
+            except (ValueError, firmware.FirmwareIntegrityError) as dev_error:
                 # Report the dev-key failure: on a dev-signed release the
                 # production attempt ALWAYS fails on the signature, so echoing
                 # that one would mask every other defect (a bad fold, a

@@ -716,8 +716,19 @@ class PqSecureBundle:
         return cls(read(meta["bootloader"]["file"]), firmware, nrf, variant)
 
     @staticmethod
+    def _with_file(meta: dict, variant: str, exists: t.Callable[[str], bool]) -> str:
+        """Return `variant` once its image is known to be in the container."""
+        entry = next(v for v in meta["variants"] if v.get("variant") == variant)
+        name = entry.get("file")
+        if name is None:
+            raise ValueError(f"bundle.json names variant {variant!r} with no file")
+        if not exists(name):
+            raise ValueError(f"bundle has no {name}")
+        return variant
+
+    @classmethod
     def _pick_variant(
-        meta: dict, requested: str | None, exists: t.Callable[[str], bool]
+        cls, meta: dict, requested: str | None, exists: t.Callable[[str], bool]
     ) -> str:
         available = [v["variant"] for v in meta.get("variants", []) if "variant" in v]
         if requested is not None:
@@ -726,12 +737,13 @@ class PqSecureBundle:
                     f"no variant {requested!r} in the bundle; have: "
                     f"{', '.join(sorted(available))}"
                 )
-            entry = next(v for v in meta["variants"] if v["variant"] == requested)
-            if not exists(entry["file"]):
-                raise ValueError(f"bundle has no {entry['file']}")
-            return requested
+            return cls._with_file(meta, requested, exists)
         if len(available) == 1:
-            return available[0]
+            # Checked here too: a lone variant is picked without the caller
+            # naming it, so nothing else establishes that its image is in the
+            # container. Without this a stale or truncated zip surfaces as a
+            # KeyError from the reader instead of a bundle defect.
+            return cls._with_file(meta, available[0], exists)
         if not available:
             raise ValueError("bundle.json lists no variants; pass one explicitly")
         raise ValueError(
