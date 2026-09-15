@@ -157,3 +157,42 @@ with `head_size == 0` inside an array would defeat the heads bounds pre-check
 (`array_length * 0`), letting an attacker-controlled length word drive an
 unbounded parse loop. Rejecting them guarantees `head_size >= 32` for every
 constructible type.
+
+## Nesting limits
+
+`ABIValue.from_proto` bounds two things on every root-to-leaf path of the
+type tree: total recursion depth (`_MAX_ABI_NESTING`) and the number of
+`Array` levels (`_MAX_NESTED_ARRAYS`). The array bound is the one that
+matters for parse cost.
+
+Array lengths come from calldata and element bodies can alias, so nested
+arrays multiply; tuple fan-out is bounded by the definition. Nothing in the
+encoding requires the offsets of a dynamic array's elements to be distinct,
+so every element of an outer array may point at the same inner body. Take
+`uint256[][]` as the only parameter:
+
+```text
+w0  0x00  ...0020       offset of outer array body
+w1  0x20  ...0003       outer element count = 3
+w2  0x40  ...0060       [0] -> 0x40 + 0x60 = 0xa0  ┐
+w3  0x60  ...0060       [1] -> 0xa0                │ all three alias
+w4  0x80  ...0060       [2] -> 0xa0                ┘ the same body
+w5  0xa0  ...0003       inner element count = 3
+w6  0xc0  ...0001
+w7  0xe0  ...0002
+w8  0x100 ...0003
+```
+
+9 words decode to `[[1,2,3],[1,2,3],[1,2,3]]`: 9 values, where an honest
+encoding would have needed 17 words. With `N` outer and `M` inner elements
+the calldata grows as `N + M` but the decoded output as `N × M`; each further
+array level multiplies again. Within `_MAX_DATA_STORED` (6144 bytes, 192
+words) that is ~190 values for one level, ~9,000 for two, and ~250,000 for
+three - beyond what the device can hold in memory.
+
+Tuples don't need the same treatment: a tuple's fan-out is its field count,
+fixed by the definition, and when a dynamic tuple's body is aliased by many
+array elements that multiplication is the array's, already counted. Arrays of
+static elements can't alias at all - they are laid out in place, and the heads
+bounds pre-check (`array_length × head_size`) keeps their element count within
+the calldata size.

@@ -1823,6 +1823,44 @@ class TestABIValueFromProto(unittest.TestCase):
         self.assertEqual(parsed, [(self.ADDR1, one), (self.ADDR2, two)])
         self.assertEqual(consumed, 32)
 
+    # --- non-leaf tuple fields ---
+
+    def test_tuple_field_may_be_a_tuple(self):
+        # ((uint256 b) inner): a struct as a struct member. Both are static,
+        # so the whole thing is one word encoded in place.
+        inner = p_tuple([p_atomic(EABIT.ABI_UINT256)], is_dynamic=False)
+        node = ABIValue.from_proto(p_tuple([inner], is_dynamic=False))
+
+        self.assertFalse(node.is_dynamic)
+        self.assertEqual(node.head_size, 32)
+
+        data = memoryview(FIVE_RANDOM_BYTES + to_bytes(42) + SEVEN_RANDOM_BYTES)
+        parsed, consumed = node.parse(data, len(FIVE_RANDOM_BYTES))
+
+        self.assertEqual(parsed, ((42,),))
+        self.assertEqual(consumed, 32)
+
+    def test_tuple_field_may_be_an_array(self):
+        # (uint256[] xs): the array member makes the struct dynamic, and the
+        # array's own offset is relative to the struct's body start.
+        inner = p_array(p_atomic(EABIT.ABI_UINT256))
+        node = ABIValue.from_proto(p_tuple([inner], is_dynamic=True))
+
+        self.assertTrue(node.is_dynamic)
+        self.assertEqual(node.head_size, 32)
+
+        data = memoryview(
+            to_bytes(32)  # 0   outer head -> struct body at 32
+            + to_bytes(32)  # 32  field 0 head, rel to 32 -> array body at 64
+            + to_bytes(2)  # 64  element count
+            + to_bytes(7)  # 96
+            + to_bytes(8)  # 128
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, ([7, 8],))
+        self.assertEqual(consumed, 32)
+
     # --- shapes the decoder refuses ---
 
     def test_no_variant_set_rejected(self):
@@ -1834,21 +1872,10 @@ class TestABIValueFromProto(unittest.TestCase):
         with self.assertRaises(InvalidFormatDefinition):
             ABIValue.from_proto(p_atomic(99))
 
-    def test_tuple_field_may_not_be_a_tuple(self):
-        # Lifted in a later change; pinned here so that change is visible.
-        inner = p_tuple([p_atomic(EABIT.ABI_UINT256)], is_dynamic=False)
-        with self.assertRaises(InvalidFormatDefinition):
-            ABIValue.from_proto(p_tuple([inner], is_dynamic=False))
-
-    def test_tuple_field_may_not_be_an_array(self):
-        # Lifted in a later change; pinned here so that change is visible.
-        inner = p_array(p_atomic(EABIT.ABI_UINT256))
-        with self.assertRaises(InvalidFormatDefinition):
-            ABIValue.from_proto(p_tuple([inner], is_dynamic=True))
-
     def test_three_nested_arrays_rejected(self):
-        # Stays rejected in the later change, but for a stated nesting limit
-        # rather than by falling off the end of the unrolled cases.
+        # Rejected by `_MAX_NESTED_ARRAYS`: each nested array level multiplies
+        # the parse work by an attacker-controlled element count, so the cap is
+        # what keeps the worst case at the order already reachable today.
         node = p_array(p_array(p_array(p_atomic(EABIT.ABI_UINT256))))
         with self.assertRaises(InvalidFormatDefinition):
             ABIValue.from_proto(node)
