@@ -26,7 +26,10 @@ struct TrezorApiV1Impl;
 
 impl TrezorApiV1 for TrezorApiV1Impl {
     extern "C" fn init(&self, inbox_words: usize) {
-        crate::allocator::init();
+        // The app's heap was already claimed for `APP_ALLOCATOR` by
+        // `crate::coreapp_app_entry`, before `applet_main` (and so this
+        // vtable call) ever started — which is what lets `register_inbox`
+        // allocate here in the first place.
         crate::wire::register_inbox(inbox_words);
     }
 
