@@ -88,8 +88,11 @@ typedef struct __attribute__((packed)) {
                        [BOOT_HEADER_PQ_SIGNATURE_LEN];
   uint8_t ec_signature[BOOT_HEADER_SIGNATURE_COUNT]
                       [BOOT_HEADER_EC_SIGNATURE_LEN];
-  uint8_t firmware_type;
-  uint8_t padding[3];
+  /* fw_variant_sec_t on device: a 32-bit RM(1,5) codeword, NOT a byte plus
+   * padding. Same four bytes either way, so nothing here moved -- but a shim
+   * that types it narrowly would let a host test set a value the device reads
+   * as INVALID. */
+  uint32_t firmware_type;
 } boot_header_unauth_t;
 
 static inline size_t boot_header_merkle_proof_size(

@@ -432,6 +432,10 @@ class PqSecureNrf(t.NamedTuple):
         return len(self.co_path) // 32
 
 
+# Mirrors BOOT_HEADER_MERKLE_PROOF_MAXLEN in sec/image/inc/sec/boot_header.h.
+BOOT_HEADER_MERKLE_PROOF_MAXLEN = 256
+
+
 def boot_header_prefix(header: bytes) -> bytes:
     """The digest-relevant part of a boot header: the authenticated part plus
     the Merkle proof, stopping before the unauthenticated part.
@@ -450,6 +454,14 @@ def boot_header_prefix(header: bytes) -> bytes:
     # sanity rebuild (there is no code after it), and the warning would be noise.
     hdr = BootHeader.SUBCON.parse(header)
     node_count = int.from_bytes(header[hdr.auth_len : hdr.auth_len + 4], "little")
+    # The same ceiling boot_header_prefix_extent enforces. Without it the host
+    # accepts a boundary the device refuses, which is the one thing this function
+    # exists to keep identical.
+    if node_count > BOOT_HEADER_MERKLE_PROOF_MAXLEN:
+        raise FirmwareIntegrityError(
+            f"boot header Merkle proof has {node_count} nodes, over the "
+            f"{BOOT_HEADER_MERKLE_PROOF_MAXLEN}-node ceiling"
+        )
     prefix_len = hdr.auth_len + 4 + 32 * node_count
     if prefix_len > len(header):
         raise FirmwareIntegrityError(
