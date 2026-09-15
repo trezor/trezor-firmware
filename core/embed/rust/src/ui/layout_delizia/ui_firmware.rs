@@ -4,9 +4,10 @@ use heapless::Vec;
 
 use super::component::{
     check_homescreen_format, Bip39Input, CoinJoinProgress, Frame, FrameMsg, Header, Homescreen,
-    Lockscreen, MnemonicKeyboard, PinKeyboard, Progress, PromptScreen, ScrolledVerticalMenu,
-    SelectWordCount, SelectWordCountLayout, Slip39Input, StatusScreen, SwipeContent, SwipeUpScreen,
-    TradeScreen, VerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem, VerticalMenuItems,
+    Lockscreen, MnemonicKeyboard, MoreInfoScreen, NumberInputDialog, PinKeyboard, Progress,
+    PromptScreen, ScrolledVerticalMenu, SelectWordCount, SelectWordCountLayout, Slip39Input,
+    StatusScreen, SwipeContent, SwipeUpScreen, TradeScreen, VerticalMenu, VerticalMenuChoiceMsg,
+    VerticalMenuItem, VerticalMenuItems,
 };
 use super::flow::{
     self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
@@ -31,7 +32,7 @@ use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
     CachedJpeg, ComponentExt, Empty, FormattedText, MsgMap, Never, Timeout,
 };
-use crate::ui::flow::FlowMsg;
+use crate::ui::flow::{FlowMsg, SwipePage};
 use crate::ui::geometry::{self, Direction, Offset};
 use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
@@ -650,25 +651,31 @@ impl FirmwareUI for UIDelizia {
         min_count: u32,
         max_count: u32,
         description: Option<TString<'static>>,
-        more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
+        _more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         debug_assert!(
             description.is_some(),
             "Description is required for request_number"
         );
-        debug_assert!(
-            more_info_callback.is_some(),
-            "More info callback is required for request_number"
+        // The "more info" content is driven from Python: the menu button in
+        // the header emits `FlowMsg::Info` and the layout returns the
+        // currently displayed number along with the result (see
+        // `ComponentMsgObj for RequestNumberScreen`).
+        let layout = RootComponent::new(
+            Frame::with_header(
+                Header::left_aligned(title).with_menu_button(),
+                SwipeContent::new(NumberInputDialog::new(
+                    min_count as u16,
+                    max_count as u16,
+                    count as u16,
+                    description.unwrap(),
+                )?),
+            )
+            .with_swipeup_footer(None)
+            .with_external_menu()
+            .map_to_button_msg(),
         );
-        let flow = flow::request_number::new_request_number(
-            title,
-            count,
-            min_count,
-            max_count,
-            description.unwrap(),
-            more_info_callback.unwrap(),
-        )?;
-        Ok(flow)
+        Ok(layout)
     }
 
     fn request_duration(
@@ -863,14 +870,16 @@ impl FirmwareUI for UIDelizia {
                 Header::left_aligned(title)
                     .with_cancel_button()
                     .with_danger(),
-                SwipeContent::new(content),
+                SwipeContent::new(SwipePage::vertical(content)),
             )
+            .with_vertical_pages()
             .with_swipeup_footer(None)
         } else {
             Frame::with_header(
                 Header::left_aligned(title).with_danger(),
-                SwipeContent::new(content),
+                SwipeContent::new(SwipePage::vertical(content)),
             )
+            .with_vertical_pages()
             .with_swipeup_footer(None)
         };
 
@@ -893,8 +902,9 @@ impl FirmwareUI for UIDelizia {
         let layout = RootComponent::new(SwipeUpScreen::new(
             Frame::with_header(
                 Header::left_aligned("".into()),
-                SwipeContent::new(paragraphs),
+                SwipeContent::new(SwipePage::vertical(paragraphs)),
             )
+            .with_vertical_pages()
             .with_swipeup_footer(None),
         ));
         Ok(layout)
@@ -997,8 +1007,12 @@ impl FirmwareUI for UIDelizia {
         }
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
         let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::with_header(Header::left_aligned(title), SwipeContent::new(content))
-                .with_swipeup_footer(None),
+            Frame::with_header(
+                Header::left_aligned(title),
+                SwipeContent::new(SwipePage::vertical(content)),
+            )
+            .with_vertical_pages()
+            .with_swipeup_footer(None),
         ))?;
         Ok(obj)
     }
@@ -1012,20 +1026,23 @@ impl FirmwareUI for UIDelizia {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [key, value, _]: [Obj; 3] = util::iter_into_array(para)?;
+            let [key, value, is_data]: [Obj; 3] = util::iter_into_array(para)?;
             let key: TString = key.try_into()?;
             let value: TString = value.try_into()?;
+            let is_data: bool = is_data.try_into()?;
             paragraphs.add(Paragraph::new(&theme::TEXT_SUB_GREY, key).no_break());
             if chunkify {
                 paragraphs.add(Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, value));
-            } else {
+            } else if is_data {
                 paragraphs.add(Paragraph::new(&theme::TEXT_MONO_DATA, value));
+            } else {
+                paragraphs.add(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, value));
             }
         }
 
-        let layout = RootComponent::new(SwipeUpScreen::new(Frame::with_header(
-            Header::left_aligned(title).with_cancel_button(),
-            SwipeContent::new(paragraphs.into_paragraphs()),
+        let layout = RootComponent::new(SwipeUpScreen::new(MoreInfoScreen::new(
+            title,
+            paragraphs.into_paragraphs(),
         )));
         Ok(layout)
     }
@@ -1053,8 +1070,9 @@ impl FirmwareUI for UIDelizia {
         let layout = RootComponent::new(SwipeUpScreen::new(
             Frame::with_header(
                 Header::left_aligned(title).with_cancel_button(),
-                SwipeContent::new(paragraphs),
+                SwipeContent::new(SwipePage::vertical(paragraphs)),
             )
+            .with_vertical_pages()
             .with_swipeup_footer(Some(button)),
         ));
 
@@ -1184,7 +1202,10 @@ impl FirmwareUI for UIDelizia {
         _title: Option<TString<'static>>,
         _button: Option<TString<'static>>,
     ) -> Result<Gc<LayoutObj>, Error> {
-        let obj = LayoutObj::new(Paragraphs::new(Paragraph::new(&theme::TEXT_DEMIBOLD, text)))?;
+        let obj = LayoutObj::new(SwipePage::vertical(Paragraphs::new(Paragraph::new(
+            &theme::TEXT_DEMIBOLD,
+            text,
+        ))))?;
         Ok(obj)
     }
 
@@ -1236,13 +1257,13 @@ impl FirmwareUI for UIDelizia {
         } else {
             Some(button)
         };
-        let content = SwipeContent::new(
+        let content = SwipeContent::new(SwipePage::vertical(
             ParagraphVecShort::from_iter([
                 Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description),
                 Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, value),
             ])
             .into_paragraphs(),
-        );
+        ));
 
         let frame = match title {
             None => {
@@ -1250,7 +1271,7 @@ impl FirmwareUI for UIDelizia {
                     // Disallow showing "dangerous" warning with no header.
                     return Err(Error::ValueError(c"Non-empty title is required"));
                 }
-                Frame::content(content)
+                Frame::content(content).with_vertical_pages()
             }
             Some(title) => {
                 let header = Header::left_aligned(title);
@@ -1259,7 +1280,7 @@ impl FirmwareUI for UIDelizia {
                 } else {
                     header.with_warning_low_icon()
                 };
-                Frame::with_header(header, content)
+                Frame::with_header(header, content).with_vertical_pages()
             }
         };
         let frame = if danger || title.is_none() {

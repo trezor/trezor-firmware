@@ -2,7 +2,6 @@ use heapless::Vec;
 
 use super::layout::{LayoutFit, TextLayout, TextStyle};
 use crate::strutil::TString;
-use crate::ui::component::paginated::SinglePage;
 use crate::ui::component::{Component, Event, EventCtx, Never, Paginate};
 use crate::ui::display::font::Font;
 use crate::ui::display::toif::Icon;
@@ -748,7 +747,20 @@ where
     }
 }
 
-impl<T> SinglePage for Checklist<T> {}
+/// Checklist can paginate; the surrounding component is responsible for
+/// providing the paging controls.
+impl<'a, T> Paginate for Checklist<T>
+where
+    T: ParagraphSource<'a>,
+{
+    fn pager(&self) -> Pager {
+        self.paragraphs.pager()
+    }
+
+    fn change_page(&mut self, active_page: u16) {
+        self.paragraphs.change_page(active_page);
+    }
+}
 
 #[cfg(feature = "ui_debug")]
 impl<'a, T: ParagraphSource<'a>> crate::trace::Trace for Checklist<T> {

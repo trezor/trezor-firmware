@@ -24,7 +24,7 @@ use crate::ui::component::text::paragraphs::{
 };
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
-    Border, ComponentExt, Empty, FormattedText, Jpeg, Label, Never, Timeout,
+    Border, CheckSinglePage, ComponentExt, Empty, FormattedText, Jpeg, Label, Never, Timeout,
 };
 use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
@@ -428,15 +428,10 @@ impl FirmwareUI for UIBolt {
             Paragraph::new(&theme::TEXT_DEMIBOLD, TR::reset__tos_link),
         ];
         let paragraphs = Paragraphs::new(par_array);
-        let buttons = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
-            Button::with_text(button).styled(theme::button_confirm()),
-            true,
-        );
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            Dialog::new(paragraphs, buttons),
+            ButtonPage::new(paragraphs, theme::BG).with_cancel_confirm(None, Some(button)),
         ));
         Ok(layout)
     }
@@ -521,6 +516,9 @@ impl FirmwareUI for UIBolt {
             LayoutObj::new(Frame::left_aligned(
                 theme::label_title(),
                 title,
+                // Not CheckSinglePage: the dialog shows a deliberately truncated
+                // preview (TEXT_MONO_WITH_CLASSIC_ELLIPSIS); the info button
+                // leads to full pagination, so multi-page content is expected.
                 Dialog::new(paragraphs.into_paragraphs(), buttons),
             ))
         } else {
@@ -564,7 +562,7 @@ impl FirmwareUI for UIBolt {
                 theme::label_title(),
                 notification,
                 Dialog::new(
-                    paragraphs,
+                    CheckSinglePage::new(paragraphs),
                     Button::cancel_info_confirm(
                         Button::with_text(TR::buttons__continue.into())
                             .styled(theme::button_confirm()),
@@ -576,7 +574,10 @@ impl FirmwareUI for UIBolt {
             LayoutObj::new(Frame::left_aligned(
                 theme::label_title(),
                 notification,
-                Dialog::new(paragraphs, Button::cancel_confirm_text(None, button)),
+                Dialog::new(
+                    CheckSinglePage::new(paragraphs),
+                    Button::cancel_confirm_text(None, button),
+                ),
             ))
         }
     }
@@ -734,7 +735,7 @@ impl FirmwareUI for UIBolt {
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            Dialog::new(paragraphs, Button::select_word(words)),
+            Dialog::new(CheckSinglePage::new(paragraphs), Button::select_word(words)),
         ));
         Ok(layout)
     }
@@ -761,7 +762,7 @@ impl FirmwareUI for UIBolt {
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            Dialog::new(paragraphs, selector),
+            Dialog::new(CheckSinglePage::new(paragraphs), selector),
         ));
         Ok(layout)
     }
@@ -1203,7 +1204,10 @@ impl FirmwareUI for UIBolt {
                 theme::label_title(),
                 t,
                 Dialog::new(
-                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, text)]),
+                    CheckSinglePage::new(Paragraphs::new([Paragraph::new(
+                        &theme::TEXT_NORMAL,
+                        text,
+                    )])),
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                     })),
@@ -1213,7 +1217,10 @@ impl FirmwareUI for UIBolt {
             LayoutObj::new(Border::new(
                 theme::borders(),
                 Dialog::new(
-                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, text)]),
+                    CheckSinglePage::new(Paragraphs::new([Paragraph::new(
+                        &theme::TEXT_NORMAL,
+                        text,
+                    )])),
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                     })),
@@ -1223,7 +1230,11 @@ impl FirmwareUI for UIBolt {
             LayoutObj::new(Border::new(
                 theme::borders(),
                 Dialog::new(
-                    Paragraphs::new([Paragraph::new(&theme::TEXT_DEMIBOLD, text).centered()]),
+                    CheckSinglePage::new(Paragraphs::new([Paragraph::new(
+                        &theme::TEXT_DEMIBOLD,
+                        text,
+                    )
+                    .centered()])),
                     Empty,
                 ),
             ))
@@ -1352,43 +1363,46 @@ fn new_show_modal(
             .with_value(value)
             .with_description(description),
         )?,
-        ModalButtons::CancelAndConfirm => LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                Button::cancel_confirm(
-                    Button::with_icon(theme::ICON_CANCEL),
-                    Button::with_icon(theme::ICON_CONFIRM).styled(button_style),
-                    false,
-                ),
+        // The button variants are paginated: the icon stays visible on all
+        // pages and only the text is paginated by `ButtonPage`. The `Border`
+        // keeps the whole dialog offset from the screen edges as before.
+        ModalButtons::CancelAndConfirm => LayoutObj::new(Border::new(
+            theme::borders(),
+            ButtonPage::new(
+                IconDialog::new(icon, title, Empty)
+                    .allow_pagination()
+                    .with_value(value)
+                    .with_description(description),
+                theme::BG,
             )
-            .with_value(value)
-            .with_description(description),
-        )?,
-        ModalButtons::CancelAndText(text) => LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                Button::cancel_confirm(
-                    Button::with_icon(theme::ICON_CANCEL),
-                    Button::with_text(text).styled(button_style),
-                    false,
-                ),
+            .with_cancel_confirm(None, None)
+            .with_confirm_style(button_style),
+        ))?,
+        ModalButtons::CancelAndText(text) => LayoutObj::new(Border::new(
+            theme::borders(),
+            ButtonPage::new(
+                IconDialog::new(icon, title, Empty)
+                    .allow_pagination()
+                    .with_value(value)
+                    .with_description(description),
+                theme::BG,
             )
-            .with_value(value)
-            .with_description(description),
-        )?,
-        ModalButtons::ConfirmText(text) => LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                theme::button_bar(Button::with_text(text).styled(button_style).map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                })),
+            .with_cancel_confirm(None, Some(text))
+            .with_confirm_style(button_style),
+        ))?,
+        ModalButtons::ConfirmText(text) => LayoutObj::new(Border::new(
+            theme::borders(),
+            ButtonPage::new(
+                IconDialog::new(icon, title, Empty)
+                    .allow_pagination()
+                    .with_value(value)
+                    .with_description(description),
+                theme::BG,
             )
-            .with_value(value)
-            .with_description(description),
-        )?,
+            .with_cancel_confirm(None, Some(text))
+            .without_cancel()
+            .with_confirm_style(button_style),
+        ))?,
     };
     Ok(obj)
 }

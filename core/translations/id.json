@@ -381,7 +381,12 @@
     "buttons__finish": "Selesai",
     "buttons__format": "Format",
     "buttons__go_back": "Kembali",
-    "buttons__hold_to_confirm": "Tahan untuk konfirmasi",
+    "buttons__hold_to_confirm": {
+      "Bolt": "Tahan untuk konfirmasi",
+      "Caesar": "Tahan konfirmasi",
+      "Delizia": "Tahan untuk konfirmasi",
+      "Eckhart": "Tahan untuk konfirmasi"
+    },
     "buttons__info": "Info",
     "buttons__install": "Instal",
     "buttons__more_info": "Info lainnya",
@@ -1799,7 +1804,7 @@
     },
     "pin__title_settings": "Pengaturan PIN",
     "pin__title_wrong_pin": "PIN salah",
-    "pin__tries_left": "percobaan lagi",
+    "pin__tries_left": "percobaan",
     "pin__turn_off": "Anda yakin ingin nonaktifkan perlindungan PIN?",
     "pin__turn_on": "Aktifkan proteksi PIN?",
     "pin__wipe_code_exists_description": "Kode wipe harus nonaktif sebelum menonaktifkan proteksi PIN.",

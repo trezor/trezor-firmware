@@ -57,3 +57,62 @@ impl<T: SinglePage> Paginate for T {
         }
     }
 }
+
+/// Wrapper for paginate-able content that is displayed on a screen which does
+/// NOT paginate. Re-checks after every `place()` (in `ui_debug` builds) that
+/// the content fits on a single page, failing loudly otherwise. This detects
+/// e.g. overlong translations that would otherwise be silently clipped.
+pub struct CheckSinglePage<T> {
+    inner: T,
+}
+
+impl<T: Paginate> CheckSinglePage<T> {
+    pub fn new(inner: T) -> Self {
+        Self { inner }
+    }
+
+    pub fn inner(&self) -> &T {
+        &self.inner
+    }
+}
+
+impl<T: Paginate> Paginate for CheckSinglePage<T> {
+    fn pager(&self) -> Pager {
+        self.inner.pager()
+    }
+
+    fn change_page(&mut self, active_page: u16) {
+        self.inner.change_page(active_page);
+    }
+}
+
+impl<T: crate::ui::component::Component + Paginate> crate::ui::component::Component
+    for CheckSinglePage<T>
+{
+    type Msg = T::Msg;
+
+    fn place(&mut self, bounds: crate::ui::geometry::Rect) -> crate::ui::geometry::Rect {
+        let area = self.inner.place(bounds);
+        crate::ui::util::assert_single_page(self.inner.pager());
+        area
+    }
+
+    fn event(
+        &mut self,
+        ctx: &mut crate::ui::component::EventCtx,
+        event: crate::ui::component::Event,
+    ) -> Option<Self::Msg> {
+        self.inner.event(ctx, event)
+    }
+
+    fn render<'s>(&'s self, target: &mut impl crate::ui::shape::Renderer<'s>) {
+        self.inner.render(target);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T: crate::trace::Trace + Paginate> crate::trace::Trace for CheckSinglePage<T> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.inner.trace(t)
+    }
+}

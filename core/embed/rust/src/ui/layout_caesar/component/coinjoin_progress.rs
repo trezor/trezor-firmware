@@ -76,7 +76,7 @@ impl Component for CoinJoinProgress {
         let center = self.area.center() + Offset::y(self.loader_y_offset);
 
         if self.indeterminate {
-            text_multiline(
+            let rest = text_multiline(
                 target,
                 self.area,
                 TR::coinjoin__title_progress.into(),
@@ -85,6 +85,10 @@ impl Component for CoinJoinProgress {
                 theme::BG,
                 Alignment::Center,
             );
+            #[cfg(feature = "ui_debug")]
+            if rest.is_none() {
+                fatal_error!("Coinjoin title does not fit the screen");
+            }
             cshape::LoaderSmall::new(center, self.value)
                 .with_color(theme::FG)
                 .render(target);
@@ -108,8 +112,12 @@ impl Component for CoinJoinProgress {
             theme::BG,
             Alignment::Center,
         );
+        #[cfg(feature = "ui_debug")]
+        if top_rest.is_none() {
+            fatal_error!("Coinjoin footer text does not fit the screen");
+        }
         if let Some(rest) = top_rest {
-            text_multiline_bottom(
+            let rest = text_multiline_bottom(
                 target,
                 rest.inset(Insets::bottom(FOOTER_TEXT_MARGIN)),
                 self.text,
@@ -118,6 +126,10 @@ impl Component for CoinJoinProgress {
                 theme::BG,
                 Alignment::Center,
             );
+            #[cfg(feature = "ui_debug")]
+            if rest.is_none() {
+                fatal_error!("Coinjoin description does not fit the screen");
+            }
         }
     }
 }

@@ -142,6 +142,9 @@ where
         let (app_name_area, account_name_area) = remaining_area.split_top(APP_NAME_HEIGHT);
 
         self.app_name.place(app_name_area);
+        // The account name is host-supplied and deliberately clipped to the
+        // fixed-height area (no pagination by design), so it must not be
+        // checked with assert_single_page().
         self.account_name.place(account_name_area);
 
         bounds

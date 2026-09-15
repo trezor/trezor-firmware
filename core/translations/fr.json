@@ -2079,7 +2079,7 @@
     "plurals__transaction_of_x_operations": "opération|opérations",
     "plurals__x_groups_needed": "groupe|groupes",
     "plurals__x_shares_needed": "fragment|fragments",
-    "progress__authenticity_check": "Vérification de l'authenticité...",
+    "progress__authenticity_check": "Vérif. de l'authenticité...",
     "progress__done": "Terminé",
     "progress__loading_transaction": {
       "Bolt": "Chargement...",
@@ -2182,7 +2182,7 @@
     "recovery__num_of_words": {
       "Bolt": "Choisir le nbre de mots de la sauveg.",
       "Caesar": "Sélectionnez le nombre de mots de votre sauvegarde.",
-      "Delizia": "Sélectionnez le nombre de mots de votre sauvegarde.",
+      "Delizia": "Choisir le nbre de mots de la sauveg.",
       "Eckhart": "Sélectionnez le nombre de mots de votre sauvegarde."
     },
     "recovery__progress_will_be_lost": "Toute progression sera perdue.",
@@ -2303,7 +2303,7 @@
     },
     "reset__button_recover": {
       "Bolt": "Récupérer portefeuille",
-      "Caesar": "Récupérer portefeuille",
+      "Caesar": "Récupérer portef.",
       "Delizia": "",
       "Eckhart": ""
     },

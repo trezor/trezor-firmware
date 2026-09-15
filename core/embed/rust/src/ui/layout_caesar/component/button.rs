@@ -139,10 +139,12 @@ impl Button {
         };
 
         // Centering the text in case of fixed width.
+        // Not centering if the text is longer than the fixed width
+        // (which is being reported by `max_width` when rendering).
         if let ButtonContent::Text(text) = &self.content {
             if let Some(fixed_width) = self.fixed_width {
                 let diff = fixed_width - text.map(|t| self.font.visible_text_width(t));
-                offset_x = diff / 2;
+                offset_x = (diff / 2).max(0);
             }
         }
 
@@ -204,8 +206,16 @@ impl Component for Button {
         // Painting the content
         match &self.content {
             ButtonContent::Text(text) => text.map(|t| {
+                let baseline = self.get_text_baseline();
+                // The text must fit into the button area, respecting the
+                // padding defined by the current style.
+                let max_width = area.width() - (baseline.x - area.x0);
+                #[cfg(feature = "ui_debug")]
+                if self.font.visible_text_width(t) > max_width {
+                    target.raise_overflow_exception();
+                }
                 shape::Text::new(
-                    self.get_text_baseline() - Offset::x(self.font.start_x_bearing(t)),
+                    baseline - Offset::x(self.font.start_x_bearing(t)),
                     t,
                     self.font,
                 )

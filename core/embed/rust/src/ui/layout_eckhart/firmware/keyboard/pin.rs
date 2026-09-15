@@ -37,9 +37,8 @@ pub struct PinKeyboard<'a> {
 impl<'a> PinKeyboard<'a> {
     const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
     const MAJOR_WARNING_TIMEOUT: Duration = Duration::from_secs(2);
-    // Ad hoc number that so that all languages can reasonably show the attempts
-    // prompt
-    const ATTEMPTS_WIDTH: i16 = 85;
+    /// Spacing between the prompt and the attempts areas [px]
+    const PROMPT_ATTEMPTS_GAP: i16 = 8;
 
     pub fn new(
         prompt: TString<'a>,
@@ -121,6 +120,19 @@ impl<'a> PinKeyboard<'a> {
         self.keypad.set_state(keypad_state, ctx);
     }
 
+    /// Width needed by the attempts prompt. The text consists of lines
+    /// separated by a hard newline (e.g. "10\ntries left"), so the widest
+    /// line determines the needed area width.
+    fn attempts_width(&self) -> i16 {
+        let font = self.attempts.font();
+        self.attempts.text().map(|t| {
+            t.split('\n')
+                .map(|line| font.text_width(line))
+                .max()
+                .unwrap_or(0)
+        })
+    }
+
     pub fn pin(&self) -> &str {
         self.input.pin()
     }
@@ -139,7 +151,11 @@ impl Component for PinKeyboard<'_> {
         let (input_touch_area, _) = bounds.split_top(INPUT_TOUCH_HEIGHT);
 
         let prompts_area = input_touch_area.inset(KEYBOARD_PROMPT_INSETS);
-        let (prompt_area, attempts_area) = prompts_area.split_right(Self::ATTEMPTS_WIDTH);
+        let attempts_width = self
+            .attempts_width()
+            .min(prompts_area.width() - Self::PROMPT_ATTEMPTS_GAP);
+        let (prompt_area, attempts_area) = prompts_area.split_right(attempts_width);
+        let prompt_area = prompt_area.inset(Insets::right(Self::PROMPT_ATTEMPTS_GAP));
 
         // Prompts and PIN dots placement.
         self.input.place(input_touch_area);

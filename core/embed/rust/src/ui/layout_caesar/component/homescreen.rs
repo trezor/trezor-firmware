@@ -1,3 +1,5 @@
+use sys::time::Instant;
+
 use super::super::{constant, fonts};
 use super::{
     theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, CancelConfirmMsg,
@@ -7,7 +9,7 @@ use crate::io::BinaryData;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::trezorhal::usb::usb_configured;
-use crate::ui::component::{Child, Component, Event, EventCtx, Label};
+use crate::ui::component::{Child, Component, Event, EventCtx, Label, Marquee};
 use crate::ui::constant::{HEIGHT, WIDTH};
 use crate::ui::display::image::{ImageInfo, ToifFormat};
 use crate::ui::display::{Font, Icon};
@@ -51,7 +53,7 @@ enum CurrentScreen {
 pub struct Homescreen {
     // TODO label should be a Child in theory, but the homescreen image is not, so it is
     // always painted, so we need to always paint the label too
-    label: Label<'static>,
+    label: Marquee,
     notification: Option<Notification>,
     custom_image: Option<BinaryData<'static>>,
     /// Used for HTC functionality to lock device from homescreen
@@ -77,7 +79,8 @@ impl Homescreen {
             loader_description.map(|desc| Child::new(ProgressLoader::new(desc, HOLD_TO_LOCK_MS)));
 
         Self {
-            label: Label::centered(label, theme::TEXT_BIG),
+            label: Marquee::new(label, fonts::FONT_BIG, theme::FG, theme::BG)
+                .with_alignment(Alignment::Center),
             notification,
             custom_image: get_homescreen_image(),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
@@ -109,6 +112,7 @@ impl Homescreen {
             TR::homescreen__title_no_usb_connection.map_translated(|t| {
                 shape::Text::new(baseline, t, NOTIFICATION_FONT)
                     .with_align(Alignment::Center)
+                    .with_max_width(AREA.width())
                     .render(target)
             });
         } else if let Some(notification) = &self.notification {
@@ -119,6 +123,7 @@ impl Homescreen {
             notification.text.map(|c| {
                 shape::Text::new(baseline, c, NOTIFICATION_FONT)
                     .with_align(Alignment::Center)
+                    .with_max_width(AREA.width())
                     .render(target)
             });
 
@@ -147,7 +152,28 @@ impl Homescreen {
         // the margin at top is bigger (caused by text-height vs line-height?)
         // compensate by shrinking the outset
         outset.top -= 5;
-        shape::Bar::new(self.label.text_area().outset(outset))
+
+        let font = fonts::FONT_BIG;
+        let text_width = self.label.text().map(|t| font.text_width(t));
+        // Baseline and height as `Label::text_area()` used to compute them, so
+        // that the bar keeps its exact position.
+        let baseline_y = LABEL_AREA.y0 + font.text_max_height() - font.text_baseline();
+        // When the label fits, the background hugs the (centered) text; when it
+        // does not, the text scrolls through the whole area.
+        let text_area = if text_width <= LABEL_AREA.width() {
+            let x = LABEL_AREA.x0 + (LABEL_AREA.width() - text_width) / 2;
+            Rect::from_bottom_left_and_size(
+                Point::new(x, baseline_y),
+                Offset::new(text_width, font.text_height()),
+            )
+        } else {
+            Rect::from_bottom_left_and_size(
+                Point::new(LABEL_AREA.x1, baseline_y),
+                Offset::new(LABEL_AREA.width(), font.text_height()),
+            )
+        };
+
+        shape::Bar::new(text_area.outset(outset))
             .with_bg(theme::BG)
             .render(target);
 
@@ -165,13 +191,24 @@ impl Component for Homescreen {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.label.place(LABEL_AREA);
+        // Marquee draws the text baseline at `text_height - 1` from the top of
+        // its area, `Label` did at `text_max_height - text_baseline`. Shifting
+        // the area up to keep the label at its original position.
+        let font = fonts::FONT_BIG;
+        let shift = font.text_height() - 1 - (font.text_max_height() - font.text_baseline());
+        self.label.place(LABEL_AREA.translate(Offset::y(-shift)));
         self.loader.place(AREA);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
+
+        if let Event::Attach(_) = event {
+            self.label.start(ctx, Instant::now());
+        } else {
+            let _ = self.label.event(ctx, event);
+        }
 
         // Only care about button and loader events when there is a possibility of
         // locking the device
@@ -293,7 +330,8 @@ impl Component for Lockscreen<'_> {
 }
 
 pub struct ConfirmHomescreen {
-    title: Child<Label<'static>>,
+    title: Marquee,
+    title_bar: Rect,
     image: BinaryData<'static>,
     buttons: Child<ButtonController>,
 }
@@ -302,7 +340,13 @@ impl ConfirmHomescreen {
     pub fn new(title: TString<'static>, image: BinaryData<'static>) -> Self {
         let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__change.into());
         ConfirmHomescreen {
-            title: Child::new(Label::left_aligned(title, theme::TEXT_BOLD_UPPER)),
+            title: Marquee::new(
+                title,
+                theme::TEXT_BOLD_UPPER.text_font,
+                theme::TEXT_BOLD_UPPER.text_color,
+                theme::TEXT_BOLD_UPPER.background_color,
+            ),
+            title_bar: Rect::zero(),
             image,
             buttons: Child::new(ButtonController::new(btn_layout)),
         }
@@ -314,14 +358,29 @@ impl Component for ConfirmHomescreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (title_content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
+        let font = theme::TEXT_BOLD_UPPER.text_font;
         let title_height = theme::TEXT_BOLD.text_font.line_height();
         let (title_area, _) = title_content_area.split_top(title_height);
-        self.title.place(title_area);
+        // Marquee draws the text baseline at `text_height - 1` from the top of
+        // its area, `Label` did at `text_max_height - text_baseline`. Shifting
+        // the area up to keep the title at its original position.
+        let shift = font.text_height() - 1 - (font.text_max_height() - font.text_baseline());
+        self.title.place(title_area.translate(Offset::y(-shift)));
+        // The black bar behind the title keeps covering the area the `Label`
+        // occupied.
+        self.title_bar = title_area.inset(Insets::bottom(title_height - font.text_height()));
         self.buttons.place(button_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Start and drive the title marquee.
+        if let Event::Attach(_) = event {
+            self.title.start(ctx, Instant::now());
+        } else {
+            let _ = self.title.event(ctx, event);
+        }
+
         // Left button cancels, right confirms
         if let Some(ButtonControllerMsg::Triggered(pos, _)) = self.buttons.event(ctx, event) {
             match pos {
@@ -344,9 +403,7 @@ impl Component for ConfirmHomescreen {
         };
         // Need to make all the title background black, so the title text is well
         // visible
-        let title_area = self.title.inner().area();
-
-        shape::Bar::new(title_area)
+        shape::Bar::new(self.title_bar)
             .with_bg(theme::BG)
             .render(target);
 

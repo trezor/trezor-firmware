@@ -308,6 +308,7 @@ impl<T: ValueInput> ValueInputDialog<T> {
                 )
                 .with_align(Alignment::Center)
                 .with_fg(theme::GREY)
+                .with_max_width(self.area.width())
                 .render(target);
             }
         }
