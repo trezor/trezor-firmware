@@ -49,7 +49,7 @@ where
         Self {
             prompt: Child::new(Maybe::new(
                 theme::BG,
-                Label::centered(prompt, theme::label_keyboard_prompt()),
+                Label::centered(prompt, theme::label_keyboard_prompt()).vertically_centered(),
                 prompt_visible,
             )),
             back: Child::new(Maybe::new(
@@ -121,7 +121,14 @@ where
 
         let prompt_row = grid.row_col(0, 0).union(grid.row_col(0, 3));
         let prompt_center = prompt_row.center();
-        let prompt_size = self.prompt.inner().inner().max_size();
+        // Give the prompt room for up to two lines; the vertically-centered
+        // `Label` wraps onto the second line if needed. A prompt needing more
+        // still fails loudly via the `Label`'s fit check.
+        let prompt_font = theme::label_keyboard_prompt().text_font;
+        let prompt_size = Offset::new(
+            prompt_row.width(),
+            prompt_font.text_max_height() + prompt_font.line_height(),
+        );
         // Clamp the area to the prompt row so that an overlong prompt does
         // not silently overflow and the Label's fit check stays effective.
         let prompt_area =
